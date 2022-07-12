@@ -9,11 +9,7 @@ from homeassistant.components.ids_hyyp.const import (
 )
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_TIMEOUT, CONF_TOKEN
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import USER_INPUT, init_integration, patch_async_setup_entry
 
@@ -26,7 +22,7 @@ async def test_user_form_valid_input(hass, ids_hyyp_config_flow):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -37,7 +33,7 @@ async def test_user_form_valid_input(hass, ids_hyyp_config_flow):
         )
     await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "test-email"
     assert result["data"] == {
         CONF_TOKEN: "12341",
@@ -61,7 +57,7 @@ async def test_user_form_exception(hass, ids_hyyp_config_flow):
         USER_INPUT,
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "invalid_host"}
 
@@ -72,7 +68,7 @@ async def test_user_form_exception(hass, ids_hyyp_config_flow):
         USER_INPUT,
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
@@ -83,7 +79,7 @@ async def test_user_form_exception(hass, ids_hyyp_config_flow):
         USER_INPUT,
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "invalid_auth"}
 
@@ -94,7 +90,7 @@ async def test_user_form_exception(hass, ids_hyyp_config_flow):
         USER_INPUT,
     )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "unknown"
 
 
@@ -104,7 +100,7 @@ async def test_options_flow(hass):
         entry = await init_integration(hass)
 
         result = await hass.config_entries.options.async_init(entry.entry_id)
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "init"
         assert result["errors"] is None
 
@@ -118,7 +114,7 @@ async def test_options_flow(hass):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_TIMEOUT] == 30
     assert result["data"][ATTR_ARM_CODE] == "1111"
     assert result["data"][ATTR_BYPASS_CODE] == "2222"
@@ -131,7 +127,7 @@ async def test_options_flow(hass):
         entry = await init_integration(hass)
 
         result = await hass.config_entries.options.async_init(entry.entry_id)
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "init"
         assert result["errors"] is None
 
@@ -145,7 +141,7 @@ async def test_options_flow(hass):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_TIMEOUT] == 33
     assert result["data"][ATTR_ARM_CODE] == "1111"
     assert result["data"][ATTR_BYPASS_CODE] == "2222"

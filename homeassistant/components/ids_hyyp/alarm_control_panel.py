@@ -1,8 +1,6 @@
 """Support for IDS Hyyp alarms."""
 from __future__ import annotations
 
-from typing import Any
-
 from pyhyypapi.exceptions import HTTPError, HyypApiError
 
 from homeassistant.components.alarm_control_panel import (
@@ -92,7 +90,7 @@ class HyypAlarm(HyypPartitionEntity, AlarmControlPanelEntity):
 
         return STATE_ALARM_DISARMED
 
-    async def async_alarm_disarm(self, code: Any = None) -> None:
+    async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         _code = code if not bool(self._arm_code) else self._arm_code
 
@@ -114,7 +112,7 @@ class HyypAlarm(HyypPartitionEntity, AlarmControlPanelEntity):
         else:
             raise HTTPError(f"Cannot disarm alarm: {update_ok}")
 
-    async def async_alarm_arm_away(self, code: Any = None) -> None:
+    async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         _code = code if not bool(self._arm_code) else self._arm_code
 
@@ -136,7 +134,7 @@ class HyypAlarm(HyypPartitionEntity, AlarmControlPanelEntity):
         else:
             raise HTTPError(f"Cannot arm alarm, check for violated zones. {update_ok}")
 
-    async def async_alarm_arm_home(self, code: Any = None) -> None:
+    async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         _code = code if not bool(self._arm_code) else self._arm_code
 
@@ -161,7 +159,7 @@ class HyypAlarm(HyypPartitionEntity, AlarmControlPanelEntity):
                 f"Cannot arm home alarm, check for violated zones. {update_ok}"
             )
 
-    async def async_alarm_trigger(self, code: Any = None) -> None:
+    async def async_alarm_trigger(self, code: str | None = None) -> None:
         """Send alarm trigger."""
         _code = code if not bool(self._arm_code) else self._arm_code
 
