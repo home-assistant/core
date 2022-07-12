@@ -106,9 +106,6 @@ class GeoJsonLocationEvent(CoordinatorEntity, GeolocationEvent):
         super().__init__(coordinator)
         self._external_id = external_id
         self._attr_unique_id = f"{config_entry_unique_id}_{external_id}"
-        self._distance: float | None = None
-        self._latitude: float | None = None
-        self._longitude: float | None = None
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.coordinator.config_entry.entry_id)},
             entry_type=DeviceEntryType.SERVICE,
@@ -140,27 +137,22 @@ class GeoJsonLocationEvent(CoordinatorEntity, GeolocationEvent):
         """Return if entity is available."""
         return super().available and self.coordinator.entry_available(self._external_id)
 
-    @property
-    def distance(self) -> float | None:
-        """Return distance value of this external event."""
-        return self._distance
-
     def _update_internal_state(self) -> None:
         """Update state and attributes from coordinator data."""
         _LOGGER.debug("Updating %s from coordinator data", self._external_id)
         entry = self.coordinator.get_entry(self._external_id)
         if entry:
             self._attr_name = entry.title
-            self._distance = entry.distance_to_home
+            self._attr_distance = entry.distance_to_home
             # Convert distance if not metric system.
             if self.hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL:
-                self._distance = IMPERIAL_SYSTEM.length(
+                self._attr_distance = IMPERIAL_SYSTEM.length(
                     entry.distance_to_home, LENGTH_KILOMETERS
                 )
             else:
-                self._distance = entry.distance_to_home
-            self._latitude = entry.coordinates[0]
-            self._longitude = entry.coordinates[1]
+                self._attr_distance = entry.distance_to_home
+            self._attr_latitude = entry.coordinates[0]
+            self._attr_longitude = entry.coordinates[1]
             self._attr_extra_state_attributes = {ATTR_EXTERNAL_ID: self._external_id}
             # Add all properties from the feed entry.
             if entry.properties:
@@ -172,16 +164,6 @@ class GeoJsonLocationEvent(CoordinatorEntity, GeolocationEvent):
         """Handle updated data from the coordinator."""
         self._update_internal_state()
         super()._handle_coordinator_update()
-
-    @property
-    def latitude(self) -> float | None:
-        """Return latitude value of this external event."""
-        return self._latitude
-
-    @property
-    def longitude(self) -> float | None:
-        """Return longitude value of this external event."""
-        return self._longitude
 
     @property
     def unit_of_measurement(self) -> str | None:
