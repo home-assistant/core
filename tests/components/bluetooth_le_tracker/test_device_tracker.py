@@ -17,7 +17,9 @@ from homeassistant.util import dt as dt_util, slugify
 from tests.common import async_fire_time_changed
 
 
-async def test_preserve_new_tracked_device_name(hass, mock_device_tracker_conf):
+async def test_preserve_new_tracked_device_name(
+    hass, mock_bluetooth, mock_device_tracker_conf
+):
     """Test preserving tracked device name across new seens."""
 
     address = "DE:AD:BE:EF:13:37"
