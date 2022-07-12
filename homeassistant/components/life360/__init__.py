@@ -37,7 +37,7 @@ from .const import (
     SHOW_DRIVING,
     SHOW_MOVING,
 )
-from .coordinator import Life360DataUpdateCoordinator
+from .coordinator import Life360DataUpdateCoordinator, MissingLocReason
 
 PLATFORMS = [Platform.DEVICE_TRACKER]
 
@@ -126,6 +126,10 @@ class IntegData:
     cfg_options: dict[str, Any] | None = None
     # ConfigEntry.entry_id: Life360DataUpdateCoordinator
     coordinators: dict[str, Life360DataUpdateCoordinator] = field(
+        init=False, default_factory=dict
+    )
+    # member_id: missing location reason
+    missing_loc_reason: dict[str, MissingLocReason] = field(
         init=False, default_factory=dict
     )
     # member_id: ConfigEntry.entry_id
