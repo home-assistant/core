@@ -2,7 +2,7 @@
 import copy
 from datetime import datetime
 import json
-from unittest.mock import ANY, patch
+from unittest.mock import ANY, MagicMock, patch
 
 import yaml
 
@@ -11,6 +11,7 @@ from homeassistant.components import mqtt
 from homeassistant.components.mqtt import debug_info
 from homeassistant.components.mqtt.const import MQTT_DISCONNECTED
 from homeassistant.components.mqtt.mixins import MQTT_ATTRIBUTES_BLOCKED
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
@@ -1670,6 +1671,25 @@ async def help_test_reload_with_config(hass, caplog, tmp_path, config):
     assert "<Event event_mqtt_reloaded[L]>" in caplog.text
 
 
+async def help_test_entry_reload_with_new_config(hass, tmp_path, new_config):
+    """Test reloading with supplied config."""
+    mqtt_config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    assert mqtt_config_entry.state is ConfigEntryState.LOADED
+    new_yaml_config_file = tmp_path / "configuration.yaml"
+    new_yaml_config = yaml.dump(new_config)
+    new_yaml_config_file.write_text(new_yaml_config)
+    assert new_yaml_config_file.read_text() == new_yaml_config
+
+    with patch.object(hass_config, "YAML_CONFIG_FILE", new_yaml_config_file), patch(
+        "paho.mqtt.client.Client"
+    ) as mock_client:
+        mock_client().connect = lambda *args: 0
+        # reload the config entry
+        assert await hass.config_entries.async_reload(mqtt_config_entry.entry_id)
+        assert mqtt_config_entry.state is ConfigEntryState.LOADED
+        await hass.async_block_till_done()
+
+
 async def help_test_reloadable(
     hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_path, domain, config
 ):
@@ -1782,6 +1802,7 @@ async def help_test_reloadable_late(hass, caplog, tmp_path, domain, config):
         domain: [new_config_1, new_config_2, new_config_3],
     }
     await help_test_reload_with_config(hass, caplog, tmp_path, new_config)
+    await hass.async_block_till_done()
 
     assert len(hass.states.async_all(domain)) == 3
 
@@ -1792,6 +1813,12 @@ async def help_test_reloadable_late(hass, caplog, tmp_path, domain, config):
 
 async def help_test_setup_manual_entity_from_yaml(hass, platform, config):
     """Help to test setup from yaml through configuration entry."""
+    calls = MagicMock()
+
+    async def mock_reload(hass):
+        """Mock reload."""
+        calls()
+
     config_structure = {mqtt.DOMAIN: {platform: config}}
 
     await async_setup_component(hass, mqtt.DOMAIN, config_structure)
@@ -1799,7 +1826,71 @@ async def help_test_setup_manual_entity_from_yaml(hass, platform, config):
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
     entry.add_to_hass(hass)
 
-    with patch("paho.mqtt.client.Client") as mock_client:
+    with patch(
+        "homeassistant.components.mqtt.async_reload_manual_mqtt_items",
+        side_effect=mock_reload,
+    ), patch("paho.mqtt.client.Client") as mock_client:
         mock_client().connect = lambda *args: 0
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
+        calls.assert_called_once()
+
+
+async def help_test_unload_config_entry(hass, tmp_path, newconfig):
+    """Test unloading the MQTT config entry."""
+    mqtt_config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    assert mqtt_config_entry.state is ConfigEntryState.LOADED
+
+    new_yaml_config_file = tmp_path / "configuration.yaml"
+    new_yaml_config = yaml.dump(newconfig)
+    new_yaml_config_file.write_text(new_yaml_config)
+    with patch.object(hass_config, "YAML_CONFIG_FILE", new_yaml_config_file):
+        assert await hass.config_entries.async_unload(mqtt_config_entry.entry_id)
+        assert mqtt_config_entry.state is ConfigEntryState.NOT_LOADED
+        await hass.async_block_till_done()
+
+
+async def help_test_unload_config_entry_with_platform(
+    hass,
+    mqtt_mock_entry_with_yaml_config,
+    tmp_path,
+    domain,
+    config,
+):
+    """Test unloading the MQTT config entry with a specific platform domain."""
+    # prepare setup through configuration.yaml
+    config_setup = copy.deepcopy(config)
+    config_setup["name"] = "config_setup"
+    config_name = config_setup
+    assert await async_setup_component(hass, domain, {domain: [config_setup]})
+    await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
+
+    # prepare setup through discovery
+    discovery_setup = copy.deepcopy(config)
+    discovery_setup["name"] = "discovery_setup"
+    async_fire_mqtt_message(
+        hass, f"homeassistant/{domain}/bla/config", json.dumps(discovery_setup)
+    )
+    await hass.async_block_till_done()
+
+    # check if both entities were setup correctly
+    config_setup_entity = hass.states.get(f"{domain}.config_setup")
+    assert config_setup_entity
+
+    discovery_setup_entity = hass.states.get(f"{domain}.discovery_setup")
+    assert discovery_setup_entity
+
+    await help_test_unload_config_entry(hass, tmp_path, config_setup)
+
+    async_fire_mqtt_message(
+        hass, f"homeassistant/{domain}/bla/config", json.dumps(discovery_setup)
+    )
+    await hass.async_block_till_done()
+
+    # check if both entities were unloaded correctly
+    config_setup_entity = hass.states.get(f"{domain}.{config_name}")
+    assert config_setup_entity is None
+
+    discovery_setup_entity = hass.states.get(f"{domain}.discovery_setup")
+    assert discovery_setup_entity is None
