@@ -1,8 +1,9 @@
 """Switches for the Elexa Guardian integration."""
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, cast
 
 from aioguardian.errors import GuardianError
 
@@ -28,8 +29,16 @@ SWITCH_KIND_VALVE = "valve"
 
 
 @dataclass
+class SwitchDescriptionMixin:
+    """Define an entity description mixin for Guardian switches."""
+
+    off_action: Callable[[Client], Awaitable]
+    on_action: Callable[[Client], Awaitable]
+
+
+@dataclass
 class ValveControllerSwitchDescription(
-    SwitchEntityDescription, ValveControllerEntityDescription
+    SwitchEntityDescription, ValveControllerEntityDescription, SwitchDescriptionMixin
 ):
     """Describe a Guardian valve controller switch."""
 
@@ -41,12 +50,20 @@ VALVE_CONTROLLER_DESCRIPTIONS = (
         icon="mdi:wifi",
         entity_category=EntityCategory.CONFIG,
         api_category=API_WIFI_STATUS,
+        off_action=lambda client: cast(
+            Awaitable[dict[str, Any]], client.wifi.disable_ap()
+        ),
+        on_action=lambda client: cast(
+            Awaitable[dict[str, Any]], client.wifi.enable_ap()
+        ),
     ),
     ValveControllerSwitchDescription(
         key=SWITCH_KIND_VALVE,
         name="Valve controller",
         icon="mdi:water",
         api_category=API_VALVE_STATUS,
+        off_action=lambda client: cast(Awaitable[dict[str, Any]], client.valve.close()),
+        on_action=lambda client: cast(Awaitable[dict[str, Any]], client.valve.open()),
     ),
 )
 
@@ -112,14 +129,9 @@ class ValveControllerSwitch(ValveControllerEntity, SwitchEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        if self.entity_description.key == SWITCH_KIND_ONBOARD_AP:
-            coro_func = self._client.wifi.disable_ap
-        else:
-            coro_func = self._client.valve.close
-
         try:
             async with self._client:
-                await coro_func()
+                await self.entity_description.off_action(self._client)
         except GuardianError as err:
             raise HomeAssistantError(
                 f'Error while turning "{self.entity_id}" off: {err}'
@@ -130,14 +142,9 @@ class ValveControllerSwitch(ValveControllerEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        if self.entity_description.key == SWITCH_KIND_ONBOARD_AP:
-            coro_func = self._client.wifi.enable_ap
-        else:
-            coro_func = self._client.valve.open
-
         try:
             async with self._client:
-                await coro_func()
+                await self.entity_description.on_action(self._client)
         except GuardianError as err:
             raise HomeAssistantError(
                 f'Error while turning "{self.entity_id}" on: {err}'
