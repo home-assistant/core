@@ -290,6 +290,7 @@ omit =
     homeassistant/components/enocean/__init__.py
     homeassistant/components/enocean/binary_sensor.py
     homeassistant/components/enocean/const.py
+    homeassistant/components/enocean/cover.py
     homeassistant/components/enocean/device.py
     homeassistant/components/enocean/dongle.py
     homeassistant/components/enocean/light.py
