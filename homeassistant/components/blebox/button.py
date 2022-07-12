@@ -1,7 +1,7 @@
 """BleBox button entities implementation."""
 from __future__ import annotations
 
-from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
+from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -26,7 +26,6 @@ class BleBoxButtonEntity(BleBoxEntity, ButtonEntity):
     def __init__(self, feature):
         """Initialize a BleBox button feature."""
         super().__init__(feature)
-        self._attr_device_class = ButtonDeviceClass.UPDATE
         self._attr_icon = self.get_icon()
 
     def get_icon(self):

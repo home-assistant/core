@@ -5,7 +5,6 @@ from unittest.mock import PropertyMock
 import blebox_uniapi
 import pytest
 
-from homeassistant.components.button import ButtonDeviceClass
 from homeassistant.const import ATTR_ICON
 
 from .conftest import async_setup_entity, mock_feature
@@ -49,8 +48,6 @@ async def test_tvliftbox_init(tvliftbox, hass, config, caplog):
     state = hass.states.get(entity_id)
 
     assert entry.unique_id == "BleBox-tvLiftBox-4a3fdaad90aa-open_or_stop"
-
-    assert state.attributes["device_class"] == ButtonDeviceClass.UPDATE
 
     assert state.name == "tvLiftBox-open_or_stop"
 
