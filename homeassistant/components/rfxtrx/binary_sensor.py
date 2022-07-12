@@ -124,10 +124,13 @@ async def async_setup_entry(
 
 
 class RfxtrxBinarySensor(RfxtrxEntity, BinarySensorEntity):
-    """A representation of a RFXtrx binary sensor."""
+    """A representation of a RFXtrx binary sensor.
+
+    Since all repeated events have meaning, these types of sensors
+    need to have force update enabled.
+    """
 
     _attr_force_update = True
-    """We should force updates. Repeated states have meaning."""
 
     def __init__(
         self,
