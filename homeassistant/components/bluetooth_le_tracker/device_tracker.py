@@ -70,7 +70,7 @@ async def async_setup_scanner(  # noqa: C901
 
     yaml_path = hass.config.path(YAML_DEVICES)
     devs_to_track: set[str] = set()
-    devs_donot_track: set[str] = set()
+    devs_no_track: set[str] = set()
     devs_track_battery = {}
     interval: timedelta = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
 
@@ -123,7 +123,7 @@ async def async_setup_scanner(  # noqa: C901
                     )
             else:
                 _LOGGER.debug("Adding %s to BLE do not track", device.mac)
-                devs_donot_track.add(address)
+                devs_no_track.add(address)
 
     # if track new devices is true discover new devices
     # on every scan.
@@ -176,7 +176,7 @@ async def async_setup_scanner(  # noqa: C901
                 )
 
         if track_new:
-            if mac not in devs_to_track and mac not in devs_donot_track:
+            if mac not in devs_to_track and mac not in devs_no_track:
                 _LOGGER.info("Discovered Bluetooth LE device %s", mac)
                 hass.async_create_task(
                     async_see_device(mac, service_info.name, new_device=True)
