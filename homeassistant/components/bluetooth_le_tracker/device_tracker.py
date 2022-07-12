@@ -182,6 +182,7 @@ async def async_setup_scanner(
 
     cancel = bluetooth.async_register_callback(hass, _async_update_ble, None)
 
+    @callback
     def handle_stop(event: Event) -> None:
         """Cancel the callback."""
         cancel()
