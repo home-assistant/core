@@ -134,7 +134,7 @@ async def async_setup_scanner(
         mac: str,
         now: datetime,
         service_info: bluetooth.BluetoothServiceInfo,
-    ):
+    ) -> None:
         """Lookup Bluetooth LE devices and update status."""
         battery = None
         try:
