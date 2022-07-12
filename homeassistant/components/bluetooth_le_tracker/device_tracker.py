@@ -144,7 +144,6 @@ async def async_setup_scanner(  # noqa: C901
             async with BleakClient(mac) as client:
                 bat_char = await client.read_gatt_char(BATTERY_CHARACTERISTIC_UUID)
                 battery = ord(bat_char)
-            # Try to get the handle; it will raise a BLEError exception if not available
         except asyncio.TimeoutError:
             _LOGGER.warning(
                 "Timeout when trying to get battery status for %s", service_info.name
