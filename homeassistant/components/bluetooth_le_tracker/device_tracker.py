@@ -204,4 +204,6 @@ async def async_setup_scanner(  # noqa: C901
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_handle_stop)
 
+    _async_refresh_ble(dt_util.now())
+
     return True

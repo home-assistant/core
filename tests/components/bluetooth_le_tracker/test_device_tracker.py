@@ -3,6 +3,7 @@
 from datetime import timedelta
 from unittest.mock import patch
 
+from homeassistant.components.bluetooth import BluetoothServiceInfo
 from homeassistant.components.bluetooth_le_tracker import device_tracker
 from homeassistant.components.device_tracker.const import (
     CONF_SCAN_INTERVAL,
@@ -24,13 +25,21 @@ async def test_preserve_new_tracked_device_name(hass, mock_device_tracker_conf):
     entity_id = f"{DOMAIN}.{slugify(name)}"
 
     with patch(
-        "homeassistant.components."
-        "bluetooth_le_tracker.device_tracker.pygatt.GATTToolBackend"
-    ) as mock_backend, patch.object(device_tracker, "MIN_SEEN_NEW", 3):
+        "homeassistant.components.bluetooth.async_discovered_service_info"
+    ) as mock_async_discovered_service_info, patch.object(
+        device_tracker, "MIN_SEEN_NEW", 3
+    ):
 
+        device = BluetoothServiceInfo(
+            name=name,
+            address=address,
+            rssi=-19,
+            manufacturer_data={},
+            service_data={},
+            service_uuids=[],
+        )
         # Return with name when seen first time
-        device = {"address": address, "name": name}
-        mock_backend.return_value.scan.return_value = [device]
+        mock_async_discovered_service_info.return_value = [device]
 
         config = {
             CONF_PLATFORM: "bluetooth_le_tracker",
@@ -41,7 +50,16 @@ async def test_preserve_new_tracked_device_name(hass, mock_device_tracker_conf):
         assert result
 
         # Seen once here; return without name when seen subsequent times
-        device["name"] = None
+        BluetoothServiceInfo(
+            name=None,
+            address=address,
+            rssi=-19,
+            manufacturer_data={},
+            service_data={},
+            service_uuids=[],
+        )
+        # Return with name when seen first time
+        mock_async_discovered_service_info.return_value = [device]
 
         # Tick until device seen enough times for to be registered for tracking
         for _ in range(device_tracker.MIN_SEEN_NEW - 1):
