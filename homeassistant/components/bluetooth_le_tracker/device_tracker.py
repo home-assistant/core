@@ -73,6 +73,9 @@ async def async_setup_scanner(  # noqa: C901
     devs_no_track: set[str] = set()
     devs_track_battery = {}
     interval: timedelta = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
+    # if track new devices is true discover new devices
+    # on every scan.
+    track_new = config.get(CONF_TRACK_NEW)
 
     async def async_see_device(address, name, new_device=False, battery=None):
         """Mark a device as seen."""
@@ -124,10 +127,6 @@ async def async_setup_scanner(  # noqa: C901
             else:
                 _LOGGER.debug("Adding %s to BLE do not track", device.mac)
                 devs_no_track.add(address)
-
-    # if track new devices is true discover new devices
-    # on every scan.
-    track_new = config.get(CONF_TRACK_NEW)
 
     if not devs_to_track and not track_new:
         _LOGGER.warning("No Bluetooth LE devices to track!")
