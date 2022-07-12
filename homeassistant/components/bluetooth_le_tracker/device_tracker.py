@@ -60,7 +60,6 @@ async def async_setup_scanner(
     """Set up the Bluetooth LE Scanner."""
 
     new_devices: dict[str, dict] = {}
-    hass.data.setdefault(DATA_BLE, {DATA_BLE_ADAPTER: None})
 
     if config[CONF_TRACK_BATTERY]:
         battery_track_interval = config[CONF_TRACK_BATTERY_INTERVAL]
