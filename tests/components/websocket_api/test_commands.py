@@ -17,13 +17,18 @@ from homeassistant.components.websocket_api.const import URL
 from homeassistant.const import SIGNAL_BOOTSTRAP_INTEGRATONS
 from homeassistant.core import Context, HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.generated import supported_brands
 from homeassistant.helpers import entity
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import DATA_SETUP_TIME, async_setup_component
 
-from tests.common import MockEntity, MockEntityPlatform, async_mock_service
+from tests.common import (
+    MockEntity,
+    MockEntityPlatform,
+    MockModule,
+    async_mock_service,
+    mock_integration,
+)
 
 STATE_KEY_SHORT_NAMES = {
     "entity_id": "e",
@@ -1752,12 +1757,24 @@ async def test_validate_config_invalid(websocket_client, key, config, error):
     assert msg["result"] == {key: {"valid": False, "error": error}}
 
 
-async def test_supported_brands(websocket_client):
+async def test_supported_brands(hass, websocket_client):
     """Test supported brands."""
-    await websocket_client.send_json({"id": 7, "type": "supported_brands"})
+    mock_integration(
+        hass,
+        MockModule("test", partial_manifest={"supported_brands": {"hello": "World"}}),
+    )
 
-    msg = await websocket_client.receive_json()
+    with patch(
+        "homeassistant.generated.supported_brands.HAS_SUPPORTED_BRANDS", ("test",)
+    ):
+        await websocket_client.send_json({"id": 7, "type": "supported_brands"})
+        msg = await websocket_client.receive_json()
+
     assert msg["id"] == 7
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
-    assert msg["result"] == supported_brands.SUPPORTED_BRANDS
+    assert msg["result"] == {
+        "test": {
+            "hello": "World",
+        }
+    }

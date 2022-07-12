@@ -13,23 +13,20 @@ To update, run python3 -m script.hassfest
 
 # fmt: off
 
-SUPPORTED_BRANDS = {}
+HAS_SUPPORTED_BRANDS = ({})
 """.strip()
 
 
 def generate_and_validate(integrations: dict[str, Integration], config: Config) -> str:
     """Validate and generate supported_brands data."""
 
-    brands = {}
+    brands = [
+        domain
+        for domain, integration in sorted(integrations.items())
+        if integration.supported_brands
+    ]
 
-    for domain in sorted(integrations):
-        integration = integrations[domain]
-        if not integration.supported_brands:
-            continue
-
-        brands[domain] = integration.supported_brands
-
-    return BASE.format(json.dumps(brands, indent=4))
+    return BASE.format(json.dumps(brands, indent=4)[1:-1])
 
 
 def validate(integrations: dict[str, Integration], config: Config) -> None:

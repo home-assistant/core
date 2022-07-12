@@ -5,41 +5,11 @@ To update, run python3 -m script.hassfest
 
 # fmt: off
 
-SUPPORTED_BRANDS = {
-    "denonavr": {
-        "marantz": "Marantz"
-    },
-    "hunterdouglas_powerview": {
-        "luxaflex": "Luxaflex"
-    },
-    "motion_blinds": {
-        "amp_motorization": "AMP Motorization",
-        "bliss_automation": "Bliss Automation",
-        "bloc_blinds": "Bloc Blinds",
-        "brel_home": "Brel Home",
-        "3_day_blinds": "3 Day Blinds",
-        "dooya": "Dooya",
-        "gaviota": "Gaviota",
-        "hurrican_shutters_wholesale": "Hurrican Shutters Wholesale",
-        "ismartwindow": "iSmartWindow",
-        "martec": "Martec",
-        "raven_rock_mfg": "Raven Rock MFG",
-        "smart_blinds": "Smart Blinds",
-        "smart_home": "Smart Home",
-        "uprise_smart_shades": "Uprise Smart Shades"
-    },
-    "overkiz": {
-        "cozytouch": "Atlantic Cozytouch",
-        "flexom": "Bouygues Flexom",
-        "hi_kumo": "Hitachi Hi Kumo",
-        "nexity": "Nexity Eug\u00e9nie",
-        "rexel": "Rexel Energeasy Connect",
-        "somfy": "Somfy"
-    },
-    "renault": {
-        "dacia": "Dacia"
-    },
-    "wemo": {
-        "digital_loggers": "Digital Loggers"
-    }
-}
+HAS_SUPPORTED_BRANDS = (
+    "denonavr",
+    "hunterdouglas_powerview",
+    "motion_blinds",
+    "overkiz",
+    "renault",
+    "wemo"
+)

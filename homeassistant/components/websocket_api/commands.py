@@ -695,14 +695,23 @@ async def handle_validate_config(
     connection.send_result(msg["id"], result)
 
 
-@callback
 @decorators.websocket_command(
     {
         vol.Required("type"): "supported_brands",
     }
 )
-def handle_supported_brands(
+@decorators.async_response
+async def handle_supported_brands(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle supported brands command."""
-    connection.send_result(msg["id"], supported_brands.SUPPORTED_BRANDS)
+    data = {}
+    for integration in await asyncio.gather(
+        *[
+            async_get_integration(hass, integration)
+            for integration in supported_brands.HAS_SUPPORTED_BRANDS
+        ]
+    ):
+        data[integration.domain] = integration.manifest["supported_brands"]
+
+    connection.send_result(msg["id"], data)
