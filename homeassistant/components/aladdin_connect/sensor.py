@@ -23,11 +23,14 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="battery_level",
         name="Battery Level",
         device_class=SensorDeviceClass.BATTERY,
+        native_unit_of_measurement=PERCENTAGE,
     ),
     SensorEntityDescription(
         key="rssi",
         name="WIFI RSSI",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        entity_registry_enabled_default=False,
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
     ),
 )
 
@@ -72,10 +75,6 @@ class AladdinConnectSensor(SensorEntity):
         self.entity_description = description
         self._attr_name = f"{self._name} {description.name}"
         self._attr_unique_id = f"{self._device_id}-{self._number}-{description.key}"
-        if self.entity_description.key == "battery_level":
-            self._attr_native_unit_of_measurement = PERCENTAGE
-        if self.entity_description.key == "rssi":
-            self._attr_native_unit_of_measurement = SIGNAL_STRENGTH_DECIBELS
 
     @property
     def native_value(self) -> float | None:
