@@ -36,6 +36,7 @@ from .const import (
     IDENTIFIER_SERIAL_NUMBER,
 )
 from .device_trigger import async_fire_triggers, async_setup_triggers_for_entry
+from .storage import EntityMapStorage
 
 DEFAULT_SCAN_INTERVAL = datetime.timedelta(seconds=60)
 RETRY_INTERVAL = 60  # seconds
@@ -77,7 +78,7 @@ class HKDevice:
             self.pairing_data["AccessoryPairingID"], self.pairing_data
         )
 
-        self.accessories = None
+        self.accessories: list[Any] | None = None
         self.config_num = 0
 
         self.entity_map = Accessories()
@@ -170,27 +171,24 @@ class HKDevice:
 
     async def async_setup(self) -> bool:
         """Prepare to use a paired HomeKit device in Home Assistant."""
-        cache = self.hass.data[ENTITY_MAP].get_map(self.unique_id)
-        if not cache:
-            if await self.async_refresh_entity_map(self.config_num):
-                self._polling_interval_remover = async_track_time_interval(
-                    self.hass, self.async_update, DEFAULT_SCAN_INTERVAL
-                )
-                return True
+        entity_storage: EntityMapStorage = self.hass.data[ENTITY_MAP]
+        if cache := entity_storage.get_map(self.unique_id):
+            self.accessories = cache["accessories"]
+            self.config_num = cache["config_num"]
+            self.entity_map = Accessories.from_list(self.accessories)
+        elif not await self.async_refresh_entity_map(self.config_num):
             return False
 
-        self.accessories = cache["accessories"]
-        self.config_num = cache["config_num"]
-
-        self.entity_map = Accessories.from_list(self.accessories)
-
+        await self.async_process_entity_map()
+        if not self.pairing.is_connected:
+            return False
+        # If everything is up to date, we can create the entities
+        # since we know the data is not stale.
+        self.add_entities()
         self._polling_interval_remover = async_track_time_interval(
             self.hass, self.async_update, DEFAULT_SCAN_INTERVAL
         )
-
-        await self.async_process_entity_map()
-
-        return self.pairing.is_connected
+        return True
 
     def device_info_for_accessory(self, accessory: Accessory) -> DeviceInfo:
         """Build a DeviceInfo for a given accessory."""
@@ -378,8 +376,6 @@ class HKDevice:
         # Load any triggers for this config entry
         await async_setup_triggers_for_entry(self.hass, self.config_entry)
 
-        self.add_entities()
-
         if self.watchable_characteristics:
             await self.pairing.subscribe(self.watchable_characteristics)
             if not self.pairing.is_connected:
@@ -398,6 +394,12 @@ class HKDevice:
             self.config_entry, self.platforms
         )
 
+    async def async_refresh_entity_map_and_entities(self, config_num: int) -> None:
+        """Refresh the entity map and entities for this pairing."""
+        await self.async_refresh_entity_map(config_num)
+        await self.async_process_entity_map()
+        self.add_entities()
+
     async def async_refresh_entity_map(self, config_num: int) -> bool:
         """Handle setup of a HomeKit accessory."""
         try:
@@ -407,15 +409,17 @@ class HKDevice:
             # later when Bonjour spots c# is still not up to date.
             return False
 
+        assert self.accessories is not None
+
         self.entity_map = Accessories.from_list(self.accessories)
 
-        self.hass.data[ENTITY_MAP].async_create_or_update_map(
+        entity_storage: EntityMapStorage = self.hass.data[ENTITY_MAP]
+
+        entity_storage.async_create_or_update_map(
             self.unique_id, config_num, self.accessories
         )
 
         self.config_num = config_num
-        self.hass.async_create_task(self.async_process_entity_map())
-
         return True
 
     def add_accessory_factory(self, add_entities_cb) -> None:
