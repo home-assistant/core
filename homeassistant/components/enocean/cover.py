@@ -137,11 +137,7 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         self._is_opening = True
         self._is_closing = False
         self.start_or_feed_watchdog()
-        _LOGGER.debug(
-            "new state set by command 'open_cover'; is_opening: %i, is_closing: %i",
-            self._is_opening,
-            self.is_closing,
-        )
+
         telegram = [0xD2, 0, 0, 0, 1]
         telegram.extend(self._sender_id)
         telegram.extend([0x00])
@@ -153,11 +149,7 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         self._is_opening = False
         self._is_closing = True
         self.start_or_feed_watchdog()
-        _LOGGER.debug(
-            "new state set by command 'close_cover'; is_opening: %i, is_closing: %i",
-            self._is_opening,
-            self.is_closing,
-        )
+
         telegram = [0xD2, 100, 0, 0, 1]
         telegram.extend(self._sender_id)
         telegram.extend([0x00])
@@ -178,11 +170,7 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
             self._is_closing = True
 
         self.start_or_feed_watchdog()
-        _LOGGER.debug(
-            "new state set by command 'set_cover_position'; is_opening: %i, is_closing: %i",
-            self._is_opening,
-            self.is_closing,
-        )
+
         telegram = [0xD2, 100 - kwargs[ATTR_POSITION], 0, 0, 1]
         telegram.extend(self._sender_id)
         telegram.extend([0x00])
@@ -194,11 +182,7 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         self._is_opening = False
         self._is_closing = False
         self.stop_watchdog()
-        _LOGGER.debug(
-            "new state; is_opening: %i, is_closing: %i",
-            self._is_opening,
-            self.is_closing,
-        )
+
         telegram = [0xD2, 2]
         telegram.extend(self._sender_id)
         telegram.extend([0x00])
@@ -235,14 +219,6 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
 
             self._state_changed_by_command = False
 
-            _LOGGER.debug(
-                "self._position: %i, new_position: %i, new state; is_opening: %i, is_closing: %i",
-                self._position,
-                new_position,
-                self._is_opening,
-                self.is_closing,
-            )
-
         self._position = new_position
         if self._position == 0:
             self._is_closed = True
@@ -260,7 +236,6 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
 
     def start_or_feed_watchdog(self):
         """Start or feed the 'movement stop' watchdog."""
-        _LOGGER.debug("Feeding watchdog")
         self._watchdog_remaining = self._watchdog_timeout
 
         if self._watchdog_enabled:
@@ -271,7 +246,6 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
 
     def stop_watchdog(self):
         """Stop the 'movement stop' watchdog."""
-        _LOGGER.debug("Stopping watchdog")
         self._watchdog_enabled = False
 
     async def watchdog(self):
@@ -281,7 +255,6 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
 
         while 1:
             if not self._watchdog_enabled:
-                _LOGGER.debug("Stopping watchdog as requested")
                 return
 
             if self._watchdog_remaining == 0:
