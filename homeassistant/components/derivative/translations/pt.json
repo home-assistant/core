@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "round": "Precis\u00e3o"
+                }
+            }
+        }
+    }
+}

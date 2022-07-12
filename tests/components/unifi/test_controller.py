@@ -379,7 +379,21 @@ async def test_wireless_client_event_calls_update_wireless_devices(
     hass, aioclient_mock, mock_unifi_websocket
 ):
     """Call update_wireless_devices method when receiving wireless client event."""
-    await setup_unifi_integration(hass, aioclient_mock)
+    client_1_dict = {
+        "essid": "ssid",
+        "disabled": False,
+        "hostname": "client_1",
+        "ip": "10.0.0.4",
+        "is_wired": False,
+        "last_seen": dt_util.as_timestamp(dt_util.utcnow()),
+        "mac": "00:00:00:00:00:01",
+    }
+    await setup_unifi_integration(
+        hass,
+        aioclient_mock,
+        clients_response=[client_1_dict],
+        known_wireless_clients=(client_1_dict["mac"],),
+    )
 
     with patch(
         "homeassistant.components.unifi.controller.UniFiController.update_wireless_clients",
@@ -391,6 +405,7 @@ async def test_wireless_client_event_calls_update_wireless_devices(
                 "data": [
                     {
                         "datetime": "2020-01-20T19:37:04Z",
+                        "user": "00:00:00:00:00:01",
                         "key": aiounifi.events.WIRELESS_CLIENT_CONNECTED,
                         "msg": "User[11:22:33:44:55:66] has connected to WLAN",
                         "time": 1579549024893,

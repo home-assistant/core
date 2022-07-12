@@ -11,6 +11,11 @@
             "link": {
                 "title": "Recuperar Palavra-passe"
             },
+            "manual": {
+                "data": {
+                    "host": "Anfitri\u00e3o"
+                }
+            },
             "user": {
                 "data": {
                     "host": "Servidor"

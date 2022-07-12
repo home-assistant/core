@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "confirm": {
+                "data": {
+                    "password": "Palavra-passe"
+                }
+            }
+        }
+    }
+}

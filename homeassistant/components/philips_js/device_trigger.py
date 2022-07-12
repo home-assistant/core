@@ -65,6 +65,10 @@ async def async_attach_trigger(
         }
 
         device = registry.async_get(config[CONF_DEVICE_ID])
+        if device is None:
+            raise HomeAssistantError(
+                f"Device id {config[CONF_DEVICE_ID]} not found in registry"
+            )
         for config_entry_id in device.config_entries:
             coordinator: PhilipsTVDataUpdateCoordinator = hass.data[DOMAIN].get(
                 config_entry_id

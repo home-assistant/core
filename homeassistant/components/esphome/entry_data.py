@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass, field
+import logging
 from typing import Any, cast
 
 from aioesphomeapi import (
@@ -31,28 +32,30 @@ from aioesphomeapi import (
 from aioesphomeapi.model import ButtonInfo
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import Store
 
 SAVE_DELAY = 120
+_LOGGER = logging.getLogger(__name__)
 
 # Mapping from ESPHome info type to HA platform
 INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], str] = {
-    BinarySensorInfo: "binary_sensor",
-    ButtonInfo: "button",
-    CameraInfo: "camera",
-    ClimateInfo: "climate",
-    CoverInfo: "cover",
-    FanInfo: "fan",
-    LightInfo: "light",
-    LockInfo: "lock",
-    MediaPlayerInfo: "media_player",
-    NumberInfo: "number",
-    SelectInfo: "select",
-    SensorInfo: "sensor",
-    SwitchInfo: "switch",
-    TextSensorInfo: "sensor",
+    BinarySensorInfo: Platform.BINARY_SENSOR,
+    ButtonInfo: Platform.BUTTON,
+    CameraInfo: Platform.CAMERA,
+    ClimateInfo: Platform.CLIMATE,
+    CoverInfo: Platform.COVER,
+    FanInfo: Platform.FAN,
+    LightInfo: Platform.LIGHT,
+    LockInfo: Platform.LOCK,
+    MediaPlayerInfo: Platform.MEDIA_PLAYER,
+    NumberInfo: Platform.NUMBER,
+    SelectInfo: Platform.SELECT,
+    SensorInfo: Platform.SENSOR,
+    SwitchInfo: Platform.SWITCH,
+    TextSensorInfo: Platform.SENSOR,
 }
 
 
@@ -63,9 +66,8 @@ class RuntimeEntryData:
     entry_id: str
     client: APIClient
     store: Store
-    state: dict[str, dict[int, EntityState]] = field(default_factory=dict)
+    state: dict[type[EntityState], dict[int, EntityState]] = field(default_factory=dict)
     info: dict[str, dict[int, EntityInfo]] = field(default_factory=dict)
-    key_to_component: dict[int, str] = field(default_factory=dict)
 
     # A second list of EntityInfo objects
     # This is necessary for when an entity is being removed. HA requires
@@ -79,6 +81,9 @@ class RuntimeEntryData:
     api_version: APIVersion = field(default_factory=APIVersion)
     cleanup_callbacks: list[Callable[[], None]] = field(default_factory=list)
     disconnect_callbacks: list[Callable[[], None]] = field(default_factory=list)
+    state_subscriptions: dict[
+        tuple[type[EntityState], int], Callable[[], None]
+    ] = field(default_factory=dict)
     loaded_platforms: set[str] = field(default_factory=set)
     platform_load_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     _storage_contents: dict[str, Any] | None = None
@@ -96,13 +101,8 @@ class RuntimeEntryData:
     ) -> None:
         async with self.platform_load_lock:
             needed = platforms - self.loaded_platforms
-            tasks = []
-            for platform in needed:
-                tasks.append(
-                    hass.config_entries.async_forward_entry_setup(entry, platform)
-                )
-            if tasks:
-                await asyncio.wait(tasks)
+            if needed:
+                await hass.config_entries.async_forward_entry_setups(entry, needed)
             self.loaded_platforms |= needed
 
     async def async_update_static_infos(
@@ -123,12 +123,32 @@ class RuntimeEntryData:
         async_dispatcher_send(hass, signal, infos)
 
     @callback
-    def async_update_state(self, hass: HomeAssistant, state: EntityState) -> None:
+    def async_subscribe_state_update(
+        self,
+        state_type: type[EntityState],
+        state_key: int,
+        entity_callback: Callable[[], None],
+    ) -> Callable[[], None]:
+        """Subscribe to state updates."""
+
+        def _unsubscribe() -> None:
+            self.state_subscriptions.pop((state_type, state_key))
+
+        self.state_subscriptions[(state_type, state_key)] = entity_callback
+        return _unsubscribe
+
+    @callback
+    def async_update_state(self, state: EntityState) -> None:
         """Distribute an update of state information to the target."""
-        component_key = self.key_to_component[state.key]
-        self.state[component_key][state.key] = state
-        signal = f"esphome_{self.entry_id}_update_{component_key}_{state.key}"
-        async_dispatcher_send(hass, signal)
+        subscription_key = (type(state), state.key)
+        self.state[type(state)][state.key] = state
+        _LOGGER.debug(
+            "Dispatching update with key %s: %s",
+            subscription_key,
+            state,
+        )
+        if subscription_key in self.state_subscriptions:
+            self.state_subscriptions[subscription_key]()
 
     @callback
     def async_update_device_state(self, hass: HomeAssistant) -> None:

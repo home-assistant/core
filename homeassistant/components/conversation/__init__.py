@@ -80,10 +80,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-@websocket_api.async_response
 @websocket_api.websocket_command(
     {"type": "conversation/process", "text": str, vol.Optional("conversation_id"): str}
 )
+@websocket_api.async_response
 async def websocket_process(hass, connection, msg):
     """Process text."""
     connection.send_result(
@@ -94,8 +94,8 @@ async def websocket_process(hass, connection, msg):
     )
 
 
-@websocket_api.async_response
 @websocket_api.websocket_command({"type": "conversation/agent/info"})
+@websocket_api.async_response
 async def websocket_get_agent_info(hass, connection, msg):
     """Do we need onboarding."""
     agent = await _get_agent(hass)
@@ -109,8 +109,8 @@ async def websocket_get_agent_info(hass, connection, msg):
     )
 
 
-@websocket_api.async_response
 @websocket_api.websocket_command({"type": "conversation/onboarding/set", "shown": bool})
+@websocket_api.async_response
 async def websocket_set_onboarding(hass, connection, msg):
     """Set onboarding status."""
     agent = await _get_agent(hass)
