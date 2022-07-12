@@ -1763,9 +1763,16 @@ async def test_supported_brands(hass, websocket_client):
         hass,
         MockModule("test", partial_manifest={"supported_brands": {"hello": "World"}}),
     )
+    mock_integration(
+        hass,
+        MockModule(
+            "abcd", partial_manifest={"supported_brands": {"something": "Something"}}
+        ),
+    )
 
     with patch(
-        "homeassistant.generated.supported_brands.HAS_SUPPORTED_BRANDS", ("test",)
+        "homeassistant.generated.supported_brands.HAS_SUPPORTED_BRANDS",
+        ("abcd", "test"),
     ):
         await websocket_client.send_json({"id": 7, "type": "supported_brands"})
         msg = await websocket_client.receive_json()
@@ -1774,7 +1781,10 @@ async def test_supported_brands(hass, websocket_client):
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
     assert msg["result"] == {
+        "abcd": {
+            "something": "Something",
+        },
         "test": {
             "hello": "World",
-        }
+        },
     }
