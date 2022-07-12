@@ -76,11 +76,6 @@ class UpbEntity(Entity):
         self._unique_id = f"{unique_id}_{element_type}_{element.addr}"
 
     @property
-    def name(self):
-        """Name of the element."""
-        return self._element.name
-
-    @property
     def unique_id(self):
         """Return unique id of the element."""
         return self._unique_id
