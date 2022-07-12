@@ -89,6 +89,9 @@
             "vibration": "foram detectadas vibra\u00e7\u00f5es em {entity_name}"
         }
     },
+    "device_class": {
+        "moisture": "humidade"
+    },
     "state": {
         "_": {
             "off": "Desligado",
@@ -177,6 +180,9 @@
         "sound": {
             "off": "Limpo",
             "on": "Detectado"
+        },
+        "update": {
+            "off": "Actualizado"
         },
         "vibration": {
             "off": "Limpo",

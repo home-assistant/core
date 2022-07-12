@@ -9,5 +9,14 @@
                 "title": "Escolha a Origem"
             }
         }
+    },
+    "options": {
+        "step": {
+            "departure_time": {
+                "data": {
+                    "departure_time": "Hora de partida"
+                }
+            }
+        }
     }
 }
