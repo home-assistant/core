@@ -515,7 +515,7 @@ async def test_discovery_already_configured_update_csharp(hass, controller):
 
     assert entry.data["AccessoryIP"] == discovery_info.host
     assert entry.data["AccessoryPort"] == discovery_info.port
-    assert connection_mock.async_refresh_entity_map.await_count == 1
+    assert connection_mock.async_refresh_entity_map_and_entities.await_count == 1
 
 
 @pytest.mark.parametrize("exception,expected", PAIRING_START_ABORT_ERRORS)
