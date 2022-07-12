@@ -234,8 +234,7 @@ async def async_start(  # noqa: C901
                 hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
             )
 
-    hass.data[DATA_CONFIG_FLOW_LOCK] = asyncio.Lock()
-
+    hass.data.setdefault(DATA_CONFIG_FLOW_LOCK, asyncio.Lock())
     hass.data[ALREADY_DISCOVERED] = {}
     hass.data[PENDING_DISCOVERED] = {}
 

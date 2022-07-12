@@ -1,4 +1,6 @@
-"""Support for tracking MQTT enabled devices."""
+"""Support for tracking MQTT enabled devices identified through discovery."""
+from __future__ import annotations
+
 import asyncio
 import functools
 
@@ -7,6 +9,7 @@ import voluptuous as vol
 from homeassistant.components import device_tracker
 from homeassistant.components.device_tracker import SOURCE_TYPES
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_GPS_ACCURACY,
     ATTR_LATITUDE,
@@ -16,8 +19,10 @@ from homeassistant.const import (
     STATE_HOME,
     STATE_NOT_HOME,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType
 
 from .. import subscription
 from ..config import MQTT_RO_SCHEMA
@@ -47,7 +52,11 @@ PLATFORM_SCHEMA_MODERN = MQTT_RO_SCHEMA.extend(
 DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA)
 
 
-async def async_setup_entry_from_discovery(hass, config_entry, async_add_entities):
+async def async_setup_entry_from_discovery(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up MQTT device tracker configuration.yaml and dynamically through MQTT discovery."""
     # load and initialize platform config from configuration.yaml
     await asyncio.gather(
@@ -66,8 +75,12 @@ async def async_setup_entry_from_discovery(hass, config_entry, async_add_entitie
 
 
 async def _async_setup_entity(
-    hass, async_add_entities, config, config_entry=None, discovery_data=None
-):
+    hass: HomeAssistant,
+    async_add_entities: AddEntitiesCallback,
+    config: ConfigType,
+    config_entry: ConfigEntry | None = None,
+    discovery_data: dict | None = None,
+) -> None:
     """Set up the MQTT Device Tracker entity."""
     async_add_entities([MqttDeviceTracker(hass, config, config_entry, discovery_data)])
 
