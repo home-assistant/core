@@ -186,6 +186,13 @@ async def setup_platform(hass):
 async def setup_test_accessories(hass, accessories):
     """Load a fake homekit device based on captured JSON profile."""
     fake_controller = await setup_platform(hass)
+    return await setup_test_accessories_with_controller(
+        hass, accessories, fake_controller
+    )
+
+
+async def setup_test_accessories_with_controller(hass, accessories, fake_controller):
+    """Load a fake homekit device based on captured JSON profile."""
 
     pairing_id = "00:00:00:00:00:00"
 
