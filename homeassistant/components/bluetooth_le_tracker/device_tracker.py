@@ -16,15 +16,17 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.components.device_tracker.const import (
     CONF_TRACK_NEW,
+    SCAN_INTERVAL,
     SOURCE_TYPE_BLUETOOTH_LE,
 )
 from homeassistant.components.device_tracker.legacy import (
     YAML_DEVICES,
     async_load_config,
 )
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.const import CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
@@ -51,7 +53,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_scanner(
+async def async_setup_scanner(  # noqa: C901
     hass: HomeAssistant,
     config: ConfigType,
     async_see: Callable[..., Awaitable[None]],
@@ -70,6 +72,7 @@ async def async_setup_scanner(
     devs_to_track: set[str] = set()
     devs_donot_track: set[str] = set()
     devs_track_battery = {}
+    interval: timedelta = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
 
     async def async_see_device(address, name, new_device=False, battery=None):
         """Mark a device as seen."""
@@ -180,13 +183,26 @@ async def async_setup_scanner(
                     async_see_device(mac, service_info.name, new_device=True)
                 )
 
-    cancel = bluetooth.async_register_callback(hass, _async_update_ble, None)
+    @callback
+    def _async_refresh_ble(now: datetime) -> None:
+        """Refresh BLE devices from the discovered service info."""
+        # Make sure devices are seen again at the scheduled
+        # interval so they do not get set to not_home when
+        # there have been no callbacks because the RSSI or
+        # other properties have not changed.
+        for service_info in bluetooth.async_discovered_service_info(hass):
+            _async_update_ble(service_info, bluetooth.BluetoothChange.ADVERTISEMENT)
+
+    cancels: list[CALLBACK_TYPE] = []
+    cancels.append(bluetooth.async_register_callback(hass, _async_update_ble, None))
+    cancels.append(async_track_time_interval(hass, _async_refresh_ble, interval))
 
     @callback
-    def handle_stop(event: Event) -> None:
+    def _async_handle_stop(event: Event) -> None:
         """Cancel the callback."""
-        cancel()
+        for cancel in cancels:
+            cancel()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, handle_stop)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_handle_stop)
 
     return True
