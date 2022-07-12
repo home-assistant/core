@@ -35,6 +35,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt
 
+from . import device_info
 from .const import DOMAIN
 
 # Icon codes from http://dd.weatheroffice.ec.gc.ca/citypage_weather/
@@ -87,6 +88,7 @@ class ECWeather(CoordinatorEntity, WeatherEntity):
         )
         self._attr_entity_registry_enabled_default = not hourly
         self._hourly = hourly
+        self._attr_device_info = device_info(coordinator.config_entry)
 
     @property
     def native_temperature(self):

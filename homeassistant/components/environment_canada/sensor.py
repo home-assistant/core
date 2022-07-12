@@ -27,6 +27,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import device_info
 from .const import ATTR_STATION, DOMAIN
 
 ATTR_TIME = "alert time"
@@ -295,6 +296,7 @@ class ECBaseSensor(CoordinatorEntity, SensorEntity):
         self._attr_attribution = self._ec_data.metadata["attribution"]
         self._attr_name = f"{coordinator.config_entry.title} {description.name}"
         self._attr_unique_id = f"{coordinator.config_entry.title}-{description.key}"
+        self._attr_device_info = device_info(coordinator.config_entry)
 
     @property
     def native_value(self):

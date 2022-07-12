@@ -12,6 +12,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import device_info
 from .const import ATTR_OBSERVATION_TIME, DOMAIN
 
 SERVICE_SET_RADAR_TYPE = "set_radar_type"
@@ -52,6 +53,7 @@ class ECCamera(CoordinatorEntity, Camera):
         self._attr_unique_id = f"{coordinator.config_entry.unique_id}-radar"
         self._attr_attribution = self.radar_object.metadata["attribution"]
         self._attr_entity_registry_enabled_default = False
+        self._attr_device_info = device_info(coordinator.config_entry)
 
         self.content_type = "image/gif"
 
