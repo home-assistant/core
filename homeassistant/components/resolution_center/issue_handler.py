@@ -51,6 +51,8 @@ class ResolutionCenterFlowManager(data_entry_flow.FlowManager):
     ) -> data_entry_flow.FlowResult:
         """Complete a fix flow."""
         async_delete_issue(self.hass, flow.handler, flow.init_data["issue_id"])
+        if "result" not in result:
+            result["result"] = None
         return result
 
 

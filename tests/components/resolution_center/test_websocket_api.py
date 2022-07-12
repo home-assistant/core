@@ -1,6 +1,7 @@
 """Test the resolution center websocket API."""
 from __future__ import annotations
 
+from http import HTTPStatus
 from unittest.mock import AsyncMock, Mock
 
 import pytest
@@ -146,11 +147,15 @@ async def test_dismiss_issue(hass: HomeAssistant, hass_ws_client) -> None:
     }
 
 
-async def test_fix_non_existing_issue(hass: HomeAssistant, hass_ws_client) -> None:
+async def test_fix_non_existing_issue(
+    hass: HomeAssistant, hass_client, hass_ws_client
+) -> None:
     """Test trying to fix an issue that doesn't exist."""
+    assert await async_setup_component(hass, "http", {})
     assert await async_setup_component(hass, DOMAIN, {})
 
-    client = await hass_ws_client(hass)
+    ws_client = await hass_ws_client(hass)
+    client = await hass_client()
 
     issues = [
         {
@@ -178,8 +183,8 @@ async def test_fix_non_existing_issue(hass: HomeAssistant, hass_ws_client) -> No
             translation_placeholders=issue["translation_placeholders"],
         )
 
-    await client.send_json({"id": 1, "type": "resolution_center/list_issues"})
-    msg = await client.receive_json()
+    await ws_client.send_json({"id": 1, "type": "resolution_center/list_issues"})
+    msg = await ws_client.receive_json()
 
     assert msg["success"]
     assert msg["result"] == {
@@ -193,19 +198,15 @@ async def test_fix_non_existing_issue(hass: HomeAssistant, hass_ws_client) -> No
         ]
     }
 
-    await client.send_json(
-        {
-            "id": 2,
-            "type": "resolution_center/fix_issue_init",
-            "domain": "fake_integration",
-            "issue_id": "no_such_issue",
-        }
+    url = "/api/resolution_center/issues/fix"
+    resp = await client.post(
+        url, json={"handler": "fake_integration", "issue_id": "no_such_issue"}
     )
-    msg = await client.receive_json()
-    assert not msg["success"]
 
-    await client.send_json({"id": 3, "type": "resolution_center/list_issues"})
-    msg = await client.receive_json()
+    assert resp.status != HTTPStatus.OK
+
+    await ws_client.send_json({"id": 3, "type": "resolution_center/list_issues"})
+    msg = await ws_client.receive_json()
 
     assert msg["success"]
     assert msg["result"] == {
@@ -220,11 +221,13 @@ async def test_fix_non_existing_issue(hass: HomeAssistant, hass_ws_client) -> No
     }
 
 
-async def test_fix_issue(hass: HomeAssistant, hass_ws_client) -> None:
+async def test_fix_issue(hass: HomeAssistant, hass_client, hass_ws_client) -> None:
     """Test we can fix an issue."""
+    assert await async_setup_component(hass, "http", {})
     assert await async_setup_component(hass, DOMAIN, {})
 
-    client = await hass_ws_client(hass)
+    ws_client = await hass_ws_client(hass)
+    client = await hass_client()
 
     issues = [
         {
@@ -252,8 +255,8 @@ async def test_fix_issue(hass: HomeAssistant, hass_ws_client) -> None:
             translation_placeholders=issue["translation_placeholders"],
         )
 
-    await client.send_json({"id": 1, "type": "resolution_center/list_issues"})
-    msg = await client.receive_json()
+    await ws_client.send_json({"id": 1, "type": "resolution_center/list_issues"})
+    msg = await ws_client.receive_json()
 
     assert msg["success"]
     assert msg["result"] == {
@@ -267,33 +270,43 @@ async def test_fix_issue(hass: HomeAssistant, hass_ws_client) -> None:
         ]
     }
 
-    await client.send_json(
-        {
-            "id": 2,
-            "type": "resolution_center/fix_issue_init",
-            "domain": "fake_integration",
-            "issue_id": "issue_1",
-        }
+    url = "/api/resolution_center/issues/fix"
+    resp = await client.post(
+        url, json={"handler": "fake_integration", "issue_id": "issue_1"}
     )
-    msg = await client.receive_json()
-    assert msg["success"]
-    assert msg["result"]["type"] == "form"
-    assert msg["result"]["step_id"] == "confirm"
 
-    await client.send_json(
-        {
-            "id": 3,
-            "type": "resolution_center/fix_issue_step",
-            "flow_id": msg["result"]["flow_id"],
-            "user_input": {},
-        }
-    )
-    msg = await client.receive_json()
-    assert msg["success"]
-    assert msg["result"]["type"] == "create_entry"
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
 
-    await client.send_json({"id": 4, "type": "resolution_center/list_issues"})
-    msg = await client.receive_json()
+    flow_id = data.pop("flow_id")
+    assert data == {
+        "data_schema": [],
+        "description_placeholders": None,
+        "errors": None,
+        "handler": "fake_integration",
+        "last_step": None,
+        "step_id": "confirm",
+        "type": "form",
+    }
+
+    url = f"/api/resolution_center/issues/fix/{flow_id}"
+    resp = await client.post(url)
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    data.pop("flow_id")
+    assert data == {
+        "description": None,
+        "description_placeholders": None,
+        "handler": "fake_integration",
+        "title": None,
+        "type": "create_entry",
+        "version": 1,
+    }
+
+    await ws_client.send_json({"id": 4, "type": "resolution_center/list_issues"})
+    msg = await ws_client.receive_json()
 
     assert msg["success"]
     assert msg["result"] == {"issues": []}

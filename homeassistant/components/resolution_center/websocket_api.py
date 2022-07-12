@@ -2,17 +2,25 @@
 from __future__ import annotations
 
 import dataclasses
+from http import HTTPStatus
 from typing import Any
 
+from aiohttp import web
 import voluptuous as vol
-import voluptuous_serialize
 
 from homeassistant import data_entry_flow
+from homeassistant.auth.permissions.const import POLICY_EDIT
 from homeassistant.components import websocket_api
+from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import Unauthorized
+from homeassistant.helpers.data_entry_flow import (
+    FlowManagerIndexView,
+    FlowManagerResourceView,
+)
 
 from .const import DOMAIN
-from .issue_handler import ResolutionCenterFlowManager, async_dismiss_issue
+from .issue_handler import async_dismiss_issue
 from .issue_registry import async_get as async_get_issue_registry
 
 
@@ -20,9 +28,14 @@ from .issue_registry import async_get as async_get_issue_registry
 def async_setup(hass: HomeAssistant) -> None:
     """Set up the resolution center websocket API."""
     websocket_api.async_register_command(hass, ws_dismiss_issue)
-    websocket_api.async_register_command(hass, ws_fix_issue_init)
-    websocket_api.async_register_command(hass, ws_fix_issue_step)
     websocket_api.async_register_command(hass, ws_list_issues)
+
+    hass.http.register_view(
+        ResolutionCenterFlowIndexView(hass.data[DOMAIN]["flow_manager"])
+    )
+    hass.http.register_view(
+        ResolutionCenterFlowResourceView(hass.data[DOMAIN]["flow_manager"])
+    )
 
 
 @callback
@@ -40,46 +53,6 @@ def ws_dismiss_issue(
     async_dismiss_issue(hass, msg["domain"], msg["issue_id"])
 
     connection.send_result(msg["id"])
-
-
-@websocket_api.websocket_command(
-    {
-        vol.Required("type"): "resolution_center/fix_issue_init",
-        vol.Required("domain"): str,
-        vol.Required("issue_id"): str,
-    }
-)
-@websocket_api.async_response
-async def ws_fix_issue_init(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
-) -> None:
-    """Start a flow to an issue."""
-    flow_manager: ResolutionCenterFlowManager = hass.data[DOMAIN]["flow_manager"]
-    result = await flow_manager.async_init(
-        msg["domain"], data={"issue_id": msg["issue_id"]}
-    )
-    connection.send_message(
-        websocket_api.result_message(msg["id"], _prepare_result_json(result))
-    )
-
-
-@websocket_api.websocket_command(
-    {
-        vol.Required("type"): "resolution_center/fix_issue_step",
-        vol.Required("flow_id"): str,
-        vol.Optional("user_input"): dict,
-    }
-)
-@websocket_api.async_response
-async def ws_fix_issue_step(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
-) -> None:
-    """Provide user input for an issue fix flow."""
-    flow_manager: ResolutionCenterFlowManager = hass.data[DOMAIN]["flow_manager"]
-    result = await flow_manager.async_configure(msg["flow_id"], msg.get("user_input"))
-    connection.send_message(
-        websocket_api.result_message(msg["id"], _prepare_result_json(result))
-    )
 
 
 @websocket_api.websocket_command(
@@ -107,16 +80,61 @@ def ws_list_issues(
     connection.send_result(msg["id"], {"issues": issues})
 
 
-def _prepare_result_json(
-    result: data_entry_flow.FlowResult,
-) -> data_entry_flow.FlowResult:
-    """Convert issue flow result to ensure it can be JSON serialized."""
-    data = result.copy()
+class ResolutionCenterFlowIndexView(FlowManagerIndexView):
+    """View to create issue fix flows."""
 
-    if data["type"] != data_entry_flow.FlowResultType.FORM:
-        return data
+    url = "/api/resolution_center/issues/fix"
+    name = "api:resolution_center:issues:fix"
 
-    schema = data["data_schema"]
-    data["data_schema"] = voluptuous_serialize.convert(schema) if schema else []
+    @RequestDataValidator(
+        vol.Schema(
+            {
+                vol.Required("handler"): str,
+                vol.Required("issue_id"): str,
+            },
+            extra=vol.ALLOW_EXTRA,
+        )
+    )
+    async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
+        """Handle a POST request."""
+        if not request["hass_user"].is_admin:
+            raise Unauthorized(permission=POLICY_EDIT)
 
-    return data
+        try:
+            result = await self._flow_mgr.async_init(
+                data["handler"],
+                data={"issue_id": data["issue_id"]},
+            )
+        except data_entry_flow.UnknownHandler:
+            return self.json_message("Invalid handler specified", HTTPStatus.NOT_FOUND)
+        except data_entry_flow.UnknownStep:
+            return self.json_message(
+                "Handler does not support user", HTTPStatus.BAD_REQUEST
+            )
+
+        result = self._prepare_result_json(result)
+
+        return self.json(result)  # pylint: disable=arguments-differ
+
+
+class ResolutionCenterFlowResourceView(FlowManagerResourceView):
+    """View to interact with the option flow manager."""
+
+    url = "/api/resolution_center/issues/fix/{flow_id}"
+    name = "api:resolution_center:issues:fix:resource"
+
+    async def get(self, request: web.Request, flow_id: str) -> web.Response:
+        """Get the current state of a data_entry_flow."""
+        if not request["hass_user"].is_admin:
+            raise Unauthorized(permission=POLICY_EDIT)
+
+        return await super().get(request, flow_id)
+
+    # pylint: disable=arguments-differ
+    async def post(self, request: web.Request, flow_id: str) -> web.Response:
+        """Handle a POST request."""
+        if not request["hass_user"].is_admin:
+            raise Unauthorized(permission=POLICY_EDIT)
+
+        # pylint: disable=no-value-for-parameter
+        return await super().post(request, flow_id)  # type: ignore[no-any-return]
