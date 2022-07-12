@@ -2,10 +2,8 @@
 from unittest.mock import ANY, patch
 
 from homeassistant.components.geo_json_events.const import DOMAIN, FEED
-from homeassistant.helpers.entity_registry import (
-    async_entries_for_config_entry,
-    async_get_registry,
-)
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
 from tests.components.geo_json_events import _generate_mock_feed_entry
@@ -32,7 +30,7 @@ async def test_remove_orphaned_entities(hass, config_entry):
     """Test removing orphaned geolocation entities."""
     config_entry.add_to_hass(hass)
 
-    entity_registry = await async_get_registry(hass)
+    entity_registry = er.async_get(hass)
     entity_registry.async_get_or_create(
         "geo_location", "geo_json_events", "1", config_entry=config_entry
     )
