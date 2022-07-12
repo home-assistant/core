@@ -41,20 +41,26 @@ class GuardianButtonDescription(
 BUTTON_KIND_REBOOT = "reboot"
 BUTTON_KIND_RESET_VALVE_DIAGNOSTICS = "reset_valve_diagnostics"
 
+async def _async_reboot(client: Client) -> None:
+    """Reboot the Guardian."""
+    await client.system.reboot()
+
+
+async def _async_valve_reset(client: Client) -> None:
+    """Reset the valve diagnostics on the Guardian."""
+    await client.valve.reset()
+
+
 BUTTON_DESCRIPTIONS = (
     GuardianButtonDescription(
         key=BUTTON_KIND_REBOOT,
         name="Reboot",
-        push_action=lambda client: cast(
-            Awaitable[dict[str, Any]], client.system.reboot()
-        ),
+        push_action=_async_reboot,
     ),
     GuardianButtonDescription(
         key=BUTTON_KIND_RESET_VALVE_DIAGNOSTICS,
         name="Reset valve diagnostics",
-        push_action=lambda client: cast(
-            Awaitable[dict[str, Any]], client.valve.reset()
-        ),
+        push_action=_async_valve_reset,
     ),
 )
 
