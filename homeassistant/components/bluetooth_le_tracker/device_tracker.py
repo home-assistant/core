@@ -16,15 +16,17 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.components.device_tracker.const import (
     CONF_TRACK_NEW,
+    SCAN_INTERVAL,
     SOURCE_TYPE_BLUETOOTH_LE,
 )
 from homeassistant.components.device_tracker.legacy import (
     YAML_DEVICES,
     async_load_config,
 )
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
@@ -51,7 +53,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_scanner(
+async def async_setup_scanner(  # noqa: C901
     hass: HomeAssistant,
     config: ConfigType,
     async_see: Callable[..., Awaitable[None]],
@@ -60,12 +62,20 @@ async def async_setup_scanner(
     """Set up the Bluetooth LE Scanner."""
 
     new_devices: dict[str, dict] = {}
-    hass.data.setdefault(DATA_BLE, {DATA_BLE_ADAPTER: None})
 
     if config[CONF_TRACK_BATTERY]:
         battery_track_interval = config[CONF_TRACK_BATTERY_INTERVAL]
     else:
         battery_track_interval = timedelta(0)
+
+    yaml_path = hass.config.path(YAML_DEVICES)
+    devs_to_track: set[str] = set()
+    devs_no_track: set[str] = set()
+    devs_track_battery = {}
+    interval: timedelta = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
+    # if track new devices is true discover new devices
+    # on every scan.
+    track_new = config.get(CONF_TRACK_NEW)
 
     async def async_see_device(address, name, new_device=False, battery=None):
         """Mark a device as seen."""
@@ -83,7 +93,7 @@ async def async_setup_scanner(
                 if new_devices[address]["seen"] < MIN_SEEN_NEW:
                     return
                 _LOGGER.debug("Adding %s to tracked devices", address)
-                devs_to_track.append(address)
+                devs_to_track.add(address)
                 if battery_track_interval > timedelta(0):
                     devs_track_battery[address] = dt_util.as_utc(
                         datetime.fromtimestamp(0)
@@ -100,11 +110,6 @@ async def async_setup_scanner(
             battery=battery,
         )
 
-    yaml_path = hass.config.path(YAML_DEVICES)
-    devs_to_track = []
-    devs_donot_track = []
-    devs_track_battery = {}
-
     # Load all known devices.
     # We just need the devices so set consider_home and home range
     # to 0
@@ -114,18 +119,14 @@ async def async_setup_scanner(
             address = device.mac[4:]
             if device.track:
                 _LOGGER.debug("Adding %s to BLE tracker", device.mac)
-                devs_to_track.append(address)
+                devs_to_track.add(address)
                 if battery_track_interval > timedelta(0):
                     devs_track_battery[address] = dt_util.as_utc(
                         datetime.fromtimestamp(0)
                     )
             else:
                 _LOGGER.debug("Adding %s to BLE do not track", device.mac)
-                devs_donot_track.append(address)
-
-    # if track new devices is true discover new devices
-    # on every scan.
-    track_new = config.get(CONF_TRACK_NEW)
+                devs_no_track.add(address)
 
     if not devs_to_track and not track_new:
         _LOGGER.warning("No Bluetooth LE devices to track!")
@@ -135,14 +136,13 @@ async def async_setup_scanner(
         mac: str,
         now: datetime,
         service_info: bluetooth.BluetoothServiceInfo,
-    ):
+    ) -> None:
         """Lookup Bluetooth LE devices and update status."""
         battery = None
         try:
             async with BleakClient(mac) as client:
                 bat_char = await client.read_gatt_char(BATTERY_CHARACTERISTIC_UUID)
                 battery = ord(bat_char)
-            # Try to get the handle; it will raise a BLEError exception if not available
         except asyncio.TimeoutError:
             _LOGGER.warning(
                 "Timeout when trying to get battery status for %s", service_info.name
@@ -159,7 +159,7 @@ async def async_setup_scanner(
     @callback
     def _async_update_ble(
         service_info: bluetooth.BluetoothServiceInfo, change: bluetooth.BluetoothChange
-    ):
+    ) -> None:
         """Update from a ble callback."""
         mac = service_info.address
         if mac in devs_to_track:
@@ -175,18 +175,35 @@ async def async_setup_scanner(
                 )
 
         if track_new:
-            if mac not in devs_to_track and mac not in devs_donot_track:
+            if mac not in devs_to_track and mac not in devs_no_track:
                 _LOGGER.info("Discovered Bluetooth LE device %s", mac)
                 hass.async_create_task(
                     async_see_device(mac, service_info.name, new_device=True)
                 )
 
-    cancel = bluetooth.async_register_callback(hass, _async_update_ble, None)
+    @callback
+    def _async_refresh_ble(now: datetime) -> None:
+        """Refresh BLE devices from the discovered service info."""
+        # Make sure devices are seen again at the scheduled
+        # interval so they do not get set to not_home when
+        # there have been no callbacks because the RSSI or
+        # other properties have not changed.
+        for service_info in bluetooth.async_discovered_service_info(hass):
+            _async_update_ble(service_info, bluetooth.BluetoothChange.ADVERTISEMENT)
 
-    def handle_stop(event: Event) -> None:
+    cancels = [
+        bluetooth.async_register_callback(hass, _async_update_ble, None),
+        async_track_time_interval(hass, _async_refresh_ble, interval),
+    ]
+
+    @callback
+    def _async_handle_stop(event: Event) -> None:
         """Cancel the callback."""
-        cancel()
+        for cancel in cancels:
+            cancel()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, handle_stop)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_handle_stop)
+
+    _async_refresh_ble(dt_util.now())
 
     return True

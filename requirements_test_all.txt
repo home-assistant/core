@@ -622,7 +622,7 @@ home-assistant-frontend==20220707.0
 homeconnect==0.7.1
 
 # homeassistant.components.homematicip_cloud
-homematicip==1.0.3
+homematicip==1.0.4
 
 # homeassistant.components.home_plus_control
 homepluscontrol==0.0.5
@@ -1228,7 +1228,7 @@ pyrisco==0.3.1
 pyrituals==0.0.6
 
 # homeassistant.components.ruckus_unleashed
-pyruckus==0.12
+pyruckus==0.16
 
 # homeassistant.components.sabnzbd
 pysabnzbd==1.1.1
