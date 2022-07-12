@@ -66,6 +66,11 @@ async def async_setup_scanner(
     else:
         battery_track_interval = timedelta(0)
 
+    yaml_path = hass.config.path(YAML_DEVICES)
+    devs_to_track: set[str] = set()
+    devs_donot_track: set[str] = set()
+    devs_track_battery = {}
+
     async def async_see_device(address, name, new_device=False, battery=None):
         """Mark a device as seen."""
         if name is not None:
@@ -82,7 +87,7 @@ async def async_setup_scanner(
                 if new_devices[address]["seen"] < MIN_SEEN_NEW:
                     return
                 _LOGGER.debug("Adding %s to tracked devices", address)
-                devs_to_track.append(address)
+                devs_to_track.add(address)
                 if battery_track_interval > timedelta(0):
                     devs_track_battery[address] = dt_util.as_utc(
                         datetime.fromtimestamp(0)
@@ -99,11 +104,6 @@ async def async_setup_scanner(
             battery=battery,
         )
 
-    yaml_path = hass.config.path(YAML_DEVICES)
-    devs_to_track = []
-    devs_donot_track = []
-    devs_track_battery = {}
-
     # Load all known devices.
     # We just need the devices so set consider_home and home range
     # to 0
@@ -113,14 +113,14 @@ async def async_setup_scanner(
             address = device.mac[4:]
             if device.track:
                 _LOGGER.debug("Adding %s to BLE tracker", device.mac)
-                devs_to_track.append(address)
+                devs_to_track.add(address)
                 if battery_track_interval > timedelta(0):
                     devs_track_battery[address] = dt_util.as_utc(
                         datetime.fromtimestamp(0)
                     )
             else:
                 _LOGGER.debug("Adding %s to BLE do not track", device.mac)
-                devs_donot_track.append(address)
+                devs_donot_track.add(address)
 
     # if track new devices is true discover new devices
     # on every scan.
