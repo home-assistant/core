@@ -1,6 +1,7 @@
 """The tests for the Demo component."""
+from http import HTTPStatus
 import json
-from unittest.mock import patch
+from unittest.mock import ANY, patch
 
 import pytest
 
@@ -69,3 +70,104 @@ async def test_demo_statistics(hass, recorder_mock):
         "statistic_id": "demo:energy_consumption",
         "unit_of_measurement": "kWh",
     } in statistic_ids
+
+
+async def test_issues_created(hass, hass_client, hass_ws_client):
+    """Test issues are created and can be fixed."""
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    await hass.async_block_till_done()
+    await hass.async_start()
+
+    ws_client = await hass_ws_client(hass)
+    client = await hass_client()
+
+    await ws_client.send_json({"id": 1, "type": "resolution_center/list_issues"})
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == {
+        "issues": [
+            {
+                "breaks_in_ha_version": "2023.1.1",
+                "dismissed": False,
+                "dismissed_version": None,
+                "domain": "demo",
+                "is_fixable": False,
+                "issue_id": "transmogrifier_deprecated",
+                "learn_more_url": "https://en.wiktionary.org/wiki/transmogrifier",
+                "severity": "warning",
+                "translation_key": "transmogrifier_deprecated",
+                "translation_placeholders": None,
+            },
+            {
+                "breaks_in_ha_version": "2023.1.1",
+                "dismissed": False,
+                "dismissed_version": None,
+                "domain": "demo",
+                "is_fixable": True,
+                "issue_id": "out_of_blinker_fluid",
+                "learn_more_url": "https://www.youtube.com/watch?v=b9rntRxLlbU",
+                "severity": "warning",
+                "translation_key": "out_of_blinker_fluid",
+                "translation_placeholders": None,
+            },
+        ]
+    }
+
+    url = "/api/resolution_center/issues/fix"
+    resp = await client.post(
+        url, json={"handler": "demo", "issue_id": "out_of_blinker_fluid"}
+    )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    flow_id = data["flow_id"]
+    assert data == {
+        "data_schema": [],
+        "description_placeholders": None,
+        "errors": None,
+        "flow_id": ANY,
+        "handler": "demo",
+        "last_step": None,
+        "step_id": "confirm",
+        "type": "form",
+    }
+
+    url = f"/api/resolution_center/issues/fix/{flow_id}"
+    resp = await client.post(url)
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    flow_id = data["flow_id"]
+    assert data == {
+        "description": None,
+        "description_placeholders": None,
+        "flow_id": flow_id,
+        "handler": "demo",
+        "title": None,
+        "type": "create_entry",
+        "version": 1,
+    }
+
+    await ws_client.send_json({"id": 4, "type": "resolution_center/list_issues"})
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == {
+        "issues": [
+            {
+                "breaks_in_ha_version": "2023.1.1",
+                "dismissed": False,
+                "dismissed_version": None,
+                "domain": "demo",
+                "is_fixable": False,
+                "issue_id": "transmogrifier_deprecated",
+                "learn_more_url": "https://en.wiktionary.org/wiki/transmogrifier",
+                "severity": "warning",
+                "translation_key": "transmogrifier_deprecated",
+                "translation_placeholders": None,
+            },
+        ]
+    }

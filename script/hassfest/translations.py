@@ -21,7 +21,7 @@ REMOVED = 2
 
 RE_REFERENCE = r"\[\%key:(.+)\%\]"
 
-# Only allow translatino of integration names if they contain non-brand names
+# Only allow translation of integration names if they contain non-brand names
 ALLOW_NAME_TRANSLATION = {
     "cert_expiry",
     "cpuspeed",
@@ -227,6 +227,7 @@ def gen_strings_schema(config: Config, integration: Integration):
             vol.Optional("application_credentials"): {
                 vol.Optional("description"): cv.string_with_no_html,
             },
+            vol.Optional("issues"): dict,
         }
     )
 

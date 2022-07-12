@@ -10,6 +10,8 @@ from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
     get_last_statistics,
 )
+from homeassistant.components.resolution_center import async_create_issue
+from homeassistant.components.resolution_center.models import IssueSeverity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -176,6 +178,29 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await finish_setup(hass, config)
 
     hass.bus.async_listen(EVENT_HOMEASSISTANT_START, demo_start_listener)
+
+    # Create issues
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "transmogrifier_deprecated",
+        breaks_in_ha_version="2023.1.1",
+        is_fixable=False,
+        learn_more_url="https://en.wiktionary.org/wiki/transmogrifier",
+        severity=IssueSeverity.WARNING,
+        translation_key="transmogrifier_deprecated",
+    )
+
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "out_of_blinker_fluid",
+        breaks_in_ha_version="2023.1.1",
+        is_fixable=True,
+        learn_more_url="https://www.youtube.com/watch?v=b9rntRxLlbU",
+        severity=IssueSeverity.WARNING,
+        translation_key="out_of_blinker_fluid",
+    )
 
     return True
 
