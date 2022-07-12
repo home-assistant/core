@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Mqtt server nebyl nalezen v s\u00EDti.",
+            "single_instance_allowed": "P\u0159ipojen\u00ED k mqtt serveru je ji\u017E vytvo\u0159eno. M\u016F\u017Ee existovat pouze jedno p\u0159ipojen\u00ED."
+        },
+        "step": {
+            "manual": {
+                "data": {
+                    "host": "Hostitel",
+                    "port": "Port",
+                    "user_name": "U\u017Eivatelsk\u00E9 jm\u00E9no",
+                    "user_password": "Heslo"
+                },
+                "title": "Vypl\u0148te p\u0159ihla\u009Aovac\u00ED \u00FAdaje pro p\u0159ipojen\u00ED do MQTT brokeru",
+                "description": "Ujist\u011Bte se, \u017Ee mqtt server je ji\u017E v provozu."
+            }
+        }
+    }
+}

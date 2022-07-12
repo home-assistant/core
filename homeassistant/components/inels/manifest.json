@@ -1,0 +1,13 @@
+{
+  "domain": "inels",
+  "name": "iNELS",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/inels",
+  "requirements": ["inels-mqtt==0.0.10"],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": ["@Nejezchleb", "@jhoralek"],
+  "iot_class": "local_polling"
+}

@@ -500,6 +500,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/image_processing/ @home-assistant/core
 /tests/components/image_processing/ @home-assistant/core
 /homeassistant/components/incomfort/ @zxdavb
+/homeassistant/components/inels/ @Nejezchleb @jhoralek
+/tests/components/inels/ @Nejezchleb @jhoralek
 /homeassistant/components/influxdb/ @mdegat01
 /tests/components/influxdb/ @mdegat01
 /homeassistant/components/inkbird/ @bdraco

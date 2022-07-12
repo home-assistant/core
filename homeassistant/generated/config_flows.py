@@ -169,6 +169,7 @@ FLOWS = {
         "icloud",
         "ifttt",
         "inkbird",
+        "inels",
         "insteon",
         "intellifire",
         "ios",

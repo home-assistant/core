@@ -1,0 +1,1 @@
+"""Inels switch entity."""
