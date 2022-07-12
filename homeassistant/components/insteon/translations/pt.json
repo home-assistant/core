@@ -60,7 +60,13 @@
             },
             "init": {
                 "data": {
+                    "add_x10": "Adicionar um dispositivo X10.",
                     "remove_x10": "Remova um dispositivo X10."
+                }
+            },
+            "remove_override": {
+                "data": {
+                    "address": "Seleccione um endere\u00e7o de dispositivo para remover"
                 }
             }
         }

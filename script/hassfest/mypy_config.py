@@ -36,7 +36,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.onvif.camera",
     "homeassistant.components.onvif.device",
     "homeassistant.components.onvif.sensor",
-    "homeassistant.components.plex.media_player",
     "homeassistant.components.sonos",
     "homeassistant.components.sonos.alarms",
     "homeassistant.components.sonos.binary_sensor",
@@ -51,10 +50,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.sonos.statistics",
     "homeassistant.components.template.number",
     "homeassistant.components.template.sensor",
-    "homeassistant.components.withings",
-    "homeassistant.components.withings.binary_sensor",
-    "homeassistant.components.withings.common",
-    "homeassistant.components.withings.config_flow",
 ]
 
 # Component modules which should set no_implicit_reexport = true.
