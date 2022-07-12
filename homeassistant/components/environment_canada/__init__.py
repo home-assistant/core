@@ -93,7 +93,7 @@ def device_info(config_entry: ConfigEntry) -> DeviceInfo:
     """Build and return the device info for EC."""
     return DeviceInfo(
         entry_type=DeviceEntryType.SERVICE,
-        identifiers={(DOMAIN, config_entry.title)},
+        identifiers={(DOMAIN, config_entry.entry_id)},
         manufacturer="Environment Canada / Environnement Canada",
         name=config_entry.title,
         configuration_url="https://weather.gc.ca/",

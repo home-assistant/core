@@ -294,7 +294,6 @@ class ECBaseSensor(CoordinatorEntity, SensorEntity):
         self.entity_description = description
         self._ec_data = coordinator.ec_data
         self._attr_attribution = self._ec_data.metadata["attribution"]
-        self._attr_name = description.name
         self._attr_unique_id = f"{coordinator.config_entry.title}-{description.key}"
         self._attr_device_info = device_info(coordinator.config_entry)
 
