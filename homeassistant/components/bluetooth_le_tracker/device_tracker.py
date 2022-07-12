@@ -24,7 +24,7 @@ from homeassistant.components.device_tracker.legacy import (
     async_load_config,
 )
 from homeassistant.const import CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -193,9 +193,10 @@ async def async_setup_scanner(  # noqa: C901
         for service_info in bluetooth.async_discovered_service_info(hass):
             _async_update_ble(service_info, bluetooth.BluetoothChange.ADVERTISEMENT)
 
-    cancels: list[CALLBACK_TYPE] = []
-    cancels.append(bluetooth.async_register_callback(hass, _async_update_ble, None))
-    cancels.append(async_track_time_interval(hass, _async_refresh_ble, interval))
+    cancels = [
+        bluetooth.async_register_callback(hass, _async_update_ble, None),
+        async_track_time_interval(hass, _async_refresh_ble, interval),
+    ]
 
     @callback
     def _async_handle_stop(event: Event) -> None:
