@@ -236,7 +236,9 @@ async def test_supported_features(
             continue
         assert supported_features & feature
     if xfail:
-        pytest.xfail(reason="The feature is wrongly set to PLAY_MEDIA.")
+        pytest.xfail(
+            reason="The feature is wrongly set to PLAY_MEDIA, but should be PLAY."
+        )
 
 
 @pytest.mark.parametrize(
