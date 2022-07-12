@@ -17,6 +17,7 @@ from homeassistant.components.websocket_api.const import URL
 from homeassistant.const import SIGNAL_BOOTSTRAP_INTEGRATONS
 from homeassistant.core import Context, HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.generated import supported_brands
 from homeassistant.helpers import entity
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.loader import async_get_integration
@@ -1749,3 +1750,14 @@ async def test_validate_config_invalid(websocket_client, key, config, error):
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
     assert msg["result"] == {key: {"valid": False, "error": error}}
+
+
+async def test_supported_brands(websocket_client):
+    """Test supported brands."""
+    await websocket_client.send_json({"id": 7, "type": "supported_brands"})
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"] == supported_brands.SUPPORTED_BRANDS
