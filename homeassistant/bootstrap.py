@@ -478,7 +478,9 @@ async def _async_set_up_integrations(
 
         integrations_to_process = [
             int_or_exc
-            for int_or_exc in await loader.async_get_integrations(hass, old_to_resolve)
+            for int_or_exc in (
+                await loader.async_get_integrations(hass, old_to_resolve)
+            ).values()
             if isinstance(int_or_exc, loader.Integration)
         ]
         resolve_dependencies_tasks = [
