@@ -155,10 +155,10 @@ async def test_warning(hass, simple_queue, hass_ws_client):
 
 async def test_error(hass, simple_queue, hass_ws_client):
     """Test that errors are logged and retrieved correctly."""
-    await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
+    watcher = await setup_system_log(hass, BASIC_CONFIG)
     await hass.async_block_till_done()
 
-    wait_empty = await _install_log_catcher(hass, simple_queue, "error message")
+    wait_empty = watcher.add_watcher("error message")
 
     _LOGGER.error("error message")
 
