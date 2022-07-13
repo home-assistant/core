@@ -757,18 +757,17 @@ async def async_get_integrations(
             _resolve_integrations_from_root, hass, components, list(needed)
         )
         for domain, event in needed.items():
-            if domain in integrations:
-                int_or_exc = integrations[domain]
-                if isinstance(int_or_exc, Exception):
-                    cache.pop(domain)
-                    exc = IntegrationNotFound(domain)
-                    exc.__cause__ = int_or_exc
-                    results[domain] = exc
-                else:
-                    results[domain] = cache[domain] = int_or_exc
-            else:
+            int_or_exc = integrations.get(domain)
+            if not int_or_exc:
                 cache.pop(domain)
                 results[domain] = IntegrationNotFound(domain)
+            elif isinstance(int_or_exc, Exception):
+                cache.pop(domain)
+                exc = IntegrationNotFound(domain)
+                exc.__cause__ = int_or_exc
+                results[domain] = exc
+            else:
+                results[domain] = cache[domain] = int_or_exc
             event.set()
 
     return results
