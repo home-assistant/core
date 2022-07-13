@@ -162,7 +162,7 @@ async def test_sensor(hass):
     state = hass.states.get("sensor.fake_profile_dns_queries")
     assert state
     assert state.state == "100"
-    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "queries"
 
     entry = registry.async_get("sensor.fake_profile_dns_queries")
@@ -172,7 +172,7 @@ async def test_sensor(hass):
     state = hass.states.get("sensor.fake_profile_dns_queries_blocked")
     assert state
     assert state.state == "20"
-    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "queries"
 
     entry = registry.async_get("sensor.fake_profile_dns_queries_blocked")
@@ -192,7 +192,7 @@ async def test_sensor(hass):
     state = hass.states.get("sensor.fake_profile_dns_queries_relayed")
     assert state
     assert state.state == "10"
-    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "queries"
 
     entry = registry.async_get("sensor.fake_profile_dns_queries_relayed")
@@ -202,7 +202,7 @@ async def test_sensor(hass):
     state = hass.states.get("sensor.fake_profile_dns_over_https_queries")
     assert state
     assert state.state == "20"
-    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "queries"
 
     entry = registry.async_get("sensor.fake_profile_dns_over_https_queries")
@@ -222,7 +222,7 @@ async def test_sensor(hass):
     state = hass.states.get("sensor.fake_profile_dns_over_quic_queries")
     assert state
     assert state.state == "10"
-    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "queries"
 
     entry = registry.async_get("sensor.fake_profile_dns_over_quic_queries")
@@ -242,7 +242,7 @@ async def test_sensor(hass):
     state = hass.states.get("sensor.fake_profile_dns_over_tls_queries")
     assert state
     assert state.state == "30"
-    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "queries"
 
     entry = registry.async_get("sensor.fake_profile_dns_over_tls_queries")
@@ -262,7 +262,7 @@ async def test_sensor(hass):
     state = hass.states.get("sensor.fake_profile_dnssec_not_validated_queries")
     assert state
     assert state.state == "25"
-    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "queries"
 
     entry = registry.async_get("sensor.fake_profile_dnssec_not_validated_queries")
@@ -272,7 +272,7 @@ async def test_sensor(hass):
     state = hass.states.get("sensor.fake_profile_dnssec_validated_queries")
     assert state
     assert state.state == "75"
-    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "queries"
 
     entry = registry.async_get("sensor.fake_profile_dnssec_validated_queries")
@@ -292,7 +292,7 @@ async def test_sensor(hass):
     state = hass.states.get("sensor.fake_profile_encrypted_queries")
     assert state
     assert state.state == "60"
-    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "queries"
 
     entry = registry.async_get("sensor.fake_profile_encrypted_queries")
@@ -302,7 +302,7 @@ async def test_sensor(hass):
     state = hass.states.get("sensor.fake_profile_unencrypted_queries")
     assert state
     assert state.state == "40"
-    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "queries"
 
     entry = registry.async_get("sensor.fake_profile_unencrypted_queries")
@@ -322,7 +322,7 @@ async def test_sensor(hass):
     state = hass.states.get("sensor.fake_profile_ipv4_queries")
     assert state
     assert state.state == "90"
-    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "queries"
 
     entry = registry.async_get("sensor.fake_profile_ipv4_queries")
@@ -332,7 +332,7 @@ async def test_sensor(hass):
     state = hass.states.get("sensor.fake_profile_ipv6_queries")
     assert state
     assert state.state == "10"
-    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "queries"
 
     entry = registry.async_get("sensor.fake_profile_ipv6_queries")
@@ -352,7 +352,7 @@ async def test_sensor(hass):
     state = hass.states.get("sensor.fake_profile_tcp_queries")
     assert state
     assert state.state == "0"
-    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "queries"
 
     entry = registry.async_get("sensor.fake_profile_tcp_queries")
@@ -372,7 +372,7 @@ async def test_sensor(hass):
     state = hass.states.get("sensor.fake_profile_udp_queries")
     assert state
     assert state.state == "40"
-    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "queries"
 
     entry = registry.async_get("sensor.fake_profile_udp_queries")
