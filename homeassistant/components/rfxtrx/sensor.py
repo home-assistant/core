@@ -300,7 +300,7 @@ class RfxtrxSensor(RfxtrxEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(device, device_id, event=event)
         self.entity_description = entity_description
-        self._attr_unique_id = "_".join(x for x in (*device_id, entity_description.key))
+        self._attr_unique_id = f"{device_id}_{entity_description.key}"
 
     async def async_added_to_hass(self) -> None:
         """Restore device state."""

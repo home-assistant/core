@@ -9,6 +9,7 @@ from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import State
 
 from .conftest import create_rfx_test_cfg
+from . import ENTRY_VERSION
 
 from tests.common import MockConfigEntry, mock_restore_cache
 
@@ -19,7 +20,9 @@ EVENT_RFY_DISABLE_SUN_AUTO = "0C1a0000030101011400000003"
 async def test_one_switch(hass, rfxtrx):
     """Test with 1 switch."""
     entry_data = create_rfx_test_cfg(devices={"0b1100cd0213c7f210010f51": {}})
-    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+    mock_entry = MockConfigEntry(
+        domain="rfxtrx", unique_id=DOMAIN, data=entry_data, version=ENTRY_VERSION
+    )
 
     mock_entry.add_to_hass(hass)
 
@@ -62,7 +65,9 @@ async def test_one_pt2262_switch(hass, rfxtrx):
             }
         }
     )
-    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+    mock_entry = MockConfigEntry(
+        domain="rfxtrx", unique_id=DOMAIN, data=entry_data, version=ENTRY_VERSION
+    )
 
     mock_entry.add_to_hass(hass)
 
@@ -103,7 +108,9 @@ async def test_state_restore(hass, rfxtrx, state):
     mock_restore_cache(hass, [State(entity_id, state)])
 
     entry_data = create_rfx_test_cfg(devices={"0b1100cd0213c7f210010f51": {}})
-    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+    mock_entry = MockConfigEntry(
+        domain="rfxtrx", unique_id=DOMAIN, data=entry_data, version=ENTRY_VERSION
+    )
 
     mock_entry.add_to_hass(hass)
 
@@ -122,7 +129,9 @@ async def test_several_switches(hass, rfxtrx):
             "0b1100101118cdea02010f70": {},
         }
     )
-    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+    mock_entry = MockConfigEntry(
+        domain="rfxtrx", unique_id=DOMAIN, data=entry_data, version=ENTRY_VERSION
+    )
 
     mock_entry.add_to_hass(hass)
 
@@ -153,7 +162,9 @@ async def test_switch_events(hass, rfxtrx):
             "0b1100cd0213c7f210010f51": {},
         }
     )
-    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+    mock_entry = MockConfigEntry(
+        domain="rfxtrx", unique_id=DOMAIN, data=entry_data, version=ENTRY_VERSION
+    )
 
     mock_entry.add_to_hass(hass)
 
@@ -212,7 +223,9 @@ async def test_pt2262_switch_events(hass, rfxtrx):
             }
         }
     )
-    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+    mock_entry = MockConfigEntry(
+        domain="rfxtrx", unique_id=DOMAIN, data=entry_data, version=ENTRY_VERSION
+    )
 
     mock_entry.add_to_hass(hass)
 
@@ -274,7 +287,9 @@ async def test_discover_rfy_sun_switch(hass, rfxtrx_automatic):
 async def test_unknown_event_code(hass, rfxtrx):
     """Test with 3 switches."""
     entry_data = create_rfx_test_cfg(devices={"1234567890": {}})
-    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+    mock_entry = MockConfigEntry(
+        domain="rfxtrx", unique_id=DOMAIN, data=entry_data, version=ENTRY_VERSION
+    )
 
     mock_entry.add_to_hass(hass)
 

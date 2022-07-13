@@ -10,6 +10,8 @@ from homeassistant.components import rfxtrx
 from homeassistant.components.rfxtrx import DOMAIN
 from homeassistant.util.dt import utcnow
 
+from . import ENTRY_VERSION
+
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
@@ -36,7 +38,9 @@ async def setup_rfx_test_cfg(
     entry_data = create_rfx_test_cfg(
         device=device, automatic_add=automatic_add, devices=devices
     )
-    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+    mock_entry = MockConfigEntry(
+        domain="rfxtrx", unique_id=DOMAIN, data=entry_data, version=ENTRY_VERSION
+    )
     mock_entry.supports_remove_device = True
     mock_entry.add_to_hass(hass)
 

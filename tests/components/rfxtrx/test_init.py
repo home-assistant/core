@@ -6,12 +6,16 @@ from unittest.mock import ANY, call, patch
 import RFXtrx as rfxtrxmod
 
 from homeassistant.components.rfxtrx import DOMAIN
+from homeassistant.components.rfxtrx.config_flow import (  # noqa: F401 pylint: disable=unused-import
+    ConfigFlow,
+)
 from homeassistant.components.rfxtrx.const import EVENT_RFXTRX_EVENT
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from .conftest import create_rfx_test_cfg, setup_rfx_test_cfg
+from . import ENTRY_VERSION
 
 from tests.common import MockConfigEntry
 
@@ -46,12 +50,12 @@ async def test_fire_event(hass, rfxtrx):
     await rfxtrx.signal("0716000100900970")
 
     device_id_1 = device_registry.async_get_device(
-        identifiers={("rfxtrx", "11", "0", "213c7f2:16")}
+        identifiers={("rfxtrx", "11_0_213c7f2:16")}
     )
     assert device_id_1
 
     device_id_2 = device_registry.async_get_device(
-        identifiers={("rfxtrx", "16", "0", "00:90")}
+        identifiers={("rfxtrx", "16_0_00:90")}
     )
     assert device_id_2
 
@@ -94,7 +98,7 @@ async def test_ws_device_remove(hass, hass_ws_client):
     """Test removing a device through device registry."""
     assert await async_setup_component(hass, "config", {})
 
-    device_id = ["11", "0", "213c7f2:16"]
+    device_id = "11_0_213c7f2:16"
     mock_entry = await setup_rfx_test_cfg(
         hass,
         devices={
@@ -104,7 +108,7 @@ async def test_ws_device_remove(hass, hass_ws_client):
 
     device_reg = dr.async_get(hass)
 
-    device_entry = device_reg.async_get_device(identifiers={("rfxtrx", *device_id)})
+    device_entry = device_reg.async_get_device(identifiers={("rfxtrx", device_id)})
     assert device_entry
 
     # Ask to remove existing device
@@ -121,7 +125,7 @@ async def test_ws_device_remove(hass, hass_ws_client):
     assert response["success"]
 
     # Verify device entry is removed
-    assert device_reg.async_get_device(identifiers={("rfxtrx", *device_id)}) is None
+    assert device_reg.async_get_device(identifiers={("rfxtrx", device_id)}) is None
 
     # Verify that the config entry has removed the device
     assert mock_entry.data["devices"] == {}
@@ -130,7 +134,9 @@ async def test_ws_device_remove(hass, hass_ws_client):
 async def test_connect(hass):
     """Test that we attempt to connect to the device."""
     entry_data = create_rfx_test_cfg(device="/dev/ttyUSBfake")
-    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+    mock_entry = MockConfigEntry(
+        domain="rfxtrx", unique_id=DOMAIN, data=entry_data, version=ENTRY_VERSION
+    )
 
     mock_entry.add_to_hass(hass)
 
@@ -144,7 +150,9 @@ async def test_connect(hass):
 async def test_connect_with_protocols(hass):
     """Test that we attempt to set protocols."""
     entry_data = create_rfx_test_cfg(device="/dev/ttyUSBfake", protocols=SOME_PROTOCOLS)
-    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+    mock_entry = MockConfigEntry(
+        domain="rfxtrx", unique_id=DOMAIN, data=entry_data, version=ENTRY_VERSION
+    )
 
     mock_entry.add_to_hass(hass)
 
@@ -153,3 +161,57 @@ async def test_connect_with_protocols(hass):
         await hass.async_block_till_done()
 
     connect.assert_called_once_with("/dev/ttyUSBfake", ANY, modes=SOME_PROTOCOLS)
+
+
+async def test_migrate_entry(hass):
+    """Test successful migration of entry data."""
+    legacy_config = {
+        "device": "abcd",
+        "host": None,
+        "port": None,
+        "automatic_add": True,
+        "protocols": [],
+        "devices": {
+            "0b1100cd0213c7f210010f51": {
+                "fire_event": True,
+                "device_id": ["11", "0", "213c7f2:16"],
+            },
+        },
+    }
+
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=DOMAIN, data=legacy_config, version=1
+    )
+    entry.add_to_hass(hass)
+
+    registry = dr.async_get(hass)
+    device = registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={
+            (DOMAIN, "11", "0", "213c7f2:16"),
+            ("dummy", "id"),
+        },
+    )
+
+    await entry.async_migrate(hass)
+
+    assert dict(entry.data) == {
+        "device": "abcd",
+        "host": None,
+        "port": None,
+        "automatic_add": True,
+        "protocols": [],
+        "devices": {
+            "0b1100cd0213c7f210010f51": {
+                "fire_event": True,
+                "device_id": "11_0_213c7f2:16",
+            },
+        },
+    }
+    assert entry.version == 2
+
+    device = registry.async_get(device.id)
+    assert device.identifiers == {
+        (DOMAIN, "11_0_213c7f2:16"),
+        ("dummy", "id"),
+    }

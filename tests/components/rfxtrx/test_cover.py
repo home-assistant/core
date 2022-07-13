@@ -8,6 +8,7 @@ from homeassistant.core import State
 from homeassistant.exceptions import HomeAssistantError
 
 from .conftest import create_rfx_test_cfg
+from . import ENTRY_VERSION
 
 from tests.common import MockConfigEntry, mock_restore_cache
 
@@ -15,7 +16,12 @@ from tests.common import MockConfigEntry, mock_restore_cache
 async def test_one_cover(hass, rfxtrx):
     """Test with 1 cover."""
     entry_data = create_rfx_test_cfg(devices={"0b1400cd0213c7f20d010f51": {}})
-    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+    mock_entry = MockConfigEntry(
+        domain="rfxtrx",
+        unique_id=DOMAIN,
+        data=entry_data,
+        version=ENTRY_VERSION,
+    )
 
     mock_entry.add_to_hass(hass)
 
@@ -62,7 +68,12 @@ async def test_state_restore(hass, rfxtrx, state):
     mock_restore_cache(hass, [State(entity_id, state)])
 
     entry_data = create_rfx_test_cfg(devices={"0b1400cd0213c7f20d010f51": {}})
-    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+    mock_entry = MockConfigEntry(
+        domain="rfxtrx",
+        unique_id=DOMAIN,
+        data=entry_data,
+        version=ENTRY_VERSION,
+    )
 
     mock_entry.add_to_hass(hass)
 
@@ -81,7 +92,12 @@ async def test_several_covers(hass, rfxtrx):
             "09190000009ba8010100": {},
         }
     )
-    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+    mock_entry = MockConfigEntry(
+        domain="rfxtrx",
+        unique_id=DOMAIN,
+        data=entry_data,
+        version=ENTRY_VERSION,
+    )
 
     mock_entry.add_to_hass(hass)
 
@@ -127,7 +143,12 @@ async def test_duplicate_cover(hass, rfxtrx):
             "0b1400cd0213c7f20d010f50": {},
         }
     )
-    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+    mock_entry = MockConfigEntry(
+        domain="rfxtrx",
+        unique_id=DOMAIN,
+        data=entry_data,
+        version=ENTRY_VERSION,
+    )
 
     mock_entry.add_to_hass(hass)
 
@@ -154,7 +175,12 @@ async def test_rfy_cover(hass, rfxtrx):
             "0c1a0000010203030000000000": {"venetian_blind_mode": "EU"},
         }
     )
-    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+    mock_entry = MockConfigEntry(
+        domain="rfxtrx",
+        unique_id=DOMAIN,
+        data=entry_data,
+        version=ENTRY_VERSION,
+    )
 
     mock_entry.add_to_hass(hass)
 

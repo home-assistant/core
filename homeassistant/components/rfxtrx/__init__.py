@@ -6,7 +6,7 @@ import binascii
 from collections.abc import Callable, Mapping
 import copy
 import logging
-from typing import Any, NamedTuple, cast
+from typing import Any, NewType, cast
 
 import RFXtrx as rfxtrxmod
 import async_timeout
@@ -53,12 +53,7 @@ SIGNAL_EVENT = f"{DOMAIN}_event"
 _LOGGER = logging.getLogger(__name__)
 
 
-class DeviceTuple(NamedTuple):
-    """Representation of a device in rfxtrx."""
-
-    packettype: str
-    subtype: str
-    id_string: str
+DeviceTuple = NewType("DeviceTuple", str)
 
 
 def _bytearray_string(data: Any) -> bytearray:
@@ -206,7 +201,7 @@ async def async_setup_internal(hass: HomeAssistant, entry: ConfigEntry) -> None:
             pt2262_devices.add(event.device.id_string)
 
         device_entry = device_registry.async_get_device(
-            identifiers={(DOMAIN, *device_id)},  # type: ignore[arg-type]
+            identifiers={(DOMAIN, device_id)},
         )
         if device_entry:
             event_data[ATTR_DEVICE_ID] = device_entry.id
@@ -245,7 +240,7 @@ async def async_setup_internal(hass: HomeAssistant, entry: ConfigEntry) -> None:
             CONF_DEVICES: {
                 packet_id: entity_info
                 for packet_id, entity_info in entry.data[CONF_DEVICES].items()
-                if tuple(entity_info.get(CONF_DEVICE_ID)) != device_id
+                if entity_info.get(CONF_DEVICE_ID) != device_id
             },
         }
         hass.config_entries.async_update_entry(entry=entry, data=data)
@@ -342,6 +337,53 @@ async def async_setup_platform_entry(
         )
 
 
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate an old config entry."""
+    version = entry.version
+
+    _LOGGER.debug("Migrating from version %s", version)
+
+    data = {}
+    if version == 1:
+        # Convert from old tuple based device identifiers to standard string
+
+        device_registry = dr.async_get(hass)
+        for device_entry in dr.async_entries_for_config_entry(
+            device_registry, entry.entry_id
+        ):
+            identifiers = set()
+            for identifier in device_entry.identifiers:
+                if identifier[0] == DOMAIN and len(identifier) == 4:
+                    identifier = (DOMAIN, "_".join(identifier[1:]))
+                identifiers.add(identifier)
+            device_registry.async_update_device(
+                device_entry.id, new_identifiers=identifiers
+            )
+
+        def _get_device_id(event_code: str, options: dict[str, Any]) -> DeviceTuple:
+            if device_id_tuple := options.get(CONF_DEVICE_ID):
+                return cast(DeviceTuple, "_".join(device_id_tuple))
+            event = get_rfx_object(event_code)
+            assert event
+            return get_device_id(event.device, options.get(CONF_DATA_BITS))
+
+        devices = {
+            event_code: {**options, CONF_DEVICE_ID: _get_device_id(event_code, options)}
+            for event_code, options in entry.data[CONF_DEVICES].items()
+        }
+        data = {**entry.data, CONF_DEVICES: devices}
+        hass.config_entries.async_update_entry(
+            entry,
+            data=data,
+        )
+        version = entry.version = 2
+
+        hass.config_entries.async_update_entry(entry, data=data)
+
+    _LOGGER.debug("Migration to version %s successful", version)
+    return True
+
+
 def get_rfx_object(packetid: str) -> rfxtrxmod.RFXtrxEvent | None:
     """Return the RFXObject with the packetid."""
     try:
@@ -351,13 +393,13 @@ def get_rfx_object(packetid: str) -> rfxtrxmod.RFXtrxEvent | None:
     return rfxtrxmod.RFXtrxTransport.parse(binarypacket)
 
 
-def get_pt2262_deviceid(device_id: str, nb_data_bits: int | None) -> bytes | None:
+def get_pt2262_deviceid(id_string: str, nb_data_bits: int | None) -> bytes | None:
     """Extract and return the address bits from a Lighting4/PT2262 packet."""
     if nb_data_bits is None:
         return None
 
     try:
-        data = bytearray.fromhex(device_id)
+        data = bytearray.fromhex(id_string)
     except ValueError:
         return None
     mask = 0xFF & ~((1 << nb_data_bits) - 1)
@@ -434,7 +476,7 @@ def get_device_id(
     ):
         id_string = masked_id.decode("ASCII")
 
-    return DeviceTuple(f"{device.packettype:x}", f"{device.subtype:x}", id_string)
+    return cast(DeviceTuple, f"{device.packettype:x}_{device.subtype:x}_{id_string}")
 
 
 def get_device_tuple_from_identifiers(
@@ -444,17 +486,14 @@ def get_device_tuple_from_identifiers(
     identifier = next((x for x in identifiers if x[0] == DOMAIN and len(x) == 4), None)
     if not identifier:
         return None
-    # work around legacy identifier, being a multi tuple value
-    identifier2 = cast(tuple[str, str, str, str], identifier)
-    return DeviceTuple(identifier2[1], identifier2[2], identifier2[3])
+    return cast(DeviceTuple, identifier[1])
 
 
 def get_identifiers_from_device_tuple(
-    device_tuple: DeviceTuple,
+    device_id: DeviceTuple,
 ) -> set[tuple[str, str]]:
     """Calculate the device identifier from a device tuple."""
-    # work around legacy identifier, being a multi tuple value
-    return {(DOMAIN, *device_tuple)}  # type: ignore[arg-type]
+    return {(DOMAIN, device_id)}
 
 
 async def async_remove_config_entry_device(
@@ -491,7 +530,7 @@ class RfxtrxEntity(RestoreEntity):
             model=device.type_string,
             name=f"{device.type_string} {device.id_string}",
         )
-        self._attr_unique_id = "_".join(x for x in device_id)
+        self._attr_unique_id = device_id
         self._device = device
         self._event = event
         self._device_id = device_id

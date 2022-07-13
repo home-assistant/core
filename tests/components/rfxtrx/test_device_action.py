@@ -13,6 +13,7 @@ from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.setup import async_setup_component
 
 from .conftest import create_rfx_test_cfg
+from . import ENTRY_VERSION
 
 from tests.common import (
     MockConfigEntry,
@@ -39,18 +40,14 @@ class DeviceTestData(NamedTuple):
     """Test data linked to a device."""
 
     code: str
-    device_identifiers: set[tuple[str, str, str, str]]
+    device_identifiers: set[tuple[str, str]]
 
 
-DEVICE_LIGHTING_1 = DeviceTestData("0710002a45050170", {("rfxtrx", "10", "0", "E5")})
+DEVICE_LIGHTING_1 = DeviceTestData("0710002a45050170", {("rfxtrx", "10_0_E5")})
 
-DEVICE_BLINDS_1 = DeviceTestData(
-    "09190000009ba8010100", {("rfxtrx", "19", "0", "009ba8:1")}
-)
+DEVICE_BLINDS_1 = DeviceTestData("09190000009ba8010100", {("rfxtrx", "19_0_009ba8:1")})
 
-DEVICE_TEMPHUM_1 = DeviceTestData(
-    "0a52080705020095220269", {("rfxtrx", "52", "8", "05:02")}
-)
+DEVICE_TEMPHUM_1 = DeviceTestData("0a52080705020095220269", {("rfxtrx", "52_8_05:02")})
 
 
 @pytest.mark.parametrize("device", [DEVICE_LIGHTING_1, DEVICE_TEMPHUM_1])
@@ -58,14 +55,16 @@ async def test_device_test_data(rfxtrx, device: DeviceTestData):
     """Verify that our testing data remains correct."""
     pkt: RFXtrx.lowlevel.Packet = RFXtrx.lowlevel.parse(bytearray.fromhex(device.code))
     assert device.device_identifiers == {
-        ("rfxtrx", f"{pkt.packettype:x}", f"{pkt.subtype:x}", pkt.id_string)
+        ("rfxtrx", f"{pkt.packettype:x}_{pkt.subtype:x}_{pkt.id_string}")
     }
 
 
 async def setup_entry(hass, devices):
     """Construct a config setup."""
     entry_data = create_rfx_test_cfg(devices=devices)
-    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+    mock_entry = MockConfigEntry(
+        domain="rfxtrx", unique_id=DOMAIN, data=entry_data, version=ENTRY_VERSION
+    )
 
     mock_entry.add_to_hass(hass)
 

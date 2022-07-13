@@ -212,7 +212,7 @@ class OptionsFlow(config_entries.OptionsFlow):
             if not errors:
                 devices = {}
                 device = {
-                    CONF_DEVICE_ID: list(device_id),
+                    CONF_DEVICE_ID: device_id,
                 }
 
                 devices[self._selected_device_event_code] = device
@@ -326,8 +326,8 @@ class OptionsFlow(config_entries.OptionsFlow):
         old_device_data = self._get_device_data(old_device)
         new_device_data = self._get_device_data(replace_device)
 
-        old_device_id = "_".join(x for x in old_device_data[CONF_DEVICE_ID])
-        new_device_id = "_".join(x for x in new_device_data[CONF_DEVICE_ID])
+        old_device_id = old_device_data[CONF_DEVICE_ID]
+        new_device_id = new_device_data[CONF_DEVICE_ID]
 
         entity_registry = er.async_get(self.hass)
         entity_entries = er.async_entries_for_device(
@@ -431,7 +431,7 @@ class OptionsFlow(config_entries.OptionsFlow):
         device_id = get_device_tuple_from_identifiers(entry.identifiers)
         assert device_id
         for packet_id, entity_info in self._config_entry.data[CONF_DEVICES].items():
-            if tuple(entity_info.get(CONF_DEVICE_ID)) == device_id:
+            if entity_info.get(CONF_DEVICE_ID) == device_id:
                 event_code = cast(str, packet_id)
                 break
         return DeviceData(event_code=event_code, device_id=device_id)
@@ -462,7 +462,7 @@ class OptionsFlow(config_entries.OptionsFlow):
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for RFXCOM RFXtrx."""
 
-    VERSION = 1
+    VERSION = 2
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

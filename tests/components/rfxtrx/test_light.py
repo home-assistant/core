@@ -9,6 +9,7 @@ from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import State
 
 from .conftest import create_rfx_test_cfg
+from . import ENTRY_VERSION
 
 from tests.common import MockConfigEntry, mock_restore_cache
 
@@ -16,7 +17,9 @@ from tests.common import MockConfigEntry, mock_restore_cache
 async def test_one_light(hass, rfxtrx):
     """Test with 1 light."""
     entry_data = create_rfx_test_cfg(devices={"0b1100cd0213c7f210020f51": {}})
-    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+    mock_entry = MockConfigEntry(
+        domain="rfxtrx", unique_id=DOMAIN, data=entry_data, version=ENTRY_VERSION
+    )
 
     mock_entry.add_to_hass(hass)
 
@@ -100,7 +103,9 @@ async def test_state_restore(hass, rfxtrx, state, brightness):
     )
 
     entry_data = create_rfx_test_cfg(devices={"0b1100cd0213c7f210020f51": {}})
-    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+    mock_entry = MockConfigEntry(
+        domain="rfxtrx", unique_id=DOMAIN, data=entry_data, version=ENTRY_VERSION
+    )
 
     mock_entry.add_to_hass(hass)
 
@@ -120,7 +125,9 @@ async def test_several_lights(hass, rfxtrx):
             "0b1100101118cdea02050f70": {},
         }
     )
-    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+    mock_entry = MockConfigEntry(
+        domain="rfxtrx", unique_id=DOMAIN, data=entry_data, version=ENTRY_VERSION
+    )
 
     mock_entry.add_to_hass(hass)
 
