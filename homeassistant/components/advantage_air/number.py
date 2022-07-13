@@ -1,7 +1,8 @@
 """Number platform for Advantage Air integration."""
 
 from homeassistant.components.number import NumberEntity
-from homeassistant.const import ENTITY_CATEGORY_CONFIG, TIME_MINUTES
+from homeassistant.const import TIME_MINUTES
+from homeassistant.helpers.entity import EntityCategory
 
 from .const import DOMAIN as ADVANTAGE_AIR_DOMAIN
 from .entity import AdvantageAirEntity
@@ -23,7 +24,7 @@ class AdvantageAirTimeTo(AdvantageAirEntity, NumberEntity):
     """Representation of Advantage Air TimeTo number."""
 
     _attr_unit_of_measurement = TIME_MINUTES
-    _attr_entity_category = ENTITY_CATEGORY_CONFIG
+    _attr_entity_category = EntityCategory.CONFIG
     _attr_step = 1
     _attr_min_value = 0
     _attr_max_value = 720

@@ -32,7 +32,7 @@ async def test_number_platform(hass, aioclient_mock):
     assert len(aioclient_mock.mock_calls) == 1
 
     # Test First TimeToOn Sensor
-    entity_id = "number.ac_one_time_to_on"
+    entity_id = "number.testname_ac_one_time_to_on"
     state = hass.states.get(entity_id)
     assert state
     assert int(state.state) == 0
