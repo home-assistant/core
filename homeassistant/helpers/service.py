@@ -12,7 +12,6 @@ from typing_extensions import TypeGuard
 import voluptuous as vol
 
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_AREA_ID,
     ATTR_DEVICE_ID,
@@ -48,6 +47,8 @@ from . import (
 from .typing import ConfigType, TemplateVarsType
 
 if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+
     from .entity import Entity
     from .entity_platform import EntityPlatform
 
