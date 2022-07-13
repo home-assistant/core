@@ -1,7 +1,7 @@
 """Test system log component."""
-import asyncio
 import logging
 import queue
+import time
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -30,12 +30,18 @@ def simple_queue():
 async def _async_block_until_queue_empty(hass, sq):
     # Unfortunately we are stuck with polling
     await hass.async_block_till_done()
-    while not sq.empty():
-        await asyncio.sleep(0.01)
-    hass.data[system_log.DOMAIN].acquire()
-    hass.data[system_log.DOMAIN].release()
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
+
+    def _wait_for_empty_queue():
+        handler: logging.Handler = hass.data[system_log.DOMAIN]
+        while True:
+            handler.acquire()
+            if sq.empty():
+                handler.release()
+                return
+            time.sleep(0.01)
+            handler.release()
+
+    await hass.async_add_executor_job(_wait_for_empty_queue)
 
 
 async def get_error_log(hass_ws_client):
