@@ -696,7 +696,6 @@ class MQTT:
 
         if mid not in self._pending_operations:
             self._pending_operations[mid] = asyncio.Event()
-
         try:
             await asyncio.wait_for(self._pending_operations[mid].wait(), TIMEOUT_ACK)
         except asyncio.TimeoutError:
@@ -704,7 +703,6 @@ class MQTT:
                 "No ACK from MQTT server in %s seconds (mid: %s)", TIMEOUT_ACK, mid
             )
         finally:
-            # Cleanup
             del self._pending_operations[mid]
 
     async def _discovery_cooldown(self):
