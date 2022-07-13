@@ -79,7 +79,7 @@ def _figure_out_source(record, call_stack, paths_re):
     for pathname in reversed(stack):
 
         # Try to match with a file within Home Assistant
-        if match := re.match(paths_re, pathname[0]):
+        if match := paths_re.match(pathname[0]):
             return [match.group(1), pathname[1]]
     # Ok, we don't know what this is
     return (record.pathname, record.lineno)
