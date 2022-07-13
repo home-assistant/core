@@ -12,10 +12,13 @@ from typing_extensions import TypeGuard
 import voluptuous as vol
 
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_AREA_ID,
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
+    CONF_AREA_ID,
+    CONF_DEVICE_ID,
     CONF_ENTITY_ID,
     CONF_SERVICE,
     CONF_SERVICE_DATA,
@@ -841,3 +844,34 @@ class ReloadServiceHelper:
             async with self._service_condition:
                 self._service_running = False
                 self._service_condition.notify_all()
+
+
+@bind_hass
+@callback
+def async_get_config_entry_from_call(
+    hass: HomeAssistant, call: ServiceCall
+) -> ConfigEntry | None:
+    """Get the config entry related to a particular service call.
+
+    We start narrow and go broad:
+       1. If one or more entity IDs match a config entry, use the first match.
+       2. If one or more device IDs match a config entry, use the first match.
+       3. If one or more area IDs match a config entry, use the first match.
+       4. If no matches, return None.
+    """
+    for module, key in (
+        (entity_registry, CONF_ENTITY_ID),
+        (device_registry, CONF_DEVICE_ID),
+        (area_registry, CONF_AREA_ID),
+    ):
+        if (target_id := call.data.get(key)) is None:
+            continue
+
+        registry = module.async_get(hass)
+
+        if target_entry := registry.async_get(target_id):
+            for entry in hass.config_entries.async_entries(call.domain):
+                if entry.entry_id in target_entry.config_entries:
+                    return entry
+
+    return None

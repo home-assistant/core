@@ -12,7 +12,6 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     ATTR_DEVICE_ID,
-    CONF_DEVICE_ID,
     CONF_FILENAME,
     CONF_IP_ADDRESS,
     CONF_PORT,
@@ -24,6 +23,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo, EntityDescription
+from homeassistant.helpers.service import async_get_config_entry_from_call
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -89,20 +89,6 @@ SERVICE_UPGRADE_FIRMWARE_SCHEMA = vol.Schema(
 )
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR, Platform.SWITCH]
-
-
-@callback
-def async_get_entry_id_for_service_call(hass: HomeAssistant, call: ServiceCall) -> str:
-    """Get the entry ID related to a service call (by device ID)."""
-    device_id = call.data[CONF_DEVICE_ID]
-    device_registry = dr.async_get(hass)
-
-    if device_entry := device_registry.async_get(device_id):
-        for entry in hass.config_entries.async_entries(DOMAIN):
-            if entry.entry_id in device_entry.config_entries:
-                return entry.entry_id
-
-    raise ValueError(f"No client for device ID: {device_id}")
 
 
 @callback
@@ -187,10 +173,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         async def wrapper(call: ServiceCall) -> None:
             """Wrap the service function."""
-            entry_id = async_get_entry_id_for_service_call(hass, call)
-            client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
-            entry = hass.config_entries.async_get_entry(entry_id)
-            assert entry
+            if (entry := async_get_config_entry_from_call(hass, call)) is None:
+                raise HomeAssistantError(
+                    f"No config entry for {call.domain}.{call.service}: {call.data}"
+                )
+
+            client = hass.data[DOMAIN][entry.entry_id][DATA_CLIENT]
 
             try:
                 async with client:
