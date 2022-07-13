@@ -23,7 +23,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class AdvantageAirTimeTo(AdvantageAirEntity, NumberEntity):
     """Representation of Advantage Air TimeTo number."""
 
-    _attr_unit_of_measurement = TIME_MINUTES
+    _attr_native_unit_of_measurement = TIME_MINUTES
     _attr_entity_category = EntityCategory.CONFIG
     _attr_step = 1
     _attr_min_value = 0
