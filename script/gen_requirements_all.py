@@ -132,6 +132,10 @@ backoff<2.0
 # Breaking change in version
 # https://github.com/samuelcolvin/pydantic/issues/4092
 pydantic!=1.9.1
+
+# Breaks asyncio
+# https://github.com/pubnub/python/issues/130
+pubnub!=6.4.0
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (
