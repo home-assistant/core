@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Chave da API"
+                }
+            }
+        }
+    }
+}
