@@ -1,6 +1,7 @@
 """Support for system log."""
 from collections import OrderedDict, deque
 import logging
+from logging.handlers import QueueListener
 import queue
 import re
 import traceback
@@ -195,6 +196,10 @@ class LogErrorHandler(logging.Handler):
             self.hass.bus.fire(EVENT_SYSTEM_LOG, entry.to_dict())
 
 
+class HASSQueueListener(QueueListener):
+    """Queue listener for Home Assistant events."""
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the logger component."""
     if (conf := config.get(DOMAIN)) is None:
@@ -209,9 +214,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.data[DOMAIN] = handler
 
-    listener = logging.handlers.QueueListener(
-        simple_queue, handler, respect_handler_level=True
-    )
+    listener = HASSQueueListener(simple_queue, handler, respect_handler_level=True)
 
     listener.start()
 

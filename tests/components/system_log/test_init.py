@@ -1,8 +1,12 @@
 """Test system log component."""
+from __future__ import annotations
+
 import asyncio
+from collections.abc import Awaitable
 import logging
 import queue
 import time
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -103,23 +107,55 @@ def assert_log(log, exception, message, level):
     assert "timestamp" in log
 
 
+class WatchHASSQueueListener(system_log.HASSQueueListener):
+    """HASSQueueListener that watches for a message."""
+
+    instances: list[WatchHASSQueueListener] = []
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Initialize HASSQueueListener."""
+        super().__init__(*args, **kwargs)
+        self.watch_message: str | None = None
+        self.watch_event: asyncio.Event | None = asyncio.Event()
+        WatchHASSQueueListener.instances.append(self)
+
+    def add_watcher(self, match: str) -> Awaitable:
+        """Add a watcher."""
+        self.watch_event = asyncio.Event()
+        self.watch_message = match
+        return self.watch_event.wait()
+
+    def handle(self, record: logging.LogRecord) -> None:
+        """Handle a logging record."""
+        super().handle(record)
+        if record.message in self.watch_message:
+            self.watch_event.set()
+
+
 def get_frame(name):
     """Get log stack frame."""
     return (name, 5, None, None)
 
 
+async def setup_system_log(hass, config) -> WatchHASSQueueListener:
+    """Set up the system_log component."""
+    WatchHASSQueueListener.instances = []
+    with patch(
+        "homeassistant.components.system_log.HASSQueueListener", WatchHASSQueueListener
+    ):
+        await async_setup_component(hass, system_log.DOMAIN, config)
+        await hass.async_block_till_done()
+
+    assert len(WatchHASSQueueListener.instances) == 1
+    return WatchHASSQueueListener.instances.pop()
+
+
 async def test_normal_logs(hass, simple_queue, hass_ws_client):
     """Test that debug and info are not logged."""
-    await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
-    await hass.async_block_till_done()
+    await setup_system_log(hass, BASIC_CONFIG)
 
-    wait_empty = await _install_log_catcher(hass, simple_queue, "debug")
     _LOGGER.debug("debug")
-    await wait_empty
-
-    wait_empty = await _install_log_catcher(hass, simple_queue, "info")
     _LOGGER.info("info")
-    await wait_empty
 
     # Assert done by get_error_log
     logs = await get_error_log(hass_ws_client)
@@ -128,9 +164,8 @@ async def test_normal_logs(hass, simple_queue, hass_ws_client):
 
 async def test_exception(hass, simple_queue, hass_ws_client):
     """Test that exceptions are logged and retrieved correctly."""
-    await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
-    await hass.async_block_till_done()
-    wait_empty = await _install_log_catcher(hass, simple_queue, "log message")
+    watcher = await setup_system_log(hass, BASIC_CONFIG)
+    wait_empty = watcher.add_watcher("log message")
 
     _generate_and_log_exception("exception message", "log message")
     await wait_empty
@@ -141,11 +176,9 @@ async def test_exception(hass, simple_queue, hass_ws_client):
 
 async def test_warning(hass, simple_queue, hass_ws_client):
     """Test that warning are logged and retrieved correctly."""
-    await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
-    await hass.async_block_till_done()
+    watcher = await setup_system_log(hass, BASIC_CONFIG)
 
-    wait_empty = await _install_log_catcher(hass, simple_queue, "warning message")
-
+    wait_empty = watcher.add_watcher("warning message")
     _LOGGER.warning("warning message")
     await wait_empty
 
