@@ -137,7 +137,7 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         icon="mdi:dns",
         name="TCP Queries",
         native_unit_of_measurement="queries",
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
         value=lambda data: data.tcp_queries,
     ),
     NextDnsSensorEntityDescription[AnalyticsProtocols](
