@@ -63,7 +63,7 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         icon="mdi:dns",
         name="DNS queries",
         native_unit_of_measurement="queries",
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
         value=lambda data: data.all_queries,
     ),
     NextDnsSensorEntityDescription[AnalyticsStatus](
@@ -73,7 +73,7 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         icon="mdi:dns",
         name="DNS queries blocked",
         native_unit_of_measurement="queries",
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
         value=lambda data: data.blocked_queries,
     ),
     NextDnsSensorEntityDescription[AnalyticsStatus](
@@ -83,7 +83,7 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         icon="mdi:dns",
         name="DNS queries relayed",
         native_unit_of_measurement="queries",
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
         value=lambda data: data.relayed_queries,
     ),
     NextDnsSensorEntityDescription[AnalyticsStatus](
@@ -104,7 +104,7 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         icon="mdi:dns",
         name="DNS-over-HTTPS queries",
         native_unit_of_measurement="queries",
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
         value=lambda data: data.doh_queries,
     ),
     NextDnsSensorEntityDescription[AnalyticsProtocols](
@@ -115,7 +115,7 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         icon="mdi:dns",
         name="DNS-over-TLS queries",
         native_unit_of_measurement="queries",
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
         value=lambda data: data.dot_queries,
     ),
     NextDnsSensorEntityDescription[AnalyticsProtocols](
@@ -126,7 +126,7 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         icon="mdi:dns",
         name="DNS-over-QUIC queries",
         native_unit_of_measurement="queries",
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
         value=lambda data: data.doq_queries,
     ),
     NextDnsSensorEntityDescription[AnalyticsProtocols](
@@ -148,7 +148,7 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         icon="mdi:dns",
         name="UDP queries",
         native_unit_of_measurement="queries",
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
         value=lambda data: data.udp_queries,
     ),
     NextDnsSensorEntityDescription[AnalyticsProtocols](
@@ -214,7 +214,7 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         icon="mdi:lock",
         name="Encrypted queries",
         native_unit_of_measurement="queries",
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
         value=lambda data: data.encrypted_queries,
     ),
     NextDnsSensorEntityDescription[AnalyticsEncryption](
@@ -225,7 +225,7 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         icon="mdi:lock-open",
         name="Unencrypted queries",
         native_unit_of_measurement="queries",
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
         value=lambda data: data.unencrypted_queries,
     ),
     NextDnsSensorEntityDescription[AnalyticsEncryption](
@@ -247,7 +247,7 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         icon="mdi:ip",
         name="IPv4 queries",
         native_unit_of_measurement="queries",
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
         value=lambda data: data.ipv4_queries,
     ),
     NextDnsSensorEntityDescription[AnalyticsIpVersions](
@@ -258,7 +258,7 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         icon="mdi:ip",
         name="IPv6 queries",
         native_unit_of_measurement="queries",
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
         value=lambda data: data.ipv6_queries,
     ),
     NextDnsSensorEntityDescription[AnalyticsIpVersions](
@@ -280,7 +280,7 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         icon="mdi:lock-check",
         name="DNSSEC validated queries",
         native_unit_of_measurement="queries",
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
         value=lambda data: data.validated_queries,
     ),
     NextDnsSensorEntityDescription[AnalyticsDnssec](
@@ -291,7 +291,7 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         icon="mdi:lock-alert",
         name="DNSSEC not validated queries",
         native_unit_of_measurement="queries",
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
         value=lambda data: data.not_validated_queries,
     ),
     NextDnsSensorEntityDescription[AnalyticsDnssec](
