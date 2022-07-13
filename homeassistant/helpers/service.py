@@ -864,14 +864,15 @@ def async_get_config_entry_from_call(
         (device_registry, CONF_DEVICE_ID),
         (area_registry, CONF_AREA_ID),
     ):
-        if (target_id := call.data.get(key)) is None:
+        if (targets := call.data.get(key)) is None:
             continue
 
         registry = module.async_get(hass)
 
-        if target_entry := registry.async_get(target_id):
-            for entry in hass.config_entries.async_entries(call.domain):
-                if entry.entry_id in target_entry.config_entries:
-                    return entry
+        for target_id in targets:
+            if target_entry := registry.async_get(target_id):
+                for entry in hass.config_entries.async_entries(call.domain):
+                    if entry.entry_id in target_entry.config_entries:
+                        return entry
 
     return None
