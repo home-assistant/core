@@ -431,7 +431,7 @@ class MQTT:
             # Do not disconnect, we want the broker to always publish will
             self._mqttc.loop_stop()
 
-        # wait for ACK-s to be processed
+        # wait for ACK-s to be processed (unsubscribe only)
         async with self._paho_lock:
             tasks = [
                 self.hass.async_create_task(self._wait_for_mid(mid))
