@@ -104,7 +104,7 @@ def get_frame(name):
     return (name, 5, None, None)
 
 
-async def setup_system_log(hass, config) -> WatchHASSQueueListener:
+async def async_setup_system_log(hass, config) -> WatchHASSQueueListener:
     """Set up the system_log component."""
     WatchHASSQueueListener.instances = []
     with patch(
@@ -119,7 +119,7 @@ async def setup_system_log(hass, config) -> WatchHASSQueueListener:
 
 async def test_normal_logs(hass, simple_queue, hass_ws_client):
     """Test that debug and info are not logged."""
-    await setup_system_log(hass, BASIC_CONFIG)
+    await async_setup_system_log(hass, BASIC_CONFIG)
 
     _LOGGER.debug("debug")
     _LOGGER.info("info")
@@ -131,7 +131,7 @@ async def test_normal_logs(hass, simple_queue, hass_ws_client):
 
 async def test_exception(hass, simple_queue, hass_ws_client):
     """Test that exceptions are logged and retrieved correctly."""
-    watcher = await setup_system_log(hass, BASIC_CONFIG)
+    watcher = await async_setup_system_log(hass, BASIC_CONFIG)
     wait_empty = watcher.add_watcher("log message")
 
     _generate_and_log_exception("exception message", "log message")
@@ -143,7 +143,7 @@ async def test_exception(hass, simple_queue, hass_ws_client):
 
 async def test_warning(hass, simple_queue, hass_ws_client):
     """Test that warning are logged and retrieved correctly."""
-    watcher = await setup_system_log(hass, BASIC_CONFIG)
+    watcher = await async_setup_system_log(hass, BASIC_CONFIG)
 
     wait_empty = watcher.add_watcher("warning message")
     _LOGGER.warning("warning message")
@@ -155,7 +155,7 @@ async def test_warning(hass, simple_queue, hass_ws_client):
 
 async def test_error(hass, simple_queue, hass_ws_client):
     """Test that errors are logged and retrieved correctly."""
-    watcher = await setup_system_log(hass, BASIC_CONFIG)
+    watcher = await async_setup_system_log(hass, BASIC_CONFIG)
 
     wait_empty = watcher.add_watcher("error message")
 
@@ -168,7 +168,7 @@ async def test_error(hass, simple_queue, hass_ws_client):
 
 async def test_config_not_fire_event(hass, simple_queue):
     """Test that errors are not posted as events with default config."""
-    watcher = await setup_system_log(hass, BASIC_CONFIG)
+    watcher = await async_setup_system_log(hass, BASIC_CONFIG)
     wait_empty = watcher.add_watcher("error message")
 
     events = []
@@ -188,7 +188,7 @@ async def test_config_not_fire_event(hass, simple_queue):
 
 async def test_error_posted_as_event(hass, simple_queue):
     """Test that error are posted as events."""
-    watcher = await setup_system_log(
+    watcher = await async_setup_system_log(
         hass, {"system_log": {"max_entries": 2, "fire_event": True}}
     )
     wait_empty = watcher.add_watcher("error message")
@@ -204,7 +204,7 @@ async def test_error_posted_as_event(hass, simple_queue):
 
 async def test_critical(hass, simple_queue, hass_ws_client):
     """Test that critical are logged and retrieved correctly."""
-    watcher = await setup_system_log(hass, BASIC_CONFIG)
+    watcher = await async_setup_system_log(hass, BASIC_CONFIG)
     wait_empty = watcher.add_watcher("critical message")
 
     _LOGGER.critical("critical message")
@@ -216,7 +216,7 @@ async def test_critical(hass, simple_queue, hass_ws_client):
 
 async def test_remove_older_logs(hass, simple_queue, hass_ws_client):
     """Test that older logs are rotated out."""
-    watcher = await setup_system_log(hass, BASIC_CONFIG)
+    watcher = await async_setup_system_log(hass, BASIC_CONFIG)
     wait_empty = watcher.add_watcher("error message 1")
     _LOGGER.error("error message 1")
     await wait_empty
@@ -241,7 +241,7 @@ def log_msg(nr=2):
 
 async def test_dedupe_logs(hass, simple_queue, hass_ws_client):
     """Test that duplicate log entries are dedupe."""
-    watcher = await setup_system_log(hass, {})
+    watcher = await async_setup_system_log(hass, {})
     wait_empty = watcher.add_watcher("error message 1")
     _LOGGER.error("error message 1")
     await wait_empty
@@ -305,7 +305,7 @@ async def test_dedupe_logs(hass, simple_queue, hass_ws_client):
 
 async def test_clear_logs(hass, simple_queue, hass_ws_client):
     """Test that the log can be cleared via a service call."""
-    watcher = await setup_system_log(hass, BASIC_CONFIG)
+    watcher = await async_setup_system_log(hass, BASIC_CONFIG)
     wait_empty = watcher.add_watcher("error message")
     _LOGGER.error("error message")
     await wait_empty
@@ -364,7 +364,7 @@ async def test_write_choose_level(hass):
 
 async def test_unknown_path(hass, simple_queue, hass_ws_client):
     """Test error logged from unknown path."""
-    watcher = await setup_system_log(hass, BASIC_CONFIG)
+    watcher = await async_setup_system_log(hass, BASIC_CONFIG)
     wait_empty = watcher.add_watcher("error message")
     _LOGGER.findCaller = MagicMock(return_value=("unknown_path", 0, None, None))
     _LOGGER.error("error message")
@@ -396,7 +396,7 @@ async def async_log_error_from_test_path(hass, path, watcher):
 
 async def test_homeassistant_path(hass, simple_queue, hass_ws_client):
     """Test error logged from Home Assistant path."""
-    watcher = await setup_system_log(hass, BASIC_CONFIG)
+    watcher = await async_setup_system_log(hass, BASIC_CONFIG)
 
     with patch(
         "homeassistant.components.system_log.HOMEASSISTANT_PATH",
@@ -411,7 +411,7 @@ async def test_homeassistant_path(hass, simple_queue, hass_ws_client):
 
 async def test_config_path(hass, simple_queue, hass_ws_client):
     """Test error logged from config path."""
-    watcher = await setup_system_log(hass, BASIC_CONFIG)
+    watcher = await async_setup_system_log(hass, BASIC_CONFIG)
 
     with patch.object(hass.config, "config_dir", new="config"):
         await async_log_error_from_test_path(
