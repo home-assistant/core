@@ -28,7 +28,7 @@
                 "title": "Selecionar Localiza\u00e7\u00e3o"
             },
             "user": {
-                "description": "Por favor, insira um SmartThings [Personal Access Token]({token_url} ) que foi criado de acordo com as [instru\u00e7\u00f5es]({component_url}).",
+                "description": "SmartThings will be configured to send push updates to Home Assistant at:\n> {webhook_url}\n\nIf this is not correct, please update your configuration, restart Home Assistant, and try again.",
                 "title": "Insira o Token de acesso pessoal"
             }
         }
