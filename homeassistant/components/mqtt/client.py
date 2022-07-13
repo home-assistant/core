@@ -389,21 +389,9 @@ class MQTT:
         """Publish a MQTT message."""
         # We don't import on the top because some integrations
         # should be able to optionally rely on MQTT.
-        from paho.mqtt.client import (  # pylint: disable=import-outside-toplevel
-            MQTTMessageInfo,
-        )
-
-        def _publish(
-            topic: str, payload: PublishPayloadType, qos: int, retain: bool
-        ) -> MQTTMessageInfo:
-            msg_info: MQTTMessageInfo = self._mqttc.publish(topic, payload, qos, retain)
-            if msg_info.rc == 0:
-                self._pending_acks.add(msg_info.mid)
-            return msg_info
-
         async with self._paho_lock:
-            msg_info: MQTTMessageInfo = await self.hass.async_add_executor_job(
-                _publish, topic, payload, qos, retain
+            msg_info = await self.hass.async_add_executor_job(
+                self._mqttc.publish, topic, payload, qos, retain
             )
             _LOGGER.debug(
                 "Transmitting message on %s: '%s', mid: %s",
@@ -412,6 +400,7 @@ class MQTT:
                 msg_info.mid,
             )
             _raise_on_error(msg_info.rc)
+            self._pending_acks.add(msg_info.mid)
         await self._wait_for_mid(msg_info.mid)
 
     async def async_connect(self) -> None:
