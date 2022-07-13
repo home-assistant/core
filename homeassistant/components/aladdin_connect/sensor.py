@@ -11,6 +11,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, SIGNAL_STRENGTH_DECIBELS
@@ -38,17 +39,19 @@ class AccSensorEntityDescription(
 SENSORS: tuple[AccSensorEntityDescription, ...] = (
     AccSensorEntityDescription(
         key="battery_level",
-        name="Battery Level",
+        name="Battery level",
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=AladdinConnectClient.get_battery_status,
     ),
     AccSensorEntityDescription(
         key="rssi",
-        name="WIFI RSSI",
+        name="Wi-Fi RSSI",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_registry_enabled_default=False,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=AladdinConnectClient.get_rssi_status,
     ),
 )
@@ -96,7 +99,6 @@ class AladdinConnectSensor(SensorEntity):
     @property
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
-        # attribute: ignore
         return cast(
             float,
             self.entity_description.value_fn(self._acc, self._device_id, self._number),
