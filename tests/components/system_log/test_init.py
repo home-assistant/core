@@ -161,6 +161,7 @@ async def test_config_not_fire_event(hass):
     hass.bus.async_listen(system_log.EVENT_SYSTEM_LOG, event_listener)
 
     await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     assert len(events) == 0
 
@@ -177,6 +178,8 @@ async def test_error_posted_as_event(hass):
     _LOGGER.error("error message")
     await wait_empty
     await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
     assert len(events) == 1
     assert_log(events[0].data, "", "error message", "ERROR")
 
