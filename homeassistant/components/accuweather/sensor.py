@@ -13,7 +13,6 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_CUBIC_METER,
-    CONF_NAME,
     LENGTH_FEET,
     LENGTH_INCHES,
     LENGTH_METERS,
@@ -27,8 +26,6 @@ from homeassistant.const import (
     UV_INDEX,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -40,7 +37,6 @@ from .const import (
     ATTR_FORECAST,
     ATTRIBUTION,
     DOMAIN,
-    MANUFACTURER,
     MAX_FORECAST_DAYS,
 )
 
@@ -321,13 +317,12 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Add AccuWeather entities from a config_entry."""
-    name: str = entry.data[CONF_NAME]
 
     coordinator: AccuWeatherDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     sensors: list[AccuWeatherSensor] = []
     for description in SENSOR_TYPES:
-        sensors.append(AccuWeatherSensor(name, coordinator, description))
+        sensors.append(AccuWeatherSensor(coordinator, description))
 
     if coordinator.forecast:
         for description in FORECAST_SENSOR_TYPES:
@@ -336,9 +331,7 @@ async def async_setup_entry(
                 # locations.
                 if description.key in coordinator.data[ATTR_FORECAST][0]:
                     sensors.append(
-                        AccuWeatherSensor(
-                            name, coordinator, description, forecast_day=day
-                        )
+                        AccuWeatherSensor(coordinator, description, forecast_day=day)
                     )
 
     async_add_entities(sensors)
@@ -355,7 +348,6 @@ class AccuWeatherSensor(
 
     def __init__(
         self,
-        name: str,
         coordinator: AccuWeatherDataUpdateCoordinator,
         description: AccuWeatherSensorDescription,
         forecast_day: int | None = None,
@@ -383,12 +375,7 @@ class AccuWeatherSensor(
         else:
             self._unit_system = API_IMPERIAL
             self._attr_native_unit_of_measurement = description.unit_imperial
-        self._attr_device_info = DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, coordinator.location_key)},
-            manufacturer=MANUFACTURER,
-            name=name,
-        )
+        self._attr_device_info = coordinator.device_info
         self.forecast_day = forecast_day
 
     @property
