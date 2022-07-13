@@ -273,7 +273,7 @@ def register_preview(hass: HomeAssistant, flow_id: str, user_input: dict[str, An
     if not hass.data[DOMAIN].get(PREVIEWS):
         _LOGGER.debug("Registering camera image preview handler")
         hass.http.register_view(CameraImagePreview(hass))
-        hass.data[DOMAIN][PREVIEWS] = {}
+    hass.data[DOMAIN][PREVIEWS] = {}
     hass.data[DOMAIN][PREVIEWS][flow_id] = user_input
 
 
