@@ -41,6 +41,8 @@ _LOGGER = logging.getLogger(__name__)
 
 MAX_REMEMBER_ADDRESSES: Final = 2048
 
+SOURCE_LOCAL: Final = "local"
+
 
 class BluetoothCallbackMatcherOptional(TypedDict, total=False):
     """Matcher for the bluetooth integration for callback optional fields."""
@@ -117,7 +119,7 @@ class BluetoothServiceInfo(BaseServiceInfo):
 
 
 BluetoothChange = Enum("BluetoothChange", "ADVERTISEMENT")
-BluetoothCallback = Callable[[BluetoothServiceInfo, BluetoothChange], None]
+BluetoothCallback = Callable[[BluetoothServiceInfo, BluetoothChange, str], None]
 
 
 @hass_callback
@@ -313,7 +315,7 @@ class BluetoothManager:
                         device, advertisement_data
                     )
                 try:
-                    callback(service_info, BluetoothChange.ADVERTISEMENT)
+                    callback(service_info, BluetoothChange.ADVERTISEMENT, SOURCE_LOCAL)
                 except Exception:  # pylint: disable=broad-except
                     _LOGGER.exception("Error in bluetooth callback")
 
@@ -358,6 +360,7 @@ class BluetoothManager:
                 callback(
                     BluetoothServiceInfo.from_advertisement(*device_adv_data),
                     BluetoothChange.ADVERTISEMENT,
+                    SOURCE_LOCAL,
                 )
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Error in bluetooth callback")
