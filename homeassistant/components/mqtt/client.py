@@ -398,7 +398,6 @@ class MQTT:
                 msg_info.mid,
             )
             _raise_on_error(msg_info.rc)
-            self._pending_acks.add(msg_info.mid)
         await self._wait_for_mid(msg_info.mid)
 
     async def async_connect(self) -> None:
@@ -438,7 +437,6 @@ class MQTT:
                 self.hass.async_create_task(self._wait_for_mid(mid, True))
                 for mid in self._pending_acks
             ]
-            self._pending_acks = set()
         await asyncio.gather(*tasks)
 
         # stop the MQTT loop
@@ -513,8 +511,6 @@ class MQTT:
             subscribe_result_list = []
             for topic, qos in subscriptions:
                 result, mid = self._mqttc.subscribe(topic, qos)
-                if result == 0:
-                    self._pending_acks.add(mid)
                 subscribe_result_list.append((result, mid))
                 _LOGGER.debug("Subscribing to %s, mid: %s", topic, mid)
             return subscribe_result_list
@@ -674,13 +670,6 @@ class MQTT:
         """Wait for ACK from broker."""
         # Create the mid event if not created, either _mqtt_handle_mid or _wait_for_mid
         # may be executed first.
-        async with self._paho_lock:
-            # Do do await ACK twice when shutting down the connection
-            if not shutdown:
-                if mid not in self._pending_acks:
-                    return
-                self._pending_acks.remove(mid)
-
         if mid not in self._pending_operations:
             self._pending_operations[mid] = asyncio.Event()
         try:
@@ -690,7 +679,12 @@ class MQTT:
                 "No ACK from MQTT server in %s seconds (mid: %s)", TIMEOUT_ACK, mid
             )
         finally:
-            del self._pending_operations[mid]
+            if mid in self._pending_operations:
+                del self._pending_operations[mid]
+            # Cleanup ACK sync buffer
+            async with self._paho_lock:
+                if mid in self._pending_acks:
+                    self._pending_acks.remove(mid)
 
     async def _discovery_cooldown(self):
         now = time.time()
