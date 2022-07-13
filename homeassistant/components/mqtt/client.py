@@ -613,7 +613,7 @@ class MQTT:
         self.hass.add_job(self._mqtt_handle_message, msg)
 
     @lru_cache(2048)
-    def _matching_subscriptions(self, topic: str):
+    def _matching_subscriptions(self, topic):
         subscriptions = []
         for subscription in self.subscriptions:
             if subscription.matcher(topic):
@@ -709,7 +709,7 @@ class MQTT:
             async with self._paho_lock:
                 self._pending_acks.remove(mid)
 
-    async def _discovery_cooldown(self) -> None:
+    async def _discovery_cooldown(self):
         now = time.time()
         # Reset discovery and subscribe cooldowns
         self.hass.data[LAST_DISCOVERY] = now
