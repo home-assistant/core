@@ -40,6 +40,7 @@ def _validate_input(data: dict[str, Any]) -> None:
     """
     nzbget_api = NZBGetAPI(
         data[CONF_HOST],
+        "",
         data.get(CONF_USERNAME),
         data.get(CONF_PASSWORD),
         data[CONF_SSL],
@@ -94,12 +95,8 @@ class NZBGetConfigFlow(ConfigFlow, domain=DOMAIN):
             vol.Optional(CONF_PASSWORD): str,
             vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
             vol.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
+            vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
         }
-
-        if self.show_advanced_options:
-            data_schema[
-                vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL)
-            ] = bool
 
         return self.async_show_form(
             step_id="user",
