@@ -35,7 +35,6 @@ from .setup import (
     async_setup_component,
 )
 from .util import dt as dt_util
-from .util.async_ import gather_with_concurrency
 from .util.logging import async_activate_log_queue_handler
 from .util.package import async_get_user_site, is_virtual_env
 
@@ -479,14 +478,7 @@ async def _async_set_up_integrations(
 
         integrations_to_process = [
             int_or_exc
-            for int_or_exc in await gather_with_concurrency(
-                loader.MAX_LOAD_CONCURRENTLY,
-                *(
-                    loader.async_get_integration(hass, domain)
-                    for domain in old_to_resolve
-                ),
-                return_exceptions=True,
-            )
+            for int_or_exc in await loader.async_get_integrations(hass, old_to_resolve)
             if isinstance(int_or_exc, loader.Integration)
         ]
         resolve_dependencies_tasks = [

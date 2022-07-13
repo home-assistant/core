@@ -7,7 +7,7 @@ documentation as possible to keep it understandable.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from contextlib import suppress
 import functools as ft
 import importlib
@@ -702,7 +702,7 @@ async def async_get_integration(hass: HomeAssistant, domain: str) -> Integration
 
 
 async def async_get_integrations(
-    hass: HomeAssistant, domains: list[str]
+    hass: HomeAssistant, domains: Iterable[str]
 ) -> dict[str, Integration | Exception]:
     """Get integrations."""
     if (cache := hass.data.get(DATA_INTEGRATIONS)) is None:
