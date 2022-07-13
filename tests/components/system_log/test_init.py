@@ -217,9 +217,14 @@ async def test_remove_older_logs(hass, simple_queue, hass_ws_client):
     await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
     await hass.async_block_till_done()
     wait_empty = await _install_log_catcher(hass)
-
     _LOGGER.error("error message 1")
+    await wait_empty
+
+    wait_empty = await _install_log_catcher(hass)
     _LOGGER.error("error message 2")
+    await wait_empty
+
+    wait_empty = await _install_log_catcher(hass)
     _LOGGER.error("error message 3")
     await wait_empty
 
@@ -238,10 +243,18 @@ async def test_dedupe_logs(hass, simple_queue, hass_ws_client):
     await async_setup_component(hass, system_log.DOMAIN, {})
     await hass.async_block_till_done()
     wait_empty = await _install_log_catcher(hass)
-
     _LOGGER.error("error message 1")
+    await wait_empty
+
+    wait_empty = await _install_log_catcher(hass)
     log_msg()
+    await wait_empty
+
+    wait_empty = await _install_log_catcher(hass)
     log_msg("2-2")
+    await wait_empty
+
+    wait_empty = await _install_log_catcher(hass)
     _LOGGER.error("error message 3")
     await wait_empty
 
@@ -260,10 +273,18 @@ async def test_dedupe_logs(hass, simple_queue, hass_ws_client):
     assert log[0]["timestamp"] > log[0]["first_occurred"]
 
     wait_empty = await _install_log_catcher(hass)
-
     log_msg("2-3")
+    await wait_empty
+
+    wait_empty = await _install_log_catcher(hass)
     log_msg("2-4")
+    await wait_empty
+
+    wait_empty = await _install_log_catcher(hass)
     log_msg("2-5")
+    await wait_empty
+
+    wait_empty = await _install_log_catcher(hass)
     log_msg("2-6")
     await wait_empty
 
@@ -287,12 +308,10 @@ async def test_clear_logs(hass, simple_queue, hass_ws_client):
     await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
     await hass.async_block_till_done()
     wait_empty = await _install_log_catcher(hass)
-
     _LOGGER.error("error message")
     await wait_empty
 
     wait_empty = await _install_log_catcher(hass)
-
     await hass.services.async_call(system_log.DOMAIN, system_log.SERVICE_CLEAR, {})
     await wait_empty
 
@@ -351,7 +370,6 @@ async def test_unknown_path(hass, simple_queue, hass_ws_client):
     await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
     await hass.async_block_till_done()
     wait_empty = await _install_log_catcher(hass)
-
     _LOGGER.findCaller = MagicMock(return_value=("unknown_path", 0, None, None))
     _LOGGER.error("error message")
     await wait_empty
@@ -376,7 +394,6 @@ async def async_log_error_from_test_path(hass, path, sq):
         ),
     ):
         wait_empty = await _install_log_catcher(hass)
-
         _LOGGER.error("error message")
         await wait_empty
 
