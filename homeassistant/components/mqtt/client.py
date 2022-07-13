@@ -434,7 +434,7 @@ class MQTT:
         # wait for ACK-s to be processed
         async with self._paho_lock:
             tasks = [
-                self.hass.async_create_task(self._wait_for_mid(mid, True))
+                self.hass.async_create_task(self._wait_for_mid(mid))
                 for mid in self._pending_acks
             ]
         await asyncio.gather(*tasks)
@@ -666,7 +666,7 @@ class MQTT:
             result_code,
         )
 
-    async def _wait_for_mid(self, mid: int, shutdown: bool = False) -> None:
+    async def _wait_for_mid(self, mid: int) -> None:
         """Wait for ACK from broker."""
         # Create the mid event if not created, either _mqtt_handle_mid or _wait_for_mid
         # may be executed first.
