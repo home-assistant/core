@@ -146,18 +146,16 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self._async_create_entry(user_input)
 
         user_input = user_input or {}
-        schema = _get_schema_common(user_input)
-        schema[
+        schema = {
+            vol.Required(
+                CONF_DEVICE, default=user_input.get(CONF_DEVICE, "/dev/ttyACM0")
+            ): str,
             vol.Required(
                 CONF_BAUD_RATE,
                 default=user_input.get(CONF_BAUD_RATE, DEFAULT_BAUD_RATE),
-            )
-        ] = cv.positive_int
-        schema[
-            vol.Required(
-                CONF_DEVICE, default=user_input.get(CONF_DEVICE, "/dev/ttyACM0")
-            )
-        ] = str
+            ): cv.positive_int,
+        }
+        schema.update(_get_schema_common(user_input))
 
         schema = vol.Schema(schema)
         return self.async_show_form(
@@ -177,16 +175,15 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self._async_create_entry(user_input)
 
         user_input = user_input or {}
-        schema = _get_schema_common(user_input)
-        schema[
-            vol.Required(CONF_DEVICE, default=user_input.get(CONF_DEVICE, "127.0.0.1"))
-        ] = str
-
-        schema[
+        schema = {
+            vol.Required(
+                CONF_DEVICE, default=user_input.get(CONF_DEVICE, "127.0.0.1")
+            ): str,
             vol.Optional(
                 CONF_TCP_PORT, default=user_input.get(CONF_TCP_PORT, DEFAULT_TCP_PORT)
-            )
-        ] = _PORT_SELECTOR
+            ): _PORT_SELECTOR,
+        }
+        schema.update(_get_schema_common(user_input))
 
         schema = vol.Schema(schema)
         return self.async_show_form(step_id="gw_tcp", data_schema=schema, errors=errors)
@@ -239,20 +236,16 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self._async_create_entry(user_input)
 
         user_input = user_input or {}
-        schema = _get_schema_common(user_input)
-        schema[
-            vol.Required(CONF_RETAIN, default=user_input.get(CONF_RETAIN, True))
-        ] = bool
-        schema[
+        schema = {
             vol.Required(
                 CONF_TOPIC_IN_PREFIX, default=user_input.get(CONF_TOPIC_IN_PREFIX, "")
-            )
-        ] = str
-        schema[
+            ): str,
             vol.Required(
                 CONF_TOPIC_OUT_PREFIX, default=user_input.get(CONF_TOPIC_OUT_PREFIX, "")
-            )
-        ] = str
+            ): str,
+            vol.Required(CONF_RETAIN, default=user_input.get(CONF_RETAIN, True)): bool,
+        }
+        schema.update(_get_schema_common(user_input))
 
         schema = vol.Schema(schema)
         return self.async_show_form(
