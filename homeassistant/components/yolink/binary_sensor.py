@@ -54,7 +54,8 @@ SENSOR_TYPES: tuple[YoLinkBinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.DOOR,
         name="State",
         value=lambda value: value == "open" if value is not None else None,
-        exists_fn=lambda device: device.device_type == ATTR_DEVICE_DOOR_SENSOR,
+        exists_fn=lambda device: device.device_type == ATTR_DEVICE_DOOR_SENSOR
+        and device.parent_id is None,
     ),
     YoLinkBinarySensorEntityDescription(
         key="motion_state",
