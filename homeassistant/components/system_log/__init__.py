@@ -3,7 +3,6 @@ from collections import OrderedDict, deque
 import logging
 import re
 import traceback
-from typing import cast
 
 import voluptuous as vol
 
@@ -191,7 +190,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         conf = CONFIG_SCHEMA({DOMAIN: {}})[DOMAIN]
 
     hass_path: str = HOMEASSISTANT_PATH[0]
-    config_dir = cast(str, hass.config.config_dir)
+    config_dir = hass.config.config_dir
+    assert config_dir is not None
     paths_re = re.compile(
         r"(?:{})/(.*)".format("|".join([re.escape(x) for x in (hass_path, config_dir)]))
     )
