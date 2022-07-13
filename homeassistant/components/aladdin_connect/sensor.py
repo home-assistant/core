@@ -82,15 +82,6 @@ class AladdinConnectSensor(SensorEntity):
     _device: AladdinConnectSensor
     entity_description: AccSensorEntityDescription
 
-    @property
-    def device_info(self) -> DeviceInfo | None:
-        """Device information for Aladdin Connect sensors."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._device_id)},
-            name=self._name,
-            manufacturer="Overhead Door",
-        )
-
     def __init__(
         self,
         acc: AladdinConnectClient,
@@ -104,6 +95,16 @@ class AladdinConnectSensor(SensorEntity):
         self._acc = acc
         self.entity_description = description
         self._attr_unique_id = f"{self._device_id}-{self._number}-{description.key}"
+        self._attr_has_entity_name = True
+
+    @property
+    def device_info(self) -> DeviceInfo | None:
+        """Device information for Aladdin Connect sensors."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._device_id)},
+            name=self._name,
+            manufacturer="Overhead Door",
+        )
 
     @property
     def native_value(self) -> float | None:

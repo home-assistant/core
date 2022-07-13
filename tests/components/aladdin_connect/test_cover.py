@@ -112,11 +112,11 @@ async def test_cover_operation(
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: "cover.aladdin_connect_533255_1"},
+        {ATTR_ENTITY_ID: "cover.home"},
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert hass.states.get("cover.aladdin_connect_533255_1").state == STATE_OPEN
+    assert hass.states.get("cover.home").state == STATE_OPEN
 
     mock_aladdinconnect_api.async_get_door_status = AsyncMock(return_value=STATE_CLOSED)
     mock_aladdinconnect_api.get_door_status.return_value = STATE_CLOSED
@@ -128,7 +128,7 @@ async def test_cover_operation(
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: "cover.aladdin_connect_533255_1"},
+            {ATTR_ENTITY_ID: "cover.home"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -138,7 +138,7 @@ async def test_cover_operation(
         )
         await hass.async_block_till_done()
 
-    assert hass.states.get("cover.aladdin_connect_533255_1").state == STATE_CLOSED
+    assert hass.states.get("cover.home").state == STATE_CLOSED
 
     mock_aladdinconnect_api.async_get_door_status = AsyncMock(
         return_value=STATE_CLOSING
@@ -154,7 +154,7 @@ async def test_cover_operation(
             utcnow() + SCAN_INTERVAL,
         )
         await hass.async_block_till_done()
-    assert hass.states.get("cover.aladdin_connect_533255_1").state == STATE_CLOSING
+    assert hass.states.get("cover.home").state == STATE_CLOSING
 
     mock_aladdinconnect_api.async_get_door_status = AsyncMock(
         return_value=STATE_OPENING
@@ -170,7 +170,7 @@ async def test_cover_operation(
             utcnow() + SCAN_INTERVAL,
         )
         await hass.async_block_till_done()
-    assert hass.states.get("cover.aladdin_connect_533255_1").state == STATE_OPENING
+    assert hass.states.get("cover.home").state == STATE_OPENING
 
     mock_aladdinconnect_api.async_get_door_status = AsyncMock(return_value=None)
     mock_aladdinconnect_api.get_door_status.return_value = None
@@ -182,7 +182,7 @@ async def test_cover_operation(
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: "cover.aladdin_connect_533255_1"},
+            {ATTR_ENTITY_ID: "cover.home"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -192,7 +192,7 @@ async def test_cover_operation(
         )
         await hass.async_block_till_done()
 
-    assert hass.states.get("cover.aladdin_connect_533255_1").state == STATE_UNKNOWN
+    assert hass.states.get("cover.home").state == STATE_UNKNOWN
 
 
 async def test_yaml_import(
@@ -259,4 +259,4 @@ async def test_callback(
     ):
         callback = mock_aladdinconnect_api.register_callback.call_args[0][0]
         await callback()
-    assert hass.states.get("cover.aladdin_connect_533255_1").state == STATE_CLOSING
+    assert hass.states.get("cover.home").state == STATE_CLOSING
