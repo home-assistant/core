@@ -168,9 +168,6 @@ async def _async_get_custom_components(
     integrations = await hass.async_add_executor_job(
         resolve_integrations_from_root, hass, custom_components, dirs
     )
-    import pprint
-
-    pprint.pprint(["integrations", integrations])
     return {
         integration.domain: integration
         for integration in integrations.values()
@@ -695,10 +692,6 @@ def resolve_integrations_from_root(
 async def async_get_integration(hass: HomeAssistant, domain: str) -> Integration:
     """Get integration."""
     integrations_or_excs = await async_get_integrations(hass, [domain])
-
-    import pprint
-
-    pprint.pprint(integrations_or_excs)
     int_or_exc = integrations_or_excs[domain]
     if isinstance(int_or_exc, Integration):
         return int_or_exc
