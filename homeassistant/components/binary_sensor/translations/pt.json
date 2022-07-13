@@ -105,6 +105,9 @@
             "off": "Sem carregar",
             "on": "A carregar"
         },
+        "carbon_monoxide": {
+            "on": "Detectado"
+        },
         "cold": {
             "off": "Normal",
             "on": "Frio"
@@ -186,7 +189,7 @@
         },
         "vibration": {
             "off": "Limpo",
-            "on": "Detetado"
+            "on": "Detectado"
         },
         "window": {
             "off": "Fechada",

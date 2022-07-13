@@ -21,7 +21,7 @@ repos:
           - --skip="./.*,*.csv,*.json"
           - --quiet-level=2
         exclude_types: [csv, json]
-        exclude: ^tests/fixtures/
+        exclude: ^tests/fixtures/|homeassistant/generated/
   - repo: https://github.com/PyCQA/flake8
     rev: 4.0.1
     hooks:
