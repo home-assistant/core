@@ -11,7 +11,6 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
 
@@ -37,7 +36,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     if re.match(r"\d+(?:, *\d+)*,?", guild_ids := data["guild_ids"].strip()):
         data["guild_ids"] = [int(guild_id) for guild_id in guild_ids.split(",")]
     else:
-        raise MalformedDataError
+        raise ValueError
 
     bot = nextcord.Client()
     await bot.login(data["token"])
@@ -68,7 +67,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             data = await validate_input(self.hass, user_input)
-        except MalformedDataError:
+        except ValueError:
             errors.update(base="malformed_guilds")
         except nextcord.LoginFailure:
             errors.update(base="invalid_token")
@@ -87,7 +86,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
         )
-
-
-class MalformedDataError(HomeAssistantError):
-    """Error raised when user provided string is not formatted correctly."""

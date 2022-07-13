@@ -4,7 +4,7 @@ from unittest.mock import patch
 import nextcord
 
 from homeassistant import config_entries
-from homeassistant.components.discal.config_flow import MalformedDataError
+from homeassistant.components.discal.config_flow import ValueError
 from homeassistant.components.discal.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -33,14 +33,14 @@ async def test_form_login_failure(hass: HomeAssistant) -> None:
 
 
 async def test_form_malformed_guilds(hass: HomeAssistant) -> None:
-    """Test a string with letters in it fails with :py:class:`MalformedDataError`."""
+    """Test a string with letters in it fails with :py:class:`ValueError`."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with patch(
         "homeassistant.components.discal.config_flow.validate_input",
-        side_effect=MalformedDataError,
+        side_effect=ValueError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
