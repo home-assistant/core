@@ -1,7 +1,7 @@
 """Test system log component."""
+import asyncio
 import logging
 import queue
-import time
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -27,20 +27,31 @@ def simple_queue():
         yield simple_queue_fixed
 
 
-async def _async_block_until_queue_empty(hass, sq):
-    # Unfortunately we are stuck with polling
+async def _install_log_catcher(hass):
+    event = asyncio.Event()
     await hass.async_block_till_done()
+
+    class EmitEventHandler(logging.Handler):
+        """Set an event when called."""
+
+        def emit(self, record):
+            """Emit a log record."""
+            event.set()
+
+    handler = EmitEventHandler()
+    logging.root.addHandler(handler)
 
     def _wait_handler_lock():
         handler: logging.Handler = hass.data[system_log.DOMAIN]
         handler.acquire()
-        while not sq.empty():
-            time.sleep(0.01)
         handler.release()
 
-    await hass.async_add_executor_job(_wait_handler_lock)
-    await hass.async_block_till_done()
-    await hass.async_add_executor_job(_wait_handler_lock)
+    async def _async_wait_and_remove():
+        await event.wait()
+        await hass.async_add_executor_job(_wait_handler_lock)
+        logging.root.removeHandler(handler)
+
+    return _async_wait_and_remove()
 
 
 async def get_error_log(hass_ws_client):
@@ -96,9 +107,13 @@ async def test_normal_logs(hass, simple_queue, hass_ws_client):
     await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
     await hass.async_block_till_done()
 
+    wait_empty = await _install_log_catcher(hass)
     _LOGGER.debug("debug")
+    await wait_empty
+
+    wait_empty = await _install_log_catcher(hass)
     _LOGGER.info("info")
-    await _async_block_until_queue_empty(hass, simple_queue)
+    await wait_empty
 
     # Assert done by get_error_log
     logs = await get_error_log(hass_ws_client)
@@ -109,9 +124,10 @@ async def test_exception(hass, simple_queue, hass_ws_client):
     """Test that exceptions are logged and retrieved correctly."""
     await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
     await hass.async_block_till_done()
+    wait_empty = await _install_log_catcher(hass)
 
     _generate_and_log_exception("exception message", "log message")
-    await _async_block_until_queue_empty(hass, simple_queue)
+    await wait_empty
     log = find_log(await get_error_log(hass_ws_client), "ERROR")
     assert log is not None
     assert_log(log, "exception message", "log message", "ERROR")
@@ -122,8 +138,10 @@ async def test_warning(hass, simple_queue, hass_ws_client):
     await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
     await hass.async_block_till_done()
 
+    wait_empty = await _install_log_catcher(hass)
+
     _LOGGER.warning("warning message")
-    await _async_block_until_queue_empty(hass, simple_queue)
+    await wait_empty
 
     log = find_log(await get_error_log(hass_ws_client), "WARNING")
     assert_log(log, "", "warning message", "WARNING")
@@ -134,9 +152,11 @@ async def test_error(hass, simple_queue, hass_ws_client):
     await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
     await hass.async_block_till_done()
 
-    _LOGGER.error("error message")
-    await _async_block_until_queue_empty(hass, simple_queue)
+    wait_empty = await _install_log_catcher(hass)
 
+    _LOGGER.error("error message")
+
+    await wait_empty
     log = find_log(await get_error_log(hass_ws_client), "ERROR")
     assert_log(log, "", "error message", "ERROR")
 
@@ -145,6 +165,7 @@ async def test_config_not_fire_event(hass, simple_queue):
     """Test that errors are not posted as events with default config."""
     await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
     await hass.async_block_till_done()
+    wait_empty = await _install_log_catcher(hass)
 
     events = []
 
@@ -156,7 +177,7 @@ async def test_config_not_fire_event(hass, simple_queue):
     hass.bus.async_listen(system_log.EVENT_SYSTEM_LOG, event_listener)
 
     _LOGGER.error("error message")
-    await _async_block_until_queue_empty(hass, simple_queue)
+    await wait_empty
 
     assert len(events) == 0
 
@@ -167,11 +188,12 @@ async def test_error_posted_as_event(hass, simple_queue):
         hass, system_log.DOMAIN, {"system_log": {"max_entries": 2, "fire_event": True}}
     )
     await hass.async_block_till_done()
+    wait_empty = await _install_log_catcher(hass)
 
     events = async_capture_events(hass, system_log.EVENT_SYSTEM_LOG)
 
     _LOGGER.error("error message")
-    await _async_block_until_queue_empty(hass, simple_queue)
+    await wait_empty
 
     assert len(events) == 1
     assert_log(events[0].data, "", "error message", "ERROR")
@@ -181,9 +203,10 @@ async def test_critical(hass, simple_queue, hass_ws_client):
     """Test that critical are logged and retrieved correctly."""
     await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
     await hass.async_block_till_done()
+    wait_empty = await _install_log_catcher(hass)
 
     _LOGGER.critical("critical message")
-    await _async_block_until_queue_empty(hass, simple_queue)
+    await wait_empty
 
     log = find_log(await get_error_log(hass_ws_client), "CRITICAL")
     assert_log(log, "", "critical message", "CRITICAL")
@@ -193,11 +216,12 @@ async def test_remove_older_logs(hass, simple_queue, hass_ws_client):
     """Test that older logs are rotated out."""
     await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
     await hass.async_block_till_done()
+    wait_empty = await _install_log_catcher(hass)
 
     _LOGGER.error("error message 1")
     _LOGGER.error("error message 2")
     _LOGGER.error("error message 3")
-    await _async_block_until_queue_empty(hass, simple_queue)
+    await wait_empty
 
     log = await get_error_log(hass_ws_client)
     assert_log(log[0], "", "error message 3", "ERROR")
@@ -213,30 +237,35 @@ async def test_dedupe_logs(hass, simple_queue, hass_ws_client):
     """Test that duplicate log entries are dedupe."""
     await async_setup_component(hass, system_log.DOMAIN, {})
     await hass.async_block_till_done()
+    wait_empty = await _install_log_catcher(hass)
 
     _LOGGER.error("error message 1")
     log_msg()
     log_msg("2-2")
     _LOGGER.error("error message 3")
-    await _async_block_until_queue_empty(hass, simple_queue)
+    await wait_empty
 
     log = await get_error_log(hass_ws_client)
     assert_log(log[0], "", "error message 3", "ERROR")
     assert log[1]["count"] == 2
     assert_log(log[1], "", ["error message 2", "error message 2-2"], "ERROR")
 
+    wait_empty = await _install_log_catcher(hass)
+
     log_msg()
-    await _async_block_until_queue_empty(hass, simple_queue)
+    await wait_empty
 
     log = await get_error_log(hass_ws_client)
     assert_log(log[0], "", ["error message 2", "error message 2-2"], "ERROR")
     assert log[0]["timestamp"] > log[0]["first_occurred"]
 
+    wait_empty = await _install_log_catcher(hass)
+
     log_msg("2-3")
     log_msg("2-4")
     log_msg("2-5")
     log_msg("2-6")
-    await _async_block_until_queue_empty(hass, simple_queue)
+    await wait_empty
 
     log = await get_error_log(hass_ws_client)
     assert_log(
@@ -257,12 +286,15 @@ async def test_clear_logs(hass, simple_queue, hass_ws_client):
     """Test that the log can be cleared via a service call."""
     await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
     await hass.async_block_till_done()
+    wait_empty = await _install_log_catcher(hass)
 
     _LOGGER.error("error message")
-    await _async_block_until_queue_empty(hass, simple_queue)
+    await wait_empty
+
+    wait_empty = await _install_log_catcher(hass)
 
     await hass.services.async_call(system_log.DOMAIN, system_log.SERVICE_CLEAR, {})
-    await _async_block_until_queue_empty(hass, simple_queue)
+    await wait_empty
 
     # Assert done by get_error_log
     await get_error_log(hass_ws_client)
@@ -318,10 +350,11 @@ async def test_unknown_path(hass, simple_queue, hass_ws_client):
     """Test error logged from unknown path."""
     await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
     await hass.async_block_till_done()
+    wait_empty = await _install_log_catcher(hass)
 
     _LOGGER.findCaller = MagicMock(return_value=("unknown_path", 0, None, None))
     _LOGGER.error("error message")
-    await _async_block_until_queue_empty(hass, simple_queue)
+    await wait_empty
     log = (await get_error_log(hass_ws_client))[0]
     assert log["source"] == ["unknown_path", 0]
 
@@ -342,8 +375,10 @@ async def async_log_error_from_test_path(hass, path, sq):
             ]
         ),
     ):
+        wait_empty = await _install_log_catcher(hass)
+
         _LOGGER.error("error message")
-        await _async_block_until_queue_empty(hass, sq)
+        await wait_empty
 
 
 async def test_homeassistant_path(hass, simple_queue, hass_ws_client):
