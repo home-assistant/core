@@ -50,9 +50,10 @@ async def _install_log_catcher(hass, sq):
 
     async def _async_wait_and_remove():
         await hass.async_add_executor_job(_wait_handler_lock)
+        await event.wait()
         await hass.async_block_till_done()
         await hass.async_add_executor_job(_wait_handler_lock)
-        await event.wait()
+        await hass.async_block_till_done()
         logging.root.removeHandler(handler)
 
     return _async_wait_and_remove()
