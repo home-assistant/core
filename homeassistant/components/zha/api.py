@@ -6,6 +6,7 @@ import logging
 from typing import TYPE_CHECKING, Any, NamedTuple
 
 import voluptuous as vol
+import zigpy.backups
 from zigpy.config.validators import cv_boolean
 from zigpy.types.named import EUI64
 from zigpy.zcl.clusters.security import IasAce
@@ -302,7 +303,7 @@ async def websocket_permit_devices(
         )
     else:
         await zha_gateway.application_controller.permit(time_s=duration, node=ieee)
-    connection.send_result(msg["id"])
+    connection.send_result(msg[ID])
 
 
 @websocket_api.require_admin
@@ -1047,6 +1048,55 @@ async def websocket_update_zha_configuration(
     connection.send_result(msg[ID], status)
 
 
+@websocket_api.require_admin
+@websocket_api.websocket_command({vol.Required(TYPE): "zha/network/settings"})
+@websocket_api.async_response
+async def websocket_get_network_settings(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Get ZHA network settings."""
+    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    application_controller = zha_gateway.application_controller
+
+    # Serialize the most recent backup
+    connection.send_result(msg[ID], application_controller.backups[-1].as_dict())
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({vol.Required(TYPE): "zha/network/backup"})
+@websocket_api.async_response
+async def websocket_backup_network_settings(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Create a ZHA network backup."""
+    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    application_controller = zha_gateway.application_controller
+
+    # This can take 5-30s
+    backup = await application_controller.backups.create_backup(load_devices=True)
+    connection.send_result(msg[ID], backup.as_dict())
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zha/network/restore",
+        vol.Required("data"): vol.Coerce(zigpy.backups.NetworkBackup.from_dict),
+    }
+)
+@websocket_api.async_response
+async def websocket_restore_network_settings(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Restore a ZHA network backup."""
+    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    application_controller = zha_gateway.application_controller
+
+    # This can take 30-40s
+    await application_controller.backups.restore_backup(msg["data"])
+    connection.send_result(msg[ID])
+
+
 @callback
 def async_load_api(hass: HomeAssistant) -> None:
     """Set up the web socket API."""
@@ -1356,6 +1406,9 @@ def async_load_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_update_topology)
     websocket_api.async_register_command(hass, websocket_get_configuration)
     websocket_api.async_register_command(hass, websocket_update_zha_configuration)
+    websocket_api.async_register_command(hass, websocket_get_network_settings)
+    websocket_api.async_register_command(hass, websocket_backup_network_settings)
+    websocket_api.async_register_command(hass, websocket_restore_network_settings)
 
 
 @callback
