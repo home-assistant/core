@@ -52,6 +52,16 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             icon="mdi:coffee",
         ),
     ),
+    #Motion Sensor
+    #https://developer.tuya.com/en/docs/iot/s?id=K9gf48cz3utjt
+    "pir": (
+        SelectEntityDescription(
+            key=DPCode.MOTION_SENSITIVITY,
+            name="Motion Detection",
+            icon="mdi:motion-sensor",
+            device_class=TuyaDeviceClass.MOTION_SENSITIVITY,
+            entity_category=EntityCategory.CONFIG,
+    ),
     # Switch
     # https://developer.tuya.com/en/docs/iot/s?id=K9gf7o5prgf7s
     "kg": (
