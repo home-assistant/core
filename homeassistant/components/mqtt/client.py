@@ -327,7 +327,6 @@ class MQTT:
         self._mqttc: mqtt.Client = None
         self._paho_lock = asyncio.Lock()
         self._pending_acks: set[int] = set()
-        self._ack_lock = asyncio.Lock()
         self._cleanup_on_unload: list[Callable] = []
 
         self._pending_operations: dict[int, asyncio.Event] = {}
@@ -447,7 +446,7 @@ class MQTT:
             self._mqttc.loop_stop()
 
         # wait for ACK-s to be processed
-        async with self._ack_lock:
+        async with self._paho_lock:
             tasks = [
                 self.hass.async_create_task(self._wait_for_mid(mid, True))
                 for mid in self._pending_acks
@@ -688,7 +687,7 @@ class MQTT:
         """Wait for ACK from broker."""
         # Create the mid event if not created, either _mqtt_handle_mid or _wait_for_mid
         # may be executed first.
-        async with self._ack_lock:
+        async with self._paho_lock:
             # Do do await ACK twice when shutting down the connection
             if not shutdown:
                 if mid not in self._pending_acks:
