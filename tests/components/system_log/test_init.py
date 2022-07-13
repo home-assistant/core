@@ -29,7 +29,6 @@ def simple_queue():
 
 async def _install_log_catcher(hass):
     event = asyncio.Event()
-    await hass.async_block_till_done()
 
     class EmitEventHandler(logging.Handler):
         """Set an event when called."""
@@ -47,6 +46,8 @@ async def _install_log_catcher(hass):
         handler.release()
 
     async def _async_wait_and_remove():
+        await hass.async_add_executor_job(_wait_handler_lock)
+        await hass.async_block_till_done()
         await hass.async_add_executor_job(_wait_handler_lock)
         await event.wait()
         logging.root.removeHandler(handler)
