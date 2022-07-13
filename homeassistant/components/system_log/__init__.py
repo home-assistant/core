@@ -3,6 +3,7 @@ from collections import OrderedDict, deque
 import logging
 import re
 import traceback
+from typing import cast
 
 import voluptuous as vol
 
@@ -55,8 +56,7 @@ SERVICE_WRITE_SCHEMA = vol.Schema(
 )
 
 
-def _figure_out_source(record, call_stack, hass):
-    paths = [HOMEASSISTANT_PATH[0], hass.config.config_dir]
+def _figure_out_source(record, call_stack, paths_re):
 
     # If a stack trace exists, extract file names from the entire call stack.
     # The other case is when a regular "log" is made (without an attached
@@ -77,7 +77,6 @@ def _figure_out_source(record, call_stack, hass):
 
     # Iterate through the stack call (in reverse) and find the last call from
     # a file in Home Assistant. Try to figure out where error happened.
-    paths_re = r"(?:{})/(.*)".format("|".join([re.escape(x) for x in paths]))
     for pathname in reversed(stack):
 
         # Try to match with a file within Home Assistant
@@ -159,12 +158,13 @@ class DedupStore(OrderedDict):
 class LogErrorHandler(logging.Handler):
     """Log handler for error messages."""
 
-    def __init__(self, hass, maxlen, fire_event):
+    def __init__(self, hass, maxlen, fire_event, paths_re):
         """Initialize a new LogErrorHandler."""
         super().__init__()
         self.hass = hass
         self.records = DedupStore(maxlen=maxlen)
         self.fire_event = fire_event
+        self.paths_re = paths_re
 
     def emit(self, record):
         """Save error and warning logs.
@@ -177,7 +177,9 @@ class LogErrorHandler(logging.Handler):
         if not record.exc_info:
             stack = [(f[0], f[1]) for f in traceback.extract_stack()]
 
-        entry = LogEntry(record, stack, _figure_out_source(record, stack, self.hass))
+        entry = LogEntry(
+            record, stack, _figure_out_source(record, stack, self.paths_re)
+        )
         self.records.add_entry(entry)
         if self.fire_event:
             self.hass.bus.async_fire(EVENT_SYSTEM_LOG, entry.to_dict())
@@ -188,7 +190,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if (conf := config.get(DOMAIN)) is None:
         conf = CONFIG_SCHEMA({DOMAIN: {}})[DOMAIN]
 
-    handler = LogErrorHandler(hass, conf[CONF_MAX_ENTRIES], conf[CONF_FIRE_EVENT])
+    hass_path: str = HOMEASSISTANT_PATH[0]
+    config_dir = cast(str, hass.config.config_dir)
+    paths_re = re.compile(
+        r"(?:{})/(.*)".format("|".join([re.escape(x) for x in (hass_path, config_dir)]))
+    )
+    handler = LogErrorHandler(
+        hass, conf[CONF_MAX_ENTRIES], conf[CONF_FIRE_EVENT], paths_re
+    )
     handler.setLevel(logging.WARN)
 
     hass.data[DOMAIN] = handler

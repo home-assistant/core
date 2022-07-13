@@ -340,12 +340,12 @@ async def async_log_error_from_test_path(hass, path, watcher):
 
 async def test_homeassistant_path(hass, hass_ws_client):
     """Test error logged from Home Assistant path."""
-    watcher = await async_setup_system_log(hass, BASIC_CONFIG)
 
     with patch(
         "homeassistant.components.system_log.HOMEASSISTANT_PATH",
         new=["venv_path/homeassistant"],
     ):
+        watcher = await async_setup_system_log(hass, BASIC_CONFIG)
         await async_log_error_from_test_path(
             hass, "venv_path/homeassistant/component/component.py", watcher
         )
@@ -355,9 +355,10 @@ async def test_homeassistant_path(hass, hass_ws_client):
 
 async def test_config_path(hass, hass_ws_client):
     """Test error logged from config path."""
-    watcher = await async_setup_system_log(hass, BASIC_CONFIG)
 
     with patch.object(hass.config, "config_dir", new="config"):
+        watcher = await async_setup_system_log(hass, BASIC_CONFIG)
+
         await async_log_error_from_test_path(
             hass, "config/custom_component/test.py", watcher
         )
