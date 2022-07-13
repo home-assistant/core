@@ -141,6 +141,48 @@ async def test_mqtt_disconnects_on_home_assistant_stop(
     assert mqtt_client_mock.loop_stop.call_count == 1
 
 
+@patch("homeassistant.components.mqtt.PLATFORMS", [])
+async def test_mqtt_await_ack_at_disconnect(
+    hass,
+):
+    """Test if ACK is awaited correctly when disconnecting."""
+
+    class FakeInfo:
+        """Returns a simulated client publish response."""
+
+        mid = 100
+        rc = 0
+
+    with patch("paho.mqtt.client.Client") as mock_client:
+        mock_client().connect = MagicMock(return_value=0)
+        mock_client().publish = MagicMock(return_value=FakeInfo())
+        entry = MockConfigEntry(
+            domain=mqtt.DOMAIN,
+            data={"certificate": "auto", mqtt.CONF_BROKER: "test-broker"},
+        )
+        entry.add_to_hass(hass)
+        assert await mqtt.async_setup_entry(hass, entry)
+        mqtt_client = hass.data["mqtt"]._mqttc
+
+    # publish from MQTT client without awaiting
+    hass.async_create_task(
+        hass.data["mqtt"].async_publish("test-topic", "some-payload", 0, False)
+    )
+    await asyncio.sleep(0)
+    # Simulate late ACK callback from client with mid 100
+    hass.data["mqtt"]._mqtt_on_callback(0, 0, 100)
+    # disconnect the MQTT client
+    await hass.data["mqtt"].async_disconnect()
+    # assert the payload was sent through the client
+    assert mqtt_client.publish.called
+    assert mqtt_client.publish.call_args[0] == (
+        "test-topic",
+        "some-payload",
+        0,
+        False,
+    )
+
+
 async def test_publish(hass, mqtt_mock_entry_no_yaml_config):
     """Test the publish function."""
     mqtt_mock = await mqtt_mock_entry_no_yaml_config()

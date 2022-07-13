@@ -326,10 +326,11 @@ class MQTT:
         self._last_subscribe = time.time()
         self._mqttc: mqtt.Client = None
         self._paho_lock = asyncio.Lock()
+        self._ack_lock = asyncio.Lock()
         self._pending_acks: set[int] = set()
         self._cleanup_on_unload: list[Callable] = []
 
-        self._pending_operations: dict[str, asyncio.Event] = {}
+        self._pending_operations: dict[int, asyncio.Event] = {}
 
         if self.hass.state == CoreState.running:
             self._ha_started.set()
@@ -387,9 +388,23 @@ class MQTT:
         self, topic: str, payload: PublishPayloadType, qos: int, retain: bool
     ) -> None:
         """Publish a MQTT message."""
+        # We don't import on the top because some integrations
+        # should be able to optionally rely on MQTT.
+        from paho.mqtt.client import (  # pylint: disable=import-outside-toplevel
+            MQTTMessageInfo,
+        )
+
+        def _publish(
+            topic: str, payload: PublishPayloadType, qos: int, retain: bool
+        ) -> MQTTMessageInfo:
+            msg_info: MQTTMessageInfo = self._mqttc.publish(topic, payload, qos, retain)
+            if msg_info.rc == 0:
+                self._pending_acks.add(msg_info.mid)
+            return msg_info
+
         async with self._paho_lock:
-            msg_info = await self.hass.async_add_executor_job(
-                self._mqttc.publish, topic, payload, qos, retain
+            msg_info: MQTTMessageInfo = await self.hass.async_add_executor_job(
+                _publish, topic, payload, qos, retain
             )
             _LOGGER.debug(
                 "Transmitting message on %s: '%s', mid: %s",
@@ -431,7 +446,7 @@ class MQTT:
             # Do not disconnect, we want the broker to always publish will
             self._mqttc.loop_stop()
 
-        # wait for ACK-s to be processes (unsubscribe only)
+        # wait for ACK-s to be processed
         async with self._paho_lock:
             tasks = [
                 self.hass.async_create_task(self._wait_for_mid(mid))
@@ -511,6 +526,8 @@ class MQTT:
             subscribe_result_list = []
             for topic, qos in subscriptions:
                 result, mid = self._mqttc.subscribe(topic, qos)
+                if result == 0:
+                    self._pending_acks.add(mid)
                 subscribe_result_list.append((result, mid))
                 _LOGGER.debug("Subscribing to %s, mid: %s", topic, mid)
             return subscribe_result_list
@@ -596,7 +613,7 @@ class MQTT:
         self.hass.add_job(self._mqtt_handle_message, msg)
 
     @lru_cache(2048)
-    def _matching_subscriptions(self, topic):
+    def _matching_subscriptions(self, topic: str):
         subscriptions = []
         for subscription in self.subscriptions:
             if subscription.matcher(topic):
@@ -648,7 +665,7 @@ class MQTT:
         self.hass.add_job(self._mqtt_handle_mid, mid)
 
     @callback
-    def _mqtt_handle_mid(self, mid) -> None:
+    def _mqtt_handle_mid(self, mid: int) -> None:
         # Create the mid event if not created, either _mqtt_handle_mid or _wait_for_mid
         # may be executed first.
         if mid not in self._pending_operations:
@@ -666,26 +683,33 @@ class MQTT:
             result_code,
         )
 
-    async def _wait_for_mid(self, mid):
+    async def _wait_for_mid(self, mid: int) -> None:
         """Wait for ACK from broker."""
         # Create the mid event if not created, either _mqtt_handle_mid or _wait_for_mid
         # may be executed first.
-        if mid not in self._pending_operations:
-            self._pending_operations[mid] = asyncio.Event()
-        try:
-            await asyncio.wait_for(self._pending_operations[mid].wait(), TIMEOUT_ACK)
-        except asyncio.TimeoutError:
-            _LOGGER.warning(
-                "No ACK from MQTT server in %s seconds (mid: %s)", TIMEOUT_ACK, mid
-            )
-        finally:
-            del self._pending_operations[mid]
-            # Cleanup ACK sync buffer
-            async with self._paho_lock:
-                if mid in self._pending_acks:
-                    self._pending_acks.remove(mid)
+        async with self._ack_lock:
+            # Do do await ACK twice when disconnecting
+            if mid not in self._pending_acks:
+                return
 
-    async def _discovery_cooldown(self):
+            if mid not in self._pending_operations:
+                self._pending_operations[mid] = asyncio.Event()
+            try:
+                await asyncio.wait_for(
+                    self._pending_operations[mid].wait(), TIMEOUT_ACK
+                )
+            except asyncio.TimeoutError:
+                _LOGGER.warning(
+                    "No ACK from MQTT server in %s seconds (mid: %s)", TIMEOUT_ACK, mid
+                )
+            finally:
+                # Cleanup
+                del self._pending_operations[mid]
+
+            async with self._paho_lock:
+                self._pending_acks.remove(mid)
+
+    async def _discovery_cooldown(self) -> None:
         now = time.time()
         # Reset discovery and subscribe cooldowns
         self.hass.data[LAST_DISCOVERY] = now
