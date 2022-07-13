@@ -181,7 +181,7 @@ class LogErrorHandler(logging.Handler):
         )
         self.records.add_entry(entry)
         if self.fire_event:
-            self.hass.bus.async_fire(EVENT_SYSTEM_LOG, entry.to_dict())
+            self.hass.bus.fire(EVENT_SYSTEM_LOG, entry.to_dict())
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
