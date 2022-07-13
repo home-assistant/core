@@ -19,6 +19,9 @@
             },
             "reauth": {
                 "title": "Re-autenticar Perfil"
+            },
+            "reauth_confirm": {
+                "title": "Reautenticar integra\u00e7\u00e3o"
             }
         }
     }

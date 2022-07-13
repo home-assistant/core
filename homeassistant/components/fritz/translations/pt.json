@@ -3,6 +3,13 @@
         "abort": {
             "already_configured": "O dispositivo j\u00e1 est\u00e1 configurado"
         },
-        "flow_title": "{name}"
+        "flow_title": "{name}",
+        "step": {
+            "user": {
+                "data": {
+                    "port": "Porta"
+                }
+            }
+        }
     }
 }
