@@ -46,7 +46,6 @@ from .const import (
     CONDITION_CLASSES,
     DOMAIN,
     MANUFACTURER,
-    NAME,
 )
 
 PARALLEL_UPDATES = 1
@@ -67,6 +66,8 @@ class AccuWeatherEntity(
     CoordinatorEntity[AccuWeatherDataUpdateCoordinator], WeatherEntity
 ):
     """Define an AccuWeather entity."""
+
+    _attr_has_entity_name = True
 
     def __init__(
         self, name: str, coordinator: AccuWeatherDataUpdateCoordinator
@@ -90,14 +91,13 @@ class AccuWeatherEntity(
             self._attr_native_temperature_unit = TEMP_FAHRENHEIT
             self._attr_native_visibility_unit = LENGTH_MILES
             self._attr_native_wind_speed_unit = SPEED_MILES_PER_HOUR
-        self._attr_name = name
         self._attr_unique_id = coordinator.location_key
         self._attr_attribution = ATTRIBUTION
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, coordinator.location_key)},
             manufacturer=MANUFACTURER,
-            name=NAME,
+            name=name,
             # You don't need to provide specific details for the URL,
             # so passing in _ characters is fine if the location key
             # is correct

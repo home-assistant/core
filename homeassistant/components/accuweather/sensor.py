@@ -23,7 +23,6 @@ from .const import (
     FORECAST_SENSOR_TYPES,
     MANUFACTURER,
     MAX_FORECAST_DAYS,
-    NAME,
     SENSOR_TYPES,
 )
 from .model import AccuWeatherSensorDescription
@@ -64,6 +63,7 @@ class AccuWeatherSensor(
     """Define an AccuWeather entity."""
 
     _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
     entity_description: AccuWeatherSensorDescription
 
     def __init__(
@@ -81,12 +81,12 @@ class AccuWeatherSensor(
         )
         self._attrs: dict[str, Any] = {}
         if forecast_day is not None:
-            self._attr_name = f"{name} {description.name} {forecast_day}d"
+            self._attr_name = f"{description.name} {forecast_day}d"
             self._attr_unique_id = (
                 f"{coordinator.location_key}-{description.key}-{forecast_day}".lower()
             )
         else:
-            self._attr_name = f"{name} {description.name}"
+            self._attr_name = description.name
             self._attr_unique_id = (
                 f"{coordinator.location_key}-{description.key}".lower()
             )
@@ -100,7 +100,7 @@ class AccuWeatherSensor(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, coordinator.location_key)},
             manufacturer=MANUFACTURER,
-            name=NAME,
+            name=name,
         )
         self.forecast_day = forecast_day
 
