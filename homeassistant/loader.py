@@ -166,7 +166,10 @@ async def _async_get_custom_components(
     )
 
     integrations = await hass.async_add_executor_job(
-        resolve_integrations_from_root, hass, custom_components, dirs
+        _resolve_integrations_from_root,
+        hass,
+        custom_components,
+        [comp.name for comp in dirs],
     )
     return {
         integration.domain: integration
@@ -673,7 +676,7 @@ class Integration:
         return f"<Integration {self.domain}: {self.pkg_path}>"
 
 
-def resolve_integrations_from_root(
+def _resolve_integrations_from_root(
     hass: HomeAssistant, root_module: ModuleType, domains: list[str]
 ) -> dict[str, Integration]:
     """Resolve multiple integrations from root."""
@@ -751,7 +754,7 @@ async def async_get_integrations(
         from . import components  # pylint: disable=import-outside-toplevel
 
         integrations = await hass.async_add_executor_job(
-            resolve_integrations_from_root, hass, components, list(needed)
+            _resolve_integrations_from_root, hass, components, list(needed)
         )
         for domain, event in needed.items():
             if domain in integrations:
