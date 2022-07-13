@@ -326,8 +326,8 @@ class MQTT:
         self._last_subscribe = time.time()
         self._mqttc: mqtt.Client = None
         self._paho_lock = asyncio.Lock()
-        self._ack_lock = asyncio.Lock()
         self._pending_acks: set[int] = set()
+        self._ack_lock = asyncio.Lock()
         self._cleanup_on_unload: list[Callable] = []
 
         self._pending_operations: dict[int, asyncio.Event] = {}
@@ -447,11 +447,12 @@ class MQTT:
             self._mqttc.loop_stop()
 
         # wait for ACK-s to be processed
-        async with self._paho_lock:
+        async with self._ack_lock:
             tasks = [
-                self.hass.async_create_task(self._wait_for_mid(mid))
+                self.hass.async_create_task(self._wait_for_mid(mid, True))
                 for mid in self._pending_acks
             ]
+            self._pending_acks = set()
         await asyncio.gather(*tasks)
 
         # stop the MQTT loop
@@ -683,31 +684,29 @@ class MQTT:
             result_code,
         )
 
-    async def _wait_for_mid(self, mid: int) -> None:
+    async def _wait_for_mid(self, mid: int, shutdown: bool = False) -> None:
         """Wait for ACK from broker."""
         # Create the mid event if not created, either _mqtt_handle_mid or _wait_for_mid
         # may be executed first.
         async with self._ack_lock:
-            # Do do await ACK twice when disconnecting
-            if mid not in self._pending_acks:
-                return
-
-            if mid not in self._pending_operations:
-                self._pending_operations[mid] = asyncio.Event()
-            try:
-                await asyncio.wait_for(
-                    self._pending_operations[mid].wait(), TIMEOUT_ACK
-                )
-            except asyncio.TimeoutError:
-                _LOGGER.warning(
-                    "No ACK from MQTT server in %s seconds (mid: %s)", TIMEOUT_ACK, mid
-                )
-            finally:
-                # Cleanup
-                del self._pending_operations[mid]
-
-            async with self._paho_lock:
+            # Do do await ACK twice when shutting down the connection
+            if not shutdown:
+                if mid not in self._pending_acks:
+                    return
                 self._pending_acks.remove(mid)
+
+        if mid not in self._pending_operations:
+            self._pending_operations[mid] = asyncio.Event()
+
+        try:
+            await asyncio.wait_for(self._pending_operations[mid].wait(), TIMEOUT_ACK)
+        except asyncio.TimeoutError:
+            _LOGGER.warning(
+                "No ACK from MQTT server in %s seconds (mid: %s)", TIMEOUT_ACK, mid
+            )
+        finally:
+            # Cleanup
+            del self._pending_operations[mid]
 
     async def _discovery_cooldown(self):
         now = time.time()
