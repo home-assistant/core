@@ -168,9 +168,8 @@ async def test_error(hass, simple_queue, hass_ws_client):
 
 async def test_config_not_fire_event(hass, simple_queue):
     """Test that errors are not posted as events with default config."""
-    watcher = await async_setup_system_log(hass, BASIC_CONFIG)
-    wait_empty = watcher.add_watcher("error message")
-
+    await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
+    await hass.async_block_till_done()
     events = []
 
     @callback
@@ -180,8 +179,7 @@ async def test_config_not_fire_event(hass, simple_queue):
 
     hass.bus.async_listen(system_log.EVENT_SYSTEM_LOG, event_listener)
 
-    _LOGGER.error("error message")
-    await wait_empty
+    await hass.async_block_till_done()
 
     assert len(events) == 0
 
@@ -216,19 +214,12 @@ async def test_critical(hass, simple_queue, hass_ws_client):
 
 async def test_remove_older_logs(hass, simple_queue, hass_ws_client):
     """Test that older logs are rotated out."""
-    watcher = await async_setup_system_log(hass, BASIC_CONFIG)
-    wait_empty = watcher.add_watcher("error message 1")
+    await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
+    await hass.async_block_till_done()
     _LOGGER.error("error message 1")
-    await wait_empty
-
-    wait_empty = watcher.add_watcher("error message 2")
     _LOGGER.error("error message 2")
-    await wait_empty
-
-    wait_empty = watcher.add_watcher("error message 3")
     _LOGGER.error("error message 3")
-    await wait_empty
-
+    await hass.async_block_till_done()
     log = await get_error_log(hass_ws_client)
     assert_log(log[0], "", "error message 3", "ERROR")
     assert_log(log[1], "", "error message 2", "ERROR")
@@ -241,52 +232,27 @@ def log_msg(nr=2):
 
 async def test_dedupe_logs(hass, simple_queue, hass_ws_client):
     """Test that duplicate log entries are dedupe."""
-    watcher = await async_setup_system_log(hass, {})
-    wait_empty = watcher.add_watcher("error message 1")
+    await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
+    await hass.async_block_till_done()
     _LOGGER.error("error message 1")
-    await wait_empty
-
-    wait_empty = watcher.add_watcher("error message")
     log_msg()
-    await wait_empty
-
-    wait_empty = watcher.add_watcher("error message")
     log_msg("2-2")
-    await wait_empty
-
-    wait_empty = watcher.add_watcher("error message")
     _LOGGER.error("error message 3")
-    await wait_empty
 
     log = await get_error_log(hass_ws_client)
     assert_log(log[0], "", "error message 3", "ERROR")
     assert log[1]["count"] == 2
     assert_log(log[1], "", ["error message 2", "error message 2-2"], "ERROR")
 
-    wait_empty = watcher.add_watcher("error message")
-
     log_msg()
-    await wait_empty
-
     log = await get_error_log(hass_ws_client)
     assert_log(log[0], "", ["error message 2", "error message 2-2"], "ERROR")
     assert log[0]["timestamp"] > log[0]["first_occurred"]
 
-    wait_empty = watcher.add_watcher("error message")
     log_msg("2-3")
-    await wait_empty
-
-    wait_empty = watcher.add_watcher("error message")
     log_msg("2-4")
-    await wait_empty
-
-    wait_empty = watcher.add_watcher("error message")
     log_msg("2-5")
-    await wait_empty
-
-    wait_empty = watcher.add_watcher("error message")
     log_msg("2-6")
-    await wait_empty
 
     log = await get_error_log(hass_ws_client)
     assert_log(
