@@ -40,8 +40,6 @@ async def async_setup_entry(
     entities: list[SensorEntity] = []
     if aircons := instance["coordinator"].data.get("aircons"):
         for ac_key, ac_device in aircons.items():
-            entities.append(AdvantageAirTimeTo(instance, ac_key, "On"))
-            entities.append(AdvantageAirTimeTo(instance, ac_key, "Off"))
             for zone_key, zone in ac_device["zones"].items():
                 # Only show damper and temp sensors when zone is in temperature control
                 if zone["type"] != 0:
@@ -58,39 +56,6 @@ async def async_setup_entry(
         {vol.Required("minutes"): cv.positive_int},
         "set_time_to",
     )
-
-
-class AdvantageAirTimeTo(AdvantageAirAcEntity, SensorEntity):
-    """Representation of Advantage Air timer control."""
-
-    _attr_native_unit_of_measurement = ADVANTAGE_AIR_SET_COUNTDOWN_UNIT
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_entity_registry_enabled_default = False
-
-    def __init__(self, instance: dict[str, Any], ac_key: str, action: str) -> None:
-        """Initialize the Advantage Air timer control."""
-        super().__init__(instance, ac_key)
-        self.action = action
-        self._time_key = f"countDownTo{action}"
-        self._attr_name = f"Time to {action}"
-        self._attr_unique_id += f"-timeto{action}"
-
-    @property
-    def native_value(self) -> Decimal:
-        """Return the current value."""
-        return self._ac[self._time_key]
-
-    @property
-    def icon(self) -> str:
-        """Return a representative icon of the timer."""
-        if self._ac[self._time_key] > 0:
-            return "mdi:timer-outline"
-        return "mdi:timer-off-outline"
-
-    async def set_time_to(self, **kwargs: Any) -> None:
-        """Set the timer value."""
-        value = min(720, max(0, int(kwargs[ADVANTAGE_AIR_SET_COUNTDOWN_VALUE])))
-        await self.aircon({self.ac_key: {"info": {self._time_key: value}}})
 
 
 class AdvantageAirZoneVent(AdvantageAirZoneEntity, SensorEntity):

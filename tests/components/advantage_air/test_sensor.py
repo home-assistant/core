@@ -1,15 +1,8 @@
 """Test the Advantage Air Sensor Platform."""
 
 from datetime import timedelta
-from json import loads
 
-from homeassistant.components.advantage_air.const import DOMAIN as ADVANTAGE_AIR_DOMAIN
-from homeassistant.components.advantage_air.sensor import (
-    ADVANTAGE_AIR_SERVICE_SET_TIME_TO,
-    ADVANTAGE_AIR_SET_COUNTDOWN_VALUE,
-)
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
-from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt
 
@@ -40,72 +33,6 @@ async def test_sensor_platform(hass, aioclient_mock):
     registry = er.async_get(hass)
 
     assert len(aioclient_mock.mock_calls) == 1
-
-    # Test First TimeToOn Sensor
-    entity_id = "sensor.testname_ac_one_time_to_on"
-
-    registry.async_update_entity(entity_id=entity_id, disabled_by=None)
-    await hass.async_block_till_done()
-    async_fire_time_changed(
-        hass,
-        dt.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert int(state.state) == 0
-
-    entry = registry.async_get(entity_id)
-    assert entry
-    assert entry.unique_id == "uniqueid-ac1-timetoOn"
-
-    value = 20
-    await hass.services.async_call(
-        ADVANTAGE_AIR_DOMAIN,
-        ADVANTAGE_AIR_SERVICE_SET_TIME_TO,
-        {ATTR_ENTITY_ID: [entity_id], ADVANTAGE_AIR_SET_COUNTDOWN_VALUE: value},
-        blocking=True,
-    )
-    assert aioclient_mock.mock_calls[-2][0] == "GET"
-    assert aioclient_mock.mock_calls[-2][1].path == "/setAircon"
-    data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
-    assert data["ac1"]["info"]["countDownToOn"] == value
-    assert aioclient_mock.mock_calls[-1][0] == "GET"
-    assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
-
-    # Test First TimeToOff Sensor
-    entity_id = "sensor.testname_ac_one_time_to_off"
-
-    registry.async_update_entity(entity_id=entity_id, disabled_by=None)
-    await hass.async_block_till_done()
-    async_fire_time_changed(
-        hass,
-        dt.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert int(state.state) == 10
-
-    entry = registry.async_get(entity_id)
-    assert entry
-    assert entry.unique_id == "uniqueid-ac1-timetoOff"
-
-    value = 0
-    await hass.services.async_call(
-        ADVANTAGE_AIR_DOMAIN,
-        ADVANTAGE_AIR_SERVICE_SET_TIME_TO,
-        {ATTR_ENTITY_ID: [entity_id], ADVANTAGE_AIR_SET_COUNTDOWN_VALUE: value},
-        blocking=True,
-    )
-    assert aioclient_mock.mock_calls[-2][0] == "GET"
-    assert aioclient_mock.mock_calls[-2][1].path == "/setAircon"
-    data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
-    assert data["ac1"]["info"]["countDownToOff"] == value
-    assert aioclient_mock.mock_calls[-1][0] == "GET"
-    assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
 
     # Test First Zone Vent Sensor
     entity_id = "sensor.ac_one_zone_open_with_sensor_vent"
