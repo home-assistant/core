@@ -24,6 +24,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -79,6 +80,15 @@ class AladdinDevice(CoverEntity):
     _attr_device_class = CoverDeviceClass.GARAGE
     _attr_supported_features = SUPPORTED_FEATURES
 
+    @property
+    def device_info(self) -> DeviceInfo | None:
+        """Device information for Aladdin Connect cover."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._device_id)},
+            name=self._name,
+            manufacturer="Overhead Door",
+        )
+
     def __init__(
         self, acc: AladdinConnectClient, device: DoorDevice, entry: ConfigEntry
     ) -> None:
@@ -87,7 +97,7 @@ class AladdinDevice(CoverEntity):
 
         self._device_id = device["device_id"]
         self._number = device["door_number"]
-        self._attr_name = device["name"]
+        self._name = device["name"]
         self._attr_unique_id = f"{self._device_id}-{self._number}"
 
     async def async_added_to_hass(self) -> None:
