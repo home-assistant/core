@@ -18,6 +18,8 @@ from .coordinator import PlugwiseDataUpdateCoordinator
 class PlugwiseEntity(CoordinatorEntity[PlugwiseDataUpdateCoordinator]):
     """Represent a PlugWise Entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: PlugwiseDataUpdateCoordinator,

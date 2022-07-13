@@ -12,7 +12,7 @@ async def test_adam_climate_sensor_entities(
     hass: HomeAssistant, mock_smile_adam: MagicMock, init_integration: MockConfigEntry
 ) -> None:
     """Test creation of climate related sensor entities."""
-    state = hass.states.get("sensor.adam_outdoor_temperature")
+    state = hass.states.get("sensor.smile_adam_outdoor_temperature")
     assert state
     assert float(state.state) == 7.81
 
@@ -65,23 +65,23 @@ async def test_p1_dsmr_sensor_entities(
     hass: HomeAssistant, mock_smile_p1: MagicMock, init_integration: MockConfigEntry
 ) -> None:
     """Test creation of power related sensor entities."""
-    state = hass.states.get("sensor.p1_net_electricity_point")
+    state = hass.states.get("sensor.smile_p1_net_electricity_point")
     assert state
     assert float(state.state) == -2816.0
 
-    state = hass.states.get("sensor.p1_electricity_consumed_off_peak_cumulative")
+    state = hass.states.get("sensor.smile_p1_electricity_consumed_off_peak_cumulative")
     assert state
     assert float(state.state) == 551.09
 
-    state = hass.states.get("sensor.p1_electricity_produced_peak_point")
+    state = hass.states.get("sensor.smile_p1_electricity_produced_peak_point")
     assert state
     assert float(state.state) == 2816.0
 
-    state = hass.states.get("sensor.p1_electricity_consumed_peak_cumulative")
+    state = hass.states.get("sensor.smile_p1_electricity_consumed_peak_cumulative")
     assert state
     assert float(state.state) == 442.932
 
-    state = hass.states.get("sensor.p1_gas_consumed_cumulative")
+    state = hass.states.get("sensor.smile_p1_gas_consumed_cumulative")
     assert state
     assert float(state.state) == 584.85
 

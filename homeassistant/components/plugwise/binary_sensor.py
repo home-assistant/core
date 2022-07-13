@@ -31,14 +31,14 @@ class PlugwiseBinarySensorEntityDescription(BinarySensorEntityDescription):
 BINARY_SENSORS: tuple[PlugwiseBinarySensorEntityDescription, ...] = (
     PlugwiseBinarySensorEntityDescription(
         key="dhw_state",
-        name="DHW State",
+        name="DHW state",
         icon="mdi:water-pump",
         icon_off="mdi:water-pump-off",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     PlugwiseBinarySensorEntityDescription(
         key="flame_state",
-        name="Flame State",
+        name="Flame state",
         icon="mdi:fire",
         icon_off="mdi:fire-off",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -59,14 +59,14 @@ BINARY_SENSORS: tuple[PlugwiseBinarySensorEntityDescription, ...] = (
     ),
     PlugwiseBinarySensorEntityDescription(
         key="slave_boiler_state",
-        name="Secondary Boiler State",
+        name="Secondary boiler state",
         icon="mdi:fire",
         icon_off="mdi:circle-off-outline",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     PlugwiseBinarySensorEntityDescription(
         key="plugwise_notification",
-        name="Plugwise Notification",
+        name="Plugwise notification",
         icon="mdi:mailbox-up-outline",
         icon_off="mdi:mailbox-outline",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -118,7 +118,6 @@ class PlugwiseBinarySensorEntity(PlugwiseEntity, BinarySensorEntity):
         super().__init__(coordinator, device_id)
         self.entity_description = description
         self._attr_unique_id = f"{device_id}-{description.key}"
-        self._attr_name = (f"{self.device.get('name', '')} {description.name}").lstrip()
 
     @property
     def is_on(self) -> bool | None:
