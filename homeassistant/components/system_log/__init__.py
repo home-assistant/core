@@ -1,8 +1,6 @@
 """Support for system log."""
 from collections import OrderedDict, deque
 import logging
-from logging.handlers import QueueListener
-import queue
 import re
 import traceback
 
@@ -10,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant import __path__ as HOMEASSISTANT_PATH
 from homeassistant.components import websocket_api
-from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -158,17 +156,6 @@ class DedupStore(OrderedDict):
         return [value.to_dict() for value in reversed(self.values())]
 
 
-class LogErrorQueueHandler(logging.handlers.QueueHandler):
-    """Process the log in another thread."""
-
-    def emit(self, record):
-        """Emit a log record."""
-        try:
-            self.enqueue(record)
-        except Exception:  # pylint: disable=broad-except
-            self.handleError(record)
-
-
 class LogErrorHandler(logging.Handler):
     """Log handler for error messages."""
 
@@ -193,11 +180,7 @@ class LogErrorHandler(logging.Handler):
         entry = LogEntry(record, stack, _figure_out_source(record, stack, self.hass))
         self.records.add_entry(entry)
         if self.fire_event:
-            self.hass.bus.fire(EVENT_SYSTEM_LOG, entry.to_dict())
-
-
-class HASSQueueListener(QueueListener):
-    """Queue listener for Home Assistant events."""
+            self.hass.bus.async_fire(EVENT_SYSTEM_LOG, entry.to_dict())
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -205,27 +188,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if (conf := config.get(DOMAIN)) is None:
         conf = CONFIG_SCHEMA({DOMAIN: {}})[DOMAIN]
 
-    simple_queue: queue.SimpleQueue = queue.SimpleQueue()
-    queue_handler = LogErrorQueueHandler(simple_queue)
-    queue_handler.setLevel(logging.WARN)
-    logging.root.addHandler(queue_handler)
-
     handler = LogErrorHandler(hass, conf[CONF_MAX_ENTRIES], conf[CONF_FIRE_EVENT])
+    handler.setLevel(logging.WARN)
 
     hass.data[DOMAIN] = handler
 
-    listener = HASSQueueListener(simple_queue, handler, respect_handler_level=True)
-
-    listener.start()
-
     @callback
-    def _async_stop_queue_handler(_) -> None:
+    def _async_stop_handler(_) -> None:
         """Cleanup handler."""
-        logging.root.removeHandler(queue_handler)
-        listener.stop()
+        logging.root.removeHandler(handler)
         del hass.data[DOMAIN]
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, _async_stop_queue_handler)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, _async_stop_handler)
+
+    logging.root.addHandler(handler)
 
     websocket_api.async_register_command(hass, list_errors)
 
@@ -240,13 +216,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
             level = service.data[CONF_LEVEL]
             getattr(logger, level)(service.data[CONF_MESSAGE])
-
-    async def async_shutdown_handler(event):
-        """Remove logging handler when Home Assistant is shutdown."""
-        # This is needed as older logger instances will remain
-        logging.getLogger().removeHandler(handler)
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_shutdown_handler)
 
     hass.services.async_register(
         DOMAIN, SERVICE_CLEAR, async_service_handler, schema=SERVICE_CLEAR_SCHEMA

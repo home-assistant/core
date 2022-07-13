@@ -4,11 +4,8 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable
 import logging
-import queue
 from typing import Any
 from unittest.mock import MagicMock, patch
-
-import pytest
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import system_log
@@ -18,17 +15,6 @@ from tests.common import async_capture_events
 
 _LOGGER = logging.getLogger("test_logger")
 BASIC_CONFIG = {"system_log": {"max_entries": 2}}
-
-
-@pytest.fixture
-def simple_queue():
-    """Fixture that get the queue."""
-    simple_queue_fixed = queue.SimpleQueue()
-    with patch(
-        "homeassistant.components.system_log.queue.SimpleQueue",
-        return_value=simple_queue_fixed,
-    ):
-        yield simple_queue_fixed
 
 
 async def get_error_log(hass_ws_client):
@@ -74,17 +60,17 @@ def assert_log(log, exception, message, level):
     assert "timestamp" in log
 
 
-class WatchHASSQueueListener(system_log.HASSQueueListener):
-    """HASSQueueListener that watches for a message."""
+class WatchLogErrorHandler(system_log.LogErrorHandler):
+    """WatchLogErrorHandler that watches for a message."""
 
-    instances: list[WatchHASSQueueListener] = []
+    instances: list[WatchLogErrorHandler] = []
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize HASSQueueListener."""
         super().__init__(*args, **kwargs)
         self.watch_message: str | None = None
         self.watch_event: asyncio.Event | None = asyncio.Event()
-        WatchHASSQueueListener.instances.append(self)
+        WatchLogErrorHandler.instances.append(self)
 
     def add_watcher(self, match: str) -> Awaitable:
         """Add a watcher."""
@@ -104,23 +90,23 @@ def get_frame(name):
     return (name, 5, None, None)
 
 
-async def async_setup_system_log(hass, config) -> WatchHASSQueueListener:
+async def async_setup_system_log(hass, config) -> WatchLogErrorHandler:
     """Set up the system_log component."""
-    WatchHASSQueueListener.instances = []
+    WatchLogErrorHandler.instances = []
     with patch(
-        "homeassistant.components.system_log.HASSQueueListener", WatchHASSQueueListener
+        "homeassistant.components.system_log.LogErrorHandler", WatchLogErrorHandler
     ):
         await async_setup_component(hass, system_log.DOMAIN, config)
         await hass.async_block_till_done()
 
-    assert len(WatchHASSQueueListener.instances) == 1
-    return WatchHASSQueueListener.instances.pop()
+    assert len(WatchLogErrorHandler.instances) == 1
+    return WatchLogErrorHandler.instances.pop()
 
 
-async def test_normal_logs(hass, simple_queue, hass_ws_client):
+async def test_normal_logs(hass, hass_ws_client):
     """Test that debug and info are not logged."""
-    await async_setup_system_log(hass, BASIC_CONFIG)
-
+    await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
+    await hass.async_block_till_done()
     _LOGGER.debug("debug")
     _LOGGER.info("info")
 
@@ -129,44 +115,39 @@ async def test_normal_logs(hass, simple_queue, hass_ws_client):
     assert len([msg for msg in logs if msg["level"] in ("DEBUG", "INFO")]) == 0
 
 
-async def test_exception(hass, simple_queue, hass_ws_client):
+async def test_exception(hass, hass_ws_client):
     """Test that exceptions are logged and retrieved correctly."""
-    watcher = await async_setup_system_log(hass, BASIC_CONFIG)
-    wait_empty = watcher.add_watcher("log message")
+    await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
+    await hass.async_block_till_done()
 
     _generate_and_log_exception("exception message", "log message")
-    await wait_empty
     log = find_log(await get_error_log(hass_ws_client), "ERROR")
     assert log is not None
     assert_log(log, "exception message", "log message", "ERROR")
 
 
-async def test_warning(hass, simple_queue, hass_ws_client):
+async def test_warning(hass, hass_ws_client):
     """Test that warning are logged and retrieved correctly."""
-    watcher = await async_setup_system_log(hass, BASIC_CONFIG)
-
-    wait_empty = watcher.add_watcher("warning message")
+    await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
+    await hass.async_block_till_done()
     _LOGGER.warning("warning message")
-    await wait_empty
 
     log = find_log(await get_error_log(hass_ws_client), "WARNING")
     assert_log(log, "", "warning message", "WARNING")
 
 
-async def test_error(hass, simple_queue, hass_ws_client):
+async def test_error(hass, hass_ws_client):
     """Test that errors are logged and retrieved correctly."""
-    watcher = await async_setup_system_log(hass, BASIC_CONFIG)
-
-    wait_empty = watcher.add_watcher("error message")
+    await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
+    await hass.async_block_till_done()
 
     _LOGGER.error("error message")
 
-    await wait_empty
     log = find_log(await get_error_log(hass_ws_client), "ERROR")
     assert_log(log, "", "error message", "ERROR")
 
 
-async def test_config_not_fire_event(hass, simple_queue):
+async def test_config_not_fire_event(hass):
     """Test that errors are not posted as events with default config."""
     await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
     await hass.async_block_till_done()
@@ -184,7 +165,7 @@ async def test_config_not_fire_event(hass, simple_queue):
     assert len(events) == 0
 
 
-async def test_error_posted_as_event(hass, simple_queue):
+async def test_error_posted_as_event(hass):
     """Test that error are posted as events."""
     watcher = await async_setup_system_log(
         hass, {"system_log": {"max_entries": 2, "fire_event": True}}
@@ -200,19 +181,18 @@ async def test_error_posted_as_event(hass, simple_queue):
     assert_log(events[0].data, "", "error message", "ERROR")
 
 
-async def test_critical(hass, simple_queue, hass_ws_client):
+async def test_critical(hass, hass_ws_client):
     """Test that critical are logged and retrieved correctly."""
-    watcher = await async_setup_system_log(hass, BASIC_CONFIG)
-    wait_empty = watcher.add_watcher("critical message")
+    await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
+    await hass.async_block_till_done()
 
     _LOGGER.critical("critical message")
-    await wait_empty
 
     log = find_log(await get_error_log(hass_ws_client), "CRITICAL")
     assert_log(log, "", "critical message", "CRITICAL")
 
 
-async def test_remove_older_logs(hass, simple_queue, hass_ws_client):
+async def test_remove_older_logs(hass, hass_ws_client):
     """Test that older logs are rotated out."""
     await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
     await hass.async_block_till_done()
@@ -230,7 +210,7 @@ def log_msg(nr=2):
     _LOGGER.error("error message %s", nr)
 
 
-async def test_dedupe_logs(hass, simple_queue, hass_ws_client):
+async def test_dedupe_logs(hass, hass_ws_client):
     """Test that duplicate log entries are dedupe."""
     await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
     await hass.async_block_till_done()
@@ -269,12 +249,11 @@ async def test_dedupe_logs(hass, simple_queue, hass_ws_client):
     )
 
 
-async def test_clear_logs(hass, simple_queue, hass_ws_client):
+async def test_clear_logs(hass, hass_ws_client):
     """Test that the log can be cleared via a service call."""
-    watcher = await async_setup_system_log(hass, BASIC_CONFIG)
-    wait_empty = watcher.add_watcher("error message")
+    await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
+    await hass.async_block_till_done()
     _LOGGER.error("error message")
-    await wait_empty
 
     await hass.services.async_call(system_log.DOMAIN, system_log.SERVICE_CLEAR, {})
     await hass.async_block_till_done()
@@ -328,13 +307,12 @@ async def test_write_choose_level(hass):
     assert logger.method_calls[0] == ("debug", ("test_message",))
 
 
-async def test_unknown_path(hass, simple_queue, hass_ws_client):
+async def test_unknown_path(hass, hass_ws_client):
     """Test error logged from unknown path."""
-    watcher = await async_setup_system_log(hass, BASIC_CONFIG)
-    wait_empty = watcher.add_watcher("error message")
+    await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
+    await hass.async_block_till_done()
     _LOGGER.findCaller = MagicMock(return_value=("unknown_path", 0, None, None))
     _LOGGER.error("error message")
-    await wait_empty
     log = (await get_error_log(hass_ws_client))[0]
     assert log["source"] == ["unknown_path", 0]
 
@@ -360,7 +338,7 @@ async def async_log_error_from_test_path(hass, path, watcher):
         await wait_empty
 
 
-async def test_homeassistant_path(hass, simple_queue, hass_ws_client):
+async def test_homeassistant_path(hass, hass_ws_client):
     """Test error logged from Home Assistant path."""
     watcher = await async_setup_system_log(hass, BASIC_CONFIG)
 
@@ -375,7 +353,7 @@ async def test_homeassistant_path(hass, simple_queue, hass_ws_client):
     assert log["source"] == ["component/component.py", 5]
 
 
-async def test_config_path(hass, simple_queue, hass_ws_client):
+async def test_config_path(hass, hass_ws_client):
     """Test error logged from config path."""
     watcher = await async_setup_system_log(hass, BASIC_CONFIG)
 
