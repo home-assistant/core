@@ -20,13 +20,13 @@ from homeassistant.components.mqtt import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers import selector
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
     CONF_BAUD_RATE,
     CONF_DEVICE,
     CONF_GATEWAY_TYPE,
-    CONF_GATEWAY_TYPE_ALL,
     CONF_GATEWAY_TYPE_MQTT,
     CONF_GATEWAY_TYPE_SERIAL,
     CONF_GATEWAY_TYPE_TCP,
@@ -44,6 +44,15 @@ from .gateway import MQTT_COMPONENT, is_serial_port, is_socket_address, try_conn
 DEFAULT_BAUD_RATE = 115200
 DEFAULT_TCP_PORT = 5003
 DEFAULT_VERSION = "1.4"
+
+_PORT_SELECTOR = vol.All(
+    selector.NumberSelector(
+        selector.NumberSelectorConfig(
+            min=1, max=65535, mode=selector.NumberSelectorMode.BOX
+        ),
+    ),
+    vol.Coerce(int),
+)
 
 
 def is_persistence_file(value: str) -> str:
@@ -119,35 +128,20 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, str] | None = None
     ) -> FlowResult:
         """Create a config entry from frontend user input."""
-        schema = {vol.Required(CONF_GATEWAY_TYPE): vol.In(CONF_GATEWAY_TYPE_ALL)}
-        schema = vol.Schema(schema)
-        errors = {}
-
-        if user_input is not None:
-            gw_type = self._gw_type = user_input[CONF_GATEWAY_TYPE]
-            input_pass = user_input if CONF_DEVICE in user_input else None
-            if gw_type == CONF_GATEWAY_TYPE_MQTT:
-                # Naive check that doesn't consider config entry state.
-                if MQTT_DOMAIN in self.hass.config.components:
-                    return await self.async_step_gw_mqtt(input_pass)
-
-                errors["base"] = "mqtt_required"
-            if gw_type == CONF_GATEWAY_TYPE_TCP:
-                return await self.async_step_gw_tcp(input_pass)
-            if gw_type == CONF_GATEWAY_TYPE_SERIAL:
-                return await self.async_step_gw_serial(input_pass)
-
-        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
+        return self.async_show_menu(
+            step_id="select_gateway_type",
+            menu_options=["gw_serial", "gw_tcp", "gw_mqtt"],
+        )
 
     async def async_step_gw_serial(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Create config entry for a serial gateway."""
+        gw_type = self._gw_type = CONF_GATEWAY_TYPE_SERIAL
         errors: dict[str, str] = {}
+
         if user_input is not None:
-            errors.update(
-                await self.validate_common(CONF_GATEWAY_TYPE_SERIAL, errors, user_input)
-            )
+            errors.update(await self.validate_common(gw_type, errors, user_input))
             if not errors:
                 return self._async_create_entry(user_input)
 
@@ -174,16 +168,11 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Create a config entry for a tcp gateway."""
-        errors = {}
-        if user_input is not None:
-            if CONF_TCP_PORT in user_input:
-                port: int = user_input[CONF_TCP_PORT]
-                if not (0 < port <= 65535):
-                    errors[CONF_TCP_PORT] = "port_out_of_range"
+        gw_type = self._gw_type = CONF_GATEWAY_TYPE_TCP
+        errors: dict[str, str] = {}
 
-            errors.update(
-                await self.validate_common(CONF_GATEWAY_TYPE_TCP, errors, user_input)
-            )
+        if user_input is not None:
+            errors.update(await self.validate_common(gw_type, errors, user_input))
             if not errors:
                 return self._async_create_entry(user_input)
 
@@ -192,12 +181,12 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         schema[
             vol.Required(CONF_DEVICE, default=user_input.get(CONF_DEVICE, "127.0.0.1"))
         ] = str
-        # Don't use cv.port as that would show a slider *facepalm*
+
         schema[
             vol.Optional(
                 CONF_TCP_PORT, default=user_input.get(CONF_TCP_PORT, DEFAULT_TCP_PORT)
             )
-        ] = vol.Coerce(int)
+        ] = _PORT_SELECTOR
 
         schema = vol.Schema(schema)
         return self.async_show_form(step_id="gw_tcp", data_schema=schema, errors=errors)
@@ -214,7 +203,13 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Create a config entry for a mqtt gateway."""
-        errors = {}
+        # Naive check that doesn't consider config entry state.
+        if MQTT_DOMAIN not in self.hass.config.components:
+            return self.async_abort(reason="mqtt_required")
+
+        gw_type = self._gw_type = CONF_GATEWAY_TYPE_MQTT
+        errors: dict[str, str] = {}
+
         if user_input is not None:
             user_input[CONF_DEVICE] = MQTT_COMPONENT
 
@@ -239,9 +234,7 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 elif self._check_topic_exists(user_input[CONF_TOPIC_OUT_PREFIX]):
                     errors[CONF_TOPIC_OUT_PREFIX] = "duplicate_topic"
 
-            errors.update(
-                await self.validate_common(CONF_GATEWAY_TYPE_MQTT, errors, user_input)
-            )
+            errors.update(await self.validate_common(gw_type, errors, user_input))
             if not errors:
                 return self._async_create_entry(user_input)
 
