@@ -870,6 +870,10 @@ def async_get_config_entry_from_call(
 
         registry = module.async_get(hass)
 
+        # Selectors will return a single value, whereas targets will return a list:
+        if isinstance(targets, str):
+            targets = [targets]
+
         for target_id in targets:
             if target_entry := registry.async_get(target_id):
                 for entry in hass.config_entries.async_entries(call.domain):
