@@ -1,0 +1,13 @@
+{
+  "domain": "discal",
+  "name": "Discord Calendar",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/discal",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": ["discord"],
+  "codeowners": ["@GrandMoff100"],
+  "iot_class": "cloud_polling"
+}
