@@ -113,11 +113,7 @@ async def async_setup_entry(
 
         first = True
         for light_id in group.lights:
-            if (
-                (light := gateway.api.lights.lights.get(light_id))
-                and light.ZHATYPE == Light.ZHATYPE
-                and light.reachable
-            ):
+            if (light := gateway.api.lights.lights.get(light_id)) and light.reachable:
                 group.update_color_state(light, update_all_attributes=first)
                 first = False
 
@@ -293,12 +289,16 @@ class DeconzLight(DeconzBaseLight[Light]):
 class DeconzGroup(DeconzBaseLight[Group]):
     """Representation of a deCONZ group."""
 
+    _attr_has_entity_name = True
+
     _device: Group
 
     def __init__(self, device: Group, gateway: DeconzGateway) -> None:
         """Set up group and create an unique id."""
         self._unique_id = f"{gateway.bridgeid}-{device.deconz_id}"
         super().__init__(device, gateway)
+
+        self._attr_name = None
 
     @property
     def unique_id(self) -> str:

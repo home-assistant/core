@@ -167,6 +167,11 @@ ZEROCONF = {
             "name": "*z.wave-me*"
         }
     ],
+    "_hap._udp.local.": [
+        {
+            "domain": "homekit_controller"
+        }
+    ],
     "_homekit._tcp.local.": [
         {
             "domain": "homekit"
@@ -345,6 +350,11 @@ ZEROCONF = {
     "_sonos._tcp.local.": [
         {
             "domain": "sonos"
+        }
+    ],
+    "_soundtouch._tcp.local.": [
+        {
+            "domain": "soundtouch"
         }
     ],
     "_spotify-connect._tcp.local.": [

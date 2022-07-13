@@ -80,6 +80,7 @@ NO_IOT_CLASS = [
     "proxy",
     "python_script",
     "raspberry_pi",
+    "resolution_center",
     "safe_mode",
     "script",
     "search",
@@ -189,6 +190,16 @@ MANIFEST_SCHEMA = vol.Schema(
         vol.Optional("ssdp"): vol.Schema(
             vol.All([vol.All(vol.Schema({}, extra=vol.ALLOW_EXTRA), vol.Length(min=1))])
         ),
+        vol.Optional("bluetooth"): [
+            vol.Schema(
+                {
+                    vol.Optional("service_uuid"): vol.All(str, verify_lowercase),
+                    vol.Optional("local_name"): vol.All(str),
+                    vol.Optional("manufacturer_id"): int,
+                    vol.Optional("manufacturer_data_first_byte"): int,
+                }
+            )
+        ],
         vol.Optional("homekit"): vol.Schema({vol.Optional("models"): [str]}),
         vol.Optional("dhcp"): [
             vol.Schema(

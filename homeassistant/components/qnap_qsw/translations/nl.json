@@ -9,6 +9,12 @@
             "invalid_auth": "Ongeldige authenticatie"
         },
         "step": {
+            "discovered_connection": {
+                "data": {
+                    "password": "Wachtwoord",
+                    "username": "Gebruikersnaam"
+                }
+            },
             "user": {
                 "data": {
                     "password": "Wachtwoord",

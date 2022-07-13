@@ -9,6 +9,11 @@
             "unknown": "Erro inesperado"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Palavra-passe"
+                }
+            },
             "user": {
                 "data": {
                     "host": "",

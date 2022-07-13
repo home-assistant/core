@@ -210,7 +210,6 @@ omit =
     homeassistant/components/denonavr/media_player.py
     homeassistant/components/denonavr/receiver.py
     homeassistant/components/deutsche_bahn/sensor.py
-    homeassistant/components/devolo_home_control/light.py
     homeassistant/components/devolo_home_control/sensor.py
     homeassistant/components/devolo_home_control/switch.py
     homeassistant/components/digital_ocean/*
@@ -267,6 +266,7 @@ omit =
     homeassistant/components/eliqonline/sensor.py
     homeassistant/components/elkm1/__init__.py
     homeassistant/components/elkm1/alarm_control_panel.py
+    homeassistant/components/elkm1/binary_sensor.py
     homeassistant/components/elkm1/climate.py
     homeassistant/components/elkm1/discovery.py
     homeassistant/components/elkm1/light.py
@@ -276,6 +276,7 @@ omit =
     homeassistant/components/elmax/__init__.py
     homeassistant/components/elmax/common.py
     homeassistant/components/elmax/const.py
+    homeassistant/components/elmax/binary_sensor.py
     homeassistant/components/elmax/switch.py
     homeassistant/components/elv/*
     homeassistant/components/emby/media_player.py
@@ -449,6 +450,7 @@ omit =
     homeassistant/components/gtfs/sensor.py
     homeassistant/components/guardian/__init__.py
     homeassistant/components/guardian/binary_sensor.py
+    homeassistant/components/guardian/button.py
     homeassistant/components/guardian/sensor.py
     homeassistant/components/guardian/switch.py
     homeassistant/components/guardian/util.py
@@ -717,7 +719,6 @@ omit =
     homeassistant/components/microsoft/tts.py
     homeassistant/components/miflora/sensor.py
     homeassistant/components/mikrotik/hub.py
-    homeassistant/components/mikrotik/device_tracker.py
     homeassistant/components/mill/climate.py
     homeassistant/components/mill/const.py
     homeassistant/components/mill/sensor.py
