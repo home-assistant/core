@@ -2519,7 +2519,7 @@ zigpy-xbee==0.15.0
 zigpy-zigate==0.9.0
 
 # homeassistant.components.zha
-zigpy-znp==0.8.0
+zigpy-znp==0.8.1
 
 # homeassistant.components.zha
 zigpy==0.47.2
