@@ -11,6 +11,8 @@ ADVANTAGE_AIR_INACTIVE = "Inactive"
 ADVANTAGE_AIR_MYAUTO = "MyAuto"
 ADVANTAGE_AIR_MYTEMP = "MyTemp"
 ADVANTAGE_AIR_MYZONE = "MyZone"
+# ADVANTAGE_AIR_MYAUTO_ENABLE = "myAutoModeIsRunning"
+# ADVANTAGE_AIR_MYTEMP_ENABLE = "climateControlModeIsRunning"
 ADVANTAGE_AIR_MYAUTO_ENABLE = "myAutoModeEnabled"
 ADVANTAGE_AIR_MYTEMP_ENABLE = "climateControlModeEnabled"
 
@@ -47,15 +49,19 @@ class AdvantageAirMyZone(AdvantageAirEntity, SelectEntity):
             f'{self.coordinator.data["system"]["rid"]}-{ac_key}-myzone'
         )
 
+        # Add option for each zone that supports MyZone
         for zone in instance["coordinator"].data["aircons"][ac_key]["zones"].values():
             if zone["type"] > 0:
                 self._name_to_number[zone["name"]] = zone["number"]
                 self._number_to_name[zone["number"]] = zone["name"]
                 self._attr_options.append(zone["name"])
 
+        # Disable this entity if there is only 1 option
+        self._attr_entity_registry_enabled_default = len(self._attr_options) > 1
+
     @property
     def current_option(self):
-        """Return the current MyZone."""
+        """Return the current myZone."""
         return self._number_to_name[self._ac["myZone"]]
 
     async def async_select_option(self, option):
@@ -68,8 +74,8 @@ class AdvantageAirMyZone(AdvantageAirEntity, SelectEntity):
 class AdvantageAirAutoMode(AdvantageAirEntity, SelectEntity):
     """Representation of Advantage Air Auto Selector."""
 
-    _attr_icon = "mdi: thermostat-auto"
-    _attr_options = [ADVANTAGE_AIR_MYZONE, ADVANTAGE_AIR_MYAUTO, ADVANTAGE_AIR_MYTEMP]
+    _attr_icon = "mdi:thermostat-auto"
+    _attr_options = [ADVANTAGE_AIR_MYZONE]
 
     def __init__(self, instance, ac_key):
         """Initialize an Advantage Air Auto Selector."""
@@ -79,12 +85,27 @@ class AdvantageAirAutoMode(AdvantageAirEntity, SelectEntity):
             f'{self.coordinator.data["system"]["rid"]}-{ac_key}-automode'
         )
 
+        # Add option for each supported auto mode
+        if ADVANTAGE_AIR_MYAUTO_ENABLE in self._ac:
+            self._attr_options.push(ADVANTAGE_AIR_MYAUTO)
+        if ADVANTAGE_AIR_MYTEMP_ENABLE in self._ac:
+            self._attr_options.push(ADVANTAGE_AIR_MYTEMP)
+
+        # Disable this entity if there is only 1 option
+        self._attr_entity_registry_enabled_default = len(self._attr_options) > 1
+
     @property
     def current_option(self):
         """Return the enabled auto mode."""
-        if self._ac["info"][ADVANTAGE_AIR_MYAUTO_ENABLE]:
+        if (
+            ADVANTAGE_AIR_MYAUTO_ENABLE in self._ac
+            and self._ac[ADVANTAGE_AIR_MYAUTO_ENABLE]
+        ):
             return ADVANTAGE_AIR_MYAUTO
-        if self._ac["info"][ADVANTAGE_AIR_MYTEMP_ENABLE]:
+        if (
+            ADVANTAGE_AIR_MYTEMP_ENABLE in self._ac
+            and self._ac[ADVANTAGE_AIR_MYTEMP_ENABLE]
+        ):
             return ADVANTAGE_AIR_MYTEMP
         return ADVANTAGE_AIR_MYZONE
 
