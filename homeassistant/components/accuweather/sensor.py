@@ -1,11 +1,31 @@
 """Support for the AccuWeather service."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any, cast
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME
+from homeassistant.const import (
+    CONCENTRATION_PARTS_PER_CUBIC_METER,
+    CONF_NAME,
+    LENGTH_FEET,
+    LENGTH_INCHES,
+    LENGTH_METERS,
+    LENGTH_MILLIMETERS,
+    PERCENTAGE,
+    SPEED_KILOMETERS_PER_HOUR,
+    SPEED_MILES_PER_HOUR,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+    TIME_HOURS,
+    UV_INDEX,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
@@ -20,14 +40,281 @@ from .const import (
     ATTR_FORECAST,
     ATTRIBUTION,
     DOMAIN,
-    FORECAST_SENSOR_TYPES,
     MANUFACTURER,
     MAX_FORECAST_DAYS,
-    SENSOR_TYPES,
 )
-from .model import AccuWeatherSensorDescription
 
 PARALLEL_UPDATES = 1
+
+
+@dataclass
+class AccuWeatherSensorDescription(SensorEntityDescription):
+    """Class describing AccuWeather sensor entities."""
+
+    unit_metric: str | None = None
+    unit_imperial: str | None = None
+
+
+FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
+    AccuWeatherSensorDescription(
+        key="CloudCoverDay",
+        icon="mdi:weather-cloudy",
+        name="Cloud cover day",
+        unit_metric=PERCENTAGE,
+        unit_imperial=PERCENTAGE,
+        entity_registry_enabled_default=False,
+    ),
+    AccuWeatherSensorDescription(
+        key="CloudCoverNight",
+        icon="mdi:weather-cloudy",
+        name="Cloud cover night",
+        unit_metric=PERCENTAGE,
+        unit_imperial=PERCENTAGE,
+        entity_registry_enabled_default=False,
+    ),
+    AccuWeatherSensorDescription(
+        key="Grass",
+        icon="mdi:grass",
+        name="Grass pollen",
+        unit_metric=CONCENTRATION_PARTS_PER_CUBIC_METER,
+        unit_imperial=CONCENTRATION_PARTS_PER_CUBIC_METER,
+        entity_registry_enabled_default=False,
+    ),
+    AccuWeatherSensorDescription(
+        key="HoursOfSun",
+        icon="mdi:weather-partly-cloudy",
+        name="Hours of sun",
+        unit_metric=TIME_HOURS,
+        unit_imperial=TIME_HOURS,
+    ),
+    AccuWeatherSensorDescription(
+        key="Mold",
+        icon="mdi:blur",
+        name="Mold pollen",
+        unit_metric=CONCENTRATION_PARTS_PER_CUBIC_METER,
+        unit_imperial=CONCENTRATION_PARTS_PER_CUBIC_METER,
+        entity_registry_enabled_default=False,
+    ),
+    AccuWeatherSensorDescription(
+        key="Ozone",
+        icon="mdi:vector-triangle",
+        name="Ozone",
+        unit_metric=None,
+        unit_imperial=None,
+        entity_registry_enabled_default=False,
+    ),
+    AccuWeatherSensorDescription(
+        key="Ragweed",
+        icon="mdi:sprout",
+        name="Ragweed pollen",
+        unit_metric=CONCENTRATION_PARTS_PER_CUBIC_METER,
+        unit_imperial=CONCENTRATION_PARTS_PER_CUBIC_METER,
+        entity_registry_enabled_default=False,
+    ),
+    AccuWeatherSensorDescription(
+        key="RealFeelTemperatureMax",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        name="RealFeel temperature max",
+        unit_metric=TEMP_CELSIUS,
+        unit_imperial=TEMP_FAHRENHEIT,
+    ),
+    AccuWeatherSensorDescription(
+        key="RealFeelTemperatureMin",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        name="RealFeel temperature min",
+        unit_metric=TEMP_CELSIUS,
+        unit_imperial=TEMP_FAHRENHEIT,
+    ),
+    AccuWeatherSensorDescription(
+        key="RealFeelTemperatureShadeMax",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        name="RealFeel temperature shade max",
+        unit_metric=TEMP_CELSIUS,
+        unit_imperial=TEMP_FAHRENHEIT,
+        entity_registry_enabled_default=False,
+    ),
+    AccuWeatherSensorDescription(
+        key="RealFeelTemperatureShadeMin",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        name="RealFeel temperature shade min",
+        unit_metric=TEMP_CELSIUS,
+        unit_imperial=TEMP_FAHRENHEIT,
+        entity_registry_enabled_default=False,
+    ),
+    AccuWeatherSensorDescription(
+        key="ThunderstormProbabilityDay",
+        icon="mdi:weather-lightning",
+        name="Thunderstorm probability day",
+        unit_metric=PERCENTAGE,
+        unit_imperial=PERCENTAGE,
+    ),
+    AccuWeatherSensorDescription(
+        key="ThunderstormProbabilityNight",
+        icon="mdi:weather-lightning",
+        name="Thunderstorm probability night",
+        unit_metric=PERCENTAGE,
+        unit_imperial=PERCENTAGE,
+    ),
+    AccuWeatherSensorDescription(
+        key="Tree",
+        icon="mdi:tree-outline",
+        name="Tree pollen",
+        unit_metric=CONCENTRATION_PARTS_PER_CUBIC_METER,
+        unit_imperial=CONCENTRATION_PARTS_PER_CUBIC_METER,
+        entity_registry_enabled_default=False,
+    ),
+    AccuWeatherSensorDescription(
+        key="UVIndex",
+        icon="mdi:weather-sunny",
+        name="UV index",
+        unit_metric=UV_INDEX,
+        unit_imperial=UV_INDEX,
+    ),
+    AccuWeatherSensorDescription(
+        key="WindGustDay",
+        icon="mdi:weather-windy",
+        name="Wind gust day",
+        unit_metric=SPEED_KILOMETERS_PER_HOUR,
+        unit_imperial=SPEED_MILES_PER_HOUR,
+        entity_registry_enabled_default=False,
+    ),
+    AccuWeatherSensorDescription(
+        key="WindGustNight",
+        icon="mdi:weather-windy",
+        name="Wind gust night",
+        unit_metric=SPEED_KILOMETERS_PER_HOUR,
+        unit_imperial=SPEED_MILES_PER_HOUR,
+        entity_registry_enabled_default=False,
+    ),
+    AccuWeatherSensorDescription(
+        key="WindDay",
+        icon="mdi:weather-windy",
+        name="Wind day",
+        unit_metric=SPEED_KILOMETERS_PER_HOUR,
+        unit_imperial=SPEED_MILES_PER_HOUR,
+    ),
+    AccuWeatherSensorDescription(
+        key="WindNight",
+        icon="mdi:weather-windy",
+        name="Wind night",
+        unit_metric=SPEED_KILOMETERS_PER_HOUR,
+        unit_imperial=SPEED_MILES_PER_HOUR,
+    ),
+)
+
+SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
+    AccuWeatherSensorDescription(
+        key="ApparentTemperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        name="Apparent temperature",
+        unit_metric=TEMP_CELSIUS,
+        unit_imperial=TEMP_FAHRENHEIT,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AccuWeatherSensorDescription(
+        key="Ceiling",
+        icon="mdi:weather-fog",
+        name="Cloud ceiling",
+        unit_metric=LENGTH_METERS,
+        unit_imperial=LENGTH_FEET,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AccuWeatherSensorDescription(
+        key="CloudCover",
+        icon="mdi:weather-cloudy",
+        name="Cloud cover",
+        unit_metric=PERCENTAGE,
+        unit_imperial=PERCENTAGE,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AccuWeatherSensorDescription(
+        key="DewPoint",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        name="Dew point",
+        unit_metric=TEMP_CELSIUS,
+        unit_imperial=TEMP_FAHRENHEIT,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AccuWeatherSensorDescription(
+        key="RealFeelTemperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        name="RealFeel temperature",
+        unit_metric=TEMP_CELSIUS,
+        unit_imperial=TEMP_FAHRENHEIT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AccuWeatherSensorDescription(
+        key="RealFeelTemperatureShade",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        name="RealFeel temperature shade",
+        unit_metric=TEMP_CELSIUS,
+        unit_imperial=TEMP_FAHRENHEIT,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AccuWeatherSensorDescription(
+        key="Precipitation",
+        icon="mdi:weather-rainy",
+        name="Precipitation",
+        unit_metric=LENGTH_MILLIMETERS,
+        unit_imperial=LENGTH_INCHES,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AccuWeatherSensorDescription(
+        key="PressureTendency",
+        device_class="accuweather__pressure_tendency",
+        icon="mdi:gauge",
+        name="Pressure tendency",
+        unit_metric=None,
+        unit_imperial=None,
+    ),
+    AccuWeatherSensorDescription(
+        key="UVIndex",
+        icon="mdi:weather-sunny",
+        name="UV index",
+        unit_metric=UV_INDEX,
+        unit_imperial=UV_INDEX,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AccuWeatherSensorDescription(
+        key="WetBulbTemperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        name="Wet bulb temperature",
+        unit_metric=TEMP_CELSIUS,
+        unit_imperial=TEMP_FAHRENHEIT,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AccuWeatherSensorDescription(
+        key="WindChillTemperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        name="Wind chill temperature",
+        unit_metric=TEMP_CELSIUS,
+        unit_imperial=TEMP_FAHRENHEIT,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AccuWeatherSensorDescription(
+        key="Wind",
+        icon="mdi:weather-windy",
+        name="Wind",
+        unit_metric=SPEED_KILOMETERS_PER_HOUR,
+        unit_imperial=SPEED_MILES_PER_HOUR,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AccuWeatherSensorDescription(
+        key="WindGust",
+        icon="mdi:weather-windy",
+        name="Wind gust",
+        unit_metric=SPEED_KILOMETERS_PER_HOUR,
+        unit_imperial=SPEED_MILES_PER_HOUR,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+)
 
 
 async def async_setup_entry(
