@@ -9,6 +9,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_LANGUAGE, CONF_STATION, DOMAIN
@@ -85,6 +87,17 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     hass.data[DOMAIN].pop(config_entry.entry_id)
 
     return unload_ok
+
+
+def device_info(config_entry: ConfigEntry) -> DeviceInfo:
+    """Build and return the device info for EC."""
+    return DeviceInfo(
+        entry_type=DeviceEntryType.SERVICE,
+        identifiers={(DOMAIN, config_entry.entry_id)},
+        manufacturer="Environment Canada",
+        name=config_entry.title,
+        configuration_url="https://weather.gc.ca/",
+    )
 
 
 class ECDataUpdateCoordinator(DataUpdateCoordinator):
