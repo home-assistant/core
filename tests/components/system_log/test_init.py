@@ -32,38 +32,6 @@ def simple_queue():
         yield simple_queue_fixed
 
 
-async def _install_log_catcher(hass, sq, msg):
-    event = asyncio.Event()
-
-    class EmitEventHandler(logging.Handler):
-        """Set an event when called."""
-
-        def emit(self, record):
-            """Emit a log record."""
-            if msg in record.message:
-                event.set()
-
-    handler = EmitEventHandler()
-    logging.root.addHandler(handler)
-
-    def _wait_handler_lock():
-        handler: logging.Handler = hass.data[system_log.DOMAIN]
-        handler.acquire()
-        while not sq.empty():
-            time.sleep(0.1)
-        handler.release()
-
-    async def _async_wait_and_remove():
-        await hass.async_add_executor_job(_wait_handler_lock)
-        await event.wait()
-        await hass.async_block_till_done()
-        await hass.async_add_executor_job(_wait_handler_lock)
-        await hass.async_block_till_done()
-        logging.root.removeHandler(handler)
-
-    return _async_wait_and_remove()
-
-
 async def get_error_log(hass_ws_client):
     """Fetch all entries from system_log via the API."""
     client = await hass_ws_client()
