@@ -387,8 +387,6 @@ class MQTT:
         self, topic: str, payload: PublishPayloadType, qos: int, retain: bool
     ) -> None:
         """Publish a MQTT message."""
-        # We don't import on the top because some integrations
-        # should be able to optionally rely on MQTT.
         async with self._paho_lock:
             msg_info = await self.hass.async_add_executor_job(
                 self._mqttc.publish, topic, payload, qos, retain
