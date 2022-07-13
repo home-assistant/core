@@ -31,17 +31,16 @@ async def _async_block_until_queue_empty(hass, sq):
     # Unfortunately we are stuck with polling
     await hass.async_block_till_done()
 
-    def _wait_for_empty_queue():
+    def _wait_handler_lock():
         handler: logging.Handler = hass.data[system_log.DOMAIN]
-        while True:
-            handler.acquire()
-            if sq.empty():
-                handler.release()
-                return
+        handler.acquire()
+        while not sq.empty():
             time.sleep(0.01)
-            handler.release()
+        handler.release()
 
-    await hass.async_add_executor_job(_wait_for_empty_queue)
+    await hass.async_add_executor_job(_wait_handler_lock)
+    await hass.async_block_till_done()
+    await hass.async_add_executor_job(_wait_handler_lock)
 
 
 async def get_error_log(hass_ws_client):
