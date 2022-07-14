@@ -18,9 +18,6 @@ from .model import Config, Integration
 IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.cloud.client",
     "homeassistant.components.cloud.http_api",
-    "homeassistant.components.minecraft_server",
-    "homeassistant.components.minecraft_server.helpers",
-    "homeassistant.components.minecraft_server.sensor",
     "homeassistant.components.sonos",
     "homeassistant.components.sonos.alarms",
     "homeassistant.components.sonos.binary_sensor",
