@@ -1,0 +1,16 @@
+{
+    "config": {
+        "step": {
+            "confirm": {
+                "data": {
+                    "password": "Palavra-passe"
+                }
+            },
+            "user_custom_url": {
+                "data": {
+                    "username": "Nome de Utilizador"
+                }
+            }
+        }
+    }
+}

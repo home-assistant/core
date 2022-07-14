@@ -8,6 +8,7 @@ from datetime import timedelta
 from enum import Enum
 import itertools
 import logging
+import re
 import time
 import traceback
 from typing import TYPE_CHECKING, Any, NamedTuple, Union
@@ -20,6 +21,7 @@ import zigpy.endpoint
 import zigpy.group
 from zigpy.types.named import EUI64
 
+from homeassistant import __path__ as HOMEASSISTANT_PATH
 from homeassistant.components.system_log import LogEntry, _figure_out_source
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -178,9 +180,7 @@ class ZHAGateway:
         self.application_controller.add_listener(self)
         self.application_controller.groups.add_listener(self)
         self._hass.data[DATA_ZHA][DATA_ZHA_GATEWAY] = self
-        self._hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID] = str(
-            self.application_controller.ieee
-        )
+        self._hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID] = str(self.coordinator_ieee)
         self.async_load_devices()
         self.async_load_groups()
 
@@ -189,7 +189,7 @@ class ZHAGateway:
         """Restore ZHA devices from zigpy application state."""
         for zigpy_device in self.application_controller.devices.values():
             zha_device = self._async_get_or_create_device(zigpy_device, restored=True)
-            if zha_device.ieee == self.application_controller.ieee:
+            if zha_device.ieee == self.coordinator_ieee:
                 self.coordinator_zha_device = zha_device
             delta_msg = "not known"
             if zha_device.last_seen is not None:
@@ -434,6 +434,11 @@ class ZHAGateway:
                 "cleaning up entity registry entry for entity: %s", entry.entity_id
             )
             self.ha_entity_registry.async_remove(entry.entity_id)
+
+    @property
+    def coordinator_ieee(self) -> EUI64:
+        """Return the active coordinator's IEEE address."""
+        return self.application_controller.state.node_info.ieee
 
     @property
     def devices(self) -> dict[EUI64, ZHADevice]:
@@ -729,7 +734,15 @@ class LogRelayHandler(logging.Handler):
         if record.levelno >= logging.WARN and not record.exc_info:
             stack = [f for f, _, _, _ in traceback.extract_stack()]
 
-        entry = LogEntry(record, stack, _figure_out_source(record, stack, self.hass))
+        hass_path: str = HOMEASSISTANT_PATH[0]
+        config_dir = self.hass.config.config_dir
+        assert config_dir is not None
+        paths_re = re.compile(
+            r"(?:{})/(.*)".format(
+                "|".join([re.escape(x) for x in (hass_path, config_dir)])
+            )
+        )
+        entry = LogEntry(record, stack, _figure_out_source(record, stack, paths_re))
         async_dispatcher_send(
             self.hass,
             ZHA_GW_MSG,

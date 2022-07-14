@@ -132,6 +132,14 @@ backoff<2.0
 # Breaking change in version
 # https://github.com/samuelcolvin/pydantic/issues/4092
 pydantic!=1.9.1
+
+# Breaks asyncio
+# https://github.com/pubnub/python/issues/130
+pubnub!=6.4.0
+
+# Package's __init__.pyi stub has invalid syntax and breaks mypy
+# https://github.com/dahlia/iso4217/issues/16
+iso4217!=1.10.20220401
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (

@@ -60,7 +60,7 @@ async def test_whois_sensors(
     assert state.state == "364"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
-        == "home-assistant.io Days Until Expiration"
+        == "home-assistant.io Days until expiration"
     )
     assert state.attributes.get(ATTR_ICON) == "mdi:calendar-clock"
     assert ATTR_DEVICE_CLASS not in state.attributes
@@ -83,7 +83,7 @@ async def test_whois_sensors(
     assert entry.unique_id == "home-assistant.io_last_updated"
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
     assert state.state == "2021-12-31T23:00:00+00:00"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "home-assistant.io Last Updated"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "home-assistant.io Last updated"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TIMESTAMP
     assert ATTR_ICON not in state.attributes
 
@@ -137,9 +137,9 @@ async def test_whois_sensors(
     assert device_entry.configuration_url is None
     assert device_entry.entry_type == dr.DeviceEntryType.SERVICE
     assert device_entry.identifiers == {(DOMAIN, "home-assistant.io")}
+    assert device_entry.name == "home-assistant.io"
     assert device_entry.manufacturer is None
     assert device_entry.model is None
-    assert device_entry.name is None
     assert device_entry.sw_version is None
 
 
@@ -159,7 +159,7 @@ async def test_whois_sensors_missing_some_attrs(
     assert entry.unique_id == "home-assistant.io_last_updated"
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
     assert state.state == "2021-12-31T23:00:00+00:00"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "home-assistant.io Last Updated"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "home-assistant.io Last updated"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TIMESTAMP
     assert ATTR_ICON not in state.attributes
 
