@@ -14,7 +14,7 @@ from aiohomekit.exceptions import (
     EncryptionError,
 )
 from aiohomekit.model import Accessories, Accessory
-from aiohomekit.model.characteristics import Characteristic
+from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
 from aiohomekit.model.services import Service
 
 from homeassistant.const import ATTR_VIA_DEVICE
@@ -169,6 +169,24 @@ class HKDevice:
         self.available = available
         async_dispatcher_send(self.hass, self.signal_state_updated)
 
+    async def async_ensure_available(self) -> bool:
+        """Verifyt the accessory is available after processing the entity map."""
+        if self.available:
+            return True
+        if self.watchable_characteristics and self.pollable_characteristics:
+            # We already tried, no need to try again
+            return False
+        # We there are no watchable and not pollable characteristics,
+        # we need to force a connection to the device.
+        primary = self.entity_map.aid(1)
+        iid = primary.accessory_information[CharacteristicsTypes.SERIAL_NUMBER].iid
+        try:
+            await self.pairing.get_characteristics([(1, iid)])
+        except (AccessoryDisconnectedError, EncryptionError, AccessoryNotFoundError):
+            return False
+        self.async_set_available_state(True)
+        return True
+
     async def async_setup(self) -> bool:
         """Prepare to use a paired HomeKit device in Home Assistant."""
         entity_storage: EntityMapStorage = self.hass.data[ENTITY_MAP]
@@ -180,7 +198,8 @@ class HKDevice:
             return False
 
         await self.async_process_entity_map()
-        if not self.pairing.is_connected:
+
+        if not await self.async_ensure_available():
             return False
         # If everything is up to date, we can create the entities
         # since we know the data is not stale.
