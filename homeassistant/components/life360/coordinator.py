@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+from contextlib import suppress
 from dataclasses import dataclass, field
 from datetime import datetime
+from enum import Enum
 from typing import Any
 
 from life360 import Life360, Life360Error, LoginError
@@ -31,6 +33,13 @@ from .const import (
     SPEED_FACTOR_MPH,
     UPDATE_INTERVAL,
 )
+
+
+class MissingLocReason(Enum):
+    """Reason member location information is missing."""
+
+    VAGUE_ERROR_REASON = "vague error reason"
+    EXPLICIT_ERROR_REASON = "explicit error reason"
 
 
 @dataclass
@@ -99,6 +108,7 @@ class Life360DataUpdateCoordinator(DataUpdateCoordinator):
             max_retries=COMM_MAX_RETRIES,
             authorization=entry.data[CONF_AUTHORIZATION],
         )
+        self._missing_loc_reason = hass.data[DOMAIN].missing_loc_reason
 
     async def _retrieve_data(self, func: str, *args: Any) -> list[dict[str, Any]]:
         """Get data from Life360."""
@@ -141,10 +151,7 @@ class Life360DataUpdateCoordinator(DataUpdateCoordinator):
                 if not int(member["features"]["shareLocation"]):
                     continue
 
-                # Note that member may be in more than one circle. If that's the case just
-                # go ahead and process the newly retrieved data (overwriting the older
-                # data), since it might be slightly newer than what was retrieved while
-                # processing another circle.
+                member_id = member["id"]
 
                 first = member["firstName"]
                 last = member["lastName"]
@@ -153,15 +160,44 @@ class Life360DataUpdateCoordinator(DataUpdateCoordinator):
                 else:
                     name = first or last
 
-                loc = member["location"]
-                if not loc:
-                    if err_msg := member["issues"]["title"]:
-                        if member["issues"]["dialog"]:
-                            err_msg += f": {member['issues']['dialog']}"
-                    else:
-                        err_msg = "Location information missing"
-                    LOGGER.error("%s: %s", name, err_msg)
+                cur_missing_reason = self._missing_loc_reason.get(member_id)
+
+                # Check if location information is missing. This can happen if server
+                # has not heard from member's device in a long time (e.g., has been off
+                # for a long time, or has lost service, etc.)
+                if loc := member["location"]:
+                    with suppress(KeyError):
+                        del self._missing_loc_reason[member_id]
+                else:
+                    if explicit_reason := member["issues"]["title"]:
+                        if extended_reason := member["issues"]["dialog"]:
+                            explicit_reason += f": {extended_reason}"
+                    # Note that different Circles can report missing location in
+                    # different ways. E.g., one might report an explicit reason and
+                    # another does not. If a vague reason has already been logged but a
+                    # more explicit reason is now available, log that, too.
+                    if (
+                        cur_missing_reason is None
+                        or cur_missing_reason == MissingLocReason.VAGUE_ERROR_REASON
+                        and explicit_reason
+                    ):
+                        if explicit_reason:
+                            self._missing_loc_reason[
+                                member_id
+                            ] = MissingLocReason.EXPLICIT_ERROR_REASON
+                            err_msg = explicit_reason
+                        else:
+                            self._missing_loc_reason[
+                                member_id
+                            ] = MissingLocReason.VAGUE_ERROR_REASON
+                            err_msg = "Location information missing"
+                        LOGGER.error("%s: %s", name, err_msg)
                     continue
+
+                # Note that member may be in more than one circle. If that's the case
+                # just go ahead and process the newly retrieved data (overwriting the
+                # older data), since it might be slightly newer than what was retrieved
+                # while processing another circle.
 
                 place = loc["name"] or None
 
@@ -179,7 +215,7 @@ class Life360DataUpdateCoordinator(DataUpdateCoordinator):
                 if self._hass.config.units.is_metric:
                     speed = convert(speed, LENGTH_MILES, LENGTH_KILOMETERS)
 
-                data.members[member["id"]] = Life360Member(
+                data.members[member_id] = Life360Member(
                     address,
                     dt_util.utc_from_timestamp(int(loc["since"])),
                     bool(int(loc["charge"])),

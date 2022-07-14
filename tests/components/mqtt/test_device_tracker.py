@@ -1,13 +1,20 @@
 """The tests for the MQTT device tracker platform using configuration.yaml."""
+import json
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components.device_tracker.const import DOMAIN, SOURCE_TYPE_BLUETOOTH
+from homeassistant.config_entries import ConfigEntryDisabler
 from homeassistant.const import CONF_PLATFORM, STATE_HOME, STATE_NOT_HOME, Platform
 from homeassistant.setup import async_setup_component
 
-from .test_common import help_test_setup_manual_entity_from_yaml
+from .test_common import (
+    MockConfigEntry,
+    help_test_entry_reload_with_new_config,
+    help_test_setup_manual_entity_from_yaml,
+    help_test_unload_config_entry,
+)
 
 from tests.common import async_fire_mqtt_message
 
@@ -265,3 +272,114 @@ async def test_setup_with_modern_schema(hass, mock_device_tracker_conf):
     await help_test_setup_manual_entity_from_yaml(hass, DOMAIN, config)
 
     assert hass.states.get(entity_id) is not None
+
+
+async def test_unload_entry(
+    hass, mock_device_tracker_conf, mqtt_mock_entry_no_yaml_config, tmp_path
+):
+    """Test unloading the config entry."""
+    # setup through configuration.yaml
+    await mqtt_mock_entry_no_yaml_config()
+    dev_id = "jan"
+    entity_id = f"{DOMAIN}.{dev_id}"
+    topic = "/location/jan"
+    location = "home"
+
+    hass.config.components = {"mqtt", "zone"}
+    assert await async_setup_component(
+        hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "mqtt", "devices": {dev_id: topic}}}
+    )
+    async_fire_mqtt_message(hass, topic, location)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == location
+
+    # setup through discovery
+    dev_id = "piet"
+    subscription = "/location/#"
+    domain = DOMAIN
+    discovery_config = {
+        "devices": {dev_id: subscription},
+        "state_topic": "some-state",
+        "name": "piet",
+    }
+    async_fire_mqtt_message(
+        hass, f"homeassistant/{domain}/bla/config", json.dumps(discovery_config)
+    )
+    await hass.async_block_till_done()
+
+    # check that both entities were created
+    config_setup_entity = hass.states.get(f"{domain}.jan")
+    assert config_setup_entity
+
+    discovery_setup_entity = hass.states.get(f"{domain}.piet")
+    assert discovery_setup_entity
+
+    await help_test_unload_config_entry(hass, tmp_path, {})
+    await hass.async_block_till_done()
+
+    # check that both entities were unsubscribed and that the location was not processed
+    async_fire_mqtt_message(hass, "some-state", "not_home")
+    async_fire_mqtt_message(hass, "location/jan", "not_home")
+    await hass.async_block_till_done()
+
+    config_setup_entity = hass.states.get(f"{domain}.jan")
+    assert config_setup_entity.state == location
+
+    # the discovered tracker is an entity which state is removed at unload
+    discovery_setup_entity = hass.states.get(f"{domain}.piet")
+    assert discovery_setup_entity is None
+
+
+async def test_reload_entry_legacy(
+    hass, mock_device_tracker_conf, mqtt_mock_entry_no_yaml_config, tmp_path
+):
+    """Test reloading the config entry with manual MQTT items."""
+    # setup through configuration.yaml
+    await mqtt_mock_entry_no_yaml_config()
+    entity_id = f"{DOMAIN}.jan"
+    topic = "location/jan"
+    location = "home"
+
+    config = {
+        DOMAIN: {CONF_PLATFORM: "mqtt", "devices": {"jan": topic}},
+    }
+    hass.config.components = {"mqtt", "zone"}
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, topic, location)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == location
+
+    await help_test_entry_reload_with_new_config(hass, tmp_path, config)
+    await hass.async_block_till_done()
+
+    location = "not_home"
+    async_fire_mqtt_message(hass, topic, location)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == location
+
+
+async def test_setup_with_disabled_entry(
+    hass, mock_device_tracker_conf, caplog
+) -> None:
+    """Test setting up the platform with a disabled config entry."""
+    # Try to setup the platform with a disabled config entry
+    config_entry = MockConfigEntry(
+        domain="mqtt", data={}, disabled_by=ConfigEntryDisabler.USER
+    )
+    config_entry.add_to_hass(hass)
+    topic = "location/jan"
+
+    config = {
+        DOMAIN: {CONF_PLATFORM: "mqtt", "devices": {"jan": topic}},
+    }
+    hass.config.components = {"mqtt", "zone"}
+
+    await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
+
+    assert (
+        "MQTT device trackers will be not available until the config entry is enabled"
+        in caplog.text
+    )

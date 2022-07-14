@@ -149,6 +149,8 @@ async def async_setup_entry(
         ("zone", zone_coordinator, RainMachineZone, RainMachineZoneEnabled),
     ):
         for uid, data in coordinator.data.items():
+            name = data["name"].capitalize()
+
             # Add a switch to start/stop the program or zone:
             entities.append(
                 switch_class(
@@ -157,7 +159,7 @@ async def async_setup_entry(
                     controller,
                     RainMachineSwitchDescription(
                         key=f"{kind}_{uid}",
-                        name=data["name"],
+                        name=name,
                         icon="mdi:water",
                         uid=uid,
                     ),
@@ -172,7 +174,7 @@ async def async_setup_entry(
                     controller,
                     RainMachineSwitchDescription(
                         key=f"{kind}_{uid}_enabled",
-                        name=f"{data['name']} Enabled",
+                        name=f"{name} enabled",
                         entity_category=EntityCategory.CONFIG,
                         icon="mdi:cog",
                         uid=uid,

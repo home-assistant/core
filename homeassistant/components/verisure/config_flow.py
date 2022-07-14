@@ -34,8 +34,8 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
     email: str
     entry: ConfigEntry
-    installations: dict[str, str]
     password: str
+    verisure: Verisure
 
     @staticmethod
     @callback
@@ -50,11 +50,13 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            verisure = Verisure(
+            self.email = user_input[CONF_EMAIL]
+            self.password = user_input[CONF_PASSWORD]
+            self.verisure = Verisure(
                 username=user_input[CONF_EMAIL], password=user_input[CONF_PASSWORD]
             )
             try:
-                await self.hass.async_add_executor_job(verisure.login)
+                await self.hass.async_add_executor_job(self.verisure.login)
             except VerisureLoginError as ex:
                 LOGGER.debug("Could not log in to Verisure, %s", ex)
                 errors["base"] = "invalid_auth"
@@ -62,13 +64,6 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 LOGGER.debug("Unexpected response from Verisure, %s", ex)
                 errors["base"] = "unknown"
             else:
-                self.email = user_input[CONF_EMAIL]
-                self.password = user_input[CONF_PASSWORD]
-                self.installations = {
-                    inst["giid"]: f"{inst['alias']} ({inst['street']})"
-                    for inst in verisure.installations
-                }
-
                 return await self.async_step_installation()
 
         return self.async_show_form(
@@ -86,22 +81,26 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Select Verisure installation to add."""
-        if len(self.installations) == 1:
-            user_input = {CONF_GIID: list(self.installations)[0]}
+        installations = {
+            inst["giid"]: f"{inst['alias']} ({inst['street']})"
+            for inst in self.verisure.installations or []
+        }
 
         if user_input is None:
-            return self.async_show_form(
-                step_id="installation",
-                data_schema=vol.Schema(
-                    {vol.Required(CONF_GIID): vol.In(self.installations)}
-                ),
-            )
+            if len(installations) != 1:
+                return self.async_show_form(
+                    step_id="installation",
+                    data_schema=vol.Schema(
+                        {vol.Required(CONF_GIID): vol.In(installations)}
+                    ),
+                )
+            user_input = {CONF_GIID: list(installations)[0]}
 
         await self.async_set_unique_id(user_input[CONF_GIID])
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
-            title=self.installations[user_input[CONF_GIID]],
+            title=installations[user_input[CONF_GIID]],
             data={
                 CONF_EMAIL: self.email,
                 CONF_PASSWORD: self.password,

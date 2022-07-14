@@ -14,6 +14,7 @@ from homeassistant.components import frontend, http
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
@@ -336,9 +337,14 @@ class CalendarEventView(http.HomeAssistantView):
         if not isinstance(entity, CalendarEntity):
             return web.Response(status=HTTPStatus.BAD_REQUEST)
 
-        calendar_event_list = await entity.async_get_events(
-            request.app["hass"], start_date, end_date
-        )
+        try:
+            calendar_event_list = await entity.async_get_events(
+                request.app["hass"], start_date, end_date
+            )
+        except HomeAssistantError as err:
+            return self.json_message(
+                f"Error reading events: {err}", HTTPStatus.INTERNAL_SERVER_ERROR
+            )
         return self.json(
             [
                 {

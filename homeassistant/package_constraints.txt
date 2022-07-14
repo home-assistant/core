@@ -19,7 +19,7 @@ home-assistant-frontend==20220707.0
 httpx==0.23.0
 ifaddr==0.1.7
 jinja2==3.1.2
-lru-dict==1.1.7
+lru-dict==1.1.8
 orjson==3.7.7
 paho-mqtt==1.6.1
 pillow==9.2.0
@@ -88,7 +88,7 @@ httpcore==0.15.0
 hyperframe>=5.2.0
 
 # Ensure we run compatible with musllinux build env
-numpy==1.23.0
+numpy==1.23.1
 
 # pytest_asyncio breaks our test suite. We rely on pytest-aiohttp instead
 pytest_asyncio==1000000000.0.0
@@ -114,3 +114,7 @@ backoff<2.0
 # Breaking change in version
 # https://github.com/samuelcolvin/pydantic/issues/4092
 pydantic!=1.9.1
+
+# Breaks asyncio
+# https://github.com/pubnub/python/issues/130
+pubnub!=6.4.0
