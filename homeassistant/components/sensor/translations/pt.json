@@ -2,6 +2,7 @@
     "device_automation": {
         "condition_type": {
             "is_battery_level": "N\u00edvel de bateria atual de {entity_name}",
+            "is_energy": "Energia atual de {entity_name}",
             "is_humidity": "humidade {entity_name}",
             "is_illuminance": "Luminancia atual de {entity_name}",
             "is_power": "Pot\u00eancia atual de {entity_name}",
@@ -12,6 +13,7 @@
         },
         "trigger_type": {
             "battery_level": "n\u00edvel da bateria {entity_name}",
+            "energy": "Mudan\u00e7as de energia de {entity_name}",
             "humidity": "humidade {entity_name}",
             "illuminance": "ilumin\u00e2ncia {entity_name}",
             "power": "pot\u00eancia {entity_name}",

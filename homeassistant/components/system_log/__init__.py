@@ -1,7 +1,6 @@
 """Support for system log."""
 from collections import OrderedDict, deque
 import logging
-import queue
 import re
 import traceback
 
@@ -9,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant import __path__ as HOMEASSISTANT_PATH
 from homeassistant.components import websocket_api
-from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -56,8 +55,7 @@ SERVICE_WRITE_SCHEMA = vol.Schema(
 )
 
 
-def _figure_out_source(record, call_stack, hass):
-    paths = [HOMEASSISTANT_PATH[0], hass.config.config_dir]
+def _figure_out_source(record, call_stack, paths_re):
 
     # If a stack trace exists, extract file names from the entire call stack.
     # The other case is when a regular "log" is made (without an attached
@@ -78,11 +76,10 @@ def _figure_out_source(record, call_stack, hass):
 
     # Iterate through the stack call (in reverse) and find the last call from
     # a file in Home Assistant. Try to figure out where error happened.
-    paths_re = r"(?:{})/(.*)".format("|".join([re.escape(x) for x in paths]))
     for pathname in reversed(stack):
 
         # Try to match with a file within Home Assistant
-        if match := re.match(paths_re, pathname[0]):
+        if match := paths_re.match(pathname[0]):
             return [match.group(1), pathname[1]]
     # Ok, we don't know what this is
     return (record.pathname, record.lineno)
@@ -157,26 +154,16 @@ class DedupStore(OrderedDict):
         return [value.to_dict() for value in reversed(self.values())]
 
 
-class LogErrorQueueHandler(logging.handlers.QueueHandler):
-    """Process the log in another thread."""
-
-    def emit(self, record):
-        """Emit a log record."""
-        try:
-            self.enqueue(record)
-        except Exception:  # pylint: disable=broad-except
-            self.handleError(record)
-
-
 class LogErrorHandler(logging.Handler):
     """Log handler for error messages."""
 
-    def __init__(self, hass, maxlen, fire_event):
+    def __init__(self, hass, maxlen, fire_event, paths_re):
         """Initialize a new LogErrorHandler."""
         super().__init__()
         self.hass = hass
         self.records = DedupStore(maxlen=maxlen)
         self.fire_event = fire_event
+        self.paths_re = paths_re
 
     def emit(self, record):
         """Save error and warning logs.
@@ -189,7 +176,9 @@ class LogErrorHandler(logging.Handler):
         if not record.exc_info:
             stack = [(f[0], f[1]) for f in traceback.extract_stack()]
 
-        entry = LogEntry(record, stack, _figure_out_source(record, stack, self.hass))
+        entry = LogEntry(
+            record, stack, _figure_out_source(record, stack, self.paths_re)
+        )
         self.records.add_entry(entry)
         if self.fire_event:
             self.hass.bus.fire(EVENT_SYSTEM_LOG, entry.to_dict())
@@ -200,29 +189,28 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if (conf := config.get(DOMAIN)) is None:
         conf = CONFIG_SCHEMA({DOMAIN: {}})[DOMAIN]
 
-    simple_queue: queue.SimpleQueue = queue.SimpleQueue()
-    queue_handler = LogErrorQueueHandler(simple_queue)
-    queue_handler.setLevel(logging.WARN)
-    logging.root.addHandler(queue_handler)
-
-    handler = LogErrorHandler(hass, conf[CONF_MAX_ENTRIES], conf[CONF_FIRE_EVENT])
+    hass_path: str = HOMEASSISTANT_PATH[0]
+    config_dir = hass.config.config_dir
+    assert config_dir is not None
+    paths_re = re.compile(
+        r"(?:{})/(.*)".format("|".join([re.escape(x) for x in (hass_path, config_dir)]))
+    )
+    handler = LogErrorHandler(
+        hass, conf[CONF_MAX_ENTRIES], conf[CONF_FIRE_EVENT], paths_re
+    )
+    handler.setLevel(logging.WARN)
 
     hass.data[DOMAIN] = handler
 
-    listener = logging.handlers.QueueListener(
-        simple_queue, handler, respect_handler_level=True
-    )
-
-    listener.start()
-
     @callback
-    def _async_stop_queue_handler(_) -> None:
+    def _async_stop_handler(_) -> None:
         """Cleanup handler."""
-        logging.root.removeHandler(queue_handler)
-        listener.stop()
+        logging.root.removeHandler(handler)
         del hass.data[DOMAIN]
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, _async_stop_queue_handler)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, _async_stop_handler)
+
+    logging.root.addHandler(handler)
 
     websocket_api.async_register_command(hass, list_errors)
 
@@ -237,13 +225,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
             level = service.data[CONF_LEVEL]
             getattr(logger, level)(service.data[CONF_MESSAGE])
-
-    async def async_shutdown_handler(event):
-        """Remove logging handler when Home Assistant is shutdown."""
-        # This is needed as older logger instances will remain
-        logging.getLogger().removeHandler(handler)
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_shutdown_handler)
 
     hass.services.async_register(
         DOMAIN, SERVICE_CLEAR, async_service_handler, schema=SERVICE_CLEAR_SCHEMA

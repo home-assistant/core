@@ -65,6 +65,7 @@ class AbstractConfig(ABC):
 
     async def async_enable_proactive_mode(self):
         """Enable proactive mode."""
+        _LOGGER.debug("Enable proactive mode")
         if self._unsub_proactive_report is None:
             self._unsub_proactive_report = self.hass.async_create_task(
                 async_enable_proactive_mode(self.hass, self)
@@ -77,6 +78,7 @@ class AbstractConfig(ABC):
 
     async def async_disable_proactive_mode(self):
         """Disable proactive mode."""
+        _LOGGER.debug("Disable proactive mode")
         if unsub_func := await self._unsub_proactive_report:
             unsub_func()
         self._unsub_proactive_report = None
@@ -113,7 +115,6 @@ class AbstractConfig(ABC):
         self._store.set_authorized(authorized)
         if self.should_report_state != self.is_reporting_states:
             if self.should_report_state:
-                _LOGGER.debug("Enable proactive mode")
                 try:
                     await self.async_enable_proactive_mode()
                 except Exception:
@@ -121,7 +122,6 @@ class AbstractConfig(ABC):
                     self._store.set_authorized(False)
                     raise
             else:
-                _LOGGER.debug("Disable proactive mode")
                 await self.async_disable_proactive_mode()
 
 

@@ -1,10 +1,10 @@
 """Test configuration and mocks for the google integration."""
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Generator
 import datetime
 import http
-from typing import Any, Generator, TypeVar
+from typing import Any, TypeVar
 from unittest.mock import Mock, mock_open, patch
 
 from aiohttp.client_exceptions import ClientError

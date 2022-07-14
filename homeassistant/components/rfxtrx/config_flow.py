@@ -199,7 +199,7 @@ class OptionsFlow(config_entries.OptionsFlow):
             if not errors:
                 devices = {}
                 device = {
-                    CONF_DEVICE_ID: device_id,
+                    CONF_DEVICE_ID: list(device_id),
                 }
 
                 devices[self._selected_device_event_code] = device

@@ -8,6 +8,7 @@ from typing import Any
 import aiohomekit
 from aiohomekit.exceptions import AuthenticationError
 from aiohomekit.model import Accessories, CharacteristicsTypes, ServicesTypes
+from aiohomekit.utils import domain_supported, domain_to_name
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -16,6 +17,7 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers import device_registry as dr
 
+from .connection import HKDevice
 from .const import DOMAIN, KNOWN_DEVICES
 from .utils import async_get_controller
 
@@ -203,8 +205,12 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         hkid = properties[zeroconf.ATTR_PROPERTIES_ID]
         normalized_hkid = normalize_hkid(hkid)
 
+        # If this aiohomekit doesn't support this particular device, ignore it.
+        if not domain_supported(discovery_info.name):
+            return self.async_abort(reason="ignored_model")
+
         model = properties["md"]
-        name = discovery_info.name.replace("._hap._tcp.local.", "")
+        name = domain_to_name(discovery_info.name)
         status_flags = int(properties["sf"])
         paired = not status_flags & 0x01
 
@@ -235,17 +241,19 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 self.hass.config_entries.async_update_entry(
                     existing_entry, data={**existing_entry.data, **updated_ip_port}
                 )
-            conn = self.hass.data[KNOWN_DEVICES][hkid]
+            conn: HKDevice = self.hass.data[KNOWN_DEVICES][hkid]
             # When we rediscover the device, let aiohomekit know
             # that the device is available and we should not wait
             # to retry connecting any longer. reconnect_soon
             # will do nothing if the device is already connected
             await conn.pairing.reconnect_soon()
-            if conn.config_num != config_num:
+            if config_num and conn.config_num != config_num:
                 _LOGGER.debug(
                     "HomeKit info %s: c# incremented, refreshing entities", hkid
                 )
-                self.hass.async_create_task(conn.async_refresh_entity_map(config_num))
+                self.hass.async_create_task(
+                    conn.async_refresh_entity_map_and_entities(config_num)
+                )
             return self.async_abort(reason="already_configured")
 
         _LOGGER.debug("Discovered device %s (%s - %s)", name, model, hkid)
