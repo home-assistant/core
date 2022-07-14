@@ -1686,7 +1686,7 @@ zigpy-zigate==0.9.0
 zigpy-znp==0.8.1
 
 # homeassistant.components.zha
-zigpy==0.47.2
+zigpy==0.47.3
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.39.0
