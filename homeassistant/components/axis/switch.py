@@ -40,7 +40,7 @@ class AxisSwitch(AxisEventBase, SwitchEntity):
         super().__init__(event, device)
 
         if event.id and device.api.vapix.ports[event.id].name:
-            self._attr_name = f"{device.api.vapix.ports[event.id].name}"
+            self._attr_name = device.api.vapix.ports[event.id].name
 
     @property
     def is_on(self):

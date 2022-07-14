@@ -110,7 +110,7 @@ class AxisBinarySensor(AxisEventBase, BinarySensorEntity):
             and self.event.id in self.device.api.vapix.ports
             and self.device.api.vapix.ports[self.event.id].name
         ):
-            return f"{self.device.api.vapix.ports[self.event.id].name}"
+            return self.device.api.vapix.ports[self.event.id].name
 
         if self.event.CLASS == CLASS_MOTION:
 
