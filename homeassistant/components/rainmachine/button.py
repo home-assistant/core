@@ -20,13 +20,7 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RainMachineEntity
-from .const import (
-    DATA_CONTROLLER,
-    DATA_COORDINATOR,
-    DATA_PROVISION_SETTINGS,
-    DOMAIN,
-    SIGNAL_REBOOT,
-)
+from .const import DATA_CONTROLLER, DATA_COORDINATOR, DATA_PROVISION_SETTINGS, DOMAIN
 
 
 @dataclass
@@ -99,4 +93,4 @@ class RainMachineButton(RainMachineEntity, ButtonEntity):
                 f'Error while pressing button "{self.entity_id}": {err}'
             ) from err
 
-        async_dispatcher_send(self.hass, SIGNAL_REBOOT.format(self._entry.entry_id))
+        async_dispatcher_send(self.hass, self._signal_reboot_requested)
