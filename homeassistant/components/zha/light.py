@@ -139,7 +139,7 @@ class BaseLight(LogMixin, light.LightEntity):
         self._level_channel = None
         self._color_channel = None
         self._identify_channel = None
-        self._default_transition = None
+        self._default_transition = self._DEFAULT_MIN_TRANSITION_TIME
         self._attr_color_mode = ColorMode.UNKNOWN  # Set by sub classes
 
     @property
@@ -214,12 +214,8 @@ class BaseLight(LogMixin, light.LightEntity):
         """Turn the entity on."""
         transition = kwargs.get(light.ATTR_TRANSITION)
         duration = (
-            transition * 10
-            if transition is not None
-            else self._default_transition * 10
-            if self._default_transition is not None
-            else self._DEFAULT_MIN_TRANSITION_TIME
-        )
+            transition * 10 if transition is not None else self._default_transition * 10
+        ) or self._DEFAULT_MIN_TRANSITION_TIME  # if 0 is passed in some devices still need the minimum default
         brightness = kwargs.get(light.ATTR_BRIGHTNESS)
         effect = kwargs.get(light.ATTR_EFFECT)
         flash = kwargs.get(light.ATTR_FLASH)
