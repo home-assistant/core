@@ -42,6 +42,7 @@ class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
 
     _attr_has_entity_name = True
     _attr_icon = "mdi:paw"
+    _attr_name = "Tracker"
 
     def __init__(self, user_id: str, item: Trackables) -> None:
         """Initialize tracker entity."""
@@ -52,8 +53,6 @@ class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
         self._longitude: float = item.pos_report["latlong"][1]
         self._accuracy: int = item.pos_report["pos_uncertainty"]
         self._source_type: str = item.pos_report["sensor_used"]
-
-        self._attr_name = "Tracker"
         self._attr_unique_id = item.trackable["_id"]
 
     @property
