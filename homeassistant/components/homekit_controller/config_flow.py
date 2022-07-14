@@ -111,7 +111,9 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             key = user_input["device"]
             self.hkid = self.devices[key].description.id
-            self.model = self.devices[key].description.model
+            self.model = getattr(
+                self.devices[key].description, "model", "Bluetooth device"
+            )
             self.name = self.devices[key].description.name
 
             await self.async_set_unique_id(
