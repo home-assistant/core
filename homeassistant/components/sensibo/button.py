@@ -16,7 +16,7 @@ PARALLEL_UPDATES = 0
 
 DEVICE_BUTTON_TYPES: ButtonEntityDescription = ButtonEntityDescription(
     key="reset_filter",
-    name="Reset Filter",
+    name="Reset filter",
     icon="mdi:air-filter",
     entity_category=EntityCategory.CONFIG,
 )
@@ -57,7 +57,7 @@ class SensiboDeviceButton(SensiboDeviceBaseEntity, ButtonEntity):
         )
         self.entity_description = entity_description
         self._attr_unique_id = f"{device_id}-{entity_description.key}"
-        self._attr_name = f"{self.device_data.name} {entity_description.name}"
+        self._attr_name = entity_description.name
 
     async def async_press(self) -> None:
         """Press the button."""
