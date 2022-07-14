@@ -8,6 +8,7 @@ from datetime import timedelta
 from enum import Enum
 import itertools
 import logging
+import re
 import time
 import traceback
 from typing import TYPE_CHECKING, Any, NamedTuple, Union
@@ -20,6 +21,7 @@ import zigpy.endpoint
 import zigpy.group
 from zigpy.types.named import EUI64
 
+from homeassistant import __path__ as HOMEASSISTANT_PATH
 from homeassistant.components.system_log import LogEntry, _figure_out_source
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -732,7 +734,15 @@ class LogRelayHandler(logging.Handler):
         if record.levelno >= logging.WARN and not record.exc_info:
             stack = [f for f, _, _, _ in traceback.extract_stack()]
 
-        entry = LogEntry(record, stack, _figure_out_source(record, stack, self.hass))
+        hass_path: str = HOMEASSISTANT_PATH[0]
+        config_dir = self.hass.config.config_dir
+        assert config_dir is not None
+        paths_re = re.compile(
+            r"(?:{})/(.*)".format(
+                "|".join([re.escape(x) for x in (hass_path, config_dir)])
+            )
+        )
+        entry = LogEntry(record, stack, _figure_out_source(record, stack, paths_re))
         async_dispatcher_send(
             self.hass,
             ZHA_GW_MSG,

@@ -7,7 +7,7 @@ import uuid
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_RESOURCES, CONF_TYPE
+from homeassistant.const import CONF_ID, CONF_RESOURCES, CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import collection, storage
@@ -94,7 +94,7 @@ class ResourceStorageCollection(collection.StorageCollection):
         conf.pop(CONF_RESOURCES)
 
         for item in data:
-            item[collection.CONF_ID] = uuid.uuid4().hex
+            item[CONF_ID] = uuid.uuid4().hex
 
         data = {"items": data}
 
