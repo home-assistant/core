@@ -75,7 +75,7 @@ MANUFACTURER_DATA_FIRST_BYTE: Final = "manufacturer_data_first_byte"
 
 
 BluetoothChange = Enum("BluetoothChange", "ADVERTISEMENT")
-BluetoothCallback = Callable[[BluetoothServiceInfo, BluetoothChange, str], None]
+BluetoothCallback = Callable[[BluetoothServiceInfo, BluetoothChange], None]
 
 
 @hass_callback
@@ -268,10 +268,10 @@ class BluetoothManager:
             ):
                 if service_info is None:
                     service_info = BluetoothServiceInfo.from_advertisement(
-                        device, advertisement_data
+                        device, advertisement_data, SOURCE_LOCAL
                     )
                 try:
-                    callback(service_info, BluetoothChange.ADVERTISEMENT, SOURCE_LOCAL)
+                    callback(service_info, BluetoothChange.ADVERTISEMENT)
                 except Exception:  # pylint: disable=broad-except
                     _LOGGER.exception("Error in bluetooth callback")
 
@@ -279,7 +279,7 @@ class BluetoothManager:
             return
         if service_info is None:
             service_info = BluetoothServiceInfo.from_advertisement(
-                device, advertisement_data
+                device, advertisement_data, SOURCE_LOCAL
             )
         for domain in matched_domains:
             discovery_flow.async_create_flow(
@@ -314,9 +314,10 @@ class BluetoothManager:
         ):
             try:
                 callback(
-                    BluetoothServiceInfo.from_advertisement(*device_adv_data),
+                    BluetoothServiceInfo.from_advertisement(
+                        *device_adv_data, SOURCE_LOCAL
+                    ),
                     BluetoothChange.ADVERTISEMENT,
-                    SOURCE_LOCAL,
                 )
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Error in bluetooth callback")
@@ -341,7 +342,9 @@ class BluetoothManager:
             discovered = models.HA_BLEAK_SCANNER.discovered_devices
             history = models.HA_BLEAK_SCANNER.history
             return [
-                BluetoothServiceInfo.from_advertisement(*history[device.address])
+                BluetoothServiceInfo.from_advertisement(
+                    *history[device.address], SOURCE_LOCAL
+                )
                 for device in discovered
                 if device.address in history
             ]
