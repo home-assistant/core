@@ -7,7 +7,7 @@
 AEMET-OpenData==0.2.1
 
 # homeassistant.components.aladdin_connect
-AIOAladdinConnect==0.1.23
+AIOAladdinConnect==0.1.24
 
 # homeassistant.components.adax
 Adax-local==0.1.4
@@ -137,7 +137,7 @@ aioeagle==1.1.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==10.10.0
+aioesphomeapi==10.11.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -757,7 +757,7 @@ netmap==0.7.0.2
 nettigo-air-monitor==1.3.0
 
 # homeassistant.components.nexia
-nexia==2.0.1
+nexia==2.0.2
 
 # homeassistant.components.discord
 nextcord==2.0.0a8
@@ -1337,7 +1337,7 @@ pytrafikverket==0.2.0.1
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.0.10
+pyunifiprotect==4.0.11
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -1686,7 +1686,7 @@ zigpy-zigate==0.9.0
 zigpy-znp==0.8.1
 
 # homeassistant.components.zha
-zigpy==0.47.2
+zigpy==0.47.3
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.39.0
