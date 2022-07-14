@@ -221,7 +221,28 @@ class MockWeatherMockForecast(MockWeather):
     """Mock weather class with mocked forecast."""
 
     @property
-    def forecast(self) -> list[Forecast] | None:
+    def forecast_daily(self) -> list[Forecast] | None:
+        """Return the forecast."""
+        return [
+            {
+                ATTR_FORECAST_NATIVE_TEMP: self.native_temperature,
+                ATTR_FORECAST_NATIVE_APPARENT_TEMP: self.native_apparent_temperature,
+                ATTR_FORECAST_NATIVE_TEMP_LOW: self.native_temperature,
+                ATTR_FORECAST_NATIVE_DEW_POINT: self.native_dew_point,
+                ATTR_FORECAST_CLOUD_COVERAGE: self.cloud_coverage,
+                ATTR_FORECAST_NATIVE_PRESSURE: self.native_pressure,
+                ATTR_FORECAST_NATIVE_WIND_GUST_SPEED: self.native_wind_gust_speed,
+                ATTR_FORECAST_NATIVE_WIND_SPEED: self.native_wind_speed,
+                ATTR_FORECAST_WIND_BEARING: self.wind_bearing,
+                ATTR_FORECAST_NATIVE_PRECIPITATION: self._values.get(
+                    "native_precipitation"
+                ),
+                ATTR_FORECAST_HUMIDITY: self.humidity,
+            }
+        ]
+
+    @property
+    def forecast_twice_daily(self) -> list[Forecast] | None:
         """Return the forecast."""
         return [
             {
@@ -247,7 +268,7 @@ class MockWeatherMockForecastCompat(MockWeatherCompat):
     """Mock weather class with mocked forecast for compatibility check."""
 
     @property
-    def forecast(self) -> list[Forecast] | None:
+    def forecast_daily(self) -> list[Forecast] | None:
         """Return the forecast."""
         return [
             {

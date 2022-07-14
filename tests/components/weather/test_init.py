@@ -7,12 +7,15 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_SUNNY,
     ATTR_FORECAST,
     ATTR_FORECAST_APPARENT_TEMP,
+    ATTR_FORECAST_DAILY,
     ATTR_FORECAST_DEW_POINT,
+    ATTR_FORECAST_HOURLY,
     ATTR_FORECAST_HUMIDITY,
     ATTR_FORECAST_PRECIPITATION,
     ATTR_FORECAST_PRESSURE,
     ATTR_FORECAST_TEMP,
     ATTR_FORECAST_TEMP_LOW,
+    ATTR_FORECAST_TWICE_DAILY,
     ATTR_FORECAST_UV_INDEX,
     ATTR_FORECAST_WIND_BEARING,
     ATTR_FORECAST_WIND_GUST_SPEED,
@@ -54,6 +57,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt
 from homeassistant.util.unit_conversion import (
     DistanceConverter,
     PressureConverter,
@@ -86,10 +90,17 @@ class MockWeatherEntity(WeatherEntity):
         self._attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
         self._attr_forecast = [
             Forecast(
-                datetime=datetime(2022, 6, 20, 20, 00, 00),
+                datetime=datetime(2022, 6, 20, 00, 00, 00, tzinfo=dt.UTC),
                 native_precipitation=1,
                 native_temperature=20,
                 native_dew_point=2,
+            )
+        ]
+        self._attr_forecast_twice_daily = [
+            Forecast(
+                datetime=datetime(2022, 6, 20, 8, 00, 00, tzinfo=dt.UTC),
+                native_precipitation=10,
+                native_temperature=25,
             )
         ]
 
@@ -126,7 +137,7 @@ class MockWeatherEntityCompat(WeatherEntity):
         self._attr_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
         self._attr_forecast = [
             Forecast(
-                datetime=datetime(2022, 6, 20, 20, 00, 00),
+                datetime=datetime(2022, 6, 20, 0, 00, 00, tzinfo=dt.UTC),
                 precipitation=1,
                 temperature=20,
             )
@@ -192,7 +203,7 @@ async def test_temperature(
     )
 
     state = hass.states.get(entity0.entity_id)
-    forecast = state.attributes[ATTR_FORECAST][0]
+    forecast_daily = state.attributes[ATTR_FORECAST_DAILY][0]
 
     expected = state_value
     apparent_expected = apparent_state_value
@@ -207,14 +218,18 @@ async def test_temperature(
         dew_point_expected, rel=0.1
     )
     assert state.attributes[ATTR_WEATHER_TEMPERATURE_UNIT] == state_unit
-    assert float(forecast[ATTR_FORECAST_TEMP]) == pytest.approx(expected, rel=0.1)
-    assert float(forecast[ATTR_FORECAST_APPARENT_TEMP]) == pytest.approx(
+    assert float(forecast_daily[ATTR_FORECAST_TEMP]) == pytest.approx(expected, rel=0.1)
+    assert float(forecast_daily[ATTR_FORECAST_APPARENT_TEMP]) == pytest.approx(
         apparent_expected, rel=0.1
     )
-    assert float(forecast[ATTR_FORECAST_DEW_POINT]) == pytest.approx(
+    assert float(forecast_daily[ATTR_FORECAST_DEW_POINT]) == pytest.approx(
         dew_point_expected, rel=0.1
     )
-    assert float(forecast[ATTR_FORECAST_TEMP_LOW]) == pytest.approx(expected, rel=0.1)
+    assert float(forecast_daily[ATTR_FORECAST_TEMP_LOW]) == pytest.approx(expected, rel=0.1)
+    assert float(forecast_daily[ATTR_FORECAST_TEMP]) == pytest.approx(expected, rel=0.1)
+    assert float(forecast_daily[ATTR_FORECAST_TEMP_LOW]) == pytest.approx(
+        expected, rel=0.1
+    )
 
 
 @pytest.mark.parametrize("native_unit", (None,))
@@ -250,7 +265,7 @@ async def test_temperature_no_unit(
     )
 
     state = hass.states.get(entity0.entity_id)
-    forecast = state.attributes[ATTR_FORECAST][0]
+    forecast = state.attributes[ATTR_FORECAST_DAILY][0]
 
     expected = state_value
     dew_point_expected = dew_point_state_value
@@ -296,7 +311,7 @@ async def test_pressure(
         hass, native_pressure=native_value, native_pressure_unit=native_unit
     )
     state = hass.states.get(entity0.entity_id)
-    forecast = state.attributes[ATTR_FORECAST][0]
+    forecast = state.attributes[ATTR_FORECAST_DAILY][0]
 
     expected = state_value
     assert float(state.attributes[ATTR_WEATHER_PRESSURE]) == pytest.approx(
@@ -326,7 +341,7 @@ async def test_pressure_no_unit(
         hass, native_pressure=native_value, native_pressure_unit=native_unit
     )
     state = hass.states.get(entity0.entity_id)
-    forecast = state.attributes[ATTR_FORECAST][0]
+    forecast = state.attributes[ATTR_FORECAST_DAILY][0]
 
     expected = state_value
     assert float(state.attributes[ATTR_WEATHER_PRESSURE]) == pytest.approx(
@@ -367,7 +382,7 @@ async def test_wind_speed(
     )
 
     state = hass.states.get(entity0.entity_id)
-    forecast = state.attributes[ATTR_FORECAST][0]
+    forecast = state.attributes[ATTR_FORECAST_DAILY][0]
 
     expected = state_value
     assert float(state.attributes[ATTR_WEATHER_WIND_SPEED]) == pytest.approx(
@@ -410,7 +425,7 @@ async def test_wind_gust_speed(
     )
 
     state = hass.states.get(entity0.entity_id)
-    forecast = state.attributes[ATTR_FORECAST][0]
+    forecast = state.attributes[ATTR_FORECAST_DAILY][0]
 
     expected = state_value
     assert float(state.attributes[ATTR_WEATHER_WIND_GUST_SPEED]) == pytest.approx(
@@ -446,7 +461,7 @@ async def test_wind_speed_no_unit(
     )
 
     state = hass.states.get(entity0.entity_id)
-    forecast = state.attributes[ATTR_FORECAST][0]
+    forecast = state.attributes[ATTR_FORECAST_DAILY][0]
 
     expected = state_value
     assert float(state.attributes[ATTR_WEATHER_WIND_SPEED]) == pytest.approx(
@@ -544,7 +559,7 @@ async def test_precipitation(
     )
 
     state = hass.states.get(entity0.entity_id)
-    forecast = state.attributes[ATTR_FORECAST][0]
+    forecast = state.attributes[ATTR_FORECAST_DAILY][0]
 
     expected = state_value
     assert float(forecast[ATTR_FORECAST_PRECIPITATION]) == pytest.approx(
@@ -577,7 +592,7 @@ async def test_precipitation_no_unit(
     )
 
     state = hass.states.get(entity0.entity_id)
-    forecast = state.attributes[ATTR_FORECAST][0]
+    forecast = state.attributes[ATTR_FORECAST_DAILY][0]
 
     expected = state_value
     assert float(forecast[ATTR_FORECAST_PRECIPITATION]) == pytest.approx(
@@ -622,7 +637,7 @@ async def test_humidity(
     entity0 = await create_entity(hass, humidity=humidity_value)
 
     state = hass.states.get(entity0.entity_id)
-    forecast = state.attributes[ATTR_FORECAST][0]
+    forecast = state.attributes[ATTR_FORECAST_DAILY][0]
     assert float(state.attributes[ATTR_WEATHER_HUMIDITY]) == 80
     assert float(forecast[ATTR_FORECAST_HUMIDITY]) == 80
 
@@ -643,7 +658,7 @@ async def test_none_forecast(
     )
 
     state = hass.states.get(entity0.entity_id)
-    forecast = state.attributes[ATTR_FORECAST][0]
+    forecast = state.attributes[ATTR_FORECAST_DAILY][0]
 
     assert forecast.get(ATTR_FORECAST_PRESSURE) is None
     assert forecast.get(ATTR_FORECAST_WIND_SPEED) is None
@@ -706,7 +721,7 @@ async def test_custom_units(
     await hass.async_block_till_done()
 
     state = hass.states.get(entity0.entity_id)
-    forecast = state.attributes[ATTR_FORECAST][0]
+    forecast = state.attributes[ATTR_FORECAST_DAILY][0]
 
     expected_wind_speed = round(
         SpeedConverter.convert(
@@ -828,9 +843,9 @@ async def test_backwards_compatibility(
     await hass.async_block_till_done()
 
     state = hass.states.get(entity0.entity_id)
-    forecast = state.attributes[ATTR_FORECAST][0]
+    forecast = state.attributes[ATTR_FORECAST_DAILY][0]
     state1 = hass.states.get(entity1.entity_id)
-    forecast1 = state1.attributes[ATTR_FORECAST][0]
+    forecast1 = state1.attributes[ATTR_FORECAST_DAILY][0]
 
     assert float(state.attributes[ATTR_WEATHER_WIND_SPEED]) == pytest.approx(
         wind_speed_value * 3.6
@@ -955,7 +970,7 @@ async def test_backwards_compatibility_convert_values(
     )
 
     assert state.attributes == {
-        ATTR_FORECAST: [
+        ATTR_FORECAST_DAILY: [
             {
                 ATTR_FORECAST_PRECIPITATION: pytest.approx(
                     expected_precipitation, rel=0.1
@@ -1031,16 +1046,15 @@ async def test_attr_compatibility(hass: HomeAssistant) -> None:
 
     forecast_entry = [
         Forecast(
-            datetime=datetime(2022, 6, 20, 20, 00, 00),
+            datetime=datetime(2022, 6, 20, 0, 00, 00, tzinfo=dt.UTC),
             precipitation=1,
             temperature=20,
         )
     ]
-
-    assert weather.forecast == forecast_entry
+    assert weather.forecast_daily == forecast_entry
 
     assert weather.state_attributes == {
-        ATTR_FORECAST: forecast_entry,
+        ATTR_FORECAST_DAILY: forecast_entry,
         ATTR_WEATHER_PRESSURE: 10.0,
         ATTR_WEATHER_PRESSURE_UNIT: UnitOfPressure.HPA,
         ATTR_WEATHER_TEMPERATURE: 20.0,
@@ -1067,3 +1081,30 @@ async def test_precision_for_temperature(hass: HomeAssistant) -> None:
 
     assert weather.state_attributes[ATTR_WEATHER_TEMPERATURE] == 20.5
     assert weather.state_attributes[ATTR_WEATHER_DEW_POINT] == 2.5
+
+
+async def test_multiple_forecast(
+    hass: HomeAssistant,
+    enable_custom_integrations: None,
+) -> None:
+    """Test multiple forecast."""
+
+    entity0 = await create_entity(
+        hass, native_temperature=38, native_temperature_unit=UnitOfTemperature.CELSIUS
+    )
+
+    state = hass.states.get(entity0.entity_id)
+    forecast_daily = state.attributes[ATTR_FORECAST_DAILY][0]
+    forecast_twice_daily = state.attributes[ATTR_FORECAST_TWICE_DAILY][0]
+    forecast_hourly = state.attributes.get(ATTR_FORECAST_HOURLY)
+
+    expected = 38
+    assert float(state.attributes[ATTR_WEATHER_TEMPERATURE]) == pytest.approx(
+        expected, rel=0.1
+    )
+
+    assert float(forecast_daily[ATTR_FORECAST_TEMP]) == pytest.approx(expected, rel=0.1)
+    assert float(forecast_twice_daily[ATTR_FORECAST_TEMP]) == pytest.approx(
+        expected, rel=0.1
+    )
+    assert forecast_hourly is None

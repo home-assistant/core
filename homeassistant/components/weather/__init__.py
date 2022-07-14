@@ -72,6 +72,9 @@ ATTR_CONDITION_SUNNY = "sunny"
 ATTR_CONDITION_WINDY = "windy"
 ATTR_CONDITION_WINDY_VARIANT = "windy-variant"
 ATTR_FORECAST = "forecast"
+ATTR_FORECAST_DAILY = "forecast_daily"
+ATTR_FORECAST_HOURLY = "forecast_hourly"
+ATTR_FORECAST_TWICE_DAILY = "forecast_twice_daily"
 ATTR_FORECAST_CONDITION: Final = "condition"
 ATTR_FORECAST_HUMIDITY: Final = "humidity"
 ATTR_FORECAST_NATIVE_PRECIPITATION: Final = "native_precipitation"
@@ -183,7 +186,12 @@ class WeatherEntity(Entity):
 
     entity_description: WeatherEntityDescription
     _attr_condition: str | None
-    _attr_forecast: list[Forecast] | None = None
+    _attr_forecast: list[
+        Forecast
+    ] | None = None  # Provide backwards compatibility. Use _attr_forecast_daily/twice_daily/hourly as needed
+    _attr_forecast_daily: list[Forecast] | None = None
+    _attr_forecast_hourly: list[Forecast] | None = None
+    _attr_forecast_twice_daily: list[Forecast] | None = None
     _attr_humidity: float | None = None
     _attr_ozone: float | None = None
     _attr_cloud_coverage: int | None = None
@@ -263,6 +271,8 @@ class WeatherEntity(Entity):
                 "visibility_unit",
                 "_attr_precipitation_unit",
                 "precipitation_unit",
+                "_attr_forecast",
+                "forecast",
             )
         ):
             if _reported is False:
@@ -571,8 +581,26 @@ class WeatherEntity(Entity):
 
     @property
     def forecast(self) -> list[Forecast] | None:
-        """Return the forecast in native units."""
+        """Return the forecast in native units.
+
+        Should not be set by integrations. Kept for backward compatibility.
+        """
         return self._attr_forecast
+
+    @property
+    def forecast_daily(self) -> list[Forecast] | None:
+        """Return the daily forecast in native units."""
+        return self._attr_forecast_daily
+
+    @property
+    def forecast_twice_daily(self) -> list[Forecast] | None:
+        """Return the daily forecast in native units."""
+        return self._attr_forecast_twice_daily
+
+    @property
+    def forecast_hourly(self) -> list[Forecast] | None:
+        """Return the hourly forecast in native units."""
+        return self._attr_forecast_hourly
 
     @property
     def native_precipitation_unit(self) -> str | None:
@@ -756,10 +784,20 @@ class WeatherEntity(Entity):
         data[ATTR_WEATHER_VISIBILITY_UNIT] = self._visibility_unit
         data[ATTR_WEATHER_PRECIPITATION_UNIT] = self._precipitation_unit
 
-        if self.forecast is not None:
+        forecasts: dict[str, Any] = {}
+        if self.forecast:
+            forecasts[ATTR_FORECAST] = self.forecast
+        if self.forecast_daily:
+            forecasts[ATTR_FORECAST_DAILY] = self.forecast_daily
+        if self.forecast_twice_daily:
+            forecasts[ATTR_FORECAST_TWICE_DAILY] = self.forecast_twice_daily
+        if self.forecast_hourly:
+            forecasts[ATTR_FORECAST_HOURLY] = self.forecast_hourly
+
+        for attr, forecast_list in forecasts.items():
             forecast: list[dict[str, Any]] = []
-            for existing_forecast_entry in self.forecast:
-                forecast_entry: dict[str, Any] = dict(existing_forecast_entry)
+            for forecast_entry in forecast_list:
+                forecast_entry = dict(forecast_entry)
 
                 temperature = forecast_entry.pop(
                     ATTR_FORECAST_NATIVE_TEMP, forecast_entry.get(ATTR_FORECAST_TEMP)
@@ -943,7 +981,7 @@ class WeatherEntity(Entity):
 
                 forecast.append(forecast_entry)
 
-            data[ATTR_FORECAST] = forecast
+            data[attr] = forecast
 
         return data
 

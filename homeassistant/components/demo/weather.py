@@ -125,7 +125,7 @@ class DemoWeather(WeatherEntity):
         temperature_unit: str,
         pressure_unit: str,
         wind_speed_unit: str,
-        forecast: list[list],
+        forecast_daily: list[list],
     ) -> None:
         """Initialize the Demo weather."""
         self._attr_name = f"Demo Weather {name}"
@@ -137,7 +137,7 @@ class DemoWeather(WeatherEntity):
         self._native_pressure_unit = pressure_unit
         self._native_wind_speed = wind_speed
         self._native_wind_speed_unit = wind_speed_unit
-        self._forecast = forecast
+        self._forecast_daily = forecast_daily
 
     @property
     def native_temperature(self) -> float:
@@ -182,12 +182,12 @@ class DemoWeather(WeatherEntity):
         ][0]
 
     @property
-    def forecast(self) -> list[Forecast]:
+    def forecast_daily(self) -> list[Forecast]:
         """Return the forecast."""
         reftime = dt_util.now().replace(hour=16, minute=00)
 
         forecast_data = []
-        for entry in self._forecast:
+        for entry in self._forecast_daily:
             data_dict = Forecast(
                 datetime=reftime.isoformat(),
                 condition=entry[0],

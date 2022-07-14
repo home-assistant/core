@@ -5,7 +5,7 @@ from datetime import timedelta
 
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.history import get_significant_states
-from homeassistant.components.weather import ATTR_FORECAST, DOMAIN
+from homeassistant.components.weather import ATTR_FORECAST, ATTR_FORECAST_DAILY, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -24,7 +24,7 @@ async def test_exclude_attributes(recorder_mock: Recorder, hass: HomeAssistant) 
     await hass.async_block_till_done()
 
     state = hass.states.get("weather.demo_weather_south")
-    assert state.attributes[ATTR_FORECAST]
+    assert state.attributes[ATTR_FORECAST_DAILY]
 
     await hass.async_block_till_done()
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
@@ -38,3 +38,4 @@ async def test_exclude_attributes(recorder_mock: Recorder, hass: HomeAssistant) 
     for entity_states in states.values():
         for state in entity_states:
             assert ATTR_FORECAST not in state.attributes
+            assert ATTR_FORECAST_DAILY not in state.attributes
