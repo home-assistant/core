@@ -1581,7 +1581,7 @@ twitchAPI==2.5.2
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-unifi-discovery==1.1.4
+unifi-discovery==1.1.5
 
 # homeassistant.components.upb
 upb_lib==0.4.12
