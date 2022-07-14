@@ -77,7 +77,7 @@ class TractiveBinarySensor(TractiveEntity, BinarySensorEntity):
 
 SENSOR_TYPE = BinarySensorEntityDescription(
     key=ATTR_BATTERY_CHARGING,
-    name="Battery charging",
+    name="Tracker battery charging",
     device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
     entity_category=EntityCategory.DIAGNOSTIC,
 )
