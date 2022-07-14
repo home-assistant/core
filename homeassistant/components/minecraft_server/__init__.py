@@ -222,6 +222,7 @@ class MinecraftServer:
 class MinecraftServerEntity(Entity):
     """Representation of a Minecraft Server base entity."""
 
+    _attr_has_entity_name = True
     _attr_should_poll = False
 
     def __init__(
@@ -233,7 +234,7 @@ class MinecraftServerEntity(Entity):
     ) -> None:
         """Initialize base entity."""
         self._server = server
-        self._attr_name = f"{server.name} {type_name}"
+        self._attr_name = type_name
         self._attr_icon = icon
         self._attr_unique_id = f"{self._server.unique_id}-{type_name}"
         self._attr_device_info = DeviceInfo(
