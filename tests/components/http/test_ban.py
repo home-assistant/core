@@ -234,7 +234,7 @@ async def test_ban_middleware_loaded_by_default(hass):
     assert len(mock_setup.mock_calls) == 1
 
 
-async def test_ip_bans_file_creation(hass, aiohttp_client):
+async def test_ip_bans_file_creation(hass, aiohttp_client, caplog):
     """Testing if banned IP file created."""
     app = web.Application()
     app["hass"] = hass
@@ -280,7 +280,12 @@ async def test_ip_bans_file_creation(hass, aiohttp_client):
         )
         assert (
             notifications[0].attributes["message"]
-            == "Login attempt or request with invalid authentication from example.com (200.201.202.204) to '/example'. See the log for details."
+            == "Login attempt or request with invalid authentication from example.com (200.201.202.204). See the log for details."
+        )
+
+        assert (
+            "Login attempt or request with invalid authentication from example.com (200.201.202.204). Requested URL: '/example'."
+            in caplog.text
         )
 
 
