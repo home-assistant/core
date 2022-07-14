@@ -118,7 +118,7 @@ class BaseLight(LogMixin, light.LightEntity):
     """Operations common to all light entities."""
 
     _FORCE_ON = False
-    _DEFAULT_TRANSITION_TIME = 0
+    _DEFAULT_MIN_TRANSITION_TIME = 0
 
     def __init__(self, *args, **kwargs):
         """Initialize the light."""
@@ -218,7 +218,7 @@ class BaseLight(LogMixin, light.LightEntity):
             if transition is not None
             else self._default_transition * 10
             if self._default_transition is not None
-            else self._DEFAULT_TRANSITION_TIME
+            else self._DEFAULT_MIN_TRANSITION_TIME
         )
         brightness = kwargs.get(light.ATTR_BRIGHTNESS)
         effect = kwargs.get(light.ATTR_EFFECT)
@@ -254,7 +254,7 @@ class BaseLight(LogMixin, light.LightEntity):
             # If the light is currently off, we first need to turn it on at a low brightness level with no transition.
             # After that, we set it to the desired color/temperature with no transition.
             result = await self._level_channel.move_to_level_with_on_off(
-                DEFAULT_MIN_BRIGHTNESS, self._DEFAULT_TRANSITION_TIME
+                DEFAULT_MIN_BRIGHTNESS, self._DEFAULT_MIN_TRANSITION_TIME
             )
             t_log["move_to_level_with_on_off"] = result
             if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
@@ -297,7 +297,9 @@ class BaseLight(LogMixin, light.LightEntity):
             temperature = kwargs[light.ATTR_COLOR_TEMP]
             result = await self._color_channel.move_to_color_temp(
                 temperature,
-                self._DEFAULT_TRANSITION_TIME if color_provided_while_off else duration,
+                self._DEFAULT_MIN_TRANSITION_TIME
+                if color_provided_while_off
+                else duration,
             )
             t_log["move_to_color_temp"] = result
             if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
@@ -313,7 +315,9 @@ class BaseLight(LogMixin, light.LightEntity):
             result = await self._color_channel.move_to_color(
                 int(xy_color[0] * 65535),
                 int(xy_color[1] * 65535),
-                self._DEFAULT_TRANSITION_TIME if color_provided_while_off else duration,
+                self._DEFAULT_MIN_TRANSITION_TIME
+                if color_provided_while_off
+                else duration,
             )
             t_log["move_to_color"] = result
             if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
@@ -623,7 +627,7 @@ class ForceOnLight(Light):
 class SengledLight(Light):
     """Representation of a Sengled light which does not react to move_to_color_temp with 0 as a transition."""
 
-    _DEFAULT_TRANSITION_TIME = 1
+    _DEFAULT_MIN_TRANSITION_TIME = 1
 
 
 @GROUP_MATCH()
