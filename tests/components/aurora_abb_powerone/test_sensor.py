@@ -1,9 +1,8 @@
 """Test the Aurora ABB PowerOne Solar PV sensors."""
+from datetime import timedelta
 from unittest.mock import patch
 
 from aurorapy.client import AuroraError, AuroraTimeoutError
-from datetime import timedelta
-
 
 from homeassistant.components.aurora_abb_powerone.const import (
     ATTR_DEVICE_NAME,
