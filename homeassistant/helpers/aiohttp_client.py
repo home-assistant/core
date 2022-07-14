@@ -36,7 +36,7 @@ SERVER_SOFTWARE = "HomeAssistant/{0} aiohttp/{1} Python/{2[0]}.{2[1]}".format(
 WARN_CLOSE_MSG = "closes the Home Assistant aiohttp session"
 
 
-class HassClientRequest(aiohttp.ClientRequest):
+class HassClientResponse(aiohttp.ClientResponse):
     """aiohttp.ClientRequest with a json method that uses json_loads by default."""
 
     async def json(
@@ -46,7 +46,7 @@ class HassClientRequest(aiohttp.ClientRequest):
         **kwargs: Any,
     ) -> Any:
         """Send a json request and parse the json response."""
-        return await self.json(*args, loads=loads, **kwargs)
+        return await super().json(*args, loads=loads, **kwargs)
 
 
 @callback
@@ -113,7 +113,7 @@ def _async_create_clientsession(
     clientsession = aiohttp.ClientSession(
         connector=_async_get_connector(hass, verify_ssl),
         json_serialize=json_dumps,
-        request_class=HassClientRequest,
+        response_class=HassClientResponse,
         **kwargs,
     )
     # Prevent packages accidentally overriding our default headers
