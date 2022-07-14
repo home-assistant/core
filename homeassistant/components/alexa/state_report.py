@@ -85,7 +85,7 @@ async def async_enable_proactive_mode(hass, smart_home_config):
         if not should_report and not should_doorbell:
             return
 
-        if should_doorbell and new_state:
+        if should_doorbell:
             if (
                 old_state is None or old_state.state != STATE_ON
             ) and new_state.state == STATE_ON:
