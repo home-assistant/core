@@ -170,14 +170,18 @@ class HKDevice:
         async_dispatcher_send(self.hass, self.signal_state_updated)
 
     async def async_ensure_available(self) -> bool:
-        """Verifyt the accessory is available after processing the entity map."""
+        """Verify the accessory is available after processing the entity map."""
         if self.available:
             return True
         if self.watchable_characteristics and self.pollable_characteristics:
             # We already tried, no need to try again
             return False
         # We there are no watchable and not pollable characteristics,
-        # we need to force a connection to the device.
+        # we need to force a connection to the device to verify its alive.
+        #
+        # This is similar to iOS's behavior for keeping alive connections
+        # to cameras.
+        #
         primary = self.entity_map.aid(1)
         iid = primary.accessory_information[CharacteristicsTypes.SERIAL_NUMBER].iid
         try:
