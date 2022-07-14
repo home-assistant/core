@@ -37,7 +37,7 @@ WARN_CLOSE_MSG = "closes the Home Assistant aiohttp session"
 
 
 class HassClientRequest(aiohttp.ClientRequest):
-    """aiohttp.ClientRequest with a json method that uses json_loads."""
+    """aiohttp.ClientRequest with a json method that uses json_loads by default."""
 
     async def json(
         self,
