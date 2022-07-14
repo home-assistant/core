@@ -184,11 +184,16 @@ class HKDevice:
             return False
         # If everything is up to date, we can create the entities
         # since we know the data is not stale.
-        self.add_entities()
+        await self.async_add_new_entities()
         self._polling_interval_remover = async_track_time_interval(
             self.hass, self.async_update, DEFAULT_SCAN_INTERVAL
         )
         return True
+
+    async def async_add_new_entities(self) -> None:
+        """Add new entities to Home Assistant."""
+        await self.async_load_platforms()
+        self.add_entities()
 
     def device_info_for_accessory(self, accessory: Accessory) -> DeviceInfo:
         """Build a DeviceInfo for a given accessory."""
@@ -369,8 +374,6 @@ class HKDevice:
         # Migrate to new device ids
         self.async_migrate_devices()
 
-        await self.async_load_platforms()
-
         self.async_create_devices()
 
         # Load any triggers for this config entry
@@ -398,7 +401,7 @@ class HKDevice:
         """Refresh the entity map and entities for this pairing."""
         await self.async_refresh_entity_map(config_num)
         await self.async_process_entity_map()
-        self.add_entities()
+        await self.async_add_new_entities()
 
     async def async_refresh_entity_map(self, config_num: int) -> bool:
         """Handle setup of a HomeKit accessory."""
