@@ -1037,7 +1037,7 @@ build.json @home-assistant/supervisor
 /tests/components/switchbot/ @danielhiversen @RenierM26
 /homeassistant/components/switcher_kis/ @tomerfi @thecode
 /tests/components/switcher_kis/ @tomerfi @thecode
-/homeassistant/components/switchmate/ @danielhiversen
+/homeassistant/components/switchmate/ @danielhiversen @qiz-li
 /homeassistant/components/syncthing/ @zhulik
 /tests/components/syncthing/ @zhulik
 /homeassistant/components/syncthru/ @nielstron
