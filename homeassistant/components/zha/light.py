@@ -295,7 +295,9 @@ class BaseLight(LogMixin, light.LightEntity):
         if light.ATTR_COLOR_TEMP in kwargs:
             temperature = kwargs[light.ATTR_COLOR_TEMP]
             result = await self._color_channel.move_to_color_temp(
-                temperature, duration or self._DEFAULT_COLOR_TRANSITION
+                temperature,
+                (0 if color_provided_while_off else duration)
+                or self._DEFAULT_COLOR_TRANSITION,
             )
             t_log["move_to_color_temp"] = result
             if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
@@ -311,7 +313,8 @@ class BaseLight(LogMixin, light.LightEntity):
             result = await self._color_channel.move_to_color(
                 int(xy_color[0] * 65535),
                 int(xy_color[1] * 65535),
-                duration or self._DEFAULT_COLOR_TRANSITION,
+                (0 if color_provided_while_off else duration)
+                or self._DEFAULT_COLOR_TRANSITION,
             )
             t_log["move_to_color"] = result
             if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
@@ -370,12 +373,12 @@ class BaseLight(LogMixin, light.LightEntity):
 
     async def async_turn_off(self, **kwargs):
         """Turn the entity off."""
-        duration = kwargs.get(light.ATTR_TRANSITION)
+        transition = kwargs.get(light.ATTR_TRANSITION)
         supports_level = brightness_supported(self._attr_supported_color_modes)
 
-        if duration and supports_level:
+        if transition and supports_level:
             result = await self._level_channel.move_to_level_with_on_off(
-                0, duration * 10
+                0, transition * 10
             )
         else:
             result = await self._on_off_channel.off()
@@ -386,7 +389,7 @@ class BaseLight(LogMixin, light.LightEntity):
 
         if supports_level:
             # store current brightness so that the next turn_on uses it.
-            self._off_with_transition = bool(duration)
+            self._off_with_transition = transition is not None
             self._off_brightness = self._brightness
 
         self.async_write_ha_state()
