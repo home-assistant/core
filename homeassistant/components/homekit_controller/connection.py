@@ -14,7 +14,7 @@ from aiohomekit.exceptions import (
     EncryptionError,
 )
 from aiohomekit.model import Accessories, Accessory
-from aiohomekit.model.characteristics import Characteristic
+from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
 from aiohomekit.model.services import Service
 
 from homeassistant.const import ATTR_VIA_DEVICE
@@ -169,6 +169,29 @@ class HKDevice:
         self.available = available
         async_dispatcher_send(self.hass, self.signal_state_updated)
 
+    async def async_ensure_available(self) -> bool:
+        """Verify the accessory is available after processing the entity map."""
+        if self.available:
+            return True
+        if self.watchable_characteristics and self.pollable_characteristics:
+            # We already tried, no need to try again
+            return False
+        # We there are no watchable and not pollable characteristics,
+        # we need to force a connection to the device to verify its alive.
+        #
+        # This is similar to iOS's behavior for keeping alive connections
+        # to cameras.
+        #
+        primary = self.entity_map.accessories[0]
+        aid = primary.aid
+        iid = primary.accessory_information[CharacteristicsTypes.SERIAL_NUMBER].iid
+        try:
+            await self.pairing.get_characteristics([(aid, iid)])
+        except (AccessoryDisconnectedError, EncryptionError, AccessoryNotFoundError):
+            return False
+        self.async_set_available_state(True)
+        return True
+
     async def async_setup(self) -> bool:
         """Prepare to use a paired HomeKit device in Home Assistant."""
         entity_storage: EntityMapStorage = self.hass.data[ENTITY_MAP]
@@ -180,15 +203,21 @@ class HKDevice:
             return False
 
         await self.async_process_entity_map()
-        if not self.pairing.is_connected:
+
+        if not await self.async_ensure_available():
             return False
         # If everything is up to date, we can create the entities
         # since we know the data is not stale.
-        self.add_entities()
+        await self.async_add_new_entities()
         self._polling_interval_remover = async_track_time_interval(
             self.hass, self.async_update, DEFAULT_SCAN_INTERVAL
         )
         return True
+
+    async def async_add_new_entities(self) -> None:
+        """Add new entities to Home Assistant."""
+        await self.async_load_platforms()
+        self.add_entities()
 
     def device_info_for_accessory(self, accessory: Accessory) -> DeviceInfo:
         """Build a DeviceInfo for a given accessory."""
@@ -369,8 +398,6 @@ class HKDevice:
         # Migrate to new device ids
         self.async_migrate_devices()
 
-        await self.async_load_platforms()
-
         self.async_create_devices()
 
         # Load any triggers for this config entry
@@ -398,7 +425,7 @@ class HKDevice:
         """Refresh the entity map and entities for this pairing."""
         await self.async_refresh_entity_map(config_num)
         await self.async_process_entity_map()
-        self.add_entities()
+        await self.async_add_new_entities()
 
     async def async_refresh_entity_map(self, config_num: int) -> bool:
         """Handle setup of a HomeKit accessory."""
