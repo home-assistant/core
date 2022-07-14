@@ -14,6 +14,7 @@ from elmax_api.exceptions import (
 )
 from elmax_api.http import Elmax
 from elmax_api.model.actuator import Actuator
+from elmax_api.model.area import Area
 from elmax_api.model.endpoint import DeviceEndpoint
 from elmax_api.model.panel import PanelEntry, PanelStatus
 
@@ -70,6 +71,12 @@ class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):
         if self._state_by_endpoint is not None:
             return self._state_by_endpoint.get(zone_id)
         raise HomeAssistantError("Unknown zone")
+
+    def get_area_state(self, area_id: str) -> Area:
+        """Return state of a specific area."""
+        if self._state_by_endpoint is not None:
+            return self._state_by_endpoint.get(area_id)
+        raise HomeAssistantError("Unknown area")
 
     @property
     def http_client(self):
