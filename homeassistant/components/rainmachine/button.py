@@ -99,4 +99,4 @@ class RainMachineButton(RainMachineEntity, ButtonEntity):
                 f'Error while pressing button "{self.entity_id}": {err}'
             ) from err
 
-        async_dispatcher_send(self.hass, SIGNAL_REBOOT)
+        async_dispatcher_send(self.hass, SIGNAL_REBOOT.format(self._entry.entry_id))
