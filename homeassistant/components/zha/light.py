@@ -702,12 +702,7 @@ class LightGroup(BaseLight, ZhaGroupEntity):
             CONF_DEFAULT_LIGHT_TRANSITION,
             0,
         )
-        self._enhanced_light_transition = async_get_zha_config_value(
-            zha_device.gateway.config_entry,
-            ZHA_OPTIONS,
-            CONF_ENABLE_ENHANCED_LIGHT_TRANSITION,
-            False,
-        )
+        self._enhanced_light_transition = False
         self._attr_color_mode = None
 
     # remove this when all ZHA platforms and base entities are updated
