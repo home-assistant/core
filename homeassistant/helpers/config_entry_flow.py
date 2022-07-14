@@ -15,6 +15,7 @@ from .typing import UNDEFINED, DiscoveryInfoType, UndefinedType
 if TYPE_CHECKING:
     import asyncio
 
+    from homeassistant.components.bluetooh import BluetoothServiceInfo
     from homeassistant.components.dhcp import DhcpServiceInfo
     from homeassistant.components.ssdp import SsdpServiceInfo
     from homeassistant.components.zeroconf import ZeroconfServiceInfo
@@ -88,6 +89,15 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow, Generic[_R]):
         self, discovery_info: DiscoveryInfoType
     ) -> FlowResult:
         """Handle a flow initialized by discovery."""
+        if self._async_in_progress() or self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
+
+        await self.async_set_unique_id(self._domain)
+
+        return await self.async_step_confirm()
+
+    async def async_step_bluetooth(self, discovery_info: BluetoothServiceInfo) -> FlowResult:
+        """Handle a flow initialized by bluetooth discovery."""
         if self._async_in_progress() or self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 

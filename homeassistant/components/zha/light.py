@@ -141,7 +141,7 @@ class BaseLight(LogMixin, light.LightEntity):
         self._color_channel = None
         self._identify_channel = None
         self._default_transition = None
-        self._color_mode = ColorMode.UNKNOWN  # Set by sub classes
+        self._attr_color_mode = ColorMode.UNKNOWN  # Set by sub classes
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -158,11 +158,6 @@ class BaseLight(LogMixin, light.LightEntity):
         if self._state is None:
             return False
         return self._state
-
-    @property
-    def color_mode(self):
-        """Return the color mode of this light."""
-        return self._color_mode
 
     @property
     def brightness(self):
@@ -309,7 +304,7 @@ class BaseLight(LogMixin, light.LightEntity):
             if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
                 self.debug("turned on: %s", t_log)
                 return
-            self._color_mode = ColorMode.COLOR_TEMP
+            self._attr_color_mode = ColorMode.COLOR_TEMP
             self._color_temp = temperature
             self._hs_color = None
 
@@ -323,7 +318,7 @@ class BaseLight(LogMixin, light.LightEntity):
             if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
                 self.debug("turned on: %s", t_log)
                 return
-            self._color_mode = ColorMode.HS
+            self._attr_color_mode = ColorMode.HS
             self._hs_color = hs_color
             self._color_temp = None
 
@@ -451,13 +446,13 @@ class Light(BaseLight, ZhaEntity):
             self._attr_supported_color_modes
         )
         if len(self._attr_supported_color_modes) == 1:
-            self._color_mode = next(iter(self._attr_supported_color_modes))
+            self._attr_color_mode = next(iter(self._attr_supported_color_modes))
         else:  # Light supports color_temp + hs, determine which mode the light is in
             assert self._color_channel
             if self._color_channel.color_mode == Color.ColorMode.Color_temperature:
-                self._color_mode = ColorMode.COLOR_TEMP
+                self._attr_color_mode = ColorMode.COLOR_TEMP
             else:
-                self._color_mode = ColorMode.HS
+                self._attr_color_mode = ColorMode.HS
 
         if self._identify_channel:
             self._supported_features |= light.LightEntityFeature.FLASH
@@ -518,7 +513,7 @@ class Light(BaseLight, ZhaEntity):
         if "off_brightness" in last_state.attributes:
             self._off_brightness = last_state.attributes["off_brightness"]
         if "color_mode" in last_state.attributes:
-            self._color_mode = ColorMode(last_state.attributes["color_mode"])
+            self._attr_color_mode = ColorMode(last_state.attributes["color_mode"])
         if "color_temp" in last_state.attributes:
             self._color_temp = last_state.attributes["color_temp"]
         if "hs_color" in last_state.attributes:
@@ -558,13 +553,13 @@ class Light(BaseLight, ZhaEntity):
 
             if (color_mode := results.get("color_mode")) is not None:
                 if color_mode == Color.ColorMode.Color_temperature:
-                    self._color_mode = ColorMode.COLOR_TEMP
+                    self._attr_color_mode = ColorMode.COLOR_TEMP
                     color_temp = results.get("color_temperature")
                     if color_temp is not None and color_mode:
                         self._color_temp = color_temp
                         self._hs_color = None
                 else:
-                    self._color_mode = ColorMode.HS
+                    self._attr_color_mode = ColorMode.HS
                     color_x = results.get("current_x")
                     color_y = results.get("current_y")
                     if color_x is not None and color_y is not None:
@@ -650,7 +645,7 @@ class LightGroup(BaseLight, ZhaGroupEntity):
             CONF_DEFAULT_LIGHT_TRANSITION,
             0,
         )
-        self._color_mode = None
+        self._attr_color_mode = None
 
     async def async_added_to_hass(self):
         """Run when about to be added to hass."""

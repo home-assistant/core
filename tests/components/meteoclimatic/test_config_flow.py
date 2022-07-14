@@ -42,7 +42,7 @@ async def test_user(hass, client):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
     # test with all provided
@@ -51,7 +51,7 @@ async def test_user(hass, client):
         context={"source": SOURCE_USER},
         data={CONF_STATION_CODE: TEST_STATION_CODE},
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == TEST_STATION_CODE
     assert result["title"] == TEST_STATION_NAME
     assert result["data"][CONF_STATION_CODE] == TEST_STATION_CODE
@@ -68,7 +68,7 @@ async def test_not_found(hass):
             context={"source": SOURCE_USER},
             data={CONF_STATION_CODE: TEST_STATION_CODE},
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"]["base"] == "not_found"
 
@@ -84,5 +84,5 @@ async def test_unknown_error(hass):
             context={"source": SOURCE_USER},
             data={CONF_STATION_CODE: TEST_STATION_CODE},
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
         assert result["reason"] == "unknown"

@@ -188,7 +188,7 @@ async def async_setup_entry(
         bridge, bridge_device, button_devices
     )
 
-    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     return True
 

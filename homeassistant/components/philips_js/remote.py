@@ -30,6 +30,8 @@ async def async_setup_entry(
 class PhilipsTVRemote(CoordinatorEntity[PhilipsTVDataUpdateCoordinator], RemoteEntity):
     """Device that sends commands."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: PhilipsTVDataUpdateCoordinator,
@@ -37,7 +39,7 @@ class PhilipsTVRemote(CoordinatorEntity[PhilipsTVDataUpdateCoordinator], RemoteE
         """Initialize the Philips TV."""
         super().__init__(coordinator)
         self._tv = coordinator.api
-        self._attr_name = f"{coordinator.system['name']} Remote"
+        self._attr_name = "Remote"
         self._attr_unique_id = coordinator.unique_id
         self._attr_device_info = DeviceInfo(
             identifiers={

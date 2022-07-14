@@ -25,7 +25,7 @@ SWITCH_KIND_VALVE = "valve"
 
 SWITCH_DESCRIPTION_VALVE = SwitchEntityDescription(
     key=SWITCH_KIND_VALVE,
-    name="Valve Controller",
+    name="Valve controller",
     icon="mdi:water",
 )
 

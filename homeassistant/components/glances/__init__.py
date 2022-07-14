@@ -91,7 +91,9 @@ class GlancesData:
             self.config_entry.add_update_listener(self.async_options_updated)
         )
 
-        self.hass.config_entries.async_setup_platforms(self.config_entry, PLATFORMS)
+        await self.hass.config_entries.async_forward_entry_setups(
+            self.config_entry, PLATFORMS
+        )
 
         return True
 

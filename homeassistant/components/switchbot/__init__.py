@@ -78,7 +78,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     sensor_type = entry.data[CONF_SENSOR_TYPE]
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS_BY_TYPE[sensor_type])
+    await hass.config_entries.async_forward_entry_setups(
+        entry, PLATFORMS_BY_TYPE[sensor_type]
+    )
 
     return True
 

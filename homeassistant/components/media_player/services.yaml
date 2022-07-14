@@ -257,11 +257,14 @@ join:
     group_members:
       name: Group members
       description: The players which will be synced with the target player.
-      example:
-        - "media_player.multiroom_player2"
-        - "media_player.multiroom_player3"
+      required: true
+      example: |
+        - media_player.multiroom_player2
+        - media_player.multiroom_player3
       selector:
-        object:
+        entity:
+          multiple: true
+          domain: media_player
 
 unjoin:
   description:
