@@ -16,6 +16,7 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import PRECISION_TENTHS, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
@@ -391,7 +392,9 @@ class EvoController(EvoClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set an operating mode for a Controller."""
-        await self._set_tcs_mode(HA_HVAC_TO_TCS[hvac_mode])
+        if not (tcs_mode := HA_HVAC_TO_TCS.get(hvac_mode)):
+            raise HomeAssistantError(f"Invalid hvac_mode: {hvac_mode}")
+        await self._set_tcs_mode(tcs_mode)
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode; if None, then revert to 'Auto' mode."""
