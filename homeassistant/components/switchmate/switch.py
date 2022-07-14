@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 
 # pylint: disable=import-error
-import switchmate
+from switchmate import Switchmate
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
@@ -17,7 +17,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 CONF_FLIP_ON_OFF = "flip_on_off"
 DEFAULT_NAME = "Switchmate"
 
-SCAN_INTERVAL = timedelta(minutes=30)
+SCAN_INTERVAL = timedelta(seconds=10)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -49,7 +49,7 @@ class SwitchmateEntity(SwitchEntity):
 
         self._mac = mac
         self._name = name
-        self._device = switchmate.Switchmate(mac=mac, flip_on_off=flip_on_off)
+        self._device = Switchmate(mac=mac, flip_on_off=flip_on_off)
 
     @property
     def unique_id(self) -> str:
@@ -66,19 +66,19 @@ class SwitchmateEntity(SwitchEntity):
         """Return the name of the switch."""
         return self._name
 
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Synchronize state with switch."""
-        self._device.update()
+        await self._device.update()
 
     @property
     def is_on(self) -> bool:
         """Return true if it is on."""
         return self._device.state
 
-    def turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs) -> None:
         """Turn the switch on."""
-        self._device.turn_on()
+        await self._device.turn_on()
 
-    def turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs) -> None:
         """Turn the switch off."""
-        self._device.turn_off()
+        await self._device.turn_off()
