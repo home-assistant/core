@@ -128,7 +128,7 @@ class PairedSensorSensor(PairedSensorEntity, SensorEntity):
 
     @callback
     def _async_update_from_latest_data(self) -> None:
-        """Update the entity."""
+        """Update the entity's underlying data."""
         if self.entity_description.key == SENSOR_KIND_BATTERY:
             self._attr_native_value = self.coordinator.data["battery"]
         elif self.entity_description.key == SENSOR_KIND_TEMPERATURE:
@@ -142,7 +142,7 @@ class ValveControllerSensor(ValveControllerEntity, SensorEntity):
 
     @callback
     def _async_update_from_latest_data(self) -> None:
-        """Update the entity."""
+        """Update the entity's underlying data."""
         if self.entity_description.key == SENSOR_KIND_TEMPERATURE:
             self._attr_native_value = self.coordinator.data["temperature"]
         elif self.entity_description.key == SENSOR_KIND_UPTIME:

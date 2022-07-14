@@ -23,7 +23,10 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -38,6 +41,8 @@ from .const import (
     DOMAIN,
     LOGGER,
     SIGNAL_PAIRED_SENSOR_COORDINATOR_ADDED,
+    SIGNAL_REBOOT_COMPLETED,
+    SIGNAL_REBOOT_REQUESTED,
 )
 from .util import GuardianDataUpdateCoordinator
 
@@ -412,17 +417,60 @@ class GuardianEntity(CoordinatorEntity[GuardianDataUpdateCoordinator]):
     _attr_has_entity_name = True
 
     def __init__(
-        self, coordinator: GuardianDataUpdateCoordinator, description: EntityDescription
+        self, entry: ConfigEntry, coordinator: GuardianDataUpdateCoordinator, description: EntityDescription
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
 
         self._attr_extra_state_attributes = {}
+        self._rebooting = False
+        self._signal_reboot_completed = SIGNAL_REBOOT_COMPLETED.format(entry.entry_id)
+        self._signal_reboot_requested = SIGNAL_REBOOT_REQUESTED.format(entry.entry_id)
         self.entity_description = description
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available.
+
+        We override the inherited instance of this property so that we can force entity
+        available when desired (e.g., a reboot).
+        """
+        return self._attr_available
+
+    @callback
+    def _async_handle_coordinator_update(
+        self, coordinator: GuardianDataUpdateCoordinator
+    ) -> None:
+        """Respond to a GuardianDataUpdateCoordinator update."""
+        if not coordinator.last_update_success:
+            return
+
+        if self._rebooting:
+            # If *any* coordinator successfully updates while the entity is marked as
+            # "rebooting," the API is back up and all entities (even those with
+            # different coordinators) should become available:
+            async_dispatcher_send(self.hass, self._signal_reboot_completed)
+
+        self._async_update_from_latest_data()
+        self.async_write_ha_state()
+
+    @callback
+    def _async_reboot_completed(self) -> None:
+        """Respond to a completed controller reboot."""
+        self._attr_available = True
+        self._rebooting = False
+        self.async_write_ha_state()
+
+    @callback
+    def _async_reboot_requested(self) -> None:
+        """Respond to a requested controller reboot."""
+        self._attr_available = False
+        self._rebooting = True
+        self.async_write_ha_state()
 
     @callback
     def _async_update_from_latest_data(self) -> None:
-        """Update the entity.
+        """Update the entity's underlying data.
 
         This should be extended by Guardian platforms.
         """
@@ -434,9 +482,15 @@ class GuardianEntity(CoordinatorEntity[GuardianDataUpdateCoordinator]):
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-        await super().async_added_to_hass()
+        """Perform tasks when the entity is added."""
         self._async_update_from_latest_data()
+        self.async_write_ha_state()
+
+        for signal, func in (
+            (self._signal_reboot_completed, self._async_reboot_completed),
+            (self._signal_reboot_requested, self._async_reboot_requested),
+        ):
+            self.async_on_remove(async_dispatcher_connect(self.hass, signal, func))
 
 
 class PairedSensorEntity(GuardianEntity):
@@ -449,7 +503,7 @@ class PairedSensorEntity(GuardianEntity):
         description: EntityDescription,
     ) -> None:
         """Initialize."""
-        super().__init__(coordinator, description)
+        super().__init__(entry, coordinator, description)
 
         paired_sensor_uid = coordinator.data["uid"]
         self._attr_device_info = DeviceInfo(
@@ -486,7 +540,7 @@ class ValveControllerEntity(GuardianEntity):
         description: ValveControllerEntityDescription,
     ) -> None:
         """Initialize."""
-        super().__init__(coordinators[description.api_category], description)
+        super().__init__(entry, coordinators[description.api_category], description)
 
         self._diagnostics_coordinator = coordinators[API_SYSTEM_DIAGNOSTICS]
 
