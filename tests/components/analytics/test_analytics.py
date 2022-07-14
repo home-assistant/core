@@ -269,8 +269,8 @@ async def test_send_statistics_one_integration_fails(hass, caplog, aioclient_moc
     hass.config.components = ["default_config"]
 
     with patch(
-        "homeassistant.components.analytics.analytics.async_get_integration",
-        side_effect=IntegrationNotFound("any"),
+        "homeassistant.components.analytics.analytics.async_get_integrations",
+        return_value={"any": IntegrationNotFound("any")},
     ), patch("homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION):
         await analytics.send_analytics()
 
@@ -291,8 +291,8 @@ async def test_send_statistics_async_get_integration_unknown_exception(
     hass.config.components = ["default_config"]
 
     with pytest.raises(ValueError), patch(
-        "homeassistant.components.analytics.analytics.async_get_integration",
-        side_effect=ValueError,
+        "homeassistant.components.analytics.analytics.async_get_integrations",
+        return_value={"any": ValueError()},
     ), patch("homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION):
         await analytics.send_analytics()
 
