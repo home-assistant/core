@@ -21,8 +21,6 @@ async def test_import_flow(hass):
         "homeassistant.components.osoenergy.config_flow.OSOEnergy.get_devices",
         return_value=True,
     ), patch(
-        "homeassistant.components.osoenergy.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.osoenergy.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
@@ -37,7 +35,6 @@ async def test_import_flow(hass):
         CONF_API_KEY: SUBSCRIPTION_KEY,
     }
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -54,8 +51,6 @@ async def test_user_flow(hass):
         "homeassistant.components.osoenergy.config_flow.OSOEnergy.get_devices",
         return_value=True,
     ), patch(
-        "homeassistant.components.osoenergy.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.osoenergy.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -70,7 +65,6 @@ async def test_user_flow(hass):
         CONF_API_KEY: SUBSCRIPTION_KEY,
     }
 
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
@@ -120,35 +114,6 @@ async def test_reauth_flow(hass):
     assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result2["reason"] == "reauth_successful"
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-
-
-async def test_option_flow(hass):
-    """Test config flow options."""
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title=TITLE,
-        data={CONF_API_KEY: SUBSCRIPTION_KEY},
-    )
-    entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    result = await hass.config_entries.options.async_init(
-        entry.entry_id,
-        data=None,
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_SCAN_INTERVAL: UPDATED_SCAN_INTERVAL}
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["data"][CONF_SCAN_INTERVAL] == UPDATED_SCAN_INTERVAL
 
 
 async def test_abort_if_existing_entry(hass):

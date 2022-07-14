@@ -4,10 +4,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/osoenergy",
   "requirements": ["pyosoenergyapi==1.0.2"],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
-  "dependencies": [],
   "codeowners": ["@osohotwateriot"],
   "iot_class": "cloud_polling"
 }

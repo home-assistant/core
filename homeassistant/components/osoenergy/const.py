@@ -48,15 +48,11 @@ HEATER_MAX_TEMP = 80
 MANUFACTURER = "OSO Energy"
 
 PLATFORMS = [
-    Platform.SENSOR,
     Platform.WATER_HEATER,
 ]
 PLATFORM_LOOKUP = {
-    Platform.SENSOR: "sensor",
     Platform.WATER_HEATER: "water_heater",
 }
-STATUS = "status"
-SENSOR = "sensor"
 SERVICE_TURN_ON = "turn_on"
 SERVICE_TURN_OFF = "turn_off"
 SERVICE_SET_V40MIN = "set_v40_min"

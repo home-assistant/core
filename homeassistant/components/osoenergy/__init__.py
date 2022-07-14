@@ -5,77 +5,34 @@ import logging
 from aiohttp.web_exceptions import HTTPException
 from apyosoenergyapi import OSOEnergy
 from apyosoenergyapi.helper.osoenergy_exceptions import OSOEnergyReauthRequired
-import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, PLATFORM_LOOKUP, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: vol.Schema(
-                {
-                    vol.Required(CONF_API_KEY): cv.string,
-                    vol.Optional(CONF_SCAN_INTERVAL, default=15): cv.positive_int,
-                },
-            )
-        },
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """OSO Energy configuration setup."""
-    hass.data[DOMAIN] = {}
-
-    if DOMAIN not in config:
-        return True
-
-    conf = config[DOMAIN]
-
-    if not hass.config_entries.async_entries(DOMAIN):
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_IMPORT},
-                data={
-                    CONF_API_KEY: conf[CONF_API_KEY],
-                },
-            )
-        )
-    return True
-
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up OSO Energy from a config entry."""
-    if hass.data.get(DOMAIN) is None:
-        hass.data.setdefault(DOMAIN, {})
 
-    subscription_key = entry.data.get(CONF_API_KEY)
+    subscription_key = entry.data[CONF_API_KEY]
     websession = aiohttp_client.async_get_clientsession(hass)
     osoenergy = OSOEnergy(subscription_key, websession)
-    osoenergy_config = dict(entry.data)
 
-    osoenergy_config["options"] = {}
-    osoenergy_config["options"].update(
-        {CONF_SCAN_INTERVAL: dict(entry.options).get(CONF_SCAN_INTERVAL, 120)}
-    )
+    osoenergy_config = dict(entry.data)
+    osoenergy_config["options"] = {CONF_SCAN_INTERVAL: 60}
+
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = osoenergy
 
     try:
@@ -125,13 +82,6 @@ class OSOEnergyEntity(Entity):
         self.device = osoenergy_device
         self.attributes = {}
         self._unique_id = self.device["device_id"]
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return {
-            "integration": DOMAIN,
-        }
 
     async def async_added_to_hass(self):
         """When entity is added to Home Assistant."""

@@ -18,16 +18,5 @@
                 "title": "OSO Energy Auth"
             }
         }
-    },
-    "options":{
-        "step":{
-            "user":{
-                "data":{
-                    "scan_interval":"Scan interval (seconds)"
-                },
-                "description": "Update the scan interval to poll for data more often.",
-                "title": "Options for OSO Energy"
-            }
-        }
     }
 }

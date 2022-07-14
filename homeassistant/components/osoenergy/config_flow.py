@@ -5,8 +5,7 @@ from apyosoenergyapi import OSOEnergy
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_API_KEY, CONF_SCAN_INTERVAL
-from homeassistant.core import callback
+from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers import aiohttp_client
 
 from .const import CONFIG_ENTRY_VERSION, DOMAIN, TITLE
@@ -80,45 +79,6 @@ class OSOEnergyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, user_input=None):
         """Import user."""
         return await self.async_step_user(user_input)
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(config_entry):
-        """Hive options callback."""
-        return OSOEnergyOptionsFlowHandler(config_entry)
-
-
-class OSOEnergyOptionsFlowHandler(config_entries.OptionsFlow):
-    """Config flow options for OSO Energy."""
-
-    def __init__(self, config_entry):
-        """Initialize Hive options flow."""
-        self.osoenergy = None
-        self.config_entry = config_entry
-        self.interval = config_entry.options.get(CONF_SCAN_INTERVAL, 120)
-
-    async def async_step_init(self, user_input=None):
-        """Manage the options."""
-        return await self.async_step_user(user_input=user_input)
-
-    async def async_step_user(self, user_input=None):
-        """Handle a flow initialized by the user."""
-        self.osoenergy = self.hass.data[DOMAIN][self.config_entry.entry_id]
-        errors = {}
-        if user_input is not None:
-            new_interval = user_input.get(CONF_SCAN_INTERVAL)
-            await self.osoenergy.update_interval(new_interval)
-            return self.async_create_entry(title="", data=user_input)
-
-        schema = vol.Schema(
-            {
-                vol.Optional(CONF_SCAN_INTERVAL, default=self.interval): vol.All(
-                    vol.Coerce(int), vol.Range(min=15)
-                ),
-            }
-        )
-
-        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
 
 class UnknownOSOEnergyError(Exception):

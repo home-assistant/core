@@ -26,16 +26,5 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
-  },
-  "options": {
-    "step": {
-      "user": {
-        "title": "Options for OSO Energy",
-        "description": "Update the scan interval to poll for data more often.",
-        "data": {
-          "scan_interval": "Scan Interval (seconds)"
-        }
-      }
-    }
   }
 }
