@@ -84,7 +84,7 @@ async def async_browse_media(
 ) -> BrowseMedia:
     """Browse media."""
 
-    if media_content_id is None:
+    if media_content_id is None or media_content_type is None:
         return await root_payload(
             hass,
             speaker,
@@ -105,7 +105,7 @@ async def async_browse_media(
     if media_content_type == "plex":
         return await plex.async_browse_media(hass, None, None, platform=DOMAIN)
 
-    if media_content_type and spotify.is_spotify_media_type(media_content_type):
+    if spotify.is_spotify_media_type(media_content_type):
         return await spotify.async_browse_media(
             hass, media_content_type, media_content_id, can_play_artist=False
         )
