@@ -6,6 +6,7 @@ from bleak.backends.scanner import AdvertisementData, BLEDevice
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
+    SOURCE_LOCAL,
     BluetoothChange,
     BluetoothServiceInfo,
     models,
@@ -244,6 +245,7 @@ async def test_async_discovered_device_api(hass, mock_bleak_scanner_start):
         assert len(service_infos) == 1
         # wrong_name should not appear because bleak no longer sees it
         assert service_infos[0].name == "wohand"
+        assert service_infos[0].source == SOURCE_LOCAL
 
         assert bluetooth.async_address_present(hass, "44:44:33:11:23:42") is False
         assert bluetooth.async_address_present(hass, "44:44:33:11:23:45") is True
@@ -314,16 +316,19 @@ async def test_register_callbacks(hass, mock_bleak_scanner_start):
 
     service_info: BluetoothServiceInfo = callbacks[0][0]
     assert service_info.name == "wohand"
+    assert service_info.source == SOURCE_LOCAL
     assert service_info.manufacturer == "Nordic Semiconductor ASA"
     assert service_info.manufacturer_id == 89
 
     service_info: BluetoothServiceInfo = callbacks[1][0]
     assert service_info.name == "empty"
+    assert service_info.source == SOURCE_LOCAL
     assert service_info.manufacturer is None
     assert service_info.manufacturer_id is None
 
     service_info: BluetoothServiceInfo = callbacks[2][0]
     assert service_info.name == "empty"
+    assert service_info.source == SOURCE_LOCAL
     assert service_info.manufacturer is None
     assert service_info.manufacturer_id is None
 
