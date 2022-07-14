@@ -9,25 +9,19 @@ import sqlalchemy
 from sqlalchemy.engine import Result
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import scoped_session, sessionmaker
-import voluptuous as vol
 
-from homeassistant.components.recorder import CONF_DB_URL, DEFAULT_DB_FILE, DEFAULT_URL
-from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
-    SensorEntity,
-)
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.components.recorder import CONF_DB_URL
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_COLUMN_NAME, CONF_QUERIES, CONF_QUERY, DB_URL_RE, DOMAIN
+from .const import CONF_COLUMN_NAME, CONF_QUERY, DB_URL_RE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,58 +29,6 @@ _LOGGER = logging.getLogger(__name__)
 def redact_credentials(data: str) -> str:
     """Redact credentials from string data."""
     return DB_URL_RE.sub("//****:****@", data)
-
-
-_QUERY_SCHEME = vol.Schema(
-    {
-        vol.Required(CONF_COLUMN_NAME): cv.string,
-        vol.Required(CONF_NAME): cv.string,
-        vol.Required(CONF_QUERY): cv.string,
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.string,
-    }
-)
-
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_QUERIES): [_QUERY_SCHEME], vol.Optional(CONF_DB_URL): cv.string}
-)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the SQL sensor platform."""
-    _LOGGER.warning(
-        # SQL config flow added in 2022.4 and should be removed in 2022.6
-        "Configuration of the SQL sensor platform in YAML is deprecated and "
-        "will be removed in Home Assistant 2022.6; Your existing configuration "
-        "has been imported into the UI automatically and can be safely removed "
-        "from your configuration.yaml file"
-    )
-
-    default_db_url = DEFAULT_URL.format(
-        hass_config_path=hass.config.path(DEFAULT_DB_FILE)
-    )
-
-    for query in config[CONF_QUERIES]:
-        new_config = {
-            CONF_DB_URL: config.get(CONF_DB_URL, default_db_url),
-            CONF_NAME: query[CONF_NAME],
-            CONF_QUERY: query[CONF_QUERY],
-            CONF_UNIT_OF_MEASUREMENT: query.get(CONF_UNIT_OF_MEASUREMENT),
-            CONF_VALUE_TEMPLATE: query.get(CONF_VALUE_TEMPLATE),
-            CONF_COLUMN_NAME: query[CONF_COLUMN_NAME],
-        }
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data=new_config,
-            )
-        )
 
 
 async def async_setup_entry(

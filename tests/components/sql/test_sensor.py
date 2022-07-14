@@ -6,10 +6,9 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from homeassistant.components.sql.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_NAME, STATE_UNKNOWN
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
-from homeassistant.setup import async_setup_component
 
 from . import init_integration
 
@@ -29,30 +28,6 @@ async def test_query(hass: HomeAssistant) -> None:
     state = hass.states.get("sensor.select_value_sql_query")
     assert state.state == "5"
     assert state.attributes["value"] == 5
-
-
-async def test_import_query(hass: HomeAssistant) -> None:
-    """Test the SQL sensor."""
-    config = {
-        "sensor": {
-            "platform": "sql",
-            "db_url": "sqlite://",
-            "queries": [
-                {
-                    "name": "count_tables",
-                    "query": "SELECT 5 as value",
-                    "column": "value",
-                }
-            ],
-        }
-    }
-
-    assert await async_setup_component(hass, "sensor", config)
-    await hass.async_block_till_done()
-
-    assert hass.config_entries.async_entries(DOMAIN)
-    options = hass.config_entries.async_entries(DOMAIN)[0].options
-    assert options[CONF_NAME] == "count_tables"
 
 
 async def test_query_value_template(hass: HomeAssistant) -> None:
