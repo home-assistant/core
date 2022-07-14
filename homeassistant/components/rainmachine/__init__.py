@@ -54,7 +54,7 @@ DEFAULT_SSL = True
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR, Platform.SWITCH]
 
 UPDATE_INTERVALS = {
     DATA_PROVISION_SETTINGS: timedelta(minutes=1),
@@ -447,4 +447,3 @@ class RainMachineEntity(CoordinatorEntity):
     @callback
     def update_from_latest_data(self) -> None:
         """Update the state."""
-        raise NotImplementedError
