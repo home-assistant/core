@@ -749,7 +749,9 @@ async def test_durations(hass, worker_finished_stream):
         },
     )
 
-    source = generate_h264_video(duration=SEGMENT_DURATION + 1)
+    source = generate_h264_video(
+        duration=round(SEGMENT_DURATION + target_part_duration + 1)
+    )
     worker_finished, mock_stream = worker_finished_stream
 
     with patch("homeassistant.components.stream.Stream", wraps=mock_stream):
