@@ -18,10 +18,8 @@ from homeassistant.const import (
     SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
     UV_INDEX,
-    Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -155,8 +153,6 @@ async def async_setup_entry(
     """Set up the Met Office weather sensor platform."""
     hass_data = hass.data[DOMAIN][entry.entry_id]
 
-    async_migrate_unique_ids(hass, hass_data)
-
     async_add_entities(
         [
             MetOfficeCurrentSensor(
@@ -178,45 +174,6 @@ async def async_setup_entry(
         ],
         False,
     )
-
-
-def async_migrate_unique_ids(hass: HomeAssistant, hass_data: Any) -> None:
-    """Migrate unique ID for sensors based on name to key."""
-
-    for old_name, key in (
-        ("Station Name", "name"),
-        ("Weather", "weather"),
-        ("Temperature", "temperature"),
-        ("Feels Like Temperature", "feels_like_temperature"),
-        ("Wind Speed", "wind_speed"),
-        ("Wind Direction", "wind_direction"),
-        ("Wind Gust", "wind_gust"),
-        ("Visibility", "visibility"),
-        ("Visibility Distance", "visibility_distance"),
-        ("UV Index", "uv"),
-        ("Probability of Precipitation", "precipitation"),
-        ("Humidity", "humidity"),
-    ):
-        old_unique_id = f"{old_name}_{hass_data[METOFFICE_COORDINATES]}"
-        old_daily_unique_id = f"{old_unique_id}_{MODE_DAILY}"
-
-        ent_reg = entity_registry.async_get(hass)
-
-        if entity_id := ent_reg.async_get_entity_id(
-            Platform.SENSOR, DOMAIN, old_unique_id
-        ):
-            ent_reg.async_update_entity(
-                entity_id,
-                new_unique_id=f"{key}_{hass_data[METOFFICE_COORDINATES]}",
-            )
-
-        if daily_entity_id := ent_reg.async_get_entity_id(
-            Platform.SENSOR, DOMAIN, old_daily_unique_id
-        ):
-            ent_reg.async_update_entity(
-                daily_entity_id,
-                new_unique_id=f"{key}_{hass_data[METOFFICE_COORDINATES]}_{MODE_DAILY}",
-            )
 
 
 class MetOfficeCurrentSensor(
