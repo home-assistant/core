@@ -106,6 +106,129 @@ async def test_full_user_flow_multiple_installations(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_full_user_flow_single_installation_with_mfa(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_verisure_config_flow: MagicMock,
+) -> None:
+    """Test a full user initiated flow with a single installation and mfa."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result.get("step_id") == "user"
+    assert result.get("type") == FlowResultType.FORM
+    assert result.get("errors") == {}
+    assert "flow_id" in result
+
+    mock_verisure_config_flow.login.side_effect = VerisureLoginError(
+        "Multifactor authentication enabled, disable or create MFA cookie"
+    )
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "email": "verisure_my_pages@example.com",
+            "password": "SuperS3cr3t!",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result2.get("type") == FlowResultType.FORM
+    assert result2.get("step_id") == "mfa"
+    assert "flow_id" in result2
+
+    mock_verisure_config_flow.login.side_effect = None
+    mock_verisure_config_flow.installations = [
+        mock_verisure_config_flow.installations[0]
+    ]
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "code": "123456",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result3.get("type") == FlowResultType.CREATE_ENTRY
+    assert result3.get("title") == "ascending (12345th street)"
+    assert result3.get("data") == {
+        CONF_GIID: "12345",
+        CONF_EMAIL: "verisure_my_pages@example.com",
+        CONF_PASSWORD: "SuperS3cr3t!",
+    }
+
+    assert len(mock_verisure_config_flow.login.mock_calls) == 2
+    assert len(mock_verisure_config_flow.login_mfa.mock_calls) == 1
+    assert len(mock_verisure_config_flow.mfa_validate.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_full_user_flow_multiple_installations_with_mfa(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_verisure_config_flow: MagicMock,
+) -> None:
+    """Test a full user initiated configuration flow with a single installation."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result.get("step_id") == "user"
+    assert result.get("type") == FlowResultType.FORM
+    assert result.get("errors") == {}
+    assert "flow_id" in result
+
+    mock_verisure_config_flow.login.side_effect = VerisureLoginError(
+        "Multifactor authentication enabled, disable or create MFA cookie"
+    )
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "email": "verisure_my_pages@example.com",
+            "password": "SuperS3cr3t!",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result2.get("type") == FlowResultType.FORM
+    assert result2.get("step_id") == "mfa"
+    assert "flow_id" in result2
+
+    mock_verisure_config_flow.login.side_effect = None
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "code": "123456",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result3.get("step_id") == "installation"
+    assert result3.get("type") == FlowResultType.FORM
+    assert result3.get("errors") is None
+    assert "flow_id" in result2
+
+    result4 = await hass.config_entries.flow.async_configure(
+        result3["flow_id"], {"giid": "54321"}
+    )
+    await hass.async_block_till_done()
+
+    assert result4.get("type") == FlowResultType.CREATE_ENTRY
+    assert result4.get("title") == "descending (54321th street)"
+    assert result4.get("data") == {
+        CONF_GIID: "54321",
+        CONF_EMAIL: "verisure_my_pages@example.com",
+        CONF_PASSWORD: "SuperS3cr3t!",
+    }
+
+    assert len(mock_verisure_config_flow.login.mock_calls) == 2
+    assert len(mock_verisure_config_flow.login_mfa.mock_calls) == 1
+    assert len(mock_verisure_config_flow.mfa_validate.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
 @pytest.mark.parametrize(
     "side_effect,error",
     [
@@ -142,10 +265,10 @@ async def test_verisure_errors(
     assert result2.get("errors") == {"base": error}
     assert "flow_id" in result2
 
-    mock_verisure_config_flow.login.side_effect = None
-    mock_verisure_config_flow.installations = [
-        mock_verisure_config_flow.installations[0]
-    ]
+    mock_verisure_config_flow.login.side_effect = VerisureLoginError(
+        "Multifactor authentication enabled, disable or create MFA cookie"
+    )
+    mock_verisure_config_flow.login_mfa.side_effect = side_effect
 
     result3 = await hass.config_entries.flow.async_configure(
         result2["flow_id"],
@@ -156,15 +279,65 @@ async def test_verisure_errors(
     )
     await hass.async_block_till_done()
 
-    assert result3.get("type") == FlowResultType.CREATE_ENTRY
-    assert result3.get("title") == "ascending (12345th street)"
-    assert result3.get("data") == {
+    mock_verisure_config_flow.login_mfa.side_effect = None
+
+    assert result3.get("type") == FlowResultType.FORM
+    assert result3.get("step_id") == "user"
+    assert result3.get("errors") == {"base": "unknown"}
+    assert "flow_id" in result3
+
+    result4 = await hass.config_entries.flow.async_configure(
+        result3["flow_id"],
+        {
+            "email": "verisure_my_pages@example.com",
+            "password": "SuperS3cr3t!",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result4.get("type") == FlowResultType.FORM
+    assert result4.get("step_id") == "mfa"
+    assert "flow_id" in result4
+
+    mock_verisure_config_flow.mfa_validate.side_effect = side_effect
+
+    result5 = await hass.config_entries.flow.async_configure(
+        result4["flow_id"],
+        {
+            "code": "123456",
+        },
+    )
+    assert result5.get("type") == FlowResultType.FORM
+    assert result5.get("step_id") == "mfa"
+    assert result5.get("errors") == {"base": error}
+    assert "flow_id" in result5
+
+    mock_verisure_config_flow.installations = [
+        mock_verisure_config_flow.installations[0]
+    ]
+
+    mock_verisure_config_flow.mfa_validate.side_effect = None
+    mock_verisure_config_flow.login.side_effect = None
+
+    result6 = await hass.config_entries.flow.async_configure(
+        result5["flow_id"],
+        {
+            "code": "654321",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result6.get("type") == FlowResultType.CREATE_ENTRY
+    assert result6.get("title") == "ascending (12345th street)"
+    assert result6.get("data") == {
         CONF_GIID: "12345",
         CONF_EMAIL: "verisure_my_pages@example.com",
         CONF_PASSWORD: "SuperS3cr3t!",
     }
 
-    assert len(mock_verisure_config_flow.login.mock_calls) == 2
+    assert len(mock_verisure_config_flow.login.mock_calls) == 4
+    assert len(mock_verisure_config_flow.login_mfa.mock_calls) == 2
+    assert len(mock_verisure_config_flow.mfa_validate.mock_calls) == 2
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -226,6 +399,70 @@ async def test_reauth_flow(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_reauth_flow_with_mfa(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_verisure_config_flow: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a reauthentication flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "unique_id": mock_config_entry.unique_id,
+            "entry_id": mock_config_entry.entry_id,
+        },
+        data=mock_config_entry.data,
+    )
+    assert result.get("step_id") == "reauth_confirm"
+    assert result.get("type") == FlowResultType.FORM
+    assert result.get("errors") == {}
+    assert "flow_id" in result
+
+    mock_verisure_config_flow.login.side_effect = VerisureLoginError(
+        "Multifactor authentication enabled, disable or create MFA cookie"
+    )
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "email": "verisure_my_pages@example.com",
+            "password": "correct horse battery staple!",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result2.get("type") == FlowResultType.FORM
+    assert result2.get("step_id") == "reauth_mfa"
+    assert "flow_id" in result2
+
+    mock_verisure_config_flow.login.side_effect = None
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {
+            "code": "123456",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result3.get("type") == FlowResultType.ABORT
+    assert result3.get("reason") == "reauth_successful"
+    assert mock_config_entry.data == {
+        CONF_GIID: "12345",
+        CONF_EMAIL: "verisure_my_pages@example.com",
+        CONF_PASSWORD: "correct horse battery staple!",
+    }
+
+    assert len(mock_verisure_config_flow.login.mock_calls) == 2
+    assert len(mock_verisure_config_flow.login_mfa.mock_calls) == 1
+    assert len(mock_verisure_config_flow.mfa_validate.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
 @pytest.mark.parametrize(
     "side_effect,error",
     [
@@ -271,16 +508,63 @@ async def test_reauth_flow_errors(
     assert result2.get("errors") == {"base": error}
     assert "flow_id" in result2
 
+    mock_verisure_config_flow.login.side_effect = VerisureLoginError(
+        "Multifactor authentication enabled, disable or create MFA cookie"
+    )
+    mock_verisure_config_flow.login_mfa.side_effect = side_effect
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {
+            "email": "verisure_my_pages@example.com",
+            "password": "SuperS3cr3t!",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result3.get("type") == FlowResultType.FORM
+    assert result3.get("step_id") == "reauth_confirm"
+    assert result3.get("errors") == {"base": "unknown"}
+    assert "flow_id" in result3
+
+    mock_verisure_config_flow.login_mfa.side_effect = None
+
+    result4 = await hass.config_entries.flow.async_configure(
+        result3["flow_id"],
+        {
+            "email": "verisure_my_pages@example.com",
+            "password": "SuperS3cr3t!",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result4.get("type") == FlowResultType.FORM
+    assert result4.get("step_id") == "reauth_mfa"
+    assert "flow_id" in result4
+
+    mock_verisure_config_flow.mfa_validate.side_effect = side_effect
+
+    result5 = await hass.config_entries.flow.async_configure(
+        result4["flow_id"],
+        {
+            "code": "123456",
+        },
+    )
+    assert result5.get("type") == FlowResultType.FORM
+    assert result5.get("step_id") == "reauth_mfa"
+    assert result5.get("errors") == {"base": error}
+    assert "flow_id" in result5
+
+    mock_verisure_config_flow.mfa_validate.side_effect = None
     mock_verisure_config_flow.login.side_effect = None
     mock_verisure_config_flow.installations = [
         mock_verisure_config_flow.installations[0]
     ]
 
     await hass.config_entries.flow.async_configure(
-        result2["flow_id"],
+        result5["flow_id"],
         {
-            "email": "verisure_my_pages@example.com",
-            "password": "correct horse battery staple",
+            "code": "654321",
         },
     )
     await hass.async_block_till_done()
@@ -288,10 +572,12 @@ async def test_reauth_flow_errors(
     assert mock_config_entry.data == {
         CONF_GIID: "12345",
         CONF_EMAIL: "verisure_my_pages@example.com",
-        CONF_PASSWORD: "correct horse battery staple",
+        CONF_PASSWORD: "SuperS3cr3t!",
     }
 
-    assert len(mock_verisure_config_flow.login.mock_calls) == 2
+    assert len(mock_verisure_config_flow.login.mock_calls) == 4
+    assert len(mock_verisure_config_flow.login_mfa.mock_calls) == 2
+    assert len(mock_verisure_config_flow.mfa_validate.mock_calls) == 2
     assert len(mock_setup_entry.mock_calls) == 1
 
 

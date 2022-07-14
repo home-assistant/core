@@ -103,6 +103,8 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle multifactor authentication step."""
+        errors: dict[str, str] = {}
+
         if user_input is not None:
             try:
                 await self.hass.async_add_executor_job(
@@ -111,10 +113,10 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 await self.hass.async_add_executor_job(self.verisure.login)
             except VerisureLoginError as ex:
                 LOGGER.debug("Could not log in to Verisure, %s", ex)
-                return self.async_abort(reason="invalid_auth")
+                errors["base"] = "invalid_auth"
             except (VerisureError, VerisureResponseError) as ex:
                 LOGGER.debug("Unexpected response from Verisure, %s", ex)
-                return self.async_abort(reason="unknown")
+                errors["base"] = "unknown"
             else:
                 return await self.async_step_installation()
 
@@ -127,6 +129,7 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                     )
                 }
             ),
+            errors=errors,
         )
 
     async def async_step_installation(
@@ -240,6 +243,8 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle multifactor authentication step during re-authentication."""
+        errors: dict[str, str] = {}
+
         if user_input is not None:
             try:
                 await self.hass.async_add_executor_job(
@@ -248,18 +253,18 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 await self.hass.async_add_executor_job(self.verisure.login)
             except VerisureLoginError as ex:
                 LOGGER.debug("Could not log in to Verisure, %s", ex)
-                return self.async_abort(reason="invalid_auth")
+                errors["base"] = "invalid_auth"
             except (VerisureError, VerisureResponseError) as ex:
                 LOGGER.debug("Unexpected response from Verisure, %s", ex)
-                return self.async_abort(reason="unknown")
+                errors["base"] = "unknown"
             else:
                 data = self.entry.data.copy()
                 self.hass.config_entries.async_update_entry(
                     self.entry,
                     data={
                         **data,
-                        CONF_EMAIL: user_input[CONF_EMAIL],
-                        CONF_PASSWORD: user_input[CONF_PASSWORD],
+                        CONF_EMAIL: self.email,
+                        CONF_PASSWORD: self.password,
                     },
                 )
                 self.hass.async_create_task(
@@ -276,6 +281,7 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                     )
                 }
             ),
+            errors=errors,
         )
 
 
