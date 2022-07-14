@@ -5,7 +5,7 @@
 AEMET-OpenData==0.2.1
 
 # homeassistant.components.aladdin_connect
-AIOAladdinConnect==0.1.23
+AIOAladdinConnect==0.1.24
 
 # homeassistant.components.adax
 Adax-local==0.1.4
@@ -150,7 +150,7 @@ aioeagle==1.1.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==10.10.0
+aioesphomeapi==10.11.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -1086,7 +1086,7 @@ nettigo-air-monitor==1.3.0
 neurio==0.3.1
 
 # homeassistant.components.nexia
-nexia==2.0.1
+nexia==2.0.2
 
 # homeassistant.components.nextcloud
 nextcloudmonitor==1.1.0
@@ -1995,7 +1995,7 @@ pytrafikverket==0.2.0.1
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.0.9
+pyunifiprotect==4.0.11
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -2357,7 +2357,7 @@ twitchAPI==2.5.2
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-unifi-discovery==1.1.4
+unifi-discovery==1.1.5
 
 # homeassistant.components.unifiled
 unifiled==0.11
@@ -2447,7 +2447,7 @@ wirelesstagpy==0.8.1
 withings-api==2.4.0
 
 # homeassistant.components.wled
-wled==0.13.2
+wled==0.14.1
 
 # homeassistant.components.wolflink
 wolf_smartset==0.1.11
@@ -2521,7 +2521,7 @@ zigpy-zigate==0.9.0
 zigpy-znp==0.8.1
 
 # homeassistant.components.zha
-zigpy==0.47.2
+zigpy==0.47.3
 
 # homeassistant.components.zoneminder
 zm-py==0.5.2

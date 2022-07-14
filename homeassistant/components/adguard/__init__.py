@@ -138,8 +138,8 @@ class AdGuardHomeEntity(Entity):
         self,
         adguard: AdGuardHome,
         entry: ConfigEntry,
-        name: str,
-        icon: str,
+        name: str | None,
+        icon: str | None,
         enabled_default: bool = True,
     ) -> None:
         """Initialize the AdGuard Home entity."""
@@ -151,12 +151,12 @@ class AdGuardHomeEntity(Entity):
         self.adguard = adguard
 
     @property
-    def name(self) -> str:
+    def name(self) -> str | None:
         """Return the name of the entity."""
         return self._name
 
     @property
-    def icon(self) -> str:
+    def icon(self) -> str | None:
         """Return the mdi icon of the entity."""
         return self._icon
 
