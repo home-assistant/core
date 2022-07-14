@@ -15,7 +15,6 @@ from homeassistant.components.climate.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -78,13 +77,6 @@ async def async_setup_entry(
             if zone["type"] != 0:
                 entities.append(AdvantageAirZone(instance, ac_key, zone_key))
     async_add_entities(entities)
-
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        ADVANTAGE_AIR_SERVICE_SET_MYZONE,
-        {},
-        "set_myzone",
-    )
 
 
 class AdvantageAirClimateEntity(AdvantageAirEntity, ClimateEntity):
@@ -215,13 +207,4 @@ class AdvantageAirZone(AdvantageAirClimateEntity):
         temp = kwargs.get(ATTR_TEMPERATURE)
         await self.async_change(
             {self.ac_key: {"zones": {self.zone_key: {"setTemp": temp}}}}
-        )
-
-    async def set_myzone(self, **kwargs):
-        """Set this zone as the 'MyZone'."""
-        _LOGGER.warning(
-            "The advantage_air.set_myzone service has been deprecated and will be removed in a future version, please use the select.select_option service on the MyZone entity"
-        )
-        await self.async_change(
-            {self.ac_key: {"info": {"myZone": self._zone["number"]}}}
         )
