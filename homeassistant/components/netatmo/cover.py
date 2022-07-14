@@ -55,7 +55,6 @@ class NetatmoCover(NetatmoBase, CoverEntity):
     def __init__(self, netatmo_device: NetatmoDevice) -> None:
         """Initialize the Netatmo device."""
         super().__init__(netatmo_device.data_handler)
-        self.optimistic = True
 
         self._cover = cast(NaModules.Shutter, netatmo_device.device)
 
@@ -81,42 +80,19 @@ class NetatmoCover(NetatmoBase, CoverEntity):
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        self._attr_is_closing = True
+        await self._cover.async_close()
+        self._attr_is_closed = True
         self.async_write_ha_state()
-        try:
-            await self._cover.async_close()
-            if self.optimistic:
-                self._attr_is_closed = True
-        finally:
-            self._attr_is_closing = None
-            self.async_write_ha_state()
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        self._attr_is_opening = True
+        await self._cover.async_open()
+        self._attr_is_closed = False
         self.async_write_ha_state()
-        try:
-            await self._cover.async_open()
-            if self.optimistic:
-                self._attr_is_closed = False
-        finally:
-            self._attr_is_opening = None
-            self.async_write_ha_state()
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         await self._cover.async_stop()
-
-        if self.optimistic:
-            if self._attr_is_closing:
-                self._attr_is_closed = True
-            elif self._attr_is_opening:
-                self._attr_is_closed = False
-
-            self._attr_is_closing = None
-            self._attr_is_opening = None
-
-        self.async_write_ha_state()
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover shutter to a specific position."""
