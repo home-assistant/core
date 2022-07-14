@@ -38,7 +38,6 @@ class RainMachineButtonDescription(
 
 
 BUTTON_KIND_REBOOT = "reboot"
-BUTTON_KIND_RESET_VALVE_DIAGNOSTICS = "reset_valve_diagnostics"
 
 
 async def _async_reboot(controller: Controller) -> None:
