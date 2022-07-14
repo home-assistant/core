@@ -53,7 +53,7 @@ async def test_adam_climate_binary_sensor_change(
     hass: HomeAssistant, mock_smile_adam: MagicMock, init_integration: MockConfigEntry
 ) -> None:
     """Test change of climate related binary_sensor entities."""
-    state = hass.states.get("binary_sensor.smile_adam_plugwise_notification")
+    state = hass.states.get("binary_sensor.adam_plugwise_notification")
     assert state
     assert state.state == STATE_ON
     assert "warning_msg" in state.attributes
