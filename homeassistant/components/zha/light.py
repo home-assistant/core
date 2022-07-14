@@ -139,7 +139,7 @@ class BaseLight(LogMixin, light.LightEntity):
         self._level_channel = None
         self._color_channel = None
         self._identify_channel = None
-        self._default_transition = self._DEFAULT_MIN_TRANSITION_TIME
+        self._zha_config_transition = self._DEFAULT_MIN_TRANSITION_TIME
         self._attr_color_mode = ColorMode.UNKNOWN  # Set by sub classes
 
     @property
@@ -214,7 +214,9 @@ class BaseLight(LogMixin, light.LightEntity):
         """Turn the entity on."""
         transition = kwargs.get(light.ATTR_TRANSITION)
         duration = (
-            transition * 10 if transition is not None else self._default_transition * 10
+            transition * 10
+            if transition is not None
+            else self._zha_config_transition * 10
         ) or self._DEFAULT_MIN_TRANSITION_TIME  # if 0 is passed in some devices still need the minimum default
         brightness = kwargs.get(light.ATTR_BRIGHTNESS)
         effect = kwargs.get(light.ATTR_EFFECT)
@@ -462,7 +464,7 @@ class Light(BaseLight, ZhaEntity):
         if effect_list:
             self._effect_list = effect_list
 
-        self._default_transition = async_get_zha_config_value(
+        self._zha_config_transition = async_get_zha_config_value(
             zha_device.gateway.config_entry,
             ZHA_OPTIONS,
             CONF_DEFAULT_LIGHT_TRANSITION,
@@ -641,7 +643,7 @@ class LightGroup(BaseLight, ZhaGroupEntity):
         self._color_channel = group.endpoint[Color.cluster_id]
         self._identify_channel = group.endpoint[Identify.cluster_id]
         self._debounced_member_refresh = None
-        self._default_transition = async_get_zha_config_value(
+        self._zha_config_transition = async_get_zha_config_value(
             zha_device.gateway.config_entry,
             ZHA_OPTIONS,
             CONF_DEFAULT_LIGHT_TRANSITION,
