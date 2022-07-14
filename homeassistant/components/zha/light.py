@@ -491,7 +491,7 @@ class Light(BaseLight, ZhaEntity):
             zha_device.gateway.config_entry,
             ZHA_OPTIONS,
             CONF_ENABLE_ENHANCED_LIGHT_TRANSITION,
-            True,
+            False,
         )
 
     @callback
@@ -706,7 +706,7 @@ class LightGroup(BaseLight, ZhaGroupEntity):
             zha_device.gateway.config_entry,
             ZHA_OPTIONS,
             CONF_ENABLE_ENHANCED_LIGHT_TRANSITION,
-            True,
+            False,
         )
         self._attr_color_mode = None
 

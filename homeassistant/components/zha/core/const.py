@@ -144,7 +144,7 @@ CONF_DEFAULT_CONSIDER_UNAVAILABLE_BATTERY = 60 * 60 * 6  # 6 hours
 CONF_ZHA_OPTIONS_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_DEFAULT_LIGHT_TRANSITION): cv.positive_int,
-        vol.Required(CONF_ENABLE_ENHANCED_LIGHT_TRANSITION, default=True): cv.boolean,
+        vol.Required(CONF_ENABLE_ENHANCED_LIGHT_TRANSITION, default=False): cv.boolean,
         vol.Required(CONF_ENABLE_IDENTIFY_ON_JOIN, default=True): cv.boolean,
         vol.Optional(
             CONF_CONSIDER_UNAVAILABLE_MAINS,
