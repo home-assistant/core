@@ -15,7 +15,7 @@ from .typing import UNDEFINED, DiscoveryInfoType, UndefinedType
 if TYPE_CHECKING:
     import asyncio
 
-    from homeassistant.components.bluetooh import BluetoothServiceInfo
+    from homeassistant.components.bluetooth import BluetoothServiceInfo
     from homeassistant.components.dhcp import DhcpServiceInfo
     from homeassistant.components.ssdp import SsdpServiceInfo
     from homeassistant.components.zeroconf import ZeroconfServiceInfo
