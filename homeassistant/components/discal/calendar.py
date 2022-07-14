@@ -15,7 +15,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 
-SCAN_INTERVAL = datetime.timedelta(seconds=5)
+PARALLEL_UPDATES = 2
+SCAN_INTERVAL = datetime.timedelta(seconds=30)
 
 _LOGGER = logging.getLogger(__name__)
 
