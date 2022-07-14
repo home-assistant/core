@@ -96,7 +96,9 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow, Generic[_R]):
 
         return await self.async_step_confirm()
 
-    async def async_step_bluetooth(self, discovery_info: BluetoothServiceInfo) -> FlowResult:
+    async def async_step_bluetooth(
+        self, discovery_info: BluetoothServiceInfo
+    ) -> FlowResult:
         """Handle a flow initialized by bluetooth discovery."""
         if self._async_in_progress() or self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
