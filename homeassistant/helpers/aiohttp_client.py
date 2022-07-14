@@ -7,12 +7,11 @@ from contextlib import suppress
 from ssl import SSLContext
 import sys
 from types import MappingProxyType
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import aiohttp
 from aiohttp import web
 from aiohttp.hdrs import CONTENT_TYPE, USER_AGENT
-from aiohttp.typedefs import JSONDecoder
 from aiohttp.web_exceptions import HTTPBadGateway, HTTPGatewayTimeout
 import async_timeout
 
@@ -24,6 +23,10 @@ from homeassistant.util import ssl as ssl_util
 
 from .frame import warn_use
 from .json import json_dumps, json_loads
+
+if TYPE_CHECKING:
+    from aiohttp.typedefs import JSONDecoder
+
 
 DATA_CONNECTOR = "aiohttp_connector"
 DATA_CONNECTOR_NOTVERIFY = "aiohttp_connector_notverify"
