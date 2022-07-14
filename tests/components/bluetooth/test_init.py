@@ -259,7 +259,6 @@ async def test_register_callbacks(hass, mock_bleak_scanner_start):
     def _fake_subscriber(
         service_info: BluetoothServiceInfo,
         change: BluetoothChange,
-        source: str,
     ) -> None:
         """Fake subscriber for the BleakScanner."""
         callbacks.append((service_info, change))
@@ -339,7 +338,7 @@ async def test_register_callback_by_address(hass, mock_bleak_scanner_start):
     callbacks = []
 
     def _fake_subscriber(
-        service_info: BluetoothServiceInfo, change: BluetoothChange, source: str
+        service_info: BluetoothServiceInfo, change: BluetoothChange
     ) -> None:
         """Fake subscriber for the BleakScanner."""
         callbacks.append((service_info, change))
