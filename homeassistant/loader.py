@@ -750,7 +750,7 @@ async def async_get_integrations(
             if domain in needed:
                 del needed[domain]
 
-    # No the rest use resolve_from_root
+    # Now the rest use resolve_from_root
     if needed:
         from . import components  # pylint: disable=import-outside-toplevel
 
