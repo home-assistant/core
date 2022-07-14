@@ -138,3 +138,68 @@ async def test_import(hass: HomeAssistant) -> None:
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "Pushover"
     assert result["data"] == MOCK_CONFIG
+
+
+async def test_reauth_success(hass: HomeAssistant) -> None:
+    """Test we can reauth."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": entry.entry_id,
+        },
+        data=MOCK_CONFIG,
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "reauth_confirm"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_API_KEY: "NEWAPIKEY",
+        },
+    )
+
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "reauth_successful"
+
+
+async def test_reauth_failed(hass: HomeAssistant, mock_pushover: MagicMock) -> None:
+    """Test we can reauth."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": entry.entry_id,
+        },
+        data=MOCK_CONFIG,
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "reauth_confirm"
+
+    mock_pushover.side_effect = BadAPIRequestError("400: application token is invalid")
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_API_KEY: "WRONGAPIKEY",
+        },
+    )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {
+        CONF_API_KEY: "invalid_api_key",
+    }
