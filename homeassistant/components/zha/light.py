@@ -296,7 +296,10 @@ class BaseLight(LogMixin, light.LightEntity):
         if light.ATTR_COLOR_TEMP in kwargs:
             temperature = kwargs[light.ATTR_COLOR_TEMP]
             result = await self._color_channel.move_to_color_temp(
-                temperature, 0 if color_provided_while_off else duration
+                temperature,
+                0 or self._DEFAULT_TRANSITION_TIME
+                if color_provided_while_off
+                else duration,
             )
             t_log["move_to_color_temp"] = result
             if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
@@ -312,7 +315,9 @@ class BaseLight(LogMixin, light.LightEntity):
             result = await self._color_channel.move_to_color(
                 int(xy_color[0] * 65535),
                 int(xy_color[1] * 65535),
-                0 if color_provided_while_off else duration,
+                0 or self._DEFAULT_TRANSITION_TIME
+                if color_provided_while_off
+                else duration,
             )
             t_log["move_to_color"] = result
             if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
