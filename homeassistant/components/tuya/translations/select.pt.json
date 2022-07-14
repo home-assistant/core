@@ -3,6 +3,9 @@
         "tuya__basic_nightvision": {
             "1": "Desligado"
         },
+        "tuya__countdown": {
+            "cancel": "Cancelar"
+        },
         "tuya__light_mode": {
             "none": "Desligado"
         },
@@ -16,7 +19,8 @@
         },
         "tuya__vacuum_mode": {
             "pick_zone": "Escolha a Zona",
-            "right_spiral": "Espiral Direita"
+            "right_spiral": "Espiral Direita",
+            "spiral": "Espiral"
         }
     }
 }

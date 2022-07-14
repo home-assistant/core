@@ -90,7 +90,8 @@
         }
     },
     "device_class": {
-        "moisture": "humidade"
+        "moisture": "humidade",
+        "problem": "problema"
     },
     "state": {
         "_": {

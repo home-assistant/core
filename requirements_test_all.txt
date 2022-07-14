@@ -311,7 +311,7 @@ base36==0.1.1
 beautifulsoup4==4.11.1
 
 # homeassistant.components.zha
-bellows==0.31.0
+bellows==0.31.1
 
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.9.6
@@ -1337,7 +1337,7 @@ pytrafikverket==0.2.0.1
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.0.9
+pyunifiprotect==4.0.10
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -1434,7 +1434,7 @@ securetar==2022.2.0
 sense_energy==0.10.4
 
 # homeassistant.components.sentry
-sentry-sdk==1.7.0
+sentry-sdk==1.7.1
 
 # homeassistant.components.sharkiq
 sharkiq==0.0.1
@@ -1570,7 +1570,7 @@ twitchAPI==2.5.2
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-unifi-discovery==1.1.4
+unifi-discovery==1.1.5
 
 # homeassistant.components.upb
 upb_lib==0.4.12
@@ -1683,7 +1683,7 @@ zigpy-xbee==0.15.0
 zigpy-zigate==0.9.0
 
 # homeassistant.components.zha
-zigpy-znp==0.8.0
+zigpy-znp==0.8.1
 
 # homeassistant.components.zha
 zigpy==0.47.2

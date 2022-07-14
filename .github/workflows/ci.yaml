@@ -20,8 +20,8 @@ on:
         type: boolean
 
 env:
-  CACHE_VERSION: 0
-  PIP_CACHE_VERSION: 0
+  CACHE_VERSION: 1
+  PIP_CACHE_VERSION: 1
   HA_SHORT_VERSION: 2022.8
   DEFAULT_PYTHON: 3.9
   PRE_COMMIT_CACHE: ~/.cache/pre-commit
