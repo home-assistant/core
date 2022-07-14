@@ -15,7 +15,8 @@
             "profile": {
                 "data": {
                     "profile": "Perfil"
-                }
+                },
+                "description": "Fornecer um nome de perfil \u00fanico para estes dados. Normalmente, este \u00e9 o nome do perfil que seleccionou na etapa anterior."
             },
             "reauth": {
                 "title": "Re-autenticar Perfil"
