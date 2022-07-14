@@ -2,6 +2,10 @@
 from __future__ import annotations
 
 from collections.abc import Generator
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from io import BytesIO
 
 
 def find_box(
@@ -135,3 +139,11 @@ def get_codec_string(mp4_bytes: bytes) -> str:
         codecs.append(codec)
 
     return ",".join(codecs)
+
+
+def read_init(bytes_io: BytesIO) -> bytes:
+    """Read the init from a mp4 file."""
+    bytes_io.seek(24)
+    moov_len = int.from_bytes(bytes_io.read(4), byteorder="big")
+    bytes_io.seek(0)
+    return bytes_io.read(24 + moov_len)

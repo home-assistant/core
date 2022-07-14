@@ -5,7 +5,7 @@
 AEMET-OpenData==0.2.1
 
 # homeassistant.components.aladdin_connect
-AIOAladdinConnect==0.1.23
+AIOAladdinConnect==0.1.24
 
 # homeassistant.components.adax
 Adax-local==0.1.4
@@ -150,7 +150,7 @@ aioeagle==1.1.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==10.10.0
+aioesphomeapi==10.11.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -2456,7 +2456,7 @@ wirelesstagpy==0.8.1
 withings-api==2.4.0
 
 # homeassistant.components.wled
-wled==0.13.2
+wled==0.14.1
 
 # homeassistant.components.wolflink
 wolf_smartset==0.1.11
@@ -2530,7 +2530,7 @@ zigpy-zigate==0.9.0
 zigpy-znp==0.8.1
 
 # homeassistant.components.zha
-zigpy==0.47.2
+zigpy==0.47.3
 
 # homeassistant.components.zoneminder
 zm-py==0.5.2
