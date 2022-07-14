@@ -4,9 +4,8 @@ from typing import Any
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON, Platform
+from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -36,23 +35,6 @@ async def async_setup_entry(
 
     tm_client = hass.data[DOMAIN][config_entry.entry_id]
     name = config_entry.data[CONF_NAME]
-
-    ent_reg = entity_registry.async_get(hass)
-    for entity_description in ENTITY_DESCRIPTIONS:
-        titlecase_name = (
-            entity_description.name.title()
-            if entity_description.name is not None
-            else None
-        )
-        old_unique_id = f"{tm_client.api.host}-{name} {titlecase_name}"
-
-        if entity_id := ent_reg.async_get_entity_id(
-            Platform.SWITCH, DOMAIN, old_unique_id
-        ):
-            ent_reg.async_update_entity(
-                entity_id,
-                new_unique_id=f"{config_entry.entry_id}-{entity_description.key}",
-            )
 
     dev = [
         TransmissionSwitch(entity_description, tm_client, name)

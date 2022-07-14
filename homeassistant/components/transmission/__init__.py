@@ -4,6 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 from functools import partial
 import logging
+import re
 from typing import Any
 
 import transmission_rpc
@@ -20,13 +21,13 @@ from homeassistant.const import (
     CONF_USERNAME,
     Platform,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
     HomeAssistantError,
 )
-from homeassistant.helpers import config_validation as cv, selector
+from homeassistant.helpers import config_validation as cv, entity_registry, selector
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
@@ -94,6 +95,7 @@ PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up the Transmission Component."""
+
     client = TransmissionClient(hass, config_entry)
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = client
 
@@ -194,6 +196,45 @@ class TransmissionClient:
             raise ConfigEntryAuthFailed from error
 
         self._tm_data = TransmissionData(self.hass, self.config_entry, self.tm_api)
+
+        @callback
+        def update_unique_id(
+            entity_entry: entity_registry.RegistryEntry,
+        ) -> dict[str, Any] | None:
+            """Update unique ID of entity entry."""
+
+            name_to_key = {
+                # Sensors
+                "Down Speed": "download",
+                "Up Speed": "upload",
+                "Status": "status",
+                "Active Torrents": "active_torrents",
+                "Paused Torrents": "paused_torrents",
+                "Total Torrents": "total_torrents",
+                "Completed Torrents": "completed_torrents",
+                "Started Torrents": "started_torrents",
+                # Switches
+                "Switch": "on_off",
+                "Turtle Mode": "turtle_mode",
+            }
+
+            match = re.search(
+                f"{self.api.host}-{self.config_entry.data[CONF_NAME]} (?P<name>.*)",
+                entity_entry.unique_id,
+            )
+
+            if match is None:
+                return None
+
+            if (name := match.group("name")) in name_to_key:
+                return {
+                    "new_unique_id": f"{self.config_entry.entry_id}-{name_to_key[name]}"
+                }
+            return None
+
+        await entity_registry.async_migrate_entries(
+            self.hass, self.config_entry.entry_id, update_unique_id
+        )
 
         await self.hass.async_add_executor_job(self._tm_data.init_torrent_list)
         await self.hass.async_add_executor_job(self._tm_data.update)
