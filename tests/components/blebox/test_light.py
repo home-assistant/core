@@ -568,7 +568,5 @@ async def test_wlightbox_on_effect(wlightbox, hass, config):
         blocking=True,
     )
 
-    feature_mock.async_on = AsyncMock(side_effect=turn_on)
-
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_EFFECT] == "POLICE"
