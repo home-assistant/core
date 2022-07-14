@@ -182,10 +182,11 @@ class HKDevice:
         # This is similar to iOS's behavior for keeping alive connections
         # to cameras.
         #
-        primary = self.entity_map.aid(1)
+        primary = self.entity_map.accessories[0]
+        aid = primary.aid
         iid = primary.accessory_information[CharacteristicsTypes.SERIAL_NUMBER].iid
         try:
-            await self.pairing.get_characteristics([(1, iid)])
+            await self.pairing.get_characteristics([(aid, iid)])
         except (AccessoryDisconnectedError, EncryptionError, AccessoryNotFoundError):
             return False
         self.async_set_available_state(True)

@@ -3,7 +3,7 @@
 from datetime import timedelta
 from unittest.mock import patch
 
-from aiohomekit import exceptions
+from aiohomekit import AccessoryDisconnectedError, exceptions
 from aiohomekit.model import Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
@@ -110,6 +110,9 @@ async def test_offline_device_raises(hass):
         def is_connected(self):
             nonlocal is_connected
             return is_connected
+
+        def get_characteristics(self, chars, *args, **kwargs):
+            raise AccessoryDisconnectedError("any")
 
     class OfflineFakeDiscovery(FakeDiscovery):
         """Fake discovery that returns an offline pairing."""
