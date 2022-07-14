@@ -463,7 +463,7 @@ async def async_test_level_on_off_from_hass(
         4,
         level_cluster.commands_by_name["move_to_level_with_on_off"].schema,
         10,
-        1,
+        0,
         expect_reply=True,
         manufacturer=None,
         tries=1,

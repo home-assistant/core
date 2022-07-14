@@ -73,7 +73,6 @@ CAPABILITIES_COLOR_LOOP = 0x4
 CAPABILITIES_COLOR_XY = 0x08
 CAPABILITIES_COLOR_TEMP = 0x10
 
-DEFAULT_TRANSITION = 1
 DEFAULT_MIN_BRIGHTNESS = 2
 
 UPDATE_COLORLOOP_ACTION = 0x1
@@ -119,7 +118,7 @@ class BaseLight(LogMixin, light.LightEntity):
     """Operations common to all light entities."""
 
     _FORCE_ON = False
-    _DEFAULT_COLOR_FROM_OFF_TRANSITION = 0
+    _DEFAULT_COLOR_TRANSITION = 0
 
     def __init__(self, *args, **kwargs):
         """Initialize the light."""
@@ -216,10 +215,10 @@ class BaseLight(LogMixin, light.LightEntity):
         transition = kwargs.get(light.ATTR_TRANSITION)
         duration = (
             transition * 10
-            if transition
+            if transition is not None
             else self._default_transition * 10
-            if self._default_transition
-            else DEFAULT_TRANSITION
+            if self._default_transition is not None
+            else 0
         )
         brightness = kwargs.get(light.ATTR_BRIGHTNESS)
         effect = kwargs.get(light.ATTR_EFFECT)
@@ -235,10 +234,6 @@ class BaseLight(LogMixin, light.LightEntity):
             and brightness_supported(self._attr_supported_color_modes)
             and (light.ATTR_COLOR_TEMP in kwargs or light.ATTR_HS_COLOR in kwargs)
         )
-        final_duration = duration
-        if color_provided_while_off:
-            # Set the duration for the color changing commands to 0.
-            duration = 0
 
         if (
             brightness is None
@@ -258,7 +253,7 @@ class BaseLight(LogMixin, light.LightEntity):
             # If the light is currently off, we first need to turn it on at a low brightness level with no transition.
             # After that, we set it to the desired color/temperature with no transition.
             result = await self._level_channel.move_to_level_with_on_off(
-                DEFAULT_MIN_BRIGHTNESS, self._DEFAULT_COLOR_FROM_OFF_TRANSITION
+                DEFAULT_MIN_BRIGHTNESS, 0
             )
             t_log["move_to_level_with_on_off"] = result
             if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
@@ -299,7 +294,9 @@ class BaseLight(LogMixin, light.LightEntity):
 
         if light.ATTR_COLOR_TEMP in kwargs:
             temperature = kwargs[light.ATTR_COLOR_TEMP]
-            result = await self._color_channel.move_to_color_temp(temperature, duration)
+            result = await self._color_channel.move_to_color_temp(
+                temperature, duration or self._DEFAULT_COLOR_TRANSITION
+            )
             t_log["move_to_color_temp"] = result
             if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
                 self.debug("turned on: %s", t_log)
@@ -312,7 +309,9 @@ class BaseLight(LogMixin, light.LightEntity):
             hs_color = kwargs[light.ATTR_HS_COLOR]
             xy_color = color_util.color_hs_to_xy(*hs_color)
             result = await self._color_channel.move_to_color(
-                int(xy_color[0] * 65535), int(xy_color[1] * 65535), duration
+                int(xy_color[0] * 65535),
+                int(xy_color[1] * 65535),
+                duration or self._DEFAULT_COLOR_TRANSITION,
             )
             t_log["move_to_color"] = result
             if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
@@ -324,7 +323,7 @@ class BaseLight(LogMixin, light.LightEntity):
 
         if color_provided_while_off:
             # The light is has the correct color, so we can now transition it to the correct brightness level.
-            result = await self._level_channel.move_to_level(level, final_duration)
+            result = await self._level_channel.move_to_level(level, duration)
             t_log["move_to_level_if_color"] = result
             if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
                 self.debug("turned on: %s", t_log)
@@ -621,7 +620,7 @@ class ForceOnLight(Light):
 class SengledLight(Light):
     """Representation of a Sengled light which does not react to move_to_color_temp with 0 as a transition."""
 
-    _DEFAULT_COLOR_FROM_OFF_TRANSITION = 1
+    _DEFAULT_COLOR_TRANSITION = 1
 
 
 @GROUP_MATCH()
