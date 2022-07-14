@@ -230,19 +230,19 @@ class BaseLight(LogMixin, light.LightEntity):
         # to the correct color. Afterwards, the transition is only from the low brightness to the new brightness.
         # Otherwise, the transition is from the color the light had before being turned on to the new color.
         # This can look especially bad with transitions longer than a second.
-        color_provided_from_off = (
+        color_provided_while_off = (
             not self._state
             and brightness_supported(self._attr_supported_color_modes)
             and (light.ATTR_COLOR_TEMP in kwargs or light.ATTR_HS_COLOR in kwargs)
         )
         final_duration = duration
-        if color_provided_from_off:
+        if color_provided_while_off:
             # Set the duration for the color changing commands to 0.
             duration = 0
 
         if (
             brightness is None
-            and (self._off_with_transition or color_provided_from_off)
+            and (self._off_with_transition or color_provided_while_off)
             and self._off_brightness is not None
         ):
             brightness = self._off_brightness
@@ -254,7 +254,7 @@ class BaseLight(LogMixin, light.LightEntity):
 
         t_log = {}
 
-        if color_provided_from_off:
+        if color_provided_while_off:
             # If the light is currently off, we first need to turn it on at a low brightness level with no transition.
             # After that, we set it to the desired color/temperature with no transition.
             result = await self._level_channel.move_to_level_with_on_off(
@@ -269,7 +269,7 @@ class BaseLight(LogMixin, light.LightEntity):
 
         if (
             (brightness is not None or transition)
-            and not color_provided_from_off
+            and not color_provided_while_off
             and brightness_supported(self._attr_supported_color_modes)
         ):
             result = await self._level_channel.move_to_level_with_on_off(
@@ -285,7 +285,7 @@ class BaseLight(LogMixin, light.LightEntity):
 
         if (
             brightness is None
-            and not color_provided_from_off
+            and not color_provided_while_off
             or (self._FORCE_ON and brightness)
         ):
             # since some lights don't always turn on with move_to_level_with_on_off,
@@ -322,7 +322,7 @@ class BaseLight(LogMixin, light.LightEntity):
             self._hs_color = hs_color
             self._color_temp = None
 
-        if color_provided_from_off:
+        if color_provided_while_off:
             # The light is has the correct color, so we can now transition it to the correct brightness level.
             result = await self._level_channel.move_to_level(level, final_duration)
             t_log["move_to_level_if_color"] = result
