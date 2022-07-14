@@ -20,7 +20,6 @@ from homeassistant.const import (
     CONF_USERNAME,
     SERVICE_RELOAD,
 )
-from homeassistant.core import Event, HassJob, HomeAssistant, ServiceCall, callback
 from homeassistant.core import HassJob, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import TemplateError, Unauthorized
 from homeassistant.helpers import config_validation as cv, event, template
