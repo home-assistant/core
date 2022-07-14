@@ -374,7 +374,8 @@ class BaseLight(LogMixin, light.LightEntity):
         transition = kwargs.get(light.ATTR_TRANSITION)
         supports_level = brightness_supported(self._attr_supported_color_modes)
 
-        if transition and supports_level:
+        # is not none looks odd here but it will override built in bulb transition times if we pass 0 in here
+        if transition is not None and supports_level:
             result = await self._level_channel.move_to_level_with_on_off(
                 0, transition * 10
             )
