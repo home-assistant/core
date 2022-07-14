@@ -200,7 +200,7 @@ class NumberEntity(Entity):
     _attr_native_max_value: float
     _attr_native_min_value: float
     _attr_native_step: float
-    _attr_native_value: float
+    _attr_native_value: float | None = None
     _attr_native_unit_of_measurement: str | None
     _deprecated_number_entity_reported = False
     _number_option_unit_of_measurement: str | None = None
