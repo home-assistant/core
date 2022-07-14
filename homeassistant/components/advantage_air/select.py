@@ -4,12 +4,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ADVANTAGE_AIR_MYTEMP_ENABLE, DOMAIN as ADVANTAGE_AIR_DOMAIN
+from .const import DOMAIN as ADVANTAGE_AIR_DOMAIN
 from .entity import AdvantageAirEntity
 
 ADVANTAGE_AIR_INACTIVE = "Inactive"
-# ADVANTAGE_AIR_MYAUTO_ENABLE = "myAutoModeIsRunning"
-# ADVANTAGE_AIR_MYTEMP_ENABLE = "climateControlModeIsRunning"
 
 
 async def async_setup_entry(
@@ -23,11 +21,7 @@ async def async_setup_entry(
 
     entities: list[SelectEntity] = []
     for ac_key in instance["coordinator"].data["aircons"]:
-        if (
-            ADVANTAGE_AIR_MYTEMP_ENABLE
-            in instance["coordinator"].data["aircons"][ac_key]["info"]
-        ):
-            entities.append(AdvantageAirMyZone(instance, ac_key))
+        entities.append(AdvantageAirMyZone(instance, ac_key))
     async_add_entities(entities)
 
 

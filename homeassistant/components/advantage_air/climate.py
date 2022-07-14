@@ -23,8 +23,6 @@ from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    ADVANTAGE_AIR_MYAUTO_ENABLE,
-    ADVANTAGE_AIR_MYTEMP_ENABLE,
     ADVANTAGE_AIR_STATE_CLOSE,
     ADVANTAGE_AIR_STATE_OFF,
     ADVANTAGE_AIR_STATE_ON,
@@ -57,6 +55,8 @@ ADVANTAGE_AIR_MYZONE = "MyZone"
 ADVANTAGE_AIR_HEAT_TARGET = "myAutoHeatTargetTemp"
 ADVANTAGE_AIR_COOL_TARGET = "myAutoCoolTargetTemp"
 ADVANTAGE_AIR_SERVICE_SET_MYZONE = "set_myzone"
+ADVANTAGE_AIR_MYAUTO_ENABLE = "myAutoModeEnabled"
+ADVANTAGE_AIR_MYTEMP_ENABLE = "climateControlModeEnabled"
 
 PARALLEL_UPDATES = 0
 
@@ -121,24 +121,24 @@ class AdvantageAirAC(AdvantageAirEntity, ClimateEntity):
             self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
 
     @property
-    def target_temperature(self) -> Float:
+    def target_temperature(self) -> Float | None:
         """Return the current target temperature."""
         return self._ac["setTemp"]
 
     @property
-    def hvac_mode(self):
+    def hvac_mode(self) -> HVACMode | None:
         """Return the current HVAC modes."""
         if self._ac["state"] == ADVANTAGE_AIR_STATE_ON:
             return ADVANTAGE_AIR_HVAC_MODES.get(self._ac["mode"])
         return HVACMode.OFF
 
     @property
-    def fan_mode(self):
+    def fan_mode(self) -> str | None:
         """Return the current fan modes."""
         return ADVANTAGE_AIR_FAN_MODES.get(self._ac["fan"])
 
     @property
-    def preset_mode(self):
+    def preset_mode(self) -> str:
         """Return the current preset mode."""
         if self._ac.get(ADVANTAGE_AIR_MYAUTO_ENABLE):
             return ADVANTAGE_AIR_MYAUTO
@@ -166,7 +166,7 @@ class AdvantageAirAC(AdvantageAirEntity, ClimateEntity):
         """Return the temperature heat mode is enabled."""
         return self._ac.get(ADVANTAGE_AIR_HEAT_TARGET, 20)
 
-    async def async_set_hvac_mode(self, hvac_mode):
+    async def async_set_hvac_mode(self, hvac_mode) -> None:
         """Set the HVAC Mode and State."""
         if hvac_mode == HVACMode.OFF:
             await self.async_change(
@@ -184,13 +184,13 @@ class AdvantageAirAC(AdvantageAirEntity, ClimateEntity):
                 }
             )
 
-    async def async_set_fan_mode(self, fan_mode):
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set the Fan Mode."""
         await self.async_change(
             {self.ac_key: {"info": {"fan": HASS_FAN_MODES.get(fan_mode)}}}
         )
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs) -> None:
         """Set the Temperature."""
         if ATTR_TEMPERATURE in kwargs:
             await self.async_change(
@@ -232,7 +232,7 @@ class AdvantageAirZone(AdvantageAirEntity, ClimateEntity):
     _attr_max_temp = 32
     _attr_min_temp = 16
 
-    def __init__(self, instance, ac_key, zone_key):
+    def __init__(self, instance, ac_key, zone_key) -> None:
         """Initialize an AdvantageAir Zone control."""
         super().__init__(instance, ac_key, zone_key)
         self._attr_name = self._zone["name"]
@@ -257,16 +257,16 @@ class AdvantageAirZone(AdvantageAirEntity, ClimateEntity):
         """Return the target temperature."""
         return self._zone["setTemp"]
 
-    async def async_set_hvac_mode(self, hvac_mode) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set the HVAC Mode and State."""
         await self.async_change(
             {
                 self.ac_key: {
                     "zones": {
                         self.zone_key: {
-                            "state": (hvac_mode == HVACMode.OFF)[
-                                ADVANTAGE_AIR_STATE_OPEN, ADVANTAGE_AIR_STATE_CLOSE
-                            ]
+                            "state": ADVANTAGE_AIR_STATE_OPEN
+                            if hvac_mode == HVACMode.OFF
+                            else ADVANTAGE_AIR_STATE_CLOSE
                         }
                     }
                 }
