@@ -540,11 +540,11 @@ class EvoDevice(Entity):
             return
         await self.async_tcs_svc_request(payload["service"], payload["data"])
 
-    async def async_tcs_svc_request(self, service: dict, data: dict) -> None:
+    async def async_tcs_svc_request(self, service: str, data: dict[str, Any]) -> None:
         """Process a service request (system mode) for a controller."""
         raise NotImplementedError
 
-    async def async_zone_svc_request(self, service: dict, data: dict) -> None:
+    async def async_zone_svc_request(self, service: str, data: dict[str, Any]) -> None:
         """Process a service request (setpoint override) for a zone."""
         raise NotImplementedError
 

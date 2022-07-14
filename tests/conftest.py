@@ -22,6 +22,7 @@ from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
 from homeassistant.auth.models import Credentials
 from homeassistant.auth.providers import homeassistant, legacy_api_password
 from homeassistant.components import mqtt, recorder
+from homeassistant.components.network.models import Adapter, IPv4ConfiguredAddress
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
     TYPE_AUTH_OK,
@@ -643,6 +644,25 @@ async def mqtt_mock_entry_with_yaml_config(hass, mqtt_client_mock, mqtt_config):
 
     async with _mqtt_mock_entry(hass, mqtt_client_mock, mqtt_config) as mqtt_mock_entry:
         yield _setup_mqtt_entry
+
+
+@pytest.fixture(autouse=True)
+def mock_network():
+    """Mock network."""
+    mock_adapter = Adapter(
+        name="eth0",
+        index=0,
+        enabled=True,
+        auto=True,
+        default=True,
+        ipv4=[IPv4ConfiguredAddress(address="10.10.10.10", network_prefix=24)],
+        ipv6=[],
+    )
+    with patch(
+        "homeassistant.components.network.network.async_load_adapters",
+        return_value=[mock_adapter],
+    ):
+        yield
 
 
 @pytest.fixture(autouse=True)
