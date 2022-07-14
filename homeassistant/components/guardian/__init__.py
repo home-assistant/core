@@ -455,20 +455,6 @@ class GuardianEntity(CoordinatorEntity[GuardianDataUpdateCoordinator]):
         self.async_write_ha_state()
 
     @callback
-    def _async_reboot_completed(self) -> None:
-        """Respond to a completed controller reboot."""
-        self._attr_available = True
-        self._rebooting = False
-        self.async_write_ha_state()
-
-    @callback
-    def _async_reboot_requested(self) -> None:
-        """Respond to a requested controller reboot."""
-        self._attr_available = False
-        self._rebooting = True
-        self.async_write_ha_state()
-
-    @callback
     def _async_update_from_latest_data(self) -> None:
         """Update the entity's underlying data.
 
@@ -486,9 +472,22 @@ class GuardianEntity(CoordinatorEntity[GuardianDataUpdateCoordinator]):
         self._async_update_from_latest_data()
         self.async_write_ha_state()
 
+        @callback
+        def async_reboot_completed() -> None:
+            """Respond to a completed controller reboot."""
+            self._attr_available = True
+            self._rebooting = False
+
+        @callback
+        def async_reboot_requested() -> None:
+            """Respond to a requested controller reboot."""
+            self._attr_available = False
+            self._rebooting = True
+            self.async_write_ha_state()
+
         for signal, func in (
-            (self._signal_reboot_completed, self._async_reboot_completed),
-            (self._signal_reboot_requested, self._async_reboot_requested),
+            (self._signal_reboot_completed, async_reboot_completed),
+            (self._signal_reboot_requested, async_reboot_requested),
         ):
             self.async_on_remove(async_dispatcher_connect(self.hass, signal, func))
 
