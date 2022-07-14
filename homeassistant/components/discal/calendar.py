@@ -30,7 +30,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             DiscordCalendar(
-                await hass.data[DOMAIN][entry.entry_id].fetch_guild(guild_id)
+                hass, await hass.data[DOMAIN][entry.entry_id].fetch_guild(guild_id)
             )
             for guild_id in entry.data["guild_ids"]
         ],
@@ -42,12 +42,14 @@ async def async_setup_entry(
 class DiscordCalendar(CalendarEntity):
     """A :py:class:`CalendarEntity` subclass that grabs events from discord."""
 
-    def __init__(self, guild: nextcord.Guild) -> None:
+    def __init__(self, hass: HomeAssistant, guild: nextcord.Guild) -> None:
         """Initialize attributes for :py:class:`DiscordCalendar`."""
         _LOGGER.debug("Initialized calendar for %r", guild)
         self.events: list[CalendarEvent] = []
         self.guild = guild
         self.entity_id = f"calendar.discal_{guild.id}"
+        self._attr_available = True
+        self.hass = hass
 
     @property
     def discord_client(self) -> nextcord.Client:
@@ -105,16 +107,28 @@ class DiscordCalendar(CalendarEntity):
         """Do the I/O to fetch guild events from the Discord API and stores the locally."""
         _LOGGER.debug("Grabbing events from Discord")
         self.events = []
-        async for scheduled_event in await self.guild.fetch_scheduled_events():
-            event = CalendarEvent(
-                summary=scheduled_event.name,
-                description=scheduled_event.description,
-                location=scheduled_event.location or str(scheduled_event.channel),
-                start=scheduled_event.start_time,
-                end=scheduled_event.end_time
-                or scheduled_event.start_time + datetime.timedelta(hours=1),
+        try:
+            async for scheduled_event in await self.guild.fetch_scheduled_events():
+                event = CalendarEvent(
+                    summary=scheduled_event.name,
+                    description=scheduled_event.description,
+                    location=scheduled_event.location or str(scheduled_event.channel),
+                    start=scheduled_event.start_time,
+                    end=scheduled_event.end_time
+                    or scheduled_event.start_time + datetime.timedelta(hours=1),
+                )
+                _LOGGER.debug("Initialized an event: %r", event)
+                if event not in self.events:
+                    self.events.append(event)
+            _LOGGER.debug("Grabbed events from Discord successfully")
+        except nextcord.HTTPException:
+            self._attr_available = False
+            await self.hass.services.async_call(
+                "notify",
+                "persistent_notification",
+                {
+                    "message": "Current Discord API token is no longer valid.",
+                    "title": "Discord Calendar: API Token Error",
+                    "target": "",
+                },
             )
-            _LOGGER.debug("Initialized an event: %r", event)
-            if event not in self.events:
-                self.events.append(event)
-        _LOGGER.debug("Grabbed events from Discord")

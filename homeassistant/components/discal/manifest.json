@@ -7,7 +7,7 @@
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},
-  "dependencies": ["discord"],
+  "dependencies": ["discord", "persistent_notification"],
   "codeowners": ["@GrandMoff100"],
   "iot_class": "cloud_polling"
 }
