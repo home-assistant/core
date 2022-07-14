@@ -1,0 +1,12 @@
+{
+  "domain": "mhtzn",
+  "name": "棉花糖智能",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/mqtt",
+  "requirements": ["paho-mqtt==1.6.1"],
+  "dependencies": ["http"],
+  "zeroconf": ["_mqtt._tcp.local."],
+  "codeowners": ["@emontnemery"],
+  "iot_class": "local_push",
+  "version": "0.1.0"
+}
