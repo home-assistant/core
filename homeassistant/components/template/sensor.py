@@ -211,7 +211,7 @@ class SensorTemplate(TemplateSensor):
                 ENTITY_ID_FORMAT, object_id, hass=hass
             )
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.add_template_attribute(
             "_attr_native_value", self._template, None, self._update_state

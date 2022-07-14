@@ -264,3 +264,20 @@ class AqaraApproachDistance(ZCLEnumSelectEntity, id_suffix="approach_distance"):
 
     _select_attr = "approach_distance"
     _enum = AqaraApproachDistances
+
+
+class AqaraE1ReverseDirection(types.enum8):
+    """Aqara curtain reversal."""
+
+    Normal = 0x00
+    Inverted = 0x01
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="window_covering", models={"lumi.curtain.agl001"}
+)
+class AqaraCurtainMode(ZCLEnumSelectEntity, id_suffix="window_covering_mode"):
+    """Representation of a ZHA curtain mode configuration entity."""
+
+    _select_attr = "window_covering_mode"
+    _enum = AqaraE1ReverseDirection

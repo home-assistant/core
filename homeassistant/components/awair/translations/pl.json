@@ -17,6 +17,13 @@
                 },
                 "description": "Wprowad\u017a ponownie token dost\u0119pu programisty Awair."
             },
+            "reauth_confirm": {
+                "data": {
+                    "access_token": "Token dost\u0119pu",
+                    "email": "Adres e-mail"
+                },
+                "description": "Wprowad\u017a ponownie token dost\u0119pu programisty Awair."
+            },
             "user": {
                 "data": {
                     "access_token": "Token dost\u0119pu",

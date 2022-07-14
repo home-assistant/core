@@ -68,7 +68,9 @@ class RoonServer:
         )
 
         # initialize media_player platform
-        hass.config_entries.async_setup_platforms(self.config_entry, PLATFORMS)
+        await hass.config_entries.async_forward_entry_setups(
+            self.config_entry, PLATFORMS
+        )
 
         # Initialize Roon background polling
         asyncio.create_task(self.async_do_loop())

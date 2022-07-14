@@ -113,12 +113,11 @@ async def test_select(hass, siren):
     entity_registry = er.async_get(hass)
     zha_device, cluster = siren
     assert cluster is not None
-    select_name = security.IasWd.Warning.WarningMode.__name__
     entity_id = await find_entity_id(
         Platform.SELECT,
         zha_device,
         hass,
-        qualifier=select_name.lower(),
+        qualifier="tone",
     )
     assert entity_id is not None
 
@@ -163,7 +162,7 @@ async def test_select_restore_state(
 ):
     """Test zha select entity restore state."""
 
-    entity_id = "select.fakemanufacturer_fakemodel_e769900a_ias_wd_warningmode"
+    entity_id = "select.fakemanufacturer_fakemodel_defaulttoneselect"
     core_rs(entity_id, state="Burglar")
 
     zigpy_device = zigpy_device_mock(
@@ -180,12 +179,11 @@ async def test_select_restore_state(
     zha_device = await zha_device_restored(zigpy_device)
     cluster = zigpy_device.endpoints[1].ias_wd
     assert cluster is not None
-    select_name = security.IasWd.Warning.WarningMode.__name__
     entity_id = await find_entity_id(
         Platform.SELECT,
         zha_device,
         hass,
-        qualifier=select_name.lower(),
+        qualifier="tone",
     )
 
     assert entity_id is not None

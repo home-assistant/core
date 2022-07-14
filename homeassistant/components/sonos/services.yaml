@@ -1,32 +1,3 @@
-join:
-  name: Join group
-  description: Group player together.
-  fields:
-    master:
-      name: Master
-      description: Entity ID of the player that should become the coordinator of the group.
-      required: true
-      selector:
-        entity:
-          integration: sonos
-          domain: media_player
-    entity_id:
-      name: Entity
-      description: Name of entity that will join the master.
-      required: true
-      selector:
-        entity:
-          integration: sonos
-          domain: media_player
-
-unjoin:
-  name: Unjoin group
-  description: Unjoin the player from a group.
-  target:
-    entity:
-      integration: sonos
-      domain: media_player
-
 snapshot:
   name: Snapshot
   description: Take a snapshot of the media player.

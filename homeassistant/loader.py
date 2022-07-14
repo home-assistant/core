@@ -24,6 +24,7 @@ from awesomeversion import (
 )
 
 from .generated.application_credentials import APPLICATION_CREDENTIALS
+from .generated.bluetooth import BLUETOOTH
 from .generated.dhcp import DHCP
 from .generated.mqtt import MQTT
 from .generated.ssdp import SSDP
@@ -77,6 +78,25 @@ class DHCPMatcher(DHCPMatcherRequired, DHCPMatcherOptional):
     """Matcher for the dhcp integration."""
 
 
+class BluetoothMatcherRequired(TypedDict, total=True):
+    """Matcher for the bluetooth integration for required fields."""
+
+    domain: str
+
+
+class BluetoothMatcherOptional(TypedDict, total=False):
+    """Matcher for the bluetooth integration for optional fields."""
+
+    local_name: str
+    service_uuid: str
+    manufacturer_id: int
+    manufacturer_data_first_byte: int
+
+
+class BluetoothMatcher(BluetoothMatcherRequired, BluetoothMatcherOptional):
+    """Matcher for the bluetooth integration."""
+
+
 class Manifest(TypedDict, total=False):
     """
     Integration manifest.
@@ -97,6 +117,7 @@ class Manifest(TypedDict, total=False):
     issue_tracker: str
     quality_scale: str
     iot_class: str
+    bluetooth: list[dict[str, int | str]]
     mqtt: list[str]
     ssdp: list[dict[str, str]]
     zeroconf: list[str | dict[str, str]]
@@ -267,6 +288,22 @@ async def async_get_zeroconf(
             zeroconf.setdefault(typ, []).append(data)
 
     return zeroconf
+
+
+async def async_get_bluetooth(hass: HomeAssistant) -> list[BluetoothMatcher]:
+    """Return cached list of bluetooth types."""
+    bluetooth = cast(list[BluetoothMatcher], BLUETOOTH.copy())
+
+    integrations = await async_get_custom_components(hass)
+    for integration in integrations.values():
+        if not integration.bluetooth:
+            continue
+        for entry in integration.bluetooth:
+            bluetooth.append(
+                cast(BluetoothMatcher, {"domain": integration.domain, **entry})
+            )
+
+    return bluetooth
 
 
 async def async_get_dhcp(hass: HomeAssistant) -> list[DHCPMatcher]:
@@ -518,6 +555,11 @@ class Integration:
     def zeroconf(self) -> list[str | dict[str, str]] | None:
         """Return Integration zeroconf entries."""
         return self.manifest.get("zeroconf")
+
+    @property
+    def bluetooth(self) -> list[dict[str, str | int]] | None:
+        """Return Integration bluetooth entries."""
+        return self.manifest.get("bluetooth")
 
     @property
     def dhcp(self) -> list[dict[str, str | bool]] | None:

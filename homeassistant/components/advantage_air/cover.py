@@ -52,7 +52,7 @@ class AdvantageAirZoneVent(AdvantageAirEntity, CoverEntity):
     def __init__(self, instance, ac_key, zone_key):
         """Initialize an Advantage Air Cover Class."""
         super().__init__(instance, ac_key, zone_key)
-        self._attr_name = f'{self._zone["name"]}'
+        self._attr_name = self._zone["name"]
         self._attr_unique_id = (
             f'{self.coordinator.data["system"]["rid"]}-{ac_key}-{zone_key}'
         )

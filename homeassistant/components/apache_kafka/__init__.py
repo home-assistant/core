@@ -102,7 +102,6 @@ class KafkaManager:
         self._hass = hass
         ssl_context = ssl_util.client_context()
         self._producer = AIOKafkaProducer(
-            loop=hass.loop,
             bootstrap_servers=f"{ip_address}:{port}",
             compression_type="gzip",
             security_protocol=security_protocol,

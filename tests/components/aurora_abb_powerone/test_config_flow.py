@@ -58,7 +58,7 @@ async def test_form(hass):
             {CONF_PORT: "/dev/ttyUSB7", CONF_ADDRESS: 7},
         )
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
     assert result2["data"] == {
         CONF_PORT: "/dev/ttyUSB7",
