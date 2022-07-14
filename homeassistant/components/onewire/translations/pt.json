@@ -9,7 +9,8 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Servidor"
+                    "host": "Servidor",
+                    "port": "Porta"
                 }
             }
         }

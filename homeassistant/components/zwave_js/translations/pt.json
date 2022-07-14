@@ -12,6 +12,11 @@
             "unknown": "Erro inesperado"
         },
         "step": {
+            "configure_addon": {
+                "data": {
+                    "emulate_hardware": "Emular Hardware"
+                }
+            },
             "manual": {
                 "data": {
                     "url": ""
