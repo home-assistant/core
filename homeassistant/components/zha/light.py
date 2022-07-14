@@ -218,7 +218,7 @@ class BaseLight(LogMixin, light.LightEntity):
             if transition is not None
             else self._default_transition * 10
             if self._default_transition is not None
-            else 0 or self._DEFAULT_TRANSITION_TIME
+            else self._DEFAULT_TRANSITION_TIME
         )
         brightness = kwargs.get(light.ATTR_BRIGHTNESS)
         effect = kwargs.get(light.ATTR_EFFECT)
