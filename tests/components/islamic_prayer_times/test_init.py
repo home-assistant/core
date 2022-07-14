@@ -44,9 +44,6 @@ async def test_successful_config_entry(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         assert entry.state is config_entries.ConfigEntryState.LOADED
-        assert entry.options == {
-            islamic_prayer_times.CONF_CALC_METHOD: islamic_prayer_times.DEFAULT_CALC_METHOD
-        }
 
 
 async def test_setup_failed(hass: HomeAssistant) -> None:

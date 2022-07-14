@@ -1,4 +1,6 @@
 """The islamic_prayer_times component."""
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 import logging
 
@@ -7,7 +9,7 @@ from requests.exceptions import ConnectionError as ConnError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_call_later, async_track_point_in_time
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -38,20 +40,23 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload Islamic Prayer entry from config_entry."""
-    if hass.data[DOMAIN].event_unsub:
-        hass.data[DOMAIN].event_unsub()
-    hass.data.pop(DOMAIN)
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    if unload_ok := await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
+    ):
+        if hass.data[DOMAIN].event_unsub:
+            hass.data[DOMAIN].event_unsub()
+        hass.data.pop(DOMAIN)
+    return unload_ok
 
 
 class IslamicPrayerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, datetime]]):
     """Islamic Prayer Client Object."""
 
-    def __init__(self, hass, config_entry):
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize the Islamic Prayer client."""
         self.hass = hass
-        self.config_entry = config_entry
-        self.event_unsub = None
+        self.config_entry: ConfigEntry = config_entry
+        self.event_unsub: CALLBACK_TYPE | None = None
         super().__init__(
             hass,
             _LOGGER,
@@ -150,6 +155,7 @@ class IslamicPrayerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, datetim
 
 async def async_options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Triggered by config entry options updates."""
-    if hass.data[DOMAIN].event_unsub:
-        hass.data[DOMAIN].event_unsub()
-    await hass.data[DOMAIN].async_update()
+    coordinator: IslamicPrayerDataUpdateCoordinator = hass.data[DOMAIN]
+    if coordinator.event_unsub:
+        coordinator.event_unsub()
+    await coordinator.async_request_refresh()

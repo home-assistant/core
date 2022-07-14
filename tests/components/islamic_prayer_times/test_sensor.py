@@ -4,8 +4,8 @@ from unittest.mock import patch
 from freezegun import freeze_time
 import pytest
 
-from homeassistant.components import islamic_prayer_times
-from homeassistant.core import HomeAssistant
+from homeassistant.components.islamic_prayer_times.const import DOMAIN, SENSOR_TYPES
+from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
 from . import NOW, PRAYER_TIMES, PRAYER_TIMES_TIMESTAMPS
@@ -21,7 +21,7 @@ def set_utc(hass):
 
 async def test_islamic_prayer_times_sensors(hass: HomeAssistant) -> None:
     """Test minimum Islamic prayer times configuration."""
-    entry = MockConfigEntry(domain=islamic_prayer_times.DOMAIN, data={})
+    entry = MockConfigEntry(domain=DOMAIN, data={})
     entry.add_to_hass(hass)
 
     with patch(
@@ -31,10 +31,10 @@ async def test_islamic_prayer_times_sensors(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        for prayer in PRAYER_TIMES:
+        for prayer in SENSOR_TYPES:
             assert (
-                hass.states.get(
-                    f"sensor.{prayer}_{islamic_prayer_times.const.SENSOR_TYPES[prayer]}"
-                ).state
-                == PRAYER_TIMES_TIMESTAMPS[prayer].astimezone(dt_util.UTC).isoformat()
+                hass.states.get(f"sensor.{DOMAIN}_{slugify(prayer.name)}").state
+                == PRAYER_TIMES_TIMESTAMPS[prayer.key]
+                .astimezone(dt_util.UTC)
+                .isoformat()
             )
