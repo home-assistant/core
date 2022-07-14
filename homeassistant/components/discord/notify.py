@@ -110,8 +110,6 @@ class DiscordNotificationService(BaseNotificationService):
                 if image_exists:
                     images.append(image)
 
-        await discord_bot.login(self.token)
-
         try:
             for channelid in kwargs[ATTR_TARGET]:
                 channelid = int(channelid)
@@ -130,4 +128,3 @@ class DiscordNotificationService(BaseNotificationService):
                 await channel.send(message, files=files, embeds=embeds)
         except (nextcord.HTTPException, nextcord.NotFound) as error:
             _LOGGER.warning("Communication error: %s", error)
-        await discord_bot.close()
