@@ -55,7 +55,6 @@ class UpbLight(UpbAttachedEntity, LightEntity):
         """Initialize an UpbLight."""
         super().__init__(element, unique_id, upb)
         self._brightness = self._element.status
-        self._attr_name = None
 
     @property
     def color_mode(self) -> ColorMode:
