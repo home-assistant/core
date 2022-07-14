@@ -113,7 +113,7 @@ async def process_wrong_login(request: Request) -> None:
             gethostbyaddr, request.remote
         )
 
-    base_msg = f"Login attempt or request with invalid authentication from {remote_host} ({remote_addr})."
+    base_msg = f"Login attempt or request with invalid authentication from {remote_host} ({remote_addr}) to '{request.rel_url}'."
 
     # The user-agent is unsanitized input so we only include it in the log
     user_agent = request.headers.get("user-agent")
