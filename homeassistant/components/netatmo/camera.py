@@ -302,7 +302,7 @@ class NetatmoCamera(NetatmoBase, Camera):
         """Service to set light mode."""
         if not isinstance(self._camera, NaModules.netatmo.NOC):
             raise HomeAssistantError(
-                f"{self._model} <{self.name}> does not have a floodlight"
+                f"{self._model} <{self._device_name}> does not have a floodlight"
             )
 
         mode = str(kwargs.get(ATTR_CAMERA_LIGHT_MODE))
