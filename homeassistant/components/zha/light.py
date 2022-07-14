@@ -41,6 +41,7 @@ from .core.const import (
     CHANNEL_LEVEL,
     CHANNEL_ON_OFF,
     CONF_DEFAULT_LIGHT_TRANSITION,
+    CONF_ENABLE_ENHANCED_LIGHT_TRANSITION,
     DATA_ZHA,
     EFFECT_BLINK,
     EFFECT_BREATHE,
@@ -121,6 +122,9 @@ class BaseLight(LogMixin, light.LightEntity):
         self._level_channel = None
         self._color_channel = None
         self._identify_channel = None
+        self._zha_config_transition = self._DEFAULT_MIN_TRANSITION_TIME
+        self._enhanced_light_transition: bool = False
+        self._attr_color_mode = ColorMode.UNKNOWN  # Set by sub classes
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -175,6 +179,7 @@ class BaseLight(LogMixin, light.LightEntity):
         # desired color mode with the desired color or color temperature.
         new_color_provided_while_off = (
             not isinstance(self, LightGroup)
+            and self._enhanced_light_transition
             and not self._FORCE_ON
             and not self._attr_state
             and (
@@ -482,6 +487,12 @@ class Light(BaseLight, ZhaEntity):
             CONF_DEFAULT_LIGHT_TRANSITION,
             0,
         )
+        self._enhanced_light_transition = async_get_zha_config_value(
+            zha_device.gateway.config_entry,
+            ZHA_OPTIONS,
+            CONF_ENABLE_ENHANCED_LIGHT_TRANSITION,
+            True,
+        )
 
     @callback
     def async_set_state(self, attr_id, attr_name, value):
@@ -690,6 +701,12 @@ class LightGroup(BaseLight, ZhaGroupEntity):
             ZHA_OPTIONS,
             CONF_DEFAULT_LIGHT_TRANSITION,
             0,
+        )
+        self._enhanced_light_transition = async_get_zha_config_value(
+            zha_device.gateway.config_entry,
+            ZHA_OPTIONS,
+            CONF_ENABLE_ENHANCED_LIGHT_TRANSITION,
+            True,
         )
         self._attr_color_mode = None
 
