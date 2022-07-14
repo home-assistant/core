@@ -80,25 +80,47 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "domain,old_unique_id,key",
+    "domain,old_unique_id,key,migration_needed",
     [
-        (SENSOR_DOMAIN, "0.0.0.0-Transmission Down Speed", "download"),
-        (SENSOR_DOMAIN, "0.0.0.0-Transmission Up Speed", "upload"),
-        (SENSOR_DOMAIN, "0.0.0.0-Transmission Status", "status"),
-        (SENSOR_DOMAIN, "0.0.0.0-Transmission Active Torrents", "active_torrents"),
-        (SENSOR_DOMAIN, "0.0.0.0-Transmission Paused Torrents", "paused_torrents"),
-        (SENSOR_DOMAIN, "0.0.0.0-Transmission Total Torrents", "total_torrents"),
+        (SENSOR_DOMAIN, "0.0.0.0-Transmission Down Speed", "download", True),
+        (SENSOR_DOMAIN, "0.0.0.0-Transmission Up Speed", "upload", True),
+        (SENSOR_DOMAIN, "0.0.0.0-Transmission Status", "status", True),
+        (
+            SENSOR_DOMAIN,
+            "0.0.0.0-Transmission Active Torrents",
+            "active_torrents",
+            True,
+        ),
+        (
+            SENSOR_DOMAIN,
+            "0.0.0.0-Transmission Paused Torrents",
+            "paused_torrents",
+            True,
+        ),
+        (SENSOR_DOMAIN, "0.0.0.0-Transmission Total Torrents", "total_torrents", True),
         (
             SENSOR_DOMAIN,
             "0.0.0.0-Transmission Completed Torrents",
             "completed_torrents",
+            True,
         ),
-        (SENSOR_DOMAIN, "0.0.0.0-Transmission Started Torrents", "started_torrents"),
-        (SWITCH_DOMAIN, "0.0.0.0-Transmission Switch", "on_off"),
-        (SWITCH_DOMAIN, "0.0.0.0-Transmission Turtle Mode", "turtle_mode"),
+        (
+            SENSOR_DOMAIN,
+            "0.0.0.0-Transmission Started Torrents",
+            "started_torrents",
+            True,
+        ),
+        (SENSOR_DOMAIN, "0.0.0.0-download", "download", False),
+        (SENSOR_DOMAIN, "abcde", "", False),
+        (SWITCH_DOMAIN, "0.0.0.0-Transmission Switch", "on_off", True),
+        (SWITCH_DOMAIN, "0.0.0.0-Transmission Turtle Mode", "turtle_mode", True),
+        (SWITCH_DOMAIN, "0.0.0.0-on_off", "on_off", False),
+        (SWITCH_DOMAIN, "abcde", "", False),
     ],
 )
-async def test_migrate_unique_id(hass, domain, old_unique_id: str, key: str):
+async def test_migrate_unique_id(
+    hass, domain, old_unique_id: str, key: str, migration_needed: bool
+):
     """Test unique id migration."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG_DATA)
     entry.add_to_hass(hass)
@@ -117,10 +139,12 @@ async def test_migrate_unique_id(hass, domain, old_unique_id: str, key: str):
 
     assert await transmission.async_setup_entry(hass, entry) is True
 
-    new_unique_id = f"{entry.entry_id}-{key}"
-    assert (
-        ent_reg.async_get_entity_id(domain, transmission.DOMAIN, old_unique_id) is None
-    )
+    new_unique_id = f"{entry.entry_id}-{key}" if migration_needed else old_unique_id
+    if migration_needed:
+        assert (
+            ent_reg.async_get_entity_id(domain, transmission.DOMAIN, old_unique_id)
+            is None
+        )
     assert (
         ent_reg.async_get_entity_id(domain, transmission.DOMAIN, new_unique_id)
         == f"{domain}.my_{domain}"
