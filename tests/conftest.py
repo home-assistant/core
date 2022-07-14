@@ -167,7 +167,8 @@ def verify_cleanup():
         pytest.exit(f"Detected non stopped instances ({count}), aborting test run")
 
     threads = frozenset(threading.enumerate()) - threads_before
-    assert not threads
+    for thread in threads:
+        assert isinstance(thread, threading._DummyThread)
 
 
 @pytest.fixture(autouse=True)
@@ -855,3 +856,36 @@ def mock_integration_frame():
         ],
     ):
         yield correct_frame
+
+
+@pytest.fixture(name="mock_bleak_scanner_start")
+def mock_bleak_scanner_start():
+    """Fixture to mock starting the bleak scanner."""
+
+    # Late imports to avoid loading bleak unless we need it
+
+    import bleak  # pylint: disable=import-outside-toplevel
+
+    from homeassistant.components.bluetooth import (  # pylint: disable=import-outside-toplevel
+        models as bluetooth_models,
+    )
+
+    scanner = bleak.BleakScanner
+    bluetooth_models.HA_BLEAK_SCANNER = None
+
+    with patch("homeassistant.components.bluetooth.HaBleakScanner.stop"), patch(
+        "homeassistant.components.bluetooth.HaBleakScanner.start",
+    ) as mock_bleak_scanner_start:
+        yield mock_bleak_scanner_start
+
+    # We need to drop the stop method from the object since we patched
+    # out start and this fixture will expire before the stop method is called
+    # when EVENT_HOMEASSISTANT_STOP is fired.
+    if bluetooth_models.HA_BLEAK_SCANNER:
+        bluetooth_models.HA_BLEAK_SCANNER.stop = AsyncMock()
+    bleak.BleakScanner = scanner
+
+
+@pytest.fixture(name="mock_bluetooth")
+def mock_bluetooth(mock_bleak_scanner_start):
+    """Mock out bluetooth from starting."""
