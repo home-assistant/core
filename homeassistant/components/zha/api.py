@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, NamedTuple
 
 import voluptuous as vol
 import zigpy.backups
+from zigpy.backups import NetworkBackup
 from zigpy.config.validators import cv_boolean
 from zigpy.types.named import EUI64
 from zigpy.zcl.clusters.security import IasAce
@@ -1058,14 +1059,35 @@ async def websocket_get_network_settings(
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     application_controller = zha_gateway.application_controller
 
+    backup = NetworkBackup(
+        node_info=application_controller.state.node_info,
+        network_info=application_controller.state.network_info,
+    )
+
     # Serialize the most recent backup
-    connection.send_result(msg[ID], application_controller.backups[-1].as_dict())
+    connection.send_result(msg[ID], backup.as_dict())
 
 
 @websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required(TYPE): "zha/network/backup"})
+@websocket_api.websocket_command({vol.Required(TYPE): "zha/network/backups/list"})
 @websocket_api.async_response
-async def websocket_backup_network_settings(
+async def websocket_list_network_backups(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Get ZHA network settings."""
+    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    application_controller = zha_gateway.application_controller
+
+    # Serialize the most recent backup
+    connection.send_result(
+        msg[ID], [backup.as_dict() for backup in application_controller.backups]
+    )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({vol.Required(TYPE): "zha/network/backups/create"})
+@websocket_api.async_response
+async def websocket_create_network_backup(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Create a ZHA network backup."""
@@ -1080,12 +1102,12 @@ async def websocket_backup_network_settings(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zha/network/restore",
+        vol.Required(TYPE): "zha/network/backups/restore",
         vol.Required("data"): vol.Coerce(zigpy.backups.NetworkBackup.from_dict),
     }
 )
 @websocket_api.async_response
-async def websocket_restore_network_settings(
+async def websocket_restore_network_backup(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Restore a ZHA network backup."""
@@ -1407,8 +1429,9 @@ def async_load_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_get_configuration)
     websocket_api.async_register_command(hass, websocket_update_zha_configuration)
     websocket_api.async_register_command(hass, websocket_get_network_settings)
-    websocket_api.async_register_command(hass, websocket_backup_network_settings)
-    websocket_api.async_register_command(hass, websocket_restore_network_settings)
+    websocket_api.async_register_command(hass, websocket_list_network_backups)
+    websocket_api.async_register_command(hass, websocket_create_network_backup)
+    websocket_api.async_register_command(hass, websocket_restore_network_backup)
 
 
 @callback
