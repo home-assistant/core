@@ -106,6 +106,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # import to config flow
     if DOMAIN in config:
         for conf in config[DOMAIN]:
+            _LOGGER.warning(
+                # Proxmox VE config flow added in 2022.8 and should be removed in 2022.10
+                "Configuration of the Proxmox in YAML is deprecated and "
+                "will be removed in Home Assistant 2022.10; Your existing configuration "
+                "has been imported into the UI automatically and can be safely removed "
+                "from your configuration.yaml file"
+            )
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
                     DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
