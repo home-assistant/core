@@ -30,7 +30,7 @@ from .const import (
     ENTITY_CATEGORY_MAPPING,
 )
 
-PLATFORMS = [Platform.MEDIA_PLAYER, Platform.NUMBER, Platform.SELECT]
+PLATFORMS = [Platform.MEDIA_PLAYER, Platform.NUMBER, Platform.SELECT, Platform.SWITCH]
 
 _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=60)
@@ -80,7 +80,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await coordinator.musiccast.device.enable_polling()
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
     return True
@@ -120,10 +120,8 @@ class MusicCastDataUpdateCoordinator(DataUpdateCoordinator[MusicCastData]):
         return self.musiccast.data
 
 
-class MusicCastEntity(CoordinatorEntity):
+class MusicCastEntity(CoordinatorEntity[MusicCastDataUpdateCoordinator]):
     """Defines a base MusicCast entity."""
-
-    coordinator: MusicCastDataUpdateCoordinator
 
     def __init__(
         self,
@@ -199,6 +197,17 @@ class MusicCastDeviceEntity(MusicCastEntity):
 
         return device_info
 
+    async def async_added_to_hass(self):
+        """Run when this Entity has been added to HA."""
+        await super().async_added_to_hass()
+        # All entities should register callbacks to update HA when their state changes
+        self.coordinator.musiccast.register_callback(self.async_write_ha_state)
+
+    async def async_will_remove_from_hass(self):
+        """Entity being removed from hass."""
+        await super().async_will_remove_from_hass()
+        self.coordinator.musiccast.remove_callback(self.async_write_ha_state)
+
 
 class MusicCastCapabilityEntity(MusicCastDeviceEntity):
     """Base Entity type for all capabilities."""
@@ -215,17 +224,6 @@ class MusicCastCapabilityEntity(MusicCastDeviceEntity):
         self.capability = capability
         super().__init__(name=capability.name, icon="", coordinator=coordinator)
         self._attr_entity_category = ENTITY_CATEGORY_MAPPING.get(capability.entity_type)
-
-    async def async_added_to_hass(self):
-        """Run when this Entity has been added to HA."""
-        await super().async_added_to_hass()
-        # All capability based entities should register callbacks to update HA when their state changes
-        self.coordinator.musiccast.register_callback(self.async_write_ha_state)
-
-    async def async_will_remove_from_hass(self):
-        """Entity being removed from hass."""
-        await super().async_added_to_hass()
-        self.coordinator.musiccast.remove_callback(self.async_write_ha_state)
 
     @property
     def unique_id(self) -> str:

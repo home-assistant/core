@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "IP-Adresse",
+                    "password": "Passwort",
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

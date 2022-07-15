@@ -19,7 +19,7 @@ from .const import CATEGORY_CDC_REPORT, CATEGORY_USER_REPORT, DOMAIN, LOGGER
 
 DEFAULT_UPDATE_INTERVAL = timedelta(minutes=30)
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 PLATFORMS = [Platform.SENSOR]
 
@@ -59,13 +59,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             update_interval=DEFAULT_UPDATE_INTERVAL,
             update_method=partial(async_update, api_category),
         )
-        data_init_tasks.append(coordinator.async_refresh())
+        data_init_tasks.append(coordinator.async_config_entry_first_refresh())
 
     await asyncio.gather(*data_init_tasks)
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinators
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

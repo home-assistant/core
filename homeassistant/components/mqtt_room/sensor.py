@@ -1,4 +1,6 @@
 """Support for MQTT room presence detection."""
+from __future__ import annotations
+
 from datetime import timedelta
 import json
 import logging
@@ -16,8 +18,10 @@ from homeassistant.const import (
     CONF_TIMEOUT,
     STATE_NOT_HOME,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt, slugify
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,7 +43,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_AWAY_TIMEOUT, default=DEFAULT_AWAY_TIMEOUT): cv.positive_int,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
-).extend(mqtt.MQTT_RO_PLATFORM_SCHEMA.schema)
+).extend(mqtt.config.MQTT_RO_SCHEMA.schema)
 
 MQTT_PAYLOAD = vol.Schema(
     vol.All(
@@ -55,7 +59,12 @@ MQTT_PAYLOAD = vol.Schema(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up MQTT room Sensor."""
     async_add_entities(
         [

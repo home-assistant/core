@@ -1,0 +1,37 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado",
+            "reauth_successful": "A reautentica\u00e7\u00e3o foi bem-sucedida"
+        },
+        "error": {
+            "cannot_connect": "Falha ao conectar",
+            "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida",
+            "pairing_failed": "Falha no emparelhamento; verifique se o Bosch Smart Home Controller est\u00e1 no modo de emparelhamento (LED piscando) e se sua senha est\u00e1 correta.",
+            "session_error": "Erro de sess\u00e3o: API retorna resultado n\u00e3o OK.",
+            "unknown": "Erro inesperado"
+        },
+        "flow_title": "Bosch SHC: {name}",
+        "step": {
+            "confirm_discovery": {
+                "description": "Pressione o bot\u00e3o frontal do Bosch Smart Home Controller at\u00e9 que o LED comece a piscar.\n Pronto para continuar a configurar {model} @ {host} com o Home Assistant?"
+            },
+            "credentials": {
+                "data": {
+                    "password": "Senha do Smart Home Controller"
+                }
+            },
+            "reauth_confirm": {
+                "description": "A integra\u00e7\u00e3o bosch_shc precisa re-autenticar sua conta",
+                "title": "Reautenticar Integra\u00e7\u00e3o"
+            },
+            "user": {
+                "data": {
+                    "host": "Nome do host"
+                },
+                "description": "Configure seu Bosch Smart Home Controller para permitir monitoramento e controle com o Home Assistant.",
+                "title": "Par\u00e2metros de autentica\u00e7\u00e3o SHC"
+            }
+        }
+    }
+}

@@ -6,6 +6,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
+from homeassistant.components import persistent_notification
 import homeassistant.config as conf_util
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -22,9 +23,11 @@ from homeassistant.const import (
 import homeassistant.core as ha
 from homeassistant.exceptions import HomeAssistantError, Unauthorized, UnknownUser
 from homeassistant.helpers import config_validation as cv, recorder, restore_state
+from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.service import (
     async_extract_config_entry_ids,
     async_extract_referenced_entity_ids,
+    async_register_admin_service,
 )
 from homeassistant.helpers.typing import ConfigType
 
@@ -55,11 +58,11 @@ SHUTDOWN_SERVICES = (SERVICE_HOMEASSISTANT_STOP, SERVICE_HOMEASSISTANT_RESTART)
 async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # noqa: C901
     """Set up general services related to Home Assistant."""
 
-    async def async_save_persistent_states(service):
+    async def async_save_persistent_states(service: ha.ServiceCall) -> None:
         """Handle calls to homeassistant.save_persistent_states."""
         await restore_state.RestoreStateData.async_save_persistent_states(hass)
 
-    async def async_handle_turn_service(service):
+    async def async_handle_turn_service(service: ha.ServiceCall) -> None:
         """Handle calls to homeassistant.turn_on/off."""
         referenced = async_extract_referenced_entity_ids(hass, service)
         all_referenced = referenced.referenced | referenced.indirectly_referenced
@@ -136,7 +139,7 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
         ha.DOMAIN, SERVICE_TOGGLE, async_handle_turn_service, schema=service_schema
     )
 
-    async def async_handle_core_service(call):
+    async def async_handle_core_service(call: ha.ServiceCall) -> None:
         """Service handler for handling core services."""
         if call.service in SHUTDOWN_SERVICES and recorder.async_migration_in_progress(
             hass
@@ -162,7 +165,8 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
                 call.service,
                 errors,
             )
-            hass.components.persistent_notification.async_create(
+            persistent_notification.async_create(
+                hass,
                 "Config error. See [the logs](/config/logs) for details.",
                 "Config validating",
                 f"{ha.DOMAIN}.check_config",
@@ -175,7 +179,7 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
         if call.service == SERVICE_HOMEASSISTANT_RESTART:
             asyncio.create_task(hass.async_stop(RESTART_EXIT_CODE))
 
-    async def async_handle_update_service(call):
+    async def async_handle_update_service(call: ha.ServiceCall) -> None:
         """Service handler for updating an entity."""
         if call.context.user_id:
             user = await hass.auth.async_get_user(call.context.user_id)
@@ -197,21 +201,20 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
                     )
 
         tasks = [
-            hass.helpers.entity_component.async_update_entity(entity)
-            for entity in call.data[ATTR_ENTITY_ID]
+            async_update_entity(hass, entity) for entity in call.data[ATTR_ENTITY_ID]
         ]
 
         if tasks:
             await asyncio.wait(tasks)
 
-    hass.helpers.service.async_register_admin_service(
-        ha.DOMAIN, SERVICE_HOMEASSISTANT_STOP, async_handle_core_service
+    async_register_admin_service(
+        hass, ha.DOMAIN, SERVICE_HOMEASSISTANT_STOP, async_handle_core_service
     )
-    hass.helpers.service.async_register_admin_service(
-        ha.DOMAIN, SERVICE_HOMEASSISTANT_RESTART, async_handle_core_service
+    async_register_admin_service(
+        hass, ha.DOMAIN, SERVICE_HOMEASSISTANT_RESTART, async_handle_core_service
     )
-    hass.helpers.service.async_register_admin_service(
-        ha.DOMAIN, SERVICE_CHECK_CONFIG, async_handle_core_service
+    async_register_admin_service(
+        hass, ha.DOMAIN, SERVICE_CHECK_CONFIG, async_handle_core_service
     )
     hass.services.async_register(
         ha.DOMAIN,
@@ -220,7 +223,7 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
         schema=SCHEMA_UPDATE_ENTITY,
     )
 
-    async def async_handle_reload_config(call):
+    async def async_handle_reload_config(call: ha.ServiceCall) -> None:
         """Service handler for reloading core config."""
         try:
             conf = await conf_util.async_hass_config_yaml(hass)
@@ -231,24 +234,25 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
         # auth only processed during startup
         await conf_util.async_process_ha_core_config(hass, conf.get(ha.DOMAIN) or {})
 
-    hass.helpers.service.async_register_admin_service(
-        ha.DOMAIN, SERVICE_RELOAD_CORE_CONFIG, async_handle_reload_config
+    async_register_admin_service(
+        hass, ha.DOMAIN, SERVICE_RELOAD_CORE_CONFIG, async_handle_reload_config
     )
 
-    async def async_set_location(call):
+    async def async_set_location(call: ha.ServiceCall) -> None:
         """Service handler to set location."""
         await hass.config.async_update(
             latitude=call.data[ATTR_LATITUDE], longitude=call.data[ATTR_LONGITUDE]
         )
 
-    hass.helpers.service.async_register_admin_service(
+    async_register_admin_service(
+        hass,
         ha.DOMAIN,
         SERVICE_SET_LOCATION,
         async_set_location,
         vol.Schema({ATTR_LATITUDE: cv.latitude, ATTR_LONGITUDE: cv.longitude}),
     )
 
-    async def async_handle_reload_config_entry(call):
+    async def async_handle_reload_config_entry(call: ha.ServiceCall) -> None:
         """Service handler for reloading a config entry."""
         reload_entries = set()
         if ATTR_ENTRY_ID in call.data:
@@ -263,7 +267,8 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
             )
         )
 
-    hass.helpers.service.async_register_admin_service(
+    async_register_admin_service(
+        hass,
         ha.DOMAIN,
         SERVICE_RELOAD_CONFIG_ENTRY,
         async_handle_reload_config_entry,

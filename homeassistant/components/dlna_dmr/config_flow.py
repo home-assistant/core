@@ -1,10 +1,10 @@
 """Config flow for DLNA DMR."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 import logging
 from pprint import pformat
-from typing import Any, Mapping, Optional, cast
+from typing import Any, Optional, cast
 from urllib.parse import urlparse
 
 from async_upnp_client.client import UpnpError
@@ -14,19 +14,14 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
-from homeassistant.const import (
-    CONF_DEVICE_ID,
-    CONF_HOST,
-    CONF_NAME,
-    CONF_TYPE,
-    CONF_URL,
-)
+from homeassistant.const import CONF_DEVICE_ID, CONF_HOST, CONF_TYPE, CONF_URL
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import IntegrationError
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
+    CONF_BROWSE_UNFILTERED,
     CONF_CALLBACK_URL_OVERRIDE,
     CONF_LISTEN_PORT,
     CONF_POLL_AVAILABILITY,
@@ -125,85 +120,6 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="manual", data_schema=data_schema, errors=errors
         )
 
-    async def async_step_import(self, import_data: FlowInput = None) -> FlowResult:
-        """Import a new DLNA DMR device from a config entry.
-
-        This flow is triggered by `async_setup_platform`. If the device has not
-        been migrated, and can be connected to, automatically import it. If it
-        cannot be connected to, prompt the user to turn it on. If it has already
-        been migrated, do nothing.
-        """
-        LOGGER.debug("async_step_import: import_data: %s", import_data)
-
-        if not import_data or CONF_URL not in import_data:
-            LOGGER.debug("Entry not imported: incomplete_config")
-            return self.async_abort(reason="incomplete_config")
-
-        self._location = import_data[CONF_URL]
-        self._async_abort_entries_match({CONF_URL: self._location})
-
-        # Use the location as this config flow's unique ID until UDN is known
-        await self.async_set_unique_id(self._location)
-
-        # Set options from the import_data, except listen_ip which is no longer used
-        self._options[CONF_LISTEN_PORT] = import_data.get(CONF_LISTEN_PORT)
-        self._options[CONF_CALLBACK_URL_OVERRIDE] = import_data.get(
-            CONF_CALLBACK_URL_OVERRIDE
-        )
-
-        # Override device name if it's set in the YAML
-        self._name = import_data.get(CONF_NAME)
-
-        discoveries = await self._async_get_discoveries()
-
-        # Find the device in the list of unconfigured devices
-        for discovery in discoveries:
-            if discovery.ssdp_location == self._location:
-                # Device found via SSDP, it shouldn't need polling
-                self._options[CONF_POLL_AVAILABILITY] = False
-                # Discovery info has everything required to create config entry
-                await self._async_set_info_from_discovery(discovery)
-                LOGGER.debug(
-                    "Entry %s found via SSDP, with UDN %s",
-                    self._location,
-                    self._udn,
-                )
-                return self._create_entry()
-
-        # This device will need to be polled
-        self._options[CONF_POLL_AVAILABILITY] = True
-
-        # Device was not found via SSDP, connect directly for configuration
-        try:
-            await self._async_connect()
-        except ConnectError as err:
-            # This will require user action
-            LOGGER.debug("Entry %s not imported yet: %s", self._location, err.args[0])
-            return await self.async_step_import_turn_on()
-
-        LOGGER.debug("Entry %s ready for import", self._location)
-        return self._create_entry()
-
-    async def async_step_import_turn_on(
-        self, user_input: FlowInput = None
-    ) -> FlowResult:
-        """Request the user to turn on the device so that import can finish."""
-        LOGGER.debug("async_step_import_turn_on: %s", user_input)
-
-        self.context["title_placeholders"] = {"name": self._name or self._location}
-
-        errors = {}
-        if user_input is not None:
-            try:
-                await self._async_connect()
-            except ConnectError as err:
-                errors["base"] = err.args[0]
-            else:
-                return self._create_entry()
-
-        self._set_confirm_only()
-        return self.async_show_form(step_id="import_turn_on", errors=errors)
-
     async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Handle a flow initialized by SSDP discovery."""
         LOGGER.debug("async_step_ssdp: discovery_info %s", pformat(discovery_info))
@@ -219,21 +135,18 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         discovery_service_list = discovery_info.upnp.get(ssdp.ATTR_UPNP_SERVICE_LIST)
         if not discovery_service_list:
             return self.async_abort(reason="not_dmr")
-        discovery_service_ids = {
-            service.get("serviceId")
-            for service in discovery_service_list.get("service") or []
-        }
+
+        services = discovery_service_list.get("service")
+        if not services:
+            discovery_service_ids: set[str] = set()
+        elif isinstance(services, list):
+            discovery_service_ids = {service.get("serviceId") for service in services}
+        else:
+            # Only one service defined (etree_to_dict failed to make a list)
+            discovery_service_ids = {services.get("serviceId")}
+
         if not DmrDevice.SERVICE_IDS.issubset(discovery_service_ids):
             return self.async_abort(reason="not_dmr")
-
-        # Abort if a migration flow for the device's location is in progress
-        for progress in self._async_in_progress(include_uninitialized=True):
-            if progress["context"].get("unique_id") == self._location:
-                LOGGER.debug(
-                    "Aborting SSDP setup because migration for %s is in progress",
-                    self._location,
-                )
-                return self.async_abort(reason="already_in_progress")
 
         # Abort if another config entry has the same location, in case the
         # device doesn't have a static and unique UDN (breaking the UPnP spec).
@@ -416,6 +329,7 @@ class DlnaDmrOptionsFlowHandler(config_entries.OptionsFlow):
             options[CONF_LISTEN_PORT] = listen_port
             options[CONF_CALLBACK_URL_OVERRIDE] = callback_url_override
             options[CONF_POLL_AVAILABILITY] = user_input[CONF_POLL_AVAILABILITY]
+            options[CONF_BROWSE_UNFILTERED] = user_input[CONF_BROWSE_UNFILTERED]
 
             # Save if there's no errors, else fall through and show the form again
             if not errors:
@@ -423,9 +337,14 @@ class DlnaDmrOptionsFlowHandler(config_entries.OptionsFlow):
 
         fields = {}
 
-        def _add_with_suggestion(key: str, validator: Callable) -> None:
-            """Add a field to with a suggested, not default, value."""
-            if (suggested_value := options.get(key)) is None:
+        def _add_with_suggestion(key: str, validator: Callable | type[bool]) -> None:
+            """Add a field to with a suggested value.
+
+            For bools, use the existing value as default, or fallback to False.
+            """
+            if validator is bool:
+                fields[vol.Required(key, default=options.get(key, False))] = validator
+            elif (suggested_value := options.get(key)) is None:
                 fields[vol.Optional(key)] = validator
             else:
                 fields[
@@ -435,12 +354,8 @@ class DlnaDmrOptionsFlowHandler(config_entries.OptionsFlow):
         # listen_port can be blank or 0 for "bind any free port"
         _add_with_suggestion(CONF_LISTEN_PORT, cv.port)
         _add_with_suggestion(CONF_CALLBACK_URL_OVERRIDE, str)
-        fields[
-            vol.Required(
-                CONF_POLL_AVAILABILITY,
-                default=options.get(CONF_POLL_AVAILABILITY, False),
-            )
-        ] = bool
+        _add_with_suggestion(CONF_POLL_AVAILABILITY, bool)
+        _add_with_suggestion(CONF_BROWSE_UNFILTERED, bool)
 
         return self.async_show_form(
             step_id="init",
@@ -474,8 +389,8 @@ def _is_ignored_device(discovery_info: ssdp.SsdpServiceInfo) -> bool:
     # Special cases for devices with other discovery methods (e.g. mDNS), or
     # that advertise multiple unrelated (sent in separate discovery packets)
     # UPnP devices.
-    manufacturer = discovery_info.upnp.get(ssdp.ATTR_UPNP_MANUFACTURER, "").lower()
-    model = discovery_info.upnp.get(ssdp.ATTR_UPNP_MODEL_NAME, "").lower()
+    manufacturer = (discovery_info.upnp.get(ssdp.ATTR_UPNP_MANUFACTURER) or "").lower()
+    model = (discovery_info.upnp.get(ssdp.ATTR_UPNP_MODEL_NAME) or "").lower()
 
     if manufacturer.startswith("xbmc") or model == "kodi":
         # kodi

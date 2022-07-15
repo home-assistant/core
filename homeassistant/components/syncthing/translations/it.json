@@ -13,10 +13,9 @@
                     "title": "Configurazione integrazione Syncthing",
                     "token": "Token",
                     "url": "URL",
-                    "verify_ssl": "Verificare il certificato SSL"
+                    "verify_ssl": "Verifica il certificato SSL"
                 }
             }
         }
-    },
-    "title": "Syncthing"
+    }
 }

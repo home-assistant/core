@@ -5,7 +5,7 @@ import asyncio
 import copy
 from dataclasses import dataclass
 import logging
-from typing import Any, Final, Literal, TypeVar, cast
+from typing import Any, Final, Literal, cast
 
 from homeassistant.components.sensor import (
     ATTR_LAST_RESET,
@@ -29,7 +29,7 @@ from homeassistant.core import (
     split_entity_id,
     valid_entity_id,
 )
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -57,9 +57,6 @@ async def async_setup_platform(
     """Set up the energy sensors."""
     sensor_manager = SensorManager(await async_get_manager(hass), async_add_entities)
     await sensor_manager.async_start()
-
-
-T = TypeVar("T")
 
 
 @dataclass
@@ -151,17 +148,17 @@ class SensorManager:
                     self._process_sensor_data(
                         adapter,
                         # Opting out of the type complexity because can't get it to work
-                        energy_source,  # type: ignore
+                        energy_source,  # type: ignore[arg-type]
                         to_add,
                         to_remove,
                     )
                     continue
 
-                for flow in energy_source[adapter.flow_type]:  # type: ignore
+                for flow in energy_source[adapter.flow_type]:  # type: ignore[typeddict-item]
                     self._process_sensor_data(
                         adapter,
                         # Opting out of the type complexity because can't get it to work
-                        flow,  # type: ignore
+                        flow,  # type: ignore[arg-type]
                         to_add,
                         to_remove,
                     )
@@ -213,7 +210,7 @@ class EnergyCostSensor(SensorEntity):
     utility.
     """
 
-    _attr_entity_category = EntityCategory.SYSTEM
+    _attr_entity_registry_visible_default = False
     _wrong_state_class_reported = False
     _wrong_unit_reported = False
 
@@ -419,3 +416,16 @@ class EnergyCostSensor(SensorEntity):
     def native_unit_of_measurement(self) -> str | None:
         """Return the units of measurement."""
         return self.hass.config.currency
+
+    @property
+    def unique_id(self) -> str | None:
+        """Return the unique ID of the sensor."""
+        entity_registry = er.async_get(self.hass)
+        if registry_entry := entity_registry.async_get(
+            self._config[self._adapter.entity_energy_key]
+        ):
+            prefix = registry_entry.id
+        else:
+            prefix = self._config[self._adapter.entity_energy_key]
+
+        return f"{prefix}_{self._adapter.source_type}_{self._adapter.entity_id_suffix}"

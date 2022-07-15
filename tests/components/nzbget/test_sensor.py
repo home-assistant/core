@@ -2,11 +2,11 @@
 from datetime import timedelta
 from unittest.mock import patch
 
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     DATA_MEGABYTES,
     DATA_RATE_MEGABYTES_PER_SECOND,
-    DEVICE_CLASS_TIMESTAMP,
 )
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
@@ -39,7 +39,7 @@ async def test_sensors(hass, nzbget_api) -> None:
         "post_processing_jobs": ("PostJobCount", "2", "Jobs", None),
         "post_processing_paused": ("PostPaused", "False", None, None),
         "queue_size": ("RemainingSizeMB", "512", DATA_MEGABYTES, None),
-        "uptime": ("UpTimeSec", uptime.isoformat(), None, DEVICE_CLASS_TIMESTAMP),
+        "uptime": ("UpTimeSec", uptime.isoformat(), None, SensorDeviceClass.TIMESTAMP),
     }
 
     for (sensor_id, data) in sensors.items():

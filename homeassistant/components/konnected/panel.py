@@ -25,6 +25,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import get_url
 
 from .const import (
@@ -136,8 +137,8 @@ class AlarmPanel:
 
             # retry in a bit, never more than ~3 min
             self.connect_attempts += 1
-            self.cancel_connect_retry = self.hass.helpers.event.async_call_later(
-                2 ** min(self.connect_attempts, 5) * 5, self.async_connect
+            self.cancel_connect_retry = async_call_later(
+                self.hass, 2 ** min(self.connect_attempts, 5) * 5, self.async_connect
             )
             return
 

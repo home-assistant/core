@@ -42,7 +42,7 @@ from . import (
     service,
 )
 from .device_registry import DeviceRegistry
-from .entity_registry import EntityRegistry, RegistryEntryDisabler
+from .entity_registry import EntityRegistry, RegistryEntryDisabler, RegistryEntryHider
 from .event import async_call_later, async_track_time_interval
 from .typing import ConfigType, DiscoveryInfoType
 
@@ -120,7 +120,7 @@ class EntityPlatform:
 
     @callback
     def _get_parallel_updates_semaphore(
-        self, entity_has_async_update: bool
+        self, entity_has_sync_update: bool
     ) -> asyncio.Semaphore | None:
         """Get or create a semaphore for parallel updates.
 
@@ -138,7 +138,7 @@ class EntityPlatform:
 
         parallel_updates = getattr(self.platform, "PARALLEL_UPDATES", None)
 
-        if parallel_updates is None and not entity_has_async_update:
+        if parallel_updates is None and entity_has_sync_update:
             parallel_updates = 1
 
         if parallel_updates == 0:
@@ -172,7 +172,7 @@ class EntityPlatform:
         def async_create_setup_task() -> Coroutine:
             """Get task to set up platform."""
             if getattr(platform, "async_setup_platform", None):
-                return platform.async_setup_platform(  # type: ignore
+                return platform.async_setup_platform(  # type: ignore[no-any-return,union-attr]
                     hass,
                     platform_config,
                     self._async_schedule_add_entities,
@@ -183,7 +183,7 @@ class EntityPlatform:
             # we don't want to track this task in case it blocks startup.
             return hass.loop.run_in_executor(  # type: ignore[return-value]
                 None,
-                platform.setup_platform,  # type: ignore
+                platform.setup_platform,  # type: ignore[union-attr]
                 hass,
                 platform_config,
                 self._schedule_add_entities,
@@ -214,8 +214,9 @@ class EntityPlatform:
         def async_create_setup_task() -> Coroutine:
             """Get task to set up platform."""
             config_entries.current_entry.set(config_entry)
+
             return platform.async_setup_entry(  # type: ignore[no-any-return,union-attr]
-                self.hass, config_entry, self._async_schedule_add_entities
+                self.hass, config_entry, self._async_schedule_add_entities_for_entry
             )
 
         return await self._async_setup_platform(async_create_setup_task)
@@ -334,6 +335,20 @@ class EntityPlatform:
         if not self._setup_complete:
             self._tasks.append(task)
 
+    @callback
+    def _async_schedule_add_entities_for_entry(
+        self, new_entities: Iterable[Entity], update_before_add: bool = False
+    ) -> None:
+        """Schedule adding entities for a single platform async and track the task."""
+        assert self.config_entry
+        task = self.config_entry.async_create_task(
+            self.hass,
+            self.async_add_entities(new_entities, update_before_add=update_before_add),
+        )
+
+        if not self._setup_complete:
+            self._tasks.append(task)
+
     def add_entities(
         self, new_entities: Iterable[Entity], update_before_add: bool = False
     ) -> None:
@@ -422,7 +437,7 @@ class EntityPlatform:
         entity.add_to_platform_start(
             self.hass,
             self,
-            self._get_parallel_updates_semaphore(hasattr(entity, "async_update")),
+            self._get_parallel_updates_semaphore(hasattr(entity, "update")),
         )
 
         # Update properties before we generate the entity_id
@@ -440,15 +455,6 @@ class EntityPlatform:
 
         # Get entity_id from unique ID registration
         if entity.unique_id is not None:
-            if entity.entity_id is not None:
-                requested_entity_id = entity.entity_id
-                suggested_object_id = split_entity_id(entity.entity_id)[1]
-            else:
-                suggested_object_id = entity.name  # type: ignore[unreachable]
-
-            if self.entity_namespace is not None:
-                suggested_object_id = f"{self.entity_namespace} {suggested_object_id}"
-
             if self.config_entry is not None:
                 config_entry_id: str | None = self.config_entry.entry_id
             else:
@@ -474,10 +480,11 @@ class EntityPlatform:
                     "name",
                     "suggested_area",
                     "sw_version",
+                    "hw_version",
                     "via_device",
                 ):
                     if key in device_info:
-                        processed_dev_info[key] = device_info[key]  # type: ignore[misc]
+                        processed_dev_info[key] = device_info[key]  # type: ignore[literal-required]
 
                 if "configuration_url" in device_info:
                     if device_info["configuration_url"] is None:
@@ -502,9 +509,29 @@ class EntityPlatform:
                 except RequiredParameterMissing:
                     pass
 
+            if entity.entity_id is not None:
+                requested_entity_id = entity.entity_id
+                suggested_object_id = split_entity_id(entity.entity_id)[1]
+            else:
+                if device and entity.has_entity_name:  # type: ignore[unreachable]
+                    device_name = device.name_by_user or device.name
+                    if not entity.name:
+                        suggested_object_id = device_name
+                    else:
+                        suggested_object_id = f"{device_name} {entity.name}"
+                if not suggested_object_id:
+                    suggested_object_id = entity.name
+
+            if self.entity_namespace is not None:
+                suggested_object_id = f"{self.entity_namespace} {suggested_object_id}"
+
             disabled_by: RegistryEntryDisabler | None = None
             if not entity.entity_registry_enabled_default:
                 disabled_by = RegistryEntryDisabler.INTEGRATION
+
+            hidden_by: RegistryEntryHider | None = None
+            if not entity.entity_registry_visible_default:
+                hidden_by = RegistryEntryHider.INTEGRATION
 
             entry = entity_registry.async_get_or_create(
                 self.domain,
@@ -515,7 +542,9 @@ class EntityPlatform:
                 device_id=device_id,
                 disabled_by=disabled_by,
                 entity_category=entity.entity_category,
+                hidden_by=hidden_by,
                 known_object_ids=self.entities.keys(),
+                has_entity_name=entity.has_entity_name,
                 original_device_class=entity.device_class,
                 original_icon=entity.icon,
                 original_name=entity.name,
@@ -605,7 +634,7 @@ class EntityPlatform:
             self.hass.states.async_reserve(entity.entity_id)
 
         def remove_entity_cb() -> None:
-            """Remove entity from entities list."""
+            """Remove entity from entities dict."""
             self.entities.pop(entity_id)
 
         entity.async_on_remove(remove_entity_cb)

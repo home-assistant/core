@@ -11,9 +11,13 @@ from homeassistant.components.number import (
     DEFAULT_MAX_VALUE,
     DEFAULT_MIN_VALUE,
     DEFAULT_STEP,
-    NumberEntity,
+    DEVICE_CLASSES_SCHEMA,
+    NumberDeviceClass,
+    RestoreNumber,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONF_DEVICE_CLASS,
     CONF_NAME,
     CONF_OPTIMISTIC,
     CONF_UNIT_OF_MEASUREMENT,
@@ -21,17 +25,29 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.reload import async_setup_reload_service
-from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import PLATFORMS, subscription
-from .. import mqtt
-from .const import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC, DOMAIN
+from . import subscription
+from .config import MQTT_RW_SCHEMA
+from .const import (
+    CONF_COMMAND_TEMPLATE,
+    CONF_COMMAND_TOPIC,
+    CONF_ENCODING,
+    CONF_QOS,
+    CONF_RETAIN,
+    CONF_STATE_TOPIC,
+)
 from .debug_info import log_messages
-from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
-
-CONF_COMMAND_TEMPLATE = "command_template"
+from .mixins import (
+    MQTT_ENTITY_COMMON_SCHEMA,
+    MqttEntity,
+    async_discover_yaml_entities,
+    async_setup_entry_helper,
+    async_setup_platform_helper,
+    warn_for_legacy_schema,
+)
+from .models import MqttCommandTemplate, MqttValueTemplate
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,9 +77,10 @@ def validate_config(config):
     return config
 
 
-_PLATFORM_SCHEMA_BASE = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
+_PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
     {
         vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
+        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_MAX, default=DEFAULT_MAX_VALUE): vol.Coerce(float),
         vol.Optional(CONF_MIN, default=DEFAULT_MIN_VALUE): vol.Coerce(float),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -77,9 +94,16 @@ _PLATFORM_SCHEMA_BASE = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
     },
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-PLATFORM_SCHEMA = vol.All(
+PLATFORM_SCHEMA_MODERN = vol.All(
     _PLATFORM_SCHEMA_BASE,
     validate_config,
+)
+
+# Configuring MQTT Number under the number platform key is deprecated in HA Core 2022.6
+PLATFORM_SCHEMA = vol.All(
+    cv.PLATFORM_SCHEMA.extend(_PLATFORM_SCHEMA_BASE.schema),
+    validate_config,
+    warn_for_legacy_schema(number.DOMAIN),
 )
 
 DISCOVERY_SCHEMA = vol.All(
@@ -89,15 +113,31 @@ DISCOVERY_SCHEMA = vol.All(
 
 
 async def async_setup_platform(
-    hass: HomeAssistant, config: ConfigType, async_add_entities, discovery_info=None
-):
-    """Set up MQTT number through configuration.yaml."""
-    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
-    await _async_setup_entity(hass, async_add_entities, config)
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Set up MQTT number configured under the number platform key (deprecated)."""
+    # Deprecated in HA Core 2022.6
+    await async_setup_platform_helper(
+        hass,
+        number.DOMAIN,
+        discovery_info or config,
+        async_add_entities,
+        _async_setup_entity,
+    )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up MQTT number dynamically through MQTT discovery."""
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up MQTT number through configuration.yaml and dynamically through MQTT discovery."""
+    # load and initialize platform config from configuration.yaml
+    await async_discover_yaml_entities(hass, number.DOMAIN)
+    # setup for discovery
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
@@ -105,13 +145,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 async def _async_setup_entity(
-    hass, async_add_entities, config, config_entry=None, discovery_data=None
-):
+    hass: HomeAssistant,
+    async_add_entities: AddEntitiesCallback,
+    config: ConfigType,
+    config_entry: ConfigEntry | None = None,
+    discovery_data: dict | None = None,
+) -> None:
     """Set up the MQTT number."""
     async_add_entities([MqttNumber(hass, config, config_entry, discovery_data)])
 
 
-class MqttNumber(MqttEntity, NumberEntity, RestoreEntity):
+class MqttNumber(MqttEntity, RestoreNumber):
     """representation of an MQTT number."""
 
     _entity_id_format = number.ENTITY_ID_FORMAT
@@ -125,7 +169,7 @@ class MqttNumber(MqttEntity, NumberEntity, RestoreEntity):
 
         self._current_number = None
 
-        NumberEntity.__init__(self)
+        RestoreNumber.__init__(self)
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
@@ -138,17 +182,16 @@ class MqttNumber(MqttEntity, NumberEntity, RestoreEntity):
         self._optimistic = config[CONF_OPTIMISTIC]
 
         self._templates = {
-            CONF_COMMAND_TEMPLATE: config.get(CONF_COMMAND_TEMPLATE),
-            CONF_VALUE_TEMPLATE: config.get(CONF_VALUE_TEMPLATE),
+            CONF_COMMAND_TEMPLATE: MqttCommandTemplate(
+                config.get(CONF_COMMAND_TEMPLATE), entity=self
+            ).async_render,
+            CONF_VALUE_TEMPLATE: MqttValueTemplate(
+                config.get(CONF_VALUE_TEMPLATE),
+                entity=self,
+            ).async_render_with_possible_json_value,
         }
-        for key, tpl in self._templates.items():
-            if tpl is None:
-                self._templates[key] = lambda value: value
-            else:
-                tpl.hass = self.hass
-                self._templates[key] = tpl.async_render_with_possible_json_value
 
-    async def _subscribe_topics(self):
+    def _prepare_subscribe_topics(self):
         """(Re)Subscribe to topics."""
 
         @callback
@@ -186,7 +229,7 @@ class MqttNumber(MqttEntity, NumberEntity, RestoreEntity):
             # Force into optimistic mode.
             self._optimistic = True
         else:
-            self._sub_state = await subscription.async_subscribe_topics(
+            self._sub_state = subscription.async_prepare_subscribe_topics(
                 self.hass,
                 self._sub_state,
                 {
@@ -194,39 +237,46 @@ class MqttNumber(MqttEntity, NumberEntity, RestoreEntity):
                         "topic": self._config.get(CONF_STATE_TOPIC),
                         "msg_callback": message_received,
                         "qos": self._config[CONF_QOS],
+                        "encoding": self._config[CONF_ENCODING] or None,
                     }
                 },
             )
 
-        if self._optimistic and (last_state := await self.async_get_last_state()):
-            self._current_number = last_state.state
+    async def _subscribe_topics(self):
+        """(Re)Subscribe to topics."""
+        await subscription.async_subscribe_topics(self.hass, self._sub_state)
+
+        if self._optimistic and (
+            last_number_data := await self.async_get_last_number_data()
+        ):
+            self._current_number = last_number_data.native_value
 
     @property
-    def min_value(self) -> float:
+    def native_min_value(self) -> float:
         """Return the minimum value."""
         return self._config[CONF_MIN]
 
     @property
-    def max_value(self) -> float:
+    def native_max_value(self) -> float:
         """Return the maximum value."""
         return self._config[CONF_MAX]
 
     @property
-    def step(self) -> float:
+    def native_step(self) -> float:
         """Return the increment/decrement step."""
         return self._config[CONF_STEP]
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
         return self._config.get(CONF_UNIT_OF_MEASUREMENT)
 
     @property
-    def value(self):
+    def native_value(self):
         """Return the current value."""
         return self._current_number
 
-    async def async_set_value(self, value: float) -> None:
+    async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         current_number = value
 
@@ -238,15 +288,20 @@ class MqttNumber(MqttEntity, NumberEntity, RestoreEntity):
             self._current_number = current_number
             self.async_write_ha_state()
 
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._config[CONF_COMMAND_TOPIC],
             payload,
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
 
     @property
-    def assumed_state(self):
+    def assumed_state(self) -> bool:
         """Return true if we do optimistic updates."""
         return self._optimistic
+
+    @property
+    def device_class(self) -> NumberDeviceClass | None:
+        """Return the device class of the sensor."""
+        return self._config.get(CONF_DEVICE_CLASS)

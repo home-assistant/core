@@ -1,8 +1,6 @@
 """Support for SimpliSafe alarm control panels."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from simplipy.errors import SimplipyError
 from simplipy.system import SystemStates
 from simplipy.system.v3 import SystemV3
@@ -22,13 +20,9 @@ from simplipy.websocket import (
 )
 
 from homeassistant.components.alarm_control_panel import (
-    FORMAT_NUMBER,
-    FORMAT_TEXT,
     AlarmControlPanelEntity,
-)
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
+    AlarmControlPanelEntityFeature,
+    CodeFormat,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -41,6 +35,7 @@ from homeassistant.const import (
     STATE_ALARM_TRIGGERED,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SimpliSafe, SimpliSafeEntity
@@ -119,6 +114,11 @@ async def async_setup_entry(
 class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
     """Representation of a SimpliSafe alarm."""
 
+    _attr_supported_features = (
+        AlarmControlPanelEntityFeature.ARM_HOME
+        | AlarmControlPanelEntityFeature.ARM_AWAY
+    )
+
     def __init__(self, simplisafe: SimpliSafe, system: SystemType) -> None:
         """Initialize the SimpliSafe alarm."""
         super().__init__(
@@ -129,10 +129,10 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
 
         if code := self._simplisafe.entry.options.get(CONF_CODE):
             if code.isdigit():
-                self._attr_code_format = FORMAT_NUMBER
+                self._attr_code_format = CodeFormat.NUMBER
             else:
-                self._attr_code_format = FORMAT_TEXT
-        self._attr_supported_features = SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
+                self._attr_code_format = CodeFormat.TEXT
+
         self._last_event = None
 
         self._set_state_from_system_data()
@@ -173,8 +173,9 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
         try:
             await self._system.async_set_off()
         except SimplipyError as err:
-            LOGGER.error('Error while disarming "%s": %s', self._system.system_id, err)
-            return
+            raise HomeAssistantError(
+                f'Error while disarming "{self._system.system_id}": {err}'
+            ) from err
 
         self._attr_state = STATE_ALARM_DISARMED
         self.async_write_ha_state()
@@ -187,10 +188,9 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
         try:
             await self._system.async_set_home()
         except SimplipyError as err:
-            LOGGER.error(
-                'Error while arming "%s" (home): %s', self._system.system_id, err
-            )
-            return
+            raise HomeAssistantError(
+                f'Error while arming (home) "{self._system.system_id}": {err}'
+            ) from err
 
         self._attr_state = STATE_ALARM_ARMED_HOME
         self.async_write_ha_state()
@@ -203,10 +203,9 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
         try:
             await self._system.async_set_away()
         except SimplipyError as err:
-            LOGGER.error(
-                'Error while arming "%s" (away): %s', self._system.system_id, err
-            )
-            return
+            raise HomeAssistantError(
+                f'Error while arming (away) "{self._system.system_id}": {err}'
+            ) from err
 
         self._attr_state = STATE_ALARM_ARMING
         self.async_write_ha_state()
@@ -240,8 +239,9 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
     def async_update_from_websocket_event(self, event: WebsocketEvent) -> None:
         """Update the entity when new data comes from the websocket."""
         self._attr_changed_by = event.changed_by
-        if TYPE_CHECKING:
-            assert event.event_type
+
+        assert event.event_type
+
         if state := STATE_MAP_FROM_WEBSOCKET_EVENT.get(event.event_type):
             self._attr_state = state
             self.async_reset_error_count()

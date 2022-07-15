@@ -3,9 +3,10 @@ from __future__ import annotations
 
 import asyncio
 from collections import deque
-from collections.abc import Iterable
+from collections.abc import Callable, Coroutine, Iterable
 import datetime
-from typing import TYPE_CHECKING
+import logging
+from typing import TYPE_CHECKING, Any
 
 from aiohttp import web
 import async_timeout
@@ -16,12 +17,21 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util.decorator import Registry
 
-from .const import ATTR_STREAMS, DOMAIN
+from .const import (
+    ATTR_STREAMS,
+    DOMAIN,
+    SEGMENT_DURATION_ADJUSTER,
+    TARGET_SEGMENT_DURATION_NON_LL_HLS,
+)
 
 if TYPE_CHECKING:
+    from av import CodecContext, Packet
+
     from . import Stream
 
-PROVIDERS = Registry()
+_LOGGER = logging.getLogger(__name__)
+
+PROVIDERS: Registry[str, type[StreamOutput]] = Registry()
 
 
 @attr.s(slots=True)
@@ -33,6 +43,15 @@ class StreamSettings:
     part_target_duration: float = attr.ib()
     hls_advance_part_limit: int = attr.ib()
     hls_part_timeout: float = attr.ib()
+
+
+STREAM_SETTINGS_NON_LL_HLS = StreamSettings(
+    ll_hls=False,
+    min_segment_duration=TARGET_SEGMENT_DURATION_NON_LL_HLS - SEGMENT_DURATION_ADJUSTER,
+    part_target_duration=TARGET_SEGMENT_DURATION_NON_LL_HLS,
+    hls_advance_part_limit=3,
+    hls_part_timeout=TARGET_SEGMENT_DURATION_NON_LL_HLS,
+)
 
 
 @attr.s(slots=True)
@@ -116,6 +135,10 @@ class Segment:
         if self.hls_playlist_complete:
             return self.hls_playlist_template[0]
         if not self.hls_playlist_template:
+            # Logically EXT-X-DISCONTINUITY makes sense above the parts, but Apple's
+            # media stream validator seems to only want it before the segment
+            if last_stream_id != self.stream_id:
+                self.hls_playlist_template.append("#EXT-X-DISCONTINUITY")
             # This is a placeholder where the rendered parts will be inserted
             self.hls_playlist_template.append("{}")
         if render_parts:
@@ -131,22 +154,19 @@ class Segment:
             # the first element to avoid an extra newline when we don't render any parts.
             # Append an empty string to create a trailing newline when we do render parts
             self.hls_playlist_parts.append("")
-            self.hls_playlist_template = []
-            # Logically EXT-X-DISCONTINUITY would make sense above the parts, but Apple's
-            # media stream validator seems to only want it before the segment
-            if last_stream_id != self.stream_id:
-                self.hls_playlist_template.append("#EXT-X-DISCONTINUITY")
+            self.hls_playlist_template = (
+                [] if last_stream_id == self.stream_id else ["#EXT-X-DISCONTINUITY"]
+            )
             # Add the remaining segment metadata
+            # The placeholder goes on the same line as the next element
             self.hls_playlist_template.extend(
                 [
-                    "#EXT-X-PROGRAM-DATE-TIME:"
+                    "{}#EXT-X-PROGRAM-DATE-TIME:"
                     + self.start_time.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
                     + "Z",
                     f"#EXTINF:{self.duration:.3f},\n./segment/{self.sequence}.m4s",
                 ]
             )
-            # The placeholder now goes on the same line as the first element
-            self.hls_playlist_template[0] = "{}" + self.hls_playlist_template[0]
 
         # Store intermediate playlist data in member variables for reuse
         self.hls_playlist_template = ["\n".join(self.hls_playlist_template)]
@@ -190,7 +210,10 @@ class IdleTimer:
     """
 
     def __init__(
-        self, hass: HomeAssistant, timeout: int, idle_callback: CALLBACK_TYPE
+        self,
+        hass: HomeAssistant,
+        timeout: int,
+        idle_callback: Callable[[], Coroutine[Any, Any, None]],
     ) -> None:
         """Initialize IdleTimer."""
         self._hass = hass
@@ -217,11 +240,12 @@ class IdleTimer:
         if self._unsub is not None:
             self._unsub()
 
+    @callback
     def fire(self, _now: datetime.datetime) -> None:
         """Invoke the idle timeout callback, called when the alarm fires."""
         self.idle = True
         self._unsub = None
-        self._callback()
+        self._hass.async_create_task(self._callback())
 
 
 class StreamOutput:
@@ -231,11 +255,13 @@ class StreamOutput:
         self,
         hass: HomeAssistant,
         idle_timer: IdleTimer,
+        stream_settings: StreamSettings,
         deque_maxlen: int | None = None,
     ) -> None:
         """Initialize a stream output."""
         self._hass = hass
         self.idle_timer = idle_timer
+        self.stream_settings = stream_settings
         self._event = asyncio.Event()
         self._part_event = asyncio.Event()
         self._segments: deque[Segment] = deque(maxlen=deque_maxlen)
@@ -318,7 +344,6 @@ class StreamOutput:
         """Handle cleanup."""
         self._event.set()
         self.idle_timer.clear()
-        self._segments = deque(maxlen=self._segments.maxlen)
 
 
 class StreamView(HomeAssistantView):
@@ -347,7 +372,7 @@ class StreamView(HomeAssistantView):
             raise web.HTTPNotFound()
 
         # Start worker if not already started
-        stream.start()
+        await stream.start()
 
         return await self.handle(request, stream, sequence, part_num)
 
@@ -356,3 +381,99 @@ class StreamView(HomeAssistantView):
     ) -> web.StreamResponse:
         """Handle the stream request."""
         raise NotImplementedError()
+
+
+class KeyFrameConverter:
+    """
+    Enables generating and getting an image from the last keyframe seen in the stream.
+
+    An overview of the thread and state interaction:
+        the worker thread sets a packet
+        get_image is called from the main asyncio loop
+        get_image schedules _generate_image in an executor thread
+        _generate_image will try to create an image from the packet
+        _generate_image will clear the packet, so there will only be one attempt per packet
+    If successful, self._image will be updated and returned by get_image
+    If unsuccessful, get_image will return the previous image
+    """
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize."""
+
+        # Keep import here so that we can import stream integration without installing reqs
+        # pylint: disable=import-outside-toplevel
+        from homeassistant.components.camera.img_util import TurboJPEGSingleton
+
+        self.packet: Packet = None
+        self._hass = hass
+        self._image: bytes | None = None
+        self._turbojpeg = TurboJPEGSingleton.instance()
+        self._lock = asyncio.Lock()
+        self._codec_context: CodecContext | None = None
+
+    def create_codec_context(self, codec_context: CodecContext) -> None:
+        """
+        Create a codec context to be used for decoding the keyframes.
+
+        This is run by the worker thread and will only be called once per worker.
+        """
+
+        if self._codec_context:
+            return
+
+        # Keep import here so that we can import stream integration without installing reqs
+        # pylint: disable=import-outside-toplevel
+        from av import CodecContext
+
+        self._codec_context = CodecContext.create(codec_context.name, "r")
+        self._codec_context.extradata = codec_context.extradata
+        self._codec_context.skip_frame = "NONKEY"
+        self._codec_context.thread_type = "NONE"
+
+    def _generate_image(self, width: int | None, height: int | None) -> None:
+        """
+        Generate the keyframe image.
+
+        This is run in an executor thread, but since it is called within an
+        the asyncio lock from the main thread, there will only be one entry
+        at a time per instance.
+        """
+
+        if not (self._turbojpeg and self.packet and self._codec_context):
+            return
+        packet = self.packet
+        self.packet = None
+        for _ in range(2):  # Retry once if codec context needs to be flushed
+            try:
+                # decode packet (flush afterwards)
+                frames = self._codec_context.decode(packet)
+                for _i in range(2):
+                    if frames:
+                        break
+                    frames = self._codec_context.decode(None)
+                break
+            except EOFError:
+                _LOGGER.debug("Codec context needs flushing, attempting to reopen")
+                self._codec_context.close()
+                self._codec_context.open()
+        else:
+            _LOGGER.debug("Unable to decode keyframe")
+            return
+        if frames:
+            frame = frames[0]
+            if width and height:
+                frame = frame.reformat(width=width, height=height)
+            bgr_array = frame.to_ndarray(format="bgr24")
+            self._image = bytes(self._turbojpeg.encode(bgr_array))
+
+    async def async_get_image(
+        self,
+        width: int | None = None,
+        height: int | None = None,
+    ) -> bytes | None:
+        """Fetch an image from the Stream and return it as a jpeg in bytes."""
+
+        # Use a lock to ensure only one thread is working on the keyframe at a time
+        async with self._lock:
+            await self._hass.async_add_executor_job(self._generate_image, width, height)
+        return self._image

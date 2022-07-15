@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "authorize_url_timeout": "Tempo scaduto nel generare l'URL di autorizzazione.",
-            "missing_configuration": "Il componente non \u00e8 configurato. Si prega di seguire la documentazione.",
+            "missing_configuration": "Il componente non \u00e8 configurato. Segui la documentazione.",
             "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
         },
         "create_entry": {
@@ -14,7 +14,7 @@
             },
             "reauth_confirm": {
                 "description": "L'integrazione di Lyric deve autenticare nuovamente il tuo account.",
-                "title": "Autenticare nuovamente l'integrazione"
+                "title": "Autentica nuovamente l'integrazione"
             }
         }
     }

@@ -9,14 +9,13 @@
             "snmp_error": "El servidor SNMP est\u00e1 apagado o la impresora no es compatible.",
             "wrong_host": "Nombre del host o direcci\u00f3n IP no v\u00e1lidos."
         },
-        "flow_title": "Impresora Brother: {model} {serial_number}",
+        "flow_title": "{model} {serial_number}",
         "step": {
             "user": {
                 "data": {
                     "host": "Host",
                     "type": "Tipo de impresora"
-                },
-                "description": "Configura la integraci\u00f3n de impresoras Brother. Si tienes problemas con la configuraci\u00f3n, ve a: https://www.home-assistant.io/integrations/brother"
+                }
             },
             "zeroconf_confirm": {
                 "data": {

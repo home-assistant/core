@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from functools import partial
-from typing import Any, Tuple, cast
+from typing import Any, cast
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -10,12 +10,9 @@ from homeassistant.components.light import (
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
     ATTR_TRANSITION,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_RGB,
-    COLOR_MODE_RGBW,
-    SUPPORT_EFFECT,
-    SUPPORT_TRANSITION,
+    ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -53,16 +50,16 @@ async def async_setup_entry(
 class WLEDMasterLight(WLEDEntity, LightEntity):
     """Defines a WLED master light."""
 
-    _attr_color_mode = COLOR_MODE_BRIGHTNESS
+    _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_icon = "mdi:led-strip-variant"
-    _attr_supported_features = SUPPORT_TRANSITION
+    _attr_name = "Master"
+    _attr_supported_features = LightEntityFeature.TRANSITION
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
     def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
         """Initialize WLED master light."""
         super().__init__(coordinator=coordinator)
-        self._attr_name = f"{coordinator.data.info.name} Master"
         self._attr_unique_id = coordinator.data.info.mac_address
-        self._attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
 
     @property
     def brightness(self) -> int | None:
@@ -105,7 +102,7 @@ class WLEDMasterLight(WLEDEntity, LightEntity):
 class WLEDSegmentLight(WLEDEntity, LightEntity):
     """Defines a WLED light based on a segment."""
 
-    _attr_supported_features = SUPPORT_EFFECT | SUPPORT_TRANSITION
+    _attr_supported_features = LightEntityFeature.EFFECT | LightEntityFeature.TRANSITION
     _attr_icon = "mdi:led-strip-variant"
 
     def __init__(
@@ -121,19 +118,18 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
 
         # Segment 0 uses a simpler name, which is more natural for when using
         # a single segment / using WLED with one big LED strip.
-        self._attr_name = f"{coordinator.data.info.name} Segment {segment}"
-        if segment == 0:
-            self._attr_name = coordinator.data.info.name
+        if segment != 0:
+            self._attr_name = f"Segment {segment}"
 
         self._attr_unique_id = (
             f"{self.coordinator.data.info.mac_address}_{self._segment}"
         )
 
-        self._attr_color_mode = COLOR_MODE_RGB
-        self._attr_supported_color_modes = {COLOR_MODE_RGB}
+        self._attr_color_mode = ColorMode.RGB
+        self._attr_supported_color_modes = {ColorMode.RGB}
         if self._rgbw and self._wv:
-            self._attr_color_mode = COLOR_MODE_RGBW
-            self._attr_supported_color_modes = {COLOR_MODE_RGBW}
+            self._attr_color_mode = ColorMode.RGBW
+            self._attr_supported_color_modes = {ColorMode.RGBW}
 
     @property
     def available(self) -> bool:
@@ -154,7 +150,7 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
     def rgbw_color(self) -> tuple[int, int, int, int] | None:
         """Return the color value."""
         return cast(
-            Tuple[int, int, int, int],
+            tuple[int, int, int, int],
             self.coordinator.data.state.segments[self._segment].color_primary,
         )
 

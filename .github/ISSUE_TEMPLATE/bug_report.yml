@@ -31,7 +31,7 @@ body:
       label: What version of Home Assistant Core has the issue?
       placeholder: core-
       description: >
-        Can be found in: [Configuration panel -> Info](https://my.home-assistant.io/redirect/info/).
+        Can be found in: [Settings -> About](https://my.home-assistant.io/redirect/info/).
 
         [![Open your Home Assistant instance and show your Home Assistant version information.](https://my.home-assistant.io/badges/info.svg)](https://my.home-assistant.io/redirect/info/)
   - type: input
@@ -46,7 +46,7 @@ body:
     attributes:
       label: What type of installation are you running?
       description: >
-        Can be found in: [Configuration panel -> Info](https://my.home-assistant.io/redirect/info/).
+        Can be found in: [Settings -> About](https://my.home-assistant.io/redirect/info/).
 
         [![Open your Home Assistant instance and show your Home Assistant version information.](https://my.home-assistant.io/badges/info.svg)](https://my.home-assistant.io/redirect/info/)
       options:
@@ -75,6 +75,18 @@ body:
     attributes:
       value: |
         # Details
+  - type: textarea
+    attributes:
+      label: Diagnostics information
+      placeholder: "drag-and-drop the diagnostics data file here (do not copy-and-paste the content)"
+      description: >-
+        Many integrations provide the ability to download diagnostic data
+        on the device page (and on the integration dashboard).
+
+        **It would really help if you could download the diagnostics data for the device you are having issues with,
+        and <ins>drag-and-drop that file into the textbox below.</ins>**
+
+        It generally allows pinpointing defects and thus resolving issues faster.
   - type: textarea
     attributes:
       label: Example YAML snippet

@@ -52,7 +52,7 @@ flow for details.
 
 Progress the flow. Most flows will be 1 page, but could optionally add extra
 login challenges, like TFA. Once the flow has finished, the returned step will
-have type RESULT_TYPE_CREATE_ENTRY and "result" key will contain an authorization code.
+have type FlowResultType.CREATE_ENTRY and "result" key will contain an authorization code.
 The authorization code associated with an authorized user by default, it will
 associate with an credential if "type" set to "link_user" in
 "/auth/login_flow"
@@ -75,6 +75,7 @@ import voluptuous_serialize
 
 from homeassistant import data_entry_flow
 from homeassistant.auth.models import Credentials
+from homeassistant.components import onboarding
 from homeassistant.components.http.auth import async_user_not_allowed_do_auth
 from homeassistant.components.http.ban import (
     log_invalid_auth,
@@ -105,7 +106,7 @@ class AuthProvidersView(HomeAssistantView):
     async def get(self, request):
         """Get available auth providers."""
         hass = request.app["hass"]
-        if not hass.components.onboarding.async_is_user_onboarded():
+        if not onboarding.async_is_user_onboarded(hass):
             return self.json_message(
                 message="Onboarding not finished",
                 status_code=HTTPStatus.BAD_REQUEST,
@@ -122,13 +123,13 @@ class AuthProvidersView(HomeAssistantView):
 
 def _prepare_result_json(result):
     """Convert result to JSON."""
-    if result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
+    if result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY:
         data = result.copy()
         data.pop("result")
         data.pop("data")
         return data
 
-    if result["type"] != data_entry_flow.RESULT_TYPE_FORM:
+    if result["type"] != data_entry_flow.FlowResultType.FORM:
         return result
 
     data = result.copy()
@@ -153,11 +154,11 @@ class LoginFlowBaseView(HomeAssistantView):
 
     async def _async_flow_result_to_response(self, request, client_id, result):
         """Convert the flow result to a response."""
-        if result["type"] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
+        if result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY:
             # @log_invalid_auth does not work here since it returns HTTP 200.
             # We need to manually log failed login attempts.
             if (
-                result["type"] == data_entry_flow.RESULT_TYPE_FORM
+                result["type"] == data_entry_flow.FlowResultType.FORM
                 and (errors := result.get("errors"))
                 and errors.get("base")
                 in (
@@ -197,7 +198,6 @@ class LoginFlowIndexView(LoginFlowBaseView):
 
     async def get(self, request):
         """Do not allow index of flows in progress."""
-        # pylint: disable=no-self-use
         return web.Response(status=HTTPStatus.METHOD_NOT_ALLOWED)
 
     @RequestDataValidator(

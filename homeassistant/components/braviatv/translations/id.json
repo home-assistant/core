@@ -21,8 +21,7 @@
                 "data": {
                     "host": "Host"
                 },
-                "description": "Siapkan integrasi TV Sony Bravia. Jika Anda memiliki masalah dengan konfigurasi, buka: https://www.home-assistant.io/integrations/braviatv \n\nPastikan TV Anda dinyalakan.",
-                "title": "TV Sony Bravia"
+                "description": "Pastikan TV Anda dinyalakan sebelum menyiapkan."
             }
         }
     },

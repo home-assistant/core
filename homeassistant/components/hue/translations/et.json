@@ -6,6 +6,7 @@
             "already_in_progress": "Seadistamine on juba k\u00e4imas",
             "cannot_connect": "\u00dchendus nurjus",
             "discover_timeout": "Ei leia Philips Hue sildu",
+            "invalid_host": "Kehtetu host",
             "no_bridges": "Philips Hue sildu ei avastatud",
             "not_hue_bridge": "See pole Hue sild",
             "unknown": "Ilmnes tundmatu viga"
@@ -69,7 +70,8 @@
                 "data": {
                     "allow_hue_groups": "Luba Hue r\u00fchmad",
                     "allow_hue_scenes": "Luba Hue stseenid",
-                    "allow_unreachable": "Luba k\u00e4ttesaamatutel pirnidel oma olekust \u00f5igesti teatada"
+                    "allow_unreachable": "Luba k\u00e4ttesaamatutel pirnidel oma olekust \u00f5igesti teatada",
+                    "ignore_availability": "Ignoreeri antud seadmete \u00fchenduvuse olekut"
                 }
             }
         }

@@ -1,6 +1,11 @@
 """Support for Daikin AirBase zones."""
+from __future__ import annotations
+
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN as DAIKIN_DOMAIN
 
@@ -10,7 +15,12 @@ DAIKIN_ATTR_ADVANCED = "adv"
 DAIKIN_ATTR_STREAMER = "streamer"
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Old way of setting up the platform.
 
     Can only be called when a user accidentally mentions the platform in their
@@ -18,10 +28,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up Daikin climate based on config_entry."""
     daikin_api = hass.data[DAIKIN_DOMAIN][entry.entry_id]
-    switches = []
+    switches: list[DaikinZoneSwitch | DaikinStreamerSwitch] = []
     if zones := daikin_api.device.zones:
         switches.extend(
             [
@@ -39,7 +51,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         async_add_entities(switches)
 
 
-class DaikinZoneSwitch(ToggleEntity):
+class DaikinZoneSwitch(SwitchEntity):
     """Representation of a zone."""
 
     def __init__(self, daikin_api, zone_id):

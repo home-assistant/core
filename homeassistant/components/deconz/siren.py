@@ -1,27 +1,23 @@
 """Support for deCONZ siren."""
-
 from __future__ import annotations
 
-from collections.abc import ValuesView
 from typing import Any
 
-from pydeconz.light import Siren
+from pydeconz.models.event import EventType
+from pydeconz.models.light.siren import Siren
 
 from homeassistant.components.siren import (
     ATTR_DURATION,
     DOMAIN,
-    SUPPORT_DURATION,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
     SirenEntity,
+    SirenEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .deconz_device import DeconzDevice
-from .gateway import DeconzGateway, get_gateway_from_config_entry
+from .gateway import get_gateway_from_config_entry
 
 
 async def async_setup_entry(
@@ -34,60 +30,46 @@ async def async_setup_entry(
     gateway.entities[DOMAIN] = set()
 
     @callback
-    def async_add_siren(
-        lights: list[Siren] | ValuesView[Siren] = gateway.api.lights.values(),
-    ) -> None:
+    def async_add_siren(_: EventType, siren_id: str) -> None:
         """Add siren from deCONZ."""
-        entities = []
+        siren = gateway.api.lights.sirens[siren_id]
+        async_add_entities([DeconzSiren(siren, gateway)])
 
-        for light in lights:
-
-            if (
-                isinstance(light, Siren)
-                and light.unique_id not in gateway.entities[DOMAIN]
-            ):
-                entities.append(DeconzSiren(light, gateway))
-
-        if entities:
-            async_add_entities(entities)
-
-    config_entry.async_on_unload(
-        async_dispatcher_connect(
-            hass,
-            gateway.signal_new_light,
-            async_add_siren,
-        )
+    gateway.register_platform_add_device_callback(
+        async_add_siren,
+        gateway.api.lights.sirens,
     )
-
-    async_add_siren()
 
 
 class DeconzSiren(DeconzDevice, SirenEntity):
     """Representation of a deCONZ siren."""
 
     TYPE = DOMAIN
+    _attr_supported_features = (
+        SirenEntityFeature.TURN_ON
+        | SirenEntityFeature.TURN_OFF
+        | SirenEntityFeature.DURATION
+    )
     _device: Siren
-
-    def __init__(self, device: Siren, gateway: DeconzGateway) -> None:
-        """Set up siren."""
-        super().__init__(device, gateway)
-
-        self._attr_supported_features = (
-            SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_DURATION
-        )
 
     @property
     def is_on(self) -> bool:
         """Return true if siren is on."""
-        return self._device.is_on  # type: ignore[no-any-return]
+        return self._device.is_on
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on siren."""
-        data = {}
         if (duration := kwargs.get(ATTR_DURATION)) is not None:
-            data["duration"] = duration * 10
-        await self._device.turn_on(**data)
+            duration *= 10
+        await self.gateway.api.lights.sirens.set_state(
+            id=self._device.resource_id,
+            on=True,
+            duration=duration,
+        )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off siren."""
-        await self._device.turn_off()
+        await self.gateway.api.lights.sirens.set_state(
+            id=self._device.resource_id,
+            on=False,
+        )

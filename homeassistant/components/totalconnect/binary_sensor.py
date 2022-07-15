@@ -1,17 +1,18 @@
 """Interfaces with TotalConnect sensors."""
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_DOOR,
-    DEVICE_CLASS_GAS,
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_SAFETY,
-    DEVICE_CLASS_SMOKE,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 
 
-async def async_setup_entry(hass, entry, async_add_entities) -> None:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up TotalConnect device sensors based on a config entry."""
     sensors = []
 
@@ -65,17 +66,17 @@ class TotalConnectBinarySensor(BinarySensorEntity):
 
     @property
     def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
+        """Return the class of this device, from BinarySensorDeviceClass."""
         if self._zone.is_type_security():
-            return DEVICE_CLASS_DOOR
+            return BinarySensorDeviceClass.DOOR
         if self._zone.is_type_fire():
-            return DEVICE_CLASS_SMOKE
+            return BinarySensorDeviceClass.SMOKE
         if self._zone.is_type_carbon_monoxide():
-            return DEVICE_CLASS_GAS
+            return BinarySensorDeviceClass.GAS
         if self._zone.is_type_motion():
-            return DEVICE_CLASS_MOTION
+            return BinarySensorDeviceClass.MOTION
         if self._zone.is_type_medical():
-            return DEVICE_CLASS_SAFETY
+            return BinarySensorDeviceClass.SAFETY
         return None
 
     @property

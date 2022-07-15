@@ -39,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.entry_id] = coordinator
 
-    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     return True
 
@@ -110,7 +110,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
             ),
         )
 
-    def _send_command(self, command: str, repeats: int = 1) -> None:
+    def _send_command(self, command: Iterable[str], repeats: int = 1) -> None:
         """Send a command to the TV."""
         for _ in range(repeats):
             for cmd in command:

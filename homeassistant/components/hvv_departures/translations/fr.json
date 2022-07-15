@@ -5,7 +5,7 @@
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
-            "invalid_auth": "Authentification invalide",
+            "invalid_auth": "Authentification non valide",
             "no_results": "Aucun r\u00e9sultat. Essayez avec une autre station / adresse"
         },
         "step": {

@@ -8,7 +8,7 @@ from datetime import date
 from vehicle import Vehicle
 
 from homeassistant.components.sensor import (
-    DEVICE_CLASS_DATE,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
@@ -42,14 +42,14 @@ class RDWSensorEntityDescription(
 SENSORS: tuple[RDWSensorEntityDescription, ...] = (
     RDWSensorEntityDescription(
         key="apk_expiration",
-        name="APK Expiration",
-        device_class=DEVICE_CLASS_DATE,
+        name="APK expiration",
+        device_class=SensorDeviceClass.DATE,
         value_fn=lambda vehicle: vehicle.apk_expiration,
     ),
     RDWSensorEntityDescription(
         key="ascription_date",
-        name="Ascription Date",
-        device_class=DEVICE_CLASS_DATE,
+        name="Ascription date",
+        device_class=SensorDeviceClass.DATE,
         value_fn=lambda vehicle: vehicle.ascription_date,
     ),
 )
@@ -76,6 +76,7 @@ class RDWSensorEntity(CoordinatorEntity, SensorEntity):
     """Defines an RDW sensor."""
 
     entity_description: RDWSensorEntityDescription
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -93,7 +94,7 @@ class RDWSensorEntity(CoordinatorEntity, SensorEntity):
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, f"{license_plate}")},
             manufacturer=coordinator.data.brand,
-            name=f"{coordinator.data.brand}: {coordinator.data.license_plate}",
+            name=f"{coordinator.data.brand} {coordinator.data.license_plate}",
             model=coordinator.data.model,
             configuration_url=f"https://ovi.rdw.nl/default.aspx?kenteken={coordinator.data.license_plate}",
         )

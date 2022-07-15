@@ -10,7 +10,6 @@ from homeassistant.components.philips_js.const import CONF_ALLOW_NOTIFY, DOMAIN
 from . import (
     MOCK_CONFIG,
     MOCK_CONFIG_PAIRED,
-    MOCK_IMPORT,
     MOCK_PASSWORD,
     MOCK_SYSTEM_UNPAIRED,
     MOCK_USERINPUT,
@@ -43,32 +42,6 @@ async def mock_tv_pairable(mock_tv):
     mock_tv.pairRequest.return_value = {}
     mock_tv.pairGrant.return_value = MOCK_USERNAME, MOCK_PASSWORD
     return mock_tv
-
-
-async def test_import(hass, mock_setup_entry):
-    """Test we get an item on import."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data=MOCK_IMPORT,
-    )
-
-    assert result["type"] == "create_entry"
-    assert result["title"] == "Philips TV (1234567890)"
-    assert result["data"] == MOCK_CONFIG
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_import_exist(hass, mock_config_entry):
-    """Test we get an item on import."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data=MOCK_IMPORT,
-    )
-
-    assert result["type"] == "abort"
-    assert result["reason"] == "already_configured"
 
 
 async def test_form(hass, mock_setup_entry):
@@ -246,12 +219,12 @@ async def test_options_flow(hass):
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={CONF_ALLOW_NOTIFY: True}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert config_entry.options == {CONF_ALLOW_NOTIFY: True}

@@ -8,7 +8,6 @@
             "unknown": "Errore imprevisto"
         },
         "error": {
-            "cannot_connect": "Impossibile connettersi",
             "one": "Vuoto",
             "other": "Vuoti"
         },
@@ -20,7 +19,7 @@
                     "name": "Nome",
                     "password": "Password"
                 },
-                "title": "Impostare il dispositivo Switchbot"
+                "title": "Imposta il dispositivo Switchbot"
             }
         }
     },

@@ -19,7 +19,6 @@ from homeassistant.const import (
     ATTR_LONGITUDE,
     CONCENTRATION_PARTS_PER_MILLION,
     DEGREE,
-    ENTITY_CATEGORY_DIAGNOSTIC,
     LENGTH_MILLIMETERS,
     PERCENTAGE,
     PRESSURE_MBAR,
@@ -30,11 +29,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.device_registry import async_entries_for_config_entry
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -174,7 +174,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         name="Battery Percent",
         netatmo_name="battery_percent",
         entity_registry_enabled_default=True,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.BATTERY,
@@ -234,7 +234,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         name="Reachability",
         netatmo_name="reachable",
         entity_registry_enabled_default=False,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:signal",
     ),
     NetatmoSensorEntityDescription(
@@ -242,7 +242,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         name="Radio",
         netatmo_name="rf_status",
         entity_registry_enabled_default=False,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:signal",
     ),
     NetatmoSensorEntityDescription(
@@ -250,7 +250,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         name="Radio Level",
         netatmo_name="rf_status",
         entity_registry_enabled_default=False,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
@@ -260,7 +260,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         name="Wifi",
         netatmo_name="wifi_status",
         entity_registry_enabled_default=False,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:wifi",
     ),
     NetatmoSensorEntityDescription(
@@ -268,7 +268,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         name="Wifi Level",
         netatmo_name="wifi_status",
         entity_registry_enabled_default=False,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
@@ -386,7 +386,6 @@ async def async_setup_entry(
         WEATHERSTATION_DATA_CLASS_NAME,
         HOMECOACH_DATA_CLASS_NAME,
     ):
-        await data_handler.register_data_class(data_class_name, data_class_name, None)
         data_class = data_handler.data.get(data_class_name)
 
         if data_class and data_class.raw_data:
@@ -394,13 +393,13 @@ async def async_setup_entry(
 
         async_add_entities(await find_entities(data_class_name), True)
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
 
     async def add_public_entities(update: bool = True) -> None:
         """Retrieve Netatmo public weather entities."""
         entities = {
             device.name: device.id
-            for device in async_entries_for_config_entry(
+            for device in dr.async_entries_for_config_entry(
                 device_registry, entry.entry_id
             )
             if device.model == "Public Weather stations"
@@ -589,7 +588,7 @@ class NetatmoClimateBatterySensor(NetatmoBase, SensorEntity):
             name="Battery Percent",
             netatmo_name="battery_percent",
             entity_registry_enabled_default=True,
-            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+            entity_category=EntityCategory.DIAGNOSTIC,
             native_unit_of_measurement=PERCENTAGE,
             state_class=SensorStateClass.MEASUREMENT,
             device_class=SensorDeviceClass.BATTERY,
@@ -840,15 +839,16 @@ class NetatmoPublicSensor(NetatmoBase, SensorEntity):
         elif self.entity_description.key == "guststrength":
             data = self._data.get_latest_gust_strengths()
 
-        if data is None:
-            if self.state is None:
-                return
-            _LOGGER.debug(
-                "No station provides %s data in the area %s",
-                self.entity_description.key,
-                self._area_name,
-            )
-            self._attr_native_value = None
+        if not data:
+            if self.available:
+                _LOGGER.error(
+                    "No station provides %s data in the area %s",
+                    self.entity_description.key,
+                    self._area_name,
+                )
+                self._attr_native_value = None
+
+            self._attr_available = False
             return
 
         if values := [x for x in data.values() if x is not None]:

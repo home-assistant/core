@@ -17,13 +17,13 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
-    ENTITY_CATEGORY_DIAGNOSTIC,
     PERCENTAGE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity import EntityCategory
 
 from .conftest import setup_platform
 
@@ -95,7 +95,7 @@ async def test_entity_and_device_attributes(hass, device_factory):
     entry = entity_registry.async_get("sensor.sensor_1_battery")
     assert entry
     assert entry.unique_id == f"{device.device_id}.{Attribute.battery}"
-    assert entry.entity_category == ENTITY_CATEGORY_DIAGNOSTIC
+    assert entry.entity_category is EntityCategory.DIAGNOSTIC
     entry = device_registry.async_get_device({(DOMAIN, device.device_id)})
     assert entry
     assert entry.configuration_url == "https://account.smartthings.com"
@@ -190,6 +190,8 @@ async def test_power_consumption_sensor(hass, device_factory):
     state = hass.states.get("sensor.refrigerator_power")
     assert state
     assert state.state == "109"
+    assert state.attributes["power_consumption_start"] == "2021-07-30T16:45:25Z"
+    assert state.attributes["power_consumption_end"] == "2021-07-30T16:58:33Z"
     entry = entity_registry.async_get("sensor.refrigerator_power")
     assert entry
     assert entry.unique_id == f"{device.device_id}.power_meter"

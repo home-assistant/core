@@ -3,14 +3,15 @@ import logging
 
 from homeassistant import core
 from homeassistant.components.http.view import HomeAssistantView
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, ENTITY_CATEGORIES
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.typing import ConfigType
 
 from .auth import Auth
 from .config import AbstractConfig
 from .const import CONF_ENDPOINT, CONF_ENTITY_CONFIG, CONF_FILTER, CONF_LOCALE
 from .smart_home import async_handle_message
-from .state_report import async_enable_proactive_mode
 
 _LOGGER = logging.getLogger(__name__)
 SMART_HOME_HTTP_ENDPOINT = "/api/alexa/smart_home"
@@ -37,7 +38,7 @@ class AlexaConfig(AbstractConfig):
     @property
     def should_report_state(self):
         """Return if we should proactively report states."""
-        return self._auth is not None
+        return self._auth is not None and self.authorized
 
     @property
     def endpoint(self):
@@ -66,7 +67,10 @@ class AlexaConfig(AbstractConfig):
 
         entity_registry = er.async_get(self.hass)
         if registry_entry := entity_registry.async_get(entity_id):
-            auxiliary_entity = registry_entry.entity_category in ENTITY_CATEGORIES
+            auxiliary_entity = (
+                registry_entry.entity_category is not None
+                or registry_entry.hidden_by is not None
+            )
         else:
             auxiliary_entity = False
         return not auxiliary_entity
@@ -85,7 +89,7 @@ class AlexaConfig(AbstractConfig):
         return await self._auth.async_do_auth(code)
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> None:
     """Activate Smart Home functionality of Alexa component.
 
     This is optional, triggered by having a `smart_home:` sub-section in the
@@ -95,10 +99,11 @@ async def async_setup(hass, config):
     by the cloud component which will call async_handle_message directly.
     """
     smart_home_config = AlexaConfig(hass, config)
+    await smart_home_config.async_initialize()
     hass.http.register_view(SmartHomeView(smart_home_config))
 
     if smart_home_config.should_report_state:
-        await async_enable_proactive_mode(hass, smart_home_config)
+        await smart_home_config.async_enable_proactive_mode()
 
 
 class SmartHomeView(HomeAssistantView):

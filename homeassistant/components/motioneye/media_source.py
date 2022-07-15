@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import PurePath
-from typing import Optional, Tuple, cast
+from typing import Optional, cast
 
 from motioneye_client.const import KEY_MEDIA_LIST, KEY_MIME_TYPE, KEY_PATH
 
@@ -96,7 +96,7 @@ class MotionEyeMediaSource(MediaSource):
         base = [None] * 4
         data = identifier.split("#", 3)
         return cast(
-            Tuple[Optional[str], Optional[str], Optional[str], Optional[str]],
+            tuple[Optional[str], Optional[str], Optional[str], Optional[str]],
             tuple(data + base)[:4],  # type: ignore[operator]
         )
 
@@ -134,8 +134,7 @@ class MotionEyeMediaSource(MediaSource):
     def _get_device_or_raise(self, device_id: str) -> dr.DeviceEntry:
         """Get a config entry from a URL."""
         device_registry = dr.async_get(self.hass)
-        device = device_registry.async_get(device_id)
-        if not device:
+        if not (device := device_registry.async_get(device_id)):
             raise MediaSourceError(f"Unable to find device with id: {device_id}")
         return device
 

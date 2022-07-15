@@ -32,7 +32,7 @@ async def async_get_controller(
     websession = aiohttp_client.async_get_clientsession(hass)
     client = Client(session=websession)
     try:
-        await client.load_local(ip_address, password, port=port, ssl=ssl)
+        await client.load_local(ip_address, password, port=port, use_ssl=ssl)
     except RainMachineError:
         return None
     else:
@@ -85,7 +85,7 @@ class RainMachineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             ):
                 await self.async_set_unique_id(controller.mac)
                 self._abort_if_unique_id_configured(
-                    updates={CONF_IP_ADDRESS: ip_address}
+                    updates={CONF_IP_ADDRESS: ip_address}, reload_on_update=False
                 )
 
         # A new rain machine: We will change out the unique id
@@ -132,7 +132,7 @@ class RainMachineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 # access token without using the IP address and password, so we have to
                 # store it:
                 return self.async_create_entry(
-                    title=controller.name,
+                    title=str(controller.name),
                     data={
                         CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS],
                         CONF_PASSWORD: user_input[CONF_PASSWORD],

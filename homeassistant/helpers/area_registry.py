@@ -3,18 +3,18 @@ from __future__ import annotations
 
 from collections import OrderedDict
 from collections.abc import Container, Iterable, MutableMapping
-from typing import cast
+from typing import Optional, cast
 
 import attr
 
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.loader import bind_hass
 from homeassistant.util import slugify
 
+from . import device_registry as dr, entity_registry as er
+from .frame import report
+from .storage import Store
 from .typing import UNDEFINED, UndefinedType
-
-# mypy: disallow-any-generics
 
 DATA_REGISTRY = "area_registry"
 EVENT_AREA_REGISTRY_UPDATED = "area_registry_updated"
@@ -49,8 +49,8 @@ class AreaRegistry:
         """Initialize the area registry."""
         self.hass = hass
         self.areas: MutableMapping[str, AreaEntry] = {}
-        self._store = hass.helpers.storage.Store(
-            STORAGE_VERSION, STORAGE_KEY, atomic_writes=True
+        self._store = Store[dict[str, list[dict[str, Optional[str]]]]](
+            hass, STORAGE_VERSION, STORAGE_KEY, atomic_writes=True
         )
         self._normalized_name_area_idx: dict[str, str] = {}
 
@@ -147,7 +147,7 @@ class AreaRegistry:
 
         normalized_name = None
 
-        if name is not UNDEFINED:
+        if name is not UNDEFINED and name != old.name:
             normalized_name = normalize_area_name(name)
 
             if normalized_name != old.normalized_name and self.async_get_area_by_name(
@@ -180,6 +180,7 @@ class AreaRegistry:
 
         if data is not None:
             for area in data["areas"]:
+                assert area["name"] is not None and area["id"] is not None
                 normalized_name = normalize_area_name(area["name"])
                 areas[area["id"]] = AreaEntry(
                     name=area["name"],
@@ -229,6 +230,9 @@ async def async_get_registry(hass: HomeAssistant) -> AreaRegistry:
 
     This is deprecated and will be removed in the future. Use async_get instead.
     """
+    report(
+        "uses deprecated `async_get_registry` to access area registry, use async_get instead"
+    )
     return async_get(hass)
 
 

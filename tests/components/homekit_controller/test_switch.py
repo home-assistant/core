@@ -38,6 +38,15 @@ def create_valve_service(accessory):
     remaining.value = 99
 
 
+def create_char_switch_service(accessory):
+    """Define swtch characteristics."""
+    service = accessory.add_service(ServicesTypes.OUTLET)
+
+    on_char = service.add_char(CharacteristicsTypes.VENDOR_AQARA_PAIRING_MODE)
+    on_char.perms.append("ev")
+    on_char.value = False
+
+
 async def test_switch_change_outlet_state(hass, utcnow):
     """Test that we can turn a HomeKit outlet on and off again."""
     helper = await setup_test_component(hass, create_switch_service)
@@ -45,12 +54,22 @@ async def test_switch_change_outlet_state(hass, utcnow):
     await hass.services.async_call(
         "switch", "turn_on", {"entity_id": "switch.testdevice"}, blocking=True
     )
-    assert helper.characteristics[("outlet", "on")].value == 1
+    helper.async_assert_service_values(
+        ServicesTypes.OUTLET,
+        {
+            CharacteristicsTypes.ON: 1,
+        },
+    )
 
     await hass.services.async_call(
         "switch", "turn_off", {"entity_id": "switch.testdevice"}, blocking=True
     )
-    assert helper.characteristics[("outlet", "on")].value == 0
+    helper.async_assert_service_values(
+        ServicesTypes.OUTLET,
+        {
+            CharacteristicsTypes.ON: 0,
+        },
+    )
 
 
 async def test_switch_read_outlet_state(hass, utcnow):
@@ -63,19 +82,25 @@ async def test_switch_read_outlet_state(hass, utcnow):
     assert switch_1.attributes["outlet_in_use"] is False
 
     # Simulate that someone switched on the device in the real world not via HA
-    helper.characteristics[("outlet", "on")].set_value(True)
-    switch_1 = await helper.poll_and_get_state()
+    switch_1 = await helper.async_update(
+        ServicesTypes.OUTLET,
+        {CharacteristicsTypes.ON: True},
+    )
     assert switch_1.state == "on"
     assert switch_1.attributes["outlet_in_use"] is False
 
     # Simulate that device switched off in the real world not via HA
-    helper.characteristics[("outlet", "on")].set_value(False)
-    switch_1 = await helper.poll_and_get_state()
+    switch_1 = await helper.async_update(
+        ServicesTypes.OUTLET,
+        {CharacteristicsTypes.ON: False},
+    )
     assert switch_1.state == "off"
 
     # Simulate that someone plugged something into the device
-    helper.characteristics[("outlet", "outlet-in-use")].value = True
-    switch_1 = await helper.poll_and_get_state()
+    switch_1 = await helper.async_update(
+        ServicesTypes.OUTLET,
+        {CharacteristicsTypes.OUTLET_IN_USE: True},
+    )
     assert switch_1.state == "off"
     assert switch_1.attributes["outlet_in_use"] is True
 
@@ -87,12 +112,22 @@ async def test_valve_change_active_state(hass, utcnow):
     await hass.services.async_call(
         "switch", "turn_on", {"entity_id": "switch.testdevice"}, blocking=True
     )
-    assert helper.characteristics[("valve", "active")].value == 1
+    helper.async_assert_service_values(
+        ServicesTypes.VALVE,
+        {
+            CharacteristicsTypes.ACTIVE: 1,
+        },
+    )
 
     await hass.services.async_call(
         "switch", "turn_off", {"entity_id": "switch.testdevice"}, blocking=True
     )
-    assert helper.characteristics[("valve", "active")].value == 0
+    helper.async_assert_service_values(
+        ServicesTypes.VALVE,
+        {
+            CharacteristicsTypes.ACTIVE: 0,
+        },
+    )
 
 
 async def test_valve_read_state(hass, utcnow):
@@ -107,18 +142,76 @@ async def test_valve_read_state(hass, utcnow):
     assert switch_1.attributes["remaining_duration"] == 99
 
     # Simulate that someone switched on the device in the real world not via HA
-    helper.characteristics[("valve", "active")].set_value(True)
-    switch_1 = await helper.poll_and_get_state()
+    switch_1 = await helper.async_update(
+        ServicesTypes.VALVE,
+        {CharacteristicsTypes.ACTIVE: True},
+    )
     assert switch_1.state == "on"
 
     # Simulate that someone configured the device in the real world not via HA
-    helper.characteristics[
-        ("valve", "is-configured")
-    ].value = IsConfiguredValues.NOT_CONFIGURED
-    switch_1 = await helper.poll_and_get_state()
+    switch_1 = await helper.async_update(
+        ServicesTypes.VALVE,
+        {CharacteristicsTypes.IS_CONFIGURED: IsConfiguredValues.NOT_CONFIGURED},
+    )
     assert switch_1.attributes["is_configured"] is False
 
     # Simulate that someone using the device in the real world not via HA
-    helper.characteristics[("valve", "in-use")].value = InUseValues.NOT_IN_USE
-    switch_1 = await helper.poll_and_get_state()
+    switch_1 = await helper.async_update(
+        ServicesTypes.VALVE,
+        {CharacteristicsTypes.IN_USE: InUseValues.NOT_IN_USE},
+    )
     assert switch_1.attributes["in_use"] is False
+
+
+async def test_char_switch_change_state(hass, utcnow):
+    """Test that we can turn a characteristic on and off again."""
+    helper = await setup_test_component(
+        hass, create_char_switch_service, suffix="pairing_mode"
+    )
+
+    await hass.services.async_call(
+        "switch",
+        "turn_on",
+        {"entity_id": "switch.testdevice_pairing_mode"},
+        blocking=True,
+    )
+    helper.async_assert_service_values(
+        ServicesTypes.OUTLET,
+        {
+            CharacteristicsTypes.VENDOR_AQARA_PAIRING_MODE: True,
+        },
+    )
+
+    await hass.services.async_call(
+        "switch",
+        "turn_off",
+        {"entity_id": "switch.testdevice_pairing_mode"},
+        blocking=True,
+    )
+    helper.async_assert_service_values(
+        ServicesTypes.OUTLET,
+        {
+            CharacteristicsTypes.VENDOR_AQARA_PAIRING_MODE: False,
+        },
+    )
+
+
+async def test_char_switch_read_state(hass, utcnow):
+    """Test that we can read the state of a HomeKit characteristic switch."""
+    helper = await setup_test_component(
+        hass, create_char_switch_service, suffix="pairing_mode"
+    )
+
+    # Simulate that someone switched on the device in the real world not via HA
+    switch_1 = await helper.async_update(
+        ServicesTypes.OUTLET,
+        {CharacteristicsTypes.VENDOR_AQARA_PAIRING_MODE: True},
+    )
+    assert switch_1.state == "on"
+
+    # Simulate that device switched off in the real world not via HA
+    switch_1 = await helper.async_update(
+        ServicesTypes.OUTLET,
+        {CharacteristicsTypes.VENDOR_AQARA_PAIRING_MODE: False},
+    )
+    assert switch_1.state == "off"

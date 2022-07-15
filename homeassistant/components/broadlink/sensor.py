@@ -1,19 +1,14 @@
 """Support for Broadlink sensors."""
 from __future__ import annotations
 
-import logging
-
-import voluptuous as vol
-
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_HOST,
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
@@ -21,13 +16,11 @@ from homeassistant.const import (
     POWER_WATT,
     TEMP_CELSIUS,
 )
-from homeassistant.helpers import config_validation as cv
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .entity import BroadlinkEntity
-from .helpers import import_device
-
-_LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -94,24 +87,12 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_HOST): cv.string}, extra=vol.ALLOW_EXTRA
-)
 
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Import the device and discontinue platform.
-
-    This is for backward compatibility.
-    Do not use this method.
-    """
-    import_device(hass, config[CONF_HOST])
-    _LOGGER.warning(
-        "The sensor platform is deprecated, please remove it from your configuration"
-    )
-
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Broadlink sensor."""
     device = hass.data[DOMAIN].devices[config_entry.entry_id]
     sensor_data = device.update_manager.coordinator.data

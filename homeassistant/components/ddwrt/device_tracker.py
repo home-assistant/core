@@ -1,4 +1,6 @@
 """Support for DD-WRT routers."""
+from __future__ import annotations
+
 from http import HTTPStatus
 import logging
 import re
@@ -18,7 +20,9 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,7 +46,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(hass, config):
+def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None:
     """Validate the configuration and return a DD-WRT scanner."""
     try:
         return DdWrtDeviceScanner(config[DOMAIN])

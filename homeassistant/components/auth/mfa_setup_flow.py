@@ -50,12 +50,12 @@ async def async_setup(hass):
     """Init mfa setup flow manager."""
     hass.data[DATA_SETUP_FLOW_MGR] = MfaFlowManager(hass)
 
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_SETUP_MFA, websocket_setup_mfa, SCHEMA_WS_SETUP_MFA
+    websocket_api.async_register_command(
+        hass, WS_TYPE_SETUP_MFA, websocket_setup_mfa, SCHEMA_WS_SETUP_MFA
     )
 
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_DEPOSE_MFA, websocket_depose_mfa, SCHEMA_WS_DEPOSE_MFA
+    websocket_api.async_register_command(
+        hass, WS_TYPE_DEPOSE_MFA, websocket_depose_mfa, SCHEMA_WS_DEPOSE_MFA
     )
 
 
@@ -129,11 +129,11 @@ def websocket_depose_mfa(
 
 def _prepare_result_json(result):
     """Convert result to JSON."""
-    if result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
+    if result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY:
         data = result.copy()
         return data
 
-    if result["type"] != data_entry_flow.RESULT_TYPE_FORM:
+    if result["type"] != data_entry_flow.FlowResultType.FORM:
         return result
 
     data = result.copy()

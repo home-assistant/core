@@ -44,15 +44,15 @@
             "button_long_release": "\"{subtype}\" relach\u00e9 apr\u00e8s un appui long",
             "button_quadruple_press": "\"{subtype}\" quadruple cliqu\u00e9",
             "button_quintuple_press": "\"{subtype}\" quintuple cliqu\u00e9",
-            "button_short_press": "\" {subtype} \" press\u00e9",
-            "button_short_release": "\"{subtype}\" relach\u00e9",
-            "button_triple_press": "\"{subtype}\" triple-cliqu\u00e9"
+            "button_short_press": "\u00ab\u00a0{subtype}\u00a0\u00bb enfonc\u00e9",
+            "button_short_release": "\u00ab\u00a0{subtype}\u00a0\u00bb rel\u00e2ch\u00e9",
+            "button_triple_press": "\u00ab\u00a0{subtype}\u00a0\u00bb triple-cliqu\u00e9"
         }
     },
     "options": {
         "error": {
-            "bad_birth": "Topic de naissance invalide",
-            "bad_will": "Topic de testament invalide",
+            "bad_birth": "Sujet de la naissance non valide.",
+            "bad_will": "Sujet du testament non valide.",
             "cannot_connect": "\u00c9chec de connexion"
         },
         "step": {

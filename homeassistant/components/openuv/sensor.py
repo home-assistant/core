@@ -2,12 +2,13 @@
 from __future__ import annotations
 
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DEVICE_CLASS_OZONE, TIME_MINUTES, UV_INDEX
+from homeassistant.const import TIME_MINUTES, UV_INDEX
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import as_local, parse_datetime
@@ -48,71 +49,71 @@ UV_LEVEL_LOW = "Low"
 SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=TYPE_CURRENT_OZONE_LEVEL,
-        name="Current Ozone Level",
-        device_class=DEVICE_CLASS_OZONE,
+        name="Current ozone level",
+        device_class=SensorDeviceClass.OZONE,
         native_unit_of_measurement="du",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_CURRENT_UV_INDEX,
-        name="Current UV Index",
+        name="Current UV index",
         icon="mdi:weather-sunny",
         native_unit_of_measurement=UV_INDEX,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_CURRENT_UV_LEVEL,
-        name="Current UV Level",
+        name="Current UV level",
         icon="mdi:weather-sunny",
     ),
     SensorEntityDescription(
         key=TYPE_MAX_UV_INDEX,
-        name="Max UV Index",
+        name="Max UV index",
         icon="mdi:weather-sunny",
         native_unit_of_measurement=UV_INDEX,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SAFE_EXPOSURE_TIME_1,
-        name="Skin Type 1 Safe Exposure Time",
+        name="Skin type 1 safe exposure time",
         icon="mdi:timer-outline",
         native_unit_of_measurement=TIME_MINUTES,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SAFE_EXPOSURE_TIME_2,
-        name="Skin Type 2 Safe Exposure Time",
+        name="Skin type 2 safe exposure time",
         icon="mdi:timer-outline",
         native_unit_of_measurement=TIME_MINUTES,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SAFE_EXPOSURE_TIME_3,
-        name="Skin Type 3 Safe Exposure Time",
+        name="Skin type 3 safe exposure time",
         icon="mdi:timer-outline",
         native_unit_of_measurement=TIME_MINUTES,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SAFE_EXPOSURE_TIME_4,
-        name="Skin Type 4 Safe Exposure Time",
+        name="Skin type 4 safe exposure time",
         icon="mdi:timer-outline",
         native_unit_of_measurement=TIME_MINUTES,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SAFE_EXPOSURE_TIME_5,
-        name="Skin Type 5 Safe Exposure Time",
+        name="Skin type 5 safe exposure time",
         icon="mdi:timer-outline",
         native_unit_of_measurement=TIME_MINUTES,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SAFE_EXPOSURE_TIME_6,
-        name="Skin Type 6 Safe Exposure Time",
+        name="Skin type 6 safe exposure time",
         icon="mdi:timer-outline",
         native_unit_of_measurement=TIME_MINUTES,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 
@@ -133,7 +134,7 @@ class OpenUvSensor(OpenUvEntity, SensorEntity):
     @callback
     def update_from_latest_data(self) -> None:
         """Update the state."""
-        if not (data := self.openuv.data[DATA_UV].get("result")):
+        if (data := self.openuv.data[DATA_UV]) is None:
             self._attr_available = False
             return
 

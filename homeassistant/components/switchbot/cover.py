@@ -4,21 +4,19 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from switchbot import SwitchbotCurtain  # pylint: disable=import-error
+from switchbot import SwitchbotCurtain
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_POSITION,
-    DEVICE_CLASS_CURTAIN,
-    SUPPORT_CLOSE,
-    SUPPORT_OPEN,
-    SUPPORT_SET_POSITION,
-    SUPPORT_STOP,
+    CoverDeviceClass,
     CoverEntity,
+    CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MAC, CONF_NAME, CONF_PASSWORD
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -38,6 +36,9 @@ async def async_setup_entry(
     coordinator: SwitchbotDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
         DATA_COORDINATOR
     ]
+
+    if not coordinator.data.get(entry.unique_id):
+        raise PlatformNotReady
 
     async_add_entities(
         [
@@ -59,10 +60,12 @@ async def async_setup_entry(
 class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
     """Representation of a Switchbot."""
 
-    coordinator: SwitchbotDataUpdateCoordinator
-    _attr_device_class = DEVICE_CLASS_CURTAIN
+    _attr_device_class = CoverDeviceClass.CURTAIN
     _attr_supported_features = (
-        SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP | SUPPORT_SET_POSITION
+        CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.STOP
+        | CoverEntityFeature.SET_POSITION
     )
     _attr_assumed_state = True
 
@@ -95,44 +98,30 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         """Open the curtain."""
 
         _LOGGER.debug("Switchbot to open curtain %s", self._mac)
-
-        async with self.coordinator.api_lock:
-            self._last_run_success = bool(
-                await self.hass.async_add_executor_job(self._device.open)
-            )
+        self._last_run_success = bool(await self._device.open())
+        self.async_write_ha_state()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the curtain."""
 
         _LOGGER.debug("Switchbot to close the curtain %s", self._mac)
-
-        async with self.coordinator.api_lock:
-            self._last_run_success = bool(
-                await self.hass.async_add_executor_job(self._device.close)
-            )
+        self._last_run_success = bool(await self._device.close())
+        self.async_write_ha_state()
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the moving of this device."""
 
         _LOGGER.debug("Switchbot to stop %s", self._mac)
-
-        async with self.coordinator.api_lock:
-            self._last_run_success = bool(
-                await self.hass.async_add_executor_job(self._device.stop)
-            )
+        self._last_run_success = bool(await self._device.stop())
+        self.async_write_ha_state()
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover shutter to a specific position."""
         position = kwargs.get(ATTR_POSITION)
 
         _LOGGER.debug("Switchbot to move at %d %s", position, self._mac)
-
-        async with self.coordinator.api_lock:
-            self._last_run_success = bool(
-                await self.hass.async_add_executor_job(
-                    self._device.set_position, position
-                )
-            )
+        self._last_run_success = bool(await self._device.set_position(position))
+        self.async_write_ha_state()
 
     @callback
     def _handle_coordinator_update(self) -> None:

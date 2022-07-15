@@ -1,7 +1,7 @@
 {
     "config": {
         "error": {
-            "bad_station_id": "L'ID de station est invalide, manquant ou introuvable dans la base de donn\u00e9es d'ID de station",
+            "bad_station_id": "L'ID de station est non valide, manquant ou introuvable dans la base de donn\u00e9es des ID de stations",
             "cannot_connect": "\u00c9chec de connexion",
             "error_response": "R\u00e9ponse d'Environnement Canada par erreur",
             "too_many_attempts": "Les connexions \u00e0 Environnement Canada sont limit\u00e9es en termes de taux; R\u00e9essayez dans 60 secondes",

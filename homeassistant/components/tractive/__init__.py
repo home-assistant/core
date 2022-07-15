@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass
 import logging
-from typing import Any, List, cast
+from typing import Any, cast
 
 import aiotractive
 
@@ -30,6 +30,7 @@ from .const import (
     ATTR_MINUTES_ACTIVE,
     ATTR_TRACKER_STATE,
     CLIENT,
+    CLIENT_ID,
     DOMAIN,
     RECONNECT_INTERVAL,
     SERVER_UNAVAILABLE,
@@ -68,7 +69,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {}).setdefault(entry.entry_id, {})
 
     client = aiotractive.Tractive(
-        data[CONF_EMAIL], data[CONF_PASSWORD], session=async_get_clientsession(hass)
+        data[CONF_EMAIL],
+        data[CONF_PASSWORD],
+        session=async_get_clientsession(hass),
+        client_id=CLIENT_ID,
     )
     try:
         creds = await client.authenticate()
@@ -98,7 +102,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id][CLIENT] = tractive
     hass.data[DOMAIN][entry.entry_id][TRACKABLES] = trackables
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     async def cancel_listen_task(_: Event) -> None:
         await tractive.unsubscribe()
@@ -164,7 +168,7 @@ class TractiveClient:
     ) -> list[aiotractive.trackable_object.TrackableObject]:
         """Get list of trackable objects."""
         return cast(
-            List[aiotractive.trackable_object.TrackableObject],
+            list[aiotractive.trackable_object.TrackableObject],
             await self._client.trackable_objects(),
         )
 

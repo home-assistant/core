@@ -13,10 +13,11 @@ import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ID, ENTITY_CATEGORY_CONFIG
+from homeassistant.const import ATTR_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -29,8 +30,9 @@ from .const import (
     DATA_ZONES,
     DEFAULT_ZONE_RUN,
     DOMAIN,
-    LOGGER,
+    RUN_STATE_MAP,
 )
+from .model import RainMachineDescriptionMixinUid
 
 ATTR_AREA = "area"
 ATTR_CS_ON = "cs_on"
@@ -49,13 +51,10 @@ ATTR_SOIL_TYPE = "soil_type"
 ATTR_SPRINKLER_TYPE = "sprinkler_head_type"
 ATTR_STATUS = "status"
 ATTR_SUN_EXPOSURE = "sun_exposure"
-ATTR_TIME_REMAINING = "time_remaining"
 ATTR_VEGETATION_TYPE = "vegetation_type"
 ATTR_ZONES = "zones"
 
 DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-
-RUN_STATUS_MAP = {0: "Not Running", 1: "Running", 2: "Queued"}
 
 SOIL_TYPE_MAP = {
     0: "Not Set",
@@ -110,15 +109,8 @@ VEGETATION_MAP = {
 
 
 @dataclass
-class RainMachineSwitchDescriptionMixin:
-    """Define an entity description mixin for switches."""
-
-    uid: int
-
-
-@dataclass
 class RainMachineSwitchDescription(
-    SwitchEntityDescription, RainMachineSwitchDescriptionMixin
+    SwitchEntityDescription, RainMachineDescriptionMixinUid
 ):
     """Describe a RainMachine switch."""
 
@@ -157,6 +149,8 @@ async def async_setup_entry(
         ("zone", zone_coordinator, RainMachineZone, RainMachineZoneEnabled),
     ):
         for uid, data in coordinator.data.items():
+            name = data["name"].capitalize()
+
             # Add a switch to start/stop the program or zone:
             entities.append(
                 switch_class(
@@ -165,7 +159,7 @@ async def async_setup_entry(
                     controller,
                     RainMachineSwitchDescription(
                         key=f"{kind}_{uid}",
-                        name=data["name"],
+                        name=name,
                         icon="mdi:water",
                         uid=uid,
                     ),
@@ -180,8 +174,8 @@ async def async_setup_entry(
                     controller,
                     RainMachineSwitchDescription(
                         key=f"{kind}_{uid}_enabled",
-                        name=f"{data['name']} Enabled",
-                        entity_category=ENTITY_CATEGORY_CONFIG,
+                        name=f"{name} enabled",
+                        entity_category=EntityCategory.CONFIG,
                         icon="mdi:cog",
                         uid=uid,
                     ),
@@ -214,22 +208,14 @@ class RainMachineBaseSwitch(RainMachineEntity, SwitchEntity):
         try:
             resp = await api_coro
         except RequestError as err:
-            LOGGER.error(
-                'Error while executing %s on "%s": %s',
-                api_coro.__name__,
-                self.name,
-                err,
-            )
-            return
+            raise HomeAssistantError(
+                f'Error while executing {api_coro.__name__} on "{self.name}": {err}',
+            ) from err
 
         if resp["statusCode"] != 0:
-            LOGGER.error(
-                'Error while executing %s on "%s": %s',
-                api_coro.__name__,
-                self.name,
-                resp["message"],
+            raise HomeAssistantError(
+                f'Error while executing {api_coro.__name__} on "{self.name}": {resp["message"]}',
             )
-            return
 
         # Because of how inextricably linked programs and zones are, anytime one is
         # toggled, we make sure to update the data of both coordinators:
@@ -343,7 +329,7 @@ class RainMachineProgram(RainMachineActivitySwitch):
                 ATTR_ID: self.entity_description.uid,
                 ATTR_NEXT_RUN: next_run,
                 ATTR_SOAK: data.get("soak"),
-                ATTR_STATUS: RUN_STATUS_MAP[data["status"]],
+                ATTR_STATUS: RUN_STATE_MAP[data["status"]],
                 ATTR_ZONES: [z for z in data["wateringTimes"] if z["active"]],
             }
         )
@@ -377,7 +363,7 @@ class RainMachineZone(RainMachineActivitySwitch):
 
     async def async_start_zone(self, *, zone_run_time: int) -> None:
         """Start a particular zone for a certain amount of time."""
-        await self.async_turn_off(duration=zone_run_time)
+        await self.async_turn_on(duration=zone_run_time)
 
     async def async_stop_zone(self) -> None:
         """Stop a zone."""
@@ -405,24 +391,32 @@ class RainMachineZone(RainMachineActivitySwitch):
 
         self._attr_is_on = bool(data["state"])
 
-        self._attr_extra_state_attributes.update(
-            {
-                ATTR_AREA: data.get("waterSense").get("area"),
-                ATTR_CURRENT_CYCLE: data.get("cycle"),
-                ATTR_FIELD_CAPACITY: data.get("waterSense").get("fieldCapacity"),
-                ATTR_ID: data["uid"],
-                ATTR_NO_CYCLES: data.get("noOfCycles"),
-                ATTR_PRECIP_RATE: data.get("waterSense").get("precipitationRate"),
-                ATTR_RESTRICTIONS: data.get("restriction"),
-                ATTR_SLOPE: SLOPE_TYPE_MAP.get(data.get("slope")),
-                ATTR_SOIL_TYPE: SOIL_TYPE_MAP.get(data.get("soil")),
-                ATTR_SPRINKLER_TYPE: SPRINKLER_TYPE_MAP.get(data.get("group_id")),
-                ATTR_STATUS: RUN_STATUS_MAP[data["state"]],
-                ATTR_SUN_EXPOSURE: SUN_EXPOSURE_MAP.get(data.get("sun")),
-                ATTR_TIME_REMAINING: data.get("remaining"),
-                ATTR_VEGETATION_TYPE: VEGETATION_MAP.get(data.get("type")),
-            }
-        )
+        attrs = {
+            ATTR_CURRENT_CYCLE: data["cycle"],
+            ATTR_ID: data["uid"],
+            ATTR_NO_CYCLES: data["noOfCycles"],
+            ATTR_RESTRICTIONS: data["restriction"],
+            ATTR_SLOPE: SLOPE_TYPE_MAP.get(data["slope"], 99),
+            ATTR_SOIL_TYPE: SOIL_TYPE_MAP.get(data["soil"], 99),
+            ATTR_SPRINKLER_TYPE: SPRINKLER_TYPE_MAP.get(data["group_id"], 99),
+            ATTR_STATUS: RUN_STATE_MAP[data["state"]],
+            ATTR_SUN_EXPOSURE: SUN_EXPOSURE_MAP.get(data.get("sun")),
+            ATTR_VEGETATION_TYPE: VEGETATION_MAP.get(data["type"], 99),
+        }
+
+        if "waterSense" in data:
+            if "area" in data["waterSense"]:
+                attrs[ATTR_AREA] = round(data["waterSense"]["area"], 2)
+            if "fieldCapacity" in data["waterSense"]:
+                attrs[ATTR_FIELD_CAPACITY] = round(
+                    data["waterSense"]["fieldCapacity"], 2
+                )
+            if "precipitationRate" in data["waterSense"]:
+                attrs[ATTR_PRECIP_RATE] = round(
+                    data["waterSense"]["precipitationRate"], 2
+                )
+
+        self._attr_extra_state_attributes.update(attrs)
 
 
 class RainMachineZoneEnabled(RainMachineEnabledSwitch):

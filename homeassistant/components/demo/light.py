@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import random
+from typing import Any
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -11,15 +12,15 @@ from homeassistant.components.light import (
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
     ATTR_WHITE,
-    COLOR_MODE_COLOR_TEMP,
-    COLOR_MODE_HS,
-    COLOR_MODE_RGBW,
-    COLOR_MODE_RGBWW,
-    COLOR_MODE_WHITE,
-    SUPPORT_EFFECT,
+    ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN
 
@@ -29,11 +30,16 @@ LIGHT_EFFECT_LIST = ["rainbow", "none"]
 
 LIGHT_TEMPS = [240, 380]
 
-SUPPORT_DEMO = {COLOR_MODE_HS, COLOR_MODE_COLOR_TEMP}
-SUPPORT_DEMO_HS_WHITE = {COLOR_MODE_HS, COLOR_MODE_WHITE}
+SUPPORT_DEMO = {ColorMode.HS, ColorMode.COLOR_TEMP}
+SUPPORT_DEMO_HS_WHITE = {ColorMode.HS, ColorMode.WHITE}
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the demo light platform."""
     async_add_entities(
         [
@@ -65,7 +71,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 name="Office RGBW Lights",
                 rgbw_color=(255, 0, 0, 255),
                 state=True,
-                supported_color_modes={COLOR_MODE_RGBW},
+                supported_color_modes={ColorMode.RGBW},
                 unique_id="light_4",
             ),
             DemoLight(
@@ -73,7 +79,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 name="Living Room RGBWW Lights",
                 rgbww_color=(255, 0, 0, 255, 0),
                 state=True,
-                supported_color_modes={COLOR_MODE_RGBWW},
+                supported_color_modes={ColorMode.RGBWW},
                 unique_id="light_5",
             ),
             DemoLight(
@@ -88,7 +94,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Demo config entry."""
     await async_setup_platform(hass, {}, async_add_entities)
 
@@ -98,18 +108,18 @@ class DemoLight(LightEntity):
 
     def __init__(
         self,
-        unique_id,
-        name,
+        unique_id: str,
+        name: str,
         state,
         available=False,
         brightness=180,
         ct=None,  # pylint: disable=invalid-name
-        effect_list=None,
+        effect_list: list[str] | None = None,
         effect=None,
         hs_color=None,
         rgbw_color=None,
         rgbww_color=None,
-        supported_color_modes=None,
+        supported_color_modes: set[ColorMode] | None = None,
     ):
         """Initialize the light."""
         self._available = True
@@ -125,18 +135,18 @@ class DemoLight(LightEntity):
         self._state = state
         self._unique_id = unique_id
         if hs_color:
-            self._color_mode = COLOR_MODE_HS
+            self._color_mode = ColorMode.HS
         elif rgbw_color:
-            self._color_mode = COLOR_MODE_RGBW
+            self._color_mode = ColorMode.RGBW
         elif rgbww_color:
-            self._color_mode = COLOR_MODE_RGBWW
+            self._color_mode = ColorMode.RGBWW
         else:
-            self._color_mode = COLOR_MODE_COLOR_TEMP
+            self._color_mode = ColorMode.COLOR_TEMP
         if not supported_color_modes:
             supported_color_modes = SUPPORT_DEMO
         self._color_modes = supported_color_modes
         if self._effect_list is not None:
-            self._features |= SUPPORT_EFFECT
+            self._features |= LightEntityFeature.EFFECT
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -160,7 +170,7 @@ class DemoLight(LightEntity):
         return self._name
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return unique ID for light."""
         return self._unique_id
 
@@ -182,17 +192,17 @@ class DemoLight(LightEntity):
         return self._color_mode
 
     @property
-    def hs_color(self) -> tuple:
+    def hs_color(self) -> tuple[float, float]:
         """Return the hs color value."""
         return self._hs_color
 
     @property
-    def rgbw_color(self) -> tuple:
+    def rgbw_color(self) -> tuple[int, int, int, int]:
         """Return the rgbw color value."""
         return self._rgbw_color
 
     @property
-    def rgbww_color(self) -> tuple:
+    def rgbww_color(self) -> tuple[int, int, int, int, int]:
         """Return the rgbww color value."""
         return self._rgbww_color
 
@@ -202,7 +212,7 @@ class DemoLight(LightEntity):
         return self._ct
 
     @property
-    def effect_list(self) -> list:
+    def effect_list(self) -> list[str] | None:
         """Return the list of supported effects."""
         return self._effect_list
 
@@ -222,11 +232,11 @@ class DemoLight(LightEntity):
         return self._features
 
     @property
-    def supported_color_modes(self) -> set | None:
+    def supported_color_modes(self) -> set[ColorMode]:
         """Flag supported color modes."""
         return self._color_modes
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         self._state = True
 
@@ -234,33 +244,33 @@ class DemoLight(LightEntity):
             self._brightness = kwargs[ATTR_BRIGHTNESS]
 
         if ATTR_COLOR_TEMP in kwargs:
-            self._color_mode = COLOR_MODE_COLOR_TEMP
+            self._color_mode = ColorMode.COLOR_TEMP
             self._ct = kwargs[ATTR_COLOR_TEMP]
 
         if ATTR_EFFECT in kwargs:
             self._effect = kwargs[ATTR_EFFECT]
 
         if ATTR_HS_COLOR in kwargs:
-            self._color_mode = COLOR_MODE_HS
+            self._color_mode = ColorMode.HS
             self._hs_color = kwargs[ATTR_HS_COLOR]
 
         if ATTR_RGBW_COLOR in kwargs:
-            self._color_mode = COLOR_MODE_RGBW
+            self._color_mode = ColorMode.RGBW
             self._rgbw_color = kwargs[ATTR_RGBW_COLOR]
 
         if ATTR_RGBWW_COLOR in kwargs:
-            self._color_mode = COLOR_MODE_RGBWW
+            self._color_mode = ColorMode.RGBWW
             self._rgbww_color = kwargs[ATTR_RGBWW_COLOR]
 
         if ATTR_WHITE in kwargs:
-            self._color_mode = COLOR_MODE_WHITE
+            self._color_mode = ColorMode.WHITE
             self._brightness = kwargs[ATTR_WHITE]
 
         # As we have disabled polling, we need to inform
         # Home Assistant about updates in our state ourselves.
         self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         self._state = False
 

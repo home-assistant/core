@@ -74,7 +74,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -92,7 +92,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
+async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 
@@ -167,7 +167,7 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
             raise UpdateFailed(ex) from ex
 
 
-class ScreenlogicEntity(CoordinatorEntity):
+class ScreenlogicEntity(CoordinatorEntity[ScreenlogicDataUpdateCoordinator]):
     """Base class for all ScreenLogic entities."""
 
     def __init__(self, coordinator, data_key, enabled=True):
@@ -222,6 +222,7 @@ class ScreenlogicEntity(CoordinatorEntity):
             manufacturer="Pentair",
             model=equipment_model,
             name=self.gateway_name,
+            sw_version=self.gateway.version,
         )
 
     async def _async_refresh(self):

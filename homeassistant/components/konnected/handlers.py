@@ -1,19 +1,15 @@
 """Handle Konnected messages."""
 import logging
 
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_STATE,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_TEMPERATURE,
-)
+from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_STATE
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util import decorator
 
 from .const import CONF_INVERSE, SIGNAL_DS18B20_NEW
 
 _LOGGER = logging.getLogger(__name__)
-HANDLERS = decorator.Registry()
+HANDLERS = decorator.Registry()  # type: ignore[var-annotated]
 
 
 @HANDLERS.register("state")
@@ -32,7 +28,7 @@ async def async_handle_state_update(hass, context, msg):
 async def async_handle_temp_update(hass, context, msg):
     """Handle a temperature sensor state update."""
     _LOGGER.debug("[temp handler] context: %s  msg: %s", context, msg)
-    entity_id, temp = context.get(DEVICE_CLASS_TEMPERATURE), msg.get("temp")
+    entity_id, temp = context.get(SensorDeviceClass.TEMPERATURE), msg.get("temp")
     if entity_id:
         async_dispatcher_send(hass, f"konnected.{entity_id}.update", temp)
 
@@ -41,7 +37,7 @@ async def async_handle_temp_update(hass, context, msg):
 async def async_handle_humi_update(hass, context, msg):
     """Handle a humidity sensor state update."""
     _LOGGER.debug("[humi handler] context: %s  msg: %s", context, msg)
-    entity_id, humi = context.get(DEVICE_CLASS_HUMIDITY), msg.get("humi")
+    entity_id, humi = context.get(SensorDeviceClass.HUMIDITY), msg.get("humi")
     if entity_id:
         async_dispatcher_send(hass, f"konnected.{entity_id}.update", humi)
 

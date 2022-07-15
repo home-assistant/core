@@ -1,4 +1,6 @@
 """Sensor for data from Austrian Zentralanstalt für Meteorologie."""
+from __future__ import annotations
+
 import logging
 
 import voluptuous as vol
@@ -12,8 +14,18 @@ from homeassistant.components.weather import (
     PLATFORM_SCHEMA,
     WeatherEntity,
 )
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_CELSIUS
+from homeassistant.const import (
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_NAME,
+    PRESSURE_HPA,
+    SPEED_KILOMETERS_PER_HOUR,
+    TEMP_CELSIUS,
+)
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 # Reuse data and API logic from the sensor implementation
 from .sensor import (
@@ -40,7 +52,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the ZAMG weather platform."""
     name = config.get(CONF_NAME)
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
@@ -55,20 +72,24 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             CONF_STATION_ID,
             station_id,
         )
-        return False
+        return
 
     probe = ZamgData(station_id=station_id)
     try:
         probe.update()
     except (ValueError, TypeError) as err:
         _LOGGER.error("Received error from ZAMG: %s", err)
-        return False
+        return
 
     add_entities([ZamgWeather(probe, name)], True)
 
 
 class ZamgWeather(WeatherEntity):
     """Representation of a weather condition."""
+
+    _attr_native_pressure_unit = PRESSURE_HPA
+    _attr_native_temperature_unit = TEMP_CELSIUS
+    _attr_native_wind_speed_unit = SPEED_KILOMETERS_PER_HOUR
 
     def __init__(self, zamg_data, stationname=None):
         """Initialise the platform with a data instance and station name."""
@@ -94,17 +115,12 @@ class ZamgWeather(WeatherEntity):
         return ATTRIBUTION
 
     @property
-    def temperature(self):
+    def native_temperature(self):
         """Return the platform temperature."""
         return self.zamg_data.get_data(ATTR_WEATHER_TEMPERATURE)
 
     @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
-
-    @property
-    def pressure(self):
+    def native_pressure(self):
         """Return the pressure."""
         return self.zamg_data.get_data(ATTR_WEATHER_PRESSURE)
 
@@ -114,7 +130,7 @@ class ZamgWeather(WeatherEntity):
         return self.zamg_data.get_data(ATTR_WEATHER_HUMIDITY)
 
     @property
-    def wind_speed(self):
+    def native_wind_speed(self):
         """Return the wind speed."""
         return self.zamg_data.get_data(ATTR_WEATHER_WIND_SPEED)
 

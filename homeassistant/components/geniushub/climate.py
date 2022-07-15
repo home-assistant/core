@@ -3,23 +3,20 @@ from __future__ import annotations
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
-    CURRENT_HVAC_OFF,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
     PRESET_ACTIVITY,
     PRESET_BOOST,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN, GeniusHeatingZone
 
 # GeniusHub Zones support: Off, Timer, Override/Boost, Footprint & Linked modes
-HA_HVAC_TO_GH = {HVAC_MODE_OFF: "off", HVAC_MODE_HEAT: "timer"}
+HA_HVAC_TO_GH = {HVACMode.OFF: "off", HVACMode.HEAT: "timer"}
 GH_HVAC_TO_HA = {v: k for k, v in HA_HVAC_TO_GH.items()}
 
 HA_PRESET_TO_GH = {PRESET_ACTIVITY: "footprint", PRESET_BOOST: "override"}
@@ -29,7 +26,10 @@ GH_ZONES = ["radiator", "wet underfloor"]
 
 
 async def async_setup_platform(
-    hass: HomeAssistant, config: ConfigType, async_add_entities, discovery_info=None
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Genius Hub climate entities."""
     if discovery_info is None:
@@ -49,13 +49,16 @@ async def async_setup_platform(
 class GeniusClimateZone(GeniusHeatingZone, ClimateEntity):
     """Representation of a Genius Hub climate device."""
 
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+    )
+
     def __init__(self, broker, zone) -> None:
         """Initialize the climate device."""
         super().__init__(broker, zone)
 
         self._max_temp = 28.0
         self._min_temp = 4.0
-        self._supported_features = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
     @property
     def icon(self) -> str:
@@ -65,7 +68,7 @@ class GeniusClimateZone(GeniusHeatingZone, ClimateEntity):
     @property
     def hvac_mode(self) -> str:
         """Return hvac operation ie. heat, cool mode."""
-        return GH_HVAC_TO_HA.get(self._zone.data["mode"], HVAC_MODE_HEAT)
+        return GH_HVAC_TO_HA.get(self._zone.data["mode"], HVACMode.HEAT)
 
     @property
     def hvac_modes(self) -> list[str]:
@@ -77,10 +80,10 @@ class GeniusClimateZone(GeniusHeatingZone, ClimateEntity):
         """Return the current running hvac operation if supported."""
         if "_state" in self._zone.data:  # only for v3 API
             if not self._zone.data["_state"].get("bIsActive"):
-                return CURRENT_HVAC_OFF
+                return HVACAction.OFF
             if self._zone.data["_state"].get("bOutRequestHeat"):
-                return CURRENT_HVAC_HEAT
-            return CURRENT_HVAC_IDLE
+                return HVACAction.HEATING
+            return HVACAction.IDLE
         return None
 
     @property
@@ -95,7 +98,7 @@ class GeniusClimateZone(GeniusHeatingZone, ClimateEntity):
             return [PRESET_ACTIVITY, PRESET_BOOST]
         return [PRESET_BOOST]
 
-    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set a new hvac mode."""
         await self._zone.set_mode(HA_HVAC_TO_GH.get(hvac_mode))
 

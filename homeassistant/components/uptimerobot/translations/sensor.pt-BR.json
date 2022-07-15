@@ -1,0 +1,11 @@
+{
+    "state": {
+        "uptimerobot__monitor_status": {
+            "down": "Para baixo",
+            "not_checked_yet": "Ainda n\u00e3o foi verificado",
+            "pause": "Pausado",
+            "seems_down": "Parece baixo",
+            "up": "Para cima"
+        }
+    }
+}

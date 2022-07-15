@@ -7,6 +7,11 @@
                     "password": "L\u00f6senord",
                     "username": "E-postadress / devolo-ID"
                 }
+            },
+            "zeroconf_confirm": {
+                "data": {
+                    "username": "E-postadress / devolo-id"
+                }
             }
         }
     }

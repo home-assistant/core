@@ -12,7 +12,6 @@ from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
 from homeassistant.components.homeassistant.triggers import event as event_trigger
-from homeassistant.components.rfxtrx.const import EVENT_RFXTRX_EVENT
 from homeassistant.const import (
     ATTR_DEVICE_ID,
     CONF_DEVICE_ID,
@@ -24,6 +23,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN
+from .const import EVENT_RFXTRX_EVENT
 from .helpers import async_get_device_object
 
 CONF_SUBTYPE = "subtype"
@@ -47,13 +47,15 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 )
 
 
-async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
+async def async_get_triggers(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, str]]:
     """List device triggers for RFXCOM RFXtrx devices."""
     device = async_get_device_object(hass, device_id)
 
     triggers = []
     for conf_type in TRIGGER_TYPES:
-        data = getattr(device, TRIGGER_SELECTION[conf_type], {})
+        data: dict[int, str] = getattr(device, TRIGGER_SELECTION[conf_type], {})
         for command in data.values():
             triggers.append(
                 {
@@ -67,7 +69,9 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
     return triggers
 
 
-async def async_validate_trigger_config(hass, config):
+async def async_validate_trigger_config(
+    hass: HomeAssistant, config: ConfigType
+) -> ConfigType:
     """Validate config."""
     config = TRIGGER_SCHEMA(config)
 

@@ -15,11 +15,9 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
-    SUPPORT_EFFECT,
-    SUPPORT_FLASH,
-    SUPPORT_TRANSITION,
     SUPPORT_WHITE_VALUE,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.const import (
     CONF_NAME,
@@ -34,10 +32,18 @@ from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.util.color as color_util
 
 from .. import subscription
-from ... import mqtt
-from ..const import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC
+from ..config import MQTT_RW_SCHEMA
+from ..const import (
+    CONF_COMMAND_TOPIC,
+    CONF_ENCODING,
+    CONF_QOS,
+    CONF_RETAIN,
+    CONF_STATE_TOPIC,
+    PAYLOAD_NONE,
+)
 from ..debug_info import log_messages
 from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity
+from ..models import MqttValueTemplate
 from .schema import MQTT_LIGHT_SCHEMA_SCHEMA
 from .schema_basic import MQTT_LIGHT_ATTRIBUTES_BLOCKED
 
@@ -61,8 +67,8 @@ CONF_MIN_MIREDS = "min_mireds"
 CONF_RED_TEMPLATE = "red_template"
 CONF_WHITE_VALUE_TEMPLATE = "white_value_template"
 
-PLATFORM_SCHEMA_TEMPLATE = (
-    mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
+_PLATFORM_SCHEMA_BASE = (
+    MQTT_RW_SCHEMA.extend(
         {
             vol.Optional(CONF_BLUE_TEMPLATE): cv.template,
             vol.Optional(CONF_BRIGHTNESS_TEMPLATE): cv.template,
@@ -85,7 +91,20 @@ PLATFORM_SCHEMA_TEMPLATE = (
     .extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema)
 )
 
-DISCOVERY_SCHEMA_TEMPLATE = PLATFORM_SCHEMA_TEMPLATE.extend({}, extra=vol.REMOVE_EXTRA)
+# Configuring MQTT Lights under the light platform key is deprecated in HA Core 2022.6
+PLATFORM_SCHEMA_TEMPLATE = vol.All(
+    # CONF_WHITE_VALUE_TEMPLATE is deprecated, support will be removed in release 2022.9
+    cv.deprecated(CONF_WHITE_VALUE_TEMPLATE),
+    cv.PLATFORM_SCHEMA.extend(_PLATFORM_SCHEMA_BASE.schema),
+)
+
+DISCOVERY_SCHEMA_TEMPLATE = vol.All(
+    # CONF_WHITE_VALUE_TEMPLATE is deprecated, support will be removed in release 2022.9
+    cv.deprecated(CONF_WHITE_VALUE_TEMPLATE),
+    _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
+)
+
+PLATFORM_SCHEMA_MODERN_TEMPLATE = _PLATFORM_SCHEMA_BASE
 
 
 async def async_setup_entity_template(
@@ -103,7 +122,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize a MQTT Template light."""
-        self._state = False
+        self._state = None
 
         self._topics = None
         self._templates = None
@@ -150,13 +169,11 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
             or self._templates[CONF_STATE_TEMPLATE] is None
         )
 
-    async def _subscribe_topics(self):  # noqa: C901
+    def _prepare_subscribe_topics(self):
         """(Re)Subscribe to topics."""
         for tpl in self._templates.values():
             if tpl is not None:
-                tpl.hass = self.hass
-
-        last_state = await self.async_get_last_state()
+                tpl = MqttValueTemplate(tpl, entity=self)
 
         @callback
         @log_messages(self.hass, self.entity_id)
@@ -169,6 +186,8 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
                 self._state = True
             elif state == STATE_OFF:
                 self._state = False
+            elif state == PAYLOAD_NONE:
+                self._state = None
             else:
                 _LOGGER.warning("Invalid state value received")
 
@@ -240,7 +259,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
             self.async_write_ha_state()
 
         if self._topics[CONF_STATE_TOPIC] is not None:
-            self._sub_state = await subscription.async_subscribe_topics(
+            self._sub_state = subscription.async_prepare_subscribe_topics(
                 self.hass,
                 self._sub_state,
                 {
@@ -248,10 +267,16 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
                         "topic": self._topics[CONF_STATE_TOPIC],
                         "msg_callback": state_received,
                         "qos": self._config[CONF_QOS],
+                        "encoding": self._config[CONF_ENCODING] or None,
                     }
                 },
             )
 
+    async def _subscribe_topics(self):
+        """(Re)Subscribe to topics."""
+        await subscription.async_subscribe_topics(self.hass, self._sub_state)
+
+        last_state = await self.async_get_last_state()
         if self._optimistic and last_state:
             self._state = last_state.state == STATE_ON
             if last_state.attributes.get(ATTR_BRIGHTNESS):
@@ -354,6 +379,8 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
             values["red"] = rgb[0]
             values["green"] = rgb[1]
             values["blue"] = rgb[2]
+            values["hue"] = hs_color[0]
+            values["sat"] = hs_color[1]
 
             if self._optimistic:
                 self._hs = kwargs[ATTR_HS_COLOR]
@@ -376,14 +403,14 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
         if ATTR_TRANSITION in kwargs:
             values["transition"] = kwargs[ATTR_TRANSITION]
 
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._topics[CONF_COMMAND_TOPIC],
             self._templates[CONF_COMMAND_ON_TEMPLATE].async_render(
                 parse_result=False, **values
             ),
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
 
         if self._optimistic:
@@ -401,14 +428,14 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
         if ATTR_TRANSITION in kwargs:
             values["transition"] = kwargs[ATTR_TRANSITION]
 
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._topics[CONF_COMMAND_TOPIC],
             self._templates[CONF_COMMAND_OFF_TEMPLATE].async_render(
                 parse_result=False, **values
             ),
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
 
         if self._optimistic:
@@ -417,7 +444,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
     @property
     def supported_features(self):
         """Flag supported features."""
-        features = SUPPORT_FLASH | SUPPORT_TRANSITION
+        features = LightEntityFeature.FLASH | LightEntityFeature.TRANSITION
         if self._templates[CONF_BRIGHTNESS_TEMPLATE] is not None:
             features = features | SUPPORT_BRIGHTNESS
         if (
@@ -427,7 +454,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
         ):
             features = features | SUPPORT_COLOR | SUPPORT_BRIGHTNESS
         if self._config.get(CONF_EFFECT_LIST) is not None:
-            features = features | SUPPORT_EFFECT
+            features = features | LightEntityFeature.EFFECT
         if self._templates[CONF_COLOR_TEMP_TEMPLATE] is not None:
             features = features | SUPPORT_COLOR_TEMP
         if self._templates[CONF_WHITE_VALUE_TEMPLATE] is not None:

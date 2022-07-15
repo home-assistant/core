@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd",
+            "api_not_enabled": "De API is niet ingeschakeld. Activeer API in de HomeWizard Energy App onder instellingen",
+            "device_not_supported": "Dit apparaat wordt niet ondersteund",
+            "invalid_discovery_parameters": "Niet-ondersteunde API-versie gedetecteerd",
+            "unknown_error": "Onverwachte fout"
+        },
+        "step": {
+            "discovery_confirm": {
+                "description": "Wilt u {product_type} ({serial}) op {ip_address} instellen?",
+                "title": "Bevestig"
+            },
+            "user": {
+                "data": {
+                    "ip_address": "IP-adres"
+                },
+                "description": "Voer het IP-adres van uw HomeWizard Energy-apparaat in om te integreren met Home Assistant.",
+                "title": "Configureer apparaat"
+            }
+        }
+    }
+}

@@ -1,7 +1,7 @@
 {
     "device_automation": {
         "action_type": {
-            "arm_away": "Armer {entity_name} en mode \"sortie\"",
+            "arm_away": "Armer {entity_name} mode sortie",
             "arm_home": "Armer {entity_name} en mode \"maison\"",
             "arm_night": "Armer {entity_name} en mode \"nuit\"",
             "arm_vacation": "Armer {entity_name} vacances",

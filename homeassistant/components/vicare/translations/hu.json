@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "M\u00e1r konfigur\u00e1lva van. Csak egy konfigur\u00e1ci\u00f3 lehets\u00e9ges.",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "error": {
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "client_id": "API kulcs",
+                    "heating_type": "F\u0171t\u00e9s t\u00edpusa",
+                    "password": "Jelsz\u00f3",
+                    "username": "E-mail"
+                },
+                "description": "A ViCare integr\u00e1ci\u00f3 be\u00e1ll\u00edt\u00e1sa. Az API-kulcs gener\u00e1l\u00e1s\u00e1hoz keresse fel a https://developer.viessmann.com webhelyet."
+            }
+        }
+    }
+}

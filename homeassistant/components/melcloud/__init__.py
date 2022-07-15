@@ -15,6 +15,7 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_TOKEN, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity import DeviceInfo
@@ -68,11 +69,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     conf = entry.data
     mel_devices = await mel_devices_setup(hass, conf[CONF_TOKEN])
     hass.data.setdefault(DOMAIN, {}).update({entry.entry_id: mel_devices})
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
@@ -141,9 +142,9 @@ class MelCloudDevice:
         )
 
 
-async def mel_devices_setup(hass, token) -> list[MelCloudDevice]:
+async def mel_devices_setup(hass, token) -> dict[str, list[MelCloudDevice]]:
     """Query connected devices from MELCloud."""
-    session = hass.helpers.aiohttp_client.async_get_clientsession()
+    session = async_get_clientsession(hass)
     try:
         async with timeout(10):
             all_devices = await get_devices(
@@ -155,7 +156,7 @@ async def mel_devices_setup(hass, token) -> list[MelCloudDevice]:
     except (asyncio.TimeoutError, ClientConnectionError) as ex:
         raise ConfigEntryNotReady() from ex
 
-    wrapped_devices = {}
+    wrapped_devices: dict[str, list[MelCloudDevice]] = {}
     for device_type, devices in all_devices.items():
         wrapped_devices[device_type] = [MelCloudDevice(device) for device in devices]
     return wrapped_devices

@@ -1,0 +1,31 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion",
+            "invalid_api_key": "Cl\u00e9 d'API non valide",
+            "rate_limited": "Nombre maximal de tentatives de connexion d\u00e9pass\u00e9, veuillez r\u00e9essayer ult\u00e9rieurement.",
+            "unknown": "Erreur inattendue"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Cl\u00e9 d'API",
+                    "location": "Emplacement",
+                    "name": "Nom"
+                },
+                "description": "Pour obtenir une cl\u00e9 d'API, inscrivez-vous sur [Tomorrow.io](https://app.tomorrow.io/signup)."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "timestep": "Min. entre les pr\u00e9visions NowCast"
+                },
+                "description": "Si vous choisissez d'activer l'entit\u00e9 de pr\u00e9vision \u00ab\u00a0nowcast\u00a0\u00bb, vous pouvez configurer le nombre de minutes entre chaque pr\u00e9vision. Le nombre de pr\u00e9visions fournies d\u00e9pend du nombre de minutes choisies entre les pr\u00e9visions.",
+                "title": "Mettre \u00e0 jour les options de Tomorrow.io"
+            }
+        }
+    }
+}

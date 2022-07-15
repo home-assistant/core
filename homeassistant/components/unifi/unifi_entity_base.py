@@ -1,12 +1,17 @@
 """Base class for UniFi Network entities."""
+from __future__ import annotations
+
+from collections.abc import Callable
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.core import callback
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_registry import async_entries_for_device
+
+if TYPE_CHECKING:
+    from .controller import UniFiController
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,7 +22,7 @@ class UniFiBase(Entity):
     DOMAIN = ""
     TYPE = ""
 
-    def __init__(self, item, controller) -> None:
+    def __init__(self, item, controller: UniFiController) -> None:
         """Set up UniFi Network entity base.
 
         Register mac to controller entities to cover disabled entities.
@@ -39,11 +44,12 @@ class UniFiBase(Entity):
             self.entity_id,
             self.key,
         )
-        for signal, method in (
+        signals: tuple[tuple[str, Callable[..., Any]], ...] = (
             (self.controller.signal_reachable, self.async_signal_reachable_callback),
             (self.controller.signal_options_update, self.options_updated),
             (self.controller.signal_remove, self.remove_item),
-        ):
+        )
+        for signal, method in signals:
             self.async_on_remove(async_dispatcher_connect(self.hass, signal, method))
         self._item.register_callback(self.async_update_callback)
 
@@ -79,59 +85,14 @@ class UniFiBase(Entity):
         raise NotImplementedError
 
     async def remove_item(self, keys: set) -> None:
-        """Remove entity if key is part of set.
-
-        Remove entity if no entry in entity registry exist.
-        Remove entity registry entry if no entry in device registry exist.
-        Remove device registry entry if there is only one linked entity (this entity).
-        Remove config entry reference from device registry entry if there is more than one config entry.
-        Remove entity registry entry if there are more than one entity linked to the device registry entry.
-        """
+        """Remove entity if key is part of set."""
         if self.key not in keys:
             return
 
-        entity_registry = er.async_get(self.hass)
-        entity_entry = entity_registry.async_get(self.entity_id)
-        if not entity_entry:
+        if self.registry_entry:
+            er.async_get(self.hass).async_remove(self.entity_id)
+        else:
             await self.async_remove(force_remove=True)
-            return
-
-        device_registry = dr.async_get(self.hass)
-        device_entry = device_registry.async_get(entity_entry.device_id)
-        if not device_entry:
-            entity_registry.async_remove(self.entity_id)
-            return
-
-        if (
-            len(
-                entries_for_device := async_entries_for_device(
-                    entity_registry,
-                    entity_entry.device_id,
-                    include_disabled_entities=True,
-                )
-            )
-        ) == 1:
-            device_registry.async_remove_device(device_entry.id)
-            return
-
-        if (
-            len(
-                entries_for_device_from_this_config_entry := [
-                    entry_for_device
-                    for entry_for_device in entries_for_device
-                    if entry_for_device.config_entry_id
-                    == self.controller.config_entry.entry_id
-                ]
-            )
-            != len(entries_for_device)
-            and len(entries_for_device_from_this_config_entry) == 1
-        ):
-            device_registry.async_update_device(
-                entity_entry.device_id,
-                remove_config_entry_id=self.controller.config_entry.entry_id,
-            )
-
-        entity_registry.async_remove(self.entity_id)
 
     @property
     def should_poll(self) -> bool:

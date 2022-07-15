@@ -1,12 +1,13 @@
 """Provides device automations for Philips Hue events."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from aiohue.v2.models.button import ButtonEvent
 from aiohue.v2.models.resource import ResourceTypes
 import voluptuous as vol
 
+from homeassistant.components import persistent_notification
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.homeassistant.triggers import event as event_trigger
 from homeassistant.const import (
@@ -35,7 +36,7 @@ if TYPE_CHECKING:
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): str,
-        vol.Required(CONF_SUBTYPE): int,
+        vol.Required(CONF_SUBTYPE): vol.Union(int, str),
         vol.Optional(CONF_UNIQUE_ID): str,
     }
 )
@@ -54,13 +55,41 @@ DEVICE_SPECIFIC_EVENT_TYPES = {
 }
 
 
+def check_invalid_device_trigger(
+    bridge: HueBridge,
+    config: ConfigType,
+    device_entry: DeviceEntry,
+    automation_info: AutomationTriggerInfo | None = None,
+):
+    """Check automation config for deprecated format."""
+    # NOTE: Remove this check after 2022.6
+    if isinstance(config["subtype"], int):
+        return
+    # found deprecated V1 style trigger, notify the user that it should be adjusted
+    msg = (
+        f"Incompatible device trigger detected for "
+        f"[{device_entry.name}](/config/devices/device/{device_entry.id}) "
+        "Please manually fix the outdated automation(s) once to fix this issue."
+    )
+    if automation_info:
+        automation_id = automation_info["variables"]["this"]["attributes"]["id"]  # type: ignore[index]
+        msg += f"\n\n[Check it out](/config/automation/edit/{automation_id})."
+    persistent_notification.async_create(
+        bridge.hass,
+        msg,
+        title="Outdated device trigger found",
+        notification_id=f"hue_trigger_{device_entry.id}",
+    )
+
+
 async def async_validate_trigger_config(
     bridge: "HueBridge",
     device_entry: DeviceEntry,
     config: ConfigType,
-):
+) -> ConfigType:
     """Validate config."""
     config = TRIGGER_SCHEMA(config)
+    check_invalid_device_trigger(bridge, config, device_entry)
     return config
 
 
@@ -68,8 +97,8 @@ async def async_attach_trigger(
     bridge: "HueBridge",
     device_entry: DeviceEntry,
     config: ConfigType,
-    action: "AutomationActionType",
-    automation_info: "AutomationTriggerInfo",
+    action: AutomationActionType,
+    automation_info: AutomationTriggerInfo,
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
     hass = bridge.hass
@@ -84,12 +113,16 @@ async def async_attach_trigger(
             },
         }
     )
+    check_invalid_device_trigger(bridge, config, device_entry, automation_info)
     return await event_trigger.async_attach_trigger(
         hass, event_config, action, automation_info, platform_type="device"
     )
 
 
-async def async_get_triggers(bridge: "HueBridge", device_entry: DeviceEntry):
+@callback
+def async_get_triggers(
+    bridge: HueBridge, device_entry: DeviceEntry
+) -> list[dict[str, Any]]:
     """Return device triggers for device on `v2` bridge."""
     api: HueBridgeV2 = bridge.api
 

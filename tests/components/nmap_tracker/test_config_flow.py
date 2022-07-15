@@ -202,7 +202,7 @@ async def test_options_flow(hass: HomeAssistant, mock_get_source_ip) -> None:
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "init"
 
     assert result["data_schema"]({}) == {
@@ -231,7 +231,7 @@ async def test_options_flow(hass: HomeAssistant, mock_get_source_ip) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
         CONF_HOSTS: "192.168.1.0/24,192.168.2.0/24",
         CONF_HOME_INTERVAL: 5,
@@ -241,70 +241,3 @@ async def test_options_flow(hass: HomeAssistant, mock_get_source_ip) -> None:
         CONF_SCAN_INTERVAL: 10,
     }
     assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_import(hass: HomeAssistant, mock_get_source_ip) -> None:
-    """Test we can import from yaml."""
-
-    with patch(
-        "homeassistant.components.nmap_tracker.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={
-                CONF_HOSTS: "1.2.3.4/20",
-                CONF_HOME_INTERVAL: 3,
-                CONF_CONSIDER_HOME: 500,
-                CONF_OPTIONS: DEFAULT_OPTIONS,
-                CONF_EXCLUDE: "4.4.4.4, 6.4.3.2",
-                CONF_SCAN_INTERVAL: 2000,
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] == "create_entry"
-    assert result["title"] == "Nmap Tracker 1.2.3.4/20"
-    assert result["data"] == {}
-    assert result["options"] == {
-        CONF_HOSTS: "1.2.3.4/20",
-        CONF_HOME_INTERVAL: 3,
-        CONF_CONSIDER_HOME: 500,
-        CONF_OPTIONS: DEFAULT_OPTIONS,
-        CONF_EXCLUDE: "4.4.4.4,6.4.3.2",
-        CONF_SCAN_INTERVAL: 2000,
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_import_aborts_if_matching(
-    hass: HomeAssistant, mock_get_source_ip
-) -> None:
-    """Test we can import from yaml."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={},
-        options={
-            CONF_HOSTS: "192.168.0.0/20",
-            CONF_HOME_INTERVAL: 3,
-            CONF_OPTIONS: DEFAULT_OPTIONS,
-            CONF_EXCLUDE: "4.4.4.4",
-        },
-    )
-    config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={
-            CONF_HOSTS: "192.168.0.0/20",
-            CONF_HOME_INTERVAL: 3,
-            CONF_OPTIONS: DEFAULT_OPTIONS,
-            CONF_EXCLUDE: "4.4.4.4, 6.4.3.2",
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] == "abort"
-    assert result["reason"] == "already_configured"

@@ -1,0 +1,12 @@
+{
+    "state": {
+        "climacell__health_concern": {
+            "hazardous": "H\u00e6ttulegt",
+            "unhealthy": "\u00d3hollt"
+        },
+        "climacell__precipitation_type": {
+            "rain": "Rigning",
+            "snow": "Snj\u00f3r"
+        }
+    }
+}

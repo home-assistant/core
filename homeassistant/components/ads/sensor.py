@@ -1,13 +1,24 @@
 """Support for ADS sensors."""
+from __future__ import annotations
+
 import voluptuous as vol
 
 from homeassistant.components import ads
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_NAME, CONF_UNIT_OF_MEASUREMENT
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
-from . import CONF_ADS_FACTOR, CONF_ADS_TYPE, CONF_ADS_VAR, STATE_KEY_STATE, AdsEntity
+from . import (
+    ADS_TYPEMAP,
+    CONF_ADS_FACTOR,
+    CONF_ADS_TYPE,
+    CONF_ADS_VAR,
+    STATE_KEY_STATE,
+    AdsEntity,
+)
 
 DEFAULT_NAME = "ADS sensor"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -29,7 +40,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up an ADS sensor device."""
     ads_hub = hass.data.get(ads.DATA_ADS)
 
@@ -58,7 +74,7 @@ class AdsSensor(AdsEntity, SensorEntity):
         """Register device notification."""
         await self.async_initialize_device(
             self._ads_var,
-            self._ads_hub.ADS_TYPEMAP[self._ads_type],
+            ADS_TYPEMAP[self._ads_type],
             STATE_KEY_STATE,
             self._factor,
         )

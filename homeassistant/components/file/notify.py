@@ -1,5 +1,8 @@
 """Support for file notification."""
+from __future__ import annotations
+
 import os
+from typing import TextIO
 
 import voluptuous as vol
 
@@ -10,7 +13,9 @@ from homeassistant.components.notify import (
     BaseNotificationService,
 )
 from homeassistant.const import CONF_FILENAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
 CONF_TIMESTAMP = "timestamp"
@@ -23,26 +28,33 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_service(hass, config, discovery_info=None):
+def get_service(
+    hass: HomeAssistant, config: ConfigType, discovery_info=None
+) -> FileNotificationService:
     """Get the file notification service."""
-    filename = config[CONF_FILENAME]
-    timestamp = config[CONF_TIMESTAMP]
+    filename: str = config[CONF_FILENAME]
+    timestamp: bool = config[CONF_TIMESTAMP]
 
-    return FileNotificationService(hass, filename, timestamp)
+    return FileNotificationService(filename, timestamp)
 
 
 class FileNotificationService(BaseNotificationService):
     """Implement the notification service for the File service."""
 
-    def __init__(self, hass, filename, add_timestamp):
+    def __init__(self, filename: str, add_timestamp: bool) -> None:
         """Initialize the service."""
-        self.filepath = os.path.join(hass.config.config_dir, filename)
+        self.filename = filename
         self.add_timestamp = add_timestamp
 
-    def send_message(self, message="", **kwargs):
+    def send_message(self, message="", **kwargs) -> None:
         """Send a message to a file."""
-        with open(self.filepath, "a", encoding="utf8") as file:
-            if os.stat(self.filepath).st_size == 0:
+        file: TextIO
+        if not self.hass.config.config_dir:
+            return
+
+        filepath: str = os.path.join(self.hass.config.config_dir, self.filename)
+        with open(filepath, "a", encoding="utf8") as file:
+            if os.stat(filepath).st_size == 0:
                 title = f"{kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)} notifications (Log started: {dt_util.utcnow().isoformat()})\n{'-' * 80}\n"
                 file.write(title)
 

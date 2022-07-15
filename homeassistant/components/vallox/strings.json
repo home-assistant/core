@@ -1,0 +1,22 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  }
+}

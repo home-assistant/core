@@ -20,13 +20,13 @@
                     "password": "Password"
                 },
                 "description": "Aggiorna la tua password per {username}",
-                "title": "Autenticare nuovamente l'integrazione"
+                "title": "Autentica nuovamente l'integrazione"
             },
             "user": {
                 "data": {
                     "locale": "Locale",
                     "password": "Password",
-                    "username": "E-mail"
+                    "username": "Email"
                 },
                 "title": "Imposta le credenziali Renault"
             }

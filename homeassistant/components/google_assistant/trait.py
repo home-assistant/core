@@ -12,6 +12,7 @@ from homeassistant.components import (
     fan,
     group,
     input_boolean,
+    input_button,
     input_select,
     light,
     lock,
@@ -175,6 +176,8 @@ def _next_selected(items: list[str], selected: str | None) -> str | None:
 
     If selected is missing in items, None is returned
     """
+    if selected is None:
+        return None
     try:
         index = items.index(selected)
     except ValueError:
@@ -187,7 +190,7 @@ def _next_selected(items: list[str], selected: str | None) -> str | None:
 class _Trait:
     """Represents a Trait inside Google Assistant skill."""
 
-    commands = []
+    commands: list[str] = []
 
     @staticmethod
     def might_2fa(domain, features, device_class):
@@ -248,7 +251,7 @@ class BrightnessTrait(_Trait):
         if domain == light.DOMAIN:
             brightness = self.state.attributes.get(light.ATTR_BRIGHTNESS)
             if brightness is not None:
-                response["brightness"] = int(100 * (brightness / 255))
+                response["brightness"] = round(100 * (brightness / 255))
             else:
                 response["brightness"] = 0
 
@@ -303,9 +306,7 @@ class CameraStreamTrait(_Trait):
 
     async def execute(self, command, data, params, challenge):
         """Execute a get camera stream command."""
-        url = await self.hass.components.camera.async_request_stream(
-            self.state.entity_id, "hls"
-        )
+        url = await camera.async_request_stream(self.hass, self.state.entity_id, "hls")
         self.stream_info = {
             "cameraStreamAccessUrl": f"{get_url(self.hass)}{url}",
             "cameraStreamReceiverAppId": CAST_APP_ID_HOMEASSISTANT_MEDIA,
@@ -514,7 +515,12 @@ class SceneTrait(_Trait):
     @staticmethod
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
-        return domain in (button.DOMAIN, scene.DOMAIN, script.DOMAIN)
+        return domain in (
+            button.DOMAIN,
+            input_button.DOMAIN,
+            scene.DOMAIN,
+            script.DOMAIN,
+        )
 
     def sync_attributes(self):
         """Return scene attributes for a sync request."""
@@ -530,6 +536,8 @@ class SceneTrait(_Trait):
         service = SERVICE_TURN_ON
         if self.state.domain == button.DOMAIN:
             service = button.SERVICE_PRESS
+        elif self.state.domain == input_button.DOMAIN:
+            service = input_button.SERVICE_PRESS
 
         # Don't block for scripts or buttons, as they can be slow.
         await self.hass.services.async_call(
@@ -537,7 +545,8 @@ class SceneTrait(_Trait):
             service,
             {ATTR_ENTITY_ID: self.state.entity_id},
             blocking=(not self.config.should_report_state)
-            and self.state.domain not in (button.DOMAIN, script.DOMAIN),
+            and self.state.domain
+            not in (button.DOMAIN, input_button.DOMAIN, script.DOMAIN),
             context=data.context,
         )
 
@@ -641,6 +650,8 @@ class EnergyStorageTrait(_Trait):
     def query_attributes(self):
         """Return EnergyStorage query attributes."""
         battery_level = self.state.attributes.get(ATTR_BATTERY_LEVEL)
+        if battery_level is None:
+            return {}
         if battery_level == 100:
             descriptive_capacity_remaining = "FULL"
         elif 75 <= battery_level < 100:
@@ -765,14 +776,10 @@ class StartStopTrait(_Trait):
         """Execute a StartStop command."""
         if command == COMMAND_STARTSTOP:
             if params["start"] is False:
-                if (
-                    self.state.state
-                    in (
-                        cover.STATE_CLOSING,
-                        cover.STATE_OPENING,
-                    )
-                    or self.state.attributes.get(ATTR_ASSUMED_STATE)
-                ):
+                if self.state.state in (
+                    cover.STATE_CLOSING,
+                    cover.STATE_OPENING,
+                ) or self.state.attributes.get(ATTR_ASSUMED_STATE):
                     await self.hass.services.async_call(
                         self.state.domain,
                         cover.SERVICE_STOP_COVER,
@@ -807,7 +814,8 @@ class TemperatureControlTrait(_Trait):
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
         return (
-            domain == sensor.DOMAIN and device_class == sensor.DEVICE_CLASS_TEMPERATURE
+            domain == sensor.DOMAIN
+            and device_class == sensor.SensorDeviceClass.TEMPERATURE
         )
 
     def sync_attributes(self):
@@ -1111,7 +1119,10 @@ class HumiditySettingTrait(_Trait):
         if domain == humidifier.DOMAIN:
             return True
 
-        return domain == sensor.DOMAIN and device_class == sensor.DEVICE_CLASS_HUMIDITY
+        return (
+            domain == sensor.DOMAIN
+            and device_class == sensor.SensorDeviceClass.HUMIDITY
+        )
 
     def sync_attributes(self):
         """Return humidity attributes for a sync request."""
@@ -1121,7 +1132,7 @@ class HumiditySettingTrait(_Trait):
 
         if domain == sensor.DOMAIN:
             device_class = attrs.get(ATTR_DEVICE_CLASS)
-            if device_class == sensor.DEVICE_CLASS_HUMIDITY:
+            if device_class == sensor.SensorDeviceClass.HUMIDITY:
                 response["queryOnlyHumiditySetting"] = True
 
         elif domain == humidifier.DOMAIN:
@@ -1144,7 +1155,7 @@ class HumiditySettingTrait(_Trait):
 
         if domain == sensor.DOMAIN:
             device_class = attrs.get(ATTR_DEVICE_CLASS)
-            if device_class == sensor.DEVICE_CLASS_HUMIDITY:
+            if device_class == sensor.SensorDeviceClass.HUMIDITY:
                 current_humidity = self.state.state
                 if current_humidity not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
                     response["humidityAmbientPercent"] = round(float(current_humidity))
@@ -1692,7 +1703,7 @@ class InputSelectorTrait(_Trait):
     name = TRAIT_INPUTSELECTOR
     commands = [COMMAND_INPUT, COMMAND_NEXT_INPUT, COMMAND_PREVIOUS_INPUT]
 
-    SYNONYMS = {}
+    SYNONYMS: dict[str, list[str]] = {}
 
     @staticmethod
     def supported(domain, features, device_class, _):
@@ -1759,9 +1770,9 @@ class OpenCloseTrait(_Trait):
 
     # Cover device classes that require 2FA
     COVER_2FA = (
-        cover.DEVICE_CLASS_DOOR,
-        cover.DEVICE_CLASS_GARAGE,
-        cover.DEVICE_CLASS_GATE,
+        cover.CoverDeviceClass.DOOR,
+        cover.CoverDeviceClass.GARAGE,
+        cover.CoverDeviceClass.GATE,
     )
 
     name = TRAIT_OPENCLOSE
@@ -1774,11 +1785,11 @@ class OpenCloseTrait(_Trait):
             return True
 
         return domain == binary_sensor.DOMAIN and device_class in (
-            binary_sensor.DEVICE_CLASS_DOOR,
-            binary_sensor.DEVICE_CLASS_GARAGE_DOOR,
-            binary_sensor.DEVICE_CLASS_LOCK,
-            binary_sensor.DEVICE_CLASS_OPENING,
-            binary_sensor.DEVICE_CLASS_WINDOW,
+            binary_sensor.BinarySensorDeviceClass.DOOR,
+            binary_sensor.BinarySensorDeviceClass.GARAGE_DOOR,
+            binary_sensor.BinarySensorDeviceClass.LOCK,
+            binary_sensor.BinarySensorDeviceClass.OPENING,
+            binary_sensor.BinarySensorDeviceClass.WINDOW,
         )
 
     @staticmethod
@@ -1939,7 +1950,7 @@ class VolumeTrait(_Trait):
         level = self.state.attributes.get(media_player.ATTR_MEDIA_VOLUME_LEVEL)
         if level is not None:
             # Convert 0.0-1.0 to 0-100
-            response["currentVolume"] = int(level * 100)
+            response["currentVolume"] = round(level * 100)
 
         muted = self.state.attributes.get(media_player.ATTR_MEDIA_VOLUME_MUTED)
         if muted is not None:
@@ -2188,7 +2199,7 @@ class MediaStateTrait(_Trait):
     """
 
     name = TRAIT_MEDIA_STATE
-    commands = []
+    commands: list[str] = []
 
     activity_lookup = {
         STATE_OFF: "INACTIVE",
@@ -2245,7 +2256,7 @@ class ChannelTrait(_Trait):
         if (
             domain == media_player.DOMAIN
             and (features & media_player.SUPPORT_PLAY_MEDIA)
-            and device_class == media_player.DEVICE_CLASS_TV
+            and device_class == media_player.MediaPlayerDeviceClass.TV
         ):
             return True
 
@@ -2293,19 +2304,19 @@ class SensorStateTrait(_Trait):
     """
 
     sensor_types = {
-        sensor.DEVICE_CLASS_AQI: ("AirQuality", "AQI"),
-        sensor.DEVICE_CLASS_CO: ("CarbonDioxideLevel", "PARTS_PER_MILLION"),
-        sensor.DEVICE_CLASS_CO2: ("CarbonMonoxideLevel", "PARTS_PER_MILLION"),
-        sensor.DEVICE_CLASS_PM25: ("PM2.5", "MICROGRAMS_PER_CUBIC_METER"),
-        sensor.DEVICE_CLASS_PM10: ("PM10", "MICROGRAMS_PER_CUBIC_METER"),
-        sensor.DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS: (
+        sensor.SensorDeviceClass.AQI: ("AirQuality", "AQI"),
+        sensor.SensorDeviceClass.CO: ("CarbonMonoxideLevel", "PARTS_PER_MILLION"),
+        sensor.SensorDeviceClass.CO2: ("CarbonDioxideLevel", "PARTS_PER_MILLION"),
+        sensor.SensorDeviceClass.PM25: ("PM2.5", "MICROGRAMS_PER_CUBIC_METER"),
+        sensor.SensorDeviceClass.PM10: ("PM10", "MICROGRAMS_PER_CUBIC_METER"),
+        sensor.SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: (
             "VolatileOrganicCompounds",
             "PARTS_PER_MILLION",
         ),
     }
 
     name = TRAIT_SENSOR_STATE
-    commands = []
+    commands: list[str] = []
 
     @classmethod
     def supported(cls, domain, features, device_class, _):

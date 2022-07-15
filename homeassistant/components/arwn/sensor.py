@@ -1,4 +1,6 @@
 """Support for collecting data from the ARWN project."""
+from __future__ import annotations
+
 import json
 import logging
 
@@ -10,7 +12,9 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
 
 _LOGGER = logging.getLogger(__name__)
@@ -72,7 +76,12 @@ def _slug(name):
     return f"sensor.arwn_{slugify(name)}"
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the ARWN platform."""
 
     @callback
@@ -121,7 +130,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 store[sensor.name].set_event(event)
 
     await mqtt.async_subscribe(hass, TOPIC, async_sensor_event_received, 0)
-    return True
 
 
 class ArwnSensor(SensorEntity):

@@ -9,16 +9,14 @@ from homeassistant.components.canary.sensor import (
     STATE_AIR_QUALITY_NORMAL,
     STATE_AIR_QUALITY_VERY_ABNORMAL,
 )
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_SIGNAL_STRENGTH,
-    DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     TEMP_CELSIUS,
 )
+from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
@@ -56,14 +54,14 @@ async def test_sensors_pro(hass, canary) -> None:
             "20_temperature",
             "21.12",
             TEMP_CELSIUS,
-            DEVICE_CLASS_TEMPERATURE,
+            SensorDeviceClass.TEMPERATURE,
             None,
         ),
         "home_dining_room_humidity": (
             "20_humidity",
             "50.46",
             PERCENTAGE,
-            DEVICE_CLASS_HUMIDITY,
+            SensorDeviceClass.HUMIDITY,
             None,
         ),
         "home_dining_room_air_quality": (
@@ -129,7 +127,7 @@ async def test_sensors_attributes_pro(hass, canary) -> None:
 
     future = utcnow() + timedelta(seconds=30)
     async_fire_time_changed(hass, future)
-    await hass.helpers.entity_component.async_update_entity(entity_id)
+    await async_update_entity(hass, entity_id)
     await hass.async_block_till_done()
 
     state2 = hass.states.get(entity_id)
@@ -145,7 +143,7 @@ async def test_sensors_attributes_pro(hass, canary) -> None:
 
     future += timedelta(seconds=30)
     async_fire_time_changed(hass, future)
-    await hass.helpers.entity_component.async_update_entity(entity_id)
+    await async_update_entity(hass, entity_id)
     await hass.async_block_till_done()
 
     state3 = hass.states.get(entity_id)
@@ -182,14 +180,14 @@ async def test_sensors_flex(hass, canary) -> None:
             "20_battery",
             "70.46",
             PERCENTAGE,
-            DEVICE_CLASS_BATTERY,
+            SensorDeviceClass.BATTERY,
             None,
         ),
         "home_dining_room_wifi": (
             "20_wifi",
             "-57.0",
             SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-            DEVICE_CLASS_SIGNAL_STRENGTH,
+            SensorDeviceClass.SIGNAL_STRENGTH,
             None,
         ),
     }

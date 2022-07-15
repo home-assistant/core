@@ -8,5 +8,6 @@
   "homekit": {
     "models": ["Abode", "Iota"]
   },
-  "iot_class": "cloud_push"
+  "iot_class": "cloud_push",
+  "loggers": ["abodepy", "lomond"]
 }

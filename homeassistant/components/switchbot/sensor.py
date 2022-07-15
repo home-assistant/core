@@ -1,18 +1,20 @@
 """Support for SwitchBot sensors."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_MAC,
     CONF_NAME,
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_SIGNAL_STRENGTH,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -26,20 +28,20 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     "rssi": SensorEntityDescription(
         key="rssi",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-        device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "battery": SensorEntityDescription(
         key="battery",
         native_unit_of_measurement=PERCENTAGE,
-        device_class=DEVICE_CLASS_BATTERY,
+        device_class=SensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "lightLevel": SensorEntityDescription(
         key="lightLevel",
         native_unit_of_measurement="Level",
-        device_class=DEVICE_CLASS_ILLUMINANCE,
+        device_class=SensorDeviceClass.ILLUMINANCE,
     ),
 }
 
@@ -52,8 +54,8 @@ async def async_setup_entry(
         DATA_COORDINATOR
     ]
 
-    if not coordinator.data[entry.unique_id].get("data"):
-        return
+    if not coordinator.data.get(entry.unique_id):
+        raise PlatformNotReady
 
     async_add_entities(
         [
@@ -72,8 +74,6 @@ async def async_setup_entry(
 
 class SwitchBotSensor(SwitchbotEntity, SensorEntity):
     """Representation of a Switchbot sensor."""
-
-    coordinator: SwitchbotDataUpdateCoordinator
 
     def __init__(
         self,

@@ -2,16 +2,14 @@
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY,
-    DEVICE_CLASS_MOISTURE,
-    DEVICE_CLASS_MOVING,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -34,20 +32,20 @@ SENSOR_KIND_MOVED = "moved"
 
 SENSOR_DESCRIPTION_AP_ENABLED = BinarySensorEntityDescription(
     key=SENSOR_KIND_AP_INFO,
-    name="Onboard AP Enabled",
-    device_class=DEVICE_CLASS_CONNECTIVITY,
-    entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    name="Onboard AP enabled",
+    device_class=BinarySensorDeviceClass.CONNECTIVITY,
+    entity_category=EntityCategory.DIAGNOSTIC,
 )
 SENSOR_DESCRIPTION_LEAK_DETECTED = BinarySensorEntityDescription(
     key=SENSOR_KIND_LEAK_DETECTED,
-    name="Leak Detected",
-    device_class=DEVICE_CLASS_MOISTURE,
+    name="Leak detected",
+    device_class=BinarySensorDeviceClass.MOISTURE,
 )
 SENSOR_DESCRIPTION_MOVED = BinarySensorEntityDescription(
     key=SENSOR_KIND_MOVED,
-    name="Recently Moved",
-    device_class=DEVICE_CLASS_MOVING,
-    entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    name="Recently moved",
+    device_class=BinarySensorDeviceClass.MOVING,
+    entity_category=EntityCategory.DIAGNOSTIC,
 )
 
 PAIRED_SENSOR_DESCRIPTIONS = (

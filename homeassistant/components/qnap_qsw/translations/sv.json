@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad",
+            "invalid_id": "Enheten returnerade ett ogiltigt unikt ID"
+        },
+        "error": {
+            "invalid_auth": "Ogiltig autentisering"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "username": "Anv\u00e4ndarnamn"
+                }
+            }
+        }
+    }
+}

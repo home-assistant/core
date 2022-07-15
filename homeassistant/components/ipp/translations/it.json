@@ -11,7 +11,7 @@
         },
         "error": {
             "cannot_connect": "Impossibile connettersi",
-            "connection_upgrade": "Impossibile connettersi alla stampante. Riprovare selezionando l'opzione SSL/TLS."
+            "connection_upgrade": "Impossibile connettersi alla stampante. Riprova selezionando l'opzione SSL/TLS."
         },
         "flow_title": "{name}",
         "step": {
@@ -21,10 +21,10 @@
                     "host": "Host",
                     "port": "Porta",
                     "ssl": "Utilizza un certificato SSL",
-                    "verify_ssl": "Verificare il certificato SSL"
+                    "verify_ssl": "Verifica il certificato SSL"
                 },
-                "description": "Configurare la stampante tramite Internet Printing Protocol (IPP) per l'integrazione con Home Assistant.",
-                "title": "Collegare la stampante"
+                "description": "Configura la stampante tramite Internet Printing Protocol (IPP) per l'integrazione con Home Assistant.",
+                "title": "Collega la stampante"
             },
             "zeroconf_confirm": {
                 "description": "Vuoi configurare {name}?",

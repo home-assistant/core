@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El servei ja est\u00e0 configurat"
+        },
+        "error": {
+            "unexpected_response": "Resposta inesperada del servidor whois",
+            "unknown_date_format": "Format de data desconegut a la resposta del servidor whois",
+            "unknown_tld": "El TLD \u00e9s desconegut o no est\u00e0 disponible per a aquesta integraci\u00f3",
+            "whois_command_failed": "La comanda whois ha fallat: no s'ha pogut obtenir la informaci\u00f3 whois"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "domain": "Nom del domini"
+                }
+            }
+        }
+    }
+}

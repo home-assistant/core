@@ -34,7 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Adax."""
 
-    VERSION = 1
+    VERSION = 2
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
@@ -90,7 +90,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors={"base": "cannot_connect"},
             )
 
-        unique_id = configurator.mac_id
+        unique_id = str(configurator.mac_id)
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
 
@@ -116,7 +116,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors = {}
 
-        await self.async_set_unique_id(user_input[ACCOUNT_ID])
+        await self.async_set_unique_id(str(user_input[ACCOUNT_ID]))
         self._abort_if_unique_id_configured()
 
         account_id = user_input[ACCOUNT_ID]
@@ -135,7 +135,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         return self.async_create_entry(
-            title=user_input[ACCOUNT_ID],
+            title=str(user_input[ACCOUNT_ID]),
             data={
                 ACCOUNT_ID: account_id,
                 CONF_PASSWORD: password,

@@ -1,0 +1,31 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_api_key": "Ugyldig API-n\u00f8kkel",
+            "rate_limited": "For \u00f8yeblikket prisbegrenset, pr\u00f8v igjen senere.",
+            "unknown": "Uventet feil"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API-n\u00f8kkel",
+                    "location": "Plassering",
+                    "name": "Navn"
+                },
+                "description": "For \u00e5 f\u00e5 en API-n\u00f8kkel, registrer deg p\u00e5 [Tomorrow.io](https://app.tomorrow.io/signup)."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "timestep": "Min. Mellom NowCast-prognoser"
+                },
+                "description": "Hvis du velger \u00e5 aktivere prognoseenheten \"nowcast\", kan du konfigurere antall minutter mellom hver prognose. Antallet prognoser som gis avhenger av antall minutter valgt mellom prognosene.",
+                "title": "Oppdater Tomorrow.io-alternativer"
+            }
+        }
+    }
+}

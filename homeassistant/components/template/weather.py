@@ -1,4 +1,6 @@
 """Template platform that aggregates meteorological data."""
+from __future__ import annotations
+
 import voluptuous as vol
 
 from homeassistant.components.weather import (
@@ -18,14 +20,24 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_WINDY,
     ATTR_CONDITION_WINDY_VARIANT,
     ENTITY_ID_FORMAT,
+    Forecast,
     WeatherEntity,
 )
-from homeassistant.const import CONF_NAME, CONF_UNIQUE_ID
+from homeassistant.const import CONF_NAME, CONF_TEMPERATURE_UNIT, CONF_UNIQUE_ID
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import async_generate_entity_id
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import (
+    distance as distance_util,
+    pressure as pressure_util,
+    speed as speed_util,
+    temperature as temp_util,
+)
 
-from .template_entity import TemplateEntity
+from .template_entity import TemplateEntity, rewrite_common_legacy_to_modern_conf
 
 CONDITION_CLASSES = {
     ATTR_CONDITION_CLEAR_NIGHT,
@@ -56,6 +68,10 @@ CONF_WIND_BEARING_TEMPLATE = "wind_bearing_template"
 CONF_OZONE_TEMPLATE = "ozone_template"
 CONF_VISIBILITY_TEMPLATE = "visibility_template"
 CONF_FORECAST_TEMPLATE = "forecast_template"
+CONF_PRESSURE_UNIT = "pressure_unit"
+CONF_WIND_SPEED_UNIT = "wind_speed_unit"
+CONF_VISIBILITY_UNIT = "visibility_unit"
+CONF_PRECIPITATION_UNIT = "precipitation_unit"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -71,41 +87,31 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_VISIBILITY_TEMPLATE): cv.template,
         vol.Optional(CONF_FORECAST_TEMPLATE): cv.template,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
+        vol.Optional(CONF_TEMPERATURE_UNIT): vol.In(temp_util.VALID_UNITS),
+        vol.Optional(CONF_PRESSURE_UNIT): vol.In(pressure_util.VALID_UNITS),
+        vol.Optional(CONF_WIND_SPEED_UNIT): vol.In(speed_util.VALID_UNITS),
+        vol.Optional(CONF_VISIBILITY_UNIT): vol.In(distance_util.VALID_UNITS),
+        vol.Optional(CONF_PRECIPITATION_UNIT): vol.In(distance_util.VALID_UNITS),
     }
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Template weather."""
 
-    name = config[CONF_NAME]
-    condition_template = config[CONF_CONDITION_TEMPLATE]
-    temperature_template = config[CONF_TEMPERATURE_TEMPLATE]
-    humidity_template = config[CONF_HUMIDITY_TEMPLATE]
-    attribution_template = config.get(CONF_ATTRIBUTION_TEMPLATE)
-    pressure_template = config.get(CONF_PRESSURE_TEMPLATE)
-    wind_speed_template = config.get(CONF_WIND_SPEED_TEMPLATE)
-    wind_bearing_template = config.get(CONF_WIND_BEARING_TEMPLATE)
-    ozone_template = config.get(CONF_OZONE_TEMPLATE)
-    visibility_template = config.get(CONF_VISIBILITY_TEMPLATE)
-    forecast_template = config.get(CONF_FORECAST_TEMPLATE)
+    config = rewrite_common_legacy_to_modern_conf(config)
     unique_id = config.get(CONF_UNIQUE_ID)
 
     async_add_entities(
         [
             WeatherTemplate(
                 hass,
-                name,
-                condition_template,
-                temperature_template,
-                humidity_template,
-                attribution_template,
-                pressure_template,
-                wind_speed_template,
-                wind_bearing_template,
-                ozone_template,
-                visibility_template,
-                forecast_template,
+                config,
                 unique_id,
             )
         ]
@@ -115,37 +121,34 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class WeatherTemplate(TemplateEntity, WeatherEntity):
     """Representation of a weather condition."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
-        hass,
-        name,
-        condition_template,
-        temperature_template,
-        humidity_template,
-        attribution_template,
-        pressure_template,
-        wind_speed_template,
-        wind_bearing_template,
-        ozone_template,
-        visibility_template,
-        forecast_template,
-        unique_id,
-    ):
-        """Initialize the Demo weather."""
-        super().__init__()
+        hass: HomeAssistant,
+        config: ConfigType,
+        unique_id: str | None,
+    ) -> None:
+        """Initialize the Template weather."""
+        super().__init__(hass, config=config, unique_id=unique_id)
 
-        self._name = name
-        self._condition_template = condition_template
-        self._temperature_template = temperature_template
-        self._humidity_template = humidity_template
-        self._attribution_template = attribution_template
-        self._pressure_template = pressure_template
-        self._wind_speed_template = wind_speed_template
-        self._wind_bearing_template = wind_bearing_template
-        self._ozone_template = ozone_template
-        self._visibility_template = visibility_template
-        self._forecast_template = forecast_template
-        self._unique_id = unique_id
+        name = self._attr_name
+        self._condition_template = config[CONF_CONDITION_TEMPLATE]
+        self._temperature_template = config[CONF_TEMPERATURE_TEMPLATE]
+        self._humidity_template = config[CONF_HUMIDITY_TEMPLATE]
+        self._attribution_template = config.get(CONF_ATTRIBUTION_TEMPLATE)
+        self._pressure_template = config.get(CONF_PRESSURE_TEMPLATE)
+        self._wind_speed_template = config.get(CONF_WIND_SPEED_TEMPLATE)
+        self._wind_bearing_template = config.get(CONF_WIND_BEARING_TEMPLATE)
+        self._ozone_template = config.get(CONF_OZONE_TEMPLATE)
+        self._visibility_template = config.get(CONF_VISIBILITY_TEMPLATE)
+        self._forecast_template = config.get(CONF_FORECAST_TEMPLATE)
+
+        self._attr_native_precipitation_unit = config.get(CONF_PRECIPITATION_UNIT)
+        self._attr_native_pressure_unit = config.get(CONF_PRESSURE_UNIT)
+        self._attr_native_temperature_unit = config.get(CONF_TEMPERATURE_UNIT)
+        self._attr_native_visibility_unit = config.get(CONF_VISIBILITY_UNIT)
+        self._attr_native_wind_speed_unit = config.get(CONF_WIND_SPEED_UNIT)
 
         self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, name, hass=hass)
 
@@ -158,76 +161,61 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
         self._wind_bearing = None
         self._ozone = None
         self._visibility = None
-        self._forecast = []
+        self._forecast: list[Forecast] = []
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def condition(self):
+    def condition(self) -> str | None:
         """Return the current condition."""
         return self._condition
 
     @property
-    def temperature(self):
+    def native_temperature(self) -> float | None:
         """Return the temperature."""
         return self._temperature
 
     @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return self.hass.config.units.temperature_unit
-
-    @property
-    def humidity(self):
+    def humidity(self) -> float | None:
         """Return the humidity."""
         return self._humidity
 
     @property
-    def wind_speed(self):
+    def native_wind_speed(self) -> float | None:
         """Return the wind speed."""
         return self._wind_speed
 
     @property
-    def wind_bearing(self):
+    def wind_bearing(self) -> float | str | None:
         """Return the wind bearing."""
         return self._wind_bearing
 
     @property
-    def ozone(self):
+    def ozone(self) -> float | None:
         """Return the ozone level."""
         return self._ozone
 
     @property
-    def visibility(self):
+    def native_visibility(self) -> float | None:
         """Return the visibility."""
         return self._visibility
 
     @property
-    def pressure(self):
+    def native_pressure(self) -> float | None:
         """Return the air pressure."""
         return self._pressure
 
     @property
-    def forecast(self):
+    def forecast(self) -> list[Forecast]:
         """Return the forecast."""
         return self._forecast
 
     @property
-    def attribution(self):
+    def attribution(self) -> str | None:
         """Return the attribution."""
         if self._attribution is None:
             return "Powered by Home Assistant"
         return self._attribution
 
-    @property
-    def unique_id(self):
-        """Return the unique id of this weather instance."""
-        return self._unique_id
-
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
 
         if self._condition_template:

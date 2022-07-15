@@ -1,10 +1,13 @@
 """Support for Risco alarm zones."""
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_MOTION,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_COORDINATOR, DOMAIN
 from .entity import RiscoEntity, binary_sensor_unique_id
@@ -13,7 +16,11 @@ SERVICE_BYPASS_ZONE = "bypass_zone"
 SERVICE_UNBYPASS_ZONE = "unbypass_zone"
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Risco alarm control panel."""
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(SERVICE_BYPASS_ZONE, {}, "async_bypass_zone")
@@ -72,8 +79,8 @@ class RiscoBinarySensor(BinarySensorEntity, RiscoEntity):
 
     @property
     def device_class(self):
-        """Return the class of this sensor, from DEVICE_CLASSES."""
-        return DEVICE_CLASS_MOTION
+        """Return the class of this sensor, from BinarySensorDeviceClass."""
+        return BinarySensorDeviceClass.MOTION
 
     async def _bypass(self, bypass):
         alarm = await self._risco.bypass_zone(self._zone_id, bypass)

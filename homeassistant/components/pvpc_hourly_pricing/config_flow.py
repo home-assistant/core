@@ -1,4 +1,6 @@
 """Config flow for pvpc_hourly_pricing."""
+from __future__ import annotations
+
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -15,7 +17,9 @@ class TariffSelectorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> PVPCOptionsFlowHandler:
         """Get the options flow for this handler."""
         return PVPCOptionsFlowHandler(config_entry)
 
@@ -36,7 +40,7 @@ class TariffSelectorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class PVPCOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle PVPC options."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 

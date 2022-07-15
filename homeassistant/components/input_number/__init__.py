@@ -1,6 +1,7 @@
 """Support to set a numeric value from a slider or text box."""
 from __future__ import annotations
 
+from contextlib import suppress
 import logging
 
 import voluptuous as vol
@@ -19,6 +20,9 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import collection
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.integration_platform import (
+    async_process_integration_platform_for_component,
+)
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
@@ -115,6 +119,11 @@ STORAGE_VERSION = 1
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up an input slider."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+
+    # Process integration platforms right away since
+    # we will create entities before firing EVENT_COMPONENT_LOADED
+    await async_process_integration_platform_for_component(hass, DOMAIN)
+
     id_manager = collection.IDManager()
 
     yaml_collection = collection.YamlCollection(
@@ -200,7 +209,7 @@ class InputNumber(RestoreEntity):
         """Initialize an input number."""
         self._config = config
         self.editable = True
-        self._current_value = config.get(CONF_INITIAL)
+        self._current_value: float | None = config.get(CONF_INITIAL)
 
     @classmethod
     def from_yaml(cls, config: dict) -> InputNumber:
@@ -273,8 +282,10 @@ class InputNumber(RestoreEntity):
         if self._current_value is not None:
             return
 
-        state = await self.async_get_last_state()
-        value = state and float(state.state)
+        value: float | None = None
+        if state := await self.async_get_last_state():
+            with suppress(ValueError):
+                value = float(state.state)
 
         # Check against None because value can be 0
         if value is not None and self._minimum <= value <= self._maximum:
@@ -306,6 +317,8 @@ class InputNumber(RestoreEntity):
         """Handle when the config is updated."""
         self._config = config
         # just in case min/max values changed
+        if self._current_value is None:
+            return
         self._current_value = min(self._current_value, self._maximum)
         self._current_value = max(self._current_value, self._minimum)
         self.async_write_ha_state()

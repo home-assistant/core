@@ -79,11 +79,11 @@ async def test_default_setup(hass, dsmr_connection_fixture):
 
     entry = registry.async_get("sensor.power_consumption")
     assert entry
-    assert entry.unique_id == "1234_Power_Consumption"
+    assert entry.unique_id == "1234_current_electricity_usage"
 
     entry = registry.async_get("sensor.gas_consumption")
     assert entry
-    assert entry.unique_id == "5678_Gas_Consumption"
+    assert entry.unique_id == "5678_gas_meter_reading"
 
     telegram_callback = connection_factory.call_args_list[0][0][2]
 
@@ -157,7 +157,7 @@ async def test_setup_only_energy(hass, dsmr_connection_fixture):
 
     entry = registry.async_get("sensor.power_consumption")
     assert entry
-    assert entry.unique_id == "1234_Power_Consumption"
+    assert entry.unique_id == "1234_current_electricity_usage"
 
     entry = registry.async_get("sensor.gas_consumption")
     assert not entry
@@ -309,9 +309,9 @@ async def test_luxembourg_meter(hass, dsmr_connection_fixture):
     (connection_factory, transport, protocol) = dsmr_connection_fixture
 
     from dsmr_parser.obis_references import (
+        ELECTRICITY_EXPORTED_TOTAL,
+        ELECTRICITY_IMPORTED_TOTAL,
         HOURLY_GAS_METER_READING,
-        LUXEMBOURG_ELECTRICITY_DELIVERED_TARIFF_GLOBAL,
-        LUXEMBOURG_ELECTRICITY_USED_TARIFF_GLOBAL,
     )
     from dsmr_parser.objects import CosemObject, MBusObject
 
@@ -334,10 +334,10 @@ async def test_luxembourg_meter(hass, dsmr_connection_fixture):
                 {"value": Decimal(745.695), "unit": "m3"},
             ]
         ),
-        LUXEMBOURG_ELECTRICITY_USED_TARIFF_GLOBAL: CosemObject(
+        ELECTRICITY_IMPORTED_TOTAL: CosemObject(
             [{"value": Decimal(123.456), "unit": ENERGY_KILO_WATT_HOUR}]
         ),
-        LUXEMBOURG_ELECTRICITY_DELIVERED_TARIFF_GLOBAL: CosemObject(
+        ELECTRICITY_EXPORTED_TOTAL: CosemObject(
             [{"value": Decimal(654.321), "unit": ENERGY_KILO_WATT_HOUR}]
         ),
     }
@@ -393,7 +393,7 @@ async def test_belgian_meter(hass, dsmr_connection_fixture):
     (connection_factory, transport, protocol) = dsmr_connection_fixture
 
     from dsmr_parser.obis_references import (
-        BELGIUM_HOURLY_GAS_METER_READING,
+        BELGIUM_5MIN_GAS_METER_READING,
         ELECTRICITY_ACTIVE_TARIFF,
     )
     from dsmr_parser.objects import CosemObject, MBusObject
@@ -411,7 +411,7 @@ async def test_belgian_meter(hass, dsmr_connection_fixture):
     }
 
     telegram = {
-        BELGIUM_HOURLY_GAS_METER_READING: MBusObject(
+        BELGIUM_5MIN_GAS_METER_READING: MBusObject(
             [
                 {"value": datetime.datetime.fromtimestamp(1551642213)},
                 {"value": Decimal(745.695), "unit": "m3"},
@@ -510,8 +510,8 @@ async def test_swedish_meter(hass, dsmr_connection_fixture):
     (connection_factory, transport, protocol) = dsmr_connection_fixture
 
     from dsmr_parser.obis_references import (
-        SWEDEN_ELECTRICITY_DELIVERED_TARIFF_GLOBAL,
-        SWEDEN_ELECTRICITY_USED_TARIFF_GLOBAL,
+        ELECTRICITY_EXPORTED_TOTAL,
+        ELECTRICITY_IMPORTED_TOTAL,
     )
     from dsmr_parser.objects import CosemObject
 
@@ -528,10 +528,10 @@ async def test_swedish_meter(hass, dsmr_connection_fixture):
     }
 
     telegram = {
-        SWEDEN_ELECTRICITY_USED_TARIFF_GLOBAL: CosemObject(
+        ELECTRICITY_IMPORTED_TOTAL: CosemObject(
             [{"value": Decimal(123.456), "unit": ENERGY_KILO_WATT_HOUR}]
         ),
-        SWEDEN_ELECTRICITY_DELIVERED_TARIFF_GLOBAL: CosemObject(
+        ELECTRICITY_EXPORTED_TOTAL: CosemObject(
             [{"value": Decimal(654.321), "unit": ENERGY_KILO_WATT_HOUR}]
         ),
     }
@@ -576,6 +576,80 @@ async def test_swedish_meter(hass, dsmr_connection_fixture):
     )
 
 
+async def test_easymeter(hass, dsmr_connection_fixture):
+    """Test if Q3D meter is correctly parsed."""
+    (connection_factory, transport, protocol) = dsmr_connection_fixture
+
+    from dsmr_parser.obis_references import (
+        ELECTRICITY_EXPORTED_TOTAL,
+        ELECTRICITY_IMPORTED_TOTAL,
+    )
+    from dsmr_parser.objects import CosemObject
+
+    entry_data = {
+        "port": "/dev/ttyUSB0",
+        "dsmr_version": "Q3D",
+        "precision": 4,
+        "reconnect_interval": 30,
+        "serial_id": None,
+        "serial_id_gas": None,
+    }
+    entry_options = {
+        "time_between_update": 0,
+    }
+
+    telegram = {
+        ELECTRICITY_IMPORTED_TOTAL: CosemObject(
+            [{"value": Decimal(54184.6316), "unit": ENERGY_KILO_WATT_HOUR}]
+        ),
+        ELECTRICITY_EXPORTED_TOTAL: CosemObject(
+            [{"value": Decimal(19981.1069), "unit": ENERGY_KILO_WATT_HOUR}]
+        ),
+    }
+
+    mock_entry = MockConfigEntry(
+        domain="dsmr",
+        unique_id="/dev/ttyUSB0",
+        data=entry_data,
+        options=entry_options,
+    )
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    telegram_callback = connection_factory.call_args_list[0][0][2]
+
+    # simulate a telegram pushed from the smartmeter and parsed by dsmr_parser
+    telegram_callback(telegram)
+
+    # after receiving telegram entities need to have the chance to update
+    await asyncio.sleep(0)
+
+    power_tariff = hass.states.get("sensor.energy_consumption_total")
+    assert power_tariff.state == "54184.6316"
+    assert power_tariff.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
+    assert power_tariff.attributes.get(ATTR_ICON) is None
+    assert (
+        power_tariff.attributes.get(ATTR_STATE_CLASS)
+        == SensorStateClass.TOTAL_INCREASING
+    )
+    assert (
+        power_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
+    )
+
+    power_tariff = hass.states.get("sensor.energy_production_total")
+    assert power_tariff.state == "19981.1069"
+    assert (
+        power_tariff.attributes.get(ATTR_STATE_CLASS)
+        == SensorStateClass.TOTAL_INCREASING
+    )
+    assert (
+        power_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
+    )
+
+
 async def test_tcp(hass, dsmr_connection_fixture):
     """If proper config provided TCP connection should be made."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
@@ -584,6 +658,35 @@ async def test_tcp(hass, dsmr_connection_fixture):
         "host": "localhost",
         "port": "1234",
         "dsmr_version": "2.2",
+        "protocol": "dsmr_protocol",
+        "precision": 4,
+        "reconnect_interval": 30,
+        "serial_id": "1234",
+        "serial_id_gas": "5678",
+    }
+
+    mock_entry = MockConfigEntry(
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data
+    )
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert connection_factory.call_args_list[0][0][0] == "localhost"
+    assert connection_factory.call_args_list[0][0][1] == "1234"
+
+
+async def test_rfxtrx_tcp(hass, rfxtrx_dsmr_connection_fixture):
+    """If proper config provided RFXtrx TCP connection should be made."""
+    (connection_factory, transport, protocol) = rfxtrx_dsmr_connection_fixture
+
+    entry_data = {
+        "host": "localhost",
+        "port": "1234",
+        "dsmr_version": "2.2",
+        "protocol": "rfxtrx_dsmr_protocol",
         "precision": 4,
         "reconnect_interval": 30,
         "serial_id": "1234",

@@ -11,12 +11,9 @@
                 "data": {
                     "host": "H\u00f4te (facultatif)",
                     "password": "Mot de passe",
-                    "port": "Port (facultatif)",
-                    "ssl": "Utilise un certificat SSL",
-                    "username": "Nom d'utilisateur (Optional)"
+                    "username": "Nom d'utilisateur (facultatif)"
                 },
-                "description": "H\u00f4te par d\u00e9faut\u00a0: {host}\n Port par d\u00e9faut\u00a0: {port}\n Nom d'utilisateur par d\u00e9faut\u00a0: {username}",
-                "title": "Netgear"
+                "description": "H\u00f4te par d\u00e9faut\u00a0: {host}\nNom d'utilisateur par d\u00e9faut\u00a0: {username}"
             }
         }
     },
@@ -26,8 +23,7 @@
                 "data": {
                     "consider_home": "Consid\u00e9rez le temps pass\u00e9 \u00e0 la maison (secondes)"
                 },
-                "description": "Sp\u00e9cifiez les param\u00e8tres optionnels",
-                "title": "Netgear"
+                "description": "Sp\u00e9cifiez les param\u00e8tres optionnels"
             }
         }
     }

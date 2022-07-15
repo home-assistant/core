@@ -14,8 +14,7 @@
                     "longitude": "Longitude",
                     "name": "Name of the integration"
                 },
-                "description": "Set up AEMET OpenData integration. To generate API key go to https://opendata.aemet.es/centrodedescargas/altaUsuario",
-                "title": "AEMET OpenData"
+                "description": "To generate API key go to https://opendata.aemet.es/centrodedescargas/altaUsuario"
             }
         }
     },

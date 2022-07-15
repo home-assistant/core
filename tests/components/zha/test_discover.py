@@ -2,7 +2,7 @@
 
 import re
 from unittest import mock
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from zigpy.const import SIG_ENDPOINTS, SIG_MANUFACTURER, SIG_MODEL, SIG_NODE_DESC
@@ -44,6 +44,24 @@ from .zha_devices_list import (
 NO_TAIL_ID = re.compile("_\\d$")
 UNIQUE_ID_HD = re.compile(r"^(([\da-fA-F]{2}:){7}[\da-fA-F]{2}-\d{1,3})", re.X)
 
+IGNORE_SUFFIXES = [
+    zigpy.zcl.clusters.general.OnOff.StartUpOnOff.__name__,
+    "on_off_transition_time",
+    "on_level",
+    "on_transition_time",
+    "off_transition_time",
+    "default_move_rate",
+    "start_up_current_level",
+]
+
+
+def contains_ignored_suffix(unique_id: str) -> bool:
+    """Return true if the unique_id ends with an ignored suffix."""
+    for suffix in IGNORE_SUFFIXES:
+        if suffix.lower() in unique_id.lower():
+            return True
+    return False
+
 
 @pytest.fixture
 def channels_mock(zha_device_mock):
@@ -69,6 +87,14 @@ def channels_mock(zha_device_mock):
 @patch(
     "zigpy.zcl.clusters.general.Identify.request",
     new=AsyncMock(return_value=[mock.sentinel.data, zcl_f.Status.SUCCESS]),
+)
+# We do this here because we are testing ZHA discovery logic. Point being we want to ensure that
+# all discovered entities are dispatched for creation. In order to test this we need the entities
+# added to HA. So we ensure that they are all enabled even though they won't necessarily be in reality
+# at runtime
+@patch(
+    "homeassistant.components.zha.entity.ZhaEntity.entity_registry_enabled_default",
+    new=Mock(return_value=True),
 )
 @pytest.mark.parametrize("device", DEVICES)
 async def test_devices(
@@ -112,7 +138,7 @@ async def test_devices(
             assert cluster_identify.request.call_args == mock.call(
                 False,
                 64,
-                (zigpy.types.uint8_t, zigpy.types.uint8_t),
+                cluster_identify.commands_by_name["trigger_effect"].schema,
                 2,
                 0,
                 expect_reply=True,
@@ -125,17 +151,25 @@ async def test_devices(
         ch.id for pool in zha_dev.channels.pools for ch in pool.client_channels.values()
     }
     assert event_channels == set(device[DEV_SIG_EVT_CHANNELS])
-
+    # we need to probe the class create entity factory so we need to reset this to get accurate results
+    zha_regs.ZHA_ENTITIES.clean_up()
     # build a dict of entity_class -> (component, unique_id, channels) tuple
     ha_ent_info = {}
+    created_entity_count = 0
     for call in _dispatch.call_args_list:
         _, component, entity_cls, unique_id, channels = call[0]
-        unique_id_head = UNIQUE_ID_HD.match(unique_id).group(0)  # ieee + endpoint_id
-        ha_ent_info[(unique_id_head, entity_cls.__name__)] = (
-            component,
-            unique_id,
-            channels,
-        )
+        # the factory can return None. We filter these out to get an accurate created entity count
+        response = entity_cls.create_entity(unique_id, zha_dev, channels)
+        if response and not contains_ignored_suffix(response.name):
+            created_entity_count += 1
+            unique_id_head = UNIQUE_ID_HD.match(unique_id).group(
+                0
+            )  # ieee + endpoint_id
+            ha_ent_info[(unique_id_head, entity_cls.__name__)] = (
+                component,
+                unique_id,
+                channels,
+            )
 
     for comp_id, ent_info in device[DEV_SIG_ENT_MAP].items():
         component, unique_id = comp_id
@@ -156,13 +190,15 @@ async def test_devices(
         assert unique_id.startswith(ha_unique_id)
         assert {ch.name for ch in ha_channels} == set(ent_info[DEV_SIG_CHANNELS])
 
-    assert _dispatch.call_count == len(device[DEV_SIG_ENT_MAP])
+    assert created_entity_count == len(device[DEV_SIG_ENT_MAP])
 
     entity_ids = hass_disable_services.states.async_entity_ids()
     await hass_disable_services.async_block_till_done()
 
     zha_entity_ids = {
-        ent for ent in entity_ids if ent.split(".")[0] in zha_const.PLATFORMS
+        ent
+        for ent in entity_ids
+        if not contains_ignored_suffix(ent) and ent.split(".")[0] in zha_const.PLATFORMS
     }
     assert zha_entity_ids == {
         e[DEV_SIG_ENT_MAP_ID] for e in device[DEV_SIG_ENT_MAP].values()
@@ -298,18 +334,20 @@ async def test_discover_endpoint(device_info, channels_mock, hass):
     assert device_info[DEV_SIG_EVT_CHANNELS] == sorted(
         ch.id for pool in channels.pools for ch in pool.client_channels.values()
     )
-    assert new_ent.call_count == len(list(device_info[DEV_SIG_ENT_MAP].values()))
 
     # build a dict of entity_class -> (component, unique_id, channels) tuple
     ha_ent_info = {}
     for call in new_ent.call_args_list:
         component, entity_cls, unique_id, channels = call[0]
-        unique_id_head = UNIQUE_ID_HD.match(unique_id).group(0)  # ieee + endpoint_id
-        ha_ent_info[(unique_id_head, entity_cls.__name__)] = (
-            component,
-            unique_id,
-            channels,
-        )
+        if not contains_ignored_suffix(unique_id):
+            unique_id_head = UNIQUE_ID_HD.match(unique_id).group(
+                0
+            )  # ieee + endpoint_id
+            ha_ent_info[(unique_id_head, entity_cls.__name__)] = (
+                component,
+                unique_id,
+                channels,
+            )
 
     for comp_id, ent_info in device_info[DEV_SIG_ENT_MAP].items():
         component, unique_id = comp_id
@@ -325,8 +363,6 @@ async def test_discover_endpoint(device_info, channels_mock, hass):
         # unique_id used for discover is the same for "multi entities"
         assert unique_id.startswith(ha_unique_id)
         assert {ch.name for ch in ha_channels} == set(ent_info[DEV_SIG_CHANNELS])
-
-    assert new_ent.call_count == len(device_info[DEV_SIG_ENT_MAP])
 
 
 def _ch_mock(cluster):
@@ -367,7 +403,6 @@ def _test_single_input_cluster_device_class(probe_mock):
         cover_ch,
         multistate_ch,
         ias_ch,
-        analog_ch,
     ]
 
     disc.ProbeEndpoint().discover_by_cluster_id(ch_pool)
@@ -383,11 +418,6 @@ def _test_single_input_cluster_device_class(probe_mock):
         component, ch = details
         assert call[0][0] == component
         assert call[0][1] == ch
-
-
-def test_single_input_cluster_device_class():
-    """Test SINGLE_INPUT_CLUSTER_DEVICE_CLASS matching by cluster id or class."""
-    _test_single_input_cluster_device_class()
 
 
 def test_single_input_cluster_device_class_by_cluster_class():
@@ -409,8 +439,8 @@ def test_single_input_cluster_device_class_by_cluster_class():
 @pytest.mark.parametrize(
     "override, entity_id",
     [
-        (None, "light.manufacturer_model_77665544_level_light_color_on_off"),
-        ("switch", "switch.manufacturer_model_77665544_on_off"),
+        (None, "light.manufacturer_model_light"),
+        ("switch", "switch.manufacturer_model_switch"),
     ],
 )
 async def test_device_override(
@@ -454,3 +484,35 @@ async def test_group_probe_cleanup_called(
     await config_entry.async_unload(hass_disable_services)
     await hass_disable_services.async_block_till_done()
     disc.GROUP_PROBE.cleanup.assert_called()
+
+
+@patch(
+    "zigpy.zcl.clusters.general.Identify.request",
+    new=AsyncMock(return_value=[mock.sentinel.data, zcl_f.Status.SUCCESS]),
+)
+@patch(
+    "homeassistant.components.zha.entity.ZhaEntity.entity_registry_enabled_default",
+    new=Mock(return_value=True),
+)
+async def test_channel_with_empty_ep_attribute_cluster(
+    hass_disable_services,
+    zigpy_device_mock,
+    zha_device_joined_restored,
+):
+    """Test device discovery for cluster which does not have em_attribute."""
+    entity_registry = homeassistant.helpers.entity_registry.async_get(
+        hass_disable_services
+    )
+
+    zigpy_device = zigpy_device_mock(
+        {1: {SIG_EP_INPUT: [0x042E], SIG_EP_OUTPUT: [], SIG_EP_TYPE: 0x1234}},
+        "00:11:22:33:44:55:66:77",
+        "test manufacturer",
+        "test model",
+        patch_cluster=False,
+    )
+    zha_dev = await zha_device_joined_restored(zigpy_device)
+    ha_entity_id = entity_registry.async_get_entity_id(
+        "sensor", "zha", f"{zha_dev.ieee}-1-1070"
+    )
+    assert ha_entity_id is not None

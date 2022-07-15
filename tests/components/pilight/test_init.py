@@ -36,7 +36,7 @@ class PilightDaemonSim:
     def __init__(self, host, port):
         """Init pilight client, ignore parameters."""
 
-    def send_code(self, call):  # pylint: disable=no-self-use
+    def send_code(self, call):
         """Handle pilight.send service callback."""
         _LOGGER.error("PilightDaemonSim payload: %s", call)
 
@@ -51,7 +51,7 @@ class PilightDaemonSim:
             self.callback(self.test_message)
             self.called = True
 
-    def stop(self):  # pylint: disable=no-self-use
+    def stop(self):
         """Handle homeassistant.stop callback."""
         _LOGGER.error("PilightDaemonSim stop")
 

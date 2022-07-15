@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "no_valid_uuid_set": "Tidak ada UUID yang valid ditetapkan"
+        },
+        "error": {
+            "no_valid_uuid_set": "Tidak ada UUID yang valid ditetapkan"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "token": "Token API",
+                    "url": "URL"
+                },
+                "description": "Masukkan alamat IP dengan port dan token akses server Z-Way. Untuk mendapatkan token, buka antarmuka pengguna Z-Way Smart Home UI > Menu > Settings > Users > Administrator > API token.\n\nContoh menghubungkan ke Z-Way di jaringan lokal:\nURL: {local_url}\nToken: {local_token}\n\nContoh menghubungkan ke Z-Way melalui akses jarak jauh find.z-wave.me:\nURL: {find_url}\nToken: {find_token}\n\nContoh menghubungkan ke Z-Way dengan alamat IP publik statis:\nURL: {remote_url}\nToken: {local_token}\n\nSaat terhubung melalui find.z-wave.me Anda perlu menggunakan token dengan cakupan global (masuk ke Z-Way melalui find.z-wave.me untuk hal ini)."
+            }
+        }
+    }
+}

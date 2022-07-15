@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Iterable
 from datetime import timedelta
-from typing import TYPE_CHECKING, Any, cast
+from typing import Any, cast
 
 from simplipy import API
 from simplipy.device import Device, DeviceTypes
@@ -12,6 +12,7 @@ from simplipy.errors import (
     EndpointUnavailableError,
     InvalidCredentialsError,
     SimplipyError,
+    WebsocketError,
 )
 from simplipy.system import SystemNotification
 from simplipy.system.v3 import (
@@ -50,11 +51,16 @@ from homeassistant.const import (
     ATTR_DEVICE_ID,
     CONF_CODE,
     CONF_TOKEN,
+    CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
 from homeassistant.core import CoreState, Event, HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from homeassistant.helpers import (
     aiohttp_client,
     config_validation as cv,
@@ -85,7 +91,6 @@ from .const import (
     ATTR_EXIT_DELAY_HOME,
     ATTR_LIGHT,
     ATTR_VOICE_PROMPT_VOLUME,
-    CONF_USER_ID,
     DOMAIN,
     LOGGER,
 )
@@ -108,8 +113,7 @@ ATTR_SYSTEM_ID = "system_id"
 ATTR_TIMESTAMP = "timestamp"
 
 DEFAULT_CONFIG_URL = "https://webapp.simplisafe.com/new/#/dashboard"
-DEFAULT_ENTITY_MODEL = "alarm_control_panel"
-DEFAULT_ENTITY_NAME = "Alarm Control Panel"
+DEFAULT_ENTITY_MODEL = "Alarm control panel"
 DEFAULT_ERROR_THRESHOLD = 2
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 DEFAULT_SOCKET_MIN_RETRY = 15
@@ -145,86 +149,62 @@ SERVICES = (
     SERVICE_NAME_SET_SYSTEM_PROPERTIES,
 )
 
-SERVICE_CLEAR_NOTIFICATIONS_SCHEMA = vol.All(
-    cv.deprecated(ATTR_SYSTEM_ID),
-    vol.Schema(
-        {
-            vol.Optional(ATTR_DEVICE_ID): cv.string,
-            vol.Optional(ATTR_SYSTEM_ID): cv.string,
-        }
-    ),
-    cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_SYSTEM_ID),
+SERVICE_CLEAR_NOTIFICATIONS_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): cv.string,
+    },
 )
 
-SERVICE_REMOVE_PIN_SCHEMA = vol.All(
-    cv.deprecated(ATTR_SYSTEM_ID),
-    vol.Schema(
-        {
-            vol.Optional(ATTR_DEVICE_ID): cv.string,
-            vol.Optional(ATTR_SYSTEM_ID): cv.string,
-            vol.Required(ATTR_PIN_LABEL_OR_VALUE): cv.string,
-        }
-    ),
-    cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_SYSTEM_ID),
+SERVICE_REMOVE_PIN_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): cv.string,
+        vol.Required(ATTR_PIN_LABEL_OR_VALUE): cv.string,
+    }
 )
 
-SERVICE_SET_PIN_SCHEMA = vol.All(
-    cv.deprecated(ATTR_SYSTEM_ID),
-    vol.Schema(
-        {
-            vol.Optional(ATTR_DEVICE_ID): cv.string,
-            vol.Optional(ATTR_SYSTEM_ID): cv.string,
-            vol.Required(ATTR_PIN_LABEL): cv.string,
-            vol.Required(ATTR_PIN_VALUE): cv.string,
-        },
-    ),
-    cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_SYSTEM_ID),
+SERVICE_SET_PIN_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): cv.string,
+        vol.Required(ATTR_PIN_LABEL): cv.string,
+        vol.Required(ATTR_PIN_VALUE): cv.string,
+    },
 )
 
-SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA = vol.All(
-    cv.deprecated(ATTR_SYSTEM_ID),
-    vol.Schema(
-        {
-            vol.Optional(ATTR_DEVICE_ID): cv.string,
-            vol.Optional(ATTR_SYSTEM_ID): cv.string,
-            vol.Optional(ATTR_ALARM_DURATION): vol.All(
-                cv.time_period,
-                lambda value: value.total_seconds(),
-                vol.Range(min=MIN_ALARM_DURATION, max=MAX_ALARM_DURATION),
-            ),
-            vol.Optional(ATTR_ALARM_VOLUME): vol.All(
-                vol.In(VOLUME_MAP), VOLUME_MAP.get
-            ),
-            vol.Optional(ATTR_CHIME_VOLUME): vol.All(
-                vol.In(VOLUME_MAP), VOLUME_MAP.get
-            ),
-            vol.Optional(ATTR_ENTRY_DELAY_AWAY): vol.All(
-                cv.time_period,
-                lambda value: value.total_seconds(),
-                vol.Range(min=MIN_ENTRY_DELAY_AWAY, max=MAX_ENTRY_DELAY_AWAY),
-            ),
-            vol.Optional(ATTR_ENTRY_DELAY_HOME): vol.All(
-                cv.time_period,
-                lambda value: value.total_seconds(),
-                vol.Range(max=MAX_ENTRY_DELAY_HOME),
-            ),
-            vol.Optional(ATTR_EXIT_DELAY_AWAY): vol.All(
-                cv.time_period,
-                lambda value: value.total_seconds(),
-                vol.Range(min=MIN_EXIT_DELAY_AWAY, max=MAX_EXIT_DELAY_AWAY),
-            ),
-            vol.Optional(ATTR_EXIT_DELAY_HOME): vol.All(
-                cv.time_period,
-                lambda value: value.total_seconds(),
-                vol.Range(max=MAX_EXIT_DELAY_HOME),
-            ),
-            vol.Optional(ATTR_LIGHT): cv.boolean,
-            vol.Optional(ATTR_VOICE_PROMPT_VOLUME): vol.All(
-                vol.In(VOLUME_MAP), VOLUME_MAP.get
-            ),
-        }
-    ),
-    cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_SYSTEM_ID),
+SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): cv.string,
+        vol.Optional(ATTR_ALARM_DURATION): vol.All(
+            cv.time_period,
+            lambda value: value.total_seconds(),
+            vol.Range(min=MIN_ALARM_DURATION, max=MAX_ALARM_DURATION),
+        ),
+        vol.Optional(ATTR_ALARM_VOLUME): vol.All(vol.In(VOLUME_MAP), VOLUME_MAP.get),
+        vol.Optional(ATTR_CHIME_VOLUME): vol.All(vol.In(VOLUME_MAP), VOLUME_MAP.get),
+        vol.Optional(ATTR_ENTRY_DELAY_AWAY): vol.All(
+            cv.time_period,
+            lambda value: value.total_seconds(),
+            vol.Range(min=MIN_ENTRY_DELAY_AWAY, max=MAX_ENTRY_DELAY_AWAY),
+        ),
+        vol.Optional(ATTR_ENTRY_DELAY_HOME): vol.All(
+            cv.time_period,
+            lambda value: value.total_seconds(),
+            vol.Range(max=MAX_ENTRY_DELAY_HOME),
+        ),
+        vol.Optional(ATTR_EXIT_DELAY_AWAY): vol.All(
+            cv.time_period,
+            lambda value: value.total_seconds(),
+            vol.Range(min=MIN_EXIT_DELAY_AWAY, max=MAX_EXIT_DELAY_AWAY),
+        ),
+        vol.Optional(ATTR_EXIT_DELAY_HOME): vol.All(
+            cv.time_period,
+            lambda value: value.total_seconds(),
+            vol.Range(max=MAX_EXIT_DELAY_HOME),
+        ),
+        vol.Optional(ATTR_LIGHT): cv.boolean,
+        vol.Optional(ATTR_VOICE_PROMPT_VOLUME): vol.All(
+            vol.In(VOLUME_MAP), VOLUME_MAP.get
+        ),
+    }
 )
 
 WEBSOCKET_EVENTS_REQUIRING_SERIAL = [EVENT_LOCK_LOCKED, EVENT_LOCK_UNLOCKED]
@@ -238,7 +218,7 @@ WEBSOCKET_EVENTS_TO_FIRE_HASS_EVENT = [
     EVENT_USER_INITIATED_TEST,
 ]
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 @callback
@@ -246,15 +226,6 @@ def _async_get_system_for_service_call(
     hass: HomeAssistant, call: ServiceCall
 ) -> SystemType:
     """Get the SimpliSafe system related to a service call (by device ID)."""
-    if ATTR_SYSTEM_ID in call.data:
-        for entry in hass.config_entries.async_entries(DOMAIN):
-            simplisafe = hass.data[DOMAIN][entry.entry_id]
-            if (
-                system := simplisafe.systems.get(int(call.data[ATTR_SYSTEM_ID]))
-            ) is None:
-                continue
-            return cast(SystemType, system)
-
     device_id = call.data[ATTR_DEVICE_ID]
     device_registry = dr.async_get(hass)
 
@@ -263,8 +234,7 @@ def _async_get_system_for_service_call(
     ) is None:
         raise vol.Invalid("Invalid device ID specified")
 
-    if TYPE_CHECKING:
-        assert alarm_control_panel_device_entry.via_device_id
+    assert alarm_control_panel_device_entry.via_device_id
 
     if (
         base_station_device_entry := device_registry.async_get(
@@ -309,11 +279,13 @@ def _async_standardize_config_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
         raise ConfigEntryAuthFailed(
             "New SimpliSafe OAuth standard requires re-authentication"
         )
+    if CONF_USERNAME not in entry.data:
+        raise ConfigEntryAuthFailed("Need to re-auth with username/password")
 
     entry_updates = {}
     if not entry.unique_id:
         # If the config entry doesn't already have a unique ID, set one:
-        entry_updates["unique_id"] = entry.data[CONF_USER_ID]
+        entry_updates["unique_id"] = entry.data[CONF_USERNAME]
     if CONF_CODE in entry.data:
         # If an alarm code was provided as part of configuration.yaml, pop it out of
         # the config entry's data and move it to options:
@@ -354,7 +326,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = simplisafe
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     @callback
     def extract_system(func: Callable) -> Callable:
@@ -367,7 +339,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             try:
                 await func(call, system)
             except SimplipyError as err:
-                LOGGER.error("Error while executing %s: %s", func.__name__, err)
+                raise HomeAssistantError(
+                    f'Error while executing "{call.service}": {err}'
+                ) from err
 
         return wrapper
 
@@ -396,8 +370,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ) -> None:
         """Set one or more system parameters."""
         if not isinstance(system, SystemV3):
-            LOGGER.error("Can only set system properties on V3 systems")
-            return
+            raise HomeAssistantError("Can only set system properties on V3 systems")
 
         await system.async_set_properties(
             {prop: value for prop, value in call.data.items() if prop != ATTR_DEVICE_ID}
@@ -473,8 +446,10 @@ class SimpliSafe:
         self._api = api
         self._hass = hass
         self._system_notifications: dict[int, set[SystemNotification]] = {}
+        self._websocket_reconnect_task: asyncio.Task | None = None
         self.entry = entry
         self.initial_event_to_use: dict[int, dict[str, Any]] = {}
+        self.subscription_data: dict[int, Any] = api.subscription_data
         self.systems: dict[int, SystemType] = {}
 
         # This will get filled in by async_init:
@@ -517,11 +492,39 @@ class SimpliSafe:
 
         self._system_notifications[system.system_id] = latest_notifications
 
-    async def _async_websocket_on_connect(self) -> None:
-        """Define a callback for connecting to the websocket."""
-        if TYPE_CHECKING:
+    async def _async_start_websocket_loop(self) -> None:
+        """Start a websocket reconnection loop."""
+        assert self._api.websocket
+
+        try:
+            await self._api.websocket.async_connect()
+            await self._api.websocket.async_listen()
+        except asyncio.CancelledError:
+            LOGGER.debug("Request to cancel websocket loop received")
+            raise
+        except WebsocketError as err:
+            LOGGER.error("Failed to connect to websocket: %s", err)
+        except Exception as err:  # pylint: disable=broad-except
+            LOGGER.error("Unknown exception while connecting to websocket: %s", err)
+
+        LOGGER.info("Reconnecting to websocket")
+        await self._async_cancel_websocket_loop()
+        self._websocket_reconnect_task = self._hass.async_create_task(
+            self._async_start_websocket_loop()
+        )
+
+    async def _async_cancel_websocket_loop(self) -> None:
+        """Stop any existing websocket reconnection loop."""
+        if self._websocket_reconnect_task:
+            self._websocket_reconnect_task.cancel()
+            try:
+                await self._websocket_reconnect_task
+            except asyncio.CancelledError:
+                LOGGER.debug("Websocket reconnection task successfully canceled")
+                self._websocket_reconnect_task = None
+
             assert self._api.websocket
-        await self._api.websocket.async_listen()
+            await self._api.websocket.async_disconnect()
 
     @callback
     def _async_websocket_on_event(self, event: WebsocketEvent) -> None:
@@ -557,21 +560,18 @@ class SimpliSafe:
 
     async def async_init(self) -> None:
         """Initialize the SimpliSafe "manager" class."""
-        if TYPE_CHECKING:
-            assert self._api.refresh_token
-            assert self._api.websocket
+        assert self._api.refresh_token
+        assert self._api.websocket
 
-        self._api.websocket.add_connect_callback(self._async_websocket_on_connect)
         self._api.websocket.add_event_callback(self._async_websocket_on_event)
-        asyncio.create_task(self._api.websocket.async_connect())
+        self._websocket_reconnect_task = asyncio.create_task(
+            self._async_start_websocket_loop()
+        )
 
         async def async_websocket_disconnect_listener(_: Event) -> None:
             """Define an event handler to disconnect from the websocket."""
-            if TYPE_CHECKING:
-                assert self._api.websocket
-
-            if self._api.websocket.connected:
-                await self._api.websocket.async_disconnect()
+            assert self._api.websocket
+            await self._async_cancel_websocket_loop()
 
         self.entry.async_on_unload(
             self._hass.bus.async_listen_once(
@@ -599,7 +599,7 @@ class SimpliSafe:
         self.coordinator = DataUpdateCoordinator(
             self._hass,
             LOGGER,
-            name=self.entry.data[CONF_USER_ID],
+            name=self.entry.title,
             update_interval=DEFAULT_SCAN_INTERVAL,
             update_method=self.async_update,
         )
@@ -613,10 +613,22 @@ class SimpliSafe:
                 data={**self.entry.data, CONF_TOKEN: token},
             )
 
+        async def async_handle_refresh_token(token: str) -> None:
+            """Handle a new refresh token."""
+            async_save_refresh_token(token)
+
+            # Open a new websocket connection with the fresh token:
+            assert self._api.websocket
+            await self._async_cancel_websocket_loop()
+            self._websocket_reconnect_task = self._hass.async_create_task(
+                self._async_start_websocket_loop()
+            )
+
         self.entry.async_on_unload(
-            self._api.add_refresh_token_callback(async_save_refresh_token)
+            self._api.add_refresh_token_callback(async_handle_refresh_token)
         )
 
+        # Save the refresh token we got on entry setup:
         async_save_refresh_token(self._api.refresh_token)
 
     async def async_update(self) -> None:
@@ -647,6 +659,8 @@ class SimpliSafe:
 class SimpliSafeEntity(CoordinatorEntity):
     """Define a base SimpliSafe entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         simplisafe: SimpliSafe,
@@ -666,12 +680,11 @@ class SimpliSafeEntity(CoordinatorEntity):
         self._error_count = 0
 
         if device:
-            model = device.type.name
-            device_name = device.name
+            model = device.type.name.capitalize().replace("_", " ")
+            device_name = f"{device.name.capitalize()} {model}"
             serial = device.serial
         else:
-            model = DEFAULT_ENTITY_MODEL
-            device_name = DEFAULT_ENTITY_NAME
+            model = device_name = DEFAULT_ENTITY_MODEL
             serial = system.serial
 
         event = simplisafe.initial_event_to_use[system.system_id]
@@ -701,7 +714,6 @@ class SimpliSafeEntity(CoordinatorEntity):
             via_device=(DOMAIN, system.system_id),
         )
 
-        self._attr_name = f"{system.address} {device_name} {' '.join([w.title() for w in model.split('_')])}"
         self._attr_unique_id = serial
         self._device = device
         self._online = True
@@ -766,17 +778,6 @@ class SimpliSafeEntity(CoordinatorEntity):
         ):
             return
 
-        if event.event_type in (EVENT_CONNECTION_LOST, EVENT_POWER_OUTAGE):
-            self._online = False
-        elif event.event_type in (EVENT_CONNECTION_RESTORED, EVENT_POWER_RESTORED):
-            self._online = True
-
-        # It's uncertain whether SimpliSafe events will still propagate down the
-        # websocket when the base station is offline. Just in case, we guard against
-        # further action until connection is restored:
-        if not self._online:
-            return
-
         sensor_type: str | None
         if event.sensor_type:
             sensor_type = event.sensor_type.name
@@ -791,6 +792,19 @@ class SimpliSafeEntity(CoordinatorEntity):
                 ATTR_LAST_EVENT_TIMESTAMP: event.timestamp,
             }
         )
+
+        # It's unknown whether these events reach the base station (since the connection
+        # is lost); we include this for completeness and coverage:
+        if event.event_type in (EVENT_CONNECTION_LOST, EVENT_POWER_OUTAGE):
+            self._online = False
+            return
+
+        # If the base station comes back online, set entities to available, but don't
+        # instruct the entities to update their state (since there won't be anything new
+        # until the next websocket event or REST API update:
+        if event.event_type in (EVENT_CONNECTION_RESTORED, EVENT_POWER_RESTORED):
+            self._online = True
+            return
 
         self.async_update_from_websocket_event(event)
         self.async_write_ha_state()

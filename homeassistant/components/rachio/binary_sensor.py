@@ -3,12 +3,14 @@ from abc import abstractmethod
 import logging
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY,
-    DEVICE_CLASS_MOISTURE,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     DOMAIN as DOMAIN_RACHIO,
@@ -20,6 +22,7 @@ from .const import (
     SIGNAL_RACHIO_RAIN_SENSOR_UPDATE,
     STATUS_ONLINE,
 )
+from .device import RachioPerson
 from .entity import RachioDevice
 from .webhooks import (
     SUBTYPE_COLD_REBOOT,
@@ -32,16 +35,21 @@ from .webhooks import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Rachio binary sensors."""
     entities = await hass.async_add_executor_job(_create_entities, hass, config_entry)
     async_add_entities(entities)
-    _LOGGER.info("%d Rachio binary sensor(s) added", len(entities))
+    _LOGGER.debug("%d Rachio binary sensor(s) added", len(entities))
 
 
-def _create_entities(hass, config_entry):
-    entities = []
-    for controller in hass.data[DOMAIN_RACHIO][config_entry.entry_id].controllers:
+def _create_entities(hass: HomeAssistant, config_entry: ConfigEntry) -> list[Entity]:
+    entities: list[Entity] = []
+    person: RachioPerson = hass.data[DOMAIN_RACHIO][config_entry.entry_id]
+    for controller in person.controllers:
         entities.append(RachioControllerOnlineBinarySensor(controller))
         entities.append(RachioRainSensor(controller))
     return entities
@@ -89,9 +97,9 @@ class RachioControllerOnlineBinarySensor(RachioControllerBinarySensor):
         return f"{self._controller.controller_id}-online"
 
     @property
-    def device_class(self) -> str:
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_CONNECTIVITY
+    def device_class(self) -> BinarySensorDeviceClass:
+        """Return the class of this device, from BinarySensorDeviceClass."""
+        return BinarySensorDeviceClass.CONNECTIVITY
 
     @property
     def icon(self) -> str:
@@ -138,9 +146,9 @@ class RachioRainSensor(RachioControllerBinarySensor):
         return f"{self._controller.controller_id}-rain_sensor"
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> BinarySensorDeviceClass:
         """Return the class of this device."""
-        return DEVICE_CLASS_MOISTURE
+        return BinarySensorDeviceClass.MOISTURE
 
     @property
     def icon(self) -> str:
