@@ -17,9 +17,9 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers import device_registry as dr
 
-from . import async_get_entity_storage
 from .connection import HKDevice
 from .const import DOMAIN, KNOWN_DEVICES
+from .storage import async_get_entity_storage
 from .utils import async_get_controller
 
 HOMEKIT_DIR = ".homekit"
