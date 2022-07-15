@@ -91,6 +91,14 @@ class BraviaTVMediaPlayer(BraviaTVEntity, MediaPlayerEntity):
         """Duration of current playing media in seconds."""
         return self.coordinator.duration
 
+    async def async_turn_on(self) -> None:
+        """Turn the device on."""
+        await self.coordinator.async_turn_on()
+
+    async def async_turn_off(self) -> None:
+        """Turn the device off."""
+        await self.coordinator.async_turn_off()
+
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         await self.coordinator.async_set_volume_level(volume)

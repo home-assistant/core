@@ -1,6 +1,4 @@
 """A entity class for BraviaTV integration."""
-from typing import Any
-
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -29,11 +27,3 @@ class BraviaTVEntity(CoordinatorEntity[BraviaTVCoordinator]):
             model=model,
             name=f"{ATTR_MANUFACTURER} {model}",
         )
-
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the device on."""
-        await self.coordinator.async_turn_on()
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the device off."""
-        await self.coordinator.async_turn_off()
