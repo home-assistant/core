@@ -476,6 +476,7 @@ class Light(BaseLight, ZhaEntity):
         """Set the state."""
         self._state = bool(value)
         if value:
+            self._off_with_transition = False
             self._off_brightness = None
         self.async_write_ha_state()
 
