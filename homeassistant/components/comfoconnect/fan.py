@@ -6,6 +6,8 @@ import math
 from typing import Any
 
 from pycomfoconnect import (
+    CMD_BYPASS_OFF,
+    CMD_BYPASS_ON,
     CMD_FAN_MODE_AWAY,
     CMD_FAN_MODE_HIGH,
     CMD_FAN_MODE_LOW,
@@ -55,7 +57,7 @@ class ComfoConnectFan(FanEntity):
 
     _attr_icon = "mdi:air-conditioner"
     _attr_should_poll = False
-    _attr_supported_features = FanEntityFeature.SET_SPEED
+    _attr_supported_features = FanEntityFeature.SET_SPEED | FanEntityFeature.OSCILLATE
     current_speed = None
 
     def __init__(self, ccb: ComfoConnectBridge) -> None:
@@ -123,5 +125,15 @@ class ComfoConnectFan(FanEntity):
         else:
             speed = math.ceil(percentage_to_ranged_value(SPEED_RANGE, percentage))
             cmd = CMD_MAPPING[speed]
+
+        self._ccb.comfoconnect.cmd_rmi_request(cmd)
+
+    def oscillate(self, oscillating: bool) -> None:
+        """Oscillate the fan."""
+
+        if oscillating:
+            cmd = CMD_BYPASS_ON
+        else:
+            cmd = CMD_BYPASS_OFF
 
         self._ccb.comfoconnect.cmd_rmi_request(cmd)
