@@ -118,10 +118,7 @@ class IntellifireFan(IntellifireEntity, FanEntity):
         percent_step = 100.0 / len(self.entity_description.named_speeds)
         int_value = int(math.ceil(float(percentage) / percent_step))
         await self.entity_description.set_fn(self.coordinator.control_api, int_value)
-        setattr(
-            self.coordinator.read_api, self.entity_description.data_field, int_value
-        )
-        self.async_write_ha_state()
+        await self.async_update_ha_state(force_refresh=True)
 
     async def async_turn_on(
         self,
@@ -130,13 +127,11 @@ class IntellifireFan(IntellifireEntity, FanEntity):
         **kwargs: Any,
     ) -> None:
         """Turn on the fan."""
-        LOGGER.debug("Turn fan on: percentage [%s]", percentage)
         await self.entity_description.set_fn(self.coordinator.control_api, 1)
         await self.async_update_ha_state(force_refresh=True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""
         self.coordinator.control_api.fan_off()
-        LOGGER.debug("Turn fan off")
         await self.entity_description.set_fn(self.coordinator.control_api, 0)
         await self.async_update_ha_state(force_refresh=True)
