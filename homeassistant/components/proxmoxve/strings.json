@@ -1,0 +1,26 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "ProxmoxVE",
+        "description": "Please fill out the form and then press submit when you're ready",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "realm": "Realm",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        }
+      }
+    },
+    "error": {
+      "auth_error": "[%key:common::config_flow::error::invalid_auth%]",
+      "ssl_rejection": "Could not verify the SSL certificate",
+      "cant_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "general_error": "[%key:common::config_flow::error::unknown%]",
+      "invalid_port": "Invalid port number"
+    },
+    "abort": {}
+  }
+}

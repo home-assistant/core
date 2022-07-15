@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {},
+        "error": {
+            "auth_error": "Invalid authentication",
+            "cant_connect": "Failed to connect",
+            "general_error": "Unexpected error",
+            "invalid_port": "Invalid port number",
+            "ssl_rejection": "Could not verify the SSL certificate"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "port": "Port",
+                    "realm": "Realm",
+                    "username": "Username",
+                    "verify_ssl": "Verify SSL certificate"
+                },
+                "description": "Please fill out the form and then press submit when you're ready",
+                "title": "ProxmoxVE"
+            }
+        }
+    }
+}

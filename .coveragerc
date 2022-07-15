@@ -943,7 +943,6 @@ omit =
     homeassistant/components/progettihwsw/binary_sensor.py
     homeassistant/components/progettihwsw/switch.py
     homeassistant/components/prowl/notify.py
-    homeassistant/components/proxmoxve/*
     homeassistant/components/proxy/camera.py
     homeassistant/components/pulseaudio_loopback/switch.py
     homeassistant/components/pushbullet/notify.py
