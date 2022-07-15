@@ -10,10 +10,9 @@ from homeassistant.components.cover import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ATTR_COORDINATORS, ATTR_DEVICE_DOOR_SENSOR, DOMAIN, MANUFACTURER
+from .const import ATTR_COORDINATORS, ATTR_DEVICE_DOOR_SENSOR, DOMAIN
 from .coordinator import YoLinkCoordinator
 from .entity import YoLinkEntity
 
@@ -30,6 +29,7 @@ async def async_setup_entry(
         for device_coordinator in device_coordinators.values()
         if device_coordinator.device.device_type == ATTR_DEVICE_DOOR_SENSOR
         and device_coordinator.device.parent_id is not None
+        and device_coordinator.device.parent_id != "null"
     ]
     async_add_entities(entities)
 
@@ -49,16 +49,6 @@ class YoLinkCoverEntity(YoLinkEntity, CoverEntity):
         self._attr_device_class = CoverDeviceClass.GARAGE
         self._attr_supported_features = (
             CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
-        )
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info for HA."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.coordinator.device.device_id)},
-            manufacturer=MANUFACTURER,
-            model="GarageDoor",
-            name=self.coordinator.device.device_name,
         )
 
     @callback
