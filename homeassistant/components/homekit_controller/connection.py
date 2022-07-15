@@ -182,13 +182,13 @@ class HKDevice:
         self.available = available
         async_dispatcher_send(self.hass, self.signal_state_updated)
 
-    async def async_ensure_available(self) -> bool:
+    async def async_ensure_available(self) -> None:
         """Verify the accessory is available after processing the entity map."""
         if self.available:
-            return True
+            return
         if self.watchable_characteristics and self.pollable_characteristics:
             # We already tried, no need to try again
-            return False
+            return
         # We there are no watchable and not pollable characteristics,
         # we need to force a connection to the device to verify its alive.
         #
@@ -198,14 +198,10 @@ class HKDevice:
         primary = self.entity_map.accessories[0]
         aid = primary.aid
         iid = primary.accessory_information[CharacteristicsTypes.SERIAL_NUMBER].iid
-        try:
-            await self.pairing.get_characteristics([(aid, iid)])
-        except (AccessoryDisconnectedError, EncryptionError, AccessoryNotFoundError):
-            return False
+        await self.pairing.get_characteristics([(aid, iid)])
         self.async_set_available_state(True)
-        return True
 
-    async def async_setup(self) -> bool:
+    async def async_setup(self) -> None:
         """Prepare to use a paired HomeKit device in Home Assistant."""
         entity_storage: EntityMapStorage = self.hass.data[ENTITY_MAP]
         if cache := entity_storage.get_map(self.unique_id):
@@ -223,21 +219,17 @@ class HKDevice:
         # Ideally we would know which entities we are about to add
         # so we only poll those chars but that is not possible
         # yet.
-        if not await self.pairing.async_populate_accessories_state(force_update=True):
-            return False
+        await self.pairing.async_populate_accessories_state(force_update=True)
 
         await self.async_process_entity_map()
 
-        if not await self.async_ensure_available():
-            return False
-
+        await self.async_ensure_available()
         # If everything is up to date, we can create the entities
         # since we know the data is not stale.
         await self.async_add_new_entities()
         self._polling_interval_remover = async_track_time_interval(
             self.hass, self.async_update, DEFAULT_SCAN_INTERVAL
         )
-        return True
 
     async def async_add_new_entities(self) -> None:
         """Add new entities to Home Assistant."""

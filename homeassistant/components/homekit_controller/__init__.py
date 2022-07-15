@@ -6,6 +6,11 @@ import logging
 from typing import Any
 
 import aiohomekit
+from aiohomekit.exceptions import (
+    AccessoryDisconnectedError,
+    AccessoryNotFoundError,
+    EncryptionError,
+)
 from aiohomekit.model import Accessory
 from aiohomekit.model.characteristics import (
     Characteristic,
@@ -227,16 +232,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry, unique_id=normalize_hkid(conn.unique_id)
         )
 
-    if not await conn.async_setup():
+    try:
+        await conn.async_setup()
+    except (AccessoryNotFoundError, EncryptionError, AccessoryDisconnectedError) as ex:
         del hass.data[KNOWN_DEVICES][conn.unique_id]
         await conn.pairing.close()
-        if (connection := getattr(conn.pairing, "connection", None)) and hasattr(
-            connection, "host"
-        ):
-            raise ConfigEntryNotReady(
-                f"Cannot connect to {connection.host}:{connection.port}"
-            )
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from ex
 
     return True
 
