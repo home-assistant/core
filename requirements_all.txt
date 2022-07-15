@@ -5,7 +5,7 @@
 AEMET-OpenData==0.2.1
 
 # homeassistant.components.aladdin_connect
-AIOAladdinConnect==0.1.23
+AIOAladdinConnect==0.1.25
 
 # homeassistant.components.adax
 Adax-local==0.1.4
@@ -402,7 +402,7 @@ bimmer_connected==0.9.6
 bizkaibus==0.1.1
 
 # homeassistant.components.blebox
-blebox_uniapi==2.0.0
+blebox_uniapi==2.0.1
 
 # homeassistant.components.blink
 blinkpy==0.19.0
@@ -828,7 +828,7 @@ hole==0.7.0
 holidays==0.14.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220707.0
+home-assistant-frontend==20220707.1
 
 # homeassistant.components.home_connect
 homeconnect==0.7.1
@@ -1625,7 +1625,7 @@ pylibrespot-java==0.1.0
 pylitejet==0.3.0
 
 # homeassistant.components.litterrobot
-pylitterbot==2022.3.0
+pylitterbot==2022.7.0
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.13.1
@@ -1993,7 +1993,7 @@ pytrafikverket==0.2.0.1
 pyudev==0.22.0
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.0.9
+pyunifiprotect==4.0.10
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -2519,7 +2519,7 @@ zigpy-zigate==0.9.0
 zigpy-znp==0.8.1
 
 # homeassistant.components.zha
-zigpy==0.47.2
+zigpy==0.47.3
 
 # homeassistant.components.zoneminder
 zm-py==0.5.2
