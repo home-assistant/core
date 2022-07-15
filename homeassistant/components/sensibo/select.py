@@ -1,11 +1,7 @@
-"""Select platform for Sensibo integration."""
+"""Number platform for Sensibo integration."""
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
-
-from pysensibo.model import SensiboDevice
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -15,7 +11,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import SensiboDataUpdateCoordinator
-from .entity import SensiboDeviceBaseEntity, api_call_decorator
+from .entity import SensiboDeviceBaseEntity
 
 PARALLEL_UPDATES = 0
 
@@ -24,34 +20,31 @@ PARALLEL_UPDATES = 0
 class SensiboSelectDescriptionMixin:
     """Mixin values for Sensibo entities."""
 
-    data_key: str
-    value_fn: Callable[[SensiboDevice], str | None]
-    options_fn: Callable[[SensiboDevice], list[str] | None]
+    remote_key: str
+    remote_options: str
 
 
 @dataclass
 class SensiboSelectEntityDescription(
     SelectEntityDescription, SensiboSelectDescriptionMixin
 ):
-    """Class describing Sensibo Select entities."""
+    """Class describing Sensibo Number entities."""
 
 
 DEVICE_SELECT_TYPES = (
     SensiboSelectEntityDescription(
         key="horizontalSwing",
-        data_key="horizontal_swing_mode",
-        name="Horizontal Swing",
+        remote_key="horizontal_swing_mode",
+        remote_options="horizontal_swing_modes",
+        name="Horizontal swing",
         icon="mdi:air-conditioner",
-        value_fn=lambda data: data.horizontal_swing_mode,
-        options_fn=lambda data: data.horizontal_swing_modes,
     ),
     SensiboSelectEntityDescription(
         key="light",
-        data_key="light_mode",
+        remote_key="light_mode",
+        remote_options="light_modes",
         name="Light",
         icon="mdi:flashlight",
-        value_fn=lambda data: data.light_mode,
-        options_fn=lambda data: data.light_modes,
     ),
 )
 
@@ -86,20 +79,19 @@ class SensiboSelect(SensiboDeviceBaseEntity, SelectEntity):
         super().__init__(coordinator, device_id)
         self.entity_description = entity_description
         self._attr_unique_id = f"{device_id}-{entity_description.key}"
-        self._attr_name = f"{self.device_data.name} {entity_description.name}"
 
     @property
     def current_option(self) -> str | None:
         """Return the current selected option."""
-        return self.entity_description.value_fn(self.device_data)
+        option: str | None = getattr(
+            self.device_data, self.entity_description.remote_key
+        )
+        return option
 
     @property
     def options(self) -> list[str]:
         """Return possible options."""
-        options = self.entity_description.options_fn(self.device_data)
-        if TYPE_CHECKING:
-            assert options is not None
-        return options
+        return getattr(self.device_data, self.entity_description.remote_options) or []
 
     async def async_select_option(self, option: str) -> None:
         """Set state to the selected option."""
@@ -108,26 +100,20 @@ class SensiboSelect(SensiboDeviceBaseEntity, SelectEntity):
                 f"Current mode {self.device_data.hvac_mode} doesn't support setting {self.entity_description.name}"
             )
 
-        await self.api_call(
-            device_data=self.device_data,
-            key=self.entity_description.data_key,
-            value=option,
-        )
-
-    @api_call_decorator
-    async def api_call(self, device_data: SensiboDevice, key: Any, value: Any) -> bool:
-        """Make service call to api."""
-        data = {
+        params = {
             "name": self.entity_description.key,
-            "value": value,
+            "value": option,
             "ac_states": self.device_data.ac_states,
             "assumed_state": False,
         }
-        result = await self._client.async_set_ac_state_property(
-            self._device_id,
-            data["name"],
-            data["value"],
-            data["ac_states"],
-            data["assumed_state"],
+        result = await self.async_send_command("set_ac_state", params)
+
+        if result["result"]["status"] == "Success":
+            setattr(self.device_data, self.entity_description.remote_key, option)
+            self.async_write_ha_state()
+            return
+
+        failure = result["result"]["failureReason"]
+        raise HomeAssistantError(
+            f"Could not set state for device {self.name} due to reason {failure}"
         )
-        return bool(result.get("result", {}).get("status") == "Success")

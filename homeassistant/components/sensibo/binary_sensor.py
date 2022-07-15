@@ -55,7 +55,7 @@ class SensiboDeviceBinarySensorEntityDescription(
 FILTER_CLEAN_REQUIRED_DESCRIPTION = SensiboDeviceBinarySensorEntityDescription(
     key="filter_clean",
     device_class=BinarySensorDeviceClass.PROBLEM,
-    name="Filter Clean Required",
+    name="Filter clean required",
     value_fn=lambda data: data.filter_clean,
 )
 
@@ -65,12 +65,13 @@ MOTION_SENSOR_TYPES: tuple[SensiboMotionBinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         name="Alive",
+        icon="mdi:wifi",
         value_fn=lambda data: data.alive,
     ),
     SensiboMotionBinarySensorEntityDescription(
         key="is_main_sensor",
         entity_category=EntityCategory.DIAGNOSTIC,
-        name="Main Sensor",
+        name="Main sensor",
         icon="mdi:connection",
         value_fn=lambda data: data.is_main_sensor,
     ),
@@ -87,7 +88,7 @@ MOTION_DEVICE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ..
     SensiboDeviceBinarySensorEntityDescription(
         key="room_occupied",
         device_class=BinarySensorDeviceClass.MOTION,
-        name="Room Occupied",
+        name="Room occupied",
         icon="mdi:motion-sensor",
         value_fn=lambda data: data.room_occupied,
     ),
@@ -103,27 +104,31 @@ PURE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         name="Pure Boost linked with AC",
+        icon="mdi:connection",
         value_fn=lambda data: data.pure_ac_integration,
     ),
     SensiboDeviceBinarySensorEntityDescription(
         key="pure_geo_integration",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
-        name="Pure Boost linked with Presence",
+        name="Pure Boost linked with presence",
+        icon="mdi:connection",
         value_fn=lambda data: data.pure_geo_integration,
     ),
     SensiboDeviceBinarySensorEntityDescription(
         key="pure_measure_integration",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
-        name="Pure Boost linked with Indoor Air Quality",
+        name="Pure Boost linked with indoor air quality",
+        icon="mdi:connection",
         value_fn=lambda data: data.pure_measure_integration,
     ),
     SensiboDeviceBinarySensorEntityDescription(
         key="pure_prime_integration",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
-        name="Pure Boost linked with Outdoor Air Quality",
+        name="Pure Boost linked with outdoor air quality",
+        icon="mdi:connection",
         value_fn=lambda data: data.pure_prime_integration,
     ),
     FILTER_CLEAN_REQUIRED_DESCRIPTION,
@@ -189,13 +194,9 @@ class SensiboMotionSensor(SensiboMotionBaseEntity, BinarySensorEntity):
             device_id,
             sensor_id,
             sensor_data,
-            entity_description.name,
         )
         self.entity_description = entity_description
         self._attr_unique_id = f"{sensor_id}-{entity_description.key}"
-        self._attr_name = (
-            f"{self.device_data.name} Motion Sensor {entity_description.name}"
-        )
 
     @property
     def is_on(self) -> bool | None:
@@ -223,7 +224,6 @@ class SensiboDeviceSensor(SensiboDeviceBaseEntity, BinarySensorEntity):
         )
         self.entity_description = entity_description
         self._attr_unique_id = f"{device_id}-{entity_description.key}"
-        self._attr_name = f"{self.device_data.name} {entity_description.name}"
 
     @property
     def is_on(self) -> bool | None:

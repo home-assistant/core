@@ -1,4 +1,4 @@
-"""The Sensibo component."""
+"""The sensibo component."""
 from __future__ import annotations
 
 from pysensibo.exceptions import AuthenticationError
