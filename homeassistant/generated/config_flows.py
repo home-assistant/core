@@ -276,6 +276,7 @@ FLOWS = {
         "profiler",
         "progettihwsw",
         "prosegur",
+        "proxmoxve",
         "ps4",
         "pure_energie",
         "pvoutput",

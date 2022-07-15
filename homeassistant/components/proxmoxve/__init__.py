@@ -9,133 +9,91 @@ from proxmoxer.backends.https import AuthenticationError
 from proxmoxer.core import ResourceException
 import requests.exceptions
 from requests.exceptions import ConnectTimeout, SSLError
-import voluptuous as vol
 
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
-    Platform,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
-PLATFORMS = [Platform.BINARY_SENSOR]
-DOMAIN = "proxmoxve"
-PROXMOX_CLIENTS = "proxmox_clients"
-CONF_REALM = "realm"
-CONF_NODE = "node"
-CONF_NODES = "nodes"
-CONF_VMS = "vms"
-CONF_CONTAINERS = "containers"
-
-COORDINATORS = "coordinators"
-API_DATA = "api_data"
-
-DEFAULT_PORT = 8006
-DEFAULT_REALM = "pam"
-DEFAULT_VERIFY_SSL = True
-TYPE_VM = 0
-TYPE_CONTAINER = 1
-UPDATE_INTERVAL = 60
+from .const import (
+    CONF_REALM,
+    COORDINATORS,
+    DEFAULT_PORT,
+    DEFAULT_REALM,
+    DEFAULT_VERIFY_SSL,
+    DOMAIN,
+    PLATFORMS,
+    PROXMOX_CLIENT,
+    PROXMOX_CLIENTS,
+    TYPE_CONTAINER,
+    TYPE_VM,
+    UPDATE_INTERVAL,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.All(
-            cv.ensure_list,
-            [
-                vol.Schema(
-                    {
-                        vol.Required(CONF_HOST): cv.string,
-                        vol.Required(CONF_USERNAME): cv.string,
-                        vol.Required(CONF_PASSWORD): cv.string,
-                        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-                        vol.Optional(CONF_REALM, default=DEFAULT_REALM): cv.string,
-                        vol.Optional(
-                            CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL
-                        ): cv.boolean,
-                        vol.Required(CONF_NODES): vol.All(
-                            cv.ensure_list,
-                            [
-                                vol.Schema(
-                                    {
-                                        vol.Required(CONF_NODE): cv.string,
-                                        vol.Optional(CONF_VMS, default=[]): [
-                                            cv.positive_int
-                                        ],
-                                        vol.Optional(CONF_CONTAINERS, default=[]): [
-                                            cv.positive_int
-                                        ],
-                                    }
-                                )
-                            ],
-                        ),
-                    }
-                )
-            ],
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the platform."""
+
+    if DOMAIN not in config:
+        return True
+
     hass.data.setdefault(DOMAIN, {})
 
-    def build_client() -> ProxmoxAPI:
-        """Build the Proxmox client connection."""
-        hass.data[PROXMOX_CLIENTS] = {}
+    hass.data[PROXMOX_CLIENTS] = {}
 
-        for entry in config[DOMAIN]:
-            host = entry[CONF_HOST]
-            port = entry[CONF_PORT]
-            user = entry[CONF_USERNAME]
-            realm = entry[CONF_REALM]
-            password = entry[CONF_PASSWORD]
-            verify_ssl = entry[CONF_VERIFY_SSL]
+    for entry in config[DOMAIN]:
+        host = entry[CONF_HOST]
+        port = entry.get(CONF_PORT, DEFAULT_PORT)
+        user = entry[CONF_USERNAME]
+        realm = entry.get(CONF_REALM, DEFAULT_REALM)
+        password = entry[CONF_PASSWORD]
+        verify_ssl = entry.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
 
-            hass.data[PROXMOX_CLIENTS][host] = None
+        hass.data[PROXMOX_CLIENTS][host] = None
 
-            try:
-                # Construct an API client with the given data for the given host
-                proxmox_client = ProxmoxClient(
-                    host, port, user, realm, password, verify_ssl
-                )
-                proxmox_client.build_client()
-            except AuthenticationError:
-                _LOGGER.warning(
-                    "Invalid credentials for proxmox instance %s:%d", host, port
-                )
-                continue
-            except SSLError:
-                _LOGGER.error(
-                    "Unable to verify proxmox server SSL. "
-                    'Try using "verify_ssl: false" for proxmox instance %s:%d',
-                    host,
-                    port,
-                )
-                continue
-            except ConnectTimeout:
-                _LOGGER.warning("Connection to host %s timed out during setup", host)
-                continue
-            except requests.exceptions.ConnectionError:
-                _LOGGER.warning("Host %s is not reachable", host)
-                continue
+        try:
+            # Construct an API client with the given data for the given host
+            proxmox_client = ProxmoxClient(
+                host, port, user, realm, password, verify_ssl
+            )
 
-            hass.data[PROXMOX_CLIENTS][host] = proxmox_client
+            hass.async_add_executor_job(proxmox_client.build_client)
+        except AuthenticationError:
+            _LOGGER.warning(
+                "Invalid credentials for proxmox instance %s:%d", host, port
+            )
+            continue
+        except SSLError:
+            _LOGGER.error(
+                "Unable to verify proxmox server SSL. "
+                'Try using "verify_ssl: false" for proxmox instance %s:%d',
+                host,
+                port,
+            )
+            continue
+        except ConnectTimeout:
+            _LOGGER.warning("Connection to host %s timed out during setup", host)
+            continue
+        except requests.exceptions.ConnectionError:
+            _LOGGER.warning("Host %s is not reachable", host)
+            continue
 
-    await hass.async_add_executor_job(build_client)
+        hass.data[PROXMOX_CLIENTS][host] = proxmox_client
 
     coordinators: dict[str, dict[str, dict[int, DataUpdateCoordinator]]] = {}
     hass.data[DOMAIN][COORDINATORS] = coordinators
@@ -145,41 +103,93 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         host_name = host_config["host"]
         coordinators[host_name] = {}
 
-        proxmox_client = hass.data[PROXMOX_CLIENTS][host_name]
-
-        # Skip invalid hosts
-        if proxmox_client is None:
-            continue
-
-        proxmox = proxmox_client.get_api_client()
-
-        for node_config in host_config["nodes"]:
-            node_name = node_config["node"]
-            node_coordinators = coordinators[host_name][node_name] = {}
-
-            for vm_id in node_config["vms"]:
-                coordinator = create_coordinator_container_vm(
-                    hass, proxmox, host_name, node_name, vm_id, TYPE_VM
+    # import to config flow
+    if DOMAIN in config:
+        for conf in config[DOMAIN]:
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
                 )
+            )
 
-                # Fetch initial data
-                await coordinator.async_refresh()
+    return True
 
-                node_coordinators[vm_id] = coordinator
 
-            for container_id in node_config["containers"]:
-                coordinator = create_coordinator_container_vm(
-                    hass, proxmox, host_name, node_name, container_id, TYPE_CONTAINER
-                )
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Set up the platform."""
 
-                # Fetch initial data
-                await coordinator.async_refresh()
+    entry_data = config_entry.data
 
-                node_coordinators[container_id] = coordinator
+    hass.data[PROXMOX_CLIENTS] = {}
 
-    for component in PLATFORMS:
-        await hass.async_create_task(
-            async_load_platform(hass, component, DOMAIN, {"config": config}, config)
+    host = entry_data[CONF_HOST]
+    port = entry_data[CONF_PORT]
+    user = entry_data[CONF_USERNAME]
+    realm = entry_data[CONF_REALM]
+    password = entry_data[CONF_PASSWORD]
+    verify_ssl = entry_data[CONF_VERIFY_SSL]
+
+    try:
+        # Construct an API client with the given data for the given host
+        proxmox_client = ProxmoxClient(host, port, user, realm, password, verify_ssl)
+        await hass.async_add_executor_job(proxmox_client.build_client)
+    except AuthenticationError:
+        _LOGGER.warning("Invalid credentials for proxmox instance %s:%d", host, port)
+        return False
+    except SSLError:
+        _LOGGER.error(
+            "Unable to verify proxmox server SSL. "
+            'Try using "verify_ssl: false" for proxmox instance %s:%d',
+            host,
+            port,
+        )
+        return False
+    except ConnectTimeout:
+        _LOGGER.warning("Connection to host %s timed out during setup", host)
+        return False
+
+    coordinators: dict[str, dict[str, dict[int, DataUpdateCoordinator]]] = {}
+
+    proxmox = await hass.async_add_executor_job(proxmox_client.get_api_client)
+
+    for node_config in entry_data["nodes"]:
+        node_name = node_config["name"]
+        node_coordinators = coordinators[node_name] = {}
+
+        for vm_id in node_config["vms"]:
+            coordinator = create_coordinator_container_vm(
+                hass, proxmox, entry_data["host"], node_name, vm_id, TYPE_VM
+            )
+
+            # Fetch initial data
+            await coordinator.async_refresh()
+
+            node_coordinators[vm_id] = coordinator
+
+        for container_id in node_config["containers"]:
+            coordinator = create_coordinator_container_vm(
+                hass,
+                proxmox,
+                entry_data["host"],
+                node_name,
+                container_id,
+                TYPE_CONTAINER,
+            )
+
+            # Fetch initial data
+            await coordinator.async_refresh()
+
+            node_coordinators[container_id] = coordinator
+
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][config_entry.entry_id] = {
+        PROXMOX_CLIENT: proxmox_client,
+        COORDINATORS: coordinators,
+    }
+
+    for platform in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(config_entry, platform)
         )
 
     return True
@@ -251,7 +261,7 @@ class ProxmoxEntity(CoordinatorEntity):
         unique_id,
         name,
         icon,
-        host_name,
+        # host_name,
         node_name,
         vm_id=None,
     ):
@@ -261,7 +271,7 @@ class ProxmoxEntity(CoordinatorEntity):
         self.coordinator = coordinator
         self._unique_id = unique_id
         self._name = name
-        self._host_name = host_name
+        # self._host_name = host_name
         self._icon = icon
         self._available = True
         self._node_name = node_name
