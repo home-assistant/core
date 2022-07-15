@@ -17,9 +17,9 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers import device_registry as dr
 
+from . import async_get_entity_storage
 from .connection import HKDevice
-from .const import DOMAIN, ENTITY_MAP, KNOWN_DEVICES
-from .storage import EntityMapStorage
+from .const import DOMAIN, KNOWN_DEVICES
 from .utils import async_get_controller
 
 HOMEKIT_DIR = ".homekit"
@@ -487,7 +487,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # have to request them again when we setup the
         # config entry.
         accessories_state = pairing.accessories_state
-        entity_storage: EntityMapStorage = self.hass.data[ENTITY_MAP]
+        entity_storage = await async_get_entity_storage(self.hass)
         assert self.unique_id is not None
         entity_storage.async_create_or_update_map(
             self.unique_id,
