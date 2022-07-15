@@ -69,7 +69,6 @@ DHCP: list[dict[str, str | bool]] = [
     {'domain': 'nest', 'macaddress': '18B430*'},
     {'domain': 'nest', 'macaddress': '641666*'},
     {'domain': 'nest', 'macaddress': 'D8EB46*'},
-    {'domain': 'nest', 'macaddress': '1C53F9*'},
     {'domain': 'nexia', 'hostname': 'xl857-*', 'macaddress': '000231*'},
     {'domain': 'nuheat', 'hostname': 'nuheat', 'macaddress': '002338*'},
     {'domain': 'nuki', 'hostname': 'nuki_bridge_*'},
