@@ -107,11 +107,10 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                def work():
-                    self.verisure.mfa_validate(user_input[CONF_CODE], True)
-                    self.verisure.login()
-
-                await self.hass.async_add_executor_job(work)
+                await self.hass.async_add_executor_job(
+                    self.verisure.mfa_validate, user_input[CONF_CODE], True
+                )
+                await self.hass.async_add_executor_job(self.verisure.login)
             except VerisureLoginError as ex:
                 LOGGER.debug("Could not log in to Verisure, %s", ex)
                 errors["base"] = "invalid_auth"
