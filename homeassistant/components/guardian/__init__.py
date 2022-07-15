@@ -438,18 +438,14 @@ class GuardianEntity(CoordinatorEntity[GuardianDataUpdateCoordinator]):
         return self._attr_available
 
     @callback
-    def _async_handle_coordinator_update(
-        self, coordinator: GuardianDataUpdateCoordinator
-    ) -> None:
+    def _async_handle_coordinator_update(self) -> None:
         """Respond to a GuardianDataUpdateCoordinator update."""
-        if not coordinator.last_update_success:
-            return
-
+        # If *any* coordinator successfully updates while the entity is marked as
+        # "rebooting," the API is back up and all entities (even those with different
+        # coordinators) should become available:
         if self._rebooting:
-            # If *any* coordinator successfully updates while the entity is marked as
-            # "rebooting," the API is back up and all entities (even those with
-            # different coordinators) should become available:
             async_dispatcher_send(self.hass, self._signal_reboot_completed)
+            return
 
         self._async_update_from_latest_data()
         self.async_write_ha_state()
@@ -477,6 +473,7 @@ class GuardianEntity(CoordinatorEntity[GuardianDataUpdateCoordinator]):
             """Respond to a completed controller reboot."""
             self._attr_available = True
             self._rebooting = False
+            self._async_handle_coordinator_update()
 
         @callback
         def async_reboot_requested() -> None:
