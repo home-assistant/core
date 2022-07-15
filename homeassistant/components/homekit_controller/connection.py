@@ -17,8 +17,9 @@ from aiohomekit.model import Accessories, Accessory
 from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
 from aiohomekit.model.services import Service
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_VIA_DEVICE
-from homeassistant.core import CALLBACK_TYPE, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo
@@ -62,7 +63,12 @@ def valid_serial_number(serial: str) -> bool:
 class HKDevice:
     """HomeKit device."""
 
-    def __init__(self, hass, config_entry, pairing_data) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        pairing_data: dict[str, Any],
+    ) -> None:
         """Initialise a generic HomeKit device."""
 
         self.hass = hass
