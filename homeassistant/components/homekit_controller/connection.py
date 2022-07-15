@@ -212,13 +212,24 @@ class HKDevice:
                 cache["accessories"], cache["config_num"]
             )
 
-        if not await self.pairing.async_populate_accessories_state():
+        # We need to force an update here to make sure we have
+        # the latest values since the async_update we do in
+        # async_process_entity_map will no values to poll yet
+        # since entities are added via dispatching and then
+        # they add the chars they are concerned about in
+        # async_added_to_hass which is too late.
+        #
+        # Ideally we would know which entities we are about to add
+        # so we only poll those chars but that is not possible
+        # yet.
+        if not await self.pairing.async_populate_accessories_state(force_update=True):
             return False
 
         await self.async_process_entity_map()
 
         if not await self.async_ensure_available():
             return False
+
         # If everything is up to date, we can create the entities
         # since we know the data is not stale.
         await self.async_add_new_entities()
@@ -413,13 +424,6 @@ class HKDevice:
         # Load any triggers for this config entry
         await async_setup_triggers_for_entry(self.hass, self.config_entry)
 
-        if self.watchable_characteristics:
-            await self.pairing.subscribe(self.watchable_characteristics)
-            if not self.pairing.is_connected:
-                return
-
-        await self.async_update()
-
     async def async_unload(self) -> None:
         """Stop interacting with device and prepare for removal from hass."""
         if self._polling_interval_remover:
@@ -443,6 +447,9 @@ class HKDevice:
         """Process a change in the pairings accessories state."""
         self.async_save_entity_map()
         await self.async_process_entity_map()
+        if self.watchable_characteristics:
+            await self.pairing.subscribe(self.watchable_characteristics)
+        await self.async_update()
         await self.async_add_new_entities()
 
     @callback
