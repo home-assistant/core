@@ -1718,7 +1718,7 @@ pyopnsense==0.2.0
 pyoppleio==1.0.5
 
 # homeassistant.components.opentherm_gw
-pyotgw==1.1b1
+pyotgw==2.0.0
 
 # homeassistant.auth.mfa_modules.notify
 # homeassistant.auth.mfa_modules.totp
