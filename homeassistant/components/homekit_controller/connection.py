@@ -78,11 +78,6 @@ class HKDevice:
             self.pairing_data["AccessoryPairingID"], self.pairing_data
         )
 
-        self.accessories: list[Any] | None = None
-        self.config_num = 0
-
-        self.entity_map = Accessories()
-
         # A list of callbacks that turn HK accessories into entities
         self.accessory_factories: list[AddAccessoryCb] = []
 
@@ -132,6 +127,16 @@ class HKDevice:
         self.watchable_characteristics: list[tuple[int, int]] = []
 
         self.pairing.dispatcher_connect(self.process_new_events)
+
+    @property
+    def entity_map(self) -> Accessories:
+        """Return the accessories from the pairing."""
+        return self.pairing.accessories_state.accessories
+
+    @property
+    def config_num(self) -> int:
+        """Return the config num from the pairing."""
+        return self.pairing.accessories_state.config_num
 
     def add_pollable_characteristics(
         self, characteristics: list[tuple[int, int]]
@@ -196,9 +201,9 @@ class HKDevice:
         """Prepare to use a paired HomeKit device in Home Assistant."""
         entity_storage: EntityMapStorage = self.hass.data[ENTITY_MAP]
         if cache := entity_storage.get_map(self.unique_id):
-            self.accessories = cache["accessories"]
-            self.config_num = cache["config_num"]
-            self.entity_map = Accessories.from_list(self.accessories)
+            self.pairing.restore_accessories_state(
+                cache["accessories"], cache["config_num"]
+            )
         elif not await self.async_refresh_entity_map(self.config_num):
             return False
 
@@ -390,10 +395,6 @@ class HKDevice:
         # Ensure the Pairing object has access to the latest version of the entity map. This
         # is especially important for BLE, as the Pairing instance relies on the entity map
         # to map aid/iid to GATT characteristics. So push it to there as well.
-        assert self.accessories is not None
-
-        self.pairing.restore_accessories_state(self.accessories, self.config_num)
-
         self.async_detect_workarounds()
 
         # Migrate to new device ids
@@ -431,23 +432,17 @@ class HKDevice:
     async def async_refresh_entity_map(self, config_num: int) -> bool:
         """Handle setup of a HomeKit accessory."""
         try:
-            self.accessories = await self.pairing.list_accessories_and_characteristics()
+            accessories = await self.pairing.list_accessories_and_characteristics()
         except AccessoryDisconnectedError:
             # If we fail to refresh this data then we will naturally retry
             # later when Bonjour spots c# is still not up to date.
             return False
 
-        assert self.accessories is not None
-
-        self.entity_map = Accessories.from_list(self.accessories)
-
+        self.pairing.restore_accessories_state(accessories, self.config_num)
         entity_storage: EntityMapStorage = self.hass.data[ENTITY_MAP]
-
         entity_storage.async_create_or_update_map(
-            self.unique_id, config_num, self.accessories
+            self.unique_id, config_num, accessories
         )
-
-        self.config_num = config_num
         return True
 
     def add_accessory_factory(self, add_entities_cb) -> None:
