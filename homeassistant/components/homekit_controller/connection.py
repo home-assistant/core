@@ -133,6 +133,7 @@ class HKDevice:
         self.watchable_characteristics: list[tuple[int, int]] = []
 
         self.pairing.dispatcher_connect(self.process_new_events)
+        self.pairing.dispatcher_connect_config_changed(self.process_config_changed)
 
     @property
     def entity_map(self) -> Accessories:
@@ -210,7 +211,8 @@ class HKDevice:
             self.pairing.restore_accessories_state(
                 cache["accessories"], cache["config_num"]
             )
-        elif not await self.async_refresh_entity_map(self.config_num):
+
+        if not await self.pairing.async_populate_accessories_state():
             return False
 
         await self.async_process_entity_map()
@@ -429,11 +431,27 @@ class HKDevice:
             self.config_entry, self.platforms
         )
 
-    async def async_refresh_entity_map_and_entities(self, config_num: int) -> None:
-        """Refresh the entity map and entities for this pairing."""
-        await self.async_refresh_entity_map(config_num)
+    def async_notify_config_changed(self, config_num: int) -> None:
+        """Notify the pairing of a config change."""
+        self.pairing.notify_config_changed(config_num)
+
+    def process_config_changed(self, config_num: int) -> None:
+        """Handle a config change notification from the pairing."""
+        self.hass.async_create_task(self.async_update_new_accessories_state())
+
+    async def async_update_new_accessories_state(self) -> None:
+        """Process a change in the pairings accessories state."""
+        self.async_save_entity_map()
         await self.async_process_entity_map()
         await self.async_add_new_entities()
+
+    @callback
+    def async_save_entity_map(self) -> None:
+        """Save the entity map."""
+        entity_storage: EntityMapStorage = self.hass.data[ENTITY_MAP]
+        entity_storage.async_create_or_update_map(
+            self.unique_id, self.config_num, self.entity_map.serialize()
+        )
 
     async def async_refresh_entity_map(self, config_num: int) -> bool:
         """Handle setup of a HomeKit accessory."""
