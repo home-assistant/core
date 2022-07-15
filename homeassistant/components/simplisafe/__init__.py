@@ -371,7 +371,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass,
             call,
             "button.press",
-            f"button.guardian_valve_controller_{1+1}_reboot",
+            "button.alarm_control_panel_clear_notifications",
         )
         await system.async_clear_notifications()
 
