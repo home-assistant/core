@@ -438,7 +438,7 @@ class HKDevice:
             # later when Bonjour spots c# is still not up to date.
             return False
 
-        self.pairing.restore_accessories_state(accessories, self.config_num)
+        self.pairing.restore_accessories_state(accessories, config_num)
         entity_storage: EntityMapStorage = self.hass.data[ENTITY_MAP]
         entity_storage.async_create_or_update_map(
             self.unique_id, config_num, accessories
