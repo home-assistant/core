@@ -104,7 +104,7 @@
         "countDownToOff": 0,
         "countDownToOn": 20,
         "fan": "autoAA",
-        "filterCleanStatus": 0,
+        "filterCleanStatus": 1,
         "freshAirStatus": "none",
         "mode": "cool",
         "myAutoModeCurrentSetMode": "cool",

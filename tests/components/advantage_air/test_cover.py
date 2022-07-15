@@ -45,7 +45,7 @@ async def test_cover_async_setup_entry(hass, aioclient_mock):
     assert len(aioclient_mock.mock_calls) == 1
 
     # Test Cover Zone Entity
-    entity_id = "cover.ac_two_zone_open_without_sensor"
+    entity_id = "cover.zone_y"
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_OPEN
@@ -54,7 +54,7 @@ async def test_cover_async_setup_entry(hass, aioclient_mock):
 
     entry = registry.async_get(entity_id)
     assert entry
-    assert entry.unique_id == "uniqueid-ac2-z01"
+    assert entry.unique_id == "uniqueid-ac3-z01"
 
     await hass.services.async_call(
         COVER_DOMAIN,
@@ -66,7 +66,7 @@ async def test_cover_async_setup_entry(hass, aioclient_mock):
     assert aioclient_mock.mock_calls[-2][0] == "GET"
     assert aioclient_mock.mock_calls[-2][1].path == "/setAircon"
     data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
-    assert data["ac2"]["zones"]["z01"]["state"] == ADVANTAGE_AIR_STATE_CLOSE
+    assert data["ac3"]["zones"]["z01"]["state"] == ADVANTAGE_AIR_STATE_CLOSE
     assert aioclient_mock.mock_calls[-1][0] == "GET"
     assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
 
@@ -80,8 +80,8 @@ async def test_cover_async_setup_entry(hass, aioclient_mock):
     assert aioclient_mock.mock_calls[-2][0] == "GET"
     assert aioclient_mock.mock_calls[-2][1].path == "/setAircon"
     data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
-    assert data["ac2"]["zones"]["z01"]["state"] == ADVANTAGE_AIR_STATE_OPEN
-    assert data["ac2"]["zones"]["z01"]["value"] == 100
+    assert data["ac3"]["zones"]["z01"]["state"] == ADVANTAGE_AIR_STATE_OPEN
+    assert data["ac3"]["zones"]["z01"]["value"] == 100
     assert aioclient_mock.mock_calls[-1][0] == "GET"
     assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
 
@@ -95,7 +95,7 @@ async def test_cover_async_setup_entry(hass, aioclient_mock):
     assert aioclient_mock.mock_calls[-2][0] == "GET"
     assert aioclient_mock.mock_calls[-2][1].path == "/setAircon"
     data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
-    assert data["ac2"]["zones"]["z01"]["value"] == 50
+    assert data["ac3"]["zones"]["z01"]["value"] == 50
     assert aioclient_mock.mock_calls[-1][0] == "GET"
     assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
 
@@ -109,7 +109,7 @@ async def test_cover_async_setup_entry(hass, aioclient_mock):
     assert aioclient_mock.mock_calls[-2][0] == "GET"
     assert aioclient_mock.mock_calls[-2][1].path == "/setAircon"
     data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
-    assert data["ac2"]["zones"]["z01"]["state"] == ADVANTAGE_AIR_STATE_CLOSE
+    assert data["ac3"]["zones"]["z01"]["state"] == ADVANTAGE_AIR_STATE_CLOSE
     assert aioclient_mock.mock_calls[-1][0] == "GET"
     assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
 
@@ -119,28 +119,28 @@ async def test_cover_async_setup_entry(hass, aioclient_mock):
         SERVICE_CLOSE_COVER,
         {
             ATTR_ENTITY_ID: [
-                "cover.ac_two_zone_open_without_sensor",
-                "cover.ac_two_zone_closed_without_sensor",
+                "cover.zone_y",
+                "cover.zone_z",
             ]
         },
         blocking=True,
     )
     assert len(aioclient_mock.mock_calls) == 11
     data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
-    assert data["ac2"]["zones"]["z01"]["state"] == ADVANTAGE_AIR_STATE_CLOSE
-    assert data["ac2"]["zones"]["z02"]["state"] == ADVANTAGE_AIR_STATE_CLOSE
+    assert data["ac3"]["zones"]["z01"]["state"] == ADVANTAGE_AIR_STATE_CLOSE
+    assert data["ac3"]["zones"]["z02"]["state"] == ADVANTAGE_AIR_STATE_CLOSE
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_OPEN_COVER,
         {
             ATTR_ENTITY_ID: [
-                "cover.ac_two_zone_open_without_sensor",
-                "cover.ac_two_zone_closed_without_sensor",
+                "cover.zone_y",
+                "cover.zone_z",
             ]
         },
         blocking=True,
     )
     assert len(aioclient_mock.mock_calls) == 13
     data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
-    assert data["ac2"]["zones"]["z01"]["state"] == ADVANTAGE_AIR_STATE_OPEN
-    assert data["ac2"]["zones"]["z02"]["state"] == ADVANTAGE_AIR_STATE_OPEN
+    assert data["ac3"]["zones"]["z01"]["state"] == ADVANTAGE_AIR_STATE_OPEN
+    assert data["ac3"]["zones"]["z02"]["state"] == ADVANTAGE_AIR_STATE_OPEN

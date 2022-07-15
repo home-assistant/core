@@ -34,7 +34,7 @@ async def test_binary_sensor_async_setup_entry(hass, aioclient_mock):
     assert len(aioclient_mock.mock_calls) == 1
 
     # Test First Air Filter
-    entity_id = "binary_sensor.ac_one_filter"
+    entity_id = "binary_sensor.myzone_filter"
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_OFF
@@ -44,7 +44,7 @@ async def test_binary_sensor_async_setup_entry(hass, aioclient_mock):
     assert entry.unique_id == "uniqueid-ac1-filter"
 
     # Test Second Air Filter
-    entity_id = "binary_sensor.ac_two_filter"
+    entity_id = "binary_sensor.mytemp_filter"
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_ON

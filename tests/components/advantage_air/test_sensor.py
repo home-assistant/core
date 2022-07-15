@@ -41,7 +41,7 @@ async def test_sensor_platform(hass, aioclient_mock):
     assert len(aioclient_mock.mock_calls) == 1
 
     # Test First TimeToOn Sensor
-    entity_id = "sensor.ac_one_time_to_on"
+    entity_id = "sensor.myzone_time_to_on"
     state = hass.states.get(entity_id)
     assert state
     assert int(state.state) == 0
@@ -66,7 +66,7 @@ async def test_sensor_platform(hass, aioclient_mock):
     assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
 
     # Test First TimeToOff Sensor
-    entity_id = "sensor.ac_one_time_to_off"
+    entity_id = "sensor.myzone_time_to_off"
     state = hass.states.get(entity_id)
     assert state
     assert int(state.state) == 10
