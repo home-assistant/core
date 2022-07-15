@@ -90,6 +90,11 @@ class OAuth2FlowHandler(
         """Return logger."""
         return logging.getLogger(__name__)
 
+    @property
+    def extra_authorize_data(self) -> dict[str, Any]:
+        """Extra data that needs to be appended to the authorize url."""
+        return {"scope": ",".join([scope.value for scope in OAUTH_SCOPES])}
+
     async def async_oauth_create_entry(
         self,
         data: dict[str, Any],

@@ -3,20 +3,22 @@ from __future__ import annotations
 
 import logging
 
-from twitchAPI.twitch import Twitch, TwitchAPIException, TwitchBackendException
+from twitchAPI.twitch import Twitch
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_REFRESH_TOKEN, DOMAIN, OAUTH_SCOPES
+from .coordinator import TwitchUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[Platform] = []
-# PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -49,17 +51,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         True,
     )
 
+    coordinator = TwitchUpdateCoordinator(hass, _LOGGER, client, entry.options)
+
     # Set data
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = client
-    # hass.data[DOMAIN][entry.entry_id] = coordinator
+    hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    try:
-        users = await hass.async_add_executor_job(client.get_users)
-    except (TwitchAPIException, TwitchBackendException) as err:
-        raise ConfigEntryNotReady from err
-
-    _LOGGER.debug("User: %s", users["data"][0])
+    # Fetch initial data so we have data when entities subscribe
+    await coordinator.async_config_entry_first_refresh()
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
@@ -72,3 +71,33 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+class TwitchDeviceEntity(CoordinatorEntity[TwitchUpdateCoordinator]):
+    """An entity using CoordinatorEntity."""
+
+    def __init__(
+        self,
+        coordinator: TwitchUpdateCoordinator,
+        service_id: str,
+        service_name: str,
+        key: str,
+    ) -> None:
+        """Pass coordinator to CoordinatorEntity."""
+        super().__init__(coordinator)
+        self._service_id = service_id
+        self._service_name = service_name
+        self._key = key
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device information about this Twitch instance."""
+        return DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            name=self._service_name,
+        )
+
+    @property
+    def unique_id(self) -> str:
+        """Return the unique ID for this entity."""
+        return self._key
