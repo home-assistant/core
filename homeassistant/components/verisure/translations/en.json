@@ -6,7 +6,8 @@
         },
         "error": {
             "invalid_auth": "Invalid authentication",
-            "unknown": "Unexpected error"
+            "unknown": "Unexpected error",
+            "unknown_mfa": "Unknown error occurred during MFA set up"
         },
         "step": {
             "installation": {
