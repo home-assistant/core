@@ -57,9 +57,15 @@ from .const import (
     SOURCE_TIMEOUT,
     STREAM_RESTART_INCREMENT,
     STREAM_RESTART_RESET_TIME,
-    TARGET_SEGMENT_DURATION_NON_LL_HLS,
 )
-from .core import PROVIDERS, IdleTimer, KeyFrameConverter, StreamOutput, StreamSettings
+from .core import (
+    PROVIDERS,
+    STREAM_SETTINGS_NON_LL_HLS,
+    IdleTimer,
+    KeyFrameConverter,
+    StreamOutput,
+    StreamSettings,
+)
 from .diagnostics import Diagnostics
 from .hls import HlsStreamOutput, async_setup_hls
 
@@ -224,14 +230,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             hls_part_timeout=2 * conf[CONF_PART_DURATION],
         )
     else:
-        hass.data[DOMAIN][ATTR_SETTINGS] = StreamSettings(
-            ll_hls=False,
-            min_segment_duration=TARGET_SEGMENT_DURATION_NON_LL_HLS
-            - SEGMENT_DURATION_ADJUSTER,
-            part_target_duration=TARGET_SEGMENT_DURATION_NON_LL_HLS,
-            hls_advance_part_limit=3,
-            hls_part_timeout=TARGET_SEGMENT_DURATION_NON_LL_HLS,
-        )
+        hass.data[DOMAIN][ATTR_SETTINGS] = STREAM_SETTINGS_NON_LL_HLS
 
     # Setup HLS
     hls_endpoint = async_setup_hls(hass)
