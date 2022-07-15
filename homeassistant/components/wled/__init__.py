@@ -5,7 +5,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN
 from .coordinator import WLEDDataUpdateCoordinator
 
 PLATFORMS = (
@@ -24,16 +24,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up WLED from a config entry."""
     coordinator = WLEDDataUpdateCoordinator(hass, entry=entry)
     await coordinator.async_config_entry_first_refresh()
-
-    if coordinator.data.info.leds.cct:
-        LOGGER.error(
-            (
-                "WLED device '%s' has a CCT channel, which is not supported by "
-                "this integration"
-            ),
-            entry.title,
-        )
-        return False
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 

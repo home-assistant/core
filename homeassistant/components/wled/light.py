@@ -4,6 +4,8 @@ from __future__ import annotations
 from functools import partial
 from typing import Any, cast
 
+from wled import LightCapability
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_EFFECT,
@@ -112,8 +114,6 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
     ) -> None:
         """Initialize WLED segment light."""
         super().__init__(coordinator=coordinator)
-        self._rgbw = coordinator.data.info.leds.rgbw
-        self._wv = coordinator.data.info.leds.wv
         self._segment = segment
 
         # Segment 0 uses a simpler name, which is more natural for when using
@@ -125,11 +125,42 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
             f"{self.coordinator.data.info.mac_address}_{self._segment}"
         )
 
-        self._attr_color_mode = ColorMode.RGB
-        self._attr_supported_color_modes = {ColorMode.RGB}
-        if self._rgbw and self._wv:
-            self._attr_color_mode = ColorMode.RGBW
-            self._attr_supported_color_modes = {ColorMode.RGBW}
+        # WLED >= v0.13.1, light capabilities per segment
+        if coordinator.data.info.leds.segment_light_capabilities is not None:
+            capabilities = coordinator.data.info.leds.segment_light_capabilities[
+                segment
+            ]
+            self._attr_supported_color_modes: set[ColorMode] = set()
+            if (
+                LightCapability.RGB_COLOR in capabilities
+                and LightCapability.WHITE_CHANNEL in capabilities
+                and LightCapability.COLOR_TEMPERATURE not in capabilities
+            ):
+                self._attr_supported_color_modes.add(ColorMode.RGBW)
+            elif LightCapability.RGB_COLOR in capabilities:
+                self._attr_supported_color_modes.add(ColorMode.RGB)
+
+            if LightCapability.COLOR_TEMPERATURE in capabilities:
+                self._attr_supported_color_modes.add(ColorMode.COLOR_TEMP)
+                if LightCapability.WHITE_CHANNEL in capabilities:
+                    self._attr_supported_color_modes.add(ColorMode.WHITE)
+
+            if (
+                not self._attr_supported_color_modes
+                and LightCapability.WHITE_CHANNEL in capabilities
+            ):
+                self._attr_supported_color_modes.add(ColorMode.BRIGHTNESS)
+
+            if not self._attr_supported_color_modes:
+                self._attr_supported_color_modes.add(ColorMode.ONOFF)
+
+        # WLED < v0.13.1
+        else:
+            self._attr_color_mode = ColorMode.RGB
+            self._attr_supported_color_modes = {ColorMode.RGB}
+            if coordinator.data.info.leds.rgbw and coordinator.data.info.leds.wv:
+                self._attr_color_mode = ColorMode.RGBW
+                self._attr_supported_color_modes = {ColorMode.RGBW}
 
     @property
     def available(self) -> bool:
