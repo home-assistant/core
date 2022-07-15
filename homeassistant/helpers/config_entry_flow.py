@@ -15,11 +15,11 @@ from .typing import UNDEFINED, DiscoveryInfoType, UndefinedType
 if TYPE_CHECKING:
     import asyncio
 
-    from homeassistant.components.bluetooth import BluetoothServiceInfo
     from homeassistant.components.dhcp import DhcpServiceInfo
     from homeassistant.components.ssdp import SsdpServiceInfo
     from homeassistant.components.zeroconf import ZeroconfServiceInfo
 
+    from .service_info.bluetooth import BluetoothServiceInfo
     from .service_info.mqtt import MqttServiceInfo
 
 _R = TypeVar("_R", bound="Awaitable[bool] | bool")

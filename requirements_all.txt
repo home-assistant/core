@@ -5,7 +5,7 @@
 AEMET-OpenData==0.2.1
 
 # homeassistant.components.aladdin_connect
-AIOAladdinConnect==0.1.23
+AIOAladdinConnect==0.1.25
 
 # homeassistant.components.adax
 Adax-local==0.1.4
@@ -150,7 +150,7 @@ aioeagle==1.1.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==10.10.0
+aioesphomeapi==10.11.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -168,7 +168,7 @@ aioguardian==2022.03.2
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==0.7.22
+aiohomekit==1.0.0
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -831,7 +831,7 @@ hole==0.7.0
 holidays==0.14.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220707.0
+home-assistant-frontend==20220707.1
 
 # homeassistant.components.home_connect
 homeconnect==0.7.1
@@ -1086,7 +1086,7 @@ nettigo-air-monitor==1.3.0
 neurio==0.3.1
 
 # homeassistant.components.nexia
-nexia==2.0.1
+nexia==2.0.2
 
 # homeassistant.components.nextcloud
 nextcloudmonitor==1.1.0
@@ -1447,7 +1447,7 @@ pydaikin==2.7.0
 pydanfossair==0.1.0
 
 # homeassistant.components.deconz
-pydeconz==98
+pydeconz==99
 
 # homeassistant.components.delijn
 pydelijn==1.0.0
@@ -1628,7 +1628,7 @@ pylibrespot-java==0.1.0
 pylitejet==0.3.0
 
 # homeassistant.components.litterrobot
-pylitterbot==2022.3.0
+pylitterbot==2022.7.0
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.13.1
@@ -1996,7 +1996,7 @@ pytrafikverket==0.2.0.1
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.0.10
+pyunifiprotect==4.0.11
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -2402,7 +2402,7 @@ volkszaehler==0.3.2
 volvooncall==0.10.0
 
 # homeassistant.components.verisure
-vsure==1.7.3
+vsure==1.8.1
 
 # homeassistant.components.vasttrafik
 vtjp==0.1.14
@@ -2448,7 +2448,7 @@ wirelesstagpy==0.8.1
 withings-api==2.4.0
 
 # homeassistant.components.wled
-wled==0.13.2
+wled==0.14.1
 
 # homeassistant.components.wolflink
 wolf_smartset==0.1.11
@@ -2522,7 +2522,7 @@ zigpy-zigate==0.9.0
 zigpy-znp==0.8.1
 
 # homeassistant.components.zha
-zigpy==0.47.2
+zigpy==0.47.3
 
 # homeassistant.components.zoneminder
 zm-py==0.5.2

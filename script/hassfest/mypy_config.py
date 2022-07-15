@@ -15,13 +15,7 @@ from .model import Config, Integration
 # If you are an author of component listed here, please fix these errors and
 # remove your component from this list to enable type checks.
 # Do your best to not add anything new here.
-IGNORED_MODULES: Final[list[str]] = [
-    "homeassistant.components.cloud.client",
-    "homeassistant.components.cloud.http_api",
-    "homeassistant.components.evohome",
-    "homeassistant.components.template.number",
-    "homeassistant.components.template.sensor",
-]
+IGNORED_MODULES: Final[list[str]] = []
 
 # Component modules which should set no_implicit_reexport = true.
 NO_IMPLICIT_REEXPORT_MODULES: set[str] = {

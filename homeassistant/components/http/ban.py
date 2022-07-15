@@ -117,7 +117,7 @@ async def process_wrong_login(request: Request) -> None:
 
     # The user-agent is unsanitized input so we only include it in the log
     user_agent = request.headers.get("user-agent")
-    log_msg = f"{base_msg} ({user_agent})"
+    log_msg = f"{base_msg} Requested URL: '{request.rel_url}'. ({user_agent})"
 
     notification_msg = f"{base_msg} See the log for details."
 
