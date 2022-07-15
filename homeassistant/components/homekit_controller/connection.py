@@ -145,12 +145,12 @@ class HKDevice:
             char for char in self.pollable_characteristics if char[0] != accessory_id
         ]
 
-    def add_watchable_characteristics(
+    async def add_watchable_characteristics(
         self, characteristics: list[tuple[int, int]]
     ) -> None:
         """Add (aid, iid) pairs that we need to poll."""
         self.watchable_characteristics.extend(characteristics)
-        self.hass.async_create_task(self.pairing.subscribe(characteristics))
+        await self.pairing.subscribe(characteristics)
 
     def remove_watchable_characteristics(self, accessory_id: int) -> None:
         """Remove all pollable characteristics by accessory id."""

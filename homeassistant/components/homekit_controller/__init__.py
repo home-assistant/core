@@ -76,7 +76,9 @@ class HomeKitEntity(Entity):
         )
 
         self._accessory.add_pollable_characteristics(self.pollable_characteristics)
-        self._accessory.add_watchable_characteristics(self.watchable_characteristics)
+        await self._accessory.add_watchable_characteristics(
+            self.watchable_characteristics
+        )
 
     async def async_will_remove_from_hass(self) -> None:
         """Prepare to be removed from hass."""
