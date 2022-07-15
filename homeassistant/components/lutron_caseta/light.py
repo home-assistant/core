@@ -83,3 +83,11 @@ class LutronCasetaLight(LutronCasetaDeviceUpdatableEntity, LightEntity):
     def is_on(self):
         """Return true if device is on."""
         return self._device["current_state"] > 0
+
+    @property
+    def unique_id(self):
+        """Return a unique identifier if serial number is None."""
+        if self.serial is None:
+            return f"zone_{self._bridge_unique_id}_{self.device_id}"
+
+        return super().unique_id
