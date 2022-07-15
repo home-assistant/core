@@ -937,7 +937,7 @@ async def test_transitions(hass, device_light_1, device_light_2, coordinator):
 
     dev2_cluster_level.request.reset_mock()
 
-    # turn the light back on with no args should use a transition
+    # turn the light back on with no args should use a transition and last known brightness
     await hass.services.async_call(
         LIGHT_DOMAIN,
         "turn_on",
