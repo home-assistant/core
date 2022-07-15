@@ -19,7 +19,7 @@ async def async_setup_entry(
 
     instance = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
 
-    entities: list[SelectEntity] = []
+    entities = []
     for ac_key in instance["coordinator"].data["aircons"]:
         entities.append(AdvantageAirMyZone(instance, ac_key))
     async_add_entities(entities)
@@ -41,7 +41,6 @@ class AdvantageAirMyZone(AdvantageAirEntity, SelectEntity):
             f'{self.coordinator.data["system"]["rid"]}-{ac_key}-myzone'
         )
 
-        # Add option for each zone that supports MyZone
         for zone in instance["coordinator"].data["aircons"][ac_key]["zones"].values():
             if zone["type"] > 0:
                 self._name_to_number[zone["name"]] = zone["number"]
@@ -50,7 +49,7 @@ class AdvantageAirMyZone(AdvantageAirEntity, SelectEntity):
 
     @property
     def current_option(self):
-        """Return the current myZone."""
+        """Return the fresh air status."""
         return self._number_to_name[self._ac["myZone"]]
 
     async def async_select_option(self, option):
