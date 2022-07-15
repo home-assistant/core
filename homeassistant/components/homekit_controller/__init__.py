@@ -229,6 +229,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if not await conn.async_setup():
         del hass.data[KNOWN_DEVICES][conn.unique_id]
+        await conn.pairing.close()
         if (connection := getattr(conn.pairing, "connection", None)) and hasattr(
             connection, "host"
         ):

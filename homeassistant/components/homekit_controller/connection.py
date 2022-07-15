@@ -5,6 +5,7 @@ import asyncio
 from collections.abc import Callable
 import datetime
 import logging
+from types import MappingProxyType
 from typing import Any
 
 from aiohomekit import Controller
@@ -67,7 +68,7 @@ class HKDevice:
         self,
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        pairing_data: dict[str, Any],
+        pairing_data: MappingProxyType[str, Any],
     ) -> None:
         """Initialise a generic HomeKit device."""
 
