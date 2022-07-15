@@ -1359,7 +1359,6 @@ omit =
     homeassistant/components/varta_storage/__init__.py
     homeassistant/components/varta_storage/const.py
     homeassistant/components/varta_storage/sensor.py
-    homeassistant/components/vallox/*
     homeassistant/components/vallox/__init__.py
     homeassistant/components/vallox/fan.py
     homeassistant/components/vallox/sensor.py

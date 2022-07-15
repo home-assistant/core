@@ -2384,7 +2384,7 @@ uvcclient==0.11.0
 vallox-websocket-api==2.11.0
 
 # homeassistant.components.varta_storage
-vartastorage==0.2.1
+vartastorage==0.2.2
 
 # homeassistant.components.rdw
 vehicle==0.4.0

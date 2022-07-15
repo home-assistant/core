@@ -9,7 +9,14 @@ from vartastorage import vartastorage
 
 from homeassistant import config_entries, core
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENERGY_KILO_WATT_HOUR, PERCENTAGE, POWER_WATT, Platform
+from homeassistant.const import (
+    ENERGY_KILO_WATT_HOUR,
+    ENERGY_WATT_HOUR,
+    PERCENTAGE,
+    POWER_WATT,
+    TIME_HOURS,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -134,25 +141,67 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "native_unit_of_measurement": None,
         }
         thisdict[11] = {
-            "name": "VARTA production power",
-            "native_value": result.production_power,
-            "device_class": "power",
-            "state_class": "measurement",
-            "native_unit_of_measurement": POWER_WATT,
-        }
-        thisdict[12] = {
-            "name": "VARTA total production power",
-            "native_value": result.total_production_power,
-            "device_class": "energy",
-            "state_class": "total_increasing",
-            "native_unit_of_measurement": ENERGY_KILO_WATT_HOUR,
-        }
-        thisdict[13] = {
             "name": "VARTA total charged energy",
             "native_value": result.total_charged_energy,
             "device_class": "energy",
             "state_class": "total",
             "native_unit_of_measurement": ENERGY_KILO_WATT_HOUR,
+        }
+        thisdict[12] = {
+            "name": "VARTA total grid to home",
+            "native_value": result.grid_to_home,
+            "device_class": "energy",
+            "state_class": "total",
+            "native_unit_of_measurement": ENERGY_WATT_HOUR,
+        }
+        thisdict[13] = {
+            "name": "VARTA total home to grid",
+            "native_value": result.home_to_grid,
+            "device_class": "energy",
+            "state_class": "total",
+            "native_unit_of_measurement": ENERGY_WATT_HOUR,
+        }
+        thisdict[14] = {
+            "name": "VARTA invertert total charged",
+            "native_value": result.inverter_total_charged,
+            "device_class": "energy",
+            "state_class": "total",
+            "native_unit_of_measurement": ENERGY_WATT_HOUR,
+        }
+        thisdict[15] = {
+            "name": "VARTA invertert total discharged",
+            "native_value": result.inverter_total_discharged,
+            "device_class": "energy",
+            "state_class": "total",
+            "native_unit_of_measurement": ENERGY_WATT_HOUR,
+        }
+        thisdict[16] = {
+            "name": "VARTA charge cycle counter",
+            "native_value": result.charge_cycle_counter,
+            "device_class": "None",
+            "state_class": "None",
+            "native_unit_of_measurement": None,
+        }
+        thisdict[17] = {
+            "name": "VARTA hours until filter maintenance",
+            "native_value": result.hours_until_filter_maintenance,
+            "device_class": "None",
+            "state_class": "None",
+            "native_unit_of_measurement": TIME_HOURS,
+        }
+        thisdict[18] = {
+            "name": "VARTA fan",
+            "native_value": result.fan,
+            "device_class": "None",
+            "state_class": "None",
+            "native_unit_of_measurement": None,
+        }
+        thisdict[19] = {
+            "name": "VARTA main",
+            "native_value": result.main,
+            "device_class": "None",
+            "state_class": "None",
+            "native_unit_of_measurement": None,
         }
 
         return thisdict
