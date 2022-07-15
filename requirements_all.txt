@@ -1697,7 +1697,7 @@ pynws==1.4.1
 pynx584==0.5
 
 # homeassistant.components.nzbget
-pynzbgetapi==0.2.0
+pynzbgetapi==0.3.0
 
 # homeassistant.components.obihai
 pyobihai==1.3.2
