@@ -7,7 +7,7 @@ from .const import ATTR_MANUFACTURER, DOMAIN
 
 
 class BraviaTVEntity(CoordinatorEntity[BraviaTVCoordinator]):
-    """Tractive entity class."""
+    """BraviaTV entity class."""
 
     def __init__(
         self,
