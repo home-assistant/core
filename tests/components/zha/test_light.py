@@ -925,7 +925,7 @@ async def test_transitions(hass, device_light_1, device_light_2, coordinator):
         4,
         dev2_cluster_level.commands_by_name["move_to_level_with_on_off"].schema,
         0,  # brightness (level in ZCL)
-        20,  # transition time - sengled light uses default minimum
+        20,  # transition time
         expect_reply=True,
         manufacturer=None,
         tries=1,
