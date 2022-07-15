@@ -7,7 +7,7 @@
 AEMET-OpenData==0.2.1
 
 # homeassistant.components.aladdin_connect
-AIOAladdinConnect==0.1.24
+AIOAladdinConnect==0.1.25
 
 # homeassistant.components.adax
 Adax-local==0.1.4
@@ -616,7 +616,7 @@ hole==0.7.0
 holidays==0.14.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220707.0
+home-assistant-frontend==20220707.1
 
 # homeassistant.components.home_connect
 homeconnect==0.7.1
@@ -995,7 +995,7 @@ pycoolmasternet-async==0.1.2
 pydaikin==2.7.0
 
 # homeassistant.components.deconz
-pydeconz==98
+pydeconz==99
 
 # homeassistant.components.dexcom
 pydexcom==0.2.3
@@ -1118,7 +1118,7 @@ pylibrespot-java==0.1.0
 pylitejet==0.3.0
 
 # homeassistant.components.litterrobot
-pylitterbot==2022.3.0
+pylitterbot==2022.7.0
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.13.1

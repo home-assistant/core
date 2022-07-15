@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
+from .const import CLIENT_ID, DOMAIN
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -23,7 +23,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up platform from a ConfigEntry."""
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
-    acc = AladdinConnectClient(username, password, async_get_clientsession(hass))
+    acc = AladdinConnectClient(
+        username, password, async_get_clientsession(hass), CLIENT_ID
+    )
     try:
         if not await acc.login():
             raise ConfigEntryAuthFailed("Incorrect Password")
