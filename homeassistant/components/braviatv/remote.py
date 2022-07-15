@@ -32,25 +32,23 @@ async def async_setup_entry(
         name=DEFAULT_NAME,
     )
 
-    async_add_entities(
-        [BraviaTVRemote(coordinator, DEFAULT_NAME, unique_id, device_info)]
-    )
+    async_add_entities([BraviaTVRemote(coordinator, unique_id, device_info)])
 
 
 class BraviaTVRemote(CoordinatorEntity[BraviaTVCoordinator], RemoteEntity):
     """Representation of a Bravia TV Remote."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: BraviaTVCoordinator,
-        name: str,
         unique_id: str,
         device_info: DeviceInfo,
     ) -> None:
         """Initialize the entity."""
 
         self._attr_device_info = device_info
-        self._attr_name = name
         self._attr_unique_id = unique_id
 
         super().__init__(coordinator)
