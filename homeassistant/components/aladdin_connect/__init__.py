@@ -12,12 +12,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
+from .const import CLIENT_ID, DOMAIN
 
 _LOGGER: Final = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.COVER, Platform.SENSOR]
-CLIENT_ID = "1000"
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
