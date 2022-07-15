@@ -50,11 +50,10 @@ class AdGuardHomeEntity(Entity):
         """Return device information about this AdGuard Home instance."""
         if self._entry.source == SOURCE_HASSIO:
             config_url = "homeassistant://hassio/ingress/a0d7b954_adguard"
+        elif self.adguard.tls:
+            config_url = f"https://{self.adguard.host}:{self.adguard.port}"
         else:
-            if self.adguard.tls:
-                config_url = f"https://{self.adguard.host}:{self.adguard.port}"
-            else:
-                config_url = f"http://{self.adguard.host}:{self.adguard.port}"
+            config_url = f"http://{self.adguard.host}:{self.adguard.port}"
 
         return DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
