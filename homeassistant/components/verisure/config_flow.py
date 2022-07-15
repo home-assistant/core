@@ -126,7 +126,7 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_CODE): vol.All(
-                        vol.Length(min=6, max=6), vol.Coerce(str)
+                        vol.Coerce(str), vol.Length(min=6, max=6)
                     )
                 }
             ),
