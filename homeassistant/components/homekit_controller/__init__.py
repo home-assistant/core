@@ -242,10 +242,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up for Homekit devices."""
+async def async_get_entity_storage(hass: HomeAssistant) -> EntityMapStorage:
+    """Get entity storage."""
+    if ENTITY_MAP in hass.data:
+        map_storage: EntityMapStorage = hass.data[ENTITY_MAP]
+        return map_storage
     map_storage = hass.data[ENTITY_MAP] = EntityMapStorage(hass)
     await map_storage.async_initialize()
+    return map_storage
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up for Homekit devices."""
+    await async_get_entity_storage(hass)
 
     await async_get_controller(hass)
 
