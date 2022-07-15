@@ -104,9 +104,9 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                     await self.hass.async_add_executor_job(self._add_vms_to_config)
 
-                    return self.async_create_entry(title="ProxmoxVE", data=self._config)
+                    return self.async_create_entry(title=host, data=self._config)
 
-            if errors:
+            if errors and not is_import:
                 data_schema = vol.Schema(
                     {
                         vol.Required(CONF_HOST, default=info.get(CONF_HOST, "")): str,
