@@ -8,6 +8,9 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import EcoNetEntity
 from .const import DOMAIN, EQUIPMENT
@@ -36,7 +39,9 @@ BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
 )
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up EcoNet binary sensor based on a config entry."""
     equipment = hass.data[DOMAIN][EQUIPMENT][entry.entry_id]
     all_equipment = equipment[EquipmentType.WATER_HEATER].copy()

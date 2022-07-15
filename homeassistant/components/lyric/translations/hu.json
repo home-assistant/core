@@ -10,7 +10,7 @@
         },
         "step": {
             "pick_implementation": {
-                "title": "V\u00e1lassz hiteles\u00edt\u00e9si m\u00f3dszert"
+                "title": "V\u00e1lasszon egy hiteles\u00edt\u00e9si m\u00f3dszert"
             },
             "reauth_confirm": {
                 "description": "A Lyric integr\u00e1ci\u00f3nak \u00fajra hiteles\u00edtenie kell a fi\u00f3kj\u00e1t.",

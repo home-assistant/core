@@ -22,7 +22,6 @@ from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
-    ENTITY_CATEGORY_DIAGNOSTIC,
     FREQUENCY_HERTZ,
     LENGTH_CENTIMETERS,
     LIGHT_LUX,
@@ -42,6 +41,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_REMOVE_DISCOVER_COMPONENT
@@ -54,11 +54,24 @@ ICON = "icon"
 
 # A Tasmota sensor type may be mapped to either a device class or an icon, not both
 SENSOR_DEVICE_CLASS_ICON_MAP: dict[str, dict[str, Any]] = {
+    hc.SENSOR_ACTIVE_ENERGYEXPORT: {
+        DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        STATE_CLASS: SensorStateClass.TOTAL,
+    },
+    hc.SENSOR_ACTIVE_ENERGYIMPORT: {
+        DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        STATE_CLASS: SensorStateClass.TOTAL,
+    },
+    hc.SENSOR_ACTIVE_POWERUSAGE: {
+        DEVICE_CLASS: SensorDeviceClass.POWER,
+        STATE_CLASS: SensorStateClass.MEASUREMENT,
+    },
     hc.SENSOR_AMBIENT: {
         DEVICE_CLASS: SensorDeviceClass.ILLUMINANCE,
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
     hc.SENSOR_APPARENT_POWERUSAGE: {
+        ICON: "mdi:flash",
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
     hc.SENSOR_BATTERY: {
@@ -78,6 +91,11 @@ SENSOR_DEVICE_CLASS_ICON_MAP: dict[str, dict[str, Any]] = {
     hc.SENSOR_COLOR_RED: {ICON: "mdi:palette"},
     hc.SENSOR_CURRENT: {
         ICON: "mdi:alpha-a-circle-outline",
+        STATE_CLASS: SensorStateClass.MEASUREMENT,
+    },
+    hc.SENSOR_CURRENTNEUTRAL: {
+        ICON: "mdi:alpha-a-circle-outline",
+        DEVICE_CLASS: SensorDeviceClass.CURRENT,
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
     hc.SENSOR_DEWPOINT: {
@@ -141,7 +159,10 @@ SENSOR_DEVICE_CLASS_ICON_MAP: dict[str, dict[str, Any]] = {
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
     hc.SENSOR_PROXIMITY: {ICON: "mdi:ruler"},
+    hc.SENSOR_REACTIVE_ENERGYEXPORT: {STATE_CLASS: SensorStateClass.TOTAL},
+    hc.SENSOR_REACTIVE_ENERGYIMPORT: {STATE_CLASS: SensorStateClass.TOTAL},
     hc.SENSOR_REACTIVE_POWERUSAGE: {
+        ICON: "mdi:flash",
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
     hc.SENSOR_STATUS_LAST_RESTART_TIME: {DEVICE_CLASS: SensorDeviceClass.TIMESTAMP},
@@ -162,7 +183,7 @@ SENSOR_DEVICE_CLASS_ICON_MAP: dict[str, dict[str, Any]] = {
     hc.SENSOR_TODAY: {DEVICE_CLASS: SensorDeviceClass.ENERGY},
     hc.SENSOR_TOTAL: {
         DEVICE_CLASS: SensorDeviceClass.ENERGY,
-        STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
+        STATE_CLASS: SensorStateClass.TOTAL,
     },
     hc.SENSOR_TOTAL_START_TIME: {ICON: "mdi:progress-clock"},
     hc.SENSOR_TVOC: {ICON: "mdi:air-filter"},
@@ -274,10 +295,10 @@ class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, SensorEntity):
         return class_or_icon.get(STATE_CLASS)
 
     @property
-    def entity_category(self) -> str | None:
+    def entity_category(self) -> EntityCategory | None:
         """Return the category of the entity, if any."""
         if self._tasmota_entity.quantity in status_sensor.SENSORS:
-            return ENTITY_CATEGORY_DIAGNOSTIC
+            return EntityCategory.DIAGNOSTIC
         return None
 
     @property

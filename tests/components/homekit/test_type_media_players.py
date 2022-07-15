@@ -18,7 +18,7 @@ from homeassistant.components.homekit.type_media_players import (
     MediaPlayer,
     TelevisionMediaPlayer,
 )
-from homeassistant.components.media_player import DEVICE_CLASS_TV
+from homeassistant.components.media_player import MediaPlayerDeviceClass
 from homeassistant.components.media_player.const import (
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
@@ -181,7 +181,7 @@ async def test_media_player_television(hass, hk_driver, events, caplog):
         entity_id,
         None,
         {
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_TV,
+            ATTR_DEVICE_CLASS: MediaPlayerDeviceClass.TV,
             ATTR_SUPPORTED_FEATURES: 3469,
             ATTR_MEDIA_VOLUME_MUTED: False,
             ATTR_INPUT_SOURCE_LIST: ["HDMI 1", "HDMI 2", "HDMI 3", "HDMI 4"],
@@ -358,7 +358,7 @@ async def test_media_player_television_basic(hass, hk_driver, events, caplog):
     hass.states.async_set(
         entity_id,
         None,
-        {ATTR_DEVICE_CLASS: DEVICE_CLASS_TV, ATTR_SUPPORTED_FEATURES: 384},
+        {ATTR_DEVICE_CLASS: MediaPlayerDeviceClass.TV, ATTR_SUPPORTED_FEATURES: 384},
     )
     await hass.async_block_till_done()
     acc = TelevisionMediaPlayer(hass, hk_driver, "MediaPlayer", entity_id, 2, None)
@@ -394,7 +394,7 @@ async def test_media_player_television_supports_source_select_no_sources(
     hass.states.async_set(
         entity_id,
         None,
-        {ATTR_DEVICE_CLASS: DEVICE_CLASS_TV, ATTR_SUPPORTED_FEATURES: 3469},
+        {ATTR_DEVICE_CLASS: MediaPlayerDeviceClass.TV, ATTR_SUPPORTED_FEATURES: 3469},
     )
     await hass.async_block_till_done()
     acc = TelevisionMediaPlayer(hass, hk_driver, "MediaPlayer", entity_id, 2, None)
@@ -415,7 +415,7 @@ async def test_tv_restore(hass, hk_driver, events):
         "generic",
         "1234",
         suggested_object_id="simple",
-        original_device_class=DEVICE_CLASS_TV,
+        original_device_class=MediaPlayerDeviceClass.TV,
     )
     registry.async_get_or_create(
         "media_player",
@@ -426,7 +426,7 @@ async def test_tv_restore(hass, hk_driver, events):
             ATTR_INPUT_SOURCE_LIST: ["HDMI 1", "HDMI 2", "HDMI 3", "HDMI 4"],
         },
         supported_features=3469,
-        original_device_class=DEVICE_CLASS_TV,
+        original_device_class=MediaPlayerDeviceClass.TV,
     )
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START, {})
@@ -465,7 +465,7 @@ async def test_media_player_television_max_sources(hass, hk_driver, events, capl
         entity_id,
         None,
         {
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_TV,
+            ATTR_DEVICE_CLASS: MediaPlayerDeviceClass.TV,
             ATTR_SUPPORTED_FEATURES: 3469,
             ATTR_MEDIA_VOLUME_MUTED: False,
             ATTR_INPUT_SOURCE: "HDMI 3",
@@ -489,7 +489,7 @@ async def test_media_player_television_max_sources(hass, hk_driver, events, capl
         entity_id,
         None,
         {
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_TV,
+            ATTR_DEVICE_CLASS: MediaPlayerDeviceClass.TV,
             ATTR_SUPPORTED_FEATURES: 3469,
             ATTR_MEDIA_VOLUME_MUTED: False,
             ATTR_INPUT_SOURCE: "HDMI 90",
@@ -503,7 +503,7 @@ async def test_media_player_television_max_sources(hass, hk_driver, events, capl
         entity_id,
         None,
         {
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_TV,
+            ATTR_DEVICE_CLASS: MediaPlayerDeviceClass.TV,
             ATTR_SUPPORTED_FEATURES: 3469,
             ATTR_MEDIA_VOLUME_MUTED: False,
             ATTR_INPUT_SOURCE: "HDMI 91",

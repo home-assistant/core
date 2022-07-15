@@ -1,8 +1,14 @@
 """Integration to UniFi Network and its various features."""
+from collections.abc import Mapping
+from typing import Any
+
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.storage import Store
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_MANUFACTURER,
@@ -19,7 +25,7 @@ STORAGE_KEY = "unifi_data"
 STORAGE_VERSION = 1
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Integration doesn't support configuration through configuration.yaml."""
     hass.data[UNIFI_WIRELESS_CLIENTS] = wireless_clients = UnifiWirelessClients(hass)
     await wireless_clients.async_load()
@@ -27,7 +33,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up the UniFi Network integration."""
     hass.data.setdefault(UNIFI_DOMAIN, {})
 
@@ -71,7 +77,7 @@ async def async_setup_entry(hass, config_entry):
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     controller = hass.data[UNIFI_DOMAIN].pop(config_entry.entry_id)
 
@@ -81,13 +87,18 @@ async def async_unload_entry(hass, config_entry):
     return await controller.async_reset()
 
 
-async def async_flatten_entry_data(hass, config_entry):
+async def async_flatten_entry_data(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> None:
     """Simpler configuration structure for entry data.
 
     Keep controller key layer in case user rollbacks.
     """
 
-    data: dict = {**config_entry.data, **config_entry.data[CONF_CONTROLLER]}
+    data: Mapping[str, Any] = {
+        **config_entry.data,
+        **config_entry.data[CONF_CONTROLLER],
+    }
     if config_entry.data != data:
         hass.config_entries.async_update_entry(config_entry, data=data)
 
@@ -102,7 +113,7 @@ class UnifiWirelessClients:
         """Set up client storage."""
         self.hass = hass
         self.data = {}
-        self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+        self._store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
 
     async def async_load(self):
         """Load data from file."""

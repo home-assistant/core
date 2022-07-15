@@ -1,6 +1,7 @@
 """The tests for Philips Hue device triggers for V1 bridge."""
 
 from homeassistant.components import automation, hue
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.hue.v1 import device_trigger
 from homeassistant.setup import async_setup_component
 
@@ -25,7 +26,9 @@ async def test_get_triggers(hass, mock_bridge_v1, device_reg):
     hue_tap_device = device_reg.async_get_device(
         {(hue.DOMAIN, "00:00:00:00:00:44:23:08")}
     )
-    triggers = await async_get_device_automations(hass, "trigger", hue_tap_device.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, hue_tap_device.id
+    )
 
     expected_triggers = [
         {
@@ -34,6 +37,7 @@ async def test_get_triggers(hass, mock_bridge_v1, device_reg):
             "device_id": hue_tap_device.id,
             "type": t_type,
             "subtype": t_subtype,
+            "metadata": {},
         }
         for t_type, t_subtype in device_trigger.HUE_TAP_REMOTE
     ]
@@ -43,7 +47,9 @@ async def test_get_triggers(hass, mock_bridge_v1, device_reg):
     hue_dimmer_device = device_reg.async_get_device(
         {(hue.DOMAIN, "00:17:88:01:10:3e:3a:dc")}
     )
-    triggers = await async_get_device_automations(hass, "trigger", hue_dimmer_device.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, hue_dimmer_device.id
+    )
 
     trigger_batt = {
         "platform": "device",
@@ -51,6 +57,7 @@ async def test_get_triggers(hass, mock_bridge_v1, device_reg):
         "device_id": hue_dimmer_device.id,
         "type": "battery_level",
         "entity_id": "sensor.hue_dimmer_switch_1_battery_level",
+        "metadata": {"secondary": True},
     }
     expected_triggers = [
         trigger_batt,
@@ -61,6 +68,7 @@ async def test_get_triggers(hass, mock_bridge_v1, device_reg):
                 "device_id": hue_dimmer_device.id,
                 "type": t_type,
                 "subtype": t_subtype,
+                "metadata": {},
             }
             for t_type, t_subtype in device_trigger.HUE_DIMMER_REMOTE
         ),

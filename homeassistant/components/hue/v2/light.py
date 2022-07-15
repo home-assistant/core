@@ -6,19 +6,20 @@ from typing import Any
 from aiohue import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
 from aiohue.v2.controllers.lights import LightsController
+from aiohue.v2.models.feature import EffectStatus, TimedEffectStatus
 from aiohue.v2.models.light import Light
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
+    ATTR_EFFECT,
+    ATTR_FLASH,
     ATTR_TRANSITION,
     ATTR_XY_COLOR,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_COLOR_TEMP,
-    COLOR_MODE_ONOFF,
-    COLOR_MODE_XY,
-    SUPPORT_TRANSITION,
+    FLASH_SHORT,
+    ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -27,11 +28,13 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from ..bridge import HueBridge
 from ..const import DOMAIN
 from .entity import HueBaseEntity
+from .helpers import (
+    normalize_hue_brightness,
+    normalize_hue_colortemp,
+    normalize_hue_transition,
+)
 
-ALLOWED_ERRORS = [
-    "device (light) has communication issues, command (on) may not have effect",
-    'device (light) is "soft off", command (on) may not have effect',
-]
+EFFECT_NONE = "None"
 
 
 async def async_setup_entry(
@@ -68,19 +71,36 @@ class HueLight(HueBaseEntity, LightEntity):
     ) -> None:
         """Initialize the light."""
         super().__init__(bridge, controller, resource)
+        if self.resource.alert and self.resource.alert.action_values:
+            self._attr_supported_features |= LightEntityFeature.FLASH
         self.resource = resource
         self.controller = controller
-        self._supported_color_modes = set()
+        self._supported_color_modes: set[ColorMode | str] = set()
         if self.resource.supports_color:
-            self._supported_color_modes.add(COLOR_MODE_XY)
+            self._supported_color_modes.add(ColorMode.XY)
         if self.resource.supports_color_temperature:
-            self._supported_color_modes.add(COLOR_MODE_COLOR_TEMP)
+            self._supported_color_modes.add(ColorMode.COLOR_TEMP)
         if self.resource.supports_dimming:
             if len(self._supported_color_modes) == 0:
                 # only add color mode brightness if no color variants
-                self._supported_color_modes.add(COLOR_MODE_BRIGHTNESS)
+                self._supported_color_modes.add(ColorMode.BRIGHTNESS)
             # support transition if brightness control
-            self._attr_supported_features |= SUPPORT_TRANSITION
+            self._attr_supported_features |= LightEntityFeature.TRANSITION
+        # get list of supported effects (combine effects and timed_effects)
+        self._attr_effect_list = []
+        if effects := resource.effects:
+            self._attr_effect_list = [
+                x.value for x in effects.status_values if x != EffectStatus.NO_EFFECT
+            ]
+        if timed_effects := resource.timed_effects:
+            self._attr_effect_list += [
+                x.value
+                for x in timed_effects.status_values
+                if x != TimedEffectStatus.NO_EFFECT
+            ]
+        if len(self._attr_effect_list) > 0:
+            self._attr_effect_list.insert(0, EFFECT_NONE)
+            self._attr_supported_features |= LightEntityFeature.EFFECT
 
     @property
     def brightness(self) -> int | None:
@@ -91,21 +111,23 @@ class HueLight(HueBaseEntity, LightEntity):
         return None
 
     @property
-    def color_mode(self) -> str:
-        """Return the current color mode of the light."""
-        if color_temp := self.resource.color_temperature:
-            if color_temp.mirek_valid and color_temp.mirek is not None:
-                return COLOR_MODE_COLOR_TEMP
-        if self.resource.supports_color:
-            return COLOR_MODE_XY
-        if self.resource.supports_dimming:
-            return COLOR_MODE_BRIGHTNESS
-        return COLOR_MODE_ONOFF
-
-    @property
     def is_on(self) -> bool:
         """Return true if device is on (brightness above 0)."""
         return self.resource.on.on
+
+    @property
+    def color_mode(self) -> ColorMode:
+        """Return the color mode of the light."""
+        if color_temp := self.resource.color_temperature:
+            # Hue lights return `mired_valid` to indicate CT is active
+            if color_temp.mirek_valid and color_temp.mirek is not None:
+                return ColorMode.COLOR_TEMP
+        if self.resource.supports_color:
+            return ColorMode.XY
+        if self.resource.supports_dimming:
+            return ColorMode.BRIGHTNESS
+        # fallback to on_off
+        return ColorMode.ONOFF
 
     @property
     def xy_color(self) -> tuple[float, float] | None:
@@ -148,18 +170,43 @@ class HueLight(HueBaseEntity, LightEntity):
             "dynamics": self.resource.dynamics.status.value,
         }
 
+    @property
+    def effect(self) -> str | None:
+        """Return the current effect."""
+        if effects := self.resource.effects:
+            if effects.status != EffectStatus.NO_EFFECT:
+                return effects.status.value
+        if timed_effects := self.resource.timed_effects:
+            if timed_effects.status != TimedEffectStatus.NO_EFFECT:
+                return timed_effects.status.value
+        return EFFECT_NONE
+
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        transition = kwargs.get(ATTR_TRANSITION)
+        transition = normalize_hue_transition(kwargs.get(ATTR_TRANSITION))
         xy_color = kwargs.get(ATTR_XY_COLOR)
-        color_temp = kwargs.get(ATTR_COLOR_TEMP)
-        brightness = kwargs.get(ATTR_BRIGHTNESS)
-        if brightness is not None:
-            # Hue uses a range of [0, 100] to control brightness.
-            brightness = float((brightness / 255) * 100)
-        if transition is not None:
-            # hue transition duration is in steps of 100 ms
-            transition = int(transition * 100)
+        color_temp = normalize_hue_colortemp(kwargs.get(ATTR_COLOR_TEMP))
+        brightness = normalize_hue_brightness(kwargs.get(ATTR_BRIGHTNESS))
+        flash = kwargs.get(ATTR_FLASH)
+        effect = effect_str = kwargs.get(ATTR_EFFECT)
+        if effect_str in (EFFECT_NONE, EFFECT_NONE.lower()):
+            effect = EffectStatus.NO_EFFECT
+        elif effect_str is not None:
+            # work out if we got a regular effect or timed effect
+            effect = EffectStatus(effect_str)
+            if effect == EffectStatus.UNKNOWN:
+                effect = TimedEffectStatus(effect_str)
+                if transition is None:
+                    # a transition is required for timed effect, default to 10 minutes
+                    transition = 600000
+
+        if flash is not None:
+            await self.async_set_flash(flash)
+            # flash can not be sent with other commands at the same time or result will be flaky
+            # Hue's default behavior is that a light returns to its previous state for short
+            # flash (identify) and the light is kept turned on for long flash (breathe effect)
+            # Why is this flash alert/effect hidden in the turn_on/off commands ?
+            return
 
         await self.bridge.async_request_call(
             self.controller.set_state,
@@ -169,19 +216,32 @@ class HueLight(HueBaseEntity, LightEntity):
             color_xy=xy_color,
             color_temp=color_temp,
             transition_time=transition,
-            allowed_errors=ALLOWED_ERRORS,
+            effect=effect,
         )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
-        transition = kwargs.get(ATTR_TRANSITION)
-        if transition is not None:
-            # hue transition duration is in steps of 100 ms
-            transition = int(transition * 100)
+        transition = normalize_hue_transition(kwargs.get(ATTR_TRANSITION))
+        flash = kwargs.get(ATTR_FLASH)
+
+        if flash is not None:
+            await self.async_set_flash(flash)
+            # flash can not be sent with other commands at the same time or result will be flaky
+            # Hue's default behavior is that a light returns to its previous state for short
+            # flash (identify) and the light is kept turned on for long flash (breathe effect)
+            return
+
         await self.bridge.async_request_call(
             self.controller.set_state,
             id=self.resource.id,
             on=False,
             transition_time=transition,
-            allowed_errors=ALLOWED_ERRORS,
+        )
+
+    async def async_set_flash(self, flash: str) -> None:
+        """Send flash command to light."""
+        await self.bridge.async_request_call(
+            self.controller.set_flash,
+            id=self.resource.id,
+            short=flash == FLASH_SHORT,
         )

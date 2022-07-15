@@ -33,6 +33,7 @@
 - [ ] Bugfix (non-breaking change which fixes an issue)
 - [ ] New integration (thank you!)
 - [ ] New feature (which adds functionality to an existing integration)
+- [ ] Deprecation (breaking change to happen in the future)
 - [ ] Breaking change (fix/feature causing existing functionality to break)
 - [ ] Code quality improvements to existing code or addition of tests
 
@@ -107,7 +108,7 @@ To help with the load of incoming pull requests:
 
 - [ ] I have reviewed two other [open pull requests][prs] in this repository.
 
-[prs]: https://github.com/home-assistant/core/pulls?q=is%3Aopen+is%3Apr+-author%3A%40me+-draft%3Atrue+-label%3Awaiting-for-upstream+sort%3Acreated-desc+review%3Anone
+[prs]: https://github.com/home-assistant/core/pulls?q=is%3Aopen+is%3Apr+-author%3A%40me+-draft%3Atrue+-label%3Awaiting-for-upstream+sort%3Acreated-desc+review%3Anone+-status%3Afailure
 
 <!--
   Thank you for contributing <3

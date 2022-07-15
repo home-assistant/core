@@ -7,13 +7,16 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.components.device_tracker.const import SOURCE_TYPE_GPS
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_ID,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
@@ -29,11 +32,12 @@ from .helpers import device_info
 ATTR_KEYS = (ATTR_ALTITUDE, ATTR_COURSE, ATTR_SPEED, ATTR_VERTICAL_ACCURACY)
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up OwnTracks based off an entry."""
     entity = MobileAppEntity(entry)
     async_add_entities([entity])
-    return True
 
 
 class MobileAppEntity(TrackerEntity, RestoreEntity):
@@ -111,8 +115,10 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
     async def async_added_to_hass(self):
         """Call when entity about to be added to Home Assistant."""
         await super().async_added_to_hass()
-        self._dispatch_unsub = self.hass.helpers.dispatcher.async_dispatcher_connect(
-            SIGNAL_LOCATION_UPDATE.format(self._entry.entry_id), self.update_data
+        self._dispatch_unsub = async_dispatcher_connect(
+            self.hass,
+            SIGNAL_LOCATION_UPDATE.format(self._entry.entry_id),
+            self.update_data,
         )
 
         # Don't restore if we got set up with data.

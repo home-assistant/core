@@ -44,7 +44,7 @@ UPDATE_INTERVAL = timedelta(minutes=5)
 
 @dataclass
 class AwairRequiredKeysMixin:
-    """Mixinf for required keys."""
+    """Mixin for required keys."""
 
     unique_id_tag: str
 

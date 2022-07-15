@@ -6,19 +6,20 @@ from miio.airhumidifier import OperationMode as AirhumidifierOperationMode
 from miio.airhumidifier_miot import OperationMode as AirhumidifierMiotOperationMode
 from miio.airhumidifier_mjjsq import OperationMode as AirhumidifierMjjsqOperationMode
 
-from homeassistant.components.humidifier import HumidifierEntity
-from homeassistant.components.humidifier.const import (
-    DEVICE_CLASS_HUMIDIFIER,
-    SUPPORT_MODES,
+from homeassistant.components.humidifier import (
+    HumidifierDeviceClass,
+    HumidifierEntity,
+    HumidifierEntityFeature,
 )
-from homeassistant.const import ATTR_MODE
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_MODE, CONF_MODEL
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import percentage_to_ranged_value
 
 from .const import (
     CONF_DEVICE,
     CONF_FLOW_TYPE,
-    CONF_MODEL,
     DOMAIN,
     KEY_COORDINATOR,
     KEY_DEVICE,
@@ -58,12 +59,17 @@ AVAILABLE_MODES_OTHER = [
 ]
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Humidifier from a config entry."""
     if not config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
         return
 
-    entities = []
+    entities: list[HumidifierEntity] = []
+    entity: HumidifierEntity
     model = config_entry.data[CONF_MODEL]
     unique_id = config_entry.unique_id
     coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
@@ -105,8 +111,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class XiaomiGenericHumidifier(XiaomiCoordinatedMiioEntity, HumidifierEntity):
     """Representation of a generic Xiaomi humidifier device."""
 
-    _attr_device_class = DEVICE_CLASS_HUMIDIFIER
-    _attr_supported_features = SUPPORT_MODES
+    _attr_device_class = HumidifierDeviceClass.HUMIDIFIER
+    _attr_supported_features = HumidifierEntityFeature.MODES
+    supported_features: int
 
     def __init__(self, name, device, entry, unique_id, coordinator):
         """Initialize the generic Xiaomi device."""
@@ -163,6 +170,8 @@ class XiaomiGenericHumidifier(XiaomiCoordinatedMiioEntity, HumidifierEntity):
 
 class XiaomiAirHumidifier(XiaomiGenericHumidifier, HumidifierEntity):
     """Representation of a Xiaomi Air Humidifier."""
+
+    available_modes: list[str]
 
     def __init__(self, name, device, entry, unique_id, coordinator):
         """Initialize the plug switch."""
@@ -241,7 +250,7 @@ class XiaomiAirHumidifier(XiaomiGenericHumidifier, HumidifierEntity):
         ):
             self._target_humidity = target_humidity
         if (
-            self.supported_features & SUPPORT_MODES == 0
+            self.supported_features & HumidifierEntityFeature.MODES == 0
             or AirhumidifierOperationMode(self._attributes[ATTR_MODE])
             == AirhumidifierOperationMode.Auto
             or AirhumidifierOperationMode.Auto.name not in self.available_modes
@@ -259,7 +268,7 @@ class XiaomiAirHumidifier(XiaomiGenericHumidifier, HumidifierEntity):
 
     async def async_set_mode(self, mode: str) -> None:
         """Set the mode of the humidifier."""
-        if self.supported_features & SUPPORT_MODES == 0 or not mode:
+        if self.supported_features & HumidifierEntityFeature.MODES == 0 or not mode:
             return
 
         if mode not in self.available_modes:
@@ -319,7 +328,7 @@ class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
         ):
             self._target_humidity = target_humidity
         if (
-            self.supported_features & SUPPORT_MODES == 0
+            self.supported_features & HumidifierEntityFeature.MODES == 0
             or AirhumidifierMiotOperationMode(self._attributes[ATTR_MODE])
             == AirhumidifierMiotOperationMode.Auto
         ):
@@ -336,7 +345,7 @@ class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
 
     async def async_set_mode(self, mode: str) -> None:
         """Set the mode of the fan."""
-        if self.supported_features & SUPPORT_MODES == 0 or not mode:
+        if self.supported_features & HumidifierEntityFeature.MODES == 0 or not mode:
             return
 
         if mode not in self.REVERSE_MODE_MAPPING:
@@ -394,7 +403,7 @@ class XiaomiAirHumidifierMjjsq(XiaomiAirHumidifier):
         ):
             self._target_humidity = target_humidity
         if (
-            self.supported_features & SUPPORT_MODES == 0
+            self.supported_features & HumidifierEntityFeature.MODES == 0
             or AirhumidifierMjjsqOperationMode(self._attributes[ATTR_MODE])
             == AirhumidifierMjjsqOperationMode.Humidity
         ):

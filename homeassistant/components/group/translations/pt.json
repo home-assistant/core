@@ -1,4 +1,27 @@
 {
+    "config": {
+        "step": {
+            "media_player": {
+                "data": {
+                    "entities": "Membros"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "fan": {
+                "data": {
+                    "hide_members": "Esconder membros"
+                }
+            },
+            "switch": {
+                "data": {
+                    "hide_members": "Esconder membros"
+                }
+            }
+        }
+    },
     "state": {
         "_": {
             "closed": "Fechada",

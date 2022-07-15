@@ -8,16 +8,21 @@ import hmac
 from logging import getLogger
 from typing import Any
 
-from homeassistant.auth.const import ACCESS_TOKEN_EXPIRATION
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
 
 from . import models
-from .const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY, GROUP_ID_USER
-from .permissions import PermissionLookup, system_policies
+from .const import (
+    ACCESS_TOKEN_EXPIRATION,
+    GROUP_ID_ADMIN,
+    GROUP_ID_READ_ONLY,
+    GROUP_ID_USER,
+)
+from .permissions import system_policies
+from .permissions.models import PermissionLookup
 from .permissions.types import PolicyType
-
-# mypy: disallow-any-generics
 
 STORAGE_VERSION = 1
 STORAGE_KEY = "auth"
@@ -41,8 +46,8 @@ class AuthStore:
         self._users: dict[str, models.User] | None = None
         self._groups: dict[str, models.Group] | None = None
         self._perm_lookup: PermissionLookup | None = None
-        self._store = hass.helpers.storage.Store(
-            STORAGE_VERSION, STORAGE_KEY, private=True, atomic_writes=True
+        self._store = Store[dict[str, list[dict[str, Any]]]](
+            hass, STORAGE_VERSION, STORAGE_KEY, private=True, atomic_writes=True
         )
         self._lock = asyncio.Lock()
 
@@ -300,11 +305,9 @@ class AuthStore:
 
     async def _async_load_task(self) -> None:
         """Load the users."""
-        [ent_reg, dev_reg, data] = await asyncio.gather(
-            self.hass.helpers.entity_registry.async_get_registry(),
-            self.hass.helpers.device_registry.async_get_registry(),
-            self._store.async_load(),
-        )
+        dev_reg = dr.async_get(self.hass)
+        ent_reg = er.async_get(self.hass)
+        data = await self._store.async_load()
 
         # Make sure that we're not overriding data if 2 loads happened at the
         # same time
@@ -313,7 +316,7 @@ class AuthStore:
 
         self._perm_lookup = perm_lookup = PermissionLookup(ent_reg, dev_reg)
 
-        if data is None:
+        if data is None or not isinstance(data, dict):
             self._set_defaults()
             return
 
@@ -480,9 +483,10 @@ class AuthStore:
                 jwt_key=rt_dict["jwt_key"],
                 last_used_at=last_used_at,
                 last_used_ip=rt_dict.get("last_used_ip"),
-                credential=credentials.get(rt_dict.get("credential_id")),
                 version=rt_dict.get("version"),
             )
+            if "credential_id" in rt_dict:
+                token.credential = credentials.get(rt_dict["credential_id"])
             users[rt_dict["user_id"]].refresh_tokens[token.id] = token
 
         self._groups = groups

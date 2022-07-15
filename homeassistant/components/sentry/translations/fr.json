@@ -4,16 +4,14 @@
             "single_instance_allowed": "D\u00e9j\u00e0 configur\u00e9. Une seule configuration possible."
         },
         "error": {
-            "bad_dsn": "DSN invalide",
+            "bad_dsn": "DSN non valide",
             "unknown": "Erreur inattendue"
         },
         "step": {
             "user": {
                 "data": {
-                    "dsn": "DSN"
-                },
-                "description": "Entrez votre DSN Sentry",
-                "title": "Sentry"
+                    "dsn": "DSN Sentry"
+                }
             }
         }
     },

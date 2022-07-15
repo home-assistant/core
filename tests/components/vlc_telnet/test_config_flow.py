@@ -11,11 +11,7 @@ from homeassistant import config_entries
 from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.components.vlc_telnet.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -56,7 +52,7 @@ async def test_user_flow(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
     with patch("homeassistant.components.vlc_telnet.config_flow.Client.connect"), patch(
@@ -73,44 +69,13 @@ async def test_user_flow(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == entry_data["host"]
     assert result["data"] == entry_data
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_import_flow(hass: HomeAssistant) -> None:
-    """Test successful import flow."""
-    test_data = {
-        "password": "test-password",
-        "host": "1.1.1.1",
-        "port": 8888,
-        "name": "custom name",
-    }
-    with patch("homeassistant.components.vlc_telnet.config_flow.Client.connect"), patch(
-        "homeassistant.components.vlc_telnet.config_flow.Client.login"
-    ), patch(
-        "homeassistant.components.vlc_telnet.config_flow.Client.disconnect"
-    ), patch(
-        "homeassistant.components.vlc_telnet.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=test_data,
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == test_data["name"]
-    assert result["data"] == test_data
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-@pytest.mark.parametrize(
-    "source", [config_entries.SOURCE_USER, config_entries.SOURCE_IMPORT]
-)
+@pytest.mark.parametrize("source", [config_entries.SOURCE_USER])
 async def test_abort_already_configured(hass: HomeAssistant, source: str) -> None:
     """Test we handle already configured host."""
     entry_data = {
@@ -129,13 +94,11 @@ async def test_abort_already_configured(hass: HomeAssistant, source: str) -> Non
         data=entry_data,
     )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
-@pytest.mark.parametrize(
-    "source", [config_entries.SOURCE_USER, config_entries.SOURCE_IMPORT]
-)
+@pytest.mark.parametrize("source", [config_entries.SOURCE_USER])
 @pytest.mark.parametrize(
     "error, connect_side_effect, login_side_effect",
     [
@@ -170,7 +133,7 @@ async def test_errors(
             {"password": "test-password"},
         )
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": error}
 
 
@@ -210,7 +173,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert len(mock_setup_entry.mock_calls) == 1
     assert dict(entry.data) == {**entry_data, "password": "new-password"}
@@ -265,7 +228,7 @@ async def test_reauth_errors(
             {"password": "test-password"},
         )
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": error}
 
 
@@ -296,11 +259,11 @@ async def test_hassio_flow(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
 
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-        assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+        assert result2["type"] == FlowResultType.CREATE_ENTRY
         assert result2["title"] == test_data.config["name"]
         assert result2["data"] == test_data.config
         assert len(mock_setup_entry.mock_calls) == 1
@@ -327,7 +290,7 @@ async def test_hassio_already_configured(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
 
 
 @pytest.mark.parametrize(
@@ -369,9 +332,9 @@ async def test_hassio_errors(
         )
         await hass.async_block_till_done()
 
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
 
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-        assert result2["type"] == RESULT_TYPE_ABORT
+        assert result2["type"] == FlowResultType.ABORT
         assert result2["reason"] == error

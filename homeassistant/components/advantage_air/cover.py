@@ -1,13 +1,15 @@
 """Cover platform for Advantage Air integration."""
+from typing import Any
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    SUPPORT_CLOSE,
-    SUPPORT_OPEN,
-    SUPPORT_SET_POSITION,
     CoverDeviceClass,
     CoverEntity,
+    CoverEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     ADVANTAGE_AIR_STATE_CLOSE,
@@ -19,7 +21,11 @@ from .entity import AdvantageAirEntity
 PARALLEL_UPDATES = 0
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up AdvantageAir cover platform."""
 
     instance = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
@@ -37,29 +43,33 @@ class AdvantageAirZoneVent(AdvantageAirEntity, CoverEntity):
     """Advantage Air Cover Class."""
 
     _attr_device_class = CoverDeviceClass.DAMPER
-    _attr_supported_features = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
+    _attr_supported_features = (
+        CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.SET_POSITION
+    )
 
     def __init__(self, instance, ac_key, zone_key):
         """Initialize an Advantage Air Cover Class."""
         super().__init__(instance, ac_key, zone_key)
-        self._attr_name = f'{self._zone["name"]}'
+        self._attr_name = self._zone["name"]
         self._attr_unique_id = (
             f'{self.coordinator.data["system"]["rid"]}-{ac_key}-{zone_key}'
         )
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool:
         """Return if vent is fully closed."""
         return self._zone["state"] == ADVANTAGE_AIR_STATE_CLOSE
 
     @property
-    def current_cover_position(self):
+    def current_cover_position(self) -> int:
         """Return vents current position as a percentage."""
         if self._zone["state"] == ADVANTAGE_AIR_STATE_OPEN:
             return self._zone["value"]
         return 0
 
-    async def async_open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs: Any) -> None:
         """Fully open zone vent."""
         await self.async_change(
             {
@@ -71,7 +81,7 @@ class AdvantageAirZoneVent(AdvantageAirEntity, CoverEntity):
             }
         )
 
-    async def async_close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs: Any) -> None:
         """Fully close zone vent."""
         await self.async_change(
             {
@@ -81,7 +91,7 @@ class AdvantageAirZoneVent(AdvantageAirEntity, CoverEntity):
             }
         )
 
-    async def async_set_cover_position(self, **kwargs):
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Change vent position."""
         position = round(kwargs[ATTR_POSITION] / 5) * 5
         if position == 0:

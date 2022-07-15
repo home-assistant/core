@@ -7,9 +7,9 @@ import voluptuous as vol
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
-    HVAC_MODE_COOL,
-    SUPPORT_FAN_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
 )
 from homeassistant.components.modbus import get_hub
 from homeassistant.components.modbus.const import (
@@ -29,6 +29,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -41,15 +42,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
-
 
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    async_add_entities,
-    discovery_info: DiscoveryInfoType = None,
-):
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Flexit Platform."""
     modbus_slave = config.get(CONF_SLAVE)
     name = config.get(CONF_NAME)
@@ -59,6 +58,10 @@ async def async_setup_platform(
 
 class Flexit(ClimateEntity):
     """Representation of a Flexit AC unit."""
+
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+    )
 
     def __init__(
         self, hub: ModbusHub, modbus_slave: int | None, name: str | None
@@ -70,9 +73,7 @@ class Flexit(ClimateEntity):
         self._target_temperature = None
         self._current_temperature = None
         self._current_fan_mode = None
-        self._current_operation = None
         self._fan_modes = ["Off", "Low", "Medium", "High"]
-        self._current_operation = None
         self._filter_hours = None
         self._filter_alarm = None
         self._heat_recovery = None
@@ -81,11 +82,6 @@ class Flexit(ClimateEntity):
         self._cooling = None
         self._alarm = False
         self._outdoor_air_temp = None
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS
 
     async def async_update(self):
         """Update unit attributes."""
@@ -130,15 +126,15 @@ class Flexit(ClimateEntity):
         )
 
         if self._heating:
-            self._current_operation = "Heating"
+            self._attr_hvac_action = HVACAction.HEATING
         elif self._cooling:
-            self._current_operation = "Cooling"
+            self._attr_hvac_action = HVACAction.COOLING
         elif self._heat_recovery:
-            self._current_operation = "Recovering"
+            self._attr_hvac_action = HVACAction.IDLE
         elif actual_air_speed:
-            self._current_operation = "Fan Only"
+            self._attr_hvac_action = HVACAction.FAN
         else:
-            self._current_operation = "Off"
+            self._attr_hvac_action = HVACAction.OFF
 
     @property
     def extra_state_attributes(self):
@@ -181,7 +177,7 @@ class Flexit(ClimateEntity):
     @property
     def hvac_mode(self):
         """Return current operation ie. heat, cool, idle."""
-        return self._current_operation
+        return HVACMode.COOL
 
     @property
     def hvac_modes(self) -> list[str]:
@@ -189,7 +185,7 @@ class Flexit(ClimateEntity):
 
         Need to be a subset of HVAC_MODES.
         """
-        return [HVAC_MODE_COOL]
+        return [HVACMode.COOL]
 
     @property
     def fan_mode(self):

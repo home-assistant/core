@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/xiaomi_tv",
   "requirements": ["pymitv==1.4.3"],
   "codeowners": ["@simse"],
-  "iot_class": "assumed_state"
+  "iot_class": "assumed_state",
+  "loggers": ["pymitv"]
 }

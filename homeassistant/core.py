@@ -7,7 +7,14 @@ of entities and react to changes.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Collection, Coroutine, Iterable, Mapping
+from collections.abc import (
+    Awaitable,
+    Callable,
+    Collection,
+    Coroutine,
+    Iterable,
+    Mapping,
+)
 import datetime
 import enum
 import functools
@@ -17,20 +24,28 @@ import pathlib
 import re
 import threading
 from time import monotonic
-from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Callable, Optional, TypeVar, cast
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Generic,
+    NamedTuple,
+    Optional,
+    TypeVar,
+    Union,
+    cast,
+    overload,
+)
 from urllib.parse import urlparse
 
-import attr
+from typing_extensions import ParamSpec
 import voluptuous as vol
 import yarl
 
-from homeassistant import async_timeout_backcompat, block_async_io, loader, util
-from homeassistant.const import (
+from . import block_async_io, loader, util
+from .backports.enum import StrEnum
+from .const import (
     ATTR_DOMAIN,
     ATTR_FRIENDLY_NAME,
-    ATTR_NOW,
-    ATTR_SECONDS,
     ATTR_SERVICE,
     ATTR_SERVICE_DATA,
     CONF_UNIT_SYSTEM_IMPERIAL,
@@ -44,15 +59,13 @@ from homeassistant.const import (
     EVENT_SERVICE_REGISTERED,
     EVENT_SERVICE_REMOVED,
     EVENT_STATE_CHANGED,
-    EVENT_TIME_CHANGED,
-    EVENT_TIMER_OUT_OF_SYNC,
     LENGTH_METERS,
     MATCH_ALL,
     MAX_LENGTH_EVENT_EVENT_TYPE,
     MAX_LENGTH_STATE_STATE,
     __version__,
 )
-from homeassistant.exceptions import (
+from .exceptions import (
     HomeAssistantError,
     InvalidEntityFormatError,
     InvalidStateError,
@@ -60,37 +73,37 @@ from homeassistant.exceptions import (
     ServiceNotFound,
     Unauthorized,
 )
-from homeassistant.util import location
-from homeassistant.util.async_ import (
+from .util import dt as dt_util, location, ulid as ulid_util
+from .util.async_ import (
     fire_coroutine_threadsafe,
     run_callback_threadsafe,
     shutdown_run_callback_threadsafe,
 )
-import homeassistant.util.dt as dt_util
-from homeassistant.util.timeout import TimeoutManager
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
-import homeassistant.util.uuid as uuid_util
+from .util.read_only_dict import ReadOnlyDict
+from .util.timeout import TimeoutManager
+from .util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
 
 # Typing imports that create a circular dependency
 if TYPE_CHECKING:
-    from homeassistant.auth import AuthManager
-    from homeassistant.components.http import HomeAssistantHTTP
-    from homeassistant.config_entries import ConfigEntries
+    from .auth import AuthManager
+    from .components.http import ApiConfig, HomeAssistantHTTP
+    from .config_entries import ConfigEntries
 
 
 STAGE_1_SHUTDOWN_TIMEOUT = 100
 STAGE_2_SHUTDOWN_TIMEOUT = 60
 STAGE_3_SHUTDOWN_TIMEOUT = 30
 
-async_timeout_backcompat.enable()
 block_async_io.enable()
 
-T = TypeVar("T")
-_UNDEF: dict = {}  # Internal; not helpers.typing.UNDEFINED due to circular dependency
-# pylint: disable=invalid-name
-CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)
-CALLBACK_TYPE = Callable[[], None]
-# pylint: enable=invalid-name
+_T = TypeVar("_T")
+_R = TypeVar("_R")
+_R_co = TypeVar("_R_co", covariant=True)
+_P = ParamSpec("_P")
+# Internal; not helpers.typing.UNDEFINED due to circular dependency
+_UNDEF: dict[Any, Any] = {}
+_CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
+CALLBACK_TYPE = Callable[[], None]  # pylint: disable=invalid-name
 
 CORE_STORAGE_KEY = "core.config"
 CORE_STORAGE_VERSION = 1
@@ -103,20 +116,36 @@ BLOCK_LOG_TIMEOUT = 60
 # How long we wait for the result of a service call
 SERVICE_CALL_LIMIT = 10  # seconds
 
-# Source of core configuration
-SOURCE_DISCOVERED = "discovered"
-SOURCE_STORAGE = "storage"
-SOURCE_YAML = "yaml"
+
+class ConfigSource(StrEnum):
+    """Source of core configuration."""
+
+    DEFAULT = "default"
+    DISCOVERED = "discovered"
+    STORAGE = "storage"
+    YAML = "yaml"
+
+
+# SOURCE_* are deprecated as of Home Assistant 2022.2, use ConfigSource instead
+SOURCE_DISCOVERED = ConfigSource.DISCOVERED.value
+SOURCE_STORAGE = ConfigSource.STORAGE.value
+SOURCE_YAML = ConfigSource.YAML.value
 
 # How long to wait until things that run on startup have to finish.
 TIMEOUT_EVENT_START = 15
 
+MAX_EXPECTED_ENTITY_IDS = 16384
+
 _LOGGER = logging.getLogger(__name__)
 
 
-def split_entity_id(entity_id: str) -> list[str]:
+@functools.lru_cache(MAX_EXPECTED_ENTITY_IDS)
+def split_entity_id(entity_id: str) -> tuple[str, str]:
     """Split a state entity ID into domain and object ID."""
-    return entity_id.split(".", 1)
+    domain, _, object_id = entity_id.partition(".")
+    if not domain or not object_id:
+        raise ValueError(f"Invalid entity ID {entity_id}")
+    return domain, object_id
 
 
 VALID_ENTITY_ID = re.compile(r"^(?!.+__)(?!_)[\da-z_]+(?<!_)\.(?!_)[\da-z_]+(?<!_)$")
@@ -135,7 +164,7 @@ def valid_state(state: str) -> bool:
     return len(state) <= MAX_LENGTH_STATE_STATE
 
 
-def callback(func: CALLABLE_T) -> CALLABLE_T:
+def callback(func: _CallableT) -> _CallableT:
     """Annotation to mark method as safe to call from within the event loop."""
     setattr(func, "_hass_callback", True)
     return func
@@ -155,7 +184,7 @@ class HassJobType(enum.Enum):
     Executor = 3
 
 
-class HassJob:
+class HassJob(Generic[_P, _R_co]):
     """Represent a job to be run later.
 
     We check the callable type in advance
@@ -165,20 +194,17 @@ class HassJob:
 
     __slots__ = ("job_type", "target")
 
-    def __init__(self, target: Callable) -> None:
+    def __init__(self, target: Callable[_P, _R_co]) -> None:
         """Create a job object."""
-        if asyncio.iscoroutine(target):
-            raise ValueError("Coroutine not allowed to be passed to HassJob")
-
         self.target = target
-        self.job_type = _get_callable_job_type(target)
+        self.job_type = _get_hassjob_callable_job_type(target)
 
     def __repr__(self) -> str:
         """Return the job."""
         return f"<Job {self.job_type} {self.target}>"
 
 
-def _get_callable_job_type(target: Callable) -> HassJobType:
+def _get_hassjob_callable_job_type(target: Callable[..., Any]) -> HassJobType:
     """Determine the job type from the callable."""
     # Check for partials to properly determine if coroutine function
     check_target = target
@@ -189,6 +215,8 @@ def _get_callable_job_type(target: Callable) -> HassJobType:
         return HassJobType.Coroutinefunction
     if is_callback(check_target):
         return HassJobType.Callback
+    if asyncio.iscoroutine(check_target):
+        raise ValueError("Coroutine not allowed to be passed to HassJob")
     return HassJobType.Executor
 
 
@@ -211,13 +239,13 @@ class HomeAssistant:
     """Root object of the Home Assistant home automation."""
 
     auth: AuthManager
-    http: HomeAssistantHTTP = None  # type: ignore
-    config_entries: ConfigEntries = None  # type: ignore
+    http: HomeAssistantHTTP = None  # type: ignore[assignment]
+    config_entries: ConfigEntries = None  # type: ignore[assignment]
 
     def __init__(self) -> None:
         """Initialize new Home Assistant object."""
         self.loop = asyncio.get_running_loop()
-        self._pending_tasks: list = []
+        self._pending_tasks: list[asyncio.Future[Any]] = []
         self._track_task = True
         self.bus = EventBus(self)
         self.services = ServiceRegistry(self)
@@ -226,7 +254,7 @@ class HomeAssistant:
         self.components = loader.Components(self)
         self.helpers = loader.Helpers(self)
         # This is a dictionary that any component can store any data on.
-        self.data: dict = {}
+        self.data: dict[str, Any] = {}
         self.state: CoreState = CoreState.not_running
         self.exit_code: int = 0
         # If not None, use to signal end-of-loop
@@ -275,7 +303,7 @@ class HomeAssistant:
         await self.async_start()
         if attach_signals:
             # pylint: disable=import-outside-toplevel
-            from homeassistant.helpers.signal import async_register_signal_handling
+            from .helpers.signal import async_register_signal_handling
 
             async_register_signal_handling(self)
 
@@ -320,10 +348,14 @@ class HomeAssistant:
         self.state = CoreState.running
         self.bus.async_fire(EVENT_CORE_CONFIG_UPDATE)
         self.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-        _async_create_timer(self)
 
-    def add_job(self, target: Callable[..., Any], *args: Any) -> None:
-        """Add job to the executor pool.
+    def add_job(
+        self, target: Callable[..., Any] | Coroutine[Any, Any, Any], *args: Any
+    ) -> None:
+        """Add a job to be executed by the event loop or by an executor.
+
+        If the job is either a coroutine or decorated with @callback, it will be
+        run by the event loop, if not it will be run by an executor.
 
         target: target to call.
         args: parameters for method to call.
@@ -332,11 +364,37 @@ class HomeAssistant:
             raise ValueError("Don't call add_job with None")
         self.loop.call_soon_threadsafe(self.async_add_job, target, *args)
 
+    @overload
     @callback
     def async_add_job(
-        self, target: Callable[..., Any], *args: Any
-    ) -> asyncio.Future | None:
-        """Add a job from within the event loop.
+        self, target: Callable[..., Coroutine[Any, Any, _R]], *args: Any
+    ) -> asyncio.Future[_R] | None:
+        ...
+
+    @overload
+    @callback
+    def async_add_job(
+        self, target: Callable[..., Coroutine[Any, Any, _R] | _R], *args: Any
+    ) -> asyncio.Future[_R] | None:
+        ...
+
+    @overload
+    @callback
+    def async_add_job(
+        self, target: Coroutine[Any, Any, _R], *args: Any
+    ) -> asyncio.Future[_R] | None:
+        ...
+
+    @callback
+    def async_add_job(
+        self,
+        target: Callable[..., Coroutine[Any, Any, _R] | _R] | Coroutine[Any, Any, _R],
+        *args: Any,
+    ) -> asyncio.Future[_R] | None:
+        """Add a job to be executed by the event loop or by an executor.
+
+        If the job is either a coroutine or decorated with @callback, it will be
+        run by the event loop, if not it will be run by an executor.
 
         This method must be run in the event loop.
 
@@ -347,27 +405,60 @@ class HomeAssistant:
             raise ValueError("Don't call async_add_job with None")
 
         if asyncio.iscoroutine(target):
-            return self.async_create_task(cast(Coroutine, target))
+            return self.async_create_task(target)
 
+        # This code path is performance sensitive and uses
+        # if TYPE_CHECKING to avoid the overhead of constructing
+        # the type used for the cast. For history see:
+        # https://github.com/home-assistant/core/pull/71960
+        if TYPE_CHECKING:
+            target = cast(Callable[..., Union[Coroutine[Any, Any, _R], _R]], target)
         return self.async_add_hass_job(HassJob(target), *args)
 
+    @overload
     @callback
-    def async_add_hass_job(self, hassjob: HassJob, *args: Any) -> asyncio.Future | None:
+    def async_add_hass_job(
+        self, hassjob: HassJob[..., Coroutine[Any, Any, _R]], *args: Any
+    ) -> asyncio.Future[_R] | None:
+        ...
+
+    @overload
+    @callback
+    def async_add_hass_job(
+        self, hassjob: HassJob[..., Coroutine[Any, Any, _R] | _R], *args: Any
+    ) -> asyncio.Future[_R] | None:
+        ...
+
+    @callback
+    def async_add_hass_job(
+        self, hassjob: HassJob[..., Coroutine[Any, Any, _R] | _R], *args: Any
+    ) -> asyncio.Future[_R] | None:
         """Add a HassJob from within the event loop.
 
         This method must be run in the event loop.
         hassjob: HassJob to call.
         args: parameters for method to call.
         """
+        task: asyncio.Future[_R]
+        # This code path is performance sensitive and uses
+        # if TYPE_CHECKING to avoid the overhead of constructing
+        # the type used for the cast. For history see:
+        # https://github.com/home-assistant/core/pull/71960
         if hassjob.job_type == HassJobType.Coroutinefunction:
+            if TYPE_CHECKING:
+                hassjob.target = cast(
+                    Callable[..., Coroutine[Any, Any, _R]], hassjob.target
+                )
             task = self.loop.create_task(hassjob.target(*args))
         elif hassjob.job_type == HassJobType.Callback:
+            if TYPE_CHECKING:
+                hassjob.target = cast(Callable[..., _R], hassjob.target)
             self.loop.call_soon(hassjob.target, *args)
             return None
         else:
-            task = self.loop.run_in_executor(  # type: ignore
-                None, hassjob.target, *args
-            )
+            if TYPE_CHECKING:
+                hassjob.target = cast(Callable[..., _R], hassjob.target)
+            task = self.loop.run_in_executor(None, hassjob.target, *args)
 
         # If a task is scheduled
         if self._track_task:
@@ -375,7 +466,7 @@ class HomeAssistant:
 
         return task
 
-    def create_task(self, target: Awaitable) -> None:
+    def create_task(self, target: Coroutine[Any, Any, Any]) -> None:
         """Add task to the executor pool.
 
         target: target to call.
@@ -383,14 +474,14 @@ class HomeAssistant:
         self.loop.call_soon_threadsafe(self.async_create_task, target)
 
     @callback
-    def async_create_task(self, target: Awaitable) -> asyncio.Task:
+    def async_create_task(self, target: Coroutine[Any, Any, _R]) -> asyncio.Task[_R]:
         """Create a task from within the eventloop.
 
         This method must be run in the event loop.
 
         target: target to call.
         """
-        task: asyncio.Task = self.loop.create_task(target)
+        task = self.loop.create_task(target)
 
         if self._track_task:
             self._pending_tasks.append(task)
@@ -399,8 +490,8 @@ class HomeAssistant:
 
     @callback
     def async_add_executor_job(
-        self, target: Callable[..., T], *args: Any
-    ) -> Awaitable[T]:
+        self, target: Callable[..., _T], *args: Any
+    ) -> asyncio.Future[_T]:
         """Add an executor job from within the event loop."""
         task = self.loop.run_in_executor(None, target, *args)
 
@@ -420,8 +511,24 @@ class HomeAssistant:
         """Stop track tasks so you can't wait for all tasks to be done."""
         self._track_task = False
 
+    @overload
     @callback
-    def async_run_hass_job(self, hassjob: HassJob, *args: Any) -> asyncio.Future | None:
+    def async_run_hass_job(
+        self, hassjob: HassJob[..., Coroutine[Any, Any, _R]], *args: Any
+    ) -> asyncio.Future[_R] | None:
+        ...
+
+    @overload
+    @callback
+    def async_run_hass_job(
+        self, hassjob: HassJob[..., Coroutine[Any, Any, _R] | _R], *args: Any
+    ) -> asyncio.Future[_R] | None:
+        ...
+
+    @callback
+    def async_run_hass_job(
+        self, hassjob: HassJob[..., Coroutine[Any, Any, _R] | _R], *args: Any
+    ) -> asyncio.Future[_R] | None:
         """Run a HassJob from within the event loop.
 
         This method must be run in the event loop.
@@ -429,16 +536,45 @@ class HomeAssistant:
         hassjob: HassJob
         args: parameters for method to call.
         """
+        # This code path is performance sensitive and uses
+        # if TYPE_CHECKING to avoid the overhead of constructing
+        # the type used for the cast. For history see:
+        # https://github.com/home-assistant/core/pull/71960
         if hassjob.job_type == HassJobType.Callback:
+            if TYPE_CHECKING:
+                hassjob.target = cast(Callable[..., _R], hassjob.target)
             hassjob.target(*args)
             return None
 
         return self.async_add_hass_job(hassjob, *args)
 
+    @overload
     @callback
     def async_run_job(
-        self, target: Callable[..., None | Awaitable], *args: Any
-    ) -> asyncio.Future | None:
+        self, target: Callable[..., Coroutine[Any, Any, _R]], *args: Any
+    ) -> asyncio.Future[_R] | None:
+        ...
+
+    @overload
+    @callback
+    def async_run_job(
+        self, target: Callable[..., Coroutine[Any, Any, _R] | _R], *args: Any
+    ) -> asyncio.Future[_R] | None:
+        ...
+
+    @overload
+    @callback
+    def async_run_job(
+        self, target: Coroutine[Any, Any, _R], *args: Any
+    ) -> asyncio.Future[_R] | None:
+        ...
+
+    @callback
+    def async_run_job(
+        self,
+        target: Callable[..., Coroutine[Any, Any, _R] | _R] | Coroutine[Any, Any, _R],
+        *args: Any,
+    ) -> asyncio.Future[_R] | None:
         """Run a job from within the event loop.
 
         This method must be run in the event loop.
@@ -447,8 +583,14 @@ class HomeAssistant:
         args: parameters for method to call.
         """
         if asyncio.iscoroutine(target):
-            return self.async_create_task(cast(Coroutine, target))
+            return self.async_create_task(target)
 
+        # This code path is performance sensitive and uses
+        # if TYPE_CHECKING to avoid the overhead of constructing
+        # the type used for the cast. For history see:
+        # https://github.com/home-assistant/core/pull/71960
+        if TYPE_CHECKING:
+            target = cast(Callable[..., Union[Coroutine[Any, Any, _R], _R]], target)
         return self.async_run_hass_job(HassJob(target), *args)
 
     def block_till_done(self) -> None:
@@ -488,7 +630,6 @@ class HomeAssistant:
 
     async def _await_and_log_pending(self, pending: Iterable[Awaitable[Any]]) -> None:
         """Await and log tasks that take a long time."""
-        # pylint: disable=no-self-use
         wait_time = 0
         while pending:
             _, pending = await asyncio.wait(pending, timeout=BLOCK_LOG_TIMEOUT)
@@ -576,13 +717,26 @@ class HomeAssistant:
             self._stopped.set()
 
 
-@attr.s(slots=True, frozen=True)
 class Context:
     """The context that triggered something."""
 
-    user_id: str = attr.ib(default=None)
-    parent_id: str | None = attr.ib(default=None)
-    id: str = attr.ib(factory=uuid_util.random_uuid_hex)
+    __slots__ = ("user_id", "parent_id", "id", "origin_event")
+
+    def __init__(
+        self,
+        user_id: str | None = None,
+        parent_id: str | None = None,
+        id: str | None = None,  # pylint: disable=redefined-builtin
+    ) -> None:
+        """Init the context."""
+        self.id = id or ulid_util.ulid()
+        self.user_id = user_id
+        self.parent_id = parent_id
+        self.origin_event: Event | None = None
+
+    def __eq__(self, other: Any) -> bool:
+        """Compare contexts."""
+        return bool(self.__class__ == other.__class__ and self.id == other.id)
 
     def as_dict(self) -> dict[str, str | None]:
         """Return a dictionary representation of the context."""
@@ -618,7 +772,9 @@ class Event:
         self.data = data or {}
         self.origin = origin
         self.time_fired = time_fired or dt_util.utcnow()
-        self.context: Context = context or Context()
+        self.context: Context = context or Context(
+            id=ulid_util.ulid(dt_util.utc_to_timestamp(self.time_fired))
+        )
 
     def __hash__(self) -> int:
         """Make hashable."""
@@ -647,7 +803,7 @@ class Event:
 
     def __eq__(self, other: Any) -> bool:
         """Return the comparison."""
-        return (  # type: ignore
+        return (  # type: ignore[no-any-return]
             self.__class__ == other.__class__
             and self.event_type == other.event_type
             and self.data == other.data
@@ -657,12 +813,20 @@ class Event:
         )
 
 
+class _FilterableJob(NamedTuple):
+    """Event listener job to be executed with optional filter."""
+
+    job: HassJob[[Event], None | Awaitable[None]]
+    event_filter: Callable[[Event], bool] | None
+    run_immediately: bool
+
+
 class EventBus:
     """Allow the firing of and listening for events."""
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize a new event bus."""
-        self._listeners: dict[str, list[tuple[HassJob, Callable | None]]] = {}
+        self._listeners: dict[str, list[_FilterableJob]] = {}
         self._hass = hass
 
     @callback
@@ -681,7 +845,7 @@ class EventBus:
     def fire(
         self,
         event_type: str,
-        event_data: dict | None = None,
+        event_data: dict[str, Any] | None = None,
         origin: EventOrigin = EventOrigin.local,
         context: Context | None = None,
     ) -> None:
@@ -710,20 +874,21 @@ class EventBus:
 
         listeners = self._listeners.get(event_type, [])
 
-        # EVENT_HOMEASSISTANT_CLOSE should go only to his listeners
+        # EVENT_HOMEASSISTANT_CLOSE should go only to this listeners
         match_all_listeners = self._listeners.get(MATCH_ALL)
         if match_all_listeners is not None and event_type != EVENT_HOMEASSISTANT_CLOSE:
             listeners = match_all_listeners + listeners
 
         event = Event(event_type, event_data, origin, time_fired, context)
+        if not event.context.origin_event:
+            event.context.origin_event = event
 
-        if event_type != EVENT_TIME_CHANGED:
-            _LOGGER.debug("Bus:Handling %s", event)
+        _LOGGER.debug("Bus:Handling %s", event)
 
         if not listeners:
             return
 
-        for job, event_filter in listeners:
+        for job, event_filter, run_immediately in listeners:
             if event_filter is not None:
                 try:
                     if not event_filter(event):
@@ -731,9 +896,19 @@ class EventBus:
                 except Exception:  # pylint: disable=broad-except
                     _LOGGER.exception("Error in event filter")
                     continue
-            self._hass.async_add_hass_job(job, event)
+            if run_immediately:
+                try:
+                    job.target(event)
+                except Exception:  # pylint: disable=broad-except
+                    _LOGGER.exception("Error running job: %s", job)
+            else:
+                self._hass.async_add_hass_job(job, event)
 
-    def listen(self, event_type: str, listener: Callable) -> CALLBACK_TYPE:
+    def listen(
+        self,
+        event_type: str,
+        listener: Callable[[Event], None | Awaitable[None]],
+    ) -> CALLBACK_TYPE:
         """Listen for all events or events of a specific type.
 
         To listen to all events specify the constant ``MATCH_ALL``
@@ -753,8 +928,9 @@ class EventBus:
     def async_listen(
         self,
         event_type: str,
-        listener: Callable,
-        event_filter: Callable | None = None,
+        listener: Callable[[Event], None | Awaitable[None]],
+        event_filter: Callable[[Event], bool] | None = None,
+        run_immediately: bool = False,
     ) -> CALLBACK_TYPE:
         """Listen for all events or events of a specific type.
 
@@ -765,17 +941,23 @@ class EventBus:
         @callback that returns a boolean value, determines if the
         listener callable should run.
 
+        If run_immediately is passed, the callback will be run
+        right away instead of using call_soon. Only use this if
+        the callback results in scheduling another task.
+
         This method must be run in the event loop.
         """
         if event_filter is not None and not is_callback(event_filter):
             raise HomeAssistantError(f"Event filter {event_filter} is not a callback")
+        if run_immediately and not is_callback(listener):
+            raise HomeAssistantError(f"Event listener {listener} is not a callback")
         return self._async_listen_filterable_job(
-            event_type, (HassJob(listener), event_filter)
+            event_type, _FilterableJob(HassJob(listener), event_filter, run_immediately)
         )
 
     @callback
     def _async_listen_filterable_job(
-        self, event_type: str, filterable_job: tuple[HassJob, Callable | None]
+        self, event_type: str, filterable_job: _FilterableJob
     ) -> CALLBACK_TYPE:
         self._listeners.setdefault(event_type, []).append(filterable_job)
 
@@ -786,7 +968,7 @@ class EventBus:
         return remove_listener
 
     def listen_once(
-        self, event_type: str, listener: Callable[[Event], None]
+        self, event_type: str, listener: Callable[[Event], None | Awaitable[None]]
     ) -> CALLBACK_TYPE:
         """Listen once for event of a specific type.
 
@@ -806,7 +988,9 @@ class EventBus:
         return remove_listener
 
     @callback
-    def async_listen_once(self, event_type: str, listener: Callable) -> CALLBACK_TYPE:
+    def async_listen_once(
+        self, event_type: str, listener: Callable[[Event], None | Awaitable[None]]
+    ) -> CALLBACK_TYPE:
         """Listen once for event of a specific type.
 
         To listen to all events specify the constant ``MATCH_ALL``
@@ -816,7 +1000,7 @@ class EventBus:
 
         This method must be run in the event loop.
         """
-        filterable_job: tuple[HassJob, Callable | None] | None = None
+        filterable_job: _FilterableJob | None = None
 
         @callback
         def _onetime_listener(event: Event) -> None:
@@ -838,13 +1022,13 @@ class EventBus:
             _onetime_listener, listener, ("__name__", "__qualname__", "__module__"), []
         )
 
-        filterable_job = (HassJob(_onetime_listener), None)
+        filterable_job = _FilterableJob(HassJob(_onetime_listener), None, False)
 
         return self._async_listen_filterable_job(event_type, filterable_job)
 
     @callback
     def _async_remove_listener(
-        self, event_type: str, filterable_job: tuple[HassJob, Callable | None]
+        self, event_type: str, filterable_job: _FilterableJob
     ) -> None:
         """Remove a listener of a specific event_type.
 
@@ -862,6 +1046,9 @@ class EventBus:
             _LOGGER.exception(
                 "Unable to remove unknown job listener %s", filterable_job
             )
+
+
+_StateT = TypeVar("_StateT", bound="State")
 
 
 class State:
@@ -916,12 +1103,19 @@ class State:
 
         self.entity_id = entity_id.lower()
         self.state = state
-        self.attributes = MappingProxyType(attributes or {})
+        self.attributes = ReadOnlyDict(attributes or {})
         self.last_updated = last_updated or dt_util.utcnow()
         self.last_changed = last_changed or self.last_updated
         self.context = context or Context()
         self.domain, self.object_id = split_entity_id(self.entity_id)
-        self._as_dict: dict[str, Collection[Any]] | None = None
+        self._as_dict: ReadOnlyDict[str, Collection[Any]] | None = None
+
+    def __hash__(self) -> int:
+        """Make the state hashable.
+
+        State objects are effectively immutable.
+        """
+        return hash((id(self), self.last_updated))
 
     @property
     def name(self) -> str:
@@ -930,7 +1124,7 @@ class State:
             "_", " "
         )
 
-    def as_dict(self) -> dict:
+    def as_dict(self) -> ReadOnlyDict[str, Collection[Any]]:
         """Return a dict representation of the State.
 
         Async friendly.
@@ -944,18 +1138,20 @@ class State:
                 last_updated_isoformat = last_changed_isoformat
             else:
                 last_updated_isoformat = self.last_updated.isoformat()
-            self._as_dict = {
-                "entity_id": self.entity_id,
-                "state": self.state,
-                "attributes": dict(self.attributes),
-                "last_changed": last_changed_isoformat,
-                "last_updated": last_updated_isoformat,
-                "context": self.context.as_dict(),
-            }
+            self._as_dict = ReadOnlyDict(
+                {
+                    "entity_id": self.entity_id,
+                    "state": self.state,
+                    "attributes": self.attributes,
+                    "last_changed": last_changed_isoformat,
+                    "last_updated": last_updated_isoformat,
+                    "context": ReadOnlyDict(self.context.as_dict()),
+                }
+            )
         return self._as_dict
 
     @classmethod
-    def from_dict(cls, json_dict: dict) -> Any:
+    def from_dict(cls: type[_StateT], json_dict: dict[str, Any]) -> _StateT | None:
         """Initialize a state from a dict.
 
         Async friendly.
@@ -987,9 +1183,27 @@ class State:
             context,
         )
 
+    def expire(self) -> None:
+        """Mark the state as old.
+
+        We give up the original reference to the context to ensure
+        the context can be garbage collected by replacing it with
+        a new one with the same id to ensure the old state
+        can still be examined for comparison against the new state.
+
+        Since we are always going to fire a EVENT_STATE_CHANGED event
+        after we remove a state from the state machine we need to make
+        sure we don't end up holding a reference to the original context
+        since it can never be garbage collected as each event would
+        reference the previous one.
+        """
+        self.context = Context(
+            self.context.user_id, self.context.parent_id, self.context.id
+        )
+
     def __eq__(self, other: Any) -> bool:
         """Return the comparison of the state."""
-        return (  # type: ignore
+        return (  # type: ignore[no-any-return]
             self.__class__ == other.__class__
             and self.entity_id == other.entity_id
             and self.state == other.state
@@ -1026,7 +1240,7 @@ class StateMachine:
 
     @callback
     def async_entity_ids(
-        self, domain_filter: str | Iterable | None = None
+        self, domain_filter: str | Iterable[str] | None = None
     ) -> list[str]:
         """List of entity ids that are being tracked.
 
@@ -1046,7 +1260,7 @@ class StateMachine:
 
     @callback
     def async_entity_ids_count(
-        self, domain_filter: str | Iterable | None = None
+        self, domain_filter: str | Iterable[str] | None = None
     ) -> int:
         """Count the entity ids that are being tracked.
 
@@ -1062,14 +1276,16 @@ class StateMachine:
             [None for state in self._states.values() if state.domain in domain_filter]
         )
 
-    def all(self, domain_filter: str | Iterable | None = None) -> list[State]:
+    def all(self, domain_filter: str | Iterable[str] | None = None) -> list[State]:
         """Create a list of all states."""
         return run_callback_threadsafe(
             self._loop, self.async_all, domain_filter
         ).result()
 
     @callback
-    def async_all(self, domain_filter: str | Iterable | None = None) -> list[State]:
+    def async_all(
+        self, domain_filter: str | Iterable[str] | None = None
+    ) -> list[State]:
         """Create a list of all states matching the filter.
 
         This method must be run in the event loop.
@@ -1125,6 +1341,7 @@ class StateMachine:
         if old_state is None:
             return False
 
+        old_state.expire()
         self._bus.async_fire(
             EVENT_STATE_CHANGED,
             {"entity_id": entity_id, "old_state": old_state, "new_state": None},
@@ -1208,17 +1425,16 @@ class StateMachine:
             last_changed = None
         else:
             same_state = old_state.state == new_state and not force_update
-            same_attr = old_state.attributes == MappingProxyType(attributes)
+            same_attr = old_state.attributes == attributes
             last_changed = old_state.last_changed if same_state else None
 
         if same_state and same_attr:
             return
 
-        if context is None:
-            context = Context()
-
         now = dt_util.utcnow()
 
+        if context is None:
+            context = Context(id=ulid_util.ulid(dt_util.utc_to_timestamp(now)))
         state = State(
             entity_id,
             new_state,
@@ -1228,6 +1444,8 @@ class StateMachine:
             context,
             old_state is None,
         )
+        if old_state is not None:
+            old_state.expire()
         self._states[entity_id] = state
         self._bus.async_fire(
             EVENT_STATE_CHANGED,
@@ -1245,7 +1463,7 @@ class Service:
 
     def __init__(
         self,
-        func: Callable,
+        func: Callable[[ServiceCall], None | Awaitable[None]],
         schema: vol.Schema | None,
         context: Context | None = None,
     ) -> None:
@@ -1263,13 +1481,13 @@ class ServiceCall:
         self,
         domain: str,
         service: str,
-        data: dict | None = None,
+        data: dict[str, Any] | None = None,
         context: Context | None = None,
     ) -> None:
         """Initialize a service call."""
         self.domain = domain.lower()
         self.service = service.lower()
-        self.data = MappingProxyType(data or {})
+        self.data = ReadOnlyDict(data or {})
         self.context = context or Context()
 
     def __repr__(self) -> str:
@@ -1315,7 +1533,7 @@ class ServiceRegistry:
         self,
         domain: str,
         service: str,
-        service_func: Callable,
+        service_func: Callable[[ServiceCall], Awaitable[None] | None],
         schema: vol.Schema | None = None,
     ) -> None:
         """
@@ -1332,7 +1550,7 @@ class ServiceRegistry:
         self,
         domain: str,
         service: str,
-        service_func: Callable,
+        service_func: Callable[[ServiceCall], Awaitable[None] | None],
         schema: vol.Schema | None = None,
     ) -> None:
         """
@@ -1387,11 +1605,11 @@ class ServiceRegistry:
         self,
         domain: str,
         service: str,
-        service_data: dict | None = None,
+        service_data: dict[str, Any] | None = None,
         blocking: bool = False,
         context: Context | None = None,
         limit: float | None = SERVICE_CALL_LIMIT,
-        target: dict | None = None,
+        target: dict[str, Any] | None = None,
     ) -> bool | None:
         """
         Call a service.
@@ -1409,11 +1627,11 @@ class ServiceRegistry:
         self,
         domain: str,
         service: str,
-        service_data: dict | None = None,
+        service_data: dict[str, Any] | None = None,
         blocking: bool = False,
         context: Context | None = None,
         limit: float | None = SERVICE_CALL_LIMIT,
-        target: dict | None = None,
+        target: dict[str, Any] | None = None,
     ) -> bool | None:
         """
         Call a service.
@@ -1446,7 +1664,7 @@ class ServiceRegistry:
 
         if handler.schema:
             try:
-                processed_data = handler.schema(service_data)
+                processed_data: dict[str, Any] = handler.schema(service_data)
             except vol.Invalid:
                 _LOGGER.debug(
                     "Invalid data for service call %s.%s: %s",
@@ -1502,7 +1720,9 @@ class ServiceRegistry:
         return False
 
     def _run_service_in_background(
-        self, coro_or_task: Coroutine | asyncio.Task, service_call: ServiceCall
+        self,
+        coro_or_task: Coroutine[Any, Any, None] | asyncio.Task[None],
+        service_call: ServiceCall,
     ) -> None:
         """Run service call in background, catching and logging any exceptions."""
 
@@ -1527,11 +1747,15 @@ class ServiceRegistry:
     ) -> None:
         """Execute a service."""
         if handler.job.job_type == HassJobType.Coroutinefunction:
-            await handler.job.target(service_call)
+            await cast(Callable[[ServiceCall], Awaitable[None]], handler.job.target)(
+                service_call
+            )
         elif handler.job.job_type == HassJobType.Callback:
-            handler.job.target(service_call)
+            cast(Callable[[ServiceCall], None], handler.job.target)(service_call)
         else:
-            await self._hass.async_add_executor_job(handler.job.target, service_call)
+            await self._hass.async_add_executor_job(
+                cast(Callable[[ServiceCall], None], handler.job.target), service_call
+            )
 
 
 class Config:
@@ -1551,7 +1775,7 @@ class Config:
         self.external_url: str | None = None
         self.currency: str = "EUR"
 
-        self.config_source: str = "default"
+        self.config_source: ConfigSource = ConfigSource.DEFAULT
 
         # If True, pip install is skipped for requirements on startup
         self.skip_pip: bool = False
@@ -1559,8 +1783,8 @@ class Config:
         # List of loaded components
         self.components: set[str] = set()
 
-        # API (HTTP) server configuration, see components.http.ApiConfig
-        self.api: Any | None = None
+        # API (HTTP) server configuration
+        self.api: ApiConfig | None = None
 
         # Directory that holds the configuration
         self.config_dir: str | None = None
@@ -1631,7 +1855,7 @@ class Config:
 
         return False
 
-    def as_dict(self) -> dict:
+    def as_dict(self) -> dict[str, Any]:
         """Create a dictionary representation of the configuration.
 
         Async friendly.
@@ -1670,7 +1894,7 @@ class Config:
     def _update(
         self,
         *,
-        source: str,
+        source: ConfigSource,
         latitude: float | None = None,
         longitude: float | None = None,
         elevation: int | None = None,
@@ -1678,8 +1902,8 @@ class Config:
         location_name: str | None = None,
         time_zone: str | None = None,
         # pylint: disable=dangerous-default-value # _UNDEFs not modified
-        external_url: str | dict | None = _UNDEF,
-        internal_url: str | dict | None = _UNDEF,
+        external_url: str | dict[Any, Any] | None = _UNDEF,
+        internal_url: str | dict[Any, Any] | None = _UNDEF,
         currency: str | None = None,
     ) -> None:
         """Update the configuration from a dictionary."""
@@ -1708,14 +1932,22 @@ class Config:
 
     async def async_update(self, **kwargs: Any) -> None:
         """Update the configuration from a dictionary."""
-        self._update(source=SOURCE_STORAGE, **kwargs)
+        self._update(source=ConfigSource.STORAGE, **kwargs)
         await self.async_store()
         self.hass.bus.async_fire(EVENT_CORE_CONFIG_UPDATE, kwargs)
 
     async def async_load(self) -> None:
         """Load [homeassistant] core config."""
-        store = self.hass.helpers.storage.Store(
-            CORE_STORAGE_VERSION, CORE_STORAGE_KEY, private=True, atomic_writes=True
+        # Circular dep
+        # pylint: disable=import-outside-toplevel
+        from .helpers.storage import Store
+
+        store = Store[dict[str, Any]](
+            self.hass,
+            CORE_STORAGE_VERSION,
+            CORE_STORAGE_KEY,
+            private=True,
+            atomic_writes=True,
         )
 
         if not (data := await store.async_load()):
@@ -1736,7 +1968,7 @@ class Config:
             _LOGGER.warning("Invalid internal_url set. It's not allowed to have a path")
 
         self._update(
-            source=SOURCE_STORAGE,
+            source=ConfigSource.STORAGE,
             latitude=data.get("latitude"),
             longitude=data.get("longitude"),
             elevation=data.get("elevation"),
@@ -1750,6 +1982,10 @@ class Config:
 
     async def async_store(self) -> None:
         """Store [homeassistant] core config."""
+        # Circular dep
+        # pylint: disable=import-outside-toplevel
+        from .helpers.storage import Store
+
         data = {
             "latitude": self.latitude,
             "longitude": self.longitude,
@@ -1762,52 +1998,11 @@ class Config:
             "currency": self.currency,
         }
 
-        store = self.hass.helpers.storage.Store(
-            CORE_STORAGE_VERSION, CORE_STORAGE_KEY, private=True, atomic_writes=True
+        store: Store[dict[str, Any]] = Store(
+            self.hass,
+            CORE_STORAGE_VERSION,
+            CORE_STORAGE_KEY,
+            private=True,
+            atomic_writes=True,
         )
         await store.async_save(data)
-
-
-def _async_create_timer(hass: HomeAssistant) -> None:
-    """Create a timer that will start on HOMEASSISTANT_START."""
-    handle = None
-    timer_context = Context()
-
-    def schedule_tick(now: datetime.datetime) -> None:
-        """Schedule a timer tick when the next second rolls around."""
-        nonlocal handle
-
-        slp_seconds = 1 - (now.microsecond / 10 ** 6)
-        target = monotonic() + slp_seconds
-        handle = hass.loop.call_later(slp_seconds, fire_time_event, target)
-
-    @callback
-    def fire_time_event(target: float) -> None:
-        """Fire next time event."""
-        now = dt_util.utcnow()
-
-        hass.bus.async_fire(
-            EVENT_TIME_CHANGED, {ATTR_NOW: now}, time_fired=now, context=timer_context
-        )
-
-        # If we are more than a second late, a tick was missed
-        if (late := monotonic() - target) > 1:
-            hass.bus.async_fire(
-                EVENT_TIMER_OUT_OF_SYNC,
-                {ATTR_SECONDS: late},
-                time_fired=now,
-                context=timer_context,
-            )
-
-        schedule_tick(now)
-
-    @callback
-    def stop_timer(_: Event) -> None:
-        """Stop the timer."""
-        if handle is not None:
-            handle.cancel()
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_timer)
-
-    _LOGGER.info("Timer:starting")
-    schedule_tick(dt_util.utcnow())

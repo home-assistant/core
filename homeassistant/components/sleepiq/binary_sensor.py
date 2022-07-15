@@ -1,50 +1,50 @@
 """Support for SleepIQ sensors."""
+from asyncsleepiq import SleepIQBed, SleepIQSleeper
+
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_OCCUPANCY,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import SleepIQSensor
-from .const import DOMAIN, IS_IN_BED, SENSOR_TYPES, SIDES
-
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the SleepIQ sensors."""
-    if discovery_info is None:
-        return
-
-    data = hass.data[DOMAIN]
-    data.update()
-
-    dev = []
-    for bed_id, bed in data.beds.items():
-        for side in SIDES:
-            if getattr(bed, side) is not None:
-                dev.append(IsInBedBinarySensor(data, bed_id, side))
-    add_entities(dev)
+from .const import DOMAIN, ICON_EMPTY, ICON_OCCUPIED, IS_IN_BED
+from .coordinator import SleepIQData
+from .entity import SleepIQSleeperEntity
 
 
-class IsInBedBinarySensor(SleepIQSensor, BinarySensorEntity):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the SleepIQ bed binary sensors."""
+    data: SleepIQData = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities(
+        IsInBedBinarySensor(data.data_coordinator, bed, sleeper)
+        for bed in data.client.beds.values()
+        for sleeper in bed.sleepers
+    )
+
+
+class IsInBedBinarySensor(SleepIQSleeperEntity, BinarySensorEntity):
     """Implementation of a SleepIQ presence sensor."""
 
-    def __init__(self, sleepiq_data, bed_id, side):
+    _attr_device_class = BinarySensorDeviceClass.OCCUPANCY
+
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator,
+        bed: SleepIQBed,
+        sleeper: SleepIQSleeper,
+    ) -> None:
         """Initialize the sensor."""
-        super().__init__(sleepiq_data, bed_id, side)
-        self._state = None
-        self._name = SENSOR_TYPES[IS_IN_BED]
-        self.update()
+        super().__init__(coordinator, bed, sleeper, IS_IN_BED)
 
-    @property
-    def is_on(self):
-        """Return the status of the sensor."""
-        return self._state is True
-
-    @property
-    def device_class(self):
-        """Return the class of this sensor."""
-        return DEVICE_CLASS_OCCUPANCY
-
-    def update(self):
-        """Get the latest data from SleepIQ and updates the states."""
-        super().update()
-        self._state = self.side.is_in_bed
+    @callback
+    def _async_update_attrs(self) -> None:
+        """Update sensor attributes."""
+        self._attr_is_on = self.sleeper.in_bed
+        self._attr_icon = ICON_OCCUPIED if self.sleeper.in_bed else ICON_EMPTY

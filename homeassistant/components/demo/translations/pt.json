@@ -3,6 +3,7 @@
         "step": {
             "options_1": {
                 "data": {
+                    "bool": "Booleano opcional",
                     "constant": "Constante"
                 }
             }

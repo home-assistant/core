@@ -8,6 +8,7 @@ from travispy import TravisPy
 from travispy.errors import TravisError
 import voluptuous as vol
 
+from homeassistant.components import persistent_notification
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
     SensorEntity,
@@ -20,7 +21,10 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     TIME_SECONDS,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,7 +89,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Travis CI sensor."""
 
     token = config[CONF_API_KEY]
@@ -98,14 +107,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     except TravisError as ex:
         _LOGGER.error("Unable to connect to Travis CI service: %s", str(ex))
-        hass.components.persistent_notification.create(
+        persistent_notification.create(
+            hass,
             "Error: {}<br />"
             "You will need to restart hass after fixing."
             "".format(ex),
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID,
         )
-        return False
+        return
 
     # non specific repository selected, then show all associated
     if not repositories:

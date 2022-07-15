@@ -20,18 +20,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import (
-    config_per_platform,
-    config_validation as cv,
-    discovery,
-    entity,
-    service,
-)
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.setup import async_prepare_setup_platform
 
+from . import config_per_platform, config_validation as cv, discovery, entity, service
 from .entity_platform import EntityPlatform
+from .typing import ConfigType, DiscoveryInfoType
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=15)
 DATA_INSTANCES = "entity_components"
@@ -111,7 +105,7 @@ class EntityComponent:
 
         This doesn't block the executor to protect from deadlocks.
         """
-        self.hass.add_job(self.async_setup(config))  # type: ignore
+        self.hass.add_job(self.async_setup(config))
 
     async def async_setup(self, config: ConfigType) -> None:
         """Set up a full entity component.
@@ -127,7 +121,8 @@ class EntityComponent:
 
         # Look in config for Domain, Domain 2, Domain 3 etc and load them
         for p_type, p_config in config_per_platform(config, self.domain):
-            self.hass.async_create_task(self.async_setup_platform(p_type, p_config))
+            if p_type is not None:
+                self.hass.async_create_task(self.async_setup_platform(p_type, p_config))
 
         # Generic discovery listener for loading platform dynamically
         # Refer to: homeassistant.helpers.discovery.async_load_platform()
@@ -204,10 +199,10 @@ class EntityComponent:
         if isinstance(schema, dict):
             schema = cv.make_entity_service_schema(schema)
 
-        async def handle_service(call: Callable) -> None:
+        async def handle_service(call: ServiceCall) -> None:
             """Handle the service."""
-            await self.hass.helpers.service.entity_service_call(
-                self._platforms.values(), func, call, required_features
+            await service.entity_service_call(
+                self.hass, self._platforms.values(), func, call, required_features
             )
 
         self.hass.services.async_register(self.domain, name, handle_service, schema)

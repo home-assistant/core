@@ -3,24 +3,17 @@ from __future__ import annotations
 
 from python_awair.air_data import AirData
 from python_awair.devices import AwairDevice
-import voluptuous as vol
 
-from homeassistant.components.awair import AwairDataUpdateCoordinator, AwairResult
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    ATTR_CONNECTIONS,
-    ATTR_NAME,
-    CONF_ACCESS_TOKEN,
-)
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_ATTRIBUTION, ATTR_CONNECTIONS, ATTR_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import AwairDataUpdateCoordinator, AwairResult
 from .const import (
     API_DUST,
     API_PM25,
@@ -30,38 +23,18 @@ from .const import (
     ATTRIBUTION,
     DOMAIN,
     DUST_ALIASES,
-    LOGGER,
     SENSOR_TYPE_SCORE,
     SENSOR_TYPES,
     SENSOR_TYPES_DUST,
     AwairSensorEntityDescription,
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_ACCESS_TOKEN): cv.string},
-    extra=vol.ALLOW_EXTRA,
-)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Import Awair configuration from YAML."""
-    LOGGER.warning(
-        "Loading Awair via platform setup is deprecated; Please remove it from your configuration"
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config,
-        )
-    )
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-):
+) -> None:
     """Set up Awair sensor entity based on a config entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     entities = []
@@ -96,7 +69,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class AwairSensor(CoordinatorEntity, SensorEntity):
+class AwairSensor(CoordinatorEntity[AwairDataUpdateCoordinator], SensorEntity):
     """Defines an Awair sensor entity."""
 
     entity_description: AwairSensorEntityDescription

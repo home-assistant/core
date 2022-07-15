@@ -31,7 +31,7 @@ DOMAINS_AND_TYPES = {
         "SP4",
         "SP4B",
     },
-    Platform.LIGHT: {"LB1"},
+    Platform.LIGHT: {"LB1", "LB2"},
 }
 DEVICE_TYPES = set.union(*DOMAINS_AND_TYPES.values())
 

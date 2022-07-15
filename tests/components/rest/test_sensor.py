@@ -8,19 +8,24 @@ import respx
 
 from homeassistant import config as hass_config
 from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
-import homeassistant.components.sensor as sensor
+from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
+    DOMAIN,
+    SensorDeviceClass,
+    SensorStateClass,
+)
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
     CONTENT_TYPE_JSON,
     DATA_MEGABYTES,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_TIMESTAMP,
     SERVICE_RELOAD,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import get_fixture_path
@@ -28,9 +33,7 @@ from tests.common import get_fixture_path
 
 async def test_setup_missing_config(hass):
     """Test setup with configuration missing required entries."""
-    assert await async_setup_component(
-        hass, sensor.DOMAIN, {"sensor": {"platform": "rest"}}
-    )
+    assert await async_setup_component(hass, DOMAIN, {"sensor": {"platform": "rest"}})
     await hass.async_block_till_done()
     assert len(hass.states.async_all("sensor")) == 0
 
@@ -39,7 +42,7 @@ async def test_setup_missing_schema(hass):
     """Test setup with resource missing schema."""
     assert await async_setup_component(
         hass,
-        sensor.DOMAIN,
+        DOMAIN,
         {"sensor": {"platform": "rest", "resource": "localhost", "method": "GET"}},
     )
     await hass.async_block_till_done()
@@ -54,7 +57,7 @@ async def test_setup_failed_connect(hass, caplog):
     )
     assert await async_setup_component(
         hass,
-        sensor.DOMAIN,
+        DOMAIN,
         {
             "sensor": {
                 "platform": "rest",
@@ -74,7 +77,7 @@ async def test_setup_timeout(hass):
     respx.get("http://localhost").mock(side_effect=asyncio.TimeoutError())
     assert await async_setup_component(
         hass,
-        sensor.DOMAIN,
+        DOMAIN,
         {"sensor": {"platform": "rest", "resource": "localhost", "method": "GET"}},
     )
     await hass.async_block_till_done()
@@ -87,7 +90,7 @@ async def test_setup_minimum(hass):
     respx.get("http://localhost") % HTTPStatus.OK
     assert await async_setup_component(
         hass,
-        sensor.DOMAIN,
+        DOMAIN,
         {
             "sensor": {
                 "platform": "rest",
@@ -109,7 +112,7 @@ async def test_manual_update(hass):
     )
     assert await async_setup_component(
         hass,
-        sensor.DOMAIN,
+        DOMAIN,
         {
             "sensor": {
                 "name": "mysensor",
@@ -142,7 +145,7 @@ async def test_setup_minimum_resource_template(hass):
     respx.get("http://localhost") % HTTPStatus.OK
     assert await async_setup_component(
         hass,
-        sensor.DOMAIN,
+        DOMAIN,
         {
             "sensor": {
                 "platform": "rest",
@@ -160,7 +163,7 @@ async def test_setup_duplicate_resource_template(hass):
     respx.get("http://localhost") % HTTPStatus.OK
     assert await async_setup_component(
         hass,
-        sensor.DOMAIN,
+        DOMAIN,
         {
             "sensor": {
                 "platform": "rest",
@@ -194,8 +197,8 @@ async def test_setup_get(hass):
                 "username": "my username",
                 "password": "my password",
                 "headers": {"Accept": CONTENT_TYPE_JSON},
-                "device_class": DEVICE_CLASS_TEMPERATURE,
-                "state_class": sensor.STATE_CLASS_MEASUREMENT,
+                "device_class": SensorDeviceClass.TEMPERATURE,
+                "state_class": SensorStateClass.MEASUREMENT,
             }
         },
     )
@@ -215,8 +218,8 @@ async def test_setup_get(hass):
     state = hass.states.get("sensor.foo")
     assert state.state == ""
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
-    assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_TEMPERATURE
-    assert state.attributes[sensor.ATTR_STATE_CLASS] == sensor.STATE_CLASS_MEASUREMENT
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TEMPERATURE
+    assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.MEASUREMENT
 
 
 @respx.mock
@@ -234,8 +237,8 @@ async def test_setup_timestamp(hass, caplog):
                 "resource": "http://localhost",
                 "method": "GET",
                 "value_template": "{{ value_json.key }}",
-                "device_class": DEVICE_CLASS_TIMESTAMP,
-                "state_class": sensor.STATE_CLASS_MEASUREMENT,
+                "device_class": SensorDeviceClass.TIMESTAMP,
+                "state_class": SensorStateClass.MEASUREMENT,
             }
         },
     )
@@ -246,7 +249,8 @@ async def test_setup_timestamp(hass, caplog):
 
     state = hass.states.get("sensor.rest_sensor")
     assert state.state == "2021-11-11T11:39:00+00:00"
-    assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_TIMESTAMP
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TIMESTAMP
+    assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.MEASUREMENT
     assert "sensor.rest_sensor rendered invalid timestamp" not in caplog.text
     assert "sensor.rest_sensor rendered timestamp without timezone" not in caplog.text
 
@@ -262,7 +266,7 @@ async def test_setup_timestamp(hass, caplog):
     )
     state = hass.states.get("sensor.rest_sensor")
     assert state.state == "unknown"
-    assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_TIMESTAMP
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TIMESTAMP
     assert "sensor.rest_sensor rendered invalid timestamp" in caplog.text
 
     # Bad response: No timezone
@@ -277,7 +281,7 @@ async def test_setup_timestamp(hass, caplog):
     )
     state = hass.states.get("sensor.rest_sensor")
     assert state.state == "unknown"
-    assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_TIMESTAMP
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TIMESTAMP
     assert "sensor.rest_sensor rendered timestamp without timezone" in caplog.text
 
 
@@ -411,7 +415,7 @@ async def test_setup_query_params(hass):
     respx.get("http://localhost", params={"search": "something"}) % HTTPStatus.OK
     assert await async_setup_component(
         hass,
-        sensor.DOMAIN,
+        DOMAIN,
         {
             "sensor": {
                 "platform": "rest",
@@ -862,3 +866,43 @@ async def test_reload(hass):
 
     assert hass.states.get("sensor.mockreset") is None
     assert hass.states.get("sensor.rollout")
+
+
+@respx.mock
+async def test_entity_config(hass: HomeAssistant) -> None:
+    """Test entity configuration."""
+
+    config = {
+        DOMAIN: {
+            # REST configuration
+            "platform": "rest",
+            "method": "GET",
+            "resource": "http://localhost",
+            # Entity configuration
+            "icon": "{{'mdi:one_two_three'}}",
+            "picture": "{{'blabla.png'}}",
+            "device_class": "temperature",
+            "name": "{{'REST' + ' ' + 'Sensor'}}",
+            "state_class": "measurement",
+            "unique_id": "very_unique",
+            "unit_of_measurement": "beardsecond",
+        },
+    }
+
+    respx.get("http://localhost") % HTTPStatus.OK
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
+
+    entity_registry = er.async_get(hass)
+    assert entity_registry.async_get("sensor.rest_sensor").unique_id == "very_unique"
+
+    state = hass.states.get("sensor.rest_sensor")
+    assert state.state == ""
+    assert state.attributes == {
+        "device_class": "temperature",
+        "entity_picture": "blabla.png",
+        "friendly_name": "REST Sensor",
+        "icon": "mdi:one_two_three",
+        "state_class": "measurement",
+        "unit_of_measurement": "beardsecond",
+    }

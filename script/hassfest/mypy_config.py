@@ -7,6 +7,8 @@ import os
 from pathlib import Path
 from typing import Final
 
+from homeassistant.const import REQUIRED_PYTHON_VER
+
 from .model import Config, Integration
 
 # Modules which have type hints which known to be broken.
@@ -14,138 +16,39 @@ from .model import Config, Integration
 # remove your component from this list to enable type checks.
 # Do your best to not add anything new here.
 IGNORED_MODULES: Final[list[str]] = [
-    "homeassistant.components.blueprint.*",
-    "homeassistant.components.climacell.*",
-    "homeassistant.components.cloud.*",
-    "homeassistant.components.config.*",
-    "homeassistant.components.conversation.*",
-    "homeassistant.components.deconz.*",
-    "homeassistant.components.demo.*",
-    "homeassistant.components.denonavr.*",
-    "homeassistant.components.dhcp.*",
-    "homeassistant.components.doorbird.*",
-    "homeassistant.components.enphase_envoy.*",
-    "homeassistant.components.evohome.*",
-    "homeassistant.components.fireservicerota.*",
-    "homeassistant.components.firmata.*",
-    "homeassistant.components.flo.*",
-    "homeassistant.components.fortios.*",
-    "homeassistant.components.foscam.*",
-    "homeassistant.components.freebox.*",
-    "homeassistant.components.geniushub.*",
-    "homeassistant.components.glances.*",
-    "homeassistant.components.google_assistant.*",
-    "homeassistant.components.gree.*",
-    "homeassistant.components.growatt_server.*",
-    "homeassistant.components.habitica.*",
-    "homeassistant.components.harmony.*",
-    "homeassistant.components.hassio.*",
-    "homeassistant.components.here_travel_time.*",
-    "homeassistant.components.hisense_aehw4a1.*",
-    "homeassistant.components.home_connect.*",
-    "homeassistant.components.home_plus_control.*",
-    "homeassistant.components.homekit.*",
-    "homeassistant.components.homekit_controller.*",
-    "homeassistant.components.honeywell.*",
-    "homeassistant.components.humidifier.*",
-    "homeassistant.components.iaqualink.*",
-    "homeassistant.components.icloud.*",
-    "homeassistant.components.image.*",
-    "homeassistant.components.incomfort.*",
-    "homeassistant.components.influxdb.*",
-    "homeassistant.components.input_datetime.*",
-    "homeassistant.components.input_number.*",
-    "homeassistant.components.ipp.*",
-    "homeassistant.components.isy994.*",
-    "homeassistant.components.izone.*",
-    "homeassistant.components.kaiterra.*",
-    "homeassistant.components.keenetic_ndms2.*",
-    "homeassistant.components.kodi.*",
-    "homeassistant.components.konnected.*",
-    "homeassistant.components.kostal_plenticore.*",
-    "homeassistant.components.kulersky.*",
-    "homeassistant.components.litejet.*",
-    "homeassistant.components.litterrobot.*",
-    "homeassistant.components.lovelace.*",
-    "homeassistant.components.luftdaten.*",
-    "homeassistant.components.lutron_caseta.*",
-    "homeassistant.components.lyric.*",
-    "homeassistant.components.melcloud.*",
-    "homeassistant.components.meteo_france.*",
-    "homeassistant.components.metoffice.*",
-    "homeassistant.components.minecraft_server.*",
-    "homeassistant.components.mobile_app.*",
-    "homeassistant.components.motion_blinds.*",
-    "homeassistant.components.mullvad.*",
-    "homeassistant.components.ness_alarm.*",
-    "homeassistant.components.nest.legacy.*",
-    "homeassistant.components.netgear.*",
-    "homeassistant.components.nightscout.*",
-    "homeassistant.components.nilu.*",
-    "homeassistant.components.nsw_fuel_station.*",
-    "homeassistant.components.nuki.*",
-    "homeassistant.components.nws.*",
-    "homeassistant.components.nzbget.*",
-    "homeassistant.components.omnilogic.*",
-    "homeassistant.components.onboarding.*",
-    "homeassistant.components.ondilo_ico.*",
-    "homeassistant.components.onvif.*",
-    "homeassistant.components.ovo_energy.*",
-    "homeassistant.components.ozw.*",
-    "homeassistant.components.philips_js.*",
-    "homeassistant.components.ping.*",
-    "homeassistant.components.pioneer.*",
-    "homeassistant.components.plaato.*",
-    "homeassistant.components.plex.*",
-    "homeassistant.components.plugwise.*",
-    "homeassistant.components.plum_lightpad.*",
-    "homeassistant.components.point.*",
-    "homeassistant.components.profiler.*",
-    "homeassistant.components.rachio.*",
-    "homeassistant.components.ring.*",
-    "homeassistant.components.ruckus_unleashed.*",
-    "homeassistant.components.screenlogic.*",
-    "homeassistant.components.search.*",
-    "homeassistant.components.sense.*",
-    "homeassistant.components.sharkiq.*",
-    "homeassistant.components.sma.*",
-    "homeassistant.components.smartthings.*",
-    "homeassistant.components.solaredge.*",
-    "homeassistant.components.somfy.*",
-    "homeassistant.components.somfy_mylink.*",
-    "homeassistant.components.sonos.*",
-    "homeassistant.components.spotify.*",
-    "homeassistant.components.stt.*",
-    "homeassistant.components.system_health.*",
-    "homeassistant.components.system_log.*",
-    "homeassistant.components.tado.*",
-    "homeassistant.components.telegram_bot.*",
-    "homeassistant.components.template.*",
-    "homeassistant.components.toon.*",
-    "homeassistant.components.unifi.*",
-    "homeassistant.components.upnp.*",
-    "homeassistant.components.vera.*",
-    "homeassistant.components.verisure.*",
-    "homeassistant.components.vizio.*",
-    "homeassistant.components.wemo.*",
-    "homeassistant.components.withings.*",
-    "homeassistant.components.xbox.*",
-    "homeassistant.components.xiaomi_aqara.*",
-    "homeassistant.components.xiaomi_miio.*",
-    "homeassistant.components.yeelight.*",
-    "homeassistant.components.zha.*",
-    "homeassistant.components.zwave.*",
+    "homeassistant.components.sonos",
+    "homeassistant.components.sonos.alarms",
+    "homeassistant.components.sonos.binary_sensor",
+    "homeassistant.components.sonos.diagnostics",
+    "homeassistant.components.sonos.entity",
+    "homeassistant.components.sonos.favorites",
+    "homeassistant.components.sonos.media_browser",
+    "homeassistant.components.sonos.media_player",
+    "homeassistant.components.sonos.number",
+    "homeassistant.components.sonos.sensor",
+    "homeassistant.components.sonos.speaker",
+    "homeassistant.components.sonos.statistics",
 ]
+
+# Component modules which should set no_implicit_reexport = true.
+NO_IMPLICIT_REEXPORT_MODULES: set[str] = {
+    "homeassistant.components",
+    "homeassistant.components.application_credentials.*",
+    "homeassistant.components.diagnostics.*",
+    "homeassistant.components.spotify.*",
+    "homeassistant.components.stream.*",
+    "homeassistant.components.update.*",
+}
 
 HEADER: Final = """
 # Automatically generated by hassfest.
 #
-# To update, run python3 -m script.hassfest
+# To update, run python3 -m script.hassfest -p mypy_config
 
 """.lstrip()
 
 GENERAL_SETTINGS: Final[dict[str, str]] = {
-    "python_version": "3.8",
+    "python_version": ".".join(str(x) for x in REQUIRED_PYTHON_VER[:2]),
     "show_error_codes": "true",
     "follow_imports": "silent",
     # Enable some checks globally.
@@ -155,6 +58,9 @@ GENERAL_SETTINGS: Final[dict[str, str]] = {
     "warn_redundant_casts": "true",
     "warn_unused_configs": "true",
     "warn_unused_ignores": "true",
+    "enable_error_code": "ignore-without-code",
+    # Strict_concatenate breaks passthrough ParamSpec typing
+    "strict_concatenate": "false",
 }
 
 # This is basically the list of checks which is enabled for "strict=true".
@@ -176,6 +82,25 @@ STRICT_SETTINGS: Final[list[str]] = [
     # "no_implicit_reexport",
 ]
 
+# Strict settings are already applied for core files.
+# To enable granular typing, add additional settings if core files are given.
+STRICT_SETTINGS_CORE: Final[list[str]] = [
+    "disallow_any_generics",
+]
+
+
+def _strict_module_in_ignore_list(
+    module: str, ignored_modules_set: set[str]
+) -> str | None:
+    if module in ignored_modules_set:
+        return module
+    if module.endswith("*"):
+        module = module[:-1]
+        for ignored_module in ignored_modules_set:
+            if ignored_module.startswith(module):
+                return ignored_module
+    return None
+
 
 def generate_and_validate(config: Config) -> str:
     """Validate and generate mypy config."""
@@ -186,11 +111,19 @@ def generate_and_validate(config: Config) -> str:
         lines = fp.readlines()
 
     # Filter empty and commented lines.
-    strict_modules: list[str] = [
+    parsed_modules: list[str] = [
         line.strip()
         for line in lines
         if line.strip() != "" and not line.startswith("#")
     ]
+
+    strict_modules: list[str] = []
+    strict_core_modules: list[str] = []
+    for module in parsed_modules:
+        if module.startswith("homeassistant.components"):
+            strict_modules.append(module)
+        else:
+            strict_core_modules.append(module)
 
     ignored_modules_set: set[str] = set(IGNORED_MODULES)
     for module in strict_modules:
@@ -201,13 +134,19 @@ def generate_and_validate(config: Config) -> str:
             config.add_error(
                 "mypy_config", f"Only components should be added: {module}"
             )
-        if module in ignored_modules_set:
+        if ignored_module := _strict_module_in_ignore_list(module, ignored_modules_set):
             config.add_error(
-                "mypy_config", f"Module '{module}' is in ignored list in mypy_config.py"
+                "mypy_config",
+                f"Module '{ignored_module}' is in ignored list in mypy_config.py",
             )
 
     # Validate that all modules exist.
-    all_modules = strict_modules + IGNORED_MODULES
+    all_modules = (
+        strict_modules
+        + strict_core_modules
+        + IGNORED_MODULES
+        + list(NO_IMPLICIT_REEXPORT_MODULES)
+    )
     for module in all_modules:
         if module.endswith(".*"):
             module_path = Path(module[:-2].replace(".", os.path.sep))
@@ -235,17 +174,39 @@ def generate_and_validate(config: Config) -> str:
     for key in STRICT_SETTINGS:
         mypy_config.set(general_section, key, "true")
 
+    # By default enable no_implicit_reexport only for homeassistant.*
+    # Disable it afterwards for all components
+    components_section = "mypy-homeassistant.*"
+    mypy_config.add_section(components_section)
+    mypy_config.set(components_section, "no_implicit_reexport", "true")
+
+    for core_module in strict_core_modules:
+        core_section = f"mypy-{core_module}"
+        mypy_config.add_section(core_section)
+        for key in STRICT_SETTINGS_CORE:
+            mypy_config.set(core_section, key, "true")
+
     # By default strict checks are disabled for components.
     components_section = "mypy-homeassistant.components.*"
     mypy_config.add_section(components_section)
     for key in STRICT_SETTINGS:
         mypy_config.set(components_section, key, "false")
+    mypy_config.set(components_section, "no_implicit_reexport", "false")
 
     for strict_module in strict_modules:
         strict_section = f"mypy-{strict_module}"
         mypy_config.add_section(strict_section)
         for key in STRICT_SETTINGS:
             mypy_config.set(strict_section, key, "true")
+        if strict_module in NO_IMPLICIT_REEXPORT_MODULES:
+            mypy_config.set(strict_section, "no_implicit_reexport", "true")
+
+    for reexport_module in sorted(
+        NO_IMPLICIT_REEXPORT_MODULES.difference(strict_modules)
+    ):
+        reexport_section = f"mypy-{reexport_module}"
+        mypy_config.add_section(reexport_section)
+        mypy_config.set(reexport_section, "no_implicit_reexport", "true")
 
     # Disable strict checks for tests
     tests_section = "mypy-tests.*"

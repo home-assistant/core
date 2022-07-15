@@ -20,21 +20,16 @@ from homeassistant.components.air_quality import DOMAIN as AIR_QUALITY_PLATFORM
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.update_coordinator import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     ATTR_SDS011,
     ATTR_SPS30,
-    DEFAULT_NAME,
     DEFAULT_UPDATE_INTERVAL,
     DOMAIN,
     MANUFACTURER,
@@ -56,10 +51,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     options = ConnectionOptions(host=host, username=username, password=password)
     try:
         nam = await NettigoAirMonitor.create(websession, options)
-    except AuthFailed as err:
-        raise ConfigEntryAuthFailed from err
     except (ApiError, ClientError, ClientConnectorError, asyncio.TimeoutError) as err:
         raise ConfigEntryNotReady from err
+
+    try:
+        await nam.async_check_credentials()
+    except AuthFailed as err:
+        raise ConfigEntryAuthFailed from err
 
     coordinator = NAMDataUpdateCoordinator(hass, nam, entry.unique_id)
     await coordinator.async_config_entry_first_refresh()
@@ -67,7 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # Remove air_quality entities from registry if they exist
     ent_reg = entity_registry.async_get(hass)
@@ -112,10 +110,7 @@ class NAMDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> NAMSensors:
         """Update data via library."""
         try:
-            # Device firmware uses synchronous code and doesn't respond to http queries
-            # when reading data from sensors. The nettigo-air-quality library tries to
-            # get the data 4 times, so we use a longer than usual timeout here.
-            async with async_timeout.timeout(30):
+            async with async_timeout.timeout(10):
                 data = await self.nam.async_update()
         # We do not need to catch AuthFailed exception here because sensor data is
         # always available without authorization.
@@ -134,7 +129,7 @@ class NAMDataUpdateCoordinator(DataUpdateCoordinator):
         """Return the device info."""
         return DeviceInfo(
             connections={(CONNECTION_NETWORK_MAC, cast(str, self._unique_id))},
-            name=DEFAULT_NAME,
+            name="Nettigo Air Monitor",
             sw_version=self.nam.software_version,
             manufacturer=MANUFACTURER,
             configuration_url=f"http://{self.nam.host}/",

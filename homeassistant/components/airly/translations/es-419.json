@@ -14,8 +14,7 @@
                     "longitude": "Longitud",
                     "name": "Nombre de la integraci\u00f3n"
                 },
-                "description": "Configure la integraci\u00f3n de la calidad del aire de Airly. Para generar la clave API, vaya a https://developer.airly.eu/register",
-                "title": "Airly"
+                "description": "Configure la integraci\u00f3n de la calidad del aire de Airly. Para generar la clave API, vaya a https://developer.airly.eu/register"
             }
         }
     },

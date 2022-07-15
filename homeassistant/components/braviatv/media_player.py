@@ -1,24 +1,10 @@
 """Support for interface with a Bravia TV."""
 from __future__ import annotations
 
-from typing import Final
-
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
-)
-from homeassistant.components.media_player.const import (
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
+    MediaPlayerEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
@@ -29,20 +15,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import BraviaTVCoordinator
 from .const import ATTR_MANUFACTURER, DEFAULT_NAME, DOMAIN
-
-SUPPORT_BRAVIA: Final = (
-    SUPPORT_PAUSE
-    | SUPPORT_VOLUME_STEP
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_SELECT_SOURCE
-    | SUPPORT_PLAY
-    | SUPPORT_STOP
-)
 
 
 async def async_setup_entry(
@@ -67,12 +39,23 @@ async def async_setup_entry(
     )
 
 
-class BraviaTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
+class BraviaTVMediaPlayer(CoordinatorEntity[BraviaTVCoordinator], MediaPlayerEntity):
     """Representation of a Bravia TV Media Player."""
 
-    coordinator: BraviaTVCoordinator
     _attr_device_class = MediaPlayerDeviceClass.TV
-    _attr_supported_features = SUPPORT_BRAVIA
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.VOLUME_STEP
+        | MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.SELECT_SOURCE
+        | MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.STOP
+    )
 
     def __init__(
         self,

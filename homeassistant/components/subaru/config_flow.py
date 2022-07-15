@@ -1,4 +1,6 @@
 """Config flow for Subaru integration."""
+from __future__ import annotations
+
 from datetime import datetime
 import logging
 
@@ -19,6 +21,8 @@ from homeassistant.helpers import aiohttp_client, config_validation as cv
 from .const import CONF_COUNTRY, CONF_UPDATE_ENABLED, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+CONF_CONTACT_METHOD = "contact_method"
+CONF_VALIDATION_CODE = "validation_code"
 PIN_SCHEMA = vol.Schema({vol.Required(CONF_PIN): str})
 
 
@@ -47,6 +51,9 @@ class SubaruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.error("Unable to communicate with Subaru API: %s", ex.message)
                 return self.async_abort(reason="cannot_connect")
             else:
+                if not self.controller.device_registered:
+                    _LOGGER.debug("2FA validation is required")
+                    return await self.async_step_two_factor()
                 if self.controller.is_pin_required():
                     return await self.async_step_pin()
                 return self.async_create_entry(
@@ -78,7 +85,9 @@ class SubaruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 
@@ -103,12 +112,59 @@ class SubaruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             device_name=device_name,
             country=data[CONF_COUNTRY],
         )
-        _LOGGER.debug(
-            "Setting up first time connection to Subaru API.  This may take up to 20 seconds"
-        )
+        _LOGGER.debug("Setting up first time connection to Subaru API")
         if await self.controller.connect():
-            _LOGGER.debug("Successfully authenticated and authorized with Subaru API")
+            _LOGGER.debug("Successfully authenticated with Subaru API")
             self.config_data.update(data)
+
+    async def async_step_two_factor(self, user_input=None):
+        """Select contact method and request 2FA code from Subaru."""
+        error = None
+        if user_input:
+            # self.controller.contact_methods is a dict:
+            # {"phone":"555-555-5555", "userName":"my@email.com"}
+            selected_method = next(
+                k
+                for k, v in self.controller.contact_methods.items()
+                if v == user_input[CONF_CONTACT_METHOD]
+            )
+            if await self.controller.request_auth_code(selected_method):
+                return await self.async_step_two_factor_validate()
+            return self.async_abort(reason="two_factor_request_failed")
+
+        data_schema = vol.Schema(
+            {
+                vol.Required(CONF_CONTACT_METHOD): vol.In(
+                    list(self.controller.contact_methods.values())
+                )
+            }
+        )
+        return self.async_show_form(
+            step_id="two_factor", data_schema=data_schema, errors=error
+        )
+
+    async def async_step_two_factor_validate(self, user_input=None):
+        """Validate received 2FA code with Subaru."""
+        error = None
+        if user_input:
+            try:
+                vol.Match(r"^[0-9]{6}$")(user_input[CONF_VALIDATION_CODE])
+                if await self.controller.submit_auth_code(
+                    user_input[CONF_VALIDATION_CODE]
+                ):
+                    if self.controller.is_pin_required():
+                        return await self.async_step_pin()
+                    return self.async_create_entry(
+                        title=self.config_data[CONF_USERNAME], data=self.config_data
+                    )
+                error = {"base": "incorrect_validation_code"}
+            except vol.Invalid:
+                error = {"base": "bad_validation_code_format"}
+
+        data_schema = vol.Schema({vol.Required(CONF_VALIDATION_CODE): str})
+        return self.async_show_form(
+            step_id="two_factor_validate", data_schema=data_schema, errors=error
+        )
 
     async def async_step_pin(self, user_input=None):
         """Handle second part of config flow, if required."""

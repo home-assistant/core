@@ -32,7 +32,6 @@ from .const import (
     CONF_CITY,
     CONF_COUNTRY,
     CONF_INTEGRATION_TYPE,
-    DATA_COORDINATOR,
     DOMAIN,
     INTEGRATION_TYPE_GEOGRAPHY_COORDS,
     INTEGRATION_TYPE_GEOGRAPHY_NAME,
@@ -63,20 +62,20 @@ SENSOR_KIND_VOC = "voc"
 GEOGRAPHY_SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=SENSOR_KIND_LEVEL,
-        name="Air Pollution Level",
+        name="Air pollution level",
         device_class=DEVICE_CLASS_POLLUTANT_LEVEL,
         icon="mdi:gauge",
     ),
     SensorEntityDescription(
         key=SENSOR_KIND_AQI,
-        name="Air Quality Index",
+        name="Air quality index",
         device_class=SensorDeviceClass.AQI,
         native_unit_of_measurement="AQI",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_KIND_POLLUTANT,
-        name="Main Pollutant",
+        name="Main pollutant",
         device_class=DEVICE_CLASS_POLLUTANT_LABEL,
         icon="mdi:chemical-weapon",
     ),
@@ -86,7 +85,7 @@ GEOGRAPHY_SENSOR_LOCALES = {"cn": "Chinese", "us": "U.S."}
 NODE_PRO_SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=SENSOR_KIND_AQI,
-        name="Air Quality Index",
+        name="Air quality index",
         device_class=SensorDeviceClass.AQI,
         native_unit_of_measurement="AQI",
         state_class=SensorStateClass.MEASUREMENT,
@@ -185,7 +184,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up AirVisual sensors based on a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR]
+    coordinator = hass.data[DOMAIN][entry.entry_id]
 
     sensors: list[AirVisualGeographySensor | AirVisualNodeProSensor]
     if entry.data[CONF_INTEGRATION_TYPE] in (
@@ -293,6 +292,8 @@ class AirVisualGeographySensor(AirVisualEntity, SensorEntity):
 class AirVisualNodeProSensor(AirVisualEntity, SensorEntity):
     """Define an AirVisual sensor related to a Node/Pro unit."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
@@ -302,9 +303,6 @@ class AirVisualNodeProSensor(AirVisualEntity, SensorEntity):
         """Initialize."""
         super().__init__(coordinator, entry, description)
 
-        self._attr_name = (
-            f"{coordinator.data['settings']['node_name']} Node/Pro: {description.name}"
-        )
         self._attr_unique_id = f"{coordinator.data['serial_number']}_{description.key}"
 
     @property

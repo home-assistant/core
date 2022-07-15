@@ -92,7 +92,6 @@ DEFAULT_HOMEKIT_MODE = HOMEKIT_MODE_BRIDGE
 HOMEKIT_MODES = [HOMEKIT_MODE_BRIDGE, HOMEKIT_MODE_ACCESSORY]
 
 # #### HomeKit Component Services ####
-SERVICE_HOMEKIT_START = "start"
 SERVICE_HOMEKIT_RESET_ACCESSORY = "reset_accessory"
 SERVICE_HOMEKIT_UNPAIR = "unpair"
 
@@ -151,6 +150,8 @@ SERV_WINDOW_COVERING = "WindowCovering"
 CHAR_ACTIVE = "Active"
 CHAR_ACTIVE_IDENTIFIER = "ActiveIdentifier"
 CHAR_AIR_PARTICULATE_DENSITY = "AirParticulateDensity"
+CHAR_PM25_DENSITY = "PM2.5Density"
+CHAR_PM10_DENSITY = "PM10Density"
 CHAR_AIR_QUALITY = "AirQuality"
 CHAR_BATTERY_LEVEL = "BatteryLevel"
 CHAR_BRIGHTNESS = "Brightness"
@@ -167,6 +168,7 @@ CHAR_CONTACT_SENSOR_STATE = "ContactSensorState"
 CHAR_COOLING_THRESHOLD_TEMPERATURE = "CoolingThresholdTemperature"
 CHAR_CURRENT_AMBIENT_LIGHT_LEVEL = "CurrentAmbientLightLevel"
 CHAR_CURRENT_DOOR_STATE = "CurrentDoorState"
+CHAR_CURRENT_FAN_STATE = "CurrentFanState"
 CHAR_CURRENT_HEATING_COOLING = "CurrentHeatingCoolingState"
 CHAR_CURRENT_HUMIDIFIER_DEHUMIDIFIER = "CurrentHumidifierDehumidifierState"
 CHAR_CURRENT_POSITION = "CurrentPosition"
@@ -177,6 +179,7 @@ CHAR_CURRENT_TILT_ANGLE = "CurrentHorizontalTiltAngle"
 CHAR_CURRENT_VISIBILITY_STATE = "CurrentVisibilityState"
 CHAR_DEHUMIDIFIER_THRESHOLD_HUMIDITY = "RelativeHumidityDehumidifierThreshold"
 CHAR_FIRMWARE_REVISION = "FirmwareRevision"
+CHAR_HARDWARE_REVISION = "HardwareRevision"
 CHAR_HEATING_THRESHOLD_TEMPERATURE = "HeatingThresholdTemperature"
 CHAR_HUE = "Hue"
 CHAR_HUMIDIFIER_THRESHOLD_HUMIDITY = "RelativeHumidityHumidifierThreshold"
@@ -214,6 +217,7 @@ CHAR_SWING_MODE = "SwingMode"
 CHAR_TARGET_DOOR_STATE = "TargetDoorState"
 CHAR_TARGET_HEATING_COOLING = "TargetHeatingCoolingState"
 CHAR_TARGET_POSITION = "TargetPosition"
+CHAR_TARGET_FAN_STATE = "TargetFanState"
 CHAR_TARGET_HUMIDIFIER_DEHUMIDIFIER = "TargetHumidifierDehumidifierState"
 CHAR_TARGET_HUMIDITY = "TargetRelativeHumidity"
 CHAR_TARGET_SECURITY_STATE = "SecuritySystemTargetState"
@@ -233,19 +237,6 @@ PROP_MIN_VALUE = "minValue"
 PROP_MIN_STEP = "minStep"
 PROP_CELSIUS = {"minValue": -273, "maxValue": 999}
 PROP_VALID_VALUES = "ValidValues"
-
-# #### Device Classes ####
-DEVICE_CLASS_DOOR = "door"
-DEVICE_CLASS_GARAGE_DOOR = "garage_door"
-DEVICE_CLASS_GAS = "gas"
-DEVICE_CLASS_MOISTURE = "moisture"
-DEVICE_CLASS_MOTION = "motion"
-DEVICE_CLASS_OCCUPANCY = "occupancy"
-DEVICE_CLASS_OPENING = "opening"
-DEVICE_CLASS_PM25 = "pm25"
-DEVICE_CLASS_SMOKE = "smoke"
-DEVICE_CLASS_WINDOW = "window"
-
 # #### Thresholds ####
 THRESHOLD_CO = 25
 THRESHOLD_CO2 = 1000

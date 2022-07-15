@@ -1,0 +1,96 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Nenhum dispositivo encontrado na rede",
+            "single_instance_allowed": "J\u00e1 configurado. Apenas uma configura\u00e7\u00e3o \u00e9 poss\u00edvel."
+        },
+        "error": {
+            "already_exists": "J\u00e1 existe uma c\u00e2mera com essas configura\u00e7\u00f5es de URL.",
+            "invalid_still_image": "A URL n\u00e3o retornou uma imagem est\u00e1tica v\u00e1lida",
+            "malformed_url": "URL malformada",
+            "no_still_image_or_stream_url": "Voc\u00ea deve especificar pelo menos uma imagem est\u00e1tica ou uma URL de stream",
+            "relative_url": "URLs relativas n\u00e3o s\u00e3o permitidas",
+            "stream_file_not_found": "Arquivo n\u00e3o encontrado ao tentar se conectar a stream (o ffmpeg est\u00e1 instalado?)",
+            "stream_http_not_found": "HTTP 404 n\u00e3o encontrado ao tentar se conectar a stream",
+            "stream_io_error": "Erro de entrada/sa\u00edda ao tentar se conectar a stream. Protocolo RTSP errado?",
+            "stream_no_route_to_host": "N\u00e3o foi poss\u00edvel encontrar o host ao tentar se conectar a stream",
+            "stream_no_video": "A stream n\u00e3o tem v\u00eddeo",
+            "stream_not_permitted": "Opera\u00e7\u00e3o n\u00e3o permitida ao tentar se conectar a stream. Protocolo RTSP errado?",
+            "stream_unauthorised": "Falha na autoriza\u00e7\u00e3o ao tentar se conectar a stream",
+            "template_error": "Erro ao renderizar o modelo. Revise o registro para obter mais informa\u00e7\u00f5es.",
+            "timeout": "Tempo limite ao carregar a URL",
+            "unable_still_load": "N\u00e3o foi poss\u00edvel carregar uma imagem v\u00e1lida do URL da imagem est\u00e1tica (por exemplo, host inv\u00e1lido, URL ou falha de autentica\u00e7\u00e3o). Revise o log para obter mais informa\u00e7\u00f5es.",
+            "unknown": "Erro inesperado"
+        },
+        "step": {
+            "confirm": {
+                "description": "Deseja iniciar a configura\u00e7\u00e3o?"
+            },
+            "content_type": {
+                "data": {
+                    "content_type": "Tipo de conte\u00fado"
+                },
+                "description": "Especifique o tipo de conte\u00fado para o stream."
+            },
+            "user": {
+                "data": {
+                    "authentication": "Autentica\u00e7\u00e3o",
+                    "framerate": "Taxa de quadros (Hz)",
+                    "limit_refetch_to_url_change": "Limitar a nova busca \u00e0 altera\u00e7\u00e3o de URL",
+                    "password": "Senha",
+                    "rtsp_transport": "Protocolo RTSP",
+                    "still_image_url": "URL da imagem est\u00e1tica (por exemplo, http://...)",
+                    "stream_source": "URL de origem da Stream (por exemplo, rtsp://...)",
+                    "username": "Usu\u00e1rio",
+                    "verify_ssl": "Verifique o certificado SSL"
+                },
+                "description": "Insira as configura\u00e7\u00f5es para se conectar \u00e0 c\u00e2mera."
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "already_exists": "J\u00e1 existe uma c\u00e2mera com essas configura\u00e7\u00f5es de URL.",
+            "invalid_still_image": "A URL n\u00e3o retornou uma imagem est\u00e1tica v\u00e1lida",
+            "malformed_url": "URL malformada",
+            "no_still_image_or_stream_url": "Voc\u00ea deve especificar pelo menos uma imagem est\u00e1tica ou uma URL de stream",
+            "relative_url": "URLs relativas n\u00e3o s\u00e3o permitidas",
+            "stream_file_not_found": "Arquivo n\u00e3o encontrado ao tentar se conectar a stream (o ffmpeg est\u00e1 instalado?)",
+            "stream_http_not_found": "HTTP 404 n\u00e3o encontrado ao tentar se conectar a stream",
+            "stream_io_error": "Erro de entrada/sa\u00edda ao tentar se conectar a stream. Protocolo RTSP errado?",
+            "stream_no_route_to_host": "N\u00e3o foi poss\u00edvel encontrar o host ao tentar se conectar a stream",
+            "stream_no_video": "A stream n\u00e3o tem v\u00eddeo",
+            "stream_not_permitted": "Opera\u00e7\u00e3o n\u00e3o permitida ao tentar se conectar a stream. Protocolo RTSP errado?",
+            "stream_unauthorised": "Falha na autoriza\u00e7\u00e3o ao tentar se conectar a stream",
+            "template_error": "Erro ao renderizar o modelo. Revise o registro para obter mais informa\u00e7\u00f5es.",
+            "timeout": "Tempo limite ao carregar a URL",
+            "unable_still_load": "N\u00e3o foi poss\u00edvel carregar uma imagem v\u00e1lida do URL da imagem est\u00e1tica (por exemplo, host inv\u00e1lido, URL ou falha de autentica\u00e7\u00e3o). Revise o log para obter mais informa\u00e7\u00f5es.",
+            "unknown": "Erro inesperado"
+        },
+        "step": {
+            "content_type": {
+                "data": {
+                    "content_type": "Tipo de conte\u00fado"
+                },
+                "description": "Especifique o tipo de conte\u00fado para o stream."
+            },
+            "init": {
+                "data": {
+                    "authentication": "Autentica\u00e7\u00e3o",
+                    "framerate": "Taxa de quadros (Hz)",
+                    "limit_refetch_to_url_change": "Limitar a nova busca \u00e0 altera\u00e7\u00e3o de URL",
+                    "password": "Senha",
+                    "rtsp_transport": "Protocolo RTSP",
+                    "still_image_url": "URL da imagem est\u00e1tica (por exemplo, http://...)",
+                    "stream_source": "URL de origem da Stream (por exemplo, rtsp://...)",
+                    "use_wallclock_as_timestamps": "Use o rel\u00f3gio de parede como data/hora",
+                    "username": "Usu\u00e1rio",
+                    "verify_ssl": "Verifique o certificado SSL"
+                },
+                "data_description": {
+                    "use_wallclock_as_timestamps": "Esta op\u00e7\u00e3o pode corrigir problemas de segmenta\u00e7\u00e3o ou travamento decorrentes de implementa\u00e7\u00f5es de data/hora com erros em algumas c\u00e2meras"
+                }
+            }
+        }
+    }
+}

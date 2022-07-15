@@ -1,13 +1,19 @@
 """Config flow for System Bridge integration."""
 from __future__ import annotations
 
+import asyncio
+from collections.abc import Mapping
 import logging
 from typing import Any
 
 import async_timeout
-from systembridge import Bridge
-from systembridge.client import BridgeClient
-from systembridge.exceptions import BridgeAuthenticationException
+from systembridgeconnector.const import EVENT_MODULE, EVENT_TYPE, TYPE_DATA_UPDATE
+from systembridgeconnector.exceptions import (
+    AuthenticationException,
+    ConnectionClosedException,
+    ConnectionErrorException,
+)
+from systembridgeconnector.websocket_client import WebSocketClient
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
@@ -15,9 +21,10 @@ from homeassistant.components import zeroconf
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import BRIDGE_CONNECTION_ERRORS, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,39 +38,84 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, str]:
+async def validate_input(
+    hass: HomeAssistant,
+    data: dict[str, Any],
+) -> dict[str, str]:
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    bridge = Bridge(
-        BridgeClient(aiohttp_client.async_get_clientsession(hass)),
-        f"http://{data[CONF_HOST]}:{data[CONF_PORT]}",
+    host = data[CONF_HOST]
+
+    websocket_client = WebSocketClient(
+        host,
+        data[CONF_PORT],
         data[CONF_API_KEY],
     )
-
-    hostname = data[CONF_HOST]
     try:
         async with async_timeout.timeout(30):
-            await bridge.async_get_information()
-            if (
-                bridge.information is not None
-                and bridge.information.host is not None
-                and bridge.information.uuid is not None
-            ):
-                hostname = bridge.information.host
-                uuid = bridge.information.uuid
-    except BridgeAuthenticationException as exception:
-        _LOGGER.info(exception)
+            await websocket_client.connect(session=async_get_clientsession(hass))
+            await websocket_client.get_data(["system"])
+            while True:
+                message = await websocket_client.receive_message()
+                _LOGGER.debug("Message: %s", message)
+                if (
+                    message[EVENT_TYPE] == TYPE_DATA_UPDATE
+                    and message[EVENT_MODULE] == "system"
+                ):
+                    break
+    except AuthenticationException as exception:
+        _LOGGER.warning(
+            "Authentication error when connecting to %s: %s", data[CONF_HOST], exception
+        )
         raise InvalidAuth from exception
-    except BRIDGE_CONNECTION_ERRORS as exception:
-        _LOGGER.info(exception)
+    except (
+        ConnectionClosedException,
+        ConnectionErrorException,
+    ) as exception:
+        _LOGGER.warning(
+            "Connection error when connecting to %s: %s", data[CONF_HOST], exception
+        )
+        raise CannotConnect from exception
+    except asyncio.TimeoutError as exception:
+        _LOGGER.warning("Timed out connecting to %s: %s", data[CONF_HOST], exception)
         raise CannotConnect from exception
 
-    return {"hostname": hostname, "uuid": uuid}
+    _LOGGER.debug("%s Message: %s", TYPE_DATA_UPDATE, message)
+
+    if "uuid" not in message["data"]:
+        error = "No UUID in result!"
+        raise CannotConnect(error)
+
+    return {"hostname": host, "uuid": message["data"]["uuid"]}
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+async def _async_get_info(
+    hass: HomeAssistant,
+    user_input: dict[str, Any],
+) -> tuple[dict[str, str], dict[str, str] | None]:
+    errors = {}
+
+    try:
+        info = await validate_input(hass, user_input)
+    except CannotConnect:
+        errors["base"] = "cannot_connect"
+    except InvalidAuth:
+        errors["base"] = "invalid_auth"
+    except Exception:  # pylint: disable=broad-except
+        _LOGGER.exception("Unexpected exception")
+        errors["base"] = "unknown"
+    else:
+        return errors, info
+
+    return errors, None
+
+
+class ConfigFlow(
+    config_entries.ConfigFlow,
+    domain=DOMAIN,
+):
     """Handle a config flow for System Bridge."""
 
     VERSION = 1
@@ -74,25 +126,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._input: dict[str, Any] = {}
         self._reauth = False
 
-    async def _async_get_info(
-        self, user_input: dict[str, Any]
-    ) -> tuple[dict[str, str], dict[str, str] | None]:
-        errors = {}
-
-        try:
-            info = await validate_input(self.hass, user_input)
-        except CannotConnect:
-            errors["base"] = "cannot_connect"
-        except InvalidAuth:
-            errors["base"] = "invalid_auth"
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
-        else:
-            return errors, info
-
-        return errors, None
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -102,7 +135,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
 
-        errors, info = await self._async_get_info(user_input)
+        errors, info = await _async_get_info(self.hass, user_input)
         if not errors and info is not None:
             # Check if already configured
             await self.async_set_unique_id(info["uuid"], raise_on_progress=False)
@@ -122,7 +155,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             user_input = {**self._input, **user_input}
-            errors, info = await self._async_get_info(user_input)
+            errors, info = await _async_get_info(self.hass, user_input)
             if not errors and info is not None:
                 # Check if already configured
                 existing_entry = await self.async_set_unique_id(info["uuid"])
@@ -170,7 +203,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_authenticate()
 
-    async def async_step_reauth(self, entry_data: dict[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""
         self._name = entry_data[CONF_HOST]
         self._input = {

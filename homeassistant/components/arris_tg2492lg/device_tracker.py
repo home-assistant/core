@@ -10,7 +10,9 @@ from homeassistant.components.device_tracker import (
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 DEFAULT_HOST = "192.168.178.1"
 
@@ -22,7 +24,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(hass, config):
+def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner:
     """Return the Arris device scanner."""
     conf = config[DOMAIN]
     url = f"http://{conf[CONF_HOST]}"

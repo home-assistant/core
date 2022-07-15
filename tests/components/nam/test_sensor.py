@@ -8,7 +8,8 @@ from homeassistant.components.nam.const import DOMAIN
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     DOMAIN as SENSOR_DOMAIN,
-    STATE_CLASS_MEASUREMENT,
+    SensorDeviceClass,
+    SensorStateClass,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -17,15 +18,6 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
-    DEVICE_CLASS_CO2,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_PM1,
-    DEVICE_CLASS_PM10,
-    DEVICE_CLASS_PM25,
-    DEVICE_CLASS_PRESSURE,
-    DEVICE_CLASS_SIGNAL_STRENGTH,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_TIMESTAMP,
     PERCENTAGE,
     PRESSURE_HPA,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
@@ -62,13 +54,16 @@ async def test_sensor(hass):
         disabled_by=None,
     )
 
-    await init_integration(hass)
+    # Patch return value from utcnow, with offset to make sure the patch is correct
+    now = utcnow() - timedelta(hours=1)
+    with patch("homeassistant.components.nam.sensor.utcnow", return_value=now):
+        await init_integration(hass)
 
     state = hass.states.get("sensor.nettigo_air_monitor_bme280_humidity")
     assert state
     assert state.state == "45.7"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_HUMIDITY
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.HUMIDITY
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
 
     entry = registry.async_get("sensor.nettigo_air_monitor_bme280_humidity")
@@ -78,8 +73,8 @@ async def test_sensor(hass):
     state = hass.states.get("sensor.nettigo_air_monitor_bme280_temperature")
     assert state
     assert state.state == "7.6"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_TEMPERATURE
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TEMPERATURE
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
 
     entry = registry.async_get("sensor.nettigo_air_monitor_bme280_temperature")
@@ -89,8 +84,8 @@ async def test_sensor(hass):
     state = hass.states.get("sensor.nettigo_air_monitor_bme280_pressure")
     assert state
     assert state.state == "1011"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_PRESSURE
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PRESSURE
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PRESSURE_HPA
 
     entry = registry.async_get("sensor.nettigo_air_monitor_bme280_pressure")
@@ -100,8 +95,8 @@ async def test_sensor(hass):
     state = hass.states.get("sensor.nettigo_air_monitor_bmp180_temperature")
     assert state
     assert state.state == "7.6"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_TEMPERATURE
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TEMPERATURE
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
 
     entry = registry.async_get("sensor.nettigo_air_monitor_bmp180_temperature")
@@ -111,8 +106,8 @@ async def test_sensor(hass):
     state = hass.states.get("sensor.nettigo_air_monitor_bmp180_pressure")
     assert state
     assert state.state == "1032"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_PRESSURE
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PRESSURE
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PRESSURE_HPA
 
     entry = registry.async_get("sensor.nettigo_air_monitor_bmp180_pressure")
@@ -122,8 +117,8 @@ async def test_sensor(hass):
     state = hass.states.get("sensor.nettigo_air_monitor_bmp280_temperature")
     assert state
     assert state.state == "5.6"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_TEMPERATURE
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TEMPERATURE
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
 
     entry = registry.async_get("sensor.nettigo_air_monitor_bmp280_temperature")
@@ -133,8 +128,8 @@ async def test_sensor(hass):
     state = hass.states.get("sensor.nettigo_air_monitor_bmp280_pressure")
     assert state
     assert state.state == "1022"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_PRESSURE
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PRESSURE
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PRESSURE_HPA
 
     entry = registry.async_get("sensor.nettigo_air_monitor_bmp280_pressure")
@@ -144,8 +139,8 @@ async def test_sensor(hass):
     state = hass.states.get("sensor.nettigo_air_monitor_sht3x_humidity")
     assert state
     assert state.state == "34.7"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_HUMIDITY
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.HUMIDITY
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
 
     entry = registry.async_get("sensor.nettigo_air_monitor_sht3x_humidity")
@@ -155,8 +150,8 @@ async def test_sensor(hass):
     state = hass.states.get("sensor.nettigo_air_monitor_sht3x_temperature")
     assert state
     assert state.state == "6.3"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_TEMPERATURE
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TEMPERATURE
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
 
     entry = registry.async_get("sensor.nettigo_air_monitor_sht3x_temperature")
@@ -166,8 +161,8 @@ async def test_sensor(hass):
     state = hass.states.get("sensor.nettigo_air_monitor_dht22_humidity")
     assert state
     assert state.state == "46.2"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_HUMIDITY
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.HUMIDITY
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
 
     entry = registry.async_get("sensor.nettigo_air_monitor_dht22_humidity")
@@ -177,8 +172,8 @@ async def test_sensor(hass):
     state = hass.states.get("sensor.nettigo_air_monitor_dht22_temperature")
     assert state
     assert state.state == "6.3"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_TEMPERATURE
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TEMPERATURE
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
 
     entry = registry.async_get("sensor.nettigo_air_monitor_dht22_temperature")
@@ -188,8 +183,8 @@ async def test_sensor(hass):
     state = hass.states.get("sensor.nettigo_air_monitor_heca_humidity")
     assert state
     assert state.state == "50.0"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_HUMIDITY
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.HUMIDITY
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
 
     entry = registry.async_get("sensor.nettigo_air_monitor_heca_humidity")
@@ -199,8 +194,8 @@ async def test_sensor(hass):
     state = hass.states.get("sensor.nettigo_air_monitor_heca_temperature")
     assert state
     assert state.state == "8.0"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_TEMPERATURE
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TEMPERATURE
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
 
     entry = registry.async_get("sensor.nettigo_air_monitor_heca_temperature")
@@ -210,8 +205,8 @@ async def test_sensor(hass):
     state = hass.states.get("sensor.nettigo_air_monitor_signal_strength")
     assert state
     assert state.state == "-72"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_SIGNAL_STRENGTH
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.SIGNAL_STRENGTH
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == SIGNAL_STRENGTH_DECIBELS_MILLIWATT
@@ -225,9 +220,9 @@ async def test_sensor(hass):
     assert state
     assert (
         state.state
-        == (utcnow() - timedelta(seconds=456987)).replace(microsecond=0).isoformat()
+        == (now - timedelta(seconds=456987)).replace(microsecond=0).isoformat()
     )
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_TIMESTAMP
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TIMESTAMP
     assert state.attributes.get(ATTR_STATE_CLASS) is None
 
     entry = registry.async_get("sensor.nettigo_air_monitor_uptime")
@@ -237,8 +232,8 @@ async def test_sensor(hass):
     state = hass.states.get("sensor.nettigo_air_monitor_sds011_particulate_matter_10")
     assert state
     assert state.state == "19"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_PM10
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PM10
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
@@ -253,8 +248,8 @@ async def test_sensor(hass):
     state = hass.states.get("sensor.nettigo_air_monitor_sds011_particulate_matter_2_5")
     assert state
     assert state.state == "11"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_PM25
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PM25
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
@@ -269,8 +264,8 @@ async def test_sensor(hass):
     state = hass.states.get("sensor.nettigo_air_monitor_sps30_particulate_matter_1_0")
     assert state
     assert state.state == "31"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_PM1
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PM1
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
@@ -285,8 +280,8 @@ async def test_sensor(hass):
     state = hass.states.get("sensor.nettigo_air_monitor_sps30_particulate_matter_10")
     assert state
     assert state.state == "21"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_PM10
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PM10
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
@@ -299,8 +294,8 @@ async def test_sensor(hass):
     state = hass.states.get("sensor.nettigo_air_monitor_sps30_particulate_matter_2_5")
     assert state
     assert state.state == "34"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_PM25
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PM25
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
@@ -315,7 +310,7 @@ async def test_sensor(hass):
     state = hass.states.get("sensor.nettigo_air_monitor_sps30_particulate_matter_4_0")
     assert state
     assert state.state == "25"
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
@@ -331,8 +326,8 @@ async def test_sensor(hass):
     state = hass.states.get("sensor.nettigo_air_monitor_mh_z14a_carbon_dioxide")
     assert state
     assert state.state == "865"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_CO2
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.CO2
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_PARTS_PER_MILLION
@@ -351,7 +346,7 @@ async def test_sensor_disabled(hass):
     assert entry
     assert entry.unique_id == "aa:bb:cc:dd:ee:ff-signal"
     assert entry.disabled
-    assert entry.disabled_by == er.DISABLED_INTEGRATION
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
     # Test enabling entity
     updated_entry = registry.async_update_entity(
@@ -369,7 +364,7 @@ async def test_incompleta_data_after_device_restart(hass):
     state = hass.states.get("sensor.nettigo_air_monitor_heca_temperature")
     assert state
     assert state.state == "8.0"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_TEMPERATURE
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TEMPERATURE
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
 
     future = utcnow() + timedelta(minutes=6)

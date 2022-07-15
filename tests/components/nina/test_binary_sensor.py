@@ -1,16 +1,18 @@
 """Test the Nina binary sensor."""
-import json
-from typing import Any, Dict
-from unittest.mock import patch
+from __future__ import annotations
 
-from pynina import ApiError
+from typing import Any
+from unittest.mock import patch
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.nina.const import (
+    ATTR_DESCRIPTION,
     ATTR_EXPIRES,
     ATTR_HEADLINE,
     ATTR_ID,
+    ATTR_SENDER,
     ATTR_SENT,
+    ATTR_SEVERITY,
     ATTR_START,
     DOMAIN,
 )
@@ -19,15 +21,17 @@ from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, load_fixture
+from . import mocked_request_function
 
-ENTRY_DATA: Dict[str, Any] = {
+from tests.common import MockConfigEntry
+
+ENTRY_DATA: dict[str, Any] = {
     "slots": 5,
     "corona_filter": True,
     "regions": {"083350000000": "Aach, Stadt"},
 }
 
-ENTRY_DATA_NO_CORONA: Dict[str, Any] = {
+ENTRY_DATA_NO_CORONA: dict[str, Any] = {
     "slots": 5,
     "corona_filter": False,
     "regions": {"083350000000": "Aach, Stadt"},
@@ -37,13 +41,9 @@ ENTRY_DATA_NO_CORONA: Dict[str, Any] = {
 async def test_sensors(hass: HomeAssistant) -> None:
     """Test the creation and values of the NINA sensors."""
 
-    dummy_response: Dict[str, Any] = json.loads(
-        load_fixture("sample_warnings.json", "nina")
-    )
-
     with patch(
         "pynina.baseApi.BaseAPI._makeRequest",
-        return_value=dummy_response,
+        wraps=mocked_request_function,
     ):
 
         conf_entry: MockConfigEntry = MockConfigEntry(
@@ -63,6 +63,12 @@ async def test_sensors(hass: HomeAssistant) -> None:
 
         assert state_w1.state == STATE_ON
         assert state_w1.attributes.get(ATTR_HEADLINE) == "Ausfall Notruf 112"
+        assert (
+            state_w1.attributes.get(ATTR_DESCRIPTION)
+            == "Es treten Sturmböen mit Geschwindigkeiten zwischen 70 km/h (20m/s, 38kn, Bft 8) und 85 km/h (24m/s, 47kn, Bft 9) aus westlicher Richtung auf. In Schauernähe sowie in exponierten Lagen muss mit schweren Sturmböen bis 90 km/h (25m/s, 48kn, Bft 10) gerechnet werden."
+        )
+        assert state_w1.attributes.get(ATTR_SENDER) == "Deutscher Wetterdienst"
+        assert state_w1.attributes.get(ATTR_SEVERITY) == "Minor"
         assert state_w1.attributes.get(ATTR_ID) == "mow.DE-NW-BN-SE030-20201014-30-000"
         assert state_w1.attributes.get(ATTR_SENT) == "2021-10-11T05:20:00+01:00"
         assert state_w1.attributes.get(ATTR_START) == "2021-11-01T05:20:00+01:00"
@@ -76,6 +82,9 @@ async def test_sensors(hass: HomeAssistant) -> None:
 
         assert state_w2.state == STATE_OFF
         assert state_w2.attributes.get(ATTR_HEADLINE) is None
+        assert state_w2.attributes.get(ATTR_DESCRIPTION) is None
+        assert state_w2.attributes.get(ATTR_SENDER) is None
+        assert state_w2.attributes.get(ATTR_SEVERITY) is None
         assert state_w2.attributes.get(ATTR_ID) is None
         assert state_w2.attributes.get(ATTR_SENT) is None
         assert state_w2.attributes.get(ATTR_START) is None
@@ -89,6 +98,9 @@ async def test_sensors(hass: HomeAssistant) -> None:
 
         assert state_w3.state == STATE_OFF
         assert state_w3.attributes.get(ATTR_HEADLINE) is None
+        assert state_w3.attributes.get(ATTR_DESCRIPTION) is None
+        assert state_w3.attributes.get(ATTR_SENDER) is None
+        assert state_w3.attributes.get(ATTR_SEVERITY) is None
         assert state_w3.attributes.get(ATTR_ID) is None
         assert state_w3.attributes.get(ATTR_SENT) is None
         assert state_w3.attributes.get(ATTR_START) is None
@@ -102,6 +114,9 @@ async def test_sensors(hass: HomeAssistant) -> None:
 
         assert state_w4.state == STATE_OFF
         assert state_w4.attributes.get(ATTR_HEADLINE) is None
+        assert state_w4.attributes.get(ATTR_DESCRIPTION) is None
+        assert state_w4.attributes.get(ATTR_SENDER) is None
+        assert state_w4.attributes.get(ATTR_SEVERITY) is None
         assert state_w4.attributes.get(ATTR_ID) is None
         assert state_w4.attributes.get(ATTR_SENT) is None
         assert state_w4.attributes.get(ATTR_START) is None
@@ -115,6 +130,9 @@ async def test_sensors(hass: HomeAssistant) -> None:
 
         assert state_w5.state == STATE_OFF
         assert state_w5.attributes.get(ATTR_HEADLINE) is None
+        assert state_w5.attributes.get(ATTR_DESCRIPTION) is None
+        assert state_w5.attributes.get(ATTR_SENDER) is None
+        assert state_w5.attributes.get(ATTR_SEVERITY) is None
         assert state_w5.attributes.get(ATTR_ID) is None
         assert state_w5.attributes.get(ATTR_SENT) is None
         assert state_w5.attributes.get(ATTR_START) is None
@@ -127,13 +145,9 @@ async def test_sensors(hass: HomeAssistant) -> None:
 async def test_sensors_without_corona_filter(hass: HomeAssistant) -> None:
     """Test the creation and values of the NINA sensors without the corona filter."""
 
-    dummy_response: Dict[str, Any] = json.loads(
-        load_fixture("nina/sample_warnings.json")
-    )
-
     with patch(
         "pynina.baseApi.BaseAPI._makeRequest",
-        return_value=dummy_response,
+        wraps=mocked_request_function,
     ):
 
         conf_entry: MockConfigEntry = MockConfigEntry(
@@ -156,6 +170,12 @@ async def test_sensors_without_corona_filter(hass: HomeAssistant) -> None:
             state_w1.attributes.get(ATTR_HEADLINE)
             == "Corona-Verordnung des Landes: Warnstufe durch Landesgesundheitsamt ausgerufen"
         )
+        assert (
+            state_w1.attributes.get(ATTR_DESCRIPTION)
+            == "Die Zahl der mit dem Corona-Virus infizierten Menschen steigt gegenwärtig stark an. Es wächst daher die Gefahr einer weiteren Verbreitung der Infektion und - je nach Einzelfall - auch von schweren Erkrankungen."
+        )
+        assert state_w1.attributes.get(ATTR_SENDER) == ""
+        assert state_w1.attributes.get(ATTR_SEVERITY) == "Minor"
         assert state_w1.attributes.get(ATTR_ID) == "mow.DE-BW-S-SE018-20211102-18-001"
         assert state_w1.attributes.get(ATTR_SENT) == "2021-11-02T20:07:16+01:00"
         assert state_w1.attributes.get(ATTR_START) == ""
@@ -169,6 +189,12 @@ async def test_sensors_without_corona_filter(hass: HomeAssistant) -> None:
 
         assert state_w2.state == STATE_ON
         assert state_w2.attributes.get(ATTR_HEADLINE) == "Ausfall Notruf 112"
+        assert (
+            state_w2.attributes.get(ATTR_DESCRIPTION)
+            == "Es treten Sturmböen mit Geschwindigkeiten zwischen 70 km/h (20m/s, 38kn, Bft 8) und 85 km/h (24m/s, 47kn, Bft 9) aus westlicher Richtung auf. In Schauernähe sowie in exponierten Lagen muss mit schweren Sturmböen bis 90 km/h (25m/s, 48kn, Bft 10) gerechnet werden."
+        )
+        assert state_w2.attributes.get(ATTR_SENDER) == "Deutscher Wetterdienst"
+        assert state_w2.attributes.get(ATTR_SEVERITY) == "Minor"
         assert state_w2.attributes.get(ATTR_ID) == "mow.DE-NW-BN-SE030-20201014-30-000"
         assert state_w2.attributes.get(ATTR_SENT) == "2021-10-11T05:20:00+01:00"
         assert state_w2.attributes.get(ATTR_START) == "2021-11-01T05:20:00+01:00"
@@ -182,6 +208,9 @@ async def test_sensors_without_corona_filter(hass: HomeAssistant) -> None:
 
         assert state_w3.state == STATE_OFF
         assert state_w3.attributes.get(ATTR_HEADLINE) is None
+        assert state_w3.attributes.get(ATTR_DESCRIPTION) is None
+        assert state_w3.attributes.get(ATTR_SENDER) is None
+        assert state_w3.attributes.get(ATTR_SEVERITY) is None
         assert state_w3.attributes.get(ATTR_ID) is None
         assert state_w3.attributes.get(ATTR_SENT) is None
         assert state_w3.attributes.get(ATTR_START) is None
@@ -195,6 +224,9 @@ async def test_sensors_without_corona_filter(hass: HomeAssistant) -> None:
 
         assert state_w4.state == STATE_OFF
         assert state_w4.attributes.get(ATTR_HEADLINE) is None
+        assert state_w4.attributes.get(ATTR_DESCRIPTION) is None
+        assert state_w4.attributes.get(ATTR_SENDER) is None
+        assert state_w4.attributes.get(ATTR_SEVERITY) is None
         assert state_w4.attributes.get(ATTR_ID) is None
         assert state_w4.attributes.get(ATTR_SENT) is None
         assert state_w4.attributes.get(ATTR_START) is None
@@ -208,6 +240,9 @@ async def test_sensors_without_corona_filter(hass: HomeAssistant) -> None:
 
         assert state_w5.state == STATE_OFF
         assert state_w5.attributes.get(ATTR_HEADLINE) is None
+        assert state_w5.attributes.get(ATTR_DESCRIPTION) is None
+        assert state_w5.attributes.get(ATTR_SENDER) is None
+        assert state_w5.attributes.get(ATTR_SEVERITY) is None
         assert state_w5.attributes.get(ATTR_ID) is None
         assert state_w5.attributes.get(ATTR_SENT) is None
         assert state_w5.attributes.get(ATTR_START) is None
@@ -215,21 +250,3 @@ async def test_sensors_without_corona_filter(hass: HomeAssistant) -> None:
 
         assert entry_w5.unique_id == "083350000000-5"
         assert state_w5.attributes.get("device_class") == BinarySensorDeviceClass.SAFETY
-
-
-async def test_sensors_connection_error(hass: HomeAssistant) -> None:
-    """Test the creation and values of the NINA sensors with no connected."""
-    with patch(
-        "pynina.baseApi.BaseAPI._makeRequest",
-        side_effect=ApiError("Could not connect to Api"),
-    ):
-        conf_entry: MockConfigEntry = MockConfigEntry(
-            domain=DOMAIN, title="NINA", data=ENTRY_DATA
-        )
-
-        conf_entry.add_to_hass(hass)
-
-        await hass.config_entries.async_setup(conf_entry.entry_id)
-        await hass.async_block_till_done()
-
-        assert conf_entry.state == ConfigEntryState.SETUP_RETRY

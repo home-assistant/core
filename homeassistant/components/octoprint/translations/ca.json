@@ -21,7 +21,8 @@
                     "path": "Ruta d'aplicaci\u00f3",
                     "port": "N\u00famero de port",
                     "ssl": "Utilitza SSL",
-                    "username": "Nom d'usuari"
+                    "username": "Nom d'usuari",
+                    "verify_ssl": "Verifica el certificat SSL"
                 }
             }
         }

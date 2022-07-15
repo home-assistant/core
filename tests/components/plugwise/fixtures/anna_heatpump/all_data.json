@@ -1,0 +1,82 @@
+[
+  {
+    "smile_name": "Anna",
+    "gateway_id": "015ae9ea3f964e668e490fa39da3870b",
+    "heater_id": "1cbf783bb11e4a7c8a6843dee3a86927",
+    "cooling_present": true,
+    "notifications": {}
+  },
+  {
+    "1cbf783bb11e4a7c8a6843dee3a86927": {
+      "dev_class": "heater_central",
+      "location": "a57efe5f145f498c9be62a9b63626fbf",
+      "model": "Generic heater",
+      "name": "OpenTherm",
+      "vendor": "Techneco",
+      "lower_bound": 0.0,
+      "upper_bound": 100.0,
+      "resolution": 1.0,
+      "maximum_boiler_temperature": 60.0,
+      "binary_sensors": {
+        "dhw_state": false,
+        "heating_state": true,
+        "compressor_state": true,
+        "cooling_state": false,
+        "slave_boiler_state": false,
+        "flame_state": false
+      },
+      "sensors": {
+        "water_temperature": 29.1,
+        "intended_boiler_temperature": 0.0,
+        "modulation_level": 52,
+        "return_temperature": 25.1,
+        "water_pressure": 1.57,
+        "outdoor_air_temperature": 3.0
+      },
+      "switches": {
+        "dhw_cm_switch": false
+      }
+    },
+    "015ae9ea3f964e668e490fa39da3870b": {
+      "dev_class": "gateway",
+      "firmware": "4.0.15",
+      "hardware": "AME Smile 2.0 board",
+      "location": "a57efe5f145f498c9be62a9b63626fbf",
+      "mac_address": "012345670001",
+      "model": "Anna",
+      "name": "Anna",
+      "vendor": "Plugwise B.V.",
+      "binary_sensors": {
+        "plugwise_notification": false
+      },
+      "sensors": {
+        "outdoor_temperature": 20.2
+      }
+    },
+    "3cb70739631c4d17a86b8b12e8a5161b": {
+      "dev_class": "thermostat",
+      "firmware": "2018-02-08T11:15:53+01:00",
+      "hardware": "6539-1301-5002",
+      "location": "c784ee9fdab44e1395b8dee7d7a497d5",
+      "model": "Anna",
+      "name": "Anna",
+      "vendor": "Plugwise",
+      "lower_bound": 4.0,
+      "upper_bound": 30.0,
+      "resolution": 0.1,
+      "preset_modes": ["no_frost", "home", "away", "asleep", "vacation"],
+      "active_preset": "home",
+      "available_schedules": ["standaard"],
+      "selected_schedule": "standaard",
+      "last_used": "standaard",
+      "mode": "auto",
+      "sensors": {
+        "temperature": 19.3,
+        "setpoint": 21.0,
+        "illuminance": 86.0,
+        "cooling_activation_outdoor_temperature": 21.0,
+        "cooling_deactivation_threshold": 4.0
+      }
+    }
+  }
+]

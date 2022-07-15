@@ -6,6 +6,9 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FliprEntity
 from .const import DOMAIN
@@ -24,7 +27,11 @@ BINARY_SENSORS_TYPES: tuple[BinarySensorEntityDescription, ...] = (
 )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Defer sensor setup of flipr binary sensors."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
 

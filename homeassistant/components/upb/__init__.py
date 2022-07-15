@@ -1,9 +1,9 @@
 """Support the UPB PIM."""
-
 import upb_lib
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_COMMAND, CONF_FILE_PATH, CONF_HOST, Platform
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import (
@@ -17,7 +17,7 @@ from .const import (
 PLATFORMS = [Platform.LIGHT, Platform.SCENE]
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up a new config_entry for UPB PIM."""
 
     url = config_entry.data[CONF_HOST]
@@ -28,7 +28,7 @@ async def async_setup_entry(hass, config_entry):
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.entry_id] = {"upb": upb}
 
-    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     def _element_changed(element, changeset):
         if (change := changeset.get("last_change")) is None:
@@ -53,7 +53,7 @@ async def async_setup_entry(hass, config_entry):
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload the config_entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
@@ -74,11 +74,6 @@ class UpbEntity(Entity):
         self._element = element
         element_type = "link" if element.addr.is_link else "device"
         self._unique_id = f"{unique_id}_{element_type}_{element.addr}"
-
-    @property
-    def name(self):
-        """Name of the element."""
-        return self._element.name
 
     @property
     def unique_id(self):

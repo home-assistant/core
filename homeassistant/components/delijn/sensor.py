@@ -1,4 +1,7 @@
 """Support for De Lijn (Flemish public transport) information."""
+from __future__ import annotations
+
+from datetime import datetime
 import logging
 
 from pydelijn.api import Passages
@@ -11,8 +14,11 @@ from homeassistant.components.sensor import (
     SensorEntity,
 )
 from homeassistant.const import CONF_API_KEY
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +52,12 @@ AUTO_ATTRIBUTES = (
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Create the sensor."""
     api_key = config[CONF_API_KEY]
 
@@ -57,7 +68,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         sensors.append(
             DeLijnPublicTransportSensor(
                 Passages(
-                    hass.loop,
                     nextpassage[CONF_STOP_ID],
                     nextpassage[CONF_NUMBER_OF_DEPARTURES],
                     api_key,
@@ -102,7 +112,9 @@ class DeLijnPublicTransportSensor(SensorEntity):
             first = self.line.passages[0]
             if (first_passage := first["due_at_realtime"]) is None:
                 first_passage = first["due_at_schedule"]
-            self._attr_native_value = first_passage
+            self._attr_native_value = datetime.strptime(
+                first_passage, "%Y-%m-%dT%H:%M:%S%z"
+            )
 
             for key in AUTO_ATTRIBUTES:
                 self._attr_extra_state_attributes[key] = first[key]

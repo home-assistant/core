@@ -22,7 +22,7 @@
             "fan_only": "Ventilateur seul",
             "heat": "Chauffe",
             "heat_cool": "Chaud/Froid",
-            "off": "Inactif"
+            "off": "D\u00e9sactiv\u00e9"
         }
     },
     "title": "Thermostat"

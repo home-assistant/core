@@ -4,7 +4,7 @@
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
             "device_unsupported": "Il dispositivo non \u00e8 supportato.",
             "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente",
-            "reauth_unsuccessful": "La riautenticazione non \u00e8 andata a buon fine, rimuovere l'integrazione e configurarla di nuovo."
+            "reauth_unsuccessful": "La nuova autenticazione non \u00e8 andata a buon fine, rimuovi l'integrazione e configurala di nuovo."
         },
         "error": {
             "cannot_connect": "Impossibile connettersi",

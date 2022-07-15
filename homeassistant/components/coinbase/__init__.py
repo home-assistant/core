@@ -76,7 +76,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data[DOMAIN][entry.entry_id] = instance
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -99,7 +99,7 @@ def create_and_update_instance(entry: ConfigEntry) -> CoinbaseData:
     return instance
 
 
-async def update_listener(hass, config_entry):
+async def update_listener(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Handle options update."""
 
     await hass.config_entries.async_reload(config_entry.entry_id)
@@ -113,11 +113,11 @@ async def update_listener(hass, config_entry):
     for entity in entities:
         currency = entity.unique_id.split("-")[-1]
         if "xe" in entity.unique_id and currency not in config_entry.options.get(
-            CONF_EXCHANGE_RATES
+            CONF_EXCHANGE_RATES, []
         ):
             registry.async_remove(entity.entity_id)
         elif "wallet" in entity.unique_id and currency not in config_entry.options.get(
-            CONF_CURRENCIES
+            CONF_CURRENCIES, []
         ):
             registry.async_remove(entity.entity_id)
 

@@ -1,0 +1,12 @@
+{
+    "state": {
+        "yamaha_musiccast__zone_sleep": {
+            "90 min": "90 \u5206\u949f",
+            "off": "\u5173"
+        },
+        "yamaha_musiccast__zone_surr_decoder_type": {
+            "auto": "\u81ea\u52a8",
+            "toggle": "\u5207\u6362"
+        }
+    }
+}

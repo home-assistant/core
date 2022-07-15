@@ -1,0 +1,74 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado",
+            "already_in_progress": "O fluxo de configura\u00e7\u00e3o j\u00e1 est\u00e1 em andamento",
+            "backoff": "O dispositivo n\u00e3o aceita solicita\u00e7\u00f5es de emparelhamento neste momento (voc\u00ea pode ter digitado um c\u00f3digo PIN inv\u00e1lido muitas vezes), tente novamente mais tarde.",
+            "device_did_not_pair": "Nenhuma tentativa de concluir o processo de emparelhamento foi feita a partir do dispositivo.",
+            "device_not_found": "O dispositivo n\u00e3o foi encontrado durante a descoberta. Tente adicion\u00e1-lo novamente.",
+            "inconsistent_device": "Os protocolos esperados n\u00e3o foram encontrados durante a descoberta. Isso normalmente indica um problema com o DNS multicast (Zeroconf). Tente adicionar o dispositivo novamente.",
+            "ipv6_not_supported": "IPv6 n\u00e3o \u00e9 suportado.",
+            "no_devices_found": "Nenhum dispositivo encontrado na rede",
+            "reauth_successful": "A reautentica\u00e7\u00e3o foi bem-sucedida",
+            "setup_failed": "Falha ao configurar o dispositivo.",
+            "unknown": "Erro inesperado"
+        },
+        "error": {
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado",
+            "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida",
+            "no_devices_found": "Nenhum dispositivo encontrado na rede",
+            "unknown": "Erro inesperado"
+        },
+        "flow_title": "{name} ({type})",
+        "step": {
+            "confirm": {
+                "description": "Voc\u00ea est\u00e1 prestes a adicionar `{name}` do tipo `{type}` ao Home Assistant.\n\n** Para completar o processo, voc\u00ea pode ter que inserir v\u00e1rios c\u00f3digos PIN.**\n\nObserve que voc\u00ea *n\u00e3o* poder\u00e1 desligar sua TV Apple com esta integra\u00e7\u00e3o. Somente o reprodutor de m\u00eddia no Home Assistant ser\u00e1 desligado!",
+                "title": "Confirme a adi\u00e7\u00e3o da Apple TV"
+            },
+            "pair_no_pin": {
+                "description": "O emparelhamento \u00e9 necess\u00e1rio para o servi\u00e7o `{protocol}`. Digite PIN {pin} no dispositivo para continuar.",
+                "title": "Emparelhamento"
+            },
+            "pair_with_pin": {
+                "data": {
+                    "pin": "C\u00f3digo PIN"
+                },
+                "description": "O emparelhamento \u00e9 necess\u00e1rio para o protocolo `{protocol}`. Digite o c\u00f3digo PIN exibido na tela. Os zeros principais ser\u00e3o omitidos, ou seja, digite 123 se o c\u00f3digo exibido for 0123.",
+                "title": "Emparelhamento"
+            },
+            "password": {
+                "description": "Uma senha \u00e9 exigida por `{protocol}`. Isso ainda n\u00e3o est\u00e1 suportado, por favor desabilitar a senha para continuar.",
+                "title": "Senha requerida"
+            },
+            "protocol_disabled": {
+                "description": "O emparelhamento \u00e9 necess\u00e1rio para ` {protocol} ` mas est\u00e1 desabilitado no dispositivo. Revise as poss\u00edveis restri\u00e7\u00f5es de acesso (por exemplo, permitir que todos os dispositivos da rede local se conectem) no dispositivo. \n\n Voc\u00ea pode continuar sem emparelhar este protocolo, mas algumas funcionalidades ser\u00e3o limitadas.",
+                "title": "N\u00e3o \u00e9 poss\u00edvel emparelhar"
+            },
+            "reconfigure": {
+                "description": "Reconfigure este dispositivo para restaurar sua funcionalidade.",
+                "title": "Reconfigura\u00e7\u00e3o do dispositivo"
+            },
+            "service_problem": {
+                "description": "Ocorreu um problema ao emparelhar o protocolo `{protocol}`. Ser\u00e1 ignorado.",
+                "title": "Falha ao adicionar servi\u00e7o"
+            },
+            "user": {
+                "data": {
+                    "device_input": "Dispositivo"
+                },
+                "description": "Comece digitando o nome do dispositivo (por exemplo, Cozinha ou Quarto) ou o endere\u00e7o IP da Apple TV que voc\u00ea deseja adicionar. \n\n Se voc\u00ea n\u00e3o conseguir ver seu dispositivo ou tiver problemas, tente especificar o endere\u00e7o IP do dispositivo.",
+                "title": "Configurar uma nova Apple TV"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "start_off": "N\u00e3o ligue o dispositivo ao iniciar o Home Assistant"
+                },
+                "description": "Definir as configura\u00e7\u00f5es gerais do dispositivo"
+            }
+        }
+    }
+}

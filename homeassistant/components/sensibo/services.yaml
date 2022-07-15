@@ -1,18 +1,82 @@
 assume_state:
   name: Assume state
   description: Set Sensibo device to external state.
+  target:
+    entity:
+      integration: sensibo
+      domain: climate
   fields:
-    entity_id:
-      name: Entity
-      description: Name(s) of entities to change.
-      selector:
-        entity:
-          integration: sensibo
-          domain: climate
     state:
       name: State
       description: State to set.
       required: true
-      example: "idle"
+      example: "on"
       selector:
-        text:
+        select:
+          options:
+            - "on"
+            - "off"
+enable_timer:
+  name: Enable Timer
+  description: Enable the timer with custom time.
+  target:
+    entity:
+      integration: sensibo
+      domain: climate
+  fields:
+    minutes:
+      name: Minutes
+      description: Countdown for timer (for timer state on)
+      required: false
+      example: 30
+      selector:
+        number:
+          min: 0
+          step: 1
+          mode: box
+enable_pure_boost:
+  name: Enable Pure Boost
+  description: Enable and configure Pure Boost settings.
+  target:
+    entity:
+      integration: sensibo
+      domain: climate
+  fields:
+    ac_integration:
+      name: AC Integration
+      description: Integrate with Air Conditioner.
+      required: true
+      example: true
+      selector:
+        boolean:
+    geo_integration:
+      name: Geo Integration
+      description: Integrate with Presence.
+      required: true
+      example: true
+      selector:
+        boolean:
+    indoor_integration:
+      name: Indoor Air Quality
+      description: Integrate with checking indoor air quality.
+      required: true
+      example: true
+      selector:
+        boolean:
+    outdoor_integration:
+      name: Outdoor Air Quality
+      description: Integrate with checking outdoor air quality.
+      required: true
+      example: true
+      selector:
+        boolean:
+    sensitivity:
+      name: Sensitivity
+      description: Set the sensitivity for Pure Boost.
+      required: true
+      example: "Normal"
+      selector:
+        select:
+          options:
+            - "Normal"
+            - "Sensitive"

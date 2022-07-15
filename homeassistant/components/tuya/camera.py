@@ -4,7 +4,7 @@ from __future__ import annotations
 from tuya_iot import TuyaDevice, TuyaDeviceManager
 
 from homeassistant.components import ffmpeg
-from homeassistant.components.camera import SUPPORT_STREAM, Camera as CameraEntity
+from homeassistant.components.camera import Camera as CameraEntity, CameraEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -50,6 +50,9 @@ async def async_setup_entry(
 class TuyaCameraEntity(TuyaEntity, CameraEntity):
     """Tuya Camera Entity."""
 
+    _attr_supported_features = CameraEntityFeature.STREAM
+    _attr_brand = "Tuya"
+
     def __init__(
         self,
         device: TuyaDevice,
@@ -58,21 +61,12 @@ class TuyaCameraEntity(TuyaEntity, CameraEntity):
         """Init Tuya Camera."""
         super().__init__(device, device_manager)
         CameraEntity.__init__(self)
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return SUPPORT_STREAM
+        self._attr_model = device.product_name
 
     @property
     def is_recording(self) -> bool:
         """Return true if the device is recording."""
         return self.device.status.get(DPCode.RECORD_SWITCH, False)
-
-    @property
-    def brand(self) -> str | None:
-        """Return the camera brand."""
-        return "Tuya"
 
     @property
     def motion_detection_enabled(self) -> bool:
@@ -100,11 +94,6 @@ class TuyaCameraEntity(TuyaEntity, CameraEntity):
             width=width,
             height=height,
         )
-
-    @property
-    def model(self) -> str | None:
-        """Return the camera model."""
-        return self.device.product_name
 
     def enable_motion_detection(self) -> None:
         """Enable motion detection in the camera."""

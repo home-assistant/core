@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "not_intellifire_device": "Non \u00e8 un dispositivo IntelliFire.",
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
+        },
+        "error": {
+            "api_error": "Accesso non riuscito",
+            "cannot_connect": "Impossibile connettersi",
+            "iftapi_connect": "Errore durante la connessione a iftapi.net"
+        },
+        "flow_title": "{serial} ({host})",
+        "step": {
+            "api_config": {
+                "data": {
+                    "password": "Password",
+                    "username": "Email"
+                }
+            },
+            "dhcp_confirm": {
+                "description": "Vuoi configurare {host}\n Seriale: {serial}?"
+            },
+            "manual_device_entry": {
+                "data": {
+                    "host": "Host (indirizzo IP)"
+                },
+                "description": "Configurazione locale"
+            },
+            "pick_device": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Sono stati rilevati i seguenti dispositivi IntelliFire. Seleziona quello che desideri configurare.",
+                "title": "Selezione del dispositivo"
+            }
+        }
+    }
+}

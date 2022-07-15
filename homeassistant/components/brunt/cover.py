@@ -1,8 +1,6 @@
 """Support for Brunt Blind Engine covers."""
 from __future__ import annotations
 
-from collections.abc import MutableMapping
-import logging
 from typing import Any
 
 from aiohttp.client_exceptions import ClientResponseError
@@ -10,18 +8,15 @@ from brunt import BruntClientAsync, Thing
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    SUPPORT_CLOSE,
-    SUPPORT_OPEN,
-    SUPPORT_SET_POSITION,
     CoverDeviceClass,
     CoverEntity,
+    CoverEntityFeature,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -38,27 +33,6 @@ from .const import (
     OPEN_POSITION,
     REGULAR_INTERVAL,
 )
-
-_LOGGER = logging.getLogger(__name__)
-
-COVER_FEATURES = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Component setup, run import config flow for each entry in config."""
-    _LOGGER.warning(
-        "Loading brunt via platform config is deprecated; The configuration has been migrated to a config entry and can be safely removed from configuration.yaml"
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
-    )
 
 
 async def async_setup_entry(
@@ -83,6 +57,12 @@ class BruntDevice(CoordinatorEntity, CoverEntity):
     Contains the common logic for all Brunt devices.
     """
 
+    _attr_supported_features = (
+        CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.SET_POSITION
+    )
+
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
@@ -100,17 +80,16 @@ class BruntDevice(CoordinatorEntity, CoverEntity):
 
         self._remove_update_listener = None
 
-        self._attr_name = self._thing.NAME
-        self._attr_device_class = CoverDeviceClass.SHADE
-        self._attr_supported_features = COVER_FEATURES
+        self._attr_name = self._thing.name
+        self._attr_device_class = CoverDeviceClass.BLIND
         self._attr_attribution = ATTRIBUTION
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},
             name=self._attr_name,
             via_device=(DOMAIN, self._entry_id),
             manufacturer="Brunt",
-            sw_version=self._thing.FW_VERSION,
-            model=self._thing.MODEL,
+            sw_version=self._thing.fw_version,
+            model=self._thing.model,
         )
 
     async def async_added_to_hass(self) -> None:
@@ -127,8 +106,7 @@ class BruntDevice(CoordinatorEntity, CoverEntity):
 
         None is unknown, 0 is closed, 100 is fully open.
         """
-        pos = self.coordinator.data[self.unique_id].currentPosition
-        return int(pos) if pos is not None else None
+        return self.coordinator.data[self.unique_id].current_position
 
     @property
     def request_cover_position(self) -> int | None:
@@ -139,8 +117,7 @@ class BruntDevice(CoordinatorEntity, CoverEntity):
         to Brunt, at times there is a diff of 1 to current
         None is unknown, 0 is closed, 100 is fully open.
         """
-        pos = self.coordinator.data[self.unique_id].requestPosition
-        return int(pos) if pos is not None else None
+        return self.coordinator.data[self.unique_id].request_position
 
     @property
     def move_state(self) -> int | None:
@@ -149,8 +126,7 @@ class BruntDevice(CoordinatorEntity, CoverEntity):
 
         None is unknown, 0 when stopped, 1 when opening, 2 when closing
         """
-        mov = self.coordinator.data[self.unique_id].moveState
-        return int(mov) if mov is not None else None
+        return self.coordinator.data[self.unique_id].move_state
 
     @property
     def is_opening(self) -> bool:
@@ -163,7 +139,7 @@ class BruntDevice(CoordinatorEntity, CoverEntity):
         return self.move_state == 2
 
     @property
-    def extra_state_attributes(self) -> MutableMapping[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the detailed device state attributes."""
         return {
             ATTR_REQUEST_POSITION: self.request_cover_position,
@@ -190,11 +166,11 @@ class BruntDevice(CoordinatorEntity, CoverEntity):
         """Set the cover to the new position and wait for the update to be reflected."""
         try:
             await self._bapi.async_change_request_position(
-                position, thingUri=self._thing.thingUri
+                position, thing_uri=self._thing.thing_uri
             )
         except ClientResponseError as exc:
             raise HomeAssistantError(
-                f"Unable to reposition {self._thing.NAME}"
+                f"Unable to reposition {self._thing.name}"
             ) from exc
         self.coordinator.update_interval = FAST_INTERVAL
         await self.coordinator.async_request_refresh()
@@ -204,7 +180,7 @@ class BruntDevice(CoordinatorEntity, CoverEntity):
         """Update the update interval after each refresh."""
         if (
             self.request_cover_position
-            == self._bapi.last_requested_positions[self._thing.thingUri]
+            == self._bapi.last_requested_positions[self._thing.thing_uri]
             and self.move_state == 0
         ):
             self.coordinator.update_interval = REGULAR_INTERVAL

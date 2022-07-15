@@ -1,13 +1,20 @@
 """Support for Flo Water Monitor sensors."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     PRESSURE_PSI,
     TEMP_FAHRENHEIT,
     VOLUME_GALLONS,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN as FLO_DOMAIN
 from .device import FloDeviceDataUpdateCoordinator
@@ -15,17 +22,21 @@ from .entity import FloEntity
 
 WATER_ICON = "mdi:water"
 GAUGE_ICON = "mdi:gauge"
-NAME_DAILY_USAGE = "Today's Water Usage"
-NAME_CURRENT_SYSTEM_MODE = "Current System Mode"
-NAME_FLOW_RATE = "Water Flow Rate"
-NAME_WATER_TEMPERATURE = "Water Temperature"
+NAME_DAILY_USAGE = "Today's water usage"
+NAME_CURRENT_SYSTEM_MODE = "Current system mode"
+NAME_FLOW_RATE = "Water flow rate"
+NAME_WATER_TEMPERATURE = "Water temperature"
 NAME_AIR_TEMPERATURE = "Temperature"
-NAME_WATER_PRESSURE = "Water Pressure"
+NAME_WATER_PRESSURE = "Water pressure"
 NAME_HUMIDITY = "Humidity"
 NAME_BATTERY = "Battery"
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Flo sensors from config entry."""
     devices: list[FloDeviceDataUpdateCoordinator] = hass.data[FLO_DOMAIN][
         config_entry.entry_id
@@ -58,6 +69,7 @@ class FloDailyUsageSensor(FloEntity, SensorEntity):
 
     _attr_icon = WATER_ICON
     _attr_native_unit_of_measurement = VOLUME_GALLONS
+    _attr_state_class: SensorStateClass = SensorStateClass.TOTAL_INCREASING
 
     def __init__(self, device):
         """Initialize the daily water usage sensor."""
@@ -93,6 +105,7 @@ class FloCurrentFlowRateSensor(FloEntity, SensorEntity):
 
     _attr_icon = GAUGE_ICON
     _attr_native_unit_of_measurement = "gpm"
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
 
     def __init__(self, device):
         """Initialize the flow rate sensor."""
@@ -112,6 +125,7 @@ class FloTemperatureSensor(FloEntity, SensorEntity):
 
     _attr_device_class = SensorDeviceClass.TEMPERATURE
     _attr_native_unit_of_measurement = TEMP_FAHRENHEIT
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
 
     def __init__(self, name, device):
         """Initialize the temperature sensor."""
@@ -131,6 +145,7 @@ class FloHumiditySensor(FloEntity, SensorEntity):
 
     _attr_device_class = SensorDeviceClass.HUMIDITY
     _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
 
     def __init__(self, device):
         """Initialize the humidity sensor."""
@@ -150,6 +165,7 @@ class FloPressureSensor(FloEntity, SensorEntity):
 
     _attr_device_class = SensorDeviceClass.PRESSURE
     _attr_native_unit_of_measurement = PRESSURE_PSI
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
 
     def __init__(self, device):
         """Initialize the pressure sensor."""
@@ -169,6 +185,7 @@ class FloBatterySensor(FloEntity, SensorEntity):
 
     _attr_device_class = SensorDeviceClass.BATTERY
     _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
 
     def __init__(self, device):
         """Initialize the battery sensor."""

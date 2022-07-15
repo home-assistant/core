@@ -1,5 +1,4 @@
 """The Risco integration."""
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -11,6 +10,7 @@ from homeassistant.const import (
     CONF_PIN,
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -20,7 +20,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DATA_COORDINATOR, DEFAULT_SCAN_INTERVAL, DOMAIN, EVENTS_COORDINATOR
 
-PLATFORMS = ["alarm_control_panel", "binary_sensor", "sensor"]
+PLATFORMS = [Platform.ALARM_CONTROL_PANEL, Platform.BINARY_SENSOR, Platform.SENSOR]
 UNDO_UPDATE_LISTENER = "undo_update_listener"
 LAST_EVENT_STORAGE_VERSION = 1
 LAST_EVENT_TIMESTAMP_KEY = "last_event_timestamp"
@@ -55,16 +55,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         EVENTS_COORDINATOR: events_coordinator,
     }
 
-    async def start_platforms():
-        await asyncio.gather(
-            *(
-                hass.config_entries.async_forward_entry_setup(entry, platform)
-                for platform in PLATFORMS
-            )
-        )
-        await events_coordinator.async_refresh()
-
-    hass.async_create_task(start_platforms())
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    await events_coordinator.async_refresh()
 
     return True
 
@@ -79,7 +71,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def _update_listener(hass: HomeAssistant, entry: ConfigEntry):
+async def _update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 

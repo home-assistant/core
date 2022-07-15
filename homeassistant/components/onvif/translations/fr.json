@@ -11,13 +11,6 @@
             "cannot_connect": "\u00c9chec de connexion"
         },
         "step": {
-            "auth": {
-                "data": {
-                    "password": "Mot de passe",
-                    "username": "Nom d'utilisateur"
-                },
-                "title": "Configurer l'authentification"
-            },
             "configure": {
                 "data": {
                     "host": "H\u00f4te",
@@ -26,7 +19,7 @@
                     "port": "Port",
                     "username": "Nom d'utilisateur"
                 },
-                "title": "Configurer le p\u00e9riph\u00e9rique ONVIF"
+                "title": "Configurer l'appareil ONVIF"
             },
             "configure_profile": {
                 "data": {
@@ -40,14 +33,6 @@
                     "host": "S\u00e9lectionnez le p\u00e9riph\u00e9rique ONVIF d\u00e9couvert"
                 },
                 "title": "S\u00e9lectionnez l'appareil ONVIF"
-            },
-            "manual_input": {
-                "data": {
-                    "host": "H\u00f4te",
-                    "name": "Nom",
-                    "port": "Port"
-                },
-                "title": "Configurer l\u2019appareil ONVIF"
             },
             "user": {
                 "data": {

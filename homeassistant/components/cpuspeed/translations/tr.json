@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Zaten yap\u0131land\u0131r\u0131lm\u0131\u015f. Yaln\u0131zca tek bir konfig\u00fcrasyon m\u00fcmk\u00fcnd\u00fcr.",
+            "not_compatible": "CPU bilgisi al\u0131nam\u0131yor, bu entegrasyon sisteminizle uyumlu de\u011fil"
+        },
+        "step": {
+            "user": {
+                "description": "Kuruluma ba\u015flamak ister misiniz?",
+                "title": "\u0130\u015flemci h\u0131z\u0131"
+            }
+        }
+    },
+    "title": "\u0130\u015flemci h\u0131z\u0131"
+}

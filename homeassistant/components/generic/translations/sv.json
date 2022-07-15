@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Inga enheter hittades i n\u00e4tverket"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "authentication": "Autentiseringen",
+                    "username": "Anv\u00e4ndarnamn"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "authentication": "Autentiseringen",
+                    "username": "Anv\u00e4ndarnamn"
+                }
+            }
+        }
+    }
+}

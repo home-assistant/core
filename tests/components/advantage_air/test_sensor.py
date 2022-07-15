@@ -41,7 +41,7 @@ async def test_sensor_platform(hass, aioclient_mock):
     assert len(aioclient_mock.mock_calls) == 1
 
     # Test First TimeToOn Sensor
-    entity_id = "sensor.ac_one_time_to_on"
+    entity_id = "sensor.testname_ac_one_time_to_on"
     state = hass.states.get(entity_id)
     assert state
     assert int(state.state) == 0
@@ -66,7 +66,7 @@ async def test_sensor_platform(hass, aioclient_mock):
     assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
 
     # Test First TimeToOff Sensor
-    entity_id = "sensor.ac_one_time_to_off"
+    entity_id = "sensor.testname_ac_one_time_to_off"
     state = hass.states.get(entity_id)
     assert state
     assert int(state.state) == 10
@@ -91,7 +91,7 @@ async def test_sensor_platform(hass, aioclient_mock):
     assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
 
     # Test First Zone Vent Sensor
-    entity_id = "sensor.zone_open_with_sensor_vent"
+    entity_id = "sensor.testname_zone_open_with_sensor_vent"
     state = hass.states.get(entity_id)
     assert state
     assert int(state.state) == 100
@@ -101,7 +101,7 @@ async def test_sensor_platform(hass, aioclient_mock):
     assert entry.unique_id == "uniqueid-ac1-z01-vent"
 
     # Test Second Zone Vent Sensor
-    entity_id = "sensor.zone_closed_with_sensor_vent"
+    entity_id = "sensor.testname_zone_closed_with_sensor_vent"
     state = hass.states.get(entity_id)
     assert state
     assert int(state.state) == 0
@@ -111,7 +111,7 @@ async def test_sensor_platform(hass, aioclient_mock):
     assert entry.unique_id == "uniqueid-ac1-z02-vent"
 
     # Test First Zone Signal Sensor
-    entity_id = "sensor.zone_open_with_sensor_signal"
+    entity_id = "sensor.testname_zone_open_with_sensor_signal"
     state = hass.states.get(entity_id)
     assert state
     assert int(state.state) == 40
@@ -121,7 +121,7 @@ async def test_sensor_platform(hass, aioclient_mock):
     assert entry.unique_id == "uniqueid-ac1-z01-signal"
 
     # Test Second Zone Signal Sensor
-    entity_id = "sensor.zone_closed_with_sensor_signal"
+    entity_id = "sensor.testname_zone_closed_with_sensor_signal"
     state = hass.states.get(entity_id)
     assert state
     assert int(state.state) == 10
@@ -131,7 +131,7 @@ async def test_sensor_platform(hass, aioclient_mock):
     assert entry.unique_id == "uniqueid-ac1-z02-signal"
 
     # Test First Zone Temp Sensor (disabled by default)
-    entity_id = "sensor.zone_open_with_sensor_temperature"
+    entity_id = "sensor.testname_zone_open_with_sensor_temperature"
 
     assert not hass.states.get(entity_id)
 

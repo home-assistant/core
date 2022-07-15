@@ -7,7 +7,7 @@ from zigpy.zcl.clusters import lighting
 
 from .. import registries
 from ..const import REPORT_CONFIG_DEFAULT
-from .base import ClientChannel, ZigbeeChannel
+from .base import AttrReportConfig, ClientChannel, ZigbeeChannel
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(lighting.Ballast.cluster_id)
@@ -29,13 +29,14 @@ class ColorChannel(ZigbeeChannel):
     CAPABILITIES_COLOR_TEMP = 0x10
     UNSUPPORTED_ATTRIBUTE = 0x86
     REPORT_CONFIG = (
-        {"attr": "current_x", "config": REPORT_CONFIG_DEFAULT},
-        {"attr": "current_y", "config": REPORT_CONFIG_DEFAULT},
-        {"attr": "color_temperature", "config": REPORT_CONFIG_DEFAULT},
+        AttrReportConfig(attr="current_x", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(attr="current_y", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(attr="color_temperature", config=REPORT_CONFIG_DEFAULT),
     )
     MAX_MIREDS: int = 500
     MIN_MIREDS: int = 153
     ZCL_INIT_ATTRS = {
+        "color_mode": False,
         "color_temp_physical_min": True,
         "color_temp_physical_max": True,
         "color_capabilities": True,
@@ -50,6 +51,11 @@ class ColorChannel(ZigbeeChannel):
         if self.cluster.get("color_temperature") is not None:
             return self.CAPABILITIES_COLOR_XY | self.CAPABILITIES_COLOR_TEMP
         return self.CAPABILITIES_COLOR_XY
+
+    @property
+    def color_mode(self) -> int | None:
+        """Return cached value of the color_mode attribute."""
+        return self.cluster.get("color_mode")
 
     @property
     def color_loop_active(self) -> int | None:

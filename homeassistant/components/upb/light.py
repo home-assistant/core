@@ -3,12 +3,14 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_FLASH,
     ATTR_TRANSITION,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_FLASH,
-    SUPPORT_TRANSITION,
+    ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import UpbAttachedEntity
 from .const import DOMAIN, UPB_BLINK_RATE_SCHEMA, UPB_BRIGHTNESS_RATE_SCHEMA
@@ -18,7 +20,11 @@ SERVICE_LIGHT_FADE_STOP = "light_fade_stop"
 SERVICE_LIGHT_BLINK = "light_blink"
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the UPB light based on a config entry."""
 
     upb = hass.data[DOMAIN][config_entry.entry_id]["upb"]
@@ -43,17 +49,31 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class UpbLight(UpbAttachedEntity, LightEntity):
     """Representation of an UPB Light."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, element, unique_id, upb):
         """Initialize an UpbLight."""
         super().__init__(element, unique_id, upb)
         self._brightness = self._element.status
 
     @property
-    def supported_features(self):
+    def color_mode(self) -> ColorMode:
+        """Return the color mode of the light."""
+        if self._element.dimmable:
+            return ColorMode.BRIGHTNESS
+        return ColorMode.ONOFF
+
+    @property
+    def supported_color_modes(self) -> set[str]:
+        """Flag supported color modes."""
+        return {self.color_mode}
+
+    @property
+    def supported_features(self) -> int:
         """Flag supported features."""
         if self._element.dimmable:
-            return SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION | SUPPORT_FLASH
-        return SUPPORT_FLASH
+            return LightEntityFeature.TRANSITION | LightEntityFeature.FLASH
+        return LightEntityFeature.FLASH
 
     @property
     def brightness(self):

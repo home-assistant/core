@@ -9,12 +9,9 @@
         },
         "flow_title": "{name}",
         "step": {
-            "confirm": {
-                "description": "\u00bfQuieres iniciar la configuraci\u00f3n?"
-            },
             "user": {
                 "data": {
-                    "host": "Anfitri\u00f3n"
+                    "host": "Host"
                 },
                 "description": "Configura tu ventilador de Modern Forms para que se integre con Home Assistant."
             },
@@ -23,6 +20,5 @@
                 "title": "Dispositivo de ventilador de Modern Forms descubierto"
             }
         }
-    },
-    "title": "Modern Forms"
+    }
 }

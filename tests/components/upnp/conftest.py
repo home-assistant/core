@@ -1,26 +1,23 @@
 """Configuration for SSDP tests."""
-from typing import Any, Mapping
-from unittest.mock import AsyncMock, MagicMock, patch
+from __future__ import annotations
+
+from unittest.mock import AsyncMock, MagicMock, create_autospec, patch
 from urllib.parse import urlparse
 
+from async_upnp_client.client import UpnpDevice
+from async_upnp_client.profiles.igd import IgdDevice, StatusInfo
 import pytest
 
 from homeassistant.components import ssdp
 from homeassistant.components.upnp.const import (
-    BYTES_RECEIVED,
-    BYTES_SENT,
+    CONFIG_ENTRY_LOCATION,
+    CONFIG_ENTRY_MAC_ADDRESS,
+    CONFIG_ENTRY_ORIGINAL_UDN,
     CONFIG_ENTRY_ST,
     CONFIG_ENTRY_UDN,
     DOMAIN,
-    PACKETS_RECEIVED,
-    PACKETS_SENT,
-    ROUTER_IP,
-    ROUTER_UPTIME,
-    TIMESTAMP,
-    WAN_STATUS,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt
 
 from tests.common import MockConfigEntry
 
@@ -29,17 +26,22 @@ TEST_ST = "urn:schemas-upnp-org:device:InternetGatewayDevice:1"
 TEST_USN = f"{TEST_UDN}::{TEST_ST}"
 TEST_LOCATION = "http://192.168.1.1/desc.xml"
 TEST_HOSTNAME = urlparse(TEST_LOCATION).hostname
-TEST_FRIENDLY_NAME = "friendly name"
+TEST_FRIENDLY_NAME = "mock-name"
+TEST_MAC_ADDRESS = "00:11:22:33:44:55"
 TEST_DISCOVERY = ssdp.SsdpServiceInfo(
-    ssdp_usn=TEST_USN,
     ssdp_st=TEST_ST,
+    ssdp_udn=TEST_UDN,
+    ssdp_usn=TEST_USN,
     ssdp_location=TEST_LOCATION,
     upnp={
-        ssdp.ATTR_UPNP_UDN: TEST_UDN,
-        "usn": TEST_USN,
-        "location": TEST_LOCATION,
         "_udn": TEST_UDN,
-        "friendlyName": TEST_FRIENDLY_NAME,
+        "location": TEST_LOCATION,
+        "usn": TEST_USN,
+        ssdp.ATTR_UPNP_DEVICE_TYPE: TEST_ST,
+        ssdp.ATTR_UPNP_FRIENDLY_NAME: TEST_FRIENDLY_NAME,
+        ssdp.ATTR_UPNP_MANUFACTURER: "mock-manufacturer",
+        ssdp.ATTR_UPNP_MODEL_NAME: "mock-model-name",
+        ssdp.ATTR_UPNP_UDN: TEST_UDN,
     },
     ssdp_headers={
         "_host": TEST_HOSTNAME,
@@ -47,96 +49,57 @@ TEST_DISCOVERY = ssdp.SsdpServiceInfo(
 )
 
 
-class MockDevice:
-    """Mock device for Device."""
-
-    def __init__(self, hass: HomeAssistant, udn: str) -> None:
-        """Initialize mock device."""
-        self.hass = hass
-        self._udn = udn
-        self.traffic_times_polled = 0
-        self.status_times_polled = 0
-        self._timestamp = dt.utcnow()
-
-    @classmethod
-    async def async_create_device(cls, hass, ssdp_location) -> "MockDevice":
-        """Return self."""
-        return cls(hass, TEST_UDN)
-
-    async def async_ssdp_callback(
-        self, headers: Mapping[str, Any], change: ssdp.SsdpChange
-    ) -> None:
-        """SSDP callback, update if needed."""
-        pass
-
-    @property
-    def udn(self) -> str:
-        """Get the UDN."""
-        return self._udn
-
-    @property
-    def manufacturer(self) -> str:
-        """Get manufacturer."""
-        return "mock-manufacturer"
-
-    @property
-    def name(self) -> str:
-        """Get name."""
-        return "mock-name"
-
-    @property
-    def model_name(self) -> str:
-        """Get the model name."""
-        return "mock-model-name"
-
-    @property
-    def device_type(self) -> str:
-        """Get the device type."""
-        return "urn:schemas-upnp-org:device:InternetGatewayDevice:1"
-
-    @property
-    def usn(self) -> str:
-        """Get the USN."""
-        return f"{self.udn}::{self.device_type}"
-
-    @property
-    def unique_id(self) -> str:
-        """Get the unique id."""
-        return self.usn
-
-    @property
-    def hostname(self) -> str:
-        """Get the hostname."""
-        return "mock-hostname"
-
-    async def async_get_traffic_data(self) -> Mapping[str, Any]:
-        """Get traffic data."""
-        self.traffic_times_polled += 1
-        return {
-            TIMESTAMP: self._timestamp,
-            BYTES_RECEIVED: 0,
-            BYTES_SENT: 0,
-            PACKETS_RECEIVED: 0,
-            PACKETS_SENT: 0,
-        }
-
-    async def async_get_status(self) -> Mapping[str, Any]:
-        """Get connection status, uptime, and external IP."""
-        self.status_times_polled += 1
-        return {
-            WAN_STATUS: "Connected",
-            ROUTER_UPTIME: 10,
-            ROUTER_IP: "8.9.10.11",
-        }
-
-
 @pytest.fixture(autouse=True)
-def mock_upnp_device():
-    """Mock homeassistant.components.upnp.Device."""
+def mock_igd_device() -> IgdDevice:
+    """Mock async_upnp_client device."""
+    mock_upnp_device = create_autospec(UpnpDevice, instance=True)
+    mock_upnp_device.device_url = TEST_DISCOVERY.ssdp_location
+
+    mock_igd_device = create_autospec(IgdDevice)
+    mock_igd_device.name = TEST_DISCOVERY.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME]
+    mock_igd_device.manufacturer = TEST_DISCOVERY.upnp[ssdp.ATTR_UPNP_MANUFACTURER]
+    mock_igd_device.model_name = TEST_DISCOVERY.upnp[ssdp.ATTR_UPNP_MODEL_NAME]
+    mock_igd_device.udn = TEST_DISCOVERY.ssdp_udn
+    mock_igd_device.device = mock_upnp_device
+
+    mock_igd_device.async_get_total_bytes_received.return_value = 0
+    mock_igd_device.async_get_total_bytes_sent.return_value = 0
+    mock_igd_device.async_get_total_packets_received.return_value = 0
+    mock_igd_device.async_get_total_packets_sent.return_value = 0
+    mock_igd_device.async_get_status_info.return_value = StatusInfo(
+        "Connected",
+        "",
+        10,
+    )
+    mock_igd_device.async_get_external_ip_address.return_value = "8.9.10.11"
+
     with patch(
-        "homeassistant.components.upnp.Device", new=MockDevice
-    ) as mock_async_create_device:
-        yield mock_async_create_device
+        "homeassistant.components.upnp.device.UpnpFactory.async_create_device"
+    ), patch(
+        "homeassistant.components.upnp.device.IgdDevice.__new__",
+        return_value=mock_igd_device,
+    ):
+        yield mock_igd_device
+
+
+@pytest.fixture
+def mock_mac_address_from_host():
+    """Get mac address."""
+    with patch(
+        "homeassistant.components.upnp.device.get_mac_address",
+        return_value=TEST_MAC_ADDRESS,
+    ):
+        yield
+
+
+@pytest.fixture
+def mock_no_mac_address_from_host():
+    """Get no mac address."""
+    with patch(
+        "homeassistant.components.upnp.device.get_mac_address",
+        return_value=None,
+    ):
+        yield
 
 
 @pytest.fixture
@@ -193,25 +156,31 @@ async def ssdp_no_discovery():
     ) as mock_register, patch(
         "homeassistant.components.ssdp.async_get_discovery_info_by_st",
         return_value=[],
-    ) as mock_get_info, patch(
-        "homeassistant.components.upnp.config_flow.SSDP_SEARCH_TIMEOUT",
-        0.1,
-    ):
+    ) as mock_get_info:
         yield (mock_register, mock_get_info)
 
 
 @pytest.fixture
-async def setup_integration(
-    hass: HomeAssistant, mock_get_source_ip, ssdp_instant_discovery, mock_upnp_device
+async def mock_config_entry(
+    hass: HomeAssistant,
+    mock_get_source_ip,
+    ssdp_instant_discovery,
+    mock_igd_device: IgdDevice,
+    mock_mac_address_from_host,
 ):
     """Create an initialized integration."""
     entry = MockConfigEntry(
         domain=DOMAIN,
+        unique_id=TEST_USN,
         data={
-            CONFIG_ENTRY_UDN: TEST_UDN,
             CONFIG_ENTRY_ST: TEST_ST,
+            CONFIG_ENTRY_UDN: TEST_UDN,
+            CONFIG_ENTRY_ORIGINAL_UDN: TEST_UDN,
+            CONFIG_ENTRY_LOCATION: TEST_LOCATION,
+            CONFIG_ENTRY_MAC_ADDRESS: TEST_MAC_ADDRESS,
         },
     )
+    entry.igd_device = mock_igd_device
 
     # Load config_entry.
     entry.add_to_hass(hass)

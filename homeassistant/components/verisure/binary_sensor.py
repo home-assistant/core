@@ -6,9 +6,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -34,19 +33,19 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class VerisureDoorWindowSensor(CoordinatorEntity, BinarySensorEntity):
+class VerisureDoorWindowSensor(
+    CoordinatorEntity[VerisureDataUpdateCoordinator], BinarySensorEntity
+):
     """Representation of a Verisure door window sensor."""
 
-    coordinator: VerisureDataUpdateCoordinator
-
     _attr_device_class = BinarySensorDeviceClass.OPENING
+    _attr_has_entity_name = True
 
     def __init__(
         self, coordinator: VerisureDataUpdateCoordinator, serial_number: str
     ) -> None:
         """Initialize the Verisure door window sensor."""
         super().__init__(coordinator)
-        self._attr_name = coordinator.data["door_window"][serial_number]["area"]
         self._attr_unique_id = f"{serial_number}_door_window"
         self.serial_number = serial_number
 
@@ -80,14 +79,15 @@ class VerisureDoorWindowSensor(CoordinatorEntity, BinarySensorEntity):
         )
 
 
-class VerisureEthernetStatus(CoordinatorEntity, BinarySensorEntity):
+class VerisureEthernetStatus(
+    CoordinatorEntity[VerisureDataUpdateCoordinator], BinarySensorEntity
+):
     """Representation of a Verisure VBOX internet status."""
 
-    coordinator: VerisureDataUpdateCoordinator
-
-    _attr_name = "Verisure Ethernet status"
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
-    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_has_entity_name = True
+    _attr_name = "Ethernet status"
 
     @property
     def unique_id(self) -> str:

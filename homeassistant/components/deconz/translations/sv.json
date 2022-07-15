@@ -4,10 +4,10 @@
             "already_configured": "Bryggan \u00e4r redan konfigurerad",
             "already_in_progress": "Konfigurations fl\u00f6det f\u00f6r bryggan p\u00e5g\u00e5r redan.",
             "no_bridges": "Inga deCONZ-bryggor uppt\u00e4cktes",
-            "not_deconz_bridge": "Inte en deCONZ-brygga",
             "updated_instance": "Uppdaterad deCONZ-instans med ny v\u00e4rdadress"
         },
         "error": {
+            "linking_not_possible": "Det gick inte att l\u00e4nka till gatewayen",
             "no_key": "Det gick inte att ta emot en API-nyckel"
         },
         "flow_title": "deCONZ Zigbee gateway ({host})",

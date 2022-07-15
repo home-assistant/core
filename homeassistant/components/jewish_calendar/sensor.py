@@ -8,8 +8,12 @@ from typing import Any
 from hdate import HDate
 from hdate.zmanim import Zmanim
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.const import DEVICE_CLASS_TIMESTAMP, SUN_EVENT_SUNSET
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
+from homeassistant.const import SUN_EVENT_SUNSET
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sun import get_astral_event_date
@@ -20,7 +24,7 @@ from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SENSORS = (
+INFO_SENSORS = (
     SensorEntityDescription(
         key="date",
         name="Date",
@@ -139,7 +143,7 @@ async def async_setup_platform(
 
     sensors = [
         JewishCalendarSensor(hass.data[DOMAIN], description)
-        for description in DATA_SENSORS
+        for description in INFO_SENSORS
     ]
     sensors.extend(
         JewishCalendarTimeSensor(hass.data[DOMAIN], description)
@@ -255,7 +259,7 @@ class JewishCalendarSensor(SensorEntity):
 class JewishCalendarTimeSensor(JewishCalendarSensor):
     """Implement attrbutes for sensors returning times."""
 
-    _attr_device_class = DEVICE_CLASS_TIMESTAMP
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
 
     def get_state(
         self, daytime_date: HDate, after_shkia_date: HDate, after_tzais_date: HDate

@@ -41,7 +41,7 @@ DATA_CONFIG = "config"
 
 DEFAULT_SOCKET_MIN_RETRY = 15
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 @callback
@@ -198,6 +198,7 @@ class AmbientStation:
 class AmbientWeatherEntity(Entity):
     """Define a base Ambient PWS entity."""
 
+    _attr_has_entity_name = True
     _attr_should_poll = False
 
     def __init__(
@@ -215,10 +216,9 @@ class AmbientWeatherEntity(Entity):
             configuration_url=f"https://ambientweather.net/dashboard/{public_device_id}",
             identifiers={(DOMAIN, mac_address)},
             manufacturer="Ambient Weather",
-            name=station_name,
+            name=station_name.capitalize(),
         )
 
-        self._attr_name = f"{station_name}_{description.name}"
         self._attr_unique_id = f"{mac_address}_{description.key}"
         self._mac_address = mac_address
         self.entity_description = description

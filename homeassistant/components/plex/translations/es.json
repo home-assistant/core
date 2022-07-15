@@ -3,13 +3,13 @@
         "abort": {
             "all_configured": "Todos los servidores vinculados ya configurados",
             "already_configured": "Este servidor Plex ya est\u00e1 configurado",
-            "already_in_progress": "Plex se est\u00e1 configurando",
+            "already_in_progress": "El flujo de configuraci\u00f3n ya est\u00e1 en proceso",
             "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente",
             "token_request_timeout": "Tiempo de espera agotado para la obtenci\u00f3n del token",
-            "unknown": "Fall\u00f3 por razones desconocidas"
+            "unknown": "Error inesperado"
         },
         "error": {
-            "faulty_credentials": "La autorizaci\u00f3n fall\u00f3, verifica el token",
+            "faulty_credentials": "La autorizaci\u00f3n ha fallado, verifica el token",
             "host_or_token": "Debes proporcionar al menos uno de Host o Token",
             "no_servers": "No hay servidores vinculados a la cuenta Plex",
             "not_found": "No se ha encontrado el servidor Plex",
@@ -35,14 +35,12 @@
                 "title": "Seleccione el servidor Plex"
             },
             "user": {
-                "description": "Continuar hacia [plex.tv](https://plex.tv) para vincular un servidor Plex.",
-                "title": "Plex Media Server"
+                "description": "Continuar hacia [plex.tv](https://plex.tv) para vincular un servidor Plex."
             },
             "user_advanced": {
                 "data": {
                     "setup_method": "M\u00e9todo de configuraci\u00f3n"
-                },
-                "title": "Plex Media Server"
+                }
             }
         }
     },

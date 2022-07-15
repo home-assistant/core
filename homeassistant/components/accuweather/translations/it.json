@@ -3,6 +3,9 @@
         "abort": {
             "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
         },
+        "create_entry": {
+            "default": "Alcuni sensori non sono abilitati per impostazione predefinita. Puoi abilitarli nel registro delle entit\u00e0 dopo la configurazione dell'integrazione.\nLe previsioni del tempo non sono abilitate per impostazione predefinita. Puoi abilitarlo nelle opzioni di integrazione."
+        },
         "error": {
             "cannot_connect": "Impossibile connettersi",
             "invalid_api_key": "Chiave API non valida",
@@ -15,9 +18,7 @@
                     "latitude": "Latitudine",
                     "longitude": "Logitudine",
                     "name": "Nome"
-                },
-                "description": "Se hai bisogno di aiuto con la configurazione dai un'occhiata qui: https://www.home-assistant.io/integrations/accuweather/ \n\nAlcuni sensori non sono abilitati per impostazione predefinita. \u00c8 possibile abilitarli nel registro entit\u00e0 dopo la configurazione di integrazione. \nLe previsioni meteo non sono abilitate per impostazione predefinita. Puoi abilitarle nelle opzioni di integrazione.",
-                "title": "AccuWeather"
+                }
             }
         }
     },
@@ -27,8 +28,7 @@
                 "data": {
                     "forecast": "Previsioni meteo"
                 },
-                "description": "A causa delle limitazioni della versione gratuita della chiave API AccuWeather, quando si abilitano le previsioni del tempo, gli aggiornamenti dei dati verranno eseguiti ogni 80 minuti invece che ogni 40.",
-                "title": "Opzioni AccuWeather"
+                "description": "A causa delle limitazioni della versione gratuita della chiave API AccuWeather, quando si abilitano le previsioni del tempo, gli aggiornamenti dei dati verranno eseguiti ogni 80 minuti invece che ogni 40."
             }
         }
     },

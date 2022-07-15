@@ -2,20 +2,17 @@
 from datetime import timedelta
 
 from homeassistant.components.airly.sensor import ATTRIBUTION
-from homeassistant.components.sensor import ATTR_STATE_CLASS, STATE_CLASS_MEASUREMENT
+from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
+    SensorDeviceClass,
+    SensorStateClass,
+)
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    DEVICE_CLASS_AQI,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_PM1,
-    DEVICE_CLASS_PM10,
-    DEVICE_CLASS_PM25,
-    DEVICE_CLASS_PRESSURE,
-    DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     PRESSURE_HPA,
     STATE_UNAVAILABLE,
@@ -41,7 +38,7 @@ async def test_sensor(hass, aioclient_mock):
     assert state.state == "23"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "CAQI"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_AQI
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.AQI
 
     entry = registry.async_get("sensor.home_caqi")
     assert entry
@@ -52,8 +49,8 @@ async def test_sensor(hass, aioclient_mock):
     assert state.state == "92.8"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_HUMIDITY
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.HUMIDITY
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
     entry = registry.async_get("sensor.home_humidity")
     assert entry
@@ -67,8 +64,8 @@ async def test_sensor(hass, aioclient_mock):
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     )
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_PM1
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PM1
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
     entry = registry.async_get("sensor.home_pm1")
     assert entry
@@ -82,8 +79,8 @@ async def test_sensor(hass, aioclient_mock):
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     )
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_PM25
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PM25
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
     entry = registry.async_get("sensor.home_pm2_5")
     assert entry
@@ -97,8 +94,8 @@ async def test_sensor(hass, aioclient_mock):
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     )
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_PM10
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PM10
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
     entry = registry.async_get("sensor.home_pm10")
     assert entry
@@ -109,8 +106,8 @@ async def test_sensor(hass, aioclient_mock):
     assert state.state == "1001"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PRESSURE_HPA
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_PRESSURE
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PRESSURE
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
     entry = registry.async_get("sensor.home_pressure")
     assert entry
@@ -121,8 +118,8 @@ async def test_sensor(hass, aioclient_mock):
     assert state.state == "14.2"
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_TEMPERATURE
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TEMPERATURE
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
     entry = registry.async_get("sensor.home_temperature")
     assert entry
@@ -161,7 +158,7 @@ async def test_availability(hass, aioclient_mock):
 
 
 async def test_manual_update_entity(hass, aioclient_mock):
-    """Test manual update entity via service homeasasistant/update_entity."""
+    """Test manual update entity via service homeassistant/update_entity."""
     await init_integration(hass, aioclient_mock)
 
     call_count = aioclient_mock.call_count

@@ -2,31 +2,18 @@
   "data": {
     "id": "station__lh_9876336",
     "name": "Славянский Бульвар",
-    "coordinates": [
-      37.47243,
-      55.730359
-    ],
+    "coordinates": [37.47243, 55.730359],
     "currentTime": 1634984296770,
     "tzOffset": 10800,
     "type": "railway",
     "region": {
       "id": 213,
       "capitalId": 0,
-      "hierarchy": [
-        225,
-        1,
-        213
-      ],
+      "hierarchy": [225, 1, 213],
       "seoname": "moscow",
       "bounds": [
-        [
-          37.0402925,
-          55.31141404514547
-        ],
-        [
-          38.2047155,
-          56.190068045145466
-        ]
+        [37.0402925, 55.31141404514547],
+        [38.2047155, 56.190068045145466]
       ],
       "longitude": 37.622504,
       "latitude": 55.753215,
@@ -48,10 +35,7 @@
       {
         "lineId": "lh_6031x7531_9600213_g21_4",
         "name": "6031/7531",
-        "Types": [
-          "suburban",
-          "railway"
-        ],
+        "Types": ["suburban", "railway"],
         "type": "suburban",
         "threads": [
           {
@@ -88,10 +72,7 @@
       {
         "lineId": "lh_6183_9600781_g21_4",
         "name": "6183",
-        "Types": [
-          "suburban",
-          "railway"
-        ],
+        "Types": ["suburban", "railway"],
         "type": "suburban",
         "threads": [
           {
@@ -128,10 +109,7 @@
       {
         "lineId": "lh_7268_9600721_g21_4",
         "name": "7268",
-        "Types": [
-          "suburban",
-          "railway"
-        ],
+        "Types": ["suburban", "railway"],
         "type": "suburban",
         "threads": [
           {
@@ -183,10 +161,7 @@
         "type": "region",
         "url": "https://yandex.ru/maps/213/moscow/",
         "region": {
-          "center": [
-            37.622504,
-            55.753215
-          ],
+          "center": [37.622504, 55.753215],
           "zoom": 10
         }
       },
@@ -209,23 +184,11 @@
       "title": "Станция метро Славянский бульвар",
       "description": "Россия, Москва, Западный административный округ, район Фили-Давыдково",
       "address": "Россия, Москва, Западный административный округ, район Фили-Давыдково",
-      "coordinates": [
-        37.47049,
-        55.729442
-      ],
-      "displayCoordinates": [
-        37.47049,
-        55.729442
-      ],
+      "coordinates": [37.47049, 55.729442],
+      "displayCoordinates": [37.47049, 55.729442],
       "bounds": [
-        [
-          37.464149,
-          55.725767
-        ],
-        [
-          37.480606,
-          55.735054
-        ]
+        [37.464149, 55.725767],
+        [37.480606, 55.735054]
       ],
       "uri": "ymapsbm1://transit/stop?id=station__lh_9876336",
       "logId": "dHlwZT1iaXpmaW5kZXI7aWQ9MjM2OTE0NjU0Nzcx",
@@ -236,10 +199,7 @@
           "name": "Славянский бульвар",
           "distance": "130 м",
           "distanceValue": 131.128,
-          "coordinates": [
-            37.46880848,
-            55.729018063
-          ],
+          "coordinates": [37.46880848, 55.729018063],
           "type": "metro",
           "color": "#003399"
         },
@@ -248,10 +208,7 @@
           "name": "Пионерская",
           "distance": "1,1 км",
           "distanceValue": 1145.75,
-          "coordinates": [
-            37.467484245,
-            55.736075908
-          ],
+          "coordinates": [37.467484245, 55.736075908],
           "type": "metro",
           "color": "#0099cc"
         },
@@ -260,10 +217,7 @@
           "name": "Филёвский парк",
           "distance": "1,9 км",
           "distanceValue": 1940.38,
-          "coordinates": [
-            37.48289444,
-            55.739425767
-          ],
+          "coordinates": [37.48289444, 55.739425767],
           "type": "metro",
           "color": "#0099cc"
         }
@@ -274,10 +228,7 @@
           "name": "Метро Славянский бульвар",
           "distance": "300 м",
           "distanceValue": 295.068,
-          "coordinates": [
-            37.473066913,
-            55.728642545
-          ],
+          "coordinates": [37.473066913, 55.728642545],
           "type": "common"
         },
         {
@@ -285,10 +236,7 @@
           "name": "Давыдково",
           "distance": "680 м",
           "distanceValue": 675.354,
-          "coordinates": [
-            37.469965263,
-            55.727241055
-          ],
+          "coordinates": [37.469965263, 55.727241055],
           "type": "common"
         },
         {
@@ -296,10 +244,7 @@
           "name": "Давыдковская улица",
           "distance": "770 м",
           "distanceValue": 774.503,
-          "coordinates": [
-            37.478631492,
-            55.726709525
-          ],
+          "coordinates": [37.478631492, 55.726709525],
           "type": "common"
         },
         {
@@ -307,10 +252,7 @@
           "name": "Метро Пионерская",
           "distance": "790 м",
           "distanceValue": 789.69,
-          "coordinates": [
-            37.470052901,
-            55.733765425
-          ],
+          "coordinates": [37.470052901, 55.733765425],
           "type": "common"
         }
       ],
@@ -418,21 +360,11 @@
       "region": {
         "id": 213,
         "capitalId": 0,
-        "hierarchy": [
-          225,
-          1,
-          213
-        ],
+        "hierarchy": [225, 1, 213],
         "seoname": "moscow",
         "bounds": [
-          [
-            37.0402925,
-            55.31141404514547
-          ],
-          [
-            38.2047155,
-            56.190068045145466
-          ]
+          [37.0402925, 55.31141404514547],
+          [38.2047155, 56.190068045145466]
         ],
         "longitude": 37.622504,
         "latitude": 55.753215,
@@ -462,10 +394,7 @@
           "type": "region",
           "url": "https://yandex.ru/maps/213/moscow/",
           "region": {
-            "center": [
-              37.622504,
-              55.753215
-            ],
+            "center": [37.622504, 55.753215],
             "zoom": 10
           }
         },
@@ -476,21 +405,11 @@
           "region": {
             "id": 213,
             "capitalId": 0,
-            "hierarchy": [
-              225,
-              1,
-              213
-            ],
+            "hierarchy": [225, 1, 213],
             "seoname": "moscow",
             "bounds": [
-              [
-                37.0402925,
-                55.31141404514547
-              ],
-              [
-                38.2047155,
-                56.190068045145466
-              ]
+              [37.0402925, 55.31141404514547],
+              [38.2047155, 56.190068045145466]
             ],
             "longitude": 37.622504,
             "latitude": 55.753215,
@@ -532,14 +451,8 @@
         "id": "53211697",
         "seoname": "rayon_fili_davydkovo",
         "kind": "district",
-        "coordinates": [
-          37.469359,
-          55.727136
-        ],
-        "displayCoordinates": [
-          37.469359,
-          55.727136
-        ],
+        "coordinates": [37.469359, 55.727136],
+        "displayCoordinates": [37.469359, 55.727136],
         "encodedCoordinates": "Z04YcgFpSkAOQFtvfXtzdn1gYg=="
       }
     }

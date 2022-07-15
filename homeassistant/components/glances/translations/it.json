@@ -16,10 +16,10 @@
                     "port": "Porta",
                     "ssl": "Utilizza un certificato SSL",
                     "username": "Nome utente",
-                    "verify_ssl": "Verificare il certificato SSL",
+                    "verify_ssl": "Verifica il certificato SSL",
                     "version": "Glances API Version (2 o 3)"
                 },
-                "title": "Impostare Glances"
+                "title": "Configura Glances"
             }
         }
     },

@@ -7,15 +7,45 @@ To update, run python3 -m script.hassfest
 
 USB = [
     {
+        "domain": "insteon",
+        "vid": "10BF"
+    },
+    {
         "domain": "modem_callerid",
         "vid": "0572",
         "pid": "1340"
+    },
+    {
+        "domain": "velbus",
+        "vid": "10CF",
+        "pid": "0B1B"
+    },
+    {
+        "domain": "velbus",
+        "vid": "10CF",
+        "pid": "0516"
+    },
+    {
+        "domain": "velbus",
+        "vid": "10CF",
+        "pid": "0517"
+    },
+    {
+        "domain": "velbus",
+        "vid": "10CF",
+        "pid": "0518"
     },
     {
         "domain": "zha",
         "vid": "10C4",
         "pid": "EA60",
         "description": "*2652*"
+    },
+    {
+        "domain": "zha",
+        "vid": "10C4",
+        "pid": "EA60",
+        "description": "*sonoff*plus*"
     },
     {
         "domain": "zha",
@@ -46,6 +76,18 @@ USB = [
         "vid": "10C4",
         "pid": "8A2A",
         "description": "*zigbee*"
+    },
+    {
+        "domain": "zha",
+        "vid": "0403",
+        "pid": "6015",
+        "description": "*zigate*"
+    },
+    {
+        "domain": "zha",
+        "vid": "10C4",
+        "pid": "EA60",
+        "description": "*zigate*"
     },
     {
         "domain": "zha",

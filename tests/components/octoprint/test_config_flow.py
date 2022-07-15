@@ -63,6 +63,7 @@ async def test_form(hass):
         "port": 81,
         "ssl": True,
         "path": "/",
+        "verify_ssl": True,
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -107,6 +108,7 @@ async def test_form_cannot_connect(hass):
                 "name": "Printer",
                 "port": 81,
                 "ssl": True,
+                "verify_ssl": True,
                 "path": "/",
                 "api_key": "test-key",
             },
@@ -157,6 +159,7 @@ async def test_form_unknown_exception(hass):
                 "ssl": True,
                 "path": "/",
                 "api_key": "test-key",
+                "verify_ssl": True,
             },
         )
 
@@ -172,6 +175,7 @@ async def test_show_zerconf_form(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="192.168.1.123",
+            addresses=["192.168.1.123"],
             hostname="example.local.",
             name="mock_name",
             port=80,
@@ -226,7 +230,7 @@ async def test_show_zerconf_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
 
 async def test_show_ssdp_form(hass: HomeAssistant) -> None:
@@ -292,7 +296,7 @@ async def test_show_ssdp_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
 
 async def test_import_yaml(hass: HomeAssistant) -> None:
@@ -324,7 +328,7 @@ async def test_import_yaml(hass: HomeAssistant) -> None:
             },
         )
         await hass.async_block_till_done()
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert "errors" not in result
 
 
@@ -358,7 +362,7 @@ async def test_import_duplicate_yaml(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
         assert len(request_app_key.mock_calls) == 0
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -493,6 +497,7 @@ async def test_duplicate_zerconf_ignored(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="192.168.1.123",
+            addresses=["192.168.1.123"],
             hostname="example.local.",
             name="mock_name",
             port=80,

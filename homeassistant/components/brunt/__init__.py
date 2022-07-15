@@ -45,7 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         try:
             async with async_timeout.timeout(10):
                 things = await bapi.async_get_things(force=True)
-                return {thing.SERIAL: thing for thing in things}
+                return {thing.serial: thing for thing in things}
         except ServerDisconnectedError as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
         except ClientResponseError as err:
@@ -66,7 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {DATA_BAPI: bapi, DATA_COOR: coordinator}
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 

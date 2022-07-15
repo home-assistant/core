@@ -17,8 +17,8 @@ from motioneye_client.const import (
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENTITY_CATEGORY_CONFIG
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -30,37 +30,37 @@ MOTIONEYE_SWITCHES = [
         key=KEY_MOTION_DETECTION,
         name="Motion Detection",
         entity_registry_enabled_default=True,
-        entity_category=ENTITY_CATEGORY_CONFIG,
+        entity_category=EntityCategory.CONFIG,
     ),
     SwitchEntityDescription(
         key=KEY_TEXT_OVERLAY,
         name="Text Overlay",
         entity_registry_enabled_default=False,
-        entity_category=ENTITY_CATEGORY_CONFIG,
+        entity_category=EntityCategory.CONFIG,
     ),
     SwitchEntityDescription(
         key=KEY_VIDEO_STREAMING,
         name="Video Streaming",
         entity_registry_enabled_default=False,
-        entity_category=ENTITY_CATEGORY_CONFIG,
+        entity_category=EntityCategory.CONFIG,
     ),
     SwitchEntityDescription(
         key=KEY_STILL_IMAGES,
         name="Still Images",
         entity_registry_enabled_default=True,
-        entity_category=ENTITY_CATEGORY_CONFIG,
+        entity_category=EntityCategory.CONFIG,
     ),
     SwitchEntityDescription(
         key=KEY_MOVIES,
         name="Movies",
         entity_registry_enabled_default=True,
-        entity_category=ENTITY_CATEGORY_CONFIG,
+        entity_category=EntityCategory.CONFIG,
     ),
     SwitchEntityDescription(
         key=KEY_UPLOAD_ENABLED,
         name="Upload Enabled",
         entity_registry_enabled_default=False,
-        entity_category=ENTITY_CATEGORY_CONFIG,
+        entity_category=EntityCategory.CONFIG,
     ),
 ]
 

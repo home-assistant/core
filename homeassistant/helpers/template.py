@@ -5,11 +5,11 @@ from ast import literal_eval
 import asyncio
 import base64
 import collections.abc
-from collections.abc import Callable, Generator, Iterable
+from collections.abc import Callable, Collection, Generator, Iterable
 from contextlib import contextmanager, suppress
 from contextvars import ContextVar
 from datetime import datetime, timedelta
-from functools import partial, wraps
+from functools import cache, lru_cache, partial, wraps
 import json
 import logging
 import math
@@ -19,12 +19,12 @@ import re
 import statistics
 from struct import error as StructError, pack, unpack_from
 import sys
-from typing import Any, cast
+from typing import Any, NoReturn, TypeVar, cast, overload
 from urllib.parse import urlencode as urllib_urlencode
 import weakref
 
 import jinja2
-from jinja2 import pass_context
+from jinja2 import pass_context, pass_environment
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
 import voluptuous as vol
@@ -33,6 +33,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
+    ATTR_PERSONS,
     ATTR_UNIT_OF_MEASUREMENT,
     LENGTH_METERS,
     STATE_UNKNOWN,
@@ -45,17 +46,20 @@ from homeassistant.core import (
     valid_entity_id,
 )
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import (
-    area_registry,
-    device_registry,
-    entity_registry,
-    location as loc_helper,
-)
-from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.loader import bind_hass
-from homeassistant.util import convert, dt as dt_util, location as loc_util
+from homeassistant.util import (
+    convert,
+    dt as dt_util,
+    location as loc_util,
+    slugify as slugify_util,
+)
 from homeassistant.util.async_ import run_callback_threadsafe
+from homeassistant.util.read_only_dict import ReadOnlyDict
 from homeassistant.util.thread import ThreadWithException
+
+from . import area_registry, device_registry, entity_registry, location as loc_helper
+from .json import JSON_DECODE_EXCEPTIONS, json_loads
+from .typing import TemplateVarsType
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -75,6 +79,7 @@ _IS_NUMERIC = re.compile(r"^[+-]?(?!0\d)\d*(?:\.\d*)?$")
 _RESERVED_NAMES = {"contextfunction", "evalcontextfunction", "environmentfunction"}
 
 _GROUP_DOMAIN_PREFIX = "group."
+_ZONE_DOMAIN_PREFIX = "zone."
 
 _COLLECTABLE_STATE_ATTRIBUTES = {
     "state",
@@ -87,12 +92,17 @@ _COLLECTABLE_STATE_ATTRIBUTES = {
     "name",
 }
 
+_T = TypeVar("_T")
+
 ALL_STATES_RATE_LIMIT = timedelta(minutes=1)
 DOMAIN_STATES_RATE_LIMIT = timedelta(seconds=1)
 
 template_cv: ContextVar[tuple[str, str] | None] = ContextVar(
     "template_cv", default=None
 )
+
+CACHED_TEMPLATE_STATES = 512
+EVAL_CACHE_SIZE = 512
 
 
 @bind_hass
@@ -218,6 +228,9 @@ def _false(arg: str) -> bool:
     return False
 
 
+_cached_literal_eval = lru_cache(maxsize=EVAL_CACHE_SIZE)(literal_eval)
+
+
 class RenderInfo:
     """Holds information about a template render."""
 
@@ -314,6 +327,7 @@ class Template:
         "_exc_info",
         "_limited",
         "_strict",
+        "_hash_cache",
     )
 
     def __init__(self, template, hass=None):
@@ -329,6 +343,7 @@ class Template:
         self._exc_info = None
         self._limited = None
         self._strict = None
+        self._hash_cache: int = hash(self.template)
 
     @property
     def _env(self) -> TemplateEnvironment:
@@ -414,10 +429,10 @@ class Template:
 
         return self._parse_result(render_result)
 
-    def _parse_result(self, render_result: str) -> Any:  # pylint: disable=no-self-use
+    def _parse_result(self, render_result: str) -> Any:
         """Parse the result."""
         try:
-            result = literal_eval(render_result)
+            result = _cached_literal_eval(render_result)
 
             if type(result) in RESULT_WRAPPERS:
                 result = RESULT_WRAPPERS[type(result)](
@@ -562,8 +577,8 @@ class Template:
         variables = dict(variables or {})
         variables["value"] = value
 
-        with suppress(ValueError, TypeError):
-            variables["value_json"] = json.loads(value)
+        with suppress(*JSON_DECODE_EXCEPTIONS):
+            variables["value_json"] = json_loads(value)
 
         try:
             return _render_with_context(
@@ -614,15 +629,29 @@ class Template:
 
     def __hash__(self) -> int:
         """Hash code for template."""
-        return hash(self.template)
+        return self._hash_cache
 
     def __repr__(self) -> str:
         """Representation of Template."""
         return 'Template("' + self.template + '")'
 
 
+@cache
+def _domain_states(hass: HomeAssistant, name: str) -> DomainStates:
+    return DomainStates(hass, name)
+
+
+def _readonly(*args: Any, **kwargs: Any) -> Any:
+    """Raise an exception when a states object is modified."""
+    raise RuntimeError(f"Cannot modify template States object: {args} {kwargs}")
+
+
 class AllStates:
     """Class to expose all HA states as attributes."""
+
+    __setitem__ = _readonly
+    __delitem__ = _readonly
+    __slots__ = ("_hass",)
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize all states."""
@@ -639,7 +668,7 @@ class AllStates:
         if not valid_entity_id(f"{name}.entity"):
             raise TemplateError(f"Invalid domain name '{name}'")
 
-        return DomainStates(self._hass, name)
+        return _domain_states(self._hass, name)
 
     # Jinja will try __getitem__ first and it avoids the need
     # to call is_safe_attribute
@@ -677,6 +706,11 @@ class AllStates:
 
 class DomainStates:
     """Class to expose a specific HA domain as attributes."""
+
+    __slots__ = ("_hass", "_domain")
+
+    __setitem__ = _readonly
+    __delitem__ = _readonly
 
     def __init__(self, hass: HomeAssistant, domain: str) -> None:
         """Initialize the domain states."""
@@ -716,22 +750,28 @@ class DomainStates:
         return f"<template DomainStates('{self._domain}')>"
 
 
-class TemplateState(State):
+class TemplateStateBase(State):
     """Class to represent a state object in a template."""
 
-    __slots__ = ("_hass", "_state", "_collect")
+    __slots__ = ("_hass", "_collect", "_entity_id")
+
+    _state: State
+
+    __setitem__ = _readonly
+    __delitem__ = _readonly
 
     # Inheritance is done so functions that check against State keep working
     # pylint: disable=super-init-not-called
-    def __init__(self, hass: HomeAssistant, state: State, collect: bool = True) -> None:
+    def __init__(self, hass: HomeAssistant, collect: bool, entity_id: str) -> None:
         """Initialize template state."""
         self._hass = hass
-        self._state = state
         self._collect = collect
+        self._entity_id = entity_id
+        self._as_dict: ReadOnlyDict[str, Collection[Any]] | None = None
 
     def _collect_state(self) -> None:
         if self._collect and _RENDER_INFO in self._hass.data:
-            self._hass.data[_RENDER_INFO].entities.add(self._state.entity_id)
+            self._hass.data[_RENDER_INFO].entities.add(self._entity_id)
 
     # Jinja will try __getitem__ first and it avoids the need
     # to call is_safe_attribute
@@ -740,10 +780,10 @@ class TemplateState(State):
         if item in _COLLECTABLE_STATE_ATTRIBUTES:
             # _collect_state inlined here for performance
             if self._collect and _RENDER_INFO in self._hass.data:
-                self._hass.data[_RENDER_INFO].entities.add(self._state.entity_id)
+                self._hass.data[_RENDER_INFO].entities.add(self._entity_id)
             return getattr(self._state, item)
         if item == "entity_id":
-            return self._state.entity_id
+            return self._entity_id
         if item == "state_with_unit":
             return self.state_with_unit
         raise KeyError
@@ -754,7 +794,7 @@ class TemplateState(State):
 
         Intentionally does not collect state
         """
-        return self._state.entity_id
+        return self._entity_id
 
     @property
     def state(self):
@@ -816,9 +856,42 @@ class TemplateState(State):
         self._collect_state()
         return self._state.__eq__(other)
 
+
+class TemplateState(TemplateStateBase):
+    """Class to represent a state object in a template."""
+
+    __slots__ = ("_state",)
+
+    # Inheritance is done so functions that check against State keep working
+    def __init__(self, hass: HomeAssistant, state: State, collect: bool = True) -> None:
+        """Initialize template state."""
+        super().__init__(hass, collect, state.entity_id)
+        self._state = state
+
     def __repr__(self) -> str:
         """Representation of Template State."""
-        return f"<template TemplateState({self._state.__repr__()})>"
+        return f"<template TemplateState({self._state!r})>"
+
+
+class TemplateStateFromEntityId(TemplateStateBase):
+    """Class to represent a state object in a template."""
+
+    def __init__(
+        self, hass: HomeAssistant, entity_id: str, collect: bool = True
+    ) -> None:
+        """Initialize template state."""
+        super().__init__(hass, collect, entity_id)
+
+    @property
+    def _state(self) -> State:  # type: ignore[override] # mypy issue 4125
+        state = self._hass.states.get(self._entity_id)
+        if not state:
+            state = State(self._entity_id, STATE_UNKNOWN)
+        return state
+
+    def __repr__(self) -> str:
+        """Representation of Template State."""
+        return f"<template TemplateStateFromEntityId({self._entity_id})>"
 
 
 def _collect_state(hass: HomeAssistant, entity_id: str) -> None:
@@ -826,21 +899,31 @@ def _collect_state(hass: HomeAssistant, entity_id: str) -> None:
         entity_collect.entities.add(entity_id)
 
 
+@lru_cache(maxsize=CACHED_TEMPLATE_STATES)
+def _template_state_no_collect(hass: HomeAssistant, state: State) -> TemplateState:
+    return TemplateState(hass, state, collect=False)
+
+
 def _state_generator(hass: HomeAssistant, domain: str | None) -> Generator:
     """State generator for a domain or all states."""
     for state in sorted(hass.states.async_all(domain), key=attrgetter("entity_id")):
-        yield TemplateState(hass, state, collect=False)
+        yield _template_state_no_collect(hass, state)
 
 
 def _get_state_if_valid(hass: HomeAssistant, entity_id: str) -> TemplateState | None:
     state = hass.states.get(entity_id)
     if state is None and not valid_entity_id(entity_id):
-        raise TemplateError(f"Invalid entity ID '{entity_id}'")  # type: ignore
+        raise TemplateError(f"Invalid entity ID '{entity_id}'")  # type: ignore[arg-type]
     return _get_template_state_from_state(hass, entity_id, state)
 
 
 def _get_state(hass: HomeAssistant, entity_id: str) -> TemplateState | None:
     return _get_template_state_from_state(hass, entity_id, hass.states.get(entity_id))
+
+
+@lru_cache(maxsize=CACHED_TEMPLATE_STATES)
+def _template_state(hass: HomeAssistant, state: State) -> TemplateState:
+    return TemplateState(hass, state)
 
 
 def _get_template_state_from_state(
@@ -851,7 +934,7 @@ def _get_template_state_from_state(
         # access to the state properties in the state wrapper.
         _collect_state(hass, entity_id)
         return None
-    return TemplateState(hass, state)
+    return _template_state(hass, state)
 
 
 def _resolve_state(
@@ -865,6 +948,31 @@ def _resolve_state(
     return None
 
 
+@overload
+def forgiving_boolean(value: Any) -> bool | object:
+    ...
+
+
+@overload
+def forgiving_boolean(value: Any, default: _T) -> bool | _T:
+    ...
+
+
+def forgiving_boolean(
+    value: Any, default: _T | object = _SENTINEL
+) -> bool | _T | object:
+    """Try to convert value to a boolean."""
+    try:
+        # Import here, not at top-level to avoid circular import
+        from . import config_validation as cv  # pylint: disable=import-outside-toplevel
+
+        return cv.boolean(value)
+    except vol.Invalid:
+        if default is _SENTINEL:
+            raise_no_default("bool", value)
+        return default
+
+
 def result_as_boolean(template_result: Any | None) -> bool:
     """Convert the template result to a boolean.
 
@@ -875,19 +983,14 @@ def result_as_boolean(template_result: Any | None) -> bool:
     if template_result is None:
         return False
 
-    try:
-        # Import here, not at top-level to avoid circular import
-        from homeassistant.helpers import (  # pylint: disable=import-outside-toplevel
-            config_validation as cv,
-        )
-
-        return cv.boolean(template_result)
-    except vol.Invalid:
-        return False
+    return forgiving_boolean(template_result, default=False)
 
 
 def expand(hass: HomeAssistant, *args: Any) -> Iterable[State]:
-    """Expand out any groups into entity states."""
+    """Expand out any groups and zones into entity states."""
+    # circular import.
+    from . import entity as entity_helper  # pylint: disable=import-outside-toplevel
+
     search = list(args)
     found = {}
     while search:
@@ -905,11 +1008,16 @@ def expand(hass: HomeAssistant, *args: Any) -> Iterable[State]:
             # ignore other types
             continue
 
-        if entity_id.startswith(_GROUP_DOMAIN_PREFIX):
+        if entity_id.startswith(_GROUP_DOMAIN_PREFIX) or (
+            (source := entity_helper.entity_sources(hass).get(entity_id))
+            and source["domain"] == "group"
+        ):
             # Collect state will be called in here since it's wrapped
-            group_entities = entity.attributes.get(ATTR_ENTITY_ID)
-            if group_entities:
+            if group_entities := entity.attributes.get(ATTR_ENTITY_ID):
                 search += group_entities
+        elif entity_id.startswith(_ZONE_DOMAIN_PREFIX):
+            if zone_entities := entity.attributes.get(ATTR_PERSONS):
+                search += zone_entities
         else:
             _collect_state(hass, entity_id)
             found[entity_id] = entity
@@ -947,7 +1055,7 @@ def integration_entities(hass: HomeAssistant, entry_name: str) -> Iterable[str]:
 
     # fallback to just returning all entities for a domain
     # pylint: disable=import-outside-toplevel
-    from homeassistant.helpers.entity import entity_sources
+    from .entity import entity_sources
 
     return [
         entity_id
@@ -1009,9 +1117,7 @@ def area_id(hass: HomeAssistant, lookup_value: str) -> str | None:
     ent_reg = entity_registry.async_get(hass)
     dev_reg = device_registry.async_get(hass)
     # Import here, not at top-level to avoid circular import
-    from homeassistant.helpers import (  # pylint: disable=import-outside-toplevel
-        config_validation as cv,
-    )
+    from . import config_validation as cv  # pylint: disable=import-outside-toplevel
 
     try:
         cv.entity_id(lookup_value)
@@ -1049,9 +1155,7 @@ def area_name(hass: HomeAssistant, lookup_value: str) -> str | None:
     dev_reg = device_registry.async_get(hass)
     ent_reg = entity_registry.async_get(hass)
     # Import here, not at top-level to avoid circular import
-    from homeassistant.helpers import (  # pylint: disable=import-outside-toplevel
-        config_validation as cv,
-    )
+    from . import config_validation as cv  # pylint: disable=import-outside-toplevel
 
     try:
         cv.entity_id(lookup_value)
@@ -1285,21 +1389,12 @@ def utcnow(hass: HomeAssistant) -> datetime:
     return dt_util.utcnow()
 
 
-def warn_no_default(function, value, default):
+def raise_no_default(function: str, value: Any) -> NoReturn:
     """Log warning if no default is specified."""
     template, action = template_cv.get() or ("", "rendering or compiling")
-    _LOGGER.warning(
-        (
-            "Template warning: '%s' got invalid input '%s' when %s template '%s' "
-            "but no default was specified. Currently '%s' will return '%s', however this template will fail "
-            "to render in Home Assistant core 2022.1"
-        ),
-        function,
-        value,
-        action,
-        template,
-        function,
-        default,
+    raise ValueError(
+        f"Template error: {function} got invalid input '{value}' when {action} template '{template}' "
+        "but no default was specified"
     )
 
 
@@ -1307,7 +1402,7 @@ def forgiving_round(value, precision=0, method="common", default=_SENTINEL):
     """Filter to round a value."""
     try:
         # support rounding methods like jinja
-        multiplier = float(10 ** precision)
+        multiplier = float(10**precision)
         if method == "ceil":
             value = math.ceil(float(value) * multiplier) / multiplier
         elif method == "floor":
@@ -1321,8 +1416,7 @@ def forgiving_round(value, precision=0, method="common", default=_SENTINEL):
     except (ValueError, TypeError):
         # If value can't be converted to float
         if default is _SENTINEL:
-            warn_no_default("round", value, value)
-            return value
+            raise_no_default("round", value)
         return default
 
 
@@ -1333,19 +1427,24 @@ def multiply(value, amount, default=_SENTINEL):
     except (ValueError, TypeError):
         # If value can't be converted to float
         if default is _SENTINEL:
-            warn_no_default("multiply", value, value)
-            return value
+            raise_no_default("multiply", value)
         return default
 
 
 def logarithm(value, base=math.e, default=_SENTINEL):
     """Filter and function to get logarithm of the value with a specific base."""
     try:
-        return math.log(float(value), float(base))
+        base_float = float(base)
     except (ValueError, TypeError):
         if default is _SENTINEL:
-            warn_no_default("log", value, value)
-            return value
+            raise_no_default("log", base)
+        return default
+    try:
+        value_float = float(value)
+        return math.log(value_float, base_float)
+    except (ValueError, TypeError):
+        if default is _SENTINEL:
+            raise_no_default("log", value)
         return default
 
 
@@ -1355,8 +1454,7 @@ def sine(value, default=_SENTINEL):
         return math.sin(float(value))
     except (ValueError, TypeError):
         if default is _SENTINEL:
-            warn_no_default("sin", value, value)
-            return value
+            raise_no_default("sin", value)
         return default
 
 
@@ -1366,8 +1464,7 @@ def cosine(value, default=_SENTINEL):
         return math.cos(float(value))
     except (ValueError, TypeError):
         if default is _SENTINEL:
-            warn_no_default("cos", value, value)
-            return value
+            raise_no_default("cos", value)
         return default
 
 
@@ -1377,8 +1474,7 @@ def tangent(value, default=_SENTINEL):
         return math.tan(float(value))
     except (ValueError, TypeError):
         if default is _SENTINEL:
-            warn_no_default("tan", value, value)
-            return value
+            raise_no_default("tan", value)
         return default
 
 
@@ -1388,8 +1484,7 @@ def arc_sine(value, default=_SENTINEL):
         return math.asin(float(value))
     except (ValueError, TypeError):
         if default is _SENTINEL:
-            warn_no_default("asin", value, value)
-            return value
+            raise_no_default("asin", value)
         return default
 
 
@@ -1399,8 +1494,7 @@ def arc_cosine(value, default=_SENTINEL):
         return math.acos(float(value))
     except (ValueError, TypeError):
         if default is _SENTINEL:
-            warn_no_default("acos", value, value)
-            return value
+            raise_no_default("acos", value)
         return default
 
 
@@ -1410,8 +1504,7 @@ def arc_tangent(value, default=_SENTINEL):
         return math.atan(float(value))
     except (ValueError, TypeError):
         if default is _SENTINEL:
-            warn_no_default("atan", value, value)
-            return value
+            raise_no_default("atan", value)
         return default
 
 
@@ -1434,8 +1527,7 @@ def arc_tangent2(*args, default=_SENTINEL):
         return math.atan2(float(args[0]), float(args[1]))
     except (ValueError, TypeError):
         if default is _SENTINEL:
-            warn_no_default("atan2", args, args)
-            return args
+            raise_no_default("atan2", args)
         return default
 
 
@@ -1445,8 +1537,7 @@ def square_root(value, default=_SENTINEL):
         return math.sqrt(float(value))
     except (ValueError, TypeError):
         if default is _SENTINEL:
-            warn_no_default("sqrt", value, value)
-            return value
+            raise_no_default("sqrt", value)
         return default
 
 
@@ -1462,8 +1553,7 @@ def timestamp_custom(value, date_format=DATE_STR_FORMAT, local=True, default=_SE
     except (ValueError, TypeError):
         # If timestamp can't be converted
         if default is _SENTINEL:
-            warn_no_default("timestamp_custom", value, value)
-            return value
+            raise_no_default("timestamp_custom", value)
         return default
 
 
@@ -1474,8 +1564,7 @@ def timestamp_local(value, default=_SENTINEL):
     except (ValueError, TypeError):
         # If timestamp can't be converted
         if default is _SENTINEL:
-            warn_no_default("timestamp_local", value, value)
-            return value
+            raise_no_default("timestamp_local", value)
         return default
 
 
@@ -1486,8 +1575,7 @@ def timestamp_utc(value, default=_SENTINEL):
     except (ValueError, TypeError):
         # If timestamp can't be converted
         if default is _SENTINEL:
-            warn_no_default("timestamp_utc", value, value)
-            return value
+            raise_no_default("timestamp_utc", value)
         return default
 
 
@@ -1497,8 +1585,7 @@ def forgiving_as_timestamp(value, default=_SENTINEL):
         return dt_util.as_timestamp(value)
     except (ValueError, TypeError):
         if default is _SENTINEL:
-            warn_no_default("as_timestamp", value, None)
-            return None
+            raise_no_default("as_timestamp", value)
         return default
 
 
@@ -1512,14 +1599,18 @@ def as_datetime(value):
         return dt_util.parse_datetime(value)
 
 
+def as_timedelta(value: str) -> timedelta | None:
+    """Parse a ISO8601 duration like 'PT10M' to a timedelta."""
+    return dt_util.parse_duration(value)
+
+
 def strptime(string, fmt, default=_SENTINEL):
     """Parse a time string to datetime."""
     try:
         return datetime.strptime(string, fmt)
     except (ValueError, AttributeError, TypeError):
         if default is _SENTINEL:
-            warn_no_default("strptime", string, string)
-            return string
+            raise_no_default("strptime", string)
         return default
 
 
@@ -1528,6 +1619,30 @@ def fail_when_undefined(value):
     if isinstance(value, jinja2.Undefined):
         value()
     return value
+
+
+def min_max_from_filter(builtin_filter: Any, name: str) -> Any:
+    """
+    Convert a built-in min/max Jinja filter to a global function.
+
+    The parameters may be passed as an iterable or as separate arguments.
+    """
+
+    @pass_environment
+    @wraps(builtin_filter)
+    def wrapper(environment: jinja2.Environment, *args: Any, **kwargs: Any) -> Any:
+        if len(args) == 0:
+            raise TypeError(f"{name} expected at least 1 argument, got 0")
+
+        if len(args) == 1:
+            if isinstance(args[0], Iterable):
+                return builtin_filter(environment, args[0], **kwargs)
+
+            raise TypeError(f"'{type(args[0]).__name__}' object is not iterable")
+
+        return builtin_filter(environment, args, **kwargs)
+
+    return pass_environment(wrapper)
 
 
 def average(*args: Any) -> float:
@@ -1554,8 +1669,7 @@ def forgiving_float(value, default=_SENTINEL):
         return float(value)
     except (ValueError, TypeError):
         if default is _SENTINEL:
-            warn_no_default("float", value, value)
-            return value
+            raise_no_default("float", value)
         return default
 
 
@@ -1565,26 +1679,23 @@ def forgiving_float_filter(value, default=_SENTINEL):
         return float(value)
     except (ValueError, TypeError):
         if default is _SENTINEL:
-            warn_no_default("float", value, 0)
-            return 0
+            raise_no_default("float", value)
         return default
 
 
 def forgiving_int(value, default=_SENTINEL, base=10):
-    """Try to convert value to an int, and warn if it fails."""
+    """Try to convert value to an int, and raise if it fails."""
     result = jinja2.filters.do_int(value, default=default, base=base)
     if result is _SENTINEL:
-        warn_no_default("int", value, value)
-        return value
+        raise_no_default("int", value)
     return result
 
 
 def forgiving_int_filter(value, default=_SENTINEL, base=10):
-    """Try to convert value to an int, and warn if it fails."""
+    """Try to convert value to an int, and raise if it fails."""
     result = jinja2.filters.do_int(value, default=default, base=base)
     if result is _SENTINEL:
-        warn_no_default("int", value, 0)
-        return 0
+        raise_no_default("int", value)
     return result
 
 
@@ -1696,7 +1807,7 @@ def ordinal(value):
 
 def from_json(value):
     """Convert a JSON string to an object."""
-    return json.loads(value)
+    return json_loads(value)
 
 
 def to_json(value, ensure_ascii=True):
@@ -1751,6 +1862,30 @@ def relative_time(value):
 def urlencode(value):
     """Urlencode dictionary and return as UTF-8 string."""
     return urllib_urlencode(value).encode("utf-8")
+
+
+def slugify(value, separator="_"):
+    """Convert a string into a slug, such as what is used for entity ids."""
+    return slugify_util(value, separator=separator)
+
+
+def iif(
+    value: Any, if_true: Any = True, if_false: Any = False, if_none: Any = _SENTINEL
+) -> Any:
+    """Immediate if function/filter that allow for common if/else constructs.
+
+    https://en.wikipedia.org/wiki/IIf
+
+    Examples:
+        {{ is_state("device_tracker.frenck", "home") | iif("yes", "no") }}
+        {{ iif(1==2, "yes", "no") }}
+        {{ (1 == 1) | iif("yes", "no") }}
+    """
+    if value is None and if_none is not _SENTINEL:
+        return if_none
+    if bool(value):
+        return if_true
+    return if_false
 
 
 @contextmanager
@@ -1836,6 +1971,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["atan2"] = arc_tangent2
         self.filters["sqrt"] = square_root
         self.filters["as_datetime"] = as_datetime
+        self.filters["as_timedelta"] = as_timedelta
         self.filters["as_timestamp"] = forgiving_as_timestamp
         self.filters["today_at"] = today_at
         self.filters["as_local"] = dt_util.as_local
@@ -1846,8 +1982,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["from_json"] = from_json
         self.filters["is_defined"] = fail_when_undefined
         self.filters["average"] = average
-        self.filters["max"] = max
-        self.filters["min"] = min
         self.filters["random"] = random_every_time
         self.filters["base64_encode"] = base64_encode
         self.filters["base64_decode"] = base64_decode
@@ -1866,6 +2000,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["float"] = forgiving_float_filter
         self.filters["int"] = forgiving_int_filter
         self.filters["relative_time"] = relative_time
+        self.filters["slugify"] = slugify
+        self.filters["iif"] = iif
+        self.filters["bool"] = forgiving_boolean
         self.globals["log"] = logarithm
         self.globals["sin"] = sine
         self.globals["cos"] = cosine
@@ -1881,6 +2018,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["float"] = forgiving_float
         self.globals["as_datetime"] = as_datetime
         self.globals["as_local"] = dt_util.as_local
+        self.globals["as_timedelta"] = as_timedelta
         self.globals["as_timestamp"] = forgiving_as_timestamp
         self.globals["today_at"] = today_at
         self.globals["relative_time"] = relative_time
@@ -1888,12 +2026,16 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["strptime"] = strptime
         self.globals["urlencode"] = urlencode
         self.globals["average"] = average
-        self.globals["max"] = max
-        self.globals["min"] = min
+        self.globals["max"] = min_max_from_filter(self.filters["max"], "max")
+        self.globals["min"] = min_max_from_filter(self.filters["min"], "min")
         self.globals["is_number"] = is_number
         self.globals["int"] = forgiving_int
         self.globals["pack"] = struct_pack
         self.globals["unpack"] = struct_unpack
+        self.globals["slugify"] = slugify
+        self.globals["iif"] = iif
+        self.globals["bool"] = forgiving_boolean
+        self.tests["is_number"] = is_number
         self.tests["match"] = regex_match
         self.tests["search"] = regex_search
 

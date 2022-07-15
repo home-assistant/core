@@ -6,9 +6,12 @@
         },
         "error": {
             "bad_pin_format": "Le code PIN doit \u00eatre compos\u00e9 de 4 chiffres",
+            "bad_validation_code_format": "Le code de validation doit \u00eatre compos\u00e9 de six chiffres",
             "cannot_connect": "\u00c9chec de connexion",
             "incorrect_pin": "PIN incorrect",
-            "invalid_auth": "Authentification invalide"
+            "incorrect_validation_code": "Code de validation incorrect",
+            "invalid_auth": "Authentification non valide",
+            "two_factor_request_failed": "La demande de code 2FA a \u00e9chou\u00e9, veuillez r\u00e9essayer"
         },
         "step": {
             "pin": {
@@ -17,6 +20,20 @@
                 },
                 "description": "Veuillez entrer votre NIP MySubaru\nREMARQUE : Tous les v\u00e9hicules en compte doivent avoir le m\u00eame NIP",
                 "title": "Configuration de Subaru Starlink"
+            },
+            "two_factor": {
+                "data": {
+                    "contact_method": "Veuillez s\u00e9lectionner une m\u00e9thode de contact\u00a0:"
+                },
+                "description": "Authentification \u00e0 deux facteurs requise",
+                "title": "Configuration Subaru Starlink"
+            },
+            "two_factor_validate": {
+                "data": {
+                    "validation_code": "Code de validation"
+                },
+                "description": "Veuillez saisir le code de validation re\u00e7u",
+                "title": "Configuration Subaru Starlink"
             },
             "user": {
                 "data": {

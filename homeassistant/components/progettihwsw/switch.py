@@ -1,5 +1,4 @@
 """Control switches."""
-
 from datetime import timedelta
 import logging
 
@@ -7,6 +6,9 @@ from ProgettiHWSW.relay import Relay
 import async_timeout
 
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -18,7 +20,11 @@ from .const import DEFAULT_POLLING_INTERVAL_SEC, DOMAIN
 _LOGGER = logging.getLogger(DOMAIN)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the switches from a config entry."""
     board_api = hass.data[DOMAIN][config_entry.entry_id]
     relay_count = config_entry.data["relay_count"]

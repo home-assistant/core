@@ -1,5 +1,11 @@
 {
     "state": {
+        "tuya__air_quality": {
+            "good": "J\u00f3",
+            "great": "Nagyszer\u0171",
+            "mild": "Enyhe",
+            "severe": "S\u00falyos"
+        },
         "tuya__status": {
             "boiling_temp": "Forral\u00e1si h\u0151m\u00e9rs\u00e9klet",
             "cooling": "H\u0171t\u00e9s",

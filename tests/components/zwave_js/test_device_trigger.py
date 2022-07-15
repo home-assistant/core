@@ -8,6 +8,7 @@ from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
 
 from homeassistant.components import automation
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
@@ -49,8 +50,11 @@ async def test_get_notification_notification_triggers(
         "type": "event.notification.notification",
         "device_id": device.id,
         "command_class": CommandClass.NOTIFICATION,
+        "metadata": {},
     }
-    triggers = await async_get_device_automations(hass, "trigger", device.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device.id
+    )
     assert expected_trigger in triggers
 
 
@@ -313,8 +317,11 @@ async def test_get_node_status_triggers(hass, client, lock_schlage_be469, integr
         "type": "state.node_status",
         "device_id": device.id,
         "entity_id": entity_id,
+        "metadata": {"secondary": True},
     }
-    triggers = await async_get_device_automations(hass, "trigger", device.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device.id
+    )
     assert expected_trigger in triggers
 
 
@@ -465,8 +472,11 @@ async def test_get_basic_value_notification_triggers(
         "property_key": None,
         "endpoint": 0,
         "subtype": "Endpoint 0",
+        "metadata": {},
     }
-    triggers = await async_get_device_automations(hass, "trigger", device.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device.id
+    )
     assert expected_trigger in triggers
 
 
@@ -630,8 +640,11 @@ async def test_get_central_scene_value_notification_triggers(
         "property_key": "001",
         "endpoint": 0,
         "subtype": "Endpoint 0 Scene 001",
+        "metadata": {},
     }
-    triggers = await async_get_device_automations(hass, "trigger", device.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device.id
+    )
     assert expected_trigger in triggers
 
 
@@ -801,8 +814,11 @@ async def test_get_scene_activation_value_notification_triggers(
         "property_key": None,
         "endpoint": 0,
         "subtype": "Endpoint 0",
+        "metadata": {},
     }
-    triggers = await async_get_device_automations(hass, "trigger", device.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device.id
+    )
     assert expected_trigger in triggers
 
 
@@ -961,8 +977,11 @@ async def test_get_value_updated_value_triggers(
         "domain": DOMAIN,
         "type": "zwave_js.value_updated.value",
         "device_id": device.id,
+        "metadata": {},
     }
-    triggers = await async_get_device_automations(hass, "trigger", device.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device.id
+    )
     assert expected_trigger in triggers
 
 
@@ -1107,7 +1126,6 @@ async def test_get_value_updated_config_parameter_triggers(
     hass, client, lock_schlage_be469, integration
 ):
     """Test we get the zwave_js.value_updated.config_parameter trigger from a zwave_js device."""
-    node = lock_schlage_be469
     dev_reg = async_get_dev_reg(hass)
     device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
     expected_trigger = {
@@ -1119,9 +1137,12 @@ async def test_get_value_updated_config_parameter_triggers(
         "property_key": None,
         "endpoint": 0,
         "command_class": CommandClass.CONFIGURATION.value,
-        "subtype": f"{node.node_id}-112-0-3 (Beeper)",
+        "subtype": "3 (Beeper)",
+        "metadata": {},
     }
-    triggers = await async_get_device_automations(hass, "trigger", device.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device.id
+    )
     assert expected_trigger in triggers
 
 
@@ -1148,7 +1169,7 @@ async def test_if_value_updated_config_parameter_fires(
                         "property_key": None,
                         "endpoint": 0,
                         "command_class": CommandClass.CONFIGURATION.value,
-                        "subtype": f"{node.node_id}-112-0-3 (Beeper)",
+                        "subtype": "3 (Beeper)",
                         "from": 255,
                     },
                     "action": {
@@ -1197,7 +1218,6 @@ async def test_get_trigger_capabilities_value_updated_config_parameter_range(
     hass, client, lock_schlage_be469, integration
 ):
     """Test we get the expected capabilities from a range zwave_js.value_updated.config_parameter trigger."""
-    node = lock_schlage_be469
     dev_reg = async_get_dev_reg(hass)
     device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
     capabilities = await device_trigger.async_get_trigger_capabilities(
@@ -1211,7 +1231,7 @@ async def test_get_trigger_capabilities_value_updated_config_parameter_range(
             "property_key": None,
             "endpoint": 0,
             "command_class": CommandClass.CONFIGURATION.value,
-            "subtype": f"{node.node_id}-112-0-6 (User Slot Status)",
+            "subtype": "6 (User Slot Status)",
         },
     )
     assert capabilities and "extra_fields" in capabilities
@@ -1240,7 +1260,6 @@ async def test_get_trigger_capabilities_value_updated_config_parameter_enumerate
     hass, client, lock_schlage_be469, integration
 ):
     """Test we get the expected capabilities from an enumerated zwave_js.value_updated.config_parameter trigger."""
-    node = lock_schlage_be469
     dev_reg = async_get_dev_reg(hass)
     device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
     capabilities = await device_trigger.async_get_trigger_capabilities(
@@ -1254,7 +1273,7 @@ async def test_get_trigger_capabilities_value_updated_config_parameter_enumerate
             "property_key": None,
             "endpoint": 0,
             "command_class": CommandClass.CONFIGURATION.value,
-            "subtype": f"{node.node_id}-112-0-3 (Beeper)",
+            "subtype": "3 (Beeper)",
         },
     )
     assert capabilities and "extra_fields" in capabilities
@@ -1355,3 +1374,19 @@ async def test_failure_scenarios(hass, client, hank_binary_switch, integration):
         await device_trigger.async_validate_trigger_config(hass, INVALID_CONFIG)
         == INVALID_CONFIG
     )
+
+    # Test invalid device ID fails validation
+    with pytest.raises(InvalidDeviceAutomationConfig):
+        await device_trigger.async_validate_trigger_config(
+            hass,
+            {
+                "platform": "device",
+                "domain": DOMAIN,
+                "device_id": "invalid_device_id",
+                "type": "zwave_js.value_updated.value",
+                "command_class": CommandClass.DOOR_LOCK.value,
+                "property": 9999,
+                "property_key": 9999,
+                "endpoint": 9999,
+            },
+        )

@@ -1,4 +1,6 @@
 """Support for Blinkstick lights."""
+from __future__ import annotations
+
 from blinkstick import blinkstick
 import voluptuous as vol
 
@@ -6,19 +8,19 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
     PLATFORM_SCHEMA,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.const import CONF_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.color as color_util
 
 CONF_SERIAL = "serial"
 
 DEFAULT_NAME = "Blinkstick"
-
-SUPPORT_BLINKSTICK = SUPPORT_BRIGHTNESS | SUPPORT_COLOR
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -28,7 +30,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up Blinkstick device specified by serial number."""
 
     name = config[CONF_NAME]
@@ -42,7 +49,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class BlinkStickLight(LightEntity):
     """Representation of a BlinkStick light."""
 
-    _attr_supported_features = SUPPORT_BLINKSTICK
+    _attr_color_mode = ColorMode.HS
+    _attr_supported_color_modes = {ColorMode.HS}
 
     def __init__(self, stick, name):
         """Initialize the light."""

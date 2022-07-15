@@ -1,11 +1,12 @@
 """Advantage Air climate integration."""
-
 from datetime import timedelta
 import logging
 
 from advantage_air import ApiError, advantage_air
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -24,7 +25,7 @@ PLATFORMS = [
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Advantage Air config."""
     ip_address = entry.data[CONF_IP_ADDRESS]
     port = entry.data[CONF_PORT]
@@ -64,12 +65,12 @@ async def async_setup_entry(hass, entry):
         "async_change": async_change,
     }
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Advantage Air Config."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 

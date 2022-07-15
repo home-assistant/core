@@ -16,8 +16,11 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, CONF_OFFSET
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = "https://hourlypricing.comed.com/api"
@@ -61,7 +64,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the ComEd Hourly Pricing sensor."""
     websession = async_get_clientsession(hass)
 

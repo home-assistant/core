@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "latitude_longitude_not_defined": "Latitude and longitude are not defined in Home Assistant.",
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
+        },
+        "step": {
+            "user": {
+                "description": "Do you want to configure International Space Station (ISS)?"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_on_map": "Show on map"
+                }
+            }
+        }
+    }
+}

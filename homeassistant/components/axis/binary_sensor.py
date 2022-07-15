@@ -1,5 +1,4 @@
 """Support for Axis binary sensors."""
-
 from datetime import timedelta
 
 from axis.event_stream import (
@@ -20,8 +19,10 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
@@ -36,7 +37,11 @@ DEVICE_CLASS = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up a Axis binary sensor."""
     device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
 
@@ -105,9 +110,7 @@ class AxisBinarySensor(AxisEventBase, BinarySensorEntity):
             and self.event.id in self.device.api.vapix.ports
             and self.device.api.vapix.ports[self.event.id].name
         ):
-            return (
-                f"{self.device.name} {self.device.api.vapix.ports[self.event.id].name}"
-            )
+            return self.device.api.vapix.ports[self.event.id].name
 
         if self.event.CLASS == CLASS_MOTION:
 
@@ -123,6 +126,6 @@ class AxisBinarySensor(AxisEventBase, BinarySensorEntity):
                     and event_data
                     and self.event.id in event_data
                 ):
-                    return f"{self.device.name} {self.event.TYPE} {event_data[self.event.id].name}"
+                    return f"{self.event.TYPE} {event_data[self.event.id].name}"
 
         return self._attr_name

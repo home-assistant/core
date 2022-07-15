@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "cloud_not_connected": "Pilve\u00fchendus puudub",
             "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine.",
             "webhook_not_internet_accessible": "Veebikonksu s\u00f5numite vastuv\u00f5tmiseks peab Home Assistant olema Interneti kaudu juurdep\u00e4\u00e4setav."
         },

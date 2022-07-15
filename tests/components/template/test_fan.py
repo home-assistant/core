@@ -8,17 +8,11 @@ from homeassistant.components.fan import (
     ATTR_OSCILLATING,
     ATTR_PERCENTAGE,
     ATTR_PRESET_MODE,
-    ATTR_SPEED,
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
     DOMAIN,
-    SPEED_HIGH,
-    SPEED_LOW,
-    SPEED_MEDIUM,
-    SPEED_OFF,
     SUPPORT_PRESET_MODE,
     SUPPORT_SET_SPEED,
-    NotValidSpeedError,
 )
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 
@@ -60,7 +54,7 @@ _DIRECTION_INPUT_SELECT = "input_select.direction"
 )
 async def test_missing_optional_config(hass, start_ha):
     """Test: missing optional template is ok."""
-    _verify(hass, STATE_ON, None, None, None, None, None)
+    _verify(hass, STATE_ON, None, None, None, None)
 
 
 @pytest.mark.parametrize("count,domain", [(0, DOMAIN)])
@@ -165,26 +159,26 @@ async def test_wrong_template_config(hass, start_ha):
 )
 async def test_templates_with_entities(hass, start_ha):
     """Test tempalates with values from other entities."""
-    _verify(hass, STATE_OFF, None, 0, None, None, None)
+    _verify(hass, STATE_OFF, 0, None, None, None)
 
     hass.states.async_set(_STATE_INPUT_BOOLEAN, True)
     hass.states.async_set(_PERCENTAGE_INPUT_NUMBER, 66)
     hass.states.async_set(_OSC_INPUT, "True")
 
-    for set_state, set_value, speed, value in [
-        (_DIRECTION_INPUT_SELECT, DIRECTION_FORWARD, SPEED_MEDIUM, 66),
-        (_PERCENTAGE_INPUT_NUMBER, 33, SPEED_LOW, 33),
-        (_PERCENTAGE_INPUT_NUMBER, 66, SPEED_MEDIUM, 66),
-        (_PERCENTAGE_INPUT_NUMBER, 100, SPEED_HIGH, 100),
-        (_PERCENTAGE_INPUT_NUMBER, "dog", None, 0),
+    for set_state, set_value, value in [
+        (_DIRECTION_INPUT_SELECT, DIRECTION_FORWARD, 66),
+        (_PERCENTAGE_INPUT_NUMBER, 33, 33),
+        (_PERCENTAGE_INPUT_NUMBER, 66, 66),
+        (_PERCENTAGE_INPUT_NUMBER, 100, 100),
+        (_PERCENTAGE_INPUT_NUMBER, "dog", 0),
     ]:
         hass.states.async_set(set_state, set_value)
         await hass.async_block_till_done()
-        _verify(hass, STATE_ON, speed, value, True, DIRECTION_FORWARD, None)
+        _verify(hass, STATE_ON, value, True, DIRECTION_FORWARD, None)
 
     hass.states.async_set(_STATE_INPUT_BOOLEAN, False)
     await hass.async_block_till_done()
-    _verify(hass, STATE_OFF, None, 0, True, DIRECTION_FORWARD, None)
+    _verify(hass, STATE_OFF, 0, True, DIRECTION_FORWARD, None)
 
 
 @pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
@@ -207,12 +201,12 @@ async def test_templates_with_entities(hass, start_ha):
             },
             "sensor.percentage",
             [
-                ("0", 0, SPEED_OFF, None),
-                ("33", 33, SPEED_LOW, None),
-                ("invalid", 0, None, None),
-                ("5000", 0, None, None),
-                ("100", 100, SPEED_HIGH, None),
-                ("0", 0, SPEED_OFF, None),
+                ("0", 0, None),
+                ("33", 33, None),
+                ("invalid", 0, None),
+                ("5000", 0, None),
+                ("100", 100, None),
+                ("0", 0, None),
             ],
         ),
         (
@@ -232,21 +226,21 @@ async def test_templates_with_entities(hass, start_ha):
             },
             "sensor.preset_mode",
             [
-                ("0", None, None, None),
-                ("invalid", None, None, None),
-                ("auto", None, None, "auto"),
-                ("smart", None, None, "smart"),
-                ("invalid", None, None, None),
+                ("0", None, None),
+                ("invalid", None, None),
+                ("auto", None, "auto"),
+                ("smart", None, "smart"),
+                ("invalid", None, None),
             ],
         ),
     ],
 )
 async def test_templates_with_entities2(hass, entity, tests, start_ha):
     """Test templates with values from other entities."""
-    for set_percentage, test_percentage, speed, test_type in tests:
+    for set_percentage, test_percentage, test_type in tests:
         hass.states.async_set(entity, set_percentage)
         await hass.async_block_till_done()
-        _verify(hass, STATE_ON, speed, test_percentage, None, None, test_type)
+        _verify(hass, STATE_ON, test_percentage, None, None, test_type)
 
 
 @pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
@@ -295,7 +289,7 @@ async def test_availability_template_with_entities(hass, start_ha):
                     },
                 }
             },
-            [STATE_OFF, None, None, None, None],
+            [STATE_OFF, None, None, None],
         ),
         (
             {
@@ -313,7 +307,7 @@ async def test_availability_template_with_entities(hass, start_ha):
                     },
                 }
             },
-            [STATE_ON, None, 0, None, None],
+            [STATE_ON, 0, None, None],
         ),
         (
             {
@@ -331,7 +325,7 @@ async def test_availability_template_with_entities(hass, start_ha):
                     },
                 }
             },
-            [STATE_ON, SPEED_MEDIUM, 66, True, DIRECTION_FORWARD],
+            [STATE_ON, 66, True, DIRECTION_FORWARD],
         ),
         (
             {
@@ -349,13 +343,13 @@ async def test_availability_template_with_entities(hass, start_ha):
                     },
                 }
             },
-            [STATE_OFF, None, 0, None, None],
+            [STATE_OFF, 0, None, None],
         ),
     ],
 )
 async def test_template_with_unavailable_entities(hass, states, start_ha):
     """Test unavailability with value_template."""
-    _verify(hass, states[0], states[1], states[2], states[3], states[4], None)
+    _verify(hass, states[0], states[1], states[2], states[3], None)
 
 
 @pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
@@ -389,52 +383,22 @@ async def test_invalid_availability_template_keeps_component_available(
     assert "x" in caplog_setup_text
 
 
-async def test_on_off(hass):
+async def test_on_off(hass, calls):
     """Test turn on and turn off."""
     await _register_components(hass)
+    expected_calls = 0
 
-    for func, state in [
-        (common.async_turn_on, STATE_ON),
-        (common.async_turn_off, STATE_OFF),
+    for func, state, action in [
+        (common.async_turn_on, STATE_ON, "turn_on"),
+        (common.async_turn_off, STATE_OFF, "turn_off"),
     ]:
         await func(hass, _TEST_FAN)
         assert hass.states.get(_STATE_INPUT_BOOLEAN).state == state
-        _verify(hass, state, None, 0, None, None, None)
-
-
-async def test_set_speed(hass):
-    """Test set valid speed."""
-    await _register_components(hass, preset_modes=["auto", "smart"])
-
-    await common.async_turn_on(hass, _TEST_FAN)
-    for cmd, type, state, value in [
-        (SPEED_HIGH, SPEED_HIGH, STATE_ON, 100),
-        (SPEED_MEDIUM, SPEED_MEDIUM, STATE_ON, 66),
-        (SPEED_OFF, SPEED_OFF, STATE_OFF, 0),
-        (SPEED_MEDIUM, SPEED_MEDIUM, STATE_ON, 66),
-    ]:
-        await common.async_set_speed(hass, _TEST_FAN, cmd)
-        assert float(hass.states.get(_PERCENTAGE_INPUT_NUMBER).state) == value
-        _verify(hass, state, type, value, None, None, None)
-
-    with pytest.raises(NotValidSpeedError):
-        await common.async_set_speed(hass, _TEST_FAN, "invalid")
-
-    assert float(hass.states.get(_PERCENTAGE_INPUT_NUMBER).state) == 66
-    _verify(hass, STATE_ON, SPEED_MEDIUM, 66, None, None, None)
-
-
-async def test_set_invalid_speed(hass):
-    """Test set invalid speed when fan has valid speed."""
-    await _register_components(hass)
-
-    await common.async_turn_on(hass, _TEST_FAN)
-    await common.async_set_speed(hass, _TEST_FAN, SPEED_HIGH)
-    assert float(hass.states.get(_PERCENTAGE_INPUT_NUMBER).state) == 100
-    _verify(hass, STATE_ON, SPEED_HIGH, 100, None, None, None)
-
-    with pytest.raises(NotValidSpeedError):
-        await common.async_set_speed(hass, _TEST_FAN, "invalid")
+        _verify(hass, state, 0, None, None, None)
+        expected_calls += 1
+        assert len(calls) == expected_calls
+        assert calls[-1].data["action"] == action
+        assert calls[-1].data["caller"] == _TEST_FAN
 
 
 async def test_set_invalid_direction_from_initial_stage(hass, calls):
@@ -445,32 +409,46 @@ async def test_set_invalid_direction_from_initial_stage(hass, calls):
 
     await common.async_set_direction(hass, _TEST_FAN, "invalid")
     assert hass.states.get(_DIRECTION_INPUT_SELECT).state == ""
-    _verify(hass, STATE_ON, None, 0, None, None, None)
+    _verify(hass, STATE_ON, 0, None, None, None)
 
 
-async def test_set_osc(hass):
+async def test_set_osc(hass, calls):
     """Test set oscillating."""
     await _register_components(hass)
+    expected_calls = 0
 
     await common.async_turn_on(hass, _TEST_FAN)
+    expected_calls += 1
     for state in [True, False]:
         await common.async_oscillate(hass, _TEST_FAN, state)
         assert hass.states.get(_OSC_INPUT).state == str(state)
-        _verify(hass, STATE_ON, None, 0, state, None, None)
+        _verify(hass, STATE_ON, 0, state, None, None)
+        expected_calls += 1
+        assert len(calls) == expected_calls
+        assert calls[-1].data["action"] == "set_oscillating"
+        assert calls[-1].data["caller"] == _TEST_FAN
+        assert calls[-1].data["option"] == state
 
 
-async def test_set_direction(hass):
+async def test_set_direction(hass, calls):
     """Test set valid direction."""
     await _register_components(hass)
+    expected_calls = 0
 
     await common.async_turn_on(hass, _TEST_FAN)
+    expected_calls += 1
     for cmd in [DIRECTION_FORWARD, DIRECTION_REVERSE]:
         await common.async_set_direction(hass, _TEST_FAN, cmd)
         assert hass.states.get(_DIRECTION_INPUT_SELECT).state == cmd
-        _verify(hass, STATE_ON, None, 0, None, cmd, None)
+        _verify(hass, STATE_ON, 0, None, cmd, None)
+        expected_calls += 1
+        assert len(calls) == expected_calls
+        assert calls[-1].data["action"] == "set_direction"
+        assert calls[-1].data["caller"] == _TEST_FAN
+        assert calls[-1].data["option"] == cmd
 
 
-async def test_set_invalid_direction(hass):
+async def test_set_invalid_direction(hass, calls):
     """Test set invalid direction when fan has valid direction."""
     await _register_components(hass)
 
@@ -478,92 +456,93 @@ async def test_set_invalid_direction(hass):
     for cmd in [DIRECTION_FORWARD, "invalid"]:
         await common.async_set_direction(hass, _TEST_FAN, cmd)
         assert hass.states.get(_DIRECTION_INPUT_SELECT).state == DIRECTION_FORWARD
-        _verify(hass, STATE_ON, None, 0, None, DIRECTION_FORWARD, None)
+        _verify(hass, STATE_ON, 0, None, DIRECTION_FORWARD, None)
 
 
-async def test_on_with_speed(hass):
-    """Test turn on with speed."""
-    await _register_components(hass)
-
-    await common.async_turn_on(hass, _TEST_FAN, SPEED_HIGH)
-    assert hass.states.get(_STATE_INPUT_BOOLEAN).state == STATE_ON
-    assert int(float(hass.states.get(_PERCENTAGE_INPUT_NUMBER).state)) == 100
-    _verify(hass, STATE_ON, SPEED_HIGH, 100, None, None, None)
-
-
-async def test_preset_modes(hass):
+async def test_preset_modes(hass, calls):
     """Test preset_modes."""
     await _register_components(
         hass, ["off", "low", "medium", "high", "auto", "smart"], ["auto", "smart"]
     )
 
     await common.async_turn_on(hass, _TEST_FAN)
-    for extra, state in [
-        ("auto", "auto"),
-        ("smart", "smart"),
-        ("invalid", "smart"),
+    for extra, state, expected_calls in [
+        ("auto", "auto", 2),
+        ("smart", "smart", 3),
+        ("invalid", "smart", 3),
     ]:
         await common.async_set_preset_mode(hass, _TEST_FAN, extra)
         assert hass.states.get(_PRESET_MODE_INPUT_SELECT).state == state
+        assert len(calls) == expected_calls
+        assert calls[-1].data["action"] == "set_preset_mode"
+        assert calls[-1].data["caller"] == _TEST_FAN
+        assert calls[-1].data["option"] == state
 
     await common.async_turn_on(hass, _TEST_FAN, preset_mode="auto")
     assert hass.states.get(_PRESET_MODE_INPUT_SELECT).state == "auto"
 
 
-async def test_set_percentage(hass):
+async def test_set_percentage(hass, calls):
     """Test set valid speed percentage."""
     await _register_components(hass)
+    expected_calls = 0
 
     await common.async_turn_on(hass, _TEST_FAN)
-    for type, state, value in [
-        (SPEED_HIGH, STATE_ON, 100),
-        (SPEED_MEDIUM, STATE_ON, 66),
-        (SPEED_OFF, STATE_OFF, 0),
+    expected_calls += 1
+    for state, value in [
+        (STATE_ON, 100),
+        (STATE_ON, 66),
+        (STATE_OFF, 0),
     ]:
         await common.async_set_percentage(hass, _TEST_FAN, value)
         assert int(float(hass.states.get(_PERCENTAGE_INPUT_NUMBER).state)) == value
-        _verify(hass, state, type, value, None, None, None)
+        _verify(hass, state, value, None, None, None)
+        expected_calls += 1
+        assert len(calls) == expected_calls
+        assert calls[-1].data["action"] == "set_value"
+        assert calls[-1].data["caller"] == _TEST_FAN
+        assert calls[-1].data["value"] == value
 
     await common.async_turn_on(hass, _TEST_FAN, percentage=50)
     assert int(float(hass.states.get(_PERCENTAGE_INPUT_NUMBER).state)) == 50
-    _verify(hass, STATE_ON, SPEED_MEDIUM, 50, None, None, None)
+    _verify(hass, STATE_ON, 50, None, None, None)
 
 
-async def test_increase_decrease_speed(hass):
+async def test_increase_decrease_speed(hass, calls):
     """Test set valid increase and decrease speed."""
     await _register_components(hass, speed_count=3)
 
     await common.async_turn_on(hass, _TEST_FAN)
-    for func, extra, state, type, value in [
-        (common.async_set_percentage, 100, STATE_ON, SPEED_HIGH, 100),
-        (common.async_decrease_speed, None, STATE_ON, SPEED_MEDIUM, 66),
-        (common.async_decrease_speed, None, STATE_ON, SPEED_LOW, 33),
-        (common.async_decrease_speed, None, STATE_OFF, SPEED_OFF, 0),
-        (common.async_increase_speed, None, STATE_ON, SPEED_LOW, 33),
+    for func, extra, state, value in [
+        (common.async_set_percentage, 100, STATE_ON, 100),
+        (common.async_decrease_speed, None, STATE_ON, 66),
+        (common.async_decrease_speed, None, STATE_ON, 33),
+        (common.async_decrease_speed, None, STATE_OFF, 0),
+        (common.async_increase_speed, None, STATE_ON, 33),
     ]:
         await func(hass, _TEST_FAN, extra)
         assert int(float(hass.states.get(_PERCENTAGE_INPUT_NUMBER).state)) == value
-        _verify(hass, state, type, value, None, None, None)
+        _verify(hass, state, value, None, None, None)
 
 
-async def test_increase_decrease_speed_default_speed_count(hass):
+async def test_increase_decrease_speed_default_speed_count(hass, calls):
     """Test set valid increase and decrease speed."""
     await _register_components(hass)
 
     await common.async_turn_on(hass, _TEST_FAN)
-    for func, extra, state, type, value in [
-        (common.async_set_percentage, 100, STATE_ON, SPEED_HIGH, 100),
-        (common.async_decrease_speed, None, STATE_ON, SPEED_HIGH, 99),
-        (common.async_decrease_speed, None, STATE_ON, SPEED_HIGH, 98),
-        (common.async_decrease_speed, 31, STATE_ON, SPEED_HIGH, 67),
-        (common.async_decrease_speed, None, STATE_ON, SPEED_MEDIUM, 66),
+    for func, extra, state, value in [
+        (common.async_set_percentage, 100, STATE_ON, 100),
+        (common.async_decrease_speed, None, STATE_ON, 99),
+        (common.async_decrease_speed, None, STATE_ON, 98),
+        (common.async_decrease_speed, 31, STATE_ON, 67),
+        (common.async_decrease_speed, None, STATE_ON, 66),
     ]:
         await func(hass, _TEST_FAN, extra)
         assert int(float(hass.states.get(_PERCENTAGE_INPUT_NUMBER).state)) == value
-        _verify(hass, state, type, value, None, None, None)
+        _verify(hass, state, value, None, None, None)
 
 
-async def test_set_invalid_osc_from_initial_state(hass):
+async def test_set_invalid_osc_from_initial_state(hass, calls):
     """Test set invalid oscillating when fan is in initial state."""
     await _register_components(hass)
 
@@ -571,28 +550,27 @@ async def test_set_invalid_osc_from_initial_state(hass):
     with pytest.raises(vol.Invalid):
         await common.async_oscillate(hass, _TEST_FAN, "invalid")
     assert hass.states.get(_OSC_INPUT).state == ""
-    _verify(hass, STATE_ON, None, 0, None, None, None)
+    _verify(hass, STATE_ON, 0, None, None, None)
 
 
-async def test_set_invalid_osc(hass):
+async def test_set_invalid_osc(hass, calls):
     """Test set invalid oscillating when fan has valid osc."""
     await _register_components(hass)
 
     await common.async_turn_on(hass, _TEST_FAN)
     await common.async_oscillate(hass, _TEST_FAN, True)
     assert hass.states.get(_OSC_INPUT).state == "True"
-    _verify(hass, STATE_ON, None, 0, True, None, None)
+    _verify(hass, STATE_ON, 0, True, None, None)
 
     with pytest.raises(vol.Invalid):
         await common.async_oscillate(hass, _TEST_FAN, None)
     assert hass.states.get(_OSC_INPUT).state == "True"
-    _verify(hass, STATE_ON, None, 0, True, None, None)
+    _verify(hass, STATE_ON, 0, True, None, None)
 
 
 def _verify(
     hass,
     expected_state,
-    expected_speed,
     expected_percentage,
     expected_oscillating,
     expected_direction,
@@ -602,7 +580,6 @@ def _verify(
     state = hass.states.get(_TEST_FAN)
     attributes = state.attributes
     assert state.state == str(expected_state)
-    assert attributes.get(ATTR_SPEED) == expected_speed or SPEED_OFF
     assert attributes.get(ATTR_PERCENTAGE) == expected_percentage
     assert attributes.get(ATTR_OSCILLATING) == expected_oscillating
     assert attributes.get(ATTR_DIRECTION) == expected_direction
@@ -669,10 +646,19 @@ async def _register_components(
             "percentage_template": "{{ states('input_number.percentage') }}",
             "oscillating_template": "{{ states('input_select.osc') }}",
             "direction_template": "{{ states('input_select.direction') }}",
-            "turn_on": {
-                "service": "input_boolean.turn_on",
-                "entity_id": _STATE_INPUT_BOOLEAN,
-            },
+            "turn_on": [
+                {
+                    "service": "input_boolean.turn_on",
+                    "entity_id": _STATE_INPUT_BOOLEAN,
+                },
+                {
+                    "service": "test.automation",
+                    "data_template": {
+                        "action": "turn_on",
+                        "caller": "{{ this.entity_id }}",
+                    },
+                },
+            ],
             "turn_off": [
                 {
                     "service": "input_boolean.turn_off",
@@ -685,35 +671,82 @@ async def _register_components(
                         "value": 0,
                     },
                 },
+                {
+                    "service": "test.automation",
+                    "data_template": {
+                        "action": "turn_off",
+                        "caller": "{{ this.entity_id }}",
+                    },
+                },
             ],
-            "set_preset_mode": {
-                "service": "input_select.select_option",
-                "data_template": {
-                    "entity_id": _PRESET_MODE_INPUT_SELECT,
-                    "option": "{{ preset_mode }}",
+            "set_preset_mode": [
+                {
+                    "service": "input_select.select_option",
+                    "data_template": {
+                        "entity_id": _PRESET_MODE_INPUT_SELECT,
+                        "option": "{{ preset_mode }}",
+                    },
                 },
-            },
-            "set_percentage": {
-                "service": "input_number.set_value",
-                "data_template": {
-                    "entity_id": _PERCENTAGE_INPUT_NUMBER,
-                    "value": "{{ percentage }}",
+                {
+                    "service": "test.automation",
+                    "data_template": {
+                        "action": "set_preset_mode",
+                        "caller": "{{ this.entity_id }}",
+                        "option": "{{ preset_mode }}",
+                    },
                 },
-            },
-            "set_oscillating": {
-                "service": "input_select.select_option",
-                "data_template": {
-                    "entity_id": _OSC_INPUT,
-                    "option": "{{ oscillating }}",
+            ],
+            "set_percentage": [
+                {
+                    "service": "input_number.set_value",
+                    "data_template": {
+                        "entity_id": _PERCENTAGE_INPUT_NUMBER,
+                        "value": "{{ percentage }}",
+                    },
                 },
-            },
-            "set_direction": {
-                "service": "input_select.select_option",
-                "data_template": {
-                    "entity_id": _DIRECTION_INPUT_SELECT,
-                    "option": "{{ direction }}",
+                {
+                    "service": "test.automation",
+                    "data_template": {
+                        "action": "set_value",
+                        "caller": "{{ this.entity_id }}",
+                        "value": "{{ percentage }}",
+                    },
                 },
-            },
+            ],
+            "set_oscillating": [
+                {
+                    "service": "input_select.select_option",
+                    "data_template": {
+                        "entity_id": _OSC_INPUT,
+                        "option": "{{ oscillating }}",
+                    },
+                },
+                {
+                    "service": "test.automation",
+                    "data_template": {
+                        "action": "set_oscillating",
+                        "caller": "{{ this.entity_id }}",
+                        "option": "{{ oscillating }}",
+                    },
+                },
+            ],
+            "set_direction": [
+                {
+                    "service": "input_select.select_option",
+                    "data_template": {
+                        "entity_id": _DIRECTION_INPUT_SELECT,
+                        "option": "{{ direction }}",
+                    },
+                },
+                {
+                    "service": "test.automation",
+                    "data_template": {
+                        "action": "set_direction",
+                        "caller": "{{ this.entity_id }}",
+                        "option": "{{ direction }}",
+                    },
+                },
+            ],
         }
 
         if preset_modes:

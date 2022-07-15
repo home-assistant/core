@@ -1,10 +1,10 @@
 """Test the Vultr switch platform."""
+from __future__ import annotations
+
 import json
-import unittest
 from unittest.mock import patch
 
 import pytest
-import requests_mock
 import voluptuous as vol
 
 from homeassistant.components import vultr as base_vultr
@@ -19,159 +19,137 @@ from homeassistant.components.vultr import (
     switch as vultr,
 )
 from homeassistant.const import CONF_NAME, CONF_PLATFORM
+from homeassistant.core import HomeAssistant
 
-from tests.common import get_test_home_assistant, load_fixture
-from tests.components.vultr.test_init import VALID_CONFIG
+from tests.common import load_fixture
+
+CONFIGS = [
+    {CONF_SUBSCRIPTION: "576965", CONF_NAME: "A Server"},
+    {CONF_SUBSCRIPTION: "123456", CONF_NAME: "Failed Server"},
+    {CONF_SUBSCRIPTION: "555555", CONF_NAME: vultr.DEFAULT_NAME},
+]
 
 
-class TestVultrSwitchSetup(unittest.TestCase):
-    """Test the Vultr switch platform."""
+@pytest.fixture(name="hass_devices")
+def load_hass_devices(hass: HomeAssistant):
+    """Load a valid config."""
+    hass_devices = []
 
-    DEVICES = []
-
-    def add_entities(self, devices, action):
+    def add_entities(devices, action):
         """Mock add devices."""
         for device in devices:
-            self.DEVICES.append(device)
+            device.hass = hass
+            hass_devices.append(device)
 
-    def setUp(self):
-        """Init values for this testcase class."""
-        self.hass = get_test_home_assistant()
-        self.configs = [
-            {CONF_SUBSCRIPTION: "576965", CONF_NAME: "A Server"},
-            {CONF_SUBSCRIPTION: "123456", CONF_NAME: "Failed Server"},
-            {CONF_SUBSCRIPTION: "555555", CONF_NAME: vultr.DEFAULT_NAME},
-        ]
-        self.addCleanup(self.tear_down_cleanup)
+    # Setup each of our test configs
+    for config in CONFIGS:
+        vultr.setup_platform(hass, config, add_entities, None)
 
-    def tear_down_cleanup(self):
-        """Stop our started services."""
-        self.hass.stop()
+    yield hass_devices
 
-    @requests_mock.Mocker()
-    def test_switch(self, mock):
-        """Test successful instance."""
-        mock.get(
-            "https://api.vultr.com/v1/account/info?api_key=ABCDEFG1234567",
-            text=load_fixture("account_info.json", "vultr"),
-        )
 
-        with patch(
-            "vultr.Vultr.server_list",
-            return_value=json.loads(load_fixture("server_list.json", "vultr")),
-        ):
-            # Setup hub
-            base_vultr.setup(self.hass, VALID_CONFIG)
+@pytest.mark.usefixtures("valid_config")
+def test_switch(hass: HomeAssistant, hass_devices: list[vultr.VultrSwitch]):
+    """Test successful instance."""
 
-        # Setup each of our test configs
-        for config in self.configs:
-            vultr.setup_platform(self.hass, config, self.add_entities, None)
+    assert len(hass_devices) == 3
 
-        assert len(self.DEVICES) == 3
+    tested = 0
 
-        tested = 0
+    for device in hass_devices:
+        if device.subscription == "555555":
+            assert device.name == "Vultr {}"
+            tested += 1
 
-        for device in self.DEVICES:
-            if device.subscription == "555555":
-                assert device.name == "Vultr {}"
-                tested += 1
+        device.update()
+        device_attrs = device.extra_state_attributes
 
-            device.update()
-            device_attrs = device.extra_state_attributes
+        if device.subscription == "555555":
+            assert device.name == "Vultr Another Server"
+            tested += 1
 
-            if device.subscription == "555555":
-                assert device.name == "Vultr Another Server"
-                tested += 1
+        if device.name == "A Server":
+            assert device.is_on is True
+            assert device.state == "on"
+            assert device.icon == "mdi:server"
+            assert device_attrs[ATTR_ALLOWED_BANDWIDTH] == "1000"
+            assert device_attrs[ATTR_AUTO_BACKUPS] == "yes"
+            assert device_attrs[ATTR_IPV4_ADDRESS] == "123.123.123.123"
+            assert device_attrs[ATTR_COST_PER_MONTH] == "10.05"
+            assert device_attrs[ATTR_CREATED_AT] == "2013-12-19 14:45:41"
+            assert device_attrs[ATTR_SUBSCRIPTION_ID] == "576965"
+            tested += 1
 
+        elif device.name == "Failed Server":
+            assert device.is_on is False
+            assert device.state == "off"
+            assert device.icon == "mdi:server-off"
+            assert device_attrs[ATTR_ALLOWED_BANDWIDTH] == "1000"
+            assert device_attrs[ATTR_AUTO_BACKUPS] == "no"
+            assert device_attrs[ATTR_IPV4_ADDRESS] == "192.168.100.50"
+            assert device_attrs[ATTR_COST_PER_MONTH] == "73.25"
+            assert device_attrs[ATTR_CREATED_AT] == "2014-10-13 14:45:41"
+            assert device_attrs[ATTR_SUBSCRIPTION_ID] == "123456"
+            tested += 1
+
+    assert tested == 4
+
+
+@pytest.mark.usefixtures("valid_config")
+def test_turn_on(hass: HomeAssistant, hass_devices: list[vultr.VultrSwitch]):
+    """Test turning a subscription on."""
+    with patch(
+        "vultr.Vultr.server_list",
+        return_value=json.loads(load_fixture("server_list.json", "vultr")),
+    ), patch("vultr.Vultr.server_start") as mock_start:
+        for device in hass_devices:
+            if device.name == "Failed Server":
+                device.update()
+                device.turn_on()
+
+    # Turn on
+    assert mock_start.call_count == 1
+
+
+@pytest.mark.usefixtures("valid_config")
+def test_turn_off(hass: HomeAssistant, hass_devices: list[vultr.VultrSwitch]):
+    """Test turning a subscription off."""
+    with patch(
+        "vultr.Vultr.server_list",
+        return_value=json.loads(load_fixture("server_list.json", "vultr")),
+    ), patch("vultr.Vultr.server_halt") as mock_halt:
+        for device in hass_devices:
             if device.name == "A Server":
-                assert device.is_on is True
-                assert device.state == "on"
-                assert device.icon == "mdi:server"
-                assert device_attrs[ATTR_ALLOWED_BANDWIDTH] == "1000"
-                assert device_attrs[ATTR_AUTO_BACKUPS] == "yes"
-                assert device_attrs[ATTR_IPV4_ADDRESS] == "123.123.123.123"
-                assert device_attrs[ATTR_COST_PER_MONTH] == "10.05"
-                assert device_attrs[ATTR_CREATED_AT] == "2013-12-19 14:45:41"
-                assert device_attrs[ATTR_SUBSCRIPTION_ID] == "576965"
-                tested += 1
+                device.update()
+                device.turn_off()
 
-            elif device.name == "Failed Server":
-                assert device.is_on is False
-                assert device.state == "off"
-                assert device.icon == "mdi:server-off"
-                assert device_attrs[ATTR_ALLOWED_BANDWIDTH] == "1000"
-                assert device_attrs[ATTR_AUTO_BACKUPS] == "no"
-                assert device_attrs[ATTR_IPV4_ADDRESS] == "192.168.100.50"
-                assert device_attrs[ATTR_COST_PER_MONTH] == "73.25"
-                assert device_attrs[ATTR_CREATED_AT] == "2014-10-13 14:45:41"
-                assert device_attrs[ATTR_SUBSCRIPTION_ID] == "123456"
-                tested += 1
+    # Turn off
+    assert mock_halt.call_count == 1
 
-        assert tested == 4
 
-    @requests_mock.Mocker()
-    def test_turn_on(self, mock):
-        """Test turning a subscription on."""
-        with patch(
-            "vultr.Vultr.server_list",
-            return_value=json.loads(load_fixture("server_list.json", "vultr")),
-        ), patch("vultr.Vultr.server_start") as mock_start:
-            for device in self.DEVICES:
-                if device.name == "Failed Server":
-                    device.turn_on()
+def test_invalid_switch_config():
+    """Test config type failures."""
+    with pytest.raises(vol.Invalid):  # No subscription
+        vultr.PLATFORM_SCHEMA({CONF_PLATFORM: base_vultr.DOMAIN})
 
-        # Turn on
-        assert mock_start.call_count == 1
 
-    @requests_mock.Mocker()
-    def test_turn_off(self, mock):
-        """Test turning a subscription off."""
-        with patch(
-            "vultr.Vultr.server_list",
-            return_value=json.loads(load_fixture("server_list.json", "vultr")),
-        ), patch("vultr.Vultr.server_halt") as mock_halt:
-            for device in self.DEVICES:
-                if device.name == "A Server":
-                    device.turn_off()
+@pytest.mark.usefixtures("valid_config")
+def test_invalid_switches(hass: HomeAssistant):
+    """Test the VultrSwitch fails."""
+    hass_devices = []
 
-        # Turn off
-        assert mock_halt.call_count == 1
+    def add_entities(devices, action):
+        """Mock add devices."""
+        for device in devices:
+            hass_devices.append(device)
 
-    def test_invalid_switch_config(self):
-        """Test config type failures."""
-        with pytest.raises(vol.Invalid):  # No subscription
-            vultr.PLATFORM_SCHEMA({CONF_PLATFORM: base_vultr.DOMAIN})
+    bad_conf = {}  # No subscription
 
-    @requests_mock.Mocker()
-    def test_invalid_switches(self, mock):
-        """Test the VultrSwitch fails."""
-        mock.get(
-            "https://api.vultr.com/v1/account/info?api_key=ABCDEFG1234567",
-            text=load_fixture("account_info.json", "vultr"),
-        )
+    vultr.setup_platform(hass, bad_conf, add_entities, None)
 
-        with patch(
-            "vultr.Vultr.server_list",
-            return_value=json.loads(load_fixture("server_list.json", "vultr")),
-        ):
-            # Setup hub
-            base_vultr.setup(self.hass, VALID_CONFIG)
+    bad_conf = {
+        CONF_NAME: "Missing Server",
+        CONF_SUBSCRIPTION: "665544",
+    }  # Sub not associated with API key (not in server_list)
 
-        bad_conf = {}  # No subscription
-
-        no_subs_setup = vultr.setup_platform(
-            self.hass, bad_conf, self.add_entities, None
-        )
-
-        assert no_subs_setup is not None
-
-        bad_conf = {
-            CONF_NAME: "Missing Server",
-            CONF_SUBSCRIPTION: "665544",
-        }  # Sub not associated with API key (not in server_list)
-
-        wrong_subs_setup = vultr.setup_platform(
-            self.hass, bad_conf, self.add_entities, None
-        )
-
-        assert wrong_subs_setup is not None
+    vultr.setup_platform(hass, bad_conf, add_entities, None)

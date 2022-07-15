@@ -3,7 +3,7 @@
         "step": {
             "options_1": {
                 "data": {
-                    "bool": "\u30aa\u30d7\u30b7\u30e7\u30f3\u306e\u771f\u507d\u5024(booleans)",
+                    "bool": "\u30aa\u30d7\u30b7\u30e7\u30f3\u306e\u771f\u507d\u5024(Booleans)",
                     "constant": "\u5b9a\u6570",
                     "int": "\u6570\u5024\u5165\u529b"
                 }

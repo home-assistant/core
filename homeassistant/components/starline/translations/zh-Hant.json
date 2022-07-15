@@ -1,7 +1,7 @@
 {
     "config": {
         "error": {
-            "error_auth_app": "\u61c9\u7528\u7a0b\u5f0f ID \u932f\u8aa4\u6216\u4e0d\u6b63\u78ba",
+            "error_auth_app": "\u61c9\u7528\u7a0b\u5f0f ID \u6216\u79c1\u9470\u932f\u8aa4",
             "error_auth_mfa": "\u5bc6\u78bc\u932f\u8aa4",
             "error_auth_user": "\u4f7f\u7528\u8005\u540d\u7a31\u6216\u5bc6\u78bc\u932f\u8aa4"
         },
@@ -9,9 +9,9 @@
             "auth_app": {
                 "data": {
                     "app_id": "App ID",
-                    "app_secret": "\u5bc6\u78bc"
+                    "app_secret": "\u79c1\u9470"
                 },
-                "description": "\u7531 [StarLine \u958b\u767c\u8005\u5e33\u865f] (https://my.starline.ru/developer) \u6240\u53d6\u5f97\u4e4b\u61c9\u7528\u7a0b\u5f0f ID \u8207\u5bc6\u78bc",
+                "description": "\u7531 [StarLine \u958b\u767c\u8005\u5e33\u865f] (https://my.starline.ru/developer) \u6240\u53d6\u5f97\u4e4b\u61c9\u7528\u7a0b\u5f0f ID \u8207\u79c1\u9470",
                 "title": "\u61c9\u7528\u6191\u8b49"
             },
             "auth_captcha": {

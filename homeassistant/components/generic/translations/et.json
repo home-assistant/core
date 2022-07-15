@@ -1,0 +1,96 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "V\u00f5rgust ei leitud \u00fchtegi seadet",
+            "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine."
+        },
+        "error": {
+            "already_exists": "Nende URL-i seadetega kaamera on juba olemas.",
+            "invalid_still_image": "URL ei tagastanud kehtivat pilti",
+            "malformed_url": "Vigane URL",
+            "no_still_image_or_stream_url": "Pead m\u00e4\u00e4rama v\u00e4hemalt liikumatu pildi v\u00f5i voo URL-i",
+            "relative_url": "Osalised URL-id pole lubatud",
+            "stream_file_not_found": "Vooga \u00fchenduse loomisel ei leitud faili (kas ffmpeg on installitud?)",
+            "stream_http_not_found": "HTTP 404 viga kui \u00fcritatakse vooga \u00fchendust luua",
+            "stream_io_error": "Sisend-/v\u00e4ljundviga vooga \u00fchenduse loomisel. Vale RTSP transpordiprotokoll?",
+            "stream_no_route_to_host": "Vooga \u00fchenduse loomisel ei leitud hosti",
+            "stream_no_video": "Voos pole videot",
+            "stream_not_permitted": "Vooga \u00fchenduse loomisel pole toiming lubatud. Vale RTSP transpordiprotokoll?",
+            "stream_unauthorised": "Autoriseerimine eba\u00f5nnestus vooga \u00fchendamise ajal",
+            "template_error": "Viga malli renderdamisel. Lisateabe saamiseks vaata logi.",
+            "timeout": "URL-i laadimise ajal\u00f5pp",
+            "unable_still_load": "Pilti ei saa laadida URL-ist (nt kehtetu host, URL v\u00f5i autentimise t\u00f5rge).  Lisateabe saamiseks vaata logi.",
+            "unknown": "Ootamatu t\u00f5rge"
+        },
+        "step": {
+            "confirm": {
+                "description": "Kas alustada seadistamist?"
+            },
+            "content_type": {
+                "data": {
+                    "content_type": "Sisu t\u00fc\u00fcp"
+                },
+                "description": "M\u00e4\u00e4ra voo sisut\u00fc\u00fcp."
+            },
+            "user": {
+                "data": {
+                    "authentication": "Autentimine",
+                    "framerate": "Kaadrisagedus (Hz)",
+                    "limit_refetch_to_url_change": "Piira laadimist URL-i muutmiseni",
+                    "password": "Salas\u00f5na",
+                    "rtsp_transport": "RTSP transpordiprotokoll",
+                    "still_image_url": "Pildi URL (nt http://...)",
+                    "stream_source": "Voo allikas URL (nt rtsp://...)",
+                    "username": "Kasutajanimi",
+                    "verify_ssl": "Kontrolli SSL sertifikaati"
+                },
+                "description": "Sisesta s\u00e4tted kaameraga \u00fchenduse loomiseks."
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "already_exists": "Nende URL-i seadetega kaamera on juba olemas.",
+            "invalid_still_image": "URL ei tagastanud kehtivat pilti",
+            "malformed_url": "Vigane URL",
+            "no_still_image_or_stream_url": "Pead m\u00e4\u00e4rama v\u00e4hemalt liikumatu pildi v\u00f5i voo URL-i",
+            "relative_url": "Osalised URL-id pole lubatud",
+            "stream_file_not_found": "Vooga \u00fchenduse loomisel ei leitud faili (kas ffmpeg on installitud?)",
+            "stream_http_not_found": "HTTP 404 viga kui \u00fcritatakse vooga \u00fchendust luua",
+            "stream_io_error": "Sisend-/v\u00e4ljundviga vooga \u00fchenduse loomisel. Vale RTSP transpordiprotokoll?",
+            "stream_no_route_to_host": "Vooga \u00fchenduse loomisel ei leitud hosti",
+            "stream_no_video": "Voos pole videot",
+            "stream_not_permitted": "Vooga \u00fchenduse loomisel pole toiming lubatud. Vale RTSP transpordiprotokoll?",
+            "stream_unauthorised": "Autoriseerimine eba\u00f5nnestus vooga \u00fchendamise ajal",
+            "template_error": "Viga malli renderdamisel. Lisateabe saamiseks vaata logi.",
+            "timeout": "URL-i laadimise ajal\u00f5pp",
+            "unable_still_load": "Pilti ei saa laadida URL-ist (nt kehtetu host, URL v\u00f5i autentimise t\u00f5rge).  Lisateabe saamiseks vaata logi.",
+            "unknown": "Ootamatu t\u00f5rge"
+        },
+        "step": {
+            "content_type": {
+                "data": {
+                    "content_type": "Sisu t\u00fc\u00fcp"
+                },
+                "description": "M\u00e4\u00e4ra voo sisut\u00fc\u00fcp."
+            },
+            "init": {
+                "data": {
+                    "authentication": "Autentimine",
+                    "framerate": "Kaadrisagedus (Hz)",
+                    "limit_refetch_to_url_change": "Piira laadimist URL-i muutmiseni",
+                    "password": "Salas\u00f5na",
+                    "rtsp_transport": "RTSP transpordiprotokoll",
+                    "still_image_url": "Pildi URL (nt http://...)",
+                    "stream_source": "Voo allikas URL (nt rtsp://...)",
+                    "use_wallclock_as_timestamps": "Wallclocki kasutamine ajatemplitena",
+                    "username": "Kasutajanimi",
+                    "verify_ssl": "Kontrolli SSL sertifikaati"
+                },
+                "data_description": {
+                    "use_wallclock_as_timestamps": "See suvand v\u00f5ib parandada segmentimis- v\u00f5i krahhiprobleeme, mis tulenevad m\u00f5ne kaamera vigastest ajatemplirakendustest"
+                }
+            }
+        }
+    }
+}

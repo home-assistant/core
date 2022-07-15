@@ -6,22 +6,30 @@
             "auth_missing": "Home Assistantil pole selle Samsungi teleriga \u00fchenduse loomiseks luba. Home Assistanti autoriseerimiseks kontrolli oma teleri seadeid.",
             "cannot_connect": "\u00dchendamine nurjus",
             "id_missing": "Sellel Samsungi seadmel puudub seerianumber.",
-            "missing_config_entry": "Sellel Samsungi seadmel puudub seadekirje.",
             "not_supported": "Seda Samsungi seadet praegu ei toetata.",
             "reauth_successful": "Taastuvastamine \u00f5nnestus",
             "unknown": "Tundmatu t\u00f5rge"
         },
         "error": {
-            "auth_missing": "Tuvastamine nurjus"
+            "auth_missing": "Tuvastamine nurjus",
+            "invalid_pin": "PIN on kehtetu, proovi uuesti."
         },
         "flow_title": "{devicel}",
         "step": {
             "confirm": {
-                "description": "Kas soovid seadistada   {devicel} ? Kui seda pole kunagi enne Home Assistantiga \u00fchendatud, n\u00e4ed oma teleris h\u00fcpikakent, mis k\u00fcsib tuvastamist.",
-                "title": ""
+                "description": "Kas soovid seadistada   {devicel} ? Kui seda pole kunagi enne Home Assistantiga \u00fchendatud, n\u00e4ed oma teleris h\u00fcpikakent, mis k\u00fcsib tuvastamist."
+            },
+            "encrypted_pairing": {
+                "description": "Sisesta seadmes {device} kuvatav PIN-kood."
+            },
+            "pairing": {
+                "description": "Kas h\u00e4\u00e4lestada seade {device}? Kui varem pole Home Assistantiga \u00fchendutud peaks teler kuvama h\u00fcpikakna tuvastusteabe sisestamiseks."
             },
             "reauth_confirm": {
-                "description": "P\u00e4rast esitamist n\u00f5ustu {device} h\u00fcpikaknaga, mis taotleb autoriseerimist 30 sekundi jooksul."
+                "description": "P\u00e4rast esitamist n\u00f5ustu {device} h\u00fcpikaknaga, mis taotleb autoriseerimist 30 sekundi jooksul v\u00f5i sisesta PIN."
+            },
+            "reauth_confirm_encrypted": {
+                "description": "Sisesta seadmes {device} kuvatav PIN-kood."
             },
             "user": {
                 "data": {

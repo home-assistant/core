@@ -1,8 +1,6 @@
 """Provides device triggers for LCN."""
 from __future__ import annotations
 
-from typing import Any
-
 import voluptuous as vol
 
 from homeassistant.components.automation import (
@@ -16,16 +14,16 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
-from . import DOMAIN
-from .const import KEY_ACTIONS, SENDKEYS
+from .const import DOMAIN, KEY_ACTIONS, SENDKEYS
 
-TRIGGER_TYPES = {"transmitter", "transponder", "fingerprint", "send_keys"}
+TRIGGER_TYPES = {"transmitter", "transponder", "fingerprint", "codelock", "send_keys"}
 
 LCN_DEVICE_TRIGGER_BASE_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES)}
 )
 
 ACCESS_CONTROL_SCHEMA = {vol.Optional("code"): vol.All(vol.Lower, cv.string)}
+
 TRANSMITTER_SCHEMA = {
     **ACCESS_CONTROL_SCHEMA,
     vol.Optional("level"): cv.positive_int,
@@ -48,18 +46,21 @@ TYPE_SCHEMAS = {
     "transmitter": {"extra_fields": vol.Schema(TRANSMITTER_SCHEMA)},
     "transponder": {"extra_fields": vol.Schema(ACCESS_CONTROL_SCHEMA)},
     "fingerprint": {"extra_fields": vol.Schema(ACCESS_CONTROL_SCHEMA)},
+    "codelock": {"extra_fields": vol.Schema(ACCESS_CONTROL_SCHEMA)},
     "send_keys": {"extra_fields": vol.Schema(SENDKEYS_SCHEMA)},
 }
 
 
 async def async_get_triggers(
     hass: HomeAssistant, device_id: str
-) -> list[dict[str, Any]]:
+) -> list[dict[str, str]]:
     """List device triggers for LCN devices."""
     device_registry = dr.async_get(hass)
-    device = device_registry.async_get(device_id)
+    if (device := device_registry.async_get(device_id)) is None:
+        return []
 
-    if device.model.startswith(("LCN host", "LCN group", "LCN resource")):  # type: ignore[union-attr]
+    identifier = next(iter(device.identifiers))
+    if (identifier[1].count("-") != 1) or device.model.startswith("LCN group"):  # type: ignore[union-attr]
         return []
 
     base_trigger = {
@@ -100,6 +101,8 @@ async def async_attach_trigger(
     )
 
 
-async def async_get_trigger_capabilities(hass: HomeAssistant, config: dict) -> dict:
+async def async_get_trigger_capabilities(
+    hass: HomeAssistant, config: ConfigType
+) -> dict[str, vol.Schema]:
     """List trigger capabilities."""
     return TYPE_SCHEMAS.get(config[CONF_TYPE], {})

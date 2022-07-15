@@ -4,25 +4,20 @@ from __future__ import annotations
 import dataclasses
 from unittest.mock import Mock
 
-from async_upnp_client import UpnpDevice, UpnpError
+from async_upnp_client.client import UpnpDevice
+from async_upnp_client.exceptions import UpnpError
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import ssdp
 from homeassistant.components.dlna_dmr.const import (
+    CONF_BROWSE_UNFILTERED,
     CONF_CALLBACK_URL_OVERRIDE,
     CONF_LISTEN_PORT,
     CONF_POLL_AVAILABILITY,
     DOMAIN as DLNA_DOMAIN,
 )
-from homeassistant.const import (
-    CONF_DEVICE_ID,
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PLATFORM,
-    CONF_TYPE,
-    CONF_URL,
-)
+from homeassistant.const import CONF_DEVICE_ID, CONF_HOST, CONF_TYPE, CONF_URL
 from homeassistant.core import HomeAssistant
 
 from .conftest import (
@@ -42,13 +37,6 @@ pytestmark = [
 ]
 
 WRONG_DEVICE_TYPE = "urn:schemas-upnp-org:device:InternetGatewayDevice:1"
-
-IMPORTED_DEVICE_NAME = "Imported DMR device"
-
-MOCK_CONFIG_IMPORT_DATA = {
-    CONF_PLATFORM: DLNA_DOMAIN,
-    CONF_URL: MOCK_DEVICE_LOCATION,
-}
 
 MOCK_ROOT_DEVICE_UDN = "ROOT_DEVICE"
 
@@ -87,7 +75,7 @@ MOCK_DISCOVERY = ssdp.SsdpServiceInfo(
             ]
         },
     },
-    x_homeassistant_matching_domains=(DLNA_DOMAIN,),
+    x_homeassistant_matching_domains={DLNA_DOMAIN},
 )
 
 
@@ -96,7 +84,7 @@ async def test_user_flow_undiscovered_manual(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DLNA_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {}
     assert result["step_id"] == "manual"
 
@@ -104,7 +92,7 @@ async def test_user_flow_undiscovered_manual(hass: HomeAssistant) -> None:
         result["flow_id"], user_input={CONF_URL: MOCK_DEVICE_LOCATION}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_DEVICE_NAME
     assert result["data"] == {
         CONF_URL: MOCK_DEVICE_LOCATION,
@@ -130,7 +118,7 @@ async def test_user_flow_discovered_manual(
     result = await hass.config_entries.flow.async_init(
         DLNA_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] is None
     assert result["step_id"] == "user"
 
@@ -138,7 +126,7 @@ async def test_user_flow_discovered_manual(
         result["flow_id"], user_input={}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {}
     assert result["step_id"] == "manual"
 
@@ -146,7 +134,7 @@ async def test_user_flow_discovered_manual(
         result["flow_id"], user_input={CONF_URL: MOCK_DEVICE_LOCATION}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_DEVICE_NAME
     assert result["data"] == {
         CONF_URL: MOCK_DEVICE_LOCATION,
@@ -170,7 +158,7 @@ async def test_user_flow_selected(hass: HomeAssistant, ssdp_scanner_mock: Mock) 
     result = await hass.config_entries.flow.async_init(
         DLNA_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] is None
     assert result["step_id"] == "user"
 
@@ -178,7 +166,7 @@ async def test_user_flow_selected(hass: HomeAssistant, ssdp_scanner_mock: Mock) 
         result["flow_id"], user_input={CONF_HOST: MOCK_DEVICE_NAME}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_DEVICE_NAME
     assert result["data"] == {
         CONF_URL: MOCK_DEVICE_LOCATION,
@@ -200,7 +188,7 @@ async def test_user_flow_uncontactable(
     result = await hass.config_entries.flow.async_init(
         DLNA_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {}
     assert result["step_id"] == "manual"
 
@@ -208,7 +196,7 @@ async def test_user_flow_uncontactable(
         result["flow_id"], user_input={CONF_URL: MOCK_DEVICE_LOCATION}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
     assert result["step_id"] == "manual"
 
@@ -233,7 +221,7 @@ async def test_user_flow_embedded_st(
     result = await hass.config_entries.flow.async_init(
         DLNA_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {}
     assert result["step_id"] == "manual"
 
@@ -241,7 +229,7 @@ async def test_user_flow_embedded_st(
         result["flow_id"], user_input={CONF_URL: MOCK_DEVICE_LOCATION}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_DEVICE_NAME
     assert result["data"] == {
         CONF_URL: MOCK_DEVICE_LOCATION,
@@ -263,7 +251,7 @@ async def test_user_flow_wrong_st(hass: HomeAssistant, domain_data_mock: Mock) -
     result = await hass.config_entries.flow.async_init(
         DLNA_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {}
     assert result["step_id"] == "manual"
 
@@ -271,215 +259,9 @@ async def test_user_flow_wrong_st(hass: HomeAssistant, domain_data_mock: Mock) -
         result["flow_id"], user_input={CONF_URL: MOCK_DEVICE_LOCATION}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {"base": "not_dmr"}
     assert result["step_id"] == "manual"
-
-
-async def test_import_flow_invalid(hass: HomeAssistant, domain_data_mock: Mock) -> None:
-    """Test import flow of invalid YAML config."""
-    # Missing CONF_URL
-    result = await hass.config_entries.flow.async_init(
-        DLNA_DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={CONF_PLATFORM: DLNA_DOMAIN},
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "incomplete_config"
-
-
-async def test_import_flow_ssdp_discovered(
-    hass: HomeAssistant, ssdp_scanner_mock: Mock
-) -> None:
-    """Test import of YAML config with a device also found via SSDP."""
-    ssdp_scanner_mock.async_get_discovery_info_by_st.side_effect = [
-        [MOCK_DISCOVERY],
-        [],
-        [],
-    ]
-    result = await hass.config_entries.flow.async_init(
-        DLNA_DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data=MOCK_CONFIG_IMPORT_DATA,
-    )
-    await hass.async_block_till_done()
-
-    assert ssdp_scanner_mock.async_get_discovery_info_by_st.call_count >= 1
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == MOCK_DEVICE_NAME
-    assert result["data"] == {
-        CONF_URL: MOCK_DEVICE_LOCATION,
-        CONF_DEVICE_ID: MOCK_DEVICE_UDN,
-        CONF_TYPE: MOCK_DEVICE_TYPE,
-    }
-    assert result["options"] == {
-        CONF_LISTEN_PORT: None,
-        CONF_CALLBACK_URL_OVERRIDE: None,
-        CONF_POLL_AVAILABILITY: False,
-    }
-
-    # The config entry should not be duplicated when dlna_dmr is restarted
-    ssdp_scanner_mock.async_get_discovery_info_by_st.side_effect = [
-        [MOCK_DISCOVERY],
-        [],
-        [],
-    ]
-    result = await hass.config_entries.flow.async_init(
-        DLNA_DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data=MOCK_CONFIG_IMPORT_DATA,
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured"
-
-    # Wait for platform to be fully setup
-    await hass.async_block_till_done()
-
-
-async def test_import_flow_direct_connect(
-    hass: HomeAssistant, ssdp_scanner_mock: Mock
-) -> None:
-    """Test import of YAML config with a device *not found* via SSDP."""
-    ssdp_scanner_mock.async_get_discovery_info_by_st.return_value = []
-
-    result = await hass.config_entries.flow.async_init(
-        DLNA_DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data=MOCK_CONFIG_IMPORT_DATA,
-    )
-    await hass.async_block_till_done()
-
-    assert ssdp_scanner_mock.async_get_discovery_info_by_st.call_count >= 1
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == MOCK_DEVICE_NAME
-    assert result["data"] == {
-        CONF_URL: MOCK_DEVICE_LOCATION,
-        CONF_DEVICE_ID: MOCK_DEVICE_UDN,
-        CONF_TYPE: MOCK_DEVICE_TYPE,
-    }
-    assert result["options"] == {
-        CONF_LISTEN_PORT: None,
-        CONF_CALLBACK_URL_OVERRIDE: None,
-        CONF_POLL_AVAILABILITY: True,
-    }
-
-    # The config entry should not be duplicated when dlna_dmr is restarted
-    result = await hass.config_entries.flow.async_init(
-        DLNA_DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data=MOCK_CONFIG_IMPORT_DATA,
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured"
-
-
-async def test_import_flow_offline(
-    hass: HomeAssistant, domain_data_mock: Mock, ssdp_scanner_mock: Mock
-) -> None:
-    """Test import flow of offline device."""
-    # Device is not yet contactable
-    domain_data_mock.upnp_factory.async_create_device.side_effect = UpnpError
-
-    result = await hass.config_entries.flow.async_init(
-        DLNA_DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={
-            CONF_PLATFORM: DLNA_DOMAIN,
-            CONF_URL: MOCK_DEVICE_LOCATION,
-            CONF_NAME: IMPORTED_DEVICE_NAME,
-            CONF_CALLBACK_URL_OVERRIDE: "http://override/callback",
-            CONF_LISTEN_PORT: 2222,
-        },
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] == {}
-    assert result["step_id"] == "import_turn_on"
-
-    import_flow_id = result["flow_id"]
-
-    # User clicks submit, same form is displayed with an error
-    result = await hass.config_entries.flow.async_configure(
-        import_flow_id, user_input={}
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] == {"base": "cannot_connect"}
-    assert result["step_id"] == "import_turn_on"
-
-    # Device is discovered via SSDP, new flow should not be initialized
-    ssdp_scanner_mock.async_get_discovery_info_by_st.side_effect = [
-        [MOCK_DISCOVERY],
-        [],
-        [],
-    ]
-    domain_data_mock.upnp_factory.async_create_device.side_effect = None
-
-    result = await hass.config_entries.flow.async_init(
-        DLNA_DOMAIN,
-        context={"source": config_entries.SOURCE_SSDP},
-        data=MOCK_DISCOVERY,
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_in_progress"
-
-    # User clicks submit, config entry should be created
-    result = await hass.config_entries.flow.async_configure(
-        import_flow_id, user_input={}
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == IMPORTED_DEVICE_NAME
-    assert result["data"] == {
-        CONF_URL: MOCK_DEVICE_LOCATION,
-        CONF_DEVICE_ID: MOCK_DEVICE_UDN,
-        CONF_TYPE: MOCK_DEVICE_TYPE,
-    }
-    # Options should be retained
-    assert result["options"] == {
-        CONF_LISTEN_PORT: 2222,
-        CONF_CALLBACK_URL_OVERRIDE: "http://override/callback",
-        CONF_POLL_AVAILABILITY: True,
-    }
-
-    # Wait for platform to be fully setup
-    await hass.async_block_till_done()
-
-
-async def test_import_flow_options(
-    hass: HomeAssistant, ssdp_scanner_mock: Mock
-) -> None:
-    """Test import of YAML config with options set."""
-    ssdp_scanner_mock.async_get_discovery_info_by_st.return_value = []
-
-    result = await hass.config_entries.flow.async_init(
-        DLNA_DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={
-            CONF_PLATFORM: DLNA_DOMAIN,
-            CONF_URL: MOCK_DEVICE_LOCATION,
-            CONF_NAME: IMPORTED_DEVICE_NAME,
-            CONF_LISTEN_PORT: 2222,
-            CONF_CALLBACK_URL_OVERRIDE: "http://override/callback",
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == IMPORTED_DEVICE_NAME
-    assert result["data"] == {
-        CONF_URL: MOCK_DEVICE_LOCATION,
-        CONF_DEVICE_ID: MOCK_DEVICE_UDN,
-        CONF_TYPE: MOCK_DEVICE_TYPE,
-    }
-    assert result["options"] == {
-        CONF_LISTEN_PORT: 2222,
-        CONF_CALLBACK_URL_OVERRIDE: "http://override/callback",
-        CONF_POLL_AVAILABILITY: True,
-    }
-
-    # Wait for platform to be fully setup
-    await hass.async_block_till_done()
 
 
 async def test_ssdp_flow_success(hass: HomeAssistant) -> None:
@@ -489,7 +271,7 @@ async def test_ssdp_flow_success(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_SSDP},
         data=MOCK_DISCOVERY,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "confirm"
 
     result = await hass.config_entries.flow.async_configure(
@@ -497,7 +279,7 @@ async def test_ssdp_flow_success(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_DEVICE_NAME
     assert result["data"] == {
         CONF_URL: MOCK_DEVICE_LOCATION,
@@ -520,7 +302,7 @@ async def test_ssdp_flow_unavailable(
         context={"source": config_entries.SOURCE_SSDP},
         data=MOCK_DISCOVERY,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "confirm"
 
     domain_data_mock.upnp_factory.async_create_device.side_effect = UpnpError
@@ -530,7 +312,7 @@ async def test_ssdp_flow_unavailable(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_DEVICE_NAME
     assert result["data"] == {
         CONF_URL: MOCK_DEVICE_LOCATION,
@@ -560,7 +342,7 @@ async def test_ssdp_flow_existing(
             },
         ),
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert config_entry_mock.data[CONF_URL] == NEW_DEVICE_LOCATION
 
@@ -575,7 +357,7 @@ async def test_ssdp_flow_duplicate_location(
         context={"source": config_entries.SOURCE_SSDP},
         data=MOCK_DISCOVERY,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert config_entry_mock.data[CONF_URL] == MOCK_DEVICE_LOCATION
 
@@ -600,28 +382,40 @@ async def test_ssdp_flow_upnp_udn(
             },
         ),
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert config_entry_mock.data[CONF_URL] == NEW_DEVICE_LOCATION
 
 
 async def test_ssdp_missing_services(hass: HomeAssistant) -> None:
     """Test SSDP ignores devices that are missing required services."""
-    # No services defined at all
+    # No service list at all
     discovery = dataclasses.replace(MOCK_DISCOVERY)
-    discovery.upnp = discovery.upnp.copy()
+    discovery.upnp = dict(discovery.upnp)
     del discovery.upnp[ssdp.ATTR_UPNP_SERVICE_LIST]
     result = await hass.config_entries.flow.async_init(
         DLNA_DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
         data=discovery,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "not_dmr"
+
+    # Service list does not contain services
+    discovery = dataclasses.replace(MOCK_DISCOVERY)
+    discovery.upnp = discovery.upnp.copy()
+    discovery.upnp[ssdp.ATTR_UPNP_SERVICE_LIST] = {"bad_key": "bad_value"}
+    result = await hass.config_entries.flow.async_init(
+        DLNA_DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=discovery,
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "not_dmr"
 
     # AVTransport service is missing
     discovery = dataclasses.replace(MOCK_DISCOVERY)
-    discovery.upnp = discovery.upnp.copy()
+    discovery.upnp = dict(discovery.upnp)
     discovery.upnp[ssdp.ATTR_UPNP_SERVICE_LIST] = {
         "service": [
             service
@@ -632,7 +426,29 @@ async def test_ssdp_missing_services(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DLNA_DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=discovery
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "not_dmr"
+
+
+async def test_ssdp_single_service(hass: HomeAssistant) -> None:
+    """Test SSDP discovery info with only one service defined.
+
+    THe etree_to_dict function turns multiple services into a list of dicts, but
+    a single service into only a dict.
+    """
+    discovery = dataclasses.replace(MOCK_DISCOVERY)
+    discovery.upnp = discovery.upnp.copy()
+    service_list = discovery.upnp[ssdp.ATTR_UPNP_SERVICE_LIST].copy()
+    # Turn mock's list of service dicts into a single dict
+    service_list["service"] = service_list["service"][0]
+    discovery.upnp[ssdp.ATTR_UPNP_SERVICE_LIST] = service_list
+
+    result = await hass.config_entries.flow.async_init(
+        DLNA_DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=discovery,
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "not_dmr"
 
 
@@ -646,11 +462,11 @@ async def test_ssdp_ignore_device(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_SSDP},
         data=discovery,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "alternative_integration"
 
     discovery = dataclasses.replace(MOCK_DISCOVERY)
-    discovery.upnp = discovery.upnp.copy()
+    discovery.upnp = dict(discovery.upnp)
     discovery.upnp[
         ssdp.ATTR_UPNP_DEVICE_TYPE
     ] = "urn:schemas-upnp-org:device:ZonePlayer:1"
@@ -659,7 +475,7 @@ async def test_ssdp_ignore_device(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_SSDP},
         data=discovery,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "alternative_integration"
 
     for manufacturer, model in [
@@ -669,7 +485,7 @@ async def test_ssdp_ignore_device(hass: HomeAssistant) -> None:
         ("Royal Philips Electronics", "Philips TV DMR"),
     ]:
         discovery = dataclasses.replace(MOCK_DISCOVERY)
-        discovery.upnp = discovery.upnp.copy()
+        discovery.upnp = dict(discovery.upnp)
         discovery.upnp[ssdp.ATTR_UPNP_MANUFACTURER] = manufacturer
         discovery.upnp[ssdp.ATTR_UPNP_MODEL_NAME] = model
         result = await hass.config_entries.flow.async_init(
@@ -677,7 +493,7 @@ async def test_ssdp_ignore_device(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_SSDP},
             data=discovery,
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
         assert result["reason"] == "alternative_integration"
 
 
@@ -691,7 +507,7 @@ async def test_unignore_flow(hass: HomeAssistant, ssdp_scanner_mock: Mock) -> No
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_DEVICE_NAME
     assert result["data"] == {}
 
@@ -710,7 +526,7 @@ async def test_unignore_flow(hass: HomeAssistant, ssdp_scanner_mock: Mock) -> No
         context={"source": config_entries.SOURCE_UNIGNORE},
         data={"unique_id": MOCK_DEVICE_UDN},
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "confirm"
 
     result = await hass.config_entries.flow.async_configure(
@@ -718,7 +534,7 @@ async def test_unignore_flow(hass: HomeAssistant, ssdp_scanner_mock: Mock) -> No
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_DEVICE_NAME
     assert result["data"] == {
         CONF_URL: MOCK_DEVICE_LOCATION,
@@ -743,7 +559,7 @@ async def test_unignore_flow_offline(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_DEVICE_NAME
     assert result["data"] == {}
 
@@ -756,7 +572,7 @@ async def test_unignore_flow_offline(
         context={"source": config_entries.SOURCE_UNIGNORE},
         data={"unique_id": MOCK_DEVICE_UDN},
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "discovery_error"
 
 
@@ -767,7 +583,7 @@ async def test_options_flow(
     config_entry_mock.add_to_hass(hass)
     result = await hass.config_entries.options.async_init(config_entry_mock.entry_id)
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "init"
     assert result["errors"] == {}
 
@@ -777,10 +593,11 @@ async def test_options_flow(
         user_input={
             CONF_CALLBACK_URL_OVERRIDE: "Bad url",
             CONF_POLL_AVAILABILITY: False,
+            CONF_BROWSE_UNFILTERED: False,
         },
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "init"
     assert result["errors"] == {"base": "invalid_url"}
 
@@ -791,12 +608,14 @@ async def test_options_flow(
             CONF_LISTEN_PORT: 2222,
             CONF_CALLBACK_URL_OVERRIDE: "http://override/callback",
             CONF_POLL_AVAILABILITY: True,
+            CONF_BROWSE_UNFILTERED: True,
         },
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_LISTEN_PORT: 2222,
         CONF_CALLBACK_URL_OVERRIDE: "http://override/callback",
         CONF_POLL_AVAILABILITY: True,
+        CONF_BROWSE_UNFILTERED: True,
     }
