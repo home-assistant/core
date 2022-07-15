@@ -50,7 +50,6 @@ class YalePanicButton(YaleAlarmEntity, ButtonEntity):
         """Initialize the plug switch."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_name = description.name
         self._attr_unique_id = f"yale_smart_alarm-{description.key}"
 
     async def async_press(self) -> None:

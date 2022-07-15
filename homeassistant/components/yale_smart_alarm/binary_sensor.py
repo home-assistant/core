@@ -84,7 +84,6 @@ class YaleProblemSensor(YaleAlarmEntity, BinarySensorEntity):
         """Initiate Yale Problem Sensor."""
         super().__init__(coordinator)
         self.entity_description = entity_description
-        self._attr_name = entity_description.name
         self._attr_unique_id = f"{coordinator.entry.entry_id}-{entity_description.key}"
 
     @property
