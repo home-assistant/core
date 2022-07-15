@@ -432,8 +432,8 @@ class GuardianEntity(CoordinatorEntity[GuardianDataUpdateCoordinator]):
     def available(self) -> bool:
         """Return True if entity is available.
 
-        We override the inherited instance of this property so that we can force entity
-        available when desired (e.g., a reboot).
+        Since we don't call our parent's __init__(), we remake our own version of this
+        property so that we can force entity available when desired (e.g., a reboot).
         """
         return self._attr_available
 
