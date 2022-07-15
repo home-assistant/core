@@ -132,7 +132,6 @@ class FerrySensor(CoordinatorEntity[TVDataUpdateCoordinator], SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._attr_name = entity_description.name
         self._attr_unique_id = f"{entry_id}-{entity_description.key}"
         self.entity_description = entity_description
         self._attr_device_info = DeviceInfo(
