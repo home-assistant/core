@@ -57,7 +57,6 @@ class SensiboDeviceButton(SensiboDeviceBaseEntity, ButtonEntity):
         )
         self.entity_description = entity_description
         self._attr_unique_id = f"{device_id}-{entity_description.key}"
-        self._attr_name = entity_description.name
 
     async def async_press(self) -> None:
         """Press the button."""
