@@ -2,13 +2,16 @@
   "aircons": {
     "ac1": {
       "info": {
+        "climateControlModeEnabled": true,
         "climateControlModeIsRunning": false,
         "countDownToOff": 10,
         "countDownToOn": 0,
         "fan": "high",
         "filterCleanStatus": 0,
         "freshAirStatus": "off",
-        "mode": "vent",
+        "mode": "cool",
+        "myAutoModeEnabled": false,
+        "myAutoModeIsRunning": false,
         "myZone": 1,
         "name": "AC One",
         "setTemp": 24,
@@ -138,6 +141,59 @@
           "setTemp": 24,
           "state": "close",
           "type": 0,
+          "value": 0
+        }
+      }
+    },
+    "ac3": {
+      "info": {
+        "climateControlModeEnabled": false,
+        "climateControlModeIsRunning": false,
+        "countDownToOff": 10,
+        "countDownToOn": 0,
+        "fan": "autoAA",
+        "filterCleanStatus": 0,
+        "freshAirStatus": "none",
+        "mode": "myauto",
+        "myAutoCoolTargetTemp": 24,
+        "myAutoHeatTargetTemp": 20,
+        "myAutoModeCurrentSetMode": "cool",
+        "myAutoModeEnabled": true,
+        "myAutoModeIsRunning": false,
+        "myZone": 1,
+        "name": "AC One",
+        "setTemp": 24,
+        "state": "on"
+      },
+      "zones": {
+        "z01": {
+          "error": 0,
+          "maxDamper": 100,
+          "measuredTemp": 25,
+          "minDamper": 0,
+          "motion": 20,
+          "motionConfig": 2,
+          "name": "Zone A",
+          "number": 1,
+          "rssi": 40,
+          "setTemp": 24,
+          "state": "open",
+          "type": 1,
+          "value": 100
+        },
+        "z02": {
+          "error": 0,
+          "maxDamper": 100,
+          "measuredTemp": 26,
+          "minDamper": 0,
+          "motion": 21,
+          "motionConfig": 2,
+          "name": "Zone B",
+          "number": 2,
+          "rssi": 10,
+          "setTemp": 24,
+          "state": "close",
+          "type": 1,
           "value": 0
         }
       }

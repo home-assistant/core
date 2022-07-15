@@ -93,8 +93,6 @@ async def async_setup_entry(
 class AdvantageAirAC(AdvantageAirEntity, ClimateEntity):
     """AdvantageAir AC unit."""
 
-    # https://www.advantageair.com.au/wp-content/uploads/2019/10/MyComfort.pdf
-
     _attr_fan_modes = [FAN_LOW, FAN_MEDIUM, FAN_HIGH]
     _attr_temperature_unit = TEMP_CELSIUS
     _attr_target_temperature_step = PRECISION_WHOLE
@@ -109,12 +107,12 @@ class AdvantageAirAC(AdvantageAirEntity, ClimateEntity):
         self._attr_preset_modes = [ADVANTAGE_AIR_MYZONE]
         self._attr_supported_features = ClimateEntityFeature.FAN_MODE
 
-        # Add "MyTemp" if available
+        # Add "MyTemp" preset if available
         if ADVANTAGE_AIR_MYTEMP_ENABLED in self._ac:
             self._attr_preset_modes += [ADVANTAGE_AIR_MYTEMP]
             self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
 
-        # Add "MyAuto" if available
+        # Add "MyAuto" preset if available
         if ADVANTAGE_AIR_MYAUTO_ENABLED in self._ac:
             self._attr_preset_modes += [ADVANTAGE_AIR_MYAUTO]
             self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
