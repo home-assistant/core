@@ -390,8 +390,10 @@ class HKDevice:
         # Ensure the Pairing object has access to the latest version of the entity map. This
         # is especially important for BLE, as the Pairing instance relies on the entity map
         # to map aid/iid to GATT characteristics. So push it to there as well.
+        assert self.accessories is not None
+        assert self.config_num is not None
 
-        self.pairing.pairing_data["accessories"] = self.accessories  # type: ignore[attr-defined]
+        self.pairing.restore_accessories_state(self.accessories, self.config_num)
 
         self.async_detect_workarounds()
 

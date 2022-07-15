@@ -8,7 +8,6 @@ from typing import Any
 import aiohomekit
 from aiohomekit.controller.abstract import AbstractPairing
 from aiohomekit.exceptions import AuthenticationError
-from aiohomekit.model import Accessories, CharacteristicsTypes, ServicesTypes
 from aiohomekit.utils import domain_supported, domain_to_name
 import voluptuous as vol
 
@@ -481,14 +480,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # available. Otherwise request a fresh copy from the API.
         # This removes the 'accessories' key from pairing_data at
         # the same time.
-        if not (accessories := pairing_data.pop("accessories", None)):
-            accessories = await pairing.list_accessories_and_characteristics()
-
-        parsed = Accessories.from_list(accessories)
-        accessory_info = parsed.aid(1).services.first(
-            service_type=ServicesTypes.ACCESSORY_INFORMATION
-        )
-        name = accessory_info.value(CharacteristicsTypes.NAME, "")
+        name = await pairing.get_primary_name()
 
         await pairing.close()
 
