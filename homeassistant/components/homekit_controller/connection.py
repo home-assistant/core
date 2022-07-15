@@ -453,22 +453,6 @@ class HKDevice:
             self.unique_id, self.config_num, self.entity_map.serialize()
         )
 
-    async def async_refresh_entity_map(self, config_num: int) -> bool:
-        """Handle setup of a HomeKit accessory."""
-        try:
-            accessories = await self.pairing.list_accessories_and_characteristics()
-        except AccessoryDisconnectedError:
-            # If we fail to refresh this data then we will naturally retry
-            # later when Bonjour spots c# is still not up to date.
-            return False
-
-        self.pairing.restore_accessories_state(accessories, config_num)
-        entity_storage: EntityMapStorage = self.hass.data[ENTITY_MAP]
-        entity_storage.async_create_or_update_map(
-            self.unique_id, config_num, accessories
-        )
-        return True
-
     def add_accessory_factory(self, add_entities_cb) -> None:
         """Add a callback to run when discovering new entities for accessories."""
         self.accessory_factories.append(add_entities_cb)
