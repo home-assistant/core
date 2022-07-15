@@ -11,7 +11,6 @@ from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BraviaTVCoordinator
 from .const import DOMAIN
 from .entity import BraviaTVEntity
 
@@ -36,7 +35,6 @@ class BraviaTVMediaPlayer(BraviaTVEntity, MediaPlayerEntity):
     """Representation of a Bravia TV Media Player."""
 
     _attr_device_class = MediaPlayerDeviceClass.TV
-    _attr_has_entity_name = True
     _attr_supported_features = (
         MediaPlayerEntityFeature.PAUSE
         | MediaPlayerEntityFeature.VOLUME_STEP
@@ -50,17 +48,6 @@ class BraviaTVMediaPlayer(BraviaTVEntity, MediaPlayerEntity):
         | MediaPlayerEntityFeature.PLAY
         | MediaPlayerEntityFeature.STOP
     )
-
-    def __init__(
-        self,
-        coordinator: BraviaTVCoordinator,
-        unique_id: str,
-        model: str,
-    ) -> None:
-        """Initialize the entity."""
-        self._attr_unique_id = unique_id
-
-        super().__init__(coordinator, unique_id, model)
 
     @property
     def state(self) -> str | None:
@@ -103,14 +90,6 @@ class BraviaTVMediaPlayer(BraviaTVEntity, MediaPlayerEntity):
     def media_duration(self) -> int | None:
         """Duration of current playing media in seconds."""
         return self.coordinator.duration
-
-    async def async_turn_on(self) -> None:
-        """Turn the device on."""
-        await self.coordinator.async_turn_on()
-
-    async def async_turn_off(self) -> None:
-        """Turn the device off."""
-        await self.coordinator.async_turn_off()
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""

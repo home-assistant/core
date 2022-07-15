@@ -9,7 +9,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BraviaTVCoordinator
 from .const import DOMAIN
 from .entity import BraviaTVEntity
 
@@ -31,31 +30,10 @@ async def async_setup_entry(
 class BraviaTVRemote(BraviaTVEntity, RemoteEntity):
     """Representation of a Bravia TV Remote."""
 
-    _attr_has_entity_name = True
-
-    def __init__(
-        self,
-        coordinator: BraviaTVCoordinator,
-        unique_id: str,
-        model: str,
-    ) -> None:
-        """Initialize the entity."""
-        self._attr_unique_id = unique_id
-
-        super().__init__(coordinator, unique_id, model)
-
     @property
     def is_on(self) -> bool:
         """Return true if device is on."""
         return self.coordinator.is_on
-
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the device on."""
-        await self.coordinator.async_turn_on()
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the device off."""
-        await self.coordinator.async_turn_off()
 
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a command to device."""
