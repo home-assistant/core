@@ -214,6 +214,38 @@ async def device_light_3(hass, zigpy_device_mock, zha_device_joined):
     return zha_device
 
 
+@pytest.fixture
+async def eWeLink_light(hass, zigpy_device_mock, zha_device_joined):
+    """Mock eWeLink light."""
+
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                SIG_EP_INPUT: [
+                    general.OnOff.cluster_id,
+                    general.LevelControl.cluster_id,
+                    lighting.Color.cluster_id,
+                    general.Groups.cluster_id,
+                    general.Identify.cluster_id,
+                ],
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zha.DeviceType.COLOR_DIMMABLE_LIGHT,
+                SIG_EP_PROFILE: zha.PROFILE_ID,
+            }
+        },
+        ieee="03:2d:6f:00:0a:90:69:e3",
+        manufacturer="eWeLink",
+        nwk=0xB79D,
+    )
+    color_cluster = zigpy_device.endpoints[1].light_color
+    color_cluster.PLUGGED_ATTR_READS = {
+        "color_capabilities": CAPABILITIES_COLOR_TEMP | CAPABILITIES_COLOR_XY
+    }
+    zha_device = await zha_device_joined(zigpy_device)
+    zha_device.available = True
+    return zha_device
+
+
 async def test_light_refresh(hass, zigpy_device_mock, zha_device_joined_restored):
     """Test zha light platform refresh."""
 
@@ -352,7 +384,9 @@ async def test_light(
     "zigpy.zcl.clusters.general.OnOff.request",
     new=AsyncMock(return_value=[sentinel.data, zcl_f.Status.SUCCESS]),
 )
-async def test_transitions(hass, device_light_1, device_light_2, coordinator):
+async def test_transitions(
+    hass, device_light_1, device_light_2, eWeLink_light, coordinator
+):
     """Test ZHA light transition code."""
     zha_gateway = get_zha_gateway(hass)
     assert zha_gateway is not None
@@ -378,6 +412,7 @@ async def test_transitions(hass, device_light_1, device_light_2, coordinator):
 
     device_1_entity_id = await find_entity_id(Platform.LIGHT, device_light_1, hass)
     device_2_entity_id = await find_entity_id(Platform.LIGHT, device_light_2, hass)
+    eWeLink_light_entity_id = await find_entity_id(Platform.LIGHT, eWeLink_light, hass)
     assert device_1_entity_id != device_2_entity_id
 
     group_entity_id = async_find_group_entity_id(hass, Platform.LIGHT, zha_group)
@@ -388,12 +423,15 @@ async def test_transitions(hass, device_light_1, device_light_2, coordinator):
 
     dev1_cluster_on_off = device_light_1.device.endpoints[1].on_off
     dev2_cluster_on_off = device_light_2.device.endpoints[1].on_off
+    eWeLink_cluster_on_off = eWeLink_light.device.endpoints[1].on_off
 
     dev1_cluster_level = device_light_1.device.endpoints[1].level
     dev2_cluster_level = device_light_2.device.endpoints[1].level
+    eWeLink_cluster_level = eWeLink_light.device.endpoints[1].level
 
     dev1_cluster_color = device_light_1.device.endpoints[1].light_color
     dev2_cluster_color = device_light_2.device.endpoints[1].light_color
+    eWeLink_cluster_color = eWeLink_light.device.endpoints[1].light_color
 
     # allow traffic to flow through the gateway and device
     await async_enable_traffic(hass, [device_light_1, device_light_2])
@@ -966,6 +1004,50 @@ async def test_transitions(hass, device_light_1, device_light_2, coordinator):
     assert light2_state.state == STATE_ON
 
     dev2_cluster_level.request.reset_mock()
+
+    # test eWeLink color temp while turning light on from off (color_provided_while_off)
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        "turn_on",
+        {
+            "entity_id": eWeLink_light_entity_id,
+            "color_temp": 235,
+        },
+        blocking=True,
+    )
+    assert eWeLink_cluster_on_off.request.call_count == 1
+    assert eWeLink_cluster_on_off.request.await_count == 1
+    assert eWeLink_cluster_color.request.call_count == 1
+    assert eWeLink_cluster_color.request.await_count == 1
+    assert eWeLink_cluster_level.request.call_count == 0
+    assert eWeLink_cluster_level.request.await_count == 0
+
+    # first it comes on
+    assert eWeLink_cluster_on_off.request.call_args_list[0] == call(
+        False,
+        1,
+        eWeLink_cluster_on_off.commands_by_name["on"].schema,
+        expect_reply=True,
+        manufacturer=None,
+        tries=1,
+        tsn=None,
+    )
+    assert dev1_cluster_color.request.call_args == call(
+        False,
+        10,
+        dev1_cluster_color.commands_by_name["move_to_color_temp"].schema,
+        235,  # color temp mireds
+        0,  # transition time (ZCL time in 10ths of a second) - no transition when color_provided_while_off
+        expect_reply=True,
+        manufacturer=None,
+        tries=1,
+        tsn=None,
+    )
+
+    eWeLink_state = hass.states.get(eWeLink_light_entity_id)
+    assert eWeLink_state.state == STATE_ON
+    assert eWeLink_state.attributes["color_temp"] == 235
+    assert eWeLink_state.attributes["color_mode"] == ColorMode.COLOR_TEMP
 
 
 async def async_test_on_off_from_light(hass, cluster, entity_id):

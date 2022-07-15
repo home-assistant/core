@@ -226,9 +226,12 @@ class BaseLight(LogMixin, light.LightEntity):
         # the light needs to be turned on first at a low brightness level where the light is immediately transitioned
         # to the correct color. Afterwards, the transition is only from the low brightness to the new brightness.
         # Otherwise, the transition is from the color the light had before being turned on to the new color.
-        # This can look especially bad with transitions longer than a second.
+        # This can look especially bad with transitions longer than a second. We do not want to do this for
+        # devices that need to be forced to use the on command because we would end up with 4 commands sent:
+        # move to level, on, color, move to level...
         color_provided_while_off = (
             not isinstance(self, LightGroup)
+            and not self._FORCE_ON
             and not self._state
             and brightness_supported(self._attr_supported_color_modes)
             and (light.ATTR_COLOR_TEMP in kwargs or light.ATTR_HS_COLOR in kwargs)
@@ -610,7 +613,7 @@ class HueLight(Light):
 @STRICT_MATCH(
     channel_names=CHANNEL_ON_OFF,
     aux_channels={CHANNEL_COLOR, CHANNEL_LEVEL},
-    manufacturers={"Jasco", "Quotra-Vision"},
+    manufacturers={"Jasco", "Quotra-Vision", "eWeLight", "eWeLink"},
 )
 class ForceOnLight(Light):
     """Representation of a light which does not respect move_to_level_with_on_off."""
