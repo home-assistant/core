@@ -28,6 +28,7 @@ from .const import (
     ATTR_LED,
     ATTR_LIVE_TRACKING,
     ATTR_MINUTES_ACTIVE,
+    ATTR_POWER_SAVING_ZONE,
     ATTR_TRACKER_STATE,
     CLIENT,
     CLIENT_ID,
@@ -233,6 +234,7 @@ class TractiveClient:
             ATTR_LIVE_TRACKING: event.get("live_tracking", {}).get("active"),
             ATTR_BUZZER: event.get("buzzer_control", {}).get("active"),
             ATTR_LED: event.get("led_control", {}).get("active"),
+            ATTR_POWER_SAVING_ZONE: event["hardware"]["power_saving_zone_id"],
         }
         self._dispatch_tracker_event(
             TRACKER_HARDWARE_STATUS_UPDATED, event["tracker_id"], payload

@@ -20,6 +20,7 @@ from . import Trackables
 from .const import (
     ATTR_DAILY_GOAL,
     ATTR_MINUTES_ACTIVE,
+    ATTR_POWER_SAVING_ZONE,
     ATTR_TRACKER_STATE,
     CLIENT,
     DOMAIN,
@@ -160,6 +161,13 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
         icon="mdi:flag-checkered",
         native_unit_of_measurement=TIME_MINUTES,
         entity_class=TractiveActivitySensor,
+    ),
+    TractiveSensorEntityDescription(
+        key=ATTR_POWER_SAVING_ZONE,
+        name="Power Saving Zone Id",
+        icon="mdid:battery-plus-variant",
+        entity_class=TractiveHardwareSensor,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 

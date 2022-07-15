@@ -12,6 +12,7 @@ ATTR_LED = "led"
 ATTR_LIVE_TRACKING = "live_tracking"
 ATTR_MINUTES_ACTIVE = "minutes_active"
 ATTR_TRACKER_STATE = "tracker_state"
+ATTR_POWER_SAVING_ZONE = "power_saving"
 
 # This client ID was issued by Tractive specifically for Home Assistant.
 # Please do not use it anywhere else.
