@@ -89,9 +89,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload an GeoJSON events component config entry."""
-    coordinator = hass.data[DOMAIN][FEED].pop(entry.entry_id)
-    await coordinator.async_stop()
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        hass.data[DOMAIN][FEED].pop(entry.entry_id)
+    return unload_ok
 
 
 class GeoJsonEventsFeedEntityCoordinator(DataUpdateCoordinator):
