@@ -176,6 +176,7 @@ async def test_migrate_entry(hass):
                 "fire_event": True,
                 "device_id": ["11", "0", "213c7f2:16"],
             },
+            "0716000100900970": {},
         },
     }
 
@@ -185,11 +186,17 @@ async def test_migrate_entry(hass):
     entry.add_to_hass(hass)
 
     registry = dr.async_get(hass)
-    device = registry.async_get_or_create(
+    device_1 = registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={
             (DOMAIN, "11", "0", "213c7f2:16"),
             ("dummy", "id"),
+        },
+    )
+    device_2 = registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={
+            (DOMAIN, "16", "0", "00:90"),
         },
     )
 
@@ -206,12 +213,20 @@ async def test_migrate_entry(hass):
                 "fire_event": True,
                 "device_id": "11_0_213c7f2:16",
             },
+            "0716000100900970": {
+                "device_id": "16_0_00:90",
+            },
         },
     }
     assert entry.version == 2
 
-    device = registry.async_get(device.id)
-    assert device.identifiers == {
+    device_1 = registry.async_get(device_1.id)
+    assert device_1.identifiers == {
         (DOMAIN, "11_0_213c7f2:16"),
         ("dummy", "id"),
+    }
+
+    device_2 = registry.async_get(device_2.id)
+    assert device_2.identifiers == {
+        (DOMAIN, "16_0_00:90"),
     }
