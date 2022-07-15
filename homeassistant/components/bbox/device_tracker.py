@@ -20,6 +20,9 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
 
+import urllib3
+requests.packages.urllib3.util.ssl_.DEFAULT_CIPHERS = 'ALL:@SECLEVEL=1'
+
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_HOST = "192.168.1.254"
