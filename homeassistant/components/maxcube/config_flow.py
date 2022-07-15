@@ -7,7 +7,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.util.dt import now
 
-from . import DOMAIN
+from . import DEFAULT_PORT, DOMAIN
 
 
 @config_entries.HANDLERS.register(DOMAIN)
@@ -25,7 +25,10 @@ class MaxCubeFlowHandler(config_entries.ConfigFlow):
         """Handle a flow initiated by the user."""
         if user_input is not None:
             host = user_input.get(CONF_HOST)
-            port = user_input.get(CONF_PORT, 62910)
+            port = user_input.get(CONF_PORT, DEFAULT_PORT)
+            title = f"{host}"
+            if port != DEFAULT_PORT:
+                title += f":{port}"
 
             try:
                 cube = MaxCube(host, port, now=now)
@@ -33,14 +36,14 @@ class MaxCubeFlowHandler(config_entries.ConfigFlow):
             except Exception:  # pylint: disable=broad-except
                 return self.async_abort(reason="connection_error")
 
-            return self.async_create_entry(title=f"{host}:{port}", data=user_input)
+            return self.async_create_entry(title=title, data=user_input)
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_HOST): str,
-                    vol.Optional(CONF_PORT, default=62910): int,
+                    vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
                     vol.Optional(CONF_SCAN_INTERVAL, default=300): int,
                 }
             ),
