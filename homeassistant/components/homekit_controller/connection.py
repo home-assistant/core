@@ -391,7 +391,6 @@ class HKDevice:
         # is especially important for BLE, as the Pairing instance relies on the entity map
         # to map aid/iid to GATT characteristics. So push it to there as well.
         assert self.accessories is not None
-        assert self.config_num is not None
 
         self.pairing.restore_accessories_state(self.accessories, self.config_num)
 
