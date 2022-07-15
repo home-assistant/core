@@ -76,7 +76,7 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                             "Unexpected response from Verisure during MFA set up, %s",
                             mfa_ex,
                         )
-                        errors["base"] = "unknown"
+                        errors["base"] = "unknown_mfa"
                     else:
                         return await self.async_step_mfa()
                 else:
@@ -204,7 +204,7 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                             "Unexpected response from Verisure during MFA set up, %s",
                             mfa_ex,
                         )
-                        errors["base"] = "unknown"
+                        errors["base"] = "unknown_mfa"
                     else:
                         return await self.async_step_reauth_mfa()
                 else:
@@ -258,11 +258,10 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 LOGGER.debug("Unexpected response from Verisure, %s", ex)
                 errors["base"] = "unknown"
             else:
-                data = self.entry.data.copy()
                 self.hass.config_entries.async_update_entry(
                     self.entry,
                     data={
-                        **data,
+                        **self.entry.data,
                         CONF_EMAIL: self.email,
                         CONF_PASSWORD: self.password,
                     },
@@ -277,7 +276,8 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_CODE): vol.All(
-                        vol.Length(min=6, max=6), vol.Coerce(str)
+                        vol.Coerce(str),
+                        vol.Length(min=6, max=6),
                     )
                 }
             ),

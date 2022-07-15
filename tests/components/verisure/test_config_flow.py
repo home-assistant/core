@@ -283,7 +283,7 @@ async def test_verisure_errors(
 
     assert result3.get("type") == FlowResultType.FORM
     assert result3.get("step_id") == "user"
-    assert result3.get("errors") == {"base": "unknown"}
+    assert result3.get("errors") == {"base": "unknown_mfa"}
     assert "flow_id" in result3
 
     result4 = await hass.config_entries.flow.async_configure(
@@ -524,7 +524,7 @@ async def test_reauth_flow_errors(
 
     assert result3.get("type") == FlowResultType.FORM
     assert result3.get("step_id") == "reauth_confirm"
-    assert result3.get("errors") == {"base": "unknown"}
+    assert result3.get("errors") == {"base": "unknown_mfa"}
     assert "flow_id" in result3
 
     mock_verisure_config_flow.login_mfa.side_effect = None

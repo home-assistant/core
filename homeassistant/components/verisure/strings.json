@@ -36,7 +36,8 @@
     },
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "unknown_mfa": "Unknown error occurred during MFA set up"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
