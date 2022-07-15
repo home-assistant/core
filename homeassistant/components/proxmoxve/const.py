@@ -8,8 +8,8 @@ PROXMOX_CLIENTS = "proxmox_clients"
 PROXMOX_CLIENT = "proxmox_client"
 
 DEFAULT_PORT = 8006
-DEFAULT_REALM = "pam"
-DEFAULT_VERIFY_SSL = True
+DEFAULT_REALM = "pve"
+DEFAULT_VERIFY_SSL = False
 
 COORDINATORS = "coordinators"
 API_DATA = "api_data"

@@ -60,7 +60,7 @@ async def test_flow_ok(hass: HomeAssistant):
     """Test flow ok."""
 
     with patch("proxmoxer.ProxmoxResource.get", return_value=MOCK_GET_RESPONSE), patch(
-        "proxmoxer.backends.https.ProxmoxHTTPAuth._getNewTokens",
+        "proxmoxer.backends.https.ProxmoxHTTPAuth._get_new_tokens",
         return_value=None,
     ):
 
@@ -76,7 +76,7 @@ async def test_flow_port_small(hass: HomeAssistant):
     """Test if port number too small."""
 
     with patch(
-        "proxmoxer.backends.https.ProxmoxHTTPAuth._getNewTokens", return_value=None
+        "proxmoxer.backends.https.ProxmoxHTTPAuth._get_new_tokens", return_value=None
     ):
 
         result = await hass.config_entries.flow.async_init(
@@ -91,7 +91,7 @@ async def test_flow_port_big(hass: HomeAssistant):
     """Test if port number too big."""
 
     with patch(
-        "proxmoxer.backends.https.ProxmoxHTTPAuth._getNewTokens", return_value=None
+        "proxmoxer.backends.https.ProxmoxHTTPAuth._get_new_tokens", return_value=None
     ):
 
         result = await hass.config_entries.flow.async_init(
@@ -174,7 +174,7 @@ async def test_flow_import_ok(hass: HomeAssistant):
     """Test flow ok."""
 
     with patch("proxmoxer.ProxmoxResource.get", return_value=MOCK_GET_RESPONSE), patch(
-        "proxmoxer.backends.https.ProxmoxHTTPAuth._getNewTokens",
+        "proxmoxer.backends.https.ProxmoxHTTPAuth._get_new_tokens",
         return_value=None,
     ), patch(
         "homeassistant.components.proxmoxve.config_flow.ProxmoxVEConfigFlow._async_endpoint_exists",
@@ -194,7 +194,7 @@ async def test_flow_import_ok_onlyrequired(hass: HomeAssistant):
     """Test flow ok."""
 
     with patch("proxmoxer.ProxmoxResource.get", return_value=MOCK_GET_RESPONSE), patch(
-        "proxmoxer.backends.https.ProxmoxHTTPAuth._getNewTokens",
+        "proxmoxer.backends.https.ProxmoxHTTPAuth._get_new_tokens",
         return_value=None,
     ), patch(
         "homeassistant.components.proxmoxve.config_flow.ProxmoxVEConfigFlow._async_endpoint_exists",
