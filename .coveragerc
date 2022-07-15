@@ -23,6 +23,7 @@ omit =
     homeassistant/components/adax/climate.py
     homeassistant/components/adguard/__init__.py
     homeassistant/components/adguard/const.py
+    homeassistant/components/adguard/entity.py
     homeassistant/components/adguard/sensor.py
     homeassistant/components/adguard/switch.py
     homeassistant/components/ads/*
@@ -450,6 +451,7 @@ omit =
     homeassistant/components/gtfs/sensor.py
     homeassistant/components/guardian/__init__.py
     homeassistant/components/guardian/binary_sensor.py
+    homeassistant/components/guardian/button.py
     homeassistant/components/guardian/sensor.py
     homeassistant/components/guardian/switch.py
     homeassistant/components/guardian/util.py

@@ -90,7 +90,8 @@
         }
     },
     "device_class": {
-        "moisture": "humidade"
+        "moisture": "humidade",
+        "problem": "problema"
     },
     "state": {
         "_": {
@@ -104,6 +105,9 @@
         "battery_charging": {
             "off": "Sem carregar",
             "on": "A carregar"
+        },
+        "carbon_monoxide": {
+            "on": "Detectado"
         },
         "cold": {
             "off": "Normal",
@@ -186,7 +190,7 @@
         },
         "vibration": {
             "off": "Limpo",
-            "on": "Detetado"
+            "on": "Detectado"
         },
         "window": {
             "off": "Fechada",

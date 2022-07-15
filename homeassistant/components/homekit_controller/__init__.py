@@ -227,6 +227,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if not await conn.async_setup():
         del hass.data[KNOWN_DEVICES][conn.unique_id]
+        if (connection := getattr(conn.pairing, "connection", None)) and hasattr(
+            connection, "host"
+        ):
+            raise ConfigEntryNotReady(
+                f"Cannot connect to {connection.host}:{connection.port}"
+            )
         raise ConfigEntryNotReady
 
     return True

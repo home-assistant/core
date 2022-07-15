@@ -15,7 +15,7 @@ ciso8601==2.2.0
 cryptography==36.0.2
 fnvhash==0.1.0
 hass-nabucasa==0.54.1
-home-assistant-frontend==20220707.0
+home-assistant-frontend==20220707.1
 httpx==0.23.0
 ifaddr==0.1.7
 jinja2==3.1.2
@@ -114,3 +114,11 @@ backoff<2.0
 # Breaking change in version
 # https://github.com/samuelcolvin/pydantic/issues/4092
 pydantic!=1.9.1
+
+# Breaks asyncio
+# https://github.com/pubnub/python/issues/130
+pubnub!=6.4.0
+
+# Package's __init__.pyi stub has invalid syntax and breaks mypy
+# https://github.com/dahlia/iso4217/issues/16
+iso4217!=1.10.20220401

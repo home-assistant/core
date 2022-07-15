@@ -22,6 +22,7 @@ from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
 from homeassistant.auth.models import Credentials
 from homeassistant.auth.providers import homeassistant, legacy_api_password
 from homeassistant.components import mqtt, recorder
+from homeassistant.components.network.models import Adapter, IPv4ConfiguredAddress
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
     TYPE_AUTH_OK,
@@ -166,7 +167,8 @@ def verify_cleanup():
         pytest.exit(f"Detected non stopped instances ({count}), aborting test run")
 
     threads = frozenset(threading.enumerate()) - threads_before
-    assert not threads
+    for thread in threads:
+        assert isinstance(thread, threading._DummyThread)
 
 
 @pytest.fixture(autouse=True)
@@ -645,6 +647,25 @@ async def mqtt_mock_entry_with_yaml_config(hass, mqtt_client_mock, mqtt_config):
 
 
 @pytest.fixture(autouse=True)
+def mock_network():
+    """Mock network."""
+    mock_adapter = Adapter(
+        name="eth0",
+        index=0,
+        enabled=True,
+        auto=True,
+        default=True,
+        ipv4=[IPv4ConfiguredAddress(address="10.10.10.10", network_prefix=24)],
+        ipv6=[],
+    )
+    with patch(
+        "homeassistant.components.network.network.async_load_adapters",
+        return_value=[mock_adapter],
+    ):
+        yield
+
+
+@pytest.fixture(autouse=True)
 def mock_get_source_ip():
     """Mock network util's async_get_source_ip."""
     with patch(
@@ -835,3 +856,36 @@ def mock_integration_frame():
         ],
     ):
         yield correct_frame
+
+
+@pytest.fixture(name="mock_bleak_scanner_start")
+def mock_bleak_scanner_start():
+    """Fixture to mock starting the bleak scanner."""
+
+    # Late imports to avoid loading bleak unless we need it
+
+    import bleak  # pylint: disable=import-outside-toplevel
+
+    from homeassistant.components.bluetooth import (  # pylint: disable=import-outside-toplevel
+        models as bluetooth_models,
+    )
+
+    scanner = bleak.BleakScanner
+    bluetooth_models.HA_BLEAK_SCANNER = None
+
+    with patch("homeassistant.components.bluetooth.HaBleakScanner.stop"), patch(
+        "homeassistant.components.bluetooth.HaBleakScanner.start",
+    ) as mock_bleak_scanner_start:
+        yield mock_bleak_scanner_start
+
+    # We need to drop the stop method from the object since we patched
+    # out start and this fixture will expire before the stop method is called
+    # when EVENT_HOMEASSISTANT_STOP is fired.
+    if bluetooth_models.HA_BLEAK_SCANNER:
+        bluetooth_models.HA_BLEAK_SCANNER.stop = AsyncMock()
+    bleak.BleakScanner = scanner
+
+
+@pytest.fixture(name="mock_bluetooth")
+def mock_bluetooth(mock_bleak_scanner_start):
+    """Mock out bluetooth from starting."""
