@@ -252,9 +252,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.debug(
                     "HomeKit info %s: c# incremented, refreshing entities", hkid
                 )
-                self.hass.async_create_task(
-                    conn.async_refresh_entity_map_and_entities(config_num)
-                )
+                conn.async_notify_config_changed(config_num)
             return self.async_abort(reason="already_configured")
 
         _LOGGER.debug("Discovered device %s (%s - %s)", name, model, hkid)
