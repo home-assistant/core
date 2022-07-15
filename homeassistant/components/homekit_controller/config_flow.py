@@ -6,6 +6,7 @@ import re
 from typing import Any
 
 import aiohomekit
+from aiohomekit.controller.abstract import AbstractPairing
 from aiohomekit.exceptions import AuthenticationError
 from aiohomekit.model import Accessories, CharacteristicsTypes, ServicesTypes
 from aiohomekit.utils import domain_supported, domain_to_name
@@ -468,13 +469,13 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(schema),
         )
 
-    async def _entry_from_accessory(self, pairing):
+    async def _entry_from_accessory(self, pairing: AbstractPairing) -> FlowResult:
         """Return a config entry from an initialized bridge."""
         # The bulk of the pairing record is stored on the config entry.
         # A specific exception is the 'accessories' key. This is more
         # volatile. We do cache it, but not against the config entry.
         # So copy the pairing data and mutate the copy.
-        pairing_data = pairing.pairing_data.copy()
+        pairing_data = pairing.pairing_data.copy()  # type: ignore[attr-defined]
 
         # Use the accessories data from the pairing operation if it is
         # available. Otherwise request a fresh copy from the API.
@@ -488,6 +489,8 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             service_type=ServicesTypes.ACCESSORY_INFORMATION
         )
         name = accessory_info.value(CharacteristicsTypes.NAME, "")
+
+        await pairing.close()
 
         return self.async_create_entry(title=name, data=pairing_data)
 
