@@ -179,11 +179,13 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
         """Turn on epson."""
         if self._state == STATE_OFF:
             await self._projector.send_command(TURN_ON)
+            self._state = STATE_ON
 
     async def async_turn_off(self):
         """Turn off epson."""
         if self._state == STATE_ON:
             await self._projector.send_command(TURN_OFF)
+            self._state = STATE_OFF
 
     @property
     def source_list(self):
