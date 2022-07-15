@@ -9,12 +9,11 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import BraviaTVCoordinator
-from .const import ATTR_MANUFACTURER, DEFAULT_NAME, DOMAIN
+from .const import DOMAIN
+from .entity import BraviaTVEntity
 
 
 async def async_setup_entry(
@@ -27,17 +26,13 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     unique_id = config_entry.unique_id
     assert unique_id is not None
-    device_info = DeviceInfo(
-        identifiers={(DOMAIN, unique_id)},
-        manufacturer=ATTR_MANUFACTURER,
-        model=config_entry.title,
-        name=DEFAULT_NAME,
+
+    async_add_entities(
+        [BraviaTVMediaPlayer(coordinator, unique_id, config_entry.title)]
     )
 
-    async_add_entities([BraviaTVMediaPlayer(coordinator, unique_id, device_info)])
 
-
-class BraviaTVMediaPlayer(CoordinatorEntity[BraviaTVCoordinator], MediaPlayerEntity):
+class BraviaTVMediaPlayer(BraviaTVEntity, MediaPlayerEntity):
     """Representation of a Bravia TV Media Player."""
 
     _attr_device_class = MediaPlayerDeviceClass.TV
@@ -60,14 +55,12 @@ class BraviaTVMediaPlayer(CoordinatorEntity[BraviaTVCoordinator], MediaPlayerEnt
         self,
         coordinator: BraviaTVCoordinator,
         unique_id: str,
-        device_info: DeviceInfo,
+        model: str,
     ) -> None:
         """Initialize the entity."""
-
-        self._attr_device_info = device_info
         self._attr_unique_id = unique_id
 
-        super().__init__(coordinator)
+        super().__init__(coordinator, unique_id, model)
 
     @property
     def state(self) -> str | None:
