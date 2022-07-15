@@ -392,6 +392,7 @@ class HKDevice:
         # to map aid/iid to GATT characteristics. So push it to there as well.
 
         self.pairing.pairing_data["accessories"] = self.accessories  # type: ignore[attr-defined]
+        self.pairing.pairing_data["config_num"] = self.config_num  # type: ignore[attr-defined]
 
         self.async_detect_workarounds()
 
