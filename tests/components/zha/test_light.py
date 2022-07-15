@@ -1037,7 +1037,7 @@ async def test_transitions(
         10,
         dev1_cluster_color.commands_by_name["move_to_color_temp"].schema,
         235,  # color temp mireds
-        0,  # transition time (ZCL time in 10ths of a second) - no transition when color_provided_while_off
+        0,  # transition time (ZCL time in 10ths of a second)
         expect_reply=True,
         manufacturer=None,
         tries=1,
