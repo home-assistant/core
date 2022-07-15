@@ -1400,7 +1400,7 @@ async def test_zha_group_light_entity(
     assert group_state.state == STATE_OFF
     assert group_state.attributes["supported_color_modes"] == [
         ColorMode.COLOR_TEMP,
-        ColorMode.HS,
+        ColorMode.XY,
     ]
     # Light which is off has no color mode
     assert "color_mode" not in group_state.attributes
@@ -1431,9 +1431,9 @@ async def test_zha_group_light_entity(
     assert group_state.state == STATE_ON
     assert group_state.attributes["supported_color_modes"] == [
         ColorMode.COLOR_TEMP,
-        ColorMode.HS,
+        ColorMode.XY,
     ]
-    assert group_state.attributes["color_mode"] == ColorMode.HS
+    assert group_state.attributes["color_mode"] == ColorMode.XY
 
     # test long flashing the lights from the HA
     await async_test_flash_from_hass(
