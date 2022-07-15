@@ -7,6 +7,7 @@ from nextdns import (
     AnalyticsIpVersions,
     AnalyticsProtocols,
     AnalyticsStatus,
+    ConnectionStatus,
     Settings,
 )
 
@@ -16,6 +17,7 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
+CONNECTION_STATUS = ConnectionStatus(connected=True, profile_id="abcdef")
 PROFILES = [{"id": "xyz12", "fingerprint": "aabbccdd123", "name": "Fake Profile"}]
 STATUS = AnalyticsStatus(
     default_queries=40, allowed_queries=30, blocked_queries=20, relayed_queries=10
@@ -87,6 +89,9 @@ async def init_integration(
     ), patch(
         "homeassistant.components.nextdns.NextDns.get_settings",
         return_value=SETTINGS,
+    ), patch(
+        "homeassistant.components.nextdns.NextDns.connection_status",
+        return_value=CONNECTION_STATUS,
     ):
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
