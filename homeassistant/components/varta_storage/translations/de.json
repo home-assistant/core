@@ -4,7 +4,7 @@
             "already_configured": "Ein Gerät mit dieser Seriennummer ist bereits konfiguriert."
         },
         "error": {
-            "cannot_connect": "Es konnte keine Verbindung hergestellt werden. Bitte prüfe die Konfiguration.",
+            "cannot_connect": "Es konnte keine Verbindung zum Gerät hergestellt werden. Bitte prüfe die Konfiguration.",
             "invalid_auth": "Die Authentifizierung war nicht erfolgreich. Bitte prüfe die Konfiguration.",
             "unknown": "Ein unerwarteter Fehler ist aufgetreten."
         },
