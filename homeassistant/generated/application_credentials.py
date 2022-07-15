@@ -15,6 +15,7 @@ APPLICATION_CREDENTIALS = [
     "netatmo",
     "senz",
     "spotify",
+    "twitch",
     "withings",
     "xbox",
     "yolink",
