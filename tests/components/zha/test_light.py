@@ -887,6 +887,86 @@ async def test_transitions(hass, device_light_1, device_light_2, coordinator):
     group_color_channel.request.reset_mock()
     group_level_channel.request.reset_mock()
 
+    # turn the sengled light back on
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        "turn_on",
+        {
+            "entity_id": device_2_entity_id,
+        },
+        blocking=True,
+    )
+    assert dev2_cluster_on_off.request.call_count == 1
+    assert dev2_cluster_on_off.request.await_count == 1
+    assert dev2_cluster_color.request.call_count == 0
+    assert dev2_cluster_color.request.await_count == 0
+    assert dev2_cluster_level.request.call_count == 0
+    assert dev2_cluster_level.request.await_count == 0
+    light2_state = hass.states.get(device_2_entity_id)
+    assert light2_state.state == STATE_ON
+
+    dev2_cluster_on_off.request.reset_mock()
+
+    # turn the light off with a transition
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        "turn_off",
+        {"entity_id": device_2_entity_id, "transition": 2},
+        blocking=True,
+    )
+    assert dev2_cluster_on_off.request.call_count == 0
+    assert dev2_cluster_on_off.request.await_count == 0
+    assert dev2_cluster_color.request.call_count == 0
+    assert dev2_cluster_color.request.await_count == 0
+    assert dev2_cluster_level.request.call_count == 1
+    assert dev2_cluster_level.request.await_count == 1
+    assert dev2_cluster_level.request.call_args == call(
+        False,
+        4,
+        dev2_cluster_level.commands_by_name["move_to_level_with_on_off"].schema,
+        0,  # brightness (level in ZCL)
+        20,  # transition time - sengled light uses default minimum
+        expect_reply=True,
+        manufacturer=None,
+        tries=1,
+        tsn=None,
+    )
+
+    light2_state = hass.states.get(device_2_entity_id)
+    assert light2_state.state == STATE_OFF
+
+    dev2_cluster_level.request.reset_mock()
+
+    # turn the light back on with no args should use a transition
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        "turn_on",
+        {"entity_id": device_2_entity_id},
+        blocking=True,
+    )
+    assert dev2_cluster_on_off.request.call_count == 0
+    assert dev2_cluster_on_off.request.await_count == 0
+    assert dev2_cluster_color.request.call_count == 0
+    assert dev2_cluster_color.request.await_count == 0
+    assert dev2_cluster_level.request.call_count == 1
+    assert dev2_cluster_level.request.await_count == 1
+    assert dev2_cluster_level.request.call_args == call(
+        False,
+        4,
+        dev2_cluster_level.commands_by_name["move_to_level_with_on_off"].schema,
+        25,  # brightness (level in ZCL) - this is the last brightness we set a few tests above
+        1,  # transition time - sengled light uses default minimum
+        expect_reply=True,
+        manufacturer=None,
+        tries=1,
+        tsn=None,
+    )
+
+    light2_state = hass.states.get(device_2_entity_id)
+    assert light2_state.state == STATE_ON
+
+    dev2_cluster_level.request.reset_mock()
+
 
 async def async_test_on_off_from_light(hass, cluster, entity_id):
     """Test on off functionality from the light."""
