@@ -809,8 +809,8 @@ build.json @home-assistant/supervisor
 /tests/components/prometheus/ @knyar
 /homeassistant/components/prosegur/ @dgomes
 /tests/components/prosegur/ @dgomes
-/homeassistant/components/proxmoxve/ @k4ds3 @jhollowe @Corbeno @edofullin
-/tests/components/proxmoxve/ @k4ds3 @jhollowe @Corbeno @edofullin
+/homeassistant/components/proxmoxve/ @jhollowe @Corbeno
+/tests/components/proxmoxve/ @jhollowe @Corbeno
 /homeassistant/components/ps4/ @ktnrg45
 /tests/components/ps4/ @ktnrg45
 /homeassistant/components/pure_energie/ @klaasnicolaas
