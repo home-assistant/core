@@ -44,8 +44,8 @@ async def async_setup_platform(
     """Set up the Brottsplatskartan platform."""
 
     LOGGER.warning(
-        # Config flow added in Home Assistant Core 2022.7, remove import flow in 2022.9
-        "Loading Brottsplatskartan via platform setup is deprecated and will be removed in 2022.9 "
+        # Config flow added in Home Assistant Core 2022.8, remove import flow in 2022.10
+        "Loading Brottsplatskartan via platform setup is deprecated and will be removed in 2022.10 "
         "Please remove it from your configuration"
     )
 
@@ -80,11 +80,11 @@ class BrottsplatskartanSensor(SensorEntity):
 
     _attr_attribution = ATTRIBUTION
     _attr_icon = ICON
+    _attr_has_entity_name = True
 
     def __init__(self, bpk: BrottsplatsKartan, name: str, unique_id: str) -> None:
         """Initialize the Brottsplatskartan sensor."""
         self._bpk = bpk
-        self._attr_name = name
         self._attr_unique_id = unique_id
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
