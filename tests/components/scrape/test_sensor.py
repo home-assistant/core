@@ -22,6 +22,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component
 
 from . import MockRestData, init_integration, return_config
@@ -287,9 +288,39 @@ async def test_scrape_sensor_errors(hass: HomeAssistant) -> None:
     assert state2.state == STATE_UNKNOWN
 
 
+async def test_scrape_sensor_unique_id(hass: HomeAssistant) -> None:
+    """Test Scrape sensor with unique_id."""
+    config = {
+        DOMAIN: [
+            return_config(
+                select=".current-version h1",
+                name="HA version",
+                remove_platform=True,
+                unique_id="ha_version_unique_id",
+            )
+        ]
+    }
+
+    mocker = MockRestData("test_scrape_sensor")
+    with patch(
+        "homeassistant.components.scrape.RestData",
+        return_value=mocker,
+    ):
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.ha_version")
+    assert state.state == "Current Version: 2021.12.10"
+
+    entity_reg = er.async_get(hass)
+    entity = entity_reg.async_get("sensor.ha_version")
+
+    assert entity.unique_id == "ha_version_unique_id"
+
+
 async def test_scrape_sensor_config_entry(hass: HomeAssistant) -> None:
     """Test Scrape sensor minimal."""
-    await init_integration(
+    entry = await init_integration(
         hass,
         return_config(select=".current-version h1", name="HA version"),
         "test_scrape_sensor",
@@ -297,6 +328,11 @@ async def test_scrape_sensor_config_entry(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.ha_version")
     assert state.state == "Current Version: 2021.12.10"
+
+    entity_reg = er.async_get(hass)
+    entity = entity_reg.async_get("sensor.ha_version")
+
+    assert entity.unique_id == entry.entry_id
 
 
 async def test_scrape_sensor_deprecated(
@@ -314,3 +350,6 @@ async def test_scrape_sensor_deprecated(
         await hass.async_block_till_done()
 
     assert "Loading Scrape via platform key has been deprecated" in caplog.text
+
+    state = hass.states.get("sensor.ha_version")
+    assert state.state == "Current Version: 2021.12.10"

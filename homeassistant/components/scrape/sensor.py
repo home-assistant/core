@@ -88,6 +88,12 @@ async def async_setup_platform(
     """Set up the Web scrape sensor."""
     resource_config = vol.Schema(RESOURCE_SCHEMA, extra=vol.REMOVE_EXTRA)(config)
     rest = create_rest_data_from_config(hass, resource_config)
+    if discovery_info is None:
+        _LOGGER.warning(
+            "Loading Scrape via platform key has been deprecated. "
+            "Please move your config yaml to the scrape key or migrate to UI. "
+            "See https://www.home-assistant.io/integrations/scrape/ for details"
+        )
 
     coordinator = ScrapeCoordinator(hass, rest, SCAN_INTERVAL)
     await coordinator.async_refresh()
