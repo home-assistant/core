@@ -2,7 +2,7 @@
 import asyncio
 from unittest import mock
 import unittest.mock
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiohomekit
 from aiohomekit.exceptions import AuthenticationError
@@ -492,7 +492,7 @@ async def test_discovery_already_configured_update_csharp(hass, controller):
 
     connection_mock = AsyncMock()
     connection_mock.pairing.connect.reconnect_soon = AsyncMock()
-    connection_mock.async_refresh_entity_map = AsyncMock()
+    connection_mock.async_notify_config_changed = MagicMock()
     hass.data[KNOWN_DEVICES] = {"AA:BB:CC:DD:EE:FF": connection_mock}
 
     device = setup_mock_accessory(controller)
@@ -515,7 +515,7 @@ async def test_discovery_already_configured_update_csharp(hass, controller):
 
     assert entry.data["AccessoryIP"] == discovery_info.host
     assert entry.data["AccessoryPort"] == discovery_info.port
-    assert connection_mock.async_refresh_entity_map_and_entities.await_count == 1
+    assert connection_mock.async_notify_config_changed.call_count == 1
 
 
 @pytest.mark.parametrize("exception,expected", PAIRING_START_ABORT_ERRORS)

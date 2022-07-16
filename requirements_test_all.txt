@@ -152,7 +152,7 @@ aioguardian==2022.03.2
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==1.1.0
+aiohomekit==1.1.1
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -323,7 +323,7 @@ beautifulsoup4==4.11.1
 bellows==0.31.1
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.9.6
+bimmer_connected==0.10.1
 
 # homeassistant.components.bluetooth
 bleak==0.14.3
@@ -1457,7 +1457,7 @@ simplehound==0.3
 simplepush==1.1.4
 
 # homeassistant.components.simplisafe
-simplisafe-python==2022.06.1
+simplisafe-python==2022.07.0
 
 # homeassistant.components.slack
 slackclient==2.5.0
