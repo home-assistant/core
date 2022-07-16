@@ -86,6 +86,9 @@ class DiscordCalendar(CalendarEntity):
         """Do the I/O to fetch guild events from the Discord API and stores the locally."""
         events = []
         async for scheduled_event in await self._guild.fetch_scheduled_events():
+            # All events are in the future.
+            # Most recent events are returned first
+            # For `VOICE` and `STAGE_INSTANCE` events that have no scheduled end_time we assume 1 hour
             event = CalendarEvent(
                 summary=scheduled_event.name,
                 description=scheduled_event.description,
