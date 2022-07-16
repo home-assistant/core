@@ -12,7 +12,6 @@ from homeassistant.data_entry_flow import FlowResult
 
 from .const import CONF_COMMAND_TIMEOUT, DOMAIN
 from .schema import (
-    CONF_JSON_ATTRIBUTES,
     DATA_SCHEMA_BINARY_SENSOR,
     DATA_SCHEMA_COMMON,
     DATA_SCHEMA_COVER,
@@ -105,10 +104,6 @@ class CommandLineOptionsFlowHandler(OptionsFlow):
         errors: dict[str, str] = {}
 
         if user_input:
-            json_attr_list: list[str] | None = user_input.get(CONF_JSON_ATTRIBUTES)
-            if json_attr_list in ([""], []):
-                json_attr_list = None
-                user_input[CONF_JSON_ATTRIBUTES] = json_attr_list
             user_input[CONF_COMMAND_TIMEOUT] = int(user_input[CONF_COMMAND_TIMEOUT])
             return self.async_create_entry(
                 title="",
