@@ -111,8 +111,16 @@ async def test_offline_device_raises(hass, controller):
             nonlocal is_connected
             return is_connected
 
-        def get_characteristics(self, chars, *args, **kwargs):
-            raise AccessoryDisconnectedError("any")
+        async def async_populate_accessories_state(self, *args, **kwargs):
+            nonlocal is_connected
+            if not is_connected:
+                raise AccessoryDisconnectedError("any")
+
+        async def get_characteristics(self, chars, *args, **kwargs):
+            nonlocal is_connected
+            if not is_connected:
+                raise AccessoryDisconnectedError("any")
+            return {}
 
     with patch("aiohomekit.testing.FakePairing", OfflineFakePairing):
         await async_setup_component(hass, DOMAIN, {})
