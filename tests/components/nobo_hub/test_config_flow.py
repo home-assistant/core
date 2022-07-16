@@ -15,50 +15,6 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 
-async def test_configure_with_ip(hass: HomeAssistant) -> None:
-    """Test configuring with IP address."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
-    with patch(
-        "pynobo.nobo.async_discover_hubs",
-        return_value=[],
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-        assert result["type"] == "form"
-        assert result["errors"] == {}
-
-        with patch(
-            "pynobo.nobo.async_connect_hub", return_value=True
-        ) as mock_connect, patch(
-            "pynobo.nobo.hub_info",
-            new_callable=PropertyMock,
-            create=True,
-            return_value={"name": "My Nobø Ecohub"},
-        ), patch(
-            "homeassistant.components.nobo_hub.async_setup_entry",
-            return_value=True,
-        ) as mock_setup_entry:
-            result2 = await hass.config_entries.flow.async_configure(
-                result["flow_id"],
-                {
-                    "serial": "123456789012",
-                    "ip_address": "1.1.1.1",
-                },
-            )
-            await hass.async_block_till_done()
-
-        assert result2["type"] == "create_entry"
-        assert result2["title"] == "My Nobø Ecohub"
-        assert result2["data"] == {
-            "serial": "123456789012",
-            "ip_address": "1.1.1.1",
-        }
-        mock_connect.assert_awaited_once_with("1.1.1.1", "123456789012")
-        mock_setup_entry.assert_awaited_once()
-
-
 async def test_configure_with_discover(hass: HomeAssistant) -> None:
     """Test configure with discover."""
     await setup.async_setup_component(hass, "persistent_notification", {})
@@ -87,7 +43,8 @@ async def test_configure_with_discover(hass: HomeAssistant) -> None:
             result2 = await hass.config_entries.flow.async_configure(
                 result["flow_id"],
                 {
-                    "serial": "123456789012",
+                    "device": 0,
+                    "serial_suffix": "012",
                 },
             )
             await hass.async_block_till_done()
@@ -95,14 +52,54 @@ async def test_configure_with_discover(hass: HomeAssistant) -> None:
         assert result2["type"] == "create_entry"
         assert result2["title"] == "My Nobø Ecohub"
         assert result2["data"] == {
+            "ip_address": None,
             "serial": "123456789012",
         }
         mock_connect.assert_awaited_once_with("1.1.1.1", "123456789012")
         mock_setup_entry.assert_awaited_once()
 
 
-async def test_configure_device_not_found(hass: HomeAssistant) -> None:
-    """Test we handle device not found."""
+async def test_configure_show_manual(hass: HomeAssistant) -> None:
+    """Test configuration when no hubs are discovered."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    with patch(
+        "pynobo.nobo.async_discover_hubs",
+        return_value=[],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] == "form"
+        assert result["errors"] == {}
+        assert result["step_id"] == "manual"
+
+
+async def test_configure_user_show_manual(hass: HomeAssistant) -> None:
+    """Test configuration when user selects manual."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    with patch(
+        "pynobo.nobo.async_discover_hubs",
+        return_value=[("1.1.1.1", "123456789")],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "device": 0,
+                "manual": True,
+            },
+        )
+        assert result2["type"] == "form"
+        assert result2["errors"] == {}
+        assert result2["step_id"] == "manual"
+
+
+async def test_configure_static_ip_with_discover(hass: HomeAssistant) -> None:
+    """Test configure with discover."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     with patch(
@@ -115,16 +112,76 @@ async def test_configure_device_not_found(hass: HomeAssistant) -> None:
         assert result["type"] == "form"
         assert result["errors"] == {}
 
+        with patch(
+            "pynobo.nobo.async_connect_hub", return_value=True
+        ) as mock_connect, patch(
+            "pynobo.nobo.hub_info",
+            new_callable=PropertyMock,
+            create=True,
+            return_value={"name": "My Nobø Ecohub"},
+        ), patch(
+            "homeassistant.components.nobo_hub.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry:
+            result2 = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                {
+                    "device": 0,
+                    "serial_suffix": "012",
+                    "store_ip": True,
+                },
+            )
+            await hass.async_block_till_done()
+
+        assert result2["type"] == "create_entry"
+        assert result2["title"] == "My Nobø Ecohub"
+        assert result2["data"] == {"serial": "123456789012", "ip_address": "1.1.1.1"}
+        mock_connect.assert_awaited_once_with("1.1.1.1", "123456789012")
+        mock_setup_entry.assert_awaited_once()
+
+
+async def test_configure_manual(hass: HomeAssistant) -> None:
+    """Test manual configuration with IP address and full serial number."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    with patch(
+        "pynobo.nobo.async_discover_hubs",
+        return_value=[],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "manual"}
+        )
+        assert result["type"] == "form"
+        assert result["errors"] == {}
+
+    with patch(
+        "pynobo.nobo.async_connect_hub", return_value=True
+    ) as mock_connect, patch(
+        "pynobo.nobo.hub_info",
+        new_callable=PropertyMock,
+        create=True,
+        return_value={"name": "My Nobø Ecohub"},
+    ), patch(
+        "homeassistant.components.nobo_hub.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "serial": "223456789012",
+                "serial": "123456789012",
+                "ip_address": "1.1.1.1",
             },
         )
         await hass.async_block_till_done()
 
-        assert result2["type"] == "form"
-        assert result2["errors"] == {"base": "device_not_found"}
+    assert result2["type"] == "create_entry"
+    assert result2["title"] == "My Nobø Ecohub"
+    assert result2["data"] == {
+        "serial": "123456789012",
+        "ip_address": "1.1.1.1",
+    }
+    mock_connect.assert_awaited_once_with("1.1.1.1", "123456789012")
+    mock_setup_entry.assert_awaited_once()
 
 
 async def test_configure_invalid_serial(hass: HomeAssistant) -> None:
@@ -139,7 +196,47 @@ async def test_configure_invalid_serial(hass: HomeAssistant) -> None:
 
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"serial": "1234567890", "ip_address": "1.1.1.1"},
+            {"device": 0, "serial_suffix": "ABC"},
+        )
+
+        assert result2["type"] == "form"
+        assert result2["errors"] == {"base": "invalid_serial"}
+
+
+async def test_configure_missing_serial_suffix(hass: HomeAssistant) -> None:
+    """Test we handle missing serial suffix when configuring discovered hub."""
+    with patch(
+        "pynobo.nobo.async_discover_hubs",
+        return_value=[("1.1.1.1", "123456789")],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "device": 0,
+            },
+        )
+
+        assert result2["type"] == "form"
+        assert result2["errors"] == {"base": "missing_serial_suffix"}
+
+
+async def test_configure_invalid_serial_manual(hass: HomeAssistant) -> None:
+    """Test we handle invalid serial error."""
+    with patch(
+        "pynobo.nobo.async_discover_hubs",
+        return_value=[],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "manual"}
+        )
+
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"ip_address": "1.1.1.1", "serial": "123456789"},
         )
 
         assert result2["type"] == "form"
@@ -153,7 +250,7 @@ async def test_configure_invalid_ip_address(hass: HomeAssistant) -> None:
         return_value=[("1.1.1.1", "123456789")],
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
+            DOMAIN, context={"source": "manual"}
         )
 
         result2 = await hass.config_entries.flow.async_configure(
@@ -181,7 +278,7 @@ async def test_configure_cannot_connect(hass: HomeAssistant) -> None:
         ) as mock_connect:
             result2 = await hass.config_entries.flow.async_configure(
                 result["flow_id"],
-                {"serial": "123456789012", "ip_address": "1.1.1.1"},
+                {"device": 0, "serial_suffix": "012"},
             )
 
         assert result2["type"] == "form"

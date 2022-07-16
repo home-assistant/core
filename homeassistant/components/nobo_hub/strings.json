@@ -1,19 +1,28 @@
 {
   "config": {
     "step": {
-      "user": {
-        "description": "Start by entering the complete serial number (12 digits) of the Nobø Ecohub you want to add. If you have more than one hub, and they have the same serial prefix, you must also specify the IP address. If any devices were automatically found on your network, they are shown below.\n\nIf you cannot see your device or experience any issues, try specifying the device IP address.\n\n{devices}",
+      "manual": {
+        "description": "Failed to discover the Nobø Ecohub on your local network. If your hub is on another network, you can still connect to it by entering the complete serial number (12 digits) and its IP address.",
         "data": {
-          "serial": "Serial number",
+          "serial": "Serial number (12 digits)",
           "ip_address": "[%key:common::config_flow::data::ip%]"
+        }
+      },
+      "user": {
+        "description": "Select Nobø Ecohub to configure. To connect to the hub, you need to enter the last 3 digits of the hub's serial number.\n\nTo avoid using discovery when connecting, you can tell Home Assistant to remember the IP address. Only use this if your hub has assigned a static IP address.",
+        "data": {
+          "device": "Discovered hubs",
+          "manual": "Configure undiscovered hub",
+          "serial_suffix": "Serial number suffix (3 digits)",
+          "store_ip": "Remember the IP address"
         }
       }
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "device_not_found": "Device not found",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%] - check serial number",
       "invalid_serial": "Invalid serial number",
       "invalid_ip": "Invalid IP address",
+      "missing_serial_suffix": "Serial suffix is required",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
