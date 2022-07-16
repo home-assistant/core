@@ -62,9 +62,9 @@ class YoLinkCoverEntity(YoLinkEntity, CoverEntity):
         # make sure current state is correct
         await self.coordinator.async_refresh()
         if state == "open" and self.is_closed is False:
-            return None
+            return
         if state == "close" and self.is_closed is True:
-            return None
+            return
         # get paired controller
         door_controller_coordinator = self.hass.data[DOMAIN][
             self.config_entry.entry_id
