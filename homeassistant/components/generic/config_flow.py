@@ -387,12 +387,6 @@ class GenericOptionsFlowHandler(OptionsFlow):
                             CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False
                         ),
                     )
-                if CONF_LIMIT_REFETCH_TO_URL_CHANGE not in user_input:
-                    data[CONF_LIMIT_REFETCH_TO_URL_CHANGE] = (
-                        self.config_entry.options.get(
-                            CONF_LIMIT_REFETCH_TO_URL_CHANGE, False
-                        ),
-                    )
                 return self.async_create_entry(
                     title=title,
                     data=data,
