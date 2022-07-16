@@ -7,13 +7,13 @@ from twitchAPI.twitch import Twitch
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN, Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_entry_oauth2_flow, device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_REFRESH_TOKEN, DOMAIN, OAUTH_SCOPES
+from .const import CONF_CHANNELS, CONF_REFRESH_TOKEN, DOMAIN, OAUTH_SCOPES
 from .coordinator import TwitchUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -60,11 +60,39 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_config_entry_first_refresh()
 
-    entry.async_on_unload(entry.add_update_listener(update_listener))
+    async_cleanup_device_registry(hass=hass, entry=entry)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
+
     return True
+
+
+@callback
+def async_cleanup_device_registry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+) -> None:
+    """Remove entries from device registry if we no longer track the channel."""
+    device_registry = dr.async_get(hass)
+    devices = dr.async_entries_for_config_entry(
+        registry=device_registry,
+        config_entry_id=entry.entry_id,
+    )
+    for device in devices:
+        for item in device.identifiers:
+            if DOMAIN == item[0] and item[1] not in entry.options[CONF_CHANNELS]:
+                _LOGGER.debug(
+                    "Unlinking device %s for untracked channel %s from config entry %s",
+                    device.id,
+                    item[1],
+                    entry.entry_id,
+                )
+                device_registry.async_update_device(
+                    device.id, remove_config_entry_id=entry.entry_id
+                )
+                break
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -75,8 +103,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Update listener."""
+async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle an options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 
@@ -92,19 +120,12 @@ class TwitchDeviceEntity(CoordinatorEntity[TwitchUpdateCoordinator]):
     ) -> None:
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator)
-        self._service_id = service_id
-        self._service_name = service_name
-        self._key = key
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information about this Twitch instance."""
-        return DeviceInfo(
+        self._attr_unique_id = key
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, service_id)},
+            name=service_name,
+            manufacturer="Twitch",
+            configuration_url=f"https://twitch.tv/{service_name}",
             entry_type=DeviceEntryType.SERVICE,
-            name=self._service_name,
         )
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this entity."""
-        return self._key

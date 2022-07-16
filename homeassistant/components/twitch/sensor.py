@@ -74,6 +74,8 @@ async def async_setup_entry(
 class TwitchSensorEntity(TwitchDeviceEntity, SensorEntity):
     """Define a Twitch sensor."""
 
+    _attr_has_entity_name = False
+
     entity_description: TwitchSensorEntityDescription
 
     def __init__(
