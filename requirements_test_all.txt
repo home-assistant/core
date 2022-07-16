@@ -607,7 +607,7 @@ home-assistant-frontend==20220707.1
 homeconnect==0.7.1
 
 # homeassistant.components.homematicip_cloud
-homematicip==1.0.4
+homematicip==1.0.5
 
 # homeassistant.components.home_plus_control
 homepluscontrol==0.0.5
