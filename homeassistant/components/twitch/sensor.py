@@ -1,10 +1,9 @@
 """Support for the Twitch stream status."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-import logging
-from typing import cast
+from typing import Any
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -17,16 +16,12 @@ from .const import DOMAIN
 from .coordinator import TwitchUpdateCoordinator
 from .data import TwitchCoordinatorData
 
-_LOGGER = logging.getLogger(__name__)
-
 ATTR_GAME = "game"
 ATTR_TITLE = "title"
 ATTR_SUBSCRIPTION = "subscribed"
-ATTR_SUBSCRIPTION_SINCE = "subscribed_since"
 ATTR_SUBSCRIPTION_GIFTED = "subscription_is_gifted"
-ATTR_FOLLOW = "following"
-ATTR_FOLLOW_SINCE = "following_since"
-ATTR_FOLLOWING = "followers"
+ATTR_FOLLOWERS = "followers"
+ATTR_FOLLOWING_SINCE = "following_since"
 ATTR_VIEWS = "views"
 
 STATE_OFFLINE = "offline"
@@ -34,10 +29,103 @@ STATE_STREAMING = "streaming"
 
 
 @dataclass
-class TwitchSensorEntityDescription(SensorEntityDescription):
-    """Class describing Twitch sensor entities."""
+class BaseEntityDescriptionMixin:
+    """Mixin for required Twitch base description keys."""
 
-    value: Callable = round
+    value_fn: Callable[[TwitchCoordinatorData, int], StateType]
+
+
+@dataclass
+class BaseEntityDescription(SensorEntityDescription):
+    """Describes Twitch sensor entity default overrides."""
+
+    icon: str = "mdi:twitch"
+    available_fn: Callable[[TwitchCoordinatorData, int], bool] = lambda data, k: True
+    attributes_fn: Callable[
+        [TwitchCoordinatorData, int], Mapping[str, Any] | None
+    ] = lambda data, k: None
+    entity_picture_fn: Callable[
+        [TwitchCoordinatorData, int], str | None
+    ] = lambda data, k: None
+
+
+@dataclass
+class TwitchSensorEntityDescription(BaseEntityDescription, BaseEntityDescriptionMixin):
+    """Describes Twitch issue sensor entity."""
+
+
+def _twitch_channel_available(
+    data: TwitchCoordinatorData,
+    item_id: int,
+) -> bool:
+    """Return True if the channel is available."""
+    return (
+        data.channels is not None
+        and len(data.channels) > 0
+        and data.channels[item_id] is not None
+    )
+
+
+def _twitch_channel_attributes(
+    data: TwitchCoordinatorData,
+    item_id: int,
+) -> Mapping[str, Any]:
+    """Return the attributes of the sensor."""
+    if (
+        data.channels is None
+        or len(data.channels) < 1
+        or data.channels[item_id] is None
+    ):
+        return {}
+
+    channel = data.channels[item_id]
+    return {
+        ATTR_GAME: channel.stream.game_name if channel.stream is not None else None,
+        ATTR_TITLE: channel.stream.title if channel.stream is not None else None,
+        ATTR_SUBSCRIPTION: bool(channel.subscription),
+        ATTR_SUBSCRIPTION_GIFTED: channel.subscription.is_gift
+        if channel.subscription
+        else None,
+        ATTR_FOLLOWERS: channel.followers,
+        ATTR_FOLLOWING_SINCE: channel.following_since,
+        ATTR_VIEWS: channel.stream.viewer_count if channel.stream is not None else None,
+    }
+
+
+def _twitch_channel_entity_picture(
+    data: TwitchCoordinatorData,
+    item_id: int,
+) -> str | None:
+    """Return the entity picture of the sensor."""
+    if (
+        data.channels is None
+        or len(data.channels) < 1
+        or data.channels[item_id] is None
+    ):
+        return None
+
+    channel = data.channels[item_id]
+    if channel.stream is not None:
+        if channel.stream.thumbnail_url is not None:
+            return channel.stream.thumbnail_url.format(width=24, height=24)
+    return channel.profile_image_url
+
+
+def _twitch_channel_value(
+    data: TwitchCoordinatorData,
+    item_id: int,
+) -> StateType:
+    """Return the value of the sensor."""
+    if (
+        data.channels is None
+        or len(data.channels) < 1
+        or data.channels[item_id] is None
+    ):
+        return None
+
+    if data.channels[item_id].stream is None:
+        return STATE_OFFLINE
+    return STATE_STREAMING
 
 
 async def async_setup_entry(
@@ -58,13 +146,14 @@ async def async_setup_entry(
                 TwitchSensorEntityDescription(
                     key=channel.id,
                     name=channel.display_name,
-                    icon="mdi:twitch",
-                    value=lambda data, id=item_id: STATE_STREAMING
-                    if data.channels[id].stream is not None
-                    else STATE_OFFLINE,
+                    available_fn=_twitch_channel_available,
+                    attributes_fn=_twitch_channel_attributes,
+                    entity_picture_fn=_twitch_channel_entity_picture,
+                    value_fn=_twitch_channel_value,
                 ),
                 channel.id,
                 channel.display_name,
+                item_id,
             )
         )
 
@@ -84,6 +173,7 @@ class TwitchSensorEntity(TwitchDeviceEntity, SensorEntity):
         description: TwitchSensorEntityDescription,
         service_id: str,
         service_name: str,
+        item_id: int,
     ) -> None:
         """Initialize sensor."""
         super().__init__(
@@ -93,131 +183,34 @@ class TwitchSensorEntity(TwitchDeviceEntity, SensorEntity):
             description.key,
         )
         self.entity_description = description
+        self._item_id = item_id
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return (
+            super().available
+            and self.coordinator.data is not None
+            and self.entity_description.available_fn(
+                self.coordinator.data, self._item_id
+            )
+        )
 
     @property
     def native_value(self) -> StateType:
-        """Return the state."""
-        try:
-            return cast(StateType, self.entity_description.value(self.coordinator.data))
-        except TypeError:
-            return None
+        """Return the state of the sensor."""
+        return self.entity_description.value_fn(self.coordinator.data, self._item_id)
 
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return the extra state attributes."""
+        return self.entity_description.attributes_fn(
+            self.coordinator.data, self._item_id
+        )
 
-# PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-#     {
-#         vol.Required(CONF_CLIENT_ID): cv.string,
-#         vol.Required(CONF_CLIENT_SECRET): cv.string,
-#         vol.Required(CONF_CHANNELS): vol.All(cv.ensure_list, [cv.string]),
-#         vol.Optional(CONF_TOKEN): cv.string,
-#     }
-# )
-
-# def setup_platform(
-#     hass: HomeAssistant,
-#     config: ConfigType,
-#     add_entities: AddEntitiesCallback,
-#     discovery_info: DiscoveryInfoType | None = None,
-# ) -> None:
-#     """Set up the Twitch platform."""
-#     channels = config[CONF_CHANNELS]
-#     client_id = config[CONF_CLIENT_ID]
-#     client_secret = config[CONF_CLIENT_SECRET]
-#     oauth_token = config.get(CONF_TOKEN)
-
-#     try:
-#         client = Twitch(
-#             app_id=client_id,
-#             app_secret=client_secret,
-#             target_app_auth_scope=OAUTH_SCOPES,
-#         )
-#         client.auto_refresh_auth = False
-#     except TwitchAuthorizationException:
-#         _LOGGER.error("Invalid client ID or client secret")
-#         return
-
-#     if oauth_token:
-#         try:
-#             client.set_user_authentication(
-#                 token=oauth_token, scope=OAUTH_SCOPES, validate=True
-#             )
-#         except MissingScopeException:
-#             _LOGGER.error("OAuth token is missing required scope")
-#             return
-#         except InvalidTokenException:
-#             _LOGGER.error("OAuth token is invalid")
-#             return
-
-#     channels = client.get_users(logins=channels)
-
-
-#     add_entities(
-#         [TwitchSensor(channel, client) for channel in channels["data"]],
-#         True,
-#     )
-
-
-# class TwitchSensor(SensorEntity):
-#     """Representation of an Twitch channel."""
-
-#     _attr_icon = ICON
-
-#     def __init__(self, channel: dict[str, str], client: Twitch) -> None:
-#         """Initialize the sensor."""
-#         self._client = client
-#         self._enable_user_auth = client.has_required_auth(AuthType.USER, OAUTH_SCOPES)
-#         self._attr_name = channel["display_name"]
-#         self._attr_unique_id = channel["id"]
-
-#     def update(self) -> None:
-#         """Update device state."""
-#         followers = self._client.get_users_follows(to_id=self.unique_id)["total"]
-#         channel = self._client.get_users(user_ids=[self.unique_id])["data"][0]
-#         self._attr_extra_state_attributes = {
-#             ATTR_FOLLOWING: followers,
-#             ATTR_VIEWS: channel["view_count"],
-#         }
-#         if self._enable_user_auth:
-#             user = self._client.get_users()["data"][0]["id"]
-
-#             subs = self._client.check_user_subscription(
-#                 user_id=user, broadcaster_id=self.unique_id
-#             )
-#             if "data" in subs:
-#                 self._attr_extra_state_attributes[ATTR_SUBSCRIPTION] = True
-#                 self._attr_extra_state_attributes[ATTR_SUBSCRIPTION_GIFTED] = subs[
-#                     "data"
-#                 ][0]["is_gift"]
-#             elif "status" in subs and subs["status"] == 404:
-#                 self._attr_extra_state_attributes[ATTR_SUBSCRIPTION] = False
-#             elif "error" in subs:
-#                 raise Exception(
-#                     f"Error response on check_user_subscription: {subs['error']}"
-#                 )
-#             else:
-#                 raise Exception("Unknown error response on check_user_subscription")
-
-#             follows = self._client.get_users_follows(
-#                 from_id=user, to_id=self.unique_id
-#             )["data"]
-#             self._attr_extra_state_attributes[ATTR_FOLLOW] = len(follows) > 0
-#             if len(follows):
-#                 self._attr_extra_state_attributes[ATTR_FOLLOW_SINCE] = follows[0][
-#                     "followed_at"
-#                 ]
-
-#         if streams := self._client.get_streams(user_id=[self.unique_id])["data"]:
-#             stream = streams[0]
-#             self._attr_native_value = STATE_STREAMING
-#             self._attr_extra_state_attributes[ATTR_GAME] = stream["game_name"]
-#             self._attr_extra_state_attributes[ATTR_TITLE] = stream["title"]
-#             self._attr_entity_picture = stream["thumbnail_url"]
-#             if self._attr_entity_picture is not None:
-#                 self._attr_entity_picture = self._attr_entity_picture.format(
-#                     height=24,
-#                     width=24,
-#                 )
-#         else:
-#             self._attr_native_value = STATE_OFFLINE
-#             self._attr_extra_state_attributes[ATTR_GAME] = None
-#             self._attr_extra_state_attributes[ATTR_TITLE] = None
-#             self._attr_entity_picture = channel["profile_image_url"]
+    @property
+    def entity_picture(self) -> str | None:
+        """Return the entity picture."""
+        return self.entity_description.entity_picture_fn(
+            self.coordinator.data, self._item_id
+        )

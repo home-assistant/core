@@ -60,11 +60,36 @@ class TwitchUser:
 
 
 @dataclass
+class TwitchFollower:
+    """Twitch Follower."""
+
+    from_id: str
+    from_login: str
+    from_name: str
+    to_id: str
+    to_login: str
+    to_name: str
+    followed_at: str
+
+
+@dataclass
+class TwitchSubscription:
+    """Twitch Subscription."""
+
+    broadcaster_id: str
+    broadcaster_name: str
+    broadcaster_login: str
+    is_gift: bool
+    tier: str
+
+
+@dataclass
 class TwitchChannel(TwitchUser):
     """Twitch Channel."""
 
     followers: int | None = None
-    subscriptions: list[dict] | None = None
+    following_since: str | None = None
+    subscription: TwitchSubscription | None = None
     stream: TwitchStream | None = None
 
 

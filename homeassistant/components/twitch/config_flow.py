@@ -20,6 +20,7 @@ from homeassistant.helpers import config_entry_oauth2_flow
 import homeassistant.helpers.config_validation as cv
 
 from .const import CONF_CHANNELS, CONF_REFRESH_TOKEN, DOMAIN, OAUTH_SCOPES
+from .data import TwitchFollower, TwitchResponse
 
 
 async def get_user(
@@ -37,27 +38,35 @@ async def get_user(
     return users["data"][0]
 
 
-async def get_channels(
+async def get_followed_channels(
     hass: HomeAssistant,
     logger: logging.Logger,
     client: Twitch,
     user_id: str,
-) -> list[dict]:
+) -> list[TwitchFollower]:
     """Return a list of channels the user is following."""
     cursor = None
-    channels: list[dict] = []
+    channels: list[TwitchFollower] = []
     try:
         while True:
-            response = await hass.async_add_executor_job(
-                client.get_users_follows,
-                cursor,
-                100,
-                user_id,
+            followers_response = TwitchResponse(
+                **await hass.async_add_executor_job(
+                    client.get_users_follows,
+                    cursor,
+                    100,
+                    user_id,
+                )
             )
-            channels.extend(response["data"])
-            pagination = response.get("pagination")
-            if pagination is not None and pagination.get("cursor") is not None:
-                cursor = pagination["cursor"]
+
+            if followers_response.data is not None:
+                channels.extend(
+                    [TwitchFollower(**follower) for follower in followers_response.data]
+                )
+            if (
+                followers_response.pagination is not None
+                and followers_response.pagination.cursor is not None
+            ):
+                cursor = followers_response.pagination.cursor
             else:
                 break
     except TwitchAuthorizationException:
@@ -69,7 +78,7 @@ async def get_channels(
 
     logger.debug("Found %s channels", len(channels))
 
-    return sorted(channels, key=lambda channel: channel["to_login"])
+    return sorted(channels, key=lambda channel: channel.to_login)
 
 
 class OAuth2FlowHandler(
@@ -145,7 +154,7 @@ class OAuth2FlowHandler(
         self.logger.debug("User: %s", user)
 
         if not user_input:
-            channels = await get_channels(
+            channels = await get_followed_channels(
                 self.hass,
                 self.logger,
                 self._client,
@@ -158,10 +167,7 @@ class OAuth2FlowHandler(
                 data_schema=vol.Schema(
                     {
                         vol.Required(CONF_CHANNELS): cv.multi_select(
-                            {
-                                channel["to_id"]: channel["to_name"]
-                                for channel in channels
-                            }
+                            {channel.to_id: channel.to_name for channel in channels}
                         ),
                     }
                 ),
@@ -221,7 +227,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 True,
             )
 
-            channels = await get_channels(
+            channels = await get_followed_channels(
                 self.hass,
                 self.logger,
                 client,
@@ -230,10 +236,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
             self.logger.debug("Channels: %s", channels)
 
-            channel_ids = [channel["to_id"] for channel in channels]
-            channels_dict = {
-                channel["to_id"]: channel["to_name"] for channel in channels
-            }
+            channel_ids = [channel.to_id for channel in channels]
+            channels_dict = {channel.to_id: channel.to_name for channel in channels}
 
             # In case the user has removed a channel that is already tracked
             for channel in configured_channels:

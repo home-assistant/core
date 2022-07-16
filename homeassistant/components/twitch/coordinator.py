@@ -24,6 +24,7 @@ from .data import (
     TwitchCoordinatorData,
     TwitchResponse,
     TwitchStream,
+    TwitchSubscription,
     TwitchUser,
 )
 
@@ -65,17 +66,28 @@ class TwitchUpdateCoordinator(DataUpdateCoordinator[TwitchCoordinatorData]):
             for channel in [
                 TwitchChannel(**channel) for channel in channels_response.data
             ]:
-                subscriptions = TwitchResponse(
+                subscriptions_response = TwitchResponse(
                     **self._client.check_user_subscription(
                         user_id=user.id, broadcaster_id=channel.id
                     )
                 )
-                channel.subscriptions = subscriptions.data
+                if (
+                    subscriptions_response.data is not None
+                    and len(subscriptions_response.data) > 0
+                ):
+                    channel.subscription = TwitchSubscription(
+                        **subscriptions_response.data[0]
+                    )
 
                 followers_response = TwitchResponse(
                     **self._client.get_users_follows(to_id=channel.id)
                 )
                 channel.followers = followers_response.total
+                if (
+                    followers_response.data is not None
+                    and len(followers_response.data) > 0
+                ):
+                    channel.following_since = followers_response.data[0]["followed_at"]
 
                 streams_response = TwitchResponse(
                     **self._client.get_streams(user_id=channel.id)

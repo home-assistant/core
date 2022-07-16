@@ -21,7 +21,10 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+) -> bool:
     """Set up Twitch from a config entry."""
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
@@ -95,7 +98,10 @@ def async_cleanup_device_registry(
                 break
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
@@ -103,7 +109,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_reload_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+) -> None:
     """Handle an options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 
