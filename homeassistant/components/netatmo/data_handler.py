@@ -185,7 +185,7 @@ class NetatmoDataHandler:
         update_callback: CALLBACK_TYPE | None,
         **kwargs: Any,
     ) -> None:
-        """Register data class."""
+        """Subscribe to publisher."""
         if signal_name in self.publisher:
             if update_callback not in self.publisher[signal_name].subscriptions:
                 self.publisher[signal_name].subscriptions.append(update_callback)
@@ -207,19 +207,19 @@ class NetatmoDataHandler:
             raise
 
         self._queue.append(self.publisher[signal_name])
-        _LOGGER.debug("Data class %s added", signal_name)
+        _LOGGER.debug("Publisher %s added", signal_name)
 
     async def unsubscribe(
         self, signal_name: str, update_callback: CALLBACK_TYPE | None
     ) -> None:
-        """Unregister data class."""
+        """Unsubscribe from publisher."""
         self.publisher[signal_name].subscriptions.remove(update_callback)
 
         if not self.publisher[signal_name].subscriptions:
             self._queue.remove(self.publisher[signal_name])
             self.publisher.pop(signal_name)
             self.data.pop(signal_name)
-            _LOGGER.debug("Data class %s removed", signal_name)
+            _LOGGER.debug("Publisher %s removed", signal_name)
 
     @property
     def webhook(self) -> bool:
