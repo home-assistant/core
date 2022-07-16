@@ -86,7 +86,6 @@ async def async_setup_platform(
                 payload_off,
                 value_template,
                 unique_id,
-                None,
             )
         ],
         True,
@@ -105,7 +104,6 @@ async def async_setup_entry(
     device_class: str | None = entry.options.get(CONF_DEVICE_CLASS)
     value_template: Template | str | None = entry.options.get(CONF_VALUE_TEMPLATE)
     command_timeout: int = entry.options[CONF_COMMAND_TIMEOUT]
-    unique_id: str | None = entry.options.get(CONF_UNIQUE_ID)
     if value_template is not None:
         value_template = Template(value_template)
         value_template.hass = hass
@@ -120,7 +118,6 @@ async def async_setup_entry(
                 payload_on,
                 payload_off,
                 value_template,
-                unique_id,
                 entry.entry_id,
             )
         ],
@@ -140,7 +137,6 @@ class CommandBinarySensor(BinarySensorEntity):
         payload_off: str,
         value_template: Template | None,
         unique_id: str | None,
-        entry_id: str | None,
     ) -> None:
         """Initialize the Command line binary sensor."""
         self.data = data
@@ -150,7 +146,7 @@ class CommandBinarySensor(BinarySensorEntity):
         self._payload_on = payload_on
         self._payload_off = payload_off
         self._value_template = value_template
-        self._attr_unique_id = unique_id if unique_id else entry_id
+        self._attr_unique_id = unique_id
 
     def update(self) -> None:
         """Get the latest data and updates the state."""
