@@ -67,7 +67,11 @@ async def get_followed_channels(
         else:
             break
 
-    return sorted(channels, key=lambda channel: channel.to_login)
+    return sorted(
+        channels,
+        key=lambda channel: channel.to_name.lower(),
+        reverse=False,
+    )
 
 
 class OAuth2FlowHandler(
@@ -244,10 +248,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 self.logger.error("Twitch API error: %s", err)
                 return self.async_abort(reason="cannot_connect")
 
-            self.logger.debug("Channels: %s", channels)
-
             channel_ids = [channel.to_id for channel in channels]
             channels_dict = {channel.to_id: channel.to_name for channel in channels}
+
+            self.logger.debug("Channels: %s", channels_dict)
 
             # In case the user has removed a channel that is already tracked
             for channel in configured_channels:
