@@ -1369,7 +1369,7 @@ pyaftership==21.11.0
 pyairnow==1.1.0
 
 # homeassistant.components.airvisual
-pyairvisual==5.0.9
+pyairvisual==2022.07.0
 
 # homeassistant.components.almond
 pyalmond==0.0.2
