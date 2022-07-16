@@ -284,8 +284,8 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize Generic ConfigFlow."""
-        self.cached_user_input: dict[str, Any] = {}
-        self.cached_title = ""
+        self.user_input: dict[str, Any] = {}
+        self.title = ""
 
     @staticmethod
     def async_get_options_flow(
@@ -330,8 +330,8 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
                         # The automatically generated still image that stream generates
                         # is always jpeg
                         user_input[CONF_CONTENT_TYPE] = "image/jpeg"
-                    self.cached_user_input = user_input
-                    self.cached_title = name
+                    self.user_input = user_input
+                    self.title = name
 
                     # Register a temporary view so that we can show a preview
                     register_preview(hass, self.flow_id, user_input)
@@ -362,11 +362,11 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
         if not user_input.get(CONF_CONFIRMED_OK):
             return self.async_show_form(
                 step_id="user",
-                data_schema=build_schema(self.cached_user_input),
+                data_schema=build_schema(self.user_input),
                 errors={},
             )
         return self.async_create_entry(
-            title=self.cached_title, data={}, options=self.cached_user_input
+            title=self.title, data={}, options=self.user_input
         )
 
     async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
