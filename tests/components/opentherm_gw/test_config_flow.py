@@ -43,10 +43,12 @@ async def test_form_user(hass):
         "homeassistant.components.opentherm_gw.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry, patch(
-        "pyotgw.pyotgw.connect", return_value=MINIMAL_STATUS
+        "pyotgw.OpenThermGateway.connect", return_value=MINIMAL_STATUS
     ) as mock_pyotgw_connect, patch(
-        "pyotgw.pyotgw.disconnect", return_value=None
-    ) as mock_pyotgw_disconnect:
+        "pyotgw.OpenThermGateway.disconnect", return_value=None
+    ) as mock_pyotgw_disconnect, patch(
+        "pyotgw.status.StatusManager._process_updates", return_value=None
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_NAME: "Test Entry 1", CONF_DEVICE: "/dev/ttyUSB0"}
         )
@@ -75,10 +77,12 @@ async def test_form_import(hass):
         "homeassistant.components.opentherm_gw.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry, patch(
-        "pyotgw.pyotgw.connect", return_value=MINIMAL_STATUS
+        "pyotgw.OpenThermGateway.connect", return_value=MINIMAL_STATUS
     ) as mock_pyotgw_connect, patch(
-        "pyotgw.pyotgw.disconnect", return_value=None
-    ) as mock_pyotgw_disconnect:
+        "pyotgw.OpenThermGateway.disconnect", return_value=None
+    ) as mock_pyotgw_disconnect, patch(
+        "pyotgw.status.StatusManager._process_updates", return_value=None
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
@@ -117,10 +121,12 @@ async def test_form_duplicate_entries(hass):
         "homeassistant.components.opentherm_gw.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry, patch(
-        "pyotgw.pyotgw.connect", return_value=MINIMAL_STATUS
+        "pyotgw.OpenThermGateway.connect", return_value=MINIMAL_STATUS
     ) as mock_pyotgw_connect, patch(
-        "pyotgw.pyotgw.disconnect", return_value=None
-    ) as mock_pyotgw_disconnect:
+        "pyotgw.OpenThermGateway.disconnect", return_value=None
+    ) as mock_pyotgw_disconnect, patch(
+        "pyotgw.status.StatusManager._process_updates", return_value=None
+    ):
         result1 = await hass.config_entries.flow.async_configure(
             flow1["flow_id"], {CONF_NAME: "Test Entry 1", CONF_DEVICE: "/dev/ttyUSB0"}
         )
@@ -148,8 +154,10 @@ async def test_form_connection_timeout(hass):
     )
 
     with patch(
-        "pyotgw.pyotgw.connect", side_effect=(asyncio.TimeoutError)
-    ) as mock_connect:
+        "pyotgw.OpenThermGateway.connect", side_effect=(asyncio.TimeoutError)
+    ) as mock_connect, patch(
+        "pyotgw.status.StatusManager._process_updates", return_value=None
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_NAME: "Test Entry 1", CONF_DEVICE: "socket://192.0.2.254:1234"},
@@ -166,7 +174,11 @@ async def test_form_connection_error(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch("pyotgw.pyotgw.connect", side_effect=(SerialException)) as mock_connect:
+    with patch(
+        "pyotgw.OpenThermGateway.connect", side_effect=(SerialException)
+    ) as mock_connect, patch(
+        "pyotgw.status.StatusManager._process_updates", return_value=None
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_NAME: "Test Entry 1", CONF_DEVICE: "/dev/ttyUSB0"}
         )
@@ -196,7 +208,11 @@ async def test_options_migration(hass):
     with patch(
         "homeassistant.components.opentherm_gw.OpenThermGatewayDevice.connect_and_subscribe",
         return_value=True,
-    ), patch("homeassistant.components.opentherm_gw.async_setup", return_value=True):
+    ), patch(
+        "homeassistant.components.opentherm_gw.async_setup", return_value=True
+    ), patch(
+        "pyotgw.status.StatusManager._process_updates", return_value=None
+    ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
