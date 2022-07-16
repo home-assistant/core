@@ -16,6 +16,8 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt
@@ -86,21 +88,20 @@ async def async_setup_platform(
 ) -> None:
     """Set up the Workday sensor."""
     LOGGER.warning(
-        # Config flow added in Home Assistant Core 2022.7, remove import flow in 2022.9
-        "Loading Workday via platform setup has been deprecated in Home Assistant 2022.7 "
+        # Config flow added in Home Assistant Core 2022.8, remove import flow in 2022.10
+        "Loading Workday via platform setup has been deprecated in Home Assistant 2022.8 "
         "Your configuration has been automatically imported and you can "
         "remove it from your configuration.yaml"
     )
-
-    new_config = config
-    if config.get(CONF_PROVINCE) is None:
-        new_config[CONF_PROVINCE] = None
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
-            data=new_config,
+            data={
+                **config,
+                CONF_PROVINCE: config.get(CONF_PROVINCE),
+            },
         )
     )
 
@@ -175,6 +176,8 @@ async def async_setup_entry(
 class IsWorkdaySensor(BinarySensorEntity):
     """Implementation of a Workday sensor."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         obj_holidays: HolidayBase,
@@ -185,7 +188,6 @@ class IsWorkdaySensor(BinarySensorEntity):
         entry_id: str,
     ) -> None:
         """Initialize the Workday sensor."""
-        self._attr_name = name
         self._obj_holidays = obj_holidays
         self._workdays = workdays
         self._excludes = excludes
@@ -196,6 +198,13 @@ class IsWorkdaySensor(BinarySensorEntity):
             CONF_OFFSET: days_offset,
         }
         self._attr_unique_id = entry_id
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, entry_id)},
+            manufacturer="python-holidays",
+            model=holidays.__version__,
+            name=name,
+        )
 
     def is_include(self, day: str, now: date) -> bool:
         """Check if given day is in the includes list."""
