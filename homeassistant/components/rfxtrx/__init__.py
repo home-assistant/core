@@ -219,7 +219,7 @@ async def async_setup_internal(hass, entry: ConfigEntry):
     def _add_device(event, device_id):
         """Add a device to config entry."""
         config = {}
-        config[CONF_DEVICE_ID] = device_id
+        config[CONF_DEVICE_ID] = list(device_id)
 
         _LOGGER.info(
             "Added device (Device ID: %s Class: %s Sub: %s, Event: %s)",
