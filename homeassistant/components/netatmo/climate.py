@@ -192,7 +192,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
             self._climate_state_class
         ]
 
-        self._data_classes.extend(
+        self._publishers.extend(
             [
                 {
                     "name": CLIMATE_TOPOLOGY_CLASS_NAME,

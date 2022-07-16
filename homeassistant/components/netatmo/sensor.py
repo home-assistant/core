@@ -486,9 +486,7 @@ class NetatmoSensor(NetatmoBase, SensorEntity):
         super().__init__(data_handler)
         self.entity_description = description
 
-        self._data_classes.append(
-            {"name": data_class_name, SIGNAL_NAME: data_class_name}
-        )
+        self._publishers.append({"name": data_class_name, SIGNAL_NAME: data_class_name})
 
         self._id = module_info["_id"]
         self._station_id = module_info.get("main_device", self._id)
@@ -516,7 +514,7 @@ class NetatmoSensor(NetatmoBase, SensorEntity):
         """Return data for this entity."""
         return cast(
             pyatmo.AsyncWeatherStationData,
-            self.data_handler.data[self._data_classes[0]["name"]],
+            self.data_handler.data[self._publishers[0]["name"]],
         )
 
     @property
@@ -733,7 +731,7 @@ class NetatmoPublicSensor(NetatmoBase, SensorEntity):
 
         self._signal_name = f"{PUBLICDATA_DATA_CLASS_NAME}-{area.uuid}"
 
-        self._data_classes.append(
+        self._publishers.append(
             {
                 "name": PUBLICDATA_DATA_CLASS_NAME,
                 "lat_ne": area.lat_ne,
@@ -793,7 +791,7 @@ class NetatmoPublicSensor(NetatmoBase, SensorEntity):
 
         self.area = area
         self._signal_name = f"{PUBLICDATA_DATA_CLASS_NAME}-{area.uuid}"
-        self._data_classes = [
+        self._publishers = [
             {
                 "name": PUBLICDATA_DATA_CLASS_NAME,
                 "lat_ne": area.lat_ne,

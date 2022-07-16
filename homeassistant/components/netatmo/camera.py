@@ -126,7 +126,7 @@ class NetatmoCamera(NetatmoBase, Camera):
         Camera.__init__(self)
         super().__init__(data_handler)
 
-        self._data_classes.append(
+        self._publishers.append(
             {"name": CAMERA_DATA_CLASS_NAME, SIGNAL_NAME: CAMERA_DATA_CLASS_NAME}
         )
 
@@ -194,7 +194,7 @@ class NetatmoCamera(NetatmoBase, Camera):
         """Return data for this entity."""
         return cast(
             pyatmo.AsyncCameraData,
-            self.data_handler.data[self._data_classes[0]["name"]],
+            self.data_handler.data[self._publishers[0]["name"]],
         )
 
     async def async_camera_image(

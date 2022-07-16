@@ -92,7 +92,7 @@ class NetatmoScheduleSelect(NetatmoBase, SelectEntity):
 
         self._home = self._climate_state.homes[self._home_id]
 
-        self._data_classes.extend(
+        self._publishers.extend(
             [
                 {
                     "name": CLIMATE_TOPOLOGY_CLASS_NAME,

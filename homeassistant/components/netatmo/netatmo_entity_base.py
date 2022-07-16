@@ -23,7 +23,7 @@ class NetatmoBase(Entity):
     def __init__(self, data_handler: NetatmoDataHandler) -> None:
         """Set up Netatmo entity base."""
         self.data_handler = data_handler
-        self._data_classes: list[dict] = []
+        self._publishers: list[dict] = []
 
         self._device_name: str = ""
         self._id: str = ""
@@ -35,7 +35,7 @@ class NetatmoBase(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Entity created."""
-        for data_class in self._data_classes:
+        for data_class in self._publishers:
             signal_name = data_class[SIGNAL_NAME]
 
             if "home_id" in data_class:
@@ -62,7 +62,7 @@ class NetatmoBase(Entity):
                     data_class["name"], signal_name, self.async_update_callback
                 )
 
-            for sub in self.data_handler.data_classes[signal_name].subscriptions:
+            for sub in self.data_handler.publisher[signal_name].subscriptions:
                 if sub is None:
                     await self.data_handler.unsubscribe(signal_name, None)
 
@@ -76,7 +76,7 @@ class NetatmoBase(Entity):
         """Run when entity will be removed from hass."""
         await super().async_will_remove_from_hass()
 
-        for data_class in self._data_classes:
+        for data_class in self._publishers:
             await self.data_handler.unsubscribe(
                 data_class[SIGNAL_NAME], self.async_update_callback
             )
