@@ -3,11 +3,11 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import Any
+from typing import TYPE_CHECKING, Any, cast
 
 import aiohomekit
+from aiohomekit.const import BLE_TRANSPORT_SUPPORTED
 from aiohomekit.controller.abstract import AbstractPairing
-from aiohomekit.controller.ble.manufacturer_data import HomeKitAdvertisement
 from aiohomekit.exceptions import AuthenticationError
 from aiohomekit.utils import domain_supported, domain_to_name
 import voluptuous as vol
@@ -17,6 +17,7 @@ from homeassistant.components import zeroconf
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.service_info import bluetooth
 
 from .connection import HKDevice
 from .const import DOMAIN, KNOWN_DEVICES
@@ -340,8 +341,16 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: bluetooth.BluetoothServiceInfo
     ) -> FlowResult:
         """Handle the bluetooth discovery step."""
-        if not aiohomekit.const.BLE_TRANSPORT_SUPPORTED:
+        if not BLE_TRANSPORT_SUPPORTED:
             return self.async_abort(reason="ignored_model")
+
+        # Late imports in case BLE is not available
+        from aiohomekit.controller.ble.discovery import (  # pylint: disable=import-outside-toplevel
+            BleDiscovery,
+        )
+        from aiohomekit.controller.ble.manufacturer_data import (  # pylint: disable=import-outside-toplevel
+            HomeKitAdvertisement,
+        )
 
         await self.async_set_unique_id(discovery_info.address)
         self._abort_if_unique_id_configured()
@@ -357,18 +366,22 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if self.controller is None:
             await self._async_setup_controller()
+            assert self.controller is not None
 
         try:
-            device = await self.controller.async_find(device.id)
+            discovery = await self.controller.async_find(device.id)
         except aiohomekit.AccessoryNotFoundError:
             return self.async_abort(reason="accessory_not_found_error")
 
-        if device.paired:
+        if TYPE_CHECKING:
+            discovery = cast(BleDiscovery, discovery)
+
+        if discovery.paired:
             return self.async_abort(reason="already_paired")
 
-        self.name = device.description.name
+        self.name = discovery.description.name
         self.model = "Bluetooth device"
-        self.hkid = device.description.id
+        self.hkid = discovery.description.id
 
         return self._async_step_pair_show_form()
 
