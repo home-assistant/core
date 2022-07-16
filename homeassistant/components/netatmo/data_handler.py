@@ -64,7 +64,7 @@ class NetatmoDevice:
     data_handler: NetatmoDataHandler
     device: pyatmo.climate.NetatmoModule
     parent_id: str
-    state_class_name: str
+    signal_name: str
 
 
 @dataclass

@@ -595,7 +595,7 @@ class NetatmoClimateBatterySensor(NetatmoBase, SensorEntity):
         self._id = netatmo_device.parent_id
         self._attr_name = f"{self._module.name} {self.entity_description.name}"
 
-        self._state_class_name = netatmo_device.state_class_name
+        self._signal_name = netatmo_device.signal_name
         self._room_id = self._module.room_id
         self._model = getattr(self._module.device_type, "value")
 
