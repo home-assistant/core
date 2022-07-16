@@ -128,18 +128,18 @@ class NetatmoDataHandler:
             if data_class.next_scan > time():
                 continue
 
-            if data_class_name := data_class.name:
-                self.publisher[data_class_name].next_scan = time() + data_class.interval
+            if publisher := data_class.name:
+                self.publisher[publisher].next_scan = time() + data_class.interval
 
-                await self.async_fetch_data(data_class_name)
+                await self.async_fetch_data(publisher)
 
         self._queue.rotate(BATCH_SIZE)
 
     @callback
-    def async_force_update(self, data_class_entry: str) -> None:
+    def async_force_update(self, signal_name: str) -> None:
         """Prioritize data retrieval for given data class entry."""
-        self.publisher[data_class_entry].next_scan = time()
-        self._queue.rotate(-(self._queue.index(self.publisher[data_class_entry])))
+        self.publisher[signal_name].next_scan = time()
+        self._queue.rotate(-(self._queue.index(self.publisher[signal_name])))
 
     async def handle_event(self, event: dict) -> None:
         """Handle webhook events."""
@@ -155,17 +155,17 @@ class NetatmoDataHandler:
             _LOGGER.debug("%s camera reconnected", MANUFACTURER)
             self.async_force_update(CAMERA_DATA_CLASS_NAME)
 
-    async def async_fetch_data(self, data_class_entry: str) -> None:
+    async def async_fetch_data(self, signal_name: str) -> None:
         """Fetch data and notify."""
-        if self.data[data_class_entry] is None:
+        if self.data[signal_name] is None:
             return
 
         try:
-            await self.data[data_class_entry].async_update()
+            await self.data[signal_name].async_update()
 
         except pyatmo.NoDevice as err:
             _LOGGER.debug(err)
-            self.data[data_class_entry] = None
+            self.data[signal_name] = None
 
         except pyatmo.ApiError as err:
             _LOGGER.debug(err)
@@ -174,54 +174,52 @@ class NetatmoDataHandler:
             _LOGGER.debug(err)
             return
 
-        for update_callback in self.publisher[data_class_entry].subscriptions:
+        for update_callback in self.publisher[signal_name].subscriptions:
             if update_callback:
                 update_callback()
 
     async def subscribe(
         self,
-        data_class_name: str,
-        data_class_entry: str,
+        publisher: str,
+        signal_name: str,
         update_callback: CALLBACK_TYPE | None,
         **kwargs: Any,
     ) -> None:
         """Register data class."""
-        if data_class_entry in self.publisher:
-            if update_callback not in self.publisher[data_class_entry].subscriptions:
-                self.publisher[data_class_entry].subscriptions.append(update_callback)
+        if signal_name in self.publisher:
+            if update_callback not in self.publisher[signal_name].subscriptions:
+                self.publisher[signal_name].subscriptions.append(update_callback)
             return
 
-        self.publisher[data_class_entry] = NetatmoPublisher(
-            name=data_class_entry,
-            interval=DEFAULT_INTERVALS[data_class_name],
-            next_scan=time() + DEFAULT_INTERVALS[data_class_name],
+        self.publisher[signal_name] = NetatmoPublisher(
+            name=signal_name,
+            interval=DEFAULT_INTERVALS[publisher],
+            next_scan=time() + DEFAULT_INTERVALS[publisher],
             subscriptions=[update_callback],
         )
 
-        self.data[data_class_entry] = DATA_CLASSES[data_class_name](
-            self._auth, **kwargs
-        )
+        self.data[signal_name] = DATA_CLASSES[publisher](self._auth, **kwargs)
 
         try:
-            await self.async_fetch_data(data_class_entry)
+            await self.async_fetch_data(signal_name)
         except KeyError:
-            self.publisher.pop(data_class_entry)
+            self.publisher.pop(signal_name)
             raise
 
-        self._queue.append(self.publisher[data_class_entry])
-        _LOGGER.debug("Data class %s added", data_class_entry)
+        self._queue.append(self.publisher[signal_name])
+        _LOGGER.debug("Data class %s added", signal_name)
 
     async def unsubscribe(
-        self, data_class_entry: str, update_callback: CALLBACK_TYPE | None
+        self, signal_name: str, update_callback: CALLBACK_TYPE | None
     ) -> None:
         """Unregister data class."""
-        self.publisher[data_class_entry].subscriptions.remove(update_callback)
+        self.publisher[signal_name].subscriptions.remove(update_callback)
 
-        if not self.publisher[data_class_entry].subscriptions:
-            self._queue.remove(self.publisher[data_class_entry])
-            self.publisher.pop(data_class_entry)
-            self.data.pop(data_class_entry)
-            _LOGGER.debug("Data class %s removed", data_class_entry)
+        if not self.publisher[signal_name].subscriptions:
+            self._queue.remove(self.publisher[signal_name])
+            self.publisher.pop(signal_name)
+            self.data.pop(signal_name)
+            _LOGGER.debug("Data class %s removed", signal_name)
 
     @property
     def webhook(self) -> bool:
