@@ -132,7 +132,7 @@ def test_default_encoder_is_passed():
     """Test we use orjson if they pass in the default encoder."""
     fname = _path_for("test6")
     with patch(
-        "homeassistant.util.json.orjson.dumps", return_value=b"{}"
+        "homeassistant.helpers.json_orjson.orjson.dumps", return_value=b"{}"
     ) as mock_orjson_dumps:
         save_json(fname, {"any": 1}, encoder=DefaultHASSJSONEncoder)
     assert len(mock_orjson_dumps.mock_calls) == 1

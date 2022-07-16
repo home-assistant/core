@@ -54,6 +54,17 @@ def json_bytes(data: Any) -> bytes:
     return json.dumps(data, cls=JSONEncoder).encode("utf-8")
 
 
+def json_dumps_indent(data: Any) -> str:
+    """Dump json string with array and object members indented."""
+    return json.dumps(data, cls=JSONEncoder, indent=2)
+
+
+def json_dumps_indent_no_encoder(data: Any) -> str:
+    """Dump json string with array and object members indented.
+    Do not apply the HASS default encoder."""
+    return json.dumps(data, indent=2)
+
+
 def json_dumps_sorted(data: Any) -> str:
     """Dump json string with keys sorted."""
     return json.dumps(data, cls=JSONEncoder, sort_keys=True)

@@ -12,6 +12,8 @@ except ImportError:
         JSON_DECODE_EXCEPTIONS,
         json_bytes,
         json_dumps,
+        json_dumps_indent,
+        json_dumps_indent_no_encoder,
         json_dumps_sorted,
         json_loads,
     )
@@ -21,6 +23,8 @@ else:
         JSON_DECODE_EXCEPTIONS,
         json_bytes,
         json_dumps,
+        json_dumps_indent,
+        json_dumps_indent_no_encoder,
         json_dumps_sorted,
         json_loads,
     )

@@ -50,6 +50,24 @@ def json_dumps(data: Any) -> str:
     ).decode("utf-8")
 
 
+def json_dumps_indent(data: Any) -> str:
+    """Dump json string with array and object members indented."""
+    return orjson.dumps(
+        data,
+        option=orjson.OPT_NON_STR_KEYS | orjson.OPT_INDENT_2,
+        default=json_encoder_default,
+    ).decode("utf-8")
+
+
+def json_dumps_indent_no_encoder(data: Any) -> str:
+    """Dump json string with array and object members indented.
+    Do not apply the HASS default encoder."""
+    return orjson.dumps(
+        data,
+        option=orjson.OPT_NON_STR_KEYS | orjson.OPT_INDENT_2,
+    ).decode("utf-8")
+
+
 def json_dumps_sorted(data: Any) -> str:
     """Dump json string with keys sorted."""
     return orjson.dumps(
