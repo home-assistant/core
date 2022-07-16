@@ -416,7 +416,7 @@ class OpenThermGatewayDevice:
         self.status = {}
         self.update_signal = f"{DATA_OPENTHERM_GW}_{self.gw_id}_update"
         self.options_update_signal = f"{DATA_OPENTHERM_GW}_{self.gw_id}_options_update"
-        self.gateway = pyotgw.pyotgw()
+        self.gateway = pyotgw.OpenThermGateway()
         self.gw_version = None
 
     async def cleanup(self, event=None):
@@ -427,7 +427,7 @@ class OpenThermGatewayDevice:
 
     async def connect_and_subscribe(self):
         """Connect to serial device and subscribe report handler."""
-        self.status = await self.gateway.connect(self.hass.loop, self.device_path)
+        self.status = await self.gateway.connect(self.device_path)
         version_string = self.status[gw_vars.OTGW].get(gw_vars.OTGW_ABOUT)
         self.gw_version = version_string[18:] if version_string else None
         _LOGGER.debug(
