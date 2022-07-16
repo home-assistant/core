@@ -41,7 +41,6 @@ from .const import (
     CONF_WEATHER_AREAS,
     DATA_HANDLER,
     DOMAIN,
-    MANUFACTURER,
     NETATMO_CREATE_BATTERY,
     SIGNAL_NAME,
     TYPE_WEATHER,
@@ -507,7 +506,7 @@ class NetatmoSensor(NetatmoBase, SensorEntity):
                 f"{module_info.get('module_name', device['type'])}"
             )
 
-        self._attr_name = f"{MANUFACTURER} {self._device_name} {description.name}"
+        self._attr_name = f"{self._device_name} {description.name}"
         self._model = device["type"]
         self._netatmo_type = TYPE_WEATHER
         self._attr_unique_id = f"{self._id}-{description.key}"
@@ -751,7 +750,7 @@ class NetatmoPublicSensor(NetatmoBase, SensorEntity):
         self._area_name = area.area_name
         self._id = self._area_name
         self._device_name = f"{self._area_name}"
-        self._attr_name = f"{MANUFACTURER} {self._device_name} {description.name}"
+        self._attr_name = f"{self._device_name} {description.name}"
         self._show_on_map = area.show_on_map
         self._attr_unique_id = (
             f"{self._device_name.replace(' ', '-')}-{description.key}"
