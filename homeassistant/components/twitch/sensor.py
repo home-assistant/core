@@ -112,7 +112,7 @@ def _twitch_channel_entity_picture(
 
     if channel.stream is not None:
         if channel.stream.thumbnail_url is not None:
-            return channel.stream.thumbnail_url.format(width=24, height=24)
+            return channel.stream.thumbnail_url.format(width=48, height=48)
     return channel.profile_image_url
 
 
