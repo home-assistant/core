@@ -72,12 +72,16 @@ class UniFiDeviceUpdateEntity(UniFiBase, UpdateEntity):
     DOMAIN = DOMAIN
     TYPE = DEVICE_UPDATE
     _attr_device_class = UpdateDeviceClass.FIRMWARE
+    _attr_supported_features = UpdateEntityFeature.PROGRESS
 
     def __init__(self, device, controller):
         """Set up device update entity."""
         super().__init__(device, controller)
 
         self.device = self._item
+
+        if self.controller.site_role == "admin":
+            self._attr_supported_features |= UpdateEntityFeature.INSTALL
 
     @property
     def name(self) -> str:
@@ -108,16 +112,6 @@ class UniFiDeviceUpdateEntity(UniFiBase, UpdateEntity):
     def latest_version(self) -> str | None:
         """Latest version available for install."""
         return self.device.upgrade_to_firmware or self.device.version
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        features: int = UpdateEntityFeature.PROGRESS
-
-        if self.controller.site_role == "admin":
-            features |= UpdateEntityFeature.INSTALL
-
-        return features
 
     @property
     def device_info(self) -> DeviceInfo:
