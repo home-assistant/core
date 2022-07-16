@@ -1186,6 +1186,8 @@ build.json @home-assistant/supervisor
 /tests/components/twentemilieu/ @frenck
 /homeassistant/components/twinkly/ @dr1rrb @Robbie1221
 /tests/components/twinkly/ @dr1rrb @Robbie1221
+/homeassistant/components/twitch/ @timmo001
+/tests/components/twitch/ @timmo001
 /homeassistant/components/ukraine_alarm/ @PaulAnnekov
 /tests/components/ukraine_alarm/ @PaulAnnekov
 /homeassistant/components/unifi/ @Kane610
