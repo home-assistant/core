@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import datetime
-import logging
 from typing import Any
 
 import nextcord
@@ -16,9 +15,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 
 PARALLEL_UPDATES = 1
-SCAN_INTERVAL = datetime.timedelta(minutes=1)
-
-_LOGGER = logging.getLogger(__name__)
+SCAN_INTERVAL = datetime.timedelta(minutes=10)
 
 
 async def async_setup_entry(
@@ -82,13 +79,12 @@ class DiscordCalendar(CalendarEntity):
         return [
             event
             for event in self._events
-            if start_date <= event.start <= event.end <= end_date
-            if start_date < event.start <= event.end < end_date  # Start and end are exclusive.
+            if start_date < event.start < end_date  # Start and end are exclusive.
         ]
 
     async def async_update(self) -> None:
         """Do the I/O to fetch guild events from the Discord API and stores the locally."""
-        self._events = []
+        events = []
         async for scheduled_event in await self._guild.fetch_scheduled_events():
             event = CalendarEvent(
                 summary=scheduled_event.name,
@@ -98,4 +94,5 @@ class DiscordCalendar(CalendarEntity):
                 end=scheduled_event.end_time
                 or scheduled_event.start_time + datetime.timedelta(hours=1),
             )
-            self._events.append(event)
+            events.append(event)
+        self._events = events
