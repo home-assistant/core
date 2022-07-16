@@ -138,3 +138,5 @@ class TwitchDeviceEntity(CoordinatorEntity[TwitchUpdateCoordinator]):
             configuration_url=f"https://twitch.tv/{service_name}",
             entry_type=DeviceEntryType.SERVICE,
         )
+
+        self._service_id = service_id

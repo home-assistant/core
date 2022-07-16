@@ -32,7 +32,7 @@ STATE_STREAMING = "streaming"
 class BaseEntityDescriptionMixin:
     """Mixin for required Twitch base description keys."""
 
-    value_fn: Callable[[TwitchCoordinatorData, int], StateType]
+    value_fn: Callable[[TwitchCoordinatorData, str], StateType]
 
 
 @dataclass
@@ -40,12 +40,12 @@ class BaseEntityDescription(SensorEntityDescription):
     """Describes Twitch sensor entity default overrides."""
 
     icon: str = "mdi:twitch"
-    available_fn: Callable[[TwitchCoordinatorData, int], bool] = lambda data, k: True
+    available_fn: Callable[[TwitchCoordinatorData, str], bool] = lambda data, k: True
     attributes_fn: Callable[
-        [TwitchCoordinatorData, int], Mapping[str, Any] | None
+        [TwitchCoordinatorData, str], Mapping[str, Any] | None
     ] = lambda data, k: None
     entity_picture_fn: Callable[
-        [TwitchCoordinatorData, int], str | None
+        [TwitchCoordinatorData, str], str | None
     ] = lambda data, k: None
 
 
@@ -56,29 +56,32 @@ class TwitchSensorEntityDescription(BaseEntityDescription, BaseEntityDescription
 
 def _twitch_channel_available(
     data: TwitchCoordinatorData,
-    item_id: int,
+    channel_id: str,
 ) -> bool:
     """Return True if the channel is available."""
     return (
         data.channels is not None
         and len(data.channels) > 0
-        and data.channels[item_id] is not None
+        and next(
+            (channel for channel in data.channels if channel.id == channel_id), None
+        )
+        is not None
     )
 
 
 def _twitch_channel_attributes(
     data: TwitchCoordinatorData,
-    item_id: int,
+    channel_id: str,
 ) -> Mapping[str, Any]:
     """Return the attributes of the sensor."""
-    if (
-        data.channels is None
-        or len(data.channels) < 1
-        or data.channels[item_id] is None
-    ):
+    if data.channels is None or len(data.channels) < 1:
+        return {}
+    channel = next(
+        (channel for channel in data.channels if channel.id == channel_id), None
+    )
+    if channel is None:
         return {}
 
-    channel = data.channels[item_id]
     return {
         ATTR_GAME: channel.stream.game_name if channel.stream is not None else None,
         ATTR_TITLE: channel.stream.title if channel.stream is not None else None,
@@ -94,17 +97,17 @@ def _twitch_channel_attributes(
 
 def _twitch_channel_entity_picture(
     data: TwitchCoordinatorData,
-    item_id: int,
+    channel_id: str,
 ) -> str | None:
     """Return the entity picture of the sensor."""
-    if (
-        data.channels is None
-        or len(data.channels) < 1
-        or data.channels[item_id] is None
-    ):
+    if data.channels is None or len(data.channels) < 1:
+        return None
+    channel = next(
+        (channel for channel in data.channels if channel.id == channel_id), None
+    )
+    if channel is None:
         return None
 
-    channel = data.channels[item_id]
     if channel.stream is not None:
         if channel.stream.thumbnail_url is not None:
             return channel.stream.thumbnail_url.format(width=24, height=24)
@@ -113,17 +116,18 @@ def _twitch_channel_entity_picture(
 
 def _twitch_channel_value(
     data: TwitchCoordinatorData,
-    item_id: int,
+    channel_id: str,
 ) -> StateType:
     """Return the value of the sensor."""
-    if (
-        data.channels is None
-        or len(data.channels) < 1
-        or data.channels[item_id] is None
-    ):
+    if data.channels is None or len(data.channels) < 1:
+        return None
+    channel = next(
+        (channel for channel in data.channels if channel.id == channel_id), None
+    )
+    if channel is None:
         return None
 
-    if data.channels[item_id].stream is None:
+    if channel.stream is None:
         return STATE_OFFLINE
     return STATE_STREAMING
 
@@ -139,7 +143,7 @@ async def async_setup_entry(
 
     entities: list[TwitchSensorEntity] = []
 
-    for item_id, channel in enumerate(data.channels):
+    for channel in data.channels:
         entities.append(
             TwitchSensorEntity(
                 coordinator,
@@ -153,7 +157,6 @@ async def async_setup_entry(
                 ),
                 channel.id,
                 channel.display_name,
-                item_id,
             )
         )
 
@@ -173,7 +176,6 @@ class TwitchSensorEntity(TwitchDeviceEntity, SensorEntity):
         description: TwitchSensorEntityDescription,
         service_id: str,
         service_name: str,
-        item_id: int,
     ) -> None:
         """Initialize sensor."""
         super().__init__(
@@ -183,7 +185,6 @@ class TwitchSensorEntity(TwitchDeviceEntity, SensorEntity):
             description.key,
         )
         self.entity_description = description
-        self._item_id = item_id
 
     @property
     def available(self) -> bool:
@@ -192,25 +193,25 @@ class TwitchSensorEntity(TwitchDeviceEntity, SensorEntity):
             super().available
             and self.coordinator.data is not None
             and self.entity_description.available_fn(
-                self.coordinator.data, self._item_id
+                self.coordinator.data, self._service_id
             )
         )
 
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self.entity_description.value_fn(self.coordinator.data, self._item_id)
+        return self.entity_description.value_fn(self.coordinator.data, self._service_id)
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the extra state attributes."""
         return self.entity_description.attributes_fn(
-            self.coordinator.data, self._item_id
+            self.coordinator.data, self._service_id
         )
 
     @property
     def entity_picture(self) -> str | None:
         """Return the entity picture."""
         return self.entity_description.entity_picture_fn(
-            self.coordinator.data, self._item_id
+            self.coordinator.data, self._service_id
         )
