@@ -74,6 +74,7 @@ class ProtectData:
         self._pending_camera_ids: set[str] = set()
         self._unsub_interval: CALLBACK_TYPE | None = None
         self._unsub_websocket: CALLBACK_TYPE | None = None
+        self._auth_failures = 0
 
         self.last_update_success = False
         self.api = protect
@@ -124,9 +125,13 @@ class ProtectData:
         try:
             updates = await self.api.update(force=force)
         except NotAuthorized:
-            await self.async_stop()
-            _LOGGER.exception("Reauthentication required")
-            self._entry.async_start_reauth(self._hass)
+            if self._auth_failures < 10:
+                _LOGGER.exception("Auth error while updating")
+                self._auth_failures += 1
+            else:
+                await self.async_stop()
+                _LOGGER.exception("Reauthentication required")
+                self._entry.async_start_reauth(self._hass)
             self.last_update_success = False
         except ClientError:
             if self.last_update_success:
@@ -136,6 +141,7 @@ class ProtectData:
             self._async_process_updates(self.api.bootstrap)
         else:
             self.last_update_success = True
+            self._auth_failures = 0
             self._async_process_updates(updates)
 
     @callback
