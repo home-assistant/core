@@ -44,6 +44,7 @@ async def async_get_config_entry_diagnostics(
 
     return {
         "title": entry.title,
+        "version": entry.version,
         "data": async_redact_data(entry.data, TO_REDACT),
         "options": options,
     }

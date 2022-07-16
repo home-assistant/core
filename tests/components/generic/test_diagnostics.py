@@ -9,6 +9,7 @@ async def test_entry_diagnostics(hass, hass_client, setup_entry):
 
     assert await get_diagnostics_for_config_entry(hass, hass_client, setup_entry) == {
         "title": "Test Camera",
+        "version": 2,
         "data": {},
         "options": {
             "still_image_url": "http://****:****@example.com/****?****=****",

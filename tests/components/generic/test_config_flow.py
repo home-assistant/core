@@ -81,7 +81,7 @@ async def test_form(hass, fakeimg_png, user_flow, mock_create_stream):
         CONF_FRAMERATE: 5,
         CONF_VERIFY_SSL: False,
     }
-
+    assert result2["version"] == 2
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -594,6 +594,7 @@ async def test_options_only_stream(hass, fakeimgbytes_png, mock_create_stream):
         )
     assert result3["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result3["data"][CONF_CONTENT_TYPE] == "image/jpeg"
+    assert CONF_STILL_IMAGE_URL not in result3["data"]
 
 
 # These below can be deleted after deprecation period is finished.

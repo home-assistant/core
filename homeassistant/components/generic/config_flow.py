@@ -264,7 +264,7 @@ async def async_test_stream(
 class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for generic IP camera."""
 
-    VERSION = 1
+    VERSION = 2
 
     def __init__(self) -> None:
         """Initialize Generic ConfigFlow."""
@@ -377,26 +377,22 @@ class GenericOptionsFlowHandler(OptionsFlow):
                     # The automatically generated still image that stream generates
                     # is always jpeg
                     still_format = "image/jpeg"
-                data = {
-                    CONF_AUTHENTICATION: user_input.get(CONF_AUTHENTICATION),
-                    CONF_STREAM_SOURCE: user_input.get(CONF_STREAM_SOURCE),
-                    CONF_PASSWORD: user_input.get(CONF_PASSWORD),
-                    CONF_STILL_IMAGE_URL: user_input.get(CONF_STILL_IMAGE_URL),
-                    CONF_CONTENT_TYPE: still_format
-                    or self.config_entry.options.get(CONF_CONTENT_TYPE),
-                    CONF_USERNAME: user_input.get(CONF_USERNAME),
-                    CONF_LIMIT_REFETCH_TO_URL_CHANGE: user_input[
-                        CONF_LIMIT_REFETCH_TO_URL_CHANGE
-                    ],
-                    CONF_FRAMERATE: user_input[CONF_FRAMERATE],
-                    CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
-                    CONF_USE_WALLCLOCK_AS_TIMESTAMPS: user_input.get(
-                        CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
+                data = user_input
+                data[CONF_CONTENT_TYPE] = still_format or self.config_entry.options.get(
+                    CONF_CONTENT_TYPE
+                )
+                if CONF_USE_WALLCLOCK_AS_TIMESTAMPS not in user_input:
+                    data[CONF_USE_WALLCLOCK_AS_TIMESTAMPS] = (
                         self.config_entry.options.get(
                             CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False
                         ),
-                    ),
-                }
+                    )
+                if CONF_LIMIT_REFETCH_TO_URL_CHANGE not in user_input:
+                    data[CONF_LIMIT_REFETCH_TO_URL_CHANGE] = (
+                        self.config_entry.options.get(
+                            CONF_LIMIT_REFETCH_TO_URL_CHANGE, False
+                        ),
+                    )
                 return self.async_create_entry(
                     title=title,
                     data=data,
