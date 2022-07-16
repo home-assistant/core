@@ -4,7 +4,8 @@ from __future__ import annotations
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
+from homeassistant.components.sensor.const import CONF_STATE_CLASS
 from homeassistant.const import (
     CONF_COMMAND,
     CONF_COMMAND_CLOSE,
@@ -85,11 +86,17 @@ DATA_SCHEMA_SENSOR = vol.Schema(
             NumberSelectorConfig(min=0, max=100, step=1, mode=NumberSelectorMode.BOX)
         ),
         vol.Optional(CONF_JSON_ATTRIBUTES): SelectSelector(
-            SelectSelectorConfig(options=[""], multiple=True, custom_value=True)
+            SelectSelectorConfig(options=[], multiple=True, custom_value=True)
         ),
         vol.Optional(CONF_DEVICE_CLASS): SelectSelector(
             SelectSelectorConfig(
                 options=list(SensorDeviceClass),
+                mode=SelectSelectorMode.DROPDOWN,
+            )
+        ),
+        vol.Optional(CONF_STATE_CLASS): SelectSelector(
+            SelectSelectorConfig(
+                options=list(SensorStateClass),
                 mode=SelectSelectorMode.DROPDOWN,
             )
         ),

@@ -8,10 +8,17 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    DEVICE_CLASSES_SCHEMA,
+    PLATFORM_SCHEMA,
+    STATE_CLASSES_SCHEMA,
+    SensorEntity,
+)
+from homeassistant.components.sensor.const import CONF_STATE_CLASS
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_COMMAND,
+    CONF_DEVICE_CLASS,
     CONF_NAME,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
@@ -46,6 +53,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
+        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
     }
 )
 
@@ -69,12 +78,22 @@ async def async_setup_platform(
     if value_template is not None:
         value_template.hass = hass
     json_attributes: list[str] | None = config.get(CONF_JSON_ATTRIBUTES)
+    device_class: str | None = config.get(CONF_DEVICE_CLASS)
+    state_class: str | None = config.get(CONF_STATE_CLASS)
     data = CommandSensorData(hass, command, command_timeout)
 
     async_add_entities(
         [
             CommandSensor(
-                data, name, unit, value_template, json_attributes, unique_id, None
+                data,
+                name,
+                unit,
+                value_template,
+                json_attributes,
+                unique_id,
+                None,
+                device_class,
+                state_class,
             )
         ],
         True,
@@ -93,6 +112,8 @@ async def async_setup_entry(
     command_timeout: int = entry.options[CONF_COMMAND_TIMEOUT]
     unique_id: str | None = entry.options.get(CONF_UNIQUE_ID)
     json_attributes: list[str] | None = entry.options.get(CONF_JSON_ATTRIBUTES)
+    device_class: str | None = entry.options.get(CONF_DEVICE_CLASS)
+    state_class: str | None = entry.options.get(CONF_STATE_CLASS)
     if value_template is not None:
         value_template = Template(value_template)
         value_template.hass = hass
@@ -109,6 +130,8 @@ async def async_setup_entry(
                 json_attributes,
                 unique_id,
                 entry.entry_id,
+                device_class,
+                state_class,
             )
         ],
         True,
@@ -127,6 +150,8 @@ class CommandSensor(SensorEntity):
         json_attributes: list[str] | None,
         unique_id: str | None,
         entry_id: str | None,
+        device_class: str | None,
+        state_class: str | None,
     ) -> None:
         """Initialize the sensor."""
         self.data = data
@@ -137,6 +162,8 @@ class CommandSensor(SensorEntity):
         self._attr_native_unit_of_measurement = unit_of_measurement
         self._value_template = value_template
         self._attr_unique_id = unique_id if unique_id else entry_id
+        self._attr_device_class = device_class
+        self._attr_state_class = state_class
 
     def update(self) -> None:
         """Get the latest data and updates the state."""
