@@ -353,7 +353,6 @@ async def async_setup_coordinated_entry(hass, config_entry, async_add_entities):
         if description.feature & device_features:
             entities.append(
                 XiaomiGenericCoordinatedSwitch(
-                    f"{config_entry.title} {description.name}",
                     device,
                     config_entry,
                     f"{description.key}_{unique_id}",
@@ -490,9 +489,9 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
 
     entity_description: XiaomiMiioSwitchDescription
 
-    def __init__(self, name, device, entry, unique_id, coordinator, description):
+    def __init__(self, device, entry, unique_id, coordinator, description):
         """Initialize the plug switch."""
-        super().__init__(name, device, entry, unique_id, coordinator)
+        super().__init__(device, entry, unique_id, coordinator)
 
         self._attr_is_on = self._extract_value_from_attribute(
             self.coordinator.data, description.key

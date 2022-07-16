@@ -158,7 +158,6 @@ def _setup_vacuum_sensors(hass, config_entry, async_add_entities):
             continue
         entities.append(
             XiaomiGenericBinarySensor(
-                f"{config_entry.title} {description.name}",
                 device,
                 config_entry,
                 f"{sensor}_{config_entry.unique_id}",
@@ -199,7 +198,6 @@ async def async_setup_entry(
                 continue
             entities.append(
                 XiaomiGenericBinarySensor(
-                    f"{config_entry.title} {description.name}",
                     hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE],
                     config_entry,
                     f"{description.key}_{config_entry.unique_id}",
@@ -216,9 +214,9 @@ class XiaomiGenericBinarySensor(XiaomiCoordinatedMiioEntity, BinarySensorEntity)
 
     entity_description: XiaomiMiioBinarySensorDescription
 
-    def __init__(self, name, device, entry, unique_id, coordinator, description):
+    def __init__(self, device, entry, unique_id, coordinator, description):
         """Initialize the entity."""
-        super().__init__(name, device, entry, unique_id, coordinator)
+        super().__init__(device, entry, unique_id, coordinator)
 
         self.entity_description = description
         self._attr_entity_registry_enabled_default = (

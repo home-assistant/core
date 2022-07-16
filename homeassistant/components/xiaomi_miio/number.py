@@ -283,7 +283,6 @@ async def async_setup_entry(
 
             entities.append(
                 XiaomiNumberEntity(
-                    f"{config_entry.title} {description.name}",
                     device,
                     config_entry,
                     f"{description.key}_{config_entry.unique_id}",
@@ -298,9 +297,9 @@ async def async_setup_entry(
 class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
     """Representation of a generic Xiaomi attribute selector."""
 
-    def __init__(self, name, device, entry, unique_id, coordinator, description):
+    def __init__(self, device, entry, unique_id, coordinator, description):
         """Initialize the generic Xiaomi attribute selector."""
-        super().__init__(name, device, entry, unique_id, coordinator)
+        super().__init__(device, entry, unique_id, coordinator)
 
         self._attr_native_value = self._extract_value_from_attribute(
             coordinator.data, description.key

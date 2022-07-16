@@ -644,7 +644,6 @@ def _setup_vacuum_sensors(hass, config_entry, async_add_entities):
             continue
         entities.append(
             XiaomiGenericSensor(
-                f"{config_entry.title} {description.name}",
                 device,
                 config_entry,
                 f"{sensor}_{config_entry.unique_id}",
@@ -741,7 +740,6 @@ async def async_setup_entry(
                     continue
                 entities.append(
                     XiaomiGenericSensor(
-                        f"{config_entry.title} {description.name}",
                         device,
                         config_entry,
                         f"{sensor}_{config_entry.unique_id}",
@@ -758,9 +756,9 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
 
     entity_description: XiaomiMiioSensorDescription
 
-    def __init__(self, name, device, entry, unique_id, coordinator, description):
+    def __init__(self, device, entry, unique_id, coordinator, description):
         """Initialize the entity."""
-        super().__init__(name, device, entry, unique_id, coordinator)
+        super().__init__(device, entry, unique_id, coordinator)
         self.entity_description = description
         self._attr_unique_id = unique_id
         self._attr_native_value = self._determine_native_value()
