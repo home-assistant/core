@@ -32,6 +32,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     HTTP_BASIC_AUTHENTICATION,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry
 
 from tests.common import MockConfigEntry
@@ -686,6 +687,25 @@ async def test_migrate_existing_ids(hass) -> None:
 
     entity_entry = registry.async_get(entity_id)
     assert entity_entry.unique_id == new_unique_id
+
+
+async def test_migrate_none_entries(hass: HomeAssistant) -> None:
+    """Test that config entry fields assigned to None are removed #75265."""
+
+    test_data = TESTDATA_OPTIONS.copy()
+    test_data[CONF_STILL_IMAGE_URL] = None
+    test_data[CONF_CONTENT_TYPE] = "image/png"
+
+    mock_entry = MockConfigEntry(domain=DOMAIN, options=test_data, version=1)
+    mock_entry.add_to_hass(hass)
+    entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
+    assert entry.options[CONF_STILL_IMAGE_URL] is None
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.version == 2
+    assert CONF_STILL_IMAGE_URL not in entry.options
 
 
 @respx.mock

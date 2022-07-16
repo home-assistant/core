@@ -1,6 +1,7 @@
 """The generic component."""
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
@@ -10,6 +11,7 @@ from homeassistant.helpers import entity_registry as er
 
 DOMAIN = "generic"
 PLATFORMS = [Platform.CAMERA]
+_LOGGER = logging.getLogger(__name__)
 
 
 async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -30,6 +32,25 @@ async def _async_migrate_unique_ids(hass: HomeAssistant, entry: ConfigEntry) -> 
         return {"new_unique_id": entry.entry_id}
 
     await er.async_migrate_entries(hass, entry.entry_id, _async_migrator)
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate an old config entry."""
+
+    _LOGGER.debug("Migrating from version %s", entry.version)
+
+    if entry.version == 1:  # 1 -> 2: Eliminate 'None' for unused fields #75265.
+        entry.version = 2
+
+        data = entry.options.copy()
+        for key in list(data.keys()):
+            if data[key] is None:
+                del data[key]
+        hass.config_entries.async_update_entry(entry, options=data)
+
+    _LOGGER.info("Migration to version %s successful", entry.version)
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
