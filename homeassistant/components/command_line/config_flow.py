@@ -65,10 +65,6 @@ class CommandLineConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input:
 
-            json_attr_list: list[str] | None = user_input.get(CONF_JSON_ATTRIBUTES)
-            if json_attr_list in ([""], []):
-                json_attr_list = None
-                user_input[CONF_JSON_ATTRIBUTES] = json_attr_list
             user_input[CONF_COMMAND_TIMEOUT] = int(user_input[CONF_COMMAND_TIMEOUT])
 
             name = (
