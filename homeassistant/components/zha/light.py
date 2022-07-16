@@ -255,14 +255,6 @@ class BaseLight(LogMixin, light.LightEntity):
             and brightness_supported(self._attr_supported_color_modes)
         )
 
-        self.warning(
-            "WTF COLORS SHIT: %s temp: %s, my temp: %s, mode: %s",
-            new_color_provided_while_off,
-            temperature,
-            self._color_temp,
-            self._attr_color_mode,
-        )
-
         if (
             brightness is None
             and (self._off_with_transition or new_color_provided_while_off)
