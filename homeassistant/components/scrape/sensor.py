@@ -130,6 +130,7 @@ class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], TemplateSensor):
     """Representation of a web scrape sensor."""
 
     _attr_icon = ICON
+    _attr_has_entity_name = True
 
     def __init__(
         self,
