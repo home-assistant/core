@@ -2,6 +2,7 @@
 import asyncio
 from datetime import timedelta
 import json
+from typing import NamedTuple
 from unittest.mock import Mock, patch
 
 import pytest
@@ -460,3 +461,23 @@ async def test_changing_delayed_written_data(hass, store, hass_storage):
         "key": MOCK_KEY,
         "data": {"hello": "world"},
     }
+
+
+async def test_saving_load_round_trip(hass, tmpdir):
+    """Test saving and loading round trip."""
+    hass.config.config_dir = await hass.async_add_executor_job(
+        tmpdir.mkdir, "temp_storage"
+    )
+
+    class NamedTupleSubclass(NamedTuple):
+        """A NamedTuple subclass."""
+
+        name: str
+
+    nts = NamedTupleSubclass("a")
+    store = storage.Store(
+        hass, MOCK_VERSION_2, MOCK_KEY, minor_version=MOCK_MINOR_VERSION_1
+    )
+    await store.async_save(nts)
+    load = await store.async_load()
+    assert load == ["a"]
