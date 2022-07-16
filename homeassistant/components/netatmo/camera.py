@@ -105,7 +105,6 @@ class NetatmoCamera(NetatmoBase, Camera):
         self._quality = DEFAULT_QUALITY
         self._monitoring: bool | None = None
         self._light_state = None
-        self._attr_brand = MANUFACTURER
 
         self._publishers.extend(
             [
