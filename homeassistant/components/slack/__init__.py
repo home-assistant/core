@@ -1,4 +1,6 @@
 """The slack integration."""
+from __future__ import annotations
+
 import logging
 
 from aiohttp.client_exceptions import ClientError
@@ -14,7 +16,7 @@ from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DATA_CLIENT, DEFAULT_NAME, DOMAIN
+from .const import ATTR_URL, ATTR_USER_ID, DATA_CLIENT, DEFAULT_NAME, DOMAIN, SLACK_DATA
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,15 +45,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         res = await slack.auth_test()
-        slack.url = res["url"]
-        slack.user_id = res["user_id"]
     except (SlackApiError, ClientError) as ex:
         if isinstance(ex, SlackApiError) and ex.response["error"] == "invalid_auth":
             _LOGGER.error("Invalid API key")
             return False
         raise ConfigEntryNotReady("Error while setting up integration") from ex
-
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = entry.data | {DATA_CLIENT: slack}
+    data = {
+        DATA_CLIENT: slack,
+        ATTR_URL: res[ATTR_URL],
+        ATTR_USER_ID: res[ATTR_USER_ID],
+    }
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = entry.data | {SLACK_DATA: data}
 
     hass.async_create_task(
         discovery.async_load_platform(
@@ -76,14 +80,17 @@ class SlackEntity(Entity):
     _attr_attribution = "Data provided by Slack"
 
     def __init__(
-        self, client: WebClient, description: EntityDescription, entry: ConfigEntry
+        self,
+        data: dict[str, str | WebClient],
+        description: EntityDescription,
+        entry: ConfigEntry,
     ) -> None:
         """Initialize a Slack entity."""
-        self._client = client
+        self._client = data[DATA_CLIENT]
         self.entity_description = description
-        self._attr_unique_id = f"{description.key}_{client.user_id}"
+        self._attr_unique_id = f"{description.key}_{data[ATTR_USER_ID]}"
         self._attr_device_info = DeviceInfo(
-            configuration_url=client.url,
+            configuration_url=data[ATTR_URL],
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, entry.entry_id)},
             manufacturer=DEFAULT_NAME,

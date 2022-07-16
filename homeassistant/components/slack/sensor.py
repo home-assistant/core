@@ -1,6 +1,7 @@
-"""Slack platform for select component."""
-
+"""Slack platform for sensor component."""
 from __future__ import annotations
+
+from slack import WebClient
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -13,7 +14,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
 from . import SlackEntity
-from .const import ATTR_SNOOZE, DATA_CLIENT, DOMAIN
+from .const import ATTR_SNOOZE, DOMAIN, SLACK_DATA
 
 
 async def async_setup_entry(
@@ -25,7 +26,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             SlackSensorEntity(
-                hass.data[DOMAIN][entry.entry_id][DATA_CLIENT],
+                hass.data[DOMAIN][entry.entry_id][SLACK_DATA],
                 SensorEntityDescription(
                     key="do_not_disturb_until",
                     name="Do Not Disturb Until",
@@ -41,6 +42,8 @@ async def async_setup_entry(
 
 class SlackSensorEntity(SlackEntity, SensorEntity):
     """Representation of a Slack sensor."""
+
+    _client: WebClient
 
     async def async_update(self) -> None:
         """Get the latest status."""
