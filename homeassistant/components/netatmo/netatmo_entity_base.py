@@ -39,7 +39,7 @@ class NetatmoBase(Entity):
             signal_name = data_class[SIGNAL_NAME]
 
             if "home_id" in data_class:
-                await self.data_handler.register_data_class(
+                await self.data_handler.subscribe(
                     data_class["name"],
                     signal_name,
                     self.async_update_callback,
@@ -47,7 +47,7 @@ class NetatmoBase(Entity):
                 )
 
             elif data_class["name"] == PUBLICDATA_DATA_CLASS_NAME:
-                await self.data_handler.register_data_class(
+                await self.data_handler.subscribe(
                     data_class["name"],
                     signal_name,
                     self.async_update_callback,
@@ -58,13 +58,13 @@ class NetatmoBase(Entity):
                 )
 
             else:
-                await self.data_handler.register_data_class(
+                await self.data_handler.subscribe(
                     data_class["name"], signal_name, self.async_update_callback
                 )
 
             for sub in self.data_handler.data_classes[signal_name].subscriptions:
                 if sub is None:
-                    await self.data_handler.unregister_data_class(signal_name, None)
+                    await self.data_handler.unsubscribe(signal_name, None)
 
         registry = dr.async_get(self.hass)
         if device := registry.async_get_device({(DOMAIN, self._id)}):
@@ -77,7 +77,7 @@ class NetatmoBase(Entity):
         await super().async_will_remove_from_hass()
 
         for data_class in self._data_classes:
-            await self.data_handler.unregister_data_class(
+            await self.data_handler.unsubscribe(
                 data_class[SIGNAL_NAME], self.async_update_callback
             )
 

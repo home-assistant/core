@@ -127,7 +127,7 @@ async def async_setup_entry(
     for home_id in climate_topology.home_ids:
         signal_name = f"{CLIMATE_STATE_CLASS_NAME}-{home_id}"
 
-        await data_handler.register_data_class(
+        await data_handler.subscribe(
             CLIMATE_STATE_CLASS_NAME, signal_name, None, home_id=home_id
         )
 

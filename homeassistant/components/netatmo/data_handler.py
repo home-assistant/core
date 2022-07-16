@@ -107,7 +107,7 @@ class NetatmoDataHandler:
 
         await asyncio.gather(
             *[
-                self.register_data_class(data_class, data_class, None)
+                self.subscribe(data_class, data_class, None)
                 for data_class in (
                     CLIMATE_TOPOLOGY_CLASS_NAME,
                     CAMERA_DATA_CLASS_NAME,
@@ -180,7 +180,7 @@ class NetatmoDataHandler:
             if update_callback:
                 update_callback()
 
-    async def register_data_class(
+    async def subscribe(
         self,
         data_class_name: str,
         data_class_entry: str,
@@ -215,7 +215,7 @@ class NetatmoDataHandler:
         self._queue.append(self.data_classes[data_class_entry])
         _LOGGER.debug("Data class %s added", data_class_entry)
 
-    async def unregister_data_class(
+    async def unsubscribe(
         self, data_class_entry: str, update_callback: CALLBACK_TYPE | None
     ) -> None:
         """Unregister data class."""

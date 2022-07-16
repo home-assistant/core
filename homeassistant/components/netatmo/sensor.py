@@ -421,7 +421,7 @@ async def async_setup_entry(
                     )
                     continue
 
-            await data_handler.register_data_class(
+            await data_handler.subscribe(
                 PUBLICDATA_DATA_CLASS_NAME,
                 signal_name,
                 None,
@@ -787,7 +787,7 @@ class NetatmoPublicSensor(NetatmoBase, SensorEntity):
         if self.area == area:
             return
 
-        await self.data_handler.unregister_data_class(
+        await self.data_handler.unsubscribe(
             self._signal_name, self.async_update_callback
         )
 
@@ -806,7 +806,7 @@ class NetatmoPublicSensor(NetatmoBase, SensorEntity):
         ]
         self._mode = area.mode
         self._show_on_map = area.show_on_map
-        await self.data_handler.register_data_class(
+        await self.data_handler.subscribe(
             PUBLICDATA_DATA_CLASS_NAME,
             self._signal_name,
             self.async_update_callback,
