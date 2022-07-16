@@ -16,7 +16,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_UNIT_SYSTEM_IMPERIAL,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
     PERCENTAGE,
@@ -183,10 +182,8 @@ class BMWSensor(BMWBaseEntity, SensorEntity):
         self._attr_name = f"{vehicle.name} {description.key}"
         self._attr_unique_id = f"{vehicle.vin}-{description.key}"
 
-        if unit_system.name == CONF_UNIT_SYSTEM_IMPERIAL:
-            self._attr_native_unit_of_measurement = description.unit_imperial
-        else:
-            self._attr_native_unit_of_measurement = description.unit_metric
+        # Force metric system as BMW API apparently only returns metric values now
+        self._attr_native_unit_of_measurement = description.unit_metric
 
     @callback
     def _handle_coordinator_update(self) -> None:
