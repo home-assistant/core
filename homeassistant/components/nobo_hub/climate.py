@@ -25,7 +25,7 @@ from homeassistant.const import (
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
     EVENT_HOMEASSISTANT_STOP,
-    PRECISION_TENTHS,
+    PRECISION_HALVES,
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -168,7 +168,7 @@ class NoboZone(ClimateEntity):
 
     _attr_max_temp = MAX_TEMPERATURE
     _attr_min_temp = MIN_TEMPERATURE
-    _attr_precision = PRECISION_TENTHS
+    _attr_precision = PRECISION_HALVES
     _attr_preset_modes = PRESET_MODES
     # Need to poll to get preset change when in HVACMode.AUTO.
     _attr_should_poll = True
@@ -255,12 +255,18 @@ class NoboZone(ClimateEntity):
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
-        low = int(kwargs.get(ATTR_TARGET_TEMP_LOW))
-        high = int(kwargs.get(ATTR_TARGET_TEMP_HIGH))
-        if low > int(self._nobo.zones[self._id][ATTR_TEMP_COMFORT_C]):
-            low = int(self._nobo.zones[self._id][ATTR_TEMP_COMFORT_C])
-        if high < int(self._nobo.zones[self._id][ATTR_TEMP_ECO_C]):
-            high = int(self._nobo.zones[self._id][ATTR_TEMP_ECO_C])
+        low, high = None, None
+        if ATTR_TARGET_TEMP_LOW in kwargs:
+            low = int(kwargs.get(ATTR_TARGET_TEMP_LOW))
+        if ATTR_TARGET_TEMP_HIGH in kwargs:
+            high = int(kwargs.get(ATTR_TARGET_TEMP_HIGH))
+        if low is not None:
+            if high is not None:
+                low = min(low, high)
+            else:
+                low = min(low, int(self.target_temperature_high))
+        elif high is not None:
+            high = max(high, int(self.target_temperature_low))
         await self._nobo.async_update_zone(
             self._id, temp_comfort_c=high, temp_eco_c=low
         )
