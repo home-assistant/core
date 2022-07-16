@@ -228,8 +228,9 @@ class DenonDevice(MediaPlayerEntity):
             configuration_url=f"http://{config_entry.data[CONF_HOST]}/",
             identifiers={(DOMAIN, config_entry.unique_id)},
             manufacturer=config_entry.data[CONF_MANUFACTURER],
-            model=f"{config_entry.data[CONF_MODEL]}-{config_entry.data[CONF_TYPE]}",
+            model=config_entry.data[CONF_MODEL],
             name=config_entry.title,
+            hw_version=config_entry.data[CONF_TYPE],
         )
         self._attr_sound_mode_list = receiver.sound_mode_list
 
