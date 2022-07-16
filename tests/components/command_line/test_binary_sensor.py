@@ -134,6 +134,7 @@ async def test_return_code(caplog: LogCaptureFixture, hass: HomeAssistant) -> No
     """Test setting the state with a template."""
     await setup_test_entity(
         hass,
+        DOMAIN,
         {
             "command": "exit 33",
         },
