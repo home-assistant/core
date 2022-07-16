@@ -133,7 +133,8 @@ class NetatmoCamera(NetatmoBase, Camera):
         self._id = camera_id
         self._home_id = home_id
         self._device_name = self._data.get_camera(camera_id=camera_id)["name"]
-        self._attr_name = f"{MANUFACTURER} {self._device_name}"
+        self._attr_name = f"{self._device_name}"
+        self._attr_brand = MANUFACTURER
         self._model = camera_type
         self._netatmo_type = TYPE_SECURITY
         self._attr_unique_id = f"{self._id}-{self._model}"
@@ -218,11 +219,6 @@ class NetatmoCamera(NetatmoBase, Camera):
     def available(self) -> bool:
         """Return True if entity is available."""
         return bool(self._alim_status == "on" or self._status == "disconnected")
-
-    @property
-    def brand(self) -> str:
-        """Return the camera brand."""
-        return MANUFACTURER
 
     @property
     def motion_detection_enabled(self) -> bool:
