@@ -15,11 +15,21 @@
                 },
                 "description": "Home Assistant heeft meerdere Verisure-installaties gevonden in uw My Pages-account. Selecteer de installatie om toe te voegen aan Home Assistant."
             },
+            "mfa": {
+                "data": {
+                    "code": "Verificatiecode"
+                }
+            },
             "reauth_confirm": {
                 "data": {
                     "description": "Verifieer opnieuw met uw Verisure My Pages-account.",
                     "email": "E-mail",
                     "password": "Wachtwoord"
+                }
+            },
+            "reauth_mfa": {
+                "data": {
+                    "code": "Verificatiecode"
                 }
             },
             "user": {
