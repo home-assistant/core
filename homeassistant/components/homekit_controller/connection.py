@@ -224,6 +224,10 @@ class HKDevice:
         await self.async_process_entity_map()
 
         await self.async_ensure_available()
+
+        if not cache:
+            # If its missing from the cache, make sure we save it
+            self.async_save_entity_map()
         # If everything is up to date, we can create the entities
         # since we know the data is not stale.
         await self.async_add_new_entities()
