@@ -22,6 +22,7 @@ from .const import CONF_CHANNELS, DOMAIN
 from .data import (
     TwitchChannel,
     TwitchCoordinatorData,
+    TwitchFollower,
     TwitchResponse,
     TwitchStream,
     TwitchSubscription,
@@ -87,7 +88,7 @@ class TwitchUpdateCoordinator(DataUpdateCoordinator[TwitchCoordinatorData]):
                     followers_response.data is not None
                     and len(followers_response.data) > 0
                 ):
-                    channel.following_since = followers_response.data[0]["followed_at"]
+                    channel.following = TwitchFollower(**followers_response.data[0])
 
                 streams_response = TwitchResponse(
                     **self._client.get_streams(user_id=channel.id)

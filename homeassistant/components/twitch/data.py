@@ -18,7 +18,7 @@ class TwitchResponse:
     data: list[dict] | None = None
     error: str | None = None
     message: str | None = None
-    pagination: TwitchResponsePagination | None = None
+    pagination: dict | None = None
     status: str | None = None
     total: int | None = None
 
@@ -88,7 +88,7 @@ class TwitchChannel(TwitchUser):
     """Twitch Channel."""
 
     followers: int | None = None
-    following_since: str | None = None
+    following: TwitchFollower | None = None
     subscription: TwitchSubscription | None = None
     stream: TwitchStream | None = None
 

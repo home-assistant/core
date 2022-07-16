@@ -20,7 +20,7 @@ from homeassistant.helpers import config_entry_oauth2_flow
 import homeassistant.helpers.config_validation as cv
 
 from .const import CONF_CHANNELS, CONF_REFRESH_TOKEN, DOMAIN, OAUTH_SCOPES
-from .data import TwitchFollower, TwitchResponse
+from .data import TwitchFollower, TwitchResponse, TwitchResponsePagination
 
 
 async def get_user(
@@ -64,9 +64,11 @@ async def get_followed_channels(
                 )
             if (
                 followers_response.pagination is not None
-                and followers_response.pagination.cursor is not None
+                and followers_response.pagination != {}
             ):
-                cursor = followers_response.pagination.cursor
+                cursor = TwitchResponsePagination(
+                    **followers_response.pagination
+                ).cursor
             else:
                 break
     except TwitchAuthorizationException:

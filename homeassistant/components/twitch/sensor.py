@@ -90,7 +90,9 @@ def _twitch_channel_attributes(
         if channel.subscription
         else None,
         ATTR_FOLLOWERS: channel.followers,
-        ATTR_FOLLOWING_SINCE: channel.following_since,
+        ATTR_FOLLOWING_SINCE: channel.following.followed_at
+        if channel.following
+        else None,
         ATTR_VIEWS: channel.stream.viewer_count if channel.stream is not None else None,
     }
 
