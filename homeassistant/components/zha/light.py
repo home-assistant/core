@@ -330,8 +330,8 @@ class BaseLight(LogMixin, light.LightEntity):
         if hs_color is not None:
             xy_color = color_util.color_hs_to_xy(*hs_color)
             result = await self._color_channel.move_to_color(
-                int(xy_color[0] * 65535),
-                int(xy_color[1] * 65535),
+                int(xy_color[0] * 65536),
+                int(xy_color[1] * 65536),
                 self._DEFAULT_MIN_TRANSITION_TIME
                 if new_color_provided_while_off
                 else duration,
@@ -455,7 +455,7 @@ class Light(BaseLight, ZhaEntity):
                 curr_y = self._color_channel.current_y
                 if curr_x is not None and curr_y is not None:
                     self._hs_color = color_util.color_xy_to_hs(
-                        float(curr_x / 65535), float(curr_y / 65535)
+                        float(curr_x / 65536), float(curr_y / 65536)
                     )
                 else:
                     self._hs_color = (0, 0)
@@ -588,7 +588,7 @@ class Light(BaseLight, ZhaEntity):
                     color_y = results.get("current_y")
                     if color_x is not None and color_y is not None:
                         self._hs_color = color_util.color_xy_to_hs(
-                            float(color_x / 65535), float(color_y / 65535)
+                            float(color_x / 65536), float(color_y / 65536)
                         )
                         self._color_temp = None
 
