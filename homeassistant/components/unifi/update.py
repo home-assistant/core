@@ -72,13 +72,14 @@ class UniFiDeviceUpdateEntity(UniFiBase, UpdateEntity):
     DOMAIN = DOMAIN
     TYPE = DEVICE_UPDATE
     _attr_device_class = UpdateDeviceClass.FIRMWARE
-    _attr_supported_features = UpdateEntityFeature.PROGRESS
 
     def __init__(self, device, controller):
         """Set up device update entity."""
         super().__init__(device, controller)
 
         self.device = self._item
+
+        self._attr_supported_features = UpdateEntityFeature.PROGRESS
 
         if self.controller.site_role == "admin":
             self._attr_supported_features |= UpdateEntityFeature.INSTALL
