@@ -15,8 +15,11 @@ class TwitchResponsePagination:
 class TwitchResponse:
     """Twitch Response."""
 
-    data: list[dict]
+    data: list[dict] | None = None
+    error: str | None = None
+    message: str | None = None
     pagination: TwitchResponsePagination | None = None
+    status: str | None = None
     total: int | None = None
 
 
@@ -25,16 +28,19 @@ class TwitchStream:
     """Twitch Stream."""
 
     id: str
-    user_id: str
-    user_name: str
     game_id: str
-    type: str
-    title: str
-    viewer_count: int
-    started_at: str
+    game_name: str
+    is_mature: bool
     language: str
-    thumbnail_url: str
+    started_at: str
     tag_ids: list[str]
+    thumbnail_url: str
+    title: str
+    type: str
+    user_id: str
+    user_login: str
+    user_name: str
+    viewer_count: int
 
 
 @dataclass
@@ -57,8 +63,8 @@ class TwitchUser:
 class TwitchChannel(TwitchUser):
     """Twitch Channel."""
 
-    followers: int
-    subscriptions: TwitchResponse
+    followers: int | None = None
+    subscriptions: list[dict] | None = None
     stream: TwitchStream | None = None
 
 

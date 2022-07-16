@@ -19,7 +19,13 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_CHANNELS, DOMAIN
-from .data import TwitchChannel, TwitchCoordinatorData, TwitchResponse, TwitchUser
+from .data import (
+    TwitchChannel,
+    TwitchCoordinatorData,
+    TwitchResponse,
+    TwitchStream,
+    TwitchUser,
+)
 
 
 class TwitchUpdateCoordinator(DataUpdateCoordinator[TwitchCoordinatorData]):
@@ -47,26 +53,37 @@ class TwitchUpdateCoordinator(DataUpdateCoordinator[TwitchCoordinatorData]):
     def _async_get_data_threaded(self) -> TwitchCoordinatorData:
         """Return data from the coordinator."""
         user_response = TwitchResponse(**self._client.get_users())
-        user: TwitchUser = TwitchUser(**user_response.data[0])
+        if user_response.data is not None and len(user_response.data) > 0:
+            user = TwitchUser(**user_response.data[0])
 
         channels = []
-        channels_response: TwitchResponse = TwitchResponse(
+        channels_response = TwitchResponse(
             **(self._client.get_users(user_ids=self._options[CONF_CHANNELS]))
         )
-        for channel in channels_response.data:
-            streams = (self._client.get_streams(user_id=channel["id"]))["data"]
-            twitch_channel = TwitchChannel(
-                **channel,
-                followers=self._client.get_users_follows(to_id=channel["id"])["total"],
-                subscriptions=TwitchResponse(
-                    **self._client.check_user_subscription(
-                        user_id=user.id, broadcaster_id=channel["id"]
-                    )
-                ),
-                stream=streams[0] if streams is not None and len(streams) > 0 else None,
-            )
 
-            channels.append(twitch_channel)
+        if channels_response.data is not None and len(channels_response.data) > 0:
+            for channel in [
+                TwitchChannel(**channel) for channel in channels_response.data
+            ]:
+                subscriptions = TwitchResponse(
+                    **self._client.check_user_subscription(
+                        user_id=user.id, broadcaster_id=channel.id
+                    )
+                )
+                channel.subscriptions = subscriptions.data
+
+                followers_response = TwitchResponse(
+                    **self._client.get_users_follows(to_id=channel.id)
+                )
+                channel.followers = followers_response.total
+
+                streams_response = TwitchResponse(
+                    **self._client.get_streams(user_id=channel.id)
+                )
+                if streams_response.data is not None and len(streams_response.data) > 0:
+                    channel.stream = TwitchStream(**streams_response.data[0])
+
+                channels.append(channel)
 
         self.logger.debug("Channels: %s", channels)
         self.logger.debug("User: %s", user)
