@@ -12,6 +12,11 @@ BLUETOOTH: list[dict[str, str | int]] = [
         "local_name": "GVH5*"
     },
     {
+        "domain": "homekit_controller",
+        "manufacturer_id": 76,
+        "manufacturer_data_first_byte": 6
+    },
+    {
         "domain": "inkbird",
         "local_name": "sps"
     },
