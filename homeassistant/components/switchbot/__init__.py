@@ -9,6 +9,7 @@ from homeassistant.core import HomeAssistant
 from .const import (
     ATTR_BOT,
     ATTR_CURTAIN,
+    ATTR_HYGROMETER,
     COMMON_OPTIONS,
     CONF_RETRY_COUNT,
     CONF_RETRY_TIMEOUT,
@@ -26,6 +27,7 @@ from .coordinator import SwitchbotDataUpdateCoordinator
 PLATFORMS_BY_TYPE = {
     ATTR_BOT: [Platform.SWITCH, Platform.SENSOR],
     ATTR_CURTAIN: [Platform.COVER, Platform.BINARY_SENSOR, Platform.SENSOR],
+    ATTR_HYGROMETER: [Platform.SENSOR],
 }
 
 
