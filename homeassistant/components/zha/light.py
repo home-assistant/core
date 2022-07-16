@@ -336,7 +336,6 @@ class BaseLight(LogMixin, light.LightEntity):
             self._hs_color = None
 
         if hs_color is not None:
-            hs_color = kwargs[light.ATTR_HS_COLOR]
             xy_color = color_util.color_hs_to_xy(*hs_color)
             result = await self._color_channel.move_to_color(
                 int(xy_color[0] * 65535),
