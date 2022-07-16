@@ -7,6 +7,7 @@ from typing import Any
 
 import aiohomekit
 from aiohomekit.controller.abstract import AbstractPairing
+from aiohomekit.controller.ble.manufacturer_data import HomeKitAdvertisement
 from aiohomekit.exceptions import AuthenticationError
 from aiohomekit.utils import domain_supported, domain_to_name
 import voluptuous as vol
@@ -112,8 +113,10 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             key = user_input["device"]
             self.hkid = self.devices[key].description.id
-            self.model = self.devices[key].description.model
-            self.name = self.devices[key].description.name
+            self.model = getattr(
+                self.devices[key].description, "model", "Bluetooth device"
+            )
+            self.name = self.devices[key].description.name or "Bluetooth device"
 
             await self.async_set_unique_id(
                 normalize_hkid(self.hkid), raise_on_progress=False
@@ -331,6 +334,42 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # We want to show the pairing form - but don't call async_step_pair
         # directly as it has side effects (will ask the device to show a
         # pairing code)
+        return self._async_step_pair_show_form()
+
+    async def async_step_bluetooth(
+        self, discovery_info: bluetooth.BluetoothServiceInfo
+    ) -> FlowResult:
+        """Handle the bluetooth discovery step."""
+        if not aiohomekit.const.BLE_TRANSPORT_SUPPORTED:
+            return self.async_abort(reason="ignored_model")
+
+        await self.async_set_unique_id(discovery_info.address)
+        self._abort_if_unique_id_configured()
+
+        mfr_data = discovery_info.manufacturer_data
+
+        try:
+            device = HomeKitAdvertisement.from_manufacturer_data(
+                discovery_info.name, discovery_info.address, mfr_data
+            )
+        except ValueError:
+            return self.async_abort(reason="ignored_model")
+
+        if self.controller is None:
+            await self._async_setup_controller()
+
+        try:
+            device = await self.controller.async_find(device.id)
+        except aiohomekit.AccessoryNotFoundError:
+            return self.async_abort(reason="accessory_not_found_error")
+
+        if device.paired:
+            return self.async_abort(reason="already_paired")
+
+        self.name = device.description.name
+        self.model = "Bluetooth device"
+        self.hkid = device.description.id
+
         return self._async_step_pair_show_form()
 
     async def async_step_pair(self, pair_info=None):
