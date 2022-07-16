@@ -40,18 +40,28 @@ async def get_user(
 async def get_followed_channels(
     hass: HomeAssistant,
     client: Twitch,
-    user_id: str,
+    user: TwitchUser,
 ) -> list[TwitchFollower]:
     """Return a list of channels the user is following."""
     cursor = None
-    channels: list[TwitchFollower] = []
+    channels: list[TwitchFollower] = [
+        TwitchFollower(
+            from_id=user.id,
+            from_login=user.login,
+            from_name=user.display_name,
+            to_id=user.id,
+            to_login=user.login,
+            to_name=user.display_name,
+            followed_at=user.created_at,
+        ),
+    ]
     while True:
         followers_response = TwitchResponse(
             **await hass.async_add_executor_job(
                 client.get_users_follows,
                 cursor,
                 100,
-                user_id,
+                user.id,
             )
         )
 
@@ -155,7 +165,7 @@ class OAuth2FlowHandler(
                 channels = await get_followed_channels(
                     self.hass,
                     self._client,
-                    user.id,
+                    user,
                 )
             except (TwitchAPIException, TwitchBackendException) as err:
                 self.logger.error("Twitch API error: %s", err)
@@ -239,7 +249,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 channels = await get_followed_channels(
                     self.hass,
                     client,
-                    self.config_entry.data["user"]["id"],
+                    TwitchUser(**self.config_entry.data["user"]),
                 )
             except TwitchAuthorizationException as err:
                 self.logger.error("Authorization error: %s", err)
