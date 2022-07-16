@@ -30,6 +30,7 @@ from homeassistant.components import media_source, zeroconf
 from homeassistant.components.media_player import (
     BrowseError,
     BrowseMedia,
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     async_process_play_media_url,
@@ -273,6 +274,7 @@ class CastDevice:
 class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
     """Representation of a Cast device on the network."""
 
+    _attr_has_entity_name = True
     _attr_should_poll = False
     _attr_media_image_remotely_accessible = True
     _mz_only = False
@@ -292,13 +294,18 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
 
         self._cast_view_remove_handler = None
         self._attr_unique_id = str(cast_info.uuid)
-        self._attr_name = cast_info.friendly_name
         self._attr_device_info = DeviceInfo(
             identifiers={(CAST_DOMAIN, str(cast_info.uuid).replace("-", ""))},
             manufacturer=str(cast_info.cast_info.manufacturer),
             model=cast_info.cast_info.model_name,
             name=str(cast_info.friendly_name),
         )
+
+        if cast_info.cast_info.cast_type in [
+            pychromecast.const.CAST_TYPE_AUDIO,
+            pychromecast.const.CAST_TYPE_GROUP,
+        ]:
+            self._attr_device_class = MediaPlayerDeviceClass.SPEAKER
 
     async def async_added_to_hass(self):
         """Create chromecast object when added to hass."""
@@ -434,6 +441,19 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
                 connection_status.status,
             )
             self._attr_available = new_available
+            if new_available and not self._cast_info.is_audio_group:
+                # Poll current group status
+                for group_uuid in self.mz_mgr.get_multizone_memberships(
+                    self._cast_info.uuid
+                ):
+                    group_media_controller = self.mz_mgr.get_multizone_mediacontroller(
+                        group_uuid
+                    )
+                    if not group_media_controller:
+                        continue
+                    self.multizone_new_media_status(
+                        group_uuid, group_media_controller.status
+                    )
             self.schedule_update_ha_state()
 
     def multizone_new_media_status(self, group_uuid, media_status):
@@ -605,7 +625,9 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         """Play a piece of media."""
         # Handle media_source
         if media_source.is_media_source_id(media_id):
-            sourced_media = await media_source.async_resolve_media(self.hass, media_id)
+            sourced_media = await media_source.async_resolve_media(
+                self.hass, media_id, self.entity_id
+            )
             media_type = sourced_media.mime_type
             media_id = sourced_media.url
 

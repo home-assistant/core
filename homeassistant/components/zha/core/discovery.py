@@ -6,7 +6,7 @@ from collections.abc import Callable
 import logging
 from typing import TYPE_CHECKING
 
-from homeassistant import const as ha_const
+from homeassistant.const import CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -86,9 +86,7 @@ class ProbeEndpoint:
 
         unique_id = channel_pool.unique_id
 
-        component: str | None = self._device_configs.get(unique_id, {}).get(
-            ha_const.CONF_TYPE
-        )
+        component: str | None = self._device_configs.get(unique_id, {}).get(CONF_TYPE)
         if component is None:
             ep_profile_id = channel_pool.endpoint.profile_id
             ep_device_type = channel_pool.endpoint.device_type
@@ -136,7 +134,7 @@ class ProbeEndpoint:
 
     @staticmethod
     def probe_single_cluster(
-        component: str,
+        component: Platform | None,
         channel: base.ZigbeeChannel,
         ep_channels: ChannelPool,
     ) -> None:

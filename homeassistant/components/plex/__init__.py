@@ -14,7 +14,7 @@ from plexwebsocket import (
 import requests.exceptions
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN, BrowseError
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL, CONF_VERIFY_SSL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -139,12 +139,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry, data={**entry.data, PLEX_SERVER_CONFIG: new_server_data}
         )
     except requests.exceptions.ConnectionError as error:
-        if entry.state is not ConfigEntryState.SETUP_RETRY:
-            _LOGGER.error(
-                "Plex server (%s) could not be reached: [%s]",
-                server_config[CONF_URL],
-                error,
-            )
         raise ConfigEntryNotReady from error
     except plexapi.exceptions.Unauthorized as ex:
         raise ConfigEntryAuthFailed(
@@ -221,7 +215,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     hass.data[PLEX_DOMAIN][WEBSOCKETS][server_id] = websocket
 
-    def start_websocket_session(platform, _):
+    def start_websocket_session(platform):
         hass.data[PLEX_DOMAIN][PLATFORMS_COMPLETED][server_id].add(platform)
         if hass.data[PLEX_DOMAIN][PLATFORMS_COMPLETED][server_id] == PLATFORMS:
             hass.loop.create_task(websocket.listen())
@@ -234,11 +228,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     hass.data[PLEX_DOMAIN][DISPATCHERS][server_id].append(unsub)
 
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
     for platform in PLATFORMS:
-        task = hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
-        task.add_done_callback(partial(start_websocket_session, platform))
+        start_websocket_session(platform)
 
     async_cleanup_plex_devices(hass, entry)
 

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Iterable
+from concurrent.futures import CancelledError
 import contextlib
 from datetime import datetime, timedelta
 import logging
@@ -35,6 +36,8 @@ from homeassistant.helpers.event import (
     async_track_time_interval,
     async_track_utc_time_change,
 )
+from homeassistant.helpers.json import JSON_ENCODE_EXCEPTIONS
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 import homeassistant.util.dt as dt_util
 
 from . import migration, statistics
@@ -46,17 +49,19 @@ from .const import (
     SQLITE_URL_PREFIX,
     SupportedDialect,
 )
-from .executor import DBInterruptibleThreadPoolExecutor
-from .models import (
+from .db_schema import (
     SCHEMA_VERSION,
     Base,
     EventData,
     Events,
     StateAttributes,
     States,
+    StatisticsRuns,
+)
+from .executor import DBInterruptibleThreadPoolExecutor
+from .models import (
     StatisticData,
     StatisticMetaData,
-    StatisticsRuns,
     UnsupportedDialect,
     process_timestamp,
 )
@@ -461,10 +466,18 @@ class Recorder(threading.Thread):
 
     @callback
     def async_update_statistics_metadata(
-        self, statistic_id: str, unit_of_measurement: str | None
+        self,
+        statistic_id: str,
+        *,
+        new_statistic_id: str | UndefinedType = UNDEFINED,
+        new_unit_of_measurement: str | None | UndefinedType = UNDEFINED,
     ) -> None:
         """Update statistics metadata for a statistic_id."""
-        self.queue_task(UpdateStatisticsMetadataTask(statistic_id, unit_of_measurement))
+        self.queue_task(
+            UpdateStatisticsMetadataTask(
+                statistic_id, new_statistic_id, new_unit_of_measurement
+            )
+        )
 
     @callback
     def async_external_statistics(
@@ -509,9 +522,16 @@ class Recorder(threading.Thread):
 
     def _wait_startup_or_shutdown(self) -> object | None:
         """Wait for startup or shutdown before starting."""
-        return asyncio.run_coroutine_threadsafe(
-            self._async_wait_for_started(), self.hass.loop
-        ).result()
+        try:
+            return asyncio.run_coroutine_threadsafe(
+                self._async_wait_for_started(), self.hass.loop
+            ).result()
+        except CancelledError as ex:
+            _LOGGER.warning(
+                "Recorder startup was externally canceled before it could complete: %s",
+                ex,
+            )
+            return SHUTDOWN_TASK
 
     def run(self) -> None:
         """Start processing events to save."""
@@ -735,11 +755,12 @@ class Recorder(threading.Thread):
             return
 
         try:
-            shared_data = EventData.shared_data_from_event(event)
-        except (TypeError, ValueError) as ex:
+            shared_data_bytes = EventData.shared_data_bytes_from_event(event)
+        except JSON_ENCODE_EXCEPTIONS as ex:
             _LOGGER.warning("Event is not JSON serializable: %s: %s", event, ex)
             return
 
+        shared_data = shared_data_bytes.decode("utf-8")
         # Matching attributes found in the pending commit
         if pending_event_data := self._pending_event_data.get(shared_data):
             dbevent.event_data_rel = pending_event_data
@@ -747,7 +768,7 @@ class Recorder(threading.Thread):
         elif data_id := self._event_data_ids.get(shared_data):
             dbevent.data_id = data_id
         else:
-            data_hash = EventData.hash_shared_data(shared_data)
+            data_hash = EventData.hash_shared_data_bytes(shared_data_bytes)
             # Matching attributes found in the database
             if data_id := self._find_shared_data_in_db(data_hash, shared_data):
                 self._event_data_ids[shared_data] = dbevent.data_id = data_id
@@ -766,10 +787,10 @@ class Recorder(threading.Thread):
         assert self.event_session is not None
         try:
             dbstate = States.from_event(event)
-            shared_attrs = StateAttributes.shared_attrs_from_event(
+            shared_attrs_bytes = StateAttributes.shared_attrs_bytes_from_event(
                 event, self._exclude_attributes_by_domain
             )
-        except (TypeError, ValueError) as ex:
+        except JSON_ENCODE_EXCEPTIONS as ex:
             _LOGGER.warning(
                 "State is not JSON serializable: %s: %s",
                 event.data.get("new_state"),
@@ -777,6 +798,7 @@ class Recorder(threading.Thread):
             )
             return
 
+        shared_attrs = shared_attrs_bytes.decode("utf-8")
         dbstate.attributes = None
         # Matching attributes found in the pending commit
         if pending_attributes := self._pending_state_attributes.get(shared_attrs):
@@ -785,7 +807,7 @@ class Recorder(threading.Thread):
         elif attributes_id := self._state_attributes_ids.get(shared_attrs):
             dbstate.attributes_id = attributes_id
         else:
-            attr_hash = StateAttributes.hash_shared_attrs(shared_attrs)
+            attr_hash = StateAttributes.hash_shared_attrs_bytes(shared_attrs_bytes)
             # Matching attributes found in the database
             if attributes_id := self._find_shared_attr_in_db(attr_hash, shared_attrs):
                 dbstate.attributes_id = attributes_id

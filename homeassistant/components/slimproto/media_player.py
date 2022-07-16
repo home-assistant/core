@@ -74,6 +74,7 @@ async def async_setup_entry(
 class SlimProtoPlayer(MediaPlayerEntity):
     """Representation of MediaPlayerEntity from SlimProto Player."""
 
+    _attr_has_entity_name = True
     _attr_should_poll = False
     _attr_supported_features = (
         MediaPlayerEntityFeature.PAUSE
@@ -139,7 +140,6 @@ class SlimProtoPlayer(MediaPlayerEntity):
     @callback
     def update_attributes(self) -> None:
         """Handle player updates."""
-        self._attr_name = self.player.name
         self._attr_volume_level = self.player.volume_level / 100
         self._attr_media_position = self.player.elapsed_seconds
         self._attr_media_position_updated_at = utcnow()
@@ -180,7 +180,9 @@ class SlimProtoPlayer(MediaPlayerEntity):
         to_send_media_type: str | None = media_type
         # Handle media_source
         if media_source.is_media_source_id(media_id):
-            sourced_media = await media_source.async_resolve_media(self.hass, media_id)
+            sourced_media = await media_source.async_resolve_media(
+                self.hass, media_id, self.entity_id
+            )
             media_id = sourced_media.url
             to_send_media_type = sourced_media.mime_type
 

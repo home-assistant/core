@@ -7,7 +7,7 @@ from contextlib import suppress
 from ssl import SSLContext
 import sys
 from types import MappingProxyType
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import aiohttp
 from aiohttp import web
@@ -22,6 +22,11 @@ from homeassistant.loader import bind_hass
 from homeassistant.util import ssl as ssl_util
 
 from .frame import warn_use
+from .json import json_dumps, json_loads
+
+if TYPE_CHECKING:
+    from aiohttp.typedefs import JSONDecoder
+
 
 DATA_CONNECTOR = "aiohttp_connector"
 DATA_CONNECTOR_NOTVERIFY = "aiohttp_connector_notverify"
@@ -32,6 +37,19 @@ SERVER_SOFTWARE = "HomeAssistant/{0} aiohttp/{1} Python/{2[0]}.{2[1]}".format(
 )
 
 WARN_CLOSE_MSG = "closes the Home Assistant aiohttp session"
+
+
+class HassClientResponse(aiohttp.ClientResponse):
+    """aiohttp.ClientResponse with a json method that uses json_loads by default."""
+
+    async def json(
+        self,
+        *args: Any,
+        loads: JSONDecoder = json_loads,
+        **kwargs: Any,
+    ) -> Any:
+        """Send a json request and parse the json response."""
+        return await super().json(*args, loads=loads, **kwargs)
 
 
 @callback
@@ -97,6 +115,8 @@ def _async_create_clientsession(
     """Create a new ClientSession with kwargs, i.e. for cookies."""
     clientsession = aiohttp.ClientSession(
         connector=_async_get_connector(hass, verify_ssl),
+        json_serialize=json_dumps,
+        response_class=HassClientResponse,
         **kwargs,
     )
     # Prevent packages accidentally overriding our default headers

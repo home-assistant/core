@@ -65,15 +65,10 @@ async def async_setup_entry(
             for description in ENTITY_DESCRIPTIONS.get(PydeconzScene, [])
         )
 
-    config_entry.async_on_unload(
-        gateway.api.scenes.subscribe(
-            async_add_scene,
-            EventType.ADDED,
-        )
+    gateway.register_platform_add_device_callback(
+        async_add_scene,
+        gateway.api.scenes,
     )
-
-    for scene_id in gateway.api.scenes:
-        async_add_scene(EventType.ADDED, scene_id)
 
 
 class DeconzButton(DeconzSceneMixin, ButtonEntity):
@@ -95,8 +90,11 @@ class DeconzButton(DeconzSceneMixin, ButtonEntity):
 
     async def async_press(self) -> None:
         """Store light states into scene."""
-        async_button_fn = getattr(self._device, self.entity_description.button_fn)
-        await async_button_fn()
+        async_button_fn = getattr(
+            self.gateway.api.scenes,
+            self.entity_description.button_fn,
+        )
+        await async_button_fn(self._device.group_id, self._device.id)
 
     def get_device_identifier(self) -> str:
         """Return a unique identifier for this scene."""

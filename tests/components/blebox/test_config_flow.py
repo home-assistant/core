@@ -77,8 +77,8 @@ async def test_flow_works(hass, valid_feature_mock, flow_feature_mock):
 @pytest.fixture(name="product_class_mock")
 def product_class_mock_fixture():
     """Return a mocked feature."""
-    path = "homeassistant.components.blebox.config_flow.Products"
-    patcher = patch(path, DEFAULT, blebox_uniapi.products.Products, True, True)
+    path = "homeassistant.components.blebox.config_flow.Box"
+    patcher = patch(path, DEFAULT, blebox_uniapi.box.Box, True, True)
     yield patcher
 
 
@@ -159,7 +159,7 @@ async def test_already_configured(hass, valid_feature_mock):
         context={"source": config_entries.SOURCE_USER},
         data={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "address_already_configured"
 
 

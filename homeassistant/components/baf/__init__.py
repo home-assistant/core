@@ -14,7 +14,14 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from .const import DOMAIN, QUERY_INTERVAL, RUN_TIMEOUT
 from .models import BAFData
 
-PLATFORMS: list[Platform] = [Platform.FAN, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS: list[Platform] = [
+    Platform.CLIMATE,
+    Platform.FAN,
+    Platform.LIGHT,
+    Platform.NUMBER,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -32,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(f"Timed out connecting to {ip_address}") from ex
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = BAFData(device, run_future)
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

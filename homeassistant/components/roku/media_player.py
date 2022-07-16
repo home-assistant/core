@@ -99,7 +99,15 @@ async def async_setup_entry(
     """Set up the Roku config entry."""
     coordinator: RokuDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     unique_id = coordinator.data.info.serial_number
-    async_add_entities([RokuMediaPlayer(unique_id, coordinator)], True)
+    async_add_entities(
+        [
+            RokuMediaPlayer(
+                device_id=unique_id,
+                coordinator=coordinator,
+            )
+        ],
+        True,
+    )
 
     platform = entity_platform.async_get_current_platform()
 
@@ -126,18 +134,6 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         | MediaPlayerEntityFeature.TURN_OFF
         | MediaPlayerEntityFeature.BROWSE_MEDIA
     )
-
-    def __init__(
-        self, unique_id: str | None, coordinator: RokuDataUpdateCoordinator
-    ) -> None:
-        """Initialize the Roku device."""
-        super().__init__(
-            coordinator=coordinator,
-            device_id=unique_id,
-        )
-
-        self._attr_name = coordinator.data.info.name
-        self._attr_unique_id = unique_id
 
     def _media_playback_trackable(self) -> bool:
         """Detect if we have enough media data to track playback."""
@@ -384,7 +380,9 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
 
         # Handle media_source
         if media_source.is_media_source_id(media_id):
-            sourced_media = await media_source.async_resolve_media(self.hass, media_id)
+            sourced_media = await media_source.async_resolve_media(
+                self.hass, media_id, self.entity_id
+            )
             media_type = MEDIA_TYPE_URL
             media_id = sourced_media.url
             mime_type = sourced_media.mime_type

@@ -204,7 +204,7 @@ async def test_options_migration(hass):
             entry.entry_id, context={"source": config_entries.SOURCE_USER}, data=None
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "init"
 
         result = await hass.config_entries.options.async_configure(
@@ -212,7 +212,7 @@ async def test_options_migration(hass):
             user_input={},
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["data"][CONF_READ_PRECISION] == PRECISION_TENTHS
         assert result["data"][CONF_SET_PRECISION] == PRECISION_TENTHS
         assert result["data"][CONF_FLOOR_TEMP] is True
@@ -243,7 +243,7 @@ async def test_options_form(hass):
     result = await hass.config_entries.options.async_init(
         entry.entry_id, context={"source": "test"}, data=None
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
@@ -256,7 +256,7 @@ async def test_options_form(hass):
         },
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_READ_PRECISION] == PRECISION_HALVES
     assert result["data"][CONF_SET_PRECISION] == PRECISION_HALVES
     assert result["data"][CONF_TEMPORARY_OVRD_MODE] is True
@@ -270,7 +270,7 @@ async def test_options_form(hass):
         result["flow_id"], user_input={CONF_READ_PRECISION: 0}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_READ_PRECISION] == 0.0
     assert result["data"][CONF_SET_PRECISION] == PRECISION_HALVES
     assert result["data"][CONF_TEMPORARY_OVRD_MODE] is True
@@ -290,7 +290,7 @@ async def test_options_form(hass):
         },
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_READ_PRECISION] == PRECISION_TENTHS
     assert result["data"][CONF_SET_PRECISION] == PRECISION_HALVES
     assert result["data"][CONF_TEMPORARY_OVRD_MODE] is False

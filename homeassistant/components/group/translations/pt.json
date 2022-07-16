@@ -3,8 +3,21 @@
         "step": {
             "media_player": {
                 "data": {
-                    "entities": "Membros",
-                    "name": "Nome"
+                    "entities": "Membros"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "fan": {
+                "data": {
+                    "hide_members": "Esconder membros"
+                }
+            },
+            "switch": {
+                "data": {
+                    "hide_members": "Esconder membros"
                 }
             }
         }

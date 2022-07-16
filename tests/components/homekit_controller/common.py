@@ -186,6 +186,13 @@ async def setup_platform(hass):
 async def setup_test_accessories(hass, accessories):
     """Load a fake homekit device based on captured JSON profile."""
     fake_controller = await setup_platform(hass)
+    return await setup_test_accessories_with_controller(
+        hass, accessories, fake_controller
+    )
+
+
+async def setup_test_accessories_with_controller(hass, accessories, fake_controller):
+    """Load a fake homekit device based on captured JSON profile."""
 
     pairing_id = "00:00:00:00:00:00"
 
@@ -224,7 +231,7 @@ async def device_config_changed(hass, accessories):
         host="127.0.0.1",
         addresses=["127.0.0.1"],
         hostname="mock_hostname",
-        name="TestDevice",
+        name="TestDevice._hap._tcp.local.",
         port=8080,
         properties={
             "md": "TestDevice",
@@ -372,3 +379,17 @@ async def assert_devices_and_entities_created(
 
     # Root device must not have a via, otherwise its not the device
     assert root_device.via_device_id is None
+
+
+async def remove_device(ws_client, device_id, config_entry_id):
+    """Remove config entry from a device."""
+    await ws_client.send_json(
+        {
+            "id": 5,
+            "type": "config/device_registry/remove_config_entry",
+            "config_entry_id": config_entry_id,
+            "device_id": device_id,
+        }
+    )
+    response = await ws_client.receive_json()
+    return response["success"]

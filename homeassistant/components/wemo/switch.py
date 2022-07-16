@@ -3,9 +3,9 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime, timedelta
-from typing import Any, cast
+from typing import Any
 
-from pywemo import CoffeeMaker, Insight, Maker, StandbyState
+from pywemo import CoffeeMaker, Insight, Maker, StandbyState, Switch
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -58,21 +58,24 @@ async def async_setup_entry(
 class WemoSwitch(WemoBinaryStateEntity, SwitchEntity):
     """Representation of a WeMo switch."""
 
+    # All wemo devices used with WemoSwitch are subclasses of Switch.
+    wemo: Switch
+
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the device."""
         attr: dict[str, Any] = {}
         if isinstance(self.wemo, Maker):
             # Is the maker sensor on or off.
-            if self.wemo.maker_params["hassensor"]:
+            if self.wemo.has_sensor:
                 # Note a state of 1 matches the WeMo app 'not triggered'!
-                if self.wemo.maker_params["sensorstate"]:
+                if self.wemo.sensor_state:
                     attr[ATTR_SENSOR_STATE] = STATE_OFF
                 else:
                     attr[ATTR_SENSOR_STATE] = STATE_ON
 
             # Is the maker switch configured as toggle(0) or momentary (1).
-            if self.wemo.maker_params["switchmode"]:
+            if self.wemo.switch_mode:
                 attr[ATTR_SWITCH_MODE] = MAKER_SWITCH_MOMENTARY
             else:
                 attr[ATTR_SWITCH_MODE] = MAKER_SWITCH_TOGGLE
@@ -103,10 +106,9 @@ class WemoSwitch(WemoBinaryStateEntity, SwitchEntity):
     def detail_state(self) -> str:
         """Return the state of the device."""
         if isinstance(self.wemo, CoffeeMaker):
-            return cast(str, self.wemo.mode_string)
+            return self.wemo.mode_string
         if isinstance(self.wemo, Insight):
-            # Note: wemo.get_standby_state is a @property.
-            standby_state = self.wemo.get_standby_state
+            standby_state = self.wemo.standby_state
             if standby_state == StandbyState.ON:
                 return STATE_ON
             if standby_state == StandbyState.OFF:

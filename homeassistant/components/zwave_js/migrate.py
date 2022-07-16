@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import logging
 
-from zwave_js_server.client import Client as ZwaveClient
+from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.value import Value as ZwaveValue
 
 from homeassistant.const import STATE_UNAVAILABLE
@@ -138,12 +138,12 @@ def async_migrate_discovered_value(
     ent_reg: EntityRegistry,
     registered_unique_ids: set[str],
     device: DeviceEntry,
-    client: ZwaveClient,
+    driver: Driver,
     disc_info: ZwaveDiscoveryInfo,
 ) -> None:
     """Migrate unique ID for entity/entities tied to discovered value."""
 
-    new_unique_id = get_unique_id(client, disc_info.primary_value.value_id)
+    new_unique_id = get_unique_id(driver, disc_info.primary_value.value_id)
 
     # On reinterviews, there is no point in going through this logic again for already
     # discovered values
@@ -155,7 +155,7 @@ def async_migrate_discovered_value(
 
     # 2021.2.*, 2021.3.0b0, and 2021.3.0 formats
     old_unique_ids = [
-        get_unique_id(client, value_id)
+        get_unique_id(driver, value_id)
         for value_id in get_old_value_ids(disc_info.primary_value)
     ]
 

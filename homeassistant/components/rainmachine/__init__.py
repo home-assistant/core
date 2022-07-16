@@ -50,10 +50,7 @@ from .const import (
     LOGGER,
 )
 
-DEFAULT_ATTRIBUTION = "Data provided by Green Electronics LLC"
-DEFAULT_ICON = "mdi:water"
 DEFAULT_SSL = True
-DEFAULT_UPDATE_INTERVAL = timedelta(seconds=15)
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
@@ -186,7 +183,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry.data[CONF_IP_ADDRESS],
             entry.data[CONF_PASSWORD],
             port=entry.data[CONF_PORT],
-            ssl=entry.data.get(CONF_SSL, DEFAULT_SSL),
+            use_ssl=entry.data.get(CONF_SSL, DEFAULT_SSL),
         )
     except RainMachineError as err:
         raise ConfigEntryNotReady from err
@@ -258,7 +255,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         DATA_COORDINATOR: coordinators,
     }
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
@@ -404,6 +401,8 @@ async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 class RainMachineEntity(CoordinatorEntity):
     """Define a generic RainMachine entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         entry: ConfigEntry,
@@ -418,7 +417,7 @@ class RainMachineEntity(CoordinatorEntity):
             identifiers={(DOMAIN, controller.mac)},
             configuration_url=f"https://{entry.data[CONF_IP_ADDRESS]}:{entry.data[CONF_PORT]}",
             connections={(dr.CONNECTION_NETWORK_MAC, controller.mac)},
-            name=str(controller.name),
+            name=str(controller.name).capitalize(),
             manufacturer="RainMachine",
             model=(
                 f"Version {controller.hardware_version} "
@@ -427,7 +426,6 @@ class RainMachineEntity(CoordinatorEntity):
             sw_version=controller.software_version,
         )
         self._attr_extra_state_attributes = {}
-        self._attr_name = f"{controller.name} {description.name}"
         self._attr_unique_id = f"{controller.mac}_{description.key}"
         self._controller = controller
         self.entity_description = description

@@ -1,31 +1,18 @@
 """The NZBGet integration."""
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_SCAN_INTERVAL,
-    CONF_SSL,
-    CONF_USERNAME,
-    Platform,
-)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_SCAN_INTERVAL, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     ATTR_SPEED,
     DATA_COORDINATOR,
     DATA_UNDO_UPDATE_LISTENER,
-    DEFAULT_NAME,
-    DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_SPEED_LIMIT,
-    DEFAULT_SSL,
     DOMAIN,
     SERVICE_PAUSE,
     SERVICE_RESUME,
@@ -35,54 +22,17 @@ from .coordinator import NZBGetDataUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
 
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: vol.Schema(
-                {
-                    vol.Required(CONF_HOST): cv.string,
-                    vol.Optional(CONF_PASSWORD): cv.string,
-                    vol.Optional(CONF_USERNAME): cv.string,
-                    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-                    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-                    vol.Optional(
-                        CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
-                    ): cv.time_period,
-                    vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-                }
-            )
-        },
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 SPEED_LIMIT_SCHEMA = vol.Schema(
     {vol.Optional(ATTR_SPEED, default=DEFAULT_SPEED_LIMIT): cv.positive_int}
 )
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the NZBGet integration."""
-    hass.data.setdefault(DOMAIN, {})
-
-    if hass.config_entries.async_entries(DOMAIN):
-        return True
-
-    if DOMAIN in config:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data=config[DOMAIN],
-            )
-        )
-
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up NZBGet from a config entry."""
+    hass.data.setdefault(DOMAIN, {})
+
     if not entry.options:
         options = {
             CONF_SCAN_INTERVAL: entry.data.get(
@@ -106,7 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         DATA_UNDO_UPDATE_LISTENER: undo_listener,
     }
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     _async_register_services(hass, coordinator)
 

@@ -24,6 +24,23 @@ from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 from tests.common import mock_coro
 
 
+@pytest.fixture(autouse=True)
+def number_platform_only():
+    """Only setup the number and required base platforms to speed up tests."""
+    with patch(
+        "homeassistant.components.zha.PLATFORMS",
+        (
+            Platform.BUTTON,
+            Platform.DEVICE_TRACKER,
+            Platform.LIGHT,
+            Platform.NUMBER,
+            Platform.SELECT,
+            Platform.SENSOR,
+        ),
+    ):
+        yield
+
+
 @pytest.fixture
 def zigpy_analog_output_device(zigpy_device_mock):
     """Zigpy analog_output device."""
@@ -116,7 +133,7 @@ async def test_number(hass, zha_device_joined_restored, zigpy_analog_output_devi
     assert hass.states.get(entity_id).attributes.get("unit_of_measurement") == "%"
     assert (
         hass.states.get(entity_id).attributes.get("friendly_name")
-        == "FakeManufacturer FakeModel e769900a analog_output PWM1"
+        == "FakeManufacturer FakeModel Number PWM1"
     )
 
     # change value from device
@@ -193,7 +210,7 @@ async def test_level_control_number(
         Platform.NUMBER,
         zha_device,
         hass,
-        qualifier=attr,
+        qualifier=attr.replace("_", ""),
     )
     assert entity_id is not None
 

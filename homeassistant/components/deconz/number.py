@@ -43,9 +43,9 @@ ENTITY_DESCRIPTIONS = {
             value_fn=lambda device: device.delay,
             suffix="Delay",
             update_key=PRESENCE_DELAY,
-            max_value=65535,
-            min_value=0,
-            step=1,
+            native_max_value=65535,
+            native_min_value=0,
+            native_step=1,
             entity_category=EntityCategory.CONFIG,
         )
     ]
@@ -65,8 +65,7 @@ async def async_setup_entry(
     def async_add_sensor(_: EventType, sensor_id: str) -> None:
         """Add sensor from deCONZ."""
         sensor = gateway.api.sensors.presence[sensor_id]
-        if sensor.type.startswith("CLIP"):
-            return
+
         for description in ENTITY_DESCRIPTIONS.get(type(sensor), []):
             if (
                 not hasattr(sensor, description.key)
@@ -75,14 +74,11 @@ async def async_setup_entry(
                 continue
             async_add_entities([DeconzNumber(sensor, gateway, description)])
 
-    config_entry.async_on_unload(
-        gateway.api.sensors.presence.subscribe(
-            gateway.evaluate_add_device(async_add_sensor),
-            EventType.ADDED,
-        )
+    gateway.register_platform_add_device_callback(
+        async_add_sensor,
+        gateway.api.sensors.presence,
+        always_ignore_clip_sensors=True,
     )
-    for sensor_id in gateway.api.sensors.presence:
-        async_add_sensor(EventType.ADDED, sensor_id)
 
 
 class DeconzNumber(DeconzDevice, NumberEntity):
@@ -111,14 +107,16 @@ class DeconzNumber(DeconzDevice, NumberEntity):
             super().async_update_callback()
 
     @property
-    def value(self) -> float | None:
+    def native_value(self) -> float | None:
         """Return the value of the sensor property."""
         return self.entity_description.value_fn(self._device)
 
-    async def async_set_value(self, value: float) -> None:
+    async def async_set_native_value(self, value: float) -> None:
         """Set sensor config."""
-        data = {self.entity_description.key: int(value)}
-        await self._device.set_config(**data)
+        await self.gateway.api.sensors.presence.set_config(
+            id=self._device.resource_id,
+            delay=int(value),
+        )
 
     @property
     def unique_id(self) -> str:

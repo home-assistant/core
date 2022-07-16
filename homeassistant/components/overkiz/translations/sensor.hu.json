@@ -36,6 +36,11 @@
         "overkiz__sensor_room": {
             "clean": "Tiszta",
             "dirty": "Piszkos"
+        },
+        "overkiz__three_way_handle_direction": {
+            "closed": "Z\u00e1rva",
+            "open": "Nyitva",
+            "tilt": "D\u00f6nt\u00e9s"
         }
     }
 }

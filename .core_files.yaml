@@ -52,6 +52,7 @@ components: &components
   - homeassistant/components/auth/**
   - homeassistant/components/automation/**
   - homeassistant/components/backup/**
+  - homeassistant/components/bluetooth/**
   - homeassistant/components/cloud/**
   - homeassistant/components/config/**
   - homeassistant/components/configurator/**
@@ -132,7 +133,7 @@ requirements: &requirements
   - homeassistant/package_constraints.txt
   - script/pip_check
   - requirements*.txt
-  - setup.cfg
+  - pyproject.toml
 
 any:
   - *base_platforms

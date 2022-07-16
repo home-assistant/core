@@ -5,8 +5,6 @@ from collections.abc import Callable, Generator
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime as dt
-import logging
-import re
 from typing import Any
 
 from sqlalchemy.engine.row import Row
@@ -30,7 +28,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entityfilter import EntityFilter
 import homeassistant.util.dt as dt_util
 
 from .const import (
@@ -42,15 +39,16 @@ from .const import (
     CONTEXT_MESSAGE,
     CONTEXT_NAME,
     CONTEXT_SERVICE,
+    CONTEXT_SOURCE,
     CONTEXT_STATE,
     CONTEXT_USER_ID,
     DOMAIN,
-    LOGBOOK_ENTITIES_FILTER,
     LOGBOOK_ENTRY_DOMAIN,
     LOGBOOK_ENTRY_ENTITY_ID,
     LOGBOOK_ENTRY_ICON,
     LOGBOOK_ENTRY_MESSAGE,
     LOGBOOK_ENTRY_NAME,
+    LOGBOOK_ENTRY_SOURCE,
     LOGBOOK_ENTRY_STATE,
     LOGBOOK_ENTRY_WHEN,
     LOGBOOK_FILTERS,
@@ -59,11 +57,6 @@ from .helpers import is_sensor_continuous
 from .models import EventAsRow, LazyEventPartialState, async_event_to_row
 from .queries import statement_for_request
 from .queries.common import PSUEDO_EVENT_STATE_CHANGED
-
-_LOGGER = logging.getLogger(__name__)
-
-ENTITY_ID_JSON_EXTRACT = re.compile('"entity_id": ?"([^"]+)"')
-DOMAIN_JSON_EXTRACT = re.compile('"domain": ?"([^"]+)"')
 
 
 @dataclass
@@ -104,10 +97,6 @@ class EventProcessor:
         self.device_ids = device_ids
         self.context_id = context_id
         self.filters: Filters | None = hass.data[LOGBOOK_FILTERS]
-        if self.limited_select:
-            self.entities_filter: EntityFilter | Callable[[str], bool] | None = None
-        else:
-            self.entities_filter = hass.data[LOGBOOK_ENTITIES_FILTER]
         format_time = (
             _row_time_fired_timestamp if timestamp else _row_time_fired_isoformat
         )
@@ -171,12 +160,6 @@ class EventProcessor:
             self.filters,
             self.context_id,
         )
-        if _LOGGER.isEnabledFor(logging.DEBUG):
-            _LOGGER.debug(
-                "Literal statement: %s",
-                stmt.compile(compile_kwargs={"literal_binds": True}),
-            )
-
         with session_scope(hass=self.hass) as session:
             return self.humanify(yield_rows(session.execute(stmt)))
 
@@ -187,7 +170,6 @@ class EventProcessor:
         return list(
             _humanify(
                 row_generator,
-                self.entities_filter,
                 self.ent_reg,
                 self.logbook_run,
                 self.context_augmenter,
@@ -197,7 +179,6 @@ class EventProcessor:
 
 def _humanify(
     rows: Generator[Row | EventAsRow, None, None],
-    entities_filter: EntityFilter | Callable[[str], bool] | None,
     ent_reg: er.EntityRegistry,
     logbook_run: LogbookRun,
     context_augmenter: ContextAugmenter,
@@ -212,34 +193,14 @@ def _humanify(
     include_entity_name = logbook_run.include_entity_name
     format_time = logbook_run.format_time
 
-    def _keep_row(row: Row | EventAsRow, event_type: str) -> bool:
-        """Check if the entity_filter rejects a row."""
-        assert entities_filter is not None
-        if entity_id := _row_event_data_extract(row, ENTITY_ID_JSON_EXTRACT):
-            return entities_filter(entity_id)
-
-        if event_type in external_events:
-            # If the entity_id isn't described, use the domain that describes
-            # the event for filtering.
-            domain: str | None = external_events[event_type][0]
-        else:
-            domain = _row_event_data_extract(row, DOMAIN_JSON_EXTRACT)
-
-        return domain is not None and entities_filter(f"{domain}._")
-
     # Process rows
     for row in rows:
         context_id = context_lookup.memorize(row)
         if row.context_only:
             continue
         event_type = row.event_type
-        if event_type == EVENT_CALL_SERVICE or (
-            event_type is not PSUEDO_EVENT_STATE_CHANGED
-            and entities_filter is not None
-            and not _keep_row(row, event_type)
-        ):
+        if event_type == EVENT_CALL_SERVICE:
             continue
-
         if event_type is PSUEDO_EVENT_STATE_CHANGED:
             entity_id = row.entity_id
             assert entity_id is not None
@@ -398,11 +359,14 @@ class ContextAugmenter:
         data[CONTEXT_DOMAIN] = domain
         event = self.event_cache.get(context_row)
         described = describe_event(event)
-        if name := described.get(ATTR_NAME):
+        if name := described.get(LOGBOOK_ENTRY_NAME):
             data[CONTEXT_NAME] = name
-        if message := described.get(ATTR_MESSAGE):
+        if message := described.get(LOGBOOK_ENTRY_MESSAGE):
             data[CONTEXT_MESSAGE] = message
-        if not (attr_entity_id := described.get(ATTR_ENTITY_ID)):
+        # In 2022.12 and later drop `CONTEXT_MESSAGE` if `CONTEXT_SOURCE` is available
+        if source := described.get(LOGBOOK_ENTRY_SOURCE):
+            data[CONTEXT_SOURCE] = source
+        if not (attr_entity_id := described.get(LOGBOOK_ENTRY_ENTITY_ID)):
             return
         data[CONTEXT_ENTITY_ID] = attr_entity_id
         if self.include_entity_name:
@@ -412,19 +376,14 @@ class ContextAugmenter:
 def _rows_match(row: Row | EventAsRow, other_row: Row | EventAsRow) -> bool:
     """Check of rows match by using the same method as Events __hash__."""
     if (
-        (state_id := row.state_id) is not None
+        row is other_row
+        or (state_id := row.state_id)
         and state_id == other_row.state_id
-        or (event_id := row.event_id) is not None
+        or (event_id := row.event_id)
         and event_id == other_row.event_id
     ):
         return True
     return False
-
-
-def _row_event_data_extract(row: Row | EventAsRow, extractor: re.Pattern) -> str | None:
-    """Extract from event_data row."""
-    result = extractor.search(row.shared_data or row.event_data or "")
-    return result.group(1) if result else None
 
 
 def _row_time_fired_isoformat(row: Row | EventAsRow) -> str:

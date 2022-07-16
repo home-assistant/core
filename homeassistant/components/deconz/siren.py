@@ -35,14 +35,10 @@ async def async_setup_entry(
         siren = gateway.api.lights.sirens[siren_id]
         async_add_entities([DeconzSiren(siren, gateway)])
 
-    config_entry.async_on_unload(
-        gateway.api.lights.sirens.subscribe(
-            gateway.evaluate_add_device(async_add_siren),
-            EventType.ADDED,
-        )
+    gateway.register_platform_add_device_callback(
+        async_add_siren,
+        gateway.api.lights.sirens,
     )
-    for siren_id in gateway.api.lights.sirens:
-        async_add_siren(EventType.ADDED, siren_id)
 
 
 class DeconzSiren(DeconzDevice, SirenEntity):
@@ -63,11 +59,17 @@ class DeconzSiren(DeconzDevice, SirenEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on siren."""
-        data = {}
         if (duration := kwargs.get(ATTR_DURATION)) is not None:
-            data["duration"] = duration * 10
-        await self._device.turn_on(**data)
+            duration *= 10
+        await self.gateway.api.lights.sirens.set_state(
+            id=self._device.resource_id,
+            on=True,
+            duration=duration,
+        )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off siren."""
-        await self._device.turn_off()
+        await self.gateway.api.lights.sirens.set_state(
+            id=self._device.resource_id,
+            on=False,
+        )

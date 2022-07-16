@@ -327,7 +327,9 @@ async def test_sync_entities_all(agents, result):
 def test_supported_features_string(caplog):
     """Test bad supported features."""
     entity = helpers.GoogleEntity(
-        None, None, State("test.entity_id", "on", {"supported_features": "invalid"})
+        None,
+        MockConfig(),
+        State("test.entity_id", "on", {"supported_features": "invalid"}),
     )
     assert entity.is_supported() is False
     assert "Entity test.entity_id contains invalid supported_features value invalid"
@@ -345,3 +347,116 @@ def test_request_data():
         config, "test_user", SOURCE_CLOUD, "test_request_id", None
     )
     assert data.is_local_request is False
+
+
+async def test_config_local_sdk_allow_min_version(hass, hass_client, caplog):
+    """Test the local SDK."""
+    version = str(helpers.LOCAL_SDK_MIN_VERSION)
+    assert await async_setup_component(hass, "webhook", {})
+
+    config = MockConfig(
+        hass=hass,
+        agent_user_ids={
+            "mock-user-id": {
+                STORE_GOOGLE_LOCAL_WEBHOOK_ID: "mock-webhook-id",
+            },
+        },
+    )
+
+    client = await hass_client()
+
+    assert config._local_sdk_version_warn is False
+    config.async_enable_local_sdk()
+
+    await client.post(
+        "/api/webhook/mock-webhook-id",
+        headers={helpers.LOCAL_SDK_VERSION_HEADER: version},
+        json={
+            "inputs": [
+                {
+                    "context": {"locale_country": "US", "locale_language": "en"},
+                    "intent": "action.devices.SYNC",
+                }
+            ],
+            "requestId": "mock-req-id",
+        },
+    )
+    assert config._local_sdk_version_warn is False
+    assert (
+        f"Local SDK version is too old ({version}), check documentation on how "
+        "to update to the latest version"
+    ) not in caplog.text
+
+
+@pytest.mark.parametrize("version", (None, "2.1.4"))
+async def test_config_local_sdk_warn_version(hass, hass_client, caplog, version):
+    """Test the local SDK."""
+    assert await async_setup_component(hass, "webhook", {})
+
+    config = MockConfig(
+        hass=hass,
+        agent_user_ids={
+            "mock-user-id": {
+                STORE_GOOGLE_LOCAL_WEBHOOK_ID: "mock-webhook-id",
+            },
+        },
+    )
+
+    client = await hass_client()
+
+    assert config._local_sdk_version_warn is False
+    config.async_enable_local_sdk()
+
+    headers = {}
+    if version:
+        headers[helpers.LOCAL_SDK_VERSION_HEADER] = version
+
+    await client.post(
+        "/api/webhook/mock-webhook-id",
+        headers=headers,
+        json={
+            "inputs": [
+                {
+                    "context": {"locale_country": "US", "locale_language": "en"},
+                    "intent": "action.devices.SYNC",
+                }
+            ],
+            "requestId": "mock-req-id",
+        },
+    )
+    assert config._local_sdk_version_warn is True
+    assert (
+        f"Local SDK version is too old ({version}), check documentation on how "
+        "to update to the latest version"
+    ) in caplog.text
+
+
+def test_is_supported_cached():
+    """Test is_supported is cached."""
+    config = MockConfig()
+
+    def entity(features: int):
+        return helpers.GoogleEntity(
+            None,
+            config,
+            State("test.entity_id", "on", {"supported_features": features}),
+        )
+
+    with patch(
+        "homeassistant.components.google_assistant.helpers.GoogleEntity.traits",
+        return_value=[1],
+    ) as mock_traits:
+        assert entity(1).is_supported() is True
+        assert len(mock_traits.mock_calls) == 1
+
+        # Supported feature changes, so we calculate again
+        assert entity(2).is_supported() is True
+        assert len(mock_traits.mock_calls) == 2
+
+        mock_traits.reset_mock()
+
+        # Supported feature is same, so we do not calculate again
+        mock_traits.side_effect = ValueError
+
+        assert entity(2).is_supported() is True
+        assert len(mock_traits.mock_calls) == 0

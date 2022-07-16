@@ -5,12 +5,14 @@ import asyncio
 from collections.abc import Callable
 from datetime import timedelta
 from enum import Enum
+from functools import cached_property
 import logging
 import random
 import time
 from typing import TYPE_CHECKING, Any
 
 from zigpy import types
+import zigpy.device
 import zigpy.exceptions
 from zigpy.profiles import PROFILES
 import zigpy.quirks
@@ -26,8 +28,9 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.event import async_track_time_interval
 
-from . import channels, typing as zha_typing
+from . import channels
 from .const import (
+    ATTR_ACTIVE_COORDINATOR,
     ATTR_ARGS,
     ATTR_ATTRIBUTE,
     ATTR_AVAILABLE,
@@ -77,6 +80,7 @@ from .helpers import LogMixin, async_get_zha_config_value
 
 if TYPE_CHECKING:
     from ..api import ClusterBinding
+    from .gateway import ZHAGateway
 
 _LOGGER = logging.getLogger(__name__)
 _UPDATE_ALIVE_INTERVAL = (60, 90)
@@ -98,8 +102,8 @@ class ZHADevice(LogMixin):
     def __init__(
         self,
         hass: HomeAssistant,
-        zigpy_device: zha_typing.ZigpyDeviceType,
-        zha_gateway: zha_typing.ZhaGatewayType,
+        zigpy_device: zigpy.device.Device,
+        zha_gateway: ZHAGateway,
     ) -> None:
         """Initialize the gateway."""
         self.hass = hass
@@ -149,17 +153,17 @@ class ZHADevice(LogMixin):
         self._ha_device_id = device_id
 
     @property
-    def device(self) -> zha_typing.ZigpyDeviceType:
+    def device(self) -> zigpy.device.Device:
         """Return underlying Zigpy device."""
         return self._zigpy_device
 
     @property
-    def channels(self) -> zha_typing.ChannelsType:
+    def channels(self) -> channels.Channels:
         """Return ZHA channels."""
         return self._channels
 
     @channels.setter
-    def channels(self, value: zha_typing.ChannelsType) -> None:
+    def channels(self, value: channels.Channels) -> None:
         """Channels setter."""
         assert isinstance(value, channels.Channels)
         self._channels = value
@@ -249,11 +253,19 @@ class ZHADevice(LogMixin):
 
     @property
     def is_coordinator(self) -> bool | None:
-        """Return true if this device represents the coordinator."""
+        """Return true if this device represents a coordinator."""
         if self._zigpy_device.node_desc is None:
             return None
 
         return self._zigpy_device.node_desc.is_coordinator
+
+    @property
+    def is_active_coordinator(self) -> bool:
+        """Return true if this device is the active coordinator."""
+        if not self.is_coordinator:
+            return False
+
+        return self.ieee == self.gateway.coordinator_ieee
 
     @property
     def is_end_device(self) -> bool | None:
@@ -273,14 +285,23 @@ class ZHADevice(LogMixin):
     @property
     def skip_configuration(self) -> bool:
         """Return true if the device should not issue configuration related commands."""
-        return self._zigpy_device.skip_configuration
+        return self._zigpy_device.skip_configuration or bool(self.is_coordinator)
 
     @property
     def gateway(self):
         """Return the gateway for this device."""
         return self._zha_gateway
 
-    @property
+    @cached_property
+    def device_automation_commands(self) -> dict[str, list[tuple[str, str]]]:
+        """Return the a lookup of commands to etype/sub_type."""
+        commands: dict[str, list[tuple[str, str]]] = {}
+        for etype_subtype, trigger in self.device_automation_triggers.items():
+            if command := trigger.get(ATTR_COMMAND):
+                commands.setdefault(command, []).append(etype_subtype)
+        return commands
+
+    @cached_property
     def device_automation_triggers(self) -> dict[tuple[str, str], dict[str, str]]:
         """Return the device automation triggers for this device."""
         triggers = {
@@ -321,8 +342,8 @@ class ZHADevice(LogMixin):
     def new(
         cls,
         hass: HomeAssistant,
-        zigpy_dev: zha_typing.ZigpyDeviceType,
-        gateway: zha_typing.ZhaGatewayType,
+        zigpy_dev: zigpy.device.Device,
+        gateway: ZHAGateway,
         restored: bool = False,
     ):
         """Create new device."""
@@ -458,8 +479,6 @@ class ZHADevice(LogMixin):
         self.debug("started configuration")
         await self._channels.async_configure()
         self.debug("completed configuration")
-        entry = self.gateway.zha_storage.async_create_or_update_device(self)
-        self.debug("stored in registry: %s", entry)
 
         if (
             should_identify
@@ -484,17 +503,12 @@ class ZHADevice(LogMixin):
         for unsubscribe in self.unsubs:
             unsubscribe()
 
-    @callback
-    def async_update_last_seen(self, last_seen: float | None) -> None:
-        """Set last seen on the zigpy device."""
-        if self._zigpy_device.last_seen is None and last_seen is not None:
-            self._zigpy_device.last_seen = last_seen
-
     @property
     def zha_device_info(self) -> dict[str, Any]:
         """Get ZHA device information."""
         device_info: dict[str, Any] = {}
         device_info.update(self.device_info)
+        device_info[ATTR_ACTIVE_COORDINATOR] = self.is_active_coordinator
         device_info["entities"] = [
             {
                 "entity_id": entity_ref.reference_id,
@@ -807,7 +821,7 @@ class ZHADevice(LogMixin):
                 fmt = f"{log_msg[1]} completed: %s"
             zdo.debug(fmt, *(log_msg[2] + (outcome,)))
 
-    def log(self, level: int, msg: str, *args: Any, **kwargs: dict) -> None:
+    def log(self, level: int, msg: str, *args: Any, **kwargs: Any) -> None:
         """Log a message."""
         msg = f"[%s](%s): {msg}"
         args = (self.nwk, self.model) + args

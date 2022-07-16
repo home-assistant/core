@@ -52,6 +52,7 @@ from homeassistant.const import (
     STATE_IDLE,
     STATE_OFF,
     STATE_PLAYING,
+    STATE_STANDBY,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -76,6 +77,7 @@ from .const import (  # noqa: F401
     ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_ALBUM_ARTIST,
     ATTR_MEDIA_ALBUM_NAME,
+    ATTR_MEDIA_ANNOUNCE,
     ATTR_MEDIA_ARTIST,
     ATTR_MEDIA_CHANNEL,
     ATTR_MEDIA_CONTENT_ID,
@@ -147,6 +149,19 @@ ENTITY_IMAGE_CACHE = {CACHE_IMAGES: collections.OrderedDict(), CACHE_MAXSIZE: 16
 SCAN_INTERVAL = dt.timedelta(seconds=10)
 
 
+class MediaPlayerEnqueue(StrEnum):
+    """Enqueue types for playing media."""
+
+    # add given media item to end of the queue
+    ADD = "add"
+    # play the given media item next, keep queue
+    NEXT = "next"
+    # play the given media item now, keep queue
+    PLAY = "play"
+    # play the given media item now, clear queue
+    REPLACE = "replace"
+
+
 class MediaPlayerDeviceClass(StrEnum):
     """Device class for media players."""
 
@@ -169,7 +184,10 @@ DEVICE_CLASS_RECEIVER = MediaPlayerDeviceClass.RECEIVER.value
 MEDIA_PLAYER_PLAY_MEDIA_SCHEMA = {
     vol.Required(ATTR_MEDIA_CONTENT_TYPE): cv.string,
     vol.Required(ATTR_MEDIA_CONTENT_ID): cv.string,
-    vol.Optional(ATTR_MEDIA_ENQUEUE): cv.boolean,
+    vol.Exclusive(ATTR_MEDIA_ENQUEUE, "enqueue_announce"): vol.Any(
+        cv.boolean, vol.Coerce(MediaPlayerEnqueue)
+    ),
+    vol.Exclusive(ATTR_MEDIA_ANNOUNCE, "enqueue_announce"): cv.boolean,
     vol.Optional(ATTR_MEDIA_EXTRA, default={}): dict,
 }
 
@@ -350,10 +368,30 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         "async_select_sound_mode",
         [MediaPlayerEntityFeature.SELECT_SOUND_MODE],
     )
+
+    # Remove in Home Assistant 2022.9
+    def _rewrite_enqueue(value):
+        """Rewrite the enqueue value."""
+        if ATTR_MEDIA_ENQUEUE not in value:
+            pass
+        elif value[ATTR_MEDIA_ENQUEUE] is True:
+            value[ATTR_MEDIA_ENQUEUE] = MediaPlayerEnqueue.ADD
+            _LOGGER.warning(
+                "Playing media with enqueue set to True is deprecated. Use 'add' instead"
+            )
+        elif value[ATTR_MEDIA_ENQUEUE] is False:
+            value[ATTR_MEDIA_ENQUEUE] = MediaPlayerEnqueue.PLAY
+            _LOGGER.warning(
+                "Playing media with enqueue set to False is deprecated. Use 'play' instead"
+            )
+
+        return value
+
     component.async_register_entity_service(
         SERVICE_PLAY_MEDIA,
         vol.All(
             cv.make_entity_service_schema(MEDIA_PLAYER_PLAY_MEDIA_SCHEMA),
+            _rewrite_enqueue,
             _rename_keys(
                 media_type=ATTR_MEDIA_CONTENT_TYPE,
                 media_id=ATTR_MEDIA_CONTENT_ID,
@@ -851,7 +889,7 @@ class MediaPlayerEntity(Entity):
             await self.hass.async_add_executor_job(self.toggle)
             return
 
-        if self.state in (STATE_OFF, STATE_IDLE):
+        if self.state in (STATE_OFF, STATE_IDLE, STATE_STANDBY):
             await self.async_turn_on()
         else:
             await self.async_turn_off()

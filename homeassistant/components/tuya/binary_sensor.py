@@ -64,19 +64,19 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
         ),
         TuyaBinarySensorEntityDescription(
             key=DPCode.VOC_STATE,
-            name="Volatile Organic Compound",
+            name="Volatile organic compound",
             device_class=BinarySensorDeviceClass.SAFETY,
             on_value="alarm",
         ),
         TuyaBinarySensorEntityDescription(
             key=DPCode.PM25_STATE,
-            name="Particulate Matter 2.5 µm",
+            name="Particulate matter 2.5 µm",
             device_class=BinarySensorDeviceClass.SAFETY,
             on_value="alarm",
         ),
         TuyaBinarySensorEntityDescription(
             key=DPCode.CO_STATE,
-            name="Carbon Monoxide",
+            name="Carbon monoxide",
             icon="mdi:molecule-co",
             device_class=BinarySensorDeviceClass.SAFETY,
             on_value="alarm",
@@ -84,7 +84,7 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
         TuyaBinarySensorEntityDescription(
             key=DPCode.CO2_STATE,
             icon="mdi:molecule-co2",
-            name="Carbon Dioxide",
+            name="Carbon dioxide",
             device_class=BinarySensorDeviceClass.SAFETY,
             on_value="alarm",
         ),
@@ -101,7 +101,7 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
         ),
         TuyaBinarySensorEntityDescription(
             key=DPCode.WATERSENSOR_STATE,
-            name="Water Leak",
+            name="Water leak",
             device_class=BinarySensorDeviceClass.MOISTURE,
             on_value="alarm",
         ),

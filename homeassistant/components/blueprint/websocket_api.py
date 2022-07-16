@@ -24,13 +24,13 @@ def async_setup(hass: HomeAssistant):
     websocket_api.async_register_command(hass, ws_delete_blueprint)
 
 
-@websocket_api.async_response
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "blueprint/list",
         vol.Required("domain"): cv.string,
     }
 )
+@websocket_api.async_response
 async def ws_list_blueprints(hass, connection, msg):
     """List available blueprints."""
     domain_blueprints: dict[str, models.DomainBlueprints] | None = hass.data.get(
@@ -55,13 +55,13 @@ async def ws_list_blueprints(hass, connection, msg):
     connection.send_result(msg["id"], results)
 
 
-@websocket_api.async_response
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "blueprint/import",
         vol.Required("url"): cv.url,
     }
 )
+@websocket_api.async_response
 async def ws_import_blueprint(hass, connection, msg):
     """Import a blueprint."""
     async with async_timeout.timeout(10):
@@ -86,7 +86,6 @@ async def ws_import_blueprint(hass, connection, msg):
     )
 
 
-@websocket_api.async_response
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "blueprint/save",
@@ -96,6 +95,7 @@ async def ws_import_blueprint(hass, connection, msg):
         vol.Optional("source_url"): cv.url,
     }
 )
+@websocket_api.async_response
 async def ws_save_blueprint(hass, connection, msg):
     """Save a blueprint."""
 
@@ -135,7 +135,6 @@ async def ws_save_blueprint(hass, connection, msg):
     )
 
 
-@websocket_api.async_response
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "blueprint/delete",
@@ -143,6 +142,7 @@ async def ws_save_blueprint(hass, connection, msg):
         vol.Required("path"): cv.path,
     }
 )
+@websocket_api.async_response
 async def ws_delete_blueprint(hass, connection, msg):
     """Delete a blueprint."""
 
