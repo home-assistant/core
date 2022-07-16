@@ -43,6 +43,8 @@ PIN_FORMAT = re.compile(r"^(\d{3})-{0,1}(\d{2})-{0,1}(\d{3})$")
 _LOGGER = logging.getLogger(__name__)
 
 
+BLE_DEFAULT_NAME = "Bluetooth device"
+
 INSECURE_CODES = {
     "00000000",
     "11111111",
@@ -115,10 +117,9 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             key = user_input["device"]
             self.hkid = self.devices[key].description.id
             self.model = getattr(
-                self.devices[key].description, "model", "Bluetooth device"
+                self.devices[key].description, "model", BLE_DEFAULT_NAME
             )
-            self.name = self.devices[key].description.name
-            self.name = self.devices[key].description.name or "Bluetooth device"
+            self.name = self.devices[key].description.name or BLE_DEFAULT_NAME
 
             await self.async_set_unique_id(
                 normalize_hkid(self.hkid), raise_on_progress=False
@@ -381,7 +382,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="already_paired")
 
         self.name = discovery.description.name
-        self.model = "Bluetooth device"
+        self.model = BLE_DEFAULT_NAME
         self.hkid = discovery.description.id
 
         return self._async_step_pair_show_form()
