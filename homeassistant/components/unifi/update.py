@@ -112,7 +112,7 @@ class UniFiDeviceUpdateEntity(UniFiBase, UpdateEntity):
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
-        features = UpdateEntityFeature.PROGRESS
+        features: int = UpdateEntityFeature.PROGRESS
 
         if self.controller.site_role == "admin":
             features |= UpdateEntityFeature.INSTALL
