@@ -22,10 +22,11 @@ class BluetoothServiceInfo(BaseServiceInfo):
     manufacturer_data: dict[int, bytes]
     service_data: dict[str, bytes]
     service_uuids: list[str]
+    source: str
 
     @classmethod
     def from_advertisement(
-        cls, device: BLEDevice, advertisement_data: AdvertisementData
+        cls, device: BLEDevice, advertisement_data: AdvertisementData, source: str
     ) -> BluetoothServiceInfo:
         """Create a BluetoothServiceInfo from an advertisement."""
         return cls(
@@ -35,6 +36,7 @@ class BluetoothServiceInfo(BaseServiceInfo):
             manufacturer_data=advertisement_data.manufacturer_data,
             service_data=advertisement_data.service_data,
             service_uuids=advertisement_data.service_uuids,
+            source=source,
         )
 
     @cached_property
