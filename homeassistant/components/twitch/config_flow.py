@@ -20,65 +20,52 @@ from homeassistant.helpers import config_entry_oauth2_flow
 import homeassistant.helpers.config_validation as cv
 
 from .const import CONF_CHANNELS, CONF_REFRESH_TOKEN, DOMAIN, OAUTH_SCOPES
-from .data import TwitchFollower, TwitchResponse, TwitchResponsePagination
+from .data import TwitchFollower, TwitchResponse, TwitchResponsePagination, TwitchUser
 
 
 async def get_user(
     hass: HomeAssistant,
-    logger: logging.Logger,
     client: Twitch,
-) -> dict | None:
+) -> TwitchUser | None:
     """Return the username of the user."""
-    try:
-        users = await hass.async_add_executor_job(client.get_users)
-    except (TwitchAPIException, TwitchBackendException) as err:
-        logger.error("Twitch API error: %s", err)
-        return None
+    users_response = TwitchResponse(
+        **await hass.async_add_executor_job(client.get_users)
+    )
 
-    return users["data"][0]
+    if users_response.data is not None:
+        return TwitchUser(**users_response.data[0])
+    return None
 
 
 async def get_followed_channels(
     hass: HomeAssistant,
-    logger: logging.Logger,
     client: Twitch,
     user_id: str,
 ) -> list[TwitchFollower]:
     """Return a list of channels the user is following."""
     cursor = None
     channels: list[TwitchFollower] = []
-    try:
-        while True:
-            followers_response = TwitchResponse(
-                **await hass.async_add_executor_job(
-                    client.get_users_follows,
-                    cursor,
-                    100,
-                    user_id,
-                )
+    while True:
+        followers_response = TwitchResponse(
+            **await hass.async_add_executor_job(
+                client.get_users_follows,
+                cursor,
+                100,
+                user_id,
             )
+        )
 
-            if followers_response.data is not None:
-                channels.extend(
-                    [TwitchFollower(**follower) for follower in followers_response.data]
-                )
-            if (
-                followers_response.pagination is not None
-                and followers_response.pagination != {}
-            ):
-                cursor = TwitchResponsePagination(
-                    **followers_response.pagination
-                ).cursor
-            else:
-                break
-    except TwitchAuthorizationException:
-        logger.error("Invalid client ID or client secret")
-        return []
-    except (TwitchAPIException, TwitchBackendException) as err:
-        logger.error("Twitch API error: %s", err)
-        return []
-
-    logger.debug("Found %s channels", len(channels))
+        if followers_response.data is not None:
+            channels.extend(
+                [TwitchFollower(**follower) for follower in followers_response.data]
+            )
+        if (
+            followers_response.pagination is not None
+            and followers_response.pagination != {}
+        ):
+            cursor = TwitchResponsePagination(**followers_response.pagination).cursor
+        else:
+            break
 
     return sorted(channels, key=lambda channel: channel.to_login)
 
@@ -144,24 +131,32 @@ class OAuth2FlowHandler(
         """Handle channels step."""
         self.logger.debug("Step channels: %s", user_input)
 
-        user = await get_user(
-            self.hass,
-            self.logger,
-            self._client,
-        )
+        try:
+            user = await get_user(self.hass, self._client)
+        except TwitchAuthorizationException as err:
+            self.logger.error("Authorization error: %s", err)
+            return self.async_abort(reason="invalid_auth")
+        except (TwitchAPIException, TwitchBackendException) as err:
+            self.logger.error("Twitch API error: %s", err)
+            return self.async_abort(reason="cannot_connect")
 
         if not user:
+            self.logger.error("No user found")
             return self.async_abort(reason="user_not_found")
 
         self.logger.debug("User: %s", user)
 
         if not user_input:
-            channels = await get_followed_channels(
-                self.hass,
-                self.logger,
-                self._client,
-                user["id"],
-            )
+            try:
+                channels = await get_followed_channels(
+                    self.hass,
+                    self._client,
+                    user.id,
+                )
+            except (TwitchAPIException, TwitchBackendException) as err:
+                self.logger.error("Twitch API error: %s", err)
+                return self.async_abort(reason="cannot_connect")
+
             self.logger.debug("Channels: %s", channels)
 
             return self.async_show_form(
@@ -176,7 +171,7 @@ class OAuth2FlowHandler(
             )
 
         return self.async_create_entry(
-            title=user.get("display_name", user["id"]),
+            title=user.display_name,
             data={**self._oauth_data, "user": user},
             options={CONF_CHANNELS: user_input[CONF_CHANNELS]},
         )
@@ -206,7 +201,14 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         self,
         user_input: dict[str, Any] | None = None,
     ) -> FlowResult:
-        """Handle options flow."""
+        """Handle init options flow."""
+        return await self.async_step_channels(user_input)
+
+    async def async_step_channels(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ) -> FlowResult:
+        """Handle channels options flow."""
         if not user_input:
             configured_channels: list[str] = self.config_entry.options[CONF_CHANNELS]
 
@@ -229,12 +231,18 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 True,
             )
 
-            channels = await get_followed_channels(
-                self.hass,
-                self.logger,
-                client,
-                self.config_entry.data["user"]["id"],
-            )
+            try:
+                channels = await get_followed_channels(
+                    self.hass,
+                    client,
+                    self.config_entry.data["user"]["id"],
+                )
+            except TwitchAuthorizationException as err:
+                self.logger.error("Authorization error: %s", err)
+                return self.async_abort(reason="invalid_auth")
+            except (TwitchAPIException, TwitchBackendException) as err:
+                self.logger.error("Twitch API error: %s", err)
+                return self.async_abort(reason="cannot_connect")
 
             self.logger.debug("Channels: %s", channels)
 
@@ -247,7 +255,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     channels_dict[channel] = channel
 
             return self.async_show_form(
-                step_id="init",
+                step_id="channels",
                 data_schema=vol.Schema(
                     {
                         vol.Required(
