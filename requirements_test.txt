@@ -12,6 +12,7 @@ coverage==6.4.2
 freezegun==1.2.1
 mock-open==1.4.0
 mypy==0.961
+orjson==3.7.7
 pre-commit==2.20.0
 pylint==2.14.4
 pipdeptree==2.2.1
