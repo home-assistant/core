@@ -29,25 +29,25 @@ async def test_configure_with_discover(hass: HomeAssistant) -> None:
         assert result["type"] == "form"
         assert result["errors"] == {}
 
-        with patch(
-            "pynobo.nobo.async_connect_hub", return_value=True
-        ) as mock_connect, patch(
-            "pynobo.nobo.hub_info",
-            new_callable=PropertyMock,
-            create=True,
-            return_value={"name": "My Nobø Ecohub"},
-        ), patch(
-            "homeassistant.components.nobo_hub.async_setup_entry",
-            return_value=True,
-        ) as mock_setup_entry:
-            result2 = await hass.config_entries.flow.async_configure(
-                result["flow_id"],
-                {
-                    "device": 0,
-                    "serial_suffix": "012",
-                },
-            )
-            await hass.async_block_till_done()
+    with patch(
+        "pynobo.nobo.async_connect_hub", return_value=True
+    ) as mock_connect, patch(
+        "pynobo.nobo.hub_info",
+        new_callable=PropertyMock,
+        create=True,
+        return_value={"name": "My Nobø Ecohub"},
+    ), patch(
+        "homeassistant.components.nobo_hub.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "device": 0,
+                "serial_suffix": "012",
+            },
+        )
+        await hass.async_block_till_done()
 
         assert result2["type"] == "create_entry"
         assert result2["title"] == "My Nobø Ecohub"
@@ -112,26 +112,26 @@ async def test_configure_static_ip_with_discover(hass: HomeAssistant) -> None:
         assert result["type"] == "form"
         assert result["errors"] == {}
 
-        with patch(
-            "pynobo.nobo.async_connect_hub", return_value=True
-        ) as mock_connect, patch(
-            "pynobo.nobo.hub_info",
-            new_callable=PropertyMock,
-            create=True,
-            return_value={"name": "My Nobø Ecohub"},
-        ), patch(
-            "homeassistant.components.nobo_hub.async_setup_entry",
-            return_value=True,
-        ) as mock_setup_entry:
-            result2 = await hass.config_entries.flow.async_configure(
-                result["flow_id"],
-                {
-                    "device": 0,
-                    "serial_suffix": "012",
-                    "store_ip": True,
-                },
-            )
-            await hass.async_block_till_done()
+    with patch(
+        "pynobo.nobo.async_connect_hub", return_value=True
+    ) as mock_connect, patch(
+        "pynobo.nobo.hub_info",
+        new_callable=PropertyMock,
+        create=True,
+        return_value={"name": "My Nobø Ecohub"},
+    ), patch(
+        "homeassistant.components.nobo_hub.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "device": 0,
+                "serial_suffix": "012",
+                "store_ip": True,
+            },
+        )
+        await hass.async_block_till_done()
 
         assert result2["type"] == "create_entry"
         assert result2["title"] == "My Nobø Ecohub"
@@ -174,14 +174,14 @@ async def test_configure_manual(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
-    assert result2["title"] == "My Nobø Ecohub"
-    assert result2["data"] == {
-        "serial": "123456789012",
-        "ip_address": "1.1.1.1",
-    }
-    mock_connect.assert_awaited_once_with("1.1.1.1", "123456789012")
-    mock_setup_entry.assert_awaited_once()
+        assert result2["type"] == "create_entry"
+        assert result2["title"] == "My Nobø Ecohub"
+        assert result2["data"] == {
+            "serial": "123456789012",
+            "ip_address": "1.1.1.1",
+        }
+        mock_connect.assert_awaited_once_with("1.1.1.1", "123456789012")
+        mock_setup_entry.assert_awaited_once()
 
 
 async def test_configure_invalid_serial(hass: HomeAssistant) -> None:
@@ -194,13 +194,13 @@ async def test_configure_invalid_serial(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"device": 0, "serial_suffix": "ABC"},
-        )
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"device": 0, "serial_suffix": "ABC"},
+    )
 
-        assert result2["type"] == "form"
-        assert result2["errors"] == {"base": "invalid_serial"}
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "invalid_serial"}
 
 
 async def test_configure_missing_serial_suffix(hass: HomeAssistant) -> None:
@@ -213,15 +213,15 @@ async def test_configure_missing_serial_suffix(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "device": 0,
-            },
-        )
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "device": 0,
+        },
+    )
 
-        assert result2["type"] == "form"
-        assert result2["errors"] == {"base": "missing_serial_suffix"}
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "missing_serial_suffix"}
 
 
 async def test_configure_invalid_serial_manual(hass: HomeAssistant) -> None:
@@ -234,13 +234,13 @@ async def test_configure_invalid_serial_manual(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": "manual"}
         )
 
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"ip_address": "1.1.1.1", "serial": "123456789"},
-        )
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"ip_address": "1.1.1.1", "serial": "123456789"},
+    )
 
-        assert result2["type"] == "form"
-        assert result2["errors"] == {"base": "invalid_serial"}
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "invalid_serial"}
 
 
 async def test_configure_invalid_ip_address(hass: HomeAssistant) -> None:
@@ -253,13 +253,13 @@ async def test_configure_invalid_ip_address(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": "manual"}
         )
 
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"serial": "123456789012", "ip_address": "ABCD"},
-        )
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"serial": "123456789012", "ip_address": "ABCD"},
+    )
 
-        assert result2["type"] == "form"
-        assert result2["errors"] == {"base": "invalid_ip"}
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "invalid_ip"}
 
 
 async def test_configure_cannot_connect(hass: HomeAssistant) -> None:
@@ -272,18 +272,18 @@ async def test_configure_cannot_connect(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
-        with patch(
-            "pynobo.nobo.async_connect_hub",
-            return_value=False,
-        ) as mock_connect:
-            result2 = await hass.config_entries.flow.async_configure(
-                result["flow_id"],
-                {"device": 0, "serial_suffix": "012"},
-            )
+    with patch(
+        "pynobo.nobo.async_connect_hub",
+        return_value=False,
+    ) as mock_connect:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"device": 0, "serial_suffix": "012"},
+        )
 
-        assert result2["type"] == "form"
-        assert result2["errors"] == {"base": "cannot_connect"}
-        mock_connect.assert_awaited_once_with("1.1.1.1", "123456789012")
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "cannot_connect"}
+    mock_connect.assert_awaited_once_with("1.1.1.1", "123456789012")
 
 
 async def test_options_flow(hass: HomeAssistant) -> None:
