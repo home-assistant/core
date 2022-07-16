@@ -187,14 +187,15 @@ def filter_libav_logging() -> None:
         return logging.getLogger(__name__).isEnabledFor(logging.DEBUG)
 
     for logging_namespace in (
-        "libav.mp4",
+        "libav.NULL",
         "libav.h264",
         "libav.hevc",
+        "libav.hls",
+        "libav.mp4",
+        "libav.mpegts",
         "libav.rtsp",
         "libav.tcp",
         "libav.tls",
-        "libav.mpegts",
-        "libav.NULL",
     ):
         logging.getLogger(logging_namespace).addFilter(libav_filter)
 
