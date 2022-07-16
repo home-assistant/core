@@ -39,7 +39,7 @@ ADVANTAGE_AIR_HVAC_MODES = {
 HASS_HVAC_MODES = {v: k for k, v in ADVANTAGE_AIR_HVAC_MODES.items()}
 
 ADVANTAGE_AIR_FAN_MODES = {
-    "auto": FAN_AUTO,
+    "autoAA": FAN_AUTO,
     "low": FAN_LOW,
     "medium": FAN_MEDIUM,
     "high": FAN_HIGH,
@@ -52,10 +52,8 @@ ADVANTAGE_AIR_MYZONE = "MyZone"
 ADVANTAGE_AIR_SERVICE_SET_MYZONE = "set_myzone"
 ADVANTAGE_AIR_MYAUTO = "MyAuto"
 ADVANTAGE_AIR_MYAUTO_ENABLED = "myAutoModeEnabled"
-ADVANTAGE_AIR_MYAUTO_RUNNING = "myAutoModeIsRunning"
 ADVANTAGE_AIR_MYTEMP = "MyTemp"
 ADVANTAGE_AIR_MYTEMP_ENABLED = "climateControlModeEnabled"
-ADVANTAGE_AIR_MYTEMP_RUNNING = "climateControlModeIsRunning"
 ADVANTAGE_AIR_HEAT_TARGET = "myAutoHeatTargetTemp"
 ADVANTAGE_AIR_COOL_TARGET = "myAutoCoolTargetTemp"
 
