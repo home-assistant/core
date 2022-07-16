@@ -9,7 +9,8 @@ from __future__ import annotations
 BLUETOOTH: list[dict[str, str | int]] = [
     {
         "domain": "homekit_controller",
-        "manufacturer_id": 76
+        "manufacturer_id": 76,
+        "manufacturer_data_first_byte": 6
     },
     {
         "domain": "switchbot",
