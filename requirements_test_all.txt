@@ -7,7 +7,7 @@
 AEMET-OpenData==0.2.1
 
 # homeassistant.components.aladdin_connect
-AIOAladdinConnect==0.1.24
+AIOAladdinConnect==0.1.25
 
 # homeassistant.components.adax
 Adax-local==0.1.4
@@ -152,7 +152,7 @@ aioguardian==2022.03.2
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==0.7.22
+aiohomekit==1.0.0
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -314,7 +314,7 @@ beautifulsoup4==4.11.1
 bellows==0.31.1
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.9.6
+bimmer_connected==0.10.1
 
 # homeassistant.components.bluetooth
 bleak==0.14.3
@@ -601,7 +601,7 @@ hole==0.7.0
 holidays==0.14.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220707.0
+home-assistant-frontend==20220707.1
 
 # homeassistant.components.home_connect
 homeconnect==0.7.1
@@ -980,7 +980,7 @@ pycoolmasternet-async==0.1.2
 pydaikin==2.7.0
 
 # homeassistant.components.deconz
-pydeconz==98
+pydeconz==99
 
 # homeassistant.components.dexcom
 pydexcom==0.2.3
@@ -1103,7 +1103,7 @@ pylibrespot-java==0.1.0
 pylitejet==0.3.0
 
 # homeassistant.components.litterrobot
-pylitterbot==2022.3.0
+pylitterbot==2022.7.0
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.13.1
@@ -1442,7 +1442,7 @@ simplehound==0.3
 simplepush==1.1.4
 
 # homeassistant.components.simplisafe
-simplisafe-python==2022.06.1
+simplisafe-python==2022.07.0
 
 # homeassistant.components.slack
 slackclient==2.5.0
@@ -1592,13 +1592,13 @@ vehicle==0.4.0
 velbus-aio==2022.6.2
 
 # homeassistant.components.venstar
-venstarcolortouch==0.17
+venstarcolortouch==0.18
 
 # homeassistant.components.vilfo
 vilfo-api-client==0.3.2
 
 # homeassistant.components.verisure
-vsure==1.7.3
+vsure==1.8.1
 
 # homeassistant.components.vulcan
 vulcan-api==2.1.1

@@ -69,7 +69,7 @@ class SensiboDeviceSensorEntityDescription(
 FILTER_LAST_RESET_DESCRIPTION = SensiboDeviceSensorEntityDescription(
     key="filter_last_reset",
     device_class=SensorDeviceClass.TIMESTAMP,
-    name="Filter Last Reset",
+    name="Filter last reset",
     icon="mdi:timer",
     value_fn=lambda data: data.filter_last_reset,
     extra_fn=None,
@@ -93,7 +93,7 @@ MOTION_SENSOR_TYPES: tuple[SensiboMotionSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         state_class=SensorStateClass.MEASUREMENT,
-        name="Battery Voltage",
+        name="Battery voltage",
         icon="mdi:battery",
         value_fn=lambda data: data.battery_voltage,
     ),
@@ -128,7 +128,7 @@ PURE_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
     ),
     SensiboDeviceSensorEntityDescription(
         key="pure_sensitivity",
-        name="Pure Sensitivity",
+        name="Pure sensitivity",
         icon="mdi:air-filter",
         value_fn=lambda data: data.pure_sensitivity,
         extra_fn=None,
@@ -140,7 +140,7 @@ DEVICE_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
     SensiboDeviceSensorEntityDescription(
         key="timer_time",
         device_class=SensorDeviceClass.TIMESTAMP,
-        name="Timer End Time",
+        name="Timer end time",
         icon="mdi:timer",
         value_fn=lambda data: data.timer_time,
         extra_fn=lambda data: {"id": data.timer_id, "turn_on": data.timer_state_on},
@@ -149,7 +149,7 @@ DEVICE_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
         key="feels_like",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        name="Temperature Feels Like",
+        name="Temperature feels like",
         value_fn=lambda data: data.feelslike,
         extra_fn=None,
         entity_registry_enabled_default=False,
@@ -237,13 +237,9 @@ class SensiboMotionSensor(SensiboMotionBaseEntity, SensorEntity):
             device_id,
             sensor_id,
             sensor_data,
-            entity_description.name,
         )
         self.entity_description = entity_description
         self._attr_unique_id = f"{sensor_id}-{entity_description.key}"
-        self._attr_name = (
-            f"{self.device_data.name} Motion Sensor {entity_description.name}"
-        )
 
     @property
     def native_unit_of_measurement(self) -> str | None:
@@ -280,7 +276,6 @@ class SensiboDeviceSensor(SensiboDeviceBaseEntity, SensorEntity):
         )
         self.entity_description = entity_description
         self._attr_unique_id = f"{device_id}-{entity_description.key}"
-        self._attr_name = f"{self.device_data.name} {entity_description.name}"
 
     @property
     def native_unit_of_measurement(self) -> str | None:

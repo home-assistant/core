@@ -39,6 +39,8 @@ _LOGGER = logging.getLogger(__name__)
 
 MAX_REMEMBER_ADDRESSES: Final = 2048
 
+SOURCE_LOCAL: Final = "local"
+
 
 class BluetoothCallbackMatcherOptional(TypedDict, total=False):
     """Matcher for the bluetooth integration for callback optional fields."""
@@ -266,7 +268,7 @@ class BluetoothManager:
             ):
                 if service_info is None:
                     service_info = BluetoothServiceInfo.from_advertisement(
-                        device, advertisement_data
+                        device, advertisement_data, SOURCE_LOCAL
                     )
                 try:
                     callback(service_info, BluetoothChange.ADVERTISEMENT)
@@ -277,7 +279,7 @@ class BluetoothManager:
             return
         if service_info is None:
             service_info = BluetoothServiceInfo.from_advertisement(
-                device, advertisement_data
+                device, advertisement_data, SOURCE_LOCAL
             )
         for domain in matched_domains:
             discovery_flow.async_create_flow(
@@ -312,7 +314,9 @@ class BluetoothManager:
         ):
             try:
                 callback(
-                    BluetoothServiceInfo.from_advertisement(*device_adv_data),
+                    BluetoothServiceInfo.from_advertisement(
+                        *device_adv_data, SOURCE_LOCAL
+                    ),
                     BluetoothChange.ADVERTISEMENT,
                 )
             except Exception:  # pylint: disable=broad-except
@@ -338,7 +342,9 @@ class BluetoothManager:
             discovered = models.HA_BLEAK_SCANNER.discovered_devices
             history = models.HA_BLEAK_SCANNER.history
             return [
-                BluetoothServiceInfo.from_advertisement(*history[device.address])
+                BluetoothServiceInfo.from_advertisement(
+                    *history[device.address], SOURCE_LOCAL
+                )
                 for device in discovered
                 if device.address in history
             ]
