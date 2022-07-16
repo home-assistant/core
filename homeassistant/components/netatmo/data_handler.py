@@ -68,7 +68,7 @@ class NetatmoDevice:
 
 
 @dataclass
-class NetatmoDataClass:
+class NetatmoPublisher:
     """Class for keeping track of Netatmo data class metadata."""
 
     name: str
@@ -191,7 +191,7 @@ class NetatmoDataHandler:
                 self.publisher[data_class_entry].subscriptions.append(update_callback)
             return
 
-        self.publisher[data_class_entry] = NetatmoDataClass(
+        self.publisher[data_class_entry] = NetatmoPublisher(
             name=data_class_entry,
             interval=DEFAULT_INTERVALS[data_class_name],
             next_scan=time() + DEFAULT_INTERVALS[data_class_name],
