@@ -185,7 +185,8 @@ class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
     _extra_state_attributes: dict[str, Any] = field(default_factory=dict, init=False)
 
     @property
-    def _entity_name(self) -> str:
+    def name(self) -> str:
+        """Return the name of the entity."""
         return self.hostname or self.mac_address
 
     @property

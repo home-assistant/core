@@ -17,7 +17,7 @@ from homeassistant.helpers.entity_registry import EntityRegistry
 
 from tests.common import MockConfigEntry
 
-SWITCH_WIFI_GUEST_NETWORK = "switch.huawei_lte_wifi_guest_network"
+SWITCH_WIFI_GUEST_NETWORK = "switch.lte_wifi_guest_network"
 
 
 @fixture
