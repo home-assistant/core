@@ -15,6 +15,7 @@ from homeassistant.components.automation import (
     AutomationTriggerInfo,
 )
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.typing import ConfigType
@@ -195,7 +196,9 @@ TRIGGER_FINDERS = {
 }
 
 
-async def async_setup_triggers_for_entry(hass: HomeAssistant, config_entry):
+async def async_setup_triggers_for_entry(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> None:
     """Triggers aren't entities as they have no state, but we still need to set them up for a config entry."""
     hkid = config_entry.data["AccessoryPairingID"]
     conn: HKDevice = hass.data[KNOWN_DEVICES][hkid]

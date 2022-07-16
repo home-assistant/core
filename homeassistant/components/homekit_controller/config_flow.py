@@ -8,7 +8,6 @@ from typing import Any
 import aiohomekit
 from aiohomekit.controller.abstract import AbstractPairing
 from aiohomekit.exceptions import AuthenticationError
-from aiohomekit.model import Accessories, CharacteristicsTypes, ServicesTypes
 from aiohomekit.utils import domain_supported, domain_to_name
 import voluptuous as vol
 
@@ -20,6 +19,7 @@ from homeassistant.helpers import device_registry as dr
 
 from .connection import HKDevice
 from .const import DOMAIN, KNOWN_DEVICES
+from .storage import async_get_entity_storage
 from .utils import async_get_controller
 
 HOMEKIT_DIR = ".homekit"
@@ -252,9 +252,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.debug(
                     "HomeKit info %s: c# incremented, refreshing entities", hkid
                 )
-                self.hass.async_create_task(
-                    conn.async_refresh_entity_map_and_entities(config_num)
-                )
+                conn.async_notify_config_changed(config_num)
             return self.async_abort(reason="already_configured")
 
         _LOGGER.debug("Discovered device %s (%s - %s)", name, model, hkid)
@@ -481,16 +479,21 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # available. Otherwise request a fresh copy from the API.
         # This removes the 'accessories' key from pairing_data at
         # the same time.
-        if not (accessories := pairing_data.pop("accessories", None)):
-            accessories = await pairing.list_accessories_and_characteristics()
-
-        parsed = Accessories.from_list(accessories)
-        accessory_info = parsed.aid(1).services.first(
-            service_type=ServicesTypes.ACCESSORY_INFORMATION
-        )
-        name = accessory_info.value(CharacteristicsTypes.NAME, "")
+        name = await pairing.get_primary_name()
 
         await pairing.close()
+
+        # Save the state of the accessories so we do not
+        # have to request them again when we setup the
+        # config entry.
+        accessories_state = pairing.accessories_state
+        entity_storage = await async_get_entity_storage(self.hass)
+        assert self.unique_id is not None
+        entity_storage.async_create_or_update_map(
+            self.unique_id,
+            accessories_state.config_num,
+            accessories_state.accessories.serialize(),
+        )
 
         return self.async_create_entry(title=name, data=pairing_data)
 
