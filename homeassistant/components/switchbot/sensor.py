@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_NAME,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
@@ -43,6 +44,16 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         native_unit_of_measurement="Level",
         device_class=SensorDeviceClass.ILLUMINANCE,
     ),
+    "humidity": SensorEntityDescription(
+        key="humidity",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.HUMIDITY,
+    ),
+    "temperature_celsius": SensorEntityDescription(
+        key="temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+    ),
 }
 
 
@@ -66,10 +77,20 @@ async def async_setup_entry(
                 entry.data[CONF_MAC],
                 entry.data[CONF_NAME],
             )
-            for sensor in coordinator.data[entry.unique_id]["data"]
+            for sensor in flatten_sensors_data(
+                coordinator.data[entry.unique_id]["data"]
+            )
             if sensor in SENSOR_TYPES
         ]
     )
+
+
+def flatten_sensors_data(sensors):
+    """Deconstruct SwitchBot library temp object C/Fº readings from object."""
+    if "temp" in sensors:
+        sensors["temperature_celsius"] = sensors["temp"]["c"]
+
+    return sensors
 
 
 class SwitchBotSensor(SwitchbotEntity, SensorEntity):
@@ -93,4 +114,4 @@ class SwitchBotSensor(SwitchbotEntity, SensorEntity):
     @property
     def native_value(self) -> str:
         """Return the state of the sensor."""
-        return self.data["data"][self._sensor]
+        return flatten_sensors_data(self.data["data"])[self._sensor]
