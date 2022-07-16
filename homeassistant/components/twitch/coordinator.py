@@ -46,7 +46,8 @@ class TwitchUpdateCoordinator(DataUpdateCoordinator[TwitchCoordinatorData]):
 
     def _async_get_data_threaded(self) -> TwitchCoordinatorData:
         """Return data from the coordinator."""
-        user: TwitchUser = TwitchUser(**(self._client.get_users())["data"][0])
+        user_response = TwitchResponse(**self._client.get_users())
+        user: TwitchUser = TwitchUser(**user_response.data[0])
 
         channels = []
         channels_response: TwitchResponse = TwitchResponse(

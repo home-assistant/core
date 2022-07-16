@@ -1,16 +1,18 @@
 """Data ckasses for Twitch."""
 from __future__ import annotations
 
-from pydantic import BaseModel  # pylint: disable=no-name-in-module
+from dataclasses import dataclass
 
 
-class TwitchResponsePagination(BaseModel):
+@dataclass
+class TwitchResponsePagination:
     """Twitch Response Pagination."""
 
     cursor: str | None = None
 
 
-class TwitchResponse(BaseModel):
+@dataclass
+class TwitchResponse:
     """Twitch Response."""
 
     data: list[dict]
@@ -18,7 +20,8 @@ class TwitchResponse(BaseModel):
     total: int | None = None
 
 
-class TwitchStream(BaseModel):
+@dataclass
+class TwitchStream:
     """Twitch Stream."""
 
     id: str
@@ -34,7 +37,8 @@ class TwitchStream(BaseModel):
     tag_ids: list[str]
 
 
-class TwitchUser(BaseModel):
+@dataclass
+class TwitchUser:
     """Twitch User."""
 
     id: str
@@ -49,6 +53,7 @@ class TwitchUser(BaseModel):
     created_at: str
 
 
+@dataclass
 class TwitchChannel(TwitchUser):
     """Twitch Channel."""
 
@@ -57,7 +62,8 @@ class TwitchChannel(TwitchUser):
     stream: TwitchStream | None = None
 
 
-class TwitchCoordinatorData(BaseModel):
+@dataclass
+class TwitchCoordinatorData:
     """Twitch Coordianator Data."""
 
     channels: list[TwitchChannel]
