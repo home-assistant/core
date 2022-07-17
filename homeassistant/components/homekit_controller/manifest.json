@@ -5,7 +5,7 @@
   "documentation": "https://www.home-assistant.io/integrations/homekit_controller",
   "requirements": ["aiohomekit==1.1.4"],
   "zeroconf": ["_hap._tcp.local.", "_hap._udp.local."],
-  "bluetooth": [{ "manufacturer_id": 76, "manufacturer_data_first_byte": 6 }],
+  "bluetooth": [{ "manufacturer_id": 76, "manufacturer_data_start": [6] }],
   "after_dependencies": ["zeroconf"],
   "codeowners": ["@Jc2k", "@bdraco"],
   "iot_class": "local_push",
