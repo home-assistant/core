@@ -6,6 +6,11 @@ import logging
 from typing import Any
 
 import aiohomekit
+from aiohomekit.exceptions import (
+    AccessoryDisconnectedError,
+    AccessoryNotFoundError,
+    EncryptionError,
+)
 from aiohomekit.model import Accessory
 from aiohomekit.model.characteristics import (
     Characteristic,
@@ -26,7 +31,7 @@ from homeassistant.helpers.typing import ConfigType
 from .config_flow import normalize_hkid
 from .connection import HKDevice, valid_serial_number
 from .const import ENTITY_MAP, KNOWN_DEVICES, TRIGGERS
-from .storage import EntityMapStorage
+from .storage import async_get_entity_storage
 from .utils import async_get_controller, folded_name
 
 _LOGGER = logging.getLogger(__name__)
@@ -76,7 +81,9 @@ class HomeKitEntity(Entity):
         )
 
         self._accessory.add_pollable_characteristics(self.pollable_characteristics)
-        self._accessory.add_watchable_characteristics(self.watchable_characteristics)
+        await self._accessory.add_watchable_characteristics(
+            self.watchable_characteristics
+        )
 
     async def async_will_remove_from_hass(self) -> None:
         """Prepare to be removed from hass."""
@@ -225,23 +232,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry, unique_id=normalize_hkid(conn.unique_id)
         )
 
-    if not await conn.async_setup():
+    try:
+        await conn.async_setup()
+    except (AccessoryNotFoundError, EncryptionError, AccessoryDisconnectedError) as ex:
         del hass.data[KNOWN_DEVICES][conn.unique_id]
-        if (connection := getattr(conn.pairing, "connection", None)) and hasattr(
-            connection, "host"
-        ):
-            raise ConfigEntryNotReady(
-                f"Cannot connect to {connection.host}:{connection.port}"
-            )
-        raise ConfigEntryNotReady
+        await conn.pairing.close()
+        raise ConfigEntryNotReady from ex
 
     return True
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up for Homekit devices."""
-    map_storage = hass.data[ENTITY_MAP] = EntityMapStorage(hass)
-    await map_storage.async_initialize()
+    await async_get_entity_storage(hass)
 
     await async_get_controller(hass)
 

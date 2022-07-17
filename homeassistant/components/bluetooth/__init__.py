@@ -39,6 +39,8 @@ _LOGGER = logging.getLogger(__name__)
 
 MAX_REMEMBER_ADDRESSES: Final = 2048
 
+SOURCE_LOCAL: Final = "local"
+
 
 class BluetoothCallbackMatcherOptional(TypedDict, total=False):
     """Matcher for the bluetooth integration for callback optional fields."""
@@ -69,7 +71,7 @@ ADDRESS: Final = "address"
 LOCAL_NAME: Final = "local_name"
 SERVICE_UUID: Final = "service_uuid"
 MANUFACTURER_ID: Final = "manufacturer_id"
-MANUFACTURER_DATA_FIRST_BYTE: Final = "manufacturer_data_first_byte"
+MANUFACTURER_DATA_START: Final = "manufacturer_data_start"
 
 
 BluetoothChange = Enum("BluetoothChange", "ADVERTISEMENT")
@@ -155,14 +157,16 @@ def _ble_device_matches(
         return False
 
     if (
-        matcher_manufacturer_data_first_byte := matcher.get(
-            MANUFACTURER_DATA_FIRST_BYTE
+        matcher_manufacturer_data_start := matcher.get(MANUFACTURER_DATA_START)
+    ) is not None:
+        matcher_manufacturer_data_start_bytes = bytearray(
+            matcher_manufacturer_data_start
         )
-    ) is not None and not any(
-        matcher_manufacturer_data_first_byte == manufacturer_data[0]
-        for manufacturer_data in advertisement_data.manufacturer_data.values()
-    ):
-        return False
+        if not any(
+            manufacturer_data.startswith(matcher_manufacturer_data_start_bytes)
+            for manufacturer_data in advertisement_data.manufacturer_data.values()
+        ):
+            return False
 
     return True
 
@@ -266,7 +270,7 @@ class BluetoothManager:
             ):
                 if service_info is None:
                     service_info = BluetoothServiceInfo.from_advertisement(
-                        device, advertisement_data
+                        device, advertisement_data, SOURCE_LOCAL
                     )
                 try:
                     callback(service_info, BluetoothChange.ADVERTISEMENT)
@@ -277,7 +281,7 @@ class BluetoothManager:
             return
         if service_info is None:
             service_info = BluetoothServiceInfo.from_advertisement(
-                device, advertisement_data
+                device, advertisement_data, SOURCE_LOCAL
             )
         for domain in matched_domains:
             discovery_flow.async_create_flow(
@@ -312,7 +316,9 @@ class BluetoothManager:
         ):
             try:
                 callback(
-                    BluetoothServiceInfo.from_advertisement(*device_adv_data),
+                    BluetoothServiceInfo.from_advertisement(
+                        *device_adv_data, SOURCE_LOCAL
+                    ),
                     BluetoothChange.ADVERTISEMENT,
                 )
             except Exception:  # pylint: disable=broad-except
@@ -338,7 +344,9 @@ class BluetoothManager:
             discovered = models.HA_BLEAK_SCANNER.discovered_devices
             history = models.HA_BLEAK_SCANNER.history
             return [
-                BluetoothServiceInfo.from_advertisement(*history[device.address])
+                BluetoothServiceInfo.from_advertisement(
+                    *history[device.address], SOURCE_LOCAL
+                )
                 for device in discovered
                 if device.address in history
             ]

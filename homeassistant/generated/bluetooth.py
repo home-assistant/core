@@ -6,7 +6,14 @@ from __future__ import annotations
 
 # fmt: off
 
-BLUETOOTH: list[dict[str, str | int]] = [
+BLUETOOTH: list[dict[str, str | int | list[int]]] = [
+    {
+        "domain": "homekit_controller",
+        "manufacturer_id": 76,
+        "manufacturer_data_start": [
+            6
+        ]
+    },
     {
         "domain": "switchbot",
         "service_uuid": "cba20d00-224d-11e6-9fb8-0002a5d5c51b"

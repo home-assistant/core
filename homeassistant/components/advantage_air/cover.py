@@ -44,8 +44,8 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class AdvantageAirZoneVent(AdvantageAirAirconEntity, CoverEntity):
-    """Advantage Air Cover Class."""
+class AdvantageAirZoneVent(AdvantageAirEntity, CoverEntity):
+    """Advantage Air Zone Vent."""
 
     _attr_device_class = CoverDeviceClass.DAMPER
     _attr_supported_features = (
@@ -55,7 +55,7 @@ class AdvantageAirZoneVent(AdvantageAirAirconEntity, CoverEntity):
     )
 
     def __init__(self, instance, ac_key, zone_key):
-        """Initialize an Advantage Air Cover Class."""
+        """Initialize an Advantage Air Zone Vent."""
         super().__init__(instance, ac_key, zone_key)
         self._attr_name = self._zone["name"]
         self._attr_unique_id = (

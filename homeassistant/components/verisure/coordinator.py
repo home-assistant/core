@@ -31,7 +31,9 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
         self.verisure = Verisure(
             username=entry.data[CONF_EMAIL],
             password=entry.data[CONF_PASSWORD],
-            cookieFileName=hass.config.path(STORAGE_DIR, f"verisure_{entry.entry_id}"),
+            cookieFileName=hass.config.path(
+                STORAGE_DIR, f"verisure_{entry.data[CONF_EMAIL]}"
+            ),
         )
 
         super().__init__(

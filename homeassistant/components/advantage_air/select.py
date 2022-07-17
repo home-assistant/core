@@ -19,7 +19,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up AdvantageAir toggle platform."""
+    """Set up AdvantageAir select platform."""
 
     instance = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
 
@@ -58,7 +58,7 @@ class AdvantageAirMyZone(AdvantageAirAirconEntity, SelectEntity):
 
     @property
     def current_option(self):
-        """Return the fresh air status."""
+        """Return the current MyZone."""
         return self._number_to_name[self._ac["myZone"]]
 
     async def async_select_option(self, option):
