@@ -54,6 +54,6 @@ class AdvantageAirMyZone(AdvantageAirEntity, SelectEntity):
 
     async def async_select_option(self, option):
         """Set the MyZone."""
-        await self.async_change(
+        await self.async_set_aircon(
             {self.ac_key: {"info": {"myZone": self._name_to_number[option]}}}
         )
