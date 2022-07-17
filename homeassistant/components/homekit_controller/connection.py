@@ -231,7 +231,7 @@ class HKDevice:
         )
 
         if transport == Transport.BLE:
-            # If we are using BLE, we need to periodicly check of the
+            # If we are using BLE, we need to periodically check of the
             # BLE device is available since we won't get callbacks
             # when it goes away since we HomeKit supports disconnected
             # notifications and we cannot treat a disconnect as unavailability.
