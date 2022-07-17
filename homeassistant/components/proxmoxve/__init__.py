@@ -28,13 +28,9 @@ from homeassistant.helpers.update_coordinator import (
 from .const import (
     CONF_REALM,
     COORDINATORS,
-    DEFAULT_PORT,
-    DEFAULT_REALM,
-    DEFAULT_VERIFY_SSL,
     DOMAIN,
     PLATFORMS,
     PROXMOX_CLIENT,
-    PROXMOX_CLIENTS,
     TYPE_CONTAINER,
     TYPE_VM,
     UPDATE_INTERVAL,
@@ -45,61 +41,6 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the platform."""
-
-    if DOMAIN not in config:
-        return True
-
-    hass.data.setdefault(DOMAIN, {})
-
-    hass.data[PROXMOX_CLIENTS] = {}
-
-    for entry in config[DOMAIN]:
-        host = entry[CONF_HOST]
-        port = entry.get(CONF_PORT, DEFAULT_PORT)
-        user = entry[CONF_USERNAME]
-        realm = entry.get(CONF_REALM, DEFAULT_REALM)
-        password = entry[CONF_PASSWORD]
-        verify_ssl = entry.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
-
-        hass.data[PROXMOX_CLIENTS][host] = None
-
-        try:
-            # Construct an API client with the given data for the given host
-            proxmox_client = ProxmoxClient(
-                host, port, user, realm, password, verify_ssl
-            )
-
-            hass.async_add_executor_job(proxmox_client.build_client)
-        except AuthenticationError:
-            _LOGGER.warning(
-                "Invalid credentials for proxmox instance %s:%d", host, port
-            )
-            continue
-        except SSLError:
-            _LOGGER.error(
-                "Unable to verify proxmox server SSL. "
-                'Try using "verify_ssl: false" for proxmox instance %s:%d',
-                host,
-                port,
-            )
-            continue
-        except ConnectTimeout:
-            _LOGGER.warning("Connection to host %s timed out during setup", host)
-            continue
-        except requests.exceptions.ConnectionError:
-            _LOGGER.warning("Host %s is not reachable", host)
-            continue
-
-        hass.data[PROXMOX_CLIENTS][host] = proxmox_client
-
-    coordinators: dict[str, dict[str, dict[int, DataUpdateCoordinator]]] = {}
-    hass.data[DOMAIN][COORDINATORS] = coordinators
-
-    # Create a coordinator for each vm/container
-    for host_config in config[DOMAIN]:
-        host_name = host_config["host"]
-        coordinators[host_name] = {}
-
     # import to config flow
     if DOMAIN in config:
         for conf in config[DOMAIN]:
@@ -123,8 +64,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     """Set up the platform."""
 
     entry_data = config_entry.data
-
-    hass.data[PROXMOX_CLIENTS] = {}
 
     host = entry_data[CONF_HOST]
     port = entry_data[CONF_PORT]
