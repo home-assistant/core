@@ -231,6 +231,10 @@ class HKDevice:
         )
 
         if transport == Transport.BLE:
+            # If we are using BLE, we need to periodicly check of the
+            # BLE device is available since we won't get callbacks
+            # when it goes away since we HomeKit supports disconnected
+            # notifications and we cannot treat a disconnect as unavailability.
             self._ble_available_interval_remover = async_track_time_interval(
                 self.hass,
                 self.async_update_available_state,
