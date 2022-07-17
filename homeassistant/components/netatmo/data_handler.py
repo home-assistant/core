@@ -109,7 +109,7 @@ class NetatmoPublisher:
     name: str
     interval: int
     next_scan: float
-    subscriptions: list[CALLBACK_TYPE | None]
+    subscriptions: set[CALLBACK_TYPE | None]
     method: str
     kwargs: dict
 
@@ -226,7 +226,7 @@ class NetatmoDataHandler:
         """Subscribe to publisher."""
         if signal_name in self.publisher:
             if update_callback not in self.publisher[signal_name].subscriptions:
-                self.publisher[signal_name].subscriptions.append(update_callback)
+                self.publisher[signal_name].subscriptions.add(update_callback)
             return
 
         if publisher == "public":
@@ -236,7 +236,7 @@ class NetatmoDataHandler:
             name=signal_name,
             interval=DEFAULT_INTERVALS[publisher],
             next_scan=time() + DEFAULT_INTERVALS[publisher],
-            subscriptions=[update_callback],
+            subscriptions={update_callback},
             method=PUBLISHERS[publisher],
             kwargs=kwargs,
         )
