@@ -409,9 +409,6 @@ class HomematicpTemperatureExternalSensorCh1(HomematicipGenericEntity, SensorEnt
     @property
     def native_value(self) -> float:
         """Return the state."""
-        if hasattr(self._device, "temperatureExternalOne"):
-            return self._device.temperatureExternalOne
-
         return self._device.temperatureExternalOne
 
     @property
@@ -437,9 +434,6 @@ class HomematicpTemperatureExternalSensorCh2(HomematicipGenericEntity, SensorEnt
     @property
     def native_value(self) -> float:
         """Return the state."""
-        if hasattr(self._device, "temperatureExternalTwo"):
-            return self._device.temperatureExternalTwo
-
         return self._device.temperatureExternalTwo
 
     @property
@@ -465,9 +459,6 @@ class HomematicpTemperatureExternalSensorDelta(HomematicipGenericEntity, SensorE
     @property
     def native_value(self) -> float:
         """Return the state."""
-        if hasattr(self._device, "temperatureExternalDelta"):
-            return self._device.temperatureExternalDelta
-
         return self._device.temperatureExternalDelta
 
     @property
