@@ -3,7 +3,7 @@
 from datetime import timedelta
 from unittest.mock import patch
 
-from aiohomekit import AccessoryDisconnectedError
+from aiohomekit import AccessoryNotFoundError
 from aiohomekit.model import Accessory, Transport
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
@@ -118,12 +118,12 @@ async def test_offline_device_raises(hass, controller):
         async def async_populate_accessories_state(self, *args, **kwargs):
             nonlocal is_connected
             if not is_connected:
-                raise AccessoryDisconnectedError("any")
+                raise AccessoryNotFoundError("any")
 
         async def get_characteristics(self, chars, *args, **kwargs):
             nonlocal is_connected
             if not is_connected:
-                raise AccessoryDisconnectedError("any")
+                raise AccessoryNotFoundError("any")
             return {}
 
     accessory = Accessory.create_with_info(
@@ -172,12 +172,12 @@ async def test_ble_device_only_checks_is_available(hass, controller):
         async def async_populate_accessories_state(self, *args, **kwargs):
             nonlocal is_available
             if not is_available:
-                raise AccessoryDisconnectedError("any")
+                raise AccessoryNotFoundError("any")
 
         async def get_characteristics(self, chars, *args, **kwargs):
             nonlocal is_available
             if not is_available:
-                raise AccessoryDisconnectedError("any")
+                raise AccessoryNotFoundError("any")
             return {}
 
     accessory = Accessory.create_with_info(
