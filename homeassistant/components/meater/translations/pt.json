@@ -11,6 +11,7 @@
             },
             "user": {
                 "data": {
+                    "password": "Palavra-passe",
                     "username": "Nome de Utilizador"
                 }
             }
