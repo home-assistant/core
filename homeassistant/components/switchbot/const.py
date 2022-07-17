@@ -5,8 +5,13 @@ MANUFACTURER = "switchbot"
 # Config Attributes
 ATTR_BOT = "bot"
 ATTR_CURTAIN = "curtain"
+ATTR_HYGROMETER = "hygrometer"
 DEFAULT_NAME = "Switchbot"
-SUPPORTED_MODEL_TYPES = {"WoHand": ATTR_BOT, "WoCurtain": ATTR_CURTAIN}
+SUPPORTED_MODEL_TYPES = {
+    "WoHand": ATTR_BOT,
+    "WoCurtain": ATTR_CURTAIN,
+    "WoSensorTH": ATTR_HYGROMETER,
+}
 
 # Config Defaults
 DEFAULT_RETRY_COUNT = 3

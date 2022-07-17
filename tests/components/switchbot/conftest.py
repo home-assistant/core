@@ -72,6 +72,19 @@ class MocGetSwitchbotDevices:
             },
             "modelName": "WoCurtain",
         }
+        self._sensor_data = {
+            "mac_address": "c0:ce:b0:d4:26:be",
+            "isEncrypted": False,
+            "data": {
+                "temp": {"c": 21.6, "f": 70.88},
+                "fahrenheit": False,
+                "humidity": 73,
+                "battery": 100,
+                "rssi": -58,
+            },
+            "model": "T",
+            "modelName": "WoSensorTH",
+        }
         self._unsupported_device = {
             "mac_address": "test",
             "isEncrypted": False,
@@ -97,6 +110,8 @@ class MocGetSwitchbotDevices:
             return self._unsupported_device
         if mac == "e7:89:43:90:90:90":
             return self._curtain_all_services_data
+        if mac == "c0:ce:b0:d4:26:be":
+            return self._sensor_data
 
         return None
 
