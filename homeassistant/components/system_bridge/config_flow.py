@@ -7,13 +7,13 @@ import logging
 from typing import Any
 
 import async_timeout
-from systembridgeconnector.const import EVENT_MODULE, EVENT_TYPE, TYPE_DATA_UPDATE
 from systembridgeconnector.exceptions import (
     AuthenticationException,
     ConnectionClosedException,
     ConnectionErrorException,
 )
 from systembridgeconnector.models.get_data import GetData
+from systembridgeconnector.models.system import System
 from systembridgeconnector.websocket_client import WebSocketClient
 import voluptuous as vol
 
@@ -47,6 +47,18 @@ async def validate_input(
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
+    system: System | None = None
+
+    async def async_handle_module(
+        module_name: str,
+        module: Any,
+    ) -> None:
+        """Handle data from the WebSocket client."""
+        _LOGGER.debug("Got data for: %s", module_name)
+        if module_name == "system":
+            nonlocal system
+            system = module
+
     host = data[CONF_HOST]
 
     websocket_client = WebSocketClient(
@@ -57,15 +69,14 @@ async def validate_input(
     try:
         async with async_timeout.timeout(30):
             await websocket_client.connect(session=async_get_clientsession(hass))
-            await websocket_client.get_data(GetData(modules=["system"]))
-            while True:
-                message = await websocket_client.receive_message()
-                _LOGGER.debug("Message: %s", message)
-                if (
-                    message[EVENT_TYPE] == TYPE_DATA_UPDATE
-                    and message[EVENT_MODULE] == "system"
-                ):
-                    break
+            hass.async_create_task(
+                websocket_client.listen(callback=async_handle_module)
+            )
+            response = await websocket_client.get_data(GetData(modules=["system"]))
+            _LOGGER.info("Got response: %s", response.json())
+            while system is None:
+                _LOGGER.debug("Waiting for system data")
+                await asyncio.sleep(1)
     except AuthenticationException as exception:
         _LOGGER.warning(
             "Authentication error when connecting to %s: %s", data[CONF_HOST], exception
@@ -83,13 +94,13 @@ async def validate_input(
         _LOGGER.warning("Timed out connecting to %s: %s", data[CONF_HOST], exception)
         raise CannotConnect from exception
 
-    _LOGGER.debug("%s Message: %s", TYPE_DATA_UPDATE, message)
+    _LOGGER.debug("Got System data: %s", system)
 
-    if "uuid" not in message["data"]:
+    if system.uuid is None:
         error = "No UUID in result!"
         raise CannotConnect(error)
 
-    return {"hostname": host, "uuid": message["data"]["uuid"]}
+    return {"hostname": host, "uuid": system.uuid}
 
 
 async def _async_get_info(

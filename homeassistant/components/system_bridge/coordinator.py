@@ -5,6 +5,7 @@ import asyncio
 from collections.abc import Callable
 from datetime import timedelta
 import logging
+from typing import Any
 
 import async_timeout
 from pydantic import BaseModel  # pylint: disable=no-name-in-module
@@ -102,7 +103,7 @@ class SystemBridgeDataUpdateCoordinator(
     async def async_handle_module(
         self,
         module_name: str,
-        module,
+        module: Any,
     ) -> None:
         """Handle data from the WebSocket client."""
         self.logger.debug("Set new data for: %s", module_name)
