@@ -52,7 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def async_change(change):
         try:
-            if await api.async_change(change):
+            if await api.aircon.async_set(change):
                 await coordinator.async_refresh()
         except ApiError as err:
             _LOGGER.warning(err)
