@@ -17,7 +17,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up AdvantageAir toggle platform."""
+    """Set up AdvantageAir switch platform."""
 
     instance = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
 
