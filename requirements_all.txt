@@ -1378,7 +1378,7 @@ pyaftership==21.11.0
 pyairnow==1.1.0
 
 # homeassistant.components.airvisual
-pyairvisual==5.0.9
+pyairvisual==2022.07.0
 
 # homeassistant.components.almond
 pyalmond==0.0.2
@@ -1726,7 +1726,7 @@ pyopnsense==0.2.0
 pyoppleio==1.0.5
 
 # homeassistant.components.opentherm_gw
-pyotgw==1.1b1
+pyotgw==2.0.0
 
 # homeassistant.auth.mfa_modules.notify
 # homeassistant.auth.mfa_modules.totp
@@ -2161,7 +2161,7 @@ sendgrid==6.8.2
 sense_energy==0.10.4
 
 # homeassistant.components.sentry
-sentry-sdk==1.7.1
+sentry-sdk==1.7.2
 
 # homeassistant.components.sharkiq
 sharkiq==0.0.1
