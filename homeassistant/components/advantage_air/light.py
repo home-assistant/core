@@ -7,6 +7,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
+    ADVANTAGE_AIR_LIGHTS,
     ADVANTAGE_AIR_STATE_OFF,
     ADVANTAGE_AIR_STATE_ON,
     DOMAIN as ADVANTAGE_AIR_DOMAIN,
@@ -24,11 +25,12 @@ async def async_setup_entry(
     instance = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
 
     entities = []
-    for light in instance["coordinator"].data["myLights"]["lights"]:
-        if light.get("relay"):
-            entities.append(AdvantageAirLight(instance, light))
-        else:
-            entities.append(AdvantageAirLightDimmable(instance, light))
+    if ADVANTAGE_AIR_LIGHTS in instance["coordinator"].data:
+        for light in instance["coordinator"].data[ADVANTAGE_AIR_LIGHTS]["lights"]:
+            if light.get("relay"):
+                entities.append(AdvantageAirLight(instance, light))
+            else:
+                entities.append(AdvantageAirLightDimmable(instance, light))
     async_add_entities(entities)
 
 
@@ -47,7 +49,7 @@ class AdvantageAirLight(AdvantageAirEntity, LightEntity):
     @property
     def _light(self):
         """Return the light object."""
-        return self.coordinator.data["myLights"]["lights"][self._id]
+        return self.coordinator.data[ADVANTAGE_AIR_LIGHTS]["lights"][self._id]
 
     @property
     def name(self) -> str:

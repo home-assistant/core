@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN as ADVANTAGE_AIR_DOMAIN
+from .const import ADVANTAGE_AIR_AIRCONS, DOMAIN as ADVANTAGE_AIR_DOMAIN
 from .entity import AdvantageAirAirconEntity
 
 PARALLEL_UPDATES = 0
@@ -26,15 +26,18 @@ async def async_setup_entry(
     instance = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
 
     entities: list[BinarySensorEntity] = []
-    for ac_key, ac_device in instance["coordinator"].data["aircons"].items():
-        entities.append(AdvantageAirFilter(instance, ac_key))
-        for zone_key, zone in ac_device["zones"].items():
-            # Only add motion sensor when motion is enabled
-            if zone["motionConfig"] >= 2:
-                entities.append(AdvantageAirZoneMotion(instance, ac_key, zone_key))
-            # Only add MyZone if it is available
-            if zone["type"] != 0:
-                entities.append(AdvantageAirZoneMyZone(instance, ac_key, zone_key))
+    if ADVANTAGE_AIR_AIRCONS in instance["coordinator"].data:
+        for ac_key, ac_device in (
+            instance["coordinator"].data[ADVANTAGE_AIR_AIRCONS].items()
+        ):
+            entities.append(AdvantageAirFilter(instance, ac_key))
+            for zone_key, zone in ac_device["zones"].items():
+                # Only add motion sensor when motion is enabled
+                if zone["motionConfig"] >= 2:
+                    entities.append(AdvantageAirZoneMotion(instance, ac_key, zone_key))
+                # Only add MyZone if it is available
+                if zone["type"] != 0:
+                    entities.append(AdvantageAirZoneMyZone(instance, ac_key, zone_key))
     async_add_entities(entities)
 
 

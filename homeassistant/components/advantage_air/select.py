@@ -4,7 +4,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN as ADVANTAGE_AIR_DOMAIN
+from .const import ADVANTAGE_AIR_AIRCONS, DOMAIN as ADVANTAGE_AIR_DOMAIN
 from .entity import AdvantageAirAirconEntity
 
 ADVANTAGE_AIR_INACTIVE = "Inactive"
@@ -20,8 +20,9 @@ async def async_setup_entry(
     instance = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
 
     entities = []
-    for ac_key in instance["coordinator"].data["aircons"]:
-        entities.append(AdvantageAirMyZone(instance, ac_key))
+    if ADVANTAGE_AIR_AIRCONS in instance["coordinator"].data:
+        for ac_key in instance["coordinator"].data[ADVANTAGE_AIR_AIRCONS]:
+            entities.append(AdvantageAirMyZone(instance, ac_key))
     async_add_entities(entities)
 
 
