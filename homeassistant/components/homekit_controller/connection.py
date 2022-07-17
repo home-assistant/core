@@ -138,16 +138,6 @@ class HKDevice:
 
         self.watchable_characteristics: list[tuple[int, int]] = []
 
-        config_entry.async_on_unload(
-            self.pairing.dispatcher_connect(self.process_new_events)
-        )
-        config_entry.async_on_unload(
-            self.pairing.dispatcher_connect_config_changed(self.process_config_changed)
-        )
-        config_entry.async_on_unload(
-            self.pairing.dispatcher_availability_changed(self.async_set_available_state)
-        )
-
     @property
     def entity_map(self) -> Accessories:
         """Return the accessories from the pairing."""
@@ -199,6 +189,7 @@ class HKDevice:
         entity_storage: EntityMapStorage = self.hass.data[ENTITY_MAP]
         pairing = self.pairing
         transport = pairing.transport
+        entry = self.config_entry
 
         if cache := entity_storage.get_map(self.unique_id):
             pairing.restore_accessories_state(cache["accessories"], cache["config_num"])
@@ -219,6 +210,14 @@ class HKDevice:
             if transport != Transport.BLE:
                 # BLE devices may sleep and we can't force a connection
                 raise
+
+        entry.async_on_unload(pairing.dispatcher_connect(self.process_new_events))
+        entry.async_on_unload(
+            pairing.dispatcher_connect_config_changed(self.process_config_changed)
+        )
+        entry.async_on_unload(
+            pairing.dispatcher_availability_changed(self.async_set_available_state)
+        )
 
         await self.async_process_entity_map()
 
