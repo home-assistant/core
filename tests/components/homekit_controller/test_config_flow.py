@@ -1069,9 +1069,8 @@ async def test_bluetooth_valid_device_discovery_paired(hass, controller):
 
 
 async def test_bluetooth_valid_device_discovery_unpaired(hass, controller):
-    """Test bluetooth discovery  with a homekit device and discovery works."""
-    device = setup_mock_accessory(controller)
-
+    """Test bluetooth discovery with a homekit device and discovery works."""
+    setup_mock_accessory(controller)
     with patch(
         "homeassistant.components.homekit_controller.config_flow.aiohomekit_const.BLE_TRANSPORT_SUPPORTED",
         True,
@@ -1091,23 +1090,11 @@ async def test_bluetooth_valid_device_discovery_unpaired(hass, controller):
         "title_placeholders": {"name": "TestDevice", "category": "Other"},
     }
 
-    original_async_start_pairing = device.async_start_pairing
-
-    async def _async_start_pairing(*args, **kwargs):
-        finish_pairing = await original_async_start_pairing(*args, **kwargs)
-
-        async def _finish_pairing(*args, **kwargs):
-            return await finish_pairing(*args, **kwargs)
-
-        return _finish_pairing
-
-    with patch.object(device, "async_start_pairing", _async_start_pairing):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
-
-    assert result["type"] == RESULT_TYPE_FORM
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={"pairing_code": "111-22-333"}
+    result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result2["type"] == RESULT_TYPE_FORM
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"], user_input={"pairing_code": "111-22-333"}
     )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Koogeek-LS1-20833F"
-    assert result["data"] == {}
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["title"] == "Koogeek-LS1-20833F"
+    assert result3["data"] == {}
