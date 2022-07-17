@@ -141,7 +141,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             detection_callback,
             BluetoothCallbackMatcher(
                 manufacturer_id=20296,
-                manufacturer_data_start=[79, 68, 70, 74, 65, 82]
+                manufacturer_data_start=[79, 68, 70, 74, 65, 82],
             ),
             BluetoothScanningMode.ACTIVE
         )
