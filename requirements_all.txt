@@ -168,7 +168,7 @@ aioguardian==2022.03.2
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==1.1.1
+aiohomekit==1.1.4
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -837,7 +837,7 @@ home-assistant-frontend==20220707.1
 homeconnect==0.7.1
 
 # homeassistant.components.homematicip_cloud
-homematicip==1.0.4
+homematicip==1.0.5
 
 # homeassistant.components.home_plus_control
 homepluscontrol==0.0.5
