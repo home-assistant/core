@@ -6,9 +6,10 @@ import re
 from typing import TYPE_CHECKING, Any, cast
 
 import aiohomekit
-from aiohomekit.const import BLE_TRANSPORT_SUPPORTED
+from aiohomekit import const as aiohomekit_const
 from aiohomekit.controller.abstract import AbstractPairing
 from aiohomekit.exceptions import AuthenticationError
+from aiohomekit.model.status_flags import StatusFlags
 from aiohomekit.utils import domain_supported, domain_to_name
 import voluptuous as vol
 
@@ -343,7 +344,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: bluetooth.BluetoothServiceInfo
     ) -> FlowResult:
         """Handle the bluetooth discovery step."""
-        if not BLE_TRANSPORT_SUPPORTED:
+        if not aiohomekit_const.BLE_TRANSPORT_SUPPORTED:
             return self.async_abort(reason="ignored_model")
 
         # Late imports in case BLE is not available
@@ -366,6 +367,9 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         except ValueError:
             return self.async_abort(reason="ignored_model")
 
+        if ~device.status_flags & StatusFlags.UNPAIRED:
+            return self.async_abort(reason="already_paired")
+
         if self.controller is None:
             await self._async_setup_controller()
             assert self.controller is not None
@@ -377,9 +381,6 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if TYPE_CHECKING:
             discovery = cast(BleDiscovery, discovery)
-
-        if discovery.paired:
-            return self.async_abort(reason="already_paired")
 
         self.name = discovery.description.name
         self.model = BLE_DEFAULT_NAME
