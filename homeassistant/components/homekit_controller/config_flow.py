@@ -527,8 +527,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     @callback
     def _async_step_pair_show_form(self, errors=None):
-        placeholders = {"name": self.name}
-        self.context["title_placeholders"] = {
+        placeholders = self.context["title_placeholders"] = {
             "name": self.name,
             "category": formatted_category(self.category),
         }
