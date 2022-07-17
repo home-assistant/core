@@ -6,7 +6,8 @@
         },
         "error": {
             "invalid_auth": "Autentikasi tidak valid",
-            "unknown": "Kesalahan yang tidak diharapkan"
+            "unknown": "Kesalahan yang tidak diharapkan",
+            "unknown_mfa": "Terjadi kesalahan yang tidak diketahui dalam pengaturan MFA"
         },
         "step": {
             "installation": {
@@ -15,11 +16,21 @@
                 },
                 "description": "Home Assistant menemukan beberapa instalasi Verisure di akun My Pages. Pilih instalasi untuk ditambahkan ke Home Assistant."
             },
+            "mfa": {
+                "data": {
+                    "code": "Kode Verifikasi"
+                }
+            },
             "reauth_confirm": {
                 "data": {
                     "description": "Autentikasi ulang dengan akun Verisure My Pages Anda.",
                     "email": "Email",
                     "password": "Kata Sandi"
+                }
+            },
+            "reauth_mfa": {
+                "data": {
+                    "code": "Kode Verifikasi"
                 }
             },
             "user": {
