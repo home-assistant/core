@@ -50,9 +50,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_interval=timedelta(seconds=ADVANTAGE_AIR_SYNC_INTERVAL),
     )
 
-    async def async_change(change):
+    async def async_set_aircon(change):
         try:
             if await api.aircon.async_set(change):
+                await coordinator.async_refresh()
+        except ApiError as err:
+            _LOGGER.warning(err)
+
+    async def async_set_lights(change):
+        try:
+            if await api.lights.async_set(change):
                 await coordinator.async_refresh()
         except ApiError as err:
             _LOGGER.warning(err)
@@ -62,7 +69,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         "coordinator": coordinator,
-        "async_change": async_change,
+        "async_set_aircon": async_set_aircon,
+        "async_set_lights": async_set_lights,
     }
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

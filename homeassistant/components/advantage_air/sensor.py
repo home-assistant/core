@@ -87,7 +87,7 @@ class AdvantageAirTimeTo(AdvantageAirEntity, SensorEntity):
     async def set_time_to(self, **kwargs):
         """Set the timer value."""
         value = min(720, max(0, int(kwargs[ADVANTAGE_AIR_SET_COUNTDOWN_VALUE])))
-        await self.async_change({self.ac_key: {"info": {self._time_key: value}}})
+        await self.async_set_aircon({self.ac_key: {"info": {self._time_key: value}}})
 
 
 class AdvantageAirZoneVent(AdvantageAirEntity, SensorEntity):
