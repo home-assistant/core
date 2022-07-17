@@ -15,7 +15,7 @@ from aiohomekit.exceptions import (
     EncryptionError,
 )
 from aiohomekit.model import Accessories, Accessory, Transport
-from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
+from aiohomekit.model.characteristics import Characteristic
 from aiohomekit.model.services import Service
 
 from homeassistant.config_entries import ConfigEntry
@@ -187,25 +187,6 @@ class HKDevice:
         self.available = available
         async_dispatcher_send(self.hass, self.signal_state_updated)
 
-    async def async_ensure_available(self) -> None:
-        """Verify the accessory is available after processing the entity map."""
-        if self.available:
-            return
-        if self.watchable_characteristics and self.pollable_characteristics:
-            # We already tried, no need to try again
-            return
-        # We there are no watchable and not pollable characteristics,
-        # we need to force a connection to the device to verify its alive.
-        #
-        # This is similar to iOS's behavior for keeping alive connections
-        # to cameras.
-        #
-        primary = self.entity_map.accessories[0]
-        aid = primary.aid
-        iid = primary.accessory_information[CharacteristicsTypes.SERIAL_NUMBER].iid
-        await self.pairing.get_characteristics([(aid, iid)])
-        self.async_set_available_state(True)
-
     async def async_setup(self) -> None:
         """Prepare to use a paired HomeKit device in Home Assistant."""
         entity_storage: EntityMapStorage = self.hass.data[ENTITY_MAP]
@@ -234,14 +215,14 @@ class HKDevice:
 
         await self.async_process_entity_map()
 
-        await self.async_ensure_available()
-
         if not cache:
             # If its missing from the cache, make sure we save it
             self.async_save_entity_map()
         # If everything is up to date, we can create the entities
         # since we know the data is not stale.
         await self.async_add_new_entities()
+
+        self.async_set_available_state(self.pairing.is_available)
 
         self._polling_interval_remover = async_track_time_interval(
             self.hass, self.async_update, SCAN_INTERVAL_BY_TRANSPORT[transport]
