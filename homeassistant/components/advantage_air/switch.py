@@ -5,6 +5,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
+    ADVANTAGE_AIR_AIRCONS,
     ADVANTAGE_AIR_STATE_OFF,
     ADVANTAGE_AIR_STATE_ON,
     DOMAIN as ADVANTAGE_AIR_DOMAIN,
@@ -21,10 +22,13 @@ async def async_setup_entry(
 
     instance = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
 
-    entities = []
-    for ac_key, ac_device in instance["coordinator"].data["aircons"].items():
-        if ac_device["info"]["freshAirStatus"] != "none":
-            entities.append(AdvantageAirFreshAir(instance, ac_key))
+    entities: list[SwitchEntity] = []
+    if ADVANTAGE_AIR_AIRCONS in instance["coordinator"].data:
+        for ac_key, ac_device in (
+            instance["coordinator"].data[ADVANTAGE_AIR_AIRCONS].items()
+        ):
+            if ac_device["info"]["freshAirStatus"] != "none":
+                entities.append(AdvantageAirFreshAir(instance, ac_key))
     async_add_entities(entities)
 
 

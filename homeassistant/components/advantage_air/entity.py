@@ -28,7 +28,7 @@ class AdvantageAirAirconEntity(AdvantageAirEntity):
 
     def __init__(self, instance, ac_key, zone_key=None):
         """Initialize common aspects of an Advantage Air Aircon entity."""
-        super().__init__(instance["coordinator"])
+        super().__init__(instance)
         self.async_set_aircon = instance["async_set_aircon"]
         self.ac_key = ac_key
         self.zone_key = zone_key
