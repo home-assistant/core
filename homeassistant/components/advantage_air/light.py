@@ -4,6 +4,7 @@ from typing import Any
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -51,16 +52,20 @@ class AdvantageAirLight(AdvantageAirEntity, LightEntity):
         self.async_set_light = instance[ADVANTAGE_AIR_SET_LIGHT]
         self._id = light["id"]
         self._attr_unique_id = f'{self.coordinator.data["system"]["rid"]}-{self._id}'
+        self._attr_device_info = DeviceInfo(
+            identifiers={
+                (ADVANTAGE_AIR_DOMAIN, self.coordinator.data["system"]["rid"], self._id)
+            },
+            via_device=(ADVANTAGE_AIR_DOMAIN, self.coordinator.data["system"]["rid"]),
+            manufacturer="Advantage Air",
+            model=light.get("moduleType", "Unknown"),
+            name=light["name"],
+        )
 
     @property
     def _light(self):
         """Return the light object."""
         return self.coordinator.data[ADVANTAGE_AIR_LIGHTS]["lights"][self._id]
-
-    @property
-    def name(self) -> str:
-        """Return a name for this light entity."""
-        return self._light["name"]
 
     @property
     def is_on(self) -> bool:
