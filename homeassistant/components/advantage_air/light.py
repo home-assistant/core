@@ -28,9 +28,11 @@ async def async_setup_entry(
 
     entities = []
     if ADVANTAGE_AIR_LIGHTS in instance[ADVANTAGE_AIR_COORDINATOR].data:
-        for light in instance[ADVANTAGE_AIR_COORDINATOR].data[ADVANTAGE_AIR_LIGHTS][
-            "lights"
-        ]:
+        for _, light in (
+            instance[ADVANTAGE_AIR_COORDINATOR]
+            .data[ADVANTAGE_AIR_LIGHTS]["lights"]
+            .items()
+        ):
             if light.get("relay"):
                 entities.append(AdvantageAirLight(instance, light))
             else:
@@ -88,5 +90,5 @@ class AdvantageAirLightDimmable(AdvantageAirLight):
         """Turn the light on and optionally set the brightness."""
         data = {"id": self._id, "state": ADVANTAGE_AIR_STATE_ON}
         if ATTR_BRIGHTNESS in kwargs:
-            data["value"] = round(kwargs[ATTR_BRIGHTNESS] / 255)
+            data["value"] = round(kwargs[ATTR_BRIGHTNESS] * 100 / 255)
         await self.async_set_light(data)
