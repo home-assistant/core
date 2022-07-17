@@ -25,7 +25,7 @@ async def async_setup_entry(
 
     entities = []
     for light in instance["coordinator"].data["myLights"]["lights"]:
-        if light["relay"]:
+        if light.get("relay"):
             entities.append(AdvantageAirLight(instance, light))
         else:
             entities.append(AdvantageAirLightDimmable(instance, light))
