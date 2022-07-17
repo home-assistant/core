@@ -69,6 +69,11 @@ def normalize_hkid(hkid: str) -> str:
     return hkid.lower()
 
 
+def formatted_category(category: Categories) -> str:
+    """Return a human readable category name."""
+    return str(category.name).replace("_", " ").title()
+
+
 @callback
 def find_existing_host(hass, serial: str) -> config_entries.ConfigEntry | None:
     """Return a set of the configured hosts."""
@@ -148,7 +153,14 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             errors=errors,
             data_schema=vol.Schema(
-                {vol.Required("device"): vol.In(self.devices.keys())}
+                {
+                    vol.Required("device"): vol.In(
+                        {
+                            key: f"{key} ({formatted_category(discovery.description.category)})"
+                            for key, discovery in self.devices.items()
+                        }
+                    )
+                }
             ),
         )
 
@@ -518,7 +530,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         placeholders = {"name": self.name}
         self.context["title_placeholders"] = {
             "name": self.name,
-            "category": str(self.category.name).replace("_", " ").title(),
+            "category": formatted_category(self.category),
         }
 
         schema = {vol.Required("pairing_code"): vol.All(str, vol.Strip)}
