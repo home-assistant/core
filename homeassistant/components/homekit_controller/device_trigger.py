@@ -1,7 +1,7 @@
 """Provides device automations for homekit devices."""
 from __future__ import annotations
 
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from typing import TYPE_CHECKING, Any
 
 from aiohomekit.model.characteristics import CharacteristicsTypes
@@ -15,6 +15,7 @@ from homeassistant.components.automation import (
     AutomationTriggerInfo,
 )
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.typing import ConfigType
@@ -59,7 +60,9 @@ HK_TO_HA_INPUT_EVENT_VALUES = {
 class TriggerSource:
     """Represents a stateless source of event data from HomeKit."""
 
-    def __init__(self, connection, aid, triggers):
+    def __init__(
+        self, connection: HKDevice, aid: int, triggers: list[dict[str, Any]]
+    ) -> None:
         """Initialize a set of triggers for a device."""
         self._hass = connection.hass
         self._connection = connection
@@ -67,7 +70,7 @@ class TriggerSource:
         self._triggers: dict[tuple[str, str], dict[str, Any]] = {}
         for trigger in triggers:
             self._triggers[(trigger["type"], trigger["subtype"])] = trigger
-        self._callbacks = {}
+        self._callbacks: dict[int, list[Callable[[Any], None]]] = {}
 
     def fire(self, iid, value):
         """Process events that have been received from a HomeKit accessory."""
@@ -97,7 +100,7 @@ class TriggerSource:
         trigger = self._triggers[config[CONF_TYPE], config[CONF_SUBTYPE]]
         iid = trigger["characteristic"]
 
-        self._connection.add_watchable_characteristics([(self._aid, iid)])
+        await self._connection.add_watchable_characteristics([(self._aid, iid)])
         self._callbacks.setdefault(iid, []).append(event_handler)
 
         def async_remove_handler():
@@ -193,10 +196,12 @@ TRIGGER_FINDERS = {
 }
 
 
-async def async_setup_triggers_for_entry(hass: HomeAssistant, config_entry):
+async def async_setup_triggers_for_entry(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> None:
     """Triggers aren't entities as they have no state, but we still need to set them up for a config entry."""
     hkid = config_entry.data["AccessoryPairingID"]
-    conn = hass.data[KNOWN_DEVICES][hkid]
+    conn: HKDevice = hass.data[KNOWN_DEVICES][hkid]
 
     @callback
     def async_add_service(service):

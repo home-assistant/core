@@ -292,6 +292,7 @@ FLOWS = {
         "recollect_waste",
         "renault",
         "rfxtrx",
+        "rhasspy",
         "ridwell",
         "ring",
         "risco",

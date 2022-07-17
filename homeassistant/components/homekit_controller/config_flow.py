@@ -6,8 +6,9 @@ import re
 from typing import Any
 
 import aiohomekit
+from aiohomekit.controller.abstract import AbstractPairing
 from aiohomekit.exceptions import AuthenticationError
-from aiohomekit.model import Accessories, CharacteristicsTypes, ServicesTypes
+from aiohomekit.utils import domain_supported, domain_to_name
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -16,7 +17,9 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers import device_registry as dr
 
+from .connection import HKDevice
 from .const import DOMAIN, KNOWN_DEVICES
+from .storage import async_get_entity_storage
 from .utils import async_get_controller
 
 HOMEKIT_DIR = ".homekit"
@@ -203,8 +206,12 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         hkid = properties[zeroconf.ATTR_PROPERTIES_ID]
         normalized_hkid = normalize_hkid(hkid)
 
+        # If this aiohomekit doesn't support this particular device, ignore it.
+        if not domain_supported(discovery_info.name):
+            return self.async_abort(reason="ignored_model")
+
         model = properties["md"]
-        name = discovery_info.name.replace("._hap._tcp.local.", "")
+        name = domain_to_name(discovery_info.name)
         status_flags = int(properties["sf"])
         paired = not status_flags & 0x01
 
@@ -235,17 +242,17 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 self.hass.config_entries.async_update_entry(
                     existing_entry, data={**existing_entry.data, **updated_ip_port}
                 )
-            conn = self.hass.data[KNOWN_DEVICES][hkid]
+            conn: HKDevice = self.hass.data[KNOWN_DEVICES][hkid]
             # When we rediscover the device, let aiohomekit know
             # that the device is available and we should not wait
             # to retry connecting any longer. reconnect_soon
             # will do nothing if the device is already connected
             await conn.pairing.reconnect_soon()
-            if conn.config_num != config_num:
+            if config_num and conn.config_num != config_num:
                 _LOGGER.debug(
                     "HomeKit info %s: c# incremented, refreshing entities", hkid
                 )
-                self.hass.async_create_task(conn.async_refresh_entity_map(config_num))
+                conn.async_notify_config_changed(config_num)
             return self.async_abort(reason="already_configured")
 
         _LOGGER.debug("Discovered device %s (%s - %s)", name, model, hkid)
@@ -460,26 +467,33 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(schema),
         )
 
-    async def _entry_from_accessory(self, pairing):
+    async def _entry_from_accessory(self, pairing: AbstractPairing) -> FlowResult:
         """Return a config entry from an initialized bridge."""
         # The bulk of the pairing record is stored on the config entry.
         # A specific exception is the 'accessories' key. This is more
         # volatile. We do cache it, but not against the config entry.
         # So copy the pairing data and mutate the copy.
-        pairing_data = pairing.pairing_data.copy()
+        pairing_data = pairing.pairing_data.copy()  # type: ignore[attr-defined]
 
         # Use the accessories data from the pairing operation if it is
         # available. Otherwise request a fresh copy from the API.
         # This removes the 'accessories' key from pairing_data at
         # the same time.
-        if not (accessories := pairing_data.pop("accessories", None)):
-            accessories = await pairing.list_accessories_and_characteristics()
+        name = await pairing.get_primary_name()
 
-        parsed = Accessories.from_list(accessories)
-        accessory_info = parsed.aid(1).services.first(
-            service_type=ServicesTypes.ACCESSORY_INFORMATION
+        await pairing.close()
+
+        # Save the state of the accessories so we do not
+        # have to request them again when we setup the
+        # config entry.
+        accessories_state = pairing.accessories_state
+        entity_storage = await async_get_entity_storage(self.hass)
+        assert self.unique_id is not None
+        entity_storage.async_create_or_update_map(
+            self.unique_id,
+            accessories_state.config_num,
+            accessories_state.accessories.serialize(),
         )
-        name = accessory_info.value(CharacteristicsTypes.NAME, "")
 
         return self.async_create_entry(title=name, data=pairing_data)
 

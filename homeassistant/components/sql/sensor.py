@@ -145,6 +145,7 @@ class SQLSensor(SensorEntity):
     """Representation of an SQL sensor."""
 
     _attr_icon = "mdi:database-search"
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -157,7 +158,6 @@ class SQLSensor(SensorEntity):
         entry_id: str,
     ) -> None:
         """Initialize the SQL sensor."""
-        self._attr_name = name
         self._query = query
         self._attr_native_unit_of_measurement = unit
         self._template = value_template

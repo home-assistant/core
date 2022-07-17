@@ -2,16 +2,14 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-import dataclasses
 from enum import Enum
 import fnmatch
-from functools import cached_property
 import logging
 import platform
 from typing import Final, TypedDict
 
 from bleak import BleakError
-from bleak.backends.device import MANUFACTURERS, BLEDevice
+from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
 from lru import LRU  # pylint: disable=no-name-in-module
 
@@ -23,8 +21,8 @@ from homeassistant.core import (
     HomeAssistant,
     callback as hass_callback,
 )
-from homeassistant.data_entry_flow import BaseServiceInfo
 from homeassistant.helpers import discovery_flow
+from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import (
     BluetoothMatcher,
@@ -40,6 +38,8 @@ from .usage import install_multiple_bleak_catcher
 _LOGGER = logging.getLogger(__name__)
 
 MAX_REMEMBER_ADDRESSES: Final = 2048
+
+SOURCE_LOCAL: Final = "local"
 
 
 class BluetoothCallbackMatcherOptional(TypedDict, total=False):
@@ -74,59 +74,19 @@ MANUFACTURER_ID: Final = "manufacturer_id"
 MANUFACTURER_DATA_FIRST_BYTE: Final = "manufacturer_data_first_byte"
 
 
-@dataclasses.dataclass
-class BluetoothServiceInfo(BaseServiceInfo):
-    """Prepared info from bluetooth entries."""
-
-    name: str
-    address: str
-    rssi: int
-    manufacturer_data: dict[int, bytes]
-    service_data: dict[str, bytes]
-    service_uuids: list[str]
-
-    @classmethod
-    def from_advertisement(
-        cls, device: BLEDevice, advertisement_data: AdvertisementData
-    ) -> BluetoothServiceInfo:
-        """Create a BluetoothServiceInfo from an advertisement."""
-        return cls(
-            name=advertisement_data.local_name or device.name or device.address,
-            address=device.address,
-            rssi=device.rssi,
-            manufacturer_data=advertisement_data.manufacturer_data,
-            service_data=advertisement_data.service_data,
-            service_uuids=advertisement_data.service_uuids,
-        )
-
-    @cached_property
-    def manufacturer(self) -> str | None:
-        """Convert manufacturer data to a string."""
-        for manufacturer in self.manufacturer_data:
-            if manufacturer in MANUFACTURERS:
-                name: str = MANUFACTURERS[manufacturer]
-                return name
-        return None
-
-    @cached_property
-    def manufacturer_id(self) -> int | None:
-        """Get the first manufacturer id."""
-        for manufacturer in self.manufacturer_data:
-            return manufacturer
-        return None
-
-
 BluetoothChange = Enum("BluetoothChange", "ADVERTISEMENT")
 BluetoothCallback = Callable[[BluetoothServiceInfo, BluetoothChange], None]
 
 
 @hass_callback
-def async_discovered_devices(
+def async_discovered_service_info(
     hass: HomeAssistant,
 ) -> list[BluetoothServiceInfo]:
     """Return the discovered devices list."""
+    if DOMAIN not in hass.data:
+        return []
     manager: BluetoothManager = hass.data[DOMAIN]
-    return manager.async_discovered_devices()
+    return manager.async_discovered_service_info()
 
 
 @hass_callback
@@ -135,6 +95,8 @@ def async_address_present(
     address: str,
 ) -> bool:
     """Check if an address is present in the bluetooth device list."""
+    if DOMAIN not in hass.data:
+        return False
     manager: BluetoothManager = hass.data[DOMAIN]
     return manager.async_address_present(address)
 
@@ -306,7 +268,7 @@ class BluetoothManager:
             ):
                 if service_info is None:
                     service_info = BluetoothServiceInfo.from_advertisement(
-                        device, advertisement_data
+                        device, advertisement_data, SOURCE_LOCAL
                     )
                 try:
                     callback(service_info, BluetoothChange.ADVERTISEMENT)
@@ -317,7 +279,7 @@ class BluetoothManager:
             return
         if service_info is None:
             service_info = BluetoothServiceInfo.from_advertisement(
-                device, advertisement_data
+                device, advertisement_data, SOURCE_LOCAL
             )
         for domain in matched_domains:
             discovery_flow.async_create_flow(
@@ -352,7 +314,9 @@ class BluetoothManager:
         ):
             try:
                 callback(
-                    BluetoothServiceInfo.from_advertisement(*device_adv_data),
+                    BluetoothServiceInfo.from_advertisement(
+                        *device_adv_data, SOURCE_LOCAL
+                    ),
                     BluetoothChange.ADVERTISEMENT,
                 )
             except Exception:  # pylint: disable=broad-except
@@ -372,13 +336,15 @@ class BluetoothManager:
         )
 
     @hass_callback
-    def async_discovered_devices(self) -> list[BluetoothServiceInfo]:
+    def async_discovered_service_info(self) -> list[BluetoothServiceInfo]:
         """Return if the address is present."""
         if models.HA_BLEAK_SCANNER:
             discovered = models.HA_BLEAK_SCANNER.discovered_devices
             history = models.HA_BLEAK_SCANNER.history
             return [
-                BluetoothServiceInfo.from_advertisement(*history[device.address])
+                BluetoothServiceInfo.from_advertisement(
+                    *history[device.address], SOURCE_LOCAL
+                )
                 for device in discovered
                 if device.address in history
             ]

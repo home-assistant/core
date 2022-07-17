@@ -2,7 +2,7 @@
 import asyncio
 from unittest import mock
 import unittest.mock
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiohomekit
 from aiohomekit.exceptions import AuthenticationError
@@ -141,7 +141,7 @@ def get_device_discovery_info(
     result = zeroconf.ZeroconfServiceInfo(
         host="127.0.0.1",
         hostname=device.description.name,
-        name=device.description.name,
+        name=device.description.name + "._hap._tcp.local.",
         addresses=["127.0.0.1"],
         port=8080,
         properties={
@@ -263,6 +263,23 @@ async def test_pair_already_paired_1(hass, controller):
     )
     assert result["type"] == "abort"
     assert result["reason"] == "already_paired"
+
+
+async def test_unknown_domain_type(hass, controller):
+    """Test that aiohomekit can reject discoveries it doesn't support."""
+    device = setup_mock_accessory(controller)
+    # Flag device as already paired
+    discovery_info = get_device_discovery_info(device)
+    discovery_info.name = "TestDevice._music._tap.local."
+
+    # Device is discovered
+    result = await hass.config_entries.flow.async_init(
+        "homekit_controller",
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+    assert result["type"] == "abort"
+    assert result["reason"] == "ignored_model"
 
 
 async def test_id_missing(hass, controller):
@@ -475,7 +492,7 @@ async def test_discovery_already_configured_update_csharp(hass, controller):
 
     connection_mock = AsyncMock()
     connection_mock.pairing.connect.reconnect_soon = AsyncMock()
-    connection_mock.async_refresh_entity_map = AsyncMock()
+    connection_mock.async_notify_config_changed = MagicMock()
     hass.data[KNOWN_DEVICES] = {"AA:BB:CC:DD:EE:FF": connection_mock}
 
     device = setup_mock_accessory(controller)
@@ -498,7 +515,7 @@ async def test_discovery_already_configured_update_csharp(hass, controller):
 
     assert entry.data["AccessoryIP"] == discovery_info.host
     assert entry.data["AccessoryPort"] == discovery_info.port
-    assert connection_mock.async_refresh_entity_map.await_count == 1
+    assert connection_mock.async_notify_config_changed.call_count == 1
 
 
 @pytest.mark.parametrize("exception,expected", PAIRING_START_ABORT_ERRORS)

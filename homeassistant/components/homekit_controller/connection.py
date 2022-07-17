@@ -5,19 +5,22 @@ import asyncio
 from collections.abc import Callable
 import datetime
 import logging
+from types import MappingProxyType
 from typing import Any
 
+from aiohomekit import Controller
 from aiohomekit.exceptions import (
     AccessoryDisconnectedError,
     AccessoryNotFoundError,
     EncryptionError,
 )
 from aiohomekit.model import Accessories, Accessory
-from aiohomekit.model.characteristics import Characteristic
+from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
 from aiohomekit.model.services import Service
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_VIA_DEVICE
-from homeassistant.core import CALLBACK_TYPE, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo
@@ -35,6 +38,7 @@ from .const import (
     IDENTIFIER_SERIAL_NUMBER,
 )
 from .device_trigger import async_fire_triggers, async_setup_triggers_for_entry
+from .storage import EntityMapStorage
 
 DEFAULT_SCAN_INTERVAL = datetime.timedelta(seconds=60)
 RETRY_INTERVAL = 60  # seconds
@@ -60,7 +64,12 @@ def valid_serial_number(serial: str) -> bool:
 class HKDevice:
     """HomeKit device."""
 
-    def __init__(self, hass, config_entry, pairing_data) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        pairing_data: MappingProxyType[str, Any],
+    ) -> None:
         """Initialise a generic HomeKit device."""
 
         self.hass = hass
@@ -70,14 +79,11 @@ class HKDevice:
         # don't want to mutate a dict owned by a config entry.
         self.pairing_data = pairing_data.copy()
 
-        self.pairing = hass.data[CONTROLLER].load_pairing(
+        connection: Controller = hass.data[CONTROLLER]
+
+        self.pairing = connection.load_pairing(
             self.pairing_data["AccessoryPairingID"], self.pairing_data
         )
-
-        self.accessories = None
-        self.config_num = 0
-
-        self.entity_map = Accessories()
 
         # A list of callbacks that turn HK accessories into entities
         self.accessory_factories: list[AddAccessoryCb] = []
@@ -128,6 +134,17 @@ class HKDevice:
         self.watchable_characteristics: list[tuple[int, int]] = []
 
         self.pairing.dispatcher_connect(self.process_new_events)
+        self.pairing.dispatcher_connect_config_changed(self.process_config_changed)
+
+    @property
+    def entity_map(self) -> Accessories:
+        """Return the accessories from the pairing."""
+        return self.pairing.accessories_state.accessories
+
+    @property
+    def config_num(self) -> int:
+        """Return the config num from the pairing."""
+        return self.pairing.accessories_state.config_num
 
     def add_pollable_characteristics(
         self, characteristics: list[tuple[int, int]]
@@ -141,12 +158,12 @@ class HKDevice:
             char for char in self.pollable_characteristics if char[0] != accessory_id
         ]
 
-    def add_watchable_characteristics(
+    async def add_watchable_characteristics(
         self, characteristics: list[tuple[int, int]]
     ) -> None:
         """Add (aid, iid) pairs that we need to poll."""
         self.watchable_characteristics.extend(characteristics)
-        self.hass.async_create_task(self.pairing.subscribe(characteristics))
+        await self.pairing.subscribe(characteristics)
 
     def remove_watchable_characteristics(self, accessory_id: int) -> None:
         """Remove all pollable characteristics by accessory id."""
@@ -165,29 +182,63 @@ class HKDevice:
         self.available = available
         async_dispatcher_send(self.hass, self.signal_state_updated)
 
-    async def async_setup(self) -> bool:
+    async def async_ensure_available(self) -> None:
+        """Verify the accessory is available after processing the entity map."""
+        if self.available:
+            return
+        if self.watchable_characteristics and self.pollable_characteristics:
+            # We already tried, no need to try again
+            return
+        # We there are no watchable and not pollable characteristics,
+        # we need to force a connection to the device to verify its alive.
+        #
+        # This is similar to iOS's behavior for keeping alive connections
+        # to cameras.
+        #
+        primary = self.entity_map.accessories[0]
+        aid = primary.aid
+        iid = primary.accessory_information[CharacteristicsTypes.SERIAL_NUMBER].iid
+        await self.pairing.get_characteristics([(aid, iid)])
+        self.async_set_available_state(True)
+
+    async def async_setup(self) -> None:
         """Prepare to use a paired HomeKit device in Home Assistant."""
-        cache = self.hass.data[ENTITY_MAP].get_map(self.unique_id)
+        entity_storage: EntityMapStorage = self.hass.data[ENTITY_MAP]
+        if cache := entity_storage.get_map(self.unique_id):
+            self.pairing.restore_accessories_state(
+                cache["accessories"], cache["config_num"]
+            )
+
+        # We need to force an update here to make sure we have
+        # the latest values since the async_update we do in
+        # async_process_entity_map will no values to poll yet
+        # since entities are added via dispatching and then
+        # they add the chars they are concerned about in
+        # async_added_to_hass which is too late.
+        #
+        # Ideally we would know which entities we are about to add
+        # so we only poll those chars but that is not possible
+        # yet.
+        await self.pairing.async_populate_accessories_state(force_update=True)
+
+        await self.async_process_entity_map()
+
+        await self.async_ensure_available()
+
         if not cache:
-            if await self.async_refresh_entity_map(self.config_num):
-                self._polling_interval_remover = async_track_time_interval(
-                    self.hass, self.async_update, DEFAULT_SCAN_INTERVAL
-                )
-                return True
-            return False
-
-        self.accessories = cache["accessories"]
-        self.config_num = cache["config_num"]
-
-        self.entity_map = Accessories.from_list(self.accessories)
-
+            # If its missing from the cache, make sure we save it
+            self.async_save_entity_map()
+        # If everything is up to date, we can create the entities
+        # since we know the data is not stale.
+        await self.async_add_new_entities()
         self._polling_interval_remover = async_track_time_interval(
             self.hass, self.async_update, DEFAULT_SCAN_INTERVAL
         )
 
-        self.hass.async_create_task(self.async_process_entity_map())
-
-        return True
+    async def async_add_new_entities(self) -> None:
+        """Add new entities to Home Assistant."""
+        await self.async_load_platforms()
+        self.add_entities()
 
     def device_info_for_accessory(self, accessory: Accessory) -> DeviceInfo:
         """Build a DeviceInfo for a given accessory."""
@@ -360,29 +411,15 @@ class HKDevice:
         # Ensure the Pairing object has access to the latest version of the entity map. This
         # is especially important for BLE, as the Pairing instance relies on the entity map
         # to map aid/iid to GATT characteristics. So push it to there as well.
-
-        self.pairing.pairing_data["accessories"] = self.accessories
-
         self.async_detect_workarounds()
 
         # Migrate to new device ids
         self.async_migrate_devices()
 
-        await self.async_load_platforms()
-
         self.async_create_devices()
 
         # Load any triggers for this config entry
         await async_setup_triggers_for_entry(self.hass, self.config_entry)
-
-        self.add_entities()
-
-        if self.watchable_characteristics:
-            await self.pairing.subscribe(self.watchable_characteristics)
-            if not self.pairing.is_connected:
-                return
-
-        await self.async_update()
 
     async def async_unload(self) -> None:
         """Stop interacting with device and prepare for removal from hass."""
@@ -395,25 +432,30 @@ class HKDevice:
             self.config_entry, self.platforms
         )
 
-    async def async_refresh_entity_map(self, config_num: int) -> bool:
-        """Handle setup of a HomeKit accessory."""
-        try:
-            self.accessories = await self.pairing.list_accessories_and_characteristics()
-        except AccessoryDisconnectedError:
-            # If we fail to refresh this data then we will naturally retry
-            # later when Bonjour spots c# is still not up to date.
-            return False
+    def async_notify_config_changed(self, config_num: int) -> None:
+        """Notify the pairing of a config change."""
+        self.pairing.notify_config_changed(config_num)
 
-        self.entity_map = Accessories.from_list(self.accessories)
+    def process_config_changed(self, config_num: int) -> None:
+        """Handle a config change notification from the pairing."""
+        self.hass.async_create_task(self.async_update_new_accessories_state())
 
-        self.hass.data[ENTITY_MAP].async_create_or_update_map(
-            self.unique_id, config_num, self.accessories
+    async def async_update_new_accessories_state(self) -> None:
+        """Process a change in the pairings accessories state."""
+        self.async_save_entity_map()
+        await self.async_process_entity_map()
+        if self.watchable_characteristics:
+            await self.pairing.subscribe(self.watchable_characteristics)
+        await self.async_update()
+        await self.async_add_new_entities()
+
+    @callback
+    def async_save_entity_map(self) -> None:
+        """Save the entity map."""
+        entity_storage: EntityMapStorage = self.hass.data[ENTITY_MAP]
+        entity_storage.async_create_or_update_map(
+            self.unique_id, self.config_num, self.entity_map.serialize()
         )
-
-        self.config_num = config_num
-        self.hass.async_create_task(self.async_process_entity_map())
-
-        return True
 
     def add_accessory_factory(self, add_entities_cb) -> None:
         """Add a callback to run when discovering new entities for accessories."""
