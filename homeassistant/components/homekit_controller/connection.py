@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
-import datetime
+from datetime import timedelta
 import logging
 from types import MappingProxyType
 from typing import Any
@@ -40,14 +40,9 @@ from .const import (
 from .device_trigger import async_fire_triggers, async_setup_triggers_for_entry
 from .storage import EntityMapStorage
 
-SCAN_INTERVAL_BY_TRANSPORT = {
-    Transport.BLE: datetime.timedelta(hours=12),
-    Transport.IP: datetime.timedelta(seconds=60),
-    Transport.COAP: datetime.timedelta(seconds=60),
-}
-
 RETRY_INTERVAL = 60  # seconds
 MAX_POLL_FAILURES_TO_DECLARE_UNAVAILABLE = 3
+BLE_AVAILABILITY_CHECK_INTERVAL = 1800  # seconds
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -127,6 +122,7 @@ class HKDevice:
         # If this is set polling is active and can be disabled by calling
         # this method.
         self._polling_interval_remover: CALLBACK_TYPE | None = None
+        self._ble_available_interval_remover: CALLBACK_TYPE | None = None
 
         # Never allow concurrent polling of the same accessory or bridge
         self._polling_lock = asyncio.Lock()
@@ -231,8 +227,19 @@ class HKDevice:
         self.async_set_available_state(self.pairing.is_available)
 
         self._polling_interval_remover = async_track_time_interval(
-            self.hass, self.async_update, SCAN_INTERVAL_BY_TRANSPORT[transport]
+            self.hass, self.async_update, self.pairing.poll_interval
         )
+
+        if transport == Transport.BLE:
+            # If we are using BLE, we need to periodicly check of the
+            # BLE device is available since we won't get callbacks
+            # when it goes away since we HomeKit supports disconnected
+            # notifications and we cannot treat a disconnect as unavailability.
+            self._ble_available_interval_remover = async_track_time_interval(
+                self.hass,
+                self.async_update_available_state,
+                timedelta(seconds=BLE_AVAILABILITY_CHECK_INTERVAL),
+            )
 
     async def async_add_new_entities(self) -> None:
         """Add new entities to Home Assistant."""
@@ -545,10 +552,15 @@ class HKDevice:
         if tasks:
             await asyncio.gather(*tasks)
 
+    @callback
+    def async_update_available_state(self, *_: Any) -> None:
+        """Update the available state of the device."""
+        self.async_set_available_state(self.pairing.is_available)
+
     async def async_update(self, now=None):
         """Poll state of all entities attached to this bridge/accessory."""
         if not self.pollable_characteristics:
-            self.async_set_available_state(self.pairing.is_available)
+            self.async_update_available_state()
             _LOGGER.debug(
                 "HomeKit connection not polling any characteristics: %s", self.unique_id
             )
