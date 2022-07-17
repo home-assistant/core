@@ -7,13 +7,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
+    ADVANTAGE_AIR_COORDINATOR,
+    ADVANTAGE_AIR_LIGHTS,
+    ADVANTAGE_AIR_SET_LIGHT,
     ADVANTAGE_AIR_STATE_OFF,
     ADVANTAGE_AIR_STATE_ON,
     DOMAIN as ADVANTAGE_AIR_DOMAIN,
 )
 from .entity import AdvantageAirEntity
-
-ADVANTAGE_AIR_LIGHTS = "myLights"
 
 
 async def async_setup_entry(
@@ -26,8 +27,10 @@ async def async_setup_entry(
     instance = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
 
     entities = []
-    if ADVANTAGE_AIR_LIGHTS in instance["coordinator"].data:
-        for light in instance["coordinator"].data[ADVANTAGE_AIR_LIGHTS]["lights"]:
+    if ADVANTAGE_AIR_LIGHTS in instance[ADVANTAGE_AIR_COORDINATOR].data:
+        for light in instance[ADVANTAGE_AIR_COORDINATOR].data[ADVANTAGE_AIR_LIGHTS][
+            "lights"
+        ]:
             if light.get("relay"):
                 entities.append(AdvantageAirLight(instance, light))
             else:
@@ -43,7 +46,7 @@ class AdvantageAirLight(AdvantageAirEntity, LightEntity):
     def __init__(self, instance, light):
         """Initialize an Advantage Air Light."""
         super().__init__(instance)
-        self.async_set_light = instance["async_set_light"]
+        self.async_set_light = instance[ADVANTAGE_AIR_SET_LIGHT]
         self._id = light["id"]
         self._attr_unique_id = f'{self.coordinator.data["system"]["rid"]}-{self._id}'
 

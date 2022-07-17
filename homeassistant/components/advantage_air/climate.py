@@ -20,6 +20,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     ADVANTAGE_AIR_AIRCONS,
+    ADVANTAGE_AIR_COORDINATOR,
     ADVANTAGE_AIR_STATE_CLOSE,
     ADVANTAGE_AIR_STATE_OFF,
     ADVANTAGE_AIR_STATE_ON,
@@ -72,9 +73,9 @@ async def async_setup_entry(
     instance = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
 
     entities: list[ClimateEntity] = []
-    if ADVANTAGE_AIR_AIRCONS in instance["coordinator"].data:
+    if ADVANTAGE_AIR_AIRCONS in instance[ADVANTAGE_AIR_COORDINATOR].data:
         for ac_key, ac_device in (
-            instance["coordinator"].data[ADVANTAGE_AIR_AIRCONS].items()
+            instance[ADVANTAGE_AIR_COORDINATOR].data[ADVANTAGE_AIR_AIRCONS].items()
         ):
             entities.append(AdvantageAirAC(instance, ac_key))
             for zone_key, zone in ac_device["zones"].items():

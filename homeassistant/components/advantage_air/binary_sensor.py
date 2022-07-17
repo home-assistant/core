@@ -10,7 +10,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ADVANTAGE_AIR_AIRCONS, DOMAIN as ADVANTAGE_AIR_DOMAIN
+from .const import (
+    ADVANTAGE_AIR_AIRCONS,
+    ADVANTAGE_AIR_COORDINATOR,
+    DOMAIN as ADVANTAGE_AIR_DOMAIN,
+)
 from .entity import AdvantageAirAirconEntity
 
 PARALLEL_UPDATES = 0
@@ -26,9 +30,9 @@ async def async_setup_entry(
     instance = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
 
     entities: list[BinarySensorEntity] = []
-    if ADVANTAGE_AIR_AIRCONS in instance["coordinator"].data:
+    if ADVANTAGE_AIR_AIRCONS in instance[ADVANTAGE_AIR_COORDINATOR].data:
         for ac_key, ac_device in (
-            instance["coordinator"].data[ADVANTAGE_AIR_AIRCONS].items()
+            instance[ADVANTAGE_AIR_COORDINATOR].data[ADVANTAGE_AIR_AIRCONS].items()
         ):
             entities.append(AdvantageAirFilter(instance, ac_key))
             for zone_key, zone in ac_device["zones"].items():
