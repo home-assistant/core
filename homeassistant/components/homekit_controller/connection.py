@@ -203,7 +203,7 @@ class HKDevice:
         try:
             await self.pairing.async_populate_accessories_state(force_update=True)
         except AccessoryNotFoundError:
-            if transport != Transport.BLE:
+            if transport != Transport.BLE or not cache:
                 # BLE devices may sleep and we can't force a connection
                 raise
 
