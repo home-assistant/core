@@ -4,15 +4,16 @@ from __future__ import annotations
 from dataclasses import asdict
 import logging
 
-from homeassistant.components.sensor import RestoreSensor
+from homeassistant.components.sensor import ATTR_STATE_CLASS, RestoreSensor
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import DOMAIN
-from .const import HEAT_METER_SENSOR_TYPES
+from .const import GJ_TO_MWH, HEAT_METER_SENSOR_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,14 +57,16 @@ class HeatMeterSensor(CoordinatorEntity, RestoreSensor):
             self._attr_icon = description.icon
         if hasattr(description, "entity_category"):
             self._attr_entity_category = description.entity_category
-        if hasattr(description, "state_class"):
+        if hasattr(description, ATTR_STATE_CLASS):
             self._attr_state_class = description.state_class
-        if hasattr(description, "unit_of_measurement"):
+        if hasattr(description, ATTR_DEVICE_CLASS):
+            self._attr_device_class = description.device_class
+        if hasattr(description, ATTR_UNIT_OF_MEASUREMENT):
             self._attr_native_unit_of_measurement = (
                 description.native_unit_of_measurement
             )
         self._attr_device_info = device
-        self._attr_should_poll = False
+        self._attr_should_poll = bool(self.key == "heat_usage_mwh")
 
     async def async_added_to_hass(self):
         """Call when entity about to be added to hass."""
@@ -76,4 +79,15 @@ class HeatMeterSensor(CoordinatorEntity, RestoreSensor):
         """Handle updated data from the coordinator."""
         if self.key in asdict(self.coordinator.data):
             self._attr_native_value = asdict(self.coordinator.data)[self.key]
-            self.async_write_ha_state()
+
+        if self.key == "heat_usage_mwh":
+            self._attr_native_value = convert_gj_to_mwh(
+                self.coordinator.data.heat_usage_gj
+            )
+
+        self.async_write_ha_state()
+
+
+def convert_gj_to_mwh(gigajoule) -> float:
+    """Convert GJ to MWh using the conversion value."""
+    return round(gigajoule * GJ_TO_MWH, 3)

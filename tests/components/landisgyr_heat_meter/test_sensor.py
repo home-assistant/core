@@ -8,11 +8,18 @@ from homeassistant.components.homeassistant import (
     SERVICE_UPDATE_ENTITY,
 )
 from homeassistant.components.landisgyr_heat_meter.const import DOMAIN
-from homeassistant.components.sensor import ATTR_LAST_RESET, SensorStateClass
+from homeassistant.components.sensor import (
+    ATTR_LAST_RESET,
+    ATTR_STATE_CLASS,
+    SensorDeviceClass,
+    SensorStateClass,
+)
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
+    ENERGY_MEGA_WATT_HOUR,
     VOLUME_CUBIC_METERS,
 )
 from homeassistant.core import CoreState, State
@@ -66,32 +73,39 @@ async def test_create_sensors(mock_heat_meter, hass):
     await hass.async_block_till_done()
 
     # check if 25 attributes have been created
-    assert len(hass.states.async_all()) == 25
+    assert len(hass.states.async_all()) == 26
     entity_reg = entity_registry.async_get(hass)
 
     state = hass.states.get("sensor.heat_meter_heat_usage_gj")
     assert state
     assert state.state == "123"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "GJ"
-    assert state.attributes.get("state_class") == SensorStateClass.TOTAL
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL
+
+    state = hass.states.get("sensor.heat_meter_heat_usage_mwh")
+    assert state
+    assert state.state == "34.167"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_MEGA_WATT_HOUR
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
 
     state = hass.states.get("sensor.heat_meter_volume_usage_m3")
     assert state
     assert state.state == "456"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == VOLUME_CUBIC_METERS
-    assert state.attributes.get("state_class") == SensorStateClass.TOTAL
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL
 
     state = hass.states.get("sensor.heat_meter_device_number")
     assert state
     assert state.state == "devicenr_789"
-    assert state.attributes.get("state_class") is None
+    assert state.attributes.get(ATTR_STATE_CLASS) is None
     entity_registry_entry = entity_reg.async_get("sensor.heat_meter_device_number")
     assert entity_registry_entry.entity_category == EntityCategory.DIAGNOSTIC
 
     state = hass.states.get("sensor.heat_meter_meter_date_time")
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:clock-outline"
-    assert state.attributes.get("state_class") is None
+    assert state.attributes.get(ATTR_STATE_CLASS) is None
     entity_registry_entry = entity_reg.async_get("sensor.heat_meter_meter_date_time")
     assert entity_registry_entry.entity_category == EntityCategory.DIAGNOSTIC
 
@@ -112,7 +126,7 @@ async def test_restore_state(mock_heat_meter, hass):
                     attributes={
                         ATTR_LAST_RESET: last_reset,
                         ATTR_UNIT_OF_MEASUREMENT: "GJ",
-                        "state_class": SensorStateClass.TOTAL,
+                        ATTR_STATE_CLASS: SensorStateClass.TOTAL,
                     },
                 ),
                 {
@@ -129,7 +143,7 @@ async def test_restore_state(mock_heat_meter, hass):
                     attributes={
                         ATTR_LAST_RESET: last_reset,
                         ATTR_UNIT_OF_MEASUREMENT: VOLUME_CUBIC_METERS,
-                        "state_class": SensorStateClass.TOTAL,
+                        ATTR_STATE_CLASS: SensorStateClass.TOTAL,
                     },
                 ),
                 {
@@ -174,16 +188,16 @@ async def test_restore_state(mock_heat_meter, hass):
     assert state
     assert state.state == "123"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "GJ"
-    assert state.attributes.get("state_class") == SensorStateClass.TOTAL
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL
 
     state = hass.states.get("sensor.heat_meter_volume_usage_m3")
     assert state
     assert state.state == "456"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == VOLUME_CUBIC_METERS
-    assert state.attributes.get("state_class") == SensorStateClass.TOTAL
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL
 
     state = hass.states.get("sensor.heat_meter_device_number")
     assert state
     print("STATE IS: ", state)
     assert state.state == "devicenr_789"
-    assert state.attributes.get("state_class") is None
+    assert state.attributes.get(ATTR_STATE_CLASS) is None

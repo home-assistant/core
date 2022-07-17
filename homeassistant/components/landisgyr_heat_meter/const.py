@@ -5,10 +5,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import TEMP_CELSIUS, VOLUME_CUBIC_METERS
+from homeassistant.const import ENERGY_MEGA_WATT_HOUR, TEMP_CELSIUS, VOLUME_CUBIC_METERS
 from homeassistant.helpers.entity import EntityCategory
 
 DOMAIN = "landisgyr_heat_meter"
+
+GJ_TO_MWH = 0.277778  # conversion factor
 
 HEAT_METER_SENSOR_TYPES = (
     SensorEntityDescription(
@@ -16,6 +18,14 @@ HEAT_METER_SENSOR_TYPES = (
         icon="mdi:fire",
         name="Heat usage GJ",
         native_unit_of_measurement="GJ",
+        state_class=SensorStateClass.TOTAL,
+    ),
+    SensorEntityDescription(
+        key="heat_usage_mwh",
+        icon="mdi:fire",
+        name="Heat usage MWh",
+        native_unit_of_measurement=ENERGY_MEGA_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
