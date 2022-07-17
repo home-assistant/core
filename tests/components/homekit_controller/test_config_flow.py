@@ -187,7 +187,7 @@ def get_device_discovery_info(
             "c#": device.description.config_num,
             "s#": device.description.state_num,
             "ff": "0",
-            "ci": "0",
+            "ci": "7",
             "sf": "0" if paired else "1",
             "sh": "",
         },
@@ -244,7 +244,7 @@ async def test_discovery_works(hass, controller, upper_case_props, missing_cshar
     assert result["step_id"] == "pair"
     assert get_flow_context(hass, result) == {
         "source": config_entries.SOURCE_ZEROCONF,
-        "title_placeholders": {"name": "TestDevice"},
+        "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
         "unique_id": "00:00:00:00:00:00",
     }
 
@@ -628,7 +628,7 @@ async def test_pair_form_errors_on_start(hass, controller, exception, expected):
     )
 
     assert get_flow_context(hass, result) == {
-        "title_placeholders": {"name": "TestDevice"},
+        "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_ZEROCONF,
     }
@@ -643,7 +643,7 @@ async def test_pair_form_errors_on_start(hass, controller, exception, expected):
     assert result["errors"]["pairing_code"] == expected
 
     assert get_flow_context(hass, result) == {
-        "title_placeholders": {"name": "TestDevice"},
+        "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_ZEROCONF,
     }
@@ -676,7 +676,7 @@ async def test_pair_abort_errors_on_finish(hass, controller, exception, expected
     )
 
     assert get_flow_context(hass, result) == {
-        "title_placeholders": {"name": "TestDevice"},
+        "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_ZEROCONF,
     }
@@ -689,7 +689,7 @@ async def test_pair_abort_errors_on_finish(hass, controller, exception, expected
 
     assert result["type"] == "form"
     assert get_flow_context(hass, result) == {
-        "title_placeholders": {"name": "TestDevice"},
+        "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_ZEROCONF,
     }
@@ -716,7 +716,7 @@ async def test_pair_form_errors_on_finish(hass, controller, exception, expected)
     )
 
     assert get_flow_context(hass, result) == {
-        "title_placeholders": {"name": "TestDevice"},
+        "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_ZEROCONF,
     }
@@ -729,7 +729,7 @@ async def test_pair_form_errors_on_finish(hass, controller, exception, expected)
 
     assert result["type"] == "form"
     assert get_flow_context(hass, result) == {
-        "title_placeholders": {"name": "TestDevice"},
+        "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_ZEROCONF,
     }
@@ -742,7 +742,7 @@ async def test_pair_form_errors_on_finish(hass, controller, exception, expected)
     assert result["errors"]["pairing_code"] == expected
 
     assert get_flow_context(hass, result) == {
-        "title_placeholders": {"name": "TestDevice"},
+        "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_ZEROCONF,
         "pairing": True,
@@ -773,7 +773,7 @@ async def test_user_works(hass, controller):
     assert get_flow_context(hass, result) == {
         "source": config_entries.SOURCE_USER,
         "unique_id": "00:00:00:00:00:00",
-        "title_placeholders": {"name": "TestDevice"},
+        "title_placeholders": {"name": "TestDevice", "category": "Other"},
     }
 
     result = await hass.config_entries.flow.async_configure(
@@ -808,7 +808,7 @@ async def test_user_pairing_with_insecure_setup_code(hass, controller):
     assert get_flow_context(hass, result) == {
         "source": config_entries.SOURCE_USER,
         "unique_id": "00:00:00:00:00:00",
-        "title_placeholders": {"name": "TestDevice"},
+        "title_placeholders": {"name": "TestDevice", "category": "Other"},
     }
 
     result = await hass.config_entries.flow.async_configure(
@@ -865,7 +865,7 @@ async def test_unignore_works(hass, controller):
     assert result["type"] == "form"
     assert result["step_id"] == "pair"
     assert get_flow_context(hass, result) == {
-        "title_placeholders": {"name": "TestDevice"},
+        "title_placeholders": {"name": "TestDevice", "category": "Other"},
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_UNIGNORE,
     }
@@ -953,7 +953,7 @@ async def test_mdns_update_to_paired_during_pairing(hass, controller):
     )
 
     assert get_flow_context(hass, result) == {
-        "title_placeholders": {"name": "TestDevice"},
+        "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_ZEROCONF,
     }
@@ -978,7 +978,7 @@ async def test_mdns_update_to_paired_during_pairing(hass, controller):
 
     assert result["type"] == "form"
     assert get_flow_context(hass, result) == {
-        "title_placeholders": {"name": "TestDevice"},
+        "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_ZEROCONF,
     }
@@ -1084,3 +1084,9 @@ async def test_bluetooth_valid_device_discovery_unpaired(hass, controller):
 
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "pair"
+
+    assert get_flow_context(hass, result) == {
+        "source": config_entries.SOURCE_BLUETOOTH,
+        "unique_id": "AA:BB:CC:DD:EE:FF",
+        "title_placeholders": {"name": "TestDevice", "category": "Other"},
+    }
