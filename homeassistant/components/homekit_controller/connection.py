@@ -14,7 +14,7 @@ from aiohomekit.exceptions import (
     AccessoryNotFoundError,
     EncryptionError,
 )
-from aiohomekit.model import Accessories, Accessory
+from aiohomekit.model import Accessories, Accessory, Transport
 from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
 from aiohomekit.model.services import Service
 
@@ -219,7 +219,12 @@ class HKDevice:
         # Ideally we would know which entities we are about to add
         # so we only poll those chars but that is not possible
         # yet.
-        await self.pairing.async_populate_accessories_state(force_update=True)
+        try:
+            await self.pairing.async_populate_accessories_state(force_update=True)
+        except AccessoryNotFoundError:
+            if self.pairing.transport != Transport.BLE:
+                # BLE devices may sleep and we can't force a connection
+                raise
 
         await self.async_process_entity_map()
 
@@ -549,7 +554,7 @@ class HKDevice:
     async def async_update(self, now=None):
         """Poll state of all entities attached to this bridge/accessory."""
         if not self.pollable_characteristics:
-            self.async_set_available_state(self.pairing.is_connected)
+            self.async_set_available_state(self.pairing.is_available)
             _LOGGER.debug(
                 "HomeKit connection not polling any characteristics: %s", self.unique_id
             )
