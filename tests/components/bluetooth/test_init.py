@@ -730,3 +730,7 @@ async def test_async_ble_device_from_address(hass, mock_bleak_scanner_start):
             bluetooth.async_ble_device_from_address(hass, "44:44:33:11:23:45")
             is switchbot_device
         )
+
+        assert (
+            bluetooth.async_ble_device_from_address(hass, "00:66:33:22:11:22") is None
+        )
