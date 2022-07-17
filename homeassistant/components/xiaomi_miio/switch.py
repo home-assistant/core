@@ -231,7 +231,7 @@ SWITCH_TYPES = (
     XiaomiMiioSwitchDescription(
         key=ATTR_CHILD_LOCK,
         feature=FEATURE_SET_CHILD_LOCK,
-        name="Child Lock",
+        name="Child lock",
         icon="mdi:lock",
         method_on="async_set_child_lock_on",
         method_off="async_set_child_lock_off",
@@ -249,7 +249,7 @@ SWITCH_TYPES = (
     XiaomiMiioSwitchDescription(
         key=ATTR_DRY,
         feature=FEATURE_SET_DRY,
-        name="Dry Mode",
+        name="Dry mode",
         icon="mdi:hair-dryer",
         method_on="async_set_dry_on",
         method_off="async_set_dry_off",
@@ -258,7 +258,7 @@ SWITCH_TYPES = (
     XiaomiMiioSwitchDescription(
         key=ATTR_CLEAN,
         feature=FEATURE_SET_CLEAN,
-        name="Clean Mode",
+        name="Clean mode",
         icon="mdi:shimmer",
         method_on="async_set_clean_on",
         method_off="async_set_clean_off",
@@ -268,7 +268,7 @@ SWITCH_TYPES = (
     XiaomiMiioSwitchDescription(
         key=ATTR_LED,
         feature=FEATURE_SET_LED,
-        name="Led",
+        name="LED",
         icon="mdi:led-outline",
         method_on="async_set_led_on",
         method_off="async_set_led_off",
@@ -277,7 +277,7 @@ SWITCH_TYPES = (
     XiaomiMiioSwitchDescription(
         key=ATTR_LEARN_MODE,
         feature=FEATURE_SET_LEARN_MODE,
-        name="Learn Mode",
+        name="Learn mode",
         icon="mdi:school-outline",
         method_on="async_set_learn_mode_on",
         method_off="async_set_learn_mode_off",
@@ -286,7 +286,7 @@ SWITCH_TYPES = (
     XiaomiMiioSwitchDescription(
         key=ATTR_AUTO_DETECT,
         feature=FEATURE_SET_AUTO_DETECT,
-        name="Auto Detect",
+        name="Auto detect",
         method_on="async_set_auto_detect_on",
         method_off="async_set_auto_detect_off",
         entity_category=EntityCategory.CONFIG,
@@ -303,7 +303,7 @@ SWITCH_TYPES = (
     XiaomiMiioSwitchDescription(
         key=ATTR_PTC,
         feature=FEATURE_SET_PTC,
-        name="Auxiliary Heat",
+        name="Auxiliary heat",
         icon="mdi:radiator",
         method_on="async_set_ptc_on",
         method_off="async_set_ptc_off",

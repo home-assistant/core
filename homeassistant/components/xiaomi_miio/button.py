@@ -38,7 +38,7 @@ class XiaomiMiioButtonDescription(ButtonEntityDescription):
 BUTTON_TYPES = (
     XiaomiMiioButtonDescription(
         key=ATTR_RESET_DUST_FILTER,
-        name="Reset Dust Filter",
+        name="Reset dust filter",
         icon="mdi:air-filter",
         method_press="reset_dust_filter",
         method_press_error_message="Resetting the dust filter lifetime failed",
@@ -46,7 +46,7 @@ BUTTON_TYPES = (
     ),
     XiaomiMiioButtonDescription(
         key=ATTR_RESET_UPPER_FILTER,
-        name="Reset Upper Filter",
+        name="Reset upper filter",
         icon="mdi:air-filter",
         method_press="reset_upper_filter",
         method_press_error_message="Resetting the upper filter lifetime failed.",
