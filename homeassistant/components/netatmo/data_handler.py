@@ -85,7 +85,7 @@ class NetatmoDataHandler:
         self.hass = hass
         self.config_entry = config_entry
         self._auth = hass.data[DOMAIN][config_entry.entry_id][AUTH]
-        self.publisher: dict = {}
+        self.publisher: dict[str, NetatmoPublisher] = {}
         self.data: dict = {}
         self._queue: deque = deque()
         self._webhook: bool = False
