@@ -7,12 +7,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    ADVANTAGE_AIR_LIGHTS,
     ADVANTAGE_AIR_STATE_OFF,
     ADVANTAGE_AIR_STATE_ON,
     DOMAIN as ADVANTAGE_AIR_DOMAIN,
 )
 from .entity import AdvantageAirEntity
+
+ADVANTAGE_AIR_LIGHTS = "myLights"
 
 
 async def async_setup_entry(
