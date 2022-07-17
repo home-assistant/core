@@ -111,7 +111,7 @@ HK_BLUETOOTH_SERVICE_INFO_DISCOVERED_UNPAIRED = BluetoothServiceInfo(
     rssi=-81,
     # ID is '00:00:00:00:00:00', pairing flag is byte 3
     manufacturer_data={
-        76: b"\x061\x00\x01\x00\x00\x00\x00\x00\x07\x00\x06\x00\x02\x02X\x19\xb1Q"
+        76: b"\x061\x01\x00\x00\x00\x00\x00\x00\x07\x00\x06\x00\x02\x02X\x19\xb1Q"
     },
     service_data={},
     service_uuids=[],

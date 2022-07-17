@@ -367,7 +367,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         except ValueError:
             return self.async_abort(reason="ignored_model")
 
-        if ~device.status_flags & StatusFlags.UNPAIRED:
+        if not (device.status_flags & StatusFlags.UNPAIRED):
             return self.async_abort(reason="already_paired")
 
         if self.controller is None:
