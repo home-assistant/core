@@ -25,7 +25,7 @@ from .const import (
     ADVANTAGE_AIR_STATE_OPEN,
     DOMAIN as ADVANTAGE_AIR_DOMAIN,
 )
-from .entity import AdvantageAirEntity
+from .entity import AdvantageAirAirconEntity
 
 ADVANTAGE_AIR_HVAC_MODES = {
     "heat": HVACMode.HEAT,
@@ -87,7 +87,7 @@ async def async_setup_entry(
     )
 
 
-class AdvantageAirClimateEntity(AdvantageAirEntity, ClimateEntity):
+class AdvantageAirClimateEntity(AdvantageAirAirconEntity, ClimateEntity):
     """AdvantageAir Climate class."""
 
     _attr_temperature_unit = TEMP_CELSIUS

@@ -16,7 +16,7 @@ from .const import (
     ADVANTAGE_AIR_STATE_OPEN,
     DOMAIN as ADVANTAGE_AIR_DOMAIN,
 )
-from .entity import AdvantageAirEntity
+from .entity import AdvantageAirAirconEntity
 
 PARALLEL_UPDATES = 0
 
@@ -39,7 +39,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class AdvantageAirZoneVent(AdvantageAirEntity, CoverEntity):
+class AdvantageAirZoneVent(AdvantageAirAirconEntity, CoverEntity):
     """Advantage Air Zone Vent."""
 
     _attr_device_class = CoverDeviceClass.DAMPER
