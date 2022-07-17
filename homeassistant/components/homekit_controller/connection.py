@@ -222,6 +222,8 @@ class HKDevice:
         # since we know the data is not stale.
         await self.async_add_new_entities()
 
+        self.async_set_available_state(self.pairing.is_available)
+
         self._polling_interval_remover = async_track_time_interval(
             self.hass, self.async_update, SCAN_INTERVAL_BY_TRANSPORT[transport]
         )
