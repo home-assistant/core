@@ -42,7 +42,7 @@ async def test_light_async_setup_entry(hass, aioclient_mock):
     assert len(aioclient_mock.mock_calls) == 1
 
     # Test Light Entity
-    entity_id = "light.testname_light_a"
+    entity_id = "light.light_a"
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_OFF
@@ -82,7 +82,7 @@ async def test_light_async_setup_entry(hass, aioclient_mock):
     assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
 
     # Test Dimmable Light Entity
-    entity_id = "light.testname_light_b"
+    entity_id = "light.light_b"
 
     entry = registry.async_get(entity_id)
     assert entry
