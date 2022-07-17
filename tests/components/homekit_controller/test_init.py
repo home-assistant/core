@@ -4,14 +4,14 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from aiohomekit import AccessoryDisconnectedError
-from aiohomekit.model import Accessory
+from aiohomekit.model import Accessory, Transport
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 from aiohomekit.testing import FakePairing
 
 from homeassistant.components.homekit_controller.const import DOMAIN, ENTITY_MAP
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_registry import EntityRegistry
@@ -104,12 +104,16 @@ async def test_offline_device_raises(hass, controller):
     is_connected = False
 
     class OfflineFakePairing(FakePairing):
-        """Fake pairing that always returns False for is_connected."""
+        """Fake pairing that can flip is_connected."""
 
         @property
         def is_connected(self):
             nonlocal is_connected
             return is_connected
+
+        @property
+        def is_available(self):
+            return self.is_connected
 
         async def async_populate_accessories_state(self, *args, **kwargs):
             nonlocal is_connected
@@ -122,13 +126,13 @@ async def test_offline_device_raises(hass, controller):
                 raise AccessoryDisconnectedError("any")
             return {}
 
+    accessory = Accessory.create_with_info(
+        "TestDevice", "example.com", "Test", "0001", "0.1"
+    )
+    create_alive_service(accessory)
+
     with patch("aiohomekit.testing.FakePairing", OfflineFakePairing):
         await async_setup_component(hass, DOMAIN, {})
-        accessory = Accessory.create_with_info(
-            "TestDevice", "example.com", "Test", "0001", "0.1"
-        )
-        create_alive_service(accessory)
-
         config_entry, _ = await setup_test_accessories_with_controller(
             hass, [accessory], controller
         )
@@ -141,3 +145,66 @@ async def test_offline_device_raises(hass, controller):
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
     await hass.async_block_till_done()
     assert config_entry.state == ConfigEntryState.LOADED
+    assert hass.states.get("light.testdevice").state == STATE_OFF
+
+
+async def test_ble_device_only_checks_is_available(hass, controller):
+    """Test a BLE device only checks is_available."""
+
+    is_available = False
+
+    class FakeBLEPairing(FakePairing):
+        """Fake BLE pairing that can flip is_available."""
+
+        @property
+        def transport(self):
+            return Transport.BLE
+
+        @property
+        def is_connected(self):
+            return False
+
+        @property
+        def is_available(self):
+            nonlocal is_available
+            return is_available
+
+        async def async_populate_accessories_state(self, *args, **kwargs):
+            nonlocal is_available
+            if not is_available:
+                raise AccessoryDisconnectedError("any")
+
+        async def get_characteristics(self, chars, *args, **kwargs):
+            nonlocal is_available
+            if not is_available:
+                raise AccessoryDisconnectedError("any")
+            return {}
+
+    accessory = Accessory.create_with_info(
+        "TestDevice", "example.com", "Test", "0001", "0.1"
+    )
+    create_alive_service(accessory)
+
+    with patch("aiohomekit.testing.FakePairing", FakeBLEPairing):
+        await async_setup_component(hass, DOMAIN, {})
+        config_entry, _ = await setup_test_accessories_with_controller(
+            hass, [accessory], controller
+        )
+        await hass.async_block_till_done()
+
+    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+
+    is_available = True
+
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
+    await hass.async_block_till_done()
+    assert config_entry.state == ConfigEntryState.LOADED
+    assert hass.states.get("light.testdevice").state == STATE_OFF
+
+    is_available = False
+    async_fire_time_changed(hass, utcnow() + timedelta(hours=1))
+    assert hass.states.get("light.testdevice").state == STATE_UNAVAILABLE
+
+    is_available = True
+    async_fire_time_changed(hass, utcnow() + timedelta(hours=1))
+    assert hass.states.get("light.testdevice").state == STATE_OFF
