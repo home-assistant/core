@@ -7,17 +7,13 @@ from .const import DOMAIN
 
 
 class AdvantageAirEntity(CoordinatorEntity):
-    """Parent class for Advantage Air Entities."""
+    """Parent class for all Advantage Air entities."""
 
     _attr_has_entity_name = True
 
-    def __init__(self, instance, ac_key, zone_key=None):
-        """Initialize common aspects of an Advantage Air sensor."""
+    def __init__(self, instance):
+        """Initialize common aspects of an Advantage Air entity."""
         super().__init__(instance["coordinator"])
-        self.async_set_aircon = instance["async_set_aircon"]
-        self.async_set_lights = instance["async_set_lights"]
-        self.ac_key = ac_key
-        self.zone_key = zone_key
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.coordinator.data["system"]["rid"])},
             manufacturer="Advantage Air",
@@ -25,6 +21,17 @@ class AdvantageAirEntity(CoordinatorEntity):
             name=self.coordinator.data["system"]["name"],
             sw_version=self.coordinator.data["system"]["myAppRev"],
         )
+
+
+class AdvantageAirAirconEntity(AdvantageAirEntity):
+    """Parent class for Advantage Air Aircon entities."""
+
+    def __init__(self, instance, ac_key, zone_key=None):
+        """Initialize common aspects of an Advantage Air Aircon entity."""
+        super().__init__(instance["coordinator"])
+        self.async_set_aircon = instance["async_set_aircon"]
+        self.ac_key = ac_key
+        self.zone_key = zone_key
 
     @property
     def _ac(self):

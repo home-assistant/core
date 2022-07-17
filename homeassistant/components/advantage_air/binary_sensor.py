@@ -11,7 +11,7 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN as ADVANTAGE_AIR_DOMAIN
-from .entity import AdvantageAirEntity
+from .entity import AdvantageAirAirconEntity
 
 PARALLEL_UPDATES = 0
 
@@ -38,7 +38,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class AdvantageAirFilter(AdvantageAirEntity, BinarySensorEntity):
+class AdvantageAirFilter(AdvantageAirAirconEntity, BinarySensorEntity):
     """Advantage Air Filter."""
 
     _attr_device_class = BinarySensorDeviceClass.PROBLEM
@@ -58,7 +58,7 @@ class AdvantageAirFilter(AdvantageAirEntity, BinarySensorEntity):
         return self._ac["filterCleanStatus"]
 
 
-class AdvantageAirZoneMotion(AdvantageAirEntity, BinarySensorEntity):
+class AdvantageAirZoneMotion(AdvantageAirAirconEntity, BinarySensorEntity):
     """Advantage Air Zone Motion."""
 
     _attr_device_class = BinarySensorDeviceClass.MOTION
@@ -77,7 +77,7 @@ class AdvantageAirZoneMotion(AdvantageAirEntity, BinarySensorEntity):
         return self._zone["motion"] == 20
 
 
-class AdvantageAirZoneMyZone(AdvantageAirEntity, BinarySensorEntity):
+class AdvantageAirZoneMyZone(AdvantageAirAirconEntity, BinarySensorEntity):
     """Advantage Air Zone MyZone."""
 
     _attr_entity_registry_enabled_default = False

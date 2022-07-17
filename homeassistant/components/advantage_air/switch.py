@@ -9,7 +9,7 @@ from .const import (
     ADVANTAGE_AIR_STATE_ON,
     DOMAIN as ADVANTAGE_AIR_DOMAIN,
 )
-from .entity import AdvantageAirEntity
+from .entity import AdvantageAirAirconEntity
 
 
 async def async_setup_entry(
@@ -17,7 +17,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up AdvantageAir toggle platform."""
+    """Set up AdvantageAir switch platform."""
 
     instance = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
 
@@ -28,7 +28,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class AdvantageAirFreshAir(AdvantageAirEntity, SwitchEntity):
+class AdvantageAirFreshAir(AdvantageAirAirconEntity, SwitchEntity):
     """Representation of Advantage Air fresh air control."""
 
     _attr_icon = "mdi:air-filter"
