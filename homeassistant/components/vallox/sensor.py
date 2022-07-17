@@ -188,6 +188,14 @@ SENSORS: tuple[ValloxSensorEntityDescription, ...] = (
         native_unit_of_measurement=TEMP_CELSIUS,
     ),
     ValloxSensorEntityDescription(
+        key="optional_air",
+        name="Optional air",
+        metric_key="A_CYC_TEMP_OPTIONAL",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=TEMP_CELSIUS,
+    ),
+    ValloxSensorEntityDescription(
         key="humidity",
         name="Humidity",
         metric_key="A_CYC_RH_VALUE",
