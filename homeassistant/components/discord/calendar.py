@@ -79,8 +79,8 @@ class DiscordCalendar(CalendarEntity):
         return [
             event
             for event in self._events
-            if start_date < event.start < end_date
-            or start_date < event.end < end_date  # Start and end are exclusive.
+            if event.start < end_date
+            and start_date < event.end  # Start and end are exclusive.
         ]
 
     async def async_update(self) -> None:
