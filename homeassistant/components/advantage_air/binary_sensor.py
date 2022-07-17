@@ -21,7 +21,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up AdvantageAir motion platform."""
+    """Set up AdvantageAir Binary Sensor platform."""
 
     instance = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
 
@@ -39,13 +39,13 @@ async def async_setup_entry(
 
 
 class AdvantageAirFilter(AdvantageAirEntity, BinarySensorEntity):
-    """Advantage Air Filter."""
+    """Advantage Air Filter sensor."""
 
     _attr_device_class = BinarySensorDeviceClass.PROBLEM
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(self, instance, ac_key):
-        """Initialize an Advantage Air Filter."""
+        """Initialize an Advantage Air Filter sensor."""
         super().__init__(instance, ac_key)
         self._attr_name = f'{self._ac["name"]} filter'
         self._attr_unique_id = (
@@ -59,12 +59,12 @@ class AdvantageAirFilter(AdvantageAirEntity, BinarySensorEntity):
 
 
 class AdvantageAirZoneMotion(AdvantageAirEntity, BinarySensorEntity):
-    """Advantage Air Zone Motion."""
+    """Advantage Air Zone Motion sensor."""
 
     _attr_device_class = BinarySensorDeviceClass.MOTION
 
     def __init__(self, instance, ac_key, zone_key):
-        """Initialize an Advantage Air Zone Motion."""
+        """Initialize an Advantage Air Zone Motion sensor."""
         super().__init__(instance, ac_key, zone_key)
         self._attr_name = f'{self._zone["name"]} motion'
         self._attr_unique_id = (
@@ -78,13 +78,13 @@ class AdvantageAirZoneMotion(AdvantageAirEntity, BinarySensorEntity):
 
 
 class AdvantageAirZoneMyZone(AdvantageAirEntity, BinarySensorEntity):
-    """Advantage Air Zone MyZone."""
+    """Advantage Air Zone MyZone sensor."""
 
     _attr_entity_registry_enabled_default = False
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(self, instance, ac_key, zone_key):
-        """Initialize an Advantage Air Zone MyZone."""
+        """Initialize an Advantage Air Zone MyZone sensor."""
         super().__init__(instance, ac_key, zone_key)
         self._attr_name = f'{self._zone["name"]} myZone'
         self._attr_unique_id = (
