@@ -73,12 +73,10 @@ async def async_setup_entry(
     model = config_entry.data[CONF_MODEL]
     unique_id = config_entry.unique_id
     coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
-    name = config_entry.title
 
     if model in MODELS_HUMIDIFIER_MIOT:
         air_humidifier = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
         entity = XiaomiAirHumidifierMiot(
-            name,
             air_humidifier,
             config_entry,
             unique_id,
@@ -87,7 +85,6 @@ async def async_setup_entry(
     elif model in MODELS_HUMIDIFIER_MJJSQ:
         air_humidifier = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
         entity = XiaomiAirHumidifierMjjsq(
-            name,
             air_humidifier,
             config_entry,
             unique_id,
@@ -96,7 +93,6 @@ async def async_setup_entry(
     else:
         air_humidifier = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
         entity = XiaomiAirHumidifier(
-            name,
             air_humidifier,
             config_entry,
             unique_id,
@@ -115,9 +111,9 @@ class XiaomiGenericHumidifier(XiaomiCoordinatedMiioEntity, HumidifierEntity):
     _attr_supported_features = HumidifierEntityFeature.MODES
     supported_features: int
 
-    def __init__(self, name, device, entry, unique_id, coordinator):
+    def __init__(self, device, entry, unique_id, coordinator):
         """Initialize the generic Xiaomi device."""
-        super().__init__(name, device, entry, unique_id, coordinator=coordinator)
+        super().__init__(device, entry, unique_id, coordinator=coordinator)
 
         self._state = None
         self._attributes = {}
@@ -173,9 +169,9 @@ class XiaomiAirHumidifier(XiaomiGenericHumidifier, HumidifierEntity):
 
     available_modes: list[str]
 
-    def __init__(self, name, device, entry, unique_id, coordinator):
+    def __init__(self, device, entry, unique_id, coordinator):
         """Initialize the plug switch."""
-        super().__init__(name, device, entry, unique_id, coordinator)
+        super().__init__(device, entry, unique_id, coordinator)
 
         self._attr_min_humidity = 30
         self._attr_max_humidity = 80
