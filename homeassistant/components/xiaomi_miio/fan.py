@@ -1088,3 +1088,17 @@ class XiaomiFanZA5(XiaomiFanMiot):
     def operation_mode_class(self):
         """Hold operation mode class."""
         return FanZA5OperationMode
+
+    @callback
+    def _handle_coordinator_update(self):
+        """Fetch state from the device."""
+        self._state = self.coordinator.data.is_on
+        self._preset_mode = self.coordinator.data.mode.name
+        self._oscillating = self.coordinator.data.oscillate
+
+        if self.coordinator.data.is_on:
+            self._percentage = self.coordinator.data.fan_speed
+        else:
+            self._percentage = 0
+
+        self.async_write_ha_state()
