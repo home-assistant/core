@@ -17,8 +17,10 @@ from systembridgeconnector.models.battery import Battery
 from systembridgeconnector.models.cpu import Cpu
 from systembridgeconnector.models.disk import Disk
 from systembridgeconnector.models.display import Display
+from systembridgeconnector.models.get_data import GetData
 from systembridgeconnector.models.gpu import Gpu
 from systembridgeconnector.models.memory import Memory
+from systembridgeconnector.models.register_data_listener import RegisterDataListener
 from systembridgeconnector.models.system import System
 from systembridgeconnector.websocket_client import WebSocketClient
 
@@ -93,7 +95,9 @@ class SystemBridgeDataUpdateCoordinator(
         if not self.websocket_client.connected:
             await self._setup_websocket()
 
-        self.hass.async_create_task(self.websocket_client.get_data(modules))
+        self.hass.async_create_task(
+            self.websocket_client.get_data(GetData(modules=modules))
+        )
 
     async def async_handle_module(
         self,
@@ -174,7 +178,9 @@ class SystemBridgeDataUpdateCoordinator(
 
         self.hass.async_create_task(self._listen_for_data())
 
-        await self.websocket_client.register_data_listener(MODULES)
+        await self.websocket_client.register_data_listener(
+            RegisterDataListener(modules=MODULES)
+        )
 
         self.last_update_success = True
         self.async_update_listeners()

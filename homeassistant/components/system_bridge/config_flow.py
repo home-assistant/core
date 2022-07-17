@@ -13,6 +13,7 @@ from systembridgeconnector.exceptions import (
     ConnectionClosedException,
     ConnectionErrorException,
 )
+from systembridgeconnector.models.get_data import GetData
 from systembridgeconnector.websocket_client import WebSocketClient
 import voluptuous as vol
 
@@ -56,7 +57,7 @@ async def validate_input(
     try:
         async with async_timeout.timeout(30):
             await websocket_client.connect(session=async_get_clientsession(hass))
-            await websocket_client.get_data(["system"])
+            await websocket_client.get_data(GetData(modules=["system"]))
             while True:
                 message = await websocket_client.receive_message()
                 _LOGGER.debug("Message: %s", message)
