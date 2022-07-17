@@ -40,7 +40,12 @@ from .const import (
 from .device_trigger import async_fire_triggers, async_setup_triggers_for_entry
 from .storage import EntityMapStorage
 
-DEFAULT_SCAN_INTERVAL = datetime.timedelta(seconds=60)
+SCAN_INTERVAL_BY_TRANSPORT = {
+    Transport.BLE: datetime.timedelta(hours=12),
+    Transport.IP: datetime.timedelta(seconds=60),
+    Transport.COAP: datetime.timedelta(seconds=60),
+}
+
 RETRY_INTERVAL = 60  # seconds
 MAX_POLL_FAILURES_TO_DECLARE_UNAVAILABLE = 3
 
@@ -204,10 +209,11 @@ class HKDevice:
     async def async_setup(self) -> None:
         """Prepare to use a paired HomeKit device in Home Assistant."""
         entity_storage: EntityMapStorage = self.hass.data[ENTITY_MAP]
+        pairing = self.pairing
+        transport = pairing.transport
+
         if cache := entity_storage.get_map(self.unique_id):
-            self.pairing.restore_accessories_state(
-                cache["accessories"], cache["config_num"]
-            )
+            pairing.restore_accessories_state(cache["accessories"], cache["config_num"])
 
         # We need to force an update here to make sure we have
         # the latest values since the async_update we do in
@@ -222,7 +228,7 @@ class HKDevice:
         try:
             await self.pairing.async_populate_accessories_state(force_update=True)
         except AccessoryNotFoundError:
-            if self.pairing.transport != Transport.BLE:
+            if transport != Transport.BLE:
                 # BLE devices may sleep and we can't force a connection
                 raise
 
@@ -236,8 +242,9 @@ class HKDevice:
         # If everything is up to date, we can create the entities
         # since we know the data is not stale.
         await self.async_add_new_entities()
+
         self._polling_interval_remover = async_track_time_interval(
-            self.hass, self.async_update, DEFAULT_SCAN_INTERVAL
+            self.hass, self.async_update, SCAN_INTERVAL_BY_TRANSPORT[transport]
         )
 
     async def async_add_new_entities(self) -> None:
