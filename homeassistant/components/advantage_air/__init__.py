@@ -10,7 +10,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import ADVANTAGE_AIR_RETRY, DOMAIN
+from .const import (
+    ADVANTAGE_AIR_COORDINATOR,
+    ADVANTAGE_AIR_RETRY,
+    ADVANTAGE_AIR_SET_AIRCON,
+    ADVANTAGE_AIR_SET_LIGHT,
+    DOMAIN,
+)
 
 ADVANTAGE_AIR_SYNC_INTERVAL = 15
 PLATFORMS = [
@@ -58,7 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except ApiError as err:
             _LOGGER.warning(err)
 
-    async def async_set_lights(change):
+    async def async_set_light(change):
         try:
             if await api.lights.async_set(change):
                 await coordinator.async_refresh()
@@ -69,9 +75,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
-        "coordinator": coordinator,
-        "async_set_aircon": async_set_aircon,
-        "async_set_lights": async_set_lights,
+        ADVANTAGE_AIR_COORDINATOR: coordinator,
+        ADVANTAGE_AIR_SET_AIRCON: async_set_aircon,
+        ADVANTAGE_AIR_SET_LIGHT: async_set_light,
     }
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
