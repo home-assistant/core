@@ -1,22 +1,28 @@
 {
     "config": {
-        "abort": {
-            "already_configured": "Conta j\u00e1 configurada"
-        },
         "step": {
             "user": {
                 "data": {
-                    "name": "Nome",
                     "unit_of_measurement": "Unidade de Medida"
+                },
+                "data_description": {
+                    "unit_of_measurement": "Unidade de Medida (opcional)"
                 }
             }
         }
     },
     "options": {
+        "error": {
+            "query_invalid": "Busca SQL In\u00e1lida"
+        },
         "step": {
             "init": {
                 "data": {
+                    "column": "Coluna",
                     "unit_of_measurement": "Unidade de Medida"
+                },
+                "data_description": {
+                    "unit_of_measurement": "Unidade de Medida (opcional)"
                 }
             }
         }
