@@ -62,7 +62,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="whOut",
-        name="WH out",
+        name="Wh out",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=ENERGY_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -70,7 +70,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="whStored",
-        name="WH stored",
+        name="Wh stored",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=ENERGY_WATT_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
@@ -103,7 +103,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="wifiStrength",
-        name="Wifi strength",
+        name="Wi-Fi strength",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
         entity_registry_enabled_default=False,
@@ -118,7 +118,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="ssid",
-        name="Wi-fi SSID",
+        name="Wi-Fi SSID",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
