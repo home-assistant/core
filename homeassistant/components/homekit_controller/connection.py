@@ -140,6 +140,7 @@ class HKDevice:
 
         self.pairing.dispatcher_connect(self.process_new_events)
         self.pairing.dispatcher_connect_config_changed(self.process_config_changed)
+        self.pairing.dispatcher_availability_changed(self.async_set_available_state)
 
     @property
     def entity_map(self) -> Accessories:
