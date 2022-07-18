@@ -23,13 +23,7 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt
 
 from . import ValloxDataUpdateCoordinator, ValloxEntity
-from .const import (
-    DOMAIN,
-    METRIC_KEY_MODE,
-    MODE_ON,
-    VALLOX_CELL_STATE_TO_STR,
-    VALLOX_PROFILE_TO_STR_REPORTABLE,
-)
+from .const import DOMAIN, METRIC_KEY_MODE, MODE_ON, VALLOX_CELL_STATE_TO_STR
 
 
 class ValloxSensor(ValloxEntity, SensorEntity):
@@ -59,16 +53,6 @@ class ValloxSensor(ValloxEntity, SensorEntity):
             return None
 
         return self.coordinator.data.get_metric(metric_key)
-
-
-class ValloxProfileSensor(ValloxSensor):
-    """Child class for profile reporting."""
-
-    @property
-    def native_value(self) -> StateType:
-        """Return the value reported by the sensor."""
-        vallox_profile = self.coordinator.data.profile
-        return VALLOX_PROFILE_TO_STR_REPORTABLE.get(vallox_profile)
 
 
 # There is a quirk with respect to the fan speed reporting. The device keeps on reporting the last
@@ -127,12 +111,6 @@ class ValloxSensorEntityDescription(SensorEntityDescription):
 
 
 SENSORS: tuple[ValloxSensorEntityDescription, ...] = (
-    ValloxSensorEntityDescription(
-        key="current_profile",
-        name="Current profile",
-        icon="mdi:gauge",
-        sensor_type=ValloxProfileSensor,
-    ),
     ValloxSensorEntityDescription(
         key="fan_speed",
         name="Fan speed",
