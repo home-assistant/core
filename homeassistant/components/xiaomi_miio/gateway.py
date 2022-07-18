@@ -63,7 +63,7 @@ class ConnectXiaomiGateway:
         self._cloud_username = self._config_entry.data.get(CONF_CLOUD_USERNAME)
         self._cloud_password = self._config_entry.data.get(CONF_CLOUD_PASSWORD)
         self._cloud_country = self._config_entry.data.get(CONF_CLOUD_COUNTRY)
-        self._push_server = self._hass.data[DOMAIN].get(KEY_PUSH_SERVER)
+        self._push_server = self._hass.data[DOMAIN][KEY_PUSH_SERVER]
 
         await self._hass.async_add_executor_job(self.connect_gateway)
 
@@ -191,18 +191,16 @@ class XiaomiGatewayDevice(CoordinatorEntity, Entity):
 
     async def async_added_to_hass(self):
         """Subscribe to push server callbacks and install the callbacks on the gateway."""
-        if self._sub_device.has_push_server:
-            self._sub_device.Register_callback(self.unique_id, self.push_callback)
-            await self.hass.async_add_executor_job(
-                self._sub_device.install_push_callbacks
-            )
+        self._sub_device.register_callback(self.unique_id, self.push_callback)
+        await self.hass.async_add_executor_job(
+            self._sub_device.subscribe_events
+        )
         await super().async_added_to_hass()
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe callbacks and remove from gateway memory when removed."""
-        if self._sub_device.has_push_server:
-            await self.hass.async_add_executor_job(
-                self._sub_device.uninstall_push_callbacks
-            )
-            self._sub_device.Remove_callback(self.unique_id)
+        await self.hass.async_add_executor_job(
+            self._sub_device.unsubscribe_events
+        )
+        self._sub_device.remove_callback(self.unique_id)
         await super().async_will_remove_from_hass()

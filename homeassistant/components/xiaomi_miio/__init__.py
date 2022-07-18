@@ -403,13 +403,13 @@ async def async_setup_gateway_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
         push_server = PushServer(host)
         hass.data[DOMAIN][KEY_PUSH_SERVER] = push_server
         # start the async push server (only once)
-        await push_server.Start_server()
+        await push_server.start()
 
         # register stop callback to shutdown the push server
         def stop_push_server(event):
             """Stop push server."""
             _LOGGER.debug("Shutting down Xiaomi Miio push server")
-            push_server.Stop_server()
+            push_server.stop()
 
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_push_server)
 
@@ -466,10 +466,10 @@ async def async_setup_gateway_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
         KEY_COORDINATOR: coordinator_dict,
     }
 
-    # register stop callback to clean callbacks of gateway
+    # register stop callback to clean subscriptions of gateway
     def gateway_stop(event):
-        """Clean callbacks registered in gateway memory."""
-        _LOGGER.debug("Removing callbacks from gateway memory")
+        """Clean subscriptions registered in gateway memory."""
+        _LOGGER.debug("Removing subscribtions from miio device memory")
         gateway = hass.data[DOMAIN].get(entry.entry_id, {}).get(CONF_GATEWAY)
         if gateway is not None:
             gateway.close()
@@ -522,7 +522,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
         # No gateways left, stop push server
         _LOGGER.debug("Shutting down Xiaomi Miio push server")
         push_server = hass.data[DOMAIN].pop(KEY_PUSH_SERVER)
-        push_server.Stop_server()
+        push_server.stop()
 
     return unload_ok
 
