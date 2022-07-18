@@ -586,7 +586,7 @@ class Light(BaseLight, ZhaEntity):
                     if color_temp is not None and color_mode:
                         self._attr_color_temp = color_temp
                         self._attr_xy_color = None
-                elif color_mode == Color.ColorMode.HS:
+                elif color_mode == Color.ColorMode.Hue_and_saturation:
                     self._attr_color_mode = ColorMode.HS
                     if self._color_channel.enhanced_hue_supported:
                         current_hue = results.get("enhanced_current_hue")
