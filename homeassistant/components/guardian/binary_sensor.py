@@ -79,10 +79,9 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Guardian switches based on a config entry."""
-    paired_sensor_coordinators = hass.data[DOMAIN][entry.entry_id][
-        DATA_COORDINATOR_PAIRED_SENSOR
-    ]
-    valve_controller_coordinators = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR]
+    entry_data = hass.data[DOMAIN][entry.entry_id]
+    paired_sensor_coordinators = entry_data[DATA_COORDINATOR_PAIRED_SENSOR]
+    valve_controller_coordinators = entry_data[DATA_COORDINATOR]
 
     @callback
     def add_new_paired_sensor(uid: str) -> None:
