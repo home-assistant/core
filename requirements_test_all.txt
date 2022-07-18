@@ -164,6 +164,15 @@ aiohue==4.4.2
 # homeassistant.components.apache_kafka
 aiokafka==0.7.2
 
+# homeassistant.components.lifx
+aiolifx-connection==1.0.0
+
+# homeassistant.components.lifx
+aiolifx==0.8.1
+
+# homeassistant.components.lifx
+aiolifx_effects==0.2.2
+
 # homeassistant.components.lookin
 aiolookin==0.1.1
 
