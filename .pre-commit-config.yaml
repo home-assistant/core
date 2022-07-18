@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/asottile/pyupgrade
-    rev: v2.34.0
+    rev: v2.37.1
     hooks:
       - id: pyupgrade
         args: [--py39-plus]
@@ -21,7 +21,7 @@ repos:
           - --skip="./.*,*.csv,*.json"
           - --quiet-level=2
         exclude_types: [csv, json]
-        exclude: ^tests/fixtures/
+        exclude: ^tests/fixtures/|homeassistant/generated/
   - repo: https://github.com/PyCQA/flake8
     rev: 4.0.1
     hooks:

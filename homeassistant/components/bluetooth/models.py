@@ -8,7 +8,11 @@ from typing import Any, Final, cast
 
 from bleak import BleakScanner
 from bleak.backends.device import BLEDevice
-from bleak.backends.scanner import AdvertisementData, AdvertisementDataCallback
+from bleak.backends.scanner import (
+    AdvertisementData,
+    AdvertisementDataCallback,
+    BaseBleakScanner,
+)
 from lru import LRU  # pylint: disable=no-name-in-module
 
 from homeassistant.core import CALLBACK_TYPE, callback as hass_callback
@@ -52,7 +56,7 @@ class HaBleakScanner(BleakScanner):  # type: ignore[misc]
         self._callbacks: list[
             tuple[AdvertisementDataCallback, dict[str, set[str]]]
         ] = []
-        self._history: LRU = LRU(MAX_HISTORY_SIZE)
+        self.history: LRU = LRU(MAX_HISTORY_SIZE)
         super().__init__(*args, **kwargs)
 
     @hass_callback
@@ -70,7 +74,7 @@ class HaBleakScanner(BleakScanner):  # type: ignore[misc]
         # Replay the history since otherwise we miss devices
         # that were already discovered before the callback was registered
         # or we are in passive mode
-        for device, advertisement_data in self._history.values():
+        for device, advertisement_data in self.history.values():
             _dispatch_callback(callback, filters, device, advertisement_data)
 
         return _remove_callback
@@ -83,31 +87,47 @@ class HaBleakScanner(BleakScanner):  # type: ignore[misc]
         Here we get the actual callback from bleak and dispatch
         it to all the wrapped HaBleakScannerWrapper classes
         """
-        self._history[device.address] = (device, advertisement_data)
+        self.history[device.address] = (device, advertisement_data)
         for callback_filters in self._callbacks:
             _dispatch_callback(*callback_filters, device, advertisement_data)
 
 
-class HaBleakScannerWrapper(BleakScanner):  # type: ignore[misc]
+class HaBleakScannerWrapper(BaseBleakScanner):  # type: ignore[misc]
     """A wrapper that uses the single instance."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the BleakScanner."""
         self._detection_cancel: CALLBACK_TYPE | None = None
         self._mapped_filters: dict[str, set[str]] = {}
-        if "filters" in kwargs:
-            self._mapped_filters = {k: set(v) for k, v in kwargs["filters"].items()}
-        if "service_uuids" in kwargs:
-            self._mapped_filters[FILTER_UUIDS] = set(kwargs["service_uuids"])
+        self._adv_data_callback: AdvertisementDataCallback | None = None
+        self._map_filters(*args, **kwargs)
         super().__init__(*args, **kwargs)
 
     async def stop(self, *args: Any, **kwargs: Any) -> None:
         """Stop scanning for devices."""
-        return
 
     async def start(self, *args: Any, **kwargs: Any) -> None:
         """Start scanning for devices."""
-        return
+
+    def _map_filters(self, *args: Any, **kwargs: Any) -> bool:
+        """Map the filters."""
+        mapped_filters = {}
+        if filters := kwargs.get("filters"):
+            if filter_uuids := filters.get(FILTER_UUIDS):
+                mapped_filters[FILTER_UUIDS] = set(filter_uuids)
+            else:
+                _LOGGER.warning("Only %s filters are supported", FILTER_UUIDS)
+        if service_uuids := kwargs.get("service_uuids"):
+            mapped_filters[FILTER_UUIDS] = set(service_uuids)
+        if mapped_filters == self._mapped_filters:
+            return False
+        self._mapped_filters = mapped_filters
+        return True
+
+    def set_scanning_filter(self, *args: Any, **kwargs: Any) -> None:
+        """Set the filters to use."""
+        if self._map_filters(*args, **kwargs):
+            self._setup_detection_callback()
 
     def _cancel_callback(self) -> None:
         """Cancel callback."""
@@ -127,8 +147,15 @@ class HaBleakScannerWrapper(BleakScanner):  # type: ignore[misc]
         This method takes the callback and registers it with the long running
         scanner.
         """
+        self._adv_data_callback = callback
+        self._setup_detection_callback()
+
+    def _setup_detection_callback(self) -> None:
+        """Set up the detection callback."""
+        if self._adv_data_callback is None:
+            return
         self._cancel_callback()
-        super().register_detection_callback(callback)
+        super().register_detection_callback(self._adv_data_callback)
         assert HA_BLEAK_SCANNER is not None
         self._detection_cancel = HA_BLEAK_SCANNER.async_register_callback(
             self._callback, self._mapped_filters

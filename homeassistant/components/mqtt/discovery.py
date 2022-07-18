@@ -17,6 +17,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.json import json_loads
+from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 from homeassistant.loader import async_get_mqtt
 
 from .. import mqtt
@@ -234,8 +235,7 @@ async def async_start(  # noqa: C901
                 hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
             )
 
-    hass.data[DATA_CONFIG_FLOW_LOCK] = asyncio.Lock()
-
+    hass.data.setdefault(DATA_CONFIG_FLOW_LOCK, asyncio.Lock())
     hass.data[ALREADY_DISCOVERED] = {}
     hass.data[PENDING_DISCOVERED] = {}
 
@@ -268,7 +268,7 @@ async def async_start(  # noqa: C901
                 if key not in hass.data[INTEGRATION_UNSUBSCRIBE]:
                     return
 
-                data = mqtt.MqttServiceInfo(
+                data = MqttServiceInfo(
                     topic=msg.topic,
                     payload=msg.payload,
                     qos=msg.qos,

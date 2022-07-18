@@ -32,7 +32,7 @@ from tests.components.advantage_air import (
 
 
 async def test_climate_async_setup_entry(hass, aioclient_mock):
-    """Test climate setup."""
+    """Test climate platform."""
 
     aioclient_mock.get(
         TEST_SYSTEM_URL,
@@ -49,7 +49,7 @@ async def test_climate_async_setup_entry(hass, aioclient_mock):
     assert len(aioclient_mock.mock_calls) == 1
 
     # Test Main Climate Entity
-    entity_id = "climate.testname_ac_one"
+    entity_id = "climate.ac_one"
     state = hass.states.get(entity_id)
     assert state
     assert state.state == HVACMode.FAN_ONLY
@@ -120,7 +120,7 @@ async def test_climate_async_setup_entry(hass, aioclient_mock):
     assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
 
     # Test Climate Zone Entity
-    entity_id = "climate.testname_zone_open_with_sensor"
+    entity_id = "climate.ac_one_zone_open_with_sensor"
     state = hass.states.get(entity_id)
     assert state
     assert state.attributes.get("min_temp") == 16
@@ -187,7 +187,7 @@ async def test_climate_async_failed_update(hass, aioclient_mock):
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: ["climate.testname_ac_one"], ATTR_TEMPERATURE: 25},
+        {ATTR_ENTITY_ID: ["climate.ac_one"], ATTR_TEMPERATURE: 25},
         blocking=True,
     )
     assert len(aioclient_mock.mock_calls) == 2

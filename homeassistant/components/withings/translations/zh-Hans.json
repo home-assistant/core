@@ -1,0 +1,9 @@
+{
+    "config": {
+        "step": {
+            "reauth_confirm": {
+                "title": "\u91cd\u65b0\u9a8c\u8bc1\u96c6\u6210"
+            }
+        }
+    }
+}

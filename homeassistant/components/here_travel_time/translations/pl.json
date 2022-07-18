@@ -39,6 +39,13 @@
                 },
                 "title": "Wybierz punkt pocz\u0105tkowy"
             },
+            "origin_menu": {
+                "menu_options": {
+                    "origin_coordinates": "Lokalizacja na mapie",
+                    "origin_entity": "Encja"
+                },
+                "title": "Wybierz punkt pocz\u0105tkowy"
+            },
             "user": {
                 "data": {
                     "api_key": "Klucz API",

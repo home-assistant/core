@@ -15,6 +15,7 @@ class GoalZeroEntity(CoordinatorEntity[GoalZeroDataUpdateCoordinator]):
     """Representation of a Goal Zero Yeti entity."""
 
     _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -24,9 +25,6 @@ class GoalZeroEntity(CoordinatorEntity[GoalZeroDataUpdateCoordinator]):
         """Initialize a Goal Zero Yeti entity."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_name = (
-            f"{coordinator.config_entry.data[CONF_NAME]} {description.name}"
-        )
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}/{description.key}"
 
     @property
@@ -37,7 +35,7 @@ class GoalZeroEntity(CoordinatorEntity[GoalZeroDataUpdateCoordinator]):
             identifiers={(DOMAIN, self.coordinator.config_entry.entry_id)},
             manufacturer=MANUFACTURER,
             model=self._api.sysdata[ATTR_MODEL],
-            name=self.coordinator.config_entry.data[CONF_NAME],
+            name=self.coordinator.config_entry.data[CONF_NAME].capitalize(),
             sw_version=self._api.data["firmwareVersion"],
         )
 
