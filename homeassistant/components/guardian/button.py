@@ -82,10 +82,8 @@ async def async_setup_entry(
     valve_controller_coordinators = entry_data[DATA_COORDINATOR]
 
     async_add_entities(
-        [
-            GuardianButton(entry, valve_controller_coordinators, description, client)
-            for description in BUTTON_DESCRIPTIONS
-        ]
+        GuardianButton(entry, valve_controller_coordinators, description, client)
+        for description in BUTTON_DESCRIPTIONS
     )
 
 

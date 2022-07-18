@@ -87,12 +87,10 @@ async def async_setup_entry(
     def add_new_paired_sensor(uid: str) -> None:
         """Add a new paired sensor."""
         async_add_entities(
-            [
-                PairedSensorBinarySensor(
-                    entry, paired_sensor_coordinators[uid], description
-                )
-                for description in PAIRED_SENSOR_DESCRIPTIONS
-            ]
+            PairedSensorBinarySensor(
+                entry, paired_sensor_coordinators[uid], description
+            )
+            for description in PAIRED_SENSOR_DESCRIPTIONS
         )
 
     # Handle adding paired sensors after HASS startup:
