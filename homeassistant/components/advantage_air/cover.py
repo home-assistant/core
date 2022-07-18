@@ -44,7 +44,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class AdvantageAirZoneVent(AdvantageAirEntity, CoverEntity):
+class AdvantageAirZoneVent(AdvantageAirAirconEntity, CoverEntity):
     """Advantage Air Zone Vent."""
 
     _attr_device_class = CoverDeviceClass.DAMPER

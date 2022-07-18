@@ -45,7 +45,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class AdvantageAirFilter(AdvantageAirEntity, BinarySensorEntity):
+class AdvantageAirFilter(AdvantageAirAirconEntity, BinarySensorEntity):
     """Advantage Air Filter sensor."""
 
     _attr_device_class = BinarySensorDeviceClass.PROBLEM
@@ -65,7 +65,7 @@ class AdvantageAirFilter(AdvantageAirEntity, BinarySensorEntity):
         return self._ac["filterCleanStatus"]
 
 
-class AdvantageAirZoneMotion(AdvantageAirEntity, BinarySensorEntity):
+class AdvantageAirZoneMotion(AdvantageAirAirconEntity, BinarySensorEntity):
     """Advantage Air Zone Motion sensor."""
 
     _attr_device_class = BinarySensorDeviceClass.MOTION
@@ -84,7 +84,7 @@ class AdvantageAirZoneMotion(AdvantageAirEntity, BinarySensorEntity):
         return self._zone["motion"] == 20
 
 
-class AdvantageAirZoneMyZone(AdvantageAirEntity, BinarySensorEntity):
+class AdvantageAirZoneMyZone(AdvantageAirAirconEntity, BinarySensorEntity):
     """Advantage Air Zone MyZone sensor."""
 
     _attr_entity_registry_enabled_default = False
