@@ -30,7 +30,6 @@ async def async_setup_entry(
     @callback
     def _create_entity(netatmo_home: NetatmoHome) -> None:
         entity = NetatmoScheduleSelect(netatmo_home)
-        _LOGGER.debug("Adding climate select %s", entity)
         async_add_entities([entity])
 
     entry.async_on_unload(

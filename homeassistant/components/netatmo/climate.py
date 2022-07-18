@@ -111,7 +111,6 @@ async def async_setup_entry(
     @callback
     def _create_entity(netatmo_device: NetatmoRoom) -> None:
         entity = NetatmoThermostat(netatmo_device)
-        _LOGGER.debug("Adding climate battery sensor %s", entity)
         async_add_entities([entity])
 
     entry.async_on_unload(

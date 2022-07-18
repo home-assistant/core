@@ -252,7 +252,6 @@ async def async_setup_entry(
         if not hasattr(netatmo_device.device, "battery"):
             return
         entity = NetatmoClimateBatterySensor(netatmo_device)
-        _LOGGER.debug("Adding climate battery sensor %s", entity)
         async_add_entities([entity])
 
     entry.async_on_unload(
@@ -261,11 +260,6 @@ async def async_setup_entry(
 
     @callback
     def _create_weather_sensor_entity(netatmo_device: NetatmoDevice) -> None:
-        _LOGGER.debug(
-            "Adding %s sensor %s",
-            netatmo_device.device.device_category,
-            netatmo_device.device.name,
-        )
         async_add_entities(
             NetatmoWeatherSensor(netatmo_device, description)
             for description in SENSOR_TYPES
@@ -280,7 +274,6 @@ async def async_setup_entry(
 
     @callback
     def _create_room_sensor_entity(netatmo_device: NetatmoRoom) -> None:
-        _LOGGER.debug("Adding %s sensor", netatmo_device.room.name)
         async_add_entities(
             NetatmoRoomSensor(netatmo_device, description)
             for description in SENSOR_TYPES
