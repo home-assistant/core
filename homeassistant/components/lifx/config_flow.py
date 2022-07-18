@@ -93,10 +93,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             for progress in self._async_in_progress()
         ):
             return self.async_abort(reason="already_in_progress")
-        device = await self._async_try_connect(
-            host, serial=serial, raise_on_progress=True
-        )
-        if not device:
+        if not (
+            device := await self._async_try_connect(
+                host, serial=serial, raise_on_progress=True
+            )
+        ):
             return self.async_abort(reason="cannot_connect")
         self._discovered_device = device
         return await self.async_step_discovery_confirm()
