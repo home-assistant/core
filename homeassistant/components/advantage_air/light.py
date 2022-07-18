@@ -53,9 +53,7 @@ class AdvantageAirLight(AdvantageAirEntity, LightEntity):
         self._id = light["id"]
         self._attr_unique_id = f'{self.coordinator.data["system"]["rid"]}-{self._id}'
         self._attr_device_info = DeviceInfo(
-            identifiers={
-                (ADVANTAGE_AIR_DOMAIN, self.coordinator.data["system"]["rid"], self._id)
-            },
+            identifiers={(ADVANTAGE_AIR_DOMAIN, self._attr_unique_id)},
             via_device=(ADVANTAGE_AIR_DOMAIN, self.coordinator.data["system"]["rid"]),
             manufacturer="Advantage Air",
             model=light.get("moduleType", "Unknown"),
