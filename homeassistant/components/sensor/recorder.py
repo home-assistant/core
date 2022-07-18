@@ -275,7 +275,7 @@ def _suggest_report_issue(hass: HomeAssistant, entity_id: str) -> str:
     custom_component = entity_sources(hass).get(entity_id, {}).get("custom_component")
     report_issue = ""
     if custom_component:
-        report_issue = "report it to the custom component author."
+        report_issue = "report it to the custom integration author."
     else:
         report_issue = (
             "create a bug report at "
