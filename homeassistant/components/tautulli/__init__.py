@@ -65,5 +65,5 @@ class TautulliEntity(CoordinatorEntity[TautulliDataUpdateCoordinator]):
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, user.user_id if user else entry_id)},
             manufacturer=DEFAULT_NAME,
-            name=user.username.capitalize() if user else DEFAULT_NAME,
+            name=user.username if user else DEFAULT_NAME,
         )
