@@ -49,6 +49,8 @@ async def async_setup_entry(
 class UpbLight(UpbAttachedEntity, LightEntity):
     """Representation of an UPB Light."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, element, unique_id, upb):
         """Initialize an UpbLight."""
         super().__init__(element, unique_id, upb)

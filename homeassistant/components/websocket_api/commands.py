@@ -1,7 +1,6 @@
 """Commands part of Websocket API."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable
 import datetime as dt
 import json
@@ -22,6 +21,7 @@ from homeassistant.exceptions import (
     TemplateError,
     Unauthorized,
 )
+from homeassistant.generated import supported_brands
 from homeassistant.helpers import config_validation as cv, entity, template
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import (
@@ -31,7 +31,12 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.json import JSON_DUMP, ExtendedJSONEncoder
 from homeassistant.helpers.service import async_get_all_descriptions
-from homeassistant.loader import IntegrationNotFound, async_get_integration
+from homeassistant.loader import (
+    Integration,
+    IntegrationNotFound,
+    async_get_integration,
+    async_get_integrations,
+)
 from homeassistant.setup import DATA_SETUP_TIME, async_get_loaded_integrations
 from homeassistant.util.json import (
     find_paths_unserializable_data,
@@ -68,6 +73,7 @@ def async_register_commands(
     async_reg(hass, handle_unsubscribe_events)
     async_reg(hass, handle_validate_config)
     async_reg(hass, handle_subscribe_entities)
+    async_reg(hass, handle_supported_brands)
 
 
 def pong_message(iden: int) -> dict[str, Any]:
@@ -370,9 +376,13 @@ async def handle_manifest_list(
     wanted_integrations = msg.get("integrations")
     if wanted_integrations is None:
         wanted_integrations = async_get_loaded_integrations(hass)
-    integrations = await asyncio.gather(
-        *(async_get_integration(hass, domain) for domain in wanted_integrations)
-    )
+
+    ints_or_excs = await async_get_integrations(hass, wanted_integrations)
+    integrations: list[Integration] = []
+    for int_or_exc in ints_or_excs.values():
+        if isinstance(int_or_exc, Exception):
+            raise int_or_exc
+        integrations.append(int_or_exc)
     connection.send_result(
         msg["id"], [integration.manifest for integration in integrations]
     )
@@ -691,3 +701,25 @@ async def handle_validate_config(
             result[key] = {"valid": True, "error": None}
 
     connection.send_result(msg["id"], result)
+
+
+@decorators.websocket_command(
+    {
+        vol.Required("type"): "supported_brands",
+    }
+)
+@decorators.async_response
+async def handle_supported_brands(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle supported brands command."""
+    data = {}
+
+    ints_or_excs = await async_get_integrations(
+        hass, supported_brands.HAS_SUPPORTED_BRANDS
+    )
+    for int_or_exc in ints_or_excs.values():
+        if isinstance(int_or_exc, Exception):
+            raise int_or_exc
+        data[int_or_exc.domain] = int_or_exc.manifest["supported_brands"]
+    connection.send_result(msg["id"], data)

@@ -40,7 +40,7 @@ async def async_setup_entry(
 
 
 class AdvantageAirZoneVent(AdvantageAirEntity, CoverEntity):
-    """Advantage Air Cover Class."""
+    """Advantage Air Zone Vent."""
 
     _attr_device_class = CoverDeviceClass.DAMPER
     _attr_supported_features = (
@@ -50,9 +50,9 @@ class AdvantageAirZoneVent(AdvantageAirEntity, CoverEntity):
     )
 
     def __init__(self, instance, ac_key, zone_key):
-        """Initialize an Advantage Air Cover Class."""
+        """Initialize an Advantage Air Zone Vent."""
         super().__init__(instance, ac_key, zone_key)
-        self._attr_name = f'{self._zone["name"]}'
+        self._attr_name = self._zone["name"]
         self._attr_unique_id = (
             f'{self.coordinator.data["system"]["rid"]}-{ac_key}-{zone_key}'
         )

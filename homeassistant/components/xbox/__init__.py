@@ -114,7 +114,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "coordinator": coordinator,
     }
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -180,7 +180,7 @@ class XboxUpdateCoordinator(DataUpdateCoordinator):
             name=DOMAIN,
             update_interval=timedelta(seconds=10),
         )
-        self.data: XboxData = XboxData({}, [])
+        self.data: XboxData = XboxData({}, {})
         self.client: XboxLiveClient = client
         self.consoles: SmartglassConsoleList = consoles
 
@@ -230,7 +230,7 @@ class XboxUpdateCoordinator(DataUpdateCoordinator):
             )
 
         # Update user presence
-        presence_data = {}
+        presence_data: dict[str, PresenceData] = {}
         batch: PeopleResponse = await self.client.people.get_friends_own_batch(
             [self.client.xuid]
         )
@@ -262,7 +262,7 @@ def _build_presence_data(person: Person) -> PresenceData:
         online=person.presence_state == "Online",
         status=person.presence_text,
         in_party=person.multiplayer_summary.in_party > 0,
-        in_game=active_app and active_app.is_game,
+        in_game=active_app is not None and active_app.is_game,
         in_multiplayer=person.multiplayer_summary.in_multiplayer_session,
         gamer_score=person.gamer_score,
         gold_tenure=person.detail.tenure,

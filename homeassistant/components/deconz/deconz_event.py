@@ -46,9 +46,6 @@ async def async_setup_events(gateway: DeconzGateway) -> None:
         new_event: DeconzAlarmEvent | DeconzEvent
         sensor = gateway.api.sensors[sensor_id]
 
-        if not gateway.option_allow_clip_sensor and sensor.type.startswith("CLIP"):
-            return None
-
         if isinstance(sensor, Switch):
             new_event = DeconzEvent(sensor, gateway)
 

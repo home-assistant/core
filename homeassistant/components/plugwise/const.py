@@ -25,8 +25,9 @@ UNIT_LUMEN: Final = "lm"
 PLATFORMS_GATEWAY: Final[list[str]] = [
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
-    Platform.SENSOR,
+    Platform.NUMBER,
     Platform.SELECT,
+    Platform.SENSOR,
     Platform.SWITCH,
 ]
 ZEROCONF_MAP: Final[dict[str, str]] = {
