@@ -198,8 +198,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         breaks_in_ha_version="2023.1.1",
         is_fixable=True,
         learn_more_url="https://www.youtube.com/watch?v=b9rntRxLlbU",
-        severity=IssueSeverity.WARNING,
+        severity=IssueSeverity.CRITICAL,
         translation_key="out_of_blinker_fluid",
+    )
+
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "unfixable_problem",
+        is_fixable=False,
+        learn_more_url="https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        severity=IssueSeverity.WARNING,
+        translation_key="unfixable_problem",
     )
 
     return True
