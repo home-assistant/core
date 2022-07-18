@@ -61,6 +61,7 @@ def coerce_host_port(value: str) -> HostPortTuple:
     return host, port
 
 
+CONF_CALLBACK_ADDRESS = "callback_address"
 CONF_STATIC = "static"
 
 DEFAULT_DISCOVERY = True
@@ -69,6 +70,7 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
+                vol.Optional(CONF_CALLBACK_ADDRESS): cv.string,
                 vol.Optional(CONF_STATIC, default=[]): vol.Schema(
                     [vol.All(cv.string, coerce_host_port)]
                 ),
@@ -101,6 +103,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a wemo config entry."""
     config = hass.data[DOMAIN].pop("config")
+
+    # Override the callback address via environment variable
+    callback_address = config.get(CONF_CALLBACK_ADDRESS, '')
+    if callback_address:
+        os.environ['PYWEMO_CALLBACK_ADDRESS'] = callback_address
 
     # Keep track of WeMo device subscriptions for push updates
     registry = hass.data[DOMAIN]["registry"] = pywemo.SubscriptionRegistry()
