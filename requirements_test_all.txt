@@ -1293,7 +1293,7 @@ python-juicenet==1.1.0
 python-kasa==0.5.0
 
 # homeassistant.components.xiaomi_miio
-python-miio==0.5.11
+python-miio==0.5.12
 
 # homeassistant.components.nest
 python-nest==4.2.0
