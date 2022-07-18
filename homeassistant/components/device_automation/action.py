@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_DOMAIN
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from . import DeviceAutomationType, async_get_device_automation_platform
@@ -51,14 +52,15 @@ async def async_validate_action_config(
 ) -> ConfigType:
     """Validate config."""
     try:
+        config = cv.DEVICE_ACTION_SCHEMA(config)
         platform = await async_get_device_automation_platform(
             hass, config[CONF_DOMAIN], DeviceAutomationType.ACTION
         )
         if hasattr(platform, "async_validate_action_config"):
             return await platform.async_validate_action_config(hass, config)
         return cast(ConfigType, platform.ACTION_SCHEMA(config))
-    except InvalidDeviceAutomationConfig as err:
-        raise vol.Invalid(str(err) or "Invalid action configuration") from err
+    except (vol.Invalid, InvalidDeviceAutomationConfig) as err:
+        raise vol.Invalid("invalid action configuration: " + str(err)) from err
 
 
 async def async_call_action_from_config(

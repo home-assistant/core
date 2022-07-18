@@ -58,8 +58,8 @@ async def async_validate_condition_config(
         if hasattr(platform, "async_validate_condition_config"):
             return await platform.async_validate_condition_config(hass, config)
         return cast(ConfigType, platform.CONDITION_SCHEMA(config))
-    except InvalidDeviceAutomationConfig as err:
-        raise vol.Invalid(str(err) or "Invalid condition configuration") from err
+    except (vol.Invalid, InvalidDeviceAutomationConfig) as err:
+        raise vol.Invalid("invalid condition configuration: " + str(err)) from err
 
 
 async def async_condition_from_config(
