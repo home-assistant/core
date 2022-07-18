@@ -28,7 +28,7 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.service import async_extract_referenced_entity_ids
 
-from .const import _LOGGER, DOMAIN
+from .const import _LOGGER, DATA_LIFX_MANAGER, DOMAIN
 from .util import convert_8_to_16, find_hsbk
 
 SCAN_INTERVAL = timedelta(seconds=10)
@@ -183,6 +183,7 @@ class LIFXManager:
             coordinator.device
             for entry_id, coordinator in self.hass.data[DOMAIN].items()
             if self.entry_id_to_entity_id[entry_id] in entity_ids
+            and entry_id != DATA_LIFX_MANAGER
         ]
         _LOGGER.debug("Starting effect %s on %s", service, bulbs)
 

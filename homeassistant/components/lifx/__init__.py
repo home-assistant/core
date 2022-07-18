@@ -25,7 +25,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
-from .const import _LOGGER, DOMAIN, TARGET_ANY
+from .const import _LOGGER, DATA_LIFX_MANAGER, DOMAIN, TARGET_ANY
 from .coordinator import LIFXUpdateCoordinator
 from .discovery import async_discover_devices, async_trigger_discovery
 from .manager import LIFXManager
@@ -56,7 +56,6 @@ CONFIG_SCHEMA = vol.All(
     ),
 )
 
-DATA_LIFX_MANAGER = "lifx_manager"
 
 PLATFORMS = [Platform.LIGHT]
 DISCOVERY_INTERVAL = timedelta(minutes=15)

@@ -32,8 +32,7 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 import homeassistant.util.color as color_util
 
-from . import DATA_LIFX_MANAGER
-from .const import DOMAIN
+from .const import DATA_LIFX_MANAGER, DOMAIN
 from .coordinator import LIFXUpdateCoordinator
 from .manager import (
     SERVICE_EFFECT_COLORLOOP,
