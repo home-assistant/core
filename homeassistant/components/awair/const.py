@@ -86,7 +86,7 @@ SENSOR_TYPES: tuple[AwairSensorEntityDescription, ...] = (
     ),
     AwairSensorEntityDescription(
         key=API_VOC,
-        icon="mdi:cloud",
+        device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
         name="Volatile organic compounds",
         unique_id_tag="VOC",  # matches legacy format
@@ -101,7 +101,6 @@ SENSOR_TYPES: tuple[AwairSensorEntityDescription, ...] = (
     AwairSensorEntityDescription(
         key=API_CO2,
         device_class=SensorDeviceClass.CO2,
-        icon="mdi:cloud",
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         name="Carbon dioxide",
         unique_id_tag="CO2",  # matches legacy format
@@ -111,14 +110,14 @@ SENSOR_TYPES: tuple[AwairSensorEntityDescription, ...] = (
 SENSOR_TYPES_DUST: tuple[AwairSensorEntityDescription, ...] = (
     AwairSensorEntityDescription(
         key=API_PM25,
-        icon="mdi:blur",
+        device_class=SensorDeviceClass.PM25,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         name="PM2.5",
         unique_id_tag="PM25",  # matches legacy format
     ),
     AwairSensorEntityDescription(
         key=API_PM10,
-        icon="mdi:blur",
+        device_class=SensorDeviceClass.PM10,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         name="PM10",
         unique_id_tag="PM10",  # matches legacy format
