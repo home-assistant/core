@@ -61,6 +61,13 @@ class ValveControllerSwitch(ValveControllerEntity, SwitchEntity):
 
     entity_description: ValveControllerSwitchDescription
 
+    ON_STATES = {
+        "start_opening",
+        "opening",
+        "finish_opening",
+        "opened",
+    }
+
     def __init__(
         self,
         entry: ConfigEntry,
@@ -77,13 +84,7 @@ class ValveControllerSwitch(ValveControllerEntity, SwitchEntity):
     @callback
     def _async_update_from_latest_data(self) -> None:
         """Update the entity."""
-        self._attr_is_on = self.coordinator.data["state"] in (
-            "start_opening",
-            "opening",
-            "finish_opening",
-            "opened",
-        )
-
+        self._attr_is_on = self.coordinator.data["state"] in self.ON_STATES
         self._attr_extra_state_attributes.update(
             {
                 ATTR_AVG_CURRENT: self.coordinator.data["average_current"],

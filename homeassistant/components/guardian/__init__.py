@@ -416,7 +416,7 @@ class PairedSensorManager:
         dev_reg.async_remove_device(device.id)
 
 
-class GuardianEntity(CoordinatorEntity):
+class GuardianEntity(CoordinatorEntity[GuardianDataUpdateCoordinator]):
     """Define a base Guardian entity."""
 
     _attr_has_entity_name = True
