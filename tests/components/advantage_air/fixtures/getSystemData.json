@@ -150,9 +150,10 @@
     "hasThings": false,
     "hasThingsBOG": false,
     "hasThingsLight": false,
+    "needsUpdate": false,
     "name": "testname",
     "rid": "uniqueid",
     "sysType": "e-zone",
-    "myAppRev": "testversion"
+    "myAppRev": "1.234"
   }
 }
