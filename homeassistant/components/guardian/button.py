@@ -113,4 +113,4 @@ class GuardianButton(ValveControllerEntity, ButtonEntity):
                 f'Error while pressing button "{self.entity_id}": {err}'
             ) from err
 
-        async_dispatcher_send(self.hass, self._signal_reboot_requested)
+        async_dispatcher_send(self.hass, self.coordinator.signal_reboot_requested)

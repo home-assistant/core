@@ -23,10 +23,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -41,8 +38,6 @@ from .const import (
     DOMAIN,
     LOGGER,
     SIGNAL_PAIRED_SENSOR_COORDINATOR_ADDED,
-    SIGNAL_REBOOT_COMPLETED,
-    SIGNAL_REBOOT_REQUESTED,
 )
 from .util import GuardianDataUpdateCoordinator
 
@@ -142,6 +137,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # so we use a lock to ensure that only one API request is reaching it at a time:
     api_lock = asyncio.Lock()
 
+    async def async_init_coordinator(
+        coordinator: GuardianDataUpdateCoordinator,
+    ) -> None:
+        """Initialize a GuardianDataUpdateCoordinator."""
+        await coordinator.async_initialize()
+        await coordinator.async_config_entry_first_refresh()
+
     # Set up GuardianDataUpdateCoordinators for the valve controller:
     valve_controller_coordinators: dict[str, GuardianDataUpdateCoordinator] = {}
     init_valve_controller_tasks = []
@@ -162,7 +164,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             api_lock=api_lock,
             valve_controller_uid=entry.data[CONF_UID],
         )
-        init_valve_controller_tasks.append(coordinator.async_refresh())
+        init_valve_controller_tasks.append(async_init_coordinator(coordinator))
 
     await asyncio.gather(*init_valve_controller_tasks)
 
@@ -426,8 +428,6 @@ class GuardianEntity(CoordinatorEntity[GuardianDataUpdateCoordinator]):
         super().__init__(coordinator)
 
         self._attr_extra_state_attributes = {}
-        self._signal_reboot_completed = SIGNAL_REBOOT_COMPLETED.format(entry.entry_id)
-        self._signal_reboot_requested = SIGNAL_REBOOT_REQUESTED.format(entry.entry_id)
         self.entity_description = description
 
     @callback
@@ -444,20 +444,9 @@ class GuardianEntity(CoordinatorEntity[GuardianDataUpdateCoordinator]):
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
-        """When entity is added to hass."""
+        """Handle entity which will be added."""
         await super().async_added_to_hass()
-
-        for signal, func in (
-            (
-                self._signal_reboot_completed,
-                self.coordinator.async_respond_to_reboot_completed,
-            ),
-            (
-                self._signal_reboot_requested,
-                self.coordinator.async_respond_to_reboot_requested,
-            ),
-        ):
-            self.async_on_remove(async_dispatcher_connect(self.hass, signal, func))
+        self._async_update_from_latest_data()
 
 
 class PairedSensorEntity(GuardianEntity):
