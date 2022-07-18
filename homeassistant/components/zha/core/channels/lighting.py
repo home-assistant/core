@@ -55,7 +55,10 @@ class ColorChannel(ZigbeeChannel):
     @property
     def zcl_color_capabilities(self) -> lighting.Color.ColorCapabilities:
         """Return ZCL color capabilities of the light."""
-        return self.cluster.get("color_capabilities")
+        color_capabilities = self.cluster.get("color_capabilities")
+        if color_capabilities is None:
+            return lighting.Color.ColorCapabilities(self.CAPABILITIES_COLOR_XY)
+        return lighting.Color.ColorCapabilities(color_capabilities)
 
     @property
     def color_mode(self) -> int | None:

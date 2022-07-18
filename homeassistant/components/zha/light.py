@@ -283,7 +283,7 @@ class BaseLight(LogMixin, light.LightEntity):
                 if new_color_provided_while_off
                 else duration,
             )
-            t_log["move_to_color"] = result
+            t_log["move_to_hue_and_saturation"] = result
             if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
                 self.debug("turned on: %s", t_log)
                 return
@@ -291,7 +291,7 @@ class BaseLight(LogMixin, light.LightEntity):
             self._attr_xy_color = None
             self._attr_color_temp = None
             self._attr_hs_color = hs_color
-            xy_color = None
+            xy_color = None  # don't set xy_color if it is also present
 
         if xy_color is not None:
             result = await self._color_channel.move_to_color(
@@ -707,6 +707,10 @@ class LightGroup(BaseLight, ZhaGroupEntity):
 
         self._attr_xy_color = helpers.reduce_attribute(
             on_states, light.ATTR_XY_COLOR, reduce=helpers.mean_tuple
+        )
+
+        self._attr_hs_color = helpers.reduce_attribute(
+            on_states, light.ATTR_HS_COLOR, reduce=helpers.mean_tuple
         )
 
         self._attr_color_temp = helpers.reduce_attribute(
