@@ -146,15 +146,9 @@ class NetatmoDataHandler:
 
         await self.subscribe(ACCOUNT, ACCOUNT, None)
 
-        await asyncio.gather(
-            *(
-                self.hass.config_entries.async_forward_entry_setup(
-                    self.config_entry, platform
-                )
-                for platform in PLATFORMS
-            )
+        await self.hass.config_entries.async_forward_entry_setups(
+            self.config_entry, PLATFORMS
         )
-
         await self.async_dispatch()
 
     async def async_update(self, event_time: datetime) -> None:
