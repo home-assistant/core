@@ -36,7 +36,7 @@ async def test_select_async_setup_entry(hass, aioclient_mock):
 
     assert len(aioclient_mock.mock_calls) == 1
 
-    # Test Select Entity
+    # Test MyZone Select Entity
     entity_id = "select.myzone"
     state = hass.states.get(entity_id)
     assert state
