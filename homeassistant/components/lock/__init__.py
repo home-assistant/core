@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
+from enum import IntEnum
 import functools as ft
 import logging
 from typing import Any, final
@@ -46,7 +47,15 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 LOCK_SERVICE_SCHEMA = make_entity_service_schema({vol.Optional(ATTR_CODE): cv.string})
 
-# Bitfield of features supported by the lock entity
+
+class LockEntityFeature(IntEnum):
+    """Supported features of the lock entity."""
+
+    OPEN = 1
+
+
+# The SUPPORT_OPEN constant is deprecated as of Home Assistant 2022.5.
+# Please use the LockEntityFeature enum instead.
 SUPPORT_OPEN = 1
 
 PROP_TO_ATTR = {"changed_by": ATTR_CHANGED_BY, "code_format": ATTR_CODE_FORMAT}

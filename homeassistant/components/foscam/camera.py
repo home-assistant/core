@@ -6,7 +6,7 @@ import asyncio
 from libpyfoscam import FoscamCamera
 import voluptuous as vol
 
-from homeassistant.components.camera import SUPPORT_STREAM, Camera
+from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -106,6 +106,8 @@ class HassFoscamCamera(Camera):
         self._unique_id = config_entry.entry_id
         self._rtsp_port = config_entry.data[CONF_RTSP_PORT]
         self._motion_status = False
+        if self._rtsp_port:
+            self._attr_supported_features = CameraEntityFeature.STREAM
 
     async def async_added_to_hass(self):
         """Handle entity addition to hass."""
@@ -144,14 +146,6 @@ class HassFoscamCamera(Camera):
             return None
 
         return response
-
-    @property
-    def supported_features(self):
-        """Return supported features."""
-        if self._rtsp_port:
-            return SUPPORT_STREAM
-
-        return None
 
     async def stream_source(self):
         """Return the stream source."""

@@ -3,14 +3,9 @@
 from unittest.mock import AsyncMock, MagicMock
 
 from homeassistant.components.cpuspeed.const import DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import CONF_NAME
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -25,7 +20,7 @@ async def test_full_user_flow(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") == RESULT_TYPE_FORM
+    assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == SOURCE_USER
     assert "flow_id" in result
 
@@ -34,7 +29,7 @@ async def test_full_user_flow(
         user_input={},
     )
 
-    assert result2.get("type") == RESULT_TYPE_CREATE_ENTRY
+    assert result2.get("type") == FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "CPU Speed"
     assert result2.get("data") == {}
 
@@ -55,31 +50,11 @@ async def test_already_configured(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") == RESULT_TYPE_ABORT
+    assert result.get("type") == FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
 
     assert len(mock_setup_entry.mock_calls) == 0
     assert len(mock_cpuinfo_config_flow.mock_calls) == 0
-
-
-async def test_import_flow(
-    hass: HomeAssistant,
-    mock_cpuinfo_config_flow: MagicMock,
-    mock_setup_entry: AsyncMock,
-) -> None:
-    """Test the import configuration flow."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={CONF_NAME: "Frenck's CPU"},
-    )
-
-    assert result.get("type") == RESULT_TYPE_CREATE_ENTRY
-    assert result.get("title") == "Frenck's CPU"
-    assert result.get("data") == {}
-
-    assert len(mock_setup_entry.mock_calls) == 1
-    assert len(mock_cpuinfo_config_flow.mock_calls) == 1
 
 
 async def test_not_compatible(
@@ -92,7 +67,7 @@ async def test_not_compatible(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") == RESULT_TYPE_FORM
+    assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == SOURCE_USER
     assert "flow_id" in result
 
@@ -102,7 +77,7 @@ async def test_not_compatible(
         user_input={},
     )
 
-    assert result2.get("type") == RESULT_TYPE_ABORT
+    assert result2.get("type") == FlowResultType.ABORT
     assert result2.get("reason") == "not_compatible"
 
     assert len(mock_setup_entry.mock_calls) == 0

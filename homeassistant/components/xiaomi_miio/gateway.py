@@ -89,7 +89,7 @@ class ConnectXiaomiGateway:
                 raise AuthException(error) from error
 
             raise SetupException(
-                "DeviceException during setup of xiaomi gateway with host {self._host}"
+                f"DeviceException during setup of xiaomi gateway with host {self._host}"
             ) from error
 
         # get the connected sub devices
@@ -123,7 +123,7 @@ class ConnectXiaomiGateway:
                 if not miio_cloud.login():
                     raise SetupException(
                         "Failed to login to Xiaomi Miio Cloud during setup of Xiaomi"
-                        " gateway with host {self._host}",
+                        f" gateway with host {self._host}",
                     )
                 devices_raw = miio_cloud.get_devices(self._cloud_country)
                 self._gateway_device.get_devices_from_dict(devices_raw)

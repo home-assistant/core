@@ -6,6 +6,7 @@ from homeassistant.const import PERCENTAGE, PRESSURE_HPA, TEMP_CELSIUS
 from homeassistant.helpers.entity import EntityCategory
 
 from tests.components.homekit_controller.common import (
+    HUB_TEST_ACCESSORY_ID,
     DeviceTestInfo,
     EntityTestInfo,
     assert_devices_and_entities_created,
@@ -22,7 +23,7 @@ async def test_eve_degree_setup(hass):
     await assert_devices_and_entities_created(
         hass,
         DeviceTestInfo(
-            unique_id="00:00:00:00:00:00",
+            unique_id=HUB_TEST_ACCESSORY_ID,
             name="Eve Degree AA11",
             model="Eve Degree 00AAA0000",
             manufacturer="Elgato",
@@ -48,7 +49,7 @@ async def test_eve_degree_setup(hass):
                 EntityTestInfo(
                     entity_id="sensor.eve_degree_aa11_air_pressure",
                     unique_id="homekit-AA00A0A00000-aid:1-sid:30-cid:32",
-                    friendly_name="Eve Degree AA11 - Air Pressure",
+                    friendly_name="Eve Degree AA11 Air Pressure",
                     unit_of_measurement=PRESSURE_HPA,
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
                     state="1005.70001220703",

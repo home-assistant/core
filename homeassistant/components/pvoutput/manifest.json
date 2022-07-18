@@ -3,8 +3,8 @@
   "name": "PVOutput",
   "documentation": "https://www.home-assistant.io/integrations/pvoutput",
   "config_flow": true,
-  "codeowners": ["@fabaff", "@frenck"],
-  "requirements": ["pvo==0.2.0"],
+  "codeowners": ["@frenck"],
+  "requirements": ["pvo==0.2.2"],
   "iot_class": "cloud_polling",
   "quality_scale": "platinum"
 }

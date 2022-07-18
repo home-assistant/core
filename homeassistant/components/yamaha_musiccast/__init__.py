@@ -30,7 +30,7 @@ from .const import (
     ENTITY_CATEGORY_MAPPING,
 )
 
-PLATFORMS = [Platform.MEDIA_PLAYER, Platform.NUMBER, Platform.SELECT]
+PLATFORMS = [Platform.MEDIA_PLAYER, Platform.NUMBER, Platform.SELECT, Platform.SWITCH]
 
 _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=60)
@@ -80,7 +80,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await coordinator.musiccast.device.enable_polling()
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
     return True
@@ -120,10 +120,8 @@ class MusicCastDataUpdateCoordinator(DataUpdateCoordinator[MusicCastData]):
         return self.musiccast.data
 
 
-class MusicCastEntity(CoordinatorEntity):
+class MusicCastEntity(CoordinatorEntity[MusicCastDataUpdateCoordinator]):
     """Defines a base MusicCast entity."""
-
-    coordinator: MusicCastDataUpdateCoordinator
 
     def __init__(
         self,

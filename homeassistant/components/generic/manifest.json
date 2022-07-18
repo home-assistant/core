@@ -1,7 +1,9 @@
 {
   "domain": "generic",
   "name": "Generic Camera",
+  "config_flow": true,
+  "requirements": ["ha-av==10.0.0b4", "pillow==9.2.0"],
   "documentation": "https://www.home-assistant.io/integrations/generic",
-  "codeowners": [],
+  "codeowners": ["@davet2001"],
   "iot_class": "local_push"
 }

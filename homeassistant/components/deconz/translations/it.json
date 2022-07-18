@@ -5,11 +5,11 @@
             "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
             "no_bridges": "Nessun bridge deCONZ rilevato",
             "no_hardware_available": "Nessun hardware radio collegato a deCONZ",
-            "not_deconz_bridge": "Non \u00e8 un bridge deCONZ",
             "updated_instance": "Istanza deCONZ aggiornata con nuovo indirizzo host"
         },
         "error": {
-            "no_key": "Impossibile ottenere una API key"
+            "linking_not_possible": "Impossibile collegarsi al gateway",
+            "no_key": "Impossibile ottenere una chiave API"
         },
         "flow_title": "{host}",
         "step": {

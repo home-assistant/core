@@ -1,12 +1,12 @@
 {
     "config": {
         "abort": {
-            "port_name_in_use": "Ya est\u00e1 configurada una pasarela con el mismo nombre o puerto."
+            "port_name_in_use": "Ya existe un enlace o accesorio configurado con ese nombre o puerto."
         },
         "step": {
             "pairing": {
                 "description": "Para completar el emparejamiento, sigue las instrucciones en \"Notificaciones\" en \"Emparejamiento HomeKit\".",
-                "title": "Vincular pasarela Homekit"
+                "title": "Vinculaci\u00f3n HomeKit"
             },
             "user": {
                 "data": {
@@ -19,9 +19,14 @@
     },
     "options": {
         "step": {
+            "accessory": {
+                "data": {
+                    "entities": "Entidad"
+                },
+                "title": "Seleccione la entidad para el accesorio"
+            },
             "advanced": {
                 "data": {
-                    "auto_start": "Arranque autom\u00e1tico (desactivado si se utiliza Z-Wave u otro sistema de arranque retardado)",
                     "devices": "Dispositivos (disparadores)"
                 },
                 "description": "Esta configuraci\u00f3n solo necesita ser ajustada si el puente HomeKit no es funcional.",
@@ -35,21 +40,28 @@
                 "description": "Verifique todas las c\u00e1maras que admiten transmisiones H.264 nativas. Si la c\u00e1mara no emite una transmisi\u00f3n H.264, el sistema transcodificar\u00e1 el video a H.264 para HomeKit. La transcodificaci\u00f3n requiere una CPU de alto rendimiento y es poco probable que funcione en ordenadores de placa \u00fanica.",
                 "title": "Seleccione el c\u00f3dec de video de la c\u00e1mara."
             },
-            "include_exclude": {
+            "exclude": {
                 "data": {
-                    "entities": "Entidades",
-                    "mode": "Modo"
+                    "entities": "Entidades"
                 },
-                "description": "Selecciona las entidades que deseas exponer. En el modo de accesorio, solo se expone una \u00fanica entidad. En el modo de inclusi\u00f3n de puente, todas las entidades del dominio se expondr\u00e1n a menos que se seleccionen entidades espec\u00edficas. En el modo de exclusi\u00f3n de puentes, todas las entidades del dominio se expondr\u00e1n excepto las entidades excluidas.",
-                "title": "Seleccionar entidades para exponer"
+                "description": "Se incluir\u00e1n todas las entidades de \" {domains} \" excepto las entidades excluidas y las entidades categorizadas.",
+                "title": "Selecciona las entidades a excluir"
+            },
+            "include": {
+                "data": {
+                    "entities": "Entidades"
+                },
+                "description": "Se incluir\u00e1n todas las entidades de \" {domains} \" a menos que se seleccionen entidades espec\u00edficas.",
+                "title": "Seleccione las entidades a incluir"
             },
             "init": {
                 "data": {
-                    "include_domains": "Dominios para incluir",
-                    "mode": "Modo"
+                    "domains": "Dominios a incluir",
+                    "include_exclude_mode": "Modo de inclusi\u00f3n",
+                    "mode": "Mode de HomeKit"
                 },
                 "description": "Las entidades de los \"Dominios que se van a incluir\" se establecer\u00e1n en HomeKit. Podr\u00e1 seleccionar qu\u00e9 entidades excluir de esta lista en la siguiente pantalla.",
-                "title": "Seleccione los dominios que desea establecer un puente."
+                "title": "Selecciona el modo y dominios."
             },
             "yaml": {
                 "description": "Esta entrada se controla a trav\u00e9s de YAML",

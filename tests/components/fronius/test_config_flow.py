@@ -7,17 +7,11 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.components.fronius.const import DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import CONF_HOST, CONF_RESOURCE
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
-from homeassistant.setup import async_setup_component
+from homeassistant.data_entry_flow import FlowResultType
 
-from . import MOCK_HOST, mock_responses
+from . import mock_responses
 
 from tests.common import MockConfigEntry
 
@@ -53,7 +47,7 @@ async def test_form_with_logger(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
     with patch(
@@ -71,7 +65,7 @@ async def test_form_with_logger(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == "SolarNet Datalogger at 10.9.8.1"
     assert result2["data"] == {
         "host": "10.9.8.1",
@@ -85,7 +79,7 @@ async def test_form_with_inverter(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
     with patch(
@@ -106,7 +100,7 @@ async def test_form_with_inverter(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == "SolarNet Inverter at 10.9.1.1"
     assert result2["data"] == {
         "host": "10.9.1.1",
@@ -135,7 +129,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -159,7 +153,7 @@ async def test_form_no_device(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -180,7 +174,7 @@ async def test_form_unexpected(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
 
@@ -208,7 +202,7 @@ async def test_form_already_existing(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_ABORT
+    assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
 
 
@@ -248,7 +242,7 @@ async def test_form_updates_host(hass, aioclient_mock):
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_ABORT
+    assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
 
     mock_unload_entry.assert_called_with(hass, entry)
@@ -256,32 +250,6 @@ async def test_form_updates_host(hass, aioclient_mock):
     assert len(entries) == 1
     assert entries[0].data == {
         "host": new_host,
-        "is_logger": True,
-    }
-
-
-async def test_import(hass, aioclient_mock):
-    """Test import step."""
-    mock_responses(aioclient_mock)
-    assert await async_setup_component(
-        hass,
-        SENSOR_DOMAIN,
-        {
-            SENSOR_DOMAIN: {
-                "platform": DOMAIN,
-                CONF_RESOURCE: MOCK_HOST,
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-    fronius_entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(fronius_entries) == 1
-
-    test_entry = fronius_entries[0]
-    assert test_entry.unique_id == "123.4567890"  # has to match mocked logger unique_id
-    assert test_entry.data == {
-        "host": MOCK_HOST,
         "is_logger": True,
     }
 
@@ -297,13 +265,13 @@ async def test_dhcp(hass, aioclient_mock):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=MOCK_DHCP_DATA
         )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "confirm_discovery"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == f"SolarNet Datalogger at {MOCK_DHCP_DATA.ip}"
     assert result["data"] == {
         "host": MOCK_DHCP_DATA.ip,
@@ -326,7 +294,7 @@ async def test_dhcp_already_configured(hass, aioclient_mock):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=MOCK_DHCP_DATA
     )
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -341,5 +309,5 @@ async def test_dhcp_invalid(hass, aioclient_mock):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=MOCK_DHCP_DATA
         )
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "invalid_host"

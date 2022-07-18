@@ -108,9 +108,9 @@ def test_name(requests_mock):
         assert test_name == sensor.name
 
 
-def test_unit_of_measurement(requests_mock):
+def test_unit_of_measurement(hass, requests_mock):
     """Test the unit of measurement."""
-    api, sensor_dict = setup_api(None, MOCK_DATA, requests_mock)
+    api, sensor_dict = setup_api(hass, MOCK_DATA, requests_mock)
     for name in sensor_dict:
         sensor = sensor_dict[name]["sensor"]
         assert sensor_dict[name]["units"] == sensor.unit_of_measurement

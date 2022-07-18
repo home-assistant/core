@@ -13,13 +13,12 @@ from homeassistant.components.climate.const import (
     ATTR_PRESET_MODE,
     ATTR_PRESET_MODES,
     DOMAIN,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
     PRESET_COMFORT,
     PRESET_ECO,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_TEMPERATURE,
+    HVACMode,
 )
 from homeassistant.components.fritzbox.const import (
     ATTR_STATE_BATTERY_LOW,
@@ -62,7 +61,7 @@ async def test_setup(hass: HomeAssistant, fritz: Mock):
     assert state.attributes[ATTR_BATTERY_LEVEL] == 23
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 18
     assert state.attributes[ATTR_FRIENDLY_NAME] == CONF_FAKE_NAME
-    assert state.attributes[ATTR_HVAC_MODES] == [HVAC_MODE_HEAT, HVAC_MODE_OFF]
+    assert state.attributes[ATTR_HVAC_MODES] == [HVACMode.HEAT, HVACMode.OFF]
     assert state.attributes[ATTR_MAX_TEMP] == 28
     assert state.attributes[ATTR_MIN_TEMP] == 8
     assert state.attributes[ATTR_PRESET_MODE] is None
@@ -73,7 +72,7 @@ async def test_setup(hass: HomeAssistant, fritz: Mock):
     assert state.attributes[ATTR_STATE_WINDOW_OPEN] == "fake_window"
     assert state.attributes[ATTR_TEMPERATURE] == 19.5
     assert ATTR_STATE_CLASS not in state.attributes
-    assert state.state == HVAC_MODE_HEAT
+    assert state.state == HVACMode.HEAT
 
     state = hass.states.get(f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_battery")
     assert state
@@ -222,15 +221,15 @@ async def test_update_error(hass: HomeAssistant, fritz: Mock):
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
-    assert fritz().update_devices.call_count == 1
-    assert fritz().login.call_count == 1
+    assert fritz().update_devices.call_count == 2
+    assert fritz().login.call_count == 2
 
     next_update = dt_util.utcnow() + timedelta(seconds=200)
     async_fire_time_changed(hass, next_update)
     await hass.async_block_till_done()
 
-    assert fritz().update_devices.call_count == 2
-    assert fritz().login.call_count == 2
+    assert fritz().update_devices.call_count == 4
+    assert fritz().login.call_count == 4
 
 
 async def test_set_temperature_temperature(hass: HomeAssistant, fritz: Mock):
@@ -261,7 +260,7 @@ async def test_set_temperature_mode_off(hass: HomeAssistant, fritz: Mock):
         SERVICE_SET_TEMPERATURE,
         {
             ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_HVAC_MODE: HVAC_MODE_OFF,
+            ATTR_HVAC_MODE: HVACMode.OFF,
             ATTR_TEMPERATURE: 123,
         },
         True,
@@ -281,7 +280,7 @@ async def test_set_temperature_mode_heat(hass: HomeAssistant, fritz: Mock):
         SERVICE_SET_TEMPERATURE,
         {
             ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_HVAC_MODE: HVAC_MODE_HEAT,
+            ATTR_HVAC_MODE: HVACMode.HEAT,
             ATTR_TEMPERATURE: 123,
         },
         True,
@@ -299,7 +298,7 @@ async def test_set_hvac_mode_off(hass: HomeAssistant, fritz: Mock):
     assert await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVAC_MODE_OFF},
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.OFF},
         True,
     )
     assert device.set_target_temperature.call_args_list == [call(0)]
@@ -315,7 +314,7 @@ async def test_set_hvac_mode_heat(hass: HomeAssistant, fritz: Mock):
     assert await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVAC_MODE_HEAT},
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.HEAT},
         True,
     )
     assert device.set_target_temperature.call_args_list == [call(22)]

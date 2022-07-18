@@ -44,7 +44,7 @@ BINARY_SENSORS: tuple[TailscaleBinarySensorEntityDescription, ...] = (
     ),
     TailscaleBinarySensorEntityDescription(
         key="client_supports_hair_pinning",
-        name="Supports Hairpinning",
+        name="Supports hairpinning",
         icon="mdi:wan",
         entity_category=EntityCategory.DIAGNOSTIC,
         is_on_fn=lambda device: device.client_connectivity.client_supports.hair_pinning,
@@ -111,8 +111,6 @@ class TailscaleBinarySensorEntity(TailscaleEntity, BinarySensorEntity):
     entity_description: TailscaleBinarySensorEntityDescription
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return the state of the sensor."""
-        return bool(
-            self.entity_description.is_on_fn(self.coordinator.data[self.device_id])
-        )
+        return self.entity_description.is_on_fn(self.coordinator.data[self.device_id])

@@ -7,6 +7,10 @@ import logging
 import voluptuous as vol
 
 from homeassistant import exceptions
+from homeassistant.components.automation import (
+    AutomationActionType,
+    AutomationTriggerInfo,
+)
 from homeassistant.const import CONF_ATTRIBUTE, CONF_FOR, CONF_PLATFORM, MATCH_ALL
 from homeassistant.core import (
     CALLBACK_TYPE,
@@ -36,6 +40,8 @@ _LOGGER = logging.getLogger(__name__)
 CONF_ENTITY_ID = "entity_id"
 CONF_FROM = "from"
 CONF_TO = "to"
+CONF_NOT_FROM = "not_from"
+CONF_NOT_TO = "not_to"
 
 BASE_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
@@ -49,15 +55,19 @@ BASE_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
 TRIGGER_STATE_SCHEMA = BASE_SCHEMA.extend(
     {
         # These are str on purpose. Want to catch YAML conversions
-        vol.Optional(CONF_FROM): vol.Any(str, [str], None),
-        vol.Optional(CONF_TO): vol.Any(str, [str], None),
+        vol.Exclusive(CONF_FROM, CONF_FROM): vol.Any(str, [str], None),
+        vol.Exclusive(CONF_NOT_FROM, CONF_FROM): vol.Any(str, [str], None),
+        vol.Exclusive(CONF_TO, CONF_TO): vol.Any(str, [str], None),
+        vol.Exclusive(CONF_NOT_TO, CONF_TO): vol.Any(str, [str], None),
     }
 )
 
 TRIGGER_ATTRIBUTE_SCHEMA = BASE_SCHEMA.extend(
     {
-        vol.Optional(CONF_FROM): cv.match_all,
-        vol.Optional(CONF_TO): cv.match_all,
+        vol.Exclusive(CONF_FROM, CONF_FROM): cv.match_all,
+        vol.Exclusive(CONF_NOT_FROM, CONF_FROM): cv.match_all,
+        vol.Exclusive(CONF_TO, CONF_TO): cv.match_all,
+        vol.Exclusive(CONF_NOT_TO, CONF_TO): cv.match_all,
     }
 )
 
@@ -77,7 +87,7 @@ async def async_validate_trigger_config(
         config = TRIGGER_STATE_SCHEMA(config)
 
     registry = er.async_get(hass)
-    config[CONF_ENTITY_ID] = er.async_resolve_entity_ids(
+    config[CONF_ENTITY_ID] = er.async_validate_entity_ids(
         registry, cv.entity_ids_or_uuids(config[CONF_ENTITY_ID])
     )
 
@@ -86,27 +96,38 @@ async def async_validate_trigger_config(
 
 async def async_attach_trigger(
     hass: HomeAssistant,
-    config,
-    action,
-    automation_info,
+    config: ConfigType,
+    action: AutomationActionType,
+    automation_info: AutomationTriggerInfo,
     *,
     platform_type: str = "state",
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
     entity_ids = config[CONF_ENTITY_ID]
-    if (from_state := config.get(CONF_FROM)) is None:
-        from_state = MATCH_ALL
-    if (to_state := config.get(CONF_TO)) is None:
-        to_state = MATCH_ALL
+
+    if (from_state := config.get(CONF_FROM)) is not None:
+        match_from_state = process_state_match(from_state)
+    elif (not_from_state := config.get(CONF_NOT_FROM)) is not None:
+        match_from_state = process_state_match(not_from_state, invert=True)
+    else:
+        match_from_state = process_state_match(MATCH_ALL)
+
+    if (to_state := config.get(CONF_TO)) is not None:
+        match_to_state = process_state_match(to_state)
+    elif (not_to_state := config.get(CONF_NOT_TO)) is not None:
+        match_to_state = process_state_match(not_to_state, invert=True)
+    else:
+        match_to_state = process_state_match(MATCH_ALL)
+
     time_delta = config.get(CONF_FOR)
     template.attach(hass, time_delta)
     # If neither CONF_FROM or CONF_TO are specified,
     # fire on all changes to the state or an attribute
-    match_all = CONF_FROM not in config and CONF_TO not in config
+    match_all = all(
+        item not in config for item in (CONF_FROM, CONF_NOT_FROM, CONF_NOT_TO, CONF_TO)
+    )
     unsub_track_same = {}
     period: dict[str, timedelta] = {}
-    match_from_state = process_state_match(from_state)
-    match_to_state = process_state_match(to_state)
     attribute = config.get(CONF_ATTRIBUTE)
     job = HassJob(action)
 

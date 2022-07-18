@@ -59,8 +59,6 @@
             "connected": "{entity_name} \u05de\u05d7\u05d5\u05d1\u05e8",
             "gas": "{entity_name} \u05d4\u05d7\u05dc \u05dc\u05d6\u05d4\u05d5\u05ea \u05d2\u05d6",
             "hot": "{entity_name} \u05e0\u05e2\u05e9\u05d4 \u05d7\u05dd",
-            "is_not_tampered": "{entity_name} \u05d4\u05e4\u05e1\u05d9\u05e7 \u05dc\u05d6\u05d4\u05d5\u05ea \u05d7\u05d1\u05dc\u05d4",
-            "is_tampered": "{entity_name} \u05d4\u05d7\u05dc \u05dc\u05d6\u05d4\u05d5\u05ea \u05d7\u05d1\u05dc\u05d4",
             "light": "{entity_name} \u05d4\u05ea\u05d7\u05d9\u05dc \u05dc\u05d6\u05d4\u05d5\u05ea \u05d0\u05d5\u05e8",
             "locked": "{entity_name} \u05e0\u05e2\u05d5\u05dc",
             "moist": "{entity_name} \u05d4\u05e4\u05da \u05dc\u05d7",
@@ -134,7 +132,7 @@
             "off": "\u05dc\u05d0 \u05e0\u05d8\u05e2\u05df",
             "on": "\u05e0\u05d8\u05e2\u05df"
         },
-        "co": {
+        "carbon_monoxide": {
             "off": "\u05e0\u05e7\u05d9",
             "on": "\u05d6\u05d5\u05d4\u05d4"
         },
@@ -147,11 +145,11 @@
             "on": "\u05de\u05d7\u05d5\u05d1\u05e8"
         },
         "door": {
-            "off": "\u05e1\u05d2\u05d5\u05e8",
+            "off": "\u05e0\u05e1\u05d2\u05e8",
             "on": "\u05e4\u05ea\u05d5\u05d7"
         },
         "garage_door": {
-            "off": "\u05e1\u05d2\u05d5\u05e8",
+            "off": "\u05e0\u05e1\u05d2\u05e8",
             "on": "\u05e4\u05ea\u05d5\u05d7"
         },
         "gas": {
@@ -187,7 +185,7 @@
             "on": "\u05d6\u05d5\u05d4\u05d4"
         },
         "opening": {
-            "off": "\u05e1\u05d2\u05d5\u05e8",
+            "off": "\u05e0\u05e1\u05d2\u05e8",
             "on": "\u05e4\u05ea\u05d5\u05d7"
         },
         "plug": {
@@ -227,7 +225,7 @@
             "on": "\u05d6\u05d5\u05d4\u05d4"
         },
         "window": {
-            "off": "\u05e1\u05d2\u05d5\u05e8",
+            "off": "\u05e0\u05e1\u05d2\u05e8",
             "on": "\u05e4\u05ea\u05d5\u05d7"
         }
     },

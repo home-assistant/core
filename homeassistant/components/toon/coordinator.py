@@ -47,11 +47,6 @@ class ToonDataUpdateCoordinator(DataUpdateCoordinator[Status]):
             hass, _LOGGER, name=DOMAIN, update_interval=DEFAULT_SCAN_INTERVAL
         )
 
-    def update_listeners(self) -> None:
-        """Call update on all listeners."""
-        for update_callback in self._listeners:
-            update_callback()
-
     async def register_webhook(self, event: Event | None = None) -> None:
         """Register a webhook with Toon to get live updates."""
         if CONF_WEBHOOK_ID not in self.entry.data:
@@ -61,11 +56,17 @@ class ToonDataUpdateCoordinator(DataUpdateCoordinator[Status]):
         if cloud.async_active_subscription(self.hass):
 
             if CONF_CLOUDHOOK_URL not in self.entry.data:
-                webhook_url = await cloud.async_create_cloudhook(
-                    self.hass, self.entry.data[CONF_WEBHOOK_ID]
-                )
-                data = {**self.entry.data, CONF_CLOUDHOOK_URL: webhook_url}
-                self.hass.config_entries.async_update_entry(self.entry, data=data)
+                try:
+                    webhook_url = await cloud.async_create_cloudhook(
+                        self.hass, self.entry.data[CONF_WEBHOOK_ID]
+                    )
+                except cloud.CloudNotConnected:
+                    webhook_url = webhook.async_generate_url(
+                        self.hass, self.entry.data[CONF_WEBHOOK_ID]
+                    )
+                else:
+                    data = {**self.entry.data, CONF_CLOUDHOOK_URL: webhook_url}
+                    self.hass.config_entries.async_update_entry(self.entry, data=data)
             else:
                 webhook_url = self.entry.data[CONF_CLOUDHOOK_URL]
         else:
@@ -122,7 +123,7 @@ class ToonDataUpdateCoordinator(DataUpdateCoordinator[Status]):
 
         try:
             await self.toon.update(data["updateDataSet"])
-            self.update_listeners()
+            self.async_update_listeners()
         except ToonError as err:
             _LOGGER.error("Could not process data received from Toon webhook - %s", err)
 

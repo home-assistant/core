@@ -5,16 +5,21 @@
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
-            "invalid_auth": "Authentification invalide",
+            "invalid_auth": "Authentification non valide",
+            "invalid_setup": "Ajoutez votre Adam au lieu de votre Anna\u00a0; consultez la documentation de l'int\u00e9gration Plugwise de Home Assistant pour plus d'informations",
             "unknown": "Erreur inattendue"
         },
         "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {
-                    "flow_type": "Type de connexion"
+                    "flow_type": "Type de connexion",
+                    "host": "Adresse IP",
+                    "password": "ID Smile",
+                    "port": "Port",
+                    "username": "Nom d'utilisateur Smile"
                 },
-                "description": "Veuillez saisir :",
+                "description": "Veuillez saisir",
                 "title": "Se connecter \u00e0 Smile"
             },
             "user_gateway": {
@@ -22,7 +27,7 @@
                     "host": "Adresse IP",
                     "password": "ID Smile",
                     "port": "Port",
-                    "username": "Nom d'utilisateur de sourire"
+                    "username": "Nom d'utilisateur Smile"
                 },
                 "description": "Veuillez saisir :",
                 "title": "Se connecter \u00e0 Smile"

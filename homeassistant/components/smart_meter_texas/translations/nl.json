@@ -4,7 +4,7 @@
             "already_configured": "Apparaat is al geconfigureerd"
         },
         "error": {
-            "cannot_connect": "Kon niet verbinden",
+            "cannot_connect": "Kan geen verbinding maken",
             "invalid_auth": "Ongeldige authenticatie",
             "unknown": "Onverwachte fout"
         },
@@ -12,7 +12,7 @@
             "user": {
                 "data": {
                     "password": "Wachtwoord",
-                    "username": "Benutzername"
+                    "username": "Gebruikersnaam"
                 }
             }
         }

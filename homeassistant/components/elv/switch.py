@@ -6,15 +6,13 @@ import logging
 import pypca
 from serial import SerialException
 
-from homeassistant.components.switch import ATTR_CURRENT_POWER_W, SwitchEntity
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_TOTAL_ENERGY_KWH = "total_energy_kwh"
 
 DEFAULT_NAME = "PCA 301"
 
@@ -57,7 +55,6 @@ class SmartPlugSwitch(SwitchEntity):
         self._name = "PCA 301"
         self._state = None
         self._available = True
-        self._emeter_params = {}
         self._pca = pca
 
     @property
@@ -83,23 +80,11 @@ class SmartPlugSwitch(SwitchEntity):
         """Turn the switch off."""
         self._pca.turn_off(self._device_id)
 
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes of the device."""
-        return self._emeter_params
-
     def update(self):
         """Update the PCA switch's state."""
         try:
-            self._emeter_params[
-                ATTR_CURRENT_POWER_W
-            ] = f"{self._pca.get_current_power(self._device_id):.1f}"
-            self._emeter_params[
-                ATTR_TOTAL_ENERGY_KWH
-            ] = f"{self._pca.get_total_consumption(self._device_id):.2f}"
-
-            self._available = True
             self._state = self._pca.get_state(self._device_id)
+            self._available = True
 
         except (OSError) as ex:
             if self._available:

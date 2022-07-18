@@ -1,0 +1,37 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Namn",
+                    "round": "Precision",
+                    "time_window": "Tidsf\u00f6nster",
+                    "unit_prefix": "Metriskt prefix",
+                    "unit_time": "Tidsenhet"
+                },
+                "data_description": {
+                    "round": "Anger antal decimaler i resultatet."
+                },
+                "description": "Skapa en sensor som ber\u00e4knar derivatan av en sensor",
+                "title": "L\u00e4gg till derivatasensor"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "name": "Namn",
+                    "round": "Precision",
+                    "time_window": "Tidsf\u00f6nster",
+                    "unit_prefix": "Metriskt prefix",
+                    "unit_time": "Tidsenhet"
+                },
+                "data_description": {
+                    "round": "Anger antal decimaler i resultatet."
+                }
+            }
+        }
+    },
+    "title": "Derivatasensor"
+}

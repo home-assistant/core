@@ -10,6 +10,7 @@ from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import POWER_WATT
 
 from tests.components.homekit_controller.common import (
+    HUB_TEST_ACCESSORY_ID,
     DeviceTestInfo,
     EntityTestInfo,
     assert_devices_and_entities_created,
@@ -26,7 +27,7 @@ async def test_koogeek_sw2_setup(hass):
     await assert_devices_and_entities_created(
         hass,
         DeviceTestInfo(
-            unique_id="00:00:00:00:00:00",
+            unique_id=HUB_TEST_ACCESSORY_ID,
             name="Koogeek-SW2-187A91",
             model="KH02CN",
             manufacturer="Koogeek",
@@ -36,14 +37,20 @@ async def test_koogeek_sw2_setup(hass):
             devices=[],
             entities=[
                 EntityTestInfo(
-                    entity_id="switch.koogeek_sw2_187a91",
-                    friendly_name="Koogeek-SW2-187A91",
+                    entity_id="switch.koogeek_sw2_187a91_switch_1",
+                    friendly_name="Koogeek-SW2-187A91 Switch 1",
                     unique_id="homekit-CNNT061751001372-8",
                     state="off",
                 ),
                 EntityTestInfo(
-                    entity_id="sensor.koogeek_sw2_187a91_real_time_energy",
-                    friendly_name="Koogeek-SW2-187A91 - Real Time Energy",
+                    entity_id="switch.koogeek_sw2_187a91_switch_2",
+                    friendly_name="Koogeek-SW2-187A91 Switch 2",
+                    unique_id="homekit-CNNT061751001372-11",
+                    state="off",
+                ),
+                EntityTestInfo(
+                    entity_id="sensor.koogeek_sw2_187a91_power",
+                    friendly_name="Koogeek-SW2-187A91 Power",
                     unique_id="homekit-CNNT061751001372-aid:1-sid:14-cid:18",
                     unit_of_measurement=POWER_WATT,
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},

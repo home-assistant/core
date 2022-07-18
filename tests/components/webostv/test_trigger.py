@@ -1,23 +1,27 @@
 """The tests for WebOS TV automation triggers."""
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components import automation
 from homeassistant.components.webostv import DOMAIN
 from homeassistant.const import SERVICE_RELOAD
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import async_get as get_dev_reg
 from homeassistant.setup import async_setup_component
 
-from . import ENTITY_ID, setup_webostv
+from . import setup_webostv
+from .const import ENTITY_ID, FAKE_UUID
 
 from tests.common import MockEntity, MockEntityPlatform
 
 
 async def test_webostv_turn_on_trigger_device_id(hass, calls, client):
     """Test for turn_on triggers by device_id firing."""
-    await setup_webostv(hass, "fake-uuid")
+    await setup_webostv(hass)
 
     device_reg = get_dev_reg(hass)
-    device = device_reg.async_get_device(identifiers={(DOMAIN, "fake-uuid")})
+    device = device_reg.async_get_device(identifiers={(DOMAIN, FAKE_UUID)})
 
     assert await async_setup_component(
         hass,
@@ -56,22 +60,23 @@ async def test_webostv_turn_on_trigger_device_id(hass, calls, client):
     with patch("homeassistant.config.load_yaml", return_value={}):
         await hass.services.async_call(automation.DOMAIN, SERVICE_RELOAD, blocking=True)
 
-    await hass.services.async_call(
-        "media_player",
-        "turn_on",
-        {"entity_id": ENTITY_ID},
-        blocking=True,
-    )
+    calls.clear()
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "media_player",
+            "turn_on",
+            {"entity_id": ENTITY_ID},
+            blocking=True,
+        )
 
     await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0].data["some"] == device.id
-    assert calls[0].data["id"] == 0
+    assert len(calls) == 0
 
 
 async def test_webostv_turn_on_trigger_entity_id(hass, calls, client):
     """Test for turn_on triggers by entity_id firing."""
-    await setup_webostv(hass, "fake-uuid")
+    await setup_webostv(hass)
 
     assert await async_setup_component(
         hass,
@@ -110,7 +115,7 @@ async def test_webostv_turn_on_trigger_entity_id(hass, calls, client):
 
 async def test_wrong_trigger_platform_type(hass, caplog, client):
     """Test wrong trigger platform type."""
-    await setup_webostv(hass, "fake-uuid")
+    await setup_webostv(hass)
 
     await async_setup_component(
         hass,
@@ -142,7 +147,7 @@ async def test_wrong_trigger_platform_type(hass, caplog, client):
 
 async def test_trigger_invalid_entity_id(hass, caplog, client):
     """Test turn on trigger using invalid entity_id."""
-    await setup_webostv(hass, "fake-uuid")
+    await setup_webostv(hass)
 
     platform = MockEntityPlatform(hass)
 

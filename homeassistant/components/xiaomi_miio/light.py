@@ -1,4 +1,6 @@
 """Support for Xiaomi Philips Lights."""
+from __future__ import annotations
+
 import asyncio
 import datetime
 from datetime import timedelta
@@ -6,7 +8,14 @@ from functools import partial
 import logging
 from math import ceil
 
-from miio import Ceil, DeviceException, PhilipsBulb, PhilipsEyecare, PhilipsMoonlight
+from miio import (
+    Ceil,
+    Device as MiioDevice,
+    DeviceException,
+    PhilipsBulb,
+    PhilipsEyecare,
+    PhilipsMoonlight,
+)
 from miio.gateway.gateway import (
     GATEWAY_MODEL_AC_V1,
     GATEWAY_MODEL_AC_V2,
@@ -19,13 +28,11 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_COLOR_TEMP,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_TOKEN
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_MODEL, CONF_TOKEN
 from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
@@ -36,7 +43,6 @@ from .const import (
     CONF_DEVICE,
     CONF_FLOW_TYPE,
     CONF_GATEWAY,
-    CONF_MODEL,
     DOMAIN,
     KEY_COORDINATOR,
     MODELS_LIGHT_BULB,
@@ -118,7 +124,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Xiaomi light from a config entry."""
-    entities = []
+    entities: list[LightEntity] = []
+    entity: LightEntity
+    light: MiioDevice
 
     if config_entry.data[CONF_FLOW_TYPE] == CONF_GATEWAY:
         gateway = hass.data[DOMAIN][config_entry.entry_id][CONF_GATEWAY]
@@ -133,9 +141,11 @@ async def async_setup_entry(
             )
         # Gateway sub devices
         sub_devices = gateway.devices
-        coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
         for sub_device in sub_devices.values():
             if sub_device.device_type == "LightBulb":
+                coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR][
+                    sub_device.sid
+                ]
                 entities.append(
                     XiaomiGatewayBulb(coordinator, sub_device, config_entry)
                 )
@@ -196,7 +206,7 @@ async def async_setup_entry(
 
         async def async_service_handler(service: ServiceCall) -> None:
             """Map services to methods on Xiaomi Philips Lights."""
-            method = SERVICE_TO_METHOD.get(service.service)
+            method = SERVICE_TO_METHOD[service.service]
             params = {
                 key: value
                 for key, value in service.data.items()
@@ -233,6 +243,9 @@ async def async_setup_entry(
 class XiaomiPhilipsAbstractLight(XiaomiMiioEntity, LightEntity):
     """Representation of a Abstract Xiaomi Philips Light."""
 
+    _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+
     def __init__(self, name, device, entry, unique_id):
         """Initialize the light device."""
         super().__init__(name, device, entry, unique_id)
@@ -261,11 +274,6 @@ class XiaomiPhilipsAbstractLight(XiaomiMiioEntity, LightEntity):
     def brightness(self):
         """Return the brightness of this light between 0..255."""
         return self._brightness
-
-    @property
-    def supported_features(self):
-        """Return the supported features."""
-        return SUPPORT_BRIGHTNESS
 
     async def _try_command(self, mask_error, func, *args, **kwargs):
         """Call a light command handling error messages."""
@@ -375,7 +383,7 @@ class XiaomiPhilipsGenericLight(XiaomiPhilipsAbstractLight):
 
     @staticmethod
     def delayed_turn_off_timestamp(
-        countdown: int, current: datetime, previous: datetime
+        countdown: int, current: datetime.datetime, previous: datetime.datetime
     ):
         """Update the turn off timestamp only if necessary."""
         if countdown is not None and countdown > 0:
@@ -398,6 +406,9 @@ class XiaomiPhilipsGenericLight(XiaomiPhilipsAbstractLight):
 class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
     """Representation of a Xiaomi Philips Bulb."""
 
+    _attr_color_mode = ColorMode.COLOR_TEMP
+    _attr_supported_color_modes = {ColorMode.COLOR_TEMP}
+
     def __init__(self, name, device, entry, unique_id):
         """Initialize the light device."""
         super().__init__(name, device, entry, unique_id)
@@ -418,11 +429,6 @@ class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
     def max_mireds(self):
         """Return the warmest color_temp that this light supports."""
         return 333
-
-    @property
-    def supported_features(self):
-        """Return the supported features."""
-        return SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP
 
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
@@ -676,7 +682,7 @@ class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight):
 
     @staticmethod
     def delayed_turn_off_timestamp(
-        countdown: int, current: datetime, previous: datetime
+        countdown: int, current: datetime.datetime, previous: datetime.datetime
     ):
         """Update the turn off timestamp only if necessary."""
         if countdown is not None and countdown > 0:
@@ -759,6 +765,8 @@ class XiaomiPhilipsEyecareLampAmbientLight(XiaomiPhilipsAbstractLight):
 class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
     """Representation of a Xiaomi Philips Zhirui Bedside Lamp."""
 
+    _attr_supported_color_modes = {ColorMode.COLOR_TEMP, ColorMode.HS}
+
     def __init__(self, name, device, entry, unique_id):
         """Initialize the light device."""
         super().__init__(name, device, entry, unique_id)
@@ -786,14 +794,16 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
         return 588
 
     @property
-    def hs_color(self) -> tuple:
+    def hs_color(self) -> tuple[float, float] | None:
         """Return the hs color value."""
         return self._hs_color
 
     @property
-    def supported_features(self):
-        """Return the supported features."""
-        return SUPPORT_BRIGHTNESS | SUPPORT_COLOR | SUPPORT_COLOR_TEMP
+    def color_mode(self):
+        """Return the color mode of the light."""
+        if self.hs_color:
+            return ColorMode.HS
+        return ColorMode.COLOR_TEMP
 
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
@@ -934,6 +944,9 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
 class XiaomiGatewayLight(LightEntity):
     """Representation of a gateway device's light."""
 
+    _attr_color_mode = ColorMode.HS
+    _attr_supported_color_modes = {ColorMode.HS}
+
     def __init__(self, gateway_device, gateway_name, gateway_device_id):
         """Initialize the XiaomiGatewayLight."""
         self._gateway = gateway_device
@@ -983,11 +996,6 @@ class XiaomiGatewayLight(LightEntity):
         """Return the hs color value."""
         return self._hs
 
-    @property
-    def supported_features(self):
-        """Return the supported features."""
-        return SUPPORT_BRIGHTNESS | SUPPORT_COLOR
-
     def turn_on(self, **kwargs):
         """Turn the light on."""
         if ATTR_HS_COLOR in kwargs:
@@ -1035,6 +1043,9 @@ class XiaomiGatewayLight(LightEntity):
 class XiaomiGatewayBulb(XiaomiGatewayDevice, LightEntity):
     """Representation of Xiaomi Gateway Bulb."""
 
+    _attr_color_mode = ColorMode.COLOR_TEMP
+    _attr_supported_color_modes = {ColorMode.COLOR_TEMP}
+
     @property
     def brightness(self):
         """Return the brightness of the light."""
@@ -1059,11 +1070,6 @@ class XiaomiGatewayBulb(XiaomiGatewayDevice, LightEntity):
     def max_mireds(self):
         """Return max cct."""
         return self._sub_device.status["cct_max"]
-
-    @property
-    def supported_features(self):
-        """Return the supported features."""
-        return SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP
 
     async def async_turn_on(self, **kwargs):
         """Instruct the light to turn on."""

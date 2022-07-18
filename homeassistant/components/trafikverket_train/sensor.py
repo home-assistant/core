@@ -6,28 +6,21 @@ import logging
 from typing import Any
 
 from pytrafikverket import TrafikverketTrain
-from pytrafikverket.trafikverket_train import TrainStop
-import voluptuous as vol
+from pytrafikverket.trafikverket_train import StationInfo, TrainStop
 
-from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
-    SensorDeviceClass,
-    SensorEntity,
-)
-from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_WEEKDAY, WEEKDAYS
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_NAME, CONF_WEEKDAY, WEEKDAYS
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util.dt import as_utc, get_time_zone
+from homeassistant.util import dt
+
+from .const import CONF_FROM, CONF_TIME, CONF_TO, DOMAIN
+from .util import create_unique_id
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_TRAINS = "trains"
-CONF_FROM = "from"
-CONF_TO = "to"
-CONF_TIME = "time"
 
 ATTR_DEPARTURE_STATE = "departure_state"
 ATTR_CANCELED = "canceled"
@@ -40,69 +33,33 @@ ATTR_DEVIATIONS = "deviations"
 
 ICON = "mdi:train"
 SCAN_INTERVAL = timedelta(minutes=5)
-STOCKHOLM_TIMEZONE = get_time_zone("Europe/Stockholm")
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_TRAINS): [
-            {
-                vol.Required(CONF_NAME): cv.string,
-                vol.Required(CONF_TO): cv.string,
-                vol.Required(CONF_FROM): cv.string,
-                vol.Optional(CONF_TIME): cv.time,
-                vol.Optional(CONF_WEEKDAY, default=WEEKDAYS): vol.All(
-                    cv.ensure_list, [vol.In(WEEKDAYS)]
-                ),
-            }
-        ],
-    }
-)
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up the departure sensor."""
-    httpsession = async_get_clientsession(hass)
-    train_api = TrafikverketTrain(httpsession, config[CONF_API_KEY])
-    sensors = []
-    station_cache = {}
-    for train in config[CONF_TRAINS]:
-        try:
-            trainstops = [train[CONF_FROM], train[CONF_TO]]
-            for station in trainstops:
-                if station not in station_cache:
-                    station_cache[station] = await train_api.async_get_train_station(
-                        station
-                    )
+    """Set up the Trafikverket sensor entry."""
 
-        except ValueError as station_error:
-            if "Invalid authentication" in station_error.args[0]:
-                _LOGGER.error("Unable to set up up component: %s", station_error)
-                return
-            _LOGGER.error(
-                "Problem when trying station %s to %s. Error: %s ",
-                train[CONF_FROM],
-                train[CONF_TO],
-                station_error,
+    train_api = hass.data[DOMAIN][entry.entry_id]["train_api"]
+    to_station = hass.data[DOMAIN][entry.entry_id][CONF_TO]
+    from_station = hass.data[DOMAIN][entry.entry_id][CONF_FROM]
+    get_time: str | None = entry.data.get(CONF_TIME)
+    train_time = dt.parse_time(get_time) if get_time else None
+
+    async_add_entities(
+        [
+            TrainSensor(
+                train_api,
+                entry.data[CONF_NAME],
+                from_station,
+                to_station,
+                entry.data[CONF_WEEKDAY],
+                train_time,
+                entry.entry_id,
             )
-            continue
-
-        sensor = TrainSensor(
-            train_api,
-            train[CONF_NAME],
-            station_cache[train[CONF_FROM]],
-            station_cache[train[CONF_TO]],
-            train[CONF_WEEKDAY],
-            train.get(CONF_TIME),
-        )
-        sensors.append(sensor)
-
-    async_add_entities(sensors, update_before_add=True)
+        ],
+        True,
+    )
 
 
 def next_weekday(fromdate: date, weekday: int) -> date:
@@ -128,7 +85,7 @@ def next_departuredate(departure: list[str]) -> date:
 
 def _to_iso_format(traintime: datetime) -> str:
     """Return isoformatted utc time."""
-    return as_utc(traintime.replace(tzinfo=STOCKHOLM_TIMEZONE)).isoformat()
+    return dt.as_utc(traintime).isoformat()
 
 
 class TrainSensor(SensorEntity):
@@ -141,10 +98,11 @@ class TrainSensor(SensorEntity):
         self,
         train_api: TrafikverketTrain,
         name: str,
-        from_station: str,
-        to_station: str,
+        from_station: StationInfo,
+        to_station: StationInfo,
         weekday: list,
-        departuretime: time,
+        departuretime: time | None,
+        entry_id: str,
     ) -> None:
         """Initialize the sensor."""
         self._train_api = train_api
@@ -153,15 +111,26 @@ class TrainSensor(SensorEntity):
         self._to_station = to_station
         self._weekday = weekday
         self._time = departuretime
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, entry_id)},
+            manufacturer="Trafikverket",
+            model="v2.0",
+            name=name,
+            configuration_url="https://api.trafikinfo.trafikverket.se/",
+        )
+        self._attr_unique_id = create_unique_id(
+            from_station.name, to_station.name, departuretime, weekday
+        )
 
     async def async_update(self) -> None:
         """Retrieve latest state."""
-        when = datetime.now()
+        when = dt.now()
         _state: TrainStop | None = None
         if self._time:
             departure_day = next_departuredate(self._weekday)
-            when = datetime.combine(departure_day, self._time).replace(
-                tzinfo=STOCKHOLM_TIMEZONE
+            when = datetime.combine(
+                departure_day, self._time, dt.get_time_zone(self.hass.config.time_zone)
             )
         try:
             if self._time:
@@ -173,8 +142,8 @@ class TrainSensor(SensorEntity):
                 _state = await self._train_api.async_get_next_train_stop(
                     self._from_station, self._to_station, when
                 )
-        except ValueError as output_error:
-            _LOGGER.error("Departure %s encountered a problem: %s", when, output_error)
+        except ValueError as error:
+            _LOGGER.error("Departure %s encountered a problem: %s", when, error)
 
         if not _state:
             self._attr_available = False
@@ -185,17 +154,11 @@ class TrainSensor(SensorEntity):
         self._attr_available = True
 
         # The original datetime doesn't provide a timezone so therefore attaching it here.
-        self._attr_native_value = _state.advertised_time_at_location.replace(
-            tzinfo=STOCKHOLM_TIMEZONE
-        )
+        self._attr_native_value = dt.as_utc(_state.advertised_time_at_location)
         if _state.time_at_location:
-            self._attr_native_value = _state.time_at_location.replace(
-                tzinfo=STOCKHOLM_TIMEZONE
-            )
+            self._attr_native_value = dt.as_utc(_state.time_at_location)
         if _state.estimated_time_at_location:
-            self._attr_native_value = _state.estimated_time_at_location.replace(
-                tzinfo=STOCKHOLM_TIMEZONE
-            )
+            self._attr_native_value = dt.as_utc(_state.estimated_time_at_location)
 
         self._update_attributes(_state)
 

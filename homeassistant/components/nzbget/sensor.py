@@ -1,7 +1,7 @@
 """Monitor the NZBGet API."""
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 
 from homeassistant.components.sensor import (
@@ -105,14 +105,15 @@ class NZBGetSensor(NZBGetEntity, SensorEntity):
         description: SensorEntityDescription,
     ) -> None:
         """Initialize a new NZBGet sensor."""
-        self.entity_description = description
-        self._attr_unique_id = f"{entry_id}_{description.key}"
-
         super().__init__(
             coordinator=coordinator,
             entry_id=entry_id,
             name=f"{entry_name} {description.name}",
         )
+
+        self.entity_description = description
+        self._attr_unique_id = f"{entry_id}_{description.key}"
+        self._native_value: datetime | None = None
 
     @property
     def native_value(self):
@@ -122,14 +123,17 @@ class NZBGetSensor(NZBGetEntity, SensorEntity):
 
         if value is None:
             _LOGGER.warning("Unable to locate value for %s", sensor_type)
-            return None
-
-        if "DownloadRate" in sensor_type and value > 0:
+            self._native_value = None
+        elif "DownloadRate" in sensor_type and value > 0:
             # Convert download rate from Bytes/s to MBytes/s
-            return round(value / 2 ** 20, 2)
+            self._native_value = round(value / 2**20, 2)
+        elif "UpTimeSec" in sensor_type and value > 0:
+            uptime = utcnow().replace(microsecond=0) - timedelta(seconds=value)
+            if not isinstance(self._attr_native_value, datetime) or abs(
+                uptime - self._attr_native_value
+            ) > timedelta(seconds=5):
+                self._native_value = uptime
+        else:
+            self._native_value = value
 
-        if "UpTimeSec" in sensor_type and value > 0:
-            uptime = utcnow() - timedelta(seconds=value)
-            return uptime.replace(microsecond=0)
-
-        return value
+        return self._native_value

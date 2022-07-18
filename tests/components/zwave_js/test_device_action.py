@@ -30,7 +30,9 @@ async def test_get_actions(
     """Test we get the expected actions from a zwave_js node."""
     node = lock_schlage_be469
     dev_reg = device_registry.async_get(hass)
-    device = dev_reg.async_get_device({get_device_id(client, node)})
+    driver = client.driver
+    assert driver
+    device = dev_reg.async_get_device({get_device_id(driver, node)})
     assert device
     expected_actions = [
         {
@@ -38,28 +40,40 @@ async def test_get_actions(
             "type": "clear_lock_usercode",
             "device_id": device.id,
             "entity_id": "lock.touchscreen_deadbolt",
+            "metadata": {"secondary": False},
         },
         {
             "domain": DOMAIN,
             "type": "set_lock_usercode",
             "device_id": device.id,
             "entity_id": "lock.touchscreen_deadbolt",
+            "metadata": {"secondary": False},
+        },
+        {
+            "domain": DOMAIN,
+            "type": "refresh_value",
+            "device_id": device.id,
+            "entity_id": "binary_sensor.touchscreen_deadbolt_low_battery_level",
+            "metadata": {"secondary": True},
         },
         {
             "domain": DOMAIN,
             "type": "refresh_value",
             "device_id": device.id,
             "entity_id": "lock.touchscreen_deadbolt",
+            "metadata": {"secondary": False},
         },
         {
             "domain": DOMAIN,
             "type": "set_value",
             "device_id": device.id,
+            "metadata": {},
         },
         {
             "domain": DOMAIN,
             "type": "ping",
             "device_id": device.id,
+            "metadata": {},
         },
         {
             "domain": DOMAIN,
@@ -67,7 +81,8 @@ async def test_get_actions(
             "device_id": device.id,
             "parameter": 3,
             "bitmask": None,
-            "subtype": f"{node.node_id}-112-0-3 (Beeper)",
+            "subtype": "3 (Beeper)",
+            "metadata": {},
         },
     ]
     actions = await async_get_device_automations(
@@ -86,7 +101,9 @@ async def test_get_actions_meter(
     """Test we get the expected meter actions from a zwave_js node."""
     node = aeon_smart_switch_6
     dev_reg = device_registry.async_get(hass)
-    device = dev_reg.async_get_device({get_device_id(client, node)})
+    driver = client.driver
+    assert driver
+    device = dev_reg.async_get_device({get_device_id(driver, node)})
     assert device
     actions = await async_get_device_automations(
         hass, DeviceAutomationType.ACTION, device.id
@@ -103,7 +120,9 @@ async def test_actions(
 ) -> None:
     """Test actions."""
     node = climate_radio_thermostat_ct100_plus
-    device_id = get_device_id(client, node)
+    driver = client.driver
+    assert driver
+    device_id = get_device_id(driver, node)
     dev_reg = device_registry.async_get(hass)
     device = dev_reg.async_get_device({device_id})
     assert device
@@ -161,7 +180,7 @@ async def test_actions(
                         "device_id": device.id,
                         "parameter": 1,
                         "bitmask": None,
-                        "subtype": "2-112-0-3 (Beeper)",
+                        "subtype": "3 (Beeper)",
                         "value": 1,
                     },
                 },
@@ -169,6 +188,15 @@ async def test_actions(
         },
     )
 
+    with patch("zwave_js_server.model.node.Node.async_poll_value") as mock_call:
+        hass.bus.async_fire("test_event_refresh_value")
+        await hass.async_block_till_done()
+        mock_call.assert_called_once()
+        args = mock_call.call_args_list[0][0]
+        assert len(args) == 1
+        assert args[0].value_id == "13-64-1-mode"
+
+    # Call action a second time to confirm that it works (this was previously a bug)
     with patch("zwave_js_server.model.node.Node.async_poll_value") as mock_call:
         hass.bus.async_fire("test_event_refresh_value")
         await hass.async_block_till_done()
@@ -206,6 +234,53 @@ async def test_actions(
         assert args[2] == 1
 
 
+async def test_actions_multiple_calls(
+    hass: HomeAssistant,
+    client: Client,
+    climate_radio_thermostat_ct100_plus: Node,
+    integration: ConfigEntry,
+) -> None:
+    """Test actions can be called multiple times and still work."""
+    node = climate_radio_thermostat_ct100_plus
+    driver = client.driver
+    assert driver
+    device_id = get_device_id(driver, node)
+    dev_reg = device_registry.async_get(hass)
+    device = dev_reg.async_get_device({device_id})
+    assert device
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "event",
+                        "event_type": "test_event_refresh_value",
+                    },
+                    "action": {
+                        "domain": DOMAIN,
+                        "type": "refresh_value",
+                        "device_id": device.id,
+                        "entity_id": "climate.z_wave_thermostat",
+                    },
+                },
+            ]
+        },
+    )
+
+    # Trigger automation multiple times to confirm that it works each time
+    for _ in range(5):
+        with patch("zwave_js_server.model.node.Node.async_poll_value") as mock_call:
+            hass.bus.async_fire("test_event_refresh_value")
+            await hass.async_block_till_done()
+            mock_call.assert_called_once()
+            args = mock_call.call_args_list[0][0]
+            assert len(args) == 1
+            assert args[0].value_id == "13-64-1-mode"
+
+
 async def test_lock_actions(
     hass: HomeAssistant,
     client: Client,
@@ -214,7 +289,9 @@ async def test_lock_actions(
 ) -> None:
     """Test actions for locks."""
     node = lock_schlage_be469
-    device_id = get_device_id(client, node)
+    driver = client.driver
+    assert driver
+    device_id = get_device_id(driver, node)
     dev_reg = device_registry.async_get(hass)
     device = dev_reg.async_get_device({device_id})
     assert device
@@ -283,7 +360,9 @@ async def test_reset_meter_action(
 ) -> None:
     """Test reset_meter action."""
     node = aeon_smart_switch_6
-    device_id = get_device_id(client, node)
+    driver = client.driver
+    assert driver
+    device_id = get_device_id(driver, node)
     dev_reg = device_registry.async_get(hass)
     device = dev_reg.async_get_device({device_id})
     assert device
@@ -328,7 +407,6 @@ async def test_get_action_capabilities(
     integration: ConfigEntry,
 ):
     """Test we get the expected action capabilities."""
-    node = climate_radio_thermostat_ct100_plus
     dev_reg = device_registry.async_get(hass)
     device = device_registry.async_entries_for_config_entry(
         dev_reg, integration.entry_id
@@ -423,7 +501,7 @@ async def test_get_action_capabilities(
             "type": "set_config_parameter",
             "parameter": 1,
             "bitmask": None,
-            "subtype": f"{node.node_id}-112-0-1 (Temperature Reporting Threshold)",
+            "subtype": "1 (Temperature Reporting Threshold)",
         },
     )
     assert capabilities and "extra_fields" in capabilities
@@ -455,7 +533,7 @@ async def test_get_action_capabilities(
             "type": "set_config_parameter",
             "parameter": 10,
             "bitmask": None,
-            "subtype": f"{node.node_id}-112-0-10 (Temperature Reporting Filter)",
+            "subtype": "10 (Temperature Reporting Filter)",
         },
     )
     assert capabilities and "extra_fields" in capabilities
@@ -482,7 +560,7 @@ async def test_get_action_capabilities(
             "type": "set_config_parameter",
             "parameter": 2,
             "bitmask": None,
-            "subtype": f"{node.node_id}-112-0-2 (HVAC Settings)",
+            "subtype": "2 (HVAC Settings)",
         },
     )
     assert not capabilities
@@ -547,7 +625,9 @@ async def test_get_action_capabilities_meter_triggers(
     """Test we get the expected action capabilities for meter triggers."""
     node = aeon_smart_switch_6
     dev_reg = device_registry.async_get(hass)
-    device = dev_reg.async_get_device({get_device_id(client, node)})
+    driver = client.driver
+    assert driver
+    device = dev_reg.async_get_device({get_device_id(driver, node)})
     assert device
     capabilities = await device_action.async_get_action_capabilities(
         hass,
@@ -603,7 +683,9 @@ async def test_unavailable_entity_actions(
     await hass.async_block_till_done()
     node = lock_schlage_be469
     dev_reg = device_registry.async_get(hass)
-    device = dev_reg.async_get_device({get_device_id(client, node)})
+    driver = client.driver
+    assert driver
+    device = dev_reg.async_get_device({get_device_id(driver, node)})
     assert device
     actions = await async_get_device_automations(
         hass, DeviceAutomationType.ACTION, device.id

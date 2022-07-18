@@ -4,7 +4,7 @@
             "already_configured": "Der Dienst ist bereits konfiguriert",
             "cannot_connect": "Die Verbindung mit den Anmeldeinformationen aus der configuration.yaml ist fehlgeschlagen, bitte entferne diese aus der yaml und verwende den Konfigurationsfluss.",
             "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich.",
-            "unknown": "Die Verbindung mit den Anmeldeinformationen aus der configuration.yaml ist mit einem unbekannten Fehler fehlgeschlagen. Bitte entferne  diese aus der yaml und verwende den Konfigurationsfluss."
+            "unknown": "Die Verbindung mit den Anmeldeinformationen aus der configuration.yaml ist mit einem unbekannten Fehler fehlgeschlagen. Bitte entferne diese aus der yaml und verwende den Konfigurationsfluss."
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",

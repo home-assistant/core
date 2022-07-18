@@ -6,16 +6,15 @@ detect_location_info and elevation are mocked by default during tests.
 from __future__ import annotations
 
 import asyncio
-import collections
 import math
-from typing import Any
+from typing import Any, NamedTuple
 
 import aiohttp
 
 from homeassistant.const import __version__ as HA_VERSION
 
-WHOAMI_URL = "https://whoami.home-assistant.io/v1"
-WHOAMI_URL_DEV = "https://whoami-v1-dev.home-assistant.workers.dev/v1"
+WHOAMI_URL = "https://services.home-assistant.io/whoami/v1"
+WHOAMI_URL_DEV = "https://services-dev.home-assistant.workers.dev/whoami/v1"
 
 # Constants from https://github.com/maurycyp/vincenty
 # Earth ellipsoid according to WGS 84
@@ -30,22 +29,21 @@ MILES_PER_KILOMETER = 0.621371
 MAX_ITERATIONS = 200
 CONVERGENCE_THRESHOLD = 1e-12
 
-LocationInfo = collections.namedtuple(
-    "LocationInfo",
-    [
-        "ip",
-        "country_code",
-        "currency",
-        "region_code",
-        "region_name",
-        "city",
-        "zip_code",
-        "time_zone",
-        "latitude",
-        "longitude",
-        "use_metric",
-    ],
-)
+
+class LocationInfo(NamedTuple):
+    """Tuple with location information."""
+
+    ip: str
+    country_code: str
+    currency: str
+    region_code: str
+    region_name: str
+    city: str
+    zip_code: str
+    time_zone: str
+    latitude: float
+    longitude: float
+    use_metric: bool
 
 
 async def async_detect_location_info(
@@ -115,7 +113,7 @@ def vincenty(
         cosSigma = sinU1 * sinU2 + cosU1 * cosU2 * cosLambda
         sigma = math.atan2(sinSigma, cosSigma)
         sinAlpha = cosU1 * cosU2 * sinLambda / sinSigma
-        cosSqAlpha = 1 - sinAlpha ** 2
+        cosSqAlpha = 1 - sinAlpha**2
         try:
             cos2SigmaM = cosSigma - 2 * sinU1 * sinU2 / cosSqAlpha
         except ZeroDivisionError:
@@ -124,14 +122,14 @@ def vincenty(
         LambdaPrev = Lambda
         Lambda = L + (1 - C) * FLATTENING * sinAlpha * (
             sigma
-            + C * sinSigma * (cos2SigmaM + C * cosSigma * (-1 + 2 * cos2SigmaM ** 2))
+            + C * sinSigma * (cos2SigmaM + C * cosSigma * (-1 + 2 * cos2SigmaM**2))
         )
         if abs(Lambda - LambdaPrev) < CONVERGENCE_THRESHOLD:
             break  # successful convergence
     else:
         return None  # failure to converge
 
-    uSq = cosSqAlpha * (AXIS_A ** 2 - AXIS_B ** 2) / (AXIS_B ** 2)
+    uSq = cosSqAlpha * (AXIS_A**2 - AXIS_B**2) / (AXIS_B**2)
     A = 1 + uSq / 16384 * (4096 + uSq * (-768 + uSq * (320 - 175 * uSq)))
     B = uSq / 1024 * (256 + uSq * (-128 + uSq * (74 - 47 * uSq)))
     deltaSigma = (
@@ -142,12 +140,12 @@ def vincenty(
             + B
             / 4
             * (
-                cosSigma * (-1 + 2 * cos2SigmaM ** 2)
+                cosSigma * (-1 + 2 * cos2SigmaM**2)
                 - B
                 / 6
                 * cos2SigmaM
-                * (-3 + 4 * sinSigma ** 2)
-                * (-3 + 4 * cos2SigmaM ** 2)
+                * (-3 + 4 * sinSigma**2)
+                * (-3 + 4 * cos2SigmaM**2)
             )
         )
     )

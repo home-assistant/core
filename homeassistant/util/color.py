@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import colorsys
 import math
-from typing import NamedTuple, cast
+from typing import NamedTuple
 
 import attr
 
@@ -294,22 +294,20 @@ def color_xy_brightness_to_RGB(
     b = X * 0.051713 - Y * 0.121364 + Z * 1.011530
 
     # Apply reverse gamma correction.
-    r, g, b = map(
-        lambda x: (12.92 * x)
-        if (x <= 0.0031308)
-        else ((1.0 + 0.055) * cast(float, pow(x, (1.0 / 2.4))) - 0.055),
-        [r, g, b],
+    r, g, b = (
+        12.92 * x if (x <= 0.0031308) else ((1.0 + 0.055) * pow(x, (1.0 / 2.4)) - 0.055)
+        for x in (r, g, b)
     )
 
     # Bring all negative components to zero.
-    r, g, b = map(lambda x: max(0, x), [r, g, b])
+    r, g, b = (max(0, x) for x in (r, g, b))
 
     # If one component is greater than 1, weight components by that value.
     max_component = max(r, g, b)
     if max_component > 1:
-        r, g, b = map(lambda x: x / max_component, [r, g, b])
+        r, g, b = (x / max_component for x in (r, g, b))
 
-    ir, ig, ib = map(lambda x: int(x * 255), [r, g, b])
+    ir, ig, ib = (int(x * 255) for x in (r, g, b))
 
     return (ir, ig, ib)
 
@@ -472,7 +470,10 @@ def color_rgbww_to_rgb(
     except ZeroDivisionError:
         ct_ratio = 0.5
     color_temp_mired = min_mireds + ct_ratio * mired_range
-    color_temp_kelvin = color_temperature_mired_to_kelvin(color_temp_mired)
+    if color_temp_mired:
+        color_temp_kelvin = color_temperature_mired_to_kelvin(color_temp_mired)
+    else:
+        color_temp_kelvin = 0
     w_r, w_g, w_b = color_temperature_to_rgb(color_temp_kelvin)
     white_level = max(cw, ww) / 255
 
@@ -531,11 +532,31 @@ def color_temperature_to_rgb(
 def color_temperature_to_rgbww(
     temperature: int, brightness: int, min_mireds: int, max_mireds: int
 ) -> tuple[int, int, int, int, int]:
-    """Convert color temperature to rgbcw."""
+    """Convert color temperature in mireds to rgbcw."""
     mired_range = max_mireds - min_mireds
-    warm = ((max_mireds - temperature) / mired_range) * brightness
-    cold = brightness - warm
+    cold = ((max_mireds - temperature) / mired_range) * brightness
+    warm = brightness - cold
     return (0, 0, 0, round(cold), round(warm))
+
+
+def rgbww_to_color_temperature(
+    rgbww: tuple[int, int, int, int, int], min_mireds: int, max_mireds: int
+) -> tuple[int, int]:
+    """Convert rgbcw to color temperature in mireds."""
+    _, _, _, cold, warm = rgbww
+    return while_levels_to_color_temperature(cold, warm, min_mireds, max_mireds)
+
+
+def while_levels_to_color_temperature(
+    cold: int, warm: int, min_mireds: int, max_mireds: int
+) -> tuple[int, int]:
+    """Convert whites to color temperature in mireds."""
+    brightness = warm / 255 + cold / 255
+    if brightness == 0:
+        return (max_mireds, 0)
+    return round(
+        ((cold / 255 / brightness) * (min_mireds - max_mireds)) + max_mireds
+    ), min(255, round(brightness * 255))
 
 
 def _clamp(color_component: float, minimum: float = 0, maximum: float = 255) -> float:

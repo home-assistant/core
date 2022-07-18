@@ -9,9 +9,11 @@
         "overkiz__discrete_rssi_level": {
             "good": "Bon",
             "low": "Bas",
-            "normal": "Normal"
+            "normal": "Normal",
+            "verylow": "Tr\u00e8s lent"
         },
         "overkiz__priority_lock_originator": {
+            "external_gateway": "Passerelle externe",
             "local_user": "Utilisateur local",
             "lsc": "LSC",
             "myself": "Moi-m\u00eame",
@@ -34,6 +36,11 @@
         "overkiz__sensor_room": {
             "clean": "Propre",
             "dirty": "Sale"
+        },
+        "overkiz__three_way_handle_direction": {
+            "closed": "Ferm\u00e9e",
+            "open": "Ouverte",
+            "tilt": "Inclin\u00e9e"
         }
     }
 }

@@ -14,7 +14,6 @@ async def setup_integration(hass):
             "host": "mock-host",
             "identity": "mock-identity",
             "key": "mock-key",
-            "import_groups": True,
             "gateway_id": GATEWAY_ID,
         },
     )
@@ -22,3 +21,5 @@ async def setup_integration(hass):
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
+
+    return entry

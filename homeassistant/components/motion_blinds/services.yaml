@@ -14,8 +14,17 @@ set_absolute_position:
       required: true
       selector:
         number:
-          min: 1
+          min: 0
           max: 100
+          unit_of_measurement: "%"
+    tilt_position:
+      name: Tilt position
+      description: Tilt position to move to.
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
     width:
       name: Width
       description: Specify the width that is covered, only for TDBU Combined entities.
@@ -23,3 +32,4 @@ set_absolute_position:
         number:
           min: 1
           max: 100
+          unit_of_measurement: "%"

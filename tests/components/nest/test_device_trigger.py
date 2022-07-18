@@ -1,5 +1,4 @@
 """The tests for Nest device triggers."""
-from google_nest_sdm.device import Device
 from google_nest_sdm.event import EventMessage
 import pytest
 
@@ -10,11 +9,12 @@ from homeassistant.components.device_automation.exceptions import (
 )
 from homeassistant.components.nest import DOMAIN
 from homeassistant.components.nest.events import NEST_EVENT
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from .common import async_setup_sdm_platform
+from .common import DEVICE_ID, CreateDevice, FakeSubscriber, PlatformSetup
 
 from tests.common import (
     assert_lists_same,
@@ -22,9 +22,14 @@ from tests.common import (
     async_mock_service,
 )
 
-DEVICE_ID = "some-device-id"
 DEVICE_NAME = "My Camera"
 DATA_MESSAGE = {"message": "service-called"}
+
+
+@pytest.fixture
+def platforms() -> list[str]:
+    """Fixture to setup the platforms to test."""
+    return ["camera"]
 
 
 def make_camera(device_id, name=DEVICE_NAME, traits={}):
@@ -45,21 +50,11 @@ def make_camera(device_id, name=DEVICE_NAME, traits={}):
             },
         }
     )
-    return Device.MakeDevice(
-        {
-            "name": device_id,
-            "type": "sdm.devices.types.CAMERA",
-            "traits": traits,
-        },
-        auth=None,
-    )
-
-
-async def async_setup_camera(hass, devices=None):
-    """Set up the platform and prerequisites for testing available triggers."""
-    if not devices:
-        devices = {DEVICE_ID: make_camera(device_id=DEVICE_ID)}
-    return await async_setup_sdm_platform(hass, "camera", devices)
+    return {
+        "name": device_id,
+        "type": "sdm.devices.types.CAMERA",
+        "traits": traits,
+    }
 
 
 async def setup_automation(hass, device_id, trigger_type):
@@ -92,16 +87,20 @@ def calls(hass):
     return async_mock_service(hass, "test", "automation")
 
 
-async def test_get_triggers(hass):
+async def test_get_triggers(
+    hass: HomeAssistant, create_device: CreateDevice, setup_platform: PlatformSetup
+) -> None:
     """Test we get the expected triggers from a nest."""
-    camera = make_camera(
-        device_id=DEVICE_ID,
-        traits={
-            "sdm.devices.traits.CameraMotion": {},
-            "sdm.devices.traits.CameraPerson": {},
-        },
+    create_device.create(
+        raw_data=make_camera(
+            device_id=DEVICE_ID,
+            traits={
+                "sdm.devices.traits.CameraMotion": {},
+                "sdm.devices.traits.CameraPerson": {},
+            },
+        )
     )
-    await async_setup_camera(hass, {DEVICE_ID: camera})
+    await setup_platform()
 
     device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_device({("nest", DEVICE_ID)})
@@ -112,12 +111,14 @@ async def test_get_triggers(hass):
             "domain": DOMAIN,
             "type": "camera_motion",
             "device_id": device_entry.id,
+            "metadata": {},
         },
         {
             "platform": "device",
             "domain": DOMAIN,
             "type": "camera_person",
             "device_id": device_entry.id,
+            "metadata": {},
         },
     ]
     triggers = await async_get_device_automations(
@@ -126,23 +127,29 @@ async def test_get_triggers(hass):
     assert_lists_same(triggers, expected_triggers)
 
 
-async def test_multiple_devices(hass):
+async def test_multiple_devices(
+    hass: HomeAssistant, create_device: CreateDevice, setup_platform: PlatformSetup
+) -> None:
     """Test we get the expected triggers from a nest."""
-    camera1 = make_camera(
-        device_id="device-id-1",
-        name="Camera 1",
-        traits={
-            "sdm.devices.traits.CameraSound": {},
-        },
+    create_device.create(
+        raw_data=make_camera(
+            device_id="device-id-1",
+            name="Camera 1",
+            traits={
+                "sdm.devices.traits.CameraSound": {},
+            },
+        )
     )
-    camera2 = make_camera(
-        device_id="device-id-2",
-        name="Camera 2",
-        traits={
-            "sdm.devices.traits.DoorbellChime": {},
-        },
+    create_device.create(
+        raw_data=make_camera(
+            device_id="device-id-2",
+            name="Camera 2",
+            traits={
+                "sdm.devices.traits.DoorbellChime": {},
+            },
+        )
     )
-    await async_setup_camera(hass, {"device-id-1": camera1, "device-id-2": camera2})
+    await setup_platform()
 
     registry = er.async_get(hass)
     entry1 = registry.async_get("camera.camera_1")
@@ -159,6 +166,7 @@ async def test_multiple_devices(hass):
         "domain": DOMAIN,
         "type": "camera_sound",
         "device_id": entry1.device_id,
+        "metadata": {},
     }
 
     triggers = await async_get_device_automations(
@@ -170,19 +178,24 @@ async def test_multiple_devices(hass):
         "domain": DOMAIN,
         "type": "doorbell_chime",
         "device_id": entry2.device_id,
+        "metadata": {},
     }
 
 
-async def test_triggers_for_invalid_device_id(hass):
+async def test_triggers_for_invalid_device_id(
+    hass: HomeAssistant, create_device: CreateDevice, setup_platform: PlatformSetup
+) -> None:
     """Get triggers for a device not found in the API."""
-    camera = make_camera(
-        device_id=DEVICE_ID,
-        traits={
-            "sdm.devices.traits.CameraMotion": {},
-            "sdm.devices.traits.CameraPerson": {},
-        },
+    create_device.create(
+        raw_data=make_camera(
+            device_id=DEVICE_ID,
+            traits={
+                "sdm.devices.traits.CameraMotion": {},
+                "sdm.devices.traits.CameraPerson": {},
+            },
+        )
     )
-    await async_setup_camera(hass, {DEVICE_ID: camera})
+    await setup_platform()
 
     device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_device({("nest", DEVICE_ID)})
@@ -203,14 +216,16 @@ async def test_triggers_for_invalid_device_id(hass):
         )
 
 
-async def test_no_triggers(hass):
+async def test_no_triggers(
+    hass: HomeAssistant, create_device: CreateDevice, setup_platform: PlatformSetup
+) -> None:
     """Test we get the expected triggers from a nest."""
-    camera = make_camera(device_id=DEVICE_ID, traits={})
-    await async_setup_camera(hass, {DEVICE_ID: camera})
+    create_device.create(raw_data=make_camera(device_id=DEVICE_ID, traits={}))
+    await setup_platform()
 
     registry = er.async_get(hass)
     entry = registry.async_get("camera.my_camera")
-    assert entry.unique_id == "some-device-id-camera"
+    assert entry.unique_id == f"{DEVICE_ID}-camera"
 
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, entry.device_id
@@ -290,15 +305,23 @@ async def test_trigger_for_wrong_event_type(hass, calls):
     assert len(calls) == 0
 
 
-async def test_subscriber_automation(hass, calls):
+async def test_subscriber_automation(
+    hass: HomeAssistant,
+    calls: list,
+    create_device: CreateDevice,
+    setup_platform: PlatformSetup,
+    subscriber: FakeSubscriber,
+) -> None:
     """Test end to end subscriber triggers automation."""
-    camera = make_camera(
-        device_id=DEVICE_ID,
-        traits={
-            "sdm.devices.traits.CameraMotion": {},
-        },
+    create_device.create(
+        raw_data=make_camera(
+            device_id=DEVICE_ID,
+            traits={
+                "sdm.devices.traits.CameraMotion": {},
+            },
+        )
     )
-    subscriber = await async_setup_camera(hass, {DEVICE_ID: camera})
+    await setup_platform()
 
     device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_device({("nest", DEVICE_ID)})

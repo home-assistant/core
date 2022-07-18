@@ -51,7 +51,10 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_SET_SLEEP_MODE,
         {
-            vol.Required(ATTR_SLEEP_MINUTES, default=120): vol.In(SLEEP_MINUTE_OPTIONS),
+            vol.Required(ATTR_SLEEP_MINUTES, default=120): vol.All(
+                vol.Coerce(int),
+                vol.In(SLEEP_MINUTE_OPTIONS),
+            ),
             vol.Required(ATTR_REVERT_TO_MODE, default=SYSTEM_MODE_HOME): vol.In(
                 SYSTEM_REVERT_MODES
             ),
@@ -65,7 +68,7 @@ class FloSwitch(FloEntity, SwitchEntity):
 
     def __init__(self, device: FloDeviceDataUpdateCoordinator) -> None:
         """Initialize the Flo switch."""
-        super().__init__("shutoff_valve", "Shutoff Valve", device)
+        super().__init__("shutoff_valve", "Shutoff valve", device)
         self._state = self._device.last_known_valve_state == "open"
 
     @property

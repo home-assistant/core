@@ -4,7 +4,7 @@ from __future__ import annotations
 from http import HTTPStatus
 import json
 import logging
-from typing import Protocol
+from typing import Any, Protocol
 
 from aiohttp import web
 import voluptuous as vol
@@ -15,7 +15,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import integration_platform
 from homeassistant.helpers.device_registry import DeviceEntry, async_get
 from homeassistant.helpers.json import ExtendedJSONEncoder
+from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.loader import async_get_custom_components, async_get_integration
 from homeassistant.util.json import (
     find_paths_unserializable_data,
     format_unserializable_data,
@@ -49,12 +51,12 @@ class DiagnosticsProtocol(Protocol):
 
     async def async_get_config_entry_diagnostics(
         self, hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> dict:
+    ) -> Any:
         """Return diagnostics for a config entry."""
 
     async def async_get_device_diagnostics(
         self, hass: HomeAssistant, config_entry: ConfigEntry, device: DeviceEntry
-    ) -> dict:
+    ) -> Any:
         """Return diagnostics for a device."""
 
 
@@ -104,9 +106,8 @@ def handle_get(
 ):
     """List all possible diagnostic handlers."""
     domain = msg["domain"]
-    info = hass.data[DOMAIN].get(domain)
 
-    if info is None:
+    if (info := hass.data[DOMAIN].get(domain)) is None:
         connection.send_error(
             msg["id"], websocket_api.ERR_NOT_FOUND, "Domain not supported"
         )
@@ -121,17 +122,40 @@ def handle_get(
     )
 
 
-def _get_json_file_response(
-    data: dict | list,
+async def _async_get_json_file_response(
+    hass: HomeAssistant,
+    data: Any,
     filename: str,
+    domain: str,
     d_type: DiagnosticsType,
     d_id: str,
     sub_type: DiagnosticsSubType | None = None,
     sub_id: str | None = None,
 ) -> web.Response:
     """Return JSON file from dictionary."""
+    hass_sys_info = await async_get_system_info(hass)
+    hass_sys_info["run_as_root"] = hass_sys_info["user"] == "root"
+    del hass_sys_info["user"]
+
+    integration = await async_get_integration(hass, domain)
+    custom_components = {}
+    all_custom_components = await async_get_custom_components(hass)
+    for cc_domain, cc_obj in all_custom_components.items():
+        custom_components[cc_domain] = {
+            "version": cc_obj.version,
+            "requirements": cc_obj.requirements,
+        }
     try:
-        json_data = json.dumps(data, indent=2, cls=ExtendedJSONEncoder)
+        json_data = json.dumps(
+            {
+                "home_assistant": hass_sys_info,
+                "custom_components": custom_components,
+                "integration_manifest": integration.manifest,
+                "data": data,
+            },
+            indent=2,
+            cls=ExtendedJSONEncoder,
+        )
     except TypeError:
         _LOGGER.error(
             "Failed to serialize to JSON: %s/%s%s. Bad data at %s",
@@ -145,7 +169,7 @@ def _get_json_file_response(
     return web.Response(
         body=json_data,
         content_type="application/json",
-        headers={"Content-Disposition": f'attachment; filename="{filename}.json"'},
+        headers={"Content-Disposition": f'attachment; filename="{filename}.json.txt"'},
     )
 
 
@@ -156,7 +180,7 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
     extra_urls = ["/api/diagnostics/{d_type}/{d_id}/{sub_type}/{sub_id}"]
     name = "api:diagnostics"
 
-    async def get(  # pylint: disable=no-self-use
+    async def get(
         self,
         request: web.Request,
         d_type: str,
@@ -172,14 +196,11 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
             return web.Response(status=HTTPStatus.BAD_REQUEST)
 
         hass = request.app["hass"]
-        config_entry = hass.config_entries.async_get_entry(d_id)
 
-        if config_entry is None:
+        if (config_entry := hass.config_entries.async_get_entry(d_id)) is None:
             return web.Response(status=HTTPStatus.NOT_FOUND)
 
-        info = hass.data[DOMAIN].get(config_entry.domain)
-
-        if info is None:
+        if (info := hass.data[DOMAIN].get(config_entry.domain)) is None:
             return web.Response(status=HTTPStatus.NOT_FOUND)
 
         filename = f"{config_entry.domain}-{config_entry.entry_id}"
@@ -189,7 +210,9 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
                 return web.Response(status=HTTPStatus.NOT_FOUND)
             data = await info[d_type.value](hass, config_entry)
             filename = f"{d_type}-{filename}"
-            return _get_json_file_response(data, filename, d_type.value, d_id)
+            return await _async_get_json_file_response(
+                hass, data, filename, config_entry.domain, d_type.value, d_id
+            )
 
         # sub_type handling
         try:
@@ -199,9 +222,8 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
 
         dev_reg = async_get(hass)
         assert sub_id
-        device = dev_reg.async_get(sub_id)
 
-        if device is None:
+        if (device := dev_reg.async_get(sub_id)) is None:
             return web.Response(status=HTTPStatus.NOT_FOUND)
 
         filename += f"-{device.name}-{device.id}"
@@ -210,4 +232,6 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
             return web.Response(status=HTTPStatus.NOT_FOUND)
 
         data = await info[sub_type.value](hass, config_entry, device)
-        return _get_json_file_response(data, filename, d_type, d_id, sub_type, sub_id)
+        return await _async_get_json_file_response(
+            hass, data, filename, config_entry.domain, d_type, d_id, sub_type, sub_id
+        )

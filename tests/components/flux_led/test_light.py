@@ -28,6 +28,8 @@ from homeassistant.components.flux_led.const import (
     CONF_TRANSITION,
     CONF_WHITE_CHANNEL_TYPE,
     DOMAIN,
+    MIN_CCT_BRIGHTNESS,
+    MIN_RGB_BRIGHTNESS,
     TRANSITION_JUMP,
 )
 from homeassistant.components.flux_led.light import (
@@ -48,10 +50,8 @@ from homeassistant.components.light import (
     ATTR_RGBWW_COLOR,
     ATTR_SUPPORTED_COLOR_MODES,
     ATTR_WHITE,
-    COLOR_MODE_RGB,
-    COLOR_MODE_RGBW,
-    COLOR_MODE_RGBWW,
     DOMAIN as LIGHT_DOMAIN,
+    ColorMode,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -135,8 +135,8 @@ async def test_light_goes_unavailable_and_recovers(hass: HomeAssistant) -> None:
     assert state.state == STATE_ON
 
 
-async def test_light_no_unique_id(hass: HomeAssistant) -> None:
-    """Test a light without a unique id."""
+async def test_light_mac_address_not_found(hass: HomeAssistant) -> None:
+    """Test a light when we cannot discover the mac address."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: IP_ADDRESS, CONF_NAME: DEFAULT_ENTRY_TITLE}
     )
@@ -148,7 +148,7 @@ async def test_light_no_unique_id(hass: HomeAssistant) -> None:
 
     entity_id = "light.bulb_rgbcw_ddeeff"
     entity_registry = er.async_get(hass)
-    assert entity_registry.async_get(entity_id) is None
+    assert entity_registry.async_get(entity_id).unique_id == config_entry.entry_id
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
 
@@ -316,9 +316,9 @@ async def test_rgb_light_auto_on(hass: HomeAssistant) -> None:
     assert state.state == STATE_ON
     attributes = state.attributes
     assert attributes[ATTR_BRIGHTNESS] == 128
-    assert attributes[ATTR_COLOR_MODE] == COLOR_MODE_RGB
+    assert attributes[ATTR_COLOR_MODE] == ColorMode.RGB
     assert attributes[ATTR_EFFECT_LIST] == bulb.effect_list
-    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == [COLOR_MODE_RGB]
+    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.RGB]
     assert attributes[ATTR_HS_COLOR] == (0, 100)
 
     await hass.services.async_call(
@@ -352,7 +352,12 @@ async def test_rgb_light_auto_on(hass: HomeAssistant) -> None:
     # If the bulb is off and we are using existing brightness
     # it has to be at least 1 or the bulb won't turn on
     bulb.async_turn_on.assert_not_called()
-    bulb.async_set_levels.assert_called_with(1, 1, 1, brightness=1)
+    bulb.async_set_levels.assert_called_with(
+        MIN_RGB_BRIGHTNESS,
+        MIN_RGB_BRIGHTNESS,
+        MIN_RGB_BRIGHTNESS,
+        brightness=MIN_RGB_BRIGHTNESS,
+    )
     bulb.async_set_levels.reset_mock()
     bulb.async_turn_on.reset_mock()
 
@@ -444,9 +449,9 @@ async def test_rgbw_light_auto_on(hass: HomeAssistant) -> None:
     assert state.state == STATE_ON
     attributes = state.attributes
     assert attributes[ATTR_BRIGHTNESS] == 128
-    assert attributes[ATTR_COLOR_MODE] == COLOR_MODE_RGBW
+    assert attributes[ATTR_COLOR_MODE] == ColorMode.RGBW
     assert attributes[ATTR_EFFECT_LIST] == bulb.effect_list
-    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == [COLOR_MODE_RGBW]
+    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.RGBW]
     assert attributes[ATTR_HS_COLOR] == (0.0, 83.529)
 
     await hass.services.async_call(
@@ -498,10 +503,30 @@ async def test_rgbw_light_auto_on(hass: HomeAssistant) -> None:
     )
     # If the bulb is on and we are using existing brightness
     # and brightness was 0 we need to set it to at least 1
-    # or the device may not turn on
+    # or the device may not turn on. In this case we scale
+    # the current color to brightness of 1 to ensure the device
+    # does not switch to white since otherwise we do not have
+    # enough resolution to determine which color to display
     bulb.async_turn_on.assert_not_called()
     bulb.async_set_brightness.assert_not_called()
-    bulb.async_set_levels.assert_called_with(1, 1, 1, 0)
+    bulb.async_set_levels.assert_called_with(2, 0, 0, 0)
+    bulb.async_set_levels.reset_mock()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        "turn_on",
+        {ATTR_ENTITY_ID: entity_id, ATTR_RGBW_COLOR: (0, 0, 0, 56)},
+        blocking=True,
+    )
+    # If the bulb is on and we are using existing brightness
+    # and brightness was 0 we need to set it to at least 1
+    # or the device may not turn on. In this case we scale
+    # the current color to brightness of 1 to ensure the device
+    # does not switch to white since otherwise we do not have
+    # enough resolution to determine which color to display
+    bulb.async_turn_on.assert_not_called()
+    bulb.async_set_brightness.assert_not_called()
+    bulb.async_set_levels.assert_called_with(2, 0, 0, 56)
     bulb.async_set_levels.reset_mock()
 
     bulb.brightness = 128
@@ -559,9 +584,9 @@ async def test_rgbww_light_auto_on(hass: HomeAssistant) -> None:
     assert state.state == STATE_ON
     attributes = state.attributes
     assert attributes[ATTR_BRIGHTNESS] == 128
-    assert attributes[ATTR_COLOR_MODE] == COLOR_MODE_RGBWW
+    assert attributes[ATTR_COLOR_MODE] == ColorMode.RGBWW
     assert attributes[ATTR_EFFECT_LIST] == bulb.effect_list
-    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == [COLOR_MODE_RGBWW]
+    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.RGBWW]
     assert attributes[ATTR_HS_COLOR] == (3.237, 94.51)
 
     await hass.services.async_call(
@@ -613,10 +638,13 @@ async def test_rgbww_light_auto_on(hass: HomeAssistant) -> None:
     )
     # If the bulb is on and we are using existing brightness
     # and brightness was 0 we need to set it to at least 1
-    # or the device may not turn on
+    # or the device may not turn on. In this case we scale
+    # the current color so we do not unexpectedly switch to white
+    # since other we do not have enough resolution to determine
+    # which color to display
     bulb.async_turn_on.assert_not_called()
     bulb.async_set_brightness.assert_not_called()
-    bulb.async_set_levels.assert_called_with(1, 1, 1, 0, 0)
+    bulb.async_set_levels.assert_called_with(2, 0, 0, 0, 0)
     bulb.async_set_levels.reset_mock()
 
     bulb.brightness = 128
@@ -1266,6 +1294,25 @@ async def test_rgbcw_light(hass: HomeAssistant) -> None:
     )
     bulb.async_set_brightness.assert_called_with(255)
     bulb.async_set_brightness.reset_mock()
+
+    await async_mock_device_turn_off(hass, bulb)
+    bulb.color_mode = FLUX_COLOR_MODE_RGBWW
+    bulb.brightness = MIN_RGB_BRIGHTNESS
+    bulb.rgb = (MIN_RGB_BRIGHTNESS, MIN_RGB_BRIGHTNESS, MIN_RGB_BRIGHTNESS)
+    await async_mock_device_turn_on(hass, bulb)
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.RGBWW
+    assert state.attributes[ATTR_BRIGHTNESS] == 1
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        "turn_on",
+        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP: 170},
+        blocking=True,
+    )
+    bulb.async_set_white_temp.assert_called_with(5882, MIN_CCT_BRIGHTNESS)
+    bulb.async_set_white_temp.reset_mock()
 
 
 async def test_white_light(hass: HomeAssistant) -> None:

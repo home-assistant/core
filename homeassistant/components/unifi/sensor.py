@@ -115,8 +115,8 @@ class UniFiRxBandwidthSensor(UniFiBandwidthSensor):
     def native_value(self) -> int:
         """Return the state of the sensor."""
         if self._is_wired:
-            return self.client.wired_rx_bytes / 1000000
-        return self.client.rx_bytes / 1000000
+            return self.client.wired_rx_bytes_r / 1000000
+        return self.client.rx_bytes_r / 1000000
 
 
 class UniFiTxBandwidthSensor(UniFiBandwidthSensor):
@@ -128,8 +128,8 @@ class UniFiTxBandwidthSensor(UniFiBandwidthSensor):
     def native_value(self) -> int:
         """Return the state of the sensor."""
         if self._is_wired:
-            return self.client.wired_tx_bytes / 1000000
-        return self.client.tx_bytes / 1000000
+            return self.client.wired_tx_bytes_r / 1000000
+        return self.client.tx_bytes_r / 1000000
 
 
 class UniFiUpTimeSensor(UniFiClient, SensorEntity):

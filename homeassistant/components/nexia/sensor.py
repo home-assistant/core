@@ -2,8 +2,13 @@
 from __future__ import annotations
 
 from nexia.const import UNIT_CELSIUS
+from nexia.thermostat import NexiaThermostat
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant
@@ -28,7 +33,7 @@ async def async_setup_entry(
 
     # Thermostat / System Sensors
     for thermostat_id in nexia_home.get_thermostat_ids():
-        thermostat = nexia_home.get_thermostat_by_id(thermostat_id)
+        thermostat: NexiaThermostat = nexia_home.get_thermostat_by_id(thermostat_id)
 
         entities.append(
             NexiaThermostatSensor(
@@ -36,6 +41,7 @@ async def async_setup_entry(
                 thermostat,
                 "get_system_status",
                 "System Status",
+                None,
                 None,
                 None,
             )
@@ -47,6 +53,7 @@ async def async_setup_entry(
                 thermostat,
                 "get_air_cleaner_mode",
                 "Air Cleaner Mode",
+                None,
                 None,
                 None,
             )
@@ -61,6 +68,7 @@ async def async_setup_entry(
                     "Current Compressor Speed",
                     None,
                     PERCENTAGE,
+                    SensorStateClass.MEASUREMENT,
                     percent_conv,
                 )
             )
@@ -72,6 +80,7 @@ async def async_setup_entry(
                     "Requested Compressor Speed",
                     None,
                     PERCENTAGE,
+                    SensorStateClass.MEASUREMENT,
                     percent_conv,
                 )
             )
@@ -90,6 +99,7 @@ async def async_setup_entry(
                     "Outdoor Temperature",
                     SensorDeviceClass.TEMPERATURE,
                     unit,
+                    SensorStateClass.MEASUREMENT,
                 )
             )
         # Relative Humidity
@@ -102,6 +112,7 @@ async def async_setup_entry(
                     "Relative Humidity",
                     SensorDeviceClass.HUMIDITY,
                     PERCENTAGE,
+                    SensorStateClass.MEASUREMENT,
                     percent_conv,
                 )
             )
@@ -123,18 +134,14 @@ async def async_setup_entry(
                     "Temperature",
                     SensorDeviceClass.TEMPERATURE,
                     unit,
+                    SensorStateClass.MEASUREMENT,
                     None,
                 )
             )
             # Zone Status
             entities.append(
                 NexiaThermostatZoneSensor(
-                    coordinator,
-                    zone,
-                    "get_status",
-                    "Zone Status",
-                    None,
-                    None,
+                    coordinator, zone, "get_status", "Zone Status", None, None, None
                 )
             )
             # Setpoint Status
@@ -144,6 +151,7 @@ async def async_setup_entry(
                     zone,
                     "get_setpoint_status",
                     "Zone Setpoint Status",
+                    None,
                     None,
                     None,
                 )
@@ -163,6 +171,7 @@ class NexiaThermostatSensor(NexiaThermostatEntity, SensorEntity):
         sensor_name,
         sensor_class,
         sensor_unit,
+        state_class,
         modifier=None,
     ):
         """Initialize the sensor."""
@@ -173,15 +182,10 @@ class NexiaThermostatSensor(NexiaThermostatEntity, SensorEntity):
             unique_id=f"{thermostat.thermostat_id}_{sensor_call}",
         )
         self._call = sensor_call
-        self._class = sensor_class
-        self._state = None
-        self._unit_of_measurement = sensor_unit
         self._modifier = modifier
-
-    @property
-    def device_class(self):
-        """Return the device class of the sensor."""
-        return self._class
+        self._attr_device_class = sensor_class
+        self._attr_native_unit_of_measurement = sensor_unit
+        self._attr_state_class = state_class
 
     @property
     def native_value(self):
@@ -192,11 +196,6 @@ class NexiaThermostatSensor(NexiaThermostatEntity, SensorEntity):
         if isinstance(val, float):
             val = round(val, 1)
         return val
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement this sensor expresses itself in."""
-        return self._unit_of_measurement
 
 
 class NexiaThermostatZoneSensor(NexiaThermostatZoneEntity, SensorEntity):
@@ -210,6 +209,7 @@ class NexiaThermostatZoneSensor(NexiaThermostatZoneEntity, SensorEntity):
         sensor_name,
         sensor_class,
         sensor_unit,
+        state_class,
         modifier=None,
     ):
         """Create a zone sensor."""
@@ -221,15 +221,10 @@ class NexiaThermostatZoneSensor(NexiaThermostatZoneEntity, SensorEntity):
             unique_id=f"{zone.zone_id}_{sensor_call}",
         )
         self._call = sensor_call
-        self._class = sensor_class
-        self._state = None
-        self._unit_of_measurement = sensor_unit
         self._modifier = modifier
-
-    @property
-    def device_class(self):
-        """Return the device class of the sensor."""
-        return self._class
+        self._attr_device_class = sensor_class
+        self._attr_native_unit_of_measurement = sensor_unit
+        self._attr_state_class = state_class
 
     @property
     def native_value(self):
@@ -240,8 +235,3 @@ class NexiaThermostatZoneSensor(NexiaThermostatZoneEntity, SensorEntity):
         if isinstance(val, float):
             val = round(val, 1)
         return val
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement this sensor expresses itself in."""
-        return self._unit_of_measurement

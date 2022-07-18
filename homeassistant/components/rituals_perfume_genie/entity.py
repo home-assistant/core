@@ -14,10 +14,8 @@ MODEL = "The Perfume Genie"
 MODEL2 = "The Perfume Genie 2.0"
 
 
-class DiffuserEntity(CoordinatorEntity):
+class DiffuserEntity(CoordinatorEntity[RitualsDataUpdateCoordinator]):
     """Representation of a diffuser entity."""
-
-    coordinator: RitualsDataUpdateCoordinator
 
     def __init__(
         self,

@@ -1,0 +1,28 @@
+{
+    "config": {
+        "error": {
+            "invalid_individual_address": "V\u00e4rdet matchar inte m\u00f6nstret f\u00f6r en individuell adress i KNX.\n'area.line.device'",
+            "invalid_ip_address": "Ogiltig IPv4-adress."
+        },
+        "step": {
+            "manual_tunnel": {
+                "data": {
+                    "tunneling_type": "KNX tunneltyp"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "tunnel": {
+                "data": {
+                    "tunneling_type": "KNX tunneltyp"
+                },
+                "data_description": {
+                    "host": "IP adress till KNX/IP tunnelingsenhet.",
+                    "port": "Port p\u00e5 KNX/IP tunnelingsenhet."
+                }
+            }
+        }
+    }
+}

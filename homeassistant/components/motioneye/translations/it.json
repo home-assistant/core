@@ -17,9 +17,9 @@
             },
             "user": {
                 "data": {
-                    "admin_password": "Amministratore Password",
+                    "admin_password": "Password di amministrazione",
                     "admin_username": "Amministratore Nome utente",
-                    "surveillance_password": "Sorveglianza Password",
+                    "surveillance_password": "Password di sorveglianza",
                     "surveillance_username": "Sorveglianza Nome utente",
                     "url": "URL"
                 }

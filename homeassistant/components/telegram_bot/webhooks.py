@@ -4,90 +4,115 @@ from http import HTTPStatus
 from ipaddress import ip_address
 import logging
 
+from telegram import Update
 from telegram.error import TimedOut
+from telegram.ext import Dispatcher, TypeHandler
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.network import get_url
 
-from . import (
-    CONF_ALLOWED_CHAT_IDS,
-    CONF_TRUSTED_NETWORKS,
-    CONF_URL,
-    BaseTelegramBotEntity,
-    initialize_bot,
-)
+from . import CONF_TRUSTED_NETWORKS, CONF_URL, BaseTelegramBotEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-TELEGRAM_HANDLER_URL = "/api/telegram_webhooks"
-REMOVE_HANDLER_URL = ""
+TELEGRAM_WEBHOOK_URL = "/api/telegram_webhooks"
+REMOVE_WEBHOOK_URL = ""
 
 
-async def async_setup_platform(hass, config):
+async def async_setup_platform(hass, bot, config):
     """Set up the Telegram webhooks platform."""
+    pushbot = PushBot(hass, bot, config)
 
-    bot = initialize_bot(config)
-
-    current_status = await hass.async_add_executor_job(bot.getWebhookInfo)
-    if not (base_url := config.get(CONF_URL)):
-        base_url = get_url(hass, require_ssl=True, allow_internal=False)
-
-    # Some logging of Bot current status:
-    last_error_date = getattr(current_status, "last_error_date", None)
-    if (last_error_date is not None) and (isinstance(last_error_date, int)):
-        last_error_date = dt.datetime.fromtimestamp(last_error_date)
-        _LOGGER.info(
-            "Telegram webhook last_error_date: %s. Status: %s",
-            last_error_date,
-            current_status,
-        )
-    else:
-        _LOGGER.debug("telegram webhook Status: %s", current_status)
-
-    handler_url = f"{base_url}{TELEGRAM_HANDLER_URL}"
-    if not handler_url.startswith("https"):
-        _LOGGER.error("Invalid telegram webhook %s must be https", handler_url)
+    if not pushbot.webhook_url.startswith("https"):
+        _LOGGER.error("Invalid telegram webhook %s must be https", pushbot.webhook_url)
         return False
 
-    def _try_to_set_webhook():
-        retry_num = 0
-        while retry_num < 3:
-            try:
-                return bot.setWebhook(handler_url, timeout=5)
-            except TimedOut:
-                retry_num += 1
-                _LOGGER.warning("Timeout trying to set webhook (retry #%d)", retry_num)
+    webhook_registered = await pushbot.register_webhook()
+    if not webhook_registered:
+        return False
 
-    if current_status and current_status["url"] != handler_url:
-        result = await hass.async_add_executor_job(_try_to_set_webhook)
-        if result:
-            _LOGGER.info("Set new telegram webhook %s", handler_url)
-        else:
-            _LOGGER.error("Set telegram webhook failed %s", handler_url)
-            return False
-
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, lambda event: bot.setWebhook(REMOVE_HANDLER_URL)
-    )
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, pushbot.deregister_webhook)
     hass.http.register_view(
-        BotPushReceiver(
-            hass, config[CONF_ALLOWED_CHAT_IDS], config[CONF_TRUSTED_NETWORKS]
-        )
+        PushBotView(hass, bot, pushbot.dispatcher, config[CONF_TRUSTED_NETWORKS])
     )
     return True
 
 
-class BotPushReceiver(HomeAssistantView, BaseTelegramBotEntity):
-    """Handle pushes from Telegram."""
+class PushBot(BaseTelegramBotEntity):
+    """Handles all the push/webhook logic and passes telegram updates to `self.handle_update`."""
+
+    def __init__(self, hass, bot, config):
+        """Create Dispatcher before calling super()."""
+        self.bot = bot
+        self.trusted_networks = config[CONF_TRUSTED_NETWORKS]
+        # Dumb dispatcher that just gets our updates to our handler callback (self.handle_update)
+        self.dispatcher = Dispatcher(bot, None)
+        self.dispatcher.add_handler(TypeHandler(Update, self.handle_update))
+        super().__init__(hass, config)
+
+        self.base_url = config.get(CONF_URL) or get_url(
+            hass, require_ssl=True, allow_internal=False
+        )
+        self.webhook_url = f"{self.base_url}{TELEGRAM_WEBHOOK_URL}"
+
+    def _try_to_set_webhook(self):
+        _LOGGER.debug("Registering webhook URL: %s", self.webhook_url)
+        retry_num = 0
+        while retry_num < 3:
+            try:
+                return self.bot.set_webhook(self.webhook_url, timeout=5)
+            except TimedOut:
+                retry_num += 1
+                _LOGGER.warning("Timeout trying to set webhook (retry #%d)", retry_num)
+
+        return False
+
+    async def register_webhook(self):
+        """Query telegram and register the URL for our webhook."""
+        current_status = await self.hass.async_add_executor_job(
+            self.bot.get_webhook_info
+        )
+        # Some logging of Bot current status:
+        last_error_date = getattr(current_status, "last_error_date", None)
+        if (last_error_date is not None) and (isinstance(last_error_date, int)):
+            last_error_date = dt.datetime.fromtimestamp(last_error_date)
+            _LOGGER.debug(
+                "Telegram webhook last_error_date: %s. Status: %s",
+                last_error_date,
+                current_status,
+            )
+        else:
+            _LOGGER.debug("telegram webhook status: %s", current_status)
+
+        if current_status and current_status["url"] != self.webhook_url:
+            result = await self.hass.async_add_executor_job(self._try_to_set_webhook)
+            if result:
+                _LOGGER.info("Set new telegram webhook %s", self.webhook_url)
+            else:
+                _LOGGER.error("Set telegram webhook failed %s", self.webhook_url)
+                return False
+
+        return True
+
+    def deregister_webhook(self, event=None):
+        """Query telegram and deregister the URL for our webhook."""
+        _LOGGER.debug("Deregistering webhook URL")
+        return self.bot.delete_webhook()
+
+
+class PushBotView(HomeAssistantView):
+    """View for handling webhook calls from Telegram."""
 
     requires_auth = False
-    url = TELEGRAM_HANDLER_URL
+    url = TELEGRAM_WEBHOOK_URL
     name = "telegram_webhooks"
 
-    def __init__(self, hass, allowed_chat_ids, trusted_networks):
-        """Initialize the class."""
-        BaseTelegramBotEntity.__init__(self, hass, allowed_chat_ids)
+    def __init__(self, hass, bot, dispatcher, trusted_networks):
+        """Initialize by storing stuff needed for setting up our webhook endpoint."""
+        self.hass = hass
+        self.bot = bot
+        self.dispatcher = dispatcher
         self.trusted_networks = trusted_networks
 
     async def post(self, request):
@@ -98,10 +123,12 @@ class BotPushReceiver(HomeAssistantView, BaseTelegramBotEntity):
             return self.json_message("Access denied", HTTPStatus.UNAUTHORIZED)
 
         try:
-            data = await request.json()
+            update_data = await request.json()
         except ValueError:
             return self.json_message("Invalid JSON", HTTPStatus.BAD_REQUEST)
 
-        if not self.process_message(data):
-            return self.json_message("Invalid message", HTTPStatus.BAD_REQUEST)
+        update = Update.de_json(update_data, self.bot)
+        _LOGGER.debug("Received Update on %s: %s", self.url, update)
+        await self.hass.async_add_executor_job(self.dispatcher.process_update, update)
+
         return None

@@ -11,12 +11,9 @@
                 "data": {
                     "host": "Vert (valgfritt)",
                     "password": "Passord",
-                    "port": "Port (valgfritt)",
-                    "ssl": "Bruker et SSL-sertifikat",
                     "username": "Brukernavn (Valgfritt)"
                 },
-                "description": "Standard vert: {host}\nStandardport: {port}\nStandard brukernavn: {username}",
-                "title": "Netgear"
+                "description": "Standard vert: {host}\n Standard brukernavn: {username}"
             }
         }
     },
@@ -26,8 +23,7 @@
                 "data": {
                     "consider_home": "Vurder hjemmetid (sekunder)"
                 },
-                "description": "Spesifiser valgfrie innstillinger",
-                "title": "Netgear"
+                "description": "Spesifiser valgfrie innstillinger"
             }
         }
     }

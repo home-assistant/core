@@ -2,10 +2,10 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable
+from collections.abc import Callable
 import functools
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.const import ATTR_NAME
 from homeassistant.core import CALLBACK_TYPE, Event, callback
@@ -30,7 +30,10 @@ from .core.const import (
     SIGNAL_REMOVE,
 )
 from .core.helpers import LogMixin
-from .core.typing import CALLABLE_T, ChannelType, ZhaDeviceType
+
+if TYPE_CHECKING:
+    from .core.channels.base import ZigbeeChannel
+    from .core.device import ZHADevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,8 +45,9 @@ class BaseZhaEntity(LogMixin, entity.Entity):
     """A base class for ZHA entities."""
 
     unique_id_suffix: str | None = None
+    _attr_has_entity_name = True
 
-    def __init__(self, unique_id: str, zha_device: ZhaDeviceType, **kwargs) -> None:
+    def __init__(self, unique_id: str, zha_device: ZHADevice, **kwargs: Any) -> None:
         """Init ZHA entity."""
         self._name: str = ""
         self._force_update: bool = False
@@ -53,9 +57,9 @@ class BaseZhaEntity(LogMixin, entity.Entity):
             self._unique_id += f"-{self.unique_id_suffix}"
         self._state: Any = None
         self._extra_state_attributes: dict[str, Any] = {}
-        self._zha_device: ZhaDeviceType = zha_device
-        self._unsubs: list[CALLABLE_T] = []
-        self.remove_future: Awaitable[None] = None
+        self._zha_device = zha_device
+        self._unsubs: list[Callable[[], None]] = []
+        self.remove_future: asyncio.Future[Any] = asyncio.Future()
 
     @property
     def name(self) -> str:
@@ -68,7 +72,7 @@ class BaseZhaEntity(LogMixin, entity.Entity):
         return self._unique_id
 
     @property
-    def zha_device(self) -> ZhaDeviceType:
+    def zha_device(self) -> ZHADevice:
         """Return the zha device this entity is attached to."""
         return self._zha_device
 
@@ -124,23 +128,28 @@ class BaseZhaEntity(LogMixin, entity.Entity):
 
     @callback
     def async_accept_signal(
-        self, channel: ChannelType, signal: str, func: CALLABLE_T, signal_override=False
+        self,
+        channel: ZigbeeChannel | None,
+        signal: str,
+        func: Callable[..., Any],
+        signal_override=False,
     ):
         """Accept a signal from a channel."""
         unsub = None
         if signal_override:
             unsub = async_dispatcher_connect(self.hass, signal, func)
         else:
+            assert channel
             unsub = async_dispatcher_connect(
                 self.hass, f"{channel.unique_id}_{signal}", func
             )
         self._unsubs.append(unsub)
 
-    def log(self, level: int, msg: str, *args):
+    def log(self, level: int, msg: str, *args, **kwargs):
         """Log a message."""
         msg = f"%s: {msg}"
         args = (self.entity_id,) + args
-        _LOGGER.log(level, msg, *args)
+        _LOGGER.log(level, msg, *args, **kwargs)
 
 
 class ZhaEntity(BaseZhaEntity, RestoreEntity):
@@ -159,18 +168,20 @@ class ZhaEntity(BaseZhaEntity, RestoreEntity):
     def __init__(
         self,
         unique_id: str,
-        zha_device: ZhaDeviceType,
-        channels: list[ChannelType],
-        **kwargs,
+        zha_device: ZHADevice,
+        channels: list[ZigbeeChannel],
+        **kwargs: Any,
     ) -> None:
         """Init ZHA entity."""
         super().__init__(unique_id, zha_device, **kwargs)
-        ieeetail = "".join([f"{o:02x}" for o in zha_device.ieee[:4]])
-        ch_names = ", ".join(sorted(ch.name for ch in channels))
-        self._name: str = f"{zha_device.name} {ieeetail} {ch_names}"
-        if self.unique_id_suffix:
-            self._name += f" {self.unique_id_suffix}"
-        self.cluster_channels: dict[str, ChannelType] = {}
+        self._name: str = (
+            self.__class__.__name__.lower()
+            .replace("zha", "")
+            .replace("entity", "")
+            .replace("sensor", "")
+            .capitalize()
+        )
+        self.cluster_channels: dict[str, ZigbeeChannel] = {}
         for channel in channels:
             self.cluster_channels[channel.name] = channel
 
@@ -178,8 +189,8 @@ class ZhaEntity(BaseZhaEntity, RestoreEntity):
     def create_entity(
         cls,
         unique_id: str,
-        zha_device: ZhaDeviceType,
-        channels: list[ChannelType],
+        zha_device: ZHADevice,
+        channels: list[ZigbeeChannel],
         **kwargs,
     ) -> ZhaEntity | None:
         """Entity Factory.
@@ -203,10 +214,8 @@ class ZhaEntity(BaseZhaEntity, RestoreEntity):
             signal_override=True,
         )
 
-        if not self.zha_device.is_mains_powered:
-            # mains powered devices will get real time state
-            if last_state := await self.async_get_last_state():
-                self.async_restore_last_state(last_state)
+        if last_state := await self.async_get_last_state():
+            self.async_restore_last_state(last_state)
 
         self.async_accept_signal(
             None,
@@ -254,7 +263,9 @@ class ZhaGroupEntity(BaseZhaEntity):
         super().__init__(unique_id, zha_device, **kwargs)
         self._available = False
         self._group = zha_device.gateway.groups.get(group_id)
-        self._name = f"{self._group.name}_zha_group_0x{group_id:04x}"
+        self._name = (
+            f"{self._group.name}_zha_group_0x{group_id:04x}".lower().capitalize()
+        )
         self._group_id: int = group_id
         self._entity_ids: list[str] = entity_ids
         self._async_unsub_state_changed: CALLBACK_TYPE | None = None
@@ -288,6 +299,7 @@ class ZhaGroupEntity(BaseZhaEntity):
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()
+        await self.async_update()
 
         self.async_accept_signal(
             None,
@@ -299,7 +311,7 @@ class ZhaGroupEntity(BaseZhaEntity):
         if self._change_listener_debouncer is None:
             self._change_listener_debouncer = Debouncer(
                 self.hass,
-                self,
+                _LOGGER,
                 cooldown=UPDATE_GROUP_FROM_CHILD_DELAY,
                 immediate=False,
                 function=functools.partial(self.async_update_ha_state, True),
@@ -319,6 +331,7 @@ class ZhaGroupEntity(BaseZhaEntity):
     def async_state_changed_listener(self, event: Event):
         """Handle child updates."""
         # Delay to ensure that we get updates from all members before updating the group
+        assert self._change_listener_debouncer
         self.hass.create_task(self._change_listener_debouncer.async_call())
 
     async def async_will_remove_from_hass(self) -> None:

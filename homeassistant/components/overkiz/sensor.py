@@ -53,7 +53,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_value=lambda value: int(str(value).strip("%")),
+        native_value=lambda value: int(float(str(value).strip("%"))),
     ),
     OverkizSensorDescription(
         key=OverkizState.CORE_BATTERY,
@@ -358,6 +358,19 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
     OverkizSensorDescription(
         key=OverkizState.IO_ELECTRIC_BOOSTER_OPERATING_TIME,
         name="Electric Booster Operating Time",
+    ),
+    # Cover
+    OverkizSensorDescription(
+        key=OverkizState.CORE_TARGET_CLOSURE,
+        name="Target Closure",
+        native_unit_of_measurement=PERCENTAGE,
+        entity_registry_enabled_default=False,
+    ),
+    # ThreeWayWindowHandle/WindowHandle
+    OverkizSensorDescription(
+        key=OverkizState.CORE_THREE_WAY_HANDLE_DIRECTION,
+        name="Three Way Handle Direction",
+        device_class=OverkizDeviceClass.THREE_WAY_HANDLE_DIRECTION,
     ),
 ]
 

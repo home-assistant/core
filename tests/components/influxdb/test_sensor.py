@@ -44,13 +44,22 @@ BASE_V1_QUERY = {
     "queries": [
         {
             "name": "test",
+            "unique_id": "unique_test_id",
             "measurement": "measurement",
             "where": "where",
             "field": "field",
         }
     ],
 }
-BASE_V2_QUERY = {"queries_flux": [{"name": "test", "query": "query"}]}
+BASE_V2_QUERY = {
+    "queries_flux": [
+        {
+            "name": "test",
+            "unique_id": "unique_test_id",
+            "query": "query",
+        }
+    ]
+}
 
 
 @dataclass
@@ -232,6 +241,7 @@ async def test_minimal_config(hass, mock_client, config_ext, queries, set_query_
                 "queries": [
                     {
                         "name": "test",
+                        "unique_id": "unique_test_id",
                         "unit_of_measurement": "unit",
                         "measurement": "measurement",
                         "where": "where",
@@ -260,6 +270,7 @@ async def test_minimal_config(hass, mock_client, config_ext, queries, set_query_
                 "queries_flux": [
                     {
                         "name": "test",
+                        "unique_id": "unique_test_id",
                         "unit_of_measurement": "unit",
                         "range_start": "start",
                         "range_stop": "end",
@@ -452,6 +463,7 @@ async def test_error_querying_influx(
                 "queries": [
                     {
                         "name": "test",
+                        "unique_id": "unique_test_id",
                         "measurement": "measurement",
                         "where": "{{ illegal.template }}",
                         "field": "field",
@@ -465,7 +477,15 @@ async def test_error_querying_influx(
         (
             API_VERSION_2,
             BASE_V2_CONFIG,
-            {"queries_flux": [{"name": "test", "query": "{{ illegal.template }}"}]},
+            {
+                "queries_flux": [
+                    {
+                        "name": "test",
+                        "unique_id": "unique_test_id",
+                        "query": "{{ illegal.template }}",
+                    }
+                ]
+            },
             _set_query_mock_v2,
             _make_v2_resultset,
             "query",

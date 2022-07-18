@@ -10,9 +10,8 @@ from homeassistant import config_entries
 from homeassistant.components.fan import (
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
-    SUPPORT_DIRECTION,
-    SUPPORT_SET_SPEED,
     FanEntity,
+    FanEntityFeature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -50,7 +49,7 @@ async def async_setup_entry(
 class HASensemeFan(SensemeEntity, FanEntity):
     """SenseME ceiling fan component."""
 
-    _attr_supported_features = SUPPORT_SET_SPEED | SUPPORT_DIRECTION
+    _attr_supported_features = FanEntityFeature.SET_SPEED | FanEntityFeature.DIRECTION
     _attr_preset_modes = [PRESET_MODE_WHOOSH]
 
     def __init__(self, device: SensemeFan) -> None:
@@ -84,7 +83,6 @@ class HASensemeFan(SensemeEntity, FanEntity):
 
     async def async_turn_on(
         self,
-        speed: str | None = None,
         percentage: int | None = None,
         preset_mode: str | None = None,
         **kwargs: Any,

@@ -11,7 +11,7 @@
             "unknown": "Uventet feil"
         },
         "step": {
-            "reauth": {
+            "reauth_confirm": {
                 "data": {
                     "password": "Passord"
                 },

@@ -16,6 +16,7 @@ from homeassistant.const import (
 )
 
 from tests.components.homekit_controller.common import (
+    HUB_TEST_ACCESSORY_ID,
     DeviceTestInfo,
     EntityTestInfo,
     assert_devices_and_entities_created,
@@ -32,7 +33,7 @@ async def test_velux_cover_setup(hass):
     await assert_devices_and_entities_created(
         hass,
         DeviceTestInfo(
-            unique_id="00:00:00:00:00:00",
+            unique_id=HUB_TEST_ACCESSORY_ID,
             name="VELUX Gateway",
             model="VELUX Gateway",
             manufacturer="VELUX",
@@ -47,11 +48,12 @@ async def test_velux_cover_setup(hass):
                     sw_version="48",
                     hw_version="",
                     serial_number="1111111a114a111a",
+                    unique_id="00:00:00:00:00:00:aid:3",
                     devices=[],
                     entities=[
                         EntityTestInfo(
-                            entity_id="cover.velux_window",
-                            friendly_name="VELUX Window",
+                            entity_id="cover.velux_window_roof_window",
+                            friendly_name="VELUX Window Roof Window",
                             unique_id="homekit-1111111a114a111a-8",
                             supported_features=SUPPORT_CLOSE
                             | SUPPORT_SET_POSITION
@@ -67,25 +69,26 @@ async def test_velux_cover_setup(hass):
                     sw_version="16",
                     hw_version="",
                     serial_number="a11b111",
+                    unique_id="00:00:00:00:00:00:aid:2",
                     devices=[],
                     entities=[
                         EntityTestInfo(
-                            entity_id="sensor.velux_sensor_temperature",
-                            friendly_name="VELUX Sensor Temperature",
+                            entity_id="sensor.velux_sensor_temperature_sensor",
+                            friendly_name="VELUX Sensor Temperature sensor",
                             unique_id="homekit-a11b111-8",
                             unit_of_measurement=TEMP_CELSIUS,
                             state="18.9",
                         ),
                         EntityTestInfo(
-                            entity_id="sensor.velux_sensor_humidity",
-                            friendly_name="VELUX Sensor Humidity",
+                            entity_id="sensor.velux_sensor_humidity_sensor",
+                            friendly_name="VELUX Sensor Humidity sensor",
                             unique_id="homekit-a11b111-11",
                             unit_of_measurement=PERCENTAGE,
                             state="58",
                         ),
                         EntityTestInfo(
-                            entity_id="sensor.velux_sensor_co2",
-                            friendly_name="VELUX Sensor CO2",
+                            entity_id="sensor.velux_sensor_carbon_dioxide_sensor",
+                            friendly_name="VELUX Sensor Carbon Dioxide sensor",
                             unique_id="homekit-a11b111-14",
                             unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
                             state="400",

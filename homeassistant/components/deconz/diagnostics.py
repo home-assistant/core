@@ -3,11 +3,15 @@ from __future__ import annotations
 
 from typing import Any
 
+from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_API_KEY, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.system_info import async_get_system_info
 
 from .gateway import get_gateway_from_config_entry
+
+REDACT_CONFIG = {CONF_API_KEY, CONF_UNIQUE_ID}
+REDACT_DECONZ_CONFIG = {"bridgeid", "mac", "panid"}
 
 
 async def async_get_config_entry_diagnostics(
@@ -17,10 +21,13 @@ async def async_get_config_entry_diagnostics(
     gateway = get_gateway_from_config_entry(hass, config_entry)
     diag: dict[str, Any] = {}
 
-    diag["home_assistant"] = await async_get_system_info(hass)
-    diag["config_entry"] = dict(config_entry.data)
-    diag["deconz_config"] = gateway.api.config.raw
-    diag["websocket_state"] = gateway.api.websocket.state
+    diag["config"] = async_redact_data(config_entry.as_dict(), REDACT_CONFIG)
+    diag["deconz_config"] = async_redact_data(
+        gateway.api.config.raw, REDACT_DECONZ_CONFIG
+    )
+    diag["websocket_state"] = (
+        gateway.api.websocket.state if gateway.api.websocket else "Unknown"
+    )
     diag["deconz_ids"] = gateway.deconz_ids
     diag["entities"] = gateway.entities
     diag["events"] = {

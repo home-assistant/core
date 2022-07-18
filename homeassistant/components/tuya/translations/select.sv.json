@@ -1,0 +1,17 @@
+{
+    "state": {
+        "tuya__humidifier_spray_mode": {
+            "humidity": "Luftfuktighet"
+        },
+        "tuya__light_mode": {
+            "none": "Av"
+        },
+        "tuya__relay_status": {
+            "on": "P\u00e5",
+            "power_on": "P\u00e5"
+        },
+        "tuya__vacuum_mode": {
+            "standby": "Standby"
+        }
+    }
+}

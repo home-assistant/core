@@ -6,9 +6,10 @@ import pytest
 
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.helpers.device_registry import async_get
+from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.setup import async_setup_component
 
-from . import get_diagnostics_for_config_entry, get_diagnostics_for_device
+from . import _get_diagnostics_for_config_entry, _get_diagnostics_for_device
 
 from tests.common import MockConfigEntry, mock_platform
 
@@ -77,9 +78,22 @@ async def test_download_diagnostics(hass, hass_client):
     """Test download diagnostics."""
     config_entry = MockConfigEntry(domain="fake_integration")
     config_entry.add_to_hass(hass)
+    hass_sys_info = await async_get_system_info(hass)
+    hass_sys_info["run_as_root"] = hass_sys_info["user"] == "root"
+    del hass_sys_info["user"]
 
-    assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
-        "config_entry": "info"
+    assert await _get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
+        "home_assistant": hass_sys_info,
+        "custom_components": {},
+        "integration_manifest": {
+            "codeowners": [],
+            "dependencies": [],
+            "domain": "fake_integration",
+            "is_built_in": True,
+            "name": "fake_integration",
+            "requirements": [],
+        },
+        "data": {"config_entry": "info"},
     }
 
     dev_reg = async_get(hass)
@@ -87,9 +101,21 @@ async def test_download_diagnostics(hass, hass_client):
         config_entry_id=config_entry.entry_id, identifiers={("test", "test")}
     )
 
-    assert await get_diagnostics_for_device(
+    assert await _get_diagnostics_for_device(
         hass, hass_client, config_entry, device
-    ) == {"device": "info"}
+    ) == {
+        "home_assistant": hass_sys_info,
+        "custom_components": {},
+        "integration_manifest": {
+            "codeowners": [],
+            "dependencies": [],
+            "domain": "fake_integration",
+            "is_built_in": True,
+            "name": "fake_integration",
+            "requirements": [],
+        },
+        "data": {"device": "info"},
+    }
 
 
 async def test_failure_scenarios(hass, hass_client):

@@ -59,8 +59,6 @@
             "connected": "{entity_name}\u5df2\u9023\u7dda",
             "gas": "{entity_name}\u5df2\u958b\u59cb\u5075\u6e2c\u6c23\u9ad4",
             "hot": "{entity_name}\u5df2\u8b8a\u71b1",
-            "is_not_tampered": "{entity_name}\u5df2\u505c\u6b62\u5075\u6e2c\u6e1b\u5f31",
-            "is_tampered": "{entity_name}\u5df2\u5075\u6e2c\u5230\u6e1b\u5f31",
             "light": "{entity_name}\u5df2\u958b\u59cb\u5075\u6e2c\u5149\u7dda",
             "locked": "{entity_name}\u5df2\u4e0a\u9396",
             "moist": "{entity_name}\u5df2\u8b8a\u6f6e\u6fd5",
@@ -134,9 +132,9 @@
             "off": "\u672a\u5728\u5145\u96fb",
             "on": "\u5145\u96fb\u4e2d"
         },
-        "co": {
-            "off": "\u672a\u5075\u6e2c",
-            "on": "\u5075\u6e2c"
+        "carbon_monoxide": {
+            "off": "\u672a\u89f8\u767c",
+            "on": "\u5df2\u89f8\u767c"
         },
         "cold": {
             "off": "\u6b63\u5e38",
@@ -199,7 +197,7 @@
             "on": "\u5728\u5bb6"
         },
         "problem": {
-            "off": "\u78ba\u5b9a",
+            "off": "\u6b63\u5e38",
             "on": "\u7570\u5e38"
         },
         "running": {

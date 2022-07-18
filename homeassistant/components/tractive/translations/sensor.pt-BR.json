@@ -1,0 +1,10 @@
+{
+    "state": {
+        "tractive__tracker_state": {
+            "not_reporting": "N\u00e3o relatando",
+            "operational": "Operacional",
+            "system_shutdown_user": "Usu\u00e1rio de desligamento do sistema",
+            "system_startup": "Inicializa\u00e7\u00e3o do sistema"
+        }
+    }
+}

@@ -10,7 +10,7 @@
             "is_on": "pilot {entity_name} jest w\u0142\u0105czony"
         },
         "trigger_type": {
-            "toggled": "{entity_name} zostanie w\u0142\u0105czony lub wy\u0142\u0105czony",
+            "changed_states": "{entity_name} zostanie w\u0142\u0105czony lub wy\u0142\u0105czony",
             "turned_off": "nast\u0105pi wy\u0142\u0105czenie {entity_name}",
             "turned_on": "nast\u0105pi w\u0142\u0105czenie {entity_name}"
         }

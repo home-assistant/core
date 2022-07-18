@@ -13,7 +13,7 @@ from aiohttp.web import Request, Response
 import jwt
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES, ENTITY_CATEGORIES
+from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 
 # Typing imports
 from homeassistant.core import HomeAssistant
@@ -59,7 +59,7 @@ def _get_homegraph_jwt(time, iss, key):
 
 async def _get_homegraph_token(
     hass: HomeAssistant, jwt_signed: str
-) -> dict[str, Any] | list[str, Any] | Any:
+) -> dict[str, Any] | list[Any] | Any:
     headers = {
         "Authorization": f"Bearer {jwt_signed}",
         "Content-Type": "application/x-www-form-urlencoded",
@@ -126,7 +126,10 @@ class GoogleConfig(AbstractConfig):
         entity_registry = er.async_get(self.hass)
         registry_entry = entity_registry.async_get(state.entity_id)
         if registry_entry:
-            auxiliary_entity = registry_entry.entity_category in ENTITY_CATEGORIES
+            auxiliary_entity = (
+                registry_entry.entity_category is not None
+                or registry_entry.hidden_by is not None
+            )
         else:
             auxiliary_entity = False
 

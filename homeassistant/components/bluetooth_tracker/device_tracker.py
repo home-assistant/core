@@ -5,7 +5,7 @@ import asyncio
 from collections.abc import Awaitable, Callable
 from datetime import datetime, timedelta
 import logging
-from typing import Any, Final
+from typing import Final
 
 import bluetooth  # pylint: disable=import-error
 from bt_proximity import BluetoothRSSI
@@ -30,7 +30,7 @@ from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     BT_PREFIX,
@@ -61,7 +61,7 @@ def is_bluetooth_device(device: Device) -> bool:
 def discover_devices(device_id: int) -> list[tuple[str, str]]:
     """Discover Bluetooth devices."""
     try:
-        result = bluetooth.discover_devices(
+        result = bluetooth.discover_devices(  # type: ignore[attr-defined]
             duration=8,
             lookup_names=True,
             flush_cache=True,
@@ -124,14 +124,14 @@ async def get_tracking_devices(hass: HomeAssistant) -> tuple[set[str], set[str]]
 def lookup_name(mac: str) -> str | None:
     """Lookup a Bluetooth device name."""
     _LOGGER.debug("Scanning %s", mac)
-    return bluetooth.lookup_name(mac, timeout=5)  # type: ignore[no-any-return]
+    return bluetooth.lookup_name(mac, timeout=5)  # type: ignore[attr-defined,no-any-return]
 
 
 async def async_setup_scanner(
     hass: HomeAssistant,
     config: ConfigType,
     async_see: Callable[..., Awaitable[None]],
-    discovery_info: dict[str, Any] | None = None,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> bool:
     """Set up the Bluetooth Scanner."""
     device_id: int = config[CONF_DEVICE_ID]
@@ -180,7 +180,7 @@ async def async_setup_scanner(
             if tasks:
                 await asyncio.wait(tasks)
 
-        except bluetooth.BluetoothError:
+        except bluetooth.BluetoothError:  # type: ignore[attr-defined]
             _LOGGER.exception("Error looking up Bluetooth device")
 
     async def update_bluetooth(now: datetime | None = None) -> None:

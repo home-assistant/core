@@ -81,7 +81,6 @@ class DoorBirdButton(DoorBirdEntity, ButtonEntity):
     ) -> None:
         """Initialize a relay in a DoorBird device."""
         super().__init__(doorstation, doorstation_info)
-        self._doorstation = doorstation
         self._relay = relay
         self.entity_description = entity_description
 

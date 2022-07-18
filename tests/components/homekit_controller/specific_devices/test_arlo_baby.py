@@ -1,10 +1,10 @@
 """Make sure that an Arlo Baby can be setup."""
 
-from homeassistant.components.light import SUPPORT_BRIGHTNESS, SUPPORT_COLOR
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
 
 from tests.components.homekit_controller.common import (
+    HUB_TEST_ACCESSORY_ID,
     DeviceTestInfo,
     EntityTestInfo,
     assert_devices_and_entities_created,
@@ -21,7 +21,7 @@ async def test_arlo_baby_setup(hass):
     await assert_devices_and_entities_created(
         hass,
         DeviceTestInfo(
-            unique_id="00:00:00:00:00:00",
+            unique_id=HUB_TEST_ACCESSORY_ID,
             name="ArloBabyA0",
             model="ABC1000",
             manufacturer="Netgear, Inc",
@@ -37,9 +37,9 @@ async def test_arlo_baby_setup(hass):
                     state="idle",
                 ),
                 EntityTestInfo(
-                    entity_id="binary_sensor.arlobabya0",
+                    entity_id="binary_sensor.arlobabya0_motion",
                     unique_id="homekit-00A0000000000-500",
-                    friendly_name="ArloBabyA0",
+                    friendly_name="ArloBabyA0 Motion",
                     state="off",
                 ),
                 EntityTestInfo(
@@ -67,14 +67,14 @@ async def test_arlo_baby_setup(hass):
                     entity_id="sensor.arlobabya0_air_quality",
                     unique_id="homekit-00A0000000000-aid:1-sid:800-cid:802",
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
-                    friendly_name="ArloBabyA0 - Air Quality",
+                    friendly_name="ArloBabyA0 Air Quality",
                     state="1",
                 ),
                 EntityTestInfo(
-                    entity_id="light.arlobabya0",
+                    entity_id="light.arlobabya0_nightlight",
                     unique_id="homekit-00A0000000000-1100",
-                    friendly_name="ArloBabyA0",
-                    supported_features=SUPPORT_BRIGHTNESS | SUPPORT_COLOR,
+                    friendly_name="ArloBabyA0 Nightlight",
+                    supported_features=0,
                     capabilities={"supported_color_modes": ["hs"]},
                     state="off",
                 ),

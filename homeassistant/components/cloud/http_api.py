@@ -1,5 +1,6 @@
 """The HTTP api to control the cloud integration."""
 import asyncio
+import dataclasses
 from functools import wraps
 from http import HTTPStatus
 import logging
@@ -21,6 +22,7 @@ from homeassistant.components.google_assistant import helpers as google_helpers
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.websocket_api import const as ws_const
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.location import async_detect_location_info
 
@@ -288,7 +290,7 @@ async def websocket_cloud_status(hass, connection, msg):
     """
     cloud = hass.data[DOMAIN]
     connection.send_message(
-        websocket_api.result_message(msg["id"], await _account_data(cloud))
+        websocket_api.result_message(msg["id"], await _account_data(hass, cloud))
     )
 
 
@@ -414,11 +416,16 @@ async def websocket_hook_delete(hass, connection, msg):
     connection.send_message(websocket_api.result_message(msg["id"]))
 
 
-async def _account_data(cloud):
+async def _account_data(hass: HomeAssistant, cloud: Cloud):
     """Generate the auth data JSON response."""
 
+    assert hass.config.api
     if not cloud.is_logged_in:
-        return {"logged_in": False, "cloud": STATE_DISCONNECTED}
+        return {
+            "logged_in": False,
+            "cloud": STATE_DISCONNECTED,
+            "http_use_ssl": hass.config.api.use_ssl,
+        }
 
     claims = cloud.claims
     client = cloud.client
@@ -433,18 +440,29 @@ async def _account_data(cloud):
     else:
         certificate = None
 
+    if cloud.iot.last_disconnect_reason:
+        cloud_last_disconnect_reason = dataclasses.asdict(
+            cloud.iot.last_disconnect_reason
+        )
+    else:
+        cloud_last_disconnect_reason = None
+
     return {
         "alexa_entities": client.alexa_user_config["filter"].config,
         "alexa_registered": alexa_config.authorized,
         "cloud": cloud.iot.state,
+        "cloud_last_disconnect_reason": cloud_last_disconnect_reason,
         "email": claims["email"],
         "google_entities": client.google_user_config["filter"].config,
         "google_registered": google_config.has_registered_user_agent,
+        "google_local_connected": google_config.is_local_connected,
         "logged_in": True,
         "prefs": client.prefs.as_dict(),
         "remote_certificate": certificate,
         "remote_connected": remote.is_connected,
         "remote_domain": remote.instance_domain,
+        "http_use_ssl": hass.config.api.use_ssl,
+        "active_subscription": not cloud.subscription_expired,
     }
 
 
@@ -457,7 +475,7 @@ async def websocket_remote_connect(hass, connection, msg):
     """Handle request for connect remote."""
     cloud = hass.data[DOMAIN]
     await cloud.client.prefs.async_update(remote_enabled=True)
-    connection.send_result(msg["id"], await _account_data(cloud))
+    connection.send_result(msg["id"], await _account_data(hass, cloud))
 
 
 @websocket_api.require_admin
@@ -469,7 +487,7 @@ async def websocket_remote_disconnect(hass, connection, msg):
     """Handle request for disconnect remote."""
     cloud = hass.data[DOMAIN]
     await cloud.client.prefs.async_update(remote_enabled=False)
-    connection.send_result(msg["id"], await _account_data(cloud))
+    connection.send_result(msg["id"], await _account_data(hass, cloud))
 
 
 @websocket_api.require_admin

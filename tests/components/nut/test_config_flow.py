@@ -37,6 +37,7 @@ async def test_form_zeroconf(hass):
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="192.168.1.5",
+            addresses=["192.168.1.5"],
             hostname="mock_hostname",
             name="mock_name",
             port=1234,
@@ -44,7 +45,7 @@ async def test_form_zeroconf(hass):
             type="mock_type",
         ),
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -65,7 +66,7 @@ async def test_form_zeroconf(hass):
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result2["title"] == "192.168.1.5:1234"
     assert result2["data"] == {
         CONF_HOST: "192.168.1.5",
@@ -83,7 +84,7 @@ async def test_form_user_one_ups(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {}
 
     mock_pynut = _get_mock_pynutclient(
@@ -108,7 +109,7 @@ async def test_form_user_one_ups(hass):
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result2["title"] == "1.1.1.1:2222"
     assert result2["data"] == {
         CONF_HOST: "1.1.1.1",
@@ -132,7 +133,7 @@ async def test_form_user_multiple_ups(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {}
 
     mock_pynut = _get_mock_pynutclient(
@@ -155,7 +156,7 @@ async def test_form_user_multiple_ups(hass):
         )
 
     assert result2["step_id"] == "ups"
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
 
     with patch(
         "homeassistant.components.nut.PyNUTClient",
@@ -170,7 +171,7 @@ async def test_form_user_multiple_ups(hass):
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result3["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result3["title"] == "ups2@1.1.1.1:2222"
     assert result3["data"] == {
         CONF_HOST: "1.1.1.1",
@@ -193,7 +194,7 @@ async def test_form_user_one_ups_with_ignored_entry(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {}
 
     mock_pynut = _get_mock_pynutclient(
@@ -218,7 +219,7 @@ async def test_form_user_one_ups_with_ignored_entry(hass):
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result2["title"] == "1.1.1.1:2222"
     assert result2["data"] == {
         CONF_HOST: "1.1.1.1",
@@ -251,7 +252,7 @@ async def test_form_cannot_connect(hass):
             },
         )
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
     with patch(
@@ -271,7 +272,7 @@ async def test_form_cannot_connect(hass):
             },
         )
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
     with patch(
@@ -291,7 +292,7 @@ async def test_form_cannot_connect(hass):
             },
         )
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
 
@@ -328,7 +329,7 @@ async def test_abort_if_already_setup(hass):
             },
         )
 
-        assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result2["type"] == data_entry_flow.FlowResultType.ABORT
         assert result2["reason"] == "already_configured"
 
 
@@ -367,7 +368,7 @@ async def test_abort_if_already_setup_alias(hass):
         )
 
     assert result2["step_id"] == "ups"
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
 
     with patch(
         "homeassistant.components.nut.PyNUTClient",
@@ -378,7 +379,7 @@ async def test_abort_if_already_setup_alias(hass):
             {CONF_ALIAS: "ups1"},
         )
 
-        assert result3["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result3["type"] == data_entry_flow.FlowResultType.ABORT
         assert result3["reason"] == "already_configured"
 
 
@@ -395,14 +396,14 @@ async def test_options_flow(hass):
     with patch("homeassistant.components.nut.async_setup_entry", return_value=True):
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "init"
 
         result = await hass.config_entries.options.async_configure(
             result["flow_id"], user_input={}
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert config_entry.options == {
             CONF_SCAN_INTERVAL: 60,
         }
@@ -410,7 +411,7 @@ async def test_options_flow(hass):
     with patch("homeassistant.components.nut.async_setup_entry", return_value=True):
         result2 = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-        assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result2["type"] == data_entry_flow.FlowResultType.FORM
         assert result2["step_id"] == "init"
 
         result2 = await hass.config_entries.options.async_configure(
@@ -418,7 +419,7 @@ async def test_options_flow(hass):
             user_input={CONF_SCAN_INTERVAL: 12},
         )
 
-        assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert config_entry.options == {
             CONF_SCAN_INTERVAL: 12,
         }

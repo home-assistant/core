@@ -3,9 +3,10 @@ from __future__ import annotations
 
 from contextlib import suppress
 import os
+from pathlib import Path
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.const import CONF_EMAIL, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 import homeassistant.helpers.config_validation as cv
@@ -28,6 +29,8 @@ CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Verisure from a config entry."""
+    await hass.async_add_executor_job(migrate_cookie_files, hass, entry)
+
     coordinator = VerisureDataUpdateCoordinator(hass, entry=entry)
 
     if not await coordinator.async_login():
@@ -43,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
     # Set up all platforms for this device/entry.
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -64,3 +67,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         del hass.data[DOMAIN]
 
     return True
+
+
+def migrate_cookie_files(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Migrate old cookie file to new location."""
+    cookie_file = Path(hass.config.path(STORAGE_DIR, f"verisure_{entry.unique_id}"))
+    if cookie_file.exists():
+        cookie_file.rename(
+            hass.config.path(STORAGE_DIR, f"verisure_{entry.data[CONF_EMAIL]}")
+        )

@@ -8,6 +8,7 @@ from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRE
 from homeassistant.components.elgato.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_ICON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import EntityCategory
 
@@ -24,12 +25,12 @@ async def test_button_identify(
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
 
-    state = hass.states.get("button.identify")
+    state = hass.states.get("button.frenck_identify")
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:help"
     assert state.state == STATE_UNKNOWN
 
-    entry = entity_registry.async_get("button.identify")
+    entry = entity_registry.async_get("button.frenck_identify")
     assert entry
     assert entry.unique_id == "CN11A1A00001_identify"
     assert entry.entity_category == EntityCategory.CONFIG
@@ -47,18 +48,19 @@ async def test_button_identify(
     assert device_entry.model == "Elgato Key Light"
     assert device_entry.name == "Frenck"
     assert device_entry.sw_version == "1.0.3 (192)"
+    assert device_entry.hw_version == "53"
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.identify"},
+        {ATTR_ENTITY_ID: "button.frenck_identify"},
         blocking=True,
     )
 
     assert len(mock_elgato.identify.mock_calls) == 1
     mock_elgato.identify.assert_called_with()
 
-    state = hass.states.get("button.identify")
+    state = hass.states.get("button.frenck_identify")
     assert state
     assert state.state == "2021-11-13T11:48:00+00:00"
 
@@ -67,17 +69,19 @@ async def test_button_identify_error(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_elgato: MagicMock,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test an error occurs with the Elgato identify button."""
     mock_elgato.identify.side_effect = ElgatoError
-    await hass.services.async_call(
-        BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.identify"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
+
+    with pytest.raises(
+        HomeAssistantError, match="An error occurred while identifying the Elgato Light"
+    ):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: "button.frenck_identify"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
 
     assert len(mock_elgato.identify.mock_calls) == 1
-    assert "An error occurred while identifying the Elgato Light" in caplog.text

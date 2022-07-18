@@ -27,7 +27,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the sensors."""
-    router = hass.data[DOMAIN][entry.unique_id]
+    router: FreeboxRouter = hass.data[DOMAIN][entry.unique_id]
     entities = []
 
     _LOGGER.debug(
@@ -120,7 +120,7 @@ class FreeboxCallSensor(FreeboxSensor):
     ) -> None:
         """Initialize a Freebox call sensor."""
         super().__init__(router, description)
-        self._call_list_for_type = []
+        self._call_list_for_type: list[dict[str, Any]] = []
 
     @callback
     def async_update_state(self) -> None:
@@ -159,7 +159,7 @@ class FreeboxDiskSensor(FreeboxSensor):
         self._disk = disk
         self._partition = partition
         self._attr_name = f"{partition['label']} {description.name}"
-        self._unique_id = f"{self._router.mac} {description.key} {self._disk['id']} {self._partition['id']}"
+        self._attr_unique_id = f"{self._router.mac} {description.key} {self._disk['id']} {self._partition['id']}"
 
     @property
     def device_info(self) -> DeviceInfo:

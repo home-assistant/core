@@ -21,8 +21,7 @@
                 "data": {
                     "host": "C\u00edm"
                 },
-                "description": "\u00c1ll\u00edtsa be a Sony Bravia TV integr\u00e1ci\u00f3t. Ha probl\u00e9m\u00e1i vannak a konfigur\u00e1ci\u00f3val, l\u00e1togasson el a k\u00f6vetkez\u0151 oldalra: https://www.home-assistant.io/integrations/braviatv \n\n Gy\u0151z\u0151dj\u00f6n meg arr\u00f3l, hogy a TV be van kapcsolva.",
-                "title": "Sony Bravia TV"
+                "description": "Gy\u0151z\u0151dj\u00f6n meg arr\u00f3l, hogy a TV k\u00e9sz\u00fcl\u00e9k be van kapcsolva a be\u00e1ll\u00edt\u00e1s el\u0151tt."
             }
         }
     },

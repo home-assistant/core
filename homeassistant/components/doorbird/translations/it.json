@@ -18,8 +18,7 @@
                     "name": "Nome del dispositivo",
                     "password": "Password",
                     "username": "Nome utente"
-                },
-                "title": "Connetti a DoorBird"
+                }
             }
         }
     },
@@ -29,7 +28,9 @@
                 "data": {
                     "events": "Elenco di eventi separati da virgole."
                 },
-                "description": "Aggiungere un nome di evento separato da virgola per ogni evento che desideri monitorare. Dopo averli inseriti qui, usa l'applicazione DoorBird per assegnarli a un evento specifico. Consulta la documentazione su https://www.home-assistant.io/integrations/doorbird/#events. Esempio: qualcuno_premuto_il_pulsante, movimento"
+                "data_description": {
+                    "events": "Aggiungi un nome evento separato da virgole per ogni evento che desideri monitorare. Dopo averli inseriti qui, usa l'applicazione DoorBird per assegnarli a un evento specifico. \n\nEsempio: somebody_pressed_the_button, movimento"
+                }
             }
         }
     }

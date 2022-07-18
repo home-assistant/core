@@ -49,7 +49,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistantError, State
-from homeassistant.helpers import device_registry
+from homeassistant.helpers import device_registry, entity_registry as er, instance_id
 from homeassistant.helpers.entityfilter import (
     CONF_EXCLUDE_DOMAINS,
     CONF_EXCLUDE_ENTITIES,
@@ -201,7 +201,7 @@ async def test_homekit_setup(hass, hk_driver, mock_async_zeroconf):
     hass.states.async_set("light.demo", "on")
     hass.states.async_set("light.demo2", "on")
     zeroconf_mock = MagicMock()
-    uuid = await hass.helpers.instance_id.async_get()
+    uuid = await instance_id.async_get(hass)
     with patch(f"{PATH_HOMEKIT}.HomeDriver", return_value=hk_driver) as mock_driver:
         await hass.async_add_executor_job(homekit.setup, zeroconf_mock, uuid)
 
@@ -218,6 +218,7 @@ async def test_homekit_setup(hass, hk_driver, mock_async_zeroconf):
         advertised_address=None,
         async_zeroconf_instance=zeroconf_mock,
         zeroconf_server=f"{uuid}-hap.local.",
+        loader=ANY,
     )
     assert homekit.driver.safe_mode is False
 
@@ -244,7 +245,7 @@ async def test_homekit_setup_ip_address(hass, hk_driver, mock_async_zeroconf):
     )
 
     path = get_persist_fullpath_for_entry_id(hass, entry.entry_id)
-    uuid = await hass.helpers.instance_id.async_get()
+    uuid = await instance_id.async_get(hass)
     with patch(f"{PATH_HOMEKIT}.HomeDriver", return_value=hk_driver) as mock_driver:
         await hass.async_add_executor_job(homekit.setup, mock_async_zeroconf, uuid)
     mock_driver.assert_called_with(
@@ -259,6 +260,7 @@ async def test_homekit_setup_ip_address(hass, hk_driver, mock_async_zeroconf):
         advertised_address=None,
         async_zeroconf_instance=mock_async_zeroconf,
         zeroconf_server=f"{uuid}-hap.local.",
+        loader=ANY,
     )
 
 
@@ -285,7 +287,7 @@ async def test_homekit_setup_advertise_ip(hass, hk_driver, mock_async_zeroconf):
 
     async_zeroconf_instance = MagicMock()
     path = get_persist_fullpath_for_entry_id(hass, entry.entry_id)
-    uuid = await hass.helpers.instance_id.async_get()
+    uuid = await instance_id.async_get(hass)
     with patch(f"{PATH_HOMEKIT}.HomeDriver", return_value=hk_driver) as mock_driver:
         await hass.async_add_executor_job(homekit.setup, async_zeroconf_instance, uuid)
     mock_driver.assert_called_with(
@@ -300,6 +302,7 @@ async def test_homekit_setup_advertise_ip(hass, hk_driver, mock_async_zeroconf):
         advertised_address="192.168.1.100",
         async_zeroconf_instance=async_zeroconf_instance,
         zeroconf_server=f"{uuid}-hap.local.",
+        loader=ANY,
     )
 
 
@@ -480,6 +483,61 @@ async def test_homekit_entity_glob_filter_with_config_entities(
     assert (
         hass.states.get(select_config_entity.entity_id) not in filtered_states
     )  # not explicted included and its a config entity
+    assert hass.states.get("cover.excluded_test") not in filtered_states
+    assert hass.states.get("light.included_test") in filtered_states
+    assert hass.states.get("select.keep") in filtered_states
+
+
+async def test_homekit_entity_glob_filter_with_hidden_entities(
+    hass, mock_async_zeroconf, entity_reg
+):
+    """Test the entity filter with hidden entities."""
+    entry = await async_init_integration(hass)
+
+    from homeassistant.helpers.entity_registry import RegistryEntry
+
+    select_config_entity: RegistryEntry = entity_reg.async_get_or_create(
+        "select",
+        "any",
+        "any",
+        device_id="1234",
+        hidden_by=er.RegistryEntryHider.INTEGRATION,
+    )
+    hass.states.async_set(select_config_entity.entity_id, "off")
+
+    switch_config_entity: RegistryEntry = entity_reg.async_get_or_create(
+        "switch",
+        "any",
+        "any",
+        device_id="1234",
+        hidden_by=er.RegistryEntryHider.INTEGRATION,
+    )
+    hass.states.async_set(switch_config_entity.entity_id, "off")
+    hass.states.async_set("select.keep", "open")
+
+    hass.states.async_set("cover.excluded_test", "open")
+    hass.states.async_set("light.included_test", "on")
+
+    entity_filter = generate_filter(
+        ["select"],
+        ["switch.test", switch_config_entity.entity_id],
+        [],
+        [],
+        ["*.included_*"],
+        ["*.excluded_*"],
+    )
+    homekit = _mock_homekit(hass, entry, HOMEKIT_MODE_BRIDGE, entity_filter)
+
+    homekit.bridge = Mock()
+    homekit.bridge.accessories = {}
+
+    filtered_states = await homekit.async_configure_accessories()
+    assert (
+        hass.states.get(switch_config_entity.entity_id) in filtered_states
+    )  # explicitly included
+    assert (
+        hass.states.get(select_config_entity.entity_id) not in filtered_states
+    )  # not explicted included and its a hidden entity
     assert hass.states.get("cover.excluded_test") not in filtered_states
     assert hass.states.get("light.included_test") in filtered_states
     assert hass.states.get("select.keep") in filtered_states

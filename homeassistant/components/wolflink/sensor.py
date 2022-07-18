@@ -152,10 +152,11 @@ class WolfLinkState(WolfLinkSensor):
     def native_value(self):
         """Return the state converting with supported values."""
         state = super().native_value
-        resolved_state = [
-            item for item in self.wolf_object.items if item.value == int(state)
-        ]
-        if resolved_state:
-            resolved_name = resolved_state[0].name
-            return STATES.get(resolved_name, resolved_name)
+        if state is not None:
+            resolved_state = [
+                item for item in self.wolf_object.items if item.value == int(state)
+            ]
+            if resolved_state:
+                resolved_name = resolved_state[0].name
+                return STATES.get(resolved_name, resolved_name)
         return state

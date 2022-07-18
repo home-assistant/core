@@ -6,8 +6,9 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.mqtt import MqttServiceInfo, valid_subscribe_topic
+from homeassistant.components.mqtt import valid_subscribe_topic
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 
 from .const import CONF_DISCOVERY_PREFIX, DEFAULT_PREFIX, DOMAIN
 

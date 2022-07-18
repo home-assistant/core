@@ -3,8 +3,9 @@ from __future__ import annotations
 
 import datetime
 import logging
+from typing import Any
 
-from soco.exceptions import SoCoException, SoCoSlaveException, SoCoUPnPException
+from soco.exceptions import SoCoSlaveException, SoCoUPnPException
 
 from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -22,8 +23,7 @@ from .const import (
     SONOS_CREATE_ALARM,
     SONOS_CREATE_SWITCHES,
 )
-from .entity import SonosEntity
-from .exception import SpeakerUnavailable
+from .entity import SonosEntity, SonosPollingEntity
 from .helpers import soco_error
 from .speaker import SonosSpeaker
 
@@ -38,6 +38,8 @@ ATTR_VOLUME = "volume"
 ATTR_INCLUDE_LINKED_ZONES = "include_linked_zones"
 
 ATTR_CROSSFADE = "cross_fade"
+ATTR_LOUDNESS = "loudness"
+ATTR_MUSIC_PLAYBACK_FULL_VOLUME = "surround_mode"
 ATTR_NIGHT_SOUND = "night_mode"
 ATTR_SPEECH_ENHANCEMENT = "dialog_level"
 ATTR_STATUS_LIGHT = "status_light"
@@ -48,6 +50,8 @@ ATTR_TOUCH_CONTROLS = "buttons_enabled"
 ALL_FEATURES = (
     ATTR_TOUCH_CONTROLS,
     ATTR_CROSSFADE,
+    ATTR_LOUDNESS,
+    ATTR_MUSIC_PLAYBACK_FULL_VOLUME,
     ATTR_NIGHT_SOUND,
     ATTR_SPEECH_ENHANCEMENT,
     ATTR_SUB_ENABLED,
@@ -64,15 +68,19 @@ POLL_REQUIRED = (
 
 FRIENDLY_NAMES = {
     ATTR_CROSSFADE: "Crossfade",
-    ATTR_NIGHT_SOUND: "Night Sound",
-    ATTR_SPEECH_ENHANCEMENT: "Speech Enhancement",
+    ATTR_LOUDNESS: "Loudness",
+    ATTR_MUSIC_PLAYBACK_FULL_VOLUME: "Surround music full volume",
+    ATTR_NIGHT_SOUND: "Night sound",
+    ATTR_SPEECH_ENHANCEMENT: "Speech enhancement",
     ATTR_STATUS_LIGHT: "Status Light",
-    ATTR_SUB_ENABLED: "Subwoofer Enabled",
-    ATTR_SURROUND_ENABLED: "Surround Enabled",
-    ATTR_TOUCH_CONTROLS: "Touch Controls",
+    ATTR_SUB_ENABLED: "Subwoofer enabled",
+    ATTR_SURROUND_ENABLED: "Surround enabled",
+    ATTR_TOUCH_CONTROLS: "Touch controls",
 }
 
 FEATURE_ICONS = {
+    ATTR_LOUDNESS: "mdi:bullhorn-variant",
+    ATTR_MUSIC_PLAYBACK_FULL_VOLUME: "mdi:music-note-plus",
     ATTR_NIGHT_SOUND: "mdi:chat-sleep",
     ATTR_SPEECH_ENHANCEMENT: "mdi:ear-hearing",
     ATTR_CROSSFADE: "mdi:swap-horizontal",
@@ -143,19 +151,16 @@ async def async_setup_entry(
     )
 
 
-class SonosSwitchEntity(SonosEntity, SwitchEntity):
+class SonosSwitchEntity(SonosPollingEntity, SwitchEntity):
     """Representation of a Sonos feature switch."""
 
     def __init__(self, feature_type: str, speaker: SonosSpeaker) -> None:
         """Initialize the switch."""
         super().__init__(speaker)
         self.feature_type = feature_type
-        self.entity_id = ENTITY_ID_FORMAT.format(
-            f"sonos_{speaker.zone_name}_{FRIENDLY_NAMES[feature_type]}"
-        )
         self.needs_coordinator = feature_type in COORDINATOR_FEATURES
         self._attr_entity_category = EntityCategory.CONFIG
-        self._attr_name = f"{speaker.zone_name} {FRIENDLY_NAMES[feature_type]}"
+        self._attr_name = FRIENDLY_NAMES[feature_type]
         self._attr_unique_id = f"{speaker.soco.uid}-{feature_type}"
         self._attr_icon = FEATURE_ICONS.get(feature_type)
 
@@ -163,17 +168,14 @@ class SonosSwitchEntity(SonosEntity, SwitchEntity):
             self._attr_entity_registry_enabled_default = False
             self._attr_should_poll = True
 
-    async def _async_poll(self) -> None:
+    async def _async_fallback_poll(self) -> None:
         """Handle polling for subscription-based switches when subscription fails."""
         if not self.should_poll:
-            await self.hass.async_add_executor_job(self.update)
+            await self.hass.async_add_executor_job(self.poll_state)
 
-    @soco_error(raise_on_err=False)
-    def update(self) -> None:
-        """Fetch switch state if necessary."""
-        if not self.available:
-            raise SpeakerUnavailable
-
+    @soco_error()
+    def poll_state(self) -> None:
+        """Poll the current state of the switch."""
         state = getattr(self.soco, self.feature_type)
         setattr(self.speaker, self.feature_type, state)
 
@@ -238,13 +240,9 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
     @property
     def name(self) -> str:
         """Return the name of the sensor."""
-        return "{} {} Alarm {}".format(
-            self.speaker.zone_name,
-            self.alarm.recurrence.title(),
-            str(self.alarm.start_time)[0:5],
-        )
+        return f"{self.alarm.recurrence.capitalize()} alarm {str(self.alarm.start_time)[:5]}"
 
-    async def _async_poll(self) -> None:
+    async def _async_fallback_poll(self) -> None:
         """Call the central alarm polling method."""
         await self.hass.data[DATA_SONOS].alarms[self.household_id].async_poll()
 
@@ -267,7 +265,6 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
         if not self.async_check_if_available():
             return
 
-        _LOGGER.debug("Updating alarm: %s", self.entity_id)
         if self.speaker.soco.uid != self.alarm.zone.uid:
             self.speaker = self.hass.data[DATA_SONOS].discovered.get(
                 self.alarm.zone.uid
@@ -342,22 +339,19 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
             ATTR_INCLUDE_LINKED_ZONES: self.alarm.include_linked_zones,
         }
 
-    async def async_turn_on(self, **kwargs) -> None:
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn alarm switch on."""
-        await self.async_handle_switch_on_off(turn_on=True)
+        self._handle_switch_on_off(turn_on=True)
 
-    async def async_turn_off(self, **kwargs) -> None:
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn alarm switch off."""
-        await self.async_handle_switch_on_off(turn_on=False)
+        self._handle_switch_on_off(turn_on=False)
 
-    async def async_handle_switch_on_off(self, turn_on: bool) -> None:
+    @soco_error()
+    def _handle_switch_on_off(self, turn_on: bool) -> None:
         """Handle turn on/off of alarm switch."""
-        try:
-            _LOGGER.debug("Toggling the state of %s", self.entity_id)
-            self.alarm.enabled = turn_on
-            await self.hass.async_add_executor_job(self.alarm.save)
-        except (OSError, SoCoException, SoCoUPnPException) as exc:
-            _LOGGER.error("Could not update %s: %s", self.entity_id, exc)
+        self.alarm.enabled = turn_on
+        self.alarm.save()
 
 
 @callback

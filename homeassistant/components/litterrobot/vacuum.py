@@ -13,12 +13,8 @@ from homeassistant.components.vacuum import (
     STATE_DOCKED,
     STATE_ERROR,
     STATE_PAUSED,
-    SUPPORT_START,
-    SUPPORT_STATE,
-    SUPPORT_STATUS,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
     StateVacuumEntity,
+    VacuumEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF
@@ -32,14 +28,23 @@ from .hub import LitterRobotHub
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_LITTERROBOT = (
-    SUPPORT_START | SUPPORT_STATE | SUPPORT_STATUS | SUPPORT_TURN_OFF | SUPPORT_TURN_ON
-)
 TYPE_LITTER_BOX = "Litter Box"
 
 SERVICE_RESET_WASTE_DRAWER = "reset_waste_drawer"
 SERVICE_SET_SLEEP_MODE = "set_sleep_mode"
 SERVICE_SET_WAIT_TIME = "set_wait_time"
+
+LITTER_BOX_STATUS_STATE_MAP = {
+    LitterBoxStatus.CLEAN_CYCLE: STATE_CLEANING,
+    LitterBoxStatus.EMPTY_CYCLE: STATE_CLEANING,
+    LitterBoxStatus.CLEAN_CYCLE_COMPLETE: STATE_DOCKED,
+    LitterBoxStatus.CAT_SENSOR_TIMING: STATE_DOCKED,
+    LitterBoxStatus.DRAWER_FULL_1: STATE_DOCKED,
+    LitterBoxStatus.DRAWER_FULL_2: STATE_DOCKED,
+    LitterBoxStatus.READY: STATE_DOCKED,
+    LitterBoxStatus.CAT_SENSOR_INTERRUPTED: STATE_PAUSED,
+    LitterBoxStatus.OFF: STATE_OFF,
+}
 
 
 async def async_setup_entry(
@@ -81,27 +86,18 @@ async def async_setup_entry(
 class LitterRobotCleaner(LitterRobotControlEntity, StateVacuumEntity):
     """Litter-Robot "Vacuum" Cleaner."""
 
-    @property
-    def supported_features(self) -> int:
-        """Flag cleaner robot features that are supported."""
-        return SUPPORT_LITTERROBOT
+    _attr_supported_features = (
+        VacuumEntityFeature.START
+        | VacuumEntityFeature.STATE
+        | VacuumEntityFeature.STATUS
+        | VacuumEntityFeature.TURN_OFF
+        | VacuumEntityFeature.TURN_ON
+    )
 
     @property
     def state(self) -> str:
         """Return the state of the cleaner."""
-        switcher = {
-            LitterBoxStatus.CLEAN_CYCLE: STATE_CLEANING,
-            LitterBoxStatus.EMPTY_CYCLE: STATE_CLEANING,
-            LitterBoxStatus.CLEAN_CYCLE_COMPLETE: STATE_DOCKED,
-            LitterBoxStatus.CAT_SENSOR_TIMING: STATE_DOCKED,
-            LitterBoxStatus.DRAWER_FULL_1: STATE_DOCKED,
-            LitterBoxStatus.DRAWER_FULL_2: STATE_DOCKED,
-            LitterBoxStatus.READY: STATE_DOCKED,
-            LitterBoxStatus.CAT_SENSOR_INTERRUPTED: STATE_PAUSED,
-            LitterBoxStatus.OFF: STATE_OFF,
-        }
-
-        return switcher.get(self.robot.status, STATE_ERROR)
+        return LITTER_BOX_STATUS_STATE_MAP.get(self.robot.status, STATE_ERROR)
 
     @property
     def status(self) -> str:
@@ -159,11 +155,8 @@ class LitterRobotCleaner(LitterRobotControlEntity, StateVacuumEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return device specific state attributes."""
         return {
-            "clean_cycle_wait_time_minutes": self.robot.clean_cycle_wait_time_minutes,
             "is_sleeping": self.robot.is_sleeping,
             "sleep_mode_enabled": self.robot.sleep_mode_enabled,
             "power_status": self.robot.power_status,
-            "status_code": self.robot.status_code,
-            "last_seen": self.robot.last_seen,
             "status": self.status,
         }

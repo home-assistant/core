@@ -28,10 +28,22 @@ TYPE_BATT6 = "batt6"
 TYPE_BATT7 = "batt7"
 TYPE_BATT8 = "batt8"
 TYPE_BATT9 = "batt9"
-TYPE_BATT_CO2 = "batt_co2"
+TYPE_BATTIN = "battin"
 TYPE_BATTOUT = "battout"
-TYPE_PM25_BATT = "batt_25"
+TYPE_BATT_CO2 = "batt_co2"
+TYPE_BATT_LIGHTNING = "batt_lightning"
+TYPE_BATT_SM1 = "battsm1"
+TYPE_BATT_SM10 = "battsm10"
+TYPE_BATT_SM2 = "battsm2"
+TYPE_BATT_SM3 = "battsm3"
+TYPE_BATT_SM4 = "battsm4"
+TYPE_BATT_SM5 = "battsm5"
+TYPE_BATT_SM6 = "battsm6"
+TYPE_BATT_SM7 = "battsm7"
+TYPE_BATT_SM8 = "battsm8"
+TYPE_BATT_SM9 = "battsm9"
 TYPE_PM25IN_BATT = "batt_25in"
+TYPE_PM25_BATT = "batt_25"
 TYPE_RELAY1 = "relay1"
 TYPE_RELAY10 = "relay10"
 TYPE_RELAY2 = "relay2"
@@ -130,6 +142,13 @@ BINARY_SENSOR_DESCRIPTIONS = (
         on_state=0,
     ),
     AmbientBinarySensorDescription(
+        key=TYPE_BATTIN,
+        name="Interior battery",
+        device_class=BinarySensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        on_state=0,
+    ),
+    AmbientBinarySensorDescription(
         key=TYPE_BATT10,
         name="Battery 10",
         device_class=BinarySensorDeviceClass.BATTERY,
@@ -137,22 +156,99 @@ BINARY_SENSOR_DESCRIPTIONS = (
         on_state=0,
     ),
     AmbientBinarySensorDescription(
+        key=TYPE_BATT_SM1,
+        name="Soil monitor battery 1",
+        device_class=BinarySensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        on_state=0,
+    ),
+    AmbientBinarySensorDescription(
+        key=TYPE_BATT_SM2,
+        name="Soil monitor battery 2",
+        device_class=BinarySensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        on_state=0,
+    ),
+    AmbientBinarySensorDescription(
+        key=TYPE_BATT_SM3,
+        name="Soil monitor battery 3",
+        device_class=BinarySensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        on_state=0,
+    ),
+    AmbientBinarySensorDescription(
+        key=TYPE_BATT_SM4,
+        name="Soil monitor battery 4",
+        device_class=BinarySensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        on_state=0,
+    ),
+    AmbientBinarySensorDescription(
+        key=TYPE_BATT_SM5,
+        name="Soil monitor battery 5",
+        device_class=BinarySensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        on_state=0,
+    ),
+    AmbientBinarySensorDescription(
+        key=TYPE_BATT_SM6,
+        name="Soil monitor battery 6",
+        device_class=BinarySensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        on_state=0,
+    ),
+    AmbientBinarySensorDescription(
+        key=TYPE_BATT_SM7,
+        name="Soil monitor battery 7",
+        device_class=BinarySensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        on_state=0,
+    ),
+    AmbientBinarySensorDescription(
+        key=TYPE_BATT_SM8,
+        name="Soil monitor battery 8",
+        device_class=BinarySensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        on_state=0,
+    ),
+    AmbientBinarySensorDescription(
+        key=TYPE_BATT_SM9,
+        name="Soil monitor battery 9",
+        device_class=BinarySensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        on_state=0,
+    ),
+    AmbientBinarySensorDescription(
+        key=TYPE_BATT_SM10,
+        name="Soil monitor battery 10",
+        device_class=BinarySensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        on_state=0,
+    ),
+    AmbientBinarySensorDescription(
         key=TYPE_BATT_CO2,
-        name="CO2 Battery",
+        name="CO2 battery",
+        device_class=BinarySensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        on_state=0,
+    ),
+    AmbientBinarySensorDescription(
+        key=TYPE_BATT_LIGHTNING,
+        name="Lightning detector battery",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         on_state=0,
     ),
     AmbientBinarySensorDescription(
         key=TYPE_PM25IN_BATT,
-        name="PM25 Indoor Battery",
+        name="PM25 indoor battery",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         on_state=0,
     ),
     AmbientBinarySensorDescription(
         key=TYPE_PM25_BATT,
-        name="PM25 Battery",
+        name="PM25 battery",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         on_state=0,

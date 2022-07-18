@@ -1,32 +1,4 @@
 # Describes the format for available RainMachine services
-disable_program:
-  name: Disable Program
-  description: Disable a program
-  target:
-    entity:
-      integration: rainmachine
-      domain: switch
-disable_zone:
-  name: Disable Zone
-  description: Disable a zone
-  target:
-    entity:
-      integration: rainmachine
-      domain: switch
-enable_program:
-  name: Enable Program
-  description: Enable a program
-  target:
-    entity:
-      integration: rainmachine
-      domain: switch
-enable_zone:
-  name: Enable Zone
-  description: Enable a zone
-  target:
-    entity:
-      integration: rainmachine
-      domain: switch
 pause_watering:
   name: Pause All Watering
   description: Pause all watering activities for a number of seconds
@@ -155,7 +127,7 @@ push_weather_data:
           min: -40
           max: 40
           step: 0.1
-          unit_of_measurement: '°C'
+          unit_of_measurement: "°C"
     maxtemp:
       name: Max Temp
       description: Maximum Temperature (°C).
@@ -164,7 +136,7 @@ push_weather_data:
           min: -40
           max: 40
           step: 0.1
-          unit_of_measurement: '°C'
+          unit_of_measurement: "°C"
     temperature:
       name: Temperature
       description: Current Temperature (°C).
@@ -173,7 +145,7 @@ push_weather_data:
           min: -40
           max: 40
           step: 0.1
-          unit_of_measurement: '°C'
+          unit_of_measurement: "°C"
     wind:
       name: Wind Speed
       description: Wind Speed (m/s)
@@ -181,7 +153,7 @@ push_weather_data:
         number:
           min: 0
           max: 65
-          unit_of_measurement: 'm/s'
+          unit_of_measurement: "m/s"
     solarrad:
       name: Solar Radiation
       description: Solar Radiation (MJ/m²/h)
@@ -190,7 +162,7 @@ push_weather_data:
           min: 0
           max: 5
           step: 0.1
-          unit_of_measurement: 'MJ/m²/h'
+          unit_of_measurement: "MJ/m²/h"
     et:
       name: Evapotranspiration
       description: Evapotranspiration (mm)
@@ -198,7 +170,7 @@ push_weather_data:
         number:
           min: 0
           max: 1000
-          unit_of_measurement: 'mm'
+          unit_of_measurement: "mm"
     qpf:
       name: Quantitative Precipitation Forecast
       description: >-
@@ -209,7 +181,7 @@ push_weather_data:
         number:
           min: 0
           max: 1000
-          unit_of_measurement: 'mm'
+          unit_of_measurement: "mm"
     rain:
       name: Measured Rainfall
       description: >-
@@ -220,7 +192,7 @@ push_weather_data:
         number:
           min: 0
           max: 1000
-          unit_of_measurement: 'mm'
+          unit_of_measurement: "mm"
     minrh:
       name: Min Relative Humidity
       description: Min Relative Humidity (%RH)
@@ -228,7 +200,7 @@ push_weather_data:
         number:
           min: 0
           max: 100
-          unit_of_measurement: '%'
+          unit_of_measurement: "%"
     maxrh:
       name: Max Relative Humidity
       description: Max Relative Humidity (%RH)
@@ -236,7 +208,7 @@ push_weather_data:
         number:
           min: 0
           max: 100
-          unit_of_measurement: '%'
+          unit_of_measurement: "%"
     condition:
       name: Weather Condition Code
       description: Current weather condition code (WNUM).
@@ -258,7 +230,7 @@ push_weather_data:
           min: -40
           max: 40
           step: 0.1
-          unit_of_measurement: '°C'
+          unit_of_measurement: "°C"
 unrestrict_watering:
   name: Unrestrict All Watering
   description: Unrestrict all watering activities

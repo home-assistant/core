@@ -7,12 +7,18 @@ import pytest
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_EFFECT,
     ATTR_RGBW_COLOR,
     ATTR_SUPPORTED_COLOR_MODES,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_RGBW,
+    ColorMode,
 )
-from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNKNOWN,
+)
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import async_setup_entity, mock_feature
@@ -34,6 +40,8 @@ def dimmer_fixture():
         is_on=True,
         supports_color=False,
         supports_white=False,
+        color_mode=blebox_uniapi.light.BleboxColorMode.MONO,
+        effect_list=None,
     )
     product = feature.product
     type(product).name = PropertyMock(return_value="My dimmer")
@@ -52,7 +60,7 @@ async def test_dimmer_init(dimmer, hass, config):
     assert state.name == "dimmerBox-brightness"
 
     color_modes = state.attributes[ATTR_SUPPORTED_COLOR_MODES]
-    assert color_modes == [COLOR_MODE_BRIGHTNESS]
+    assert color_modes == [ColorMode.BRIGHTNESS]
 
     assert state.attributes[ATTR_BRIGHTNESS] == 65
     assert state.state == STATE_ON
@@ -205,6 +213,8 @@ def wlightboxs_fixture():
         is_on=None,
         supports_color=False,
         supports_white=False,
+        color_mode=blebox_uniapi.light.BleboxColorMode.MONO,
+        effect_list=["NONE", "PL", "RELAX"],
     )
     product = feature.product
     type(product).name = PropertyMock(return_value="My wLightBoxS")
@@ -223,10 +233,10 @@ async def test_wlightbox_s_init(wlightbox_s, hass, config):
     assert state.name == "wLightBoxS-color"
 
     color_modes = state.attributes[ATTR_SUPPORTED_COLOR_MODES]
-    assert color_modes == [COLOR_MODE_BRIGHTNESS]
+    assert color_modes == [ColorMode.BRIGHTNESS]
 
     assert ATTR_BRIGHTNESS not in state.attributes
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
 
     device_registry = dr.async_get(hass)
     device = device_registry.async_get(entry.device_id)
@@ -305,6 +315,9 @@ def wlightbox_fixture():
         supports_white=True,
         white_value=None,
         rgbw_hex=None,
+        color_mode=blebox_uniapi.light.BleboxColorMode.RGBW,
+        effect="NONE",
+        effect_list=["NONE", "PL", "POLICE"],
     )
     product = feature.product
     type(product).name = PropertyMock(return_value="My wLightBox")
@@ -323,11 +336,11 @@ async def test_wlightbox_init(wlightbox, hass, config):
     assert state.name == "wLightBox-color"
 
     color_modes = state.attributes[ATTR_SUPPORTED_COLOR_MODES]
-    assert color_modes == [COLOR_MODE_RGBW]
+    assert color_modes == [ColorMode.RGBW]
 
     assert ATTR_BRIGHTNESS not in state.attributes
     assert ATTR_RGBW_COLOR not in state.attributes
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
 
     device_registry = dr.async_get(hass)
     device = device_registry.async_get(entry.device_id)
@@ -374,7 +387,7 @@ async def test_wlightbox_on_rgbw(wlightbox, hass, config):
 
     def turn_on(value):
         feature_mock.is_on = True
-        assert value == "c1d2f3c7"
+        assert value == [193, 210, 243, 199]
         feature_mock.white_value = 0xC7  # on
         feature_mock.rgbw_hex = "c1d2f3c7"
 
@@ -497,17 +510,63 @@ async def test_turn_on_failure(feature, hass, config, caplog):
     caplog.set_level(logging.ERROR)
 
     feature_mock, entity_id = feature
-    feature_mock.async_on = AsyncMock(side_effect=blebox_uniapi.error.BadOnValueError)
+    feature_mock.async_on = AsyncMock(side_effect=ValueError)
     await async_setup_entity(hass, config, entity_id)
 
     feature_mock.sensible_on_value = 123
+    with pytest.raises(ValueError) as info:
+        await hass.services.async_call(
+            "light",
+            SERVICE_TURN_ON,
+            {"entity_id": entity_id},
+            blocking=True,
+        )
+
+    assert f"Turning on '{feature_mock.full_name}' failed: Bad value 123" in str(
+        info.value
+    )
+
+
+async def test_wlightbox_on_effect(wlightbox, hass, config):
+    """Test light on."""
+
+    feature_mock, entity_id = wlightbox
+
+    def initial_update():
+        feature_mock.is_on = False
+
+    feature_mock.async_update = AsyncMock(side_effect=initial_update)
+    await async_setup_entity(hass, config, entity_id)
+    feature_mock.async_update = AsyncMock()
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_OFF
+
+    def turn_on(value):
+        feature_mock.is_on = True
+        feature_mock.effect = "POLICE"
+
+    feature_mock.async_on = AsyncMock(side_effect=turn_on)
+
+    with pytest.raises(ValueError) as info:
+        await hass.services.async_call(
+            "light",
+            SERVICE_TURN_ON,
+            {"entity_id": entity_id, ATTR_EFFECT: "NOT IN LIST"},
+            blocking=True,
+        )
+
+    assert (
+        f"Turning on with effect '{feature_mock.full_name}' failed: NOT IN LIST not in effect list."
+        in str(info.value)
+    )
+
     await hass.services.async_call(
         "light",
         SERVICE_TURN_ON,
-        {"entity_id": entity_id},
+        {"entity_id": entity_id, ATTR_EFFECT: "POLICE"},
         blocking=True,
     )
 
-    assert (
-        f"Turning on '{feature_mock.full_name}' failed: Bad value 123 ()" in caplog.text
-    )
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_EFFECT] == "POLICE"

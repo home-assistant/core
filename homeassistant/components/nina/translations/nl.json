@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Al geconfigureerd. Slechts een enkele configuratie mogelijk."
+            "single_instance_allowed": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk."
         },
         "error": {
             "cannot_connect": "Kan geen verbinding maken",
@@ -21,6 +21,23 @@
                     "slots": "Maximale waarschuwingen per stad/provincie"
                 },
                 "title": "Selecteer stad/provincie"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "_i_to_l": "Stad/provincie (I-L)",
+                    "_m_to_q": "Stad/provincie (M-Q)",
+                    "_r_to_u": "Stad/provincie (R-U)",
+                    "_v_to_z": "Stad/provincie (V-Z)"
+                },
+                "title": "Opties"
             }
         }
     }

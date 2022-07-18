@@ -1,13 +1,13 @@
 """Make sure that Vocolinc Flowerbud is enumerated properly."""
 
 from homeassistant.components.humidifier.const import SUPPORT_MODES
-from homeassistant.components.light import SUPPORT_BRIGHTNESS, SUPPORT_COLOR
 from homeassistant.components.number import NumberMode
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import PERCENTAGE
 from homeassistant.helpers.entity import EntityCategory
 
 from tests.components.homekit_controller.common import (
+    HUB_TEST_ACCESSORY_ID,
     DeviceTestInfo,
     EntityTestInfo,
     assert_devices_and_entities_created,
@@ -24,7 +24,7 @@ async def test_vocolinc_flowerbud_setup(hass):
     await assert_devices_and_entities_created(
         hass,
         DeviceTestInfo(
-            unique_id="00:00:00:00:00:00",
+            unique_id=HUB_TEST_ACCESSORY_ID,
             name="VOCOlinc-Flowerbud-0d324b",
             model="Flowerbud",
             manufacturer="VOCOlinc",
@@ -46,10 +46,10 @@ async def test_vocolinc_flowerbud_setup(hass):
                     state="off",
                 ),
                 EntityTestInfo(
-                    entity_id="light.vocolinc_flowerbud_0d324b",
-                    friendly_name="VOCOlinc-Flowerbud-0d324b",
+                    entity_id="light.vocolinc_flowerbud_0d324b_mood_light",
+                    friendly_name="VOCOlinc-Flowerbud-0d324b Mood Light",
                     unique_id="homekit-AM01121849000327-9",
-                    supported_features=SUPPORT_BRIGHTNESS | SUPPORT_COLOR,
+                    supported_features=0,
                     capabilities={"supported_color_modes": ["hs"]},
                     state="on",
                 ),
@@ -68,7 +68,7 @@ async def test_vocolinc_flowerbud_setup(hass):
                 ),
                 EntityTestInfo(
                     entity_id="sensor.vocolinc_flowerbud_0d324b_current_humidity",
-                    friendly_name="VOCOlinc-Flowerbud-0d324b - Current Humidity",
+                    friendly_name="VOCOlinc-Flowerbud-0d324b Current Humidity",
                     unique_id="homekit-AM01121849000327-aid:1-sid:30-cid:33",
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
                     unit_of_measurement=PERCENTAGE,

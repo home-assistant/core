@@ -9,6 +9,7 @@ import io
 import logging
 import mimetypes
 import os
+from pathlib import Path
 import re
 from typing import TYPE_CHECKING, Optional, cast
 
@@ -16,15 +17,18 @@ from aiohttp import web
 import mutagen
 from mutagen.id3 import ID3, TextFrame as ID3Text
 import voluptuous as vol
+import yarl
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.media_player.const import (
+    ATTR_MEDIA_ANNOUNCE,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     DOMAIN as DOMAIN_MP,
     MEDIA_TYPE_MUSIC,
     SERVICE_PLAY_MEDIA,
 )
+from homeassistant.components.media_source import generate_media_source_id
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DESCRIPTION,
@@ -39,9 +43,11 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_prepare_setup_platform
+from homeassistant.util.network import normalize_url
 from homeassistant.util.yaml import load_yaml
+
+from .const import DOMAIN
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -69,7 +75,6 @@ CONF_FIELDS = "fields"
 DEFAULT_CACHE = True
 DEFAULT_CACHE_DIR = "tts"
 DEFAULT_TIME_MEMORY = 300
-DOMAIN = "tts"
 
 MEM_CACHE_FILENAME = "filename"
 MEM_CACHE_VOICE = "voice"
@@ -91,6 +96,16 @@ def _deprecated_platform(value):
     return value
 
 
+def valid_base_url(value: str) -> str:
+    """Validate base url, return value."""
+    url = yarl.URL(cv.url(value))
+
+    if url.path != "/":
+        raise vol.Invalid("Path should be empty")
+
+    return normalize_url(value)
+
+
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_PLATFORM): vol.All(cv.string, _deprecated_platform),
@@ -99,7 +114,7 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_TIME_MEMORY, default=DEFAULT_TIME_MEMORY): vol.All(
             vol.Coerce(int), vol.Range(min=60, max=57600)
         ),
-        vol.Optional(CONF_BASE_URL): cv.string,
+        vol.Optional(CONF_BASE_URL): valid_base_url,
         vol.Optional(CONF_SERVICE_NAME): cv.string,
     }
 )
@@ -128,6 +143,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         cache_dir = conf.get(CONF_CACHE_DIR, DEFAULT_CACHE_DIR)
         time_memory = conf.get(CONF_TIME_MEMORY, DEFAULT_TIME_MEMORY)
         base_url = conf.get(CONF_BASE_URL)
+        if base_url is not None:
+            _LOGGER.warning(
+                "TTS base_url option is deprecated. Configure internal/external URL instead"
+            )
         hass.data[BASE_URL_KEY] = base_url
 
         await tts.async_init_cache(use_cache, cache_dir, time_memory, base_url)
@@ -135,12 +154,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _LOGGER.exception("Error on cache init")
         return False
 
+    hass.data[DOMAIN] = tts
     hass.http.register_view(TextToSpeechView(tts))
     hass.http.register_view(TextToSpeechUrlView(tts))
 
     # Load service descriptions from tts/services.yaml
-    integration = await async_get_integration(hass, DOMAIN)
-    services_yaml = integration.file_path / "services.yaml"
+    services_yaml = Path(__file__).parent / "services.yaml"
     services_dict = cast(
         dict, await hass.async_add_executor_job(load_yaml, str(services_yaml))
     )
@@ -185,27 +204,29 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             language = service.data.get(ATTR_LANGUAGE)
             options = service.data.get(ATTR_OPTIONS)
 
-            try:
-                url = await tts.async_get_url_path(
-                    p_type, message, cache=cache, language=language, options=options
-                )
-            except HomeAssistantError as err:
-                _LOGGER.error("Error on init TTS: %s", err)
-                return
-
-            base = tts.base_url or get_url(hass)
-            url = base + url
-
-            data = {
-                ATTR_MEDIA_CONTENT_ID: url,
-                ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
-                ATTR_ENTITY_ID: entity_ids,
+            tts.process_options(p_type, language, options)
+            params = {
+                "message": message,
             }
+            if cache is not None:
+                params["cache"] = "true" if cache else "false"
+            if language is not None:
+                params["language"] = language
+            if options is not None:
+                params.update(options)
 
             await hass.services.async_call(
                 DOMAIN_MP,
                 SERVICE_PLAY_MEDIA,
-                data,
+                {
+                    ATTR_ENTITY_ID: entity_ids,
+                    ATTR_MEDIA_CONTENT_ID: generate_media_source_id(
+                        DOMAIN,
+                        str(yarl.URL.build(path=p_type, query=params)),
+                    ),
+                    ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
+                    ATTR_MEDIA_ANNOUNCE: True,
+                },
                 blocking=True,
                 context=service.context,
             )
@@ -331,21 +352,16 @@ class SpeechManager:
             PLATFORM_FORMAT.format(domain=engine, platform=DOMAIN)
         )
 
-    async def async_get_url_path(
+    @callback
+    def process_options(
         self,
         engine: str,
-        message: str,
-        cache: bool | None = None,
         language: str | None = None,
         options: dict | None = None,
-    ) -> str:
-        """Get URL for play message.
-
-        This method is a coroutine.
-        """
-        provider = self.providers[engine]
-        msg_hash = hashlib.sha1(bytes(message, "utf-8")).hexdigest()
-        use_cache = cache if cache is not None else self.use_cache
+    ) -> tuple[str, dict | None]:
+        """Validate and process options."""
+        if (provider := self.providers.get(engine)) is None:
+            raise HomeAssistantError(f"Provider {engine} not found")
 
         # Languages
         language = language or provider.default_language
@@ -367,9 +383,25 @@ class SpeechManager:
             ]
             if invalid_opts:
                 raise HomeAssistantError(f"Invalid options found: {invalid_opts}")
-            options_key = _hash_options(options)
-        else:
-            options_key = "-"
+
+        return language, options
+
+    async def async_get_url_path(
+        self,
+        engine: str,
+        message: str,
+        cache: bool | None = None,
+        language: str | None = None,
+        options: dict | None = None,
+    ) -> str:
+        """Get URL for play message.
+
+        This method is a coroutine.
+        """
+        language, options = self.process_options(engine, language, options)
+        options_key = _hash_options(options) if options else "-"
+        msg_hash = hashlib.sha1(bytes(message, "utf-8")).hexdigest()
+        use_cache = cache if cache is not None else self.use_cache
 
         key = KEY_PATTERN.format(
             msg_hash, language.replace("_", "-"), options_key, engine

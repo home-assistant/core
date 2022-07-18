@@ -6,14 +6,9 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
-    FORMAT_NUMBER,
     AlarmControlPanelEntity,
-)
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_ARM_NIGHT,
-    SUPPORT_ALARM_TRIGGER,
+    AlarmControlPanelEntityFeature,
+    CodeFormat,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -68,45 +63,52 @@ async def async_setup_platform(
     code = discovery_info[CONF_CODE]
     panic_type = discovery_info[CONF_PANIC]
 
-    devices = []
+    entities = []
     for part_num in configured_partitions:
-        device_config_data = PARTITION_SCHEMA(configured_partitions[part_num])
-        device = EnvisalinkAlarm(
+        entity_config_data = PARTITION_SCHEMA(configured_partitions[part_num])
+        entity = EnvisalinkAlarm(
             hass,
             part_num,
-            device_config_data[CONF_PARTITIONNAME],
+            entity_config_data[CONF_PARTITIONNAME],
             code,
             panic_type,
             hass.data[DATA_EVL].alarm_state["partition"][part_num],
             hass.data[DATA_EVL],
         )
-        devices.append(device)
+        entities.append(entity)
 
-    async_add_entities(devices)
+    async_add_entities(entities)
 
     @callback
-    def alarm_keypress_handler(service: ServiceCall) -> None:
+    def async_alarm_keypress_handler(service: ServiceCall) -> None:
         """Map services to methods on Alarm."""
         entity_ids = service.data[ATTR_ENTITY_ID]
         keypress = service.data[ATTR_KEYPRESS]
 
-        target_devices = [
-            device for device in devices if device.entity_id in entity_ids
+        target_entities = [
+            entity for entity in entities if entity.entity_id in entity_ids
         ]
 
-        for device in target_devices:
-            device.async_alarm_keypress(keypress)
+        for entity in target_entities:
+            entity.async_alarm_keypress(keypress)
 
     hass.services.async_register(
         DOMAIN,
         SERVICE_ALARM_KEYPRESS,
-        alarm_keypress_handler,
+        async_alarm_keypress_handler,
         schema=ALARM_KEYPRESS_SCHEMA,
     )
 
 
 class EnvisalinkAlarm(EnvisalinkDevice, AlarmControlPanelEntity):
     """Representation of an Envisalink-based alarm panel."""
+
+    _attr_supported_features = (
+        AlarmControlPanelEntityFeature.ARM_HOME
+        | AlarmControlPanelEntityFeature.ARM_AWAY
+        | AlarmControlPanelEntityFeature.ARM_NIGHT
+        | AlarmControlPanelEntityFeature.TRIGGER
+    )
 
     def __init__(
         self, hass, partition_number, alarm_name, code, panic_type, info, controller
@@ -119,34 +121,34 @@ class EnvisalinkAlarm(EnvisalinkDevice, AlarmControlPanelEntity):
         _LOGGER.debug("Setting up alarm: %s", alarm_name)
         super().__init__(alarm_name, info, controller)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, SIGNAL_KEYPAD_UPDATE, self._update_callback
+                self.hass, SIGNAL_KEYPAD_UPDATE, self.async_update_callback
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, SIGNAL_PARTITION_UPDATE, self._update_callback
+                self.hass, SIGNAL_PARTITION_UPDATE, self.async_update_callback
             )
         )
 
     @callback
-    def _update_callback(self, partition):
+    def async_update_callback(self, partition):
         """Update Home Assistant state, if needed."""
         if partition is None or int(partition) == self._partition_number:
             self.async_write_ha_state()
 
     @property
-    def code_format(self):
+    def code_format(self) -> CodeFormat | None:
         """Regex for code format or None if no code is required."""
         if self._code:
             return None
-        return FORMAT_NUMBER
+        return CodeFormat.NUMBER
 
     @property
-    def state(self):
+    def state(self) -> str:
         """Return the state of the device."""
         state = STATE_UNKNOWN
 
@@ -166,17 +168,7 @@ class EnvisalinkAlarm(EnvisalinkDevice, AlarmControlPanelEntity):
             state = STATE_ALARM_DISARMED
         return state
 
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return (
-            SUPPORT_ALARM_ARM_HOME
-            | SUPPORT_ALARM_ARM_AWAY
-            | SUPPORT_ALARM_ARM_NIGHT
-            | SUPPORT_ALARM_TRIGGER
-        )
-
-    async def async_alarm_disarm(self, code=None):
+    async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         if code:
             self.hass.data[DATA_EVL].disarm_partition(str(code), self._partition_number)
@@ -185,7 +177,7 @@ class EnvisalinkAlarm(EnvisalinkDevice, AlarmControlPanelEntity):
                 str(self._code), self._partition_number
             )
 
-    async def async_alarm_arm_home(self, code=None):
+    async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         if code:
             self.hass.data[DATA_EVL].arm_stay_partition(
@@ -196,7 +188,7 @@ class EnvisalinkAlarm(EnvisalinkDevice, AlarmControlPanelEntity):
                 str(self._code), self._partition_number
             )
 
-    async def async_alarm_arm_away(self, code=None):
+    async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         if code:
             self.hass.data[DATA_EVL].arm_away_partition(
@@ -207,11 +199,11 @@ class EnvisalinkAlarm(EnvisalinkDevice, AlarmControlPanelEntity):
                 str(self._code), self._partition_number
             )
 
-    async def async_alarm_trigger(self, code=None):
+    async def async_alarm_trigger(self, code: str | None = None) -> None:
         """Alarm trigger command. Will be used to trigger a panic alarm."""
         self.hass.data[DATA_EVL].panic_alarm(self._panic_type)
 
-    async def async_alarm_arm_night(self, code=None):
+    async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
         self.hass.data[DATA_EVL].arm_night_partition(
             str(code) if code else str(self._code), self._partition_number

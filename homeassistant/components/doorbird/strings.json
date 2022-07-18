@@ -5,14 +5,15 @@
         "data": {
           "events": "Comma separated list of events."
         },
-        "description": "Add an comma separated event name for each event you wish to track. After entering them here, use the DoorBird app to assign them to a specific event. See the documentation at https://www.home-assistant.io/integrations/doorbird/#events. Example: somebody_pressed_the_button, motion"
+        "data_description": {
+          "events": "Add an comma separated event name for each event you wish to track. After entering them here, use the DoorBird app to assign them to a specific event.\n\nExample: somebody_pressed_the_button, motion"
+        }
       }
     }
   },
   "config": {
     "step": {
       "user": {
-        "title": "Connect to the DoorBird",
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
           "host": "[%key:common::config_flow::data::host%]",

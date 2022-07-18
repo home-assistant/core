@@ -18,7 +18,7 @@ from homeassistant.const import (
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
-from tests.components.mazda import init_integration
+from . import init_integration
 
 
 async def test_sensors(hass):
@@ -32,7 +32,7 @@ async def test_sensors(hass):
     assert state
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
-        == "My Mazda3 Fuel Remaining Percentage"
+        == "My Mazda3 Fuel remaining percentage"
     )
     assert state.attributes.get(ATTR_ICON) == "mdi:gas-station"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
@@ -46,7 +46,7 @@ async def test_sensors(hass):
     state = hass.states.get("sensor.my_mazda3_fuel_distance_remaining")
     assert state
     assert (
-        state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Fuel Distance Remaining"
+        state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Fuel distance remaining"
     )
     assert state.attributes.get(ATTR_ICON) == "mdi:gas-station"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == LENGTH_KILOMETERS
@@ -72,9 +72,10 @@ async def test_sensors(hass):
     state = hass.states.get("sensor.my_mazda3_front_left_tire_pressure")
     assert state
     assert (
-        state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Front Left Tire Pressure"
+        state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Front left tire pressure"
     )
     assert state.attributes.get(ATTR_ICON) == "mdi:car-tire-alert"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PRESSURE
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PRESSURE_PSI
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert state.state == "35"
@@ -87,9 +88,10 @@ async def test_sensors(hass):
     assert state
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
-        == "My Mazda3 Front Right Tire Pressure"
+        == "My Mazda3 Front right tire pressure"
     )
     assert state.attributes.get(ATTR_ICON) == "mdi:car-tire-alert"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PRESSURE
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PRESSURE_PSI
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert state.state == "35"
@@ -101,9 +103,10 @@ async def test_sensors(hass):
     state = hass.states.get("sensor.my_mazda3_rear_left_tire_pressure")
     assert state
     assert (
-        state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Rear Left Tire Pressure"
+        state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Rear left tire pressure"
     )
     assert state.attributes.get(ATTR_ICON) == "mdi:car-tire-alert"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PRESSURE
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PRESSURE_PSI
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert state.state == "33"
@@ -115,9 +118,10 @@ async def test_sensors(hass):
     state = hass.states.get("sensor.my_mazda3_rear_right_tire_pressure")
     assert state
     assert (
-        state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Rear Right Tire Pressure"
+        state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Rear right tire pressure"
     )
     assert state.attributes.get(ATTR_ICON) == "mdi:car-tire-alert"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PRESSURE
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PRESSURE_PSI
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert state.state == "33"
@@ -163,7 +167,7 @@ async def test_electric_vehicle_sensors(hass):
     # Charge Level
     state = hass.states.get("sensor.my_mazda3_charge_level")
     assert state
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Charge Level"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Charge level"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.BATTERY
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
@@ -175,7 +179,7 @@ async def test_electric_vehicle_sensors(hass):
     # Remaining Range
     state = hass.states.get("sensor.my_mazda3_remaining_range")
     assert state
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Remaining Range"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Remaining range"
     assert state.attributes.get(ATTR_ICON) == "mdi:ev-station"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == LENGTH_KILOMETERS
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT

@@ -2,6 +2,6 @@
   "domain": "fan",
   "name": "Fan",
   "documentation": "https://www.home-assistant.io/integrations/fan",
-  "codeowners": [],
+  "codeowners": ["@home-assistant/core"],
   "quality_scale": "internal"
 }

@@ -281,7 +281,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def async_entry_updated(hass: HomeAssistant, entry: ConfigEntry):
+async def async_entry_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Reload the config entry when options change."""
     await hass.config_entries.async_reload(entry.entry_id)
 
@@ -419,7 +419,7 @@ class KonnectedView(HomeAssistantView):
         resp = {}
         if request.query.get(CONF_ZONE):
             resp[CONF_ZONE] = zone_num
-        else:
+        elif zone_num:
             resp[CONF_PIN] = ZONE_TO_PIN[zone_num]
 
         # Make sure entity is setup

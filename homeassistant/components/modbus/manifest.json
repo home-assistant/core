@@ -5,5 +5,6 @@
   "requirements": ["pymodbus==2.5.3"],
   "codeowners": ["@adamchengtkc", "@janiversen", "@vzahradnik"],
   "quality_scale": "gold",
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["pymodbus"]
 }

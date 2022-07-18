@@ -20,6 +20,7 @@ from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers import entity_registry as er
 
 from tests.components.homekit_controller.common import (
+    HUB_TEST_ACCESSORY_ID,
     DeviceTestInfo,
     EntityTestInfo,
     assert_devices_and_entities_created,
@@ -38,7 +39,7 @@ async def test_ecobee3_setup(hass):
     await assert_devices_and_entities_created(
         hass,
         DeviceTestInfo(
-            unique_id="00:00:00:00:00:00",
+            unique_id=HUB_TEST_ACCESSORY_ID,
             name="HomeW",
             model="ecobee3",
             manufacturer="ecobee Inc.",
@@ -53,6 +54,7 @@ async def test_ecobee3_setup(hass):
                     sw_version="1.0.0",
                     hw_version="",
                     serial_number="AB1C",
+                    unique_id="00:00:00:00:00:00:aid:2",
                     devices=[],
                     entities=[
                         EntityTestInfo(
@@ -70,6 +72,7 @@ async def test_ecobee3_setup(hass):
                     sw_version="1.0.0",
                     hw_version="",
                     serial_number="AB2C",
+                    unique_id="00:00:00:00:00:00:aid:3",
                     devices=[],
                     entities=[
                         EntityTestInfo(
@@ -87,6 +90,7 @@ async def test_ecobee3_setup(hass):
                     sw_version="1.0.0",
                     hw_version="",
                     serial_number="AB3C",
+                    unique_id="00:00:00:00:00:00:aid:4",
                     devices=[],
                     entities=[
                         EntityTestInfo(
@@ -119,11 +123,18 @@ async def test_ecobee3_setup(hass):
                 ),
                 EntityTestInfo(
                     entity_id="sensor.homew_current_temperature",
-                    friendly_name="HomeW - Current Temperature",
+                    friendly_name="HomeW Current Temperature",
                     unique_id="homekit-123456789012-aid:1-sid:16-cid:19",
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
                     unit_of_measurement=TEMP_CELSIUS,
                     state="21.8",
+                ),
+                EntityTestInfo(
+                    entity_id="select.homew_current_mode",
+                    friendly_name="HomeW Current Mode",
+                    unique_id="homekit-123456789012-aid:1-sid:16-cid:33",
+                    capabilities={"options": ["home", "sleep", "away"]},
+                    state="home",
                 ),
             ],
         ),
@@ -138,7 +149,7 @@ async def test_ecobee3_setup_from_cache(hass, hass_storage):
         "version": 1,
         "data": {
             "pairings": {
-                "00:00:00:00:00:00": {
+                HUB_TEST_ACCESSORY_ID: {
                     "config_num": 1,
                     "accessories": [
                         a.to_accessory_and_service_list() for a in accessories

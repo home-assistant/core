@@ -1,6 +1,7 @@
 """Config flow to configure the Synology DSM integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from ipaddress import ip_address
 import logging
 from typing import Any
@@ -39,10 +40,12 @@ from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import (
     CONF_DEVICE_TOKEN,
+    CONF_SNAPSHOT_QUALITY,
     CONF_VOLUMES,
     DEFAULT_PORT,
     DEFAULT_PORT_SSL,
     DEFAULT_SCAN_INTERVAL,
+    DEFAULT_SNAPSHOT_QUALITY,
     DEFAULT_TIMEOUT,
     DEFAULT_USE_SSL,
     DEFAULT_VERIFY_SSL,
@@ -118,7 +121,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize the synology_dsm config flow."""
         self.saved_user_input: dict[str, Any] = {}
         self.discovered_conf: dict[str, Any] = {}
-        self.reauth_conf: dict[str, Any] = {}
+        self.reauth_conf: Mapping[str, Any] = {}
         self.reauth_reason: str | None = None
 
     def _show_form(
@@ -265,7 +268,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
             and existing_entry.data[CONF_HOST] != parsed_url.hostname
             and not fqdn_with_ssl_verification
         ):
-            _LOGGER.debug(
+            _LOGGER.info(
                 "Update host from '%s' to '%s' for NAS '%s' via SSDP discovery",
                 existing_entry.data[CONF_HOST],
                 parsed_url.hostname,
@@ -297,9 +300,9 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         user_input = {**self.discovered_conf, **user_input}
         return await self.async_validate_input_create_entry(user_input, step_id=step)
 
-    async def async_step_reauth(self, data: dict[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""
-        self.reauth_conf = data.copy()
+        self.reauth_conf = entry_data
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -357,18 +360,24 @@ class SynologyDSMOptionsFlowHandler(OptionsFlow):
 
         data_schema = vol.Schema(
             {
-                vol.Optional(
+                vol.Required(
                     CONF_SCAN_INTERVAL,
                     default=self.config_entry.options.get(
                         CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
                     ),
                 ): cv.positive_int,
-                vol.Optional(
+                vol.Required(
                     CONF_TIMEOUT,
                     default=self.config_entry.options.get(
                         CONF_TIMEOUT, DEFAULT_TIMEOUT
                     ),
                 ): cv.positive_int,
+                vol.Required(
+                    CONF_SNAPSHOT_QUALITY,
+                    default=self.config_entry.options.get(
+                        CONF_SNAPSHOT_QUALITY, DEFAULT_SNAPSHOT_QUALITY
+                    ),
+                ): vol.All(vol.Coerce(int), vol.Range(min=0, max=2)),
             }
         )
         return self.async_show_form(step_id="init", data_schema=data_schema)
