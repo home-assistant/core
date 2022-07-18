@@ -108,7 +108,6 @@ class AdvantageAirAC(AdvantageAirClimateEntity):
     def __init__(self, instance, ac_key):
         """Initialize an AdvantageAir AC unit."""
         super().__init__(instance, ac_key)
-        self._attr_name = self._ac["name"]
         self._attr_unique_id = f'{self.coordinator.data["system"]["rid"]}-{ac_key}'
         if self._ac.get("myAutoModeEnabled"):
             self._attr_hvac_modes = AC_HVAC_MODES + [HVACMode.AUTO]
