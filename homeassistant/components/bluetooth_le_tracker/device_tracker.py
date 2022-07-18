@@ -8,6 +8,7 @@ import logging
 from uuid import UUID
 
 from bleak import BleakClient, BleakError
+from bleak.backends.device import BLEDevice
 import voluptuous as vol
 
 from homeassistant.components import bluetooth
@@ -139,15 +140,18 @@ async def async_setup_scanner(  # noqa: C901
     ) -> None:
         """Lookup Bluetooth LE devices and update status."""
         battery = None
+        ble_device: BLEDevice | str = (
+            bluetooth.async_ble_device_from_address(hass, mac) or mac
+        )
         try:
-            async with BleakClient(mac) as client:
+            async with BleakClient(ble_device) as client:
                 bat_char = await client.read_gatt_char(BATTERY_CHARACTERISTIC_UUID)
                 battery = ord(bat_char)
         except asyncio.TimeoutError:
             _LOGGER.warning(
                 "Timeout when trying to get battery status for %s", service_info.name
             )
-        except BleakError as err:
+        except (AttributeError, BleakError) as err:
             _LOGGER.debug("Could not read battery status: %s", err)
             # If the device does not offer battery information, there is no point in asking again later on.
             # Remove the device from the battery-tracked devices, so that their battery is not wasted
