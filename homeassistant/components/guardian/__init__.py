@@ -419,9 +419,7 @@ class GuardianEntity(CoordinatorEntity[GuardianDataUpdateCoordinator]):
     _attr_has_entity_name = True
 
     def __init__(
-        self,
-        coordinator: GuardianDataUpdateCoordinator,
-        description: EntityDescription,
+        self, coordinator: GuardianDataUpdateCoordinator, description: EntityDescription
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
