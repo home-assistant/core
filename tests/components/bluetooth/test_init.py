@@ -246,6 +246,8 @@ async def test_async_discovered_device_api(hass, mock_bleak_scanner_start):
         # wrong_name should not appear because bleak no longer sees it
         assert service_infos[0].name == "wohand"
         assert service_infos[0].source == SOURCE_LOCAL
+        assert isinstance(service_infos[0].device, BLEDevice)
+        assert isinstance(service_infos[0].advertisement, AdvertisementData)
 
         assert bluetooth.async_address_present(hass, "44:44:33:11:23:42") is False
         assert bluetooth.async_address_present(hass, "44:44:33:11:23:45") is True
@@ -686,6 +688,49 @@ async def test_wrapped_instance_unsupported_filter(
     assert models.HA_BLEAK_SCANNER is not None
     scanner = models.HaBleakScannerWrapper()
     scanner.set_scanning_filter(
-        filters={"unsupported": ["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]}
+        filters={
+            "unsupported": ["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+            "DuplicateData": True,
+        }
     )
     assert "Only UUIDs filters are supported" in caplog.text
+
+
+async def test_async_ble_device_from_address(hass, mock_bleak_scanner_start):
+    """Test the async_ble_device_from_address api."""
+    mock_bt = []
+    with patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
+    ), patch(
+        "bleak.BleakScanner.discovered_devices",  # Must patch before we setup
+        [MagicMock(address="44:44:33:11:23:45")],
+    ):
+        assert not bluetooth.async_discovered_service_info(hass)
+        assert not bluetooth.async_address_present(hass, "44:44:22:22:11:22")
+        assert (
+            bluetooth.async_ble_device_from_address(hass, "44:44:33:11:23:45") is None
+        )
+
+        assert await async_setup_component(
+            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
+        )
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        assert len(mock_bleak_scanner_start.mock_calls) == 1
+
+        assert not bluetooth.async_discovered_service_info(hass)
+
+        switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
+        switchbot_adv = AdvertisementData(local_name="wohand", service_uuids=[])
+        models.HA_BLEAK_SCANNER._callback(switchbot_device, switchbot_adv)
+        await hass.async_block_till_done()
+
+        assert (
+            bluetooth.async_ble_device_from_address(hass, "44:44:33:11:23:45")
+            is switchbot_device
+        )
+
+        assert (
+            bluetooth.async_ble_device_from_address(hass, "00:66:33:22:11:22") is None
+        )

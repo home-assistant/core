@@ -152,7 +152,7 @@ aioguardian==2022.03.2
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==1.0.0
+aiohomekit==1.1.4
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -607,7 +607,7 @@ home-assistant-frontend==20220707.1
 homeconnect==0.7.1
 
 # homeassistant.components.homematicip_cloud
-homematicip==1.0.4
+homematicip==1.0.5
 
 # homeassistant.components.home_plus_control
 homepluscontrol==0.0.5
@@ -935,7 +935,7 @@ pyaehw4a1==0.3.9
 pyairnow==1.1.0
 
 # homeassistant.components.airvisual
-pyairvisual==5.0.9
+pyairvisual==2022.07.0
 
 # homeassistant.components.almond
 pyalmond==0.0.2
@@ -980,7 +980,7 @@ pycoolmasternet-async==0.1.2
 pydaikin==2.7.0
 
 # homeassistant.components.deconz
-pydeconz==99
+pydeconz==100
 
 # homeassistant.components.dexcom
 pydexcom==0.2.3
@@ -1169,7 +1169,7 @@ pyopenuv==2022.04.0
 pyopnsense==0.2.0
 
 # homeassistant.components.opentherm_gw
-pyotgw==1.1b1
+pyotgw==2.0.0
 
 # homeassistant.auth.mfa_modules.notify
 # homeassistant.auth.mfa_modules.totp
@@ -1430,7 +1430,7 @@ securetar==2022.2.0
 sense_energy==0.10.4
 
 # homeassistant.components.sentry
-sentry-sdk==1.7.1
+sentry-sdk==1.7.2
 
 # homeassistant.components.sharkiq
 sharkiq==0.0.1

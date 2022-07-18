@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import dataclass
 from enum import Enum
 import fnmatch
 import logging
@@ -42,6 +43,37 @@ MAX_REMEMBER_ADDRESSES: Final = 2048
 SOURCE_LOCAL: Final = "local"
 
 
+@dataclass
+class BluetoothServiceInfoBleak(BluetoothServiceInfo):  # type: ignore[misc]
+    """BluetoothServiceInfo with bleak data.
+
+    Integrations may need BLEDevice and AdvertisementData
+    to connect to the device without having bleak trigger
+    another scan to translate the address to the system's
+    internal details.
+    """
+
+    device: BLEDevice
+    advertisement: AdvertisementData
+
+    @classmethod
+    def from_advertisement(
+        cls, device: BLEDevice, advertisement_data: AdvertisementData, source: str
+    ) -> BluetoothServiceInfo:
+        """Create a BluetoothServiceInfoBleak from an advertisement."""
+        return cls(
+            name=advertisement_data.local_name or device.name or device.address,
+            address=device.address,
+            rssi=device.rssi,
+            manufacturer_data=advertisement_data.manufacturer_data,
+            service_data=advertisement_data.service_data,
+            service_uuids=advertisement_data.service_uuids,
+            source=source,
+            device=device,
+            advertisement=advertisement_data,
+        )
+
+
 class BluetoothCallbackMatcherOptional(TypedDict, total=False):
     """Matcher for the bluetooth integration for callback optional fields."""
 
@@ -75,18 +107,30 @@ MANUFACTURER_DATA_FIRST_BYTE: Final = "manufacturer_data_first_byte"
 
 
 BluetoothChange = Enum("BluetoothChange", "ADVERTISEMENT")
-BluetoothCallback = Callable[[BluetoothServiceInfo, BluetoothChange], None]
+BluetoothCallback = Callable[[BluetoothServiceInfoBleak, BluetoothChange], None]
 
 
 @hass_callback
 def async_discovered_service_info(
     hass: HomeAssistant,
-) -> list[BluetoothServiceInfo]:
+) -> list[BluetoothServiceInfoBleak]:
     """Return the discovered devices list."""
     if DOMAIN not in hass.data:
         return []
     manager: BluetoothManager = hass.data[DOMAIN]
     return manager.async_discovered_service_info()
+
+
+@hass_callback
+def async_ble_device_from_address(
+    hass: HomeAssistant,
+    address: str,
+) -> BLEDevice | None:
+    """Return BLEDevice for an address if its present."""
+    if DOMAIN not in hass.data:
+        return None
+    manager: BluetoothManager = hass.data[DOMAIN]
+    return manager.async_ble_device_from_address(address)
 
 
 @hass_callback
@@ -261,13 +305,13 @@ class BluetoothManager:
         if not matched_domains and not self._callbacks:
             return
 
-        service_info: BluetoothServiceInfo | None = None
+        service_info: BluetoothServiceInfoBleak | None = None
         for callback, matcher in self._callbacks:
             if matcher is None or _ble_device_matches(
                 matcher, device, advertisement_data
             ):
                 if service_info is None:
-                    service_info = BluetoothServiceInfo.from_advertisement(
+                    service_info = BluetoothServiceInfoBleak.from_advertisement(
                         device, advertisement_data, SOURCE_LOCAL
                     )
                 try:
@@ -278,7 +322,7 @@ class BluetoothManager:
         if not matched_domains:
             return
         if service_info is None:
-            service_info = BluetoothServiceInfo.from_advertisement(
+            service_info = BluetoothServiceInfoBleak.from_advertisement(
                 device, advertisement_data, SOURCE_LOCAL
             )
         for domain in matched_domains:
@@ -314,7 +358,7 @@ class BluetoothManager:
         ):
             try:
                 callback(
-                    BluetoothServiceInfo.from_advertisement(
+                    BluetoothServiceInfoBleak.from_advertisement(
                         *device_adv_data, SOURCE_LOCAL
                     ),
                     BluetoothChange.ADVERTISEMENT,
@@ -323,6 +367,15 @@ class BluetoothManager:
                 _LOGGER.exception("Error in bluetooth callback")
 
         return _async_remove_callback
+
+    @hass_callback
+    def async_ble_device_from_address(self, address: str) -> BLEDevice | None:
+        """Return the BLEDevice if present."""
+        if models.HA_BLEAK_SCANNER and (
+            ble_adv := models.HA_BLEAK_SCANNER.history.get(address)
+        ):
+            return ble_adv[0]
+        return None
 
     @hass_callback
     def async_address_present(self, address: str) -> bool:
@@ -342,7 +395,7 @@ class BluetoothManager:
             discovered = models.HA_BLEAK_SCANNER.discovered_devices
             history = models.HA_BLEAK_SCANNER.history
             return [
-                BluetoothServiceInfo.from_advertisement(
+                BluetoothServiceInfoBleak.from_advertisement(
                     *history[device.address], SOURCE_LOCAL
                 )
                 for device in discovered
