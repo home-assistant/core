@@ -19,7 +19,9 @@ class AdvantageAirEntity(CoordinatorEntity):
         self.zone_key = zone_key
         self._attr_device_info = DeviceInfo(
             via_device=(DOMAIN, self.coordinator.data["system"]["rid"]),
-            identifiers={(DOMAIN, self.coordinator.data["system"]["rid"], ac_key)},
+            identifiers={
+                (DOMAIN, f"{self.coordinator.data['system']['rid']}_{ac_key}")
+            },
             manufacturer="Advantage Air",
             model=self.coordinator.data["system"]["sysType"],
             name=self._ac["name"],
