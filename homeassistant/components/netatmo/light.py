@@ -38,7 +38,6 @@ async def async_setup_entry(
         except AttributeError:
             return
         entity = NetatmoCameraLight(netatmo_device)
-        _LOGGER.debug("Adding climate battery sensor %s", entity)
         async_add_entities([entity])
 
     entry.async_on_unload(
