@@ -17,3 +17,8 @@ API_DATA = "api_data"
 TYPE_VM = 0
 TYPE_CONTAINER = 1
 UPDATE_INTERVAL = 60
+
+CONF_NODE = "node"
+CONF_NODES = "nodes"
+CONF_VMS = "vms"
+CONF_CONTAINERS = "containers"

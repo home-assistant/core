@@ -9,6 +9,7 @@ from proxmoxer.backends.https import AuthenticationError
 from proxmoxer.core import ResourceException
 import requests.exceptions
 from requests.exceptions import ConnectTimeout, SSLError
+import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -19,6 +20,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -26,8 +28,15 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import (
+    CONF_CONTAINERS,
+    CONF_NODE,
+    CONF_NODES,
     CONF_REALM,
+    CONF_VMS,
     COORDINATORS,
+    DEFAULT_PORT,
+    DEFAULT_REALM,
+    DEFAULT_VERIFY_SSL,
     DOMAIN,
     PLATFORMS,
     PROXMOX_CLIENT,
@@ -37,6 +46,45 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.All(
+            cv.ensure_list,
+            [
+                vol.Schema(
+                    {
+                        vol.Required(CONF_HOST): cv.string,
+                        vol.Required(CONF_USERNAME): cv.string,
+                        vol.Required(CONF_PASSWORD): cv.string,
+                        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                        vol.Optional(CONF_REALM, default=DEFAULT_REALM): cv.string,
+                        vol.Optional(
+                            CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL
+                        ): cv.boolean,
+                        vol.Required(CONF_NODES): vol.All(
+                            cv.ensure_list,
+                            [
+                                vol.Schema(
+                                    {
+                                        vol.Required(CONF_NODE): cv.string,
+                                        vol.Optional(CONF_VMS, default=[]): [
+                                            cv.positive_int
+                                        ],
+                                        vol.Optional(CONF_CONTAINERS, default=[]): [
+                                            cv.positive_int
+                                        ],
+                                    }
+                                )
+                            ],
+                        ),
+                    }
+                )
+            ],
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
