@@ -760,7 +760,7 @@ mutesync==0.0.1
 ndms2_client==0.1.1
 
 # homeassistant.components.ness_alarm
-nessclient==0.9.15
+nessclient==0.10.0
 
 # homeassistant.components.discovery
 netdisco==3.0.0
@@ -1673,7 +1673,7 @@ yalexs==1.1.25
 yeelight==0.7.10
 
 # homeassistant.components.yolink
-yolink-api==0.0.8
+yolink-api==0.0.9
 
 # homeassistant.components.youless
 youless-api==0.16

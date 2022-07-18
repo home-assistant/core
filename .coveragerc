@@ -1496,6 +1496,7 @@ omit =
     homeassistant/components/yolink/climate.py
     homeassistant/components/yolink/const.py
     homeassistant/components/yolink/coordinator.py
+    homeassistant/components/yolink/cover.py
     homeassistant/components/yolink/entity.py
     homeassistant/components/yolink/lock.py
     homeassistant/components/yolink/sensor.py
