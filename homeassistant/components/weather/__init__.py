@@ -75,6 +75,7 @@ ATTR_FORECAST = "forecast"
 ATTR_FORECAST_DAILY = "forecast_daily"
 ATTR_FORECAST_HOURLY = "forecast_hourly"
 ATTR_FORECAST_TWICE_DAILY = "forecast_twice_daily"
+ATTR_FORECAST_IS_DAYTIME: Final = "is_daytime"
 ATTR_FORECAST_CONDITION: Final = "condition"
 ATTR_FORECAST_HUMIDITY: Final = "humidity"
 ATTR_FORECAST_NATIVE_PRECIPITATION: Final = "native_precipitation"
@@ -152,6 +153,7 @@ class Forecast(TypedDict, total=False):
     wind_speed: None
     native_dew_point: float | None
     uv_index: float | None
+    is_daytime: bool | None  # Mandatory to use with forecast_twice_daily
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -790,6 +792,11 @@ class WeatherEntity(Entity):
         if self.forecast_daily:
             forecasts[ATTR_FORECAST_DAILY] = self.forecast_daily
         if self.forecast_twice_daily:
+            for forecast in self.forecast_twice_daily:
+                if ATTR_FORECAST_IS_DAYTIME not in forecast:
+                    raise ValueError(
+                        "is_daytime mandatory attribute for forecast_twice_daily is missing"
+                    )
             forecasts[ATTR_FORECAST_TWICE_DAILY] = self.forecast_twice_daily
         if self.forecast_hourly:
             forecasts[ATTR_FORECAST_HOURLY] = self.forecast_hourly
