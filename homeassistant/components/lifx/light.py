@@ -74,8 +74,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up LIFX from a config entry."""
-    coordinator: LIFXUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    manager: LIFXManager = hass.data[DATA_LIFX_MANAGER]
+    domain_data = hass.data[DOMAIN]
+    coordinator: LIFXUpdateCoordinator = domain_data[entry.entry_id]
+    manager: LIFXManager = domain_data[DATA_LIFX_MANAGER]
     device = coordinator.device
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
