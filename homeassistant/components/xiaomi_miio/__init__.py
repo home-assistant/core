@@ -33,7 +33,7 @@ from miio import (
 )
 from miio.gateway.gateway import GatewayException
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
     CONF_MODEL,
@@ -54,7 +54,9 @@ from .const import (
     DOMAIN,
     KEY_COORDINATOR,
     KEY_DEVICE,
+    KEY_DEVICE_STOP,
     KEY_PUSH_SERVER,
+    KEY_PUSH_SERVER_STOP,
     MODEL_AIRFRESH_A1,
     MODEL_AIRFRESH_T2017,
     MODEL_FAN_1C,
@@ -128,14 +130,44 @@ MODEL_TO_CLASS_MAP = {
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Xiaomi Miio components from a config entry."""
     hass.data.setdefault(DOMAIN, {})
+    host = entry.data[CONF_HOST]
+
+    # Create push server
+    if KEY_PUSH_SERVER not in hass.data[DOMAIN]:
+        push_server = PushServer(host)
+        hass.data[DOMAIN][KEY_PUSH_SERVER] = push_server
+        # start the async push server (only once)
+        await push_server.start()
+
+        # register stop callback to shutdown the push server
+        def stop_push_server(event):
+            """Stop push server."""
+            _LOGGER.debug("Shutting down Xiaomi Miio push server")
+            push_server.stop()
+
+        unsub = hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_push_server)
+        hass.data[DOMAIN][KEY_PUSH_SERVER_STOP] = unsub
+
     if entry.data[CONF_FLOW_TYPE] == CONF_GATEWAY:
         await async_setup_gateway_entry(hass, entry)
-        return True
+    elif entry.data[CONF_FLOW_TYPE] == CONF_DEVICE
+        if not await async_setup_device_entry(hass, entry):
+            return False
+    else:
+        return False
+    
+    # register stop callback to clean push server subscriptions of miio device
+    def device_stop(event):
+        """Clean subscriptions registered in miio device memory."""
+        _LOGGER.debug("Removing subscribtions from miio device memory")
+        push_server = hass.data[DOMAIN][KEY_PUSH_SERVER]
+        device = hass.data[DOMAIN][entry.entry_id][KEY_DEVICE]
+        push_server.unregister_miio_device(device)
 
-    return bool(
-        entry.data[CONF_FLOW_TYPE] != CONF_DEVICE
-        or await async_setup_device_entry(hass, entry)
-    )
+    unsub = hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, device_stop)
+    hass.data[DOMAIN][entry.entry_id][KEY_DEVICE_STOP] = unsub
+
+    return True
 
 
 @callback
@@ -398,21 +430,6 @@ async def async_setup_gateway_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
-    # Create push server
-    if KEY_PUSH_SERVER not in hass.data[DOMAIN]:
-        push_server = PushServer(host)
-        hass.data[DOMAIN][KEY_PUSH_SERVER] = push_server
-        # start the async push server (only once)
-        await push_server.start()
-
-        # register stop callback to shutdown the push server
-        def stop_push_server(event):
-            """Stop push server."""
-            _LOGGER.debug("Shutting down Xiaomi Miio push server")
-            push_server.stop()
-
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_push_server)
-
     # Connect to gateway
     gateway = ConnectXiaomiGateway(hass, entry)
     try:
@@ -462,19 +479,9 @@ async def async_setup_gateway_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
         )
 
     hass.data[DOMAIN][entry.entry_id] = {
-        CONF_GATEWAY: gateway.gateway_device,
+        KEY_DEVICE: gateway.gateway_device,
         KEY_COORDINATOR: coordinator_dict,
     }
-
-    # register stop callback to clean subscriptions of gateway
-    def gateway_stop(event):
-        """Clean subscriptions registered in gateway memory."""
-        _LOGGER.debug("Removing subscribtions from miio device memory")
-        gateway = hass.data[DOMAIN].get(entry.entry_id, {}).get(CONF_GATEWAY)
-        if gateway is not None:
-            gateway.close()
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, gateway_stop)
 
     await hass.config_entries.async_forward_entry_setups(entry, GATEWAY_PLATFORMS)
 
@@ -502,24 +509,25 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
         config_entry, platforms
     )
 
-    if config_entry.data[CONF_FLOW_TYPE] == CONF_GATEWAY:
-        gateway = hass.data[DOMAIN][config_entry.entry_id][CONF_GATEWAY]
-        await hass.async_add_executor_job(gateway.close)
+    _LOGGER.debug("Removing subscribtions from miio device memory")
+    unsub_stop = hass.data[DOMAIN][config_entry.entry_id].pop(KEY_DEVICE_STOP)
+    unsub_stop()
+    push_server = hass.data[DOMAIN][KEY_PUSH_SERVER]
+    device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
+    await hass.async_add_executor_job(push_server.unregister_miio_device, device)
 
     if unload_ok:
         hass.data[DOMAIN].pop(config_entry.entry_id)
 
-    # Check if there are still gateways configured that could be using the push server
-    gateway_configured = False
-    for key in hass.data[DOMAIN]:
-        item = hass.data[DOMAIN][key]
-        if isinstance(item, dict):
-            gateway_data = item.get(CONF_GATEWAY)
-            if gateway_data is not None:
-                gateway_configured = True
-
-    if not gateway_configured and KEY_PUSH_SERVER in hass.data[DOMAIN]:
-        # No gateways left, stop push server
+    loaded_entries = [
+        entry
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        if entry.state == ConfigEntryState.LOADED
+    ]
+    if len(loaded_entries) == 1:
+        # No miio devices left, stop push server
+        unsub_stop = hass.data[DOMAIN].pop(KEY_PUSH_SERVER_STOP)
+        unsub_stop()
         _LOGGER.debug("Shutting down Xiaomi Miio push server")
         push_server = hass.data[DOMAIN].pop(KEY_PUSH_SERVER)
         push_server.stop()

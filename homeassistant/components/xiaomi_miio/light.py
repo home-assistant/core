@@ -45,6 +45,7 @@ from .const import (
     CONF_GATEWAY,
     DOMAIN,
     KEY_COORDINATOR,
+    KEY_DEVICE,
     MODELS_LIGHT_BULB,
     MODELS_LIGHT_CEILING,
     MODELS_LIGHT_EYECARE,
@@ -129,7 +130,7 @@ async def async_setup_entry(
     light: MiioDevice
 
     if config_entry.data[CONF_FLOW_TYPE] == CONF_GATEWAY:
-        gateway = hass.data[DOMAIN][config_entry.entry_id][CONF_GATEWAY]
+        gateway = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
         # Gateway light
         if gateway.model not in [
             GATEWAY_MODEL_AC_V1,

@@ -21,7 +21,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import CONF_GATEWAY, DOMAIN
+from .const import KEY_DEVICE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Xiaomi Gateway Alarm from a config entry."""
     entities = []
-    gateway = hass.data[DOMAIN][config_entry.entry_id][CONF_GATEWAY]
+    gateway = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
     entity = XiaomiGatewayAlarm(
         gateway,
         f"{config_entry.title} Alarm",

@@ -25,7 +25,9 @@ CONF_CLOUD_SUBDEVICES = "cloud_subdevices"
 # Keys
 KEY_COORDINATOR = "coordinator"
 KEY_DEVICE = "device"
+KEY_DEVICE_STOP = "device_stop"
 KEY_PUSH_SERVER = "push_server"
+KEY_PUSH_SERVER_STOP = "push_server_stop"
 
 # Attributes
 ATTR_AVAILABLE = "available"

@@ -373,7 +373,7 @@ async def async_setup_other_entry(hass, config_entry, async_add_entities):
     model = config_entry.data[CONF_MODEL]
     unique_id = config_entry.unique_id
     if config_entry.data[CONF_FLOW_TYPE] == CONF_GATEWAY:
-        gateway = hass.data[DOMAIN][config_entry.entry_id][CONF_GATEWAY]
+        gateway = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
         # Gateway sub devices
         sub_devices = gateway.devices
         for sub_device in sub_devices.values():
