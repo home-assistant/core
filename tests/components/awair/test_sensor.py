@@ -87,6 +87,7 @@ async def test_awair_gen1_sensors(hass):
         "sensor.living_room_awair_score",
         f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
         "88",
+        {},
     )
 
     assert_expected_properties(
@@ -178,6 +179,7 @@ async def test_awair_gen2_sensors(hass):
         "sensor.living_room_awair_score",
         f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
         "97",
+        {},
     )
 
     assert_expected_properties(
@@ -210,6 +212,7 @@ async def test_awair_mint_sensors(hass):
         "sensor.living_room_awair_score",
         f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
         "98",
+        {},
     )
 
     assert_expected_properties(
@@ -250,6 +253,7 @@ async def test_awair_glow_sensors(hass):
         "sensor.living_room_awair_score",
         f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
         "93",
+        {},
     )
 
     # The glow does not have a particle sensor
@@ -269,6 +273,7 @@ async def test_awair_omni_sensors(hass):
         "sensor.living_room_awair_score",
         f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
         "99",
+        {},
     )
 
     assert_expected_properties(
@@ -277,6 +282,7 @@ async def test_awair_omni_sensors(hass):
         "sensor.living_room_sound_level",
         f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SPL_A].unique_id_tag}",
         "47.0",
+        {ATTR_UNIT_OF_MEASUREMENT: "dBa"},
     )
 
     assert_expected_properties(
@@ -320,6 +326,7 @@ async def test_awair_unavailable(hass):
         "sensor.living_room_awair_score",
         f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
         "88",
+        {},
     )
 
     with patch("python_awair.AwairClient.query", side_effect=OFFLINE_FIXTURE):
@@ -330,4 +337,5 @@ async def test_awair_unavailable(hass):
             "sensor.living_room_awair_score",
             f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
             STATE_UNAVAILABLE,
+            {},
         )
