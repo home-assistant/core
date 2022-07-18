@@ -154,7 +154,7 @@ async def test_climate_async_setup_entry(hass, aioclient_mock):
     assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
 
     # Test MyTemp Climate Zone Entity
-    entity_id = "climate.zone_open_with_sensor"
+    entity_id = "climate.myzone_zone_open_with_sensor"
     state = hass.states.get(entity_id)
     assert state
     assert state.attributes.get(ATTR_MIN_TEMP) == 16
@@ -203,7 +203,7 @@ async def test_climate_async_setup_entry(hass, aioclient_mock):
     assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
 
     # Test MyAuto Climate Entity
-    entity_id = "climate.testname_myauto"
+    entity_id = "climate.myauto"
     state = hass.states.get(entity_id)
     assert state
     assert state.attributes.get(ATTR_TARGET_TEMP_LOW) == 20
@@ -233,7 +233,7 @@ async def test_climate_async_setup_entry(hass, aioclient_mock):
     assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
 
     # Test set_myair service
-    entity_id = "climate.testname_zone_b"
+    entity_id = "climate.mytemp_zone_b"
     await hass.services.async_call(
         ADVANTAGE_AIR_DOMAIN,
         ADVANTAGE_AIR_SERVICE_SET_MYZONE,

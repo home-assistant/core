@@ -45,7 +45,7 @@ async def test_cover_async_setup_entry(hass, aioclient_mock):
     assert len(aioclient_mock.mock_calls) == 1
 
     # Test Cover Zone Entity
-    entity_id = "cover.zone_y"
+    entity_id = "cover.myauto_zone_y"
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_OPEN
@@ -119,8 +119,8 @@ async def test_cover_async_setup_entry(hass, aioclient_mock):
         SERVICE_CLOSE_COVER,
         {
             ATTR_ENTITY_ID: [
-                "cover.zone_y",
-                "cover.zone_z",
+                "cover.myauto_zone_y",
+                "cover.myauto_zone_z",
             ]
         },
         blocking=True,
@@ -134,8 +134,8 @@ async def test_cover_async_setup_entry(hass, aioclient_mock):
         SERVICE_OPEN_COVER,
         {
             ATTR_ENTITY_ID: [
-                "cover.zone_y",
-                "cover.zone_z",
+                "cover.myauto_zone_y",
+                "cover.myauto_zone_z",
             ]
         },
         blocking=True,
