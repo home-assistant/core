@@ -688,6 +688,9 @@ async def test_wrapped_instance_unsupported_filter(
     assert models.HA_BLEAK_SCANNER is not None
     scanner = models.HaBleakScannerWrapper()
     scanner.set_scanning_filter(
-        filters={"unsupported": ["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]}
+        filters={
+            "unsupported": ["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+            "DuplicateData": True,
+        }
     )
     assert "Only UUIDs filters are supported" in caplog.text
