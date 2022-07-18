@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from datetime import datetime, timedelta
 from enum import Enum
 import fnmatch
 import logging
@@ -21,6 +22,7 @@ from homeassistant.core import (
     callback as hass_callback,
 )
 from homeassistant.helpers import discovery_flow
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import (
@@ -37,6 +39,8 @@ from .usage import install_multiple_bleak_catcher
 _LOGGER = logging.getLogger(__name__)
 
 MAX_REMEMBER_ADDRESSES: Final = 2048
+
+SLEEP_RECOVERY_INTERVAL: Final = 120
 
 SOURCE_LOCAL: Final = "local"
 
@@ -185,6 +189,7 @@ class BluetoothManager:
         self._integration_matchers = integration_matchers
         self.scanner: HaBleakScanner | None = None
         self._cancel_device_detected: CALLBACK_TYPE | None = None
+        self._cancel_sleep_recovery: CALLBACK_TYPE | None = None
         self._callbacks: list[
             tuple[BluetoothCallback, BluetoothCallbackMatcher | None]
         ] = []
@@ -205,6 +210,7 @@ class BluetoothManager:
             )
             return
         install_multiple_bleak_catcher(self.scanner)
+        self.async_setup_sleep_recovery()
         # We have to start it right away as some integrations might
         # need it straight away.
         _LOGGER.debug("Starting bluetooth scanner")
@@ -214,6 +220,20 @@ class BluetoothManager:
         )
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
         await self.scanner.start()
+
+    @hass_callback
+    def async_setup_sleep_recovery(self) -> None:
+        """Set up the sleep recovery."""
+
+        async def async_sleep_recovery(now: datetime) -> None:
+            """Restart bluetooth discovery on sleep."""
+            _LOGGER.debug("Restarting bluetooth scanner?")
+            assert self.scanner is not None
+            _LOGGER.warning("Discovered devices: %s", self.scanner.discovered_devices)
+
+        self._cancel_sleep_recovery = async_track_time_interval(
+            self.hass, async_sleep_recovery, timedelta(seconds=SLEEP_RECOVERY_INTERVAL)
+        )
 
     @hass_callback
     def _device_detected(
@@ -341,6 +361,9 @@ class BluetoothManager:
         if self._cancel_device_detected:
             self._cancel_device_detected()
             self._cancel_device_detected = None
+        if self._cancel_sleep_recovery:
+            self._cancel_sleep_recovery()
+            self._cancel_sleep_recovery = None
         if self.scanner:
             await self.scanner.stop()
         models.HA_BLEAK_SCANNER = None
