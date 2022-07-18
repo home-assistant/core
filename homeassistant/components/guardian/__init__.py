@@ -422,10 +422,7 @@ class GuardianEntity(CoordinatorEntity):
     _attr_has_entity_name = True
 
     def __init__(
-        self,
-        entry: ConfigEntry,
-        coordinator: GuardianDataUpdateCoordinator,
-        description: EntityDescription,
+        self, coordinator: GuardianDataUpdateCoordinator, description: EntityDescription
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
@@ -462,7 +459,7 @@ class PairedSensorEntity(GuardianEntity):
         description: EntityDescription,
     ) -> None:
         """Initialize."""
-        super().__init__(entry, coordinator, description)
+        super().__init__(coordinator, description)
 
         paired_sensor_uid = coordinator.data["uid"]
         self._attr_device_info = DeviceInfo(
@@ -499,7 +496,7 @@ class ValveControllerEntity(GuardianEntity):
         description: ValveControllerEntityDescription,
     ) -> None:
         """Initialize."""
-        super().__init__(entry, coordinators[description.api_category], description)
+        super().__init__(coordinators[description.api_category], description)
 
         self._diagnostics_coordinator = coordinators[API_SYSTEM_DIAGNOSTICS]
 
