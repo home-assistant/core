@@ -1068,7 +1068,7 @@ nad_receiver==0.3.0
 ndms2_client==0.1.1
 
 # homeassistant.components.ness_alarm
-nessclient==0.9.15
+nessclient==0.10.0
 
 # homeassistant.components.netdata
 netdata==1.0.1
