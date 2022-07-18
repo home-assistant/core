@@ -47,9 +47,8 @@ class GuardianDataUpdateCoordinator(DataUpdateCoordinator[dict]):
         self._client = client
         self._signal_handler_unsubs: list[Callable[..., None]] = []
 
-        assert self.config_entry
         self.signal_reboot_requested = SIGNAL_REBOOT_REQUESTED.format(
-            self.config_entry.entry_id
+            self.config_entry.entry_id  # type: ignore[union-attr]
         )
 
     async def _async_update_data(self) -> dict[str, Any]:
