@@ -1,5 +1,7 @@
 """Const for LIFX."""
 
+import logging
+
 DOMAIN = "lifx"
 
 TARGET_ANY = "00:00:00:00:00:00"
@@ -11,3 +13,5 @@ OVERALL_TIMEOUT = 9
 UNAVAILABLE_GRACE = 90
 
 CONF_SERIAL = "serial"
+
+_LOGGER = logging.getLogger(__name__)

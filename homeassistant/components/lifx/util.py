@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
-import logging
 from typing import Any
 
 from aiolifx import products
@@ -26,10 +25,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 import homeassistant.util.color as color_util
 
-from .const import DOMAIN, OVERALL_TIMEOUT
+from .const import _LOGGER, DOMAIN, OVERALL_TIMEOUT
 
 FIX_MAC_FW = AwesomeVersion("3.70")
-_LOGGER = logging.getLogger(__name__)
 
 
 @callback

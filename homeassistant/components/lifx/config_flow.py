@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-import logging
 import socket
 from typing import Any
 
@@ -19,7 +18,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .const import CONF_SERIAL, DOMAIN, TARGET_ANY
+from .const import _LOGGER, CONF_SERIAL, DOMAIN, TARGET_ANY
 from .discovery import async_discover_devices
 from .util import (
     async_entry_is_legacy,
@@ -29,8 +28,6 @@ from .util import (
     lifx_features,
     mac_matches_serial_number,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Iterable
-import logging
 
 from aiolifx.aiolifx import LifxDiscovery, Light, ScanManager
 
@@ -13,8 +12,6 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 
 from .const import CONF_SERIAL, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_TIMEOUT = 8.5
 

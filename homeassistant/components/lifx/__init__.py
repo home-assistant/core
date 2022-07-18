@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Iterable
 from datetime import datetime, timedelta
-import logging
 import socket
 from typing import Any
 
@@ -26,7 +25,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, TARGET_ANY
+from .const import _LOGGER, DOMAIN, TARGET_ANY
 from .coordinator import LIFXUpdateCoordinator
 from .discovery import async_discover_devices, async_trigger_discovery
 from .manager import LIFXManager
@@ -64,7 +63,6 @@ DISCOVERY_INTERVAL = timedelta(minutes=15)
 MIGRATION_INTERVAL = timedelta(minutes=5)
 
 DISCOVERY_COOLDOWN = 5
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_legacy_migration(
@@ -217,5 +215,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         coordinator.connection.async_stop()
     # Only the DATA_LIFX_MANAGER left, remove it.
     if len(domain_data) == 1:
-        domain_data.pop(DATA_LIFX_MANAGER).async_unload()
+        manager: LIFXManager = domain_data.pop(DATA_LIFX_MANAGER)
+        manager.async_unload()
     return unload_ok
