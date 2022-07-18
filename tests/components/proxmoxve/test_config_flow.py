@@ -12,11 +12,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import patch
 
@@ -68,7 +64,7 @@ async def test_flow_ok(hass: HomeAssistant):
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT_OK
         )
 
-        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == FlowResultType.CREATE_ENTRY
         assert result["data"][CONF_HOST] == USER_INPUT_OK[CONF_HOST]
 
 
@@ -83,7 +79,7 @@ async def test_flow_port_small(hass: HomeAssistant):
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT_PORT_TOO_SMALL
         )
 
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert result["errors"][CONF_PORT] == "invalid_port"
 
 
@@ -98,7 +94,7 @@ async def test_flow_port_big(hass: HomeAssistant):
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT_PORT_TOO_BIG
         )
 
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert result["errors"][CONF_PORT] == "invalid_port"
 
 
@@ -115,7 +111,7 @@ async def test_flow_auth_error(hass: HomeAssistant):
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT_OK
         )
 
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert result["errors"][CONF_USERNAME] == "auth_error"
 
 
@@ -132,7 +128,7 @@ async def test_flow_cant_connect(hass: HomeAssistant):
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT_OK
         )
 
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert result["errors"][CONF_HOST] == "cant_connect"
 
 
@@ -149,7 +145,7 @@ async def test_flow_ssl_error(hass: HomeAssistant):
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT_OK
         )
 
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert result["errors"][CONF_VERIFY_SSL] == "ssl_rejection"
 
 
@@ -166,7 +162,7 @@ async def test_flow_unknown_exception(hass: HomeAssistant):
             DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT_OK
         )
 
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert result["errors"]["base"] == "general_error"
 
 
@@ -186,7 +182,7 @@ async def test_flow_import_ok(hass: HomeAssistant):
             DOMAIN, context={"source": SOURCE_IMPORT}, data=USER_INPUT_OK
         )
 
-        assert result["type"] == RESULT_TYPE_ABORT
+        assert result["type"] == FlowResultType.ABORT
         assert result["reason"] == "already_configured"
 
 
@@ -206,7 +202,7 @@ async def test_flow_import_ok_onlyrequired(hass: HomeAssistant):
             DOMAIN, context={"source": SOURCE_IMPORT}, data=USER_INPUT_REQONLY
         )
 
-        assert result["type"] == RESULT_TYPE_ABORT
+        assert result["type"] == FlowResultType.ABORT
         assert result["reason"] == "already_configured"
 
 
@@ -224,5 +220,5 @@ async def test_flow_import_error(hass: HomeAssistant):
             DOMAIN, context={"source": SOURCE_IMPORT}, data=USER_INPUT_OK
         )
 
-        assert result["type"] == RESULT_TYPE_ABORT
+        assert result["type"] == FlowResultType.ABORT
         assert result["reason"] == "import_failed"
