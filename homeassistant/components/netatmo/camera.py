@@ -255,7 +255,7 @@ class NetatmoCamera(NetatmoBase, Camera):
         return f"{self._camera.vpn_url}/vod/{video_id}/files/{self._quality}/index.m3u8"
 
     def fetch_person_ids(self, persons: list[str | None]) -> list[str]:
-        """Fetch matching person ids for give list of persons."""
+        """Fetch matching person ids for given list of persons."""
         person_ids = []
         person_id_errors = []
 
