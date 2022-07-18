@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-import logging
 import socket
 from typing import Any
 
@@ -19,7 +18,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .const import CONF_SERIAL, DOMAIN, TARGET_ANY
+from .const import _LOGGER, CONF_SERIAL, DOMAIN, TARGET_ANY
 from .discovery import async_discover_devices
 from .util import (
     async_entry_is_legacy,
@@ -29,8 +28,6 @@ from .util import (
     lifx_features,
     mac_matches_serial_number,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -93,10 +90,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             for progress in self._async_in_progress()
         ):
             return self.async_abort(reason="already_in_progress")
-        device = await self._async_try_connect(
-            host, serial=serial, raise_on_progress=True
-        )
-        if not device:
+        if not (
+            device := await self._async_try_connect(
+                host, serial=serial, raise_on_progress=True
+            )
+        ):
             return self.async_abort(reason="cannot_connect")
         self._discovered_device = device
         return await self.async_step_discovery_confirm()
@@ -213,7 +211,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_try_connect(
         self, host: str, serial: str | None = None, raise_on_progress: bool = True
-    ) -> Light:
+    ) -> Light | None:
         """Try to connect."""
         self._async_abort_entries_match({CONF_HOST: host})
         connection = LIFXConnection(host, TARGET_ANY)

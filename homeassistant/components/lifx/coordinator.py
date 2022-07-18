@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 from functools import partial
-import logging
 from typing import cast
 
 from aiolifx.aiolifx import Light
@@ -14,10 +13,14 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import MESSAGE_RETRIES, MESSAGE_TIMEOUT, TARGET_ANY, UNAVAILABLE_GRACE
+from .const import (
+    _LOGGER,
+    MESSAGE_RETRIES,
+    MESSAGE_TIMEOUT,
+    TARGET_ANY,
+    UNAVAILABLE_GRACE,
+)
 from .util import async_execute_lifx, get_real_mac_addr, lifx_features
-
-_LOGGER = logging.getLogger(__name__)
 
 REQUEST_REFRESH_DELAY = 0.35
 

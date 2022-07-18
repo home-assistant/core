@@ -32,8 +32,7 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 import homeassistant.util.color as color_util
 
-from . import DATA_LIFX_MANAGER
-from .const import DOMAIN
+from .const import DATA_LIFX_MANAGER, DOMAIN
 from .coordinator import LIFXUpdateCoordinator
 from .manager import (
     SERVICE_EFFECT_COLORLOOP,
@@ -74,8 +73,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up LIFX from a config entry."""
-    coordinator: LIFXUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    manager: LIFXManager = hass.data[DATA_LIFX_MANAGER]
+    domain_data = hass.data[DOMAIN]
+    coordinator: LIFXUpdateCoordinator = domain_data[entry.entry_id]
+    manager: LIFXManager = domain_data[DATA_LIFX_MANAGER]
     device = coordinator.device
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(

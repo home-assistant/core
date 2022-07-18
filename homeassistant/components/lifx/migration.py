@@ -1,16 +1,12 @@
 """Migrate lifx devices to their own config entry."""
 from __future__ import annotations
 
-import logging
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .const import DOMAIN
+from .const import _LOGGER, DOMAIN
 from .discovery import async_init_discovery_flow
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_migrate_legacy_entries(

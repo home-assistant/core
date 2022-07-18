@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Iterable
 from datetime import datetime, timedelta
-import logging
 import socket
 from typing import Any
 
@@ -26,7 +25,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, TARGET_ANY
+from .const import _LOGGER, DATA_LIFX_MANAGER, DOMAIN, TARGET_ANY
 from .coordinator import LIFXUpdateCoordinator
 from .discovery import async_discover_devices, async_trigger_discovery
 from .manager import LIFXManager
@@ -57,14 +56,12 @@ CONFIG_SCHEMA = vol.All(
     ),
 )
 
-DATA_LIFX_MANAGER = "lifx_manager"
 
 PLATFORMS = [Platform.LIGHT]
 DISCOVERY_INTERVAL = timedelta(minutes=15)
 MIGRATION_INTERVAL = timedelta(minutes=5)
 
 DISCOVERY_COOLDOWN = 5
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_legacy_migration(
@@ -176,6 +173,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up LIFX from a config entry."""
+
     if async_entry_is_legacy(entry):
         return True
 
@@ -185,9 +183,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await async_migrate_entities_devices(hass, legacy_entry.entry_id, entry)
 
     assert entry.unique_id is not None
-    if DATA_LIFX_MANAGER not in hass.data:
+    domain_data = hass.data[DOMAIN]
+    if DATA_LIFX_MANAGER not in domain_data:
         manager = LIFXManager(hass)
-        hass.data[DATA_LIFX_MANAGER] = manager
+        domain_data[DATA_LIFX_MANAGER] = manager
         manager.async_setup()
 
     host = entry.data[CONF_HOST]
@@ -200,7 +199,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator.async_setup()
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    domain_data[entry.entry_id] = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
@@ -209,9 +208,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if async_entry_is_legacy(entry):
         return True
+    domain_data = hass.data[DOMAIN]
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        coordinator: LIFXUpdateCoordinator = hass.data[DOMAIN].pop(entry.entry_id)
+        coordinator: LIFXUpdateCoordinator = domain_data.pop(entry.entry_id)
         coordinator.connection.async_stop()
-    if not hass.data[DOMAIN]:
-        hass.data.pop(DATA_LIFX_MANAGER).async_unload()
+    # Only the DATA_LIFX_MANAGER left, remove it.
+    if len(domain_data) == 1:
+        manager: LIFXManager = domain_data.pop(DATA_LIFX_MANAGER)
+        manager.async_unload()
     return unload_ok
