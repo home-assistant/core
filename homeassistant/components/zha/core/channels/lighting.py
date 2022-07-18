@@ -30,7 +30,10 @@ class ColorChannel(ZigbeeChannel):
     UNSUPPORTED_ATTRIBUTE = 0x86
     REPORT_CONFIG = (
         AttrReportConfig(attr="current_x", config=REPORT_CONFIG_DEFAULT),
-        AttrReportConfig(attr="current_y", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(attr="current_x", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(attr="current_hue", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(attr="current_saturation", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(attr="enhanced_current_hue", config=REPORT_CONFIG_DEFAULT),
         AttrReportConfig(attr="color_temperature", config=REPORT_CONFIG_DEFAULT),
     )
     MAX_MIREDS: int = 500
@@ -91,6 +94,11 @@ class ColorChannel(ZigbeeChannel):
         return self.cluster.get("current_hue")
 
     @property
+    def enhanced_current_hue(self) -> int | None:
+        """Return cached value of the enhanced_current_hue attribute."""
+        return self.cluster.get("enhanced_current_hue")
+
+    @property
     def current_saturation(self) -> int | None:
         """Return cached value of the current_saturation attribute."""
         return self.cluster.get("current_saturation")
@@ -107,7 +115,7 @@ class ColorChannel(ZigbeeChannel):
 
     @property
     def hs_supported(self) -> bool:
-        """Return if the channel supports hue and saturation."""
+        """Return True if the channel supports hue and saturation."""
         return (
             self.zcl_color_capabilities is not None
             and lighting.Color.ColorCapabilities.Hue_and_saturation
@@ -115,8 +123,17 @@ class ColorChannel(ZigbeeChannel):
         )
 
     @property
+    def enhanced_hue_supported(self) -> bool:
+        """Return True if the channel supports enhanced hue and saturation."""
+        return (
+            self.zcl_color_capabilities is not None
+            and lighting.Color.ColorCapabilities.Enhanced_hue
+            in self.zcl_color_capabilities
+        )
+
+    @property
     def xy_supported(self) -> bool:
-        """Return if the channel supports xy."""
+        """Return True if the channel supports xy."""
         return (
             self.zcl_color_capabilities is not None
             and lighting.Color.ColorCapabilities.XY_attributes
@@ -125,7 +142,7 @@ class ColorChannel(ZigbeeChannel):
 
     @property
     def color_temp_supported(self) -> bool:
-        """Return if the channel supports color temperature."""
+        """Return True if the channel supports color temperature."""
         return (
             self.zcl_color_capabilities is not None
             and lighting.Color.ColorCapabilities.Color_temperature
@@ -134,7 +151,7 @@ class ColorChannel(ZigbeeChannel):
 
     @property
     def color_loop_supported(self) -> bool:
-        """Return if the channel supports color loop."""
+        """Return True if the channel supports color loop."""
         return (
             self.zcl_color_capabilities is not None
             and lighting.Color.ColorCapabilities.Color_loop

@@ -301,7 +301,7 @@ async def test_light_refresh(hass, zigpy_device_mock, zha_device_joined_restored
 )
 @pytest.mark.parametrize(
     "device, reporting",
-    [(LIGHT_ON_OFF, (1, 0, 0)), (LIGHT_LEVEL, (1, 1, 0)), (LIGHT_COLOR, (1, 1, 3))],
+    [(LIGHT_ON_OFF, (1, 0, 0)), (LIGHT_LEVEL, (1, 1, 0)), (LIGHT_COLOR, (1, 1, 6))],
 )
 async def test_light(
     hass, zigpy_device_mock, zha_device_joined_restored, device, reporting
