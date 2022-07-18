@@ -97,7 +97,7 @@ async def async_setup_entry(
 
 
 class ValveControllerSwitch(ValveControllerEntity, SwitchEntity):
-    """Define a base Guardian switch."""
+    """Define a switch related to a Guardian valve controller."""
 
     ON_STATES = {
         "start_opening",
