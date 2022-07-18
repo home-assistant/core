@@ -7,7 +7,8 @@ from datetime import datetime, timedelta
 from enum import Enum
 import fnmatch
 import logging
-from typing import Final, TypedDict
+import platform
+from typing import Final, TypedDict, Union
 
 from bleak import BleakError
 from bleak.backends.device import BLEDevice
@@ -110,7 +111,9 @@ MANUFACTURER_DATA_START: Final = "manufacturer_data_start"
 
 
 BluetoothChange = Enum("BluetoothChange", "ADVERTISEMENT")
-BluetoothCallback = Callable[[BluetoothServiceInfoBleak, BluetoothChange], None]
+BluetoothCallback = Callable[
+    [Union[BluetoothServiceInfoBleak, BluetoothServiceInfo], BluetoothChange], None
+]
 
 
 @hass_callback
