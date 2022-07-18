@@ -18,7 +18,7 @@
             "unable_to_pair": "No s'ha pogut vincular, torna-ho a provar.",
             "unknown_error": "El dispositiu ha em\u00e8s un error desconegut. Vinculaci\u00f3 fallida."
         },
-        "flow_title": "{name}",
+        "flow_title": "{name} ({category})",
         "step": {
             "busy_error": {
                 "description": "Atura la vinculaci\u00f3 a tots els controladors o prova de reiniciar el dispositiu, despr\u00e9s, segueix amb la vinculaci\u00f3.",
@@ -33,7 +33,7 @@
                     "allow_insecure_setup_codes": "Permet la vinculaci\u00f3 amb codis de configuraci\u00f3 insegurs.",
                     "pairing_code": "Codi de vinculaci\u00f3"
                 },
-                "description": "El controlador HomeKit es comunica amb {name} a trav\u00e9s de la xarxa d'\u00e0rea local utilitzant una connexi\u00f3 segura encriptada sense un HomeKit o iCloud separats. Introdueix el codi de vinculaci\u00f3 de HomeKit (en format XXX-XX-XXX) per utilitzar aquest accessori. Aquest codi es troba normalment en el propi dispositiu o en la seva caixa.",
+                "description": "El controlador HomeKit es comunica amb {name} ({category}) a trav\u00e9s de la xarxa d'\u00e0rea local utilitzant una connexi\u00f3 segura xifrada sense un HomeKit o iCloud separats. Introdueix el codi de vinculaci\u00f3 de HomeKit (en format XXX-XX-XXX) per utilitzar aquest accessori. Aquest codi es troba normalment en el mateix dispositiu o en la seva caixa.",
                 "title": "Vinculaci\u00f3 amb un dispositiu a trav\u00e9s de HomeKit Accessory Protocol"
             },
             "protocol_error": {
