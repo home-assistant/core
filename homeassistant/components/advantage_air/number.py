@@ -40,7 +40,7 @@ class AdvantageAirTimeTo(AdvantageAirEntity, NumberEntity):
         """Initialize the Advantage Air timer number."""
         super().__init__(instance, ac_key)
         self._time_key = f"countDownTo{action}"
-        self._attr_name = f'{self._ac["name"]} Time To {action}'
+        self._attr_name = f"Time to {action}"
         self._attr_unique_id = (
             f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-timeto{action}'
         )
