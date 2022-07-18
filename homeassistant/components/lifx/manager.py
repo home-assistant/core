@@ -182,8 +182,8 @@ class LIFXManager:
         bulbs = [
             coordinator.device
             for entry_id, coordinator in self.hass.data[DOMAIN].items()
-            if self.entry_id_to_entity_id[entry_id] in entity_ids
-            and entry_id != DATA_LIFX_MANAGER
+            if entry_id != DATA_LIFX_MANAGER
+            and self.entry_id_to_entity_id[entry_id] in entity_ids
         ]
         _LOGGER.debug("Starting effect %s on %s", service, bulbs)
 
