@@ -45,7 +45,7 @@ class LidarrSensorEntityDescription(SensorEntityDescription):
 SENSOR_TYPES: tuple[LidarrSensorEntityDescription, ...] = (
     LidarrSensorEntityDescription(
         key="diskspace",
-        name="Disk Space",
+        name="Disk space",
         native_unit_of_measurement=DATA_GIGABYTES,
         icon="mdi:harddisk",
         value=get_space,
