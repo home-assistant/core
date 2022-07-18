@@ -271,8 +271,13 @@ class BluetoothManager:
 
         async def async_sleep_recovery(now: datetime) -> None:
             """Restart bluetooth discovery on sleep."""
-            _LOGGER.debug("Restarting bluetooth scanner?")
+            _LOGGER.debug(
+                "Restarting bluetooth scanner? -- is_scanning: %s",
+                getattr(self.scanner, "is_scanning", None),
+            )
             assert self.scanner is not None
+            ## TODO: scanner has is_scanning property for mac but not linux so
+            ## on linux we need to restart if nothing seen in last 2 minutes
             _LOGGER.warning("Discovered devices: %s", self.scanner.discovered_devices)
 
         self._cancel_sleep_recovery = async_track_time_interval(
