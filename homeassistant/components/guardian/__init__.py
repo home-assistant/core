@@ -417,38 +417,18 @@ class GuardianEntity(CoordinatorEntity[GuardianDataUpdateCoordinator]):
     _attr_has_entity_name = True
 
     def __init__(
-        self, entry: ConfigEntry, coordinator: GuardianDataUpdateCoordinator, description: EntityDescription
+        self,
+        entry: ConfigEntry,
+        coordinator: GuardianDataUpdateCoordinator,
+        description: EntityDescription,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
 
         self._attr_extra_state_attributes = {}
-        self._rebooting = False
         self._signal_reboot_completed = SIGNAL_REBOOT_COMPLETED.format(entry.entry_id)
         self._signal_reboot_requested = SIGNAL_REBOOT_REQUESTED.format(entry.entry_id)
         self.entity_description = description
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available.
-
-        Since we don't call our parent's __init__(), we remake our own version of this
-        property so that we can force entity available when desired (e.g., a reboot).
-        """
-        return self._attr_available
-
-    @callback
-    def _async_handle_coordinator_update(self) -> None:
-        """Respond to a GuardianDataUpdateCoordinator update."""
-        # If *any* coordinator successfully updates while the entity is marked as
-        # "rebooting," the API is back up and all entities (even those with different
-        # coordinators) should become available:
-        if self._rebooting:
-            async_dispatcher_send(self.hass, self._signal_reboot_completed)
-            return
-
-        self._async_update_from_latest_data()
-        self.async_write_ha_state()
 
     @callback
     def _async_update_from_latest_data(self) -> None:
@@ -464,27 +444,18 @@ class GuardianEntity(CoordinatorEntity[GuardianDataUpdateCoordinator]):
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
-        """Perform tasks when the entity is added."""
-        self._async_update_from_latest_data()
-        self.async_write_ha_state()
-
-        @callback
-        def async_reboot_completed() -> None:
-            """Respond to a completed controller reboot."""
-            self._attr_available = True
-            self._rebooting = False
-            self._async_handle_coordinator_update()
-
-        @callback
-        def async_reboot_requested() -> None:
-            """Respond to a requested controller reboot."""
-            self._attr_available = False
-            self._rebooting = True
-            self.async_write_ha_state()
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
 
         for signal, func in (
-            (self._signal_reboot_completed, async_reboot_completed),
-            (self._signal_reboot_requested, async_reboot_requested),
+            (
+                self._signal_reboot_completed,
+                self.coordinator.async_respond_to_reboot_completed,
+            ),
+            (
+                self._signal_reboot_requested,
+                self.coordinator.async_respond_to_reboot_requested,
+            ),
         ):
             self.async_on_remove(async_dispatcher_connect(self.hass, signal, func))
 

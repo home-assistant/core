@@ -9,7 +9,7 @@ from typing import Any, cast
 from aioguardian import Client
 from aioguardian.errors import GuardianError
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import LOGGER
@@ -50,3 +50,15 @@ class GuardianDataUpdateCoordinator(DataUpdateCoordinator[dict]):
             except GuardianError as err:
                 raise UpdateFailed(err) from err
         return cast(dict[str, Any], resp["data"])
+
+    @callback
+    def async_respond_to_reboot_completed(self) -> None:
+        """Respond to reboot complete."""
+        self.last_update_success = True
+        self.async_update_listeners()
+
+    @callback
+    def async_respond_to_reboot_requested(self) -> None:
+        """Respond to a reboot request."""
+        self.last_update_success = False
+        self.async_update_listeners()
