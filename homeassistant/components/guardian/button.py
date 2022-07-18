@@ -77,8 +77,9 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Guardian buttons based on a config entry."""
-    client = hass.data[DOMAIN][entry.entry_id][DATA_CLIENT]
-    valve_controller_coordinators = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR]
+    entry_data = hass.data[DOMAIN][entry.entry_id]
+    client = entry_data[DATA_CLIENT]
+    valve_controller_coordinators = entry_data[DATA_COORDINATOR]
 
     async_add_entities(
         [
