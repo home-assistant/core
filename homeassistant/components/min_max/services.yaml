@@ -1,3 +1,18 @@
 reload:
   name: Reload
   description: Reload all min_max entities.
+
+set_entities:
+  name: Set entities
+  description: Change the entities referenced by this sensor.
+  target:
+    entity:
+      integration: min_max
+  fields:
+    entities:
+      name: Entities
+      description: The entities the sensor should refer to.
+      required: true
+      example: ["sensor.sensor_1", "sensor.sensor_2"]
+      selector:
+        object:

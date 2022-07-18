@@ -20,7 +20,11 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_platform,
+    entity_registry as er,
+)
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.reload import async_setup_reload_service
@@ -39,6 +43,7 @@ ATTR_MEAN = "mean"
 ATTR_MEDIAN = "median"
 ATTR_LAST = "last"
 ATTR_LAST_ENTITY_ID = "last_entity_id"
+ATTR_ENTITIES = "entities"
 
 ICON = "mdi:calculator"
 
@@ -51,6 +56,8 @@ SENSOR_TYPES = {
 }
 SENSOR_TYPE_TO_ATTR = {v: k for k, v in SENSOR_TYPES.items()}
 
+SERVICE_SET_ENTITIES = "set_entities"
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_TYPE, default=SENSOR_TYPES[ATTR_MAX_VALUE]): vol.All(
@@ -59,6 +66,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME): cv.string,
         vol.Required(CONF_ENTITY_IDS): cv.entity_ids,
         vol.Optional(CONF_ROUND_DIGITS, default=2): vol.Coerce(int),
+    }
+)
+
+SCHEMA_SET_ENTITIES = cv.make_entity_service_schema(
+    {
+        vol.Optional(ATTR_ENTITIES): vol.All(cv.ensure_list, [cv.string]),
     }
 )
 
@@ -86,6 +99,13 @@ async def async_setup_entry(
                 config_entry.entry_id,
             )
         ]
+    )
+
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_SET_ENTITIES,
+        SCHEMA_SET_ENTITIES,
+        "set_entities",
     )
 
 
@@ -199,6 +219,18 @@ class MinMaxSensor(SensorEntity):
             self._async_min_max_sensor_state_listener(state_event, update_state=False)
 
         self._calc_values()
+
+    async def set_entities(self, entities: list[str]) -> bool:
+        """Change the entities referenced by the sensor."""
+        _LOGGER.debug("SET ENTITIES CALLED")
+        _LOGGER.debug("entities: %s", entities)
+        _LOGGER.debug(dir(self))
+        _LOGGER.debug(str(self))
+        _LOGGER.debug(repr(self))
+        registry = er.async_get(self.hass)
+        entity_ids = er.async_validate_entity_ids(registry, entities)
+        _LOGGER.debug(entity_ids)
+        return True
 
     @property
     def native_value(self):
