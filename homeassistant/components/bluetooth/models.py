@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
 import contextlib
 import logging
 from typing import Any, Final, cast
@@ -56,7 +57,9 @@ class HaBleakScanner(BleakScanner):  # type: ignore[misc]
         self._callbacks: list[
             tuple[AdvertisementDataCallback, dict[str, set[str]]]
         ] = []
-        self.history: LRU = LRU(MAX_HISTORY_SIZE)
+        self.history: Mapping[str, tuple[BLEDevice, AdvertisementData]] = LRU(
+            MAX_HISTORY_SIZE
+        )
         super().__init__(*args, **kwargs)
 
     @hass_callback
@@ -87,7 +90,7 @@ class HaBleakScanner(BleakScanner):  # type: ignore[misc]
         Here we get the actual callback from bleak and dispatch
         it to all the wrapped HaBleakScannerWrapper classes
         """
-        self.history[device.address] = (device, advertisement_data)
+        self.history[device.address] = (device, advertisement_data)  # type: ignore[index]
         for callback_filters in self._callbacks:
             _dispatch_callback(*callback_filters, device, advertisement_data)
 
