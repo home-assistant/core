@@ -213,7 +213,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_try_connect(
         self, host: str, serial: str | None = None, raise_on_progress: bool = True
-    ) -> Light:
+    ) -> Light | None:
         """Try to connect."""
         self._async_abort_entries_match({CONF_HOST: host})
         connection = LIFXConnection(host, TARGET_ANY)
