@@ -647,9 +647,6 @@ omit =
     homeassistant/components/life360/const.py
     homeassistant/components/life360/coordinator.py
     homeassistant/components/life360/device_tracker.py
-    homeassistant/components/lifx/__init__.py
-    homeassistant/components/lifx/const.py
-    homeassistant/components/lifx/light.py
     homeassistant/components/lifx_cloud/scene.py
     homeassistant/components/lightwave/*
     homeassistant/components/limitlessled/light.py
