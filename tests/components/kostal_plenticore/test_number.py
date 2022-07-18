@@ -2,7 +2,7 @@
 
 from collections.abc import Generator
 from datetime import timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
 
 from kostal.plenticore import PlenticoreApiClient, SettingsData
 import pytest
@@ -26,16 +26,9 @@ def mock_plenticore_client() -> Generator[PlenticoreApiClient, None, None]:
     """Return a patched PlenticoreApiClient."""
     with patch(
         "homeassistant.components.kostal_plenticore.helper.PlenticoreApiClient",
+        autospec=True,
     ) as plenticore_client_class:
-        mock_api_ctx = MagicMock()
-        plenticore_client_class.return_value = mock_api_ctx
-
-        mock_api_ctx.login = AsyncMock()
-        mock_api_ctx.logout = AsyncMock()
-
-        mock_api_ctx.get_process_data = AsyncMock()
-
-        yield mock_api_ctx
+        yield plenticore_client_class.return_value
 
 
 @pytest.fixture
@@ -45,34 +38,32 @@ def mock_get_setting_values(mock_plenticore_client: PlenticoreApiClient) -> list
     Returns a list with setting values which can be extended by test cases.
     """
 
-    mock_plenticore_client.get_settings = AsyncMock(
-        return_value={
-            "devices:local": [
-                SettingsData(
-                    {
-                        "default": None,
-                        "min": 5,
-                        "max": 100,
-                        "access": "readwrite",
-                        "unit": "%",
-                        "type": "byte",
-                        "id": "Battery:MinSoc",
-                    }
-                ),
-                SettingsData(
-                    {
-                        "default": None,
-                        "min": 50,
-                        "max": 38000,
-                        "access": "readwrite",
-                        "unit": "W",
-                        "type": "byte",
-                        "id": "Battery:MinHomeComsumption",
-                    }
-                ),
-            ]
-        }
-    )
+    mock_plenticore_client.get_settings.return_value = {
+        "devices:local": [
+            SettingsData(
+                {
+                    "default": None,
+                    "min": 5,
+                    "max": 100,
+                    "access": "readwrite",
+                    "unit": "%",
+                    "type": "byte",
+                    "id": "Battery:MinSoc",
+                }
+            ),
+            SettingsData(
+                {
+                    "default": None,
+                    "min": 50,
+                    "max": 38000,
+                    "access": "readwrite",
+                    "unit": "W",
+                    "type": "byte",
+                    "id": "Battery:MinHomeComsumption",
+                }
+            ),
+        ]
+    }
 
     # this values are always retrieved by the integration on startup
     setting_values = [
@@ -87,7 +78,8 @@ def mock_get_setting_values(mock_plenticore_client: PlenticoreApiClient) -> list
             "scb:network": {"Hostname": "scb"},
         }
     ]
-    mock_plenticore_client.get_setting_values = AsyncMock(side_effect=setting_values)
+
+    mock_plenticore_client.get_setting_values.side_effect = setting_values
 
     return setting_values
 
@@ -99,7 +91,7 @@ async def test_setup_all_entries(
     mock_get_setting_values: list,
     entity_registry_enabled_by_default,
 ):
-    """Test if all available entries are setup up."""
+    """Test if all available entries are setup."""
 
     mock_config_entry.add_to_hass(hass)
 
@@ -118,7 +110,7 @@ async def test_setup_no_entries(
     mock_get_setting_values: list,
     entity_registry_enabled_by_default,
 ):
-    """Test that no entries are setup up if Plenticore does not provide data."""
+    """Test that no entries are setup if Plenticore does not provide data."""
 
     mock_plenticore_client.get_settings.return_value = []
 
@@ -139,7 +131,7 @@ async def test_number_has_value(
     mock_get_setting_values: list,
     entity_registry_enabled_by_default,
 ):
-    """Test if number has a value if data are provided on update."""
+    """Test if number has a value if data is provided on update."""
 
     mock_get_setting_values.append({"devices:local": {"Battery:MinSoc": "42"}})
 
@@ -164,7 +156,7 @@ async def test_number_is_unavailable(
     mock_get_setting_values: list,
     entity_registry_enabled_by_default,
 ):
-    """Test if number is unavailable if not data is provided on update."""
+    """Test if number is unavailable if no data is provided on update."""
 
     mock_config_entry.add_to_hass(hass)
 
@@ -187,7 +179,6 @@ async def test_set_value(
 ):
     """Test if a new value could be set."""
 
-    mock_plenticore_client.set_setting_values = AsyncMock()
     mock_get_setting_values.append({"devices:local": {"Battery:MinSoc": "42"}})
 
     mock_config_entry.add_to_hass(hass)
