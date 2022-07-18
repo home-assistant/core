@@ -89,6 +89,7 @@ class AladdinDevice(CoverEntity):
         self._device_id = device["device_id"]
         self._number = device["door_number"]
         self._name = device["name"]
+        self._serial = device["serial"]
         self._attr_unique_id = f"{self._device_id}-{self._number}"
         self._attr_has_entity_name = True
 
@@ -108,8 +109,8 @@ class AladdinDevice(CoverEntity):
             """Schedule a state update."""
             self.async_write_ha_state()
 
-        self._acc.register_callback(update_callback, self._number)
-        await self._acc.get_doors(self._number)
+        self._acc.register_callback(update_callback, self._serial)
+        await self._acc.get_doors(self._serial)
 
     async def async_will_remove_from_hass(self) -> None:
         """Close Aladdin Connect before removing."""
@@ -125,7 +126,7 @@ class AladdinDevice(CoverEntity):
 
     async def async_update(self) -> None:
         """Update status of cover."""
-        await self._acc.get_doors(self._number)
+        await self._acc.get_doors(self._serial)
 
     @property
     def is_closed(self) -> bool | None:

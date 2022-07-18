@@ -43,11 +43,11 @@ class AdvantageAirFilter(AdvantageAirEntity, BinarySensorEntity):
 
     _attr_device_class = BinarySensorDeviceClass.PROBLEM
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_name = "Filter"
 
     def __init__(self, instance, ac_key):
         """Initialize an Advantage Air Filter sensor."""
         super().__init__(instance, ac_key)
-        self._attr_name = f'{self._ac["name"]} filter'
         self._attr_unique_id = (
             f'{self.coordinator.data["system"]["rid"]}-{ac_key}-filter'
         )
