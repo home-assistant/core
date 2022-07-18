@@ -10,6 +10,7 @@ DEVICE_CONFIG_OPEN = {
     "name": "home",
     "status": "open",
     "link_status": "Connected",
+    "serial": "12345",
 }
 
 
