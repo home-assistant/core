@@ -187,6 +187,9 @@ aiokafka==0.7.2
 aiokef==0.2.16
 
 # homeassistant.components.lifx
+aiolifx-connection==1.0.0
+
+# homeassistant.components.lifx
 aiolifx==0.8.1
 
 # homeassistant.components.lifx
