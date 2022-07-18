@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AmbientWeatherEntity
+from . import AmbientStation, AmbientWeatherEntity
 from .const import ATTR_LAST_DATA, DOMAIN
 
 TYPE_BATT1 = "batt1"
@@ -330,7 +330,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Ambient PWS binary sensors based on a config entry."""
-    ambient = hass.data[DOMAIN][entry.entry_id]
+    ambient: AmbientStation = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
         [
