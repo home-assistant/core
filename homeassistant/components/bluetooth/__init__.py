@@ -271,7 +271,7 @@ class BluetoothManager:
 
         async def async_sleep_recovery(now: datetime) -> None:
             """Restart bluetooth discovery on sleep."""
-            _LOGGER.debug(
+            _LOGGER.warning(
                 "Restarting bluetooth scanner? -- is_scanning: %s",
                 getattr(self.scanner, "is_scanning", None),
             )
