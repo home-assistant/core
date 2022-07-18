@@ -153,12 +153,12 @@ async def test_discovery_match_by_local_name(hass, mock_bleak_scanner_start):
 async def test_discovery_match_by_manufacturer_id_and_first_byte(
     hass, mock_bleak_scanner_start
 ):
-    """Test bluetooth discovery match by manufacturer_id and manufacturer_data_first_byte."""
+    """Test bluetooth discovery match by manufacturer_id and manufacturer_data_start."""
     mock_bt = [
         {
             "domain": "homekit_controller",
             "manufacturer_id": 76,
-            "manufacturer_data_first_byte": 0x06,
+            "manufacturer_data_start": [0x06, 0x02, 0x03],
         }
     ]
     with patch(
@@ -174,7 +174,9 @@ async def test_discovery_match_by_manufacturer_id_and_first_byte(
 
         hkc_device = BLEDevice("44:44:33:11:23:45", "lock")
         hkc_adv = AdvertisementData(
-            local_name="lock", service_uuids=[], manufacturer_data={76: b"\x06"}
+            local_name="lock",
+            service_uuids=[],
+            manufacturer_data={76: b"\x06\x02\x03\x99"},
         )
 
         models.HA_BLEAK_SCANNER._callback(hkc_device, hkc_adv)

@@ -647,9 +647,6 @@ omit =
     homeassistant/components/life360/const.py
     homeassistant/components/life360/coordinator.py
     homeassistant/components/life360/device_tracker.py
-    homeassistant/components/lifx/__init__.py
-    homeassistant/components/lifx/const.py
-    homeassistant/components/lifx/light.py
     homeassistant/components/lifx_cloud/scene.py
     homeassistant/components/lightwave/*
     homeassistant/components/limitlessled/light.py
@@ -1498,6 +1495,7 @@ omit =
     homeassistant/components/yolink/climate.py
     homeassistant/components/yolink/const.py
     homeassistant/components/yolink/coordinator.py
+    homeassistant/components/yolink/cover.py
     homeassistant/components/yolink/entity.py
     homeassistant/components/yolink/lock.py
     homeassistant/components/yolink/sensor.py

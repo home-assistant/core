@@ -196,7 +196,7 @@ MANIFEST_SCHEMA = vol.Schema(
                     vol.Optional("service_uuid"): vol.All(str, verify_lowercase),
                     vol.Optional("local_name"): vol.All(str),
                     vol.Optional("manufacturer_id"): int,
-                    vol.Optional("manufacturer_data_first_byte"): int,
+                    vol.Optional("manufacturer_data_start"): [int],
                 }
             )
         ],

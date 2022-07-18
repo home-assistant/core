@@ -7,7 +7,7 @@ from enum import Enum
 import fnmatch
 import logging
 import platform
-from typing import Final, TypedDict
+from typing import Final, TypedDict, Union
 
 from bleak import BleakError
 from bleak.backends.device import BLEDevice
@@ -103,11 +103,13 @@ ADDRESS: Final = "address"
 LOCAL_NAME: Final = "local_name"
 SERVICE_UUID: Final = "service_uuid"
 MANUFACTURER_ID: Final = "manufacturer_id"
-MANUFACTURER_DATA_FIRST_BYTE: Final = "manufacturer_data_first_byte"
+MANUFACTURER_DATA_START: Final = "manufacturer_data_start"
 
 
 BluetoothChange = Enum("BluetoothChange", "ADVERTISEMENT")
-BluetoothCallback = Callable[[BluetoothServiceInfoBleak, BluetoothChange], None]
+BluetoothCallback = Callable[
+    [Union[BluetoothServiceInfoBleak, BluetoothServiceInfo], BluetoothChange], None
+]
 
 
 @hass_callback
@@ -201,14 +203,16 @@ def _ble_device_matches(
         return False
 
     if (
-        matcher_manufacturer_data_first_byte := matcher.get(
-            MANUFACTURER_DATA_FIRST_BYTE
+        matcher_manufacturer_data_start := matcher.get(MANUFACTURER_DATA_START)
+    ) is not None:
+        matcher_manufacturer_data_start_bytes = bytearray(
+            matcher_manufacturer_data_start
         )
-    ) is not None and not any(
-        matcher_manufacturer_data_first_byte == manufacturer_data[0]
-        for manufacturer_data in advertisement_data.manufacturer_data.values()
-    ):
-        return False
+        if not any(
+            manufacturer_data.startswith(matcher_manufacturer_data_start_bytes)
+            for manufacturer_data in advertisement_data.manufacturer_data.values()
+        ):
+            return False
 
     return True
 

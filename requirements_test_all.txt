@@ -7,7 +7,7 @@
 AEMET-OpenData==0.2.1
 
 # homeassistant.components.aladdin_connect
-AIOAladdinConnect==0.1.25
+AIOAladdinConnect==0.1.27
 
 # homeassistant.components.adax
 Adax-local==0.1.4
@@ -152,7 +152,7 @@ aioguardian==2022.03.2
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==1.1.4
+aiohomekit==1.1.8
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -163,6 +163,15 @@ aiohue==4.4.2
 
 # homeassistant.components.apache_kafka
 aiokafka==0.7.2
+
+# homeassistant.components.lifx
+aiolifx-connection==1.0.0
+
+# homeassistant.components.lifx
+aiolifx==0.8.1
+
+# homeassistant.components.lifx
+aiolifx_effects==0.2.2
 
 # homeassistant.components.lookin
 aiolookin==0.1.1
@@ -745,7 +754,7 @@ mutesync==0.0.1
 ndms2_client==0.1.1
 
 # homeassistant.components.ness_alarm
-nessclient==0.9.15
+nessclient==0.10.0
 
 # homeassistant.components.discovery
 netdisco==3.0.0
@@ -1658,7 +1667,7 @@ yalexs==1.1.25
 yeelight==0.7.10
 
 # homeassistant.components.yolink
-yolink-api==0.0.8
+yolink-api==0.0.9
 
 # homeassistant.components.youless
 youless-api==0.16

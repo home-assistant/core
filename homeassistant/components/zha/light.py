@@ -73,7 +73,6 @@ CAPABILITIES_COLOR_LOOP = 0x4
 CAPABILITIES_COLOR_XY = 0x08
 CAPABILITIES_COLOR_TEMP = 0x10
 
-DEFAULT_TRANSITION = 1
 DEFAULT_MIN_BRIGHTNESS = 2
 
 UPDATE_COLORLOOP_ACTION = 0x1
@@ -119,7 +118,7 @@ class BaseLight(LogMixin, light.LightEntity):
     """Operations common to all light entities."""
 
     _FORCE_ON = False
-    _DEFAULT_COLOR_FROM_OFF_TRANSITION = 0
+    _DEFAULT_MIN_TRANSITION_TIME = 0
 
     def __init__(self, *args, **kwargs):
         """Initialize the light."""
@@ -140,7 +139,7 @@ class BaseLight(LogMixin, light.LightEntity):
         self._level_channel = None
         self._color_channel = None
         self._identify_channel = None
-        self._default_transition = None
+        self._zha_config_transition = self._DEFAULT_MIN_TRANSITION_TIME
         self._attr_color_mode = ColorMode.UNKNOWN  # Set by sub classes
 
     @property
@@ -216,33 +215,49 @@ class BaseLight(LogMixin, light.LightEntity):
         transition = kwargs.get(light.ATTR_TRANSITION)
         duration = (
             transition * 10
-            if transition
-            else self._default_transition * 10
-            if self._default_transition
-            else DEFAULT_TRANSITION
-        )
+            if transition is not None
+            else self._zha_config_transition * 10
+        ) or self._DEFAULT_MIN_TRANSITION_TIME  # if 0 is passed in some devices still need the minimum default
         brightness = kwargs.get(light.ATTR_BRIGHTNESS)
         effect = kwargs.get(light.ATTR_EFFECT)
         flash = kwargs.get(light.ATTR_FLASH)
+        temperature = kwargs.get(light.ATTR_COLOR_TEMP)
+        hs_color = kwargs.get(light.ATTR_HS_COLOR)
 
         # If the light is currently off but a turn_on call with a color/temperature is sent,
         # the light needs to be turned on first at a low brightness level where the light is immediately transitioned
         # to the correct color. Afterwards, the transition is only from the low brightness to the new brightness.
         # Otherwise, the transition is from the color the light had before being turned on to the new color.
-        # This can look especially bad with transitions longer than a second.
-        color_provided_from_off = (
-            not self._state
+        # This can look especially bad with transitions longer than a second. We do not want to do this for
+        # devices that need to be forced to use the on command because we would end up with 4 commands sent:
+        # move to level, on, color, move to level... We also will not set this if the bulb is already in the
+        # desired color mode with the desired color or color temperature.
+        new_color_provided_while_off = (
+            not isinstance(self, LightGroup)
+            and not self._FORCE_ON
+            and not self._state
+            and (
+                (
+                    temperature is not None
+                    and (
+                        self._color_temp != temperature
+                        or self._attr_color_mode != ColorMode.COLOR_TEMP
+                    )
+                )
+                or (
+                    hs_color is not None
+                    and (
+                        self.hs_color != hs_color
+                        or self._attr_color_mode != ColorMode.HS
+                    )
+                )
+            )
             and brightness_supported(self._attr_supported_color_modes)
-            and (light.ATTR_COLOR_TEMP in kwargs or light.ATTR_HS_COLOR in kwargs)
         )
-        final_duration = duration
-        if color_provided_from_off:
-            # Set the duration for the color changing commands to 0.
-            duration = 0
 
         if (
             brightness is None
-            and (self._off_with_transition or color_provided_from_off)
+            and (self._off_with_transition or new_color_provided_while_off)
             and self._off_brightness is not None
         ):
             brightness = self._off_brightness
@@ -254,11 +269,11 @@ class BaseLight(LogMixin, light.LightEntity):
 
         t_log = {}
 
-        if color_provided_from_off:
+        if new_color_provided_while_off:
             # If the light is currently off, we first need to turn it on at a low brightness level with no transition.
             # After that, we set it to the desired color/temperature with no transition.
             result = await self._level_channel.move_to_level_with_on_off(
-                DEFAULT_MIN_BRIGHTNESS, self._DEFAULT_COLOR_FROM_OFF_TRANSITION
+                DEFAULT_MIN_BRIGHTNESS, self._DEFAULT_MIN_TRANSITION_TIME
             )
             t_log["move_to_level_with_on_off"] = result
             if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
@@ -269,7 +284,7 @@ class BaseLight(LogMixin, light.LightEntity):
 
         if (
             (brightness is not None or transition)
-            and not color_provided_from_off
+            and not new_color_provided_while_off
             and brightness_supported(self._attr_supported_color_modes)
         ):
             result = await self._level_channel.move_to_level_with_on_off(
@@ -285,7 +300,7 @@ class BaseLight(LogMixin, light.LightEntity):
 
         if (
             brightness is None
-            and not color_provided_from_off
+            and not new_color_provided_while_off
             or (self._FORCE_ON and brightness)
         ):
             # since some lights don't always turn on with move_to_level_with_on_off,
@@ -297,9 +312,13 @@ class BaseLight(LogMixin, light.LightEntity):
                 return
             self._state = True
 
-        if light.ATTR_COLOR_TEMP in kwargs:
-            temperature = kwargs[light.ATTR_COLOR_TEMP]
-            result = await self._color_channel.move_to_color_temp(temperature, duration)
+        if temperature is not None:
+            result = await self._color_channel.move_to_color_temp(
+                temperature,
+                self._DEFAULT_MIN_TRANSITION_TIME
+                if new_color_provided_while_off
+                else duration,
+            )
             t_log["move_to_color_temp"] = result
             if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
                 self.debug("turned on: %s", t_log)
@@ -308,11 +327,14 @@ class BaseLight(LogMixin, light.LightEntity):
             self._color_temp = temperature
             self._hs_color = None
 
-        if light.ATTR_HS_COLOR in kwargs:
-            hs_color = kwargs[light.ATTR_HS_COLOR]
+        if hs_color is not None:
             xy_color = color_util.color_hs_to_xy(*hs_color)
             result = await self._color_channel.move_to_color(
-                int(xy_color[0] * 65535), int(xy_color[1] * 65535), duration
+                int(xy_color[0] * 65535),
+                int(xy_color[1] * 65535),
+                self._DEFAULT_MIN_TRANSITION_TIME
+                if new_color_provided_while_off
+                else duration,
             )
             t_log["move_to_color"] = result
             if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
@@ -322,9 +344,9 @@ class BaseLight(LogMixin, light.LightEntity):
             self._hs_color = hs_color
             self._color_temp = None
 
-        if color_provided_from_off:
+        if new_color_provided_while_off:
             # The light is has the correct color, so we can now transition it to the correct brightness level.
-            result = await self._level_channel.move_to_level(level, final_duration)
+            result = await self._level_channel.move_to_level(level, duration)
             t_log["move_to_level_if_color"] = result
             if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
                 self.debug("turned on: %s", t_log)
@@ -371,12 +393,13 @@ class BaseLight(LogMixin, light.LightEntity):
 
     async def async_turn_off(self, **kwargs):
         """Turn the entity off."""
-        duration = kwargs.get(light.ATTR_TRANSITION)
+        transition = kwargs.get(light.ATTR_TRANSITION)
         supports_level = brightness_supported(self._attr_supported_color_modes)
 
-        if duration and supports_level:
+        # is not none looks odd here but it will override built in bulb transition times if we pass 0 in here
+        if transition is not None and supports_level:
             result = await self._level_channel.move_to_level_with_on_off(
-                0, duration * 10
+                0, transition * 10
             )
         else:
             result = await self._on_off_channel.off()
@@ -387,7 +410,7 @@ class BaseLight(LogMixin, light.LightEntity):
 
         if supports_level:
             # store current brightness so that the next turn_on uses it.
-            self._off_with_transition = bool(duration)
+            self._off_with_transition = transition is not None
             self._off_brightness = self._brightness
 
         self.async_write_ha_state()
@@ -460,7 +483,7 @@ class Light(BaseLight, ZhaEntity):
         if effect_list:
             self._effect_list = effect_list
 
-        self._default_transition = async_get_zha_config_value(
+        self._zha_config_transition = async_get_zha_config_value(
             zha_device.gateway.config_entry,
             ZHA_OPTIONS,
             CONF_DEFAULT_LIGHT_TRANSITION,
@@ -472,6 +495,7 @@ class Light(BaseLight, ZhaEntity):
         """Set the state."""
         self._state = bool(value)
         if value:
+            self._off_with_transition = False
             self._off_brightness = None
         self.async_write_ha_state()
 
@@ -605,7 +629,7 @@ class HueLight(Light):
 @STRICT_MATCH(
     channel_names=CHANNEL_ON_OFF,
     aux_channels={CHANNEL_COLOR, CHANNEL_LEVEL},
-    manufacturers={"Jasco", "Quotra-Vision"},
+    manufacturers={"Jasco", "Quotra-Vision", "eWeLight", "eWeLink"},
 )
 class ForceOnLight(Light):
     """Representation of a light which does not respect move_to_level_with_on_off."""
@@ -621,7 +645,7 @@ class ForceOnLight(Light):
 class SengledLight(Light):
     """Representation of a Sengled light which does not react to move_to_color_temp with 0 as a transition."""
 
-    _DEFAULT_COLOR_FROM_OFF_TRANSITION = 1
+    _DEFAULT_MIN_TRANSITION_TIME = 1
 
 
 @GROUP_MATCH()
@@ -639,7 +663,7 @@ class LightGroup(BaseLight, ZhaGroupEntity):
         self._color_channel = group.endpoint[Color.cluster_id]
         self._identify_channel = group.endpoint[Identify.cluster_id]
         self._debounced_member_refresh = None
-        self._default_transition = async_get_zha_config_value(
+        self._zha_config_transition = async_get_zha_config_value(
             zha_device.gateway.config_entry,
             ZHA_OPTIONS,
             CONF_DEFAULT_LIGHT_TRANSITION,
