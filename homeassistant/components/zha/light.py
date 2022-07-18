@@ -59,10 +59,6 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-CAPABILITIES_COLOR_LOOP = 0x4
-CAPABILITIES_COLOR_XY = 0x08
-CAPABILITIES_COLOR_TEMP = 0x10
-
 DEFAULT_MIN_BRIGHTNESS = 2
 
 UPDATE_COLORLOOP_ACTION = 0x1
@@ -167,6 +163,7 @@ class BaseLight(LogMixin, light.LightEntity):
         flash = kwargs.get(light.ATTR_FLASH)
         temperature = kwargs.get(light.ATTR_COLOR_TEMP)
         xy_color = kwargs.get(light.ATTR_XY_COLOR)
+        hs_color = kwargs.get(light.ATTR_HS_COLOR)
 
         # If the light is currently off but a turn_on call with a color/temperature is sent,
         # the light needs to be turned on first at a low brightness level where the light is immediately transitioned
@@ -193,6 +190,13 @@ class BaseLight(LogMixin, light.LightEntity):
                     and (
                         self._attr_xy_color != xy_color
                         or self._attr_color_mode != ColorMode.XY
+                    )
+                )
+                or (
+                    hs_color is not None
+                    and (
+                        self._attr_hs_color != hs_color
+                        or self._attr_color_mode != ColorMode.HS
                     )
                 )
             )
@@ -270,6 +274,24 @@ class BaseLight(LogMixin, light.LightEntity):
             self._attr_color_mode = ColorMode.COLOR_TEMP
             self._attr_color_temp = temperature
             self._attr_xy_color = None
+
+        if hs_color is not None:
+            result = await self._color_channel.move_to_hue_and_saturation(
+                int(hs_color[0] * 254 / 360),
+                int(hs_color[1] * 2.54),
+                self._DEFAULT_MIN_TRANSITION_TIME
+                if new_color_provided_while_off
+                else duration,
+            )
+            t_log["move_to_color"] = result
+            if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
+                self.debug("turned on: %s", t_log)
+                return
+            self._attr_color_mode = ColorMode.HS
+            self._attr_xy_color = None
+            self._attr_color_temp = None
+            self._attr_hs_color = hs_color
+            xy_color = None
 
         if xy_color is not None:
             result = await self._color_channel.move_to_color(
@@ -388,12 +410,14 @@ class Light(BaseLight, ZhaEntity):
             self._attr_brightness = self._level_channel.current_level
 
         if self._color_channel:
-            color_capabilities = self._color_channel.color_capabilities
-            if color_capabilities & CAPABILITIES_COLOR_TEMP:
+            if self._color_channel.color_temp_supported:
                 self._attr_supported_color_modes.add(ColorMode.COLOR_TEMP)
                 self._attr_color_temp = self._color_channel.color_temperature
 
-            if color_capabilities & CAPABILITIES_COLOR_XY:
+            if (
+                self._color_channel.xy_supported
+                and not self._color_channel.hs_supported
+            ):
                 self._attr_supported_color_modes.add(ColorMode.XY)
                 curr_x = self._color_channel.current_x
                 curr_y = self._color_channel.current_y
@@ -402,7 +426,19 @@ class Light(BaseLight, ZhaEntity):
                 else:
                     self._attr_xy_color = (0, 0)
 
-            if color_capabilities & CAPABILITIES_COLOR_LOOP:
+            if self._color_channel.hs_supported:
+                self._attr_supported_color_modes.add(ColorMode.HS)
+                curr_hue = self._color_channel.current_hue
+                curr_saturation = self._color_channel.current_saturation
+                if curr_hue is not None and curr_saturation is not None:
+                    self._attr_hs_color = (
+                        int(curr_hue * 254 / 360),
+                        int(curr_saturation * 2.54),
+                    )
+                else:
+                    self._attr_hs_color = (0, 0)
+
+            if self._color_channel.color_loop_supported:
                 self._attr_supported_features |= light.LightEntityFeature.EFFECT
                 effect_list.append(light.EFFECT_COLORLOOP)
                 if self._color_channel.color_loop_active == 1:
@@ -482,8 +518,10 @@ class Light(BaseLight, ZhaEntity):
             self._attr_color_mode = ColorMode(last_state.attributes["color_mode"])
         if "color_temp" in last_state.attributes:
             self._attr_color_temp = last_state.attributes["color_temp"]
-        if "hs_color" in last_state.attributes:
+        if "xy_color" in last_state.attributes:
             self._attr_xy_color = last_state.attributes["xy_color"]
+        if "hs_color" in last_state.attributes:
+            self._attr_hs_color = last_state.attributes["hs_color"]
         if "effect" in last_state.attributes:
             self._attr_effect = last_state.attributes["effect"]
 
@@ -511,6 +549,8 @@ class Light(BaseLight, ZhaEntity):
                 "current_x",
                 "current_y",
                 "color_loop_active",
+                "current_hue",
+                "current_saturation",
             ]
 
             results = await self._color_channel.get_attributes(
@@ -524,6 +564,17 @@ class Light(BaseLight, ZhaEntity):
                     if color_temp is not None and color_mode:
                         self._attr_color_temp = color_temp
                         self._attr_xy_color = None
+                elif color_mode == Color.ColorMode.HS:
+                    self._attr_color_mode = ColorMode.HS
+                    current_hue = results.get("current_hue")
+                    current_saturation = results.get("current_saturation")
+                    if current_hue is not None and current_saturation is not None:
+                        self._attr_hs_color = (
+                            int(current_hue * 360 / 254),
+                            int(current_saturation / 254),
+                        )
+                        self._attr_xy_color = None
+                        self._attr_color_temp = None
                 else:
                     self._attr_color_mode = ColorMode.XY
                     color_x = results.get("current_x")
@@ -531,6 +582,7 @@ class Light(BaseLight, ZhaEntity):
                     if color_x is not None and color_y is not None:
                         self._attr_xy_color = (color_x / 65535, color_y / 65535)
                         self._attr_color_temp = None
+                        self._attr_hs_color = None
 
             color_loop_active = results.get("color_loop_active")
             if color_loop_active is not None:

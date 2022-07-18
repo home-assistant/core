@@ -15,11 +15,7 @@ from homeassistant.components.light import (
     ColorMode,
 )
 from homeassistant.components.zha.core.group import GroupMember
-from homeassistant.components.zha.light import (
-    CAPABILITIES_COLOR_TEMP,
-    CAPABILITIES_COLOR_XY,
-    FLASH_EFFECTS,
-)
+from homeassistant.components.zha.light import FLASH_EFFECTS
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 import homeassistant.util.dt as dt_util
 
@@ -148,7 +144,8 @@ async def device_light_1(hass, zigpy_device_mock, zha_device_joined):
     )
     color_cluster = zigpy_device.endpoints[1].light_color
     color_cluster.PLUGGED_ATTR_READS = {
-        "color_capabilities": CAPABILITIES_COLOR_TEMP | CAPABILITIES_COLOR_XY
+        "color_capabilities": lighting.Color.ColorCapabilities.Color_temperature
+        | lighting.Color.ColorCapabilities.XY_attributes
     }
     zha_device = await zha_device_joined(zigpy_device)
     zha_device.available = True
@@ -180,7 +177,8 @@ async def device_light_2(hass, zigpy_device_mock, zha_device_joined):
     )
     color_cluster = zigpy_device.endpoints[1].light_color
     color_cluster.PLUGGED_ATTR_READS = {
-        "color_capabilities": CAPABILITIES_COLOR_TEMP | CAPABILITIES_COLOR_XY
+        "color_capabilities": lighting.Color.ColorCapabilities.Color_temperature
+        | lighting.Color.ColorCapabilities.XY_attributes
     }
     zha_device = await zha_device_joined(zigpy_device)
     zha_device.available = True
@@ -239,7 +237,8 @@ async def eWeLink_light(hass, zigpy_device_mock, zha_device_joined):
     )
     color_cluster = zigpy_device.endpoints[1].light_color
     color_cluster.PLUGGED_ATTR_READS = {
-        "color_capabilities": CAPABILITIES_COLOR_TEMP | CAPABILITIES_COLOR_XY
+        "color_capabilities": lighting.Color.ColorCapabilities.Color_temperature
+        | lighting.Color.ColorCapabilities.XY_attributes
     }
     zha_device = await zha_device_joined(zigpy_device)
     zha_device.available = True

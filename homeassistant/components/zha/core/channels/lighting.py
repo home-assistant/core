@@ -53,6 +53,11 @@ class ColorChannel(ZigbeeChannel):
         return self.CAPABILITIES_COLOR_XY
 
     @property
+    def zcl_color_capabilities(self) -> lighting.Color.ColorCapabilities:
+        """Return ZCL color capabilities of the light."""
+        return self.cluster.get("color_capabilities")
+
+    @property
     def color_mode(self) -> int | None:
         """Return cached value of the color_mode attribute."""
         return self.cluster.get("color_mode")
@@ -78,6 +83,16 @@ class ColorChannel(ZigbeeChannel):
         return self.cluster.get("current_y")
 
     @property
+    def current_hue(self) -> int | None:
+        """Return cached value of the current_hue attribute."""
+        return self.cluster.get("current_hue")
+
+    @property
+    def current_saturation(self) -> int | None:
+        """Return cached value of the current_saturation attribute."""
+        return self.cluster.get("current_saturation")
+
+    @property
     def min_mireds(self) -> int:
         """Return the coldest color_temp that this channel supports."""
         return self.cluster.get("color_temp_physical_min", self.MIN_MIREDS)
@@ -86,3 +101,39 @@ class ColorChannel(ZigbeeChannel):
     def max_mireds(self) -> int:
         """Return the warmest color_temp that this channel supports."""
         return self.cluster.get("color_temp_physical_max", self.MAX_MIREDS)
+
+    @property
+    def hs_supported(self) -> bool:
+        """Return if the channel supports hue and saturation."""
+        return (
+            self.zcl_color_capabilities is not None
+            and lighting.Color.ColorCapabilities.Hue_and_saturation
+            in self.zcl_color_capabilities
+        )
+
+    @property
+    def xy_supported(self) -> bool:
+        """Return if the channel supports xy."""
+        return (
+            self.zcl_color_capabilities is not None
+            and lighting.Color.ColorCapabilities.XY_attributes
+            in self.zcl_color_capabilities
+        )
+
+    @property
+    def color_temp_supported(self) -> bool:
+        """Return if the channel supports color temperature."""
+        return (
+            self.zcl_color_capabilities is not None
+            and lighting.Color.ColorCapabilities.Color_temperature
+            in self.zcl_color_capabilities
+        )
+
+    @property
+    def color_loop_supported(self) -> bool:
+        """Return if the channel supports color loop."""
+        return (
+            self.zcl_color_capabilities is not None
+            and lighting.Color.ColorCapabilities.Color_loop
+            in self.zcl_color_capabilities
+        )
