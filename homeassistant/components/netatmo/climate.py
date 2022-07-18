@@ -260,7 +260,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
                 data["event_type"] == EVENT_TYPE_CANCEL_SET_POINT
                 and self._room.entity_id == room["id"]
             ):
-                if self.hvac_mode == HVACMode.OFF:
+                if self._attr_hvac_mode == HVACMode.OFF:
                     self._attr_hvac_mode = HVACMode.AUTO
                     self._attr_preset_mode = PRESET_MAP_NETATMO[PRESET_SCHEDULE]
 
@@ -294,7 +294,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         if (
             preset_mode in (PRESET_BOOST, STATE_NETATMO_MAX)
             and self._model == NA_VALVE
-            and self.hvac_mode == HVACMode.HEAT
+            and self._attr_hvac_mode == HVACMode.HEAT
         ):
             await self._room.async_therm_set(
                 STATE_NETATMO_HOME,
@@ -308,7 +308,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
             )
         elif (
             preset_mode in (PRESET_BOOST, STATE_NETATMO_MAX)
-            and self.hvac_mode == HVACMode.HEAT
+            and self._attr_hvac_mode == HVACMode.HEAT
         ):
             await self._room.async_therm_set(STATE_NETATMO_HOME)
         elif preset_mode in (PRESET_BOOST, STATE_NETATMO_MAX):
@@ -334,7 +334,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
                 STATE_NETATMO_MANUAL,
                 DEFAULT_MIN_TEMP,
             )
-        elif self.hvac_mode != HVACMode.OFF:
+        elif self._attr_hvac_mode != HVACMode.OFF:
             await self._room.async_therm_set(STATE_NETATMO_OFF)
         self.async_write_ha_state()
 
