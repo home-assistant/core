@@ -4,6 +4,7 @@ from __future__ import annotations
 from http import HTTPStatus
 from unittest.mock import ANY, AsyncMock, Mock
 
+from freezegun import freeze_time
 import pytest
 import voluptuous as vol
 
@@ -56,6 +57,7 @@ async def create_issues(hass, ws_client):
         "issues": [
             dict(
                 issue,
+                created=ANY,
                 dismissed=False,
                 dismissed_version=None,
             )
@@ -146,6 +148,7 @@ async def test_dismiss_issue(hass: HomeAssistant, hass_ws_client) -> None:
         "issues": [
             dict(
                 issue,
+                created=ANY,
                 dismissed=True,
                 dismissed_version=ha_version,
             )
@@ -188,6 +191,7 @@ async def test_fix_non_existing_issue(
         "issues": [
             dict(
                 issue,
+                created=ANY,
                 dismissed=False,
                 dismissed_version=None,
             )
@@ -333,6 +337,7 @@ async def test_step_unauth(
     assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
+@freeze_time("2022-07-19 07:53:05")
 async def test_list_issues(hass: HomeAssistant, hass_ws_client) -> None:
     """Test we can list issues."""
     assert await async_setup_component(hass, DOMAIN, {})
@@ -389,6 +394,7 @@ async def test_list_issues(hass: HomeAssistant, hass_ws_client) -> None:
         "issues": [
             dict(
                 issue,
+                created="2022-07-19T07:53:05+00:00",
                 dismissed=False,
                 dismissed_version=None,
             )
