@@ -1164,7 +1164,7 @@ async def websocket_handle_thumbnail(hass, connection, msg):
         )
         return
 
-    await connection.send_big_result(
+    connection.send_big_result(
         msg["id"],
         {
             "content_type": content_type,

@@ -10,7 +10,7 @@ from homeassistant.components import onboarding
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 
-from .typing import UNDEFINED, DiscoveryInfoType, UndefinedType
+from .typing import DiscoveryInfoType
 
 if TYPE_CHECKING:
     import asyncio
@@ -173,23 +173,8 @@ def register_discovery_flow(
     domain: str,
     title: str,
     discovery_function: DiscoveryFunctionType[Awaitable[bool] | bool],
-    connection_class: str | UndefinedType = UNDEFINED,
 ) -> None:
     """Register flow for discovered integrations that not require auth."""
-    if connection_class is not UNDEFINED:
-        _LOGGER.warning(
-            (
-                "The %s (%s) integration is setting a connection_class"
-                " when calling the 'register_discovery_flow()' method in its"
-                " config flow. The connection class has been deprecated and will"
-                " be removed in a future release of Home Assistant."
-                " If '%s' is a custom integration, please contact the author"
-                " of that integration about this warning.",
-            ),
-            title,
-            domain,
-            domain,
-        )
 
     class DiscoveryFlow(DiscoveryFlowHandler[Union[Awaitable[bool], bool]]):
         """Discovery flow handler."""
