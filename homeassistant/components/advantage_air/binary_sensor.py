@@ -48,9 +48,7 @@ class AdvantageAirFilter(AdvantageAirEntity, BinarySensorEntity):
     def __init__(self, instance, ac_key):
         """Initialize an Advantage Air Filter sensor."""
         super().__init__(instance, ac_key)
-        self._attr_unique_id = (
-            f'{self.coordinator.data["system"]["rid"]}-{ac_key}-filter'
-        )
+        self._attr_unique_id += "-filter"
 
     @property
     def is_on(self):
@@ -67,9 +65,7 @@ class AdvantageAirZoneMotion(AdvantageAirEntity, BinarySensorEntity):
         """Initialize an Advantage Air Zone Motion sensor."""
         super().__init__(instance, ac_key, zone_key)
         self._attr_name = f'{self._zone["name"]} motion'
-        self._attr_unique_id = (
-            f'{self.coordinator.data["system"]["rid"]}-{ac_key}-{zone_key}-motion'
-        )
+        self._attr_unique_id += "-motion"
 
     @property
     def is_on(self):
@@ -87,9 +83,7 @@ class AdvantageAirZoneMyZone(AdvantageAirEntity, BinarySensorEntity):
         """Initialize an Advantage Air Zone MyZone sensor."""
         super().__init__(instance, ac_key, zone_key)
         self._attr_name = f'{self._zone["name"]} myZone'
-        self._attr_unique_id = (
-            f'{self.coordinator.data["system"]["rid"]}-{ac_key}-{zone_key}-myzone'
-        )
+        self._attr_unique_id += "-myzone"
 
     @property
     def is_on(self):

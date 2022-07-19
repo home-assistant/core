@@ -53,9 +53,6 @@ class AdvantageAirZoneVent(AdvantageAirEntity, CoverEntity):
         """Initialize an Advantage Air Zone Vent."""
         super().__init__(instance, ac_key, zone_key)
         self._attr_name = self._zone["name"]
-        self._attr_unique_id = (
-            f'{self.coordinator.data["system"]["rid"]}-{ac_key}-{zone_key}'
-        )
 
     @property
     def is_closed(self) -> bool:

@@ -68,9 +68,7 @@ class AdvantageAirTimeTo(AdvantageAirEntity, SensorEntity):
         self.action = action
         self._time_key = f"countDownTo{action}"
         self._attr_name = f"Time to {action}"
-        self._attr_unique_id = (
-            f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-timeto{action}'
-        )
+        self._attr_unique_id += f"-timeto{action}"
 
     @property
     def native_value(self):
@@ -101,9 +99,7 @@ class AdvantageAirZoneVent(AdvantageAirEntity, SensorEntity):
         """Initialize an Advantage Air Zone Vent Sensor."""
         super().__init__(instance, ac_key, zone_key=zone_key)
         self._attr_name = f'{self._zone["name"]} vent'
-        self._attr_unique_id = (
-            f'{self.coordinator.data["system"]["rid"]}-{ac_key}-{zone_key}-vent'
-        )
+        self._attr_unique_id += "-vent"
 
     @property
     def native_value(self):
@@ -131,9 +127,7 @@ class AdvantageAirZoneSignal(AdvantageAirEntity, SensorEntity):
         """Initialize an Advantage Air Zone wireless signal sensor."""
         super().__init__(instance, ac_key, zone_key)
         self._attr_name = f'{self._zone["name"]} signal'
-        self._attr_unique_id = (
-            f'{self.coordinator.data["system"]["rid"]}-{ac_key}-{zone_key}-signal'
-        )
+        self._attr_unique_id += "-signal"
 
     @property
     def native_value(self):
@@ -167,9 +161,7 @@ class AdvantageAirZoneTemp(AdvantageAirEntity, SensorEntity):
         """Initialize an Advantage Air Zone Temp Sensor."""
         super().__init__(instance, ac_key, zone_key)
         self._attr_name = f'{self._zone["name"]} temperature'
-        self._attr_unique_id = (
-            f'{self.coordinator.data["system"]["rid"]}-{ac_key}-{zone_key}-temp'
-        )
+        self._attr_unique_id += "-temp"
 
     @property
     def native_value(self):

@@ -37,9 +37,7 @@ class AdvantageAirFreshAir(AdvantageAirEntity, SwitchEntity):
     def __init__(self, instance, ac_key):
         """Initialize an Advantage Air fresh air control."""
         super().__init__(instance, ac_key)
-        self._attr_unique_id = (
-            f'{self.coordinator.data["system"]["rid"]}-{ac_key}-freshair'
-        )
+        self._attr_unique_id += "-freshair"
 
     @property
     def is_on(self):

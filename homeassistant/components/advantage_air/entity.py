@@ -17,15 +17,17 @@ class AdvantageAirEntity(CoordinatorEntity):
         self.async_change = instance["async_change"]
         self.ac_key = ac_key
         self.zone_key = zone_key
+        self._attr_unique_id = f'{self.coordinator.data["system"]["rid"]}-{ac_key}'
+
         self._attr_device_info = DeviceInfo(
             via_device=(DOMAIN, self.coordinator.data["system"]["rid"]),
-            identifiers={
-                (DOMAIN, f"{self.coordinator.data['system']['rid']}_{ac_key}")
-            },
+            identifiers={(DOMAIN, self._attr_unique_id)},
             manufacturer="Advantage Air",
             model=self.coordinator.data["system"]["sysType"],
             name=self._ac["name"],
         )
+        if zone_key:
+            self._attr_unique_id += f"-{zone_key}"
 
     @property
     def _ac(self):
