@@ -164,6 +164,15 @@ aiohue==4.4.2
 # homeassistant.components.apache_kafka
 aiokafka==0.7.2
 
+# homeassistant.components.lifx
+aiolifx-connection==1.0.0
+
+# homeassistant.components.lifx
+aiolifx==0.8.1
+
+# homeassistant.components.lifx
+aiolifx_effects==0.2.2
+
 # homeassistant.components.lookin
 aiolookin==0.1.1
 
@@ -1033,10 +1042,6 @@ pyfronius==0.7.1
 # homeassistant.components.ifttt
 pyfttt==0.3
 
-# homeassistant.components.bluetooth_le_tracker
-# homeassistant.components.skybeacon
-pygatt[GATTTOOL]==4.0.5
-
 # homeassistant.components.hvv_departures
 pygti==0.9.2
 
@@ -1293,7 +1298,7 @@ python-juicenet==1.1.0
 python-kasa==0.5.0
 
 # homeassistant.components.xiaomi_miio
-python-miio==0.5.11
+python-miio==0.5.12
 
 # homeassistant.components.nest
 python-nest==4.2.0

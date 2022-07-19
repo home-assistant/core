@@ -11,7 +11,8 @@
             "invalid_access_token": "Ung\u00fcltiger Zugriffs-Token",
             "missing_configuration": "Die Komponente ist nicht konfiguriert. Bitte der Dokumentation folgen.",
             "oauth_error": "Ung\u00fcltige Token-Daten empfangen.",
-            "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich",
+            "timeout_connect": "Zeit\u00fcberschreitung beim Verbindungsaufbau"
         },
         "create_entry": {
             "default": "Erfolgreich authentifiziert"

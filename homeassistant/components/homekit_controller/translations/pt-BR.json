@@ -18,7 +18,7 @@
             "unable_to_pair": "N\u00e3o \u00e9 poss\u00edvel parear, tente novamente.",
             "unknown_error": "O dispositivo relatou um erro desconhecido. O pareamento falhou."
         },
-        "flow_title": "{name}",
+        "flow_title": "{name} ( {category} )",
         "step": {
             "busy_error": {
                 "description": "Abortar o emparelhamento em todos os controladores, ou tentar reiniciar o dispositivo, em seguida, continuar a retomar o emparelhamento.",
@@ -33,7 +33,7 @@
                     "allow_insecure_setup_codes": "Permitir o emparelhamento com c\u00f3digos de configura\u00e7\u00e3o inseguros.",
                     "pairing_code": "C\u00f3digo de pareamento"
                 },
-                "description": "O HomeKit Controller se comunica com {name} sobre a rede local usando uma conex\u00e3o criptografada segura sem um controlador HomeKit separado ou iCloud. Digite seu c\u00f3digo de emparelhamento HomeKit (no formato XXX-XX-XXX) para usar este acess\u00f3rio. Este c\u00f3digo geralmente \u00e9 encontrado no pr\u00f3prio dispositivo ou na embalagem.",
+                "description": "O Controlador HomeKit se comunica com {name} ( {category} ) pela rede local usando uma conex\u00e3o criptografada segura sem um controlador HomeKit separado ou iCloud. Insira o c\u00f3digo de pareamento do HomeKit (no formato XXX-XX-XXX) para usar este acess\u00f3rio. Esse c\u00f3digo geralmente \u00e9 encontrado no pr\u00f3prio dispositivo ou na embalagem.",
                 "title": "Emparelhar com um dispositivo atrav\u00e9s do protocolo `HomeKit Accessory`"
             },
             "protocol_error": {

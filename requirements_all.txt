@@ -187,6 +187,9 @@ aiokafka==0.7.2
 aiokef==0.2.16
 
 # homeassistant.components.lifx
+aiolifx-connection==1.0.0
+
+# homeassistant.components.lifx
 aiolifx==0.8.1
 
 # homeassistant.components.lifx
@@ -1527,7 +1530,6 @@ pyfronius==0.7.1
 # homeassistant.components.ifttt
 pyfttt==0.3
 
-# homeassistant.components.bluetooth_le_tracker
 # homeassistant.components.skybeacon
 pygatt[GATTTOOL]==4.0.5
 
@@ -1928,7 +1930,7 @@ python-kasa==0.5.0
 # python-lirc==1.2.3
 
 # homeassistant.components.xiaomi_miio
-python-miio==0.5.11
+python-miio==0.5.12
 
 # homeassistant.components.mpd
 python-mpd2==3.0.5

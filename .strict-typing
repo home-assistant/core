@@ -15,6 +15,7 @@ homeassistant.auth.auth_store
 homeassistant.auth.providers.*
 homeassistant.helpers.area_registry
 homeassistant.helpers.condition
+homeassistant.helpers.debounce
 homeassistant.helpers.discovery
 homeassistant.helpers.entity
 homeassistant.helpers.entity_values
@@ -146,6 +147,7 @@ homeassistant.components.lametric.*
 homeassistant.components.laundrify.*
 homeassistant.components.lcn.*
 homeassistant.components.light.*
+homeassistant.components.lifx.*
 homeassistant.components.local_ip.*
 homeassistant.components.lock.*
 homeassistant.components.logbook.*
