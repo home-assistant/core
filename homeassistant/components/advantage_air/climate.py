@@ -25,7 +25,7 @@ from .const import (
     ADVANTAGE_AIR_STATE_OPEN,
     DOMAIN as ADVANTAGE_AIR_DOMAIN,
 )
-from .entity import AdvantageAirEntity
+from .entity import AdvantageAirAcEntity, AdvantageAirZoneEntity
 
 ADVANTAGE_AIR_HVAC_MODES = {
     "heat": HVACMode.HEAT,
@@ -45,7 +45,7 @@ AC_HVAC_MODES = [
 ]
 
 ADVANTAGE_AIR_FAN_MODES = {
-    "auto": FAN_AUTO,
+    "autoAA": FAN_AUTO,
     "low": FAN_LOW,
     "medium": FAN_MEDIUM,
     "high": FAN_HIGH,
@@ -87,18 +87,13 @@ async def async_setup_entry(
     )
 
 
-class AdvantageAirClimateEntity(AdvantageAirEntity, ClimateEntity):
-    """AdvantageAir Climate class."""
+class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
+    """AdvantageAir AC unit."""
 
     _attr_temperature_unit = TEMP_CELSIUS
     _attr_target_temperature_step = PRECISION_WHOLE
     _attr_max_temp = 32
     _attr_min_temp = 16
-
-
-class AdvantageAirAC(AdvantageAirClimateEntity):
-    """AdvantageAir AC unit."""
-
     _attr_fan_modes = [FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH]
     _attr_hvac_modes = AC_HVAC_MODES
     _attr_supported_features = (
@@ -158,9 +153,13 @@ class AdvantageAirAC(AdvantageAirClimateEntity):
         await self.async_change({self.ac_key: {"info": {"setTemp": temp}}})
 
 
-class AdvantageAirZone(AdvantageAirClimateEntity):
+class AdvantageAirZone(AdvantageAirZoneEntity, ClimateEntity):
     """AdvantageAir Zone control."""
 
+    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_target_temperature_step = PRECISION_WHOLE
+    _attr_max_temp = 32
+    _attr_min_temp = 16
     _attr_hvac_modes = ZONE_HVAC_MODES
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
 
@@ -168,6 +167,9 @@ class AdvantageAirZone(AdvantageAirClimateEntity):
         """Initialize an AdvantageAir Zone control."""
         super().__init__(instance, ac_key, zone_key)
         self._attr_name = self._zone["name"]
+        self._attr_unique_id = (
+            f'{self.coordinator.data["system"]["rid"]}-{ac_key}-{zone_key}'
+        )
 
     @property
     def hvac_mode(self):

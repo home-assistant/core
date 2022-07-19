@@ -5,7 +5,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN as ADVANTAGE_AIR_DOMAIN
-from .entity import AdvantageAirEntity
+from .entity import AdvantageAirAcEntity
 
 ADVANTAGE_AIR_INACTIVE = "Inactive"
 
@@ -25,7 +25,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class AdvantageAirMyZone(AdvantageAirEntity, SelectEntity):
+class AdvantageAirMyZone(AdvantageAirAcEntity, SelectEntity):
     """Representation of Advantage Air MyZone control."""
 
     _attr_icon = "mdi:home-thermometer"
