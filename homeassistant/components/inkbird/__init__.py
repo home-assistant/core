@@ -38,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     def _async_update_data(
         service_info: BluetoothServiceInfo,
     ) -> PassiveBluetoothDataUpdate:
-        """Update data from Govee Bluetooth."""
+        """Update data from INKBIRD Bluetooth."""
         return sensor_update_to_bluetooth_data_update(data.update(service_info))
 
     coordinator = hass.data.setdefault(DOMAIN, {})[
