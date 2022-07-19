@@ -2,11 +2,9 @@
 from __future__ import annotations
 
 from sensorpush_ble import (
-    ATTR_HW_VERSION as SENSOR_HW_VERSION,
     ATTR_MANUFACTURER as SENSOR_MANUFACTURER,
     ATTR_MODEL as SENSOR_MODEL,
     ATTR_NAME as SENSOR_NAME,
-    ATTR_SW_VERSION as SENSOR_SW_VERSION,
     SIGNAL_STRENGTH_KEY,
     DeviceClass,
     DeviceKey,
@@ -19,28 +17,14 @@ from homeassistant.components.bluetooth.passive_update_coordinator import (
     PassiveBluetoothEntityKey,
 )
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
-from homeassistant.const import (
-    ATTR_HW_VERSION,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_NAME,
-    ATTR_SW_VERSION,
-)
+from homeassistant.const import ATTR_MANUFACTURER, ATTR_MODEL, ATTR_NAME
 from homeassistant.helpers.entity import DeviceInfo
 
 SENSOR_DEVICE_CLASS_TO_HASS = {
-    DeviceClass.APPARENT_POWER: SensorDeviceClass.APPARENT_POWER,
     DeviceClass.BATTERY: SensorDeviceClass.BATTERY,
     DeviceClass.HUMIDITY: SensorDeviceClass.HUMIDITY,
-    DeviceClass.ILLUMINANCE: SensorDeviceClass.ILLUMINANCE,
     DeviceClass.TEMPERATURE: SensorDeviceClass.TEMPERATURE,
     DeviceClass.PRESSURE: SensorDeviceClass.PRESSURE,
-    DeviceClass.VOLTAGE: SensorDeviceClass.VOLTAGE,
-    DeviceClass.CURRENT: SensorDeviceClass.CURRENT,
-    DeviceClass.FREQUENCY: SensorDeviceClass.FREQUENCY,
-    DeviceClass.POWER: SensorDeviceClass.POWER,
-    DeviceClass.ENERGY: SensorDeviceClass.ENERGY,
-    DeviceClass.POWER_FACTOR: SensorDeviceClass.POWER_FACTOR,
     DeviceClass.SIGNAL_STRENGTH: SensorDeviceClass.SIGNAL_STRENGTH,
 }
 
@@ -70,10 +54,6 @@ def _sensor_device_info_to_hass(
         base_device_info[ATTR_NAME] = device_info[SENSOR_NAME]
     if device_info.get(SENSOR_MANUFACTURER) is not None:
         base_device_info[ATTR_MANUFACTURER] = device_info[SENSOR_MANUFACTURER]
-    if device_info.get(SENSOR_SW_VERSION) is not None:
-        base_device_info[ATTR_SW_VERSION] = device_info[SENSOR_HW_VERSION]
-    if device_info.get(SENSOR_HW_VERSION) is not None:
-        base_device_info[ATTR_HW_VERSION] = device_info[SENSOR_HW_VERSION]
     if device_info.get(SENSOR_MODEL) is not None:
         base_device_info[ATTR_MODEL] = device_info[SENSOR_MODEL]
     return base_device_info
