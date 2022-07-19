@@ -58,7 +58,7 @@ from .entry_data import RuntimeEntryData
 DOMAIN = "esphome"
 CONF_NOISE_PSK = "noise_psk"
 _LOGGER = logging.getLogger(__name__)
-_T = TypeVar("_T")
+_DomainDataSelfT = TypeVar("_DomainDataSelfT", bound="DomainData")
 
 STORAGE_VERSION = 1
 
@@ -101,11 +101,11 @@ class DomainData:
         )
 
     @classmethod
-    def get(cls: type[_T], hass: HomeAssistant) -> _T:
+    def get(cls: type[_DomainDataSelfT], hass: HomeAssistant) -> _DomainDataSelfT:
         """Get the global DomainData instance stored in hass.data."""
         # Don't use setdefault - this is a hot code path
         if DOMAIN in hass.data:
-            return cast(_T, hass.data[DOMAIN])
+            return cast(_DomainDataSelfT, hass.data[DOMAIN])
         ret = hass.data[DOMAIN] = cls()
         return ret
 
