@@ -1,4 +1,4 @@
-"""The Govee Bluetooth integration."""
+"""The INKBIRD Bluetooth integration."""
 from __future__ import annotations
 
 from inkbird_ble import (

@@ -17,8 +17,8 @@ from homeassistant.data_entry_flow import FlowResult
 from .const import DOMAIN
 
 
-class GoveeConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for govee."""
+class INKBIRDConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for inkbird."""
 
     VERSION = 1
 
