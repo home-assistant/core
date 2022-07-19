@@ -41,13 +41,6 @@ SENSOR_DEVICE_CLASS_TO_HASS = {
     DeviceClass.POWER_FACTOR: SensorDeviceClass.POWER_FACTOR,
     DeviceClass.SIGNAL_STRENGTH: SensorDeviceClass.SIGNAL_STRENGTH,
 }
-SENSOR_DEVICE_INFO_TO_HASS = {
-    SENSOR_NAME: ATTR_NAME,
-    SENSOR_MANUFACTURER: ATTR_MANUFACTURER,
-    SENSOR_SW_VERSION: ATTR_SW_VERSION,
-    SENSOR_HW_VERSION: ATTR_HW_VERSION,
-    SENSOR_MODEL: ATTR_MODEL,
-}
 
 
 def _device_key_to_bluetooth_entity_key(
@@ -70,13 +63,18 @@ def _sensor_device_info_to_hass(
     device_info: SensorDeviceInfo,
 ) -> DeviceInfo:
     """Convert a sensor device info to a sensor device info."""
-    return DeviceInfo(  # type: ignore[misc]
-        {
-            SENSOR_DEVICE_INFO_TO_HASS[key]: value
-            for key, value in device_info.items()
-            if device_info.get(key) is not None
-        }
-    )
+    base_device_info = DeviceInfo({})
+    if device_info.get(SENSOR_NAME) is not None:
+        base_device_info[ATTR_NAME] = device_info[SENSOR_NAME]
+    if device_info.get(SENSOR_MANUFACTURER) is not None:
+        base_device_info[ATTR_MANUFACTURER] = device_info[SENSOR_MANUFACTURER]
+    if device_info.get(SENSOR_SW_VERSION) is not None:
+        base_device_info[ATTR_SW_VERSION] = device_info[SENSOR_HW_VERSION]
+    if device_info.get(SENSOR_HW_VERSION) is not None:
+        base_device_info[ATTR_HW_VERSION] = device_info[SENSOR_HW_VERSION]
+    if device_info.get(SENSOR_MODEL) is not None:
+        base_device_info[ATTR_MODEL] = device_info[SENSOR_MODEL]
+    return base_device_info
 
 
 def sensor_update_to_bluetooth_data_update(
