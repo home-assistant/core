@@ -39,6 +39,15 @@ def patch_metrics(metrics: dict[str, Any]):
     )
 
 
+def patch_profile(profile: PROFILE):
+    """Patch the Vallox profile response."""
+
+    return patch(
+        "homeassistant.components.vallox.Vallox.get_profile",
+        return_value=profile,
+    )
+
+
 @pytest.fixture(autouse=True)
 def patch_profile_home():
     """Patch the Vallox profile response."""

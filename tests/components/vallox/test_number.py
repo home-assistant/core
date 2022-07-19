@@ -18,7 +18,7 @@ from tests.common import MockConfigEntry
 async def test_temperature_number_entities(
     entity_id, metric_key, value, mock_entry: MockConfigEntry, hass: HomeAssistant
 ):
-    """Test cell state sensor in defrosting state."""
+    """Test temperature entities."""
     # Arrange
     metrics = {metric_key: value}
 
@@ -44,7 +44,7 @@ async def test_temperature_number_entities(
 async def test_fan_speed_number_entities(
     entity_id, metric_key, value, mock_entry: MockConfigEntry, hass: HomeAssistant
 ):
-    """Test cell state sensor in defrosting state."""
+    """Test fan speed entities."""
     # Arrange
     metrics = {metric_key: value}
 
