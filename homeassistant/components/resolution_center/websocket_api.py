@@ -67,8 +67,9 @@ def ws_list_issues(
     """Return a list of issues."""
 
     def ws_dict(kv_pairs: list[tuple[Any, Any]]) -> dict[Any, Any]:
-        result = {k: v for k, v in kv_pairs if k != "active"}
+        result = {k: v for k, v in kv_pairs if k not in ("active")}
         result["dismissed"] = result["dismissed_version"] is not None
+        result["created"] = result["created"].isoformat()
         return result
 
     issue_registry = async_get_issue_registry(hass)
