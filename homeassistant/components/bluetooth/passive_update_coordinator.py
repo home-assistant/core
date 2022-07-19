@@ -10,13 +10,18 @@ from typing import Any, Generic, TypeVar
 
 from home_assistant_bluetooth import BluetoothServiceInfo
 
-from homeassistant.components import bluetooth
 from homeassistant.const import ATTR_IDENTIFIERS, ATTR_NAME
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 
+from . import (
+    BluetoothCallbackMatcher,
+    BluetoothChange,
+    async_address_present,
+    async_register_callback,
+)
 from .const import DOMAIN
 
 UNAVAILABLE_SECONDS = 60 * 5
@@ -102,7 +107,7 @@ class PassiveBluetoothDataUpdateCoordinator(Generic[_T]):
         if (
             not self._present
             or time.monotonic() - self._last_callback_time < UNAVAILABLE_SECONDS
-            or bluetooth.async_address_present(self.hass, self.address)
+            or async_address_present(self.hass, self.address)
         ):
             return
         self._present = False
@@ -117,10 +122,10 @@ class PassiveBluetoothDataUpdateCoordinator(Generic[_T]):
                 self._async_check_device_present,
                 timedelta(seconds=UNAVAILABLE_SECONDS),
             ),
-            bluetooth.async_register_callback(
+            async_register_callback(
                 self.hass,
                 self._async_handle_bluetooth_event,
-                bluetooth.BluetoothCallbackMatcher(address=self.address),
+                BluetoothCallbackMatcher(address=self.address),
             ),
         ]
 
@@ -208,8 +213,8 @@ class PassiveBluetoothDataUpdateCoordinator(Generic[_T]):
     @callback
     def _async_handle_bluetooth_event(
         self,
-        service_info: bluetooth.BluetoothServiceInfo,
-        change: bluetooth.BluetoothChange,
+        service_info: BluetoothServiceInfo,
+        change: BluetoothChange,
     ) -> None:
         """Handle a Bluetooth event."""
         self.name = service_info.name
@@ -220,7 +225,9 @@ class PassiveBluetoothDataUpdateCoordinator(Generic[_T]):
             new_data = self.update_method(service_info)
         except Exception as err:  # pylint: disable=broad-except
             self.last_update_success = False
-            self.logger.exception("Unexpected error update %s data: %s", self.name, err)
+            self.logger.exception(
+                "Unexpected error updating %s data: %s", self.name, err
+            )
             return
 
         if not self.last_update_success:
@@ -277,7 +284,7 @@ class PassiveBluetoothCoordinatorEntity(
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return self.coordinator.last_update_success and self.coordinator.available
+        return self.coordinator.available
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
