@@ -940,14 +940,14 @@
         "type": "number",
         "readable": true,
         "writeable": true,
-        "description": "Celsius or Farenheit for temperature display.",
+        "description": "Celsius or Fahrenheit for temperature display.",
         "label": "Temperature Display Units",
         "default": 1,
         "min": 0,
         "max": 1,
         "states": {
           "0": "Celsius",
-          "1": "Farenheit"
+          "1": "Fahrenheit"
         },
         "valueSize": 1,
         "format": 0,

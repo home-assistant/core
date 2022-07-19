@@ -446,7 +446,7 @@
           "0": "analog sensor w/no pullup",
           "1": "analog sensor with pull-up",
           "2": "momentary switch",
-          "3": "toggle switch (on when swithc is on)",
+          "3": "toggle switch (on when switch is on)",
           "4": "toggle switch (toggles with switch toggle)"
         },
         "valueSize": 1,
@@ -476,7 +476,7 @@
           "0": "analog sensor w/no pullup",
           "1": "analog sensor with pull-up",
           "2": "momentary switch",
-          "3": "toggle switch (on when swithc is on)",
+          "3": "toggle switch (on when switch is on)",
           "4": "toggle switch (toggles with switch toggle)"
         },
         "valueSize": 1,
@@ -506,7 +506,7 @@
           "0": "analog sensor w/no pullup",
           "1": "analog sensor with pull-up",
           "2": "momentary switch",
-          "3": "toggle switch (on when swithc is on)",
+          "3": "toggle switch (on when switch is on)",
           "4": "toggle switch (toggles with switch toggle)"
         },
         "valueSize": 1,
@@ -536,7 +536,7 @@
           "0": "analog sensor w/no pullup",
           "1": "analog sensor with pull-up",
           "2": "momentary switch",
-          "3": "toggle switch (on when swithc is on)",
+          "3": "toggle switch (on when switch is on)",
           "4": "toggle switch (toggles with switch toggle)"
         },
         "valueSize": 1,
@@ -581,7 +581,7 @@
         "type": "number",
         "readable": true,
         "writeable": true,
-        "description": "Energy Report Threshold. Choose how you want your RGBW Dimmer to report energy use (kWh) to your hub. The number entered as value corresponds to decimal values in energy useage change. So if 10 is entered by default, the RGBW Dimmer will report any change in energy use over 0.1 kWh. Energy reports are sent in t least 30-second intervals.",
+        "description": "Energy Report Threshold. Choose how you want your RGBW Dimmer to report energy use (kWh) to your hub. The number entered as value corresponds to decimal values in energy usage change. So if 10 is entered by default, the RGBW Dimmer will report any change in energy use over 0.1 kWh. Energy reports are sent in t least 30-second intervals.",
         "label": "Energy Report Threshold",
         "default": 10,
         "min": 0,

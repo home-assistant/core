@@ -1602,7 +1602,7 @@
         "readable": true,
         "writeable": true,
         "label": "Node Identify - On/Off Period: On time",
-        "description": "This property is used to set the length of the On time during an On/Off period. It allows asymetic On/Off periods. The value 0x00 MUST represent symmetric On/Off period (On time equal to Off time)",
+        "description": "This property is used to set the length of the On time during an On/Off period. It allows asymmetric On/Off periods. The value 0x00 MUST represent symmetric On/Off period (On time equal to Off time)",
         "ccSpecific": {
           "indicatorId": 80,
           "propertyId": 5

@@ -437,7 +437,7 @@
       "commandClass": 112,
       "endpoint": 0,
       "property": 24,
-      "propertyName": "Notifcation on Load Change",
+      "propertyName": "Notification on Load Change",
       "metadata": {
         "type": "number",
         "readable": true,
@@ -448,7 +448,7 @@
         "default": 1,
         "format": 0,
         "allowManualEntry": true,
-        "label": "Notifcation on Load Change",
+        "label": "Notification on Load Change",
         "description": "Smart Plug can send notifications to association device load state changes.",
         "isFromConfig": true
       },
@@ -666,7 +666,7 @@
         "type": "any",
         "readable": true,
         "writeable": false,
-        "label": "Libary type"
+        "label": "Library type"
       },
       "value": 3
     },

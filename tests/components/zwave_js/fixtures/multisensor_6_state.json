@@ -1774,7 +1774,7 @@
         "type": "any",
         "readable": true,
         "writeable": false,
-        "label": "Libary type"
+        "label": "Library type"
       },
       "value": 3
     },

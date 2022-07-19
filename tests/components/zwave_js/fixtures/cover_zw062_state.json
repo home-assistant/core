@@ -232,7 +232,7 @@
       "commandClass": 112,
       "commandClassName": "Configuration",
       "property": 35,
-      "propertyName": "Calibration timout",
+      "propertyName": "Calibration timeout",
       "ccVersion": 1,
       "metadata": {
         "type": "number",
@@ -244,7 +244,7 @@
         "default": 60,
         "format": 0,
         "allowManualEntry": true,
-        "label": "Calibration timout",
+        "label": "Calibration timeout",
         "description": "Set the timeout of all calibration steps for the Sensor.",
         "isFromConfig": true
       },
