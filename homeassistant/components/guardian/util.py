@@ -18,7 +18,7 @@ from .const import LOGGER
 
 DEFAULT_UPDATE_INTERVAL = timedelta(seconds=30)
 
-SIGNAL_REBOOT_REQUESTED = "rainmachine_reboot_requested_{0}"
+SIGNAL_REBOOT_REQUESTED = "guardian_reboot_requested_{0}"
 
 
 class GuardianDataUpdateCoordinator(DataUpdateCoordinator[dict]):
