@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Optional, Union
 
 from inkbird_ble import INKBIRDBluetoothDeviceData
 
@@ -13,7 +14,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
-from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN
 from .data import sensor_update_to_bluetooth_data_update
@@ -23,7 +23,9 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
 
 
-class InkbirdDataUpdateCoordinator(PassiveBluetoothDataUpdateCoordinator[StateType]):
+class InkbirdDataUpdateCoordinator(
+    PassiveBluetoothDataUpdateCoordinator[Optional[Union[float, int]]]
+):
     """Coordinator for INKBIRD Bluetooth data."""
 
 
@@ -43,7 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     coordinator = hass.data.setdefault(DOMAIN, {})[
         entry.entry_id
-    ] = PassiveBluetoothDataUpdateCoordinator(
+    ] = InkbirdDataUpdateCoordinator(
         hass,
         _LOGGER,
         update_method=_async_update_data,

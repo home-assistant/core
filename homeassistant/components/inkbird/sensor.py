@@ -4,12 +4,10 @@ from __future__ import annotations
 from homeassistant import config_entries
 from homeassistant.components.bluetooth.passive_update_coordinator import (
     PassiveBluetoothCoordinatorEntity,
-    PassiveBluetoothDataUpdateCoordinator,
 )
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 
 from . import InkbirdDataUpdateCoordinator
 from .const import DOMAIN
@@ -21,9 +19,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the INKBIRD BLE sensors."""
-    coordinator: PassiveBluetoothDataUpdateCoordinator = hass.data[DOMAIN][
-        entry.entry_id
-    ]
+    coordinator: InkbirdDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     entry.async_on_unload(
         coordinator.async_add_entities_listener(
             InkbirdBluetoothSensorEntity, async_add_entities
@@ -37,6 +33,6 @@ class InkbirdBluetoothSensorEntity(
     """Representation of a inkbird ble sensor."""
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> float | int | None:
         """Return the native value."""
         return self.coordinator.entity_data.get(self.entity_key)
