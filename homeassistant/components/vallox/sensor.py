@@ -107,7 +107,7 @@ class ValloxSensorEntityDescription(SensorEntityDescription):
     """Describes Vallox sensor entity."""
 
     metric_key: str | None = None
-    sensor_type: type[ValloxSensorEntity] = ValloxSensorEntity
+    entity_type: type[ValloxSensorEntity] = ValloxSensorEntity
 
 
 SENSOR_ENTITIES: tuple[ValloxSensorEntityDescription, ...] = (
@@ -118,20 +118,20 @@ SENSOR_ENTITIES: tuple[ValloxSensorEntityDescription, ...] = (
         icon="mdi:fan",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
-        sensor_type=ValloxFanSpeedSensor,
+        entity_type=ValloxFanSpeedSensor,
     ),
     ValloxSensorEntityDescription(
         key="remaining_time_for_filter",
         name="Remaining time for filter",
         device_class=SensorDeviceClass.TIMESTAMP,
-        sensor_type=ValloxFilterRemainingSensor,
+        entity_type=ValloxFilterRemainingSensor,
     ),
     ValloxSensorEntityDescription(
         key="cell_state",
         name="Cell state",
         icon="mdi:swap-horizontal-bold",
         metric_key="A_CYC_CELL_STATE",
-        sensor_type=ValloxCellStateSensor,
+        entity_type=ValloxCellStateSensor,
     ),
     ValloxSensorEntityDescription(
         key="extract_air",
@@ -161,6 +161,14 @@ SENSOR_ENTITIES: tuple[ValloxSensorEntityDescription, ...] = (
         key="supply_air",
         name="Supply air",
         metric_key="A_CYC_TEMP_SUPPLY_AIR",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=TEMP_CELSIUS,
+    ),
+    ValloxSensorEntityDescription(
+        key="supply_cell_air",
+        name="Supply cell air",
+        metric_key="A_CYC_TEMP_SUPPLY_CELL_AIR",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=TEMP_CELSIUS,
@@ -209,7 +217,7 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            description.sensor_type(name, coordinator, description)
+            description.entity_type(name, coordinator, description)
             for description in SENSOR_ENTITIES
         ]
     )
