@@ -2,10 +2,10 @@
 from __future__ import annotations
 
 from homeassistant import config_entries
-from homeassistant.components.bluetooth.sensor import BluetoothSensorEntity
-from homeassistant.components.bluetooth.update_coordinator import (
+from homeassistant.components.bluetooth.passive_update_coordinator import (
     BluetoothDataUpdateCoordinator,
 )
+from homeassistant.components.bluetooth.sensor import BluetoothSensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 

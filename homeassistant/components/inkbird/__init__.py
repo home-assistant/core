@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.bluetooth.update_coordinator import (
+from homeassistant.components.bluetooth.passive_update_coordinator import (
     BluetoothDataUpdateCoordinator,
 )
 from homeassistant.config_entries import ConfigEntry
