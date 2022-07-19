@@ -25,8 +25,8 @@ async def async_setup_entry(
     instance = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
 
     entities = []
-    if "MyLights" in instance["coordinator"].data:
-        for _, light in instance["coordinator"].data["MyLights"]["lights"].items():
+    if "myLights" in instance["coordinator"].data:
+        for light in instance["coordinator"].data["myLights"]["lights"].values():
             if light.get("relay"):
                 entities.append(AdvantageAirLight(instance, light))
             else:
@@ -57,7 +57,7 @@ class AdvantageAirLight(CoordinatorEntity, LightEntity):
     @property
     def _light(self):
         """Return the light object."""
-        return self.coordinator.data["MyLights"]["lights"][self._id]
+        return self.coordinator.data["myLights"]["lights"][self._id]
 
     @property
     def is_on(self) -> bool:

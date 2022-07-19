@@ -67,7 +67,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = {
         "coordinator": coordinator,
         "async_change": error_handle_factory(api.aircon.async_set),
-        "async_light_set": error_handle_factory(api.lights.async_set),
+        "async_set_light": error_handle_factory(api.lights.async_set),
     }
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
