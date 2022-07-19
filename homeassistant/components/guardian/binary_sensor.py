@@ -15,6 +15,7 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import (
+    GuardianData,
     PairedSensorEntity,
     ValveControllerEntity,
     ValveControllerEntityDescription,
@@ -23,8 +24,6 @@ from .const import (
     API_SYSTEM_ONBOARD_SENSOR_STATUS,
     API_WIFI_STATUS,
     CONF_UID,
-    DATA_COORDINATOR,
-    DATA_COORDINATOR_PAIRED_SENSOR,
     DOMAIN,
     SIGNAL_PAIRED_SENSOR_COORDINATOR_ADDED,
 )
@@ -79,16 +78,14 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Guardian switches based on a config entry."""
-    entry_data = hass.data[DOMAIN][entry.entry_id]
-    paired_sensor_coordinators = entry_data[DATA_COORDINATOR_PAIRED_SENSOR]
-    valve_controller_coordinators = entry_data[DATA_COORDINATOR]
+    data: GuardianData = hass.data[DOMAIN][entry.entry_id]
 
     @callback
     def add_new_paired_sensor(uid: str) -> None:
         """Add a new paired sensor."""
         async_add_entities(
             PairedSensorBinarySensor(
-                entry, paired_sensor_coordinators[uid], description
+                entry, data.paired_sensor_manager.coordinators[uid], description
             )
             for description in PAIRED_SENSOR_DESCRIPTIONS
         )
@@ -104,7 +101,9 @@ async def async_setup_entry(
 
     # Add all valve controller-specific binary sensors:
     sensors: list[PairedSensorBinarySensor | ValveControllerBinarySensor] = [
-        ValveControllerBinarySensor(entry, valve_controller_coordinators, description)
+        ValveControllerBinarySensor(
+            entry, data.valve_controller_coordinators, description
+        )
         for description in VALVE_CONTROLLER_DESCRIPTIONS
     ]
 
@@ -112,7 +111,7 @@ async def async_setup_entry(
     sensors.extend(
         [
             PairedSensorBinarySensor(entry, coordinator, description)
-            for coordinator in paired_sensor_coordinators.values()
+            for coordinator in data.paired_sensor_manager.coordinators.values()
             for description in PAIRED_SENSOR_DESCRIPTIONS
         ]
     )

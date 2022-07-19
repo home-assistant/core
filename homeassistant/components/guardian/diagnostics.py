@@ -7,8 +7,8 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_UID, DATA_COORDINATOR, DATA_COORDINATOR_PAIRED_SENSOR, DOMAIN
-from .util import GuardianDataUpdateCoordinator
+from . import GuardianData
+from .const import CONF_UID, DOMAIN
 
 CONF_BSSID = "bssid"
 CONF_PAIRED_UIDS = "paired_uids"
@@ -26,12 +26,7 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    data = hass.data[DOMAIN][entry.entry_id]
-
-    coordinators: dict[str, GuardianDataUpdateCoordinator] = data[DATA_COORDINATOR]
-    paired_sensor_coordinators: dict[str, GuardianDataUpdateCoordinator] = data[
-        DATA_COORDINATOR_PAIRED_SENSOR
-    ]
+    data: GuardianData = hass.data[DOMAIN][entry.entry_id]
 
     return {
         "entry": {
@@ -41,11 +36,11 @@ async def async_get_config_entry_diagnostics(
         "data": {
             "valve_controller": {
                 api_category: async_redact_data(coordinator.data, TO_REDACT)
-                for api_category, coordinator in coordinators.items()
+                for api_category, coordinator in data.valve_controller_coordinators.items()
             },
             "paired_sensors": [
                 async_redact_data(coordinator.data, TO_REDACT)
-                for coordinator in paired_sensor_coordinators.values()
+                for coordinator in data.paired_sensor_manager.coordinators.values()
             ],
         },
     }
