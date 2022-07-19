@@ -45,11 +45,14 @@ class PassiveBluetoothDataUpdate(Generic[_T]):
     entity_descriptions: dict[
         PassiveBluetoothEntityKey, EntityDescription
     ] = dataclasses.field(default_factory=dict)
-    entity_data: dict[PassiveBluetoothEntityKey, _T] = dataclasses.field(default_factory=dict)
+    entity_data: dict[PassiveBluetoothEntityKey, _T] = dataclasses.field(
+        default_factory=dict
+    )
 
 
 _PassiveBluetoothDataUpdateCoordinatorT = TypeVar(
-    "_PassiveBluetoothDataUpdateCoordinatorT", bound="PassiveBluetoothDataUpdateCoordinator[Any]"
+    "_PassiveBluetoothDataUpdateCoordinatorT",
+    bound="PassiveBluetoothDataUpdateCoordinator[Any]",
 )
 
 
@@ -68,7 +71,9 @@ class PassiveBluetoothDataUpdateCoordinator(Generic[_T]):
         self.logger = logger
         self.name: str | None = None
         self.address = address
-        self._listeners: list[Callable[[PassiveBluetoothDataUpdate[_T] | None], None]] = []
+        self._listeners: list[
+            Callable[[PassiveBluetoothDataUpdate[_T] | None], None]
+        ] = []
         self._entity_key_listeners: dict[
             PassiveBluetoothEntityKey | None,
             list[Callable[[PassiveBluetoothDataUpdate[_T] | None], None]],
@@ -76,7 +81,9 @@ class PassiveBluetoothDataUpdateCoordinator(Generic[_T]):
         self.update_method = update_method
 
         self.entity_data: dict[PassiveBluetoothEntityKey, _T] = {}
-        self.entity_descriptions: dict[PassiveBluetoothEntityKey, EntityDescription] = {}
+        self.entity_descriptions: dict[
+            PassiveBluetoothEntityKey, EntityDescription
+        ] = {}
         self.devices: dict[str | None, DeviceInfo] = {}
 
         self.last_update_success = True
@@ -166,8 +173,8 @@ class PassiveBluetoothDataUpdateCoordinator(Generic[_T]):
     @callback
     def async_add_entity_key_listener(
         self,
-        update_callback: Callable[[BluetoothDataUpdate[_T] | None], None],
-        entity_key: BluetoothEntityKey | None = None,
+        update_callback: Callable[[PassiveBluetoothDataUpdate[_T] | None], None],
+        entity_key: PassiveBluetoothEntityKey | None = None,
     ) -> Callable[[], None]:
         """Listen for updates by device key."""
 
@@ -182,7 +189,9 @@ class PassiveBluetoothDataUpdateCoordinator(Generic[_T]):
         return remove_listener
 
     @callback
-    def async_update_listeners(self, data: PassiveBluetoothDataUpdate[_T] | None) -> None:
+    def async_update_listeners(
+        self, data: PassiveBluetoothDataUpdate[_T] | None
+    ) -> None:
         """Update all registered listeners."""
         # Dispatch to listeners without a filter key
         for update_callback in self._listeners:
@@ -220,7 +229,9 @@ class PassiveBluetoothDataUpdateCoordinator(Generic[_T]):
                 self.async_update_listeners(new_data)
 
 
-class PassiveBluetoothCoordinatorEntity(Entity, Generic[_PassiveBluetoothDataUpdateCoordinatorT]):
+class PassiveBluetoothCoordinatorEntity(
+    Entity, Generic[_PassiveBluetoothDataUpdateCoordinatorT]
+):
     """A class for entities using PassiveBluetoothDataUpdateCoordinator."""
 
     _attr_should_poll = False
@@ -272,6 +283,8 @@ class PassiveBluetoothCoordinatorEntity(Entity, Generic[_PassiveBluetoothDataUpd
         )
 
     @callback
-    def _handle_coordinator_update(self, data: PassiveBluetoothDataUpdate | None) -> None:
+    def _handle_coordinator_update(
+        self, data: PassiveBluetoothDataUpdate | None
+    ) -> None:
         """Handle updated data from the coordinator."""
         self.async_write_ha_state()
