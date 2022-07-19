@@ -1,8 +1,8 @@
 """The Govee Bluetooth integration."""
 from __future__ import annotations
 
-from bluetooth_sensor_state_data import SensorUpdate
-from sensor_state_data import DeviceClass, DeviceKey
+from bluetooth_sensor_state_data import RSSI_KEY
+from sensor_state_data import DeviceClass, DeviceKey, SensorUpdate
 from sensor_state_data.data import SensorDeviceInfo
 
 from homeassistant.components.bluetooth.update_coordinator import (
@@ -28,8 +28,6 @@ SENSOR_DEVICE_CLASS_TO_HASS = {
     DeviceClass.POWER_FACTOR: SensorDeviceClass.POWER_FACTOR,
     DeviceClass.SIGNAL_STRENGTH: SensorDeviceClass.SIGNAL_STRENGTH,
 }
-
-RSSI_KEY = "rssi"
 
 
 def _device_key_to_bluetooth_entity_key(device_key: DeviceKey) -> BluetoothEntityKey:
