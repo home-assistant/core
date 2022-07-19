@@ -91,7 +91,6 @@ class PassiveBluetoothDataUpdateCoordinator(Generic[_T]):
         self.last_update_success = True
         self._last_callback_time: float = NEVER_TIME
         self._present = True
-        self._cancel: CALLBACK_TYPE | None = None
 
     @property
     def available(self) -> bool:
