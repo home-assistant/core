@@ -4,7 +4,6 @@ import copy
 from datetime import datetime, timedelta
 from functools import partial
 import json
-import logging
 import ssl
 from unittest.mock import ANY, AsyncMock, MagicMock, call, mock_open, patch
 
@@ -46,8 +45,6 @@ from tests.common import (
     mock_registry,
 )
 from tests.testing_config.custom_components.test.sensor import DEVICE_CLASSES
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class RecordCallsPartial(partial):
@@ -162,25 +159,26 @@ async def test_mqtt_await_ack_at_disconnect(
         )
         entry.add_to_hass(hass)
         assert await mqtt.async_setup_entry(hass, entry)
-        mqtt_client = hass.data["mqtt"]._mqttc
+        mqtt_client = mock_client.return_value
 
-    # publish from MQTT client without awaiting
-    hass.async_create_task(
-        hass.data["mqtt"].async_publish("test-topic", "some-payload", 0, False)
-    )
-    await asyncio.sleep(0)
-    # Simulate late ACK callback from client with mid 100
-    hass.data["mqtt"]._mqtt_on_callback(0, 0, 100)
-    # disconnect the MQTT client
-    await hass.data["mqtt"].async_disconnect()
-    # assert the payload was sent through the client
-    assert mqtt_client.publish.called
-    assert mqtt_client.publish.call_args[0] == (
-        "test-topic",
-        "some-payload",
-        0,
-        False,
-    )
+        # publish from MQTT client without awaiting
+        hass.async_create_task(
+            mqtt.async_publish(hass, "test-topic", "some-payload", 0, False)
+        )
+        await asyncio.sleep(0)
+        # Simulate late ACK callback from client with mid 100
+        mqtt_client.on_publish(0, 0, 100)
+        # disconnect the MQTT client
+        await hass.async_stop()
+        await hass.async_block_till_done()
+        # assert the payload was sent through the client
+        assert mqtt_client.publish.called
+        assert mqtt_client.publish.call_args[0] == (
+            "test-topic",
+            "some-payload",
+            0,
+            False,
+        )
 
 
 async def test_publish(hass, mqtt_mock_entry_no_yaml_config):
