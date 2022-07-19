@@ -18,7 +18,8 @@
             },
             "mfa": {
                 "data": {
-                    "code": "Kode Verifikasi"
+                    "code": "Kode Verifikasi",
+                    "description": "Verifikasi 2 langka tetap diaktifkan pada akun Anda. Masukkan kode verifikasi yang dikirimkan Verisure kepada Anda."
                 }
             },
             "reauth_confirm": {
@@ -30,7 +31,8 @@
             },
             "reauth_mfa": {
                 "data": {
-                    "code": "Kode Verifikasi"
+                    "code": "Kode Verifikasi",
+                    "description": "Verifikasi 2 langka tetap diaktifkan pada akun Anda. Masukkan kode verifikasi yang dikirimkan Verisure kepada Anda."
                 }
             },
             "user": {
