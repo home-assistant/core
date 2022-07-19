@@ -7,6 +7,7 @@ from __future__ import annotations
 from homeassistant.components.weather import (
     ATTR_FORECAST_CLOUD_COVERAGE,
     ATTR_FORECAST_HUMIDITY,
+    ATTR_FORECAST_IS_DAYTIME,
     ATTR_FORECAST_NATIVE_APPARENT_TEMP,
     ATTR_FORECAST_NATIVE_DEW_POINT,
     ATTR_FORECAST_NATIVE_PRECIPITATION,
@@ -260,6 +261,7 @@ class MockWeatherMockForecast(MockWeather):
                     "native_precipitation"
                 ),
                 ATTR_FORECAST_HUMIDITY: self.humidity,
+                ATTR_FORECAST_IS_DAYTIME: True,
             }
         ]
 
