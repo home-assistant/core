@@ -51,9 +51,9 @@ def _sensor_device_info_to_hass(
 ) -> DeviceInfo:
     """Convert a sensor device info to a sensor device info."""
     base_device_info = DeviceInfo({})
-    if device_info[ATTR_NAME] is not None:
+    if device_info.get(ATTR_NAME) is not None:
         base_device_info[ATTR_NAME] = device_info[ATTR_NAME]
-    if device_info[ATTR_MODEL] is not None:
+    if device_info.get(ATTR_MODEL) is not None:
         base_device_info[ATTR_MODEL] = device_info[ATTR_MODEL]
     return base_device_info
 
