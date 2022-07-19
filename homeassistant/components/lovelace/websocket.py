@@ -38,7 +38,7 @@ def _handle_errors(func):
             return
 
         if msg is not None:
-            await connection.send_big_result(msg["id"], result)
+            connection.send_big_result(msg["id"], result)
         else:
             connection.send_result(msg["id"], result)
 
