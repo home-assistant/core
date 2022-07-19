@@ -11,10 +11,9 @@ from typing import Any, Generic, TypeVar
 from home_assistant_bluetooth import BluetoothServiceInfo
 
 from homeassistant.components import bluetooth
-from homeassistant.const import ATTR_CONNECTIONS, ATTR_IDENTIFIERS, ATTR_NAME
+from homeassistant.const import ATTR_IDENTIFIERS, ATTR_NAME
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 
@@ -43,7 +42,10 @@ class BluetoothDataUpdate(Generic[_T]):
     """Generic bluetooth data."""
 
     devices: dict[str | None, DeviceInfo] = dataclasses.field(default_factory=dict)
-    entities: dict[BluetoothEntityKey, _T] = dataclasses.field(default_factory=dict)
+    entity_descriptions: dict[
+        BluetoothEntityKey, EntityDescription
+    ] = dataclasses.field(default_factory=dict)
+    entity_data: dict[BluetoothEntityKey, _T] = dataclasses.field(default_factory=dict)
 
 
 _BluetoothDataUpdateCoordinatorT = TypeVar(
@@ -72,8 +74,11 @@ class BluetoothDataUpdateCoordinator(Generic[_T]):
             list[Callable[[BluetoothDataUpdate[_T] | None], None]],
         ] = {}
         self.update_method = update_method
+
         self.entity_data: dict[BluetoothEntityKey, _T] = {}
-        self.device_data: dict[str | None, DeviceInfo] = {}
+        self.entity_descriptions: dict[BluetoothEntityKey, EntityDescription] = {}
+        self.devices: dict[str | None, DeviceInfo] = {}
+
         self.last_update_success = True
         self._last_callback_time: float = NEVER_TIME
         self._present = True
@@ -134,9 +139,9 @@ class BluetoothDataUpdateCoordinator(Generic[_T]):
             if data is None:
                 return
             entities: list[BluetoothCoordinatorEntity] = []
-            for entity_key in data.entities:
+            for entity_key, description in data.entity_descriptions.items():
                 if entity_key not in created:
-                    entities.append(entity_class(self, entity_key))
+                    entities.append(entity_class(self, entity_key, description))
                     created.add(entity_key)
             if entities:
                 async_add_entites(entities)
@@ -210,8 +215,9 @@ class BluetoothDataUpdateCoordinator(Generic[_T]):
                 self.logger.info("Processing %s data recovered", self.name)
             if new_data:
                 self.async_update_listeners(new_data)
-            self.entity_data.update(new_data.entities)
-            self.device_data.update(new_data.devices)
+            self.devices.update(new_data.devices)
+            self.entity_descriptions.update(new_data.entity_descriptions)
+            self.entity_data.update(new_data.entity_data)
 
 
 class BluetoothCoordinatorEntity(Entity, Generic[_BluetoothDataUpdateCoordinatorT]):
@@ -223,38 +229,31 @@ class BluetoothCoordinatorEntity(Entity, Generic[_BluetoothDataUpdateCoordinator
         self,
         coordinator: _BluetoothDataUpdateCoordinatorT,
         entity_key: BluetoothEntityKey,
+        description: EntityDescription,
         context: Any = None,
     ) -> None:
         """Create the entity with a DataUpdateCoordinator."""
-        self.device_key = entity_key
+        self.entity_description = description
+        self.entity_key = entity_key
         self.coordinator = coordinator
         self.coordinator_context = context
-        self._attr_unique_id = f"{coordinator.address}-{self.device_key.key}"
-        identifiers: set[tuple[str, str]] = set()
-        connections: set[tuple[str, str]] = set()
-        if entity_key.device_id:
-            identifiers.add(
-                (bluetooth.DOMAIN, f"{coordinator.address}-{self.device_key.device_id}")
-            )
-            self._attr_unique_id = f"{coordinator.address}-{self.device_key.device_id}-{self.device_key.key}"
-        elif ":" in coordinator.address:
-            # Linux
-            connections.add((dr.CONNECTION_NETWORK_MAC, coordinator.address))
-        else:
-            # Mac uses UUIDs
-            identifiers.add((bluetooth.DOMAIN, coordinator.address))
+        address = coordinator.address
         device_id = entity_key.device_id
-
-        if device_id in coordinator.device_data:
-            base_device_info = coordinator.device_data[device_id]
+        key = entity_key.key
+        if device_id in coordinator.devices:
+            base_device_info = coordinator.devices[device_id]
         else:
             base_device_info = DeviceInfo({})
-        self._attr_device_info = base_device_info | DeviceInfo(
-            {
-                ATTR_CONNECTIONS: connections,
-                ATTR_IDENTIFIERS: identifiers,
-            }
-        )
+        if entity_key.device_id:
+            self._attr_device_info = base_device_info | DeviceInfo(
+                {ATTR_IDENTIFIERS: {(bluetooth.DOMAIN, f"{address}-{device_id}")}}
+            )
+            self._attr_unique_id = f"{coordinator.address}-{key}-{device_id}"
+        else:
+            self._attr_device_info = base_device_info | DeviceInfo(
+                {ATTR_IDENTIFIERS: {(bluetooth.DOMAIN, address)}}
+            )
+            self._attr_unique_id = f"{coordinator.address}-{key}"
         if ATTR_NAME not in self._attr_device_info:
             self._attr_device_info[ATTR_NAME] = self.coordinator.name
 
@@ -268,7 +267,7 @@ class BluetoothCoordinatorEntity(Entity, Generic[_BluetoothDataUpdateCoordinator
         await super().async_added_to_hass()
         self.async_on_remove(
             self.coordinator.async_add_entity_key_listener(
-                self._handle_coordinator_update, self.device_key
+                self._handle_coordinator_update, self.entity_key
             )
         )
 

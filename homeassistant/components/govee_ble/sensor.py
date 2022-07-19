@@ -2,12 +2,14 @@
 from __future__ import annotations
 
 from homeassistant import config_entries
-from homeassistant.components.bluetooth.sensor import BluetoothSensorEntity
 from homeassistant.components.bluetooth.update_coordinator import (
+    BluetoothCoordinatorEntity,
     BluetoothDataUpdateCoordinator,
 )
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN
 
@@ -21,6 +23,17 @@ async def async_setup_entry(
     coordinator: BluetoothDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     entry.async_on_unload(
         coordinator.async_add_entities_listener(
-            BluetoothSensorEntity, async_add_entities
+            GoveeBluetoothSensorEntity, async_add_entities
         )
     )
+
+
+class GoveeBluetoothSensorEntity(
+    BluetoothCoordinatorEntity[BluetoothDataUpdateCoordinator[StateType]], SensorEntity
+):
+    """Representation of a govee ble sensor."""
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the native value."""
+        return self.coordinator.entity_data.get(self.entity_key)
