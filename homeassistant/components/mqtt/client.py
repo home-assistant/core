@@ -683,7 +683,9 @@ class MQTT:
             async with self._pending_operations_condition:
                 # Cleanup ACK sync buffer
                 del self._pending_operations[mid]
-                self._pending_acks.remove(mid)
+                if mid in self._pending_acks:
+                    # self._pending_acks only has unsubscribe mids
+                    self._pending_acks.remove(mid)
                 self._pending_operations_condition.notify_all()
 
     async def _discovery_cooldown(self):
