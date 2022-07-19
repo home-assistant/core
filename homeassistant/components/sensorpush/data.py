@@ -1,15 +1,17 @@
 """The SensorPush Bluetooth integration."""
 from __future__ import annotations
 
-from bluetooth_sensor_state_data import SIGNAL_STRENGTH_KEY
-from sensor_state_data import DeviceClass, DeviceKey, SensorUpdate
-from sensor_state_data.data import (
+from sensorpush_ble import (
     ATTR_HW_VERSION as SENSOR_HW_VERSION,
     ATTR_MANUFACTURER as SENSOR_MANUFACTURER,
     ATTR_MODEL as SENSOR_MODEL,
     ATTR_NAME as SENSOR_NAME,
     ATTR_SW_VERSION as SENSOR_SW_VERSION,
+    SIGNAL_STRENGTH_KEY,
+    DeviceClass,
+    DeviceKey,
     SensorDeviceInfo,
+    SensorUpdate,
 )
 
 from homeassistant.components.bluetooth.passive_update_coordinator import (

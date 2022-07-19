@@ -4,11 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/sensorpush",
   "bluetooth": [{ "local_name": "SensorPush*" }],
-  "requirements": [
-    "sensor-state-data==1.9.0",
-    "bluetooth-sensor-state-data==1.4.1",
-    "sensorpush-ble==1.0.0"
-  ],
+  "requirements": ["sensorpush-ble==1.1.0"],
   "dependencies": ["bluetooth"],
   "codeowners": ["@bdraco"],
   "iot_class": "local_push"

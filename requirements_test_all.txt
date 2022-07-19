@@ -337,9 +337,7 @@ bleparser==3.3.0
 # homeassistant.components.blink
 blinkpy==0.19.0
 
-# homeassistant.components.govee_ble
 # homeassistant.components.inkbird
-# homeassistant.components.sensorpush
 bluetooth-sensor-state-data==1.4.1
 
 # homeassistant.components.bond
@@ -566,6 +564,8 @@ google-nest-sdm==2.0.0
 googlemaps==2.5.1
 
 # homeassistant.components.govee_ble
+govee-ble==0.10.0
+
 # homeassistant.components.inkbird
 govee-ble==0.9.1
 
@@ -1450,13 +1450,11 @@ securetar==2022.2.0
 # homeassistant.components.sense
 sense_energy==0.10.4
 
-# homeassistant.components.govee_ble
 # homeassistant.components.inkbird
-# homeassistant.components.sensorpush
 sensor-state-data==1.9.0
 
 # homeassistant.components.sensorpush
-sensorpush-ble==1.0.0
+sensorpush-ble==1.1.0
 
 # homeassistant.components.sentry
 sentry-sdk==1.7.2
