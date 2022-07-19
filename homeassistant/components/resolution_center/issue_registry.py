@@ -2,11 +2,13 @@
 from __future__ import annotations
 
 import dataclasses
+from datetime import datetime
 from typing import Optional, cast
 
 from homeassistant.const import __version__ as ha_version
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.storage import Store
+import homeassistant.util.dt as dt_util
 
 from .models import IssueSeverity
 
@@ -14,7 +16,6 @@ DATA_REGISTRY = "issue_registry"
 STORAGE_KEY = "resolution_center.issue_registry"
 STORAGE_VERSION = 1
 SAVE_DELAY = 10
-SAVED_FIELDS = ("dismissed_version", "domain", "issue_id")
 
 
 @dataclasses.dataclass(frozen=True)
@@ -23,6 +24,7 @@ class IssueEntry:
 
     active: bool
     breaks_in_ha_version: str | None
+    created: datetime
     dismissed_version: str | None
     domain: str
     is_fixable: bool | None
@@ -68,6 +70,7 @@ class IssueRegistry:
             issue = IssueEntry(
                 active=True,
                 breaks_in_ha_version=breaks_in_ha_version,
+                created=dt_util.utcnow(),
                 dismissed_version=None,
                 domain=domain,
                 is_fixable=is_fixable,
@@ -102,15 +105,16 @@ class IssueRegistry:
         self.async_schedule_save()
 
     @callback
-    def async_dismiss(self, domain: str, issue_id: str) -> IssueEntry:
-        """Dismiss issue."""
+    def async_ignore(self, domain: str, issue_id: str, ignore: bool) -> IssueEntry:
+        """Ignore issue."""
         old = self.issues[(domain, issue_id)]
-        if old.dismissed_version == ha_version:
+        dismissed_version = ha_version if ignore else None
+        if old.dismissed_version == dismissed_version:
             return old
 
         issue = self.issues[(domain, issue_id)] = dataclasses.replace(
             old,
-            dismissed_version=ha_version,
+            dismissed_version=dismissed_version,
         )
 
         self.async_schedule_save()
@@ -125,10 +129,11 @@ class IssueRegistry:
 
         if isinstance(data, dict):
             for issue in data["issues"]:
-                assert issue["domain"] and issue["issue_id"]
+                assert issue["created"] and issue["domain"] and issue["issue_id"]
                 issues[(issue["domain"], issue["issue_id"])] = IssueEntry(
                     active=False,
                     breaks_in_ha_version=None,
+                    created=cast(datetime, dt_util.parse_datetime(issue["created"])),
                     dismissed_version=issue["dismissed_version"],
                     domain=issue["domain"],
                     is_fixable=None,
@@ -152,7 +157,12 @@ class IssueRegistry:
         data = {}
 
         data["issues"] = [
-            {field: getattr(entry, field) for field in SAVED_FIELDS}
+            {
+                "created": entry.created.isoformat(),
+                "dismissed_version": entry.dismissed_version,
+                "domain": entry.domain,
+                "issue_id": entry.issue_id,
+            }
             for entry in self.issues.values()
         ]
 
