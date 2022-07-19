@@ -6,7 +6,6 @@ from collections.abc import Awaitable, Callable, Coroutine, Iterable
 from contextvars import ContextVar
 from datetime import datetime, timedelta
 from logging import Logger, getLogger
-from types import ModuleType
 from typing import TYPE_CHECKING, Any, Protocol
 from urllib.parse import urlparse
 
@@ -71,6 +70,36 @@ class AddEntitiesCallback(Protocol):
         """Define add_entities type."""
 
 
+class EntityPlatformModule(Protocol):
+    """Protocol type for entity platform modules."""
+
+    async def async_setup_platform(
+        self,
+        hass: HomeAssistant,
+        config: ConfigType,
+        async_add_entities: AddEntitiesCallback,
+        discovery_info: DiscoveryInfoType | None = None,
+    ) -> None:
+        """Async setup integration platform."""
+
+    def setup_platform(
+        self,
+        hass: HomeAssistant,
+        config: ConfigType,
+        add_entities: AddEntitiesCallback,
+        discovery_info: DiscoveryInfoType | None = None,
+    ) -> None:
+        """Setup integration platform."""  # noqa: D401
+
+    async def async_setup_entry(
+        self,
+        hass: HomeAssistant,
+        entry: config_entries.ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
+        """Setup integration platform from config entry."""  # noqa: D401
+
+
 class EntityPlatform:
     """Manage the entities for a single platform."""
 
@@ -81,7 +110,7 @@ class EntityPlatform:
         logger: Logger,
         domain: str,
         platform_name: str,
-        platform: ModuleType | None,
+        platform: EntityPlatformModule | None,
         scan_interval: timedelta,
         entity_namespace: str | None,
     ) -> None:
@@ -174,7 +203,7 @@ class EntityPlatform:
         ] | asyncio.Future[None]:
             """Get task to set up platform."""
             if getattr(platform, "async_setup_platform", None):
-                return platform.async_setup_platform(  # type: ignore[no-any-return,union-attr]
+                return platform.async_setup_platform(  # type: ignore[union-attr]
                     hass,
                     platform_config,
                     self._async_schedule_add_entities,
@@ -217,7 +246,7 @@ class EntityPlatform:
             """Get task to set up platform."""
             config_entries.current_entry.set(config_entry)
 
-            return platform.async_setup_entry(  # type: ignore[no-any-return,union-attr]
+            return platform.async_setup_entry(  # type: ignore[union-attr]
                 self.hass, config_entry, self._async_schedule_add_entities_for_entry
             )
 
