@@ -18,11 +18,16 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_MODEL, ATTR_NAME, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
+
+
+class GoveeDataUpdateCoordinator(BluetoothDataUpdateCoordinator[StateType]):
+    """Coordinator for Govee Bluetooth data."""
 
 
 def device_key_to_bluetooth_entity_key(device_key: DeviceKey) -> BluetoothEntityKey:
@@ -69,7 +74,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     coordinator = hass.data.setdefault(DOMAIN, {})[
         entry.entry_id
-    ] = BluetoothDataUpdateCoordinator(
+    ] = GoveeDataUpdateCoordinator(
         hass,
         _LOGGER,
         update_method=_async_update_data,

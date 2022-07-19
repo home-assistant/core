@@ -54,7 +54,7 @@ _BluetoothDataUpdateCoordinatorT = TypeVar(
 
 
 class BluetoothDataUpdateCoordinator(Generic[_T]):
-    """Bluetooth data update dispatcher."""
+    """Bluetooth data update coordinator."""
 
     def __init__(
         self,
@@ -63,7 +63,7 @@ class BluetoothDataUpdateCoordinator(Generic[_T]):
         address: str,
         update_method: Callable[[BluetoothServiceInfo], BluetoothDataUpdate[_T]],
     ) -> None:
-        """Initialize the dispatcher."""
+        """Initialize the coordinator."""
         self.hass = hass
         self.logger = logger
         self.name: str | None = None
