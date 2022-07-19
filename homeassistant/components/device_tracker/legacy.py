@@ -649,7 +649,7 @@ class Device(RestoreEntity):
         self.consider_home = consider_home
 
         # Device ID
-        self._attr_unique_id = dev_id
+        self._attr_unique_id = self.entity_id
         self.dev_id = dev_id
         self.mac = mac
 
