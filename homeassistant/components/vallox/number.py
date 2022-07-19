@@ -1,4 +1,4 @@
-"""Support for Vallox ventilation unit selects."""
+"""Support for Vallox ventilation unit numbers."""
 from __future__ import annotations
 
 from dataclasses import dataclass
