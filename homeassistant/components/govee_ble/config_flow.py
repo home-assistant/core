@@ -29,7 +29,6 @@ class GoveeConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(discovery_info.address)
         self._abort_if_unique_id_configured()
         device = GoveeBluetoothDeviceData()
-        device.generate_update(discovery_info)
         if not device.supported(discovery_info):
             return self.async_abort(reason="not_supported")
         self._discovery_info = discovery_info

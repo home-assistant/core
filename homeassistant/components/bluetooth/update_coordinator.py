@@ -214,10 +214,10 @@ class BluetoothDataUpdateCoordinator(Generic[_T]):
                 self.last_update_success = True
                 self.logger.info("Processing %s data recovered", self.name)
             if new_data:
+                self.devices.update(new_data.devices)
+                self.entity_descriptions.update(new_data.entity_descriptions)
+                self.entity_data.update(new_data.entity_data)
                 self.async_update_listeners(new_data)
-            self.devices.update(new_data.devices)
-            self.entity_descriptions.update(new_data.entity_descriptions)
-            self.entity_data.update(new_data.entity_data)
 
 
 class BluetoothCoordinatorEntity(Entity, Generic[_BluetoothDataUpdateCoordinatorT]):
