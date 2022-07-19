@@ -9,6 +9,10 @@ from __future__ import annotations
 BLUETOOTH: list[dict[str, str | int | list[int]]] = [
     {
         "domain": "govee_ble",
+        "local_name": "Govee*"
+    },
+    {
+        "domain": "govee_ble",
         "local_name": "GVH5*"
     },
     {
