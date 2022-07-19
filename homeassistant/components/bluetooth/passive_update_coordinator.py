@@ -287,7 +287,7 @@ class PassiveBluetoothCoordinatorEntity(
 
     @callback
     def _handle_coordinator_update(
-        self, data: PassiveBluetoothDataUpdate | None
+        self, new_data: PassiveBluetoothDataUpdate | None
     ) -> None:
         """Handle updated data from the coordinator."""
         self.async_write_ha_state()
