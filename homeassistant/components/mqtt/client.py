@@ -445,7 +445,7 @@ class MQTT:
     async def async_subscribe(
         self,
         topic: str,
-        msg_callback: MessageCallbackType,
+        msg_callback: AsyncMessageCallbackType | MessageCallbackType,
         qos: int,
         encoding: str | None = None,
     ) -> Callable[[], None]:
