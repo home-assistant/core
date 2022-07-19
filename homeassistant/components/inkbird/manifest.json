@@ -9,11 +9,7 @@
     { "local_name": "iBBQ*" },
     { "local_name": "tps" }
   ],
-  "requirements": [
-    "sensor-state-data==1.9.0",
-    "bluetooth-sensor-state-data==1.4.1",
-    "govee-ble==0.9.1"
-  ],
+  "requirements": ["inkbird-ble==0.2.0"],
   "dependencies": ["bluetooth"],
   "codeowners": ["@bdraco"],
   "iot_class": "local_push"

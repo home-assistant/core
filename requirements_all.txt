@@ -427,9 +427,6 @@ blockchain==1.4.4
 # homeassistant.components.zengge
 # bluepy==1.3.0
 
-# homeassistant.components.inkbird
-bluetooth-sensor-state-data==1.4.1
-
 # homeassistant.components.bond
 bond-async==0.1.22
 
@@ -766,9 +763,6 @@ goslide-api==0.5.1
 # homeassistant.components.govee_ble
 govee-ble==0.10.0
 
-# homeassistant.components.inkbird
-govee-ble==0.9.1
-
 # homeassistant.components.remote_rpi_gpio
 gpiozero==1.6.2
 
@@ -907,6 +901,9 @@ influxdb-client==1.24.0
 
 # homeassistant.components.influxdb
 influxdb==5.3.1
+
+# homeassistant.components.inkbird
+inkbird-ble==0.2.0
 
 # homeassistant.components.insteon
 insteon-frontend-home-assistant==0.2.0
@@ -2165,9 +2162,6 @@ sendgrid==6.8.2
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
 sense_energy==0.10.4
-
-# homeassistant.components.inkbird
-sensor-state-data==1.9.0
 
 # homeassistant.components.sensorpush
 sensorpush-ble==1.1.0
