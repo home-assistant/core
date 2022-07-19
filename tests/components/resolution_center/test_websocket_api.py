@@ -58,8 +58,8 @@ async def create_issues(hass, ws_client):
             dict(
                 issue,
                 created=ANY,
-                dismissed=False,
                 dismissed_version=None,
+                ignored=False,
             )
             for issue in issues
         ]
@@ -120,9 +120,10 @@ async def test_dismiss_issue(hass: HomeAssistant, hass_ws_client) -> None:
     await client.send_json(
         {
             "id": 2,
-            "type": "resolution_center/dismiss_issue",
+            "type": "resolution_center/ignore_issue",
             "domain": "fake_integration",
             "issue_id": "no_such_issue",
+            "ignore": True,
         }
     )
     msg = await client.receive_json()
@@ -131,9 +132,10 @@ async def test_dismiss_issue(hass: HomeAssistant, hass_ws_client) -> None:
     await client.send_json(
         {
             "id": 3,
-            "type": "resolution_center/dismiss_issue",
+            "type": "resolution_center/ignore_issue",
             "domain": "fake_integration",
             "issue_id": "issue_1",
+            "ignore": True,
         }
     )
     msg = await client.receive_json()
@@ -149,8 +151,37 @@ async def test_dismiss_issue(hass: HomeAssistant, hass_ws_client) -> None:
             dict(
                 issue,
                 created=ANY,
-                dismissed=True,
                 dismissed_version=ha_version,
+                ignored=True,
+            )
+            for issue in issues
+        ]
+    }
+
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "resolution_center/ignore_issue",
+            "domain": "fake_integration",
+            "issue_id": "issue_1",
+            "ignore": False,
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] is None
+
+    await client.send_json({"id": 6, "type": "resolution_center/list_issues"})
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == {
+        "issues": [
+            dict(
+                issue,
+                created=ANY,
+                dismissed_version=None,
+                ignored=False,
             )
             for issue in issues
         ]
@@ -192,8 +223,8 @@ async def test_fix_non_existing_issue(
             dict(
                 issue,
                 created=ANY,
-                dismissed=False,
                 dismissed_version=None,
+                ignored=False,
             )
             for issue in issues
         ]
@@ -395,8 +426,8 @@ async def test_list_issues(hass: HomeAssistant, hass_ws_client) -> None:
             dict(
                 issue,
                 created="2022-07-19T07:53:05+00:00",
-                dismissed=False,
                 dismissed_version=None,
+                ignored=False,
             )
             for issue in issues
         ]
