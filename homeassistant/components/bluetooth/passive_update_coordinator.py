@@ -225,7 +225,9 @@ class PassiveBluetoothDataUpdateCoordinator(Generic[_T]):
             new_data = self.update_method(service_info)
         except Exception as err:  # pylint: disable=broad-except
             self.last_update_success = False
-            self.logger.exception("Unexpected error update %s data: %s", self.name, err)
+            self.logger.exception(
+                "Unexpected error updating %s data: %s", self.name, err
+            )
             return
 
         if not self.last_update_success:
