@@ -213,20 +213,23 @@ class PassiveBluetoothDataUpdateCoordinator(Generic[_T]):
         self.name = service_info.name
         self._last_callback_time = time.monotonic()
         self._present = True
+
         try:
             new_data = self.update_method(service_info)
         except Exception as err:  # pylint: disable=broad-except
             self.last_update_success = False
             self.logger.exception("Unexpected error update %s data: %s", self.name, err)
-        else:
-            if not self.last_update_success:
-                self.last_update_success = True
-                self.logger.info("Processing %s data recovered", self.name)
-            if new_data:
-                self.devices.update(new_data.devices)
-                self.entity_descriptions.update(new_data.entity_descriptions)
-                self.entity_data.update(new_data.entity_data)
-                self.async_update_listeners(new_data)
+            return
+
+        if not self.last_update_success:
+            self.last_update_success = True
+            self.logger.info("Processing %s data recovered", self.name)
+
+        if new_data:
+            self.devices.update(new_data.devices)
+            self.entity_descriptions.update(new_data.entity_descriptions)
+            self.entity_data.update(new_data.entity_data)
+            self.async_update_listeners(new_data)
 
 
 class PassiveBluetoothCoordinatorEntity(
@@ -271,7 +274,7 @@ class PassiveBluetoothCoordinatorEntity(
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return self.coordinator.available
+        return self.coordinator.last_update_success and self.coordinator.available
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
