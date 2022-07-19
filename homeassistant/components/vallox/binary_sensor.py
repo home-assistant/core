@@ -16,7 +16,7 @@ from . import ValloxDataUpdateCoordinator, ValloxEntity
 from .const import DOMAIN
 
 
-class ValloxBinarySensor(ValloxEntity, BinarySensorEntity):
+class ValloxBinarySensorEntity(ValloxEntity, BinarySensorEntity):
     """Representation of a Vallox binary sensor."""
 
     entity_description: ValloxBinarySensorEntityDescription
@@ -56,7 +56,7 @@ class ValloxBinarySensorEntityDescription(
     """Describes Vallox binary sensor entity."""
 
 
-SENSORS: tuple[ValloxBinarySensorEntityDescription, ...] = (
+BINARY_SENSOR_ENTITIES: tuple[ValloxBinarySensorEntityDescription, ...] = (
     ValloxBinarySensorEntityDescription(
         key="post_heater",
         name="Post heater",
@@ -77,7 +77,7 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            ValloxBinarySensor(data["name"], data["coordinator"], description)
-            for description in SENSORS
+            ValloxBinarySensorEntity(data["name"], data["coordinator"], description)
+            for description in BINARY_SENSOR_ENTITIES
         ]
     )

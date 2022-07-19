@@ -26,7 +26,7 @@ from . import ValloxDataUpdateCoordinator, ValloxEntity
 from .const import DOMAIN, METRIC_KEY_MODE, MODE_ON, VALLOX_CELL_STATE_TO_STR
 
 
-class ValloxSensor(ValloxEntity, SensorEntity):
+class ValloxSensorEntity(ValloxEntity, SensorEntity):
     """Representation of a Vallox sensor."""
 
     entity_description: ValloxSensorEntityDescription
@@ -61,7 +61,7 @@ class ValloxSensor(ValloxEntity, SensorEntity):
 #
 # Therefore, first query the overall state of the device, and report zero percent fan speed in case
 # it is not in regular operation mode.
-class ValloxFanSpeedSensor(ValloxSensor):
+class ValloxFanSpeedSensor(ValloxSensorEntity):
     """Child class for fan speed reporting."""
 
     @property
@@ -71,7 +71,7 @@ class ValloxFanSpeedSensor(ValloxSensor):
         return super().native_value if fan_is_on else 0
 
 
-class ValloxFilterRemainingSensor(ValloxSensor):
+class ValloxFilterRemainingSensor(ValloxSensorEntity):
     """Child class for filter remaining time reporting."""
 
     @property
@@ -88,7 +88,7 @@ class ValloxFilterRemainingSensor(ValloxSensor):
         )
 
 
-class ValloxCellStateSensor(ValloxSensor):
+class ValloxCellStateSensor(ValloxSensorEntity):
     """Child class for cell state reporting."""
 
     @property
@@ -107,10 +107,10 @@ class ValloxSensorEntityDescription(SensorEntityDescription):
     """Describes Vallox sensor entity."""
 
     metric_key: str | None = None
-    sensor_type: type[ValloxSensor] = ValloxSensor
+    sensor_type: type[ValloxSensorEntity] = ValloxSensorEntity
 
 
-SENSORS: tuple[ValloxSensorEntityDescription, ...] = (
+SENSOR_ENTITIES: tuple[ValloxSensorEntityDescription, ...] = (
     ValloxSensorEntityDescription(
         key="fan_speed",
         name="Fan speed",
@@ -210,6 +210,6 @@ async def async_setup_entry(
     async_add_entities(
         [
             description.sensor_type(name, coordinator, description)
-            for description in SENSORS
+            for description in SENSOR_ENTITIES
         ]
     )

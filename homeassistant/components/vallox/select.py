@@ -18,7 +18,7 @@ from .const import (
 )
 
 
-class ValloxSelect(ValloxEntity, SelectEntity):
+class ValloxSelectEntity(ValloxEntity, SelectEntity):
     """Representation of a Vallox sensor."""
 
     entity_description: ValloxSelectEntityDescription
@@ -45,12 +45,12 @@ class ValloxSelectEntityDescription(SelectEntityDescription):
     """Describes Vallox select entity."""
 
     metric_key: str | None = None
-    sensor_type: type[ValloxSelect] = ValloxSelect
+    sensor_type: type[ValloxSelectEntity] = ValloxSelectEntity
     current_option: str | None = None
     options: list[str] | None = None
 
 
-class ValloxProfileSensor(ValloxSelect):
+class ValloxProfileEntity(ValloxSelectEntity):
     """Child class for profile reporting."""
 
     _attr_options = list(STR_TO_VALLOX_PROFILE_SETTABLE.keys())
@@ -67,12 +67,12 @@ class ValloxProfileSensor(ValloxSelect):
         await self.coordinator.async_request_refresh()
 
 
-SELECT_TYPES: tuple[ValloxSelectEntityDescription, ...] = (
+SELECT_ENTITIES: tuple[ValloxSelectEntityDescription, ...] = (
     ValloxSelectEntityDescription(
         key="current_profile",
         name="Current profile",
         icon="mdi:gauge",
-        sensor_type=ValloxProfileSensor,
+        sensor_type=ValloxProfileEntity,
     ),
 )
 
@@ -88,6 +88,6 @@ async def async_setup_entry(
     async_add_entities(
         [
             description.sensor_type(name, coordinator, description, client)
-            for description in SELECT_TYPES
+            for description in SELECT_ENTITIES
         ]
     )
