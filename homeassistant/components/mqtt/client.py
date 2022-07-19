@@ -488,19 +488,21 @@ class MQTT:
         This method is a coroutine.
         """
 
-        def _client_unsubscribe(topic: str) -> None:
+        def _client_unsubscribe(topic: str) -> int:
             result: int | None = None
             result, mid = self._mqttc.unsubscribe(topic)
             _LOGGER.debug("Unsubscribing from %s, mid: %s", topic, mid)
             _raise_on_error(result)
             self._pending_acks.add(mid)
+            return mid
 
         if any(other.topic == topic for other in self.subscriptions):
             # Other subscriptions on topic remaining - don't unsubscribe.
             return
 
         async with self._paho_lock:
-            await self.hass.async_add_executor_job(_client_unsubscribe, topic)
+            mid = await self.hass.async_add_executor_job(_client_unsubscribe, topic)
+            self.hass.async_create_task(self._wait_for_mid(mid))
 
     async def _async_perform_subscriptions(
         self, subscriptions: Iterable[tuple[str, int]]
