@@ -567,7 +567,6 @@ googlemaps==2.5.1
 
 # homeassistant.components.govee_ble
 # homeassistant.components.inkbird
-# homeassistant.components.sensorpush
 govee-ble==0.9.1
 
 # homeassistant.components.gree
@@ -1455,6 +1454,9 @@ sense_energy==0.10.4
 # homeassistant.components.inkbird
 # homeassistant.components.sensorpush
 sensor-state-data==1.9.0
+
+# homeassistant.components.sensorpush
+sensorpush-ble==1.0.0
 
 # homeassistant.components.sentry
 sentry-sdk==1.7.2

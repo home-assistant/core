@@ -4,7 +4,6 @@ from __future__ import annotations
 import logging
 
 from govee_ble import GoveeBluetoothDeviceData
-from home_assistant_bluetooth import BluetoothServiceInfo
 
 from homeassistant.components.bluetooth.passive_update_coordinator import (
     PassiveBluetoothDataUpdate,
@@ -13,6 +12,7 @@ from homeassistant.components.bluetooth.passive_update_coordinator import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN
