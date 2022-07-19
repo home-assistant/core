@@ -36,13 +36,14 @@ class SonosHouseholdCoordinator:
     async def _async_setup(self) -> None:
         """Finish setup in async context."""
         self.cache_update_lock = asyncio.Lock()
-        self.async_poll = Debouncer[[], Coroutine[Any, Any, None]](
+        debouncer: Debouncer[[], Coroutine[Any, Any, None]] = Debouncer(
             self.hass,
             _LOGGER,
             cooldown=3,
             immediate=False,
             function=self._async_poll,
-        ).async_call
+        )
+        self.async_poll = debouncer.async_call
 
     @property
     def class_type(self) -> str:
