@@ -43,12 +43,12 @@ class GoveeConfigFlow(ConfigFlow, domain=DOMAIN):
         device = self._discovered_device
         assert self._discovery_info is not None
         discovery_info = self._discovery_info
-        device_name = device.get_device_name() or discovery_info.name
+        title = device.title or device.get_device_name() or discovery_info.name
         if user_input is not None:
-            return self.async_create_entry(title=device_name, data={})
+            return self.async_create_entry(title=title, data={})
 
         self._set_confirm_only()
-        placeholders = {"name": device_name}
+        placeholders = {"name": title}
         self.context["title_placeholders"] = placeholders
         return self.async_show_form(
             step_id="bluetooth_confirm", description_placeholders=placeholders
