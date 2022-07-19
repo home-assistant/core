@@ -566,7 +566,7 @@ google-nest-sdm==2.0.0
 googlemaps==2.5.1
 
 # homeassistant.components.govee_ble
-govee-ble==0.5.0
+govee-ble==0.6.0
 
 # homeassistant.components.gree
 greeclimate==1.2.0
