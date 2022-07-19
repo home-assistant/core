@@ -16,7 +16,7 @@
     }
   },
   "options": {
-    "step": {
+    "step": { 
       "init": {
         "data": {}
       },
