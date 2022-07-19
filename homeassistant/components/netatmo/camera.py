@@ -112,6 +112,7 @@ async def async_setup_entry(
 class NetatmoCamera(NetatmoBase, Camera):
     """Representation of a Netatmo camera."""
 
+    _attr_brand = MANUFACTURER
     _attr_supported_features = CameraEntityFeature.STREAM
 
     def __init__(
@@ -134,7 +135,6 @@ class NetatmoCamera(NetatmoBase, Camera):
         self._home_id = home_id
         self._device_name = self._data.get_camera(camera_id=camera_id)["name"]
         self._attr_name = f"{self._device_name}"
-        self._attr_brand = MANUFACTURER
         self._model = camera_type
         self._netatmo_type = TYPE_SECURITY
         self._attr_unique_id = f"{self._id}-{self._model}"
