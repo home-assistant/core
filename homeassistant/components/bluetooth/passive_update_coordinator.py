@@ -277,7 +277,7 @@ class PassiveBluetoothCoordinatorEntity(
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return self.coordinator.last_update_success and self.coordinator.available
+        return self.coordinator.available
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
