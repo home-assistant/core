@@ -2,6 +2,12 @@
   "config": {
     "flow_title": "{name}",
     "step": {
+      "user": {
+        "description": "Choose a device to setup",
+        "data": {
+          "address": "Device"
+        }
+      },
       "bluetooth_confirm": {
         "description": "Do you want to setup {name}?"
       }
