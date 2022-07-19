@@ -150,12 +150,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if entry.data[CONF_FLOW_TYPE] == CONF_GATEWAY:
         await async_setup_gateway_entry(hass, entry)
-    elif entry.data[CONF_FLOW_TYPE] == CONF_DEVICE
+    elif entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
         if not await async_setup_device_entry(hass, entry):
             return False
     else:
         return False
-    
+
     # register stop callback to clean push server subscriptions of miio device
     def device_stop(event):
         """Clean subscriptions registered in miio device memory."""
