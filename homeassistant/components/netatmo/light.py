@@ -62,6 +62,7 @@ class NetatmoLight(NetatmoBase, LightEntity):
     """Representation of a Netatmo Presence camera light."""
 
     _attr_color_mode = ColorMode.ONOFF
+    _attr_has_entity_name = True
     _attr_supported_color_modes = {ColorMode.ONOFF}
 
     def __init__(
@@ -83,7 +84,6 @@ class NetatmoLight(NetatmoBase, LightEntity):
         self._model = camera_type
         self._netatmo_type = TYPE_SECURITY
         self._device_name: str = self._data.get_camera(camera_id)["name"]
-        self._attr_name = f"{self._device_name}"
         self._is_on = False
         self._attr_unique_id = f"{self._id}-light"
 
