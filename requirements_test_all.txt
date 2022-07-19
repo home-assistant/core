@@ -339,6 +339,9 @@ bleparser==3.3.0
 # homeassistant.components.blink
 blinkpy==0.19.0
 
+# homeassistant.components.govee_ble
+bluetooth-sensor-state-data==1.2.0
+
 # homeassistant.components.bond
 bond-async==0.1.22
 
@@ -1445,6 +1448,9 @@ securetar==2022.2.0
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
 sense_energy==0.10.4
+
+# homeassistant.components.govee_ble
+sensor-state-data==1.5.1
 
 # homeassistant.components.sentry
 sentry-sdk==1.7.2
