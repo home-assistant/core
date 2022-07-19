@@ -8,7 +8,6 @@ from homeassistant.components.bluetooth.passive_update_coordinator import (
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 
 from . import SensorPushDataUpdateCoordinator
 from .const import DOMAIN
@@ -34,6 +33,6 @@ class SensorPushBluetoothSensorEntity(
     """Representation of a sensorpush ble sensor."""
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> int | float | None:
         """Return the native value."""
         return self.coordinator.entity_data.get(self.entity_key)
