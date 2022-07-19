@@ -6,9 +6,9 @@ import logging
 from govee_ble import GoveeBluetoothDeviceData
 from home_assistant_bluetooth import BluetoothServiceInfo
 
-from homeassistant.components.bluetooth.update_coordinator import (
-    BluetoothDataUpdate,
-    BluetoothDataUpdateCoordinator,
+from homeassistant.components.bluetooth.passive_update_coordinator import (
+    PassiveBluetoothDataUpdate,
+    PassiveBluetoothDataUpdateCoordinator,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -22,7 +22,7 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
 
 
-class GoveeDataUpdateCoordinator(BluetoothDataUpdateCoordinator[StateType]):
+class GoveeDataUpdateCoordinator(PassiveBluetoothDataUpdateCoordinator[StateType]):
     """Coordinator for Govee Bluetooth data."""
 
 
@@ -34,7 +34,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     govee_data = GoveeBluetoothDeviceData()
 
     @callback
-    def _async_update_data(service_info: BluetoothServiceInfo) -> BluetoothDataUpdate:
+    def _async_update_data(
+        service_info: BluetoothServiceInfo,
+    ) -> PassiveBluetoothDataUpdate:
         """Update data from Govee Bluetooth."""
         return sensor_update_to_bluetooth_data_update(govee_data.update(service_info))
 

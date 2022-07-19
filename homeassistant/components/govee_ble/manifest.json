@@ -7,7 +7,7 @@
   "requirements": [
     "sensor-state-data==1.8.0",
     "bluetooth-sensor-state-data==1.4.1",
-    "govee-ble==0.8.0"
+    "govee-ble==0.9.0"
   ],
   "dependencies": ["bluetooth"],
   "codeowners": ["@bdraco"],

@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 from homeassistant import config_entries
-from homeassistant.components.bluetooth.update_coordinator import (
-    BluetoothCoordinatorEntity,
+from homeassistant.components.bluetooth.passive_update_coordinator import (
+    PassiveBluetoothCoordinatorEntity,
 )
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant
@@ -29,7 +29,7 @@ async def async_setup_entry(
 
 
 class GoveeBluetoothSensorEntity(
-    BluetoothCoordinatorEntity[GoveeDataUpdateCoordinator], SensorEntity
+    PassiveBluetoothCoordinatorEntity[GoveeDataUpdateCoordinator], SensorEntity
 ):
     """Representation of a govee ble sensor."""
 

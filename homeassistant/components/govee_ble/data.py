@@ -12,9 +12,9 @@ from sensor_state_data.data import (
     SensorDeviceInfo,
 )
 
-from homeassistant.components.bluetooth.update_coordinator import (
-    BluetoothDataUpdate,
-    BluetoothEntityKey,
+from homeassistant.components.bluetooth.passive_update_coordinator import (
+    PassiveBluetoothDataUpdate,
+    PassiveBluetoothEntityKey,
 )
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
 from homeassistant.const import (
@@ -43,9 +43,11 @@ SENSOR_DEVICE_CLASS_TO_HASS = {
 }
 
 
-def _device_key_to_bluetooth_entity_key(device_key: DeviceKey) -> BluetoothEntityKey:
+def _device_key_to_bluetooth_entity_key(
+    device_key: DeviceKey,
+) -> PassiveBluetoothEntityKey:
     """Convert a device key to an entity key."""
-    return BluetoothEntityKey(device_key.key, device_key.device_id)
+    return PassiveBluetoothEntityKey(device_key.key, device_key.device_id)
 
 
 def _sensor_device_class_to_hass(
@@ -77,9 +79,9 @@ def _sensor_device_info_to_hass(
 
 def sensor_update_to_bluetooth_data_update(
     sensor_update: SensorUpdate,
-) -> BluetoothDataUpdate:
+) -> PassiveBluetoothDataUpdate:
     """Convert a sensor update to a bluetooth data update."""
-    return BluetoothDataUpdate(
+    return PassiveBluetoothDataUpdate(
         devices={
             device_id: _sensor_device_info_to_hass(device_info)
             for device_id, device_info in sensor_update.devices.items()
