@@ -110,6 +110,12 @@ class SensiboDeviceBaseEntity(SensiboBaseEntity):
             )
         if command == "reset_filter":
             result = await self._client.async_reset_filter(self._device_id)
+        if command == "set_climate_react":
+            if TYPE_CHECKING:
+                assert params is not None
+            result = await self._client.async_enable_climate_react(
+                self._device_id, params
+            )
         return result
 
 

@@ -44,6 +44,17 @@ class SensiboDeviceSwitchEntityDescription(
 
 DEVICE_SWITCH_TYPES: tuple[SensiboDeviceSwitchEntityDescription, ...] = (
     SensiboDeviceSwitchEntityDescription(
+        key="climate_react_on_switch",
+        device_class=SwitchDeviceClass.SWITCH,
+        name="Climate React",
+        icon="mdi:home-thermometer",
+        value_fn=lambda data: data.smart_on,
+        extra_fn=None,
+        command_on="set_climate_react",
+        command_off="set_climate_react",
+        remote_key="smart_on",
+    ),
+    SensiboDeviceSwitchEntityDescription(
         key="timer_on_switch",
         device_class=SwitchDeviceClass.SWITCH,
         name="Timer",
@@ -88,6 +99,12 @@ def build_params(command: str, device_data: SensiboDevice) -> dict[str, Any] | N
             params["acIntegration"] = False
             params["geoIntegration"] = False
             params["primeIntegration"] = False
+        return params
+    if command == "set_climate_react":
+        new_state = bool(device_data.smart_on is False)
+        params = {
+            "enabled": new_state,
+        }
         return params
     return None
 
