@@ -110,7 +110,7 @@ class USBDiscovery:
         self.usb = usb
         self.seen: set[tuple[str, ...]] = set()
         self.observer_active = False
-        self._request_debouncer: Debouncer[[], Coroutine[Any, Any, None]] | None = None
+        self._request_debouncer: Debouncer[Coroutine[Any, Any, None]] | None = None
 
     async def async_setup(self) -> None:
         """Set up USB Discovery."""

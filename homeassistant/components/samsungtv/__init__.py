@@ -131,7 +131,7 @@ class DebouncedEntryReloader:
         self.hass = hass
         self.entry = entry
         self.token = self.entry.data.get(CONF_TOKEN)
-        self._debounced_reload: Debouncer[[], Coroutine[Any, Any, None]] = Debouncer(
+        self._debounced_reload: Debouncer[Coroutine[Any, Any, None]] = Debouncer(
             hass,
             LOGGER,
             cooldown=ENTRY_RELOAD_COOLDOWN,

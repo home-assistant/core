@@ -144,7 +144,7 @@ class FluxConfigNumber(
     ) -> None:
         """Initialize the flux number."""
         super().__init__(coordinator, base_unique_id, name, key)
-        self._debouncer: Debouncer[[], Coroutine[Any, Any, None]] | None = None
+        self._debouncer: Debouncer[Coroutine[Any, Any, None]] | None = None
         self._pending_value: int | None = None
 
     async def async_added_to_hass(self) -> None:

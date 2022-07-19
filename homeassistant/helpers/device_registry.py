@@ -833,7 +833,7 @@ def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
         ent_reg = entity_registry.async_get(hass)
         async_cleanup(hass, dev_reg, ent_reg)
 
-    debounced_cleanup: Debouncer[[], Coroutine[Any, Any, None]] = Debouncer(
+    debounced_cleanup: Debouncer[Coroutine[Any, Any, None]] = Debouncer(
         hass, _LOGGER, cooldown=CLEANUP_DELAY, immediate=False, function=cleanup
     )
 

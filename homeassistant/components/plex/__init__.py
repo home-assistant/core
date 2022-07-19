@@ -95,14 +95,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _LOGGER.debug("Scanning for GDM clients")
         gdm.scan(scan_for_clients=True)
 
-    debouncer: Debouncer[[], None] = Debouncer(
+    hass.data[PLEX_DOMAIN][GDM_DEBOUNCER] = Debouncer[None](
         hass,
         _LOGGER,
         cooldown=10,
         immediate=True,
         function=gdm_scan,
-    )
-    hass.data[PLEX_DOMAIN][GDM_DEBOUNCER] = debouncer.async_call
+    ).async_call
 
     return True
 

@@ -297,7 +297,7 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         self.entry = entry
         self.device = device
 
-        self._debounced_reload: Debouncer[[], Coroutine[Any, Any, None]] = Debouncer(
+        self._debounced_reload: Debouncer[Coroutine[Any, Any, None]] = Debouncer(
             hass,
             LOGGER,
             cooldown=ENTRY_RELOAD_COOLDOWN,
@@ -637,7 +637,7 @@ class RpcDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         self.entry = entry
         self.device = device
 
-        self._debounced_reload: Debouncer[[], Coroutine[Any, Any, None]] = Debouncer(
+        self._debounced_reload: Debouncer[Coroutine[Any, Any, None]] = Debouncer(
             hass,
             LOGGER,
             cooldown=ENTRY_RELOAD_COOLDOWN,

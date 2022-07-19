@@ -6,15 +6,12 @@ from collections.abc import Callable
 from logging import Logger
 from typing import Generic, TypeVar
 
-from typing_extensions import ParamSpec
-
 from homeassistant.core import HassJob, HomeAssistant, callback
 
 _R_co = TypeVar("_R_co", covariant=True)
-_P = ParamSpec("_P")
 
 
-class Debouncer(Generic[_P, _R_co]):
+class Debouncer(Generic[_R_co]):
     """Class to rate limit calls to a specific command."""
 
     def __init__(
@@ -24,7 +21,7 @@ class Debouncer(Generic[_P, _R_co]):
         *,
         cooldown: float,
         immediate: bool,
-        function: Callable[_P, _R_co] | None = None,
+        function: Callable[[], _R_co] | None = None,
     ) -> None:
         """Initialize debounce.
 
@@ -40,17 +37,17 @@ class Debouncer(Generic[_P, _R_co]):
         self._timer_task: asyncio.TimerHandle | None = None
         self._execute_at_end_of_timer: bool = False
         self._execute_lock = asyncio.Lock()
-        self._job: HassJob[_P, _R_co] | None = (
+        self._job: HassJob[[], _R_co] | None = (
             None if function is None else HassJob(function)
         )
 
     @property
-    def function(self) -> Callable[_P, _R_co] | None:
+    def function(self) -> Callable[[], _R_co] | None:
         """Return the function being wrapped by the Debouncer."""
         return self._function
 
     @function.setter
-    def function(self, function: Callable[_P, _R_co]) -> None:
+    def function(self, function: Callable[[], _R_co]) -> None:
         """Update the function being wrapped by the Debouncer."""
         self._function = function
         if self._job is None or function != self._job.target:
@@ -80,8 +77,7 @@ class Debouncer(Generic[_P, _R_co]):
             if self._timer_task:
                 return
 
-            task: asyncio.Future[_R_co] | None
-            task = self.hass.async_run_hass_job(self._job)  # type: ignore[arg-type]
+            task = self.hass.async_run_hass_job(self._job)
             if task:
                 await task
 
@@ -108,8 +104,7 @@ class Debouncer(Generic[_P, _R_co]):
                 return  # type: ignore[unreachable]
 
             try:
-                task: asyncio.Future[_R_co] | None
-                task = self.hass.async_run_hass_job(self._job)  # type: ignore[arg-type]
+                task = self.hass.async_run_hass_job(self._job)
                 if task:
                     await task
             except Exception:  # pylint: disable=broad-except
