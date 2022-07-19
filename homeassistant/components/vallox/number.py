@@ -64,7 +64,7 @@ class ValloxNumberEntityDescription(NumberEntityDescription):
     """Describes Vallox select entity."""
 
     metric_key: str | None = None
-    number_type: type[ValloxNumberEntity] = ValloxNumberEntity
+    entity_type: type[ValloxNumberEntity] = ValloxNumberEntity
 
 
 NUMBER_ENTITIES: tuple[ValloxNumberEntityDescription, ...] = (
@@ -94,7 +94,7 @@ NUMBER_ENTITIES: tuple[ValloxNumberEntityDescription, ...] = (
         key="supply_air_target_boost",
         name="Supply air temperature (Boost)",
         metric_key="A_CYC_BOOST_AIR_TEMP_TARGET",
-        sensor_type=ValloxNumberEntity,
+        entity_type=ValloxNumberEntity,
         device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
         native_min_value=5.0,
