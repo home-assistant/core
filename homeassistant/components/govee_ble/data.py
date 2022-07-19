@@ -52,7 +52,7 @@ def sensor_update_to_bluetooth_data_update(
     return BluetoothDataUpdate(
         devices={
             device_id: DeviceInfo(
-                name=device_data[ATTR_NAME], model=device_data[ATTR_MODEL]
+                name=device_data.get(ATTR_NAME), model=device_data.get(ATTR_MODEL)
             )
             for device_id, device_data in sensor_update.devices.items()
         },
