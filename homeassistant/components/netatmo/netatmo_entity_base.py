@@ -1,5 +1,6 @@
 """Base class for Netatmo entities."""
 from __future__ import annotations
+
 from typing import Any
 
 from pyatmo.modules.device_types import (
