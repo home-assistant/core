@@ -177,7 +177,7 @@ class XiaomiGatewayDevice(CoordinatorEntity, Entity):
         if self.coordinator.data is None:
             return False
 
-        return self.coordinator.data[self._sub_device.sid][ATTR_AVAILABLE]
+        return self.coordinator.data[ATTR_AVAILABLE]
 
     @callback
     def push_callback(self, action, params):

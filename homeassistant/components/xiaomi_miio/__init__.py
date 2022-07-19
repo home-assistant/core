@@ -54,7 +54,6 @@ from .const import (
     DOMAIN,
     KEY_COORDINATOR,
     KEY_DEVICE,
-    KEY_DEVICE_STOP,
     KEY_PUSH_SERVER,
     KEY_PUSH_SERVER_STOP,
     MODEL_AIRFRESH_A1,
@@ -150,24 +149,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if entry.data[CONF_FLOW_TYPE] == CONF_GATEWAY:
         await async_setup_gateway_entry(hass, entry)
-    elif entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
-        if not await async_setup_device_entry(hass, entry):
-            return False
-    else:
-        return False
+        return True
 
-    # register stop callback to clean push server subscriptions of miio device
-    def device_stop(event):
-        """Clean subscriptions registered in miio device memory."""
-        _LOGGER.debug("Removing subscribtions from miio device memory")
-        push_server = hass.data[DOMAIN][KEY_PUSH_SERVER]
-        device = hass.data[DOMAIN][entry.entry_id][KEY_DEVICE]
-        push_server.unregister_miio_device(device)
-
-    unsub = hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, device_stop)
-    hass.data[DOMAIN][entry.entry_id][KEY_DEVICE_STOP] = unsub
-
-    return True
+    return bool(
+        entry.data[CONF_FLOW_TYPE] != CONF_DEVICE
+        or await async_setup_device_entry(hass, entry)
+    )
 
 
 @callback
@@ -510,8 +497,6 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     )
 
     _LOGGER.debug("Removing subscribtions from miio device memory")
-    unsub_stop = hass.data[DOMAIN][config_entry.entry_id].pop(KEY_DEVICE_STOP)
-    unsub_stop()
     push_server = hass.data[DOMAIN][KEY_PUSH_SERVER]
     device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
     await hass.async_add_executor_job(push_server.unregister_miio_device, device)
