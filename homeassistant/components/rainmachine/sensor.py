@@ -22,10 +22,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.dt import utcnow
 
-from . import RainMachineEntity
+from . import RainMachineData, RainMachineEntity
 from .const import (
-    DATA_CONTROLLER,
-    DATA_COORDINATOR,
     DATA_PROGRAMS,
     DATA_PROVISION_SETTINGS,
     DATA_RESTRICTIONS_UNIVERSAL,
@@ -125,8 +123,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up RainMachine sensors based on a config entry."""
-    controller = hass.data[DOMAIN][entry.entry_id][DATA_CONTROLLER]
-    coordinators = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR]
+    data: RainMachineData = hass.data[DOMAIN][entry.entry_id]
 
     api_category_sensor_map = {
         DATA_PROVISION_SETTINGS: ProvisionSettingsSensor,
@@ -135,18 +132,18 @@ async def async_setup_entry(
 
     sensors = [
         api_category_sensor_map[description.api_category](
-            entry, coordinator, controller, description
+            entry, coordinator, data.controller, description
         )
         for description in SENSOR_DESCRIPTIONS
         if (
-            (coordinator := coordinators[description.api_category]) is not None
+            (coordinator := data.coordinators[description.api_category]) is not None
             and coordinator.data
             and key_exists(coordinator.data, description.data_key)
         )
     ]
 
-    program_coordinator = coordinators[DATA_PROGRAMS]
-    zone_coordinator = coordinators[DATA_ZONES]
+    program_coordinator = data.coordinators[DATA_PROGRAMS]
+    zone_coordinator = data.coordinators[DATA_ZONES]
 
     for uid, program in program_coordinator.data.items():
         sensors.append(
@@ -154,7 +151,7 @@ async def async_setup_entry(
                 entry,
                 program_coordinator,
                 zone_coordinator,
-                controller,
+                data.controller,
                 RainMachineSensorDescriptionUid(
                     key=f"{TYPE_PROGRAM_RUN_COMPLETION_TIME}_{uid}",
                     name=f"{program['name']} Run Completion Time",
@@ -170,7 +167,7 @@ async def async_setup_entry(
             ZoneTimeRemainingSensor(
                 entry,
                 zone_coordinator,
-                controller,
+                data.controller,
                 RainMachineSensorDescriptionUid(
                     key=f"{TYPE_ZONE_RUN_COMPLETION_TIME}_{uid}",
                     name=f"{zone['name']} Run Completion Time",

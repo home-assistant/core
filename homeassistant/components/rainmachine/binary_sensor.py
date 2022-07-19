@@ -10,10 +10,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import RainMachineEntity
+from . import RainMachineData, RainMachineEntity
 from .const import (
-    DATA_CONTROLLER,
-    DATA_COORDINATOR,
     DATA_PROVISION_SETTINGS,
     DATA_RESTRICTIONS_CURRENT,
     DATA_RESTRICTIONS_UNIVERSAL,
@@ -124,8 +122,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up RainMachine binary sensors based on a config entry."""
-    controller = hass.data[DOMAIN][entry.entry_id][DATA_CONTROLLER]
-    coordinators = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR]
+    data: RainMachineData = hass.data[DOMAIN][entry.entry_id]
 
     api_category_sensor_map = {
         DATA_PROVISION_SETTINGS: ProvisionSettingsBinarySensor,
@@ -136,11 +133,11 @@ async def async_setup_entry(
     async_add_entities(
         [
             api_category_sensor_map[description.api_category](
-                entry, coordinator, controller, description
+                entry, coordinator, data.controller, description
             )
             for description in BINARY_SENSOR_DESCRIPTIONS
             if (
-                (coordinator := coordinators[description.api_category]) is not None
+                (coordinator := data.coordinators[description.api_category]) is not None
                 and coordinator.data
                 and key_exists(coordinator.data, description.data_key)
             )

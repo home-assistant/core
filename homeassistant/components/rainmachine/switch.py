@@ -21,11 +21,9 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import RainMachineEntity, async_update_programs_and_zones
+from . import RainMachineData, RainMachineEntity, async_update_programs_and_zones
 from .const import (
     CONF_ZONE_RUN_TIME,
-    DATA_CONTROLLER,
-    DATA_COORDINATOR,
     DATA_PROGRAMS,
     DATA_ZONES,
     DEFAULT_ZONE_RUN,
@@ -137,26 +135,32 @@ async def async_setup_entry(
     ):
         platform.async_register_entity_service(service_name, schema, method)
 
-    data = hass.data[DOMAIN][entry.entry_id]
-    controller = data[DATA_CONTROLLER]
-    program_coordinator = data[DATA_COORDINATOR][DATA_PROGRAMS]
-    zone_coordinator = data[DATA_COORDINATOR][DATA_ZONES]
+    data: RainMachineData = hass.data[DOMAIN][entry.entry_id]
 
     entities: list[RainMachineActivitySwitch | RainMachineEnabledSwitch] = []
-
     for kind, coordinator, switch_class, switch_enabled_class in (
-        ("program", program_coordinator, RainMachineProgram, RainMachineProgramEnabled),
-        ("zone", zone_coordinator, RainMachineZone, RainMachineZoneEnabled),
+        (
+            "program",
+            data.coordinators[DATA_PROGRAMS],
+            RainMachineProgram,
+            RainMachineProgramEnabled,
+        ),
+        (
+            "zone",
+            data.coordinators[DATA_ZONES],
+            RainMachineZone,
+            RainMachineZoneEnabled,
+        ),
     ):
-        for uid, data in coordinator.data.items():
-            name = data["name"].capitalize()
+        for uid, activity in coordinator.data.items():
+            name = activity["name"].capitalize()
 
             # Add a switch to start/stop the program or zone:
             entities.append(
                 switch_class(
                     entry,
                     coordinator,
-                    controller,
+                    data.controller,
                     RainMachineSwitchDescription(
                         key=f"{kind}_{uid}",
                         name=name,
@@ -171,7 +175,7 @@ async def async_setup_entry(
                 switch_enabled_class(
                     entry,
                     coordinator,
-                    controller,
+                    data.controller,
                     RainMachineSwitchDescription(
                         key=f"{kind}_{uid}_enabled",
                         name=f"{name} enabled",

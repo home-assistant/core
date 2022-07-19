@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 from datetime import timedelta
 from functools import partial
-from typing import Any, cast
+from typing import Any
 
 from regenmaschine import Client
 from regenmaschine.controller import Controller
@@ -39,8 +40,6 @@ from homeassistant.util.network import is_ip_address
 from .config_flow import get_client_controller
 from .const import (
     CONF_ZONE_RUN_TIME,
-    DATA_CONTROLLER,
-    DATA_COORDINATOR,
     DATA_PROGRAMS,
     DATA_PROVISION_SETTINGS,
     DATA_RESTRICTIONS_CURRENT,
@@ -135,6 +134,14 @@ SERVICE_RESTRICT_WATERING_SCHEMA = SERVICE_SCHEMA.extend(
 )
 
 
+@dataclass
+class RainMachineData:
+    """Define an object to be stored in `hass.data`."""
+
+    controller: Controller
+    coordinators: dict[str, DataUpdateCoordinator]
+
+
 @callback
 def async_get_controller_for_service_call(
     hass: HomeAssistant, call: ServiceCall
@@ -146,9 +153,8 @@ def async_get_controller_for_service_call(
     if device_entry := device_registry.async_get(device_id):
         for entry in hass.config_entries.async_entries(DOMAIN):
             if entry.entry_id in device_entry.config_entries:
-                return cast(
-                    Controller, hass.data[DOMAIN][entry.entry_id][DATA_CONTROLLER]
-                )
+                data: RainMachineData = hass.data[DOMAIN][entry.entry_id]
+                return data.controller
 
     raise ValueError(f"No controller for device ID: {device_id}")
 
@@ -161,14 +167,12 @@ async def async_update_programs_and_zones(
     Program and zone updates always go together because of how linked they are:
     programs affect zones and certain combinations of zones affect programs.
     """
+    data: RainMachineData = hass.data[DOMAIN][entry.entry_id]
+
     await asyncio.gather(
         *[
-            hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR][
-                DATA_PROGRAMS
-            ].async_refresh(),
-            hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR][
-                DATA_ZONES
-            ].async_refresh(),
+            data.coordinators[DATA_PROGRAMS].async_refresh(),
+            data.coordinators[DATA_ZONES].async_refresh(),
         ]
     )
 
@@ -250,10 +254,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await asyncio.gather(*controller_init_tasks)
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {
-        DATA_CONTROLLER: controller,
-        DATA_COORDINATOR: coordinators,
-    }
+    hass.data[DOMAIN][entry.entry_id] = RainMachineData(
+        controller=controller, coordinators=coordinators
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
