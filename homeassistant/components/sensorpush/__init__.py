@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class SensorPushDataUpdateCoordinator(PassiveBluetoothDataUpdateCoordinator[StateType]):
-    """Coordinator for Govee Bluetooth data."""
+    """Coordinator for SensorPush Bluetooth data."""
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

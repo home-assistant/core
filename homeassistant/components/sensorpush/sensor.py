@@ -23,12 +23,12 @@ async def async_setup_entry(
     coordinator: SensorPushDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     entry.async_on_unload(
         coordinator.async_add_entities_listener(
-            GoveeBluetoothSensorEntity, async_add_entities
+            SensorPushBluetoothSensorEntity, async_add_entities
         )
     )
 
 
-class GoveeBluetoothSensorEntity(
+class SensorPushBluetoothSensorEntity(
     PassiveBluetoothCoordinatorEntity[SensorPushDataUpdateCoordinator], SensorEntity
 ):
     """Representation of a sensorpush ble sensor."""
