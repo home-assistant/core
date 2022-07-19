@@ -55,7 +55,6 @@ class ValloxNumberEntity(ValloxEntity, NumberEntity):
         """Update the current value."""
         if (metric_key := self.entity_description.metric_key) is None:
             return
-        self._attr_native_value = value
         await self._client.set_values({metric_key: float(value)})
         await self.coordinator.async_request_refresh()
 
