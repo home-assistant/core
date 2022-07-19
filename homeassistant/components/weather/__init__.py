@@ -793,7 +793,7 @@ class WeatherEntity(Entity):
             forecasts[ATTR_FORECAST_DAILY] = self.forecast_daily
         if self.forecast_twice_daily:
             for forecast in self.forecast_twice_daily:
-                if ATTR_FORECAST_IS_DAYTIME not in forecast:
+                if forecast.get(ATTR_FORECAST_IS_DAYTIME) is None:
                     raise ValueError(
                         "is_daytime mandatory attribute for forecast_twice_daily is missing"
                     )

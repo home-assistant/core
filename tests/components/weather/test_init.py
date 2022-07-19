@@ -146,7 +146,12 @@ class MockWeatherEntityCompat(WeatherEntity):
 
 async def create_entity(hass: HomeAssistant, **kwargs):
     """Create the weather entity to run tests on."""
-    kwargs = {"native_temperature": None, "native_temperature_unit": None, **kwargs}
+    kwargs = {
+        "native_temperature": None,
+        "native_temperature_unit": None,
+        "is_daytime": True,
+        **kwargs,
+    }
     platform: WeatherPlatform = getattr(hass.components, "test.weather")
     platform.init(empty=True)
     platform.ENTITIES.append(
@@ -710,6 +715,7 @@ async def test_custom_units(
             native_visibility_unit=visibility_unit,
             native_precipitation=precipitation_value,
             native_precipitation_unit=precipitation_unit,
+            is_daytime=True,
             unique_id="very_unique",
         )
     )
@@ -843,9 +849,9 @@ async def test_backwards_compatibility(
     await hass.async_block_till_done()
 
     state = hass.states.get(entity0.entity_id)
-    forecast = state.attributes[ATTR_FORECAST_DAILY][0]
+    forecast = state.attributes[ATTR_FORECAST][0]
     state1 = hass.states.get(entity1.entity_id)
-    forecast1 = state1.attributes[ATTR_FORECAST_DAILY][0]
+    forecast1 = state1.attributes[ATTR_FORECAST][0]
 
     assert float(state.attributes[ATTR_WEATHER_WIND_SPEED]) == pytest.approx(
         wind_speed_value * 3.6
@@ -970,7 +976,7 @@ async def test_backwards_compatibility_convert_values(
     )
 
     assert state.attributes == {
-        ATTR_FORECAST_DAILY: [
+        ATTR_FORECAST: [
             {
                 ATTR_FORECAST_PRECIPITATION: pytest.approx(
                     expected_precipitation, rel=0.1
@@ -1051,10 +1057,11 @@ async def test_attr_compatibility(hass: HomeAssistant) -> None:
             temperature=20,
         )
     ]
-    assert weather.forecast_daily == forecast_entry
+
+    assert weather.forecast == forecast_entry
 
     assert weather.state_attributes == {
-        ATTR_FORECAST_DAILY: forecast_entry,
+        ATTR_FORECAST: forecast_entry,
         ATTR_WEATHER_PRESSURE: 10.0,
         ATTR_WEATHER_PRESSURE_UNIT: UnitOfPressure.HPA,
         ATTR_WEATHER_TEMPERATURE: 20.0,
@@ -1090,13 +1097,15 @@ async def test_multiple_forecast(
     """Test multiple forecast."""
 
     entity0 = await create_entity(
-        hass, native_temperature=38, native_temperature_unit=UnitOfTemperature.CELSIUS
+        hass,
+        native_temperature=38,
+        native_temperature_unit=UnitOfTemperature.CELSIUS,
     )
 
     state = hass.states.get(entity0.entity_id)
     forecast_daily = state.attributes[ATTR_FORECAST_DAILY][0]
     forecast_twice_daily = state.attributes[ATTR_FORECAST_TWICE_DAILY][0]
-    forecast_hourly = state.attributes.get(ATTR_FORECAST_HOURLY)
+    forecast_hourly = state.attributes.get(ATTR_FORECAST_HOURLY)[0]
 
     expected = 38
     assert float(state.attributes[ATTR_WEATHER_TEMPERATURE]) == pytest.approx(
@@ -1107,4 +1116,23 @@ async def test_multiple_forecast(
     assert float(forecast_twice_daily[ATTR_FORECAST_TEMP]) == pytest.approx(
         expected, rel=0.1
     )
-    assert forecast_hourly is None
+    assert float(forecast_hourly[ATTR_FORECAST_TEMP]) == pytest.approx(
+        expected, rel=0.1
+    )
+
+
+async def test_forecast_twice_daily_missing_is_daytime(
+    hass: HomeAssistant,
+    enable_custom_integrations: None,
+) -> None:
+    """Test forecast_twice_daily missing mandatory attribute is_daytime."""
+
+    entity0 = await create_entity(
+        hass,
+        native_temperature=38,
+        native_temperature_unit=UnitOfTemperature.CELSIUS,
+        is_daytime=None,
+    )
+
+    state = hass.states.get(entity0.entity_id)
+    assert state is None
