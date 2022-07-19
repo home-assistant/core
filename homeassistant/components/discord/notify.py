@@ -13,7 +13,6 @@ from homeassistant.components.notify import (
     ATTR_TARGET,
     BaseNotificationService,
 )
-from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -40,16 +39,15 @@ async def async_get_service(
     """Get the Discord notification service."""
     if discovery_info is None:
         return None
-    return DiscordNotificationService(hass, discovery_info[CONF_API_TOKEN])
+    return DiscordNotificationService(discovery_info["client"])
 
 
 class DiscordNotificationService(BaseNotificationService):
     """Implement the notification service for Discord."""
 
-    def __init__(self, hass: HomeAssistant, token: str) -> None:
+    def __init__(self, discord_bot: nextcord.Client) -> None:
         """Initialize the service."""
-        self.token = token
-        self.hass = hass
+        self.discord_bot = discord_bot
 
     def file_exists(self, filename: str) -> bool:
         """Check if a file exists on disk and is in authorized path."""
@@ -64,7 +62,6 @@ class DiscordNotificationService(BaseNotificationService):
     async def async_send_message(self, message: str, **kwargs: Any) -> None:
         """Login to Discord, send message to channel(s) and log out."""
         nextcord.VoiceClient.warn_nacl = False
-        discord_bot = nextcord.Client()
         images = None
         embedding = None
 
@@ -117,11 +114,11 @@ class DiscordNotificationService(BaseNotificationService):
                 files = [nextcord.File(image) for image in images] if images else []
                 try:
                     channel = cast(
-                        Messageable, await discord_bot.fetch_channel(channelid)
+                        Messageable, await self.discord_bot.fetch_channel(channelid)
                     )
                 except nextcord.NotFound:
                     try:
-                        channel = await discord_bot.fetch_user(channelid)
+                        channel = await self.discord_bot.fetch_user(channelid)
                     except nextcord.NotFound:
                         _LOGGER.warning("Channel not found for ID: %s", channelid)
                         continue
