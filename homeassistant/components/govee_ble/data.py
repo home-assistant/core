@@ -1,7 +1,7 @@
 """The Govee Bluetooth integration."""
 from __future__ import annotations
 
-from bluetooth_sensor_state_data import RSSI_KEY
+from bluetooth_sensor_state_data import SIGNAL_STRENGTH_KEY
 from sensor_state_data import DeviceClass, DeviceKey, SensorUpdate
 from sensor_state_data.data import SensorDeviceInfo
 
@@ -73,7 +73,7 @@ def sensor_update_to_bluetooth_data_update(
                     sensor_description.device_class
                 ),
                 native_unit_of_measurement=sensor_description.native_unit_of_measurement,
-                entity_registry_enabled_default=device_key.key != RSSI_KEY,
+                entity_registry_enabled_default=device_key.key != SIGNAL_STRENGTH_KEY,
             )
             for device_key, sensor_description in sensor_update.entity_descriptions.items()
         },
