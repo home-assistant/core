@@ -4,8 +4,8 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/govee_ble",
   "bluetooth": [{ "local_name": "GVH5*" }],
-  "requirements": ["bleparser==3.3.0"],
-  "dependencies": ["ble_parser", "bluetooth"],
+  "requirements": ["govee-ble==0.2.0"],
+  "dependencies": ["bluetooth"],
   "codeowners": ["@bdraco"],
   "iot_class": "local_push"
 }

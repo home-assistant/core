@@ -1,32 +1,57 @@
 """The Bluetooth integration."""
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
+import dataclasses
 from datetime import datetime, timedelta
 import logging
 import time
-from typing import TYPE_CHECKING, Optional
+from typing import Any, Generic, TypeVar
+
+from home_assistant_bluetooth import BluetoothServiceInfo
 
 from homeassistant.components import bluetooth
+from homeassistant.const import ATTR_CONNECTIONS, ATTR_IDENTIFIERS, ATTR_NAME
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.helpers.entity import EntityDescription
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
-
-from .device import BluetoothDeviceData
-from .entity import BluetoothDeviceKey
 
 UNAVAILABLE_SECONDS = 60 * 5
 NEVER_TIME = -UNAVAILABLE_SECONDS
 
-BluetoothListenerCallbackType = Callable[
-    [Optional[Mapping[BluetoothDeviceKey, EntityDescription]]], None
-]
-if TYPE_CHECKING:
-    from .entity import BluetoothCoordinatorEntity
+
+@dataclasses.dataclass(frozen=True)
+class BluetoothEntityKey:
+    """Key for a bluetooth entity.
+
+    Example:
+    key: temperature
+    device_id: outdoor_sensor_1
+    """
+
+    key: str
+    device_id: str | None
 
 
-class BluetoothDataUpdateCoordinator:
+_T = TypeVar("_T")
+
+
+@dataclasses.dataclass(frozen=True)
+class BluetoothDataUpdate(Generic[_T]):
+    """Generic bluetooth data."""
+
+    devices: dict[str | None, DeviceInfo] = dataclasses.field(default_factory=dict)
+    entities: dict[BluetoothEntityKey, _T] = dataclasses.field(default_factory=dict)
+
+
+_BluetoothDataUpdateCoordinatorT = TypeVar(
+    "_BluetoothDataUpdateCoordinatorT", bound="BluetoothDataUpdateCoordinator[Any]"
+)
+
+
+class BluetoothDataUpdateCoordinator(Generic[_T]):
     """Bluetooth data update dispatcher."""
 
     def __init__(
@@ -34,25 +59,25 @@ class BluetoothDataUpdateCoordinator:
         hass: HomeAssistant,
         logger: logging.Logger,
         address: str,
-        data: BluetoothDeviceData,
-        *,
-        name: str,
+        update_method: Callable[[BluetoothServiceInfo], BluetoothDataUpdate[_T]],
     ) -> None:
         """Initialize the dispatcher."""
-        self.data = data
-        self.entity_descriptions = data.entity_descriptions
         self.hass = hass
         self.logger = logger
-        self.name = name
+        self.name: str | None = None
         self.address = address
-        self._listeners: dict[
-            BluetoothDeviceKey | None, list[BluetoothListenerCallbackType]
+        self._listeners: list[Callable[[BluetoothDataUpdate[_T] | None], None]] = []
+        self._entity_key_listeners: dict[
+            BluetoothEntityKey | None,
+            list[Callable[[BluetoothDataUpdate[_T] | None], None]],
         ] = {}
-        self._cancel: CALLBACK_TYPE | None = None
+        self.update_method = update_method
+        self.entity_data: dict[BluetoothEntityKey, _T] = {}
+        self.device_data: dict[str | None, DeviceInfo] = {}
         self.last_update_success = True
-        self._present = True
-        self.last_exception: Exception | None = None
         self._last_callback_time: float = NEVER_TIME
+        self._present = True
+        self._cancel: CALLBACK_TYPE | None = None
 
     @property
     def available(self) -> bool:
@@ -69,10 +94,7 @@ class BluetoothDataUpdateCoordinator:
         if bluetooth.async_address_present(self.hass, self.address):
             return
         self._present = False
-        for key, callbacks in self._listeners.items():
-            if key is not None:
-                for update_callback in callbacks:
-                    update_callback(None)
+        self.async_update_listeners(None)
 
     @callback
     def async_setup(self) -> CALLBACK_TYPE:
@@ -102,19 +124,20 @@ class BluetoothDataUpdateCoordinator:
         async_add_entites: AddEntitiesCallback,
     ) -> Callable[[], None]:
         """Add a listener for new entities."""
-        created: set[BluetoothDeviceKey] = set()
+        created: set[BluetoothEntityKey] = set()
 
         @callback
         def _async_add_or_update_entities(
-            data: Mapping[BluetoothDeviceKey, EntityDescription] | None,
+            data: BluetoothDataUpdate[_T] | None,
         ) -> None:
             """Listen for new entities."""
+            if data is None:
+                return
             entities: list[BluetoothCoordinatorEntity] = []
-            if data:
-                for key, description in data.items():
-                    if key not in created:
-                        entities.append(entity_class(self, description, key))
-                        created.add(key)
+            for entity_key in data.entities:
+                if entity_key not in created:
+                    entities.append(entity_class(self, entity_key))
+                    created.add(entity_key)
             if entities:
                 async_add_entites(entities)
 
@@ -123,34 +146,46 @@ class BluetoothDataUpdateCoordinator:
     @callback
     def async_add_listener(
         self,
-        update_callback: BluetoothListenerCallbackType,
-        device_key: BluetoothDeviceKey | None = None,
+        update_callback: Callable[[BluetoothDataUpdate[_T] | None], None],
     ) -> Callable[[], None]:
-        """Listen for data updates."""
+        """Listen for all updates."""
 
         @callback
         def remove_listener() -> None:
             """Remove update listener."""
-            self._listeners[device_key].remove(update_callback)
-            if not self._listeners[device_key]:
-                del self._listeners[device_key]
+            self._listeners.remove(update_callback)
 
-        self._listeners.setdefault(device_key, []).append(update_callback)
+        self._listeners.append(update_callback)
         return remove_listener
 
     @callback
-    def async_update_listeners(
-        self, data: Mapping[BluetoothDeviceKey, EntityDescription]
-    ) -> None:
+    def async_add_entity_key_listener(
+        self,
+        update_callback: Callable[[BluetoothDataUpdate[_T] | None], None],
+        entity_key: BluetoothEntityKey | None = None,
+    ) -> Callable[[], None]:
+        """Listen for updates by device key."""
+
+        @callback
+        def remove_listener() -> None:
+            """Remove update listener."""
+            self._entity_key_listeners[entity_key].remove(update_callback)
+            if not self._entity_key_listeners[entity_key]:
+                del self._entity_key_listeners[entity_key]
+
+        self._entity_key_listeners.setdefault(entity_key, []).append(update_callback)
+        return remove_listener
+
+    @callback
+    def async_update_listeners(self, data: BluetoothDataUpdate[_T] | None) -> None:
         """Update all registered listeners."""
         # Dispatch to listeners without a filter key
-        if listeners := self._listeners.get(None):
-            for update_callback in listeners:
-                update_callback(data)
+        for update_callback in self._listeners:
+            update_callback(data)
 
         # Dispatch to listeners with a filter key
-        for key in data:
-            if listeners := self._listeners.get(key):
+        for key in self._entity_key_listeners:
+            if listeners := self._entity_key_listeners.get(key):
                 for update_callback in listeners:
                     update_callback(data)
 
@@ -161,17 +196,83 @@ class BluetoothDataUpdateCoordinator:
         change: bluetooth.BluetoothChange,
     ) -> None:
         """Handle a Bluetooth event."""
+        self.name = service_info.name
         self._last_callback_time = time.monotonic()
         self._present = True
         try:
-            data_update = self.data.generate_update(service_info)
+            new_data = self.update_method(service_info)
         except Exception as err:  # pylint: disable=broad-except
-            self.last_exception = err
             self.last_update_success = False
             self.logger.exception("Unexpected error update %s data: %s", self.name, err)
         else:
             if not self.last_update_success:
                 self.last_update_success = True
                 self.logger.info("Processing %s data recovered", self.name)
-            if data_update:
-                self.async_update_listeners(data_update)
+            if new_data:
+                self.async_update_listeners(new_data)
+            self.entity_data.update(new_data.entities)
+            self.device_data.update(new_data.devices)
+
+
+class BluetoothCoordinatorEntity(Entity, Generic[_BluetoothDataUpdateCoordinatorT]):
+    """A class for entities using DataUpdateCoordinator."""
+
+    _attr_should_poll = False
+
+    def __init__(
+        self,
+        coordinator: _BluetoothDataUpdateCoordinatorT,
+        entity_key: BluetoothEntityKey,
+        context: Any = None,
+    ) -> None:
+        """Create the entity with a DataUpdateCoordinator."""
+        self.device_key = entity_key
+        self.coordinator = coordinator
+        self.coordinator_context = context
+        self._attr_unique_id = f"{coordinator.address}-{self.device_key.key}"
+        identifiers: set[tuple[str, str]] = set()
+        connections: set[tuple[str, str]] = set()
+        if entity_key.device_id:
+            identifiers.add(
+                (bluetooth.DOMAIN, f"{coordinator.address}-{self.device_key.device_id}")
+            )
+            self._attr_unique_id = f"{coordinator.address}-{self.device_key.device_id}-{self.device_key.key}"
+        elif ":" in coordinator.address:
+            # Linux
+            connections.add((dr.CONNECTION_NETWORK_MAC, coordinator.address))
+        else:
+            # Mac uses UUIDs
+            identifiers.add((bluetooth.DOMAIN, coordinator.address))
+        device_id = entity_key.device_id
+
+        if device_id in coordinator.device_data:
+            base_device_info = coordinator.device_data[device_id]
+        else:
+            base_device_info = DeviceInfo({})
+        self._attr_device_info = base_device_info | DeviceInfo(
+            {
+                ATTR_CONNECTIONS: connections,
+                ATTR_IDENTIFIERS: identifiers,
+            }
+        )
+        if ATTR_NAME not in self._attr_device_info:
+            self._attr_device_info[ATTR_NAME] = self.coordinator.name
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self.coordinator.available
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self.coordinator.async_add_entity_key_listener(
+                self._handle_coordinator_update, self.device_key
+            )
+        )
+
+    @callback
+    def _handle_coordinator_update(self, data: BluetoothDataUpdate | None) -> None:
+        """Handle updated data from the coordinator."""
+        self.async_write_ha_state()
