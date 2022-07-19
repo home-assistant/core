@@ -89,9 +89,10 @@ async def test_issues_created(hass, hass_client, hass_ws_client):
         "issues": [
             {
                 "breaks_in_ha_version": "2023.1.1",
-                "dismissed": False,
+                "created": ANY,
                 "dismissed_version": None,
                 "domain": "demo",
+                "ignored": False,
                 "is_fixable": False,
                 "issue_id": "transmogrifier_deprecated",
                 "learn_more_url": "https://en.wiktionary.org/wiki/transmogrifier",
@@ -101,9 +102,10 @@ async def test_issues_created(hass, hass_client, hass_ws_client):
             },
             {
                 "breaks_in_ha_version": "2023.1.1",
-                "dismissed": False,
+                "created": ANY,
                 "dismissed_version": None,
                 "domain": "demo",
+                "ignored": False,
                 "is_fixable": True,
                 "issue_id": "out_of_blinker_fluid",
                 "learn_more_url": "https://www.youtube.com/watch?v=b9rntRxLlbU",
@@ -113,9 +115,10 @@ async def test_issues_created(hass, hass_client, hass_ws_client):
             },
             {
                 "breaks_in_ha_version": None,
-                "dismissed": False,
+                "created": ANY,
                 "dismissed_version": None,
                 "domain": "demo",
+                "ignored": False,
                 "is_fixable": False,
                 "issue_id": "unfixable_problem",
                 "learn_more_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
@@ -171,9 +174,10 @@ async def test_issues_created(hass, hass_client, hass_ws_client):
         "issues": [
             {
                 "breaks_in_ha_version": "2023.1.1",
-                "dismissed": False,
+                "created": ANY,
                 "dismissed_version": None,
                 "domain": "demo",
+                "ignored": False,
                 "is_fixable": False,
                 "issue_id": "transmogrifier_deprecated",
                 "learn_more_url": "https://en.wiktionary.org/wiki/transmogrifier",
@@ -183,9 +187,10 @@ async def test_issues_created(hass, hass_client, hass_ws_client):
             },
             {
                 "breaks_in_ha_version": None,
-                "dismissed": False,
+                "created": ANY,
                 "dismissed_version": None,
                 "domain": "demo",
+                "ignored": False,
                 "is_fixable": False,
                 "issue_id": "unfixable_problem",
                 "learn_more_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
