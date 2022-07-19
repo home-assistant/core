@@ -158,6 +158,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             api
         ] = GuardianDataUpdateCoordinator(
             hass,
+            entry=entry,
             client=client,
             api_name=api,
             api_coro=api_coro,
@@ -359,6 +360,7 @@ class PairedSensorManager:
 
         coordinator = self.coordinators[uid] = GuardianDataUpdateCoordinator(
             self._hass,
+            entry=self._entry,
             client=self._client,
             api_name=f"{API_SENSOR_PAIRED_SENSOR_STATUS}_{uid}",
             api_coro=lambda: cast(

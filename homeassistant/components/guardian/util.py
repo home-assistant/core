@@ -9,6 +9,7 @@ from typing import Any, cast
 from aioguardian import Client
 from aioguardian.errors import GuardianError
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -28,6 +29,7 @@ class GuardianDataUpdateCoordinator(DataUpdateCoordinator[dict]):
         self,
         hass: HomeAssistant,
         *,
+        entry: ConfigEntry,
         client: Client,
         api_name: str,
         api_coro: Callable[..., Awaitable],
@@ -47,8 +49,9 @@ class GuardianDataUpdateCoordinator(DataUpdateCoordinator[dict]):
         self._client = client
         self._signal_handler_unsubs: list[Callable[..., None]] = []
 
+        self.config_entry = entry
         self.signal_reboot_requested = SIGNAL_REBOOT_REQUESTED.format(
-            self.config_entry.entry_id  # type: ignore[union-attr]
+            self.config_entry.entry_id
         )
 
     async def _async_update_data(self) -> dict[str, Any]:
