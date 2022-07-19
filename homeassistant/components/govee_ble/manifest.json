@@ -5,9 +5,9 @@
   "documentation": "https://www.home-assistant.io/integrations/govee_ble",
   "bluetooth": [{ "local_name": "GVH5*" }, { "local_name": "B5178*" }],
   "requirements": [
-    "sensor-state-data==1.7.0",
+    "sensor-state-data==1.8.0",
     "bluetooth-sensor-state-data==1.4.1",
-    "govee-ble==0.6.0"
+    "govee-ble==0.8.0"
   ],
   "dependencies": ["bluetooth"],
   "codeowners": ["@bdraco"],

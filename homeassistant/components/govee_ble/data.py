@@ -3,14 +3,27 @@ from __future__ import annotations
 
 from bluetooth_sensor_state_data import SIGNAL_STRENGTH_KEY
 from sensor_state_data import DeviceClass, DeviceKey, SensorUpdate
-from sensor_state_data.data import SensorDeviceInfo
+from sensor_state_data.data import (
+    ATTR_HW_VERSION as SENSOR_HW_VERSION,
+    ATTR_MANUFACTURER as SENSOR_MANUFACTURER,
+    ATTR_MODEL as SENSOR_MODEL,
+    ATTR_NAME as SENSOR_NAME,
+    ATTR_SW_VERSION as SENSOR_SW_VERSION,
+    SensorDeviceInfo,
+)
 
 from homeassistant.components.bluetooth.update_coordinator import (
     BluetoothDataUpdate,
     BluetoothEntityKey,
 )
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
-from homeassistant.const import ATTR_MODEL, ATTR_NAME
+from homeassistant.const import (
+    ATTR_HW_VERSION,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
+    ATTR_SW_VERSION,
+)
 from homeassistant.helpers.entity import DeviceInfo
 
 SENSOR_DEVICE_CLASS_TO_HASS = {
@@ -49,10 +62,16 @@ def _sensor_device_info_to_hass(
 ) -> DeviceInfo:
     """Convert a sensor device info to a sensor device info."""
     base_device_info = DeviceInfo({})
-    if device_info.get(ATTR_NAME) is not None:
-        base_device_info[ATTR_NAME] = device_info[ATTR_NAME]
-    if device_info.get(ATTR_MODEL) is not None:
-        base_device_info[ATTR_MODEL] = device_info[ATTR_MODEL]
+    if device_info.get(SENSOR_NAME) is not None:
+        base_device_info[ATTR_NAME] = device_info[SENSOR_NAME]
+    if device_info.get(SENSOR_MANUFACTURER) is not None:
+        base_device_info[ATTR_MANUFACTURER] = device_info[SENSOR_MANUFACTURER]
+    if device_info.get(SENSOR_SW_VERSION) is not None:
+        base_device_info[ATTR_SW_VERSION] = device_info[SENSOR_HW_VERSION]
+    if device_info.get(SENSOR_HW_VERSION) is not None:
+        base_device_info[ATTR_HW_VERSION] = device_info[SENSOR_HW_VERSION]
+    if device_info.get(SENSOR_MODEL) is not None:
+        base_device_info[ATTR_MODEL] = device_info[SENSOR_MODEL]
     return base_device_info
 
 
