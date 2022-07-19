@@ -103,9 +103,8 @@ class PassiveBluetoothDataUpdateCoordinator(Generic[_T]):
         if (
             not self._present
             or time.monotonic() - self._last_callback_time < UNAVAILABLE_SECONDS
+            or bluetooth.async_address_present(self.hass, self.address)
         ):
-            return
-        if bluetooth.async_address_present(self.hass, self.address):
             return
         self._present = False
         self.async_update_listeners(None)
