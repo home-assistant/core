@@ -6,12 +6,11 @@ from homeassistant.components.aladdin_connect.const import DOMAIN
 from homeassistant.components.aladdin_connect.cover import SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry
-from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
-YAML_CONFIG = {"username": "test-user", "password": "test-password"}
+CONFIG = {"username": "test-user", "password": "test-password"}
 RELOAD_AFTER_UPDATE_DELAY = timedelta(seconds=31)
 
 
@@ -22,12 +21,11 @@ async def test_sensors(
     """Test Sensors for AladdinConnect."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data=YAML_CONFIG,
+        data=CONFIG,
         unique_id="test-id",
     )
     config_entry.add_to_hass(hass)
 
-    assert await async_setup_component(hass, "homeassistant", {})
     await hass.async_block_till_done()
 
     with patch(
@@ -48,6 +46,9 @@ async def test_sensors(
         await hass.async_block_till_done()
         assert update_entry != entry
         assert update_entry.disabled is False
+        state = hass.states.get("sensor.home_battery_level")
+        assert state is None
+
         async_fire_time_changed(
             hass,
             utcnow() + SCAN_INTERVAL,
@@ -67,6 +68,8 @@ async def test_sensors(
         await hass.async_block_till_done()
         assert update_entry != entry
         assert update_entry.disabled is False
+        state = hass.states.get("sensor.home_wi_fi_rssi")
+        assert state is None
 
         update_entry = registry.async_update_entity(
             entry.entity_id, **{"disabled_by": None}
