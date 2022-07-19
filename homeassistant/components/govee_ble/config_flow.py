@@ -1,6 +1,7 @@
 """Config flow for govee_ble integration."""
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from govee_ble import GoveeBluetoothDeviceData
@@ -10,6 +11,8 @@ from homeassistant.config_entries import ConfigFlow
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class GoveeConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -26,11 +29,14 @@ class GoveeConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: BluetoothServiceInfo
     ) -> FlowResult:
         """Handle the bluetooth discovery step."""
+        _LOGGER.warning("async_step_bluetooth: %s", discovery_info)
         await self.async_set_unique_id(discovery_info.address)
         self._abort_if_unique_id_configured()
         device = GoveeBluetoothDeviceData()
         if not device.supported(discovery_info):
+            _LOGGER.warning("async_step_bluetooth NOT ACCEPTED %s", discovery_info)
             return self.async_abort(reason="not_supported")
+        _LOGGER.warning("async_step_bluetooth ACCEPTED %s", discovery_info)
         self._discovery_info = discovery_info
         self._discovered_device = device
         return await self.async_step_bluetooth_confirm()
