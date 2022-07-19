@@ -319,27 +319,26 @@ class BluetoothManager:
         if not matched_domains and not self._callbacks:
             return
 
-        callback_service_info: BluetoothServiceInfoBleak | None = None
+        service_info: BluetoothServiceInfoBleak | None = None
         for callback, matcher in self._callbacks:
             if matcher is None or _ble_device_matches(
                 matcher, device, advertisement_data
             ):
-                if callback_service_info is None:
-                    callback_service_info = (
-                        BluetoothServiceInfoBleak.from_advertisement(
-                            device, advertisement_data, SOURCE_LOCAL
-                        )
+                if service_info is None:
+                    service_info = BluetoothServiceInfoBleak.from_advertisement(
+                        device, advertisement_data, SOURCE_LOCAL
                     )
                 try:
-                    callback(callback_service_info, BluetoothChange.ADVERTISEMENT)
+                    callback(service_info, BluetoothChange.ADVERTISEMENT)
                 except Exception:  # pylint: disable=broad-except
                     _LOGGER.exception("Error in bluetooth callback")
 
         if not matched_domains:
             return
-        service_info = BluetoothServiceInfo.from_advertisement(
-            device, advertisement_data, SOURCE_LOCAL
-        )
+        if service_info is None:
+            service_info = BluetoothServiceInfoBleak.from_advertisement(
+                device, advertisement_data, SOURCE_LOCAL
+            )
         for domain in matched_domains:
             discovery_flow.async_create_flow(
                 self.hass,
