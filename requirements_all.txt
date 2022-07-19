@@ -1530,7 +1530,6 @@ pyfronius==0.7.1
 # homeassistant.components.ifttt
 pyfttt==0.3
 
-# homeassistant.components.bluetooth_le_tracker
 # homeassistant.components.skybeacon
 pygatt[GATTTOOL]==4.0.5
 
