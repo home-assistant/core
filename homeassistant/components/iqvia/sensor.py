@@ -16,20 +16,17 @@ from homeassistant.const import ATTR_STATE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import IQVIAEntity
+from . import IQVIAData, IQVIAEntity
 from .const import (
     DOMAIN,
     TYPE_ALLERGY_FORECAST,
-    TYPE_ALLERGY_INDEX,
     TYPE_ALLERGY_OUTLOOK,
     TYPE_ALLERGY_TODAY,
     TYPE_ALLERGY_TOMORROW,
     TYPE_ASTHMA_FORECAST,
-    TYPE_ASTHMA_INDEX,
     TYPE_ASTHMA_TODAY,
     TYPE_ASTHMA_TOMORROW,
     TYPE_DISEASE_FORECAST,
-    TYPE_DISEASE_INDEX,
     TYPE_DISEASE_TODAY,
 )
 
@@ -43,15 +40,6 @@ ATTR_RATING = "rating"
 ATTR_SEASON = "season"
 ATTR_TREND = "trend"
 ATTR_ZIP_CODE = "zip_code"
-
-API_CATEGORY_MAPPING = {
-    TYPE_ALLERGY_TODAY: TYPE_ALLERGY_INDEX,
-    TYPE_ALLERGY_TOMORROW: TYPE_ALLERGY_INDEX,
-    TYPE_ALLERGY_TOMORROW: TYPE_ALLERGY_INDEX,
-    TYPE_ASTHMA_TODAY: TYPE_ASTHMA_INDEX,
-    TYPE_ASTHMA_TOMORROW: TYPE_ASTHMA_INDEX,
-    TYPE_DISEASE_TODAY: TYPE_DISEASE_INDEX,
-}
 
 
 class Rating(NamedTuple):
@@ -130,25 +118,15 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up IQVIA sensors based on a config entry."""
+    data: IQVIAData = hass.data[DOMAIN][entry.entry_id]
+
     sensors: list[ForecastSensor | IndexSensor] = [
-        ForecastSensor(
-            hass.data[DOMAIN][entry.entry_id][
-                API_CATEGORY_MAPPING.get(description.key, description.key)
-            ],
-            entry,
-            description,
-        )
+        ForecastSensor(data, entry, description)
         for description in FORECAST_SENSOR_DESCRIPTIONS
     ]
     sensors.extend(
         [
-            IndexSensor(
-                hass.data[DOMAIN][entry.entry_id][
-                    API_CATEGORY_MAPPING.get(description.key, description.key)
-                ],
-                entry,
-                description,
-            )
+            IndexSensor(data, entry, description)
             for description in INDEX_SENSOR_DESCRIPTIONS
         ]
     )
@@ -205,9 +183,7 @@ class ForecastSensor(IQVIAEntity, SensorEntity):
         )
 
         if self.entity_description.key == TYPE_ALLERGY_FORECAST:
-            outlook_coordinator = self.hass.data[DOMAIN][self._entry.entry_id][
-                TYPE_ALLERGY_OUTLOOK
-            ]
+            outlook_coordinator = self._data.coordinators[TYPE_ALLERGY_OUTLOOK]
 
             if not outlook_coordinator.last_update_success:
                 return

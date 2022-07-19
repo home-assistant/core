@@ -5,8 +5,8 @@ from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
+from . import IQVIAData
 from .const import DOMAIN
 
 
@@ -14,7 +14,7 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinators: dict[str, DataUpdateCoordinator] = hass.data[DOMAIN][entry.entry_id]
+    data: IQVIAData = hass.data[DOMAIN][entry.entry_id]
 
     return {
         "entry": {
@@ -23,6 +23,6 @@ async def async_get_config_entry_diagnostics(
         },
         "data": {
             data_type: coordinator.data
-            for data_type, coordinator in coordinators.items()
+            for data_type, coordinator in data.coordinators.items()
         },
     }

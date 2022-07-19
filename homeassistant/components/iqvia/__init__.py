@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
 from datetime import timedelta
 from functools import partial
 from typing import Any, cast
@@ -29,16 +30,28 @@ from .const import (
     TYPE_ALLERGY_FORECAST,
     TYPE_ALLERGY_INDEX,
     TYPE_ALLERGY_OUTLOOK,
+    TYPE_ALLERGY_TODAY,
+    TYPE_ALLERGY_TOMORROW,
     TYPE_ASTHMA_FORECAST,
     TYPE_ASTHMA_INDEX,
+    TYPE_ASTHMA_TODAY,
+    TYPE_ASTHMA_TOMORROW,
     TYPE_DISEASE_FORECAST,
     TYPE_DISEASE_INDEX,
+    TYPE_DISEASE_TODAY,
 )
 
 DEFAULT_ATTRIBUTION = "Data provided by IQVIA™"
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=30)
 
 PLATFORMS = [Platform.SENSOR]
+
+
+@dataclass
+class IQVIAData:
+    """Define an object to be stored in `hass.data`."""
+
+    coordinators: dict[str, DataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -99,7 +112,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     client.enable_request_retries()
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = coordinators
+    hass.data[DOMAIN][entry.entry_id] = IQVIAData(coordinators=coordinators)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -118,20 +131,33 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class IQVIAEntity(CoordinatorEntity):
     """Define a base IQVIA entity."""
 
+    API_CATEGORY_MAPPING = {
+        TYPE_ALLERGY_TODAY: TYPE_ALLERGY_INDEX,
+        TYPE_ALLERGY_TOMORROW: TYPE_ALLERGY_INDEX,
+        TYPE_ALLERGY_TOMORROW: TYPE_ALLERGY_INDEX,
+        TYPE_ASTHMA_TODAY: TYPE_ASTHMA_INDEX,
+        TYPE_ASTHMA_TOMORROW: TYPE_ASTHMA_INDEX,
+        TYPE_DISEASE_TODAY: TYPE_DISEASE_INDEX,
+    }
+
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        data: IQVIAData,
         entry: ConfigEntry,
         description: EntityDescription,
     ) -> None:
         """Initialize."""
-        super().__init__(coordinator)
+        super().__init__(
+            data.coordinators[
+                self.API_CATEGORY_MAPPING.get(description.key, description.key)
+            ]
+        )
 
         self._attr_extra_state_attributes = {}
         self._attr_unique_id = f"{entry.data[CONF_ZIP_CODE]}_{description.key}"
-        self._entry = entry
+        self._data = data
         self.entity_description = description
 
     @callback
@@ -149,9 +175,9 @@ class IQVIAEntity(CoordinatorEntity):
 
         if self.entity_description.key == TYPE_ALLERGY_FORECAST:
             self.async_on_remove(
-                self.hass.data[DOMAIN][self._entry.entry_id][
-                    TYPE_ALLERGY_OUTLOOK
-                ].async_add_listener(self._handle_coordinator_update)
+                self._data.coordinators[TYPE_ALLERGY_OUTLOOK].async_add_listener(
+                    self._handle_coordinator_update
+                )
             )
 
         self.update_from_latest_data()
