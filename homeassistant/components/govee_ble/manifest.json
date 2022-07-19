@@ -3,7 +3,7 @@
   "name": "Govee Bluetooth",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/govee_ble",
-  "bluetooth": [{ "local_name": "GVH5*" }],
+  "bluetooth": [{ "local_name": "GVH5*" }, { "local_name": "B5178*" }],
   "requirements": ["govee-ble==0.3.0"],
   "dependencies": ["bluetooth"],
   "codeowners": ["@bdraco"],
