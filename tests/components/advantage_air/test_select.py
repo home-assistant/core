@@ -19,7 +19,7 @@ from tests.components.advantage_air import (
 
 
 async def test_select_async_setup_entry(hass, aioclient_mock):
-    """Test climate setup without sensors."""
+    """Test select platform."""
 
     aioclient_mock.get(
         TEST_SYSTEM_URL,
@@ -36,7 +36,7 @@ async def test_select_async_setup_entry(hass, aioclient_mock):
 
     assert len(aioclient_mock.mock_calls) == 1
 
-    # Test Select Entity
+    # Test MyZone Select Entity
     entity_id = "select.ac_one_myzone"
     state = hass.states.get(entity_id)
     assert state

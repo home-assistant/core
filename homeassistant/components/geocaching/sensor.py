@@ -91,6 +91,7 @@ class GeocachingSensor(
     """Representation of a Sensor."""
 
     entity_description: GeocachingSensorEntityDescription
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -100,9 +101,6 @@ class GeocachingSensor(
         """Initialize the Geocaching sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_name = (
-            f"Geocaching {coordinator.data.user.username} {description.name}"
-        )
         self._attr_unique_id = (
             f"{coordinator.data.user.reference_code}_{description.key}"
         )

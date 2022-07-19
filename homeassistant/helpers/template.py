@@ -5,11 +5,11 @@ from ast import literal_eval
 import asyncio
 import base64
 import collections.abc
-from collections.abc import Callable, Generator, Iterable
+from collections.abc import Callable, Collection, Generator, Iterable
 from contextlib import contextmanager, suppress
 from contextvars import ContextVar
 from datetime import datetime, timedelta
-from functools import partial, wraps
+from functools import cache, lru_cache, partial, wraps
 import json
 import logging
 import math
@@ -19,7 +19,7 @@ import re
 import statistics
 from struct import error as StructError, pack, unpack_from
 import sys
-from typing import Any, cast
+from typing import Any, NoReturn, TypeVar, cast, overload
 from urllib.parse import urlencode as urllib_urlencode
 import weakref
 
@@ -55,9 +55,11 @@ from homeassistant.util import (
     slugify as slugify_util,
 )
 from homeassistant.util.async_ import run_callback_threadsafe
+from homeassistant.util.read_only_dict import ReadOnlyDict
 from homeassistant.util.thread import ThreadWithException
 
 from . import area_registry, device_registry, entity_registry, location as loc_helper
+from .json import JSON_DECODE_EXCEPTIONS, json_loads
 from .translation import get_cached_translations
 from .typing import TemplateVarsType
 
@@ -92,12 +94,17 @@ _COLLECTABLE_STATE_ATTRIBUTES = {
     "name",
 }
 
+_T = TypeVar("_T")
+
 ALL_STATES_RATE_LIMIT = timedelta(minutes=1)
 DOMAIN_STATES_RATE_LIMIT = timedelta(seconds=1)
 
 template_cv: ContextVar[tuple[str, str] | None] = ContextVar(
     "template_cv", default=None
 )
+
+CACHED_TEMPLATE_STATES = 512
+EVAL_CACHE_SIZE = 512
 
 
 @bind_hass
@@ -223,6 +230,9 @@ def _false(arg: str) -> bool:
     return False
 
 
+_cached_literal_eval = lru_cache(maxsize=EVAL_CACHE_SIZE)(literal_eval)
+
+
 class RenderInfo:
     """Holds information about a template render."""
 
@@ -319,6 +329,7 @@ class Template:
         "_exc_info",
         "_limited",
         "_strict",
+        "_hash_cache",
     )
 
     def __init__(self, template, hass=None):
@@ -334,6 +345,7 @@ class Template:
         self._exc_info = None
         self._limited = None
         self._strict = None
+        self._hash_cache: int = hash(self.template)
 
     @property
     def _env(self) -> TemplateEnvironment:
@@ -422,7 +434,7 @@ class Template:
     def _parse_result(self, render_result: str) -> Any:
         """Parse the result."""
         try:
-            result = literal_eval(render_result)
+            result = _cached_literal_eval(render_result)
 
             if type(result) in RESULT_WRAPPERS:
                 result = RESULT_WRAPPERS[type(result)](
@@ -567,8 +579,8 @@ class Template:
         variables = dict(variables or {})
         variables["value"] = value
 
-        with suppress(ValueError, TypeError):
-            variables["value_json"] = json.loads(value)
+        with suppress(*JSON_DECODE_EXCEPTIONS):
+            variables["value_json"] = json_loads(value)
 
         try:
             return _render_with_context(
@@ -619,15 +631,29 @@ class Template:
 
     def __hash__(self) -> int:
         """Hash code for template."""
-        return hash(self.template)
+        return self._hash_cache
 
     def __repr__(self) -> str:
         """Representation of Template."""
         return 'Template("' + self.template + '")'
 
 
+@cache
+def _domain_states(hass: HomeAssistant, name: str) -> DomainStates:
+    return DomainStates(hass, name)
+
+
+def _readonly(*args: Any, **kwargs: Any) -> Any:
+    """Raise an exception when a states object is modified."""
+    raise RuntimeError(f"Cannot modify template States object: {args} {kwargs}")
+
+
 class AllStates:
     """Class to expose all HA states as attributes."""
+
+    __setitem__ = _readonly
+    __delitem__ = _readonly
+    __slots__ = ("_hass",)
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize all states."""
@@ -644,7 +670,7 @@ class AllStates:
         if not valid_entity_id(f"{name}.entity"):
             raise TemplateError(f"Invalid domain name '{name}'")  # type: ignore[arg-type]
 
-        return DomainStates(self._hass, name)
+        return _domain_states(self._hass, name)
 
     # Jinja will try __getitem__ first and it avoids the need
     # to call is_safe_attribute
@@ -720,6 +746,11 @@ class StateTranslated:
 class DomainStates:
     """Class to expose a specific HA domain as attributes."""
 
+    __slots__ = ("_hass", "_domain")
+
+    __setitem__ = _readonly
+    __delitem__ = _readonly
+
     def __init__(self, hass: HomeAssistant, domain: str) -> None:
         """Initialize the domain states."""
         self._hass = hass
@@ -765,6 +796,9 @@ class TemplateStateBase(State):
 
     _state: State
 
+    __setitem__ = _readonly
+    __delitem__ = _readonly
+
     # Inheritance is done so functions that check against State keep working
     # pylint: disable=super-init-not-called
     def __init__(self, hass: HomeAssistant, collect: bool, entity_id: str) -> None:
@@ -772,6 +806,7 @@ class TemplateStateBase(State):
         self._hass = hass
         self._collect = collect
         self._entity_id = entity_id
+        self._as_dict: ReadOnlyDict[str, Collection[Any]] | None = None
 
     def _collect_state(self) -> None:
         if self._collect and _RENDER_INFO in self._hass.data:
@@ -903,10 +938,15 @@ def _collect_state(hass: HomeAssistant, entity_id: str) -> None:
         entity_collect.entities.add(entity_id)
 
 
+@lru_cache(maxsize=CACHED_TEMPLATE_STATES)
+def _template_state_no_collect(hass: HomeAssistant, state: State) -> TemplateState:
+    return TemplateState(hass, state, collect=False)
+
+
 def _state_generator(hass: HomeAssistant, domain: str | None) -> Generator:
     """State generator for a domain or all states."""
     for state in sorted(hass.states.async_all(domain), key=attrgetter("entity_id")):
-        yield TemplateState(hass, state, collect=False)
+        yield _template_state_no_collect(hass, state)
 
 
 def _get_state_if_valid(hass: HomeAssistant, entity_id: str) -> TemplateState | None:
@@ -920,6 +960,11 @@ def _get_state(hass: HomeAssistant, entity_id: str) -> TemplateState | None:
     return _get_template_state_from_state(hass, entity_id, hass.states.get(entity_id))
 
 
+@lru_cache(maxsize=CACHED_TEMPLATE_STATES)
+def _template_state(hass: HomeAssistant, state: State) -> TemplateState:
+    return TemplateState(hass, state)
+
+
 def _get_template_state_from_state(
     hass: HomeAssistant, entity_id: str, state: State | None
 ) -> TemplateState | None:
@@ -928,7 +973,7 @@ def _get_template_state_from_state(
         # access to the state properties in the state wrapper.
         _collect_state(hass, entity_id)
         return None
-    return TemplateState(hass, state)
+    return _template_state(hass, state)
 
 
 def _resolve_state(
@@ -942,6 +987,31 @@ def _resolve_state(
     return None
 
 
+@overload
+def forgiving_boolean(value: Any) -> bool | object:
+    ...
+
+
+@overload
+def forgiving_boolean(value: Any, default: _T) -> bool | _T:
+    ...
+
+
+def forgiving_boolean(
+    value: Any, default: _T | object = _SENTINEL
+) -> bool | _T | object:
+    """Try to convert value to a boolean."""
+    try:
+        # Import here, not at top-level to avoid circular import
+        from . import config_validation as cv  # pylint: disable=import-outside-toplevel
+
+        return cv.boolean(value)
+    except vol.Invalid:
+        if default is _SENTINEL:
+            raise_no_default("bool", value)
+        return default
+
+
 def result_as_boolean(template_result: Any | None) -> bool:
     """Convert the template result to a boolean.
 
@@ -952,13 +1022,7 @@ def result_as_boolean(template_result: Any | None) -> bool:
     if template_result is None:
         return False
 
-    try:
-        # Import here, not at top-level to avoid circular import
-        from . import config_validation as cv  # pylint: disable=import-outside-toplevel
-
-        return cv.boolean(template_result)
-    except vol.Invalid:
-        return False
+    return forgiving_boolean(template_result, default=False)
 
 
 def expand(hass: HomeAssistant, *args: Any) -> Iterable[State]:
@@ -1364,7 +1428,7 @@ def utcnow(hass: HomeAssistant) -> datetime:
     return dt_util.utcnow()
 
 
-def raise_no_default(function, value):
+def raise_no_default(function: str, value: Any) -> NoReturn:
     """Log warning if no default is specified."""
     template, action = template_cv.get() or ("", "rendering or compiling")
     raise ValueError(
@@ -1782,7 +1846,7 @@ def ordinal(value):
 
 def from_json(value):
     """Convert a JSON string to an object."""
-    return json.loads(value)
+    return json_loads(value)
 
 
 def to_json(value, ensure_ascii=True):
@@ -1977,6 +2041,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["relative_time"] = relative_time
         self.filters["slugify"] = slugify
         self.filters["iif"] = iif
+        self.filters["bool"] = forgiving_boolean
         self.globals["log"] = logarithm
         self.globals["sin"] = sine
         self.globals["cos"] = cosine
@@ -2008,6 +2073,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["unpack"] = struct_unpack
         self.globals["slugify"] = slugify
         self.globals["iif"] = iif
+        self.globals["bool"] = forgiving_boolean
         self.tests["is_number"] = is_number
         self.tests["match"] = regex_match
         self.tests["search"] = regex_search

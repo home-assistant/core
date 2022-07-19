@@ -12,16 +12,18 @@ import voluptuous as vol
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_DEVICE_CLASS,
+    ATTR_FRIENDLY_NAME,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
 from homeassistant.core import Context, HomeAssistantError
-from homeassistant.helpers import entity, entity_registry
+from homeassistant.helpers import device_registry as dr, entity, entity_registry as er
 
 from tests.common import (
     MockConfigEntry,
     MockEntity,
     MockEntityPlatform,
+    MockPlatform,
     get_test_home_assistant,
     mock_registry,
 )
@@ -594,11 +596,11 @@ async def test_set_context_expired(hass):
 
 async def test_warn_disabled(hass, caplog):
     """Test we warn once if we write to a disabled entity."""
-    entry = entity_registry.RegistryEntry(
+    entry = er.RegistryEntry(
         entity_id="hello.world",
         unique_id="test-unique-id",
         platform="test-platform",
-        disabled_by=entity_registry.RegistryEntryDisabler.USER,
+        disabled_by=er.RegistryEntryDisabler.USER,
     )
     mock_registry(hass, {"hello.world": entry})
 
@@ -621,7 +623,7 @@ async def test_warn_disabled(hass, caplog):
 
 async def test_disabled_in_entity_registry(hass):
     """Test entity is removed if we disable entity registry entry."""
-    entry = entity_registry.RegistryEntry(
+    entry = er.RegistryEntry(
         entity_id="hello.world",
         unique_id="test-unique-id",
         platform="test-platform",
@@ -640,7 +642,7 @@ async def test_disabled_in_entity_registry(hass):
     assert hass.states.get("hello.world") is not None
 
     entry2 = registry.async_update_entity(
-        "hello.world", disabled_by=entity_registry.RegistryEntryDisabler.USER
+        "hello.world", disabled_by=er.RegistryEntryDisabler.USER
     )
     await hass.async_block_till_done()
     assert entry2 != entry
@@ -713,7 +715,7 @@ async def test_warn_slow_write_state_custom_component(hass, caplog):
     assert (
         "Updating state for comp_test.test_entity "
         "(<class 'custom_components.bla.sensor.test_warn_slow_write_state_custom_component.<locals>.CustomComponentEntity'>) "
-        "took 10.000 seconds. Please report it to the custom component author."
+        "took 10.000 seconds. Please report it to the custom integration author."
     ) in caplog.text
 
 
@@ -749,7 +751,7 @@ async def test_setup_source(hass):
 
 async def test_removing_entity_unavailable(hass):
     """Test removing an entity that is still registered creates an unavailable state."""
-    entry = entity_registry.RegistryEntry(
+    entry = er.RegistryEntry(
         entity_id="hello.world",
         unique_id="test-unique-id",
         platform="test-platform",
@@ -886,3 +888,49 @@ async def test_entity_description_fallback():
             continue
 
         assert getattr(ent, field.name) == getattr(ent_with_description, field.name)
+
+
+@pytest.mark.parametrize(
+    "has_entity_name, entity_name, expected_friendly_name",
+    (
+        (False, "Entity Blu", "Entity Blu"),
+        (False, None, None),
+        (True, "Entity Blu", "Device Bla Entity Blu"),
+        (True, None, "Device Bla"),
+    ),
+)
+async def test_friendly_name(
+    hass, has_entity_name, entity_name, expected_friendly_name
+):
+    """Test entity_id is influenced by entity name."""
+
+    async def async_setup_entry(hass, config_entry, async_add_entities):
+        """Mock setup entry method."""
+        async_add_entities(
+            [
+                MockEntity(
+                    unique_id="qwer",
+                    device_info={
+                        "identifiers": {("hue", "1234")},
+                        "connections": {(dr.CONNECTION_NETWORK_MAC, "abcd")},
+                        "name": "Device Bla",
+                    },
+                    has_entity_name=has_entity_name,
+                    name=entity_name,
+                ),
+            ]
+        )
+        return True
+
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    config_entry = MockConfigEntry(entry_id="super-mock-id")
+    entity_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    assert await entity_platform.async_setup_entry(config_entry)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids()) == 1
+    state = hass.states.async_all()[0]
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == expected_friendly_name

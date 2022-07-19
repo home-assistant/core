@@ -1,5 +1,8 @@
 {
     "config": {
+        "error": {
+            "unknown": "Ov\u00e4ntat fel"
+        },
         "step": {
             "user": {
                 "data": {

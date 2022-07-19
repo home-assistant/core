@@ -29,7 +29,6 @@ class DelugeSwitch(DelugeEntity, SwitchEntity):
     def __init__(self, coordinator: DelugeDataUpdateCoordinator) -> None:
         """Initialize the Deluge switch."""
         super().__init__(coordinator)
-        self._attr_name = coordinator.config_entry.title
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_enabled"
 
     def turn_on(self, **kwargs: Any) -> None:

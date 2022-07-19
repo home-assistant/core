@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import socket
+from types import MappingProxyType
 from typing import Any
 from urllib.parse import urlparse
 
@@ -46,7 +47,7 @@ from .const import (
     DEFAULT_POE_CLIENTS,
     DOMAIN as UNIFI_DOMAIN,
 )
-from .controller import get_controller
+from .controller import UniFiController, get_unifi_controller
 from .errors import AuthenticationRequired, CannotConnect
 
 DEFAULT_PORT = 443
@@ -75,11 +76,11 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the UniFi Network flow."""
-        self.config = {}
-        self.site_ids = {}
-        self.site_names = {}
-        self.reauth_config_entry = None
-        self.reauth_schema = {}
+        self.config: dict[str, Any] = {}
+        self.site_ids: dict[str, str] = {}
+        self.site_names: dict[str, str] = {}
+        self.reauth_config_entry: config_entries.ConfigEntry | None = None
+        self.reauth_schema: dict[vol.Marker, Any] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -99,16 +100,9 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
             }
 
             try:
-                controller = await get_controller(
-                    self.hass,
-                    host=self.config[CONF_HOST],
-                    username=self.config[CONF_USERNAME],
-                    password=self.config[CONF_PASSWORD],
-                    port=self.config[CONF_PORT],
-                    site=self.config[CONF_SITE_ID],
-                    verify_ssl=self.config[CONF_VERIFY_SSL],
+                controller = await get_unifi_controller(
+                    self.hass, MappingProxyType(self.config)
                 )
-
                 sites = await controller.sites()
 
             except AuthenticationRequired:
@@ -156,8 +150,6 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Select site to control."""
-        errors = {}
-
         if user_input is not None:
 
             unique_id = user_input[CONF_SITE_ID]
@@ -173,9 +165,9 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
                 abort_reason = "reauth_successful"
 
             if config_entry:
-                controller = self.hass.data.get(UNIFI_DOMAIN, {}).get(
-                    config_entry.entry_id
-                )
+                controller: UniFiController | None = self.hass.data.get(
+                    UNIFI_DOMAIN, {}
+                ).get(config_entry.entry_id)
 
                 if controller and controller.available:
                     return self.async_abort(reason="already_configured")
@@ -199,14 +191,14 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
             data_schema=vol.Schema(
                 {vol.Required(CONF_SITE_ID): vol.In(self.site_names)}
             ),
-            errors=errors,
         )
 
-    async def async_step_reauth(self, data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Trigger a reauthentication flow."""
         config_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
         )
+        assert config_entry
         self.reauth_config_entry = config_entry
 
         self.context["title_placeholders"] = {
@@ -258,11 +250,12 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
 class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle Unifi Network options."""
 
+    controller: UniFiController
+
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize UniFi Network options flow."""
         self.config_entry = config_entry
         self.options = dict(config_entry.options)
-        self.controller = None
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -379,8 +372,6 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Manage configuration of network access controlled clients."""
-        errors = {}
-
         if user_input is not None:
             self.options.update(user_input)
             return await self.async_step_statistics_sensors()
@@ -417,7 +408,6 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
                     ): bool,
                 }
             ),
-            errors=errors,
             last_step=False,
         )
 

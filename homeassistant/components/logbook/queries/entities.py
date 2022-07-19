@@ -5,9 +5,10 @@ from collections.abc import Iterable
 from datetime import datetime as dt
 
 import sqlalchemy
-from sqlalchemy import select, union_all
+from sqlalchemy import lambda_stmt, select, union_all
 from sqlalchemy.orm import Query
-from sqlalchemy.sql.selectable import CTE, CompoundSelect, Select
+from sqlalchemy.sql.lambdas import StatementLambdaElement
+from sqlalchemy.sql.selectable import CTE, CompoundSelect
 
 from homeassistant.components.recorder.db_schema import (
     ENTITY_ID_IN_EVENT,
@@ -91,18 +92,20 @@ def entities_stmt(
     event_types: tuple[str, ...],
     entity_ids: list[str],
     json_quoted_entity_ids: list[str],
-) -> Select:
+) -> StatementLambdaElement:
     """Generate a logbook query for multiple entities."""
-    return _apply_entities_context_union(
-        select_events_without_states(start_day, end_day, event_types).where(
-            apply_event_entity_id_matchers(json_quoted_entity_ids)
-        ),
-        start_day,
-        end_day,
-        event_types,
-        entity_ids,
-        json_quoted_entity_ids,
-    ).order_by(Events.time_fired)
+    return lambda_stmt(
+        lambda: _apply_entities_context_union(
+            select_events_without_states(start_day, end_day, event_types).where(
+                apply_event_entity_id_matchers(json_quoted_entity_ids)
+            ),
+            start_day,
+            end_day,
+            event_types,
+            entity_ids,
+            json_quoted_entity_ids,
+        ).order_by(Events.time_fired)
+    )
 
 
 def states_query_for_entity_ids(
@@ -118,8 +121,15 @@ def apply_event_entity_id_matchers(
     json_quoted_entity_ids: Iterable[str],
 ) -> sqlalchemy.or_:
     """Create matchers for the entity_id in the event_data."""
-    return ENTITY_ID_IN_EVENT.in_(json_quoted_entity_ids) | OLD_ENTITY_ID_IN_EVENT.in_(
-        json_quoted_entity_ids
+    return sqlalchemy.or_(
+        ENTITY_ID_IN_EVENT.is_not(None)
+        & sqlalchemy.cast(ENTITY_ID_IN_EVENT, sqlalchemy.Text()).in_(
+            json_quoted_entity_ids
+        ),
+        OLD_ENTITY_ID_IN_EVENT.is_not(None)
+        & sqlalchemy.cast(OLD_ENTITY_ID_IN_EVENT, sqlalchemy.Text()).in_(
+            json_quoted_entity_ids
+        ),
     )
 
 

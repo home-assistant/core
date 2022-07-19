@@ -1,7 +1,7 @@
 """The Tautulli integration."""
 from __future__ import annotations
 
-from pytautulli import PyTautulli, PyTautulliHostConfiguration
+from pytautulli import PyTautulli, PyTautulliApiUser, PyTautulliHostConfiguration
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL, Platform
@@ -31,7 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = TautulliDataUpdateCoordinator(hass, host_configuration, api_client)
     await coordinator.async_config_entry_first_refresh()
     hass.data[DOMAIN] = coordinator
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -46,18 +46,24 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class TautulliEntity(CoordinatorEntity[TautulliDataUpdateCoordinator]):
     """Defines a base Tautulli entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: TautulliDataUpdateCoordinator,
         description: EntityDescription,
+        user: PyTautulliApiUser | None = None,
     ) -> None:
         """Initialize the Tautulli entity."""
         super().__init__(coordinator)
+        entry_id = coordinator.config_entry.entry_id
+        self._attr_unique_id = f"{entry_id}_{description.key}"
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
+        self.user = user
         self._attr_device_info = DeviceInfo(
             configuration_url=coordinator.host_configuration.base_url,
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
+            identifiers={(DOMAIN, user.user_id if user else entry_id)},
             manufacturer=DEFAULT_NAME,
+            name=user.username if user else DEFAULT_NAME,
         )

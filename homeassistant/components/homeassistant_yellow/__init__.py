@@ -23,12 +23,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "zha",
         context={"source": "hardware"},
         data={
-            "radio_type": "efr32",
+            "name": "Yellow",
             "port": {
                 "path": "/dev/ttyAMA1",
                 "baudrate": 115200,
                 "flow_control": "hardware",
             },
+            "radio_type": "efr32",
         },
     )
 

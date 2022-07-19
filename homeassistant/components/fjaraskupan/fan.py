@@ -1,6 +1,8 @@
 """Support for Fjäråskupan fans."""
 from __future__ import annotations
 
+from typing import Any
+
 from fjaraskupan import (
     COMMAND_AFTERCOOKINGTIMERAUTO,
     COMMAND_AFTERCOOKINGTIMERMANUAL,
@@ -65,6 +67,7 @@ class Fan(CoordinatorEntity[Coordinator], FanEntity):
     """Fan entity."""
 
     _attr_supported_features = FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -76,7 +79,6 @@ class Fan(CoordinatorEntity[Coordinator], FanEntity):
         super().__init__(coordinator)
         self._device = device
         self._default_on_speed = 25
-        self._attr_name = device_info["name"]
         self._attr_unique_id = device.address
         self._attr_device_info = device_info
         self._percentage = 0
@@ -93,9 +95,9 @@ class Fan(CoordinatorEntity[Coordinator], FanEntity):
 
     async def async_turn_on(
         self,
-        percentage: int = None,
-        preset_mode: str = None,
-        **kwargs,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
+        **kwargs: Any,
     ) -> None:
         """Turn on the fan."""
 
@@ -133,7 +135,7 @@ class Fan(CoordinatorEntity[Coordinator], FanEntity):
         else:
             raise UnsupportedPreset(f"The preset {preset_mode} is unsupported")
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self._device.send_command(COMMAND_STOP_FAN)
         self.coordinator.async_set_updated_data(self._device.state)

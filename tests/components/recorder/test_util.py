@@ -9,6 +9,7 @@ from sqlalchemy import text
 from sqlalchemy.engine.result import ChunkedIteratorResult
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.sql.elements import TextClause
+from sqlalchemy.sql.lambdas import StatementLambdaElement
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder import history, util
@@ -712,8 +713,8 @@ def test_build_mysqldb_conv():
 
 
 @patch("homeassistant.components.recorder.util.QUERY_RETRY_WAIT", 0)
-def test_execute_stmt(hass_recorder):
-    """Test executing with execute_stmt."""
+def test_execute_stmt_lambda_element(hass_recorder):
+    """Test executing with execute_stmt_lambda_element."""
     hass = hass_recorder()
     instance = recorder.get_instance(hass)
     hass.states.set("sensor.on", "on")
@@ -724,15 +725,13 @@ def test_execute_stmt(hass_recorder):
     one_week_from_now = now + timedelta(days=7)
 
     class MockExecutor:
-
-        _calls = 0
-
         def __init__(self, stmt):
-            """Init the mock."""
+            assert isinstance(stmt, StatementLambdaElement)
+            self.calls = 0
 
         def all(self):
-            MockExecutor._calls += 1
-            if MockExecutor._calls == 2:
+            self.calls += 1
+            if self.calls == 2:
                 return ["mock_row"]
             raise SQLAlchemyError
 
@@ -741,24 +740,24 @@ def test_execute_stmt(hass_recorder):
         stmt = history._get_single_entity_states_stmt(
             instance.schema_version, dt_util.utcnow(), "sensor.on", False
         )
-        rows = util.execute_stmt(session, stmt)
+        rows = util.execute_stmt_lambda_element(session, stmt)
         assert isinstance(rows, list)
         assert rows[0].state == new_state.state
         assert rows[0].entity_id == new_state.entity_id
 
         # Time window >= 2 days, we get a ChunkedIteratorResult
-        rows = util.execute_stmt(session, stmt, now, one_week_from_now)
+        rows = util.execute_stmt_lambda_element(session, stmt, now, one_week_from_now)
         assert isinstance(rows, ChunkedIteratorResult)
         row = next(rows)
         assert row.state == new_state.state
         assert row.entity_id == new_state.entity_id
 
         # Time window < 2 days, we get a list
-        rows = util.execute_stmt(session, stmt, now, tomorrow)
+        rows = util.execute_stmt_lambda_element(session, stmt, now, tomorrow)
         assert isinstance(rows, list)
         assert rows[0].state == new_state.state
         assert rows[0].entity_id == new_state.entity_id
 
         with patch.object(session, "execute", MockExecutor):
-            rows = util.execute_stmt(session, stmt, now, tomorrow)
+            rows = util.execute_stmt_lambda_element(session, stmt, now, tomorrow)
             assert rows == ["mock_row"]

@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Konto har redan konfigurerats",
             "authorize_url_timeout": "Timeout vid generering av en autentisieringsadress."
         },
         "error": {

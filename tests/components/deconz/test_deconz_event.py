@@ -3,11 +3,8 @@
 from unittest.mock import patch
 
 from pydeconz.models.sensor.ancillary_control import (
-    ANCILLARY_CONTROL_ARMED_AWAY,
-    ANCILLARY_CONTROL_EMERGENCY,
-    ANCILLARY_CONTROL_FIRE,
-    ANCILLARY_CONTROL_INVALID_CODE,
-    ANCILLARY_CONTROL_PANIC,
+    AncillaryControlAction,
+    AncillaryControlPanel,
 )
 
 from homeassistant.components.deconz.const import DOMAIN as DECONZ_DOMAIN
@@ -286,7 +283,7 @@ async def test_deconz_alarm_events(hass, aioclient_mock, mock_deconz_websocket):
         "e": "changed",
         "r": "sensors",
         "id": "1",
-        "state": {"action": ANCILLARY_CONTROL_EMERGENCY},
+        "state": {"action": AncillaryControlAction.EMERGENCY},
     }
     await mock_deconz_websocket(data=event_changed_sensor)
     await hass.async_block_till_done()
@@ -300,7 +297,7 @@ async def test_deconz_alarm_events(hass, aioclient_mock, mock_deconz_websocket):
         CONF_ID: "keypad",
         CONF_UNIQUE_ID: "00:00:00:00:00:00:00:01",
         CONF_DEVICE_ID: device.id,
-        CONF_EVENT: ANCILLARY_CONTROL_EMERGENCY,
+        CONF_EVENT: AncillaryControlAction.EMERGENCY.value,
     }
 
     # Fire event
@@ -310,7 +307,7 @@ async def test_deconz_alarm_events(hass, aioclient_mock, mock_deconz_websocket):
         "e": "changed",
         "r": "sensors",
         "id": "1",
-        "state": {"action": ANCILLARY_CONTROL_FIRE},
+        "state": {"action": AncillaryControlAction.FIRE},
     }
     await mock_deconz_websocket(data=event_changed_sensor)
     await hass.async_block_till_done()
@@ -324,7 +321,7 @@ async def test_deconz_alarm_events(hass, aioclient_mock, mock_deconz_websocket):
         CONF_ID: "keypad",
         CONF_UNIQUE_ID: "00:00:00:00:00:00:00:01",
         CONF_DEVICE_ID: device.id,
-        CONF_EVENT: ANCILLARY_CONTROL_FIRE,
+        CONF_EVENT: AncillaryControlAction.FIRE.value,
     }
 
     # Invalid code event
@@ -334,7 +331,7 @@ async def test_deconz_alarm_events(hass, aioclient_mock, mock_deconz_websocket):
         "e": "changed",
         "r": "sensors",
         "id": "1",
-        "state": {"action": ANCILLARY_CONTROL_INVALID_CODE},
+        "state": {"action": AncillaryControlAction.INVALID_CODE},
     }
     await mock_deconz_websocket(data=event_changed_sensor)
     await hass.async_block_till_done()
@@ -348,7 +345,7 @@ async def test_deconz_alarm_events(hass, aioclient_mock, mock_deconz_websocket):
         CONF_ID: "keypad",
         CONF_UNIQUE_ID: "00:00:00:00:00:00:00:01",
         CONF_DEVICE_ID: device.id,
-        CONF_EVENT: ANCILLARY_CONTROL_INVALID_CODE,
+        CONF_EVENT: AncillaryControlAction.INVALID_CODE.value,
     }
 
     # Panic event
@@ -358,7 +355,7 @@ async def test_deconz_alarm_events(hass, aioclient_mock, mock_deconz_websocket):
         "e": "changed",
         "r": "sensors",
         "id": "1",
-        "state": {"action": ANCILLARY_CONTROL_PANIC},
+        "state": {"action": AncillaryControlAction.PANIC},
     }
     await mock_deconz_websocket(data=event_changed_sensor)
     await hass.async_block_till_done()
@@ -372,7 +369,7 @@ async def test_deconz_alarm_events(hass, aioclient_mock, mock_deconz_websocket):
         CONF_ID: "keypad",
         CONF_UNIQUE_ID: "00:00:00:00:00:00:00:01",
         CONF_DEVICE_ID: device.id,
-        CONF_EVENT: ANCILLARY_CONTROL_PANIC,
+        CONF_EVENT: AncillaryControlAction.PANIC.value,
     }
 
     # Only care for changes to specific action events
@@ -382,7 +379,7 @@ async def test_deconz_alarm_events(hass, aioclient_mock, mock_deconz_websocket):
         "e": "changed",
         "r": "sensors",
         "id": "1",
-        "state": {"action": ANCILLARY_CONTROL_ARMED_AWAY},
+        "state": {"action": AncillaryControlAction.ARMED_AWAY},
     }
     await mock_deconz_websocket(data=event_changed_sensor)
     await hass.async_block_till_done()
@@ -396,7 +393,7 @@ async def test_deconz_alarm_events(hass, aioclient_mock, mock_deconz_websocket):
         "e": "changed",
         "r": "sensors",
         "id": "1",
-        "state": {"panel": ANCILLARY_CONTROL_ARMED_AWAY},
+        "state": {"panel": AncillaryControlPanel.ARMED_AWAY},
     }
     await mock_deconz_websocket(data=event_changed_sensor)
     await hass.async_block_till_done()
@@ -415,7 +412,7 @@ async def test_deconz_alarm_events(hass, aioclient_mock, mock_deconz_websocket):
     assert len(hass.states.async_all()) == 0
 
 
-async def test_deconz_events_bad_unique_id(hass, aioclient_mock, mock_deconz_websocket):
+async def test_deconz_events_bad_unique_id(hass, aioclient_mock):
     """Verify no devices are created if unique id is bad or missing."""
     data = {
         "sensors": {

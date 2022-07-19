@@ -122,8 +122,8 @@ class Metering(ZigbeeChannel):
     def __init__(self, cluster: zigpy.zcl.Cluster, ch_pool: ChannelPool) -> None:
         """Initialize Metering."""
         super().__init__(cluster, ch_pool)
-        self._format_spec = None
-        self._summa_format = None
+        self._format_spec: str | None = None
+        self._summa_format: str | None = None
 
     @property
     def divisor(self) -> int:
@@ -131,7 +131,7 @@ class Metering(ZigbeeChannel):
         return self.cluster.get("divisor") or 1
 
     @property
-    def device_type(self) -> int | None:
+    def device_type(self) -> str | int | None:
         """Return metering device type."""
         dev_type = self.cluster.get("metering_device_type")
         if dev_type is None:
@@ -154,7 +154,7 @@ class Metering(ZigbeeChannel):
         return self.DeviceStatusDefault(status)
 
     @property
-    def unit_of_measurement(self) -> str:
+    def unit_of_measurement(self) -> int:
         """Return unit of measurement."""
         return self.cluster.get("unit_of_measure")
 
@@ -210,18 +210,22 @@ class Metering(ZigbeeChannel):
 
         return f"{{:0{width}.{r_digits}f}}"
 
-    def _formatter_function(self, selector: FormatSelector, value: int) -> int | float:
+    def _formatter_function(
+        self, selector: FormatSelector, value: int
+    ) -> int | float | str:
         """Return formatted value for display."""
-        value = value * self.multiplier / self.divisor
+        value_float = value * self.multiplier / self.divisor
         if self.unit_of_measurement == 0:
             # Zigbee spec power unit is kW, but we show the value in W
-            value_watt = value * 1000
+            value_watt = value_float * 1000
             if value_watt < 100:
                 return round(value_watt, 1)
             return round(value_watt)
         if selector == self.FormatSelector.SUMMATION:
-            return self._summa_format.format(value).lstrip()
-        return self._format_spec.format(value).lstrip()
+            assert self._summa_format
+            return self._summa_format.format(value_float).lstrip()
+        assert self._format_spec
+        return self._format_spec.format(value_float).lstrip()
 
     demand_formatter = partialmethod(_formatter_function, FormatSelector.DEMAND)
     summa_formatter = partialmethod(_formatter_function, FormatSelector.SUMMATION)

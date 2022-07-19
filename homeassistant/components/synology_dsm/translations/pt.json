@@ -23,6 +23,12 @@
                     "verify_ssl": "Verificar o certificado SSL"
                 }
             },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Palavra-passe",
+                    "username": "Nome de Utilizador"
+                }
+            },
             "user": {
                 "data": {
                     "host": "Servidor",

@@ -30,7 +30,7 @@ class AugustWakeLockButton(AugustEntityMixin, ButtonEntity):
         self._attr_name = f"{device.device_name} Wake"
         self._attr_unique_id = f"{self._device_id}_wake"
 
-    async def async_press(self, **kwargs):
+    async def async_press(self) -> None:
         """Wake the device."""
         await self._data.async_status_async(self._device_id, self._hyper_bridge)
 

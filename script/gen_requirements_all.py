@@ -30,7 +30,6 @@ COMMENT_REQUIREMENTS = (
     "opencv-python-headless",
     "pybluez",
     "pycups",
-    "PySwitchbot",
     "pySwitchmate",
     "python-eq3bt",
     "python-gammu",
@@ -106,6 +105,9 @@ httpcore==0.15.0
 # 5.2.0 fixed a collections abc deprecation
 hyperframe>=5.2.0
 
+# Ensure we run compatible with musllinux build env
+numpy==1.23.1
+
 # pytest_asyncio breaks our test suite. We rely on pytest-aiohttp instead
 pytest_asyncio==1000000000.0.0
 
@@ -130,6 +132,14 @@ backoff<2.0
 # Breaking change in version
 # https://github.com/samuelcolvin/pydantic/issues/4092
 pydantic!=1.9.1
+
+# Breaks asyncio
+# https://github.com/pubnub/python/issues/130
+pubnub!=6.4.0
+
+# Package's __init__.pyi stub has invalid syntax and breaks mypy
+# https://github.com/dahlia/iso4217/issues/16
+iso4217!=1.10.20220401
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (

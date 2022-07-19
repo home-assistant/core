@@ -139,49 +139,52 @@ class Filters:
         have_exclude = self._have_exclude
         have_include = self._have_include
 
-        # Case 1 - no includes or excludes - pass all entities
+        # Case 1 - No filter
+        # - All entities included
         if not have_include and not have_exclude:
             return None
 
-        # Case 2 - includes, no excludes - only include specified entities
+        # Case 2 - Only includes
+        # - Entity listed in entities include: include
+        # - Otherwise, entity matches domain include: include
+        # - Otherwise, entity matches glob include: include
+        # - Otherwise: exclude
         if have_include and not have_exclude:
             return or_(*includes).self_group()
 
-        # Case 3 - excludes, no includes - only exclude specified entities
+        # Case 3 - Only excludes
+        # - Entity listed in exclude: exclude
+        # - Otherwise, entity matches domain exclude: exclude
+        # - Otherwise, entity matches glob exclude: exclude
+        # - Otherwise: include
         if not have_include and have_exclude:
             return not_(or_(*excludes).self_group())
 
-        # Case 4 - both includes and excludes specified
-        # Case 4a - include domain or glob specified
-        #  - if domain is included, pass if entity not excluded
-        #  - if glob is included, pass if entity and domain not excluded
-        #  - if domain and glob are not included, pass if entity is included
-        # note: if both include domain matches then exclude domains ignored.
-        #   If glob matches then exclude domains and glob checked
+        # Case 4 - Domain and/or glob includes (may also have excludes)
+        # - Entity listed in entities include: include
+        # - Otherwise, entity listed in entities exclude: exclude
+        # - Otherwise, entity matches glob include: include
+        # - Otherwise, entity matches glob exclude: exclude
+        # - Otherwise, entity matches domain include: include
+        # - Otherwise: exclude
         if self.included_domains or self.included_entity_globs:
             return or_(
-                (i_domains & ~(e_entities | e_entity_globs)),
-                (
-                    ~i_domains
-                    & or_(
-                        (i_entity_globs & ~(or_(*excludes))),
-                        (~i_entity_globs & i_entities),
-                    )
-                ),
+                i_entities,
+                (~e_entities & (i_entity_globs | (~e_entity_globs & i_domains))),
             ).self_group()
 
-        # Case 4b - exclude domain or glob specified, include has no domain or glob
-        # In this one case the traditional include logic is inverted. Even though an
-        # include is specified since its only a list of entity IDs its used only to
-        # expose specific entities excluded by domain or glob. Any entities not
-        # excluded are then presumed included. Logic is as follows
-        #  - if domain or glob is excluded, pass if entity is included
-        #  - if domain is not excluded, pass if entity not excluded by ID
+        # Case 5 - Domain and/or glob excludes (no domain and/or glob includes)
+        # - Entity listed in entities include: include
+        # - Otherwise, entity listed in exclude: exclude
+        # - Otherwise, entity matches glob exclude: exclude
+        # - Otherwise, entity matches domain exclude: exclude
+        # - Otherwise: include
         if self.excluded_domains or self.excluded_entity_globs:
             return (not_(or_(*excludes)) | i_entities).self_group()
 
-        # Case 4c - neither include or exclude domain specified
-        #  - Only pass if entity is included.  Ignore entity excludes.
+        # Case 6 - No Domain and/or glob includes or excludes
+        # - Entity listed in entities include: include
+        # - Otherwise: exclude
         return i_entities
 
     def states_entity_filter(self) -> ClauseList:

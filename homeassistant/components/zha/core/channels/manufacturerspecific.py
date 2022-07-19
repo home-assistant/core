@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
+from zigpy.exceptions import ZigbeeException
 import zigpy.zcl
 
 from homeassistant.core import callback
@@ -14,6 +15,8 @@ from ..const import (
     ATTR_ATTRIBUTE_NAME,
     ATTR_VALUE,
     REPORT_CONFIG_ASAP,
+    REPORT_CONFIG_DEFAULT,
+    REPORT_CONFIG_IMMEDIATE,
     REPORT_CONFIG_MAX_INT,
     REPORT_CONFIG_MIN_INT,
     SIGNAL_ATTR_UPDATED,
@@ -71,6 +74,13 @@ class OppleRemote(ZigbeeChannel):
                 "motion_sensitivity": True,
                 "trigger_indicator": True,
             }
+        elif self.cluster.endpoint.model == "lumi.motion.ac01":
+            self.ZCL_INIT_ATTRS = {
+                "presence": True,
+                "monitoring_mode": True,
+                "motion_sensitivity": True,
+                "approach_distance": True,
+            }
 
     async def async_initialize_channel_specific(self, from_cache: bool) -> None:
         """Initialize channel specific."""
@@ -122,3 +132,56 @@ class InovelliCluster(ClientChannel):
     """Inovelli Button Press Event channel."""
 
     REPORT_CONFIG = ()
+
+
+@registries.CHANNEL_ONLY_CLUSTERS.register(registries.IKEA_AIR_PURIFIER_CLUSTER)
+@registries.ZIGBEE_CHANNEL_REGISTRY.register(registries.IKEA_AIR_PURIFIER_CLUSTER)
+class IkeaAirPurifierChannel(ZigbeeChannel):
+    """IKEA Air Purifier channel."""
+
+    REPORT_CONFIG = (
+        AttrReportConfig(attr="filter_run_time", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(attr="replace_filter", config=REPORT_CONFIG_IMMEDIATE),
+        AttrReportConfig(attr="filter_life_time", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(attr="disable_led", config=REPORT_CONFIG_IMMEDIATE),
+        AttrReportConfig(attr="air_quality_25pm", config=REPORT_CONFIG_IMMEDIATE),
+        AttrReportConfig(attr="child_lock", config=REPORT_CONFIG_IMMEDIATE),
+        AttrReportConfig(attr="fan_mode", config=REPORT_CONFIG_IMMEDIATE),
+        AttrReportConfig(attr="fan_speed", config=REPORT_CONFIG_IMMEDIATE),
+        AttrReportConfig(attr="device_run_time", config=REPORT_CONFIG_DEFAULT),
+    )
+
+    @property
+    def fan_mode(self) -> int | None:
+        """Return current fan mode."""
+        return self.cluster.get("fan_mode")
+
+    @property
+    def fan_mode_sequence(self) -> int | None:
+        """Return possible fan mode speeds."""
+        return self.cluster.get("fan_mode_sequence")
+
+    async def async_set_speed(self, value) -> None:
+        """Set the speed of the fan."""
+
+        try:
+            await self.cluster.write_attributes({"fan_mode": value})
+        except ZigbeeException as ex:
+            self.error("Could not set speed: %s", ex)
+            return
+
+    async def async_update(self) -> None:
+        """Retrieve latest state."""
+        await self.get_attribute_value("fan_mode", from_cache=False)
+
+    @callback
+    def attribute_updated(self, attrid: int, value: Any) -> None:
+        """Handle attribute update from fan cluster."""
+        attr_name = self._get_attribute_name(attrid)
+        self.debug(
+            "Attribute report '%s'[%s] = %s", self.cluster.name, attr_name, value
+        )
+        if attr_name == "fan_mode":
+            self.async_send_signal(
+                f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", attrid, attr_name, value
+            )

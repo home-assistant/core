@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import datetime, timedelta
-import json
 import logging
 from typing import Any, cast
 
@@ -39,9 +38,15 @@ from homeassistant.const import (
     MAX_LENGTH_STATE_STATE,
 )
 from homeassistant.core import Context, Event, EventOrigin, State, split_entity_id
+from homeassistant.helpers.json import (
+    JSON_DECODE_EXCEPTIONS,
+    JSON_DUMP,
+    json_bytes,
+    json_loads,
+)
 import homeassistant.util.dt as dt_util
 
-from .const import ALL_DOMAIN_EXCLUDE_ATTRS, JSON_DUMP
+from .const import ALL_DOMAIN_EXCLUDE_ATTRS
 from .models import StatisticData, StatisticMetaData, process_timestamp
 
 # SQLAlchemy Schema
@@ -124,7 +129,7 @@ class JSONLiteral(JSON):  # type: ignore[misc]
 
         def process(value: Any) -> str:
             """Dump json."""
-            return json.dumps(value)
+            return JSON_DUMP(value)
 
         return process
 
@@ -187,15 +192,15 @@ class Events(Base):  # type: ignore[misc,valid-type]
         try:
             return Event(
                 self.event_type,
-                json.loads(self.event_data) if self.event_data else {},
+                json_loads(self.event_data) if self.event_data else {},
                 EventOrigin(self.origin)
                 if self.origin
                 else EVENT_ORIGIN_ORDER[self.origin_idx],
                 process_timestamp(self.time_fired),
                 context=context,
             )
-        except ValueError:
-            # When json.loads fails
+        except JSON_DECODE_EXCEPTIONS:
+            # When json_loads fails
             _LOGGER.exception("Error converting to event: %s", self)
             return None
 
@@ -223,26 +228,27 @@ class EventData(Base):  # type: ignore[misc,valid-type]
     @staticmethod
     def from_event(event: Event) -> EventData:
         """Create object from an event."""
-        shared_data = JSON_DUMP(event.data)
+        shared_data = json_bytes(event.data)
         return EventData(
-            shared_data=shared_data, hash=EventData.hash_shared_data(shared_data)
+            shared_data=shared_data.decode("utf-8"),
+            hash=EventData.hash_shared_data_bytes(shared_data),
         )
 
     @staticmethod
-    def shared_data_from_event(event: Event) -> str:
-        """Create shared_attrs from an event."""
-        return JSON_DUMP(event.data)
+    def shared_data_bytes_from_event(event: Event) -> bytes:
+        """Create shared_data from an event."""
+        return json_bytes(event.data)
 
     @staticmethod
-    def hash_shared_data(shared_data: str) -> int:
+    def hash_shared_data_bytes(shared_data_bytes: bytes) -> int:
         """Return the hash of json encoded shared data."""
-        return cast(int, fnv1a_32(shared_data.encode("utf-8")))
+        return cast(int, fnv1a_32(shared_data_bytes))
 
     def to_native(self) -> dict[str, Any]:
         """Convert to an HA state object."""
         try:
-            return cast(dict[str, Any], json.loads(self.shared_data))
-        except ValueError:
+            return cast(dict[str, Any], json_loads(self.shared_data))
+        except JSON_DECODE_EXCEPTIONS:
             _LOGGER.exception("Error converting row to event data: %s", self)
             return {}
 
@@ -328,9 +334,9 @@ class States(Base):  # type: ignore[misc,valid-type]
             parent_id=self.context_parent_id,
         )
         try:
-            attrs = json.loads(self.attributes) if self.attributes else {}
-        except ValueError:
-            # When json.loads fails
+            attrs = json_loads(self.attributes) if self.attributes else {}
+        except JSON_DECODE_EXCEPTIONS:
+            # When json_loads fails
             _LOGGER.exception("Error converting row to state: %s", self)
             return None
         if self.last_changed is None or self.last_changed == self.last_updated:
@@ -376,40 +382,39 @@ class StateAttributes(Base):  # type: ignore[misc,valid-type]
         """Create object from a state_changed event."""
         state: State | None = event.data.get("new_state")
         # None state means the state was removed from the state machine
-        dbstate = StateAttributes(
-            shared_attrs="{}" if state is None else JSON_DUMP(state.attributes)
-        )
-        dbstate.hash = StateAttributes.hash_shared_attrs(dbstate.shared_attrs)
+        attr_bytes = b"{}" if state is None else json_bytes(state.attributes)
+        dbstate = StateAttributes(shared_attrs=attr_bytes.decode("utf-8"))
+        dbstate.hash = StateAttributes.hash_shared_attrs_bytes(attr_bytes)
         return dbstate
 
     @staticmethod
-    def shared_attrs_from_event(
+    def shared_attrs_bytes_from_event(
         event: Event, exclude_attrs_by_domain: dict[str, set[str]]
-    ) -> str:
+    ) -> bytes:
         """Create shared_attrs from a state_changed event."""
         state: State | None = event.data.get("new_state")
         # None state means the state was removed from the state machine
         if state is None:
-            return "{}"
+            return b"{}"
         domain = split_entity_id(state.entity_id)[0]
         exclude_attrs = (
             exclude_attrs_by_domain.get(domain, set()) | ALL_DOMAIN_EXCLUDE_ATTRS
         )
-        return JSON_DUMP(
+        return json_bytes(
             {k: v for k, v in state.attributes.items() if k not in exclude_attrs}
         )
 
     @staticmethod
-    def hash_shared_attrs(shared_attrs: str) -> int:
+    def hash_shared_attrs_bytes(shared_attrs_bytes: bytes) -> int:
         """Return the hash of json encoded shared attributes."""
-        return cast(int, fnv1a_32(shared_attrs.encode("utf-8")))
+        return cast(int, fnv1a_32(shared_attrs_bytes))
 
     def to_native(self) -> dict[str, Any]:
         """Convert to an HA state object."""
         try:
-            return cast(dict[str, Any], json.loads(self.shared_attrs))
-        except ValueError:
-            # When json.loads fails
+            return cast(dict[str, Any], json_loads(self.shared_attrs))
+        except JSON_DECODE_EXCEPTIONS:
+            # When json_loads fails
             _LOGGER.exception("Error converting row to state attributes: %s", self)
             return {}
 

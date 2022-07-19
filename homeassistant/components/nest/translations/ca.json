@@ -4,6 +4,7 @@
     },
     "config": {
         "abort": {
+            "already_configured": "El compte ja est\u00e0 configurat",
             "authorize_url_timeout": "Temps d'espera esgotat durant la generaci\u00f3 de l'URL d'autoritzaci\u00f3.",
             "invalid_access_token": "Token d'acc\u00e9s inv\u00e0lid",
             "missing_configuration": "El component no est\u00e0 configurat. Mira'n la documentaci\u00f3.",

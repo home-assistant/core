@@ -118,7 +118,7 @@ class Sensor(ZhaEntity, SensorEntity):
     SENSOR_ATTR: int | str | None = None
     _decimals: int = 1
     _divisor: int = 1
-    _multiplier: int = 1
+    _multiplier: int | float = 1
     _unit: str | None = None
 
     def __init__(
@@ -455,7 +455,7 @@ class SmartEnergyMetering(Sensor):
         return self._channel.demand_formatter(value)
 
     @property
-    def native_unit_of_measurement(self) -> str:
+    def native_unit_of_measurement(self) -> str | None:
         """Return Unit of measurement."""
         return self.unit_of_measure_map.get(self._channel.unit_of_measurement)
 
@@ -472,25 +472,8 @@ class SmartEnergyMetering(Sensor):
 
 @MULTI_MATCH(
     channel_names=CHANNEL_SMARTENERGY_METERING,
-    models={"TS011F"},
     stop_on_match_group=CHANNEL_SMARTENERGY_METERING,
 )
-class PolledSmartEnergyMetering(SmartEnergyMetering):
-    """Polled metering sensor."""
-
-    @property
-    def should_poll(self) -> bool:
-        """Poll the entity for current state."""
-        return True
-
-    async def async_update(self) -> None:
-        """Retrieve latest state."""
-        if not self.available:
-            return
-        await self._channel.async_force_update()
-
-
-@MULTI_MATCH(channel_names=CHANNEL_SMARTENERGY_METERING)
 class SmartEnergySummation(SmartEnergyMetering, id_suffix="summation_delivered"):
     """Smart Energy Metering summation sensor."""
 
@@ -521,6 +504,26 @@ class SmartEnergySummation(SmartEnergyMetering, id_suffix="summation_delivered")
 
         cooked = float(self._channel.multiplier * value) / self._channel.divisor
         return round(cooked, 3)
+
+
+@MULTI_MATCH(
+    channel_names=CHANNEL_SMARTENERGY_METERING,
+    models={"TS011F"},
+    stop_on_match_group=CHANNEL_SMARTENERGY_METERING,
+)
+class PolledSmartEnergySummation(SmartEnergySummation):
+    """Polled Smart Energy Metering summation sensor."""
+
+    @property
+    def should_poll(self) -> bool:
+        """Poll the entity for current state."""
+        return True
+
+    async def async_update(self) -> None:
+        """Retrieve latest state."""
+        if not self.available:
+            return
+        await self._channel.async_force_update()
 
 
 @MULTI_MATCH(channel_names=CHANNEL_PRESSURE)
@@ -760,6 +763,7 @@ class RSSISensor(Sensor, id_suffix="rssi"):
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.SIGNAL_STRENGTH
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_entity_registry_enabled_default = False
+    unique_id_suffix: str
 
     @classmethod
     def create_entity(
@@ -804,6 +808,26 @@ class TimeLeft(Sensor, id_suffix="time_left"):
     """Sensor that displays time left value."""
 
     SENSOR_ATTR = "timer_time_left"
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.DURATION
+    _attr_icon = "mdi:timer"
+    _unit = TIME_MINUTES
+
+
+@MULTI_MATCH(channel_names="ikea_airpurifier")
+class IkeaDeviceRunTime(Sensor, id_suffix="device_run_time"):
+    """Sensor that displays device run time (in minutes)."""
+
+    SENSOR_ATTR = "device_run_time"
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.DURATION
+    _attr_icon = "mdi:timer"
+    _unit = TIME_MINUTES
+
+
+@MULTI_MATCH(channel_names="ikea_airpurifier")
+class IkeaFilterRunTime(Sensor, id_suffix="filter_run_time"):
+    """Sensor that displays run time of the current filter (in minutes)."""
+
+    SENSOR_ATTR = "filter_run_time"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.DURATION
     _attr_icon = "mdi:timer"
     _unit = TIME_MINUTES

@@ -45,6 +45,7 @@ class BaseZhaEntity(LogMixin, entity.Entity):
     """A base class for ZHA entities."""
 
     unique_id_suffix: str | None = None
+    _attr_has_entity_name = True
 
     def __init__(self, unique_id: str, zha_device: ZHADevice, **kwargs: Any) -> None:
         """Init ZHA entity."""
@@ -128,9 +129,9 @@ class BaseZhaEntity(LogMixin, entity.Entity):
     @callback
     def async_accept_signal(
         self,
-        channel: ZigbeeChannel,
+        channel: ZigbeeChannel | None,
         signal: str,
-        func: Callable[[], Any],
+        func: Callable[..., Any],
         signal_override=False,
     ):
         """Accept a signal from a channel."""
@@ -138,6 +139,7 @@ class BaseZhaEntity(LogMixin, entity.Entity):
         if signal_override:
             unsub = async_dispatcher_connect(self.hass, signal, func)
         else:
+            assert channel
             unsub = async_dispatcher_connect(
                 self.hass, f"{channel.unique_id}_{signal}", func
             )
@@ -172,11 +174,13 @@ class ZhaEntity(BaseZhaEntity, RestoreEntity):
     ) -> None:
         """Init ZHA entity."""
         super().__init__(unique_id, zha_device, **kwargs)
-        ieeetail = "".join([f"{o:02x}" for o in zha_device.ieee[:4]])
-        ch_names = ", ".join(sorted(ch.name for ch in channels))
-        self._name: str = f"{zha_device.name} {ieeetail} {ch_names}"
-        if self.unique_id_suffix:
-            self._name += f" {self.unique_id_suffix}"
+        self._name: str = (
+            self.__class__.__name__.lower()
+            .replace("zha", "")
+            .replace("entity", "")
+            .replace("sensor", "")
+            .capitalize()
+        )
         self.cluster_channels: dict[str, ZigbeeChannel] = {}
         for channel in channels:
             self.cluster_channels[channel.name] = channel
@@ -259,7 +263,9 @@ class ZhaGroupEntity(BaseZhaEntity):
         super().__init__(unique_id, zha_device, **kwargs)
         self._available = False
         self._group = zha_device.gateway.groups.get(group_id)
-        self._name = f"{self._group.name}_zha_group_0x{group_id:04x}"
+        self._name = (
+            f"{self._group.name}_zha_group_0x{group_id:04x}".lower().capitalize()
+        )
         self._group_id: int = group_id
         self._entity_ids: list[str] = entity_ids
         self._async_unsub_state_changed: CALLBACK_TYPE | None = None
@@ -305,7 +311,7 @@ class ZhaGroupEntity(BaseZhaEntity):
         if self._change_listener_debouncer is None:
             self._change_listener_debouncer = Debouncer(
                 self.hass,
-                self,
+                _LOGGER,
                 cooldown=UPDATE_GROUP_FROM_CHILD_DELAY,
                 immediate=False,
                 function=functools.partial(self.async_update_ha_state, True),
@@ -325,6 +331,7 @@ class ZhaGroupEntity(BaseZhaEntity):
     def async_state_changed_listener(self, event: Event):
         """Handle child updates."""
         # Delay to ensure that we get updates from all members before updating the group
+        assert self._change_listener_debouncer
         self.hass.create_task(self._change_listener_debouncer.async_call())
 
     async def async_will_remove_from_hass(self) -> None:

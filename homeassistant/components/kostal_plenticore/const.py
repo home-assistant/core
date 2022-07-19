@@ -790,34 +790,6 @@ SENSOR_PROCESS_DATA = [
     ),
 ]
 
-# Defines all entities for settings.
-#
-# Each entry is defined with a tuple of these values:
-#  - module id (str)
-#  - process data id (str)
-#  - entity name suffix (str)
-#  - sensor properties (dict)
-#  - value formatter (str)
-SENSOR_SETTINGS_DATA = [
-    (
-        "devices:local",
-        "Battery:MinHomeComsumption",
-        "Battery min Home Consumption",
-        {
-            ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
-            ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
-        },
-        "format_round",
-    ),
-    (
-        "devices:local",
-        "Battery:MinSoc",
-        "Battery min Soc",
-        {ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE, ATTR_ICON: "mdi:battery-negative"},
-        "format_round",
-    ),
-]
-
 
 class SwitchData(NamedTuple):
     """Representation of a SelectData tuple."""

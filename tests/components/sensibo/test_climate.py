@@ -28,7 +28,6 @@ from homeassistant.components.sensibo.climate import (
     ATTR_OUTDOOR_INTEGRATION,
     ATTR_SENSITIVITY,
     SERVICE_ASSUME_STATE,
-    SERVICE_DISABLE_PURE_BOOST,
     SERVICE_ENABLE_PURE_BOOST,
     SERVICE_ENABLE_TIMER,
     _find_valid_target_temp,
@@ -809,7 +808,7 @@ async def test_climate_pure_boost(
         await hass.async_block_till_done()
 
     state_climate = hass.states.get("climate.kitchen")
-    state2 = hass.states.get("binary_sensor.kitchen_pure_boost_enabled")
+    state2 = hass.states.get("switch.kitchen_pure_boost")
     assert state2.state == "off"
 
     with patch(
@@ -878,7 +877,7 @@ async def test_climate_pure_boost(
         )
         await hass.async_block_till_done()
 
-    state1 = hass.states.get("binary_sensor.kitchen_pure_boost_enabled")
+    state1 = hass.states.get("switch.kitchen_pure_boost")
     state2 = hass.states.get(
         "binary_sensor.kitchen_pure_boost_linked_with_indoor_air_quality"
     )
@@ -889,50 +888,4 @@ async def test_climate_pure_boost(
     assert state1.state == "on"
     assert state2.state == "on"
     assert state3.state == "on"
-    assert state4.state == "s"
-
-    with patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
-        return_value=get_data,
-    ), patch(
-        "homeassistant.components.sensibo.coordinator.SensiboClient.async_set_pureboost",
-        return_value={
-            "status": "success",
-            "result": {
-                "enabled": False,
-                "sensitivity": "S",
-                "measurements_integration": True,
-                "ac_integration": False,
-                "geo_integration": False,
-                "prime_integration": True,
-            },
-        },
-    ) as mock_set_pureboost:
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_DISABLE_PURE_BOOST,
-            {
-                ATTR_ENTITY_ID: state_climate.entity_id,
-            },
-            blocking=True,
-        )
-    await hass.async_block_till_done()
-    mock_set_pureboost.assert_called_once()
-
-    monkeypatch.setattr(get_data.parsed["AAZZAAZZ"], "pure_boost_enabled", False)
-    monkeypatch.setattr(get_data.parsed["AAZZAAZZ"], "pure_sensitivity", "s")
-
-    with patch(
-        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
-        return_value=get_data,
-    ):
-        async_fire_time_changed(
-            hass,
-            dt.utcnow() + timedelta(minutes=5),
-        )
-        await hass.async_block_till_done()
-
-    state1 = hass.states.get("binary_sensor.kitchen_pure_boost_enabled")
-    state4 = hass.states.get("sensor.kitchen_pure_sensitivity")
-    assert state1.state == "off"
     assert state4.state == "s"

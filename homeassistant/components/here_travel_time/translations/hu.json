@@ -39,6 +39,13 @@
                 },
                 "title": "Eredet kiv\u00e1laszt\u00e1sa"
             },
+            "origin_menu": {
+                "menu_options": {
+                    "origin_coordinates": "T\u00e9rk\u00e9pes hely haszn\u00e1lata",
+                    "origin_entity": "Egy entit\u00e1s haszn\u00e1lata"
+                },
+                "title": "V\u00e1lassza az eredetit"
+            },
             "user": {
                 "data": {
                     "api_key": "API kulcs",

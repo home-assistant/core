@@ -74,6 +74,8 @@ build.json @home-assistant/supervisor
 /tests/components/analytics/ @home-assistant/core @ludeeus
 /homeassistant/components/androidtv/ @JeffLIrion @ollo69
 /tests/components/androidtv/ @JeffLIrion @ollo69
+/homeassistant/components/anthemav/ @hyralex
+/tests/components/anthemav/ @hyralex
 /homeassistant/components/apache_kafka/ @bachya
 /tests/components/apache_kafka/ @bachya
 /homeassistant/components/api/ @home-assistant/core
@@ -129,13 +131,15 @@ build.json @home-assistant/supervisor
 /homeassistant/components/binary_sensor/ @home-assistant/core
 /tests/components/binary_sensor/ @home-assistant/core
 /homeassistant/components/bizkaibus/ @UgaitzEtxebarria
-/homeassistant/components/blebox/ @bbx-a @bbx-jp
-/tests/components/blebox/ @bbx-a @bbx-jp
+/homeassistant/components/blebox/ @bbx-a @riokuu
+/tests/components/blebox/ @bbx-a @riokuu
 /homeassistant/components/blink/ @fronzbot
 /tests/components/blink/ @fronzbot
 /homeassistant/components/blueprint/ @home-assistant/core
 /tests/components/blueprint/ @home-assistant/core
 /homeassistant/components/bluesound/ @thrawnarn
+/homeassistant/components/bluetooth/ @bdraco
+/tests/components/bluetooth/ @bdraco
 /homeassistant/components/bmw_connected_drive/ @gerard33 @rikroe
 /tests/components/bmw_connected_drive/ @gerard33 @rikroe
 /homeassistant/components/bond/ @bdraco @prystupa @joshs85 @marciogranzotto
@@ -572,7 +576,9 @@ build.json @home-assistant/supervisor
 /tests/components/lcn/ @alengwenus
 /homeassistant/components/lg_netcast/ @Drafteed
 /homeassistant/components/life360/ @pnbruckner
-/homeassistant/components/lifx/ @Djelibeybi
+/tests/components/life360/ @pnbruckner
+/homeassistant/components/lifx/ @bdraco @Djelibeybi
+/tests/components/lifx/ @bdraco @Djelibeybi
 /homeassistant/components/light/ @home-assistant/core
 /tests/components/light/ @home-assistant/core
 /homeassistant/components/linux_battery/ @fabaff
@@ -627,8 +633,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/meteoalarm/ @rolfberkenbosch
 /homeassistant/components/meteoclimatic/ @adrianmo
 /tests/components/meteoclimatic/ @adrianmo
-/homeassistant/components/metoffice/ @MrHarcombe
-/tests/components/metoffice/ @MrHarcombe
+/homeassistant/components/metoffice/ @MrHarcombe @avee87
+/tests/components/metoffice/ @MrHarcombe @avee87
 /homeassistant/components/miflora/ @danielhiversen @basnijholt
 /homeassistant/components/mikrotik/ @engrbm87
 /tests/components/mikrotik/ @engrbm87
@@ -695,6 +701,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/nextbus/ @vividboarder
 /tests/components/nextbus/ @vividboarder
 /homeassistant/components/nextcloud/ @meichthys
+/homeassistant/components/nextdns/ @bieniu
+/tests/components/nextdns/ @bieniu
 /homeassistant/components/nfandroidtv/ @tkdrob
 /tests/components/nfandroidtv/ @tkdrob
 /homeassistant/components/nightscout/ @marciogranzotto
@@ -852,10 +860,14 @@ build.json @home-assistant/supervisor
 /homeassistant/components/renault/ @epenet
 /tests/components/renault/ @epenet
 /homeassistant/components/repetier/ @MTrab @ShadowBr0ther
+/homeassistant/components/resolution_center/ @home-assistant/core
+/tests/components/resolution_center/ @home-assistant/core
 /homeassistant/components/rflink/ @javicalle
 /tests/components/rflink/ @javicalle
 /homeassistant/components/rfxtrx/ @danielhiversen @elupus @RobBie1221
 /tests/components/rfxtrx/ @danielhiversen @elupus @RobBie1221
+/homeassistant/components/rhasspy/ @balloob @synesthesiam
+/tests/components/rhasspy/ @balloob @synesthesiam
 /homeassistant/components/ridwell/ @bachya
 /tests/components/ridwell/ @bachya
 /homeassistant/components/ring/ @balloob
@@ -890,8 +902,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/scene/ @home-assistant/core
 /tests/components/scene/ @home-assistant/core
 /homeassistant/components/schluter/ @prairieapps
-/homeassistant/components/scrape/ @fabaff @gjohansson-ST
-/tests/components/scrape/ @fabaff @gjohansson-ST
+/homeassistant/components/scrape/ @fabaff
+/tests/components/scrape/ @fabaff
 /homeassistant/components/screenlogic/ @dieselrabbit @bdraco
 /tests/components/screenlogic/ @dieselrabbit @bdraco
 /homeassistant/components/script/ @home-assistant/core
@@ -929,6 +941,8 @@ build.json @home-assistant/supervisor
 /tests/components/sighthound/ @robmarkcole
 /homeassistant/components/signal_messenger/ @bbernhard
 /tests/components/signal_messenger/ @bbernhard
+/homeassistant/components/simplepush/ @engrbm87
+/tests/components/simplepush/ @engrbm87
 /homeassistant/components/simplisafe/ @bachya
 /tests/components/simplisafe/ @bachya
 /homeassistant/components/sinch/ @bendikrb
@@ -974,6 +988,8 @@ build.json @home-assistant/supervisor
 /tests/components/songpal/ @rytilahti @shenxn
 /homeassistant/components/sonos/ @cgtobi @jjlawren
 /tests/components/sonos/ @cgtobi @jjlawren
+/homeassistant/components/soundtouch/ @kroimon
+/tests/components/soundtouch/ @kroimon
 /homeassistant/components/spaceapi/ @fabaff
 /tests/components/spaceapi/ @fabaff
 /homeassistant/components/speedtestdotnet/ @rohankapoorcom @engrbm87
@@ -1162,8 +1178,8 @@ build.json @home-assistant/supervisor
 /tests/components/watttime/ @bachya
 /homeassistant/components/waze_travel_time/ @eifinger
 /tests/components/waze_travel_time/ @eifinger
-/homeassistant/components/weather/ @fabaff
-/tests/components/weather/ @fabaff
+/homeassistant/components/weather/ @home-assistant/core
+/tests/components/weather/ @home-assistant/core
 /homeassistant/components/webhook/ @home-assistant/core
 /tests/components/webhook/ @home-assistant/core
 /homeassistant/components/webostv/ @bendavid @thecode
@@ -1223,8 +1239,8 @@ build.json @home-assistant/supervisor
 /tests/components/zeroconf/ @bdraco
 /homeassistant/components/zerproc/ @emlove
 /tests/components/zerproc/ @emlove
-/homeassistant/components/zha/ @dmulcahey @adminiuga
-/tests/components/zha/ @dmulcahey @adminiuga
+/homeassistant/components/zha/ @dmulcahey @adminiuga @puddly
+/tests/components/zha/ @dmulcahey @adminiuga @puddly
 /homeassistant/components/zodiac/ @JulienTant
 /tests/components/zodiac/ @JulienTant
 /homeassistant/components/zone/ @home-assistant/core
