@@ -1,8 +1,8 @@
 """The tests for the demo weather component."""
 from homeassistant.components import weather
 from homeassistant.components.weather import (
-    ATTR_FORECAST,
     ATTR_FORECAST_CONDITION,
+    ATTR_FORECAST_DAILY,
     ATTR_FORECAST_PRECIPITATION,
     ATTR_FORECAST_PRECIPITATION_PROBABILITY,
     ATTR_FORECAST_TEMP,
@@ -41,16 +41,20 @@ async def test_attributes(hass: HomeAssistant, disable_platforms) -> None:
     assert data.get(ATTR_WEATHER_WIND_BEARING) is None
     assert data.get(ATTR_WEATHER_OZONE) is None
     assert data.get(ATTR_ATTRIBUTION) == "Powered by Home Assistant"
-    assert data.get(ATTR_FORECAST)[0].get(ATTR_FORECAST_CONDITION) == "rainy"
-    assert data.get(ATTR_FORECAST)[0].get(ATTR_FORECAST_PRECIPITATION) == 1
-    assert data.get(ATTR_FORECAST)[0].get(ATTR_FORECAST_PRECIPITATION_PROBABILITY) == 60
-    assert data.get(ATTR_FORECAST)[0].get(ATTR_FORECAST_TEMP) == 22
-    assert data.get(ATTR_FORECAST)[0].get(ATTR_FORECAST_TEMP_LOW) == 15
-    assert data.get(ATTR_FORECAST)[6].get(ATTR_FORECAST_CONDITION) == "fog"
-    assert data.get(ATTR_FORECAST)[6].get(ATTR_FORECAST_PRECIPITATION) == 0.2
-    assert data.get(ATTR_FORECAST)[6].get(ATTR_FORECAST_TEMP) == 21
-    assert data.get(ATTR_FORECAST)[6].get(ATTR_FORECAST_TEMP_LOW) == 12
+    assert data.get(ATTR_FORECAST_DAILY)[0].get(ATTR_FORECAST_CONDITION) == "rainy"
+    assert data.get(ATTR_FORECAST_DAILY)[0].get(ATTR_FORECAST_PRECIPITATION) == 1
     assert (
-        data.get(ATTR_FORECAST)[6].get(ATTR_FORECAST_PRECIPITATION_PROBABILITY) == 100
+        data.get(ATTR_FORECAST_DAILY)[0].get(ATTR_FORECAST_PRECIPITATION_PROBABILITY)
+        == 60
     )
-    assert len(data.get(ATTR_FORECAST)) == 7
+    assert data.get(ATTR_FORECAST_DAILY)[0].get(ATTR_FORECAST_TEMP) == 22
+    assert data.get(ATTR_FORECAST_DAILY)[0].get(ATTR_FORECAST_TEMP_LOW) == 15
+    assert data.get(ATTR_FORECAST_DAILY)[6].get(ATTR_FORECAST_CONDITION) == "fog"
+    assert data.get(ATTR_FORECAST_DAILY)[6].get(ATTR_FORECAST_PRECIPITATION) == 0.2
+    assert data.get(ATTR_FORECAST_DAILY)[6].get(ATTR_FORECAST_TEMP) == 21
+    assert data.get(ATTR_FORECAST_DAILY)[6].get(ATTR_FORECAST_TEMP_LOW) == 12
+    assert (
+        data.get(ATTR_FORECAST_DAILY)[6].get(ATTR_FORECAST_PRECIPITATION_PROBABILITY)
+        == 100
+    )
+    assert len(data.get(ATTR_FORECAST_DAILY)) == 7
