@@ -325,11 +325,12 @@ class MQTT:
         self._ha_started = asyncio.Event()
         self._last_subscribe = time.time()
         self._mqttc: mqtt.Client = None
-        self._paho_lock = asyncio.Lock()
-        self._pending_acks: set[int] = set()
         self._cleanup_on_unload: list[Callable] = []
 
+        self._paho_lock = asyncio.Lock()  # Prevents parallel calls to the MQTT client
+        self._pending_acks: set[int] = set()
         self._pending_operations: dict[int, asyncio.Event] = {}
+        self._pending_operations_condition = asyncio.Condition()
 
         if self.hass.state == CoreState.running:
             self._ha_started.set()
@@ -431,13 +432,13 @@ class MQTT:
             # Do not disconnect, we want the broker to always publish will
             self._mqttc.loop_stop()
 
-        # wait for ACK-s to be processed (unsubscribe only)
-        async with self._paho_lock:
-            tasks = [
-                self.hass.async_create_task(self._wait_for_mid(mid))
-                for mid in self._pending_acks
-            ]
-        await asyncio.gather(*tasks)
+        def no_more_acks() -> bool:
+            """Return False if there are unprocessed ACKs."""
+            return not bool(self._pending_acks)
+
+        # wait for ACK-s to be processesed (unsubscribe only)
+        async with self._pending_operations_condition:
+            await self._pending_operations_condition.wait_for(no_more_acks)
 
         # stop the MQTT loop
         await self.hass.async_add_executor_job(stop)
@@ -679,12 +680,11 @@ class MQTT:
                 "No ACK from MQTT server in %s seconds (mid: %s)", TIMEOUT_ACK, mid
             )
         finally:
-            if mid in self._pending_operations:
+            async with self._pending_operations_condition:
+                # Cleanup ACK sync buffer
                 del self._pending_operations[mid]
-            # Cleanup ACK sync buffer
-            async with self._paho_lock:
-                if mid in self._pending_acks:
-                    self._pending_acks.remove(mid)
+                self._pending_acks.remove(mid)
+                self._pending_operations_condition.notify_all()
 
     async def _discovery_cooldown(self):
         now = time.time()
