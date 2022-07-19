@@ -86,7 +86,7 @@ SENSOR_TYPES: tuple[AwairSensorEntityDescription, ...] = (
     ),
     AwairSensorEntityDescription(
         key=API_VOC,
-        device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
+        icon="mdi:molecule",
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
         name="Volatile organic compounds",
         unique_id_tag="VOC",  # matches legacy format
