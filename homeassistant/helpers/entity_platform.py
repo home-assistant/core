@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine, Iterable
+from collections.abc import Awaitable, Callable, Coroutine, Iterable
 from contextvars import ContextVar
 from datetime import datetime, timedelta
 from logging import Logger, getLogger
@@ -95,7 +95,7 @@ class EntityPlatform:
         self.entity_namespace = entity_namespace
         self.config_entry: config_entries.ConfigEntry | None = None
         self.entities: dict[str, Entity] = {}
-        self._tasks: list[asyncio.Future] = []
+        self._tasks: list[asyncio.Task[None]] = []
         # Stop tracking tasks after setup is completed
         self._setup_complete = False
         # Method to cancel the state change listener
@@ -169,7 +169,9 @@ class EntityPlatform:
             return
 
         @callback
-        def async_create_setup_task() -> Coroutine:
+        def async_create_setup_task() -> Coroutine[
+            Any, Any, None
+        ] | asyncio.Future[None]:
             """Get task to set up platform."""
             if getattr(platform, "async_setup_platform", None):
                 return platform.async_setup_platform(  # type: ignore[no-any-return,union-attr]
@@ -181,7 +183,7 @@ class EntityPlatform:
 
             # This should not be replaced with hass.async_add_job because
             # we don't want to track this task in case it blocks startup.
-            return hass.loop.run_in_executor(  # type: ignore[return-value]
+            return hass.loop.run_in_executor(
                 None,
                 platform.setup_platform,  # type: ignore[union-attr]
                 hass,
@@ -211,7 +213,7 @@ class EntityPlatform:
         platform = self.platform
 
         @callback
-        def async_create_setup_task() -> Coroutine:
+        def async_create_setup_task() -> Coroutine[Any, Any, None]:
             """Get task to set up platform."""
             config_entries.current_entry.set(config_entry)
 
@@ -222,7 +224,7 @@ class EntityPlatform:
         return await self._async_setup_platform(async_create_setup_task)
 
     async def _async_setup_platform(
-        self, async_create_setup_task: Callable[[], Coroutine], tries: int = 0
+        self, async_create_setup_task: Callable[[], Awaitable[None]], tries: int = 0
     ) -> bool:
         """Set up a platform via config file or config entry.
 
@@ -701,7 +703,7 @@ class EntityPlatform:
     def async_register_entity_service(
         self,
         name: str,
-        schema: dict | vol.Schema,
+        schema: dict[str, Any] | vol.Schema,
         func: str | Callable[..., Any],
         required_features: Iterable[int] | None = None,
     ) -> None:
@@ -753,7 +755,7 @@ class EntityPlatform:
             return
 
         async with self._process_updates:
-            tasks = []
+            tasks: list[Coroutine[Any, Any, None]] = []
             for entity in self.entities.values():
                 if not entity.should_poll:
                     continue

@@ -18,6 +18,7 @@ homeassistant.helpers.condition
 homeassistant.helpers.debounce
 homeassistant.helpers.discovery
 homeassistant.helpers.entity
+homeassistant.helpers.entity_platform
 homeassistant.helpers.entity_values
 homeassistant.helpers.event
 homeassistant.helpers.reload
