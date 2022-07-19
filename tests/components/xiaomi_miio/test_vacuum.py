@@ -116,6 +116,10 @@ def mirobo_is_got_error_fixture():
     mock_vacuum.timer.return_value = [mock_timer_1, mock_timer_2]
 
     with patch(
+        "homeassistant.components.xiaomi_miio.PushServer.start", return_value=True
+    ), patch(
+        "homeassistant.components.xiaomi_miio.PushServer.stop", return_value=True
+    ), patch(
         "homeassistant.components.xiaomi_miio.RoborockVacuum"
     ) as mock_vacuum_cls:
         mock_vacuum_cls.return_value = mock_vacuum
@@ -152,6 +156,10 @@ def mirobo_old_speeds_fixture(request):
     )
 
     with patch(
+        "homeassistant.components.xiaomi_miio.PushServer.start", return_value=True
+    ), patch(
+        "homeassistant.components.xiaomi_miio.PushServer.stop", return_value=True
+    ), patch(
         "homeassistant.components.xiaomi_miio.RoborockVacuum"
     ) as mock_vacuum_cls:
         mock_vacuum_cls.return_value = mock_vacuum
@@ -214,6 +222,10 @@ def mirobo_is_on_fixture():
     mock_vacuum.timer.return_value = [mock_timer_1, mock_timer_2]
 
     with patch(
+        "homeassistant.components.xiaomi_miio.PushServer.start", return_value=True
+    ), patch(
+        "homeassistant.components.xiaomi_miio.PushServer.stop", return_value=True
+    ), patch(
         "homeassistant.components.xiaomi_miio.RoborockVacuum"
     ) as mock_vacuum_cls:
         mock_vacuum_cls.return_value = mock_vacuum
