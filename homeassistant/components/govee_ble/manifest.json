@@ -8,7 +8,7 @@
     { "local_name": "GVH5*" },
     { "local_name": "B5178*" }
   ],
-  "requirements": ["govee-ble==0.10.0"],
+  "requirements": ["govee-ble==0.10.1"],
   "dependencies": ["bluetooth"],
   "codeowners": ["@bdraco"],
   "iot_class": "local_push"
