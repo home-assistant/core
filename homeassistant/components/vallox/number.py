@@ -20,7 +20,7 @@ from .const import DOMAIN
 
 
 class ValloxNumberEntity(ValloxEntity, NumberEntity):
-    """Representation of a Vallox sensor."""
+    """Representation of a Vallox number entity."""
 
     entity_description: ValloxNumberEntityDescription
     _attr_has_entity_name = True
@@ -32,7 +32,7 @@ class ValloxNumberEntity(ValloxEntity, NumberEntity):
         description: ValloxNumberEntityDescription,
         client: Vallox,
     ) -> None:
-        """Initialize the Vallox sensor."""
+        """Initialize the Vallox number entity."""
         super().__init__(name, coordinator)
 
         self.entity_description = description
@@ -64,7 +64,7 @@ class ValloxNumberEntityDescription(NumberEntityDescription):
     """Describes Vallox select entity."""
 
     metric_key: str | None = None
-    sensor_type: type[ValloxNumberEntity] = ValloxNumberEntity
+    number_type: type[ValloxNumberEntity] = ValloxNumberEntity
 
 
 NUMBER_ENTITIES: tuple[ValloxNumberEntityDescription, ...] = (
@@ -72,7 +72,7 @@ NUMBER_ENTITIES: tuple[ValloxNumberEntityDescription, ...] = (
         key="supply_air_target_home",
         name="Supply air temperature (Home)",
         metric_key="A_CYC_HOME_AIR_TEMP_TARGET",
-        sensor_type=ValloxNumberEntity,
+        entity_type=ValloxNumberEntity,
         device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
         native_min_value=5.0,
@@ -83,6 +83,17 @@ NUMBER_ENTITIES: tuple[ValloxNumberEntityDescription, ...] = (
         key="supply_air_target_away",
         name="Supply air temperature (Away)",
         metric_key="A_CYC_AWAY_AIR_TEMP_TARGET",
+        entity_type=ValloxNumberEntity,
+        device_class=NumberDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=TEMP_CELSIUS,
+        native_min_value=5.0,
+        native_max_value=25.0,
+        native_step=1.0,
+    ),
+    ValloxNumberEntityDescription(
+        key="supply_air_target_boost",
+        name="Supply air temperature (Boost)",
+        metric_key="A_CYC_BOOST_AIR_TEMP_TARGET",
         sensor_type=ValloxNumberEntity,
         device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
@@ -93,8 +104,9 @@ NUMBER_ENTITIES: tuple[ValloxNumberEntityDescription, ...] = (
     ValloxNumberEntityDescription(
         key="fan_speed_home",
         name="Fan speed (Home)",
+        icon="mdi:fan",
         metric_key="A_CYC_HOME_SPEED_SETTING",
-        sensor_type=ValloxNumberEntity,
+        entity_type=ValloxNumberEntity,
         native_unit_of_measurement=PERCENTAGE,
         native_min_value=0.0,
         native_max_value=100.0,
@@ -103,8 +115,9 @@ NUMBER_ENTITIES: tuple[ValloxNumberEntityDescription, ...] = (
     ValloxNumberEntityDescription(
         key="fan_speed_away",
         name="Fan speed (Away)",
+        icon="mdi:fan",
         metric_key="A_CYC_AWAY_SPEED_SETTING",
-        sensor_type=ValloxNumberEntity,
+        entity_type=ValloxNumberEntity,
         native_unit_of_measurement=PERCENTAGE,
         native_min_value=0.0,
         native_max_value=100.0,
@@ -113,8 +126,9 @@ NUMBER_ENTITIES: tuple[ValloxNumberEntityDescription, ...] = (
     ValloxNumberEntityDescription(
         key="fan_speed_boost",
         name="Fan speed (Boost)",
+        icon="mdi:fan",
         metric_key="A_CYC_BOOST_SPEED_SETTING",
-        sensor_type=ValloxNumberEntity,
+        entity_type=ValloxNumberEntity,
         native_unit_of_measurement=PERCENTAGE,
         native_min_value=0.0,
         native_max_value=100.0,
@@ -133,7 +147,7 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            description.sensor_type(name, coordinator, description, client)
+            description.entity_type(name, coordinator, description, client)
             for description in NUMBER_ENTITIES
         ]
     )
