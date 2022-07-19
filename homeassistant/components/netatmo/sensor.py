@@ -380,6 +380,8 @@ async def async_setup_entry(
 class NetatmoWeatherSensor(NetatmoBase, SensorEntity):
     """Implementation of a Netatmo weather/home coach sensor."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         netatmo_device: NetatmoDevice,
@@ -405,7 +407,7 @@ class NetatmoWeatherSensor(NetatmoBase, SensorEntity):
             ]
         )
 
-        self._attr_name = f"{self._device_name} {description.name}"
+        self._attr_name = f"{description.name}"
         self._model = self._module.device_type
         self._config_url = CONF_URL_WEATHER
         self._attr_unique_id = f"{self._id}-{description.key}"
@@ -613,6 +615,7 @@ class NetatmoRoomSensor(NetatmoBase, SensorEntity):
 class NetatmoPublicSensor(NetatmoBase, SensorEntity):
     """Represent a single sensor in a Netatmo."""
 
+    _attr_has_entity_name = True
     entity_description: NetatmoSensorEntityDescription
 
     def __init__(
@@ -645,7 +648,7 @@ class NetatmoPublicSensor(NetatmoBase, SensorEntity):
         self._area_name = area.area_name
         self._id = self._area_name
         self._device_name = f"{self._area_name}"
-        self._attr_name = f"{self._device_name} {description.name}"
+        self._attr_name = f"{description.name}"
         self._show_on_map = area.show_on_map
         self._attr_unique_id = (
             f"{self._device_name.replace(' ', '-')}-{description.key}"
