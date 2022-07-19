@@ -151,6 +151,9 @@ async def async_setup_scanner(  # noqa: C901
             _LOGGER.warning(
                 "Timeout when trying to get battery status for %s", service_info.name
             )
+        # Bleak currently has a few places where checking dbus attributes
+        # can raise when there is another error. We need to trap AttributeError
+        # until bleak releases v0.15+ which resolves these.
         except (AttributeError, BleakError) as err:
             _LOGGER.debug("Could not read battery status: %s", err)
             # If the device does not offer battery information, there is no point in asking again later on.

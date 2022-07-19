@@ -54,12 +54,9 @@ class ActiveConnection:
         """Send a result message."""
         self.send_message(messages.result_message(msg_id, result))
 
-    async def send_big_result(self, msg_id: int, result: Any) -> None:
+    def send_big_result(self, msg_id: int, result: Any) -> None:
         """Send a result message that would be expensive to JSON serialize."""
-        content = await self.hass.async_add_executor_job(
-            JSON_DUMP, messages.result_message(msg_id, result)
-        )
-        self.send_message(content)
+        self.send_message(JSON_DUMP(messages.result_message(msg_id, result)))
 
     @callback
     def send_error(self, msg_id: int, code: str, message: str) -> None:
