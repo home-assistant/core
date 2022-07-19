@@ -105,15 +105,16 @@ class IssueRegistry:
         self.async_schedule_save()
 
     @callback
-    def async_dismiss(self, domain: str, issue_id: str) -> IssueEntry:
-        """Dismiss issue."""
+    def async_ignore(self, domain: str, issue_id: str, ignore: bool) -> IssueEntry:
+        """Ignore issue."""
         old = self.issues[(domain, issue_id)]
-        if old.dismissed_version == ha_version:
+        dismissed_version = ha_version if ignore else None
+        if old.dismissed_version == dismissed_version:
             return old
 
         issue = self.issues[(domain, issue_id)] = dataclasses.replace(
             old,
-            dismissed_version=ha_version,
+            dismissed_version=dismissed_version,
         )
 
         self.async_schedule_save()
