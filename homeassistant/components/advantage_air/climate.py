@@ -45,7 +45,7 @@ AC_HVAC_MODES = [
 ]
 
 ADVANTAGE_AIR_FAN_MODES = {
-    "autoAA": FAN_AUTO,
+    "auto": FAN_AUTO,
     "low": FAN_LOW,
     "medium": FAN_MEDIUM,
     "high": FAN_HIGH,
