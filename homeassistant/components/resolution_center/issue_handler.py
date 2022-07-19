@@ -128,10 +128,12 @@ def async_delete_issue(hass: HomeAssistant, domain: str, issue_id: str) -> None:
 
 
 @callback
-def async_dismiss_issue(hass: HomeAssistant, domain: str, issue_id: str) -> None:
-    """Dismiss an issue.
+def async_ignore_issue(
+    hass: HomeAssistant, domain: str, issue_id: str, ignore: bool
+) -> None:
+    """Ignore an issue.
 
     Will raise if the issue does not exist.
     """
     issue_registry = async_get_issue_registry(hass)
-    issue_registry.async_dismiss(domain, issue_id)
+    issue_registry.async_ignore(domain, issue_id, ignore)
