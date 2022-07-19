@@ -35,8 +35,10 @@ def device_key_to_bluetooth_entity_key(device_key: DeviceKey) -> BluetoothEntity
     return BluetoothEntityKey(device_key.key, device_key.device_id)
 
 
-def sensor_update_to_hass(sensor_update: SensorUpdate) -> BluetoothDataUpdate:
-    """Convert a sensor update to a hass data update."""
+def sensor_update_to_bluetooth_data_update(
+    sensor_update: SensorUpdate,
+) -> BluetoothDataUpdate:
+    """Convert a sensor update to a bluetooth data update."""
     return BluetoothDataUpdate(
         devices={
             device_id: DeviceInfo(
@@ -70,7 +72,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     @callback
     def _async_update_data(service_info: BluetoothServiceInfo) -> BluetoothDataUpdate:
         """Update data from Govee Bluetooth."""
-        return sensor_update_to_hass(govee_data.generate_update(service_info))
+        return sensor_update_to_bluetooth_data_update(
+            govee_data.generate_update(service_info)
+        )
 
     coordinator = hass.data.setdefault(DOMAIN, {})[
         entry.entry_id
