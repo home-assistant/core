@@ -173,7 +173,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     await paired_sensor_manager.async_initialize()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = GuardianData(
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = GuardianData(
         entry=entry,
         client=client,
         valve_controller_coordinators=valve_controller_coordinators,
