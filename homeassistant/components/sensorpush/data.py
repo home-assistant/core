@@ -3,11 +3,12 @@ from __future__ import annotations
 
 import logging
 
-from bleparser.sensorpush import parse_sensorpush
-
 from homeassistant.components.ble_parser import async_get_manufacturer_parser
 from homeassistant.components.bluetooth import BluetoothServiceInfo
 from homeassistant.components.bluetooth.device import BluetoothDeviceData
+
+# from bleparser.sensorpush import parse_sensorpush
+
 
 _LOGGER = logging.getLogger(__name__)
 

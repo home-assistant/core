@@ -3,13 +3,14 @@ from __future__ import annotations
 
 import logging
 
-from bleparser.inkbird import parse_inkbird
-
-from homeassistant.components.ble_parser import (
-    async_get_manufacturer_parser_with_local_name,
-)
+# from homeassistant.components.ble_parser import (
+#    async_get_manufacturer_parser_with_local_name,
+# )
 from homeassistant.components.bluetooth import BluetoothServiceInfo
 from homeassistant.components.bluetooth.device import BluetoothDeviceData
+
+# from bleparser.inkbird import parse_inkbird
+
 
 _LOGGER = logging.getLogger(__name__)
 

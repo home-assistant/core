@@ -34,7 +34,7 @@ async def async_setup_entry(
 class InkbirdBluetoothSensorEntity(
     PassiveBluetoothCoordinatorEntity[InkbirdDataUpdateCoordinator], SensorEntity
 ):
-    """Representation of a govee ble sensor."""
+    """Representation of a inkbird ble sensor."""
 
     @property
     def native_value(self) -> StateType:

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from homeassistant import config_entries
 from homeassistant.components.bluetooth.passive_update_coordinator import (
-    BluetoothDataUpdateCoordinator,
+    PassiveBluetoothDataUpdateCoordinator,
 )
 from homeassistant.components.bluetooth.sensor import BluetoothSensorEntity
 from homeassistant.core import HomeAssistant
