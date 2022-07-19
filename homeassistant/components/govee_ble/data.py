@@ -14,6 +14,7 @@ from homeassistant.helpers.entity import DeviceInfo
 
 SENSOR_DEVICE_CLASS_TO_HASS = {
     DeviceClass.APPARENT_POWER: SensorDeviceClass.APPARENT_POWER,
+    DeviceClass.BATTERY: SensorDeviceClass.BATTERY,
     DeviceClass.HUMIDITY: SensorDeviceClass.HUMIDITY,
     DeviceClass.ILLUMINANCE: SensorDeviceClass.ILLUMINANCE,
     DeviceClass.TEMPERATURE: SensorDeviceClass.TEMPERATURE,
