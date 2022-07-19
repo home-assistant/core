@@ -1,6 +1,8 @@
 """Base class for Netatmo entities."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
@@ -23,7 +25,7 @@ class NetatmoBase(Entity):
     def __init__(self, data_handler: NetatmoDataHandler) -> None:
         """Set up Netatmo entity base."""
         self.data_handler = data_handler
-        self._publishers: list[dict] = []
+        self._publishers: list[dict[str, Any]] = []
 
         self._device_name: str = ""
         self._id: str = ""
