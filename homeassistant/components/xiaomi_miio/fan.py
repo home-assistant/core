@@ -7,13 +7,21 @@ import logging
 import math
 from typing import Any
 
-from miio.airfresh import OperationMode as AirfreshOperationMode
-from miio.airfresh_t2017 import OperationMode as AirfreshOperationModeT2017
-from miio.airpurifier import OperationMode as AirpurifierOperationMode
-from miio.airpurifier_miot import OperationMode as AirpurifierMiotOperationMode
 from miio.fan_common import (
     MoveDirection as FanMoveDirection,
     OperationMode as FanOperationMode,
+)
+from miio.integrations.airpurifier.dmaker.airfresh_t2017 import (
+    OperationMode as AirfreshOperationModeT2017,
+)
+from miio.integrations.airpurifier.zhimi.airfresh import (
+    OperationMode as AirfreshOperationMode,
+)
+from miio.integrations.airpurifier.zhimi.airpurifier import (
+    OperationMode as AirpurifierOperationMode,
+)
+from miio.integrations.airpurifier.zhimi.airpurifier_miot import (
+    OperationMode as AirpurifierMiotOperationMode,
 )
 from miio.integrations.fan.zhimi.zhimi_miot import (
     OperationModeFanZA5 as FanZA5OperationMode,
