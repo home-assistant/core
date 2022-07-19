@@ -57,5 +57,7 @@ class GoveeConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="bluetooth_confirm", description_placeholders=placeholders
         )
 
-    # TODO: async_step_user to get the list of discovered devices
-    # from bluetooth.async_get_devices()
+    async def async_step_user(self, user_input: dict[str, Any] = None) -> FlowResult:
+        """Handle the user step."""
+        # We can only setup from discovery.
+        return self.async_abort(reason="no_devices_found")
