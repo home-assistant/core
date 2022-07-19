@@ -1481,7 +1481,8 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         self, discovery_info: BluetoothServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by Bluetooth discovery."""
-        return await self.async_step_discovery(dataclasses.asdict(discovery_info))
+        await self._async_handle_discovery_without_unique_id()
+        return await self.async_step_user()
 
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
