@@ -24,6 +24,7 @@ homeassistant.helpers.entity_values
 homeassistant.helpers.event
 homeassistant.helpers.reload
 homeassistant.helpers.script_variables
+homeassistant.helpers.singleton
 homeassistant.helpers.sun
 homeassistant.helpers.translation
 homeassistant.util.async_
