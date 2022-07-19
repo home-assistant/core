@@ -295,12 +295,6 @@ class BluetoothManager:
         matched_domains: set[str] | None = None
         match_key = (device.address, bool(advertisement_data.manufacturer_data))
         match_key_has_mfr_data = (device.address, True)
-        _LOGGER.debug(
-            "Device detected: %s with advertisement_data: %s matched domains: %s",
-            device,
-            advertisement_data,
-            matched_domains,
-        )
 
         # If we matched without manufacturer_data, we need to do it again
         # since we may think the device is unsupported otherwise
@@ -315,6 +309,13 @@ class BluetoothManager:
             }
             if matched_domains:
                 self._matched[match_key] = True
+
+        _LOGGER.debug(
+            "Device detected: %s with advertisement_data: %s matched domains: %s",
+            device,
+            advertisement_data,
+            matched_domains,
+        )
 
         if not matched_domains and not self._callbacks:
             return
