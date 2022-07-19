@@ -43,6 +43,12 @@ async def test_setup_provide_implementation(hass):
         version=1,
         data={"auth_implementation": "cloud"},
     )
+    none_cloud_entry = MockConfigEntry(
+        domain="no_cloud",
+        version=1,
+        data={"auth_implementation": "somethingelse"},
+    )
+    none_cloud_entry.add_to_hass(hass)
     legacy_entry.add_to_hass(hass)
     account_link.async_setup(hass)
 
@@ -61,6 +67,11 @@ async def test_setup_provide_implementation(hass):
                 "min_version": "0.1.0",
                 "accepts_new_authorizations": False,
             },
+            {
+                "service": "no_cloud",
+                "min_version": "0.1.0",
+                "accepts_new_authorizations": False,
+            },
         ],
     ):
         assert (
@@ -75,6 +86,10 @@ async def test_setup_provide_implementation(hass):
         )
         assert (
             await config_entry_oauth2_flow.async_get_implementations(hass, "deprecated")
+            == {}
+        )
+        assert (
+            await config_entry_oauth2_flow.async_get_implementations(hass, "no_cloud")
             == {}
         )
 

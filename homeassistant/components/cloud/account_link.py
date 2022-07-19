@@ -38,7 +38,13 @@ async def async_provide_implementation(hass: HomeAssistant, domain: str):
             and CURRENT_VERSION >= service["min_version"]
             and (
                 service.get("accepts_new_authorizations", True)
-                or hass.config_entries.async_entries(domain)
+                or (
+                    (entries := hass.config_entries.async_entries(domain))
+                    and any(
+                        entry.data.get("auth_implementation") == DOMAIN
+                        for entry in entries
+                    )
+                )
             )
         ):
             return [CloudOAuth2Implementation(hass, domain)]
