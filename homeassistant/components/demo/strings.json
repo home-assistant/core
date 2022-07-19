@@ -5,7 +5,10 @@
       "title": "The blinker fluid is empty and needs to be refilled",
       "fix_flow": {
         "step": {
-          "confirm": "Press OK when blinker fluid has been refilled"
+          "confirm": {
+            "title": "Blinker fluid needs to be refilled",
+            "description": "Press OK when blinker fluid has been refilled"
+          }
         }
       }
     },
