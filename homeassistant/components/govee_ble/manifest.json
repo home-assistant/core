@@ -6,8 +6,8 @@
   "bluetooth": [{ "local_name": "GVH5*" }, { "local_name": "B5178*" }],
   "requirements": [
     "sensor-state-data==1.6.0",
-    "bluetooth-sensor-state-data==1.3.0",
-    "govee-ble==0.3.0"
+    "bluetooth-sensor-state-data==1.4.0",
+    "govee-ble==0.4.0"
   ],
   "dependencies": ["bluetooth"],
   "codeowners": ["@bdraco"],

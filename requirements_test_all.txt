@@ -340,7 +340,7 @@ bleparser==3.3.0
 blinkpy==0.19.0
 
 # homeassistant.components.govee_ble
-bluetooth-sensor-state-data==1.2.1
+bluetooth-sensor-state-data==1.4.0
 
 # homeassistant.components.bond
 bond-async==0.1.22
@@ -566,7 +566,7 @@ google-nest-sdm==2.0.0
 googlemaps==2.5.1
 
 # homeassistant.components.govee_ble
-govee-ble==0.3.0
+govee-ble==0.4.0
 
 # homeassistant.components.gree
 greeclimate==1.2.0
