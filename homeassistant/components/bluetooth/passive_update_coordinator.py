@@ -17,6 +17,8 @@ from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 
+from .const import DOMAIN
+
 UNAVAILABLE_SECONDS = 60 * 5
 NEVER_TIME = -UNAVAILABLE_SECONDS
 
@@ -111,21 +113,23 @@ class PassiveBluetoothDataUpdateCoordinator(Generic[_T]):
     @callback
     def async_setup(self) -> CALLBACK_TYPE:
         """Start the callback."""
-        cancel_track_time = async_track_time_interval(
-            self.hass,
-            self._async_check_device_present,
-            timedelta(seconds=UNAVAILABLE_SECONDS),
-        )
-        cancel_callback = bluetooth.async_register_callback(
-            self.hass,
-            self._async_handle_bluetooth_event,
-            bluetooth.BluetoothCallbackMatcher(address=self.address),
-        )
+        cancels = [
+            async_track_time_interval(
+                self.hass,
+                self._async_check_device_present,
+                timedelta(seconds=UNAVAILABLE_SECONDS),
+            ),
+            bluetooth.async_register_callback(
+                self.hass,
+                self._async_handle_bluetooth_event,
+                bluetooth.BluetoothCallbackMatcher(address=self.address),
+            ),
+        ]
 
         @callback
         def _async_cancel_all() -> None:
-            cancel_track_time()
-            cancel_callback()
+            for cancel in cancels:
+                cancel()
 
         return _async_cancel_all
 
@@ -253,21 +257,22 @@ class PassiveBluetoothCoordinatorEntity(
         self.coordinator_context = context
         address = coordinator.address
         device_id = entity_key.device_id
+        devices = coordinator.devices
         key = entity_key.key
-        if device_id in coordinator.devices:
-            base_device_info = coordinator.devices[device_id]
+        if device_id in devices:
+            base_device_info = devices[device_id]
         else:
             base_device_info = DeviceInfo({})
         if entity_key.device_id:
             self._attr_device_info = base_device_info | DeviceInfo(
-                {ATTR_IDENTIFIERS: {(bluetooth.DOMAIN, f"{address}-{device_id}")}}
+                {ATTR_IDENTIFIERS: {(DOMAIN, f"{address}-{device_id}")}}
             )
-            self._attr_unique_id = f"{coordinator.address}-{key}-{device_id}"
+            self._attr_unique_id = f"{address}-{key}-{device_id}"
         else:
             self._attr_device_info = base_device_info | DeviceInfo(
-                {ATTR_IDENTIFIERS: {(bluetooth.DOMAIN, address)}}
+                {ATTR_IDENTIFIERS: {(DOMAIN, address)}}
             )
-            self._attr_unique_id = f"{coordinator.address}-{key}"
+            self._attr_unique_id = f"{address}-{key}"
         if ATTR_NAME not in self._attr_device_info:
             self._attr_device_info[ATTR_NAME] = self.coordinator.name
 
