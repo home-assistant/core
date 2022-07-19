@@ -11,7 +11,7 @@ from typing import Any, Generic, TypeVar
 from home_assistant_bluetooth import BluetoothServiceInfo
 
 from homeassistant.components import bluetooth
-from homeassistant.const import ATTR_IDENTIFIERS, ATTR_NAME, ATTR_VIA_DEVICE
+from homeassistant.const import ATTR_IDENTIFIERS, ATTR_NAME
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -256,18 +256,6 @@ class BluetoothCoordinatorEntity(Entity, Generic[_BluetoothDataUpdateCoordinator
             self._attr_unique_id = f"{coordinator.address}-{key}"
         if ATTR_NAME not in self._attr_device_info:
             self._attr_device_info[ATTR_NAME] = self.coordinator.name
-        if len(coordinator.devices) < 2:
-            return
-        connected_device_id = list(coordinator.devices)[0]
-        if connected_device_id == device_id:
-            return
-        if connected_device_id is not None:
-            self._attr_device_info[ATTR_VIA_DEVICE] = (
-                bluetooth.DOMAIN,
-                f"{address}-{connected_device_id}",
-            )
-        else:
-            self._attr_device_info[ATTR_VIA_DEVICE] = (bluetooth.DOMAIN, address)
 
     @property
     def available(self) -> bool:
