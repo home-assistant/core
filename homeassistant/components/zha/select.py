@@ -4,7 +4,7 @@ from __future__ import annotations
 from enum import Enum
 import functools
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from zigpy import types
 from zigpy.zcl.clusters.general import OnOff
@@ -33,6 +33,10 @@ if TYPE_CHECKING:
     from .core.channels.base import ZigbeeChannel
     from .core.device import ZHADevice
 
+
+_ZCLEnumSelectEntitySelfT = TypeVar(
+    "_ZCLEnumSelectEntitySelfT", bound="ZCLEnumSelectEntity"
+)
 
 CONFIG_DIAGNOSTIC_MATCH = functools.partial(
     ZHA_ENTITIES.config_diagnostic_match, Platform.SELECT
@@ -72,7 +76,7 @@ class ZHAEnumSelectEntity(ZhaEntity, SelectEntity):
         unique_id: str,
         zha_device: ZHADevice,
         channels: list[ZigbeeChannel],
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """Init this select entity."""
         self._attr_name = self._enum.__name__
@@ -154,12 +158,12 @@ class ZCLEnumSelectEntity(ZhaEntity, SelectEntity):
 
     @classmethod
     def create_entity(
-        cls,
+        cls: type[_ZCLEnumSelectEntitySelfT],
         unique_id: str,
         zha_device: ZHADevice,
         channels: list[ZigbeeChannel],
-        **kwargs,
-    ) -> ZhaEntity | None:
+        **kwargs: Any,
+    ) -> _ZCLEnumSelectEntitySelfT | None:
         """Entity Factory.
 
         Return entity if it is a supported configuration, otherwise return None
@@ -183,7 +187,7 @@ class ZCLEnumSelectEntity(ZhaEntity, SelectEntity):
         unique_id: str,
         zha_device: ZHADevice,
         channels: list[ZigbeeChannel],
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """Init this select entity."""
         self._attr_options = [entry.name.replace("_", " ") for entry in self._enum]
