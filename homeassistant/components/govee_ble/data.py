@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from bluetooth_sensor_state_data import SensorUpdate
 from sensor_state_data import DeviceClass, DeviceKey
+from sensor_state_data.data import SensorDeviceInfo
 
 from homeassistant.components.bluetooth.update_coordinator import (
     BluetoothDataUpdate,
@@ -45,16 +46,26 @@ def _sensor_device_class_to_hass(
     return SENSOR_DEVICE_CLASS_TO_HASS.get(sensor_device_class)
 
 
+def _sensor_device_info_to_hass(
+    device_info: SensorDeviceInfo,
+) -> DeviceInfo:
+    """Convert a sensor device info to a sensor device info."""
+    base_device_info = DeviceInfo({})
+    if device_info[ATTR_NAME] is not None:
+        base_device_info[ATTR_NAME] = device_info[ATTR_NAME]
+    if device_info[ATTR_MODEL] is not None:
+        base_device_info[ATTR_MODEL] = device_info[ATTR_MODEL]
+    return base_device_info
+
+
 def sensor_update_to_bluetooth_data_update(
     sensor_update: SensorUpdate,
 ) -> BluetoothDataUpdate:
     """Convert a sensor update to a bluetooth data update."""
     return BluetoothDataUpdate(
         devices={
-            device_id: DeviceInfo(
-                name=device_data.get(ATTR_NAME), model=device_data.get(ATTR_MODEL)
-            )
-            for device_id, device_data in sensor_update.devices.items()
+            device_id: _sensor_device_info_to_hass(device_info)
+            for device_id, device_info in sensor_update.devices.items()
         },
         entity_descriptions={
             _device_key_to_bluetooth_entity_key(device_key): SensorEntityDescription(
