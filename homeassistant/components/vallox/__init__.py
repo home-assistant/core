@@ -64,6 +64,7 @@ PLATFORMS: list[str] = [
     Platform.FAN,
     Platform.BINARY_SENSOR,
     Platform.SELECT,
+    Platform.NUMBER,
 ]
 
 ATTR_PROFILE_FAN_SPEED = "fan_speed"
