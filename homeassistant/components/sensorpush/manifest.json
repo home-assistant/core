@@ -3,7 +3,11 @@
   "name": "SensorPush",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/sensorpush",
-  "bluetooth": [{ "local_name": "SensorPush*" }],
+  "bluetooth": [
+    {
+      "local_name": "SensorPush*"
+    }
+  ],
   "requirements": ["sensorpush-ble==1.2.2"],
   "dependencies": ["bluetooth"],
   "codeowners": ["@bdraco"],
