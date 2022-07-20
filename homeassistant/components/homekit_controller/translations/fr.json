@@ -18,7 +18,7 @@
             "unable_to_pair": "Impossible d'appairer, veuillez r\u00e9essayer.",
             "unknown_error": "L'appareil a signal\u00e9 une erreur inconnue. L'appairage a \u00e9chou\u00e9."
         },
-        "flow_title": "{name}",
+        "flow_title": "{name} ({category})",
         "step": {
             "busy_error": {
                 "description": "Annulez l'association sur tous les contr\u00f4leurs ou essayez de red\u00e9marrer l'appareil, puis continuez \u00e0 reprendre l'association.",
@@ -33,7 +33,7 @@
                     "allow_insecure_setup_codes": "Autoriser le jumelage avec des codes de configuration non s\u00e9curis\u00e9s.",
                     "pairing_code": "Code d\u2019appairage"
                 },
-                "description": "Le contr\u00f4leur HomeKit communique avec {name} sur le r\u00e9seau local en utilisant une connexion crypt\u00e9e s\u00e9curis\u00e9e sans contr\u00f4leur HomeKit s\u00e9par\u00e9 ou iCloud. Entrez votre code d'appariement HomeKit (au format XXX-XX-XXX) pour utiliser cet accessoire. Ce code se trouve g\u00e9n\u00e9ralement sur l'appareil lui-m\u00eame ou dans l'emballage.",
+                "description": "Le contr\u00f4leur HomeKit communique avec {name} ({category}) sur le r\u00e9seau local en utilisant une connexion chiffr\u00e9e s\u00e9curis\u00e9e sans contr\u00f4leur HomeKit s\u00e9par\u00e9 ni iCloud. Saisissez votre code d'appairage HomeKit (au format XXX-XX-XXX) pour utiliser cet accessoire. Ce code se trouve g\u00e9n\u00e9ralement sur l'appareil lui-m\u00eame ou dans l'emballage.",
                 "title": "Couplage avec un appareil via le protocole accessoire HomeKit"
             },
             "protocol_error": {
