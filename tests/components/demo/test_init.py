@@ -161,7 +161,7 @@ async def test_issues_created(hass, hass_client, hass_ws_client):
         "description_placeholders": None,
         "flow_id": flow_id,
         "handler": "demo",
-        "title": None,
+        "title": "Fixed issue",
         "type": "create_entry",
         "version": 1,
     }
