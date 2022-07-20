@@ -15,6 +15,10 @@
     "transmogrifier_deprecated": {
       "title": "The transmogrifier component is deprecated",
       "description": "The transmogrifier component is now deprecated due to the lack of local control available in the new API"
+    },
+    "unfixable_problem": {
+      "title": "This is not a fixable problem",
+      "description": "This issue is never going to give up."
     }
   },
   "options": {
