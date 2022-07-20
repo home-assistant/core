@@ -25,4 +25,5 @@
       title: 'Here is something that should work...!'
       message: fixed?
   mode: single
+# yamllint enable
 
