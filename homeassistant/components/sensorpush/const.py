@@ -1,3 +1,3 @@
-"""Constants for the Govee Bluetooth integration."""
+"""Constants for the SensorPush Bluetooth integration."""
 
 DOMAIN = "sensorpush"

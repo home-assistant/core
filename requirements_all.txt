@@ -411,8 +411,6 @@ bleak==0.14.3
 blebox_uniapi==2.0.2
 
 # homeassistant.components.ble_parser
-# homeassistant.components.inkbird
-# homeassistant.components.sensorpush
 bleparser==3.3.0
 
 # homeassistant.components.blink
@@ -428,9 +426,6 @@ blockchain==1.4.4
 # homeassistant.components.miflora
 # homeassistant.components.zengge
 # bluepy==1.3.0
-
-# homeassistant.components.govee_ble
-bluetooth-sensor-state-data==1.4.1
 
 # homeassistant.components.bond
 bond-async==0.1.22
@@ -766,7 +761,7 @@ googlemaps==2.5.1
 goslide-api==0.5.1
 
 # homeassistant.components.govee_ble
-govee-ble==0.8.0
+govee-ble==0.10.1
 
 # homeassistant.components.remote_rpi_gpio
 gpiozero==1.6.2
@@ -906,6 +901,9 @@ influxdb-client==1.24.0
 
 # homeassistant.components.influxdb
 influxdb==5.3.1
+
+# homeassistant.components.inkbird
+inkbird-ble==0.3.0
 
 # homeassistant.components.insteon
 insteon-frontend-home-assistant==0.2.0
@@ -2165,8 +2163,8 @@ sendgrid==6.8.2
 # homeassistant.components.sense
 sense_energy==0.10.4
 
-# homeassistant.components.govee_ble
-sensor-state-data==1.8.0
+# homeassistant.components.sensorpush
+sensorpush-ble==1.2.1
 
 # homeassistant.components.sentry
 sentry-sdk==1.7.2
