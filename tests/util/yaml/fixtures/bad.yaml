@@ -1,3 +1,4 @@
+# yamllint disable
 - id: '1658085239190'
   alias: Config validation test
   description: ''
