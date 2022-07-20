@@ -226,9 +226,10 @@ class DenonDevice(MediaPlayerEntity):
         assert config_entry.unique_id
         self._attr_device_info = DeviceInfo(
             configuration_url=f"http://{config_entry.data[CONF_HOST]}/",
+            hw_version=config_entry.data[CONF_TYPE],
             identifiers={(DOMAIN, config_entry.unique_id)},
             manufacturer=config_entry.data[CONF_MANUFACTURER],
-            model=f"{config_entry.data[CONF_MODEL]}-{config_entry.data[CONF_TYPE]}",
+            model=config_entry.data[CONF_MODEL],
             name=config_entry.title,
         )
         self._attr_sound_mode_list = receiver.sound_mode_list
