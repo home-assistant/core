@@ -64,7 +64,26 @@ _PassiveBluetoothDataUpdateCoordinatorT = TypeVar(
 
 
 class PassiveBluetoothDataUpdateCoordinator(Generic[_T]):
-    """Bluetooth data update coordinator."""
+    """Passive bluetooth data update coordinator for bluetooth advertisements.
+
+    The coordinator is responsible for keeping track of the bluetooth data,
+    updating subscribers, and device availability.
+
+    The update_method must return a PassiveBluetoothDataUpdate object. Callers
+    are responsible for formatting the data returned from their parser into
+    the appropriate format.
+
+    The coordinator will call the update_method every time the bluetooth device
+    receives a new advertisement with the following signature:
+
+    update_method(service_info: BluetoothServiceInfo) -> PassiveBluetoothDataUpdate
+
+    As the size of each advertisement is limited, the update_method should
+    return a PassiveBluetoothDataUpdate object that contains only data that
+    should be updated. The coordinator will then dispatch subscribers based
+    on the data in the PassiveBluetoothDataUpdate object. The accumulated data
+    is available in the devices, entity_data, and entity_descriptions attributes.
+    """
 
     def __init__(
         self,
