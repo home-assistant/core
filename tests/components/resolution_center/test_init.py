@@ -1,6 +1,7 @@
 """Test the resolution center websocket API."""
 from unittest.mock import AsyncMock, Mock
 
+from freezegun import freeze_time
 import pytest
 
 from homeassistant.components.resolution_center import (
@@ -9,7 +10,7 @@ from homeassistant.components.resolution_center import (
 )
 from homeassistant.components.resolution_center.const import DOMAIN
 from homeassistant.components.resolution_center.issue_handler import (
-    async_dismiss_issue,
+    async_ignore_issue,
     async_process_resolution_center_platforms,
 )
 from homeassistant.const import __version__ as ha_version
@@ -19,6 +20,7 @@ from homeassistant.setup import async_setup_component
 from tests.common import mock_platform
 
 
+@freeze_time("2022-07-19 07:53:05")
 async def test_create_update_issue(hass: HomeAssistant, hass_ws_client) -> None:
     """Test creating and updating issues."""
     assert await async_setup_component(hass, DOMAIN, {})
@@ -75,8 +77,9 @@ async def test_create_update_issue(hass: HomeAssistant, hass_ws_client) -> None:
         "issues": [
             dict(
                 issue,
-                dismissed=False,
+                created="2022-07-19T07:53:05+00:00",
                 dismissed_version=None,
+                ignored=False,
             )
             for issue in issues
         ]
@@ -101,8 +104,9 @@ async def test_create_update_issue(hass: HomeAssistant, hass_ws_client) -> None:
     assert msg["success"]
     assert msg["result"]["issues"][0] == dict(
         issues[0],
-        dismissed=False,
+        created="2022-07-19T07:53:05+00:00",
         dismissed_version=None,
+        ignored=False,
         learn_more_url="blablabla",
     )
 
@@ -147,8 +151,9 @@ async def test_create_issue_invalid_version(
     assert msg["result"] == {"issues": []}
 
 
-async def test_dismiss_issue(hass: HomeAssistant, hass_ws_client) -> None:
-    """Test dismissing issues."""
+@freeze_time("2022-07-19 07:53:05")
+async def test_ignore_issue(hass: HomeAssistant, hass_ws_client) -> None:
+    """Test ignoring issues."""
     assert await async_setup_component(hass, DOMAIN, {})
 
     client = await hass_ws_client(hass)
@@ -193,16 +198,17 @@ async def test_dismiss_issue(hass: HomeAssistant, hass_ws_client) -> None:
         "issues": [
             dict(
                 issue,
-                dismissed=False,
+                created="2022-07-19T07:53:05+00:00",
                 dismissed_version=None,
+                ignored=False,
             )
             for issue in issues
         ]
     }
 
-    # Dismiss a non-existing issue
+    # Ignore a non-existing issue
     with pytest.raises(KeyError):
-        async_dismiss_issue(hass, issues[0]["domain"], "no_such_issue")
+        async_ignore_issue(hass, issues[0]["domain"], "no_such_issue", True)
 
     await client.send_json({"id": 3, "type": "resolution_center/list_issues"})
     msg = await client.receive_json()
@@ -212,15 +218,16 @@ async def test_dismiss_issue(hass: HomeAssistant, hass_ws_client) -> None:
         "issues": [
             dict(
                 issue,
-                dismissed=False,
+                created="2022-07-19T07:53:05+00:00",
                 dismissed_version=None,
+                ignored=False,
             )
             for issue in issues
         ]
     }
 
-    # Dismiss an existing issue
-    async_dismiss_issue(hass, issues[0]["domain"], issues[0]["issue_id"])
+    # Ignore an existing issue
+    async_ignore_issue(hass, issues[0]["domain"], issues[0]["issue_id"], True)
 
     await client.send_json({"id": 4, "type": "resolution_center/list_issues"})
     msg = await client.receive_json()
@@ -230,15 +237,16 @@ async def test_dismiss_issue(hass: HomeAssistant, hass_ws_client) -> None:
         "issues": [
             dict(
                 issue,
-                dismissed=True,
+                created="2022-07-19T07:53:05+00:00",
                 dismissed_version=ha_version,
+                ignored=True,
             )
             for issue in issues
         ]
     }
 
-    # Dismiss the same issue again
-    async_dismiss_issue(hass, issues[0]["domain"], issues[0]["issue_id"])
+    # Ignore the same issue again
+    async_ignore_issue(hass, issues[0]["domain"], issues[0]["issue_id"], True)
 
     await client.send_json({"id": 5, "type": "resolution_center/list_issues"})
     msg = await client.receive_json()
@@ -248,14 +256,15 @@ async def test_dismiss_issue(hass: HomeAssistant, hass_ws_client) -> None:
         "issues": [
             dict(
                 issue,
-                dismissed=True,
+                created="2022-07-19T07:53:05+00:00",
                 dismissed_version=ha_version,
+                ignored=True,
             )
             for issue in issues
         ]
     }
 
-    # Update a dismissed issue
+    # Update an ignored issue
     async_create_issue(
         hass,
         issues[0]["domain"],
@@ -274,14 +283,36 @@ async def test_dismiss_issue(hass: HomeAssistant, hass_ws_client) -> None:
     assert msg["success"]
     assert msg["result"]["issues"][0] == dict(
         issues[0],
-        dismissed=True,
+        created="2022-07-19T07:53:05+00:00",
         dismissed_version=ha_version,
+        ignored=True,
         learn_more_url="blablabla",
     )
 
+    # Unignore the same issue
+    async_ignore_issue(hass, issues[0]["domain"], issues[0]["issue_id"], False)
 
-async def test_delete_issue(hass: HomeAssistant, hass_ws_client) -> None:
+    await client.send_json({"id": 7, "type": "resolution_center/list_issues"})
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == {
+        "issues": [
+            dict(
+                issue,
+                created="2022-07-19T07:53:05+00:00",
+                dismissed_version=None,
+                ignored=False,
+                learn_more_url="blablabla",
+            )
+            for issue in issues
+        ]
+    }
+
+
+async def test_delete_issue(hass: HomeAssistant, hass_ws_client, freezer) -> None:
     """Test we can delete an issue."""
+    freezer.move_to("2022-07-19 07:53:05")
     assert await async_setup_component(hass, DOMAIN, {})
 
     client = await hass_ws_client(hass)
@@ -320,8 +351,9 @@ async def test_delete_issue(hass: HomeAssistant, hass_ws_client) -> None:
         "issues": [
             dict(
                 issue,
-                dismissed=False,
+                created="2022-07-19T07:53:05+00:00",
                 dismissed_version=None,
+                ignored=False,
             )
             for issue in issues
         ]
@@ -338,8 +370,9 @@ async def test_delete_issue(hass: HomeAssistant, hass_ws_client) -> None:
         "issues": [
             dict(
                 issue,
-                dismissed=False,
+                created="2022-07-19T07:53:05+00:00",
                 dismissed_version=None,
+                ignored=False,
             )
             for issue in issues
         ]
@@ -362,6 +395,38 @@ async def test_delete_issue(hass: HomeAssistant, hass_ws_client) -> None:
 
     assert msg["success"]
     assert msg["result"] == {"issues": []}
+
+    # Create the same issues again created timestamp should change
+    freezer.move_to("2022-07-19 08:53:05")
+
+    for issue in issues:
+        async_create_issue(
+            hass,
+            issue["domain"],
+            issue["issue_id"],
+            breaks_in_ha_version=issue["breaks_in_ha_version"],
+            is_fixable=issue["is_fixable"],
+            learn_more_url=issue["learn_more_url"],
+            severity=issue["severity"],
+            translation_key=issue["translation_key"],
+            translation_placeholders=issue["translation_placeholders"],
+        )
+
+    await client.send_json({"id": 5, "type": "resolution_center/list_issues"})
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == {
+        "issues": [
+            dict(
+                issue,
+                created="2022-07-19T08:53:05+00:00",
+                dismissed_version=None,
+                ignored=False,
+            )
+            for issue in issues
+        ]
+    }
 
 
 async def test_non_compliant_platform(hass: HomeAssistant, hass_ws_client) -> None:

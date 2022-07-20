@@ -42,6 +42,7 @@ SENSORS: tuple[AccSensorEntityDescription, ...] = (
         key="battery_level",
         name="Battery level",
         device_class=SensorDeviceClass.BATTERY,
+        entity_registry_enabled_default=False,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=AladdinConnectClient.get_battery_status,

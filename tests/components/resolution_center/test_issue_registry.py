@@ -4,7 +4,7 @@ from homeassistant.components.resolution_center import (
     issue_registry,
 )
 from homeassistant.components.resolution_center.const import DOMAIN
-from homeassistant.components.resolution_center.issue_handler import async_dismiss_issue
+from homeassistant.components.resolution_center.issue_handler import async_ignore_issue
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -50,7 +50,7 @@ async def test_load_issues(hass: HomeAssistant) -> None:
             translation_key=issue["translation_key"],
             translation_placeholders=issue["translation_placeholders"],
         )
-    async_dismiss_issue(hass, issues[0]["domain"], issues[0]["issue_id"])
+    async_ignore_issue(hass, issues[0]["domain"], issues[0]["issue_id"], True)
 
     registry: issue_registry.IssueRegistry = hass.data[issue_registry.DATA_REGISTRY]
     assert len(registry.issues) == 2
@@ -64,8 +64,10 @@ async def test_load_issues(hass: HomeAssistant) -> None:
     assert list(registry.issues) == list(registry2.issues)
 
     issue1_registry2 = registry2.async_get_issue("test", "issue_1")
+    assert issue1_registry2.created == issue1.created
     assert issue1_registry2.dismissed_version == issue1.dismissed_version
     issue2_registry2 = registry2.async_get_issue("test", "issue_2")
+    assert issue2_registry2.created == issue2.created
     assert issue2_registry2.dismissed_version == issue2.dismissed_version
 
 
@@ -76,11 +78,13 @@ async def test_loading_issues_from_storage(hass: HomeAssistant, hass_storage) ->
         "data": {
             "issues": [
                 {
+                    "created": "2022-07-19T09:41:13.746514+00:00",
                     "dismissed_version": "2022.7.0.dev0",
                     "domain": "test",
                     "issue_id": "issue_1",
                 },
                 {
+                    "created": "2022-07-19T19:41:13.746514+00:00",
                     "dismissed_version": None,
                     "domain": "test",
                     "issue_id": "issue_2",

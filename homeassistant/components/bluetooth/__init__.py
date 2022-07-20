@@ -7,7 +7,6 @@ from datetime import datetime, timedelta
 from enum import Enum
 import fnmatch
 import logging
-import platform
 from typing import Final, TypedDict, Union
 
 from bleak import BleakError

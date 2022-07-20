@@ -15,7 +15,10 @@ homeassistant.auth.auth_store
 homeassistant.auth.providers.*
 homeassistant.helpers.area_registry
 homeassistant.helpers.condition
+homeassistant.helpers.debounce
+homeassistant.helpers.deprecation
 homeassistant.helpers.discovery
+homeassistant.helpers.dispatcher
 homeassistant.helpers.entity
 homeassistant.helpers.entity_values
 homeassistant.helpers.event

@@ -20,14 +20,14 @@ from homeassistant.helpers.data_entry_flow import (
 )
 
 from .const import DOMAIN
-from .issue_handler import async_dismiss_issue
+from .issue_handler import async_ignore_issue
 from .issue_registry import async_get as async_get_issue_registry
 
 
 @callback
 def async_setup(hass: HomeAssistant) -> None:
     """Set up the resolution center websocket API."""
-    websocket_api.async_register_command(hass, ws_dismiss_issue)
+    websocket_api.async_register_command(hass, ws_ignore_issue)
     websocket_api.async_register_command(hass, ws_list_issues)
 
     hass.http.register_view(
@@ -41,16 +41,17 @@ def async_setup(hass: HomeAssistant) -> None:
 @callback
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "resolution_center/dismiss_issue",
+        vol.Required("type"): "resolution_center/ignore_issue",
         vol.Required("domain"): str,
         vol.Required("issue_id"): str,
+        vol.Required("ignore"): bool,
     }
 )
-def ws_dismiss_issue(
+def ws_ignore_issue(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """Fix an issue."""
-    async_dismiss_issue(hass, msg["domain"], msg["issue_id"])
+    async_ignore_issue(hass, msg["domain"], msg["issue_id"], msg["ignore"])
 
     connection.send_result(msg["id"])
 
@@ -67,8 +68,9 @@ def ws_list_issues(
     """Return a list of issues."""
 
     def ws_dict(kv_pairs: list[tuple[Any, Any]]) -> dict[Any, Any]:
-        result = {k: v for k, v in kv_pairs if k != "active"}
-        result["dismissed"] = result["dismissed_version"] is not None
+        result = {k: v for k, v in kv_pairs if k not in ("active")}
+        result["ignored"] = result["dismissed_version"] is not None
+        result["created"] = result["created"].isoformat()
         return result
 
     issue_registry = async_get_issue_registry(hass)

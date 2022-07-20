@@ -4,6 +4,7 @@ from __future__ import annotations
 from http import HTTPStatus
 from unittest.mock import ANY, AsyncMock, Mock
 
+from freezegun import freeze_time
 import pytest
 import voluptuous as vol
 
@@ -56,8 +57,9 @@ async def create_issues(hass, ws_client):
         "issues": [
             dict(
                 issue,
-                dismissed=False,
+                created=ANY,
                 dismissed_version=None,
+                ignored=False,
             )
             for issue in issues
         ]
@@ -118,9 +120,10 @@ async def test_dismiss_issue(hass: HomeAssistant, hass_ws_client) -> None:
     await client.send_json(
         {
             "id": 2,
-            "type": "resolution_center/dismiss_issue",
+            "type": "resolution_center/ignore_issue",
             "domain": "fake_integration",
             "issue_id": "no_such_issue",
+            "ignore": True,
         }
     )
     msg = await client.receive_json()
@@ -129,9 +132,10 @@ async def test_dismiss_issue(hass: HomeAssistant, hass_ws_client) -> None:
     await client.send_json(
         {
             "id": 3,
-            "type": "resolution_center/dismiss_issue",
+            "type": "resolution_center/ignore_issue",
             "domain": "fake_integration",
             "issue_id": "issue_1",
+            "ignore": True,
         }
     )
     msg = await client.receive_json()
@@ -146,8 +150,38 @@ async def test_dismiss_issue(hass: HomeAssistant, hass_ws_client) -> None:
         "issues": [
             dict(
                 issue,
-                dismissed=True,
+                created=ANY,
                 dismissed_version=ha_version,
+                ignored=True,
+            )
+            for issue in issues
+        ]
+    }
+
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "resolution_center/ignore_issue",
+            "domain": "fake_integration",
+            "issue_id": "issue_1",
+            "ignore": False,
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] is None
+
+    await client.send_json({"id": 6, "type": "resolution_center/list_issues"})
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == {
+        "issues": [
+            dict(
+                issue,
+                created=ANY,
+                dismissed_version=None,
+                ignored=False,
             )
             for issue in issues
         ]
@@ -188,8 +222,9 @@ async def test_fix_non_existing_issue(
         "issues": [
             dict(
                 issue,
-                dismissed=False,
+                created=ANY,
                 dismissed_version=None,
+                ignored=False,
             )
             for issue in issues
         ]
@@ -333,6 +368,7 @@ async def test_step_unauth(
     assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
+@freeze_time("2022-07-19 07:53:05")
 async def test_list_issues(hass: HomeAssistant, hass_ws_client) -> None:
     """Test we can list issues."""
     assert await async_setup_component(hass, DOMAIN, {})
@@ -389,8 +425,9 @@ async def test_list_issues(hass: HomeAssistant, hass_ws_client) -> None:
         "issues": [
             dict(
                 issue,
-                dismissed=False,
+                created="2022-07-19T07:53:05+00:00",
                 dismissed_version=None,
+                ignored=False,
             )
             for issue in issues
         ]
