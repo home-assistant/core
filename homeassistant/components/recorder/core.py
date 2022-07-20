@@ -73,7 +73,7 @@ from .tasks import (
     CommitTask,
     DatabaseLockTask,
     EventTask,
-    ExternalStatisticsTask,
+    ImportStatisticsTask,
     KeepAliveTask,
     PerodicCleanupTask,
     PurgeTask,
@@ -479,11 +479,11 @@ class Recorder(threading.Thread):
         )
 
     @callback
-    def async_external_statistics(
+    def async_import_statistics(
         self, metadata: StatisticMetaData, stats: Iterable[StatisticData]
     ) -> None:
-        """Schedule external statistics."""
-        self.queue_task(ExternalStatisticsTask(metadata, stats))
+        """Schedule import of statistics."""
+        self.queue_task(ImportStatisticsTask(metadata, stats))
 
     @callback
     def _async_setup_periodic_tasks(self) -> None:

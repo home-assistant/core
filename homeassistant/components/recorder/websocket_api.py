@@ -7,11 +7,17 @@ from typing import TYPE_CHECKING
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback, valid_entity_id
+from homeassistant.helpers import config_validation as cv
 from homeassistant.util import dt as dt_util
 
 from .const import DATA_INSTANCE, MAX_QUEUE_BACKLOG
-from .statistics import list_statistic_ids, validate_statistics
+from .statistics import (
+    async_add_external_statistics,
+    async_import_statistics,
+    list_statistic_ids,
+    validate_statistics,
+)
 from .util import async_migration_in_progress
 
 if TYPE_CHECKING:
@@ -31,7 +37,7 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_backup_start)
     websocket_api.async_register_command(hass, ws_backup_end)
     websocket_api.async_register_command(hass, ws_adjust_sum_statistics)
-    websocket_api.async_register_command(hass, ws_add_external_statistics)
+    websocket_api.async_register_command(hass, ws_import_statistics)
 
 
 @websocket_api.websocket_command(
@@ -140,44 +146,40 @@ def ws_adjust_sum_statistics(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "recorder/add_external_statistics",
-        vol.Required("metadata"): dict,
-        vol.Required("stats"): list,
+        vol.Required("type"): "recorder/import_statistics",
+        vol.Required("metadata"): {
+            vol.Required("has_mean"): bool,
+            vol.Required("has_sum"): bool,
+            vol.Required("name"): vol.Any(str, None),
+            vol.Required("source"): str,
+            vol.Required("statistic_id"): str,
+            vol.Required("unit_of_measurement"): vol.Any(str, None),
+        },
+        vol.Required("stats"): [
+            {
+                vol.Required("start"): cv.datetime,
+                vol.Optional("mean"): vol.Any(float, int),
+                vol.Optional("min"): vol.Any(float, int),
+                vol.Optional("max"): vol.Any(float, int),
+                vol.Optional("last_reset"): vol.Any(cv.datetime, None),
+                vol.Optional("state"): vol.Any(float, int),
+                vol.Optional("sum"): vol.Any(float, int),
+            }
+        ],
     }
 )
 @callback
-def ws_add_external_statistics(
+def ws_import_statistics(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """Adjust sum statistics."""
-    stats = []
-    for raw_stat in msg["stats"]:
-        # Validate data
-        stat = raw_stat.copy()
-        start_time_str = raw_stat["start"]
-        if start_time := dt_util.parse_datetime(start_time_str):
-            start_time = dt_util.as_utc(start_time)
-        else:
-            connection.send_error(msg["id"], "invalid_start_time", "Invalid start time")
-            return
-        stat["start"] = start_time
+    metadata = msg["metadata"]
+    stats = msg["stats"]
 
-        last_reset_time_str = stat.get("last_reset")
-        if last_reset_time_str is not None:
-            if last_reset_time := dt_util.parse_datetime(last_reset_time_str):
-                last_reset_time = dt_util.as_utc(last_reset_time)
-            else:
-                connection.send_error(
-                    msg["id"], "invalid_last_reset_time", "Invalid last_reset time"
-                )
-                return
-        else:
-            last_reset_time = None
-        stat["last_reset"] = last_reset_time
-
-        stats.append(stat)
-
-    hass.data[DATA_INSTANCE].async_external_statistics(msg["metadata"], stats)
+    if valid_entity_id(metadata["statistic_id"]):
+        async_import_statistics(hass, metadata, stats)
+    else:
+        async_add_external_statistics(hass, metadata, stats)
     connection.send_result(msg["id"])
 
 

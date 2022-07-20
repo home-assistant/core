@@ -28,7 +28,7 @@ from homeassistant.const import (
     VOLUME_CUBIC_FEET,
     VOLUME_CUBIC_METERS,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.json import JSONEncoder
@@ -1340,6 +1340,54 @@ def _statistics_exists(
 
 
 @callback
+def _async_import_statistics(
+    hass: HomeAssistant,
+    metadata: StatisticMetaData,
+    statistics: Iterable[StatisticData],
+) -> None:
+    """Validate timestamps and insert an import_statistics job in the recorder's queue."""
+    for statistic in statistics:
+        start = statistic["start"]
+        if start.tzinfo is None or start.tzinfo.utcoffset(start) is None:
+            raise HomeAssistantError("Naive timestamp")
+        if start.minute != 0 or start.second != 0 or start.microsecond != 0:
+            raise HomeAssistantError("Invalid timestamp")
+        statistic["start"] = dt_util.as_utc(start)
+
+        if "last_reset" in statistic and statistic["last_reset"] is not None:
+            last_reset = statistic["last_reset"]
+            if (
+                last_reset.tzinfo is None
+                or last_reset.tzinfo.utcoffset(last_reset) is None
+            ):
+                raise HomeAssistantError("Naive timestamp")
+            statistic["last_reset"] = dt_util.as_utc(last_reset)
+
+    # Insert job in recorder's queue
+    hass.data[DATA_INSTANCE].async_import_statistics(metadata, statistics)
+
+
+@callback
+def async_import_statistics(
+    hass: HomeAssistant,
+    metadata: StatisticMetaData,
+    statistics: Iterable[StatisticData],
+) -> None:
+    """Import hourly statistics from an internal source.
+
+    This inserts an import_statistics job in the recorder's queue.
+    """
+    if not valid_entity_id(metadata["statistic_id"]):
+        raise HomeAssistantError("Invalid statistic_id")
+
+    # The source must not be empty and must be aligned with the statistic_id
+    if not metadata["source"] or metadata["source"] != DOMAIN:
+        raise HomeAssistantError("Invalid source")
+
+    _async_import_statistics(hass, metadata, statistics)
+
+
+@callback
 def async_add_external_statistics(
     hass: HomeAssistant,
     metadata: StatisticMetaData,
@@ -1347,7 +1395,7 @@ def async_add_external_statistics(
 ) -> None:
     """Add hourly statistics from an external source.
 
-    This inserts an add_external_statistics job in the recorder's queue.
+    This inserts an import_statistics job in the recorder's queue.
     """
     # The statistic_id has same limitations as an entity_id, but with a ':' as separator
     if not valid_statistic_id(metadata["statistic_id"]):
@@ -1358,16 +1406,7 @@ def async_add_external_statistics(
     if not metadata["source"] or metadata["source"] != domain:
         raise HomeAssistantError("Invalid source")
 
-    for statistic in statistics:
-        start = statistic["start"]
-        if start.tzinfo is None or start.tzinfo.utcoffset(start) is None:
-            raise HomeAssistantError("Naive timestamp")
-        if start.minute != 0 or start.second != 0 or start.microsecond != 0:
-            raise HomeAssistantError("Invalid timestamp")
-        statistic["start"] = dt_util.as_utc(start)
-
-    # Insert job in recorder's queue
-    hass.data[DATA_INSTANCE].async_external_statistics(metadata, statistics)
+    _async_import_statistics(hass, metadata, statistics)
 
 
 def _filter_unique_constraint_integrity_error(
@@ -1411,12 +1450,12 @@ def _filter_unique_constraint_integrity_error(
 
 
 @retryable_database_job("statistics")
-def add_external_statistics(
+def import_statistics(
     instance: Recorder,
     metadata: StatisticMetaData,
     statistics: Iterable[StatisticData],
 ) -> bool:
-    """Process an add_external_statistics job."""
+    """Process an import_statistics job."""
 
     with session_scope(
         session=instance.get_session(),
