@@ -21,11 +21,9 @@ from homeassistant.const import ATTR_MANUFACTURER, ATTR_MODEL, ATTR_NAME
 from homeassistant.helpers.entity import DeviceInfo
 
 SENSOR_DEVICE_CLASS_TO_HASS = {
-    DeviceClass.BATTERY: SensorDeviceClass.BATTERY,
-    DeviceClass.HUMIDITY: SensorDeviceClass.HUMIDITY,
-    DeviceClass.TEMPERATURE: SensorDeviceClass.TEMPERATURE,
-    DeviceClass.PRESSURE: SensorDeviceClass.PRESSURE,
-    DeviceClass.SIGNAL_STRENGTH: SensorDeviceClass.SIGNAL_STRENGTH,
+    key: getattr(SensorDeviceClass, key.value)
+    for key in DeviceClass
+    if hasattr(SensorDeviceClass, key.value)
 }
 
 
@@ -46,17 +44,17 @@ def _sensor_device_class_to_hass(
 
 
 def _sensor_device_info_to_hass(
-    device_info: SensorDeviceInfo,
+    sensor_device_info: SensorDeviceInfo,
 ) -> DeviceInfo:
     """Convert a sensor device info to a sensor device info."""
-    base_device_info = DeviceInfo({})
-    if device_info.get(SENSOR_NAME) is not None:
-        base_device_info[ATTR_NAME] = device_info[SENSOR_NAME]
-    if device_info.get(SENSOR_MANUFACTURER) is not None:
-        base_device_info[ATTR_MANUFACTURER] = device_info[SENSOR_MANUFACTURER]
-    if device_info.get(SENSOR_MODEL) is not None:
-        base_device_info[ATTR_MODEL] = device_info[SENSOR_MODEL]
-    return base_device_info
+    hass_device_info = DeviceInfo({})
+    if sensor_device_info.get(SENSOR_NAME) is not None:
+        hass_device_info[ATTR_NAME] = sensor_device_info[SENSOR_NAME]
+    if sensor_device_info.get(SENSOR_MANUFACTURER) is not None:
+        hass_device_info[ATTR_MANUFACTURER] = sensor_device_info[SENSOR_MANUFACTURER]
+    if sensor_device_info.get(SENSOR_MODEL) is not None:
+        hass_device_info[ATTR_MODEL] = sensor_device_info[SENSOR_MODEL]
+    return hass_device_info
 
 
 def sensor_update_to_bluetooth_data_update(
