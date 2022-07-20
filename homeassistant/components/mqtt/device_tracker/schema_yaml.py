@@ -1,6 +1,8 @@
 """Support for tracking MQTT enabled devices defined in YAML."""
+from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
+import dataclasses
 import logging
 from typing import Any
 
@@ -10,6 +12,7 @@ from homeassistant.components.device_tracker import PLATFORM_SCHEMA, SOURCE_TYPE
 from homeassistant.const import CONF_DEVICES, STATE_HOME, STATE_NOT_HOME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from ... import mqtt
 from ..client import async_subscribe
@@ -33,9 +36,20 @@ PLATFORM_SCHEMA_YAML = PLATFORM_SCHEMA.extend(SCHEMA_BASE).extend(
 )
 
 
+@dataclasses.dataclass
+class MQTTLegacyDeviceTrackerData:
+    """Class to hold device tracker data."""
+
+    async_see: Callable[..., Awaitable[None]]
+    config: ConfigType
+
+
 async def async_setup_scanner_from_yaml(
-    hass: HomeAssistant, config, async_see, discovery_info=None
-):
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_see: Callable[..., Awaitable[None]],
+    discovery_info: DiscoveryInfoType | None = None,
+) -> bool:
     """Set up the MQTT tracker."""
     devices = config[CONF_DEVICES]
     qos = config[CONF_QOS]
@@ -45,15 +59,14 @@ async def async_setup_scanner_from_yaml(
     config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     subscriptions: list[Callable] = []
 
-    hass.data[MQTT_DATA_DEVICE_TRACKER_LEGACY] = {
-        "async_see": async_see,
-        "config": config,
-    }
+    hass.data[MQTT_DATA_DEVICE_TRACKER_LEGACY] = MQTTLegacyDeviceTrackerData(
+        async_see, config
+    )
     if not mqtt_config_entry_enabled(hass):
         _LOGGER.info(
             "MQTT device trackers will be not available until the config entry is enabled",
         )
-        return
+        return False
 
     @callback
     def _entry_unload(*_: Any) -> None:
