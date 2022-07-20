@@ -98,7 +98,7 @@ async def test_basic_usage(hass):
         entity_key,
     )
 
-    def _all_listener(data: PassiveBluetoothDataUpdate | None):
+    def _all_listener(data: PassiveBluetoothDataUpdate | None) -> None:
         """Mock an all listener."""
         all_events.append(data)
 
