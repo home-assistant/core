@@ -1,5 +1,6 @@
 """Test The generic (IP Camera) config flow."""
 
+from datetime import timedelta
 import errno
 from http import HTTPStatus
 import os.path
@@ -35,6 +36,7 @@ from homeassistant.const import (
     HTTP_BASIC_AUTHENTICATION,
 )
 from homeassistant.helpers import entity_registry
+import homeassistant.util.dt as dt_util
 
 from tests.common import MockConfigEntry
 
@@ -64,6 +66,7 @@ async def test_form(hass, fakeimgbytes_png, hass_client, user_flow, mock_create_
     """Test the form with a normal set of settings."""
 
     respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_png)
+    utcnow = dt_util.utcnow()
     with mock_create_stream as mock_setup, patch(
         "homeassistant.components.generic.async_setup_entry", return_value=True
     ) as mock_setup_entry:
@@ -105,6 +108,15 @@ async def test_form(hass, fakeimgbytes_png, hass_client, user_flow, mock_create_
     assert resp.status == HTTPStatus.OK
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+
+    with patch(
+        "homeassistant.components.generic.config_flow.CameraImagePreview.utc_time",
+        return_value=utcnow + timedelta(minutes=6),
+    ):
+        resp2 = await client.get(f"/api/generic/preview_flow_image/{preview_id}")
+    # async_fire_time_changed(hass, utcnow + timedelta(minutes=6))
+    await hass.async_block_till_done()
+    assert resp2.status == HTTPStatus.SERVICE_UNAVAILABLE
 
 
 @respx.mock
