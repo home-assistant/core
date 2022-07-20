@@ -73,7 +73,7 @@ PATH_CONFIG = ".config_entries.json"
 
 SAVE_DELAY = 1
 
-_T = TypeVar("_T", bound="ConfigEntryState")
+_ConfigEntryStateSelfT = TypeVar("_ConfigEntryStateSelfT", bound="ConfigEntryState")
 _R = TypeVar("_R")
 
 
@@ -97,7 +97,9 @@ class ConfigEntryState(Enum):
 
     _recoverable: bool
 
-    def __new__(cls: type[_T], value: str, recoverable: bool) -> _T:
+    def __new__(
+        cls: type[_ConfigEntryStateSelfT], value: str, recoverable: bool
+    ) -> _ConfigEntryStateSelfT:
         """Create new ConfigEntryState."""
         obj = object.__new__(cls)
         obj._value_ = value
