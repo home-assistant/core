@@ -282,6 +282,14 @@ def register_preview(hass: HomeAssistant, flow_id: str, user_input: dict[str, An
     hass.data[DOMAIN][PREVIEWS][flow_id]["expiry"] = expiry
 
 
+def unregister_preview(hass: HomeAssistant, flow_id: str):
+    """Remove a preview that is no longer needed."""
+    if hass.data.get(DOMAIN):
+        if PREVIEWS in hass.data[DOMAIN]:
+            if flow_id in hass.data[DOMAIN][PREVIEWS]:
+                hass.data[DOMAIN][PREVIEWS].pop(flow_id)
+
+
 class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for generic IP camera."""
 
@@ -353,7 +361,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
         else:
             user_input = DEFAULT_DATA.copy()
-
+        unregister_preview(hass, self.flow_id)
         return self.async_show_form(
             step_id="user",
             data_schema=build_schema(user_input),
@@ -364,6 +372,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any]
     ) -> FlowResult:
         """Handle user clicking confirm after still preview."""
+        unregister_preview(self.hass, self.flow_id)
         if not user_input.get(CONF_CONFIRMED_OK):
             return self.async_show_form(
                 step_id="user",
@@ -477,10 +486,13 @@ class CameraImagePreview(HomeAssistantView):
     async def get(self, request: web.Request, flow_id: str) -> web.Response:
         """Start a GET request."""
         _LOGGER.debug("processing GET request for flow_id=%s", flow_id)
-        data = self.hass.data[DOMAIN][PREVIEWS][flow_id]
+        try:
+            data = self.hass.data[DOMAIN][PREVIEWS][flow_id]
+        except KeyError as exc:
+            raise web.HTTPNotFound() from exc
         if self.utc_time() > data["expiry"]:
             self.hass.data[DOMAIN][PREVIEWS].pop(flow_id)
-            raise web.HTTPServiceUnavailable()
+            raise web.HTTPNotFound()
         camera = GenericCamera(self.hass, data["user_input"], flow_id, "preview")
 
         if not camera.is_on:

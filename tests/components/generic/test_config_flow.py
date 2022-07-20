@@ -104,8 +104,7 @@ async def test_form(hass, fakeimgbytes_png, hass_client, user_flow, mock_create_
     await hass.async_block_till_done()
     # Check that the preview image is disabled after.
     resp = await client.get(f"/api/generic/preview_flow_image/{preview_id}")
-    # In reality it's not disabled & remains until next HA restart.
-    assert resp.status == HTTPStatus.OK
+    assert resp.status == HTTPStatus.NOT_FOUND
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -116,7 +115,37 @@ async def test_form(hass, fakeimgbytes_png, hass_client, user_flow, mock_create_
         resp2 = await client.get(f"/api/generic/preview_flow_image/{preview_id}")
     # async_fire_time_changed(hass, utcnow + timedelta(minutes=6))
     await hass.async_block_till_done()
-    assert resp2.status == HTTPStatus.SERVICE_UNAVAILABLE
+    assert resp2.status == HTTPStatus.NOT_FOUND
+
+
+@respx.mock
+async def test_form_preview_timeout(
+    hass, fakeimgbytes_png, hass_client, user_flow, mock_create_stream
+):
+    """Test the form with a normal set of settings but let the preview timeout."""
+
+    respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_png)
+    utcnow = dt_util.utcnow()
+    with mock_create_stream, patch(
+        "homeassistant.components.generic.async_setup_entry", return_value=True
+    ):
+        result1 = await hass.config_entries.flow.async_configure(
+            user_flow["flow_id"],
+            TESTDATA,
+        )
+        client = await hass_client()
+        preview_id = result1["flow_id"]
+        resp = await client.get(f"/api/generic/preview_flow_image/{preview_id}?t=1")
+        assert resp.status == HTTPStatus.OK
+        assert await resp.read() == fakeimgbytes_png
+        await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.generic.config_flow.CameraImagePreview.utc_time",
+        return_value=utcnow + timedelta(minutes=6),
+    ):
+        resp2 = await client.get(f"/api/generic/preview_flow_image/{preview_id}")
+    await hass.async_block_till_done()
+    assert resp2.status == HTTPStatus.NOT_FOUND
 
 
 @respx.mock
