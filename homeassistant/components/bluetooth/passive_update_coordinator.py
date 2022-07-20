@@ -131,6 +131,7 @@ class PassiveBluetoothDataUpdateCoordinator(Generic[_T]):
 
         @callback
         def _async_cancel_all() -> None:
+            """Cancel all the callbacks."""
             for cancel in cancels:
                 cancel()
 
