@@ -207,7 +207,7 @@ class PassiveBluetoothDataUpdateCoordinator(Generic[_T]):
             update_callback(data)
 
         # Dispatch to listeners with a filter key
-        for key in self._entity_key_listeners:
+        for listeners in self._entity_key_listeners.values():
             if listeners := self._entity_key_listeners.get(key):
                 for update_callback in listeners:
                     update_callback(data)
