@@ -13,7 +13,7 @@ import homeassistant.util.dt as dt_util
 from .models import IssueSeverity
 
 DATA_REGISTRY = "issue_registry"
-STORAGE_KEY = "resolution_center.issue_registry"
+STORAGE_KEY = "repairs.issue_registry"
 STORAGE_VERSION = 1
 SAVE_DELAY = 10
 

@@ -442,7 +442,6 @@ omit =
     homeassistant/components/google_cloud/tts.py
     homeassistant/components/google_maps/device_tracker.py
     homeassistant/components/google_pubsub/__init__.py
-    homeassistant/components/gpmdp/media_player.py
     homeassistant/components/gpsd/sensor.py
     homeassistant/components/greenwave/light.py
     homeassistant/components/group/notify.py
@@ -1110,7 +1109,6 @@ omit =
     homeassistant/components/smtp/notify.py
     homeassistant/components/snapcast/*
     homeassistant/components/snmp/*
-    homeassistant/components/sochain/sensor.py
     homeassistant/components/solaredge/__init__.py
     homeassistant/components/solaredge/coordinator.py
     homeassistant/components/solaredge/sensor.py
@@ -1523,7 +1521,6 @@ omit =
     homeassistant/components/zha/light.py
     homeassistant/components/zha/sensor.py
     homeassistant/components/zhong_hong/climate.py
-    homeassistant/components/xbee/*
     homeassistant/components/ziggo_mediabox_xl/media_player.py
     homeassistant/components/zoneminder/*
     homeassistant/components/supla/*

@@ -1,17 +1,14 @@
-"""Test the resolution center websocket API."""
+"""Test the repairs websocket API."""
 from unittest.mock import AsyncMock, Mock
 
 from freezegun import freeze_time
 import pytest
 
-from homeassistant.components.resolution_center import (
-    async_create_issue,
-    async_delete_issue,
-)
-from homeassistant.components.resolution_center.const import DOMAIN
-from homeassistant.components.resolution_center.issue_handler import (
+from homeassistant.components.repairs import async_create_issue, async_delete_issue
+from homeassistant.components.repairs.const import DOMAIN
+from homeassistant.components.repairs.issue_handler import (
     async_ignore_issue,
-    async_process_resolution_center_platforms,
+    async_process_repairs_platforms,
 )
 from homeassistant.const import __version__ as ha_version
 from homeassistant.core import HomeAssistant
@@ -27,7 +24,7 @@ async def test_create_update_issue(hass: HomeAssistant, hass_ws_client) -> None:
 
     client = await hass_ws_client(hass)
 
-    await client.send_json({"id": 1, "type": "resolution_center/list_issues"})
+    await client.send_json({"id": 1, "type": "repairs/list_issues"})
     msg = await client.receive_json()
 
     assert msg["success"]
@@ -69,7 +66,7 @@ async def test_create_update_issue(hass: HomeAssistant, hass_ws_client) -> None:
             translation_placeholders=issue["translation_placeholders"],
         )
 
-    await client.send_json({"id": 2, "type": "resolution_center/list_issues"})
+    await client.send_json({"id": 2, "type": "repairs/list_issues"})
     msg = await client.receive_json()
 
     assert msg["success"]
@@ -98,7 +95,7 @@ async def test_create_update_issue(hass: HomeAssistant, hass_ws_client) -> None:
         translation_placeholders=issues[0]["translation_placeholders"],
     )
 
-    await client.send_json({"id": 3, "type": "resolution_center/list_issues"})
+    await client.send_json({"id": 3, "type": "repairs/list_issues"})
     msg = await client.receive_json()
 
     assert msg["success"]
@@ -144,7 +141,7 @@ async def test_create_issue_invalid_version(
             translation_placeholders=issue["translation_placeholders"],
         )
 
-    await client.send_json({"id": 1, "type": "resolution_center/list_issues"})
+    await client.send_json({"id": 1, "type": "repairs/list_issues"})
     msg = await client.receive_json()
 
     assert msg["success"]
@@ -158,7 +155,7 @@ async def test_ignore_issue(hass: HomeAssistant, hass_ws_client) -> None:
 
     client = await hass_ws_client(hass)
 
-    await client.send_json({"id": 1, "type": "resolution_center/list_issues"})
+    await client.send_json({"id": 1, "type": "repairs/list_issues"})
     msg = await client.receive_json()
 
     assert msg["success"]
@@ -190,7 +187,7 @@ async def test_ignore_issue(hass: HomeAssistant, hass_ws_client) -> None:
             translation_placeholders=issue["translation_placeholders"],
         )
 
-    await client.send_json({"id": 2, "type": "resolution_center/list_issues"})
+    await client.send_json({"id": 2, "type": "repairs/list_issues"})
     msg = await client.receive_json()
 
     assert msg["success"]
@@ -210,7 +207,7 @@ async def test_ignore_issue(hass: HomeAssistant, hass_ws_client) -> None:
     with pytest.raises(KeyError):
         async_ignore_issue(hass, issues[0]["domain"], "no_such_issue", True)
 
-    await client.send_json({"id": 3, "type": "resolution_center/list_issues"})
+    await client.send_json({"id": 3, "type": "repairs/list_issues"})
     msg = await client.receive_json()
 
     assert msg["success"]
@@ -229,7 +226,7 @@ async def test_ignore_issue(hass: HomeAssistant, hass_ws_client) -> None:
     # Ignore an existing issue
     async_ignore_issue(hass, issues[0]["domain"], issues[0]["issue_id"], True)
 
-    await client.send_json({"id": 4, "type": "resolution_center/list_issues"})
+    await client.send_json({"id": 4, "type": "repairs/list_issues"})
     msg = await client.receive_json()
 
     assert msg["success"]
@@ -248,7 +245,7 @@ async def test_ignore_issue(hass: HomeAssistant, hass_ws_client) -> None:
     # Ignore the same issue again
     async_ignore_issue(hass, issues[0]["domain"], issues[0]["issue_id"], True)
 
-    await client.send_json({"id": 5, "type": "resolution_center/list_issues"})
+    await client.send_json({"id": 5, "type": "repairs/list_issues"})
     msg = await client.receive_json()
 
     assert msg["success"]
@@ -277,7 +274,7 @@ async def test_ignore_issue(hass: HomeAssistant, hass_ws_client) -> None:
         translation_placeholders=issues[0]["translation_placeholders"],
     )
 
-    await client.send_json({"id": 6, "type": "resolution_center/list_issues"})
+    await client.send_json({"id": 6, "type": "repairs/list_issues"})
     msg = await client.receive_json()
 
     assert msg["success"]
@@ -292,7 +289,7 @@ async def test_ignore_issue(hass: HomeAssistant, hass_ws_client) -> None:
     # Unignore the same issue
     async_ignore_issue(hass, issues[0]["domain"], issues[0]["issue_id"], False)
 
-    await client.send_json({"id": 7, "type": "resolution_center/list_issues"})
+    await client.send_json({"id": 7, "type": "repairs/list_issues"})
     msg = await client.receive_json()
 
     assert msg["success"]
@@ -343,7 +340,7 @@ async def test_delete_issue(hass: HomeAssistant, hass_ws_client, freezer) -> Non
             translation_placeholders=issue["translation_placeholders"],
         )
 
-    await client.send_json({"id": 1, "type": "resolution_center/list_issues"})
+    await client.send_json({"id": 1, "type": "repairs/list_issues"})
     msg = await client.receive_json()
 
     assert msg["success"]
@@ -362,7 +359,7 @@ async def test_delete_issue(hass: HomeAssistant, hass_ws_client, freezer) -> Non
     # Delete a non-existing issue
     async_delete_issue(hass, issues[0]["domain"], "no_such_issue")
 
-    await client.send_json({"id": 2, "type": "resolution_center/list_issues"})
+    await client.send_json({"id": 2, "type": "repairs/list_issues"})
     msg = await client.receive_json()
 
     assert msg["success"]
@@ -381,7 +378,7 @@ async def test_delete_issue(hass: HomeAssistant, hass_ws_client, freezer) -> Non
     # Delete an existing issue
     async_delete_issue(hass, issues[0]["domain"], issues[0]["issue_id"])
 
-    await client.send_json({"id": 3, "type": "resolution_center/list_issues"})
+    await client.send_json({"id": 3, "type": "repairs/list_issues"})
     msg = await client.receive_json()
 
     assert msg["success"]
@@ -390,7 +387,7 @@ async def test_delete_issue(hass: HomeAssistant, hass_ws_client, freezer) -> Non
     # Delete the same issue again
     async_delete_issue(hass, issues[0]["domain"], issues[0]["issue_id"])
 
-    await client.send_json({"id": 4, "type": "resolution_center/list_issues"})
+    await client.send_json({"id": 4, "type": "repairs/list_issues"})
     msg = await client.receive_json()
 
     assert msg["success"]
@@ -412,7 +409,7 @@ async def test_delete_issue(hass: HomeAssistant, hass_ws_client, freezer) -> Non
             translation_placeholders=issue["translation_placeholders"],
         )
 
-    await client.send_json({"id": 5, "type": "resolution_center/list_issues"})
+    await client.send_json({"id": 5, "type": "repairs/list_issues"})
     msg = await client.receive_json()
 
     assert msg["success"]
@@ -436,16 +433,16 @@ async def test_non_compliant_platform(hass: HomeAssistant, hass_ws_client) -> No
     hass.config.components.add("integration_without_diagnostics")
     mock_platform(
         hass,
-        "fake_integration.resolution_center",
+        "fake_integration.repairs",
         Mock(async_create_fix_flow=AsyncMock(return_value=True)),
     )
     mock_platform(
         hass,
-        "integration_without_diagnostics.resolution_center",
+        "integration_without_diagnostics.repairs",
         Mock(spec=[]),
     )
     assert await async_setup_component(hass, DOMAIN, {})
 
-    await async_process_resolution_center_platforms(hass)
+    await async_process_repairs_platforms(hass)
 
     assert list(hass.data[DOMAIN]["platforms"].keys()) == ["fake_integration"]

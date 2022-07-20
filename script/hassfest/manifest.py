@@ -80,7 +80,7 @@ NO_IOT_CLASS = [
     "proxy",
     "python_script",
     "raspberry_pi",
-    "resolution_center",
+    "repairs",
     "safe_mode",
     "script",
     "search",
