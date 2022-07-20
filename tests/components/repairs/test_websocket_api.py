@@ -1,4 +1,4 @@
-"""Test the resolution center websocket API."""
+"""Test the repairs websocket API."""
 from __future__ import annotations
 
 from http import HTTPStatus

@@ -1,4 +1,4 @@
-"""Test the resolution center websocket API."""
+"""Test the repairs websocket API."""
 from homeassistant.components.repairs import async_create_issue, issue_registry
 from homeassistant.components.repairs.const import DOMAIN
 from homeassistant.components.repairs.issue_handler import async_ignore_issue
