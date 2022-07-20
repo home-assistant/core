@@ -82,7 +82,7 @@ class PassiveBluetoothDataUpdateCoordinator(Generic[_T]):
             Callable[[PassiveBluetoothDataUpdate[_T] | None], None]
         ] = []
         self._entity_key_listeners: dict[
-            PassiveBluetoothEntityKey | None,
+            PassiveBluetoothEntityKey,
             list[Callable[[PassiveBluetoothDataUpdate[_T] | None], None]],
         ] = {}
         self.update_method = update_method
@@ -102,6 +102,7 @@ class PassiveBluetoothDataUpdateCoordinator(Generic[_T]):
         """Return if the device is available."""
         return self._present and self.last_update_success
 
+    @callback
     def _async_check_device_present(self, _: datetime) -> None:
         """Check if the device is present."""
         if (
@@ -182,7 +183,7 @@ class PassiveBluetoothDataUpdateCoordinator(Generic[_T]):
     def async_add_entity_key_listener(
         self,
         update_callback: Callable[[PassiveBluetoothDataUpdate[_T] | None], None],
-        entity_key: PassiveBluetoothEntityKey | None = None,
+        entity_key: PassiveBluetoothEntityKey,
     ) -> Callable[[], None]:
         """Listen for updates by device key."""
 
@@ -206,10 +207,9 @@ class PassiveBluetoothDataUpdateCoordinator(Generic[_T]):
             update_callback(data)
 
         # Dispatch to listeners with a filter key
-        for key in self._entity_key_listeners:
-            if listeners := self._entity_key_listeners.get(key):
-                for update_callback in listeners:
-                    update_callback(data)
+        for listeners in self._entity_key_listeners.values():
+            for update_callback in listeners:
+                update_callback(data)
 
     @callback
     def _async_handle_bluetooth_event(
@@ -235,11 +235,10 @@ class PassiveBluetoothDataUpdateCoordinator(Generic[_T]):
             self.last_update_success = True
             self.logger.info("Processing %s data recovered", self.name)
 
-        if new_data:
-            self.devices.update(new_data.devices)
-            self.entity_descriptions.update(new_data.entity_descriptions)
-            self.entity_data.update(new_data.entity_data)
-            self.async_update_listeners(new_data)
+        self.devices.update(new_data.devices)
+        self.entity_descriptions.update(new_data.entity_descriptions)
+        self.entity_data.update(new_data.entity_data)
+        self.async_update_listeners(new_data)
 
 
 class PassiveBluetoothCoordinatorEntity(
@@ -269,7 +268,7 @@ class PassiveBluetoothCoordinatorEntity(
             base_device_info = devices[device_id]
         else:
             base_device_info = DeviceInfo({})
-        if entity_key.device_id:
+        if device_id:
             self._attr_device_info = base_device_info | DeviceInfo(
                 {ATTR_IDENTIFIERS: {(DOMAIN, f"{address}-{device_id}")}}
             )
