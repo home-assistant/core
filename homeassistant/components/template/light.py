@@ -29,6 +29,7 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
     STATE_OFF,
     STATE_ON,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
