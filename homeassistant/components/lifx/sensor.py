@@ -111,7 +111,6 @@ class LifxSensorEntity(CoordinatorEntity[LIFXUpdateCoordinator], SensorEntity):
         """Initialise the sensor."""
         super().__init__(coordinator)
         self.coordinator = coordinator
-
         self.entity_description = description
         self._attr_unique_id = (
             f"{self.coordinator.serial_number}_{self.entity_description.key}"

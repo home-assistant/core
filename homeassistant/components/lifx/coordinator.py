@@ -7,7 +7,6 @@ from functools import partial
 import logging
 import math
 from typing import Any, cast
-from typing import cast
 
 from aiolifx.aiolifx import Light
 from aiolifx.connection import LIFXConnection
@@ -25,6 +24,10 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import (
     IDENTIFY_WAVEFORM,
+    HEV_CYCLE_DURATION,
+    HEV_CYCLE_LAST_POWER,
+    HEV_CYCLE_LAST_RESULT,
+    HEV_CYCLE_REMAINING,
     MESSAGE_RETRIES,
     MESSAGE_TIMEOUT,
     TARGET_ANY,
@@ -42,6 +45,7 @@ from .util import (
 
 REQUEST_REFRESH_DELAY = 0.35
 RSSI_DBM_FW = AwesomeVersion("2.77")
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -217,6 +221,9 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
                         f"Failed to fetch zones from device: {self.device.label} ({self.device.ip_addr})"
                     ) from ex
 
+            if lifx_features(self.device)["hev"]:
+                await self.async_update_hev_cycle()
+
     async def async_update_color_zones(self) -> None:
         """Get updated color information for each zone."""
         zone = 0
@@ -278,3 +285,43 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
                 apply=apply,
             )
         )
+
+    async def async_update_wifi_info(self) -> None:
+        """Get the bulb's wifi signal strength."""
+        _LOGGER.debug("Updating wifi signal strength for %s", self.device.label)
+        try:
+            wifi_info = await async_execute_lifx(self.device.get_wifiinfo)
+            self._rssi = int(math.floor(10 * math.log10(wifi_info.signal) + 0.5))
+        except asyncio.TimeoutError as ex:
+            raise UpdateFailed(
+                f"Failed to fetch RSSI sensor data from device: {self.device.ip_addr}"
+            ) from ex
+
+    async def async_update_hev_cycle(self) -> None:
+        """Get the current and last HEV cycle data from the bulb."""
+        _LOGGER.debug("Updating HEV cycle sensor values for %s", self.device.label)
+        try:
+            hev_cycle: StateHevCycle = await async_execute_lifx(
+                self.device.get_hev_cycle
+            )
+            self._hev_cycle = {
+                HEV_CYCLE_DURATION: hev_cycle.duration,
+                HEV_CYCLE_REMAINING: hev_cycle.remaining,
+                HEV_CYCLE_LAST_POWER: hev_cycle.last_power,
+            }
+
+            last_result: StateLastHevCycleResult = await async_execute_lifx(
+                self.device.get_last_hev_cycle_result
+            )
+            self._hev_cycle[HEV_CYCLE_LAST_RESULT] = (
+                str(last_result.result_str)
+                .title()
+                .replace("_", " ")
+                .replace("Homekit", "HomeKit")
+                .replace("Lan", "LAN")
+            )
+            _LOGGER.debug(self._hev_cycle)
+        except asyncio.TimeoutError as ex:
+            raise UpdateFailed(
+                f"Failed to fetch HEV cycle data from device: {self.device.ip_addr}"
+            ) from ex
