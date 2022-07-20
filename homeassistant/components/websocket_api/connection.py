@@ -11,7 +11,6 @@ import voluptuous as vol
 from homeassistant.auth.models import RefreshToken, User
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
-from homeassistant.helpers.json import JSON_DUMP
 
 from . import const, messages
 
@@ -53,10 +52,6 @@ class ActiveConnection:
     def send_result(self, msg_id: int, result: Any | None = None) -> None:
         """Send a result message."""
         self.send_message(messages.result_message(msg_id, result))
-
-    def send_big_result(self, msg_id: int, result: Any) -> None:
-        """Send a result message that would be expensive to JSON serialize."""
-        self.send_message(JSON_DUMP(messages.result_message(msg_id, result)))
 
     @callback
     def send_error(self, msg_id: int, code: str, message: str) -> None:
