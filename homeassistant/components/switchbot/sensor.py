@@ -49,7 +49,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
     ),
-    "temperature_celsius": SensorEntityDescription(
+    "temperature": SensorEntityDescription(
         key="temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -88,7 +88,7 @@ async def async_setup_entry(
 def flatten_sensors_data(sensors):
     """Deconstruct SwitchBot library temp object C/Fº readings from object."""
     if "temp" in sensors:
-        sensors["temperature_celsius"] = sensors["temp"]["c"]
+        sensors["temperature"] = sensors["temp"]["c"]
 
     return sensors
 
