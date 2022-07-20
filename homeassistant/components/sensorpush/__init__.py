@@ -43,7 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Update data from SensorPush Bluetooth."""
         new_data = sensor_update_to_bluetooth_data_update(data.update(service_info))
         _LOGGER.warning("Got service info: %s", service_info)
-        _LOGGER.warning("Got data: %s", data)
+        _LOGGER.warning("Got data: %s", new_data)
         return new_data
 
     coordinator = hass.data.setdefault(DOMAIN, {})[
