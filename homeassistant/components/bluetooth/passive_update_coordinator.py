@@ -80,7 +80,7 @@ class PassiveBluetoothDataUpdateCoordinator(Generic[_T]):
 
     As the size of each advertisement is limited, the update_method should
     return a PassiveBluetoothDataUpdate object that contains only data that
-    should be updated. The coordinator will then dispatcher to subscribers based
+    should be updated. The coordinator will then dispatch subscribers based
     on the data in the PassiveBluetoothDataUpdate object. The accumulated data
     is available in the devices, entity_data, and entity_descriptions attributes.
     """
