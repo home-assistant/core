@@ -281,6 +281,101 @@ async def test_no_updates_once_stopping(hass):
     cancel_coordinator()
 
 
+async def test_exception_from_update_method(hass, caplog):
+    """Test we handle exceptions from the update method."""
+    run_count = 0
+
+    @callback
+    def _async_generate_mock_data(
+        service_info: BluetoothServiceInfo,
+    ) -> PassiveBluetoothDataUpdate:
+        """Generate mock data."""
+        nonlocal run_count
+        run_count += 1
+        if run_count == 2:
+            raise Exception("Test exception")
+        return GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE
+
+    coordinator = PassiveBluetoothDataUpdateCoordinator(
+        hass, _LOGGER, "aa:bb:cc:dd:ee:ff", _async_generate_mock_data
+    )
+    assert coordinator.available is False  # no data yet
+    saved_callback = None
+
+    def _async_register_callback(_hass, _callback, _matcher):
+        nonlocal saved_callback
+        saved_callback = _callback
+        return lambda: None
+
+    with patch(
+        "homeassistant.components.bluetooth.passive_update_coordinator.async_register_callback",
+        _async_register_callback,
+    ):
+        cancel_coordinator = coordinator.async_setup()
+
+    saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    assert coordinator.available is True
+
+    # We should go unavailable once we get an exception
+    saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    assert "Test exception" in caplog.text
+    assert coordinator.available is False
+
+    # We should go available again once we get data again
+    saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    assert coordinator.available is True
+
+    cancel_coordinator()
+
+
+async def test_bad_data_from_update_method(hass, caplog):
+    """Test we handle bad data from the update method."""
+    run_count = 0
+
+    @callback
+    def _async_generate_mock_data(
+        service_info: BluetoothServiceInfo,
+    ) -> PassiveBluetoothDataUpdate:
+        """Generate mock data."""
+        nonlocal run_count
+        run_count += 1
+        if run_count == 2:
+            return "bad_data"
+        return GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE
+
+    coordinator = PassiveBluetoothDataUpdateCoordinator(
+        hass, _LOGGER, "aa:bb:cc:dd:ee:ff", _async_generate_mock_data
+    )
+    assert coordinator.available is False  # no data yet
+    saved_callback = None
+
+    def _async_register_callback(_hass, _callback, _matcher):
+        nonlocal saved_callback
+        saved_callback = _callback
+        return lambda: None
+
+    with patch(
+        "homeassistant.components.bluetooth.passive_update_coordinator.async_register_callback",
+        _async_register_callback,
+    ):
+        cancel_coordinator = coordinator.async_setup()
+
+    saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    assert coordinator.available is True
+
+    # We should go unavailable once we get bad data
+    saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    assert "update_method" in caplog.text
+    assert "bad_data" in caplog.text
+    assert coordinator.available is False
+
+    # We should go available again once we get good data again
+    saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    assert coordinator.available is True
+
+    cancel_coordinator()
+
+
 GOVEE_B5178_REMOTE_SERVICE_INFO = BluetoothServiceInfo(
     name="B5178D6FB",
     address="749A17CB-F7A9-D466-C29F-AABE601938A0",

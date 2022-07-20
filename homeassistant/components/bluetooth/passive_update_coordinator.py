@@ -259,6 +259,15 @@ class PassiveBluetoothDataUpdateCoordinator(Generic[_T]):
             )
             return
 
+        if not isinstance(new_data, PassiveBluetoothDataUpdate):
+            self.last_update_success = False  # type: ignore[unreachable]
+            self.logger.error(
+                "The update_method for %s returned %s instead of a PassiveBluetoothDataUpdate",
+                self.name,
+                new_data,
+            )
+            return
+
         if not self.last_update_success:
             self.last_update_success = True
             self.logger.info("Processing %s data recovered", self.name)
