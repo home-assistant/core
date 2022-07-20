@@ -825,7 +825,7 @@ async def test_integration_with_entity_without_a_device(hass):
     )
 
 
-async def test_with_entity_platform(hass):
+async def test_passive_bluetooth_entity_with_entity_platform(hass):
     """Test with a mock entity platform."""
     entity_platform = MockEntityPlatform(hass)
 
