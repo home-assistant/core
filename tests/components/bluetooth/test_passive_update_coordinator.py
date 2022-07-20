@@ -17,7 +17,7 @@ from homeassistant.components.bluetooth.passive_update_coordinator import (
 )
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
 from homeassistant.const import TEMP_CELSIUS
-from homeassistant.core import callback
+from homeassistant.core import CoreState, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.util import dt as dt_util
 
@@ -228,6 +228,55 @@ async def test_unavailable_after_no_data(hass):
         async_fire_time_changed(hass, now + timedelta(seconds=UNAVAILABLE_SECONDS))
         await hass.async_block_till_done()
     assert coordinator.available is False
+
+    cancel_coordinator()
+
+
+async def test_no_updates_once_stopping(hass):
+    """Test updates are ignored once hass is stopping."""
+
+    @callback
+    def _async_generate_mock_data(
+        service_info: BluetoothServiceInfo,
+    ) -> PassiveBluetoothDataUpdate:
+        """Generate mock data."""
+        return GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE
+
+    coordinator = PassiveBluetoothDataUpdateCoordinator(
+        hass, _LOGGER, "aa:bb:cc:dd:ee:ff", _async_generate_mock_data
+    )
+    assert coordinator.available is False  # no data yet
+    saved_callback = None
+
+    def _async_register_callback(_hass, _callback, _matcher):
+        nonlocal saved_callback
+        saved_callback = _callback
+        return lambda: None
+
+    with patch(
+        "homeassistant.components.bluetooth.passive_update_coordinator.async_register_callback",
+        _async_register_callback,
+    ):
+        cancel_coordinator = coordinator.async_setup()
+
+    all_events = []
+
+    def _all_listener(data: PassiveBluetoothDataUpdate | None) -> None:
+        """Mock an all listener."""
+        all_events.append(data)
+
+    coordinator.async_add_listener(
+        _all_listener,
+    )
+
+    saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    assert len(all_events) == 1
+
+    hass.state = CoreState.stopping
+
+    # We should stop processing events once hass is stopping
+    saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    assert len(all_events) == 1
 
     cancel_coordinator()
 
