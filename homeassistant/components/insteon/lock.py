@@ -42,8 +42,8 @@ class InsteonLockEntity(InsteonEntity, LockEntity):
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device."""
-        await self._insteon_device.async_lock(group=self._insteon_device_group.group)
+        await self._insteon_device.async_lock()
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
-        await self._insteon_device.async_unlock(group=self._insteon_device_group.group)
+        await self._insteon_device.async_unlock()
