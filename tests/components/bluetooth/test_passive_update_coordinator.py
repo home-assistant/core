@@ -184,12 +184,10 @@ async def test_unavailable_after_no_data(hass):
         cancel_coordinator = coordinator.async_setup()
 
     assert coordinator.available is False
-    assert coordinator._last_callback_time is not None
 
     saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
     assert coordinator.available is True
 
-    assert coordinator._last_callback_time is not None
     monotonic_now = time.monotonic()
     now = dt_util.utcnow()
     with patch(
@@ -202,6 +200,34 @@ async def test_unavailable_after_no_data(hass):
 
     saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
     assert coordinator.available is True
+
+    # Now simulate the device is still present even though we got
+    # no data for a while
+
+    monotonic_now = time.monotonic()
+    now = dt_util.utcnow()
+    with patch(
+        "homeassistant.components.bluetooth.passive_update_coordinator.async_address_present",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.bluetooth.passive_update_coordinator.time.monotonic",
+        return_value=monotonic_now + UNAVAILABLE_SECONDS,
+    ):
+        async_fire_time_changed(hass, now + timedelta(seconds=UNAVAILABLE_SECONDS))
+        await hass.async_block_till_done()
+
+    assert coordinator.available is True
+
+    # And finally that it can go unavailable again when its gone
+    monotonic_now = time.monotonic()
+    now = dt_util.utcnow()
+    with patch(
+        "homeassistant.components.bluetooth.passive_update_coordinator.time.monotonic",
+        return_value=monotonic_now + UNAVAILABLE_SECONDS,
+    ):
+        async_fire_time_changed(hass, now + timedelta(seconds=UNAVAILABLE_SECONDS))
+        await hass.async_block_till_done()
+    assert coordinator.available is False
 
     cancel_coordinator()
 
