@@ -1,4 +1,4 @@
-"""Models for Resolution Center."""
+"""Models for Repairs."""
 from __future__ import annotations
 
 from typing import Protocol
@@ -16,14 +16,14 @@ class IssueSeverity(StrEnum):
     WARNING = "warning"
 
 
-class ResolutionCenterFlow(data_entry_flow.FlowHandler):
+class RepairsFlow(data_entry_flow.FlowHandler):
     """Handle a flow for fixing an issue."""
 
 
-class ResolutionCenterProtocol(Protocol):
-    """Define the format of resolution center platforms."""
+class RepairsProtocol(Protocol):
+    """Define the format of repairs platforms."""
 
     async def async_create_fix_flow(
         self, hass: HomeAssistant, issue_id: str
-    ) -> ResolutionCenterFlow:
+    ) -> RepairsFlow:
         """Create a flow to fix a fixable issue."""

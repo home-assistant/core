@@ -9,11 +9,8 @@ import pytest
 import voluptuous as vol
 
 from homeassistant import data_entry_flow
-from homeassistant.components.resolution_center import (
-    ResolutionCenterFlow,
-    async_create_issue,
-)
-from homeassistant.components.resolution_center.const import DOMAIN
+from homeassistant.components.repairs import RepairsFlow, async_create_issue
+from homeassistant.components.repairs.const import DOMAIN
 from homeassistant.const import __version__ as ha_version
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -49,7 +46,7 @@ async def create_issues(hass, ws_client):
             translation_placeholders=issue["translation_placeholders"],
         )
 
-    await ws_client.send_json({"id": 1, "type": "resolution_center/list_issues"})
+    await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
     msg = await ws_client.receive_json()
 
     assert msg["success"]
@@ -68,7 +65,7 @@ async def create_issues(hass, ws_client):
     return issues
 
 
-class MockFixFlow(ResolutionCenterFlow):
+class MockFixFlow(RepairsFlow):
     """Handler for an issue fixing flow."""
 
     async def async_step_init(
@@ -89,8 +86,8 @@ class MockFixFlow(ResolutionCenterFlow):
 
 
 @pytest.fixture(autouse=True)
-async def mock_resolution_center_integration(hass):
-    """Mock a resolution_center integration."""
+async def mock_repairs_integration(hass):
+    """Mock a repairs integration."""
     hass.config.components.add("fake_integration")
     hass.config.components.add("integration_without_diagnostics")
 
@@ -99,12 +96,12 @@ async def mock_resolution_center_integration(hass):
 
     mock_platform(
         hass,
-        "fake_integration.resolution_center",
+        "fake_integration.repairs",
         Mock(async_create_fix_flow=AsyncMock(wraps=async_create_fix_flow)),
     )
     mock_platform(
         hass,
-        "integration_without_diagnostics.resolution_center",
+        "integration_without_diagnostics.repairs",
         Mock(spec=[]),
     )
 
@@ -120,7 +117,7 @@ async def test_dismiss_issue(hass: HomeAssistant, hass_ws_client) -> None:
     await client.send_json(
         {
             "id": 2,
-            "type": "resolution_center/ignore_issue",
+            "type": "repairs/ignore_issue",
             "domain": "fake_integration",
             "issue_id": "no_such_issue",
             "ignore": True,
@@ -132,7 +129,7 @@ async def test_dismiss_issue(hass: HomeAssistant, hass_ws_client) -> None:
     await client.send_json(
         {
             "id": 3,
-            "type": "resolution_center/ignore_issue",
+            "type": "repairs/ignore_issue",
             "domain": "fake_integration",
             "issue_id": "issue_1",
             "ignore": True,
@@ -142,7 +139,7 @@ async def test_dismiss_issue(hass: HomeAssistant, hass_ws_client) -> None:
     assert msg["success"]
     assert msg["result"] is None
 
-    await client.send_json({"id": 4, "type": "resolution_center/list_issues"})
+    await client.send_json({"id": 4, "type": "repairs/list_issues"})
     msg = await client.receive_json()
 
     assert msg["success"]
@@ -161,7 +158,7 @@ async def test_dismiss_issue(hass: HomeAssistant, hass_ws_client) -> None:
     await client.send_json(
         {
             "id": 5,
-            "type": "resolution_center/ignore_issue",
+            "type": "repairs/ignore_issue",
             "domain": "fake_integration",
             "issue_id": "issue_1",
             "ignore": False,
@@ -171,7 +168,7 @@ async def test_dismiss_issue(hass: HomeAssistant, hass_ws_client) -> None:
     assert msg["success"]
     assert msg["result"] is None
 
-    await client.send_json({"id": 6, "type": "resolution_center/list_issues"})
+    await client.send_json({"id": 6, "type": "repairs/list_issues"})
     msg = await client.receive_json()
 
     assert msg["success"]
@@ -200,21 +197,21 @@ async def test_fix_non_existing_issue(
 
     issues = await create_issues(hass, ws_client)
 
-    url = "/api/resolution_center/issues/fix"
+    url = "/api/repairs/issues/fix"
     resp = await client.post(
         url, json={"handler": "no_such_integration", "issue_id": "no_such_issue"}
     )
 
     assert resp.status != HTTPStatus.OK
 
-    url = "/api/resolution_center/issues/fix"
+    url = "/api/repairs/issues/fix"
     resp = await client.post(
         url, json={"handler": "fake_integration", "issue_id": "no_such_issue"}
     )
 
     assert resp.status != HTTPStatus.OK
 
-    await ws_client.send_json({"id": 3, "type": "resolution_center/list_issues"})
+    await ws_client.send_json({"id": 3, "type": "repairs/list_issues"})
     msg = await ws_client.receive_json()
 
     assert msg["success"]
@@ -241,7 +238,7 @@ async def test_fix_issue(hass: HomeAssistant, hass_client, hass_ws_client) -> No
 
     await create_issues(hass, ws_client)
 
-    url = "/api/resolution_center/issues/fix"
+    url = "/api/repairs/issues/fix"
     resp = await client.post(
         url, json={"handler": "fake_integration", "issue_id": "issue_1"}
     )
@@ -261,7 +258,7 @@ async def test_fix_issue(hass: HomeAssistant, hass_client, hass_ws_client) -> No
         "type": "form",
     }
 
-    url = f"/api/resolution_center/issues/fix/{flow_id}"
+    url = f"/api/repairs/issues/fix/{flow_id}"
     # Test we can get the status of the flow
     resp2 = await client.get(url)
 
@@ -286,7 +283,7 @@ async def test_fix_issue(hass: HomeAssistant, hass_client, hass_ws_client) -> No
         "version": 1,
     }
 
-    await ws_client.send_json({"id": 4, "type": "resolution_center/list_issues"})
+    await ws_client.send_json({"id": 4, "type": "repairs/list_issues"})
     msg = await ws_client.receive_json()
 
     assert msg["success"]
@@ -304,7 +301,7 @@ async def test_fix_issue_unauth(
 
     client = await hass_client()
 
-    url = "/api/resolution_center/issues/fix"
+    url = "/api/repairs/issues/fix"
     resp = await client.post(
         url, json={"handler": "fake_integration", "issue_id": "issue_1"}
     )
@@ -324,7 +321,7 @@ async def test_get_progress_unauth(
 
     await create_issues(hass, ws_client)
 
-    url = "/api/resolution_center/issues/fix"
+    url = "/api/repairs/issues/fix"
     resp = await client.post(
         url, json={"handler": "fake_integration", "issue_id": "issue_1"}
     )
@@ -334,7 +331,7 @@ async def test_get_progress_unauth(
 
     hass_admin_user.groups = []
 
-    url = f"/api/resolution_center/issues/fix/{flow_id}"
+    url = f"/api/repairs/issues/fix/{flow_id}"
     # Test we can't get the status of the flow
     resp = await client.get(url)
     assert resp.status == HTTPStatus.UNAUTHORIZED
@@ -352,7 +349,7 @@ async def test_step_unauth(
 
     await create_issues(hass, ws_client)
 
-    url = "/api/resolution_center/issues/fix"
+    url = "/api/repairs/issues/fix"
     resp = await client.post(
         url, json={"handler": "fake_integration", "issue_id": "issue_1"}
     )
@@ -362,7 +359,7 @@ async def test_step_unauth(
 
     hass_admin_user.groups = []
 
-    url = f"/api/resolution_center/issues/fix/{flow_id}"
+    url = f"/api/repairs/issues/fix/{flow_id}"
     # Test we can't get the status of the flow
     resp = await client.post(url)
     assert resp.status == HTTPStatus.UNAUTHORIZED
@@ -375,7 +372,7 @@ async def test_list_issues(hass: HomeAssistant, hass_ws_client) -> None:
 
     client = await hass_ws_client(hass)
 
-    await client.send_json({"id": 1, "type": "resolution_center/list_issues"})
+    await client.send_json({"id": 1, "type": "repairs/list_issues"})
     msg = await client.receive_json()
 
     assert msg["success"]
@@ -417,7 +414,7 @@ async def test_list_issues(hass: HomeAssistant, hass_ws_client) -> None:
             translation_placeholders=issue["translation_placeholders"],
         )
 
-    await client.send_json({"id": 2, "type": "resolution_center/list_issues"})
+    await client.send_json({"id": 2, "type": "repairs/list_issues"})
     msg = await client.receive_json()
 
     assert msg["success"]
