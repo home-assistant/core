@@ -128,7 +128,7 @@ async def test_basic_usage(hass):
     assert len(entity_key_events) == 2
     assert len(all_events) == 2
 
-    # On the second, the entties should already be created
+    # On the second, the entities should already be created
     # so the mock should not be called again
     assert len(mock_entity.mock_calls) == 2
 
