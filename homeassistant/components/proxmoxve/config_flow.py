@@ -33,7 +33,7 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._config = {}
         self._proxmox_client = None
 
-    async def async_step_import(self, import_config=None):
+    async def async_step_import(self, import_config=None) -> FlowResult:
         """Import existing configuration."""
         return await self.async_step_init(import_config, True)
 
@@ -41,7 +41,7 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Manual user configuration."""
         return await self.async_step_init(user_input, False)
 
-    async def async_step_init(self, info, is_import):
+    async def async_step_init(self, info, is_import) -> FlowResult:
         """Async step user for proxmoxve config flow."""
         errors = {}
 
@@ -90,8 +90,6 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     errors["base"] = "general_error"
 
                 else:
-                    # get all vms and containers and add them
-
                     if "nodes" not in self._config:
                         self._config["nodes"] = []
 
@@ -116,10 +114,10 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         vol.Required(
                             CONF_PASSWORD, default=info.get(CONF_PASSWORD, "")
                         ): str,
-                        vol.Required(
+                        vol.Optional(
                             CONF_REALM, default=info.get(CONF_REALM, DEFAULT_REALM)
                         ): str,
-                        vol.Required(
+                        vol.Optional(
                             CONF_PORT, default=info.get(CONF_PORT, DEFAULT_PORT)
                         ): int,
                         vol.Required(
@@ -146,10 +144,10 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_HOST, default=info.get(CONF_HOST, "")): str,
                 vol.Required(CONF_USERNAME, default=info.get(CONF_USERNAME, "")): str,
                 vol.Required(CONF_PASSWORD, default=info.get(CONF_PASSWORD, "")): str,
-                vol.Required(
+                vol.Optional(
                     CONF_REALM, default=info.get(CONF_REALM, DEFAULT_REALM)
                 ): str,
-                vol.Required(CONF_PORT, default=info.get(CONF_PORT, DEFAULT_PORT)): int,
+                vol.Optional(CONF_PORT, default=info.get(CONF_PORT, DEFAULT_PORT)): int,
                 vol.Required(
                     CONF_VERIFY_SSL,
                     default=info.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
