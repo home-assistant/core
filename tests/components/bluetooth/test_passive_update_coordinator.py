@@ -1,13 +1,16 @@
 """Tests for the Bluetooth integration."""
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
+import time
 from unittest.mock import MagicMock, patch
 
 from home_assistant_bluetooth import BluetoothServiceInfo
 
 from homeassistant.components.bluetooth import BluetoothChange
 from homeassistant.components.bluetooth.passive_update_coordinator import (
+    UNAVAILABLE_SECONDS,
     PassiveBluetoothDataUpdate,
     PassiveBluetoothDataUpdateCoordinator,
     PassiveBluetoothEntityKey,
@@ -16,6 +19,9 @@ from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescr
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.core import callback
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.util import dt as dt_util
+
+from tests.common import async_fire_time_changed
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,6 +77,7 @@ async def test_basic_usage(hass):
     coordinator = PassiveBluetoothDataUpdateCoordinator(
         hass, _LOGGER, "aa:bb:cc:dd:ee:ff", _async_generate_mock_data
     )
+    assert coordinator.available is False  # no data yet
     saved_callback = None
 
     def _async_register_callback(_hass, _callback, _matcher):
@@ -144,6 +151,57 @@ async def test_basic_usage(hass):
     assert len(entity_key_events) == 2
     assert len(all_events) == 2
     assert len(mock_entity.mock_calls) == 2
+    assert coordinator.available is True
+
+    cancel_coordinator()
+
+
+async def test_unavailable_after_no_data(hass):
+    """Test that the coordinator is unavailable after no data for a while."""
+
+    @callback
+    def _async_generate_mock_data(
+        service_info: BluetoothServiceInfo,
+    ) -> PassiveBluetoothDataUpdate:
+        """Generate mock data."""
+        return GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE
+
+    coordinator = PassiveBluetoothDataUpdateCoordinator(
+        hass, _LOGGER, "aa:bb:cc:dd:ee:ff", _async_generate_mock_data
+    )
+    assert coordinator.available is False  # no data yet
+    saved_callback = None
+
+    def _async_register_callback(_hass, _callback, _matcher):
+        nonlocal saved_callback
+        saved_callback = _callback
+        return lambda: None
+
+    with patch(
+        "homeassistant.components.bluetooth.passive_update_coordinator.async_register_callback",
+        _async_register_callback,
+    ):
+        cancel_coordinator = coordinator.async_setup()
+
+    assert coordinator.available is False
+    assert coordinator._last_callback_time is not None
+
+    saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    assert coordinator.available is True
+
+    assert coordinator._last_callback_time is not None
+    monotonic_now = time.monotonic()
+    now = dt_util.utcnow()
+    with patch(
+        "homeassistant.components.bluetooth.passive_update_coordinator.time.monotonic",
+        return_value=monotonic_now + UNAVAILABLE_SECONDS,
+    ):
+        async_fire_time_changed(hass, now + timedelta(seconds=UNAVAILABLE_SECONDS))
+        await hass.async_block_till_done()
+    assert coordinator.available is False
+
+    saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    assert coordinator.available is True
 
     cancel_coordinator()
 
