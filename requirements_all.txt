@@ -1978,7 +1978,7 @@ pythonegardia==1.0.40
 pytile==2022.02.0
 
 # homeassistant.components.tomorrowio
-pytomorrowio==0.3.3
+pytomorrowio==0.3.4
 
 # homeassistant.components.touchline
 pytouchline==0.7
