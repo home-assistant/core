@@ -328,7 +328,6 @@ class MQTT:
         self._cleanup_on_unload: list[Callable] = []
 
         self._paho_lock = asyncio.Lock()  # Prevents parallel calls to the MQTT client
-        self._pending_acks: set[int] = set()
         self._pending_operations: dict[int, asyncio.Event] = {}
         self._pending_operations_condition = asyncio.Condition()
 
@@ -434,7 +433,7 @@ class MQTT:
 
         def no_more_acks() -> bool:
             """Return False if there are unprocessed ACKs."""
-            return not bool(self._pending_acks)
+            return not bool(self._pending_operations)
 
         # wait for ACK-s to be processesed (unsubscribe only)
         async with self._pending_operations_condition:
@@ -493,7 +492,6 @@ class MQTT:
             result, mid = self._mqttc.unsubscribe(topic)
             _LOGGER.debug("Unsubscribing from %s, mid: %s", topic, mid)
             _raise_on_error(result)
-            self._pending_acks.add(mid)
             return mid
 
         if any(other.topic == topic for other in self.subscriptions):
@@ -502,6 +500,7 @@ class MQTT:
 
         async with self._paho_lock:
             mid = await self.hass.async_add_executor_job(_client_unsubscribe, topic)
+            await self._register_mid(mid)
             self.hass.async_create_task(self._wait_for_mid(mid))
 
     async def _async_perform_subscriptions(
@@ -650,13 +649,17 @@ class MQTT:
         """Publish / Subscribe / Unsubscribe callback."""
         self.hass.add_job(self._mqtt_handle_mid, mid)
 
-    @callback
-    def _mqtt_handle_mid(self, mid: int) -> None:
+    async def _mqtt_handle_mid(self, mid: int) -> None:
         # Create the mid event if not created, either _mqtt_handle_mid or _wait_for_mid
         # may be executed first.
-        if mid not in self._pending_operations:
-            self._pending_operations[mid] = asyncio.Event()
+        await self._register_mid(mid)
         self._pending_operations[mid].set()
+
+    async def _register_mid(self, mid: int) -> None:
+        """Create Event for an expected ACK."""
+        async with self._pending_operations_condition:
+            if mid not in self._pending_operations:
+                self._pending_operations[mid] = asyncio.Event()
 
     def _mqtt_on_disconnect(self, _mqttc, _userdata, result_code: int) -> None:
         """Disconnected callback."""
@@ -673,8 +676,7 @@ class MQTT:
         """Wait for ACK from broker."""
         # Create the mid event if not created, either _mqtt_handle_mid or _wait_for_mid
         # may be executed first.
-        if mid not in self._pending_operations:
-            self._pending_operations[mid] = asyncio.Event()
+        await self._register_mid(mid)
         try:
             await asyncio.wait_for(self._pending_operations[mid].wait(), TIMEOUT_ACK)
         except asyncio.TimeoutError:
@@ -685,9 +687,6 @@ class MQTT:
             async with self._pending_operations_condition:
                 # Cleanup ACK sync buffer
                 del self._pending_operations[mid]
-                if mid in self._pending_acks:
-                    # self._pending_acks only has unsubscribe mids
-                    self._pending_acks.remove(mid)
                 self._pending_operations_condition.notify_all()
 
     async def _discovery_cooldown(self):
