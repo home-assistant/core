@@ -221,6 +221,11 @@ async def test_template_state_text(
             STATE_OFF,
             None,
         ),
+        (
+            "{{ None }}",
+            STATE_UNKNOWN,
+            None,
+        ),
     ],
 )
 async def test_templatex_state_boolean(

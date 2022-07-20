@@ -48,7 +48,7 @@ from .template_entity import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-_VALID_STATES = [STATE_ON, STATE_OFF, STATE_UNKNOWN, "true", "false", None]
+_VALID_STATES = [STATE_ON, STATE_OFF, STATE_UNKNOWN, "true", "false", "none"]
 
 CONF_COLOR_ACTION = "set_color"
 CONF_COLOR_TEMPLATE = "color_template"
@@ -567,7 +567,7 @@ class LightTemplate(TemplateEntity, LightEntity):
 
         state = str(result).lower()
         if state in _VALID_STATES:
-            if state in (None, STATE_UNKNOWN):
+            if state in ("none", STATE_UNKNOWN):
                 self._state = None
             else:
                 self._state = state in ("true", STATE_ON)
