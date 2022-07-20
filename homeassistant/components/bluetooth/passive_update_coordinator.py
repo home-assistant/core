@@ -225,9 +225,11 @@ class PassiveBluetoothDataUpdateCoordinator(Generic[_T]):
         """Handle a Bluetooth event."""
         self.name = service_info.name
         self._last_callback_time = time.monotonic()
+        self._present = True
         if not self._cancel_track_available:
             self._async_schedule_available_tracker(UNAVAILABLE_SECONDS)
-        self._present = True
+        if self.hass.is_stopping:
+            return
 
         try:
             new_data = self.update_method(service_info)
