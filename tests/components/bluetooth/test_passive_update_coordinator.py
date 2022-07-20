@@ -22,7 +22,7 @@ from homeassistant.core import CoreState, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.util import dt as dt_util
 
-from tests.common import async_fire_time_changed
+from tests.common import MockEntityPlatform, async_fire_time_changed
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -772,15 +772,11 @@ NO_DEVICES_PASSIVE_BLUETOOTH_DATA_UPDATE = PassiveBluetoothDataUpdate(
 async def test_integration_with_entity_without_a_device(hass):
     """Test integration with PassiveBluetoothCoordinatorEntity with no device."""
 
-    update_count = 0
-
     @callback
     def _async_generate_mock_data(
         service_info: BluetoothServiceInfo,
     ) -> PassiveBluetoothDataUpdate:
         """Generate mock data."""
-        nonlocal update_count
-        update_count += 1
         return NO_DEVICES_PASSIVE_BLUETOOTH_DATA_UPDATE
 
     coordinator = PassiveBluetoothDataUpdateCoordinator(
@@ -827,3 +823,46 @@ async def test_integration_with_entity_without_a_device(hass):
     assert entity_one.entity_key == PassiveBluetoothEntityKey(
         key="temperature", device_id=None
     )
+
+
+async def test_with_entity_platform(hass):
+    """Test with a mock entity platform."""
+    entity_platform = MockEntityPlatform(hass)
+
+    @callback
+    def _async_generate_mock_data(
+        service_info: BluetoothServiceInfo,
+    ) -> PassiveBluetoothDataUpdate:
+        """Generate mock data."""
+        return NO_DEVICES_PASSIVE_BLUETOOTH_DATA_UPDATE
+
+    coordinator = PassiveBluetoothDataUpdateCoordinator(
+        hass, _LOGGER, "aa:bb:cc:dd:ee:ff", _async_generate_mock_data
+    )
+    assert coordinator.available is False  # no data yet
+    saved_callback = None
+
+    def _async_register_callback(_hass, _callback, _matcher):
+        nonlocal saved_callback
+        saved_callback = _callback
+        return lambda: None
+
+    with patch(
+        "homeassistant.components.bluetooth.passive_update_coordinator.async_register_callback",
+        _async_register_callback,
+    ):
+        coordinator.async_setup()
+
+    coordinator.async_add_entities_listener(
+        PassiveBluetoothCoordinatorEntity,
+        lambda entities: hass.async_create_task(
+            entity_platform.async_add_entities(entities)
+        ),
+    )
+
+    saved_callback(NO_DEVICES_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    await hass.async_block_till_done()
+    saved_callback(NO_DEVICES_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    await hass.async_block_till_done()
+    assert hass.states.get("test_domain.temperature") is not None
+    assert hass.states.get("test_domain.pressure") is not None
