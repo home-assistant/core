@@ -7,6 +7,7 @@ import time
 from unittest.mock import MagicMock, patch
 
 from home_assistant_bluetooth import BluetoothServiceInfo
+import pytest
 
 from homeassistant.components.bluetooth import BluetoothChange
 from homeassistant.components.bluetooth.passive_update_coordinator import (
@@ -337,7 +338,7 @@ async def test_exception_from_update_method(hass, caplog):
     cancel_coordinator()
 
 
-async def test_bad_data_from_update_method(hass, caplog):
+async def test_bad_data_from_update_method(hass):
     """Test we handle bad data from the update method."""
     run_count = 0
 
@@ -373,9 +374,9 @@ async def test_bad_data_from_update_method(hass, caplog):
     assert coordinator.available is True
 
     # We should go unavailable once we get bad data
-    saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
-    assert "update_method" in caplog.text
-    assert "bad_data" in caplog.text
+    with pytest.raises(ValueError):
+        saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+
     assert coordinator.available is False
 
     # We should go available again once we get good data again
