@@ -102,6 +102,7 @@ class PassiveBluetoothDataUpdateCoordinator(Generic[_T]):
         """Return if the device is available."""
         return self._present and self.last_update_success
 
+    @callback
     def _async_check_device_present(self, _: datetime) -> None:
         """Check if the device is present."""
         if (
