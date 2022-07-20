@@ -118,7 +118,7 @@ async def test_basic_usage(hass):
     assert len(entity_key_events) == 1
     assert len(all_events) == 1
 
-    # There should be 4 calls to create entities
+    # There should be 2 calls to create entities
     assert len(mock_entity.mock_calls) == 2
 
     saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
