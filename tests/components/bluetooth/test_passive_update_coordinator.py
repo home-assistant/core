@@ -11,6 +11,7 @@ from home_assistant_bluetooth import BluetoothServiceInfo
 from homeassistant.components.bluetooth import BluetoothChange
 from homeassistant.components.bluetooth.passive_update_coordinator import (
     UNAVAILABLE_SECONDS,
+    PassiveBluetoothCoordinatorEntity,
     PassiveBluetoothDataUpdate,
     PassiveBluetoothDataUpdateCoordinator,
     PassiveBluetoothEntityKey,
@@ -183,9 +184,17 @@ async def test_unavailable_after_no_data(hass):
     ):
         cancel_coordinator = coordinator.async_setup()
 
+    mock_entity = MagicMock()
+    mock_add_entities = MagicMock()
+    coordinator.async_add_entities_listener(
+        mock_entity,
+        mock_add_entities,
+    )
+
     assert coordinator.available is False
 
     saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    assert len(mock_add_entities.mock_calls) == 1
     assert coordinator.available is True
 
     monotonic_now = time.monotonic()
@@ -648,3 +657,173 @@ GOVEE_B5178_PRIMARY_AND_REMOTE_PASSIVE_BLUETOOTH_DATA_UPDATE = (
         },
     )
 )
+
+
+async def test_integration_with_entity(hass):
+    """Test integration of PassiveBluetoothDataUpdateCoordinator with PassiveBluetoothCoordinatorEntity."""
+
+    update_count = 0
+
+    @callback
+    def _async_generate_mock_data(
+        service_info: BluetoothServiceInfo,
+    ) -> PassiveBluetoothDataUpdate:
+        """Generate mock data."""
+        nonlocal update_count
+        update_count += 1
+        if update_count > 2:
+            return GOVEE_B5178_PRIMARY_AND_REMOTE_PASSIVE_BLUETOOTH_DATA_UPDATE
+        return GOVEE_B5178_REMOTE_PASSIVE_BLUETOOTH_DATA_UPDATE
+
+    coordinator = PassiveBluetoothDataUpdateCoordinator(
+        hass, _LOGGER, "aa:bb:cc:dd:ee:ff", _async_generate_mock_data
+    )
+    assert coordinator.available is False  # no data yet
+    saved_callback = None
+
+    def _async_register_callback(_hass, _callback, _matcher):
+        nonlocal saved_callback
+        saved_callback = _callback
+        return lambda: None
+
+    with patch(
+        "homeassistant.components.bluetooth.passive_update_coordinator.async_register_callback",
+        _async_register_callback,
+    ):
+        coordinator.async_setup()
+
+    mock_add_entities = MagicMock()
+
+    coordinator.async_add_entities_listener(
+        PassiveBluetoothCoordinatorEntity,
+        mock_add_entities,
+    )
+
+    saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    # First call with just the remote sensor entities results in them being added
+    assert len(mock_add_entities.mock_calls) == 1
+
+    saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    # Second call with just the remote sensor entities does not add them again
+    assert len(mock_add_entities.mock_calls) == 1
+
+    saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    # Third call with primary and remote sensor entities adds the primary sensor entities
+    assert len(mock_add_entities.mock_calls) == 2
+
+    saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    # Forth call with both primary and remote sensor entities does not add them again
+    assert len(mock_add_entities.mock_calls) == 2
+
+    entities = [
+        *mock_add_entities.mock_calls[0][1][0],
+        *mock_add_entities.mock_calls[1][1][0],
+    ]
+
+    entity_one: PassiveBluetoothCoordinatorEntity = entities[0]
+    entity_one.hass = hass
+    assert entity_one.available is True
+    assert entity_one.unique_id == "aa:bb:cc:dd:ee:ff-temperature-remote"
+    assert entity_one.device_info == {
+        "identifiers": {("bluetooth", "aa:bb:cc:dd:ee:ff-remote")},
+        "manufacturer": "Govee",
+        "model": "H5178-REMOTE",
+        "name": "B5178D6FB Remote",
+    }
+    assert entity_one.entity_key == PassiveBluetoothEntityKey(
+        key="temperature", device_id="remote"
+    )
+
+
+NO_DEVICES_BLUETOOTH_SERVICE_INFO = BluetoothServiceInfo(
+    name="Generic",
+    address="aa:bb:cc:dd:ee:ff",
+    rssi=-95,
+    manufacturer_data={
+        1: b"\x01\x01\x01\x01\x01\x01\x01\x01",
+    },
+    service_data={},
+    service_uuids=[],
+    source="local",
+)
+NO_DEVICES_PASSIVE_BLUETOOTH_DATA_UPDATE = PassiveBluetoothDataUpdate(
+    devices={},
+    entity_data={
+        PassiveBluetoothEntityKey("temperature", None): 14.5,
+        PassiveBluetoothEntityKey("pressure", None): 1234,
+    },
+    entity_descriptions={
+        PassiveBluetoothEntityKey("temperature", None): SensorEntityDescription(
+            key="temperature",
+            name="Temperature",
+            native_unit_of_measurement=TEMP_CELSIUS,
+            device_class=SensorDeviceClass.TEMPERATURE,
+        ),
+        PassiveBluetoothEntityKey("pressure", None): SensorEntityDescription(
+            key="pressure",
+            name="Pressure",
+            native_unit_of_measurement="hPa",
+            device_class=SensorDeviceClass.PRESSURE,
+        ),
+    },
+)
+
+
+async def test_integration_with_entity_without_a_device(hass):
+    """Test integration with PassiveBluetoothCoordinatorEntity with no device."""
+
+    update_count = 0
+
+    @callback
+    def _async_generate_mock_data(
+        service_info: BluetoothServiceInfo,
+    ) -> PassiveBluetoothDataUpdate:
+        """Generate mock data."""
+        nonlocal update_count
+        update_count += 1
+        return NO_DEVICES_PASSIVE_BLUETOOTH_DATA_UPDATE
+
+    coordinator = PassiveBluetoothDataUpdateCoordinator(
+        hass, _LOGGER, "aa:bb:cc:dd:ee:ff", _async_generate_mock_data
+    )
+    assert coordinator.available is False  # no data yet
+    saved_callback = None
+
+    def _async_register_callback(_hass, _callback, _matcher):
+        nonlocal saved_callback
+        saved_callback = _callback
+        return lambda: None
+
+    with patch(
+        "homeassistant.components.bluetooth.passive_update_coordinator.async_register_callback",
+        _async_register_callback,
+    ):
+        coordinator.async_setup()
+
+    mock_add_entities = MagicMock()
+
+    coordinator.async_add_entities_listener(
+        PassiveBluetoothCoordinatorEntity,
+        mock_add_entities,
+    )
+
+    saved_callback(NO_DEVICES_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    # First call with just the remote sensor entities results in them being added
+    assert len(mock_add_entities.mock_calls) == 1
+
+    saved_callback(NO_DEVICES_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    # Second call with just the remote sensor entities does not add them again
+    assert len(mock_add_entities.mock_calls) == 1
+
+    entities = mock_add_entities.mock_calls[0][1][0]
+    entity_one: PassiveBluetoothCoordinatorEntity = entities[0]
+    entity_one.hass = hass
+    assert entity_one.available is True
+    assert entity_one.unique_id == "aa:bb:cc:dd:ee:ff-temperature"
+    assert entity_one.device_info == {
+        "identifiers": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
+        "name": "Generic",
+    }
+    assert entity_one.entity_key == PassiveBluetoothEntityKey(
+        key="temperature", device_id=None
+    )
