@@ -281,14 +281,14 @@ SENSOR_DESCRIPTIONS = (
         name="Lightning strikes per day",
         icon="mdi:lightning-bolt",
         native_unit_of_measurement="strikes",
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
         key=TYPE_LIGHTNING_PER_HOUR,
         name="Lightning strikes per hour",
         icon="mdi:lightning-bolt",
         native_unit_of_measurement="strikes",
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
         key=TYPE_MAXDAILYGUST,
