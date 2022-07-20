@@ -231,6 +231,15 @@ def _cv_cluster_binding(value: dict[str, Any]) -> ClusterBinding:
     )
 
 
+def _cv_zigpy_network_backup(value: dict[str, Any]) -> zigpy.backups.NetworkBackup:
+    """Transform a zigpy network backup."""
+
+    try:
+        return zigpy.backups.NetworkBackup.from_dict(value)
+    except ValueError as err:
+        raise vol.Invalid(str(err)) from err
+
+
 GROUP_MEMBER_SCHEMA = vol.All(
     vol.Schema(
         {
@@ -1103,7 +1112,7 @@ async def websocket_create_network_backup(
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zha/network/backups/restore",
-        vol.Required("data"): vol.Coerce(zigpy.backups.NetworkBackup.from_dict),
+        vol.Required("data"): _cv_zigpy_network_backup,
     }
 )
 @websocket_api.async_response
@@ -1115,8 +1124,12 @@ async def websocket_restore_network_backup(
     application_controller = zha_gateway.application_controller
 
     # This can take 30-40s
-    await application_controller.backups.restore_backup(msg["data"])
-    connection.send_result(msg[ID])
+    try:
+        await application_controller.backups.restore_backup(msg["data"])
+    except ValueError as err:
+        connection.send_error(msg[ID], websocket_api.const.ERR_INVALID_FORMAT, str(err))
+    else:
+        connection.send_result(msg[ID])
 
 
 @callback
