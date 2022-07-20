@@ -124,7 +124,7 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
         if self._async_current_entries() and _product == "smile_thermo":
             return self.async_abort(reason="anna_with_adam")
 
-        # If we have discovered a Adam or Anna, both might be on the network.
+        # If we have discovered an Adam or Anna, both might be on the network.
         # In that case, we need to cancel the Anna flow, as the Adam should
         # be added.
         for flow in self._async_in_progress():
