@@ -548,6 +548,10 @@ class HuaweiLteSensor(HuaweiLteBaseEntityWithDevice, SensorEntity):
     _state: StateType = field(default=STATE_UNKNOWN, init=False)
     _unit: str | None = field(default=None, init=False)
 
+    def __post_init__(self) -> None:
+        """Initialize remaining attributes."""
+        self._attr_name = self.meta.name or self.item
+
     async def async_added_to_hass(self) -> None:
         """Subscribe to needed data on add."""
         await super().async_added_to_hass()
@@ -557,10 +561,6 @@ class HuaweiLteSensor(HuaweiLteBaseEntityWithDevice, SensorEntity):
         """Unsubscribe from needed data on remove."""
         await super().async_will_remove_from_hass()
         self.router.subscriptions[self.key].remove(f"{SENSOR_DOMAIN}/{self.item}")
-
-    @property
-    def _entity_name(self) -> str:
-        return self.meta.name or self.item
 
     @property
     def _device_unique_id(self) -> str:
