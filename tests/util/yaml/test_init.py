@@ -496,5 +496,7 @@ def test_c_loader_is_available_in_ci():
 async def test_loading_actual_file_with_syntax(hass, try_both_loaders):
     """Test loading a real file with syntax errors."""
     with pytest.raises(HomeAssistantError):
-        fixture_path = pathlib.Path(__file__).parent.joinpath("fixtures", "bad.yaml")
+        fixture_path = pathlib.Path(__file__).parent.joinpath(
+            "fixtures", "bad.yaml.txt"
+        )
         await hass.async_add_executor_job(load_yaml_config_file, fixture_path)
