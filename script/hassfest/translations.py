@@ -185,7 +185,7 @@ def gen_data_entry_schema(
     return vol.All(*validators)
 
 
-def gen_strings_schema(config: Config, integration: Integration):
+def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
     """Generate a strings schema."""
     return vol.Schema(
         {
@@ -228,16 +228,23 @@ def gen_strings_schema(config: Config, integration: Integration):
                 vol.Optional("description"): cv.string_with_no_html,
             },
             vol.Optional("issues"): {
-                str: {
-                    vol.Required("title"): cv.string_with_no_html,
-                    vol.Optional("description"): cv.string_with_no_html,
-                    vol.Optional("fix_flow"): gen_data_entry_schema(
-                        config=config,
-                        integration=integration,
-                        flow_title=UNDEFINED,
-                        require_step_title=False,
+                str: vol.All(
+                    cv.has_at_least_one_key("description", "fix_flow"),
+                    vol.Schema(
+                        {
+                            vol.Required("title"): cv.string_with_no_html,
+                            vol.Exclusive(
+                                "description", "fixable"
+                            ): cv.string_with_no_html,
+                            vol.Exclusive("fix_flow", "fixable"): gen_data_entry_schema(
+                                config=config,
+                                integration=integration,
+                                flow_title=UNDEFINED,
+                                require_step_title=False,
+                            ),
+                        },
                     ),
-                }
+                )
             },
         }
     )
