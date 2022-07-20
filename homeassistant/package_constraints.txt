@@ -21,7 +21,7 @@ httpx==0.23.0
 ifaddr==0.1.7
 jinja2==3.1.2
 lru-dict==1.1.8
-orjson==3.7.7
+orjson==3.7.8
 paho-mqtt==1.6.1
 pillow==9.2.0
 pip>=21.0,<22.2
