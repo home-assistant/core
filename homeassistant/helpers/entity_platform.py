@@ -80,7 +80,7 @@ class EntityPlatformModule(Protocol):
         async_add_entities: AddEntitiesCallback,
         discovery_info: DiscoveryInfoType | None = None,
     ) -> None:
-        """Async setup integration platform."""
+        """Set up an integration platform async."""
 
     def setup_platform(
         self,
@@ -89,7 +89,7 @@ class EntityPlatformModule(Protocol):
         add_entities: AddEntitiesCallback,
         discovery_info: DiscoveryInfoType | None = None,
     ) -> None:
-        """Setup integration platform."""  # noqa: D401
+        """Set up an integration platform."""
 
     async def async_setup_entry(
         self,
@@ -97,7 +97,7 @@ class EntityPlatformModule(Protocol):
         entry: config_entries.ConfigEntry,
         async_add_entities: AddEntitiesCallback,
     ) -> None:
-        """Setup integration platform from config entry."""  # noqa: D401
+        """Set up an integration platform from a config entry."""
 
 
 class EntityPlatform:
