@@ -1129,12 +1129,6 @@ class MediaPlayerImageView(HomeAssistantView):
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "media_player_thumbnail",
-        vol.Required("entity_id"): cv.entity_id,
-    }
-)
-@websocket_api.websocket_command(
-    {
         vol.Required("type"): "media_player/browse_media",
         vol.Required("entity_id"): cv.entity_id,
         vol.Inclusive(
