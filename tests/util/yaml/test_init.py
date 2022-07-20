@@ -2,6 +2,7 @@
 import importlib
 import io
 import os
+import pathlib
 import unittest
 from unittest.mock import patch
 
@@ -490,3 +491,12 @@ def test_input(try_both_loaders, try_both_dumpers):
 def test_c_loader_is_available_in_ci():
     """Verify we are testing the C loader in the CI."""
     assert yaml.loader.HAS_C_LOADER is True
+
+
+async def test_loading_actual_file_with_syntax(hass, try_both_loaders):
+    """Test loading a real file with syntax errors."""
+    with pytest.raises(HomeAssistantError):
+        fixture_path = pathlib.Path(__file__).parent.joinpath(
+            "fixtures", "bad.yaml.txt"
+        )
+        await hass.async_add_executor_job(load_yaml_config_file, fixture_path)
