@@ -368,7 +368,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        _LOGGER.debug("Supported Tado capabilities for %s: %s", self.zone_name, self._current_capabilities)
+        _LOGGER.warning("Supported Tado capabilities for %s: %s", self.zone_name, self._current_capabilities)
         return self._current_capabilities["support_flags"]
 
     @property
