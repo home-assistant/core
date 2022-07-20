@@ -37,10 +37,7 @@ def _handle_errors(func):
             connection.send_error(msg["id"], *error)
             return
 
-        if msg is not None:
-            connection.send_big_result(msg["id"], result)
-        else:
-            connection.send_result(msg["id"], result)
+        connection.send_result(msg["id"], result)
 
     return send_with_error_handling
 

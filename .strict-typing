@@ -20,6 +20,7 @@ homeassistant.helpers.deprecation
 homeassistant.helpers.discovery
 homeassistant.helpers.dispatcher
 homeassistant.helpers.entity
+homeassistant.helpers.entity_platform
 homeassistant.helpers.entity_values
 homeassistant.helpers.event
 homeassistant.helpers.reload
@@ -196,7 +197,7 @@ homeassistant.components.recollect_waste.*
 homeassistant.components.recorder.*
 homeassistant.components.remote.*
 homeassistant.components.renault.*
-homeassistant.components.resolution_center.*
+homeassistant.components.repairs.*
 homeassistant.components.rhasspy.*
 homeassistant.components.ridwell.*
 homeassistant.components.rituals_perfume_genie.*

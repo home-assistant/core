@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-import base64
 import collections
 from collections.abc import Awaitable, Callable, Iterable
 from contextlib import suppress
@@ -362,12 +361,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.http.register_view(CameraImageView(component))
     hass.http.register_view(CameraMjpegStream(component))
-    websocket_api.async_register_command(
-        hass,
-        WS_TYPE_CAMERA_THUMBNAIL,
-        websocket_camera_thumbnail,
-        SCHEMA_WS_CAMERA_THUMBNAIL,
-    )
+
     websocket_api.async_register_command(hass, ws_camera_stream)
     websocket_api.async_register_command(hass, ws_camera_web_rtc_offer)
     websocket_api.async_register_command(hass, websocket_get_prefs)
@@ -791,32 +785,6 @@ class CameraMjpegStream(CameraView):
             return await camera.handle_async_still_stream(request, interval)
         except ValueError as err:
             raise web.HTTPBadRequest() from err
-
-
-@websocket_api.async_response
-async def websocket_camera_thumbnail(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict
-) -> None:
-    """Handle get camera thumbnail websocket command.
-
-    Async friendly.
-    """
-    _LOGGER.warning("The websocket command 'camera_thumbnail' has been deprecated")
-    try:
-        image = await async_get_image(hass, msg["entity_id"])
-        connection.send_big_result(
-            msg["id"],
-            {
-                "content_type": image.content_type,
-                "content": base64.b64encode(image.content).decode("utf-8"),
-            },
-        )
-    except HomeAssistantError:
-        connection.send_message(
-            websocket_api.error_message(
-                msg["id"], "image_fetch_failed", "Unable to fetch image"
-            )
-        )
 
 
 @websocket_api.websocket_command(
