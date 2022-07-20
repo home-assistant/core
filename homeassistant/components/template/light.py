@@ -567,7 +567,10 @@ class LightTemplate(TemplateEntity, LightEntity):
 
         state = str(result).lower()
         if state in _VALID_STATES:
-            self._state = state in ("true", STATE_ON)
+            if state in (None, STATE_UNKNOWN):
+                self._state = None
+            else:
+                self._state = state in ("true", STATE_ON)
             return
 
         _LOGGER.error(
