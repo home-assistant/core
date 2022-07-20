@@ -263,10 +263,10 @@ def _async_validate_auto_generated_cost_entity(
 
 async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
     """Validate the energy configuration."""
-    manager = await data.async_get_manager(hass)
+    manager: data.EnergyManager = await data.async_get_manager(hass)
     statistics_metadata: dict[str, tuple[int, recorder.models.StatisticMetaData]] = {}
     validate_calls = []
-    wanted_statistics_metadata = set()
+    wanted_statistics_metadata: set[str] = set()
 
     result = EnergyPreferencesValidation()
 
@@ -279,6 +279,7 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
         result.energy_sources.append(source_result)
 
         if source["type"] == "grid":
+            flow: data.FlowFromGridSourceType | data.FlowToGridSourceType
             for flow in source["flow_from"]:
                 wanted_statistics_metadata.add(flow["stat_energy_from"])
                 validate_calls.append(
@@ -294,14 +295,14 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                     )
                 )
 
-                if flow.get("stat_cost") is not None:
-                    wanted_statistics_metadata.add(flow["stat_cost"])
+                if (stat_cost := flow.get("stat_cost")) is not None:
+                    wanted_statistics_metadata.add(stat_cost)
                     validate_calls.append(
                         functools.partial(
                             _async_validate_cost_stat,
                             hass,
                             statistics_metadata,
-                            flow["stat_cost"],
+                            stat_cost,
                             source_result,
                         )
                     )
@@ -345,14 +346,14 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                     )
                 )
 
-                if flow.get("stat_compensation") is not None:
-                    wanted_statistics_metadata.add(flow["stat_compensation"])
+                if (stat_compensation := flow.get("stat_compensation")) is not None:
+                    wanted_statistics_metadata.add(stat_compensation)
                     validate_calls.append(
                         functools.partial(
                             _async_validate_cost_stat,
                             hass,
                             statistics_metadata,
-                            flow["stat_compensation"],
+                            stat_compensation,
                             source_result,
                         )
                     )
@@ -396,14 +397,14 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                 )
             )
 
-            if source.get("stat_cost") is not None:
-                wanted_statistics_metadata.add(source["stat_cost"])
+            if (stat_cost := source.get("stat_cost")) is not None:
+                wanted_statistics_metadata.add(stat_cost)
                 validate_calls.append(
                     functools.partial(
                         _async_validate_cost_stat,
                         hass,
                         statistics_metadata,
-                        source["stat_cost"],
+                        stat_cost,
                         source_result,
                     )
                 )
