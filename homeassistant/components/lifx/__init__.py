@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Iterable
 from datetime import datetime, timedelta
+import logging
 import socket
 from typing import Any
 
@@ -25,12 +26,14 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
-from .const import _LOGGER, DATA_LIFX_MANAGER, DOMAIN, TARGET_ANY
+from .const import DATA_LIFX_MANAGER, DOMAIN, TARGET_ANY
 from .coordinator import LIFXUpdateCoordinator
 from .discovery import async_discover_devices, async_trigger_discovery
 from .manager import LIFXManager
 from .migration import async_migrate_entities_devices, async_migrate_legacy_entries
 from .util import async_entry_is_legacy, async_get_legacy_entry
+
+_LOGGER = logging.getLogger(__name__)
 
 CONF_SERVER = "server"
 CONF_BROADCAST = "broadcast"
@@ -57,7 +60,7 @@ CONFIG_SCHEMA = vol.All(
 )
 
 
-PLATFORMS = [Platform.BUTTON, Platform.LIGHT]
+PLATFORMS = [Platform.BUTTON, Platform.SENSOR, Platform.LIGHT]
 DISCOVERY_INTERVAL = timedelta(minutes=15)
 MIGRATION_INTERVAL = timedelta(minutes=5)
 

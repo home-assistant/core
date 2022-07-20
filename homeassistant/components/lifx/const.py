@@ -1,7 +1,5 @@
 """Const for LIFX."""
 
-import logging
-
 DOMAIN = "lifx"
 
 TARGET_ANY = "00:00:00:00:00:00"
@@ -29,6 +27,11 @@ IDENTIFY_WAVEFORM = {
 IDENTIFY = "identify"
 RESTART = "restart"
 
+HEV_CYCLE_DURATION = "hev_cycle_duration"
+HEV_CYCLE_REMAINING = "hev_cycle_remaining"
+HEV_CYCLE_LAST_POWER = "hev_cycle_last_power"
+HEV_CYCLE_LAST_RESULT = "last_hev_cycle_result"
+
 DATA_LIFX_MANAGER = "lifx_manager"
 
-_LOGGER = logging.getLogger(__name__)
+ATTR_RSSI = "rssi"

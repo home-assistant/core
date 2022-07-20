@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import timedelta
+import logging
 from typing import Any
 
 import aiolifx_effects
@@ -28,8 +29,10 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.service import async_extract_referenced_entity_ids
 
-from .const import _LOGGER, DATA_LIFX_MANAGER, DOMAIN
+from .const import DATA_LIFX_MANAGER, DOMAIN
 from .util import convert_8_to_16, find_hsbk
+
+_LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=10)
 

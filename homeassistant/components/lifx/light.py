@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime, timedelta
+import logging
 import math
 from typing import Any
 
@@ -62,6 +63,9 @@ HSBK_HUE = 0
 HSBK_SATURATION = 1
 HSBK_BRIGHTNESS = 2
 HSBK_KELVIN = 3
+
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
