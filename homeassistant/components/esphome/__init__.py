@@ -562,13 +562,11 @@ async def platform_async_setup_entry(
         """Update entities of this platform when entities are listed."""
         old_infos = entry_data.info[component_key]
         new_infos: dict[int, EntityInfo] = {}
-        add_entities = []
+        add_entities: list[_EntityT] = []
         for info in infos:
             if not isinstance(info, info_type):
                 # Filter out infos that don't belong to this platform.
                 continue
-            # cast back to upper type, otherwise mypy gets confused
-            info = cast(EntityInfo, info)
 
             if info.key in old_infos:
                 # Update existing entity
