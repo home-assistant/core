@@ -11,7 +11,7 @@ HTW_SERVICE_INFO = BluetoothServiceInfo(
     service_uuids=["ef090000-11d6-42ba-93b8-9dd7ec090ab0"],
     source="local",
 )
-HTWX_SERVICE_INFO = BluetoothServiceInfo(
+HTPWX_SERVICE_INFO = BluetoothServiceInfo(
     name="SensorPush HTP.xw F4D",
     address="4125DDBA-2774-4851-9889-6AADDD4CAC3D",
     rssi=-56,
