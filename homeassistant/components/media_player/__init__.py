@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-import base64
 import collections
 from collections.abc import Callable
 from contextlib import suppress
@@ -27,7 +26,6 @@ from homeassistant.backports.enum import StrEnum
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
 from homeassistant.components.websocket_api.const import (
-    ERR_NOT_FOUND,
     ERR_NOT_SUPPORTED,
     ERR_UNKNOWN_ERROR,
 )
@@ -254,7 +252,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL
     )
 
-    websocket_api.async_register_command(hass, websocket_handle_thumbnail)
     websocket_api.async_register_command(hass, websocket_browse_media)
     hass.http.register_view(MediaPlayerImageView(component))
 
@@ -1128,49 +1125,6 @@ class MediaPlayerImageView(HomeAssistantView):
 
         headers: LooseHeaders = {CACHE_CONTROL: "max-age=3600"}
         return web.Response(body=data, content_type=content_type, headers=headers)
-
-
-@websocket_api.websocket_command(
-    {
-        vol.Required("type"): "media_player_thumbnail",
-        vol.Required("entity_id"): cv.entity_id,
-    }
-)
-@websocket_api.async_response
-async def websocket_handle_thumbnail(hass, connection, msg):
-    """Handle get media player cover command.
-
-    Async friendly.
-    """
-    component = hass.data[DOMAIN]
-
-    if (player := component.get_entity(msg["entity_id"])) is None:
-        connection.send_message(
-            websocket_api.error_message(msg["id"], ERR_NOT_FOUND, "Entity not found")
-        )
-        return
-
-    _LOGGER.warning(
-        "The websocket command media_player_thumbnail is deprecated. Use /api/media_player_proxy instead"
-    )
-
-    data, content_type = await player.async_get_media_image()
-
-    if data is None:
-        connection.send_message(
-            websocket_api.error_message(
-                msg["id"], "thumbnail_fetch_failed", "Failed to fetch thumbnail"
-            )
-        )
-        return
-
-    connection.send_big_result(
-        msg["id"],
-        {
-            "content_type": content_type,
-            "content": base64.b64encode(data).decode("utf-8"),
-        },
-    )
 
 
 @websocket_api.websocket_command(
