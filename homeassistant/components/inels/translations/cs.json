@@ -1,19 +1,47 @@
 {
     "config": {
         "abort": {
-            "no_devices_found": "Mqtt server nebyl nalezen v s\u00EDti.",
-            "single_instance_allowed": "P\u0159ipojen\u00ED k mqtt serveru je ji\u017E vytvo\u0159eno. M\u016F\u017Ee existovat pouze jedno p\u0159ipojen\u00ED."
+            "already_configured": "Service is already configured",
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
+        },
+        "error": {
+            "cannot_connect": "Failed to connect"
         },
         "step": {
-            "manual": {
+            "setup": {
                 "data": {
-                    "host": "Hostitel",
+                    "discovery": "Enable discovery",
+                    "host": "Broker",
                     "port": "Port",
-                    "user_name": "U\u017Eivatelsk\u00E9 jm\u00E9no",
-                    "user_password": "Heslo"
+                    "username": "User name",
+                    "password": "Password"
                 },
-                "title": "Vypl\u0148te p\u0159ihla\u009Aovac\u00ED \u00FAdaje pro p\u0159ipojen\u00ED do MQTT brokeru",
-                "description": "Ujist\u011Bte se, \u017Ee mqtt server je ji\u017E v provozu."
+                "title": "iNELS MQTT broker",
+                "description": "Please connect your MQTT broker to load iNELS components."
+            },
+            "confirm": {
+                "data": {
+                    "discovery": "Enable discovery"
+                },
+                "title": "MQTT broker via add-on",
+                "description": "Do you want to configure Home Assistant to connec to the MQTT broker by the add-on {addon}?"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "cannot_connect": "Failed to connect"
+        },
+        "step": {
+            "setup": {
+                "data": {
+                    "host": "Broker",
+                    "port": "Port",
+                    "username": "User name",
+                    "password": "Password"
+                },
+                "title": "iNELS MQTT broker options",
+                "description": "Please enter MQTT broker connection information."
             }
         }
     }

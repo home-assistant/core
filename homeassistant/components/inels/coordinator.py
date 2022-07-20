@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from homewizard_energy import RequestError
 from inelsmqtt.devices import Device
 
 from homeassistant.core import HomeAssistant, callback
@@ -11,7 +10,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import LOGGER
 
-SCAN_INTERVAL = 60
+SCAN_INTERVAL = 5
 
 
 class InelsDeviceUpdateCoordinator(DataUpdateCoordinator[Device]):
@@ -28,6 +27,10 @@ class InelsDeviceUpdateCoordinator(DataUpdateCoordinator[Device]):
             name=f"Update coordinator for {device}",
             update_interval=timedelta(seconds=SCAN_INTERVAL),
         )
+
+    @property
+    def type(self) -> str:
+        """Type of the coordinator entity."""
 
     @callback
     def _exception_callback(self, exc: Exception) -> None:
@@ -59,13 +62,13 @@ class InelsDeviceUpdateCoordinator(DataUpdateCoordinator[Device]):
                 exc = self._exception
                 self._exception = None
                 raise exc
-        except RequestError as err:
+        except Exception as err:
             raise UpdateFailed(f"Error communicating with broker: {err}.") from err
 
         if not self.data or not self.last_update_success:
             try:
-                await self.hass.async_add_executor_job(self.device.value)
-            except RequestError as err:
+                await self.hass.async_add_executor_job(self.device.get_value)
+            except Exception as err:
                 raise UpdateFailed(f"Error communicating with broker: {err}.") from err
 
             # reset update interval

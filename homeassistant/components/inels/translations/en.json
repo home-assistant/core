@@ -1,12 +1,47 @@
 {
     "config": {
         "abort": {
-            "no_devices_found": "No devices found on the network",
+            "already_configured": "Service is already configured",
             "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
+        "error": {
+            "cannot_connect": "Failed to connect"
+        },
         "step": {
+            "setup": {
+                "data": {
+                    "discovery": "Enable discovery",
+                    "host": "Broker",
+                    "port": "Port",
+                    "username": "User name",
+                    "password": "Password"
+                },
+                "title": "iNELS MQTT broker",
+                "description": "Please connect your MQTT broker to load iNELS components."
+            },
             "confirm": {
-                "description": "Do you want to start set up?"
+                "data": {
+                    "discovery": "Enable discovery"
+                },
+                "title": "MQTT broker via add-on",
+                "description": "Do you want to configure Home Assistant to connec to the MQTT broker by the add-on {addon}?"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "cannot_connect": "Failed to connect"
+        },
+        "step": {
+            "setup": {
+                "data": {
+                    "host": "Broker",
+                    "port": "Port",
+                    "username": "User name",
+                    "password": "Password"
+                },
+                "title": "iNELS MQTT broker options",
+                "description": "Please enter MQTT broker connection information."
             }
         }
     }

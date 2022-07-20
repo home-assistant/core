@@ -1,15 +1,13 @@
 """Base class for Inels components."""
 from __future__ import annotations
 
-from abc import abstractmethod
-
 from inelsmqtt.devices import Device
 
 from homeassistant.core import callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DOMAIN, ICONS
 from .coordinator import InelsDeviceUpdateCoordinator
 
 
@@ -23,7 +21,7 @@ class InelsBaseEntity(CoordinatorEntity[InelsDeviceUpdateCoordinator]):
         """Init base entity."""
         super().__init__(device_coordinator)
 
-        self._device: Device = device_coordinator.data
+        self._device: Device = device_coordinator.device
         self._device_id = self._device.unique_id
         self._attr_name = self._device.title
 
@@ -31,16 +29,26 @@ class InelsBaseEntity(CoordinatorEntity[InelsDeviceUpdateCoordinator]):
 
         self._attr_unique_id = f"{self._parent_id}-{self._device_id}"
 
-    @abstractmethod
     @callback
     def _refresh(self) -> None:
         """Refresh device data."""
+        self.hass.async_add_executor_job(self._device.get_value)
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updted data from the coordinator."""
         self._refresh()
         super()._handle_coordinator_update()
+
+    @property
+    def icon(self) -> str | None:
+        """Icon of the entity."""
+        return ICONS.get(self._device.device_type)
+
+    @property
+    def should_poll(self) -> bool:
+        """Need to poll. Coordinator notifies entity of updates."""
+        return True
 
     @property
     def device_info(self) -> DeviceInfo:

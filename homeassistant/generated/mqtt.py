@@ -6,6 +6,9 @@ To update, run python3 -m script.hassfest
 # fmt: off
 
 MQTT = {
+    "inels": [
+        "inels/#"
+    ],
     "tasmota": [
         "tasmota/discovery/#"
     ]
