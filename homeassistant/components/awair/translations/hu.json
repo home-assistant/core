@@ -24,7 +24,7 @@
                 },
                 "description": "Adja meg \u00fajra az Awair fejleszt\u0151i hozz\u00e1f\u00e9r\u00e9si tokent."
             },
-            "user": {
+            "cloud": {
                 "data": {
                     "access_token": "Hozz\u00e1f\u00e9r\u00e9si token",
                     "email": "E-mail"

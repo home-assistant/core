@@ -24,7 +24,7 @@
                 },
                 "description": "Ange din Awair-utvecklar\u00e5tkomsttoken igen."
             },
-            "user": {
+            "cloud": {
                 "data": {
                     "access_token": "\u00c5tkomstnyckel",
                     "email": "E-post"

@@ -24,7 +24,7 @@
                 },
                 "description": "Masukkan kembali token akses pengembang Awair Anda."
             },
-            "user": {
+            "cloud": {
                 "data": {
                     "access_token": "Token Akses",
                     "email": "Email"

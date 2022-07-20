@@ -24,7 +24,7 @@
                 },
                 "description": "Skriv inn Awair-utviklertilgangstokenet ditt p\u00e5 nytt."
             },
-            "user": {
+            "cloud": {
                 "data": {
                     "access_token": "Tilgangstoken",
                     "email": "E-post"

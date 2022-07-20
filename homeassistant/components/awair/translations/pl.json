@@ -24,7 +24,7 @@
                 },
                 "description": "Wprowad\u017a ponownie token dost\u0119pu programisty Awair."
             },
-            "user": {
+            "cloud": {
                 "data": {
                     "access_token": "Token dost\u0119pu",
                     "email": "Adres e-mail"

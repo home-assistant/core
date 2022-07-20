@@ -22,7 +22,7 @@
                     "email": "Email"
                 }
             },
-            "user": {
+            "cloud": {
                 "data": {
                     "access_token": "Token de Acesso",
                     "email": "Email"

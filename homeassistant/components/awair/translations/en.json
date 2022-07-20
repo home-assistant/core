@@ -24,12 +24,25 @@
                 },
                 "description": "Please re-enter your Awair developer access token."
             },
-            "user": {
+            "local" :{
+                "data": {
+                    "hosts": "Comma separated host(s)"
+                },
+                "description": "Awair Local API must be enabled following these steps: https://support.getawair.com/hc/en-us/articles/360049221014-Awair-Element-Local-API-Feature"
+            },
+            "cloud" :{
                 "data": {
                     "access_token": "Access Token",
                     "email": "Email"
                 },
                 "description": "You must register for an Awair developer access token at: https://developer.getawair.com/onboard/login"
+            },
+            "user": {
+                "menu_options": {
+                    "cloud": "Cloud API",
+                    "local": "Local API"
+                  },
+                "description": "Awair provides two APIs, a Cloud API with data summarized over 5 minutes, and a beta Local API which can be polled for real time data."
             }
         }
     }
