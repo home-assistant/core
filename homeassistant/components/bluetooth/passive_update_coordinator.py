@@ -64,7 +64,7 @@ _PassiveBluetoothDataUpdateCoordinatorT = TypeVar(
 
 
 class PassiveBluetoothDataUpdateCoordinator(Generic[_T]):
-    """Bluetooth data update coordinator.
+    """Passive bluetooth data update coordinator for bluetooth advertisements.
 
     The coordinator is responsible for keeping track of the bluetooth data,
     updating subscribers, and device availability.
