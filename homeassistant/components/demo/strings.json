@@ -1,5 +1,26 @@
 {
   "title": "Demo",
+  "issues": {
+    "out_of_blinker_fluid": {
+      "title": "The blinker fluid is empty and needs to be refilled",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Blinker fluid needs to be refilled",
+            "description": "Press OK when blinker fluid has been refilled"
+          }
+        }
+      }
+    },
+    "transmogrifier_deprecated": {
+      "title": "The transmogrifier component is deprecated",
+      "description": "The transmogrifier component is now deprecated due to the lack of local control available in the new API"
+    },
+    "unfixable_problem": {
+      "title": "This is not a fixable problem",
+      "description": "This issue is never going to give up."
+    }
+  },
   "options": {
     "step": {
       "init": {
