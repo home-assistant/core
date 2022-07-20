@@ -89,7 +89,7 @@ async def test_basic_usage(hass):
     mock_entity = MagicMock()
     mock_add_entities = MagicMock()
 
-    def _async_entity_key_listener(data: PassiveBluetoothDataUpdate | None):
+    def _async_entity_key_listener(data: PassiveBluetoothDataUpdate | None) -> None:
         """Mock entity key listener."""
         entity_key_events.append(data)
 
