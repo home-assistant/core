@@ -92,12 +92,16 @@ class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
         data = {}
 
         async with self.api_lock:
-            data[KEY_GATEWAY] = await self.hass.async_add_executor_job(self.update_gateway)
+            data[KEY_GATEWAY] = await self.hass.async_add_executor_job(
+                self.update_gateway
+            )
 
         for blind in self._gateway.device_list.values():
             await asyncio.sleep(1.5)
             async with self.api_lock:
-                data[blind.mac] = await self.hass.async_add_executor_job(self.update_blind, blind)
+                data[blind.mac] = await self.hass.async_add_executor_job(
+                    self.update_blind, blind
+                )
 
         all_available = all(device[ATTR_AVAILABLE] for device in data.values())
         if all_available:
