@@ -24,7 +24,7 @@ class DemoFixFlow(RepairsFlow):
         """Handle the confirm step of a fix flow."""
         if user_input is not None:
             return self.async_create_entry(
-                title=None, data=None  # type:ignore[arg-type]
+                title="Fixed issue", data={}
             )
 
         return self.async_show_form(step_id="confirm", data_schema=vol.Schema({}))
