@@ -81,7 +81,7 @@ async def test_issues_created(hass, hass_client, hass_ws_client):
     ws_client = await hass_ws_client(hass)
     client = await hass_client()
 
-    await ws_client.send_json({"id": 1, "type": "resolution_center/list_issues"})
+    await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
     msg = await ws_client.receive_json()
 
     assert msg["success"]
@@ -129,7 +129,7 @@ async def test_issues_created(hass, hass_client, hass_ws_client):
         ]
     }
 
-    url = "/api/resolution_center/issues/fix"
+    url = "/api/repairs/issues/fix"
     resp = await client.post(
         url, json={"handler": "demo", "issue_id": "out_of_blinker_fluid"}
     )
@@ -149,7 +149,7 @@ async def test_issues_created(hass, hass_client, hass_ws_client):
         "type": "form",
     }
 
-    url = f"/api/resolution_center/issues/fix/{flow_id}"
+    url = f"/api/repairs/issues/fix/{flow_id}"
     resp = await client.post(url)
 
     assert resp.status == HTTPStatus.OK
@@ -166,7 +166,7 @@ async def test_issues_created(hass, hass_client, hass_ws_client):
         "version": 1,
     }
 
-    await ws_client.send_json({"id": 4, "type": "resolution_center/list_issues"})
+    await ws_client.send_json({"id": 4, "type": "repairs/list_issues"})
     msg = await ws_client.receive_json()
 
     assert msg["success"]

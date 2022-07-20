@@ -1,14 +1,14 @@
-"""Resolution center platform for the demo integration."""
+"""Repairs platform for the demo integration."""
 
 from __future__ import annotations
 
 import voluptuous as vol
 
 from homeassistant import data_entry_flow
-from homeassistant.components.resolution_center import ResolutionCenterFlow
+from homeassistant.components.repairs import RepairsFlow
 
 
-class DemoFixFlow(ResolutionCenterFlow):
+class DemoFixFlow(RepairsFlow):
     """Handler for an issue fixing flow."""
 
     async def async_step_init(

@@ -10,8 +10,8 @@ from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
     get_last_statistics,
 )
-from homeassistant.components.resolution_center import async_create_issue
-from homeassistant.components.resolution_center.models import IssueSeverity
+from homeassistant.components.repairs import async_create_issue
+from homeassistant.components.repairs.models import IssueSeverity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
