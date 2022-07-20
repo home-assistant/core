@@ -550,6 +550,7 @@ omit =
     homeassistant/components/insteon/const.py
     homeassistant/components/insteon/cover.py
     homeassistant/components/insteon/fan.py
+    homeassistant/components/insteon/lock.py
     homeassistant/components/insteon/insteon_entity.py
     homeassistant/components/insteon/ipdb.py
     homeassistant/components/insteon/light.py
