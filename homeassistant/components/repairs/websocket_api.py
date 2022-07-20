@@ -1,4 +1,4 @@
-"""The resolution center websocket API."""
+"""The repairs websocket API."""
 from __future__ import annotations
 
 import dataclasses
@@ -26,22 +26,18 @@ from .issue_registry import async_get as async_get_issue_registry
 
 @callback
 def async_setup(hass: HomeAssistant) -> None:
-    """Set up the resolution center websocket API."""
+    """Set up the repairs websocket API."""
     websocket_api.async_register_command(hass, ws_ignore_issue)
     websocket_api.async_register_command(hass, ws_list_issues)
 
-    hass.http.register_view(
-        ResolutionCenterFlowIndexView(hass.data[DOMAIN]["flow_manager"])
-    )
-    hass.http.register_view(
-        ResolutionCenterFlowResourceView(hass.data[DOMAIN]["flow_manager"])
-    )
+    hass.http.register_view(RepairsFlowIndexView(hass.data[DOMAIN]["flow_manager"]))
+    hass.http.register_view(RepairsFlowResourceView(hass.data[DOMAIN]["flow_manager"]))
 
 
 @callback
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "resolution_center/ignore_issue",
+        vol.Required("type"): "repairs/ignore_issue",
         vol.Required("domain"): str,
         vol.Required("issue_id"): str,
         vol.Required("ignore"): bool,
@@ -58,7 +54,7 @@ def ws_ignore_issue(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "resolution_center/list_issues",
+        vol.Required("type"): "repairs/list_issues",
     }
 )
 @callback
@@ -82,11 +78,11 @@ def ws_list_issues(
     connection.send_result(msg["id"], {"issues": issues})
 
 
-class ResolutionCenterFlowIndexView(FlowManagerIndexView):
+class RepairsFlowIndexView(FlowManagerIndexView):
     """View to create issue fix flows."""
 
-    url = "/api/resolution_center/issues/fix"
-    name = "api:resolution_center:issues:fix"
+    url = "/api/repairs/issues/fix"
+    name = "api:repairs:issues:fix"
 
     @RequestDataValidator(
         vol.Schema(
@@ -119,11 +115,11 @@ class ResolutionCenterFlowIndexView(FlowManagerIndexView):
         return self.json(result)  # pylint: disable=arguments-differ
 
 
-class ResolutionCenterFlowResourceView(FlowManagerResourceView):
+class RepairsFlowResourceView(FlowManagerResourceView):
     """View to interact with the option flow manager."""
 
-    url = "/api/resolution_center/issues/fix/{flow_id}"
-    name = "api:resolution_center:issues:fix:resource"
+    url = "/api/repairs/issues/fix/{flow_id}"
+    name = "api:repairs:issues:fix:resource"
 
     async def get(self, request: web.Request, flow_id: str) -> web.Response:
         """Get the current state of a data_entry_flow."""

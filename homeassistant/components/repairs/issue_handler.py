@@ -1,4 +1,4 @@
-"""The resolution center integration."""
+"""The repairs integration."""
 from __future__ import annotations
 
 from typing import Any
@@ -14,11 +14,11 @@ from homeassistant.helpers.integration_platform import (
 
 from .const import DOMAIN
 from .issue_registry import async_get as async_get_issue_registry
-from .models import IssueSeverity, ResolutionCenterFlow, ResolutionCenterProtocol
+from .models import IssueSeverity, RepairsFlow, RepairsProtocol
 
 
-class ResolutionCenterFlowManager(data_entry_flow.FlowManager):
-    """Manage resolution center flows."""
+class RepairsFlowManager(data_entry_flow.FlowManager):
+    """Manage repairs flows."""
 
     async def async_create_flow(
         self,
@@ -26,14 +26,12 @@ class ResolutionCenterFlowManager(data_entry_flow.FlowManager):
         *,
         context: dict[str, Any] | None = None,
         data: dict[str, Any] | None = None,
-    ) -> ResolutionCenterFlow:
-        """Create a flow. platform is a resolution center module."""
+    ) -> RepairsFlow:
+        """Create a flow. platform is a repairs module."""
         if "platforms" not in self.hass.data[DOMAIN]:
-            await async_process_resolution_center_platforms(self.hass)
+            await async_process_repairs_platforms(self.hass)
 
-        platforms: dict[str, ResolutionCenterProtocol] = self.hass.data[DOMAIN][
-            "platforms"
-        ]
+        platforms: dict[str, RepairsProtocol] = self.hass.data[DOMAIN]["platforms"]
         if handler_key not in platforms:
             raise data_entry_flow.UnknownHandler
         platform = platforms[handler_key]
@@ -60,25 +58,23 @@ class ResolutionCenterFlowManager(data_entry_flow.FlowManager):
 
 @callback
 def async_setup(hass: HomeAssistant) -> None:
-    """Initialize resolution center."""
-    hass.data[DOMAIN]["flow_manager"] = ResolutionCenterFlowManager(hass)
+    """Initialize repairs."""
+    hass.data[DOMAIN]["flow_manager"] = RepairsFlowManager(hass)
 
 
-async def async_process_resolution_center_platforms(hass: HomeAssistant) -> None:
-    """Start processing resolution center platforms."""
+async def async_process_repairs_platforms(hass: HomeAssistant) -> None:
+    """Start processing repairs platforms."""
     hass.data[DOMAIN]["platforms"] = {}
 
-    await async_process_integration_platforms(
-        hass, DOMAIN, _register_resolution_center_platform
-    )
+    await async_process_integration_platforms(hass, DOMAIN, _register_repairs_platform)
 
 
-async def _register_resolution_center_platform(
-    hass: HomeAssistant, integration_domain: str, platform: ResolutionCenterProtocol
+async def _register_repairs_platform(
+    hass: HomeAssistant, integration_domain: str, platform: RepairsProtocol
 ) -> None:
-    """Register a resolution center platform."""
+    """Register a repairs platform."""
     if not hasattr(platform, "async_create_fix_flow"):
-        raise HomeAssistantError(f"Invalid resolution center platform {platform}")
+        raise HomeAssistantError(f"Invalid repairs platform {platform}")
     hass.data[DOMAIN]["platforms"][integration_domain] = platform
 
 
