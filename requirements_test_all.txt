@@ -1438,6 +1438,9 @@ securetar==2022.2.0
 # homeassistant.components.sense
 sense_energy==0.10.4
 
+# homeassistant.components.sensorpush
+sensorpush-ble==1.2.2
+
 # homeassistant.components.sentry
 sentry-sdk==1.7.2
 
