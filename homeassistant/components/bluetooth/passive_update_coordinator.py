@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import dataclasses
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
 import time
 from typing import Any, Generic, TypeVar
@@ -14,7 +14,7 @@ from homeassistant.const import ATTR_IDENTIFIERS, ATTR_NAME
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.event import async_call_later
 
 from . import (
     BluetoothCallbackMatcher,
@@ -95,7 +95,8 @@ class PassiveBluetoothDataUpdateCoordinator(Generic[_T]):
 
         self.last_update_success = True
         self._last_callback_time: float = NEVER_TIME
-        self._present = True
+        self._cancel_track_available: CALLBACK_TYPE | None = None
+        self._present = False
 
     @property
     def available(self) -> bool:
@@ -103,13 +104,32 @@ class PassiveBluetoothDataUpdateCoordinator(Generic[_T]):
         return self._present and self.last_update_success
 
     @callback
+    def _async_cancel_available_tracker(self) -> None:
+        """Reset the available tracker."""
+        if self._cancel_track_available:
+            self._cancel_track_available()
+            self._cancel_track_available = None
+
+    @callback
+    def _async_schedule_available_tracker(self, time_remaining: float) -> None:
+        """Schedule the available tracker."""
+        self._cancel_track_available = async_call_later(
+            self.hass, time_remaining, self._async_check_device_present
+        )
+
+    @callback
     def _async_check_device_present(self, _: datetime) -> None:
         """Check if the device is present."""
+        time_passed_since_seen = time.monotonic() - self._last_callback_time
+        self._async_cancel_available_tracker()
         if (
             not self._present
-            or time.monotonic() - self._last_callback_time < UNAVAILABLE_SECONDS
+            or time_passed_since_seen < UNAVAILABLE_SECONDS
             or async_address_present(self.hass, self.address)
         ):
+            self._async_schedule_available_tracker(
+                UNAVAILABLE_SECONDS - time_passed_since_seen
+            )
             return
         self._present = False
         self.async_update_listeners(None)
@@ -117,26 +137,11 @@ class PassiveBluetoothDataUpdateCoordinator(Generic[_T]):
     @callback
     def async_setup(self) -> CALLBACK_TYPE:
         """Start the callback."""
-        cancels = [
-            async_track_time_interval(
-                self.hass,
-                self._async_check_device_present,
-                timedelta(seconds=UNAVAILABLE_SECONDS),
-            ),
-            async_register_callback(
-                self.hass,
-                self._async_handle_bluetooth_event,
-                BluetoothCallbackMatcher(address=self.address),
-            ),
-        ]
-
-        @callback
-        def _async_cancel_all() -> None:
-            """Cancel all the callbacks."""
-            for cancel in cancels:
-                cancel()
-
-        return _async_cancel_all
+        return async_register_callback(
+            self.hass,
+            self._async_handle_bluetooth_event,
+            BluetoothCallbackMatcher(address=self.address),
+        )
 
     @callback
     def async_add_entities_listener(
@@ -220,6 +225,8 @@ class PassiveBluetoothDataUpdateCoordinator(Generic[_T]):
         """Handle a Bluetooth event."""
         self.name = service_info.name
         self._last_callback_time = time.monotonic()
+        if not self._cancel_track_available:
+            self._async_schedule_available_tracker(UNAVAILABLE_SECONDS)
         self._present = True
 
         try:
