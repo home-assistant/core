@@ -19,6 +19,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    STATE_UNKNOWN,
     STATE_UNAVAILABLE,
 )
 
@@ -97,7 +98,7 @@ async def test_template_state_invalid(hass, start_ha):
 )
 async def test_template_state_text(hass, start_ha):
     """Test the state text of a template."""
-    for set_state in [STATE_ON, STATE_OFF]:
+    for set_state in [STATE_ON, STATE_OFF, STATE_UNKNOWN]:
         hass.states.async_set("light.test_state", set_state)
         await hass.async_block_till_done()
         assert hass.states.get("light.test_template_light").state == set_state
