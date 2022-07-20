@@ -44,7 +44,7 @@ SOURCE_LOCAL: Final = "local"
 
 
 @dataclass
-class BluetoothServiceInfoBleak(BluetoothServiceInfo):  # type: ignore[misc]
+class BluetoothServiceInfoBleak(BluetoothServiceInfo):
     """BluetoothServiceInfo with bleak data.
 
     Integrations may need BLEDevice and AdvertisementData
@@ -59,7 +59,7 @@ class BluetoothServiceInfoBleak(BluetoothServiceInfo):  # type: ignore[misc]
     @classmethod
     def from_advertisement(
         cls, device: BLEDevice, advertisement_data: AdvertisementData, source: str
-    ) -> BluetoothServiceInfo:
+    ) -> BluetoothServiceInfoBleak:
         """Create a BluetoothServiceInfoBleak from an advertisement."""
         return cls(
             name=advertisement_data.local_name or device.name or device.address,
@@ -393,7 +393,7 @@ class BluetoothManager:
         )
 
     @hass_callback
-    def async_discovered_service_info(self) -> list[BluetoothServiceInfo]:
+    def async_discovered_service_info(self) -> list[BluetoothServiceInfoBleak]:
         """Return if the address is present."""
         if models.HA_BLEAK_SCANNER:
             discovered = models.HA_BLEAK_SCANNER.discovered_devices
