@@ -1,4 +1,3 @@
-# yamllint disable
 - id: '1658085239190'
   alias: Config validation test
   description: ''
@@ -25,6 +24,3 @@
       title: 'Here is something that should work...!'
       message: fixed?
   mode: single
-# yamllint enable
-# yamllint enable
-
