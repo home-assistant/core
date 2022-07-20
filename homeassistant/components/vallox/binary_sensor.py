@@ -21,6 +21,7 @@ class ValloxBinarySensor(ValloxEntity, BinarySensorEntity):
 
     entity_description: ValloxBinarySensorEntityDescription
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -33,7 +34,6 @@ class ValloxBinarySensor(ValloxEntity, BinarySensorEntity):
 
         self.entity_description = description
 
-        self._attr_name = f"{name} {description.name}"
         self._attr_unique_id = f"{self._device_uuid}-{description.key}"
 
     @property
@@ -59,7 +59,7 @@ class ValloxBinarySensorEntityDescription(
 SENSORS: tuple[ValloxBinarySensorEntityDescription, ...] = (
     ValloxBinarySensorEntityDescription(
         key="post_heater",
-        name="Post Heater",
+        name="Post heater",
         icon="mdi:radiator",
         metric_key="A_CYC_IO_HEATER",
     ),

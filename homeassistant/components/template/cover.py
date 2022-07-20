@@ -12,6 +12,7 @@ from homeassistant.components.cover import (
     DEVICE_CLASSES_SCHEMA,
     ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA,
+    CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
 )
@@ -154,7 +155,7 @@ class CoverTemplate(TemplateEntity, CoverEntity):
         self._template = config.get(CONF_VALUE_TEMPLATE)
         self._position_template = config.get(CONF_POSITION_TEMPLATE)
         self._tilt_template = config.get(CONF_TILT_TEMPLATE)
-        self._device_class = config.get(CONF_DEVICE_CLASS)
+        self._device_class: CoverDeviceClass | None = config.get(CONF_DEVICE_CLASS)
         self._open_script = None
         if (open_action := config.get(OPEN_ACTION)) is not None:
             self._open_script = Script(hass, open_action, friendly_name, DOMAIN)
@@ -270,22 +271,22 @@ class CoverTemplate(TemplateEntity, CoverEntity):
             self._tilt_value = state
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool:
         """Return if the cover is closed."""
         return self._position == 0
 
     @property
-    def is_opening(self):
+    def is_opening(self) -> bool:
         """Return if the cover is currently opening."""
         return self._is_opening
 
     @property
-    def is_closing(self):
+    def is_closing(self) -> bool:
         """Return if the cover is currently closing."""
         return self._is_closing
 
     @property
-    def current_cover_position(self):
+    def current_cover_position(self) -> int | None:
         """Return current position of cover.
 
         None is unknown, 0 is closed, 100 is fully open.
@@ -295,7 +296,7 @@ class CoverTemplate(TemplateEntity, CoverEntity):
         return None
 
     @property
-    def current_cover_tilt_position(self):
+    def current_cover_tilt_position(self) -> int | None:
         """Return current position of cover tilt.
 
         None is unknown, 0 is closed, 100 is fully open.
@@ -303,12 +304,12 @@ class CoverTemplate(TemplateEntity, CoverEntity):
         return self._tilt_value
 
     @property
-    def device_class(self):
+    def device_class(self) -> CoverDeviceClass | None:
         """Return the device class of the cover."""
         return self._device_class
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Flag supported features."""
         supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
 

@@ -5,6 +5,7 @@ import asyncio
 from collections import deque
 from collections.abc import Callable, Coroutine, Iterable
 import datetime
+import logging
 from typing import TYPE_CHECKING, Any
 
 from aiohttp import web
@@ -16,12 +17,19 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util.decorator import Registry
 
-from .const import ATTR_STREAMS, DOMAIN
+from .const import (
+    ATTR_STREAMS,
+    DOMAIN,
+    SEGMENT_DURATION_ADJUSTER,
+    TARGET_SEGMENT_DURATION_NON_LL_HLS,
+)
 
 if TYPE_CHECKING:
     from av import CodecContext, Packet
 
     from . import Stream
+
+_LOGGER = logging.getLogger(__name__)
 
 PROVIDERS: Registry[str, type[StreamOutput]] = Registry()
 
@@ -35,6 +43,15 @@ class StreamSettings:
     part_target_duration: float = attr.ib()
     hls_advance_part_limit: int = attr.ib()
     hls_part_timeout: float = attr.ib()
+
+
+STREAM_SETTINGS_NON_LL_HLS = StreamSettings(
+    ll_hls=False,
+    min_segment_duration=TARGET_SEGMENT_DURATION_NON_LL_HLS - SEGMENT_DURATION_ADJUSTER,
+    part_target_duration=TARGET_SEGMENT_DURATION_NON_LL_HLS,
+    hls_advance_part_limit=3,
+    hls_part_timeout=TARGET_SEGMENT_DURATION_NON_LL_HLS,
+)
 
 
 @attr.s(slots=True)
@@ -426,12 +443,22 @@ class KeyFrameConverter:
             return
         packet = self.packet
         self.packet = None
-        # decode packet (flush afterwards)
-        frames = self._codec_context.decode(packet)
-        for _i in range(2):
-            if frames:
+        for _ in range(2):  # Retry once if codec context needs to be flushed
+            try:
+                # decode packet (flush afterwards)
+                frames = self._codec_context.decode(packet)
+                for _i in range(2):
+                    if frames:
+                        break
+                    frames = self._codec_context.decode(None)
                 break
-            frames = self._codec_context.decode(None)
+            except EOFError:
+                _LOGGER.debug("Codec context needs flushing, attempting to reopen")
+                self._codec_context.close()
+                self._codec_context.open()
+        else:
+            _LOGGER.debug("Unable to decode keyframe")
+            return
         if frames:
             frame = frames[0]
             if width and height:

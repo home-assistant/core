@@ -15,6 +15,8 @@ homeassistant.auth.auth_store
 homeassistant.auth.providers.*
 homeassistant.helpers.area_registry
 homeassistant.helpers.condition
+homeassistant.helpers.debounce
+homeassistant.helpers.deprecation
 homeassistant.helpers.discovery
 homeassistant.helpers.entity
 homeassistant.helpers.entity_values
@@ -57,6 +59,7 @@ homeassistant.components.automation.*
 homeassistant.components.backup.*
 homeassistant.components.baf.*
 homeassistant.components.binary_sensor.*
+homeassistant.components.bluetooth.*
 homeassistant.components.bluetooth_tracker.*
 homeassistant.components.bmw_connected_drive.*
 homeassistant.components.bond.*
@@ -145,6 +148,7 @@ homeassistant.components.lametric.*
 homeassistant.components.laundrify.*
 homeassistant.components.lcn.*
 homeassistant.components.light.*
+homeassistant.components.lifx.*
 homeassistant.components.local_ip.*
 homeassistant.components.lock.*
 homeassistant.components.logbook.*
@@ -153,6 +157,7 @@ homeassistant.components.luftdaten.*
 homeassistant.components.mailbox.*
 homeassistant.components.media_player.*
 homeassistant.components.media_source.*
+homeassistant.components.metoffice.*
 homeassistant.components.mjpeg.*
 homeassistant.components.modbus.*
 homeassistant.components.modem_callerid.*
@@ -190,6 +195,8 @@ homeassistant.components.recollect_waste.*
 homeassistant.components.recorder.*
 homeassistant.components.remote.*
 homeassistant.components.renault.*
+homeassistant.components.resolution_center.*
+homeassistant.components.rhasspy.*
 homeassistant.components.ridwell.*
 homeassistant.components.rituals_perfume_genie.*
 homeassistant.components.roku.*

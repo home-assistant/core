@@ -32,7 +32,7 @@ STATE_DUMP_INTERVAL = timedelta(minutes=15)
 # How long should a saved state be preserved if the entity no longer exists
 STATE_EXPIRATION = timedelta(days=7)
 
-_StoredStateT = TypeVar("_StoredStateT", bound="StoredState")
+_StoredStateSelfT = TypeVar("_StoredStateSelfT", bound="StoredState")
 
 
 class ExtraStoredData:
@@ -82,7 +82,7 @@ class StoredState:
         return result
 
     @classmethod
-    def from_dict(cls: type[_StoredStateT], json_dict: dict) -> _StoredStateT:
+    def from_dict(cls: type[_StoredStateSelfT], json_dict: dict) -> _StoredStateSelfT:
         """Initialize a stored state from a dict."""
         extra_data_dict = json_dict.get("extra_data")
         extra_data = RestoredExtraData(extra_data_dict) if extra_data_dict else None
@@ -139,7 +139,7 @@ class RestoreStateData:
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the restore state data class."""
         self.hass: HomeAssistant = hass
-        self.store: Store = Store(
+        self.store = Store[list[dict[str, Any]]](
             hass, STORAGE_VERSION, STORAGE_KEY, encoder=JSONEncoder
         )
         self.last_states: dict[str, StoredState] = {}

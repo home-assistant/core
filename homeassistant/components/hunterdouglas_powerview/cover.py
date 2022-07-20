@@ -192,7 +192,7 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         return {STATE_ATTRIBUTE_ROOM_NAME: self._room_name}
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool:
         """Return if the cover is closed."""
         return self.positions.primary <= CLOSED_POSITION
 
@@ -455,14 +455,6 @@ class PowerViewShadeTDBUTop(PowerViewShadeTDBU):
         super().__init__(coordinator, device_info, room_name, shade, name)
         self._attr_unique_id = f"{self._shade.id}_top"
         self._attr_name = f"{self._shade_name} Top"
-        # these shades share a class in parent API
-        # override open position for top shade
-        self._shade.open_position = {
-            ATTR_POSITION1: MIN_POSITION,
-            ATTR_POSITION2: MAX_POSITION,
-            ATTR_POSKIND1: POS_KIND_PRIMARY,
-            ATTR_POSKIND2: POS_KIND_SECONDARY,
-        }
 
     @property
     def should_poll(self) -> bool:
@@ -474,7 +466,7 @@ class PowerViewShadeTDBUTop(PowerViewShadeTDBU):
         return False
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool:
         """Return if the cover is closed."""
         # top shade needs to check other motor
         return self.positions.secondary <= CLOSED_POSITION
@@ -484,6 +476,21 @@ class PowerViewShadeTDBUTop(PowerViewShadeTDBU):
         """Return the current position of cover."""
         # these need to be inverted to report state correctly in HA
         return hd_position_to_hass(self.positions.secondary, MAX_POSITION)
+
+    @property
+    def open_position(self) -> PowerviewShadeMove:
+        """Return the open position and required additional positions."""
+        # these shades share a class in parent API
+        # override open position for top shade
+        return PowerviewShadeMove(
+            {
+                ATTR_POSITION1: MIN_POSITION,
+                ATTR_POSITION2: MAX_POSITION,
+                ATTR_POSKIND1: POS_KIND_PRIMARY,
+                ATTR_POSKIND2: POS_KIND_SECONDARY,
+            },
+            {},
+        )
 
     @callback
     def _clamp_cover_limit(self, target_hass_position: int) -> int:

@@ -52,12 +52,12 @@ class SomaTilt(SomaEntity, CoverEntity):
     )
 
     @property
-    def current_cover_tilt_position(self):
+    def current_cover_tilt_position(self) -> int:
         """Return the current cover tilt position."""
         return self.current_position
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool:
         """Return if the cover tilt is closed."""
         return self.current_position == 0
 
@@ -102,7 +102,7 @@ class SomaTilt(SomaEntity, CoverEntity):
             )
         self.set_position(kwargs[ATTR_TILT_POSITION])
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update the entity with the latest data."""
         response = await self.get_shade_state_from_api()
 
@@ -126,12 +126,12 @@ class SomaShade(SomaEntity, CoverEntity):
     )
 
     @property
-    def current_cover_position(self):
+    def current_cover_position(self) -> int:
         """Return the current cover position."""
         return self.current_position
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool:
         """Return if the cover is closed."""
         return self.current_position == 0
 
@@ -172,7 +172,7 @@ class SomaShade(SomaEntity, CoverEntity):
                 f'Error while setting the cover position ({self.name}): {response["msg"]}'
             )
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update the cover with the latest data."""
         response = await self.get_shade_state_from_api()
 

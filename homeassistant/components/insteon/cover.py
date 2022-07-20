@@ -47,7 +47,7 @@ class InsteonCoverEntity(InsteonEntity, CoverEntity):
     )
 
     @property
-    def current_cover_position(self):
+    def current_cover_position(self) -> int:
         """Return the current cover position."""
         if self._insteon_device_group.value is not None:
             pos = self._insteon_device_group.value
@@ -56,7 +56,7 @@ class InsteonCoverEntity(InsteonEntity, CoverEntity):
         return int(math.ceil(pos * 100 / 255))
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool:
         """Return the boolean response if the node is on."""
         return bool(self.current_cover_position)
 

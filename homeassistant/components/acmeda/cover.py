@@ -47,7 +47,7 @@ class AcmedaCover(AcmedaBase, CoverEntity):
     """Representation of a Acmeda cover device."""
 
     @property
-    def current_cover_position(self):
+    def current_cover_position(self) -> int | None:
         """Return the current position of the roller blind.
 
         None is unknown, 0 is closed, 100 is fully open.
@@ -58,7 +58,7 @@ class AcmedaCover(AcmedaBase, CoverEntity):
         return position
 
     @property
-    def current_cover_tilt_position(self):
+    def current_cover_tilt_position(self) -> int | None:
         """Return the current tilt of the roller blind.
 
         None is unknown, 0 is closed, 100 is fully open.
@@ -69,7 +69,7 @@ class AcmedaCover(AcmedaBase, CoverEntity):
         return position
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Flag supported features."""
         supported_features = 0
         if self.current_cover_position is not None:
@@ -90,7 +90,7 @@ class AcmedaCover(AcmedaBase, CoverEntity):
         return supported_features
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool:
         """Return if the cover is closed."""
         return self.roller.closed_percent == 100
 

@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 import logging
 import logging.handlers
 import os
+import platform
 import sys
 import threading
 from time import monotonic
@@ -34,7 +35,6 @@ from .setup import (
     async_setup_component,
 )
 from .util import dt as dt_util
-from .util.async_ import gather_with_concurrency
 from .util.logging import async_activate_log_queue_handler
 from .util.package import async_get_user_site, is_virtual_env
 
@@ -69,7 +69,7 @@ LOGGING_INTEGRATIONS = {
     # To record data
     "recorder",
 }
-DISCOVERY_INTEGRATIONS = ("dhcp", "ssdp", "usb", "zeroconf")
+DISCOVERY_INTEGRATIONS = ("bluetooth", "dhcp", "ssdp", "usb", "zeroconf")
 STAGE_1_INTEGRATIONS = {
     # We need to make sure discovery integrations
     # update their deps before stage 2 integrations
@@ -284,7 +284,9 @@ def async_enable_logging(
 
     This method must be run in the event loop.
     """
-    fmt = "%(asctime)s %(levelname)s (%(threadName)s) [%(name)s] %(message)s"
+    fmt = (
+        "%(asctime)s.%(msecs)03d %(levelname)s (%(threadName)s) [%(name)s] %(message)s"
+    )
     datefmt = "%Y-%m-%d %H:%M:%S"
 
     if not log_no_color:
@@ -476,14 +478,9 @@ async def _async_set_up_integrations(
 
         integrations_to_process = [
             int_or_exc
-            for int_or_exc in await gather_with_concurrency(
-                loader.MAX_LOAD_CONCURRENTLY,
-                *(
-                    loader.async_get_integration(hass, domain)
-                    for domain in old_to_resolve
-                ),
-                return_exceptions=True,
-            )
+            for int_or_exc in (
+                await loader.async_get_integrations(hass, old_to_resolve)
+            ).values()
             if isinstance(int_or_exc, loader.Integration)
         ]
         resolve_dependencies_tasks = [
@@ -540,11 +537,22 @@ async def _async_set_up_integrations(
 
     stage_2_domains = domains_to_setup - logging_domains - debuggers - stage_1_domains
 
+    def _cache_uname_processor() -> None:
+        """Cache the result of platform.uname().processor in the executor.
+
+        Multiple modules call this function at startup which
+        executes a blocking subprocess call. This is a problem for the
+        asyncio event loop. By primeing the cache of uname we can
+        avoid the blocking call in the event loop.
+        """
+        platform.uname().processor  # pylint: disable=expression-not-assigned
+
     # Load the registries
     await asyncio.gather(
         device_registry.async_load(hass),
         entity_registry.async_load(hass),
         area_registry.async_load(hass),
+        hass.async_add_executor_job(_cache_uname_processor),
     )
 
     # Start setup

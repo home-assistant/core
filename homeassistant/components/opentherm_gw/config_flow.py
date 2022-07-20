@@ -59,8 +59,8 @@ class OpenThermGwConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             async def test_connection():
                 """Try to connect to the OpenTherm Gateway."""
-                otgw = pyotgw.pyotgw()
-                status = await otgw.connect(self.hass.loop, device)
+                otgw = pyotgw.OpenThermGateway()
+                status = await otgw.connect(device)
                 await otgw.disconnect()
                 return status[gw_vars.OTGW].get(gw_vars.OTGW_ABOUT)
 

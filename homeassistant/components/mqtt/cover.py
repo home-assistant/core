@@ -12,6 +12,7 @@ from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
     DEVICE_CLASSES_SCHEMA,
+    CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
 )
@@ -45,8 +46,8 @@ from .debug_info import log_messages
 from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
+    async_discover_yaml_entities,
     async_setup_entry_helper,
-    async_setup_platform_discovery,
     async_setup_platform_helper,
     warn_for_legacy_schema,
 )
@@ -241,9 +242,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up MQTT cover through configuration.yaml and dynamically through MQTT discovery."""
     # load and initialize platform config from configuration.yaml
-    config_entry.async_on_unload(
-        await async_setup_platform_discovery(hass, cover.DOMAIN)
-    )
+    await async_discover_yaml_entities(hass, cover.DOMAIN)
     # setup for discovery
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
@@ -252,8 +251,12 @@ async def async_setup_entry(
 
 
 async def _async_setup_entity(
-    hass, async_add_entities, config, config_entry=None, discovery_data=None
-):
+    hass: HomeAssistant,
+    async_add_entities: AddEntitiesCallback,
+    config: ConfigType,
+    config_entry: ConfigEntry | None = None,
+    discovery_data: dict | None = None,
+) -> None:
     """Set up the MQTT Cover."""
     async_add_entities([MqttCover(hass, config, config_entry, discovery_data)])
 
@@ -486,12 +489,12 @@ class MqttCover(MqttEntity, CoverEntity):
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
     @property
-    def assumed_state(self):
+    def assumed_state(self) -> bool:
         """Return true if we do optimistic updates."""
-        return self._optimistic
+        return bool(self._optimistic)
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool | None:
         """Return true if the cover is closed or None if the status is unknown."""
         if self._state is None:
             return None
@@ -499,17 +502,17 @@ class MqttCover(MqttEntity, CoverEntity):
         return self._state == STATE_CLOSED
 
     @property
-    def is_opening(self):
+    def is_opening(self) -> bool:
         """Return true if the cover is actively opening."""
         return self._state == STATE_OPENING
 
     @property
-    def is_closing(self):
+    def is_closing(self) -> bool:
         """Return true if the cover is actively closing."""
         return self._state == STATE_CLOSING
 
     @property
-    def current_cover_position(self):
+    def current_cover_position(self) -> int | None:
         """Return current position of cover.
 
         None is unknown, 0 is closed, 100 is fully open.
@@ -517,17 +520,17 @@ class MqttCover(MqttEntity, CoverEntity):
         return self._position
 
     @property
-    def current_cover_tilt_position(self):
+    def current_cover_tilt_position(self) -> int | None:
         """Return current position of cover tilt."""
         return self._tilt_value
 
     @property
-    def device_class(self):
+    def device_class(self) -> CoverDeviceClass | None:
         """Return the class of this sensor."""
         return self._config.get(CONF_DEVICE_CLASS)
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Flag supported features."""
         supported_features = 0
         if self._config.get(CONF_COMMAND_TOPIC) is not None:

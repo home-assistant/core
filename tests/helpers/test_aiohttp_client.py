@@ -19,6 +19,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import EVENT_HOMEASSISTANT_CLOSE
 import homeassistant.helpers.aiohttp_client as client
+from homeassistant.util.color import RGBColor
 
 from tests.common import MockConfigEntry
 
@@ -182,7 +183,7 @@ async def test_warning_close_session_custom(hass, caplog):
         await session.close()
     assert (
         "Detected integration that closes the Home Assistant aiohttp session. "
-        "Please report issue to the custom component author for hue using this method at "
+        "Please report issue to the custom integration author for hue using this method at "
         "custom_components/hue/light.py, line 23: await session.close()" in caplog.text
     )
 
@@ -213,6 +214,16 @@ async def test_async_aiohttp_proxy_stream_client_err(aioclient_mock, camera_clie
 
     resp = await camera_client.get("/api/camera_proxy_stream/camera.mjpeg_camera")
     assert resp.status == 502
+
+
+async def test_sending_named_tuple(hass, aioclient_mock):
+    """Test sending a named tuple in json."""
+    resp = aioclient_mock.post("http://127.0.0.1/rgb", json={"rgb": RGBColor(4, 3, 2)})
+    session = client.async_create_clientsession(hass)
+    resp = await session.post("http://127.0.0.1/rgb", json={"rgb": RGBColor(4, 3, 2)})
+    assert resp.status == 200
+    await resp.json() == {"rgb": RGBColor(4, 3, 2)}
+    aioclient_mock.mock_calls[0][2]["rgb"] == RGBColor(4, 3, 2)
 
 
 async def test_client_session_immutable_headers(hass):

@@ -4,6 +4,7 @@
     },
     "config": {
         "abort": {
+            "already_configured": "A fi\u00f3k m\u00e1r konfigur\u00e1lva van",
             "authorize_url_timeout": "Id\u0151t\u00fall\u00e9p\u00e9s az \u00e9rv\u00e9nyes\u00edt\u00e9si url gener\u00e1l\u00e1sa sor\u00e1n.",
             "invalid_access_token": "\u00c9rv\u00e9nytelen hozz\u00e1f\u00e9r\u00e9si token",
             "missing_configuration": "A komponens nincs konfigur\u00e1lva. K\u00e9rem, k\u00f6vesse a dokument\u00e1ci\u00f3t.",

@@ -92,24 +92,24 @@ class ZhaCover(ZhaEntity, CoverEntity):
             self._current_position = last_state.attributes["current_position"]
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
         if self.current_cover_position is None:
             return None
         return self.current_cover_position == 0
 
     @property
-    def is_opening(self):
+    def is_opening(self) -> bool:
         """Return if the cover is opening or not."""
         return self._state == STATE_OPENING
 
     @property
-    def is_closing(self):
+    def is_closing(self) -> bool:
         """Return if the cover is closing or not."""
         return self._state == STATE_CLOSING
 
     @property
-    def current_cover_position(self):
+    def current_cover_position(self) -> int | None:
         """Return the current position of ZHA cover.
 
         None is unknown, 0 is closed, 100 is fully open.
@@ -162,7 +162,7 @@ class ZhaCover(ZhaEntity, CoverEntity):
             self._state = STATE_OPEN if self._current_position > 0 else STATE_CLOSED
             self.async_write_ha_state()
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Attempt to retrieve the open/close state of the cover."""
         await super().async_update()
         await self.async_get_state()
@@ -207,7 +207,7 @@ class Shade(ZhaEntity, CoverEntity):
         self._is_open: bool | None = None
 
     @property
-    def current_cover_position(self):
+    def current_cover_position(self) -> int | None:
         """Return current position of cover.
 
         None is unknown, 0 is closed, 100 is fully open.

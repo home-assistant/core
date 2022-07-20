@@ -43,7 +43,9 @@ def api_fixture(api_auth_state, data_subscription, system_v3, websocket):
 @pytest.fixture(name="config_entry")
 def config_entry_fixture(hass, config, unique_id):
     """Define a config entry."""
-    entry = MockConfigEntry(domain=DOMAIN, unique_id=unique_id, data=config)
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=unique_id, data=config, options={CONF_CODE: "1234"}
+    )
     entry.add_to_hass(hass)
     return entry
 

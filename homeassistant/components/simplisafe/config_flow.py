@@ -98,16 +98,16 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Define the config flow to handle options."""
         return SimpliSafeOptionsFlowHandler(config_entry)
 
-    async def async_step_reauth(self, config: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle configuration by re-auth."""
         self._reauth = True
 
-        if CONF_USERNAME not in config:
+        if CONF_USERNAME not in entry_data:
             # Old versions of the config flow may not have the username by this point;
             # in that case, we reauth them by making them go through the user flow:
             return await self.async_step_user()
 
-        self._username = config[CONF_USERNAME]
+        self._username = entry_data[CONF_USERNAME]
         return await self.async_step_reauth_confirm()
 
     async def _async_get_email_2fa(self) -> None:

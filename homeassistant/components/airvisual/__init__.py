@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import timedelta
 from math import ceil
-from typing import Any, cast
+from typing import Any
 
 from pyairvisual import CloudAPI, NodeSamba
 from pyairvisual.errors import (
@@ -12,6 +12,7 @@ from pyairvisual.errors import (
     InvalidKeyError,
     KeyExpiredError,
     NodeProError,
+    UnauthorizedError,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -210,9 +211,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 )
 
             try:
-                data = await api_coro
-                return cast(dict[str, Any], data)
-            except (InvalidKeyError, KeyExpiredError) as ex:
+                return await api_coro
+            except (InvalidKeyError, KeyExpiredError, UnauthorizedError) as ex:
                 raise ConfigEntryAuthFailed from ex
             except AirVisualError as err:
                 raise UpdateFailed(f"Error while retrieving data: {err}") from err
@@ -253,8 +253,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 async with NodeSamba(
                     entry.data[CONF_IP_ADDRESS], entry.data[CONF_PASSWORD]
                 ) as node:
-                    data = await node.async_get_latest_measurements()
-                    return cast(dict[str, Any], data)
+                    return await node.async_get_latest_measurements()
             except NodeProError as err:
                 raise UpdateFailed(f"Error while retrieving data: {err}") from err
 
@@ -274,7 +273,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if CONF_API_KEY in entry.data:
         async_sync_geo_coordinator_update_intervals(hass, entry.data[CONF_API_KEY])
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

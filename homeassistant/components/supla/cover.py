@@ -60,7 +60,7 @@ class SuplaCover(SuplaChannel, CoverEntity):
     """Representation of a Supla Cover."""
 
     @property
-    def current_cover_position(self):
+    def current_cover_position(self) -> int | None:
         """Return current position of cover. 0 is closed, 100 is open."""
         if state := self.channel_data.get("state"):
             return 100 - state["shut"]
@@ -71,7 +71,7 @@ class SuplaCover(SuplaChannel, CoverEntity):
         await self.async_action("REVEAL", percentage=kwargs.get(ATTR_POSITION))
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
         if self.current_cover_position is None:
             return None
@@ -94,7 +94,7 @@ class SuplaGateDoor(SuplaChannel, CoverEntity):
     """Representation of a Supla gate door."""
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool | None:
         """Return if the gate is closed or not."""
         state = self.channel_data.get("state")
         if state and "hi" in state:
@@ -120,6 +120,6 @@ class SuplaGateDoor(SuplaChannel, CoverEntity):
         await self.async_action("OPEN_CLOSE")
 
     @property
-    def device_class(self):
+    def device_class(self) -> CoverDeviceClass:
         """Return the class of this device, from component DEVICE_CLASSES."""
         return CoverDeviceClass.GARAGE

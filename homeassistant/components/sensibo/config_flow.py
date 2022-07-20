@@ -29,7 +29,7 @@ class SensiboConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     entry: config_entries.ConfigEntry | None
 
-    async def async_step_reauth(self, data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle re-authentication with Sensibo."""
 
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])

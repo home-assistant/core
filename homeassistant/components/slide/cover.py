@@ -52,29 +52,29 @@ class SlideCover(CoverEntity):
         self._invert = slide["invert"]
 
     @property
-    def is_opening(self):
+    def is_opening(self) -> bool:
         """Return if the cover is opening or not."""
         return self._slide["state"] == STATE_OPENING
 
     @property
-    def is_closing(self):
+    def is_closing(self) -> bool:
         """Return if the cover is closing or not."""
         return self._slide["state"] == STATE_CLOSING
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool | None:
         """Return None if status is unknown, True if closed, else False."""
         if self._slide["state"] is None:
             return None
         return self._slide["state"] == STATE_CLOSED
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return False if state is not available."""
         return self._slide["online"]
 
     @property
-    def current_cover_position(self):
+    def current_cover_position(self) -> int | None:
         """Return the current position of cover shutter."""
         if (pos := self._slide["pos"]) is not None:
             if (1 - pos) <= DEFAULT_OFFSET or pos <= DEFAULT_OFFSET:

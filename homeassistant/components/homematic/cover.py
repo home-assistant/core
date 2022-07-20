@@ -43,7 +43,7 @@ class HMCover(HMDevice, CoverEntity):
     """Representation a HomeMatic Cover."""
 
     @property
-    def current_cover_position(self):
+    def current_cover_position(self) -> int | None:
         """
         Return current position of cover.
 
@@ -60,7 +60,7 @@ class HMCover(HMDevice, CoverEntity):
             self._hmdevice.set_level(level, self._channel)
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool | None:
         """Return whether the cover is closed."""
         if self.current_cover_position is not None:
             return self.current_cover_position == 0
@@ -86,7 +86,7 @@ class HMCover(HMDevice, CoverEntity):
             self._data.update({"LEVEL_2": None})
 
     @property
-    def current_cover_tilt_position(self):
+    def current_cover_tilt_position(self) -> int | None:
         """Return current position of cover tilt.
 
         None is unknown, 0 is closed, 100 is fully open.
@@ -125,7 +125,7 @@ class HMGarage(HMCover):
     _attr_device_class = CoverDeviceClass.GARAGE
 
     @property
-    def current_cover_position(self):
+    def current_cover_position(self) -> None:
         """
         Return current position of cover.
 
@@ -135,7 +135,7 @@ class HMGarage(HMCover):
         return None
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool:
         """Return whether the cover is closed."""
         return self._hmdevice.is_closed(self._hm_get_state())
 

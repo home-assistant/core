@@ -40,7 +40,7 @@
                 "data": {
                     "device_input": "Dispositivo"
                 },
-                "description": "Comece por introduzir o nome do dispositivo (por exemplo, Cozinha ou Quarto) ou o endere\u00e7o IP da Apple TV que pretende adicionar. Se algum dispositivo foi automaticamente encontrado na sua rede, ele \u00e9 mostrado abaixo.\n\nSe n\u00e3o conseguir ver o seu dispositivo ou se tiver algum problema, tente especificar o endere\u00e7o IP do dispositivo.\n\n{devices}",
+                "description": "Comece por introduzir o nome do dispositivo (por exemplo, Cozinha ou Quarto) ou o endere\u00e7o IP da Apple TV que pretende adicionar. Se algum dispositivo foi automaticamente encontrado na sua rede, ele \u00e9 mostrado abaixo.\n\nSe n\u00e3o conseguir ver o seu dispositivo ou se tiver algum problema, tente especificar o endere\u00e7o IP do dispositivo.",
                 "title": "Configure uma nova Apple TV"
             }
         }

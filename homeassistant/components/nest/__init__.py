@@ -177,7 +177,7 @@ class SignalUpdateCallback:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Nest from a config entry with dispatch between old/new flows."""
     config_mode = config_flow.get_config_mode(hass)
-    if config_mode == config_flow.ConfigMode.LEGACY:
+    if DATA_SDM not in entry.data or config_mode == config_flow.ConfigMode.LEGACY:
         return await async_setup_legacy_entry(hass, entry)
 
     if config_mode == config_flow.ConfigMode.SDM:
@@ -227,7 +227,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         DATA_DEVICE_MANAGER: device_manager,
     }
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

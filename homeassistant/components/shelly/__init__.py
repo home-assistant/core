@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Coroutine
 from datetime import timedelta
 from typing import Any, Final, cast
 
@@ -296,7 +297,7 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         self.entry = entry
         self.device = device
 
-        self._debounced_reload = Debouncer(
+        self._debounced_reload: Debouncer[Coroutine[Any, Any, None]] = Debouncer(
             hass,
             LOGGER,
             cooldown=ENTRY_RELOAD_COOLDOWN,
@@ -636,7 +637,7 @@ class RpcDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         self.entry = entry
         self.device = device
 
-        self._debounced_reload = Debouncer(
+        self._debounced_reload: Debouncer[Coroutine[Any, Any, None]] = Debouncer(
             hass,
             LOGGER,
             cooldown=ENTRY_RELOAD_COOLDOWN,

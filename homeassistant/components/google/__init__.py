@@ -30,7 +30,11 @@ from homeassistant.const import (
     CONF_OFFSET,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -268,7 +272,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if get_feature_access(hass, entry) is FeatureAccess.read_write:
         await async_setup_add_event_service(hass, calendar_service)
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
@@ -348,15 +352,18 @@ async def async_setup_add_event_service(
                 "Missing required fields to set start or end date/datetime"
             )
 
-        await calendar_service.async_create_event(
-            call.data[EVENT_CALENDAR_ID],
-            Event(
-                summary=call.data[EVENT_SUMMARY],
-                description=call.data[EVENT_DESCRIPTION],
-                start=start,
-                end=end,
-            ),
-        )
+        try:
+            await calendar_service.async_create_event(
+                call.data[EVENT_CALENDAR_ID],
+                Event(
+                    summary=call.data[EVENT_SUMMARY],
+                    description=call.data[EVENT_DESCRIPTION],
+                    start=start,
+                    end=end,
+                ),
+            )
+        except ApiException as err:
+            raise HomeAssistantError(str(err)) from err
 
     hass.services.async_register(
         DOMAIN, SERVICE_ADD_EVENT, _add_event, schema=ADD_EVENT_SERVICE_SCHEMA

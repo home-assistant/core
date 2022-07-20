@@ -119,15 +119,45 @@ async def test_state(hass, setup_comp):
     Otherwise, the group state is off.
     """
     state = hass.states.get(FAN_GROUP)
-    # No entity has a valid state -> group state off
-    assert state.state == STATE_OFF
+    # No entity has a valid state -> group state unavailable
+    assert state.state == STATE_UNAVAILABLE
     assert state.attributes[ATTR_FRIENDLY_NAME] == DEFAULT_NAME
+    assert ATTR_ENTITY_ID not in state.attributes
+    assert ATTR_ASSUMED_STATE not in state.attributes
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
+
+    # Test group members exposed as attribute
+    hass.states.async_set(CEILING_FAN_ENTITY_ID, STATE_UNKNOWN, {})
+    await hass.async_block_till_done()
+    state = hass.states.get(FAN_GROUP)
     assert state.attributes[ATTR_ENTITY_ID] == [
         *FULL_FAN_ENTITY_IDS,
         *LIMITED_FAN_ENTITY_IDS,
     ]
-    assert ATTR_ASSUMED_STATE not in state.attributes
-    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
+
+    # All group members unavailable -> unavailable
+    hass.states.async_set(CEILING_FAN_ENTITY_ID, STATE_UNAVAILABLE)
+    hass.states.async_set(LIVING_ROOM_FAN_ENTITY_ID, STATE_UNAVAILABLE)
+    hass.states.async_set(PERCENTAGE_FULL_FAN_ENTITY_ID, STATE_UNAVAILABLE)
+    hass.states.async_set(PERCENTAGE_LIMITED_FAN_ENTITY_ID, STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+    state = hass.states.get(FAN_GROUP)
+    assert state.state == STATE_UNAVAILABLE
+
+    # The group state is unknown if all group members are unknown or unavailable.
+    for state_1 in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+        for state_2 in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+            for state_3 in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+                print("meh")
+                hass.states.async_set(CEILING_FAN_ENTITY_ID, state_1, {})
+                hass.states.async_set(LIVING_ROOM_FAN_ENTITY_ID, state_2, {})
+                hass.states.async_set(PERCENTAGE_FULL_FAN_ENTITY_ID, state_3, {})
+                hass.states.async_set(
+                    PERCENTAGE_LIMITED_FAN_ENTITY_ID, STATE_UNKNOWN, {}
+                )
+                await hass.async_block_till_done()
+                state = hass.states.get(FAN_GROUP)
+                assert state.state == STATE_UNKNOWN
 
     # The group state is off if all group members are off, unknown or unavailable.
     for state_1 in (STATE_OFF, STATE_UNAVAILABLE, STATE_UNKNOWN):
@@ -137,32 +167,6 @@ async def test_state(hass, setup_comp):
                 hass.states.async_set(LIVING_ROOM_FAN_ENTITY_ID, state_2, {})
                 hass.states.async_set(PERCENTAGE_FULL_FAN_ENTITY_ID, state_3, {})
                 hass.states.async_set(PERCENTAGE_LIMITED_FAN_ENTITY_ID, STATE_OFF, {})
-                await hass.async_block_till_done()
-                state = hass.states.get(FAN_GROUP)
-                assert state.state == STATE_OFF
-
-    for state_1 in (STATE_OFF, STATE_UNAVAILABLE, STATE_UNKNOWN):
-        for state_2 in (STATE_OFF, STATE_UNAVAILABLE, STATE_UNKNOWN):
-            for state_3 in (STATE_OFF, STATE_UNAVAILABLE, STATE_UNKNOWN):
-                hass.states.async_set(CEILING_FAN_ENTITY_ID, state_1, {})
-                hass.states.async_set(LIVING_ROOM_FAN_ENTITY_ID, state_2, {})
-                hass.states.async_set(PERCENTAGE_FULL_FAN_ENTITY_ID, state_3, {})
-                hass.states.async_set(
-                    PERCENTAGE_LIMITED_FAN_ENTITY_ID, STATE_UNAVAILABLE, {}
-                )
-                await hass.async_block_till_done()
-                state = hass.states.get(FAN_GROUP)
-                assert state.state == STATE_OFF
-
-    for state_1 in (STATE_OFF, STATE_UNAVAILABLE, STATE_UNKNOWN):
-        for state_2 in (STATE_OFF, STATE_UNAVAILABLE, STATE_UNKNOWN):
-            for state_3 in (STATE_OFF, STATE_UNAVAILABLE, STATE_UNKNOWN):
-                hass.states.async_set(CEILING_FAN_ENTITY_ID, state_1, {})
-                hass.states.async_set(LIVING_ROOM_FAN_ENTITY_ID, state_2, {})
-                hass.states.async_set(PERCENTAGE_FULL_FAN_ENTITY_ID, state_3, {})
-                hass.states.async_set(
-                    PERCENTAGE_LIMITED_FAN_ENTITY_ID, STATE_UNKNOWN, {}
-                )
                 await hass.async_block_till_done()
                 state = hass.states.get(FAN_GROUP)
                 assert state.state == STATE_OFF
@@ -183,7 +187,7 @@ async def test_state(hass, setup_comp):
     hass.states.async_remove(PERCENTAGE_LIMITED_FAN_ENTITY_ID)
     await hass.async_block_till_done()
     state = hass.states.get(FAN_GROUP)
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     assert ATTR_ASSUMED_STATE not in state.attributes
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
 
@@ -193,7 +197,7 @@ async def test_state(hass, setup_comp):
     hass.states.async_remove(PERCENTAGE_FULL_FAN_ENTITY_ID)
     await hass.async_block_till_done()
     state = hass.states.get(FAN_GROUP)
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNAVAILABLE
     assert ATTR_ASSUMED_STATE not in state.attributes
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
 
@@ -208,12 +212,9 @@ async def test_state(hass, setup_comp):
 async def test_attributes(hass, setup_comp):
     """Test handling of state attributes."""
     state = hass.states.get(FAN_GROUP)
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNAVAILABLE
     assert state.attributes[ATTR_FRIENDLY_NAME] == DEFAULT_NAME
-    assert state.attributes[ATTR_ENTITY_ID] == [
-        *FULL_FAN_ENTITY_IDS,
-        *LIMITED_FAN_ENTITY_IDS,
-    ]
+    assert ATTR_ENTITY_ID not in state.attributes
     assert ATTR_ASSUMED_STATE not in state.attributes
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
     hass.states.async_set(CEILING_FAN_ENTITY_ID, STATE_ON, {})
@@ -223,6 +224,10 @@ async def test_attributes(hass, setup_comp):
     await hass.async_block_till_done()
     state = hass.states.get(FAN_GROUP)
     assert state.state == STATE_ON
+    assert state.attributes[ATTR_ENTITY_ID] == [
+        *FULL_FAN_ENTITY_IDS,
+        *LIMITED_FAN_ENTITY_IDS,
+    ]
 
     # Add Entity that supports speed
     hass.states.async_set(

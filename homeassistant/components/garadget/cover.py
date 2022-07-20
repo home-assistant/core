@@ -7,7 +7,11 @@ from typing import Any
 import requests
 import voluptuous as vol
 
-from homeassistant.components.cover import PLATFORM_SCHEMA, CoverEntity
+from homeassistant.components.cover import (
+    PLATFORM_SCHEMA,
+    CoverDeviceClass,
+    CoverEntity,
+)
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_COVERS,
@@ -135,17 +139,17 @@ class GaradgetCover(CoverEntity):
             self.remove_token()
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the cover."""
         return self._name
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
         return self._available
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         data = {}
 
@@ -164,16 +168,16 @@ class GaradgetCover(CoverEntity):
         return data
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
         if self._state is None:
             return None
         return self._state == STATE_CLOSED
 
     @property
-    def device_class(self):
+    def device_class(self) -> CoverDeviceClass:
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return "garage"
+        return CoverDeviceClass.GARAGE
 
     def get_token(self):
         """Get new token for usage during this session."""
@@ -229,7 +233,7 @@ class GaradgetCover(CoverEntity):
             self._start_watcher("stop")
             return ret["return_value"] == 1
 
-    def update(self):
+    def update(self) -> None:
         """Get updated status from API."""
         try:
             status = self._get_variable("doorStatus")

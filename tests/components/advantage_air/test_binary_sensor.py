@@ -54,7 +54,7 @@ async def test_binary_sensor_async_setup_entry(hass, aioclient_mock):
     assert entry.unique_id == "uniqueid-ac2-filter"
 
     # Test First Motion Sensor
-    entity_id = "binary_sensor.zone_open_with_sensor_motion"
+    entity_id = "binary_sensor.ac_one_zone_open_with_sensor_motion"
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_ON
@@ -64,7 +64,7 @@ async def test_binary_sensor_async_setup_entry(hass, aioclient_mock):
     assert entry.unique_id == "uniqueid-ac1-z01-motion"
 
     # Test Second Motion Sensor
-    entity_id = "binary_sensor.zone_closed_with_sensor_motion"
+    entity_id = "binary_sensor.ac_one_zone_closed_with_sensor_motion"
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_OFF
@@ -74,7 +74,7 @@ async def test_binary_sensor_async_setup_entry(hass, aioclient_mock):
     assert entry.unique_id == "uniqueid-ac1-z02-motion"
 
     # Test First MyZone Sensor (disabled by default)
-    entity_id = "binary_sensor.zone_open_with_sensor_myzone"
+    entity_id = "binary_sensor.ac_one_zone_open_with_sensor_myzone"
 
     assert not hass.states.get(entity_id)
 
@@ -96,7 +96,7 @@ async def test_binary_sensor_async_setup_entry(hass, aioclient_mock):
     assert entry.unique_id == "uniqueid-ac1-z01-myzone"
 
     # Test Second Motion Sensor (disabled by default)
-    entity_id = "binary_sensor.zone_closed_with_sensor_myzone"
+    entity_id = "binary_sensor.ac_one_zone_closed_with_sensor_myzone"
 
     assert not hass.states.get(entity_id)
 

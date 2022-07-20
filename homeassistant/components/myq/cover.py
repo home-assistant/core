@@ -50,22 +50,22 @@ class MyQCover(MyQEntity, CoverEntity):
         self._attr_unique_id = device.device_id
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool:
         """Return true if cover is closed, else False."""
         return MYQ_TO_HASS.get(self._device.state) == STATE_CLOSED
 
     @property
-    def is_closing(self):
+    def is_closing(self) -> bool:
         """Return if the cover is closing or not."""
         return MYQ_TO_HASS.get(self._device.state) == STATE_CLOSING
 
     @property
-    def is_open(self):
+    def is_open(self) -> bool:
         """Return if the cover is opening or not."""
         return MYQ_TO_HASS.get(self._device.state) == STATE_OPEN
 
     @property
-    def is_opening(self):
+    def is_opening(self) -> bool:
         """Return if the cover is opening or not."""
         return MYQ_TO_HASS.get(self._device.state) == STATE_OPENING
 

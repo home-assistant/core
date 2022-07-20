@@ -225,9 +225,59 @@ class AqaraMotionSensitivities(types.enum8):
     High = 0x03
 
 
-@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"lumi.motion.ac02"})
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="opple_cluster", models={"lumi.motion.ac01", "lumi.motion.ac02"}
+)
 class AqaraMotionSensitivity(ZCLEnumSelectEntity, id_suffix="motion_sensitivity"):
     """Representation of a ZHA on off transition time configuration entity."""
 
     _select_attr = "motion_sensitivity"
     _enum = AqaraMotionSensitivities
+
+
+class AqaraMonitoringModess(types.enum8):
+    """Aqara monitoring modes."""
+
+    Undirected = 0x00
+    Left_Right = 0x01
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"lumi.motion.ac01"})
+class AqaraMonitoringMode(ZCLEnumSelectEntity, id_suffix="monitoring_mode"):
+    """Representation of a ZHA monitoring mode configuration entity."""
+
+    _select_attr = "monitoring_mode"
+    _enum = AqaraMonitoringModess
+
+
+class AqaraApproachDistances(types.enum8):
+    """Aqara approach distances."""
+
+    Far = 0x00
+    Medium = 0x01
+    Near = 0x02
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"lumi.motion.ac01"})
+class AqaraApproachDistance(ZCLEnumSelectEntity, id_suffix="approach_distance"):
+    """Representation of a ZHA approach distance configuration entity."""
+
+    _select_attr = "approach_distance"
+    _enum = AqaraApproachDistances
+
+
+class AqaraE1ReverseDirection(types.enum8):
+    """Aqara curtain reversal."""
+
+    Normal = 0x00
+    Inverted = 0x01
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="window_covering", models={"lumi.curtain.agl001"}
+)
+class AqaraCurtainMode(ZCLEnumSelectEntity, id_suffix="window_covering_mode"):
+    """Representation of a ZHA curtain mode configuration entity."""
+
+    _select_attr = "window_covering_mode"
+    _enum = AqaraE1ReverseDirection
