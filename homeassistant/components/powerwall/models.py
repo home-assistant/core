@@ -45,7 +45,6 @@ class PowerwallRuntimeData(TypedDict):
     """Run time data for the powerwall."""
 
     coordinator: DataUpdateCoordinator | None
-    login_failed_count: int
     base_info: PowerwallBaseInfo
     api_changed: bool
     http_session: Session

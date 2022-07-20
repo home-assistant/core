@@ -272,7 +272,7 @@ class LoginFlow(data_entry_flow.FlowHandler):
             if not errors:
                 return await self.async_finish(self.credential)
 
-        description_placeholders: dict[str, str | None] = {
+        description_placeholders: dict[str, str] = {
             "mfa_module_name": auth_module.name,
             "mfa_module_id": auth_module.id,
         }

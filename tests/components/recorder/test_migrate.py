@@ -20,9 +20,13 @@ from sqlalchemy.pool import StaticPool
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import persistent_notification as pn, recorder
-from homeassistant.components.recorder import migration, models
+from homeassistant.components.recorder import db_schema, migration
 from homeassistant.components.recorder.const import DATA_INSTANCE
-from homeassistant.components.recorder.models import RecorderRuns, States
+from homeassistant.components.recorder.db_schema import (
+    SCHEMA_VERSION,
+    RecorderRuns,
+    States,
+)
 from homeassistant.components.recorder.util import session_scope
 import homeassistant.util.dt as dt_util
 
@@ -56,10 +60,13 @@ async def test_schema_update_calls(hass):
         await async_wait_recording_done(hass)
 
     assert recorder.util.async_migration_in_progress(hass) is False
+    instance = recorder.get_instance(hass)
+    engine = instance.engine
+    session_maker = instance.get_session
     update.assert_has_calls(
         [
-            call(hass.data[DATA_INSTANCE], version + 1, 0)
-            for version in range(0, models.SCHEMA_VERSION)
+            call(hass, engine, session_maker, version + 1, 0)
+            for version in range(0, db_schema.SCHEMA_VERSION)
         ]
     )
 
@@ -80,6 +87,7 @@ async def test_migration_in_progress(hass):
         await async_wait_recording_done(hass)
 
     assert recorder.util.async_migration_in_progress(hass) is False
+    assert recorder.get_instance(hass).schema_version == SCHEMA_VERSION
 
 
 async def test_database_migration_failed(hass):
@@ -259,14 +267,16 @@ async def test_schema_migrate(hass, start_version):
 
         This simulates an existing db with the old schema.
         """
-        module = f"tests.components.recorder.models_schema_{str(start_version)}"
+        module = f"tests.components.recorder.db_schema_{str(start_version)}"
         importlib.import_module(module)
         old_models = sys.modules[module]
         engine = create_engine(*args, **kwargs)
         old_models.Base.metadata.create_all(engine)
         if start_version > 0:
             with Session(engine) as session:
-                session.add(recorder.models.SchemaChanges(schema_version=start_version))
+                session.add(
+                    recorder.db_schema.SchemaChanges(schema_version=start_version)
+                )
                 session.commit()
         return engine
 
@@ -291,8 +301,8 @@ async def test_schema_migrate(hass, start_version):
         # the recorder will silently create a new database.
         with session_scope(hass=hass) as session:
             res = (
-                session.query(models.SchemaChanges)
-                .order_by(models.SchemaChanges.change_id.desc())
+                session.query(db_schema.SchemaChanges)
+                .order_by(db_schema.SchemaChanges.change_id.desc())
                 .first()
             )
             migration_version = res.schema_version
@@ -317,15 +327,15 @@ async def test_schema_migrate(hass, start_version):
         await hass.async_block_till_done()
         await hass.async_add_executor_job(migration_done.wait)
         await async_wait_recording_done(hass)
-        assert migration_version == models.SCHEMA_VERSION
+        assert migration_version == db_schema.SCHEMA_VERSION
         assert setup_run.called
         assert recorder.util.async_migration_in_progress(hass) is not True
 
 
-def test_invalid_update():
+def test_invalid_update(hass):
     """Test that an invalid new version raises an exception."""
     with pytest.raises(ValueError):
-        migration._apply_update(Mock(), -1, 0)
+        migration._apply_update(hass, Mock(), Mock(), -1, 0)
 
 
 @pytest.mark.parametrize(
@@ -346,7 +356,9 @@ def test_modify_column(engine_type, substr):
     instance.get_session = Mock(return_value=session)
     engine = Mock()
     engine.dialect.name = engine_type
-    migration._modify_columns(instance, engine, "events", ["event_type VARCHAR(64)"])
+    migration._modify_columns(
+        instance.get_session, engine, "events", ["event_type VARCHAR(64)"]
+    )
     if substr:
         assert substr in connection.execute.call_args[0][0].text
     else:
@@ -360,18 +372,22 @@ def test_forgiving_add_column():
         session.execute(text("CREATE TABLE hello (id int)"))
         instance = Mock()
         instance.get_session = Mock(return_value=session)
-        migration._add_columns(instance, "hello", ["context_id CHARACTER(36)"])
-        migration._add_columns(instance, "hello", ["context_id CHARACTER(36)"])
+        migration._add_columns(
+            instance.get_session, "hello", ["context_id CHARACTER(36)"]
+        )
+        migration._add_columns(
+            instance.get_session, "hello", ["context_id CHARACTER(36)"]
+        )
 
 
 def test_forgiving_add_index():
     """Test that add index will continue if index exists."""
     engine = create_engine("sqlite://", poolclass=StaticPool)
-    models.Base.metadata.create_all(engine)
+    db_schema.Base.metadata.create_all(engine)
     with Session(engine) as session:
         instance = Mock()
         instance.get_session = Mock(return_value=session)
-        migration._create_index(instance, "states", "ix_states_context_id")
+        migration._create_index(instance.get_session, "states", "ix_states_context_id")
 
 
 @pytest.mark.parametrize(

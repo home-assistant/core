@@ -7,9 +7,6 @@
             "switchbot_unsupported_type": "Nicht unterst\u00fctzter Switchbot-Typ.",
             "unknown": "Unerwarteter Fehler"
         },
-        "error": {
-            "cannot_connect": "Verbindung fehlgeschlagen"
-        },
         "flow_title": "{name}",
         "step": {
             "user": {

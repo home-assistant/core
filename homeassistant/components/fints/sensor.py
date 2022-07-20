@@ -7,7 +7,6 @@ import logging
 from typing import Any
 
 from fints.client import FinTS3PinTanClient
-from fints.dialog import FinTSDialogError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
@@ -128,6 +127,9 @@ class FinTsClient:
         As the fints library is stateless, there is not benefit in caching
         the client objects. If that ever changes, consider caching the client
         object and also think about potential concurrency problems.
+
+        Note: As of version 2, the fints library is not stateless anymore.
+        This should be considered when reworking this integration.
         """
 
         return FinTS3PinTanClient(
@@ -140,24 +142,22 @@ class FinTsClient:
     def detect_accounts(self):
         """Identify the accounts of the bank."""
 
+        bank = self.client
+        accounts = bank.get_sepa_accounts()
+        account_types = {
+            x["iban"]: x["type"]
+            for x in bank.get_information()["accounts"]
+            if x["iban"] is not None
+        }
+
         balance_accounts = []
         holdings_accounts = []
-        for account in self.client.get_sepa_accounts():
-            try:
-                self.client.get_balance(account)
+        for account in accounts:
+            account_type = account_types[account.iban]
+            if 1 <= account_type <= 9:  # 1-9 is balance account
                 balance_accounts.append(account)
-            except IndexError:
-                # account is not a balance account.
-                pass
-            except FinTSDialogError:
-                # account is not a balance account.
-                pass
-            try:
-                self.client.get_holdings(account)
+            elif 30 <= account_type <= 39:  # 30-39 is holdings account
                 holdings_accounts.append(account)
-            except FinTSDialogError:
-                # account is not a holdings account.
-                pass
 
         return balance_accounts, holdings_accounts
 

@@ -1,7 +1,6 @@
 """The PECO Outage Counter integration."""
 from __future__ import annotations
 
-import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import Final
@@ -48,8 +47,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             raise UpdateFailed(f"Error fetching data: {err}") from err
         except BadJSONError as err:
             raise UpdateFailed(f"Error parsing data: {err}") from err
-        except asyncio.TimeoutError as err:
-            raise UpdateFailed(f"Timeout fetching data: {err}") from err
         return data
 
     coordinator = DataUpdateCoordinator(
@@ -63,7 +60,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

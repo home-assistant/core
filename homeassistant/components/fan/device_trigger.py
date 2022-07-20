@@ -1,8 +1,6 @@
 """Provides device automations for Fan."""
 from __future__ import annotations
 
-from typing import Any
-
 import voluptuous as vol
 
 from homeassistant.components.automation import (
@@ -24,7 +22,7 @@ TRIGGER_SCHEMA = vol.All(
 
 async def async_get_triggers(
     hass: HomeAssistant, device_id: str
-) -> list[dict[str, Any]]:
+) -> list[dict[str, str]]:
     """List device triggers for Fan devices."""
     return await toggle_entity.async_get_triggers(hass, device_id, DOMAIN)
 

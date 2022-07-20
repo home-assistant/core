@@ -7,7 +7,7 @@ import pytest
 
 from homeassistant.components import device_tracker, sensor
 from homeassistant.components.asuswrt.const import CONF_INTERFACE, DOMAIN
-from homeassistant.components.asuswrt.sensor import DEFAULT_PREFIX
+from homeassistant.components.asuswrt.router import DEFAULT_NAME
 from homeassistant.components.device_tracker.const import CONF_CONSIDER_HOME
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -38,6 +38,8 @@ CONFIG_DATA = {
     CONF_PASSWORD: "pwd",
     CONF_MODE: "router",
 }
+
+MAC_ADDR = "a1:b2:c3:d4:e5:f6"
 
 MOCK_BYTES_TOTAL = [60000000000, 50000000000]
 MOCK_CURRENT_TRANSFER_RATES = [20000000, 10000000]
@@ -157,7 +159,7 @@ def mock_controller_connect_sens_fail():
         yield service_mock
 
 
-def _setup_entry(hass):
+def _setup_entry(hass, unique_id=None):
     """Create mock config entry."""
     entity_reg = er.async_get(hass)
 
@@ -166,11 +168,11 @@ def _setup_entry(hass):
         domain=DOMAIN,
         data=CONFIG_DATA,
         options={CONF_CONSIDER_HOME: 60},
+        unique_id=unique_id,
     )
 
     # init variable
-    unique_id = DOMAIN
-    obj_prefix = slugify(DEFAULT_PREFIX)
+    obj_prefix = slugify(HOST if unique_id else DEFAULT_NAME)
     sensor_prefix = f"{sensor.DOMAIN}.{obj_prefix}"
 
     # Pre-enable the status sensor
@@ -179,7 +181,7 @@ def _setup_entry(hass):
         entity_reg.async_get_or_create(
             sensor.DOMAIN,
             DOMAIN,
-            f"{unique_id} {DEFAULT_PREFIX} {sensor_name}",
+            f"{DOMAIN} {unique_id or DEFAULT_NAME} {sensor_name}",
             suggested_object_id=f"{obj_prefix}_{sensor_id}",
             disabled_by=None,
         )
@@ -202,15 +204,20 @@ def _setup_entry(hass):
     return config_entry, sensor_prefix
 
 
+@pytest.mark.parametrize(
+    "entry_unique_id",
+    [None, MAC_ADDR],
+)
 async def test_sensors(
     hass,
     connect,
     mock_devices,
     mock_available_temps,
     create_device_registry_devices,
+    entry_unique_id,
 ):
     """Test creating an AsusWRT sensor."""
-    config_entry, sensor_prefix = _setup_entry(hass)
+    config_entry, sensor_prefix = _setup_entry(hass, entry_unique_id)
     config_entry.add_to_hass(hass)
 
     # initial devices setup

@@ -49,7 +49,7 @@ async def test_get_media_source(hass: HomeAssistant) -> None:
 async def test_resolve_media_unconfigured(hass: HomeAssistant) -> None:
     """Test resolve_media without any devices being configured."""
     source = DmsMediaSource(hass)
-    item = MediaSourceItem(hass, DOMAIN, "source_id/media_id")
+    item = MediaSourceItem(hass, DOMAIN, "source_id/media_id", None)
     with pytest.raises(Unresolvable, match="No sources have been configured"):
         await source.async_resolve_media(item)
 
@@ -60,31 +60,31 @@ async def test_resolve_media_bad_identifier(
     """Test trying to resolve an item that has an unresolvable identifier."""
     # Empty identifier
     with pytest.raises(Unresolvable, match="No source ID.*"):
-        await media_source.async_resolve_media(hass, f"media-source://{DOMAIN}")
+        await media_source.async_resolve_media(hass, f"media-source://{DOMAIN}", None)
 
     # Identifier has media_id but no source_id
     # media_source.URI_SCHEME_REGEX won't let the ID through to dlna_dms
     with pytest.raises(Unresolvable, match="Invalid media source URI"):
         await media_source.async_resolve_media(
-            hass, f"media-source://{DOMAIN}//media_id"
+            hass, f"media-source://{DOMAIN}//media_id", None
         )
 
     # Identifier has source_id but no media_id
     with pytest.raises(Unresolvable, match="No media ID.*"):
         await media_source.async_resolve_media(
-            hass, f"media-source://{DOMAIN}/source_id/"
+            hass, f"media-source://{DOMAIN}/source_id/", None
         )
 
     # Identifier is missing source_id/media_id separator
     with pytest.raises(Unresolvable, match="No media ID.*"):
         await media_source.async_resolve_media(
-            hass, f"media-source://{DOMAIN}/source_id"
+            hass, f"media-source://{DOMAIN}/source_id", None
         )
 
     # Identifier has an unknown source_id
     with pytest.raises(Unresolvable, match="Unknown source ID: unknown_source"):
         await media_source.async_resolve_media(
-            hass, f"media-source://{DOMAIN}/unknown_source/media_id"
+            hass, f"media-source://{DOMAIN}/unknown_source/media_id", None
         )
 
 
@@ -105,7 +105,7 @@ async def test_resolve_media_success(
     dms_device_mock.async_browse_metadata.return_value = didl_item
 
     result = await media_source.async_resolve_media(
-        hass, f"media-source://{DOMAIN}/{MOCK_SOURCE_ID}/:{object_id}"
+        hass, f"media-source://{DOMAIN}/{MOCK_SOURCE_ID}/:{object_id}", None
     )
     assert isinstance(result, DidlPlayMedia)
     assert result.url == f"{MOCK_DEVICE_BASE_URL}/{res_url}"
@@ -116,11 +116,11 @@ async def test_resolve_media_success(
 async def test_browse_media_unconfigured(hass: HomeAssistant) -> None:
     """Test browse_media without any devices being configured."""
     source = DmsMediaSource(hass)
-    item = MediaSourceItem(hass, DOMAIN, "source_id/media_id")
+    item = MediaSourceItem(hass, DOMAIN, "source_id/media_id", None)
     with pytest.raises(BrowseError, match="No sources have been configured"):
         await source.async_browse_media(item)
 
-    item = MediaSourceItem(hass, DOMAIN, "")
+    item = MediaSourceItem(hass, DOMAIN, "", None)
     with pytest.raises(BrowseError, match="No sources have been configured"):
         await source.async_browse_media(item)
 
@@ -239,7 +239,7 @@ async def test_browse_media_source_id(
     dms_device_mock.async_browse_metadata.side_effect = UpnpError
 
     # Browse by source_id
-    item = MediaSourceItem(hass, DOMAIN, f"{MOCK_SOURCE_ID}/:media-item-id")
+    item = MediaSourceItem(hass, DOMAIN, f"{MOCK_SOURCE_ID}/:media-item-id", None)
     dms_source = DmsMediaSource(hass)
     with pytest.raises(BrowseError):
         await dms_source.async_browse_media(item)

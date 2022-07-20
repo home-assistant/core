@@ -25,12 +25,12 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_WINDY,
     ATTR_CONDITION_WINDY_VARIANT,
     ATTR_FORECAST_CONDITION,
+    ATTR_FORECAST_NATIVE_TEMP,
+    ATTR_FORECAST_NATIVE_TEMP_LOW,
+    ATTR_FORECAST_NATIVE_WIND_SPEED,
     ATTR_FORECAST_PRECIPITATION_PROBABILITY,
-    ATTR_FORECAST_TEMP,
-    ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
-    ATTR_FORECAST_WIND_SPEED,
     PLATFORM_SCHEMA,
     WeatherEntity,
 )
@@ -40,6 +40,8 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_MODE,
     CONF_NAME,
+    PRESSURE_HPA,
+    SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -174,6 +176,10 @@ async def async_get_location(hass, api, latitude, longitude):
 class IPMAWeather(WeatherEntity):
     """Representation of a weather condition."""
 
+    _attr_native_pressure_unit = PRESSURE_HPA
+    _attr_native_temperature_unit = TEMP_CELSIUS
+    _attr_native_wind_speed_unit = SPEED_KILOMETERS_PER_HOUR
+
     def __init__(self, location: Location, api: IPMA_API, config):
         """Initialise the platform with a data instance and station name."""
         self._api = api
@@ -237,7 +243,7 @@ class IPMAWeather(WeatherEntity):
         )
 
     @property
-    def temperature(self):
+    def native_temperature(self):
         """Return the current temperature."""
         if not self._observation:
             return None
@@ -245,7 +251,7 @@ class IPMAWeather(WeatherEntity):
         return self._observation.temperature
 
     @property
-    def pressure(self):
+    def native_pressure(self):
         """Return the current pressure."""
         if not self._observation:
             return None
@@ -261,7 +267,7 @@ class IPMAWeather(WeatherEntity):
         return self._observation.humidity
 
     @property
-    def wind_speed(self):
+    def native_wind_speed(self):
         """Return the current windspeed."""
         if not self._observation:
             return None
@@ -275,11 +281,6 @@ class IPMAWeather(WeatherEntity):
             return None
 
         return self._observation.wind_direction
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
 
     @property
     def forecast(self):
@@ -307,13 +308,13 @@ class IPMAWeather(WeatherEntity):
                         ),
                         None,
                     ),
-                    ATTR_FORECAST_TEMP: float(data_in.feels_like_temperature),
+                    ATTR_FORECAST_NATIVE_TEMP: float(data_in.feels_like_temperature),
                     ATTR_FORECAST_PRECIPITATION_PROBABILITY: (
                         int(float(data_in.precipitation_probability))
                         if int(float(data_in.precipitation_probability)) >= 0
                         else None
                     ),
-                    ATTR_FORECAST_WIND_SPEED: data_in.wind_strength,
+                    ATTR_FORECAST_NATIVE_WIND_SPEED: data_in.wind_strength,
                     ATTR_FORECAST_WIND_BEARING: data_in.wind_direction,
                 }
                 for data_in in forecast_filtered
@@ -331,10 +332,10 @@ class IPMAWeather(WeatherEntity):
                         ),
                         None,
                     ),
-                    ATTR_FORECAST_TEMP_LOW: data_in.min_temperature,
-                    ATTR_FORECAST_TEMP: data_in.max_temperature,
+                    ATTR_FORECAST_NATIVE_TEMP_LOW: data_in.min_temperature,
+                    ATTR_FORECAST_NATIVE_TEMP: data_in.max_temperature,
                     ATTR_FORECAST_PRECIPITATION_PROBABILITY: data_in.precipitation_probability,
-                    ATTR_FORECAST_WIND_SPEED: data_in.wind_strength,
+                    ATTR_FORECAST_NATIVE_WIND_SPEED: data_in.wind_strength,
                     ATTR_FORECAST_WIND_BEARING: data_in.wind_direction,
                 }
                 for data_in in forecast_filtered

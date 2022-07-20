@@ -14,5 +14,14 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "activity": "A actividade por defeito a executar quando nenhuma \u00e9 especificada."
+                }
+            }
+        }
     }
 }

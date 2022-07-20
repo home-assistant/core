@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Zaten yap\u0131land\u0131r\u0131lm\u0131\u015f. Yaln\u0131zca tek bir konfig\u00fcrasyon m\u00fcmk\u00fcnd\u00fcr."
+            "invalid_unique_id": "Cihaz i\u00e7in ge\u00e7erli bir benzersiz kimlik belirlemek imkans\u0131z",
+            "no_unique_id": "Ge\u00e7erli bir benzersiz kimli\u011fi olmayan bir cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f. Birden \u00e7ok \u00f6rne\u011fin yap\u0131land\u0131r\u0131lmas\u0131 m\u00fcmk\u00fcn de\u011fil"
         },
         "error": {
             "cannot_connect": "Ba\u011flanma hatas\u0131",

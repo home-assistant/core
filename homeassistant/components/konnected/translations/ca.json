@@ -39,7 +39,7 @@
             "options_binary": {
                 "data": {
                     "inverse": "Inverteix l'estat obert/tancat",
-                    "name": "Nom (opcional)",
+                    "name": "Nom",
                     "type": "Tipus de sensor binari"
                 },
                 "description": "Opcions de {zone}",
@@ -47,8 +47,8 @@
             },
             "options_digital": {
                 "data": {
-                    "name": "Nom (opcional)",
-                    "poll_interval": "Interval de sondeig (minuts) (opcional)",
+                    "name": "Nom",
+                    "poll_interval": "Interval de sondeig (minuts)",
                     "type": "Tipus de sensor"
                 },
                 "description": "Opcions de {zone}",
@@ -84,7 +84,7 @@
             },
             "options_misc": {
                 "data": {
-                    "api_host": "Substitueix l'URL d'amfitri\u00f3 d'API (opcional)",
+                    "api_host": "Substitueix l'URL d'amfitri\u00f3 d'API",
                     "blink": "Parpelleja el LED del panell quan s'envien canvis d'estat",
                     "discovery": "Respon a peticions de descobriment a la teva xarxa",
                     "override_api_host": "Substitueix l'URL per defecte del panell d'amfitri\u00f3 de l'API de Home Assistant"
@@ -95,11 +95,11 @@
             "options_switch": {
                 "data": {
                     "activation": "Sortida quan estigui ON",
-                    "momentary": "Durada del pols (ms) (opcional)",
+                    "momentary": "Durada del pols (ms)",
                     "more_states": "Configura estats addicionals per a aquesta zona",
-                    "name": "Nom (opcional)",
-                    "pause": "Pausa entre polsos (ms) (opcional)",
-                    "repeat": "Repeticions (-1 = infinit) (opcional)"
+                    "name": "Nom",
+                    "pause": "Pausa entre polsos (ms)",
+                    "repeat": "Repeticions (-1 = infinit)"
                 },
                 "description": "Opcions de {zone}: estat {state}",
                 "title": "Configuraci\u00f3 de sortida commutable"

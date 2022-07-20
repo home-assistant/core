@@ -1,0 +1,21 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "device_key": "The device key of your device",
+          "event": "The event for the events.",
+          "password": "The password of the encryption used by your device",
+          "salt": "The salt used by your device."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  }
+}

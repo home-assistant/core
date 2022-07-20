@@ -7,14 +7,17 @@ https://home-assistant.io/integrations/zha/
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Any
 
 from zigpy.exceptions import ZigbeeException
+import zigpy.zcl
 from zigpy.zcl.clusters import security
 from zigpy.zcl.clusters.security import IasAce as AceCluster
 
 from homeassistant.core import callback
 
-from .. import registries, typing as zha_typing
+from .. import registries
 from ..const import (
     SIGNAL_ATTR_UPDATED,
     WARNING_DEVICE_MODE_EMERGENCY,
@@ -23,8 +26,10 @@ from ..const import (
     WARNING_DEVICE_STROBE_HIGH,
     WARNING_DEVICE_STROBE_YES,
 )
-from ..typing import CALLABLE_T
 from .base import ChannelStatus, ZigbeeChannel
+
+if TYPE_CHECKING:
+    from . import ChannelPool
 
 IAS_ACE_ARM = 0x0000  # ("arm", (t.enum8, t.CharacterString, t.uint8_t), False),
 IAS_ACE_BYPASS = 0x0001  # ("bypass", (t.LVList(t.uint8_t), t.CharacterString), False),
@@ -47,12 +52,10 @@ SIGNAL_ALARM_TRIGGERED = "zha_armed_triggered"
 class IasAce(ZigbeeChannel):
     """IAS Ancillary Control Equipment channel."""
 
-    def __init__(
-        self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType
-    ) -> None:
+    def __init__(self, cluster: zigpy.zcl.Cluster, ch_pool: ChannelPool) -> None:
         """Initialize IAS Ancillary Control Equipment channel."""
         super().__init__(cluster, ch_pool)
-        self.command_map: dict[int, CALLABLE_T] = {
+        self.command_map: dict[int, Callable[..., Any]] = {
             IAS_ACE_ARM: self.arm,
             IAS_ACE_BYPASS: self._bypass,
             IAS_ACE_EMERGENCY: self._emergency,
@@ -64,7 +67,7 @@ class IasAce(ZigbeeChannel):
             IAS_ACE_GET_BYPASSED_ZONE_LIST: self._get_bypassed_zone_list,
             IAS_ACE_GET_ZONE_STATUS: self._get_zone_status,
         }
-        self.arm_map: dict[AceCluster.ArmMode, CALLABLE_T] = {
+        self.arm_map: dict[AceCluster.ArmMode, Callable[..., Any]] = {
             AceCluster.ArmMode.Disarm: self._disarm,
             AceCluster.ArmMode.Arm_All_Zones: self._arm_away,
             AceCluster.ArmMode.Arm_Day_Home_Only: self._arm_day,
@@ -89,7 +92,7 @@ class IasAce(ZigbeeChannel):
         )
         self.command_map[command_id](*args)
 
-    def arm(self, arm_mode: int, code: str, zone_id: int):
+    def arm(self, arm_mode: int, code: str | None, zone_id: int) -> None:
         """Handle the IAS ACE arm command."""
         mode = AceCluster.ArmMode(arm_mode)
 
@@ -196,26 +199,17 @@ class IasAce(ZigbeeChannel):
 
     def _emergency(self) -> None:
         """Handle the IAS ACE emergency command."""
-        self._set_alarm(
-            AceCluster.AlarmStatus.Emergency,
-            IAS_ACE_EMERGENCY,
-        )
+        self._set_alarm(AceCluster.AlarmStatus.Emergency)
 
     def _fire(self) -> None:
         """Handle the IAS ACE fire command."""
-        self._set_alarm(
-            AceCluster.AlarmStatus.Fire,
-            IAS_ACE_FIRE,
-        )
+        self._set_alarm(AceCluster.AlarmStatus.Fire)
 
     def _panic(self) -> None:
         """Handle the IAS ACE panic command."""
-        self._set_alarm(
-            AceCluster.AlarmStatus.Emergency_Panic,
-            IAS_ACE_PANIC,
-        )
+        self._set_alarm(AceCluster.AlarmStatus.Emergency_Panic)
 
-    def _set_alarm(self, status: AceCluster.PanelStatus, event: str) -> None:
+    def _set_alarm(self, status: AceCluster.AlarmStatus) -> None:
         """Set the specified alarm status."""
         self.alarm_status = status
         self.armed_state = AceCluster.PanelStatus.In_Alarm

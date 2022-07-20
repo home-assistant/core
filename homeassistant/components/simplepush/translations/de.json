@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "device_key": "Der Ger\u00e4teschl\u00fcssel deines Ger\u00e4ts",
+                    "event": "Das Ereignis f\u00fcr die Ereignisse.",
+                    "name": "Name",
+                    "password": "Das Passwort der von deinem Ger\u00e4t verwendeten Verschl\u00fcsselung",
+                    "salt": "Das von deinem Ger\u00e4t verwendete Salt."
+                }
+            }
+        }
+    }
+}

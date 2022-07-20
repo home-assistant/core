@@ -25,6 +25,9 @@
         }
     },
     "options": {
+        "error": {
+            "unauthorized": "Liste d'amis restreinte\u00a0: Veuillez consulter la documentation afin d'afficher tous les autres amis"
+        },
         "step": {
             "init": {
                 "data": {

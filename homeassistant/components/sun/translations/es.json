@@ -1,4 +1,14 @@
 {
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Ya configurado. S\u00f3lo es posible una \u00fanica configuraci\u00f3n."
+        },
+        "step": {
+            "user": {
+                "description": "\u00bfQuiere empezar a configurar?"
+            }
+        }
+    },
     "state": {
         "_": {
             "above_horizon": "Sobre el horizonte",

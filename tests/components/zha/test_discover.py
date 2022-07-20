@@ -44,7 +44,15 @@ from .zha_devices_list import (
 NO_TAIL_ID = re.compile("_\\d$")
 UNIQUE_ID_HD = re.compile(r"^(([\da-fA-F]{2}:){7}[\da-fA-F]{2}-\d{1,3})", re.X)
 
-IGNORE_SUFFIXES = [zigpy.zcl.clusters.general.OnOff.StartUpOnOff.__name__]
+IGNORE_SUFFIXES = [
+    zigpy.zcl.clusters.general.OnOff.StartUpOnOff.__name__,
+    "on_off_transition_time",
+    "on_level",
+    "on_transition_time",
+    "off_transition_time",
+    "default_move_rate",
+    "start_up_current_level",
+]
 
 
 def contains_ignored_suffix(unique_id: str) -> bool:
@@ -431,8 +439,8 @@ def test_single_input_cluster_device_class_by_cluster_class():
 @pytest.mark.parametrize(
     "override, entity_id",
     [
-        (None, "light.manufacturer_model_77665544_level_light_color_on_off"),
-        ("switch", "switch.manufacturer_model_77665544_on_off"),
+        (None, "light.manufacturer_model_light"),
+        ("switch", "switch.manufacturer_model_switch"),
     ],
 )
 async def test_device_override(

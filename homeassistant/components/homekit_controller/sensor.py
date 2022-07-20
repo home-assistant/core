@@ -32,6 +32,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import KNOWN_DEVICES, CharacteristicEntity, HomeKitEntity
 from .connection import HKDevice
+from .utils import folded_name
 
 CO2_ICON = "mdi:molecule-co2"
 
@@ -199,7 +200,24 @@ SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
 }
 
 
-class HomeKitHumiditySensor(HomeKitEntity, SensorEntity):
+class HomeKitSensor(HomeKitEntity):
+    """Representation of a HomeKit sensor."""
+
+    @property
+    def name(self) -> str | None:
+        """Return the name of the device."""
+        full_name = super().name
+        default_name = self.default_name
+        if (
+            default_name
+            and full_name
+            and folded_name(default_name) not in folded_name(full_name)
+        ):
+            return f"{full_name} {default_name}"
+        return full_name
+
+
+class HomeKitHumiditySensor(HomeKitSensor, SensorEntity):
     """Representation of a Homekit humidity sensor."""
 
     _attr_device_class = SensorDeviceClass.HUMIDITY
@@ -210,9 +228,9 @@ class HomeKitHumiditySensor(HomeKitEntity, SensorEntity):
         return [CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT]
 
     @property
-    def name(self) -> str:
-        """Return the name of the device."""
-        return f"{super().name} Humidity"
+    def default_name(self) -> str:
+        """Return the default name of the device."""
+        return "Humidity"
 
     @property
     def native_value(self) -> float:
@@ -220,7 +238,7 @@ class HomeKitHumiditySensor(HomeKitEntity, SensorEntity):
         return self.service.value(CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT)
 
 
-class HomeKitTemperatureSensor(HomeKitEntity, SensorEntity):
+class HomeKitTemperatureSensor(HomeKitSensor, SensorEntity):
     """Representation of a Homekit temperature sensor."""
 
     _attr_device_class = SensorDeviceClass.TEMPERATURE
@@ -231,9 +249,9 @@ class HomeKitTemperatureSensor(HomeKitEntity, SensorEntity):
         return [CharacteristicsTypes.TEMPERATURE_CURRENT]
 
     @property
-    def name(self) -> str:
-        """Return the name of the device."""
-        return f"{super().name} Temperature"
+    def default_name(self) -> str:
+        """Return the default name of the device."""
+        return "Temperature"
 
     @property
     def native_value(self) -> float:
@@ -241,7 +259,7 @@ class HomeKitTemperatureSensor(HomeKitEntity, SensorEntity):
         return self.service.value(CharacteristicsTypes.TEMPERATURE_CURRENT)
 
 
-class HomeKitLightSensor(HomeKitEntity, SensorEntity):
+class HomeKitLightSensor(HomeKitSensor, SensorEntity):
     """Representation of a Homekit light level sensor."""
 
     _attr_device_class = SensorDeviceClass.ILLUMINANCE
@@ -252,9 +270,9 @@ class HomeKitLightSensor(HomeKitEntity, SensorEntity):
         return [CharacteristicsTypes.LIGHT_LEVEL_CURRENT]
 
     @property
-    def name(self) -> str:
-        """Return the name of the device."""
-        return f"{super().name} Light Level"
+    def default_name(self) -> str:
+        """Return the default name of the device."""
+        return "Light Level"
 
     @property
     def native_value(self) -> int:
@@ -273,9 +291,9 @@ class HomeKitCarbonDioxideSensor(HomeKitEntity, SensorEntity):
         return [CharacteristicsTypes.CARBON_DIOXIDE_LEVEL]
 
     @property
-    def name(self) -> str:
-        """Return the name of the device."""
-        return f"{super().name} CO2"
+    def default_name(self) -> str:
+        """Return the default name of the device."""
+        return "CO2"
 
     @property
     def native_value(self) -> int:
@@ -283,7 +301,7 @@ class HomeKitCarbonDioxideSensor(HomeKitEntity, SensorEntity):
         return self.service.value(CharacteristicsTypes.CARBON_DIOXIDE_LEVEL)
 
 
-class HomeKitBatterySensor(HomeKitEntity, SensorEntity):
+class HomeKitBatterySensor(HomeKitSensor, SensorEntity):
     """Representation of a Homekit battery sensor."""
 
     _attr_device_class = SensorDeviceClass.BATTERY
@@ -298,9 +316,9 @@ class HomeKitBatterySensor(HomeKitEntity, SensorEntity):
         ]
 
     @property
-    def name(self) -> str:
-        """Return the name of the device."""
-        return f"{super().name} Battery"
+    def default_name(self) -> str:
+        """Return the default name of the device."""
+        return "Battery"
 
     @property
     def icon(self) -> str:
@@ -374,7 +392,9 @@ class SimpleSensor(CharacteristicEntity, SensorEntity):
     @property
     def name(self) -> str:
         """Return the name of the device if any."""
-        return f"{super().name} {self.entity_description.name}"
+        if name := self.accessory.name:
+            return f"{name} {self.entity_description.name}"
+        return f"{self.entity_description.name}"
 
     @property
     def native_value(self) -> str | int | float:

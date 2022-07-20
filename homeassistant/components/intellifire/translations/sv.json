@@ -4,13 +4,12 @@
             "already_configured": "Enheten \u00e4r redan konfigurerad"
         },
         "error": {
-            "cannot_connect": "Det gick inte att ansluta.",
-            "unknown": "Ov\u00e4ntat fel"
+            "cannot_connect": "Det gick inte att ansluta."
         },
         "step": {
-            "user": {
+            "api_config": {
                 "data": {
-                    "host": "V\u00e4rd"
+                    "username": "E-postadress"
                 }
             }
         }

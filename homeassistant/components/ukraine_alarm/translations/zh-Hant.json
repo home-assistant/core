@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u5ea7\u6a19\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "max_regions": "\u6700\u9ad8\u53ef\u8a2d\u5b9a 5 \u500b\u5340\u57df",
+            "rate_limit": "\u8acb\u6c42\u6b21\u6578\u904e\u591a",
+            "timeout": "\u5efa\u7acb\u9023\u7dda\u903e\u6642",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+        },
+        "step": {
+            "community": {
+                "data": {
+                    "region": "\u5340\u57df"
+                },
+                "description": "\u5047\u5982\u4f60\u4e0d\u53ea\u8981\u76e3\u770b\u72c0\u614b\u8207\u5340\u57df\u3001\u8acb\u9078\u64c7\u7279\u5b9a\u793e\u5340"
+            },
+            "district": {
+                "data": {
+                    "region": "\u5340\u57df"
+                },
+                "description": "\u5047\u5982\u4f60\u4e0d\u53ea\u8981\u76e3\u770b\u72c0\u614b\u3001\u8acb\u9078\u64c7\u7279\u5b9a\u5340\u57df"
+            },
+            "user": {
+                "data": {
+                    "region": "\u5340\u57df"
+                },
+                "description": "\u9078\u64c7\u6240\u8981\u76e3\u8996\u7684\u72c0\u614b"
+            }
+        }
+    }
+}

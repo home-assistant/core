@@ -31,6 +31,9 @@
           "accounts": "Names of accounts to be monitored"
         }
       }
+    },
+    "error": {
+      "unauthorized": "Friends list restricted: Please refer to the documentation on how to see all other friends"
     }
   }
 }

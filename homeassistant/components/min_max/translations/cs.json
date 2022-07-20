@@ -20,14 +20,6 @@
                     "round_digits": "P\u0159esnost",
                     "type": "Statistika"
                 }
-            },
-            "options": {
-                "data": {
-                    "entity_ids": "Vstupn\u00ed entity",
-                    "round_digits": "P\u0159esnost",
-                    "type": "Statistika"
-                },
-                "description": "P\u0159esnost ur\u010duje po\u010det desetinn\u00fdch m\u00edst, kdy\u017e je statistikou pr\u016fm\u011br nebo medi\u00e1n."
             }
         }
     }

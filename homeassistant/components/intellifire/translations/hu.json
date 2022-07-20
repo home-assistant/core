@@ -8,8 +8,7 @@
         "error": {
             "api_error": "A bejelentkez\u00e9s sikertelen",
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
-            "iftapi_connect": "Hiba az iftapi.net-hez val\u00f3 csatlakoz\u00e1sban",
-            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+            "iftapi_connect": "Hiba az iftapi.net-hez val\u00f3 csatlakoz\u00e1sban"
         },
         "flow_title": "{serial} ({host})",
         "step": {
@@ -34,11 +33,6 @@
                 },
                 "description": "A k\u00f6vetkez\u0151 IntelliFire eszk\u00f6z\u00f6k \u00e9szlelve. K\u00e9rj\u00fck, v\u00e1lassza ki, melyiket szeretn\u00e9 konfigur\u00e1lni.",
                 "title": "Eszk\u00f6z v\u00e1laszt\u00e1sa"
-            },
-            "user": {
-                "data": {
-                    "host": "C\u00edm"
-                }
             }
         }
     }

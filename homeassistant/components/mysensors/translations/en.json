@@ -75,6 +75,5 @@
                 "description": "Choose connection method to the gateway"
             }
         }
-    },
-    "title": "MySensors"
+    }
 }

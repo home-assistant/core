@@ -25,6 +25,9 @@
         }
     },
     "options": {
+        "error": {
+            "unauthorized": "Lista znajomych ograniczona: zapoznaj si\u0119 z dokumentacj\u0105, aby dowiedzie\u0107 si\u0119, jak zobaczy\u0107 wszystkich innych znajomych"
+        },
         "step": {
             "init": {
                 "data": {

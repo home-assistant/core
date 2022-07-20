@@ -69,9 +69,13 @@ from homeassistant.const import (
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
+    STATE_BUFFERING,
     STATE_IDLE,
     STATE_OFF,
     STATE_ON,
+    STATE_PAUSED,
+    STATE_PLAYING,
+    STATE_STANDBY,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -79,7 +83,11 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import TrackTemplate, async_track_template_result
+from homeassistant.helpers.event import (
+    TrackTemplate,
+    async_track_state_change_event,
+    async_track_template_result,
+)
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.service import async_call_from_config
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -90,8 +98,17 @@ CONF_ATTRS = "attributes"
 CONF_CHILDREN = "children"
 CONF_COMMANDS = "commands"
 
-OFF_STATES = [STATE_IDLE, STATE_OFF, STATE_UNAVAILABLE, STATE_UNKNOWN]
-
+STATES_ORDER = [
+    STATE_UNKNOWN,
+    STATE_UNAVAILABLE,
+    STATE_OFF,
+    STATE_IDLE,
+    STATE_STANDBY,
+    STATE_ON,
+    STATE_PAUSED,
+    STATE_BUFFERING,
+    STATE_PLAYING,
+]
 ATTRS_SCHEMA = cv.schema_with_slug_keys(cv.string)
 CMD_SCHEMA = cv.schema_with_slug_keys(cv.SERVICE_SCHEMA)
 
@@ -202,8 +219,8 @@ class UniversalMediaPlayer(MediaPlayerEntity):
             depend.append(entity[0])
 
         self.async_on_remove(
-            self.hass.helpers.event.async_track_state_change_event(
-                list(set(depend)), _async_on_dependency_update
+            async_track_state_change_event(
+                self.hass, list(set(depend)), _async_on_dependency_update
             )
         )
 
@@ -610,9 +627,15 @@ class UniversalMediaPlayer(MediaPlayerEntity):
 
     async def async_update(self):
         """Update state in HA."""
-        for child_name in self._children:
-            child_state = self.hass.states.get(child_name)
-            if child_state and child_state.state not in OFF_STATES:
-                self._child_state = child_state
-                return
         self._child_state = None
+        for child_name in self._children:
+            if (child_state := self.hass.states.get(child_name)) and STATES_ORDER.index(
+                child_state.state
+            ) >= STATES_ORDER.index(STATE_IDLE):
+                if self._child_state:
+                    if STATES_ORDER.index(child_state.state) > STATES_ORDER.index(
+                        self._child_state.state
+                    ):
+                        self._child_state = child_state
+                else:
+                    self._child_state = child_state

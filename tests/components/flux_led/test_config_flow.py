@@ -24,7 +24,7 @@ from homeassistant.components.flux_led.const import (
 )
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MODEL
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_FORM
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
     DEFAULT_ENTRY_TITLE,
@@ -386,7 +386,7 @@ async def test_discovered_by_discovery_and_dhcp(hass):
             data=FLUX_DISCOVERY,
         )
         await hass.async_block_till_done()
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
     with _patch_discovery(), _patch_wifibulb():
@@ -396,7 +396,7 @@ async def test_discovered_by_discovery_and_dhcp(hass):
             data=DHCP_DISCOVERY,
         )
         await hass.async_block_till_done()
-    assert result2["type"] == RESULT_TYPE_ABORT
+    assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "already_in_progress"
 
     with _patch_discovery(), _patch_wifibulb():
@@ -410,7 +410,7 @@ async def test_discovered_by_discovery_and_dhcp(hass):
             ),
         )
         await hass.async_block_till_done()
-    assert result3["type"] == RESULT_TYPE_ABORT
+    assert result3["type"] == FlowResultType.ABORT
     assert result3["reason"] == "already_in_progress"
 
 
@@ -425,7 +425,7 @@ async def test_discovered_by_discovery(hass):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
     with _patch_discovery(), _patch_wifibulb(), patch(
@@ -462,7 +462,7 @@ async def test_discovered_by_dhcp_udp_responds(hass):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
     with _patch_discovery(), _patch_wifibulb(), patch(
@@ -499,7 +499,7 @@ async def test_discovered_by_dhcp_no_udp_response(hass):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
     with _patch_discovery(no_device=True), _patch_wifibulb(), patch(
@@ -529,7 +529,7 @@ async def test_discovered_by_dhcp_partial_udp_response_fallback_tcp(hass):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
     with _patch_discovery(device=FLUX_DISCOVERY_PARTIAL), _patch_wifibulb(), patch(
@@ -560,7 +560,7 @@ async def test_discovered_by_dhcp_no_udp_response_or_tcp_response(hass):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
 
@@ -584,7 +584,7 @@ async def test_discovered_by_dhcp_or_discovery_adds_missing_unique_id(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
     assert config_entry.unique_id == MAC_ADDRESS
@@ -605,7 +605,7 @@ async def test_mac_address_off_by_one_updated_via_discovery(hass):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
     assert config_entry.unique_id == MAC_ADDRESS
@@ -624,7 +624,7 @@ async def test_mac_address_off_by_one_not_updated_from_dhcp(hass):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
     assert config_entry.unique_id == MAC_ADDRESS_ONE_OFF
@@ -652,7 +652,7 @@ async def test_discovered_by_dhcp_or_discovery_mac_address_mismatch_host_already
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
     assert config_entry.unique_id == MAC_ADDRESS_DIFFERENT

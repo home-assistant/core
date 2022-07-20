@@ -18,7 +18,8 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import DATA_COORDINATOR, DATA_TILE, DOMAIN
+from . import TileData
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,14 +39,12 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Tile device trackers."""
+    data: TileData = hass.data[DOMAIN][entry.entry_id]
+
     async_add_entities(
         [
-            TileDeviceTracker(
-                entry,
-                hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR][tile_uuid],
-                tile,
-            )
-            for tile_uuid, tile in hass.data[DOMAIN][entry.entry_id][DATA_TILE].items()
+            TileDeviceTracker(entry, data.coordinators[tile_uuid], tile)
+            for tile_uuid, tile in data.tiles.items()
         ]
     )
 

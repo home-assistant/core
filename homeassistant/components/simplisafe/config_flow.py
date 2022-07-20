@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
 from typing import Any
 
 import async_timeout
@@ -20,7 +21,7 @@ from homeassistant.helpers import aiohttp_client, config_validation as cv
 from .const import DOMAIN, LOGGER
 
 DEFAULT_EMAIL_2FA_SLEEP = 3
-DEFAULT_EMAIL_2FA_TIMEOUT = 300
+DEFAULT_EMAIL_2FA_TIMEOUT = 600
 
 STEP_REAUTH_SCHEMA = vol.Schema(
     {
@@ -97,16 +98,16 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Define the config flow to handle options."""
         return SimpliSafeOptionsFlowHandler(config_entry)
 
-    async def async_step_reauth(self, config: dict[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle configuration by re-auth."""
         self._reauth = True
 
-        if CONF_USERNAME not in config:
+        if CONF_USERNAME not in entry_data:
             # Old versions of the config flow may not have the username by this point;
             # in that case, we reauth them by making them go through the user flow:
             return await self.async_step_user()
 
-        self._username = config[CONF_USERNAME]
+        self._username = entry_data[CONF_USERNAME]
         return await self.async_step_reauth_confirm()
 
     async def _async_get_email_2fa(self) -> None:

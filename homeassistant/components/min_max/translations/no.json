@@ -27,14 +27,6 @@
                 "data_description": {
                     "round_digits": "Styrer antall desimaler i utdata n\u00e5r statistikkkarakteristikken er gjennomsnitt eller median."
                 }
-            },
-            "options": {
-                "data": {
-                    "entity_ids": "Inndataenheter",
-                    "round_digits": "Presisjon",
-                    "type": "Statistisk karakteristikk"
-                },
-                "description": "Lag en sensor som beregner en min, maks, middelverdi eller medianverdi fra en liste over inngangssensorer."
             }
         }
     },

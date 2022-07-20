@@ -8,6 +8,7 @@ from pyisy.constants import (
     EMPTY_TIME,
     EVENT_PROPS_IGNORED,
     PROTO_GROUP,
+    PROTO_INSTEON,
     PROTO_ZWAVE,
 )
 from pyisy.helpers import EventListener, NodeProperty
@@ -35,6 +36,7 @@ class ISYEntity(Entity):
     """Representation of an ISY994 device."""
 
     _name: str | None = None
+    _attr_should_poll = False
 
     def __init__(self, node: Node) -> None:
         """Initialize the insteon device."""
@@ -86,7 +88,7 @@ class ISYEntity(Entity):
         node = self._node
         url = _async_isy_to_configuration_url(isy)
 
-        basename = self.name
+        basename = self._name or str(self._node.name)
 
         if hasattr(self._node, "parent_node") and self._node.parent_node is not None:
             # This is not the parent node, get the parent node.
@@ -151,11 +153,6 @@ class ISYEntity(Entity):
         """Get the name of the device."""
         return self._name or str(self._node.name)
 
-    @property
-    def should_poll(self) -> bool:
-        """No polling required since we're using the subscription."""
-        return False
-
 
 class ISYNodeEntity(ISYEntity):
     """Representation of a ISY Nodebase (Node/Group) entity."""
@@ -169,9 +166,13 @@ class ISYNodeEntity(ISYEntity):
         the combined result are returned as the device state attributes.
         """
         attr = {}
-        if hasattr(self._node, "aux_properties"):
-            # Cast as list due to RuntimeError if a new property is added while running.
-            for name, value in list(self._node.aux_properties.items()):
+        node = self._node
+        # Insteon aux_properties are now their own sensors
+        if (
+            hasattr(self._node, "aux_properties")
+            and getattr(node, "protocol", None) != PROTO_INSTEON
+        ):
+            for name, value in self._node.aux_properties.items():
                 attr_name = COMMAND_FRIENDLY_NAME.get(name, name)
                 attr[attr_name] = str(value.formatted).lower()
 

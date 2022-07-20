@@ -7,9 +7,6 @@
             "switchbot_unsupported_type": "Unsupported Switchbot Type.",
             "unknown": "Unexpected error"
         },
-        "error": {
-            "cannot_connect": "Failed to connect"
-        },
         "flow_title": "{name}",
         "step": {
             "user": {

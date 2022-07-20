@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Al geconfigureerd. Slechts een enkele configuratie mogelijk."
+            "already_configured": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk."
         },
         "error": {
             "one": "Leeg",
@@ -9,7 +9,7 @@
         },
         "step": {
             "user": {
-                "description": "Wilt u beginnen met instellen?"
+                "description": "Wil je beginnen met instellen?"
             }
         }
     },

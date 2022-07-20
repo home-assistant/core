@@ -25,6 +25,9 @@
         }
     },
     "options": {
+        "error": {
+            "unauthorized": "Llista d'amics restringida: consulta la documentaci\u00f3 sobre com veure tots els amics"
+        },
         "step": {
             "init": {
                 "data": {

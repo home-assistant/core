@@ -12,7 +12,7 @@
         },
         "step": {
             "reauth_confirm": {
-                "description": "Integrasi Steam perlu diautentikasi ulang secara manual \n\n Anda dapat menemukan kunci Anda di sini: https://steamcommunity.com/dev/apikey",
+                "description": "Integrasi Steam perlu diautentikasi ulang secara manual \n\nAnda dapat menemukan kunci Anda di sini: {api_key_url}",
                 "title": "Autentikasi Ulang Integrasi"
             },
             "user": {
@@ -20,11 +20,14 @@
                     "account": "ID akun Steam",
                     "api_key": "Kunci API"
                 },
-                "description": "Gunakan https://steamid.io untuk menemukan ID akun Steam Anda"
+                "description": "Gunakan {account_id_url} untuk menemukan ID akun Steam Anda"
             }
         }
     },
     "options": {
+        "error": {
+            "unauthorized": "Daftar teman dibatasi: Rujuk ke dokumentasi tentang cara melihat semua teman lain"
+        },
         "step": {
             "init": {
                 "data": {

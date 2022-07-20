@@ -41,7 +41,7 @@
             "options_binary": {
                 "data": {
                     "inverse": "A\u00e7\u0131k / kapal\u0131 durumunu tersine \u00e7evirin",
-                    "name": "Ad (iste\u011fe ba\u011fl\u0131)",
+                    "name": "Ad",
                     "type": "\u0130kili Sens\u00f6r Tipi"
                 },
                 "description": "{zone} se\u00e7enekleri",
@@ -49,8 +49,8 @@
             },
             "options_digital": {
                 "data": {
-                    "name": "Ad (iste\u011fe ba\u011fl\u0131)",
-                    "poll_interval": "Yoklama Aral\u0131\u011f\u0131 (dakika) (iste\u011fe ba\u011fl\u0131)",
+                    "name": "Ad",
+                    "poll_interval": "Yoklama Aral\u0131\u011f\u0131 (dakika)",
                     "type": "Sens\u00f6r Tipi"
                 },
                 "description": "{zone} se\u00e7enekleri",
@@ -86,7 +86,7 @@
             },
             "options_misc": {
                 "data": {
-                    "api_host": "API ana makine URL'sini ge\u00e7ersiz k\u0131l (iste\u011fe ba\u011fl\u0131)",
+                    "api_host": "API ana makine URL'sini ge\u00e7ersiz k\u0131l",
                     "blink": "Durum de\u011fi\u015fikli\u011fi g\u00f6nderilirken panelin LED'ini yan\u0131p s\u00f6nd\u00fcr",
                     "discovery": "A\u011f\u0131n\u0131zdaki ke\u015fif isteklerine yan\u0131t verin",
                     "override_api_host": "Varsay\u0131lan Home Assistant API ana bilgisayar paneli URL'sini ge\u00e7ersiz k\u0131l"
@@ -97,11 +97,11 @@
             "options_switch": {
                 "data": {
                     "activation": "A\u00e7\u0131kken \u00e7\u0131kt\u0131",
-                    "momentary": "Darbe s\u00fcresi (ms) (iste\u011fe ba\u011fl\u0131)",
+                    "momentary": "Darbe s\u00fcresi (ms)",
                     "more_states": "Bu b\u00f6lge i\u00e7in ek durumlar yap\u0131land\u0131r\u0131n",
-                    "name": "Ad (iste\u011fe ba\u011fl\u0131)",
-                    "pause": "Darbeler aras\u0131nda duraklama (ms) (iste\u011fe ba\u011fl\u0131)",
-                    "repeat": "Tekrarlanacak zamanlar (-1=sonsuz) (iste\u011fe ba\u011fl\u0131)"
+                    "name": "Ad",
+                    "pause": "Darbeler aras\u0131nda duraklama (ms)",
+                    "repeat": "Tekrarlanacak zamanlar (-1=sonsuz)"
                 },
                 "description": "{zone} se\u00e7enekleri: durum {state}",
                 "title": "De\u011fi\u015ftirilebilir \u00c7\u0131k\u0131\u015f\u0131 Yap\u0131land\u0131r"

@@ -1,0 +1,8 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Det gick inte att ansluta.",
+            "unknown": "Ov\u00e4ntat fel"
+        }
+    }
+}

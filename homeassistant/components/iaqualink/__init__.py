@@ -19,9 +19,7 @@ from iaqualink.device import (
 )
 from iaqualink.exception import AqualinkServiceException
 from typing_extensions import Concatenate, ParamSpec
-import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
@@ -32,14 +30,12 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, UPDATE_INTERVAL
 
@@ -52,41 +48,12 @@ ATTR_CONFIG = "config"
 PARALLEL_UPDATES = 0
 
 PLATFORMS = [
-    BINARY_SENSOR_DOMAIN,
-    CLIMATE_DOMAIN,
-    LIGHT_DOMAIN,
-    SENSOR_DOMAIN,
-    SWITCH_DOMAIN,
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.LIGHT,
+    Platform.SENSOR,
+    Platform.SWITCH,
 ]
-
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: vol.Schema(
-                {
-                    vol.Required(CONF_USERNAME): cv.string,
-                    vol.Required(CONF_PASSWORD): cv.string,
-                }
-            )
-        },
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Aqualink component."""
-    if (conf := config.get(DOMAIN)) is not None:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_IMPORT},
-                data=conf,
-            )
-        )
-
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -150,22 +117,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         elif isinstance(dev, AqualinkToggle):
             switches += [dev]
 
-    forward_setup = hass.config_entries.async_forward_entry_setup
+    platforms = []
     if binary_sensors:
         _LOGGER.debug("Got %s binary sensors: %s", len(binary_sensors), binary_sensors)
-        hass.async_create_task(forward_setup(entry, Platform.BINARY_SENSOR))
+        platforms.append(Platform.BINARY_SENSOR)
     if climates:
         _LOGGER.debug("Got %s climates: %s", len(climates), climates)
-        hass.async_create_task(forward_setup(entry, Platform.CLIMATE))
+        platforms.append(Platform.CLIMATE)
     if lights:
         _LOGGER.debug("Got %s lights: %s", len(lights), lights)
-        hass.async_create_task(forward_setup(entry, Platform.LIGHT))
+        platforms.append(Platform.LIGHT)
     if sensors:
         _LOGGER.debug("Got %s sensors: %s", len(sensors), sensors)
-        hass.async_create_task(forward_setup(entry, Platform.SENSOR))
+        platforms.append(Platform.SENSOR)
     if switches:
         _LOGGER.debug("Got %s switches: %s", len(switches), switches)
-        hass.async_create_task(forward_setup(entry, Platform.SWITCH))
+        platforms.append(Platform.SWITCH)
+
+    await hass.config_entries.async_forward_entry_setups(entry, platforms)
 
     async def _async_systems_update(now):
         """Refresh internal state for all systems."""

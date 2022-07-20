@@ -13,10 +13,14 @@
         "step": {
             "user": {
                 "data": {
-                    "flow_type": "Verbindungstyp"
+                    "flow_type": "Verbindungstyp",
+                    "host": "IP-Adresse",
+                    "password": "Smile ID",
+                    "port": "Port",
+                    "username": "Smile-Benutzername"
                 },
-                "description": "Produkt:",
-                "title": "Plugwise Typ"
+                "description": "Bitte eingeben",
+                "title": "Stelle eine Verbindung zu Smile her"
             },
             "user_gateway": {
                 "data": {

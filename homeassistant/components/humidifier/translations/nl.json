@@ -10,12 +10,11 @@
         "condition_type": {
             "is_mode": "{entity_name} is ingesteld op een specifieke modus",
             "is_off": "{entity_name} is uitgeschakeld",
-            "is_on": "{entity_name} staat aan"
+            "is_on": "{entity_name} is ingeschakeld"
         },
         "trigger_type": {
             "changed_states": "{entity_name} in- of uitgeschakeld",
             "target_humidity_changed": "{entity_name} doel luchtvochtigheid gewijzigd",
-            "toggled": "{entity_name} in- of uitgeschakeld",
             "turned_off": "{entity_name} is uitgeschakeld",
             "turned_on": "{entity_name} is ingeschakeld"
         }

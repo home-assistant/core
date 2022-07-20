@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -136,6 +137,8 @@ async def async_setup_platform(
 class LightTemplate(TemplateEntity, LightEntity):
     """Representation of a templated Light, including dimmable."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         hass,
@@ -195,17 +198,17 @@ class LightTemplate(TemplateEntity, LightEntity):
         self._supports_transition = False
 
     @property
-    def brightness(self):
+    def brightness(self) -> int | None:
         """Return the brightness of the light."""
         return self._brightness
 
     @property
-    def color_temp(self):
+    def color_temp(self) -> int | None:
         """Return the CT color value in mireds."""
         return self._temperature
 
     @property
-    def max_mireds(self):
+    def max_mireds(self) -> int:
         """Return the max mireds value in mireds."""
         if self._max_mireds is not None:
             return self._max_mireds
@@ -213,7 +216,7 @@ class LightTemplate(TemplateEntity, LightEntity):
         return super().max_mireds
 
     @property
-    def min_mireds(self):
+    def min_mireds(self) -> int:
         """Return the min mireds value in mireds."""
         if self._min_mireds is not None:
             return self._min_mireds
@@ -221,27 +224,27 @@ class LightTemplate(TemplateEntity, LightEntity):
         return super().min_mireds
 
     @property
-    def white_value(self):
+    def white_value(self) -> int | None:
         """Return the white value."""
         return self._white_value
 
     @property
-    def hs_color(self):
+    def hs_color(self) -> tuple[float, float] | None:
         """Return the hue and saturation color value [float, float]."""
         return self._color
 
     @property
-    def effect(self):
+    def effect(self) -> str | None:
         """Return the effect."""
         return self._effect
 
     @property
-    def effect_list(self):
+    def effect_list(self) -> list[str] | None:
         """Return the effect list."""
         return self._effect_list
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Flag supported features."""
         supported_features = 0
         if self._level_script is not None:
@@ -259,11 +262,11 @@ class LightTemplate(TemplateEntity, LightEntity):
         return supported_features
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return true if device is on."""
         return self._state
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         if self._template:
             self.add_template_attribute(
@@ -343,7 +346,7 @@ class LightTemplate(TemplateEntity, LightEntity):
             )
         await super().async_added_to_hass()
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         optimistic_set = False
         # set optimistic states
@@ -352,25 +355,37 @@ class LightTemplate(TemplateEntity, LightEntity):
             optimistic_set = True
 
         if self._level_template is None and ATTR_BRIGHTNESS in kwargs:
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Optimistically setting brightness to %s", kwargs[ATTR_BRIGHTNESS]
             )
             self._brightness = kwargs[ATTR_BRIGHTNESS]
             optimistic_set = True
 
         if self._white_value_template is None and ATTR_WHITE_VALUE in kwargs:
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Optimistically setting white value to %s", kwargs[ATTR_WHITE_VALUE]
             )
             self._white_value = kwargs[ATTR_WHITE_VALUE]
             optimistic_set = True
 
         if self._temperature_template is None and ATTR_COLOR_TEMP in kwargs:
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Optimistically setting color temperature to %s",
                 kwargs[ATTR_COLOR_TEMP],
             )
             self._temperature = kwargs[ATTR_COLOR_TEMP]
+            if self._color_template is None:
+                self._color = None
+            optimistic_set = True
+
+        if self._color_template is None and ATTR_HS_COLOR in kwargs:
+            _LOGGER.debug(
+                "Optimistically setting color to %s",
+                kwargs[ATTR_HS_COLOR],
+            )
+            self._color = kwargs[ATTR_HS_COLOR]
+            if self._temperature_template is None:
+                self._temperature = None
             optimistic_set = True
 
         common_params = {}
@@ -384,14 +399,18 @@ class LightTemplate(TemplateEntity, LightEntity):
         if ATTR_COLOR_TEMP in kwargs and self._temperature_script:
             common_params["color_temp"] = kwargs[ATTR_COLOR_TEMP]
 
-            await self._temperature_script.async_run(
-                common_params, context=self._context
+            await self.async_run_script(
+                self._temperature_script,
+                run_variables=common_params,
+                context=self._context,
             )
         elif ATTR_WHITE_VALUE in kwargs and self._white_value_script:
             common_params["white_value"] = kwargs[ATTR_WHITE_VALUE]
 
-            await self._white_value_script.async_run(
-                common_params, context=self._context
+            await self.async_run_script(
+                self._white_value_script,
+                run_variables=common_params,
+                context=self._context,
             )
         elif ATTR_EFFECT in kwargs and self._effect_script:
             effect = kwargs[ATTR_EFFECT]
@@ -406,33 +425,40 @@ class LightTemplate(TemplateEntity, LightEntity):
 
             common_params["effect"] = effect
 
-            await self._effect_script.async_run(common_params, context=self._context)
+            await self.async_run_script(
+                self._effect_script, run_variables=common_params, context=self._context
+            )
         elif ATTR_HS_COLOR in kwargs and self._color_script:
             hs_value = kwargs[ATTR_HS_COLOR]
             common_params["hs"] = hs_value
             common_params["h"] = int(hs_value[0])
             common_params["s"] = int(hs_value[1])
 
-            await self._color_script.async_run(
-                common_params,
-                context=self._context,
+            await self.async_run_script(
+                self._color_script, run_variables=common_params, context=self._context
             )
         elif ATTR_BRIGHTNESS in kwargs and self._level_script:
-            await self._level_script.async_run(common_params, context=self._context)
+            await self.async_run_script(
+                self._level_script, run_variables=common_params, context=self._context
+            )
         else:
-            await self._on_script.async_run(common_params, context=self._context)
+            await self.async_run_script(
+                self._on_script, run_variables=common_params, context=self._context
+            )
 
         if optimistic_set:
             self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         if ATTR_TRANSITION in kwargs and self._supports_transition is True:
-            await self._off_script.async_run(
-                {"transition": kwargs[ATTR_TRANSITION]}, context=self._context
+            await self.async_run_script(
+                self._off_script,
+                run_variables={"transition": kwargs[ATTR_TRANSITION]},
+                context=self._context,
             )
         else:
-            await self._off_script.async_run(context=self._context)
+            await self.async_run_script(self._off_script, context=self._context)
         if self._template is None:
             self._state = False
             self.async_write_ha_state()

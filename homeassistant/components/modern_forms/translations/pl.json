@@ -9,9 +9,6 @@
         },
         "flow_title": "{name}",
         "step": {
-            "confirm": {
-                "description": "Czy chcesz rozpocz\u0105\u0107 konfiguracj\u0119?"
-            },
             "user": {
                 "data": {
                     "host": "Nazwa hosta lub adres IP"
@@ -23,6 +20,5 @@
                 "title": "Wykryto wentylator Modern Forms"
             }
         }
-    },
-    "title": "Modern Forms"
+    }
 }

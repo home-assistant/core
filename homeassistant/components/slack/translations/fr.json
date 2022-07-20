@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Le service est d\u00e9j\u00e0 configur\u00e9"
+        },
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion",
+            "invalid_auth": "Authentification non valide",
+            "unknown": "Erreur inattendue"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Cl\u00e9 d'API",
+                    "default_channel": "Canal par d\u00e9faut",
+                    "icon": "Ic\u00f4ne",
+                    "username": "Nom d'utilisateur"
+                },
+                "data_description": {
+                    "api_key": "Le jeton d'API Slack \u00e0 utiliser pour l'envoi des messages sur Slack.",
+                    "default_channel": "Le canal sur lequel poster si aucun canal n'est sp\u00e9cifi\u00e9 lors de l'envoi d'un message.",
+                    "icon": "Utilisez l'un des \u00e9mojis de Slack en tant qu'ic\u00f4ne pour le nom d'utilisateur fourni.",
+                    "username": "Home Assistant postera sur Slack en utilisant le nom d'utilisateur sp\u00e9cifi\u00e9."
+                },
+                "description": "Consultez la documentation pour obtenir votre cl\u00e9 d'API Slack."
+            }
+        }
+    }
+}

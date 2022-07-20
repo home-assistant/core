@@ -385,7 +385,7 @@ async def test_query_message(hass):
                 "light.another_light": {
                     "on": True,
                     "online": True,
-                    "brightness": 30,
+                    "brightness": 31,
                     "color": {
                         "spectrumHsv": {
                             "hue": 180,
@@ -1026,7 +1026,7 @@ async def test_device_class_switch(hass, device_class, google_type):
         ("garage_door", "action.devices.types.GARAGE"),
         ("lock", "action.devices.types.SENSOR"),
         ("opening", "action.devices.types.SENSOR"),
-        ("window", "action.devices.types.SENSOR"),
+        ("window", "action.devices.types.WINDOW"),
     ],
 )
 async def test_device_class_binary_sensor(hass, device_class, google_type):
@@ -1510,7 +1510,7 @@ async def test_query_recover(hass, caplog):
         "payload": {
             "devices": {
                 "light.bad": {"online": False},
-                "light.good": {"on": True, "online": True, "brightness": 19},
+                "light.good": {"on": True, "online": True, "brightness": 20},
             }
         },
     }

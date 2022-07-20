@@ -11,8 +11,8 @@ from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from . import MqttValueTemplate, subscription
-from .. import mqtt
+from . import subscription
+from .config import MQTT_BASE_SCHEMA
 from .const import ATTR_DISCOVERY_HASH, CONF_QOS, CONF_TOPIC
 from .mixins import (
     MQTT_ENTITY_DEVICE_INFO_SCHEMA,
@@ -21,7 +21,7 @@ from .mixins import (
     send_discovery_done,
     update_device,
 )
-from .models import ReceiveMessage
+from .models import MqttValueTemplate, ReceiveMessage
 from .subscription import EntitySubscription
 from .util import valid_subscribe_topic
 
@@ -30,7 +30,7 @@ LOG_NAME = "Tag"
 TAG = "tag"
 TAGS = "mqtt_tags"
 
-PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = MQTT_BASE_SCHEMA.extend(
     {
         vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
         vol.Optional(CONF_PLATFORM): "mqtt",

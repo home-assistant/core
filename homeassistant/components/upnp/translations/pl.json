@@ -24,9 +24,7 @@
             },
             "user": {
                 "data": {
-                    "scan_interval": "Cz\u0119stotliwo\u015b\u0107 aktualizacji (sekundy, minimum 30)",
-                    "unique_id": "Urz\u0105dzenie",
-                    "usn": "Urz\u0105dzenie"
+                    "unique_id": "Urz\u0105dzenie"
                 }
             }
         }

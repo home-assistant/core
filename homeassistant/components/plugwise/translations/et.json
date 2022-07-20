@@ -13,10 +13,14 @@
         "step": {
             "user": {
                 "data": {
-                    "flow_type": "\u00dchenduse t\u00fc\u00fcp"
+                    "flow_type": "\u00dchenduse t\u00fc\u00fcp",
+                    "host": "IP aadress",
+                    "password": "Smile ID",
+                    "port": "Port",
+                    "username": "Smile kasutajanimi"
                 },
-                "description": "Toode:",
-                "title": "Plugwise t\u00fc\u00fcp"
+                "description": "Sisesta andmed",
+                "title": "Loo \u00fchendus Smile-ga"
             },
             "user_gateway": {
                 "data": {

@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "device_key": "Kunci perangkat untuk perangkat Anda",
+                    "event": "Event untuk daftar event",
+                    "name": "Nama",
+                    "password": "Kata sandi enkripsi yang digunakan oleh perangkat Anda",
+                    "salt": "Salt yang digunakan oleh perangkat Anda."
+                }
+            }
+        }
+    }
+}

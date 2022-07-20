@@ -8,8 +8,7 @@
         "error": {
             "api_error": "Login falhou",
             "cannot_connect": "Falha ao conectar",
-            "iftapi_connect": "Erro ao conectar ao iftapi.net",
-            "unknown": "Erro inesperado"
+            "iftapi_connect": "Erro ao conectar ao iftapi.net"
         },
         "flow_title": "{serial} ({host})",
         "step": {
@@ -34,11 +33,6 @@
                 },
                 "description": "Os seguintes dispositivos IntelliFire foram descobertos. Por favor, selecione o que voc\u00ea deseja configura.",
                 "title": "Sele\u00e7\u00e3o de dispositivo"
-            },
-            "user": {
-                "data": {
-                    "host": "Nome do host"
-                }
             }
         }
     }

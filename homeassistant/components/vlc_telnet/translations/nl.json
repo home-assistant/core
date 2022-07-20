@@ -1,14 +1,14 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Deze service is al geconfigureerd",
+            "already_configured": "Dienst is al geconfigureerd",
             "cannot_connect": "Kan geen verbinding maken",
             "invalid_auth": "Ongeldige authenticatie",
-            "reauth_successful": "Het opnieuw verifi\u00ebren is geslaagd",
+            "reauth_successful": "Herauthenticatie geslaagd",
             "unknown": "Onverwachte fout"
         },
         "error": {
-            "cannot_connect": "Verbinding tot stand brengen is mislukt",
+            "cannot_connect": "Kan geen verbinding maken",
             "invalid_auth": "Ongeldige authenticatie",
             "unknown": "Onverwachte fout"
         },

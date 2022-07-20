@@ -21,11 +21,14 @@
                     "username": "Usuario",
                     "verify_ssl": "Controlador usando el certificado adecuado"
                 },
-                "title": "Configurar el controlador UniFi"
+                "title": "Configuraci\u00f3n de UniFi Network"
             }
         }
     },
     "options": {
+        "abort": {
+            "integration_not_setup": "La integraci\u00f3n UniFi no est\u00e1 configurada"
+        },
         "step": {
             "client_control": {
                 "data": {
@@ -39,7 +42,7 @@
             "device_tracker": {
                 "data": {
                     "detection_time": "Tiempo en segundos desde la \u00faltima vez que se vio hasta considerarlo desconectado",
-                    "ignore_wired_bug": "Desactivar la l\u00f3gica para el bug cableado de UniFi",
+                    "ignore_wired_bug": "Desactiva la l\u00f3gica de errores de UniFi Network",
                     "ssid_filter": "Seleccione los SSIDs para realizar seguimiento de clientes inal\u00e1mbricos",
                     "track_clients": "Seguimiento de los clientes de red",
                     "track_devices": "Rastree dispositivos de red (dispositivos Ubiquiti)",
@@ -54,7 +57,7 @@
                     "track_clients": "Rastree clientes de red",
                     "track_devices": "Rastree dispositivos de red (dispositivos Ubiquiti)"
                 },
-                "description": "Configurar la integraci\u00f3n de UniFi"
+                "description": "Configura la integraci\u00f3n UniFi Network"
             },
             "statistics_sensors": {
                 "data": {
@@ -62,7 +65,7 @@
                     "allow_uptime_sensors": "Sensores de tiempo de actividad para clientes de la red"
                 },
                 "description": "Configurar estad\u00edsticas de los sensores",
-                "title": "Opciones UniFi 3/3"
+                "title": "Opciones de UniFi Network 3/3"
             }
         }
     }

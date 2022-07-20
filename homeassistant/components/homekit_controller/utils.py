@@ -10,6 +10,11 @@ from homeassistant.core import Event, HomeAssistant
 from .const import CONTROLLER
 
 
+def folded_name(name: str) -> str:
+    """Return a name that is used for matching a similar string."""
+    return name.casefold().replace(" ", "")
+
+
 async def async_get_controller(hass: HomeAssistant) -> Controller:
     """Get or create an aiohomekit Controller instance."""
     if existing := hass.data.get(CONTROLLER):

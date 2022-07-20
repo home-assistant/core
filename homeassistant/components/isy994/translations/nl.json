@@ -4,10 +4,10 @@
             "already_configured": "Apparaat is al geconfigureerd"
         },
         "error": {
-            "cannot_connect": "Kon niet verbinden",
+            "cannot_connect": "Kan geen verbinding maken",
             "invalid_auth": "Ongeldige authenticatie",
             "invalid_host": "De hostvermelding had de niet volledig URL-indeling, bijvoorbeeld http://192.168.10.100:80",
-            "reauth_successful": "Herauthenticatie was succesvol",
+            "reauth_successful": "Herauthenticatie geslaagd",
             "unknown": "Onverwachte fout"
         },
         "flow_title": "{name} ({host})",

@@ -41,9 +41,11 @@ from .const import (
     MANUFACTURER,
     PLATFORMS,
     PROGRAM_PLATFORMS,
+    SENSOR_AUX,
 )
 from .helpers import _categorize_nodes, _categorize_programs, _categorize_variables
 from .services import async_setup_services, async_unload_services
+from .util import unique_ids_for_config_entry_id
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -120,7 +122,7 @@ async def async_setup_entry(
     hass.data[DOMAIN][entry.entry_id] = {}
     hass_isy_data = hass.data[DOMAIN][entry.entry_id]
 
-    hass_isy_data[ISY994_NODES] = {}
+    hass_isy_data[ISY994_NODES] = {SENSOR_AUX: []}
     for platform in PLATFORMS:
         hass_isy_data[ISY994_NODES][platform] = []
 
@@ -202,7 +204,7 @@ async def async_setup_entry(
     _async_get_or_create_isy_device_in_registry(hass, entry, isy)
 
     # Load platforms for the devices in the ISY controller that we support.
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     @callback
     def _async_stop_auto_update(event: Event) -> None:
@@ -295,3 +297,15 @@ async def async_unload_entry(
     async_unload_services(hass)
 
     return unload_ok
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant,
+    config_entry: config_entries.ConfigEntry,
+    device_entry: dr.DeviceEntry,
+) -> bool:
+    """Remove isy994 config entry from a device."""
+    return not device_entry.identifiers.intersection(
+        (DOMAIN, unique_id)
+        for unique_id in unique_ids_for_config_entry_id(hass, config_entry.entry_id)
+    )
