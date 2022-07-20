@@ -270,7 +270,7 @@ class PassiveBluetoothCoordinatorEntity(
             base_device_info = devices[device_id]
         else:
             base_device_info = DeviceInfo({})
-        if entity_key.device_id:
+        if device_id:
             self._attr_device_info = base_device_info | DeviceInfo(
                 {ATTR_IDENTIFIERS: {(DOMAIN, f"{address}-{device_id}")}}
             )
