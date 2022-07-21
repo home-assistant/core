@@ -4,8 +4,10 @@ from sensorpush_ble import (
     DeviceClass,
     DeviceKey,
     SensorDescription,
+    SensorDeviceInfo,
     SensorUpdate,
     SensorValue,
+    Units,
 )
 
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
@@ -22,37 +24,45 @@ HTW_SERVICE_INFO = BluetoothServiceInfo(
 HTW_SENSOR_UPDATE = SensorUpdate(
     title=None,
     devices={
-        None: {"model": "HT.w", "manufacturer": "SensorPush", "name": "HT.w 0CA1"}
+        None: SensorDeviceInfo(
+            model="HTP.w",
+            manufacturer="SensorPush",
+            name="HTP.w 0CA1",
+            sw_version=None,
+            hw_version=None,
+        )
     },
     entity_descriptions={
         DeviceKey(key="temperature", device_id=None): SensorDescription(
             device_key=DeviceKey(key="temperature", device_id=None),
-            name="Temperature",
             device_class=DeviceClass.TEMPERATURE,
-            native_unit_of_measurement="°C",
+            native_unit_of_measurement=Units.TEMP_CELSIUS,
         ),
         DeviceKey(key="humidity", device_id=None): SensorDescription(
             device_key=DeviceKey(key="humidity", device_id=None),
-            name="Humidity",
             device_class=DeviceClass.HUMIDITY,
-            native_unit_of_measurement="%",
+            native_unit_of_measurement=Units.PERCENTAGE,
         ),
         DeviceKey(key="signal_strength", device_id=None): SensorDescription(
             device_key=DeviceKey(key="signal_strength", device_id=None),
-            name="Signal Strength",
             device_class=DeviceClass.SIGNAL_STRENGTH,
-            native_unit_of_measurement="dBm",
+            native_unit_of_measurement=Units.SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         ),
     },
     entity_values={
         DeviceKey(key="temperature", device_id=None): SensorValue(
-            device_key=DeviceKey(key="temperature", device_id=None), native_value=20.21
+            device_key=DeviceKey(key="temperature", device_id=None),
+            native_value=20.21,
+            name="Temperature",
         ),
         DeviceKey(key="humidity", device_id=None): SensorValue(
-            device_key=DeviceKey(key="humidity", device_id=None), native_value=45.08
+            device_key=DeviceKey(key="humidity", device_id=None),
+            native_value=45.08,
+            name="Humidity",
         ),
         DeviceKey(key="signal_strength", device_id=None): SensorValue(
             device_key=DeviceKey(key="signal_strength", device_id=None),
+            name="Signal Strength",
             native_value=-60,
         ),
     },
@@ -69,47 +79,56 @@ HTPWX_SERVICE_INFO = BluetoothServiceInfo(
 HTPWX_SENSOR_UPDATE = SensorUpdate(
     title=None,
     devices={
-        None: {"model": "HTP.xw", "manufacturer": "SensorPush", "name": "HTP.xw F4D"}
+        None: SensorDeviceInfo(
+            model="HTP.xw",
+            manufacturer="SensorPush",
+            name="HTP.xw F4D",
+            sw_version=None,
+            hw_version=None,
+        )
     },
     entity_descriptions={
         DeviceKey(key="temperature", device_id=None): SensorDescription(
             device_key=DeviceKey(key="temperature", device_id=None),
-            name="Temperature",
             device_class=DeviceClass.TEMPERATURE,
-            native_unit_of_measurement="°C",
+            native_unit_of_measurement=Units.TEMP_CELSIUS,
         ),
         DeviceKey(key="humidity", device_id=None): SensorDescription(
             device_key=DeviceKey(key="humidity", device_id=None),
-            name="Humidity",
             device_class=DeviceClass.HUMIDITY,
-            native_unit_of_measurement="%",
+            native_unit_of_measurement=Units.PERCENTAGE,
         ),
         DeviceKey(key="pressure", device_id=None): SensorDescription(
             device_key=DeviceKey(key="pressure", device_id=None),
-            name="Pressure",
             device_class=DeviceClass.PRESSURE,
-            native_unit_of_measurement="Pa",
+            native_unit_of_measurement=Units.PRESSURE_MBAR,
         ),
         DeviceKey(key="signal_strength", device_id=None): SensorDescription(
             device_key=DeviceKey(key="signal_strength", device_id=None),
-            name="Signal Strength",
             device_class=DeviceClass.SIGNAL_STRENGTH,
-            native_unit_of_measurement="dBm",
+            native_unit_of_measurement=Units.SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         ),
     },
     entity_values={
         DeviceKey(key="temperature", device_id=None): SensorValue(
-            device_key=DeviceKey(key="temperature", device_id=None), native_value=20.34
+            device_key=DeviceKey(key="temperature", device_id=None),
+            native_value=20.34,
+            name="Temperature",
         ),
         DeviceKey(key="humidity", device_id=None): SensorValue(
-            device_key=DeviceKey(key="humidity", device_id=None), native_value=46.27
+            device_key=DeviceKey(key="humidity", device_id=None),
+            native_value=46.27,
+            name="Humidity",
         ),
         DeviceKey(key="pressure", device_id=None): SensorValue(
-            device_key=DeviceKey(key="pressure", device_id=None), native_value=1009.21
+            device_key=DeviceKey(key="pressure", device_id=None),
+            native_value=1009.21,
+            name="Pressure",
         ),
         DeviceKey(key="signal_strength", device_id=None): SensorValue(
             device_key=DeviceKey(key="signal_strength", device_id=None),
             native_value=-55,
+            name="Signal Strength",
         ),
     },
 )
