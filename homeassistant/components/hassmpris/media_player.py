@@ -28,6 +28,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN, ENTRY_CLIENT, ENTRY_MANAGER, ENTRY_PLAYERS, LOGGER as _LOGGER
 
@@ -87,7 +88,6 @@ class HASSMPRISEntity(MediaPlayerEntity):
         self.player_id = player_id
         self._integration_id = integration_id
         self._attr_available = True
-        self._state = STATE_OFF
         self._metadata: dict[str, Any] = {}
 
     async def set_unavailable(self):
@@ -115,7 +115,8 @@ class HASSMPRISEntity(MediaPlayerEntity):
         self.client = client
         self._client_host = self.client.host
         self._attr_available = True
-        await self.update_state(STATE_OFF)
+        if self.hass:
+            await self.async_update_ha_state(True)
 
     @property
     def unique_id(self) -> str:
@@ -144,7 +145,7 @@ class HASSMPRISEntity(MediaPlayerEntity):
     @property
     def state(self):
         """Return the current playback state of the entity."""
-        return self._state
+        return self._attr_state
 
     @property
     def metadata(self) -> dict[str, Any]:
@@ -187,17 +188,60 @@ class HASSMPRISEntity(MediaPlayerEntity):
     async def async_media_seek(self, position: float):
         """Send seek command."""
         if self.client:
-            await self.client.seek(self.player_id, position)
+            trackid = self._metadata.get("mpris:trackid")
+            if trackid:
+                await self.client.set_position(
+                    self.player_id,
+                    trackid,
+                    position,
+                )
 
-    async def update_state(self, new_state):
+    async def update_state(
+        self,
+        new_state: str,
+    ):
         """Update player state based on reports from the server."""
-        self._state = new_state
+        if new_state == self._attr_state:
+            return
+
+        _LOGGER.debug(
+            "Updating state from %s to %s",
+            self._attr_state,
+            new_state,
+        )
+        self._attr_state = new_state
         if self.hass:
             await self.async_update_ha_state(True)
 
     async def update_metadata(self, new_metadata: dict[str, Any]):
         """Update player metadata based on incoming metadata (a dict)."""
         self._metadata = new_metadata
+        if "mpris:length" in self._metadata:
+            length: int | None = round(
+                float(self._metadata["mpris:length"]) / 1000 / 1000
+            )
+            if length is not None and length <= 0:
+                length = None
+        else:
+            length = None
+
+        self._attr_media_duration = length
+        self._attr_media_position = 0 if length is not None else None
+        self._attr_media_position_updated_at = dt_util.utcnow()
+
+        _LOGGER.debug("Setting media duration to %s", self._attr_media_duration)
+        _LOGGER.debug("Setting media position to %s", self._attr_media_position)
+
+        if self.hass:
+            await self.async_update_ha_state(True)
+
+    async def update_position(self, new_position: float):
+        """Update position."""
+        self._attr_media_position_updated_at = dt_util.utcnow()
+        self._attr_media_position = (
+            round(new_position) if new_position is not None else None
+        )
+        _LOGGER.debug("Setting media position to %s", self._attr_media_position)
         if self.hass:
             await self.async_update_ha_state(True)
 
@@ -432,6 +476,10 @@ class EntityManager:
         if discovery_data.HasField("properties"):
             fire_properties_update_observed = True
             mpris_properties = discovery_data.properties
+        fire_seeked_observed = False
+        if discovery_data.HasField("seeked"):
+            fire_seeked_observed = True
+            position = discovery_data.seeked.position
 
         player_id = discovery_data.player_id
 
@@ -448,6 +496,8 @@ class EntityManager:
             await entity.update_metadata(metadata)
         if fire_properties_update_observed:
             await entity.update_mpris_properties(mpris_properties)
+        if fire_seeked_observed:
+            await entity.update_position(position)
 
 
 async def async_setup_entry(

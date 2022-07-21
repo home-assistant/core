@@ -669,7 +669,7 @@ hass-nabucasa==0.61.0
 hassil==1.0.5
 
 # homeassistant.components.hassmpris
-hassmpris_client==0.0.15
+hassmpris_client==0.0.18
 
 # homeassistant.components.tasmota
 hatasmota==0.6.4
