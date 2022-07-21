@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from datetime import timedelta
+from collections.abc import Callable
+from datetime import date, datetime, timedelta
+from decimal import Decimal
 import logging
 from typing import cast
 
@@ -18,6 +20,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -33,7 +36,7 @@ from .util import lifx_features
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=10)
+SCAN_INTERVAL = timedelta(seconds=60)
 
 RSSI_SENSOR = SensorEntityDescription(
     key=ATTR_RSSI,
@@ -41,8 +44,7 @@ RSSI_SENSOR = SensorEntityDescription(
     entity_category=EntityCategory.DIAGNOSTIC,
     state_class=SensorStateClass.MEASUREMENT,
     device_class=SensorDeviceClass.SIGNAL_STRENGTH,
-    has_entity_name=True,
-    icon="mdi:wifi",
+    entity_registry_enabled_default=False,
 )
 
 HEV_SENSORS = [
@@ -50,10 +52,8 @@ HEV_SENSORS = [
         key=HEV_CYCLE_DURATION,
         name="Clean Cycle Duration",
         entity_category=EntityCategory.DIAGNOSTIC,
-        state_class=None,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=TIME_MINUTES,
-        icon="mdi:timer",
     ),
     SensorEntityDescription(
         key=HEV_CYCLE_REMAINING,
@@ -62,25 +62,16 @@ HEV_SENSORS = [
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=TIME_MINUTES,
-        icon="mdi:timer",
     ),
     SensorEntityDescription(
         key=HEV_CYCLE_LAST_POWER,
         name="Clean Cycle Last Power",
         entity_category=EntityCategory.DIAGNOSTIC,
-        state_class=None,
-        device_class=None,
-        native_unit_of_measurement=None,
-        icon="mdi:checkbox-marked-circle-outline",
     ),
     SensorEntityDescription(
         key=HEV_CYCLE_LAST_RESULT,
         name="Clean Cycle Last Result",
         entity_category=EntityCategory.DIAGNOSTIC,
-        state_class=None,
-        device_class=None,
-        native_unit_of_measurement=None,
-        icon="mdi:checkbox-marked-circle-outline",
     ),
 ]
 
@@ -91,7 +82,7 @@ async def async_setup_entry(
     """Set up LIFX from a config entry."""
     domain_data = hass.data[DOMAIN]
     coordinator: LIFXUpdateCoordinator = domain_data[entry.entry_id]
-    sensors: list[LifxRssiSensorEntity | LifxHevSensorEntity] = [
+    sensors: list[LifxSensorEntity] = [
         LifxRssiSensorEntity(coordinator=coordinator, description=RSSI_SENSOR)
     ]
 
@@ -102,17 +93,15 @@ async def async_setup_entry(
                     coordinator=coordinator, description=sensor_description
                 )
             )
-            _LOGGER.debug(
-                "Adding HEV sensor %s to %s",
-                sensor_description.name,
-                coordinator.device.label,
-            )
 
-    async_add_entities(sensors)
+    async_add_entities(sensors, update_before_add=True)
 
 
 class LifxSensorEntity(CoordinatorEntity[LIFXUpdateCoordinator], SensorEntity):
     """LIFX sensor entity base class."""
+
+    _attr_has_entity_name: bool = True
+    entity_description: SensorEntityDescription
 
     def __init__(
         self,
@@ -122,23 +111,24 @@ class LifxSensorEntity(CoordinatorEntity[LIFXUpdateCoordinator], SensorEntity):
         """Initialise the sensor."""
         super().__init__(coordinator)
         self.coordinator = coordinator
+
         self.entity_description = description
         self._attr_unique_id = (
             f"{self.coordinator.serial_number}_{self.entity_description.key}"
         )
-        self._attr_name = description.name
-        self._attr_icon = description.icon
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._attr_unique_id)},
+            connections={(dr.CONNECTION_NETWORK_MAC, self.coordinator.mac_address)},
+            manufacturer="LIFX",
+            name=self.coordinator.label,
+        )
         self._async_update_attrs()
 
     @property
-    def device_info(self) -> DeviceInfo:
-        """Return the LIFX device info."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.coordinator.serial_number)},
-            connections={(dr.CONNECTION_NETWORK_MAC, self.coordinator.mac_address)},
-            manufacturer="LIFX",
-            name=self.name,
-        )
+    def native_value(self) -> StateType | date | datetime | Decimal:
+        """Return the sensor native value."""
+        return self._attr_native_value
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -162,21 +152,29 @@ class LifxRssiSensorEntity(LifxSensorEntity):
     ) -> None:
         """Initialise a LIFX RSSI sensor."""
         super().__init__(coordinator=coordinator, description=description)
+        self._attr_name = description.name
 
     @property
     def native_unit_of_measurement(self) -> str:
         """Get the RSSI unit of measurement."""
-        return self.coordinator.get_rssi_unit_of_measurement()
-
-    @property
-    def native_value(self) -> int:
-        """Get the current RSSI value."""
-        return cast(int, self._attr_native_value)
+        return str(self.coordinator.get_rssi_unit_of_measurement())
 
     @callback
     def _async_update_attrs(self) -> None:
         """Handle attribute updates."""
         self._attr_native_value = self.coordinator.rssi
+
+    @callback
+    async def async_added_to_hass(self) -> None:
+        """Enable fetch of RSSI data."""
+        self.coordinator.fetch_rssi = True
+        await super().async_added_to_hass()
+
+    @callback
+    async def async_will_remove_from_hass(self) -> None:
+        """Disable fetching RSSI data."""
+        self.coordinator.fetch_rssi = False
+        await super().async_will_remove_from_hass()
 
 
 class LifxHevSensorEntity(LifxSensorEntity):
@@ -189,20 +187,26 @@ class LifxHevSensorEntity(LifxSensorEntity):
     ) -> None:
         """Initialise a LIFX HEV sensor."""
         super().__init__(coordinator=coordinator, description=description)
-
-    @property
-    def native_unit_of_measurement(self) -> str:
-        """Return the native unit of measurement for this sensor."""
-        return cast(str, self.entity_description.native_unit_of_measurement)
-
-    @property
-    def native_value(self) -> str:
-        """Return the value from the bulb."""
-        return cast(str, self._attr_native_value)
+        self._attr_name = description.name
+        self.coordinator.update_method = cast(
+            Callable, f"self.coordinator._async_fetch_{self.entity_description.key}"
+        )
 
     @callback
     def _async_update_attrs(self) -> None:
         """Handle updating _attr values."""
-        self._attr_native_value = self.coordinator.hev_cycle.get(
-            self.entity_description.key, None
+        self._attr_native_value = getattr(
+            self.coordinator, self.entity_description.key, None
         )
+
+    @callback
+    async def async_added_to_hass(self) -> None:
+        """Enable fetch of HEV data."""
+        setattr(self.coordinator, f"fetch_{self.entity_description.key}", True)
+        await super().async_added_to_hass()
+
+    @callback
+    async def async_will_remove_from_hass(self) -> None:
+        """Disable fetching HEV data."""
+        setattr(self.coordinator, f"fetch_{self.entity_description.key}", False)
+        await super().async_will_remove_from_hass()

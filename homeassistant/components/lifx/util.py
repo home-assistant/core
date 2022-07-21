@@ -5,11 +5,13 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 import logging
+import math
 from typing import Any
 
 from aiolifx import products
 from aiolifx.aiolifx import Light
 from aiolifx.message import Message
+from aiolifx.msgtypes import StateHevCycle, StateLastHevCycleResult, StateWifiInfo
 import async_timeout
 from awesomeversion import AwesomeVersion
 
@@ -47,6 +49,27 @@ def async_get_legacy_entry(hass: HomeAssistant) -> ConfigEntry | None:
         if async_entry_is_legacy(entry):
             return entry
     return None
+
+
+def get_rssi_from_wifiinfo(wifiinfo: StateWifiInfo) -> int:
+    """Derive the RSSI value from the bulb signal field."""
+    return int(math.floor(10 * math.log10(wifiinfo.signal) + 0.5))
+
+
+def hev_cycle_status(hev_cycle: StateHevCycle) -> tuple[int, int, bool]:
+    """Return the HEV cycle status."""
+    return (hev_cycle.duration, hev_cycle.remaining, hev_cycle.last_power)
+
+
+def last_hev_cycle_result_str(last_hev_cycle_result: StateLastHevCycleResult) -> str:
+    """Make the result text easier to read."""
+    result: str = (
+        last_hev_cycle_result.result_str.title()
+        .replace("_", " ")
+        .replace("Homekit", "HomeKit")
+        .replace("Lan", "LAN")
+    )
+    return result
 
 
 def convert_8_to_16(value: int) -> int:
@@ -152,7 +175,7 @@ async def async_execute_lifx(method: Callable) -> Message:
             # us by async_timeout when we hit the OVERALL_TIMEOUT
             future.set_result(message)
 
-    _LOGGER.debug("Sending LIFX command: %s", method)
+    # _LOGGER.debug("Sending LIFX command: %s", method)
 
     method(callb=_callback)
     result = None
