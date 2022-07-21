@@ -41,7 +41,7 @@ _LOGGER = logging.getLogger(__name__)
 
 MAX_REMEMBER_ADDRESSES: Final = 2048
 
-SLEEP_RECOVERY_INTERVAL: Final = 120
+UNAVAILABLE_TRACK_SECONDS: Final = 60 * 5
 
 SOURCE_LOCAL: Final = "local"
 
@@ -164,6 +164,20 @@ def async_register_callback(
     return manager.async_register_callback(callback, match_dict)
 
 
+@hass_callback
+def async_track_unavailable(
+    hass: HomeAssistant,
+    callback: CALLBACK_TYPE,
+    address: str,
+) -> Callable[[], None]:
+    """Register to receive a callback when an address is unavailable.
+
+    Returns a callback that can be used to cancel the registration.
+    """
+    manager: BluetoothManager = hass.data[DOMAIN]
+    return manager.async_track_unavailable(callback, address)
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the bluetooth integration."""
     integration_matchers = await async_get_bluetooth(hass)
@@ -235,7 +249,8 @@ class BluetoothManager:
         self._integration_matchers = integration_matchers
         self.scanner: HaBleakScanner | None = None
         self._cancel_device_detected: CALLBACK_TYPE | None = None
-        self._cancel_sleep_recovery: CALLBACK_TYPE | None = None
+        self._cancel_unavailable_tracking: CALLBACK_TYPE | None = None
+        self._unavailable_callbacks: dict[str, list[CALLBACK_TYPE]] = {}
         self._callbacks: list[
             tuple[BluetoothCallback, BluetoothCallbackMatcher | None]
         ] = []
@@ -256,7 +271,7 @@ class BluetoothManager:
             )
             return
         install_multiple_bleak_catcher(self.scanner)
-        self.async_setup_sleep_recovery()
+        self.async_setup_unavailable_tracking()
         # We have to start it right away as some integrations might
         # need it straight away.
         _LOGGER.debug("Starting bluetooth scanner")
@@ -268,22 +283,31 @@ class BluetoothManager:
         await self.scanner.start()
 
     @hass_callback
-    def async_setup_sleep_recovery(self) -> None:
-        """Set up the sleep recovery."""
+    def async_setup_unavailable_tracking(self) -> None:
+        """Set up the unavailable tracking."""
 
-        async def async_sleep_recovery(now: datetime) -> None:
-            """Restart bluetooth discovery on sleep."""
-            _LOGGER.warning(
-                "Restarting bluetooth scanner? -- is_scanning: %s",
-                getattr(self.scanner, "is_scanning", None),
-            )
-            assert self.scanner is not None
-            ## TODO: scanner has is_scanning property for mac but not linux so
-            ## on linux we need to restart if nothing seen in last 2 minutes
-            _LOGGER.warning("Discovered devices: %s", self.scanner.discovered_devices)
+        @hass_callback
+        def _async_check_unavailable(now: datetime) -> None:
+            """Watch for unavailable devices."""
+            if not (scanner := models.HA_BLEAK_SCANNER):
+                return
+            history = set(scanner.history)
+            active = {device.address for device in scanner.discovered_devices}
+            disappeared = history.difference(active)
+            for address in disappeared:
+                del scanner.history[address]
+                if not (callbacks := self._unavailable_callbacks.get(address)):
+                    continue
+                for callback in callbacks:
+                    try:
+                        callback()
+                    except Exception:  # pylint: disable=broad-except
+                        _LOGGER.exception("Error in unavailable callback")
 
-        self._cancel_sleep_recovery = async_track_time_interval(
-            self.hass, async_sleep_recovery, timedelta(seconds=SLEEP_RECOVERY_INTERVAL)
+        self._cancel_unavailable_tracking = async_track_time_interval(
+            self.hass,
+            _async_check_unavailable,
+            timedelta(seconds=UNAVAILABLE_TRACK_SECONDS),
         )
 
     @hass_callback
@@ -348,6 +372,21 @@ class BluetoothManager:
             )
 
     @hass_callback
+    def async_track_unavailable(
+        self, callback: CALLBACK_TYPE, address: str
+    ) -> Callable[[], None]:
+        """Register a callback."""
+        self._unavailable_callbacks.setdefault(address, []).append(callback)
+
+        @hass_callback
+        def _async_remove_callback() -> None:
+            self._unavailable_callbacks[address].remove(callback)
+            if not self._unavailable_callbacks[address]:
+                del self._unavailable_callbacks[address]
+
+        return _async_remove_callback
+
+    @hass_callback
     def async_register_callback(
         self,
         callback: BluetoothCallback,
@@ -395,25 +434,17 @@ class BluetoothManager:
     def async_address_present(self, address: str) -> bool:
         """Return if the address is present."""
         return bool(
-            models.HA_BLEAK_SCANNER
-            and any(
-                device.address == address
-                for device in models.HA_BLEAK_SCANNER.discovered_devices
-            )
+            models.HA_BLEAK_SCANNER and address in models.HA_BLEAK_SCANNER.history
         )
 
     @hass_callback
     def async_discovered_service_info(self) -> list[BluetoothServiceInfoBleak]:
         """Return if the address is present."""
         if models.HA_BLEAK_SCANNER:
-            discovered = models.HA_BLEAK_SCANNER.discovered_devices
             history = models.HA_BLEAK_SCANNER.history
             return [
-                BluetoothServiceInfoBleak.from_advertisement(
-                    *history[device.address], SOURCE_LOCAL
-                )
-                for device in discovered
-                if device.address in history
+                BluetoothServiceInfoBleak.from_advertisement(*device_adv, SOURCE_LOCAL)
+                for device_adv in history.values()
             ]
         return []
 
@@ -422,9 +453,9 @@ class BluetoothManager:
         if self._cancel_device_detected:
             self._cancel_device_detected()
             self._cancel_device_detected = None
-        if self._cancel_sleep_recovery:
-            self._cancel_sleep_recovery()
-            self._cancel_sleep_recovery = None
+        if self._cancel_unavailable_tracking:
+            self._cancel_unavailable_tracking()
+            self._cancel_unavailable_tracking = None
         if self.scanner:
             await self.scanner.stop()
         models.HA_BLEAK_SCANNER = None
