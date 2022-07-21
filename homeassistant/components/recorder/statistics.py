@@ -41,7 +41,7 @@ import homeassistant.util.temperature as temperature_util
 from homeassistant.util.unit_system import UnitSystem
 import homeassistant.util.volume as volume_util
 
-from .const import DATA_INSTANCE, DOMAIN, MAX_ROWS_TO_PURGE, SupportedDialect
+from .const import DOMAIN, MAX_ROWS_TO_PURGE, SupportedDialect
 from .db_schema import Statistics, StatisticsMeta, StatisticsRuns, StatisticsShortTerm
 from .models import (
     StatisticData,
@@ -53,6 +53,7 @@ from .models import (
 from .util import (
     execute,
     execute_stmt_lambda_element,
+    get_instance,
     retryable_database_job,
     session_scope,
 )
@@ -209,7 +210,7 @@ def async_setup(hass: HomeAssistant) -> None:
 
     @callback
     def _async_entity_id_changed(event: Event) -> None:
-        hass.data[DATA_INSTANCE].async_update_statistics_metadata(
+        get_instance(hass).async_update_statistics_metadata(
             event.data["old_entity_id"], new_statistic_id=event.data["entity_id"]
         )
 
@@ -1385,7 +1386,7 @@ def _async_import_statistics(
             statistic["last_reset"] = dt_util.as_utc(last_reset)
 
     # Insert job in recorder's queue
-    hass.data[DATA_INSTANCE].async_import_statistics(metadata, statistics)
+    get_instance(hass).async_import_statistics(metadata, statistics)
 
 
 @callback

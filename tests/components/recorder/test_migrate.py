@@ -21,7 +21,6 @@ from sqlalchemy.pool import StaticPool
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import persistent_notification as pn, recorder
 from homeassistant.components.recorder import db_schema, migration
-from homeassistant.components.recorder.const import DATA_INSTANCE
 from homeassistant.components.recorder.db_schema import (
     SCHEMA_VERSION,
     RecorderRuns,
@@ -82,7 +81,7 @@ async def test_migration_in_progress(hass):
         await async_setup_component(
             hass, "recorder", {"recorder": {"db_url": "sqlite://"}}
         )
-        await hass.data[DATA_INSTANCE].async_migration_event.wait()
+        await recorder.get_instance(hass).async_migration_event.wait()
         assert recorder.util.async_migration_in_progress(hass) is True
         await async_wait_recording_done(hass)
 
@@ -112,7 +111,7 @@ async def test_database_migration_failed(hass):
         hass.states.async_set("my.entity", "on", {})
         hass.states.async_set("my.entity", "off", {})
         await hass.async_block_till_done()
-        await hass.async_add_executor_job(hass.data[DATA_INSTANCE].join)
+        await hass.async_add_executor_job(recorder.get_instance(hass).join)
         await hass.async_block_till_done()
 
     assert recorder.util.async_migration_in_progress(hass) is False
@@ -172,7 +171,7 @@ async def test_database_migration_encounters_corruption_not_sqlite(hass):
         hass.states.async_set("my.entity", "on", {})
         hass.states.async_set("my.entity", "off", {})
         await hass.async_block_till_done()
-        await hass.async_add_executor_job(hass.data[DATA_INSTANCE].join)
+        await hass.async_add_executor_job(recorder.get_instance(hass).join)
         await hass.async_block_till_done()
 
     assert recorder.util.async_migration_in_progress(hass) is False
@@ -201,7 +200,7 @@ async def test_events_during_migration_are_queued(hass):
         async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(hours=2))
         await hass.async_block_till_done()
         async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(hours=4))
-        await hass.data[DATA_INSTANCE].async_recorder_ready.wait()
+        await recorder.get_instance(hass).async_recorder_ready.wait()
         await async_wait_recording_done(hass)
 
     assert recorder.util.async_migration_in_progress(hass) is False
@@ -232,7 +231,7 @@ async def test_events_during_migration_queue_exhausted(hass):
         async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(hours=4))
         await hass.async_block_till_done()
         hass.states.async_set("my.entity", "off", {})
-        await hass.data[DATA_INSTANCE].async_recorder_ready.wait()
+        await recorder.get_instance(hass).async_recorder_ready.wait()
         await async_wait_recording_done(hass)
 
     assert recorder.util.async_migration_in_progress(hass) is False

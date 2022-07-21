@@ -80,7 +80,7 @@ def session_scope(
 ) -> Generator[Session, None, None]:
     """Provide a transactional scope around a series of operations."""
     if session is None and hass is not None:
-        session = hass.data[DATA_INSTANCE].get_session()
+        session = get_instance(hass).get_session()
 
     if session is None:
         raise RuntimeError("Session required")
@@ -559,7 +559,7 @@ def async_migration_in_progress(hass: HomeAssistant) -> bool:
     """
     if DATA_INSTANCE not in hass.data:
         return False
-    instance: Recorder = hass.data[DATA_INSTANCE]
+    instance = get_instance(hass)
     return instance.migration_in_progress
 
 
@@ -577,3 +577,9 @@ def second_sunday(year: int, month: int) -> date:
 def is_second_sunday(date_time: datetime) -> bool:
     """Check if a time is the second sunday of the month."""
     return bool(second_sunday(date_time.year, date_time.month).day == date_time.day)
+
+
+def get_instance(hass: HomeAssistant) -> Recorder:
+    """Get the recorder instance."""
+    instance: Recorder = hass.data[DATA_INSTANCE]
+    return instance
