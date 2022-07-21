@@ -609,7 +609,7 @@ class Light(BaseLight, ZhaEntity):
                             int(current_hue * 360 / 65535)
                             if self._color_channel.enhanced_hue_supported
                             else int(current_hue * 360 / 254),
-                            int(current_saturation / 254),
+                            int(current_saturation / 2.54),
                         )
                         self._attr_xy_color = None
                         self._attr_color_temp = None
