@@ -249,14 +249,14 @@ async def test_async_discovered_device_api(hass, mock_bleak_scanner_start):
         switchbot_adv = AdvertisementData(local_name="wohand", service_uuids=[])
         models.HA_BLEAK_SCANNER._callback(switchbot_device, switchbot_adv)
         wrong_device_went_unavailable = False
+        switchbot_device_went_unavailable = False
 
         @callback
         def _wrong_device_unavailable_callback():
             """Wrong device unavailable callback."""
             nonlocal wrong_device_went_unavailable
             wrong_device_went_unavailable = True
-
-        switchbot_device_went_unavailable = False
+            raise ValueError("blow up")
 
         @callback
         def _switchbot_device_unavailable_callback():
@@ -265,10 +265,10 @@ async def test_async_discovered_device_api(hass, mock_bleak_scanner_start):
             switchbot_device_went_unavailable = True
 
         wrong_device_unavailable_cancel = async_track_unavailable(
-            hass, wrong_device.address, _wrong_device_unavailable_callback
+            hass, _wrong_device_unavailable_callback, wrong_device.address
         )
         switchbot_device_unavailable_cancel = async_track_unavailable(
-            hass, switchbot_device.address, _switchbot_device_unavailable_callback
+            hass, _switchbot_device_unavailable_callback, switchbot_device.address
         )
 
         async_fire_time_changed(
@@ -277,8 +277,8 @@ async def test_async_discovered_device_api(hass, mock_bleak_scanner_start):
         await hass.async_block_till_done()
 
         service_infos = bluetooth.async_discovered_service_info(hass)
-        assert wrong_device_went_unavailable is True
         assert switchbot_device_went_unavailable is False
+        assert wrong_device_went_unavailable is True
 
         wrong_device_unavailable_cancel()
         switchbot_device_unavailable_cancel()
