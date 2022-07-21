@@ -13,6 +13,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
+    FREQUENCY_HERTZ,
     PERCENTAGE,
     TEMP_CELSIUS,
 )
@@ -121,6 +122,26 @@ SENSOR_ENTITIES: tuple[ValloxSensorEntityDescription, ...] = (
         entity_type=ValloxFanSpeedSensor,
     ),
     ValloxSensorEntityDescription(
+        key="extract_fan_speed",
+        name="Extract fan speed",
+        metric_key="A_CYC_EXTR_FAN_SPEED",
+        icon="mdi:fan",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=FREQUENCY_HERTZ,
+        entity_type=ValloxFanSpeedSensor,
+        entity_registry_enabled_default=False,
+    ),
+    ValloxSensorEntityDescription(
+        key="supply_fan_speed",
+        name="Supply fan speed",
+        metric_key="A_CYC_SUPP_FAN_SPEED",
+        icon="mdi:fan",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=FREQUENCY_HERTZ,
+        entity_type=ValloxFanSpeedSensor,
+        entity_registry_enabled_default=False,
+    ),
+    ValloxSensorEntityDescription(
         key="remaining_time_for_filter",
         name="Remaining time for filter",
         device_class=SensorDeviceClass.TIMESTAMP,
@@ -180,6 +201,7 @@ SENSOR_ENTITIES: tuple[ValloxSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=TEMP_CELSIUS,
+        entity_registry_enabled_default=False,
     ),
     ValloxSensorEntityDescription(
         key="humidity",
@@ -196,6 +218,7 @@ SENSOR_ENTITIES: tuple[ValloxSensorEntityDescription, ...] = (
         icon="mdi:gauge",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
+        entity_registry_enabled_default=False,
     ),
     ValloxSensorEntityDescription(
         key="co2",
@@ -204,6 +227,7 @@ SENSOR_ENTITIES: tuple[ValloxSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.CO2,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        entity_registry_enabled_default=False,
     ),
 )
 
