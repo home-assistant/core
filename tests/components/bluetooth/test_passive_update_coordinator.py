@@ -49,16 +49,18 @@ GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE = PassiveBluetoothDataUpdate(
         PassiveBluetoothEntityKey("temperature", None): 14.5,
         PassiveBluetoothEntityKey("pressure", None): 1234,
     },
+    entity_names={
+        PassiveBluetoothEntityKey("temperature", None): "Temperature",
+        PassiveBluetoothEntityKey("pressure", None): "Pressure",
+    },
     entity_descriptions={
         PassiveBluetoothEntityKey("temperature", None): SensorEntityDescription(
             key="temperature",
-            name="Temperature",
             native_unit_of_measurement=TEMP_CELSIUS,
             device_class=SensorDeviceClass.TEMPERATURE,
         ),
         PassiveBluetoothEntityKey("pressure", None): SensorEntityDescription(
             key="pressure",
-            name="Pressure",
             native_unit_of_measurement="hPa",
             device_class=SensorDeviceClass.PRESSURE,
         ),
@@ -429,7 +431,6 @@ GOVEE_B5178_REMOTE_PASSIVE_BLUETOOTH_DATA_UPDATE = PassiveBluetoothDataUpdate(
             force_update=False,
             icon=None,
             has_entity_name=False,
-            name="Temperature",
             unit_of_measurement=None,
             last_reset=None,
             native_unit_of_measurement="°C",
@@ -446,7 +447,6 @@ GOVEE_B5178_REMOTE_PASSIVE_BLUETOOTH_DATA_UPDATE = PassiveBluetoothDataUpdate(
             force_update=False,
             icon=None,
             has_entity_name=False,
-            name="Humidity",
             unit_of_measurement=None,
             last_reset=None,
             native_unit_of_measurement="%",
@@ -463,7 +463,6 @@ GOVEE_B5178_REMOTE_PASSIVE_BLUETOOTH_DATA_UPDATE = PassiveBluetoothDataUpdate(
             force_update=False,
             icon=None,
             has_entity_name=False,
-            name="Battery",
             unit_of_measurement=None,
             last_reset=None,
             native_unit_of_measurement="%",
@@ -480,12 +479,19 @@ GOVEE_B5178_REMOTE_PASSIVE_BLUETOOTH_DATA_UPDATE = PassiveBluetoothDataUpdate(
             force_update=False,
             icon=None,
             has_entity_name=False,
-            name="Signal Strength",
             unit_of_measurement=None,
             last_reset=None,
             native_unit_of_measurement="dBm",
             state_class=None,
         ),
+    },
+    entity_names={
+        PassiveBluetoothEntityKey(key="temperature", device_id="remote"): "Temperature",
+        PassiveBluetoothEntityKey(key="humidity", device_id="remote"): "Humidity",
+        PassiveBluetoothEntityKey(key="battery", device_id="remote"): "Battery",
+        PassiveBluetoothEntityKey(
+            key="signal_strength", device_id="remote"
+        ): "Signal Strength",
     },
     entity_data={
         PassiveBluetoothEntityKey(key="temperature", device_id="remote"): 30.8642,
@@ -520,7 +526,6 @@ GOVEE_B5178_PRIMARY_AND_REMOTE_PASSIVE_BLUETOOTH_DATA_UPDATE = (
                 force_update=False,
                 icon=None,
                 has_entity_name=False,
-                name="Temperature",
                 unit_of_measurement=None,
                 last_reset=None,
                 native_unit_of_measurement="°C",
@@ -537,7 +542,6 @@ GOVEE_B5178_PRIMARY_AND_REMOTE_PASSIVE_BLUETOOTH_DATA_UPDATE = (
                 force_update=False,
                 icon=None,
                 has_entity_name=False,
-                name="Humidity",
                 unit_of_measurement=None,
                 last_reset=None,
                 native_unit_of_measurement="%",
@@ -554,7 +558,6 @@ GOVEE_B5178_PRIMARY_AND_REMOTE_PASSIVE_BLUETOOTH_DATA_UPDATE = (
                 force_update=False,
                 icon=None,
                 has_entity_name=False,
-                name="Battery",
                 unit_of_measurement=None,
                 last_reset=None,
                 native_unit_of_measurement="%",
@@ -571,7 +574,6 @@ GOVEE_B5178_PRIMARY_AND_REMOTE_PASSIVE_BLUETOOTH_DATA_UPDATE = (
                 force_update=False,
                 icon=None,
                 has_entity_name=False,
-                name="Signal Strength",
                 unit_of_measurement=None,
                 last_reset=None,
                 native_unit_of_measurement="dBm",
@@ -588,7 +590,6 @@ GOVEE_B5178_PRIMARY_AND_REMOTE_PASSIVE_BLUETOOTH_DATA_UPDATE = (
                 force_update=False,
                 icon=None,
                 has_entity_name=False,
-                name="Temperature",
                 unit_of_measurement=None,
                 last_reset=None,
                 native_unit_of_measurement="°C",
@@ -605,7 +606,6 @@ GOVEE_B5178_PRIMARY_AND_REMOTE_PASSIVE_BLUETOOTH_DATA_UPDATE = (
                 force_update=False,
                 icon=None,
                 has_entity_name=False,
-                name="Humidity",
                 unit_of_measurement=None,
                 last_reset=None,
                 native_unit_of_measurement="%",
@@ -622,7 +622,6 @@ GOVEE_B5178_PRIMARY_AND_REMOTE_PASSIVE_BLUETOOTH_DATA_UPDATE = (
                 force_update=False,
                 icon=None,
                 has_entity_name=False,
-                name="Battery",
                 unit_of_measurement=None,
                 last_reset=None,
                 native_unit_of_measurement="%",
@@ -639,12 +638,29 @@ GOVEE_B5178_PRIMARY_AND_REMOTE_PASSIVE_BLUETOOTH_DATA_UPDATE = (
                 force_update=False,
                 icon=None,
                 has_entity_name=False,
-                name="Signal Strength",
                 unit_of_measurement=None,
                 last_reset=None,
                 native_unit_of_measurement="dBm",
                 state_class=None,
             ),
+        },
+        entity_names={
+            PassiveBluetoothEntityKey(
+                key="temperature", device_id="remote"
+            ): "Temperature",
+            PassiveBluetoothEntityKey(key="humidity", device_id="remote"): "Humidity",
+            PassiveBluetoothEntityKey(key="battery", device_id="remote"): "Battery",
+            PassiveBluetoothEntityKey(
+                key="signal_strength", device_id="remote"
+            ): "Signal Strength",
+            PassiveBluetoothEntityKey(
+                key="temperature", device_id="primary"
+            ): "Temperature",
+            PassiveBluetoothEntityKey(key="humidity", device_id="primary"): "Humidity",
+            PassiveBluetoothEntityKey(key="battery", device_id="primary"): "Battery",
+            PassiveBluetoothEntityKey(
+                key="signal_strength", device_id="primary"
+            ): "Signal Strength",
         },
         entity_data={
             PassiveBluetoothEntityKey(key="temperature", device_id="remote"): 30.8642,
@@ -865,5 +881,11 @@ async def test_passive_bluetooth_entity_with_entity_platform(hass):
     await hass.async_block_till_done()
     saved_callback(NO_DEVICES_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
     await hass.async_block_till_done()
-    assert hass.states.get("test_domain.temperature") is not None
-    assert hass.states.get("test_domain.pressure") is not None
+    assert (
+        hass.states.get("test_domain.test_platform_aa_bb_cc_dd_ee_ff_temperature")
+        is not None
+    )
+    assert (
+        hass.states.get("test_domain.test_platform_aa_bb_cc_dd_ee_ff_pressure")
+        is not None
+    )

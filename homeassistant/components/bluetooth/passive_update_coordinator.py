@@ -52,6 +52,9 @@ class PassiveBluetoothDataUpdate(Generic[_T]):
     entity_descriptions: Mapping[
         PassiveBluetoothEntityKey, EntityDescription
     ] = dataclasses.field(default_factory=dict)
+    entity_names: Mapping[PassiveBluetoothEntityKey, str | None] = dataclasses.field(
+        default_factory=dict
+    )
     entity_data: Mapping[PassiveBluetoothEntityKey, _T] = dataclasses.field(
         default_factory=dict
     )
@@ -106,6 +109,7 @@ class PassiveBluetoothDataUpdateCoordinator(Generic[_T]):
         ] = {}
         self.update_method = update_method
 
+        self.entity_names: dict[PassiveBluetoothEntityKey, str | None] = {}
         self.entity_data: dict[PassiveBluetoothEntityKey, _T] = {}
         self.entity_descriptions: dict[
             PassiveBluetoothEntityKey, EntityDescription
@@ -272,6 +276,7 @@ class PassiveBluetoothDataUpdateCoordinator(Generic[_T]):
         self.devices.update(new_data.devices)
         self.entity_descriptions.update(new_data.entity_descriptions)
         self.entity_data.update(new_data.entity_data)
+        self.entity_names.update(new_data.entity_names)
         self.async_update_listeners(new_data)
 
 
@@ -315,6 +320,7 @@ class PassiveBluetoothCoordinatorEntity(
             self._attr_unique_id = f"{address}-{key}"
         if ATTR_NAME not in self._attr_device_info:
             self._attr_device_info[ATTR_NAME] = self.coordinator.name
+        self._attr_name = coordinator.entity_names.get(entity_key)
 
     @property
     def available(self) -> bool:
