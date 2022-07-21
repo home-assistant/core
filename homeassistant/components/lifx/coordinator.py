@@ -75,6 +75,11 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
             self.device.host_firmware_version,
         )
 
+    @property
+    def label(self) -> str:
+        """Return the label of the bulb."""
+        return cast(str, self.device.label)
+
     async def _async_update_data(self) -> None:
         """Fetch all device data from the api."""
         async with self.lock:
@@ -128,6 +133,10 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
         await async_execute_lifx(
             partial(self.device.set_power, state, duration=duration)
         )
+
+    async def async_set_reboot(self) -> None:
+        """Send a set reboot message to the device."""
+        self.device.set_reboot()
 
     async def async_set_color(
         self, hsbk: list[float | int | None], duration: int | None

@@ -14,6 +14,8 @@ UNAVAILABLE_GRACE = 90
 
 CONF_SERIAL = "serial"
 
+RESTART = "restart"
+
 DATA_LIFX_MANAGER = "lifx_manager"
 
 _LOGGER = logging.getLogger(__name__)

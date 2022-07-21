@@ -57,7 +57,7 @@ CONFIG_SCHEMA = vol.All(
 )
 
 
-PLATFORMS = [Platform.LIGHT]
+PLATFORMS = [Platform.BUTTON, Platform.LIGHT]
 DISCOVERY_INTERVAL = timedelta(minutes=15)
 MIGRATION_INTERVAL = timedelta(minutes=5)
 
