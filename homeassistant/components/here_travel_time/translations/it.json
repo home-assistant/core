@@ -39,6 +39,9 @@
                 },
                 "title": "Scegli la partenza"
             },
+            "origin_menu": {
+                "title": "Scegli Origine"
+            },
             "user": {
                 "data": {
                     "api_key": "Chiave API",
