@@ -3,8 +3,10 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-
-import uscisstatus
+from lxml import html
+import requests
+import re
+from datetime import datetime
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
@@ -34,21 +36,26 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the platform in Home Assistant and Case Information."""
-    uscis = UscisSensor(config["case_id"], config[CONF_NAME])
+    uscis = USCISSensor(config["case_id"], config[CONF_NAME])
     uscis.update()
     if uscis.valid_case_id:
         add_entities([uscis])
     else:
-        _LOGGER.error("Setup USCIS Sensor Fail check if your Case ID is Valid")
+        _LOGGER.error("USCIS Sensor setup Failed. Check if your Case ID is Valid.")
 
 
-class UscisSensor(SensorEntity):
+class USCISSensor(SensorEntity):
     """USCIS Sensor will check case status on daily basis."""
-
+    CASE_DATE_PATTERN = r"[(A-Za-z)]*\s[\d]*,\s[\d]*"
     MIN_TIME_BETWEEN_UPDATES = timedelta(hours=24)
+    URL = "https://egov.uscis.gov/casestatus/mycasestatus.do"
+    APP_RECEIPT_NUMBER = "appReceiptNum"
+    STATUS_HEADER_XPATH = "/html/body/div[2]/form/div/div[1]/div/div/div[2]/div[3]/h1/text()"
+    STATUS_TEXT_XPATH = "/html/body/div[2]/form/div/div[1]/div/div/div[2]/div[3]/p/text()"
 
+    SHORT_STATUS = "short_status"
     CURRENT_STATUS = "current_status"
-    LAST_CASE_UPDATE = "last_update_date"
+    LAST_CASE_UPDATE_DATE = "last_update_date"
 
     def __init__(self, case, name):
         """Initialize the sensor."""
@@ -76,12 +83,19 @@ class UscisSensor(SensorEntity):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Fetch data from the USCIS website and update state attributes."""
-        try:
-            status = uscisstatus.get_case_status(self._case_id)
-            self._attributes = {self.CURRENT_STATUS: status["status"]}
-            self._state = status["date"]
-            self.valid_case_id = True
-
-        except ValueError:
-            _LOGGER("Please Check that you have valid USCIS case id")
+        response = requests.post(USCISSensor.URL, {USCISSensor.APP_RECEIPT_NUMBER: self._case_id})
+        parsed_html = html.fromstring(response.content)
+        status_text = parsed_html.xpath(USCISSensor.STATUS_TEXT_XPATH)[0]
+        if len(status_text) < 2:
+            _LOGGER('Invalid status. Please check your USCIS case id.')
             self.valid_case_id = False
+            return
+        short_status = parsed_html.xpath(USCISSensor.STATUS_HEADER_XPATH)[0]
+        match = re.search(USCISSensor.CASE_DATE_PATTERN, status_text)
+        last_case_update_date = 'Invalid'
+        if match is not None:
+            last_case_update_date = datetime.strptime(str(match.group(0)), "%B %d, %Y")
+            last_case_update_date = last_case_update_date.strftime("%m/%d/%Y")
+        self._attributes = {USCISSensor.CURRENT_STATUS: status_text, USCISSensor.LAST_CASE_UPDATE_DATE: last_case_update_date}
+        self._state = short_status
+        self.valid_case_id = True

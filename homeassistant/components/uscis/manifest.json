@@ -2,7 +2,7 @@
   "domain": "uscis",
   "name": "U.S. Citizenship and Immigration Services (USCIS)",
   "documentation": "https://www.home-assistant.io/integrations/uscis",
-  "requirements": ["uscisstatus==0.1.1"],
+  "requirements": ["lxml==4.9.1", "requests==2.28.1"],
   "codeowners": [],
   "iot_class": "cloud_polling",
   "loggers": ["uscisstatus"]
