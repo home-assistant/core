@@ -15,7 +15,7 @@
                 "data": {
                     "personal_access_token": "Szem\u00e9lyes hozz\u00e1f\u00e9r\u00e9si token (PAT)"
                 },
-                "description": "{project_url} hiteles\u00edt\u00e9se nem siker\u00fclt. K\u00e9rj\u00fck, adja meg jelenlegi hiteles\u00edt\u0151 adatait.",
+                "description": "{project_url} hiteles\u00edt\u00e9se nem siker\u00fclt. K\u00e9rem, adja meg az aktu\u00e1lis hiteles\u00edt\u0151 adatait.",
                 "title": "\u00dajrahiteles\u00edt\u00e9s"
             },
             "user": {

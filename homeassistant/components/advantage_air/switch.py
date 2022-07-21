@@ -32,11 +32,11 @@ class AdvantageAirFreshAir(AdvantageAirEntity, SwitchEntity):
     """Representation of Advantage Air fresh air control."""
 
     _attr_icon = "mdi:air-filter"
+    _attr_name = "Fresh air"
 
     def __init__(self, instance, ac_key):
         """Initialize an Advantage Air fresh air control."""
         super().__init__(instance, ac_key)
-        self._attr_name = f'{self._ac["name"]} Fresh Air'
         self._attr_unique_id = (
             f'{self.coordinator.data["system"]["rid"]}-{ac_key}-freshair'
         )

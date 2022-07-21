@@ -89,7 +89,7 @@ class BluetoothMatcherOptional(TypedDict, total=False):
     local_name: str
     service_uuid: str
     manufacturer_id: int
-    manufacturer_data_first_byte: int
+    manufacturer_data_start: list[int]
 
 
 class BluetoothMatcher(BluetoothMatcherRequired, BluetoothMatcherOptional):

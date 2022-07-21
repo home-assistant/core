@@ -12,6 +12,7 @@
     "http",
     "lovelace",
     "onboarding",
+    "repairs",
     "search",
     "system_log",
     "websocket_api"

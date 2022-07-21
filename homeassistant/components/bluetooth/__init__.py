@@ -2,11 +2,11 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import dataclass
 from enum import Enum
 import fnmatch
 import logging
-import platform
-from typing import Final, TypedDict
+from typing import Final, TypedDict, Union
 
 from bleak import BleakError
 from bleak.backends.device import BLEDevice
@@ -42,6 +42,37 @@ MAX_REMEMBER_ADDRESSES: Final = 2048
 SOURCE_LOCAL: Final = "local"
 
 
+@dataclass
+class BluetoothServiceInfoBleak(BluetoothServiceInfo):
+    """BluetoothServiceInfo with bleak data.
+
+    Integrations may need BLEDevice and AdvertisementData
+    to connect to the device without having bleak trigger
+    another scan to translate the address to the system's
+    internal details.
+    """
+
+    device: BLEDevice
+    advertisement: AdvertisementData
+
+    @classmethod
+    def from_advertisement(
+        cls, device: BLEDevice, advertisement_data: AdvertisementData, source: str
+    ) -> BluetoothServiceInfoBleak:
+        """Create a BluetoothServiceInfoBleak from an advertisement."""
+        return cls(
+            name=advertisement_data.local_name or device.name or device.address,
+            address=device.address,
+            rssi=device.rssi,
+            manufacturer_data=advertisement_data.manufacturer_data,
+            service_data=advertisement_data.service_data,
+            service_uuids=advertisement_data.service_uuids,
+            source=source,
+            device=device,
+            advertisement=advertisement_data,
+        )
+
+
 class BluetoothCallbackMatcherOptional(TypedDict, total=False):
     """Matcher for the bluetooth integration for callback optional fields."""
 
@@ -71,22 +102,36 @@ ADDRESS: Final = "address"
 LOCAL_NAME: Final = "local_name"
 SERVICE_UUID: Final = "service_uuid"
 MANUFACTURER_ID: Final = "manufacturer_id"
-MANUFACTURER_DATA_FIRST_BYTE: Final = "manufacturer_data_first_byte"
+MANUFACTURER_DATA_START: Final = "manufacturer_data_start"
 
 
 BluetoothChange = Enum("BluetoothChange", "ADVERTISEMENT")
-BluetoothCallback = Callable[[BluetoothServiceInfo, BluetoothChange], None]
+BluetoothCallback = Callable[
+    [Union[BluetoothServiceInfoBleak, BluetoothServiceInfo], BluetoothChange], None
+]
 
 
 @hass_callback
 def async_discovered_service_info(
     hass: HomeAssistant,
-) -> list[BluetoothServiceInfo]:
+) -> list[BluetoothServiceInfoBleak]:
     """Return the discovered devices list."""
     if DOMAIN not in hass.data:
         return []
     manager: BluetoothManager = hass.data[DOMAIN]
     return manager.async_discovered_service_info()
+
+
+@hass_callback
+def async_ble_device_from_address(
+    hass: HomeAssistant,
+    address: str,
+) -> BLEDevice | None:
+    """Return BLEDevice for an address if its present."""
+    if DOMAIN not in hass.data:
+        return None
+    manager: BluetoothManager = hass.data[DOMAIN]
+    return manager.async_ble_device_from_address(address)
 
 
 @hass_callback
@@ -157,30 +202,18 @@ def _ble_device_matches(
         return False
 
     if (
-        matcher_manufacturer_data_first_byte := matcher.get(
-            MANUFACTURER_DATA_FIRST_BYTE
+        matcher_manufacturer_data_start := matcher.get(MANUFACTURER_DATA_START)
+    ) is not None:
+        matcher_manufacturer_data_start_bytes = bytearray(
+            matcher_manufacturer_data_start
         )
-    ) is not None and not any(
-        matcher_manufacturer_data_first_byte == manufacturer_data[0]
-        for manufacturer_data in advertisement_data.manufacturer_data.values()
-    ):
-        return False
+        if not any(
+            manufacturer_data.startswith(matcher_manufacturer_data_start_bytes)
+            for manufacturer_data in advertisement_data.manufacturer_data.values()
+        ):
+            return False
 
     return True
-
-
-@hass_callback
-def async_enable_rssi_updates() -> None:
-    """Bleak filters out RSSI updates by default on linux only."""
-    # We want RSSI updates
-    if platform.system() == "Linux":
-        from bleak.backends.bluezdbus import (  # pylint: disable=import-outside-toplevel
-            scanner,
-        )
-
-        scanner._ADVERTISING_DATA_PROPERTIES.add(  # pylint: disable=protected-access
-            "RSSI"
-        )
 
 
 class BluetoothManager:
@@ -217,7 +250,6 @@ class BluetoothManager:
                 ex,
             )
             return
-        async_enable_rssi_updates()
         install_multiple_bleak_catcher(self.scanner)
         # We have to start it right away as some integrations might
         # need it straight away.
@@ -261,13 +293,13 @@ class BluetoothManager:
         if not matched_domains and not self._callbacks:
             return
 
-        service_info: BluetoothServiceInfo | None = None
+        service_info: BluetoothServiceInfoBleak | None = None
         for callback, matcher in self._callbacks:
             if matcher is None or _ble_device_matches(
                 matcher, device, advertisement_data
             ):
                 if service_info is None:
-                    service_info = BluetoothServiceInfo.from_advertisement(
+                    service_info = BluetoothServiceInfoBleak.from_advertisement(
                         device, advertisement_data, SOURCE_LOCAL
                     )
                 try:
@@ -278,7 +310,7 @@ class BluetoothManager:
         if not matched_domains:
             return
         if service_info is None:
-            service_info = BluetoothServiceInfo.from_advertisement(
+            service_info = BluetoothServiceInfoBleak.from_advertisement(
                 device, advertisement_data, SOURCE_LOCAL
             )
         for domain in matched_domains:
@@ -314,7 +346,7 @@ class BluetoothManager:
         ):
             try:
                 callback(
-                    BluetoothServiceInfo.from_advertisement(
+                    BluetoothServiceInfoBleak.from_advertisement(
                         *device_adv_data, SOURCE_LOCAL
                     ),
                     BluetoothChange.ADVERTISEMENT,
@@ -323,6 +355,15 @@ class BluetoothManager:
                 _LOGGER.exception("Error in bluetooth callback")
 
         return _async_remove_callback
+
+    @hass_callback
+    def async_ble_device_from_address(self, address: str) -> BLEDevice | None:
+        """Return the BLEDevice if present."""
+        if models.HA_BLEAK_SCANNER and (
+            ble_adv := models.HA_BLEAK_SCANNER.history.get(address)
+        ):
+            return ble_adv[0]
+        return None
 
     @hass_callback
     def async_address_present(self, address: str) -> bool:
@@ -336,13 +377,13 @@ class BluetoothManager:
         )
 
     @hass_callback
-    def async_discovered_service_info(self) -> list[BluetoothServiceInfo]:
+    def async_discovered_service_info(self) -> list[BluetoothServiceInfoBleak]:
         """Return if the address is present."""
         if models.HA_BLEAK_SCANNER:
             discovered = models.HA_BLEAK_SCANNER.discovered_devices
             history = models.HA_BLEAK_SCANNER.history
             return [
-                BluetoothServiceInfo.from_advertisement(
+                BluetoothServiceInfoBleak.from_advertisement(
                     *history[device.address], SOURCE_LOCAL
                 )
                 for device in discovered

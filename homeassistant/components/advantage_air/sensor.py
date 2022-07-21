@@ -67,7 +67,7 @@ class AdvantageAirTimeTo(AdvantageAirEntity, SensorEntity):
         super().__init__(instance, ac_key)
         self.action = action
         self._time_key = f"countDownTo{action}"
-        self._attr_name = f'{self._ac["name"]} time to {action}'
+        self._attr_name = f"Time to {action}"
         self._attr_unique_id = (
             f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-timeto{action}'
         )

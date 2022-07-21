@@ -775,7 +775,7 @@ def test_compile_hourly_sum_statistics_nan_inf_state(
         (
             "sensor.custom_sensor",
             "from integration test ",
-            "report it to the custom component author",
+            "report it to the custom integration author",
         ),
     ],
 )
