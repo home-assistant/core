@@ -22,6 +22,7 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.deprecation import deprecated_function
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import ConfigType, StateType
 from homeassistant.helpers.update_coordinator import (
@@ -250,6 +251,7 @@ class ValloxServiceHandler:
         self._client = client
         self._coordinator = coordinator
 
+    @deprecated_function("number entity")
     async def async_set_profile_fan_speed_home(
         self, fan_speed: int = DEFAULT_FAN_SPEED_HOME
     ) -> bool:
@@ -266,6 +268,7 @@ class ValloxServiceHandler:
             _LOGGER.error("Error setting fan speed for Home profile: %s", err)
             return False
 
+    @deprecated_function("number entity")
     async def async_set_profile_fan_speed_away(
         self, fan_speed: int = DEFAULT_FAN_SPEED_AWAY
     ) -> bool:
@@ -282,6 +285,7 @@ class ValloxServiceHandler:
             _LOGGER.error("Error setting fan speed for Away profile: %s", err)
             return False
 
+    @deprecated_function("number entity")
     async def async_set_profile_fan_speed_boost(
         self, fan_speed: int = DEFAULT_FAN_SPEED_BOOST
     ) -> bool:
