@@ -49,6 +49,19 @@
           "remoteRoot": "/usr/src/homeassistant"
         }
       ]
+    },
+    {
+      // Run and debug selected pytest
+      "name": "Debug Test",
+      "type": "python",
+      "request": "launch",
+      "console": "integratedTerminal",
+      "module": "pytest",
+      "args": ["${file}"],
+      "justMyCode": false,
+      "env": {
+          "_PYTEST_RAISE": "1"
+      }
     }
   ]
 }
