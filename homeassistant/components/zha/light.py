@@ -792,6 +792,12 @@ class LightGroup(BaseLight, ZhaGroupEntity):
             if ColorMode.BRIGHTNESS in color_mode_count:
                 color_mode_count[ColorMode.BRIGHTNESS] = 0
             self._attr_color_mode = color_mode_count.most_common(1)[0][0]
+            if self._attr_color_mode == ColorMode.HS and color_mode_count[
+                ColorMode.HS
+            ] != len(
+                self._group.members
+            ):  # switch to XY if all members do not support HS
+                self._attr_color_mode = ColorMode.XY
 
         self._attr_supported_color_modes = None
         all_supported_color_modes = list(
