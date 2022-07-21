@@ -156,10 +156,6 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
             partial(self.device.set_power, state, duration=duration)
         )
 
-    async def async_set_reboot(self) -> None:
-        """Send a set reboot message to the device."""
-        self.device.set_reboot()
-
     async def async_set_color(
         self, hsbk: list[float | int | None], duration: int | None
     ) -> None:
