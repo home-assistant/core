@@ -252,7 +252,7 @@ async def test_async_discovered_device_api(hass, mock_bleak_scanner_start):
         switchbot_device_went_unavailable = False
 
         @callback
-        def _wrong_device_unavailable_callback(_address: str):
+        def _wrong_device_unavailable_callback(_address: str) -> None:
             """Wrong device unavailable callback."""
             nonlocal wrong_device_went_unavailable
             wrong_device_went_unavailable = True
