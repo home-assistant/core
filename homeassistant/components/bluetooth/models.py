@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Mapping
 import contextlib
 import logging
 from typing import Any, Final, cast
@@ -14,7 +13,6 @@ from bleak.backends.scanner import (
     AdvertisementDataCallback,
     BaseBleakScanner,
 )
-from lru import LRU  # pylint: disable=no-name-in-module
 
 from homeassistant.core import CALLBACK_TYPE, callback as hass_callback
 
@@ -23,8 +21,6 @@ _LOGGER = logging.getLogger(__name__)
 FILTER_UUIDS: Final = "UUIDs"
 
 HA_BLEAK_SCANNER: HaBleakScanner | None = None
-
-MAX_HISTORY_SIZE: Final = 512
 
 
 def _dispatch_callback(
@@ -57,9 +53,7 @@ class HaBleakScanner(BleakScanner):  # type: ignore[misc]
         self._callbacks: list[
             tuple[AdvertisementDataCallback, dict[str, set[str]]]
         ] = []
-        self.history: Mapping[str, tuple[BLEDevice, AdvertisementData]] = LRU(
-            MAX_HISTORY_SIZE
-        )
+        self.history: dict[str, tuple[BLEDevice, AdvertisementData]] = {}
         super().__init__(*args, **kwargs)
 
     @hass_callback
@@ -90,7 +84,7 @@ class HaBleakScanner(BleakScanner):  # type: ignore[misc]
         Here we get the actual callback from bleak and dispatch
         it to all the wrapped HaBleakScannerWrapper classes
         """
-        self.history[device.address] = (device, advertisement_data)  # type: ignore[index]
+        self.history[device.address] = (device, advertisement_data)
         for callback_filters in self._callbacks:
             _dispatch_callback(*callback_filters, device, advertisement_data)
 

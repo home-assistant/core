@@ -1,4 +1,5 @@
 """Tests for the Bluetooth integration."""
+from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
 from bleak import BleakError
@@ -7,12 +8,18 @@ from bleak.backends.scanner import AdvertisementData, BLEDevice
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
     SOURCE_LOCAL,
+    UNAVAILABLE_TRACK_SECONDS,
     BluetoothChange,
     BluetoothServiceInfo,
+    async_track_unavailable,
     models,
 )
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import callback
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
+
+from tests.common import async_fire_time_changed
 
 
 async def test_setup_and_stop(hass, mock_bleak_scanner_start):
@@ -241,9 +248,55 @@ async def test_async_discovered_device_api(hass, mock_bleak_scanner_start):
         switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
         switchbot_adv = AdvertisementData(local_name="wohand", service_uuids=[])
         models.HA_BLEAK_SCANNER._callback(switchbot_device, switchbot_adv)
+        wrong_device_went_unavailable = False
+        switchbot_device_went_unavailable = False
+
+        @callback
+        def _wrong_device_unavailable_callback(_address: str):
+            """Wrong device unavailable callback."""
+            nonlocal wrong_device_went_unavailable
+            wrong_device_went_unavailable = True
+            raise ValueError("blow up")
+
+        @callback
+        def _switchbot_device_unavailable_callback(_address: str):
+            """Switchbot device unavailable callback."""
+            nonlocal switchbot_device_went_unavailable
+            switchbot_device_went_unavailable = True
+
+        wrong_device_unavailable_cancel = async_track_unavailable(
+            hass, _wrong_device_unavailable_callback, wrong_device.address
+        )
+        switchbot_device_unavailable_cancel = async_track_unavailable(
+            hass, _switchbot_device_unavailable_callback, switchbot_device.address
+        )
+
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
+        )
         await hass.async_block_till_done()
 
         service_infos = bluetooth.async_discovered_service_info(hass)
+        assert switchbot_device_went_unavailable is False
+        assert wrong_device_went_unavailable is True
+
+        # See the devices again
+        models.HA_BLEAK_SCANNER._callback(wrong_device, wrong_adv)
+        models.HA_BLEAK_SCANNER._callback(switchbot_device, switchbot_adv)
+        # Cancel the callbacks
+        wrong_device_unavailable_cancel()
+        switchbot_device_unavailable_cancel()
+        wrong_device_went_unavailable = False
+        switchbot_device_went_unavailable = False
+
+        # Verify the cancel is effective
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
+        )
+        await hass.async_block_till_done()
+        assert switchbot_device_went_unavailable is False
+        assert wrong_device_went_unavailable is False
+
         assert len(service_infos) == 1
         # wrong_name should not appear because bleak no longer sees it
         assert service_infos[0].name == "wohand"
