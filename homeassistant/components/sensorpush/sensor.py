@@ -36,8 +36,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import SensorPushDataUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import SensorPushDataUpdateCoordinator
 
 SENSOR_DESCRIPTIONS = {
     (DeviceClass.TEMPERATURE, "°C"): SensorEntityDescription(
