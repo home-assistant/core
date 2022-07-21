@@ -9,6 +9,9 @@ import logging
 from typing import Final, TypedDict, Union
 
 from bleak import BleakError
+from bleak.assigned_numbers import AdvertisementDataType
+from bleak.backends.bluezdbus.advertisement_monitor import OrPattern
+from bleak.backends.bluezdbus.scanner import BlueZArgs
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
 from lru import LRU  # pylint: disable=no-name-in-module
@@ -241,8 +244,15 @@ class BluetoothManager:
     async def async_setup(self) -> None:
         """Set up BT Discovery."""
         try:
+            # TODO : fallback to active scanner if passive fails
             self.scanner = HaBleakScanner(
-                scanning_mode=SCANNING_MODE_TO_BLEAK[self.scanning_mode]
+                scanning_mode=SCANNING_MODE_TO_BLEAK[self.scanning_mode],
+                bluez=BlueZArgs(
+                    or_patterns=[
+                        OrPattern(0, AdvertisementDataType.FLAGS, b"\x06"),
+                        OrPattern(0, AdvertisementDataType.FLAGS, b"\x1a"),
+                    ]
+                ),
             )
         except (FileNotFoundError, BleakError) as ex:
             _LOGGER.warning(
