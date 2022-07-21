@@ -337,11 +337,7 @@ class BluetoothManager:
                 scanning_mode=SCANNING_MODE_TO_BLEAK[self.scanning_mode]
             )
         except (FileNotFoundError, BleakError) as ex:
-            _LOGGER.warning(
-                "Could not create bluetooth scanner (is bluetooth present and enabled?): %s",
-                ex,
-            )
-            return
+            raise RuntimeError("Failed to initialize Bluetooth: {ex}") from ex
         install_multiple_bleak_catcher(self.scanner)
         self.async_setup_unavailable_tracking()
         # We have to start it right away as some integrations might
