@@ -159,6 +159,7 @@ async def poll_control_device(zha_device_restored, zigpy_device_mock):
                 "current_y",
                 "color_temperature",
                 "current_hue",
+                "enhanced_current_hue",
                 "current_saturation",
             },
         ),
