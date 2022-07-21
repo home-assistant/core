@@ -289,8 +289,8 @@ class BluetoothManager:
         @hass_callback
         def _async_check_unavailable(now: datetime) -> None:
             """Watch for unavailable devices."""
-            if not (scanner := models.HA_BLEAK_SCANNER):
-                return
+            assert models.HA_BLEAK_SCANNER is not None
+            scanner = models.HA_BLEAK_SCANNER
             history = set(scanner.history)
             active = {device.address for device in scanner.discovered_devices}
             disappeared = history.difference(active)

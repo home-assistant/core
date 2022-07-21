@@ -4,7 +4,6 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 import dataclasses
 import logging
-import time
 from typing import Any, Generic, TypeVar
 
 from home_assistant_bluetooth import BluetoothServiceInfo
@@ -21,9 +20,6 @@ from . import (
     async_track_unavailable,
 )
 from .const import DOMAIN
-
-UNAVAILABLE_SECONDS = 60 * 5
-NEVER_TIME = -UNAVAILABLE_SECONDS
 
 
 @dataclasses.dataclass(frozen=True)
@@ -115,7 +111,6 @@ class PassiveBluetoothDataUpdateCoordinator(Generic[_T]):
         self.devices: dict[str | None, DeviceInfo] = {}
 
         self.last_update_success = True
-        self._last_callback_time: float = NEVER_TIME
         self._cancel_track_unavailable: CALLBACK_TYPE | None = None
         self._cancel_bluetooth_advertisements: CALLBACK_TYPE | None = None
         self._present = False
@@ -250,7 +245,6 @@ class PassiveBluetoothDataUpdateCoordinator(Generic[_T]):
     ) -> None:
         """Handle a Bluetooth event."""
         self.name = service_info.name
-        self._last_callback_time = time.monotonic()
         self._present = True
         if self.hass.is_stopping:
             return
