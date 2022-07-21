@@ -59,9 +59,7 @@
       "module": "pytest",
       "args": ["${file}"],
       "justMyCode": false,
-      "env": {
-          "_PYTEST_RAISE": "1"
-      }
+      "env": { "_PYTEST_RAISE": "1" }
     }
   ]
 }
