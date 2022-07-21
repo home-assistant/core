@@ -6,7 +6,7 @@ from homeassistant import config_entries
 from homeassistant.components.inkbird.const import DOMAIN
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import HTPWX_SERVICE_INFO, HTW_SERVICE_INFO, NOT_SENSOR_PUSH_SERVICE_INFO
+from . import IBBQ_SERVICE_INFO, NOT_INKBIRD_SERVICE_INFO, SPS_SERVICE_INFO
 
 from tests.common import MockConfigEntry
 
@@ -16,7 +16,7 @@ async def test_async_step_bluetooth_valid_device(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_BLUETOOTH},
-        data=HTPWX_SERVICE_INFO,
+        data=IBBQ_SERVICE_INFO,
     )
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
@@ -25,7 +25,7 @@ async def test_async_step_bluetooth_valid_device(hass):
             result["flow_id"], user_input={}
         )
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "HTP.xw F4D"
+    assert result2["title"] == "iBBQ 6AADDD4CAC3D"
     assert result2["data"] == {}
     assert result2["result"].unique_id == "4125DDBA-2774-4851-9889-6AADDD4CAC3D"
 
@@ -35,7 +35,7 @@ async def test_async_step_bluetooth_not_inkbird(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_BLUETOOTH},
-        data=NOT_SENSOR_PUSH_SERVICE_INFO,
+        data=NOT_INKBIRD_SERVICE_INFO,
     )
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "not_supported"
@@ -55,7 +55,7 @@ async def test_async_step_user_with_found_devices(hass):
     """Test setup from service info cache with devices found."""
     with patch(
         "homeassistant.components.inkbird.config_flow.async_discovered_service_info",
-        return_value=[HTW_SERVICE_INFO],
+        return_value=[SPS_SERVICE_INFO],
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -69,7 +69,7 @@ async def test_async_step_user_with_found_devices(hass):
             user_input={"address": "61DE521B-F0BF-9F44-64D4-75BBE1738105"},
         )
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "HT.w 0CA1"
+    assert result2["title"] == "IBS-TH 75BBE1738105"
     assert result2["data"] == {}
     assert result2["result"].unique_id == "61DE521B-F0BF-9F44-64D4-75BBE1738105"
 
@@ -84,7 +84,7 @@ async def test_async_step_user_with_found_devices_already_setup(hass):
 
     with patch(
         "homeassistant.components.inkbird.config_flow.async_discovered_service_info",
-        return_value=[HTW_SERVICE_INFO],
+        return_value=[SPS_SERVICE_INFO],
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
