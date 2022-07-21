@@ -67,4 +67,4 @@ class LIFXRestartButton(CoordinatorEntity[LIFXUpdateCoordinator], ButtonEntity):
 
     async def async_press(self) -> None:
         """Restart the bulb on button press."""
-        await self.coordinator.async_set_reboot()
+        self.coordinator.device.set_reboot()
