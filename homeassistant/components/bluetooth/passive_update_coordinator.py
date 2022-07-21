@@ -1,7 +1,7 @@
 """The Bluetooth integration."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 import dataclasses
 from datetime import datetime
 import logging
@@ -49,10 +49,10 @@ class PassiveBluetoothDataUpdate(Generic[_T]):
     """Generic bluetooth data."""
 
     devices: dict[str | None, DeviceInfo] = dataclasses.field(default_factory=dict)
-    entity_descriptions: dict[
+    entity_descriptions: Mapping[
         PassiveBluetoothEntityKey, EntityDescription
     ] = dataclasses.field(default_factory=dict)
-    entity_data: dict[PassiveBluetoothEntityKey, _T] = dataclasses.field(
+    entity_data: Mapping[PassiveBluetoothEntityKey, _T] = dataclasses.field(
         default_factory=dict
     )
 
