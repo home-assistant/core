@@ -348,7 +348,10 @@ class BluetoothManager:
             self._device_detected, {}
         )
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
-        await self.scanner.start()
+        try:
+            await self.scanner.start()
+        except (FileNotFoundError, BleakError) as ex:
+            raise RuntimeError("Failed to start Bluetooth: {ex}") from ex
 
     @hass_callback
     def async_setup_unavailable_tracking(self) -> None:
