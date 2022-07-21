@@ -259,7 +259,7 @@ async def test_async_discovered_device_api(hass, mock_bleak_scanner_start):
             raise ValueError("blow up")
 
         @callback
-        def _switchbot_device_unavailable_callback(_address: str):
+        def _switchbot_device_unavailable_callback(_address: str) -> None:
             """Switchbot device unavailable callback."""
             nonlocal switchbot_device_went_unavailable
             switchbot_device_went_unavailable = True
