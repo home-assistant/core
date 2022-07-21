@@ -193,7 +193,12 @@ async def _async_has_bluetooth_adapter() -> bool:
 async def _async_get_bluetooth_adapters() -> set[str]:
     """Return a list of bluetooth adapters."""
     adapters: set[str] = set()
-    bus = await MessageBus(bus_type=BusType.SYSTEM, negotiate_unix_fd=True).connect()
+    try:
+        bus = await MessageBus(
+            bus_type=BusType.SYSTEM, negotiate_unix_fd=True
+        ).connect()
+    except FileNotFoundError:
+        return adapters
     msg = Message(
         destination="org.bluez",
         path="/",
