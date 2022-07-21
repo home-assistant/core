@@ -30,7 +30,7 @@ class SimpliSafeButtonDescriptionMixin:
 class SimpliSafeButtonDescription(
     ButtonEntityDescription, SimpliSafeButtonDescriptionMixin
 ):
-    """Describe a SimpliSafe button description."""
+    """Describe a SimpliSafe button entity."""
 
 
 BUTTON_KIND_CLEAR_NOTIFICATIONS = "clear_notifications"
