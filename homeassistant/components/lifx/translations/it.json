@@ -4,9 +4,21 @@
             "no_devices_found": "Nessun dispositivo trovato sulla rete",
             "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
         },
+        "flow_title": "{label} ({host}) {serial}",
         "step": {
             "confirm": {
                 "description": "Vuoi configurare LIFX?"
+            },
+            "discovery_confirm": {
+                "description": "Vuoi configurare {label} ({host}) {serial}?"
+            },
+            "pick_device": {
+                "data": {
+                    "device": "Dispositivo"
+                }
+            },
+            "user": {
+                "description": "Se lasci l'host vuoto, il rilevamento verr\u00e0 utilizzato per trovare i dispositivi."
             }
         }
     }
