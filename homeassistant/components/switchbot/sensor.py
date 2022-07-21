@@ -77,20 +77,10 @@ async def async_setup_entry(
                 entry.data[CONF_MAC],
                 entry.data[CONF_NAME],
             )
-            for sensor in flatten_sensors_data(
-                coordinator.data[entry.unique_id]["data"]
-            )
+            for sensor in coordinator.data[entry.unique_id]["data"]
             if sensor in SENSOR_TYPES
         ]
     )
-
-
-def flatten_sensors_data(sensors):
-    """Deconstruct SwitchBot library temp object C/Fº readings from object."""
-    if "temp" in sensors:
-        sensors["temperature"] = sensors["temp"]["c"]
-
-    return sensors
 
 
 class SwitchBotSensor(SwitchbotEntity, SensorEntity):
@@ -114,4 +104,4 @@ class SwitchBotSensor(SwitchbotEntity, SensorEntity):
     @property
     def native_value(self) -> str:
         """Return the state of the sensor."""
-        return flatten_sensors_data(self.data["data"])[self._sensor]
+        return self.data["data"][self._sensor]
