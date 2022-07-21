@@ -30,7 +30,7 @@ class ColorChannel(ZigbeeChannel):
     UNSUPPORTED_ATTRIBUTE = 0x86
     REPORT_CONFIG = (
         AttrReportConfig(attr="current_x", config=REPORT_CONFIG_DEFAULT),
-        AttrReportConfig(attr="current_x", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(attr="current_y", config=REPORT_CONFIG_DEFAULT),
         AttrReportConfig(attr="current_hue", config=REPORT_CONFIG_DEFAULT),
         AttrReportConfig(attr="current_saturation", config=REPORT_CONFIG_DEFAULT),
         AttrReportConfig(attr="color_temperature", config=REPORT_CONFIG_DEFAULT),
