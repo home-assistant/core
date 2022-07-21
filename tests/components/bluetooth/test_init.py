@@ -1,4 +1,5 @@
 """Tests for the Bluetooth integration."""
+from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
 from bleak import BleakError
@@ -7,12 +8,16 @@ from bleak.backends.scanner import AdvertisementData, BLEDevice
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
     SOURCE_LOCAL,
+    UNAVAILABLE_TRACK_SECONDS,
     BluetoothChange,
     BluetoothServiceInfo,
     models,
 )
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
+
+from tests.common import async_fire_time_changed
 
 
 async def test_setup_and_stop(hass, mock_bleak_scanner_start):
@@ -241,9 +246,16 @@ async def test_async_discovered_device_api(hass, mock_bleak_scanner_start):
         switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
         switchbot_adv = AdvertisementData(local_name="wohand", service_uuids=[])
         models.HA_BLEAK_SCANNER._callback(switchbot_device, switchbot_adv)
+
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
+        )
         await hass.async_block_till_done()
 
         service_infos = bluetooth.async_discovered_service_info(hass)
+        import pprint
+
+        pprint.pprint(service_infos)
         assert len(service_infos) == 1
         # wrong_name should not appear because bleak no longer sees it
         assert service_infos[0].name == "wohand"
