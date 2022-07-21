@@ -35,7 +35,7 @@ from homeassistant.loader import (
 from . import models
 from .const import DOMAIN
 from .models import HaBleakScanner
-from .usage import install_multiple_bleak_catcher
+from .usage import install_multiple_bleak_catcher, uninstall_multiple_bleak_catcher
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -180,12 +180,34 @@ def async_track_unavailable(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the bluetooth integration."""
+    if DOMAIN in config:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data={}
+            )
+        )
+    return True
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: config_entries.ConfigEntry
+) -> bool:
+    """Set up the bluetooth integration from a config entry."""
     integration_matchers = await async_get_bluetooth(hass)
-    bluetooth_discovery = BluetoothManager(
+    manager = BluetoothManager(
         hass, integration_matchers, BluetoothScanningMode.PASSIVE
     )
-    await bluetooth_discovery.async_setup()
-    hass.data[DOMAIN] = bluetooth_discovery
+    await manager.async_setup()
+    hass.data[DOMAIN] = manager
+    return True
+
+
+async def async_unload_entry(
+    hass: HomeAssistant, entry: config_entries.ConfigEntry
+) -> bool:
+    """Unload a config entry."""
+    manager: BluetoothManager = hass.data.pop(DOMAIN)
+    await manager.async_stop()
     return True
 
 
@@ -448,7 +470,7 @@ class BluetoothManager:
             ]
         return []
 
-    async def async_stop(self, event: Event) -> None:
+    async def async_stop(self, *event: Event) -> None:
         """Stop bluetooth discovery."""
         if self._cancel_device_detected:
             self._cancel_device_detected()
@@ -459,3 +481,4 @@ class BluetoothManager:
         if self.scanner:
             await self.scanner.stop()
         models.HA_BLEAK_SCANNER = None
+        uninstall_multiple_bleak_catcher()
