@@ -1105,7 +1105,13 @@ async def websocket_create_network_backup(
 
     # This can take 5-30s
     backup = await application_controller.backups.create_backup(load_devices=True)
-    connection.send_result(msg[ID], backup.as_dict())
+    connection.send_result(
+        msg[ID],
+        {
+            "backup": backup.as_dict(),
+            "is_complete": backup.is_complete(),
+        },
+    )
 
 
 @websocket_api.require_admin
