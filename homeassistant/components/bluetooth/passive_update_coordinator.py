@@ -121,7 +121,7 @@ class PassiveBluetoothDataUpdateCoordinator(Generic[_T]):
         return self._present and self.last_update_success
 
     @callback
-    def _async_handle_unavailable(self) -> None:
+    def _async_handle_unavailable(self, _address: str) -> None:
         """Handle the device going unavailable."""
         self._present = False
         self.async_update_listeners(None)
