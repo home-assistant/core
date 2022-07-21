@@ -257,7 +257,7 @@ class LoginFlowResourceView(LoginFlowBaseView):
 
     @RequestDataValidator(vol.Schema({"client_id": str}, extra=vol.ALLOW_EXTRA))
     @log_invalid_auth
-    async def post(self, request, flow_id, data):
+    async def post(self, request, data, flow_id):
         """Handle progressing a login flow request."""
         client_id = data.pop("client_id")
 
