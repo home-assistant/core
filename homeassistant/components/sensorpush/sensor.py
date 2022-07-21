@@ -3,15 +3,7 @@ from __future__ import annotations
 
 from typing import Optional, Union
 
-from sensorpush_ble import (
-    ATTR_MANUFACTURER as SENSOR_MANUFACTURER,
-    ATTR_MODEL as SENSOR_MODEL,
-    ATTR_NAME as SENSOR_NAME,
-    DeviceClass,
-    DeviceKey,
-    SensorDeviceInfo,
-    SensorUpdate,
-)
+from sensorpush_ble import DeviceClass, DeviceKey, SensorDeviceInfo, SensorUpdate, Units
 
 from homeassistant import config_entries
 from homeassistant.components.bluetooth.passive_update_coordinator import (
@@ -31,7 +23,7 @@ from homeassistant.const import (
     ATTR_MODEL,
     ATTR_NAME,
     PERCENTAGE,
-    PRESSURE_PA,
+    PRESSURE_MBAR,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     TEMP_CELSIUS,
 )
@@ -42,30 +34,29 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 
 SENSOR_DESCRIPTIONS = {
-    (DeviceClass.TEMPERATURE, "°C"): SensorEntityDescription(
-        key=f"{DeviceClass.TEMPERATURE}_°C",
-        name=DeviceClass.TEMPERATURE.name.replace("_", " ").title(),
+    (DeviceClass.TEMPERATURE, Units.TEMP_CELSIUS): SensorEntityDescription(
+        key=f"{DeviceClass.TEMPERATURE}_{Units.TEMP_CELSIUS}",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    (DeviceClass.HUMIDITY, "%"): SensorEntityDescription(
-        key=f"{DeviceClass.HUMIDITY}_%",
-        name=DeviceClass.HUMIDITY.name.replace("_", " ").title(),
+    (DeviceClass.HUMIDITY, Units.PERCENTAGE): SensorEntityDescription(
+        key=f"{DeviceClass.HUMIDITY}_{Units.PERCENTAGE}",
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    (DeviceClass.PRESSURE, "Pa"): SensorEntityDescription(
-        key=f"{DeviceClass.PRESSURE}_Pa",
-        name=DeviceClass.PRESSURE.name.replace("_", " ").title(),
+    (DeviceClass.PRESSURE, Units.PRESSURE_MBAR): SensorEntityDescription(
+        key=f"{DeviceClass.PRESSURE}_{Units.PRESSURE_MBAR}",
         device_class=SensorDeviceClass.PRESSURE,
-        native_unit_of_measurement=PRESSURE_PA,
+        native_unit_of_measurement=PRESSURE_MBAR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    (DeviceClass.SIGNAL_STRENGTH, "dBm"): SensorEntityDescription(
-        key=f"{DeviceClass.SIGNAL_STRENGTH}_dBm",
-        name=DeviceClass.SIGNAL_STRENGTH.name.replace("_", " ").title(),
+    (
+        DeviceClass.SIGNAL_STRENGTH,
+        Units.SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    ): SensorEntityDescription(
+        key=f"{DeviceClass.SIGNAL_STRENGTH}_{Units.SIGNAL_STRENGTH_DECIBELS_MILLIWATT}",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -86,12 +77,12 @@ def _sensor_device_info_to_hass(
 ) -> DeviceInfo:
     """Convert a sensor device info to a sensor device info."""
     hass_device_info = DeviceInfo({})
-    if sensor_device_info.get(SENSOR_NAME) is not None:
-        hass_device_info[ATTR_NAME] = sensor_device_info[SENSOR_NAME]
-    if sensor_device_info.get(SENSOR_MANUFACTURER) is not None:
-        hass_device_info[ATTR_MANUFACTURER] = sensor_device_info[SENSOR_MANUFACTURER]
-    if sensor_device_info.get(SENSOR_MODEL) is not None:
-        hass_device_info[ATTR_MODEL] = sensor_device_info[SENSOR_MODEL]
+    if sensor_device_info.name is not None:
+        hass_device_info[ATTR_NAME] = sensor_device_info.name
+    if sensor_device_info.manufacturer is not None:
+        hass_device_info[ATTR_MANUFACTURER] = sensor_device_info.manufacturer
+    if sensor_device_info.model is not None:
+        hass_device_info[ATTR_MODEL] = sensor_device_info.model
     return hass_device_info
 
 
@@ -113,6 +104,10 @@ def sensor_update_to_bluetooth_data_update(
         },
         entity_data={
             _device_key_to_bluetooth_entity_key(device_key): sensor_values.native_value
+            for device_key, sensor_values in sensor_update.entity_values.items()
+        },
+        entity_names={
+            _device_key_to_bluetooth_entity_key(device_key): sensor_values.name
             for device_key, sensor_values in sensor_update.entity_values.items()
         },
     )
