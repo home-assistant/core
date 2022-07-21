@@ -33,7 +33,6 @@ class ColorChannel(ZigbeeChannel):
         AttrReportConfig(attr="current_x", config=REPORT_CONFIG_DEFAULT),
         AttrReportConfig(attr="current_hue", config=REPORT_CONFIG_DEFAULT),
         AttrReportConfig(attr="current_saturation", config=REPORT_CONFIG_DEFAULT),
-        AttrReportConfig(attr="enhanced_current_hue", config=REPORT_CONFIG_DEFAULT),
         AttrReportConfig(attr="color_temperature", config=REPORT_CONFIG_DEFAULT),
     )
     MAX_MIREDS: int = 500
@@ -44,6 +43,7 @@ class ColorChannel(ZigbeeChannel):
         "color_temp_physical_max": True,
         "color_capabilities": True,
         "color_loop_active": False,
+        "enhanced_current_hue": True,
     }
 
     @property
