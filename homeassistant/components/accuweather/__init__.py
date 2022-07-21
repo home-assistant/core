@@ -91,9 +91,11 @@ class AccuWeatherDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # You don't need to provide specific details for the URL,
             # so passing in _ characters is fine if the location key
             # is correct
-            configuration_url="http://accuweather.com/en/"
-            f"_/_/{location_key}/"
-            f"weather-forecast/{location_key}/",
+            configuration_url=(
+                "http://accuweather.com/en/"
+                f"_/_/{location_key}/"
+                f"weather-forecast/{location_key}/"
+            ),
         )
 
         # Enabling the forecast download increases the number of requests per data
