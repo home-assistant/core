@@ -10,8 +10,7 @@ from aioguardian import Client
 from aioguardian.errors import GuardianError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -24,6 +23,8 @@ SIGNAL_REBOOT_REQUESTED = "guardian_reboot_requested_{0}"
 
 class GuardianDataUpdateCoordinator(DataUpdateCoordinator[dict]):
     """Define an extended DataUpdateCoordinator with some Guardian goodies."""
+
+    config_entry: ConfigEntry
 
     def __init__(
         self,
@@ -79,9 +80,9 @@ class GuardianDataUpdateCoordinator(DataUpdateCoordinator[dict]):
         )
 
         @callback
-        def async_teardown(_: Event) -> None:
+        def async_teardown() -> None:
             """Tear the coordinator down appropriately."""
             for unsub in self._signal_handler_unsubs:
                 unsub()
 
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_teardown)
+        self.config_entry.async_on_unload(async_teardown)
