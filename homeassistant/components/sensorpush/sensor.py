@@ -1,6 +1,8 @@
 """Support for sensorpush ble sensors."""
 from __future__ import annotations
 
+from typing import Optional, Union
+
 from sensorpush_ble import (
     ATTR_MANUFACTURER as SENSOR_MANUFACTURER,
     ATTR_MODEL as SENSOR_MODEL,
@@ -15,6 +17,7 @@ from homeassistant import config_entries
 from homeassistant.components.bluetooth.passive_update_coordinator import (
     PassiveBluetoothCoordinatorEntity,
     PassiveBluetoothDataUpdate,
+    PassiveBluetoothDataUpdateCoordinator,
     PassiveBluetoothEntityKey,
 )
 from homeassistant.components.sensor import (
@@ -36,7 +39,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import SensorPushDataUpdateCoordinator
 from .const import DOMAIN
 
 SENSOR_DESCRIPTIONS = {
@@ -122,7 +124,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the SensorPush BLE sensors."""
-    coordinator: SensorPushDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: PassiveBluetoothDataUpdateCoordinator = hass.data[DOMAIN][
+        entry.entry_id
+    ]
     entry.async_on_unload(
         coordinator.async_add_entities_listener(
             SensorPushBluetoothSensorEntity, async_add_entities
@@ -131,7 +135,10 @@ async def async_setup_entry(
 
 
 class SensorPushBluetoothSensorEntity(
-    PassiveBluetoothCoordinatorEntity[SensorPushDataUpdateCoordinator], SensorEntity
+    PassiveBluetoothCoordinatorEntity[
+        PassiveBluetoothDataUpdateCoordinator[Optional[Union[float, int]]]
+    ],
+    SensorEntity,
 ):
     """Representation of a sensorpush ble sensor."""
 

@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional, Union
 
 from sensorpush_ble import SensorPushBluetoothDeviceData
 
@@ -21,12 +20,6 @@ from .sensor import sensor_update_to_bluetooth_data_update
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
-
-
-class SensorPushDataUpdateCoordinator(
-    PassiveBluetoothDataUpdateCoordinator[Optional[Union[float, int]]]
-):
-    """Coordinator for SensorPush Bluetooth data."""
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -48,7 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     coordinator = hass.data.setdefault(DOMAIN, {})[
         entry.entry_id
-    ] = SensorPushDataUpdateCoordinator(
+    ] = PassiveBluetoothDataUpdateCoordinator(
         hass,
         _LOGGER,
         update_method=_async_update_data,
