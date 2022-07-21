@@ -47,7 +47,7 @@ PAIRED_SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=SENSOR_KIND_BATTERY,
         name="Battery",
-        device_class=SensorDeviceClass.BATTERY,
+        device_class=SensorDeviceClass.VOLTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
     ),
