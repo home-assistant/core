@@ -113,7 +113,7 @@ class RepairsFlowIndexView(FlowManagerIndexView):
 
         result = self._prepare_result_json(result)
 
-        return self.json(result)  # pylint: disable=arguments-differ
+        return self.json(result)
 
 
 class RepairsFlowResourceView(FlowManagerResourceView):
@@ -136,4 +136,4 @@ class RepairsFlowResourceView(FlowManagerResourceView):
             raise Unauthorized(permission=POLICY_EDIT)
 
         # pylint: disable=no-value-for-parameter
-        return await super().post(request, flow_id)  # type: ignore[no-any-return]
+        return await super().post(request, flow_id)
