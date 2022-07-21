@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 import dataclasses
 import logging
+import time
 from typing import Any, Generic, TypeVar
 
 from home_assistant_bluetooth import BluetoothServiceInfo
@@ -113,17 +114,18 @@ class PassiveBluetoothDataUpdateCoordinator(Generic[_T]):
         self.last_update_success = True
         self._cancel_track_unavailable: CALLBACK_TYPE | None = None
         self._cancel_bluetooth_advertisements: CALLBACK_TYPE | None = None
-        self._present = False
+        self.present = False
+        self.last_seen = 0.0
 
     @property
     def available(self) -> bool:
         """Return if the device is available."""
-        return self._present and self.last_update_success
+        return self.present and self.last_update_success
 
     @callback
-    def _async_handle_unavailable(self) -> None:
+    def _async_handle_unavailable(self, _address: str) -> None:
         """Handle the device going unavailable."""
-        self._present = False
+        self.present = False
         self.async_update_listeners(None)
 
     @callback
@@ -196,11 +198,11 @@ class PassiveBluetoothDataUpdateCoordinator(Generic[_T]):
     @callback
     def _async_handle_listeners_changed(self) -> None:
         """Handle listeners changed."""
-        listener_count = len(self._listeners) + len(self._entity_key_listeners)
+        has_listeners = self._listeners or self._entity_key_listeners
         running = bool(self._cancel_bluetooth_advertisements)
-        if listener_count == 0 and running:
+        if running and not has_listeners:
             self._async_stop()
-        elif not running:
+        elif not running and has_listeners:
             self._async_start()
 
     @callback
@@ -244,8 +246,9 @@ class PassiveBluetoothDataUpdateCoordinator(Generic[_T]):
         change: BluetoothChange,
     ) -> None:
         """Handle a Bluetooth event."""
+        self.last_seen = time.monotonic()
         self.name = service_info.name
-        self._present = True
+        self.present = True
         if self.hass.is_stopping:
             return
 
