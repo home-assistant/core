@@ -274,6 +274,7 @@ class BaseLight(LogMixin, light.LightEntity):
             self._attr_color_mode = ColorMode.COLOR_TEMP
             self._attr_color_temp = temperature
             self._attr_xy_color = None
+            self._attr_hs_color = None
 
         if hs_color is not None:
             if self._color_channel.enhanced_hue_supported:
@@ -298,9 +299,9 @@ class BaseLight(LogMixin, light.LightEntity):
                 self.debug("turned on: %s", t_log)
                 return
             self._attr_color_mode = ColorMode.HS
+            self._attr_hs_color = hs_color
             self._attr_xy_color = None
             self._attr_color_temp = None
-            self._attr_hs_color = hs_color
             xy_color = None  # don't set xy_color if it is also present
 
         if xy_color is not None:
@@ -318,6 +319,7 @@ class BaseLight(LogMixin, light.LightEntity):
             self._attr_color_mode = ColorMode.XY
             self._attr_xy_color = xy_color
             self._attr_color_temp = None
+            self._attr_hs_color = None
 
         if new_color_provided_while_off:
             # The light is has the correct color, so we can now transition it to the correct brightness level.
@@ -586,6 +588,7 @@ class Light(BaseLight, ZhaEntity):
                     if color_temp is not None and color_mode:
                         self._attr_color_temp = color_temp
                         self._attr_xy_color = None
+                        self._attr_hs_color = None
                 elif color_mode == Color.ColorMode.Hue_and_saturation:
                     self._attr_color_mode = ColorMode.HS
                     if self._color_channel.enhanced_hue_supported:
@@ -603,7 +606,7 @@ class Light(BaseLight, ZhaEntity):
                         self._attr_xy_color = None
                         self._attr_color_temp = None
                 else:
-                    self._attr_color_mode = ColorMode.XY
+                    self._attr_color_mode = Color.ColorMode.X_and_Y
                     color_x = results.get("current_x")
                     color_y = results.get("current_y")
                     if color_x is not None and color_y is not None:
