@@ -178,8 +178,7 @@ class BaseLight(LogMixin, light.LightEntity):
         # move to level, on, color, move to level... We also will not set this if the bulb is already in the
         # desired color mode with the desired color or color temperature.
         new_color_provided_while_off = (
-            not isinstance(self, LightGroup)
-            and self._zha_config_enhanced_light_transition
+            self._zha_config_enhanced_light_transition
             and not self._FORCE_ON
             and not self._attr_state
             and (
