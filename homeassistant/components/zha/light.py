@@ -118,11 +118,11 @@ class BaseLight(LogMixin, light.LightEntity):
         self._off_with_transition: bool = False
         self._off_brightness: int | None = None
         self._zha_config_transition = self._DEFAULT_MIN_TRANSITION_TIME
+        self._zha_config_enhanced_light_transition: bool = False
         self._on_off_channel = None
         self._level_channel = None
         self._color_channel = None
         self._identify_channel = None
-        self._zha_config_enhanced_light_transition: bool = False
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
