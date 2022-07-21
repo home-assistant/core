@@ -11,9 +11,11 @@ from homeassistant.components.bluetooth import (
     UNAVAILABLE_TRACK_SECONDS,
     BluetoothChange,
     BluetoothServiceInfo,
+    async_track_unavailable,
     models,
 )
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import callback
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -246,6 +248,28 @@ async def test_async_discovered_device_api(hass, mock_bleak_scanner_start):
         switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
         switchbot_adv = AdvertisementData(local_name="wohand", service_uuids=[])
         models.HA_BLEAK_SCANNER._callback(switchbot_device, switchbot_adv)
+        wrong_device_went_unavailable = False
+
+        @callback
+        def _wrong_device_unavailable_callback():
+            """Wrong device unavailable callback."""
+            nonlocal wrong_device_went_unavailable
+            wrong_device_went_unavailable = True
+
+        switchbot_device_went_unavailable = False
+
+        @callback
+        def _switchbot_device_unavailable_callback():
+            """Switchbot device unavailable callback."""
+            nonlocal switchbot_device_went_unavailable
+            switchbot_device_went_unavailable = True
+
+        wrong_device_unavailable_cancel = async_track_unavailable(
+            hass, wrong_device.address, _wrong_device_unavailable_callback
+        )
+        switchbot_device_unavailable_cancel = async_track_unavailable(
+            hass, switchbot_device.address, _switchbot_device_unavailable_callback
+        )
 
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
@@ -253,9 +277,12 @@ async def test_async_discovered_device_api(hass, mock_bleak_scanner_start):
         await hass.async_block_till_done()
 
         service_infos = bluetooth.async_discovered_service_info(hass)
-        import pprint
+        assert wrong_device_went_unavailable is True
+        assert switchbot_device_went_unavailable is False
 
-        pprint.pprint(service_infos)
+        wrong_device_unavailable_cancel()
+        switchbot_device_unavailable_cancel()
+
         assert len(service_infos) == 1
         # wrong_name should not appear because bleak no longer sees it
         assert service_infos[0].name == "wohand"
