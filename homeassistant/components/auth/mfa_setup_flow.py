@@ -10,15 +10,19 @@ import voluptuous_serialize
 from homeassistant import data_entry_flow
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
+import homeassistant.helpers.config_validation as cv
 
 WS_TYPE_SETUP_MFA = "auth/setup_mfa"
-SCHEMA_WS_SETUP_MFA = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {
-        vol.Required("type"): WS_TYPE_SETUP_MFA,
-        vol.Exclusive("mfa_module_id", "module_or_flow_id"): str,
-        vol.Exclusive("flow_id", "module_or_flow_id"): str,
-        vol.Optional("user_input"): object,
-    }
+SCHEMA_WS_SETUP_MFA = vol.All(
+    websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
+        {
+            vol.Required("type"): WS_TYPE_SETUP_MFA,
+            vol.Exclusive("mfa_module_id", "module_or_flow_id"): str,
+            vol.Exclusive("flow_id", "module_or_flow_id"): str,
+            vol.Optional("user_input"): object,
+        }
+    ),
+    cv.has_at_least_one_key("mfa_module_id", "flow_id"),
 )
 
 WS_TYPE_DEPOSE_MFA = "auth/depose_mfa"
@@ -89,8 +93,7 @@ def websocket_setup_mfa(
             return
 
         mfa_module_id = msg["mfa_module_id"]
-        mfa_module = hass.auth.get_auth_mfa_module(mfa_module_id)
-        if mfa_module is None:
+        if hass.auth.get_auth_mfa_module(mfa_module_id) is None:
             connection.send_message(
                 websocket_api.error_message(
                     msg["id"], "no_module", f"MFA module {mfa_module_id} is not found"
