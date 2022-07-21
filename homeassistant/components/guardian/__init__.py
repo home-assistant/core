@@ -18,10 +18,9 @@ from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_PORT,
     CONF_URL,
-    EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -343,13 +342,7 @@ class PairedSensorManager:
         cancel_process_task = self._sensor_pair_dump_coordinator.async_add_listener(
             async_create_process_task
         )
-
-        @callback
-        def async_teardown(_: Event) -> None:
-            """Tear the manager down."""
-            cancel_process_task()
-
-        self._hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_teardown)
+        self._entry.async_on_unload(cancel_process_task)
 
     async def async_pair_sensor(self, uid: str) -> None:
         """Add a new paired sensor coordinator."""
