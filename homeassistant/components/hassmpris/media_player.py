@@ -86,7 +86,15 @@ class HASSMPRISEntity(MediaPlayerEntity):
         self.client: hassmpris_client.AsyncMPRISClient | None = client
         self._client_host = self.client.host
         self.player_id = player_id
+        self._attr_has_entity_name = True
+        self._name = player_id
         self._integration_id = integration_id
+        self._attr_unique_id: str = self._integration_id + "-" + self.player_id
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._integration_id)},
+            name="MPRIS agent at %s" % self._client_host,
+            manufacturer="Freedesktop",
+        )
         self._attr_available = True
         self._metadata: dict[str, Any] = {}
 
@@ -117,25 +125,6 @@ class HASSMPRISEntity(MediaPlayerEntity):
         self._attr_available = True
         if self.hass:
             await self.async_update_ha_state(True)
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID of this entity."""
-        return self._integration_id + "-" + self.player_id
-
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        return self.player_id
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device information associated with the entity."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._integration_id)},
-            name="MPRIS agent at %s" % self._client_host,
-            manufacturer="Freedesktop",
-        )
 
     @property
     def should_poll(self) -> bool:
@@ -393,8 +382,8 @@ class EntityManager:
     async def _sync_entity_entries(self):
         reg = er.async_get(self.hass)
 
-        def player_id_from_entity(entity: er.RegistryEntry) -> str:
-            return entity.unique_id.split("-", 1)[1]
+        def player_id_from_entity(entity: HASSMPRISEntity) -> str:
+            return entity._attr_unique_id.split("-", 1)[1]
 
         def is_copy(player_id: str) -> bool:
             return bool(re.match(".* [(]\\d+[)]", player_id))
