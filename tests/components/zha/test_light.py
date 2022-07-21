@@ -560,7 +560,7 @@ async def test_transitions(
 
     dev1_cluster_level.request.reset_mock()
 
-    # test non 0 length transition and color temp while turning light on (color_provided_while_off)
+    # test non 0 length transition and color temp while turning light on (new_color_provided_while_off)
     await hass.services.async_call(
         LIGHT_DOMAIN,
         "turn_on",
@@ -596,7 +596,7 @@ async def test_transitions(
         10,
         dev1_cluster_color.commands_by_name["move_to_color_temp"].schema,
         235,  # color temp mireds
-        0,  # transition time (ZCL time in 10ths of a second) - no transition when color_provided_while_off
+        0,  # transition time (ZCL time in 10ths of a second) - no transition when new_color_provided_while_off
         expect_reply=True,
         manufacturer=None,
         tries=1,
@@ -645,7 +645,7 @@ async def test_transitions(
     dev1_cluster_color.request.reset_mock()
     dev1_cluster_level.request.reset_mock()
 
-    # test no transition provided and color temp while turning light on (color_provided_while_off)
+    # test no transition provided and color temp while turning light on (new_color_provided_while_off)
     await hass.services.async_call(
         LIGHT_DOMAIN,
         "turn_on",
@@ -680,7 +680,7 @@ async def test_transitions(
         10,
         dev1_cluster_color.commands_by_name["move_to_color_temp"].schema,
         236,  # color temp mireds
-        0,  # transition time (ZCL time in 10ths of a second) - no transition when color_provided_while_off
+        0,  # transition time (ZCL time in 10ths of a second) - no transition when new_color_provided_while_off
         expect_reply=True,
         manufacturer=None,
         tries=1,
@@ -761,7 +761,7 @@ async def test_transitions(
         10,
         dev1_cluster_color.commands_by_name["move_to_color_temp"].schema,
         236,  # color temp mireds
-        0,  # transition time (ZCL time in 10ths of a second) - no transition when color_provided_while_off
+        0,  # transition time (ZCL time in 10ths of a second) - no transition when new_color_provided_while_off
         expect_reply=True,
         manufacturer=None,
         tries=1,
@@ -854,7 +854,7 @@ async def test_transitions(
 
     dev2_cluster_on_off.request.reset_mock()
 
-    # test non 0 length transition and color temp while turning light on and sengled (color_provided_while_off)
+    # test non 0 length transition and color temp while turning light on and sengled (new_color_provided_while_off)
     await hass.services.async_call(
         LIGHT_DOMAIN,
         "turn_on",
@@ -890,7 +890,7 @@ async def test_transitions(
         10,
         dev2_cluster_color.commands_by_name["move_to_color_temp"].schema,
         235,  # color temp mireds
-        1,  # transition time (ZCL time in 10ths of a second) - sengled transition == 1 when color_provided_while_off
+        1,  # transition time (ZCL time in 10ths of a second) - sengled transition == 1 when new_color_provided_while_off
         expect_reply=True,
         manufacturer=None,
         tries=1,
@@ -937,7 +937,7 @@ async def test_transitions(
 
     dev2_cluster_on_off.request.reset_mock()
 
-    # test non 0 length transition and color temp while turning group light on (color_provided_while_off)
+    # test non 0 length transition and color temp while turning group light on (new_color_provided_while_off)
     await hass.services.async_call(
         LIGHT_DOMAIN,
         "turn_on",
@@ -960,13 +960,13 @@ async def test_transitions(
     assert group_level_channel.request.call_count == 1
     assert group_level_channel.request.await_count == 1
 
-    # groups are omitted from the 3 call dance for color_provided_while_off
+    # groups are omitted from the 3 call dance for new_color_provided_while_off
     assert group_color_channel.request.call_args == call(
         False,
         10,
         dev2_cluster_color.commands_by_name["move_to_color_temp"].schema,
         235,  # color temp mireds
-        10.0,  # transition time (ZCL time in 10ths of a second) - sengled transition == 1 when color_provided_while_off
+        10.0,  # transition time (ZCL time in 10ths of a second) - sengled transition == 1 when new_color_provided_while_off
         expect_reply=True,
         manufacturer=None,
         tries=1,
@@ -1074,7 +1074,7 @@ async def test_transitions(
 
     dev2_cluster_level.request.reset_mock()
 
-    # test eWeLink color temp while turning light on from off (color_provided_while_off)
+    # test eWeLink color temp while turning light on from off (new_color_provided_while_off)
     await hass.services.async_call(
         LIGHT_DOMAIN,
         "turn_on",
