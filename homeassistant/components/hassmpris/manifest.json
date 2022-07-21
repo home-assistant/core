@@ -3,7 +3,11 @@
   "name": "MPRIS media playback remote control",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/hassmpris",
-  "requirements": ["hassmpris_client==0.0.18", "grpclib==0.4.2"],
+  "requirements": [
+    "hassmpris_client==0.0.18",
+    "grpclib==0.4.2",
+    "protobuf==3.19.4"
+  ],
   "ssdp": [],
   "zeroconf": ["_hassmpris._tcp.local."],
   "homekit": {},
