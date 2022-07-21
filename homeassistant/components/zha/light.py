@@ -279,7 +279,10 @@ class BaseLight(LogMixin, light.LightEntity):
             self._attr_hs_color = None
 
         if hs_color is not None:
-            if self._color_channel.enhanced_hue_supported:
+            if (
+                not isinstance(self, LightGroup)
+                and self._color_channel.enhanced_hue_supported
+            ):
                 result = await self._color_channel.enhanced_move_to_hue_and_saturation(
                     int(hs_color[0] * 65535 / 360),
                     int(hs_color[1] * 2.54),
