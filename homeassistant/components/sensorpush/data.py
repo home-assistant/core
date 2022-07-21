@@ -33,29 +33,29 @@ from homeassistant.helpers.entity import DeviceInfo
 
 SENSOR_DESCRIPTIONS = {
     (DeviceClass.TEMPERATURE, "°C"): SensorEntityDescription(
-        key="temperature_°C",
-        name="Temperature",
+        key=f"{DeviceClass.TEMPERATURE}_°C",
+        name=DeviceClass.TEMPERATURE.name.replace("_", " ").title(),
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     (DeviceClass.HUMIDITY, "%"): SensorEntityDescription(
-        key="humidity_%",
-        name="Humidity",
+        key=f"{DeviceClass.HUMIDITY}_%",
+        name=DeviceClass.HUMIDITY.name.replace("_", " ").title(),
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     (DeviceClass.PRESSURE, "Pa"): SensorEntityDescription(
-        key="pressure_Pa",
-        name="Pressure",
+        key=f"{DeviceClass.PRESSURE}_Pa",
+        name=DeviceClass.PRESSURE.name.replace("_", " ").title(),
         device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=PRESSURE_PA,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     (DeviceClass.SIGNAL_STRENGTH, "dBm"): SensorEntityDescription(
-        key="pressure_dBm",
-        name="Pressure",
+        key=f"{DeviceClass.SIGNAL_STRENGTH}_dBm",
+        name=DeviceClass.SIGNAL_STRENGTH.name.replace("_", " ").title(),
         device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         state_class=SensorStateClass.MEASUREMENT,
