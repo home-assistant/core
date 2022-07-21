@@ -25,7 +25,7 @@ from homeassistant.const import (
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
     EVENT_HOMEASSISTANT_STOP,
-    PRECISION_HALVES,
+    PRECISION_TENTHS,
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -168,7 +168,7 @@ class NoboZone(ClimateEntity):
 
     _attr_max_temp = MAX_TEMPERATURE
     _attr_min_temp = MIN_TEMPERATURE
-    _attr_precision = PRECISION_HALVES
+    _attr_precision = PRECISION_TENTHS
     _attr_preset_modes = PRESET_MODES
     # Need to poll to get preset change when in HVACMode.AUTO.
     _attr_should_poll = True
