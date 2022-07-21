@@ -98,13 +98,24 @@ class HaBleakScanner(BleakScanner):  # type: ignore[misc]
 class HaBleakScannerWrapper(BaseBleakScanner):  # type: ignore[misc]
     """A wrapper that uses the single instance."""
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        *args: Any,
+        detection_callback: AdvertisementDataCallback | None = None,
+        service_uuids: list[str] | None = None,
+        **kwargs: Any,
+    ) -> None:
         """Initialize the BleakScanner."""
         self._detection_cancel: CALLBACK_TYPE | None = None
         self._mapped_filters: dict[str, set[str]] = {}
         self._adv_data_callback: AdvertisementDataCallback | None = None
         self._map_filters(*args, **kwargs)
-        super().__init__(*args, **kwargs)
+        super().__init__(
+            *args,
+            detection_callback=detection_callback,
+            service_uuids=service_uuids,
+            **kwargs,
+        )
 
     async def stop(self, *args: Any, **kwargs: Any) -> None:
         """Stop scanning for devices."""
