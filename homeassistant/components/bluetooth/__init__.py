@@ -7,11 +7,14 @@ from datetime import datetime, timedelta
 from enum import Enum
 import fnmatch
 import logging
+import platform
 from typing import Final, TypedDict, Union
 
 from bleak import BleakError
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
+from dbus_next import BusType, Message, MessageType
+from dbus_next.aio import MessageBus
 from lru import LRU  # pylint: disable=no-name-in-module
 
 from homeassistant import config_entries
@@ -178,12 +181,54 @@ def async_track_unavailable(
     return manager.async_track_unavailable(callback, address)
 
 
+async def _async_has_bluetooth_adapter() -> bool:
+    """Return if the device has a bluetooth adapter."""
+    if platform.system() == "Darwin":  # CoreBluetooth is built in on MacOS hardware
+        return True
+    if platform.system() == "Windows":  # We don't have a good way to detect on windows
+        return False
+    return bool(await _async_get_bluetooth_adapters())
+
+
+async def _async_get_bluetooth_adapters() -> set[str]:
+    """Return a list of bluetooth adapters."""
+    adapters: set[str] = set()
+    bus = await MessageBus(bus_type=BusType.SYSTEM, negotiate_unix_fd=True).connect()
+    msg = Message(
+        destination="org.bluez",
+        path="/",
+        interface="org.freedesktop.DBus.ObjectManager",
+        member="GetManagedObjects",
+    )
+    if (
+        not (reply := await bus.call(msg))
+        or reply.message_type != MessageType.METHOD_RETURN
+    ):
+        return adapters
+    for path in reply.body[0]:
+        path_str = str(path)
+        if path_str.startswith("/org/bluez/hci"):
+            split_path = path_str.split("/")
+            adapters.add(split_path[3])
+    return adapters
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the bluetooth integration."""
+    if hass.config_entries.async_entries(DOMAIN):
+        return True
     if DOMAIN in config:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data={}
+            )
+        )
+    elif await _async_has_bluetooth_adapter():
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+                data={},
             )
         )
     return True
