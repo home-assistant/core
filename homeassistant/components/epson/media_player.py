@@ -136,7 +136,7 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
                 try:
                     self._volume = float(volume)
                 except ValueError:
-                    pass
+                    self._volume = None
         elif power_state == BUSY:
             self._state = STATE_ON
         else:
