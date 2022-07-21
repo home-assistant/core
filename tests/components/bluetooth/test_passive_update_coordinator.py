@@ -3,15 +3,17 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-import time
 from unittest.mock import MagicMock, patch
 
 from home_assistant_bluetooth import BluetoothServiceInfo
 import pytest
 
-from homeassistant.components.bluetooth import DOMAIN, BluetoothChange
+from homeassistant.components.bluetooth import (
+    DOMAIN,
+    UNAVAILABLE_TRACK_SECONDS,
+    BluetoothChange,
+)
 from homeassistant.components.bluetooth.passive_update_coordinator import (
-    UNAVAILABLE_SECONDS,
     PassiveBluetoothCoordinatorEntity,
     PassiveBluetoothDataUpdate,
     PassiveBluetoothDataUpdateCoordinator,
@@ -163,7 +165,12 @@ async def test_basic_usage(hass, mock_bleak_scanner_start):
 
 async def test_unavailable_after_no_data(hass, mock_bleak_scanner_start):
     """Test that the coordinator is unavailable after no data for a while."""
-    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    with patch(
+        "bleak.BleakScanner.discovered_devices",  # Must patch before we setup
+        [MagicMock(address="44:44:33:11:23:45")],
+    ):
+        await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+        await hass.async_block_till_done()
 
     @callback
     def _async_generate_mock_data(
@@ -201,44 +208,33 @@ async def test_unavailable_after_no_data(hass, mock_bleak_scanner_start):
     assert len(mock_add_entities.mock_calls) == 1
     assert coordinator.available is True
 
-    monotonic_now = time.monotonic()
-    now = dt_util.utcnow()
     with patch(
-        "homeassistant.components.bluetooth.passive_update_coordinator.time.monotonic",
-        return_value=monotonic_now + UNAVAILABLE_SECONDS,
+        "homeassistant.components.bluetooth.models.HaBleakScanner.discovered_devices",
+        [MagicMock(address="44:44:33:11:23:45")],
+    ), patch(
+        "homeassistant.components.bluetooth.models.HA_BLEAK_SCANNER.history",
+        {"aa:bb:cc:dd:ee:ff": MagicMock()},
     ):
-        async_fire_time_changed(hass, now + timedelta(seconds=UNAVAILABLE_SECONDS))
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
+        )
         await hass.async_block_till_done()
     assert coordinator.available is False
 
     saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    assert len(mock_add_entities.mock_calls) == 1
     assert coordinator.available is True
 
-    # Now simulate the device is still present even though we got
-    # no data for a while
-
-    monotonic_now = time.monotonic()
-    now = dt_util.utcnow()
     with patch(
-        "homeassistant.components.bluetooth.passive_update_coordinator.async_address_present",
-        return_value=True,
+        "homeassistant.components.bluetooth.models.HaBleakScanner.discovered_devices",
+        [MagicMock(address="44:44:33:11:23:45")],
     ), patch(
-        "homeassistant.components.bluetooth.passive_update_coordinator.time.monotonic",
-        return_value=monotonic_now + UNAVAILABLE_SECONDS,
+        "homeassistant.components.bluetooth.models.HA_BLEAK_SCANNER.history",
+        {"aa:bb:cc:dd:ee:ff": MagicMock()},
     ):
-        async_fire_time_changed(hass, now + timedelta(seconds=UNAVAILABLE_SECONDS))
-        await hass.async_block_till_done()
-
-    assert coordinator.available is True
-
-    # And finally that it can go unavailable again when its gone
-    monotonic_now = time.monotonic()
-    now = dt_util.utcnow()
-    with patch(
-        "homeassistant.components.bluetooth.passive_update_coordinator.time.monotonic",
-        return_value=monotonic_now + UNAVAILABLE_SECONDS,
-    ):
-        async_fire_time_changed(hass, now + timedelta(seconds=UNAVAILABLE_SECONDS))
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
+        )
         await hass.async_block_till_done()
     assert coordinator.available is False
 
