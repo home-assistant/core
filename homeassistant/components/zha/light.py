@@ -122,7 +122,6 @@ class BaseLight(LogMixin, light.LightEntity):
         self._level_channel = None
         self._color_channel = None
         self._identify_channel = None
-        self._zha_config_transition = self._DEFAULT_MIN_TRANSITION_TIME
         self._zha_config_enhanced_light_transition: bool = False
 
     @property
