@@ -280,8 +280,22 @@ async def test_async_discovered_device_api(hass, mock_bleak_scanner_start):
         assert switchbot_device_went_unavailable is False
         assert wrong_device_went_unavailable is True
 
+        # See the devices again
+        models.HA_BLEAK_SCANNER._callback(wrong_device, wrong_adv)
+        models.HA_BLEAK_SCANNER._callback(switchbot_device, switchbot_adv)
+        # Cancel the callbacks
         wrong_device_unavailable_cancel()
         switchbot_device_unavailable_cancel()
+        wrong_device_went_unavailable = False
+        switchbot_device_went_unavailable = False
+
+        # Verify the cancel is effective
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
+        )
+        await hass.async_block_till_done()
+        assert switchbot_device_went_unavailable is False
+        assert wrong_device_went_unavailable is False
 
         assert len(service_infos) == 1
         # wrong_name should not appear because bleak no longer sees it
