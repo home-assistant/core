@@ -39,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.warning("Got data: %s", new_data)
         return new_data
 
-    coordinator = hass.data.setdefault(DOMAIN, {})[
+    hass.data.setdefault(DOMAIN, {})[
         entry.entry_id
     ] = PassiveBluetoothDataUpdateCoordinator(
         hass,
@@ -48,7 +48,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         address=address,
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    entry.async_on_unload(coordinator.async_setup())
     return True
 
 
