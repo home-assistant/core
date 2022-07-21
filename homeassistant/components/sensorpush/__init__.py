@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
 from .const import DOMAIN
-from .data import sensor_update_to_bluetooth_data_update
+from .sensor import sensor_update_to_bluetooth_data_update
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
