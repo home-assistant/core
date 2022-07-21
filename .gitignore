@@ -132,3 +132,7 @@ tmp_cache
 
 # python-language-server / Rope
 .ropeproject
+
+# own
+.gitignore
+.github/workflows/ci.yaml

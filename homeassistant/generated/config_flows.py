@@ -17,6 +17,7 @@ FLOWS = {
         "agent_dvr",
         "airly",
         "airnow",
+        "airq",
         "airthings",
         "airtouch4",
         "airvisual",
