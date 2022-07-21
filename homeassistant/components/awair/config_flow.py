@@ -26,6 +26,12 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle a flow initialized by the user."""
 
+        if user_input is not None:
+            if CONF_ACCESS_TOKEN in user_input:
+                return await self.async_step_cloud(user_input)
+            if CONF_HOSTS in user_input:
+                return await self.async_step_local(user_input)
+
         return self.async_show_menu(
             step_id="user",
             menu_options=["cloud", "local"],
