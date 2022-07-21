@@ -9,7 +9,7 @@ from unittest.mock import MagicMock, patch
 from home_assistant_bluetooth import BluetoothServiceInfo
 import pytest
 
-from homeassistant.components.bluetooth import BluetoothChange
+from homeassistant.components.bluetooth import DOMAIN, BluetoothChange
 from homeassistant.components.bluetooth.passive_update_coordinator import (
     UNAVAILABLE_SECONDS,
     PassiveBluetoothCoordinatorEntity,
@@ -21,6 +21,7 @@ from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescr
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.core import CoreState, callback
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockEntityPlatform, async_fire_time_changed
@@ -68,8 +69,9 @@ GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE = PassiveBluetoothDataUpdate(
 )
 
 
-async def test_basic_usage(hass):
+async def test_basic_usage(hass, mock_bleak_scanner_start):
     """Test basic usage of the PassiveBluetoothDataUpdateCoordinator."""
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
     @callback
     def _async_generate_mock_data(
@@ -159,8 +161,9 @@ async def test_basic_usage(hass):
     assert coordinator.available is True
 
 
-async def test_unavailable_after_no_data(hass):
+async def test_unavailable_after_no_data(hass, mock_bleak_scanner_start):
     """Test that the coordinator is unavailable after no data for a while."""
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
     @callback
     def _async_generate_mock_data(
@@ -240,8 +243,9 @@ async def test_unavailable_after_no_data(hass):
     assert coordinator.available is False
 
 
-async def test_no_updates_once_stopping(hass):
+async def test_no_updates_once_stopping(hass, mock_bleak_scanner_start):
     """Test updates are ignored once hass is stopping."""
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
     @callback
     def _async_generate_mock_data(
@@ -286,8 +290,10 @@ async def test_no_updates_once_stopping(hass):
     assert len(all_events) == 1
 
 
-async def test_exception_from_update_method(hass, caplog):
+async def test_exception_from_update_method(hass, caplog, mock_bleak_scanner_start):
     """Test we handle exceptions from the update method."""
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+
     run_count = 0
 
     @callback
@@ -331,8 +337,10 @@ async def test_exception_from_update_method(hass, caplog):
     assert coordinator.available is True
 
 
-async def test_bad_data_from_update_method(hass):
+async def test_bad_data_from_update_method(hass, mock_bleak_scanner_start):
     """Test we handle bad data from the update method."""
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+
     run_count = 0
 
     @callback
@@ -665,8 +673,9 @@ GOVEE_B5178_PRIMARY_AND_REMOTE_PASSIVE_BLUETOOTH_DATA_UPDATE = (
 )
 
 
-async def test_integration_with_entity(hass):
+async def test_integration_with_entity(hass, mock_bleak_scanner_start):
     """Test integration of PassiveBluetoothDataUpdateCoordinator with PassiveBluetoothCoordinatorEntity."""
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
     update_count = 0
 
@@ -775,8 +784,9 @@ NO_DEVICES_PASSIVE_BLUETOOTH_DATA_UPDATE = PassiveBluetoothDataUpdate(
 )
 
 
-async def test_integration_with_entity_without_a_device(hass):
+async def test_integration_with_entity_without_a_device(hass, mock_bleak_scanner_start):
     """Test integration with PassiveBluetoothCoordinatorEntity with no device."""
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
     @callback
     def _async_generate_mock_data(
@@ -830,8 +840,12 @@ async def test_integration_with_entity_without_a_device(hass):
     )
 
 
-async def test_passive_bluetooth_entity_with_entity_platform(hass):
+async def test_passive_bluetooth_entity_with_entity_platform(
+    hass, mock_bleak_scanner_start
+):
     """Test with a mock entity platform."""
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+
     entity_platform = MockEntityPlatform(hass)
 
     @callback
