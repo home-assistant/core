@@ -569,6 +569,15 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             name="Switch",
         ),
     ),
+    # Water Valve
+    # Not documented
+    "sfkzq": (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH,
+            name="Valve",
+            icon="mdi:faucet",
+        ),
+    ),
     # Fan
     # https://developer.tuya.com/en/docs/iot/categoryfs?id=Kaiuz1xweel1c
     "fs": (
