@@ -365,7 +365,6 @@ class AccuWeatherSensor(
                 f"{coordinator.location_key}-{description.key}-{forecast_day}".lower()
             )
         else:
-            self._attr_name = description.name
             self._attr_unique_id = (
                 f"{coordinator.location_key}-{description.key}".lower()
             )
