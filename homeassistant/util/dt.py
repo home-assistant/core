@@ -278,6 +278,10 @@ def get_age(date: dt.datetime) -> str:
         return f"{number:d} {unit}s"
 
     delta = (now() - date).total_seconds()
+
+    if delta < 0:
+        delta = -1 * delta
+
     rounded_delta = round(delta)
 
     units = ["second", "minute", "hour", "day", "month"]
