@@ -15,11 +15,7 @@ from homeassistant.components.light import (
     ColorMode,
 )
 from homeassistant.components.zha.core.group import GroupMember
-from homeassistant.components.zha.light import (
-    CAPABILITIES_COLOR_TEMP,
-    CAPABILITIES_COLOR_XY,
-    FLASH_EFFECTS,
-)
+from homeassistant.components.zha.light import FLASH_EFFECTS
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 import homeassistant.util.dt as dt_util
 
@@ -148,7 +144,8 @@ async def device_light_1(hass, zigpy_device_mock, zha_device_joined):
     )
     color_cluster = zigpy_device.endpoints[1].light_color
     color_cluster.PLUGGED_ATTR_READS = {
-        "color_capabilities": CAPABILITIES_COLOR_TEMP | CAPABILITIES_COLOR_XY
+        "color_capabilities": lighting.Color.ColorCapabilities.Color_temperature
+        | lighting.Color.ColorCapabilities.XY_attributes
     }
     zha_device = await zha_device_joined(zigpy_device)
     zha_device.available = True
@@ -180,7 +177,8 @@ async def device_light_2(hass, zigpy_device_mock, zha_device_joined):
     )
     color_cluster = zigpy_device.endpoints[1].light_color
     color_cluster.PLUGGED_ATTR_READS = {
-        "color_capabilities": CAPABILITIES_COLOR_TEMP | CAPABILITIES_COLOR_XY
+        "color_capabilities": lighting.Color.ColorCapabilities.Color_temperature
+        | lighting.Color.ColorCapabilities.XY_attributes
     }
     zha_device = await zha_device_joined(zigpy_device)
     zha_device.available = True
@@ -239,7 +237,8 @@ async def eWeLink_light(hass, zigpy_device_mock, zha_device_joined):
     )
     color_cluster = zigpy_device.endpoints[1].light_color
     color_cluster.PLUGGED_ATTR_READS = {
-        "color_capabilities": CAPABILITIES_COLOR_TEMP | CAPABILITIES_COLOR_XY
+        "color_capabilities": lighting.Color.ColorCapabilities.Color_temperature
+        | lighting.Color.ColorCapabilities.XY_attributes
     }
     zha_device = await zha_device_joined(zigpy_device)
     zha_device.available = True
@@ -302,7 +301,7 @@ async def test_light_refresh(hass, zigpy_device_mock, zha_device_joined_restored
 )
 @pytest.mark.parametrize(
     "device, reporting",
-    [(LIGHT_ON_OFF, (1, 0, 0)), (LIGHT_LEVEL, (1, 1, 0)), (LIGHT_COLOR, (1, 1, 3))],
+    [(LIGHT_ON_OFF, (1, 0, 0)), (LIGHT_LEVEL, (1, 1, 0)), (LIGHT_COLOR, (1, 1, 6))],
 )
 async def test_light(
     hass, zigpy_device_mock, zha_device_joined_restored, device, reporting
@@ -1400,7 +1399,7 @@ async def test_zha_group_light_entity(
     assert group_state.state == STATE_OFF
     assert group_state.attributes["supported_color_modes"] == [
         ColorMode.COLOR_TEMP,
-        ColorMode.HS,
+        ColorMode.XY,
     ]
     # Light which is off has no color mode
     assert "color_mode" not in group_state.attributes
@@ -1431,9 +1430,9 @@ async def test_zha_group_light_entity(
     assert group_state.state == STATE_ON
     assert group_state.attributes["supported_color_modes"] == [
         ColorMode.COLOR_TEMP,
-        ColorMode.HS,
+        ColorMode.XY,
     ]
-    assert group_state.attributes["color_mode"] == ColorMode.HS
+    assert group_state.attributes["color_mode"] == ColorMode.XY
 
     # test long flashing the lights from the HA
     await async_test_flash_from_hass(
