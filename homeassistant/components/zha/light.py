@@ -124,7 +124,6 @@ class BaseLight(LogMixin, light.LightEntity):
         self._identify_channel = None
         self._zha_config_transition = self._DEFAULT_MIN_TRANSITION_TIME
         self._zha_config_enhanced_light_transition: bool = False
-        self._attr_color_mode = ColorMode.UNKNOWN  # Set by sub classes
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
