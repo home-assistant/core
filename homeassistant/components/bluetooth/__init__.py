@@ -167,7 +167,7 @@ def async_register_callback(
 @hass_callback
 def async_track_unavailable(
     hass: HomeAssistant,
-    callback: CALLBACK_TYPE,
+    callback: Callable[[str], None],
     address: str,
 ) -> Callable[[], None]:
     """Register to receive a callback when an address is unavailable.
@@ -250,7 +250,7 @@ class BluetoothManager:
         self.scanner: HaBleakScanner | None = None
         self._cancel_device_detected: CALLBACK_TYPE | None = None
         self._cancel_unavailable_tracking: CALLBACK_TYPE | None = None
-        self._unavailable_callbacks: dict[str, list[CALLBACK_TYPE]] = {}
+        self._unavailable_callbacks: dict[str, list[Callable[[str], None]]] = {}
         self._callbacks: list[
             tuple[BluetoothCallback, BluetoothCallbackMatcher | None]
         ] = []
@@ -300,7 +300,7 @@ class BluetoothManager:
                     continue
                 for callback in callbacks:
                     try:
-                        callback()
+                        callback(address)
                     except Exception:  # pylint: disable=broad-except
                         _LOGGER.exception("Error in unavailable callback")
 
@@ -373,7 +373,7 @@ class BluetoothManager:
 
     @hass_callback
     def async_track_unavailable(
-        self, callback: CALLBACK_TYPE, address: str
+        self, callback: Callable[[str], None], address: str
     ) -> Callable[[], None]:
         """Register a callback."""
         self._unavailable_callbacks.setdefault(address, []).append(callback)
