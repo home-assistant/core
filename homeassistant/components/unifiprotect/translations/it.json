@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
-            "discovery_started": "Rilevamento "
+            "discovery_started": "Rilevamento iniziato"
         },
         "error": {
             "cannot_connect": "Impossibile connettersi",

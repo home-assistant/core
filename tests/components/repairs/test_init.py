@@ -1,15 +1,23 @@
 """Test the repairs websocket API."""
+from collections.abc import Awaitable, Callable
 from unittest.mock import AsyncMock, Mock
 
+from aiohttp import ClientWebSocketResponse
 from freezegun import freeze_time
 import pytest
 
-from homeassistant.components.repairs import async_create_issue, async_delete_issue
+from homeassistant.components.repairs import (
+    async_create_issue,
+    async_delete_issue,
+    create_issue,
+    delete_issue,
+)
 from homeassistant.components.repairs.const import DOMAIN
 from homeassistant.components.repairs.issue_handler import (
     async_ignore_issue,
     async_process_repairs_platforms,
 )
+from homeassistant.components.repairs.models import IssueSeverity
 from homeassistant.const import __version__ as ha_version
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -446,3 +454,66 @@ async def test_non_compliant_platform(hass: HomeAssistant, hass_ws_client) -> No
     await async_process_repairs_platforms(hass)
 
     assert list(hass.data[DOMAIN]["platforms"].keys()) == ["fake_integration"]
+
+
+@freeze_time("2022-07-21 08:22:00")
+async def test_sync_methods(
+    hass: HomeAssistant,
+    hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
+) -> None:
+    """Test sync method for creating and deleting an issue."""
+
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json({"id": 1, "type": "repairs/list_issues"})
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == {"issues": []}
+
+    def _create_issue() -> None:
+        create_issue(
+            hass,
+            "fake_integration",
+            "sync_issue",
+            breaks_in_ha_version="2022.9",
+            is_fixable=True,
+            learn_more_url="https://theuselessweb.com",
+            severity=IssueSeverity.ERROR,
+            translation_key="abc_123",
+            translation_placeholders={"abc": "123"},
+        )
+
+    await hass.async_add_executor_job(_create_issue)
+    await client.send_json({"id": 2, "type": "repairs/list_issues"})
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == {
+        "issues": [
+            {
+                "breaks_in_ha_version": "2022.9",
+                "created": "2022-07-21T08:22:00+00:00",
+                "dismissed_version": None,
+                "domain": "fake_integration",
+                "ignored": False,
+                "is_fixable": True,
+                "issue_id": "sync_issue",
+                "learn_more_url": "https://theuselessweb.com",
+                "severity": "error",
+                "translation_key": "abc_123",
+                "translation_placeholders": {"abc": "123"},
+            }
+        ]
+    }
+
+    await hass.async_add_executor_job(
+        delete_issue, hass, "fake_integration", "sync_issue"
+    )
+    await client.send_json({"id": 3, "type": "repairs/list_issues"})
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == {"issues": []}

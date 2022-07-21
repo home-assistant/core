@@ -1,6 +1,7 @@
 """The repairs integration."""
 from __future__ import annotations
 
+import functools as ft
 from typing import Any
 
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
@@ -11,6 +12,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
 )
+from homeassistant.util.async_ import run_callback_threadsafe
 
 from .const import DOMAIN
 from .issue_registry import async_get as async_get_issue_registry
@@ -113,6 +115,36 @@ def async_create_issue(
     )
 
 
+def create_issue(
+    hass: HomeAssistant,
+    domain: str,
+    issue_id: str,
+    *,
+    breaks_in_ha_version: str | None = None,
+    is_fixable: bool,
+    learn_more_url: str | None = None,
+    severity: IssueSeverity,
+    translation_key: str,
+    translation_placeholders: dict[str, str] | None = None,
+) -> None:
+    """Create an issue, or replace an existing one."""
+    return run_callback_threadsafe(
+        hass.loop,
+        ft.partial(
+            async_create_issue,
+            hass,
+            domain,
+            issue_id,
+            breaks_in_ha_version=breaks_in_ha_version,
+            is_fixable=is_fixable,
+            learn_more_url=learn_more_url,
+            severity=severity,
+            translation_key=translation_key,
+            translation_placeholders=translation_placeholders,
+        ),
+    ).result()
+
+
 @callback
 def async_delete_issue(hass: HomeAssistant, domain: str, issue_id: str) -> None:
     """Delete an issue.
@@ -121,6 +153,16 @@ def async_delete_issue(hass: HomeAssistant, domain: str, issue_id: str) -> None:
     """
     issue_registry = async_get_issue_registry(hass)
     issue_registry.async_delete(domain, issue_id)
+
+
+def delete_issue(hass: HomeAssistant, domain: str, issue_id: str) -> None:
+    """Delete an issue.
+
+    It is not an error to delete an issue that does not exist.
+    """
+    return run_callback_threadsafe(
+        hass.loop, async_delete_issue, hass, domain, issue_id
+    ).result()
 
 
 @callback

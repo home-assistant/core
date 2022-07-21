@@ -9,7 +9,11 @@ import pytest
 import voluptuous as vol
 
 from homeassistant import data_entry_flow
-from homeassistant.components.repairs import RepairsFlow, async_create_issue
+from homeassistant.components.repairs import (
+    RepairsFlow,
+    async_create_issue,
+    issue_registry,
+)
 from homeassistant.components.repairs.const import DOMAIN
 from homeassistant.const import __version__ as ha_version
 from homeassistant.core import HomeAssistant
@@ -366,8 +370,24 @@ async def test_step_unauth(
 
 
 @freeze_time("2022-07-19 07:53:05")
-async def test_list_issues(hass: HomeAssistant, hass_ws_client) -> None:
+async def test_list_issues(hass: HomeAssistant, hass_storage, hass_ws_client) -> None:
     """Test we can list issues."""
+
+    # Add an inactive issue, this should not be exposed in the list
+    hass_storage[issue_registry.STORAGE_KEY] = {
+        "version": issue_registry.STORAGE_VERSION,
+        "data": {
+            "issues": [
+                {
+                    "created": "2022-07-19T09:41:13.746514+00:00",
+                    "dismissed_version": None,
+                    "domain": "test",
+                    "issue_id": "issue_3_inactive",
+                },
+            ]
+        },
+    }
+
     assert await async_setup_component(hass, DOMAIN, {})
 
     client = await hass_ws_client(hass)

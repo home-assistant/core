@@ -74,7 +74,7 @@ from .tasks import (
     CommitTask,
     DatabaseLockTask,
     EventTask,
-    ExternalStatisticsTask,
+    ImportStatisticsTask,
     KeepAliveTask,
     PerodicCleanupTask,
     PurgeTask,
@@ -295,9 +295,9 @@ class Recorder(threading.Thread):
 
     @callback
     def _async_check_queue(self, *_: Any) -> None:
-        """Periodic check of the queue size to ensure we do not exaust memory.
+        """Periodic check of the queue size to ensure we do not exhaust memory.
 
-        The queue grows during migraton or if something really goes wrong.
+        The queue grows during migration or if something really goes wrong.
         """
         size = self.backlog
         _LOGGER.debug("Recorder queue size is: %s", size)
@@ -480,11 +480,11 @@ class Recorder(threading.Thread):
         )
 
     @callback
-    def async_external_statistics(
+    def async_import_statistics(
         self, metadata: StatisticMetaData, stats: Iterable[StatisticData]
     ) -> None:
-        """Schedule external statistics."""
-        self.queue_task(ExternalStatisticsTask(metadata, stats))
+        """Schedule import of statistics."""
+        self.queue_task(ImportStatisticsTask(metadata, stats))
 
     @callback
     def _async_setup_periodic_tasks(self) -> None:
