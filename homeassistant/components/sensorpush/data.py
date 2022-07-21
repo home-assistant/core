@@ -56,7 +56,7 @@ SENSOR_DESCRIPTIONS = {
     (DeviceClass.SIGNAL_STRENGTH, "dBm"): SensorEntityDescription(
         key=f"{DeviceClass.SIGNAL_STRENGTH}_dBm",
         name=DeviceClass.SIGNAL_STRENGTH.name.replace("_", " ").title(),
-        device_class=SensorDeviceClass.PRESSURE,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
