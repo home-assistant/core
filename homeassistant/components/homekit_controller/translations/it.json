@@ -18,7 +18,7 @@
             "unable_to_pair": "Impossibile abbinare, riprova.",
             "unknown_error": "Il dispositivo ha riportato un errore sconosciuto. L'abbinamento non \u00e8 riuscito."
         },
-        "flow_title": "{name}",
+        "flow_title": "{name} ({category})",
         "step": {
             "busy_error": {
                 "description": "Interrompi l'associazione su tutti i controller o provare a riavviare il dispositivo, quindi continua a riprendere l'associazione.",
