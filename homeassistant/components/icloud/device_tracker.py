@@ -148,7 +148,7 @@ def icon_for_icloud_device(icloud_device: IcloudDevice) -> str:
         "iPad": "mdi:tablet",
         "iPhone": "mdi:cellphone",
         "iPod": "mdi:ipod",
-        "iMac": "mdi:desktop-mac",
+        "iMac": "mdi:monitor",
         "MacBookPro": "mdi:laptop",
     }
 
