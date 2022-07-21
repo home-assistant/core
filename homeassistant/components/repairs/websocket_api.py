@@ -73,6 +73,7 @@ def ws_list_issues(
     issues = [
         dataclasses.asdict(issue, dict_factory=ws_dict)
         for issue in issue_registry.issues.values()
+        if issue.active
     ]
 
     connection.send_result(msg["id"], {"issues": issues})
