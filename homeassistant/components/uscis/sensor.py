@@ -7,6 +7,7 @@ import logging
 import uscisstatus
 import voluptuous as vol
 
+from homeassistant.components.repairs import IssueSeverity, create_issue
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
@@ -34,6 +35,18 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the platform in Home Assistant and Case Information."""
+    create_issue(
+        hass,
+        "uscis",
+        "pending_removal",
+        breaks_in_ha_version="2022.10.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="pending_removal",
+    )
+    _LOGGER.warning(
+        "The USCIS sensor component is deprecated and will be removed in Home Assistant 2022.10"
+    )
     uscis = UscisSensor(config["case_id"], config[CONF_NAME])
     uscis.update()
     if uscis.valid_case_id:
