@@ -39,6 +39,11 @@ def patch_metrics(metrics: dict[str, Any]):
     )
 
 
+def patch_metrics_set():
+    """Patch the Vallox metrics response."""
+    return patch("homeassistant.components.vallox.Vallox.set_values")
+
+
 def patch_profile(profile: PROFILE):
     """Patch the Vallox profile response."""
 
@@ -46,6 +51,12 @@ def patch_profile(profile: PROFILE):
         "homeassistant.components.vallox.Vallox.get_profile",
         return_value=profile,
     )
+
+
+def patch_profile_set():
+    """Patch the Vallox profile set response."""
+
+    return patch("homeassistant.components.vallox.Vallox.set_profile")
 
 
 @pytest.fixture(autouse=True)

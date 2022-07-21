@@ -2,11 +2,19 @@
 import pytest
 from vallox_websocket_api import PROFILE as VALLOX_PROFILE
 
+from homeassistant.components.select.const import (
+    ATTR_OPTION,
+    DOMAIN as SELECT_DOMAIN,
+    SERVICE_SELECT_OPTION,
+)
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
-from .conftest import patch_metrics, patch_profile
+from .conftest import patch_metrics, patch_profile, patch_profile_set
 
 from tests.common import MockConfigEntry
+
+VALLOX_PROFILE_ENTITY_ID = "select.vallox_current_profile"
 
 
 @pytest.mark.parametrize(
@@ -24,12 +32,35 @@ async def test_select_profile_entitity(
     mock_entry: MockConfigEntry,
     hass: HomeAssistant,
 ):
-    """Test cell state sensor in defrosting state."""
+    """Test profile state."""
     # Act
     with patch_profile(profile=profile), patch_metrics(metrics={}):
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
     # Assert
-    sensor = hass.states.get("select.vallox_current_profile")
+    sensor = hass.states.get(VALLOX_PROFILE_ENTITY_ID)
     assert sensor.state == expected_state
+
+
+async def test_select_profile_entitity_set(
+    mock_entry: MockConfigEntry,
+    hass: HomeAssistant,
+):
+    """Test profile set state."""
+    # Act
+    with patch_profile(profile=VALLOX_PROFILE.AWAY), patch_metrics(
+        metrics={}
+    ), patch_profile_set() as profile_set:
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            service_data={
+                ATTR_ENTITY_ID: VALLOX_PROFILE_ENTITY_ID,
+                ATTR_OPTION: "Fireplace",
+            },
+        )
+        await hass.async_block_till_done()
+        profile_set.assert_called_once_with(VALLOX_PROFILE.FIREPLACE)

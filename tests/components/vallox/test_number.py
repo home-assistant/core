@@ -1,9 +1,15 @@
 """Tests for Vallox number platform."""
 import pytest
 
+from homeassistant.components.number.const import (
+    ATTR_VALUE,
+    DOMAIN as NUMBER_DOMAIN,
+    SERVICE_SET_VALUE,
+)
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
-from .conftest import patch_metrics
+from .conftest import patch_metrics, patch_metrics_set
 
 from tests.common import MockConfigEntry
 
@@ -57,3 +63,24 @@ async def test_fan_speed_number_entities(
     sensor = hass.states.get(entity_id)
     assert sensor.state == str(float(value))
     assert sensor.attributes["unit_of_measurement"] == "%"
+
+
+async def test_fan_speed_number_entitity_set(
+    mock_entry: MockConfigEntry,
+    hass: HomeAssistant,
+):
+    """Test fan speed set."""
+    # Act
+    with patch_metrics(metrics={}), patch_metrics_set() as metrics_set:
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            service_data={
+                ATTR_ENTITY_ID: "number.vallox_fan_speed_home",
+                ATTR_VALUE: 10,
+            },
+        )
+        await hass.async_block_till_done()
+        metrics_set.assert_called_once_with({"A_CYC_HOME_SPEED_SETTING": 10.0})
