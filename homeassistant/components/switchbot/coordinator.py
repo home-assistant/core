@@ -14,6 +14,14 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
+def flatten_sensors_data(sensor):
+    """Deconstruct SwitchBot library temp object C/Fº readings from dictionary."""
+    if "temp" in sensor["data"]:
+        sensor["data"]["temperature"] = sensor["data"]["temp"]["c"]
+
+    return sensor
+
+
 class SwitchbotDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching switchbot data."""
 
@@ -47,4 +55,7 @@ class SwitchbotDataUpdateCoordinator(DataUpdateCoordinator):
         if not switchbot_data:
             raise UpdateFailed("Unable to fetch switchbot services data")
 
-        return switchbot_data
+        return {
+            identifier: flatten_sensors_data(sensor)
+            for identifier, sensor in switchbot_data.items()
+        }
