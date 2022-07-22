@@ -858,7 +858,7 @@ async def test_async_ble_device_from_address(hass, mock_bleak_scanner_start):
         )
 
 
-async def test_setup_without_bluetooth_in_configuration_yaml(hass):
+async def test_setup_without_bluetooth_in_configuration_yaml(hass, mock_bluetooth):
     """Test setting up without bluetooth in configuration.yaml does not create the config entry."""
     assert await async_setup_component(hass, bluetooth.DOMAIN, {})
     await hass.async_block_till_done()

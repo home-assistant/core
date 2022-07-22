@@ -918,5 +918,5 @@ def mock_bleak_scanner_start():
 
 
 @pytest.fixture(name="mock_bluetooth")
-def mock_bluetooth(mock_bleak_scanner_start):
+def mock_bluetooth(mock_bleak_scanner_start, mock_bluetooth_adapters):
     """Mock out bluetooth from starting."""
