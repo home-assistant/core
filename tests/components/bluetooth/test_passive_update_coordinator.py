@@ -12,7 +12,6 @@ from homeassistant.components.bluetooth import (
     DOMAIN,
     UNAVAILABLE_TRACK_SECONDS,
     BluetoothChange,
-    async_get_scanner,
 )
 from homeassistant.components.bluetooth.passive_update_coordinator import (
     PassiveBluetoothCoordinatorEntity,
@@ -26,6 +25,8 @@ from homeassistant.core import CoreState, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
+
+from . import _get_underlying_scanner
 
 from tests.common import MockEntityPlatform, async_fire_time_changed
 
@@ -208,7 +209,7 @@ async def test_unavailable_after_no_data(hass, mock_bleak_scanner_start):
     saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
     assert len(mock_add_entities.mock_calls) == 1
     assert coordinator.available is True
-    scanner = async_get_scanner(hass)
+    scanner = _get_underlying_scanner()
 
     with patch(
         "homeassistant.components.bluetooth.models.HaBleakScanner.discovered_devices",
