@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Iterable
+from collections.abc import Awaitable, Callable, Coroutine, Iterable
 from functools import lru_cache, partial, wraps
 import inspect
 from itertools import groupby
@@ -246,7 +246,7 @@ class Subscription:
 
     topic: str = attr.ib()
     matcher: Any = attr.ib()
-    job: HassJob = attr.ib()
+    job: HassJob[[ReceiveMessage], Coroutine[Any, Any, None] | None] = attr.ib()
     qos: int = attr.ib(default=0)
     encoding: str | None = attr.ib(default="utf-8")
 
@@ -445,7 +445,7 @@ class MQTT:
     async def async_subscribe(
         self,
         topic: str,
-        msg_callback: MessageCallbackType,
+        msg_callback: AsyncMessageCallbackType | MessageCallbackType,
         qos: int,
         encoding: str | None = None,
     ) -> Callable[[], None]:
@@ -598,15 +598,15 @@ class MQTT:
         self.hass.add_job(self._mqtt_handle_message, msg)
 
     @lru_cache(2048)
-    def _matching_subscriptions(self, topic):
-        subscriptions = []
+    def _matching_subscriptions(self, topic: str) -> list[Subscription]:
+        subscriptions: list[Subscription] = []
         for subscription in self.subscriptions:
             if subscription.matcher(topic):
                 subscriptions.append(subscription)
         return subscriptions
 
     @callback
-    def _mqtt_handle_message(self, msg) -> None:
+    def _mqtt_handle_message(self, msg: ReceiveMessage) -> None:
         _LOGGER.debug(
             "Received message on %s%s: %s",
             msg.topic,
@@ -622,7 +622,7 @@ class MQTT:
             payload: SubscribePayloadType = msg.payload
             if subscription.encoding is not None:
                 try:
-                    payload = msg.payload.decode(subscription.encoding)
+                    payload = msg.payload.decode(subscription.encoding)  # type: ignore[union-attr]
                 except (AttributeError, UnicodeDecodeError):
                     _LOGGER.warning(
                         "Can't decode payload %s on %s with encoding %s (for %s)",
