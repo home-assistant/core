@@ -740,7 +740,7 @@ glances_api==0.3.5
 goalzero==0.2.1
 
 # homeassistant.components.goodwe
-goodwe==0.2.15
+goodwe==0.2.18
 
 # homeassistant.components.google_pubsub
 google-cloud-pubsub==2.11.0
