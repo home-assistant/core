@@ -501,7 +501,7 @@ def fail_on_log_exception(request, monkeypatch):
 
 
 @pytest.fixture
-def mqtt_config():
+def mqtt_config_entry_data():
     """Fixture to allow overriding MQTT config."""
     return None
 
@@ -553,7 +553,7 @@ def mqtt_client_mock(hass):
 async def mqtt_mock(
     hass,
     mqtt_client_mock,
-    mqtt_config,
+    mqtt_config_entry_data,
     mqtt_mock_entry_no_yaml_config,
 ):
     """Fixture to mock MQTT component."""
@@ -561,15 +561,18 @@ async def mqtt_mock(
 
 
 @asynccontextmanager
-async def _mqtt_mock_entry(hass, mqtt_client_mock, mqtt_config):
+async def _mqtt_mock_entry(hass, mqtt_client_mock, mqtt_config_entry_data):
     """Fixture to mock a delayed setup of the MQTT config entry."""
-    if mqtt_config is None:
-        mqtt_config = {mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_BIRTH_MESSAGE: {}}
+    if mqtt_config_entry_data is None:
+        mqtt_config_entry_data = {
+            mqtt.CONF_BROKER: "mock-broker",
+            mqtt.CONF_BIRTH_MESSAGE: {},
+        }
 
     await hass.async_block_till_done()
 
     entry = MockConfigEntry(
-        data=mqtt_config,
+        data=mqtt_config_entry_data,
         domain=mqtt.DOMAIN,
         title="MQTT",
     )
@@ -613,7 +616,9 @@ async def _mqtt_mock_entry(hass, mqtt_client_mock, mqtt_config):
 
 
 @pytest.fixture
-async def mqtt_mock_entry_no_yaml_config(hass, mqtt_client_mock, mqtt_config):
+async def mqtt_mock_entry_no_yaml_config(
+    hass, mqtt_client_mock, mqtt_config_entry_data
+):
     """Set up an MQTT config entry without MQTT yaml config."""
 
     async def _async_setup_config_entry(hass, entry):
@@ -626,12 +631,16 @@ async def mqtt_mock_entry_no_yaml_config(hass, mqtt_client_mock, mqtt_config):
         """Set up the MQTT config entry."""
         return await mqtt_mock_entry(_async_setup_config_entry)
 
-    async with _mqtt_mock_entry(hass, mqtt_client_mock, mqtt_config) as mqtt_mock_entry:
+    async with _mqtt_mock_entry(
+        hass, mqtt_client_mock, mqtt_config_entry_data
+    ) as mqtt_mock_entry:
         yield _setup_mqtt_entry
 
 
 @pytest.fixture
-async def mqtt_mock_entry_with_yaml_config(hass, mqtt_client_mock, mqtt_config):
+async def mqtt_mock_entry_with_yaml_config(
+    hass, mqtt_client_mock, mqtt_config_entry_data
+):
     """Set up an MQTT config entry with MQTT yaml config."""
 
     async def _async_do_not_setup_config_entry(hass, entry):
@@ -642,7 +651,9 @@ async def mqtt_mock_entry_with_yaml_config(hass, mqtt_client_mock, mqtt_config):
         """Set up the MQTT config entry."""
         return await mqtt_mock_entry(_async_do_not_setup_config_entry)
 
-    async with _mqtt_mock_entry(hass, mqtt_client_mock, mqtt_config) as mqtt_mock_entry:
+    async with _mqtt_mock_entry(
+        hass, mqtt_client_mock, mqtt_config_entry_data
+    ) as mqtt_mock_entry:
         yield _setup_mqtt_entry
 
 
