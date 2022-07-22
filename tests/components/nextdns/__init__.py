@@ -57,9 +57,7 @@ SETTINGS = Settings(
 )
 
 
-async def init_integration(
-    hass: HomeAssistant, add_to_hass: bool = True
-) -> MockConfigEntry:
+async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
     """Set up the NextDNS integration in Home Assistant."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -67,9 +65,6 @@ async def init_integration(
         unique_id="xyz12",
         data={CONF_API_KEY: "fake_api_key", CONF_PROFILE_ID: "xyz12"},
     )
-
-    if not add_to_hass:
-        return entry
 
     with patch(
         "homeassistant.components.nextdns.NextDns.get_profiles", return_value=PROFILES
