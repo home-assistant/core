@@ -233,7 +233,7 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: config_entries.ConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    manager: BluetoothManager = hass.data.pop(DOMAIN)
+    manager: BluetoothManager = hass.data[DOMAIN]
     await manager.async_stop()
     return True
 

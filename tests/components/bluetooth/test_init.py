@@ -874,12 +874,13 @@ async def test_can_unsetup_bluetooth(hass, mock_bleak_scanner_start, enable_blue
     """Test we can setup and unsetup bluetooth."""
     entry = MockConfigEntry(domain=bluetooth.DOMAIN, data={})
     entry.add_to_hass(hass)
+    for _ in range(2):
 
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-    assert await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
 
 
 async def test_auto_detect_bluetooth_adapters_linux(hass):
