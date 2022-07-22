@@ -22,6 +22,6 @@ def recorder_url_mock():
         yield
 
 
-async def test_setup(hass, mock_zeroconf, mock_get_source_ip):
+async def test_setup(hass, mock_zeroconf, mock_get_source_ip, mock_bluetooth):
     """Test setup."""
     assert await async_setup_component(hass, "default_config", {"foo": "bar"})

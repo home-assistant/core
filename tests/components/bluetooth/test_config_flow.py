@@ -9,7 +9,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-async def test_async_step_user(hass, mock_enable_bluetooth):
+async def test_async_step_user(hass):
     """Test setting up manually."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
