@@ -10,7 +10,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, TEMP_FAHRENHEIT, TIME_MINUTES
+from homeassistant.const import ELECTRIC_POTENTIAL_VOLT, TEMP_FAHRENHEIT, TIME_MINUTES
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
@@ -46,9 +46,9 @@ PAIRED_SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=SENSOR_KIND_BATTERY,
         name="Battery",
-        device_class=SensorDeviceClass.BATTERY,
+        device_class=SensorDeviceClass.VOLTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
     ),
     SensorEntityDescription(
         key=SENSOR_KIND_TEMPERATURE,
