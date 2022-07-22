@@ -16,7 +16,7 @@ async def test_sensors(hass):
     """Test setting up creates the sensors."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="61DE521B-F0BF-9F44-64D4-75BBE1738105",
+        unique_id="00:81:F9:DD:6F:C1",
     )
     entry.add_to_hass(hass)
 

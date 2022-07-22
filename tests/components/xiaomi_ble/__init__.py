@@ -15,7 +15,7 @@ NOT_SENSOR_PUSH_SERVICE_INFO = BluetoothServiceInfo(
 
 LYWSDCGQ_SERVICE_INFO = BluetoothServiceInfo(
     name="LYWSDCGQ",
-    address="00:00:00:00:00:01",
+    address="58:2D:34:35:93:21",
     rssi=-63,
     manufacturer_data={},
     service_data={
@@ -27,7 +27,7 @@ LYWSDCGQ_SERVICE_INFO = BluetoothServiceInfo(
 
 MMC_T201_1_SERVICE_INFO = BluetoothServiceInfo(
     name="MMC_T201_1",
-    address="00:00:00:00:00:02",
+    address="00:81:F9:DD:6F:C1",
     rssi=-56,
     manufacturer_data={},
     service_data={
