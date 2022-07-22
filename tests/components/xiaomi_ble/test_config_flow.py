@@ -136,3 +136,25 @@ async def test_async_step_bluetooth_already_in_progress(hass):
     )
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_in_progress"
+
+
+async def test_async_step_user_takes_precedence_over_discovery(hass):
+    """Test manual setup takes precedence over discovery."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+        data=MMC_T201_1_SERVICE_INFO,
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "bluetooth_confirm"
+
+    with patch(
+        "homeassistant.components.sensorpush.async_setup_entry", return_value=True
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "MMC_T201_1"
+    assert result2["data"] == {}
+    assert result2["result"].unique_id == "00:81:F9:DD:6F:C1"
