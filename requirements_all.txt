@@ -424,6 +424,9 @@ blockchain==1.4.4
 # homeassistant.components.zengge
 # bluepy==1.3.0
 
+# homeassistant.components.bluetooth
+bluetooth-adapters==0.1.0
+
 # homeassistant.components.bond
 bond-async==0.1.22
 
@@ -522,9 +525,6 @@ datadog==0.15.0
 
 # homeassistant.components.metoffice
 datapoint==0.9.8
-
-# homeassistant.components.bluetooth
-dbus_next==0.2.3
 
 # homeassistant.components.debugpy
 debugpy==1.6.2
