@@ -103,7 +103,7 @@ async def test_shutdown_before_startup_finishes(
 
     recorder_helper.async_initialize_recorder(hass)
     hass.create_task(async_setup_recorder_instance(hass, config))
-    await hass.data[DOMAIN]["db_connected"]
+    await hass.data[DOMAIN].db_connected
     instance = get_instance(hass)
 
     session = await hass.async_add_executor_job(instance.get_session)
