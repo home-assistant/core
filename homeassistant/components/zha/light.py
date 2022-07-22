@@ -42,6 +42,7 @@ from .core.const import (
     CHANNEL_ON_OFF,
     CONF_DEFAULT_LIGHT_TRANSITION,
     CONF_ENABLE_ENHANCED_LIGHT_TRANSITION,
+    CONF_ENABLE_HS_LIGHT_SUPPORT,
     DATA_ZHA,
     EFFECT_BLINK,
     EFFECT_BREATHE,
@@ -119,6 +120,7 @@ class BaseLight(LogMixin, light.LightEntity):
         self._off_brightness: int | None = None
         self._zha_config_transition = self._DEFAULT_MIN_TRANSITION_TIME
         self._zha_config_enhanced_light_transition: bool = False
+        self._zha_config_enable_hs_light_support: bool = False
         self._on_off_channel = None
         self._level_channel = None
         self._color_channel = None
@@ -278,7 +280,7 @@ class BaseLight(LogMixin, light.LightEntity):
             self._attr_xy_color = None
             self._attr_hs_color = None
 
-        if hs_color is not None:
+        if hs_color is not None and self._zha_config_enable_hs_light_support:
             if (
                 not isinstance(self, LightGroup)
                 and self._color_channel.enhanced_hue_supported
@@ -420,6 +422,13 @@ class Light(BaseLight, ZhaEntity):
         self._cancel_refresh_handle = None
         effect_list = []
 
+        self._zha_config_enable_hs_light_support = async_get_zha_config_value(
+            zha_device.gateway.config_entry,
+            ZHA_OPTIONS,
+            CONF_ENABLE_HS_LIGHT_SUPPORT,
+            False,
+        )
+
         self._attr_supported_color_modes = {ColorMode.ONOFF}
         if self._level_channel:
             self._attr_supported_color_modes.add(ColorMode.BRIGHTNESS)
@@ -431,9 +440,9 @@ class Light(BaseLight, ZhaEntity):
                 self._attr_supported_color_modes.add(ColorMode.COLOR_TEMP)
                 self._attr_color_temp = self._color_channel.color_temperature
 
-            if (
-                self._color_channel.xy_supported
-                and not self._color_channel.hs_supported
+            if self._color_channel.xy_supported and (
+                not self._color_channel.hs_supported
+                or not self._zha_config_enable_hs_light_support
             ):
                 self._attr_supported_color_modes.add(ColorMode.XY)
                 curr_x = self._color_channel.current_x
@@ -443,7 +452,10 @@ class Light(BaseLight, ZhaEntity):
                 else:
                     self._attr_xy_color = (0, 0)
 
-            if self._color_channel.hs_supported:
+            if (
+                self._color_channel.hs_supported
+                and self._zha_config_enable_hs_light_support
+            ):
                 self._attr_supported_color_modes.add(ColorMode.HS)
                 if self._color_channel.enhanced_hue_supported:
                     curr_hue = self._color_channel.enhanced_current_hue * 65535 / 360
@@ -574,12 +586,16 @@ class Light(BaseLight, ZhaEntity):
                 "current_x",
                 "current_y",
             ]
-            if self._color_channel.enhanced_hue_supported:
+            if (
+                self._color_channel.enhanced_hue_supported
+                and self._zha_config_enable_hs_light_support
+            ):
                 attributes.append("enhanced_current_hue")
                 attributes.append("current_saturation")
             if (
                 self._color_channel.hs_supported
                 and not self._color_channel.enhanced_hue_supported
+                and self._zha_config_enable_hs_light_support
             ):
                 attributes.append("current_hue")
                 attributes.append("current_saturation")
@@ -703,6 +719,12 @@ class LightGroup(BaseLight, ZhaGroupEntity):
             0,
         )
         self._zha_config_enhanced_light_transition = False
+        self._zha_config_enable_hs_light_support = async_get_zha_config_value(
+            zha_device.gateway.config_entry,
+            ZHA_OPTIONS,
+            CONF_ENABLE_HS_LIGHT_SUPPORT,
+            False,
+        )
         self._attr_color_mode = None
 
     # remove this when all ZHA platforms and base entities are updated
@@ -796,7 +818,7 @@ class LightGroup(BaseLight, ZhaGroupEntity):
                 ColorMode.HS
             ] != len(
                 self._group.members
-            ):  # switch to XY if all members do not support HS
+            ):  # switch to XY if not all members support HS
                 self._attr_color_mode = ColorMode.XY
 
         self._attr_supported_color_modes = None

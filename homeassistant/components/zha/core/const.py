@@ -129,6 +129,7 @@ CONF_DATABASE = "database_path"
 CONF_DEFAULT_LIGHT_TRANSITION = "default_light_transition"
 CONF_DEVICE_CONFIG = "device_config"
 CONF_ENABLE_ENHANCED_LIGHT_TRANSITION = "enhanced_light_transition"
+CONF_ENABLE_HS_LIGHT_SUPPORT = "enable_hs_light_support"
 CONF_ENABLE_IDENTIFY_ON_JOIN = "enable_identify_on_join"
 CONF_ENABLE_QUIRKS = "enable_quirks"
 CONF_FLOWCONTROL = "flow_control"
@@ -145,6 +146,7 @@ CONF_ZHA_OPTIONS_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_DEFAULT_LIGHT_TRANSITION): cv.positive_int,
         vol.Required(CONF_ENABLE_ENHANCED_LIGHT_TRANSITION, default=False): cv.boolean,
+        vol.Required(CONF_ENABLE_HS_LIGHT_SUPPORT, default=False): cv.boolean,
         vol.Required(CONF_ENABLE_IDENTIFY_ON_JOIN, default=True): cv.boolean,
         vol.Optional(
             CONF_CONSIDER_UNAVAILABLE_MAINS,
