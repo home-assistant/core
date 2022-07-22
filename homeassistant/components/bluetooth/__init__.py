@@ -519,7 +519,7 @@ class BluetoothManager:
             ]
         return []
 
-    async def async_stop(self, *event: Event) -> None:
+    async def async_stop(self, event = None: Event| None) -> None:
         """Stop bluetooth discovery."""
         if self._cancel_device_detected:
             self._cancel_device_detected()
