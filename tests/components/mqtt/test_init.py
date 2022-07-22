@@ -1249,7 +1249,7 @@ async def test_unsubscribe_race(hass, mqtt_client_mock, mqtt_mock_entry_no_yaml_
 
 
 @pytest.mark.parametrize(
-    "mqtt_config",
+    "mqtt_config_entry_data",
     [{mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_DISCOVERY: False}],
 )
 async def test_restore_subscriptions_on_reconnect(
@@ -1272,7 +1272,7 @@ async def test_restore_subscriptions_on_reconnect(
 
 
 @pytest.mark.parametrize(
-    "mqtt_config",
+    "mqtt_config_entry_data",
     [{mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_DISCOVERY: False}],
 )
 async def test_restore_all_active_subscriptions_on_reconnect(
@@ -1486,19 +1486,19 @@ async def test_setup_manual_mqtt_empty_platform(hass, caplog):
 
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [])
-async def test_setup_mqtt_client_protocol(hass):
+async def test_setup_mqtt_client_protocol(hass, mqtt_mock_entry_with_yaml_config):
     """Test MQTT client protocol setup."""
-    entry = MockConfigEntry(
-        domain=mqtt.DOMAIN,
-        data={
-            mqtt.CONF_BROKER: "test-broker",
-            mqtt.config_integration.CONF_PROTOCOL: "3.1",
-        },
-    )
-    entry.add_to_hass(hass)
     with patch("paho.mqtt.client.Client") as mock_client:
+        assert await async_setup_component(
+            hass,
+            mqtt.DOMAIN,
+            {
+                mqtt.DOMAIN: {
+                    mqtt.config_integration.CONF_PROTOCOL: "3.1",
+                }
+            },
+        )
         mock_client.on_connect(return_value=0)
-        assert await mqtt.async_setup_entry(hass, entry)
         await hass.async_block_till_done()
 
         # check if protocol setup was correctly
@@ -1563,9 +1563,17 @@ async def test_setup_raises_ConfigEntryNotReady_if_no_connect_broker(hass, caplo
         assert "Failed to connect to MQTT server due to exception:" in caplog.text
 
 
-@pytest.mark.parametrize("insecure", [None, False, True])
+@pytest.mark.parametrize(
+    "config, insecure_param",
+    [
+        ({"certificate": "auto"}, "not set"),
+        ({"certificate": "auto", "tls_insecure": False}, False),
+        ({"certificate": "auto", "tls_insecure": True}, True),
+    ],
+)
+@patch("homeassistant.components.mqtt.PLATFORMS", [])
 async def test_setup_uses_certificate_on_certificate_set_to_auto_and_insecure(
-    hass, insecure
+    hass, config, insecure_param, mqtt_mock_entry_with_yaml_config
 ):
     """Test setup uses bundled certs when certificate is set to auto and insecure."""
     calls = []
@@ -1577,18 +1585,14 @@ async def test_setup_uses_certificate_on_certificate_set_to_auto_and_insecure(
     def mock_tls_insecure_set(insecure_param):
         insecure_check["insecure"] = insecure_param
 
-    config_item_data = {mqtt.CONF_BROKER: "test-broker", "certificate": "auto"}
-    if insecure is not None:
-        config_item_data["tls_insecure"] = insecure
     with patch("paho.mqtt.client.Client") as mock_client:
         mock_client().tls_set = mock_tls_set
         mock_client().tls_insecure_set = mock_tls_insecure_set
-        entry = MockConfigEntry(
-            domain=mqtt.DOMAIN,
-            data=config_item_data,
+        assert await async_setup_component(
+            hass,
+            mqtt.DOMAIN,
+            {mqtt.DOMAIN: config},
         )
-        entry.add_to_hass(hass)
-        assert await mqtt.async_setup_entry(hass, entry)
         await hass.async_block_till_done()
 
         assert calls
@@ -1596,19 +1600,14 @@ async def test_setup_uses_certificate_on_certificate_set_to_auto_and_insecure(
         import certifi
 
         expectedCertificate = certifi.where()
-        # assert mock_mqtt.mock_calls[0][1][2]["certificate"] == expectedCertificate
         assert calls[0][0] == expectedCertificate
 
         # test if insecure is set
-        assert (
-            insecure_check["insecure"] == insecure
-            if insecure is not None
-            else insecure_check["insecure"] == "not set"
-        )
+        assert insecure_check["insecure"] == insecure_param
 
 
-async def test_setup_without_tls_config_uses_tlsv1_under_python36(hass):
-    """Test setup defaults to TLSv1 under python3.6."""
+async def test_tls_version(hass, mqtt_mock_entry_with_yaml_config):
+    """Test setup defaults for tls."""
     calls = []
 
     def mock_tls_set(certificate, certfile=None, keyfile=None, tls_version=None):
@@ -1616,28 +1615,19 @@ async def test_setup_without_tls_config_uses_tlsv1_under_python36(hass):
 
     with patch("paho.mqtt.client.Client") as mock_client:
         mock_client().tls_set = mock_tls_set
-        entry = MockConfigEntry(
-            domain=mqtt.DOMAIN,
-            data={"certificate": "auto", mqtt.CONF_BROKER: "test-broker"},
+        assert await async_setup_component(
+            hass,
+            mqtt.DOMAIN,
+            {mqtt.DOMAIN: {"certificate": "auto"}},
         )
-        entry.add_to_hass(hass)
-        assert await mqtt.async_setup_entry(hass, entry)
         await hass.async_block_till_done()
 
         assert calls
-
-        import sys
-
-        if sys.hexversion >= 0x03060000:
-            expectedTlsVersion = ssl.PROTOCOL_TLS  # pylint: disable=no-member
-        else:
-            expectedTlsVersion = ssl.PROTOCOL_TLSv1
-
-        assert calls[0][3] == expectedTlsVersion
+        assert calls[0][3] == ssl.PROTOCOL_TLS
 
 
 @pytest.mark.parametrize(
-    "mqtt_config",
+    "mqtt_config_entry_data",
     [
         {
             mqtt.CONF_BROKER: "mock-broker",
@@ -1670,7 +1660,7 @@ async def test_custom_birth_message(
 
 
 @pytest.mark.parametrize(
-    "mqtt_config",
+    "mqtt_config_entry_data",
     [
         {
             mqtt.CONF_BROKER: "mock-broker",
@@ -1705,7 +1695,7 @@ async def test_default_birth_message(
 
 
 @pytest.mark.parametrize(
-    "mqtt_config",
+    "mqtt_config_entry_data",
     [{mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_BIRTH_MESSAGE: {}}],
 )
 async def test_no_birth_message(hass, mqtt_client_mock, mqtt_mock_entry_no_yaml_config):
@@ -1719,7 +1709,7 @@ async def test_no_birth_message(hass, mqtt_client_mock, mqtt_mock_entry_no_yaml_
 
 
 @pytest.mark.parametrize(
-    "mqtt_config",
+    "mqtt_config_entry_data",
     [
         {
             mqtt.CONF_BROKER: "mock-broker",
@@ -1733,7 +1723,7 @@ async def test_no_birth_message(hass, mqtt_client_mock, mqtt_mock_entry_no_yaml_
     ],
 )
 async def test_delayed_birth_message(
-    hass, mqtt_client_mock, mqtt_config, mqtt_mock_entry_no_yaml_config
+    hass, mqtt_client_mock, mqtt_config_entry_data, mqtt_mock_entry_no_yaml_config
 ):
     """Test sending birth message does not happen until Home Assistant starts."""
     mqtt_mock = await mqtt_mock_entry_no_yaml_config()
@@ -1743,7 +1733,7 @@ async def test_delayed_birth_message(
 
     await hass.async_block_till_done()
 
-    entry = MockConfigEntry(domain=mqtt.DOMAIN, data=mqtt_config)
+    entry = MockConfigEntry(domain=mqtt.DOMAIN, data=mqtt_config_entry_data)
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -1780,7 +1770,7 @@ async def test_delayed_birth_message(
 
 
 @pytest.mark.parametrize(
-    "mqtt_config",
+    "mqtt_config_entry_data",
     [
         {
             mqtt.CONF_BROKER: "mock-broker",
@@ -1816,7 +1806,7 @@ async def test_default_will_message(
 
 
 @pytest.mark.parametrize(
-    "mqtt_config",
+    "mqtt_config_entry_data",
     [{mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_WILL_MESSAGE: {}}],
 )
 async def test_no_will_message(hass, mqtt_client_mock, mqtt_mock_entry_no_yaml_config):
@@ -1827,7 +1817,7 @@ async def test_no_will_message(hass, mqtt_client_mock, mqtt_mock_entry_no_yaml_c
 
 
 @pytest.mark.parametrize(
-    "mqtt_config",
+    "mqtt_config_entry_data",
     [
         {
             mqtt.CONF_BROKER: "mock-broker",
@@ -2926,14 +2916,14 @@ async def test_setup_manual_items_with_unique_ids(
 
 async def test_remove_unknown_conf_entry_options(hass, mqtt_client_mock, caplog):
     """Test unknown keys in config entry data is removed."""
-    mqtt_config = {
+    mqtt_config_entry_data = {
         mqtt.CONF_BROKER: "mock-broker",
         mqtt.CONF_BIRTH_MESSAGE: {},
-        mqtt.CONF_PROTOCOL: mqtt.PROTOCOL_311,
+        mqtt.client.CONF_PROTOCOL: mqtt.const.PROTOCOL_311,
     }
 
     entry = MockConfigEntry(
-        data=mqtt_config,
+        data=mqtt_config_entry_data,
         domain=mqtt.DOMAIN,
         title="MQTT",
     )
@@ -2942,7 +2932,7 @@ async def test_remove_unknown_conf_entry_options(hass, mqtt_client_mock, caplog)
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mqtt.CONF_PROTOCOL not in entry.data
+    assert mqtt.client.CONF_PROTOCOL not in entry.data
     assert (
         "The following unsupported configuration options were removed from the "
         "MQTT config entry: {'protocol'}. Add them to configuration.yaml if they "
