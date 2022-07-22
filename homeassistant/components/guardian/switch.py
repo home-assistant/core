@@ -5,6 +5,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any
 
+from aioguardian import Client
 from aioguardian.errors import GuardianError
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
