@@ -44,7 +44,7 @@ _LOGGER = logging.getLogger(__name__)
 
 MAX_REMEMBER_ADDRESSES: Final = 2048
 
-UNAVAILABLE_TRACK_SECONDS: Final = 10
+UNAVAILABLE_TRACK_SECONDS: Final = 60 * 5
 
 SOURCE_LOCAL: Final = "local"
 
