@@ -146,7 +146,7 @@ aioflo==2021.11.0
 aiogithubapi==22.2.4
 
 # homeassistant.components.guardian
-aioguardian==2022.03.2
+aioguardian==2022.07.0
 
 # homeassistant.components.harmony
 aioharmony==0.2.9
@@ -333,6 +333,9 @@ blebox_uniapi==2.0.2
 
 # homeassistant.components.blink
 blinkpy==0.19.0
+
+# homeassistant.components.bluetooth
+bluetooth-adapters==0.1.1
 
 # homeassistant.components.bond
 bond-async==0.1.22

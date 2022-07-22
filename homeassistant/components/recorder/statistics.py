@@ -41,7 +41,7 @@ import homeassistant.util.temperature as temperature_util
 from homeassistant.util.unit_system import UnitSystem
 import homeassistant.util.volume as volume_util
 
-from .const import DATA_INSTANCE, DOMAIN, MAX_ROWS_TO_PURGE, SupportedDialect
+from .const import DOMAIN, MAX_ROWS_TO_PURGE, SupportedDialect
 from .db_schema import Statistics, StatisticsMeta, StatisticsRuns, StatisticsShortTerm
 from .models import (
     StatisticData,
@@ -53,6 +53,7 @@ from .models import (
 from .util import (
     execute,
     execute_stmt_lambda_element,
+    get_instance,
     retryable_database_job,
     session_scope,
 )
@@ -209,7 +210,7 @@ def async_setup(hass: HomeAssistant) -> None:
 
     @callback
     def _async_entity_id_changed(event: Event) -> None:
-        hass.data[DATA_INSTANCE].async_update_statistics_metadata(
+        get_instance(hass).async_update_statistics_metadata(
             event.data["old_entity_id"], new_statistic_id=event.data["entity_id"]
         )
 
@@ -575,7 +576,7 @@ def compile_statistics(instance: Recorder, start: datetime) -> bool:
     platform_stats: list[StatisticResult] = []
     current_metadata: dict[str, tuple[int, StatisticMetaData]] = {}
     # Collect statistics from all platforms implementing support
-    for domain, platform in instance.hass.data[DOMAIN].items():
+    for domain, platform in instance.hass.data[DOMAIN].recorder_platforms.items():
         if not hasattr(platform, "compile_statistics"):
             continue
         compiled: PlatformCompiledStatistics = platform.compile_statistics(
@@ -850,7 +851,7 @@ def list_statistic_ids(
         }
 
     # Query all integrations with a registered recorder platform
-    for platform in hass.data[DOMAIN].values():
+    for platform in hass.data[DOMAIN].recorder_platforms.values():
         if not hasattr(platform, "list_statistic_ids"):
             continue
         platform_statistic_ids = platform.list_statistic_ids(
@@ -1338,7 +1339,7 @@ def _sorted_statistics_to_dict(
 def validate_statistics(hass: HomeAssistant) -> dict[str, list[ValidationIssue]]:
     """Validate statistics."""
     platform_validation: dict[str, list[ValidationIssue]] = {}
-    for platform in hass.data[DOMAIN].values():
+    for platform in hass.data[DOMAIN].recorder_platforms.values():
         if not hasattr(platform, "validate_statistics"):
             continue
         platform_validation.update(platform.validate_statistics(hass))
@@ -1385,7 +1386,7 @@ def _async_import_statistics(
             statistic["last_reset"] = dt_util.as_utc(last_reset)
 
     # Insert job in recorder's queue
-    hass.data[DATA_INSTANCE].async_import_statistics(metadata, statistics)
+    get_instance(hass).async_import_statistics(metadata, statistics)
 
 
 @callback

@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_NAME,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
@@ -42,6 +43,16 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         key="lightLevel",
         native_unit_of_measurement="Level",
         device_class=SensorDeviceClass.ILLUMINANCE,
+    ),
+    "humidity": SensorEntityDescription(
+        key="humidity",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.HUMIDITY,
+    ),
+    "temperature": SensorEntityDescription(
+        key="temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
 }
 

@@ -48,13 +48,24 @@ def _dispatch_callback(
 class HaBleakScanner(BleakScanner):  # type: ignore[misc]
     """BleakScanner that cannot be stopped."""
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(  # pylint: disable=super-init-not-called
+        self, *args: Any, **kwargs: Any
+    ) -> None:
         """Initialize the BleakScanner."""
         self._callbacks: list[
             tuple[AdvertisementDataCallback, dict[str, set[str]]]
         ] = []
         self.history: dict[str, tuple[BLEDevice, AdvertisementData]] = {}
-        super().__init__(*args, **kwargs)
+        # Init called later in async_setup if we are enabling the scanner
+        # since init has side effects that can throw exceptions
+        self._setup = False
+
+    @hass_callback
+    def async_setup(self, *args: Any, **kwargs: Any) -> None:
+        """Deferred setup of the BleakScanner since __init__ has side effects."""
+        if not self._setup:
+            super().__init__(*args, **kwargs)
+            self._setup = True
 
     @hass_callback
     def async_register_callback(
