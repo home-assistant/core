@@ -422,6 +422,7 @@ FLOWS = {
         "ws66i",
         "xbox",
         "xiaomi_aqara",
+        "xiaomi_ble",
         "xiaomi_miio",
         "yale_smart_alarm",
         "yamaha_musiccast",
