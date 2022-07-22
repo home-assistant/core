@@ -6,7 +6,7 @@ from homeassistant import config_entries
 from homeassistant.components.xiaomi_ble.const import DOMAIN
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import HTPWX_SERVICE_INFO, HTW_SERVICE_INFO, NOT_SENSOR_PUSH_SERVICE_INFO
+from . import MMC_T201_1_SERVICE_INFO, LYWSDCGQ_SERVICE_INFO, NOT_SENSOR_PUSH_SERVICE_INFO
 
 from tests.common import MockConfigEntry
 
@@ -16,7 +16,7 @@ async def test_async_step_bluetooth_valid_device(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_BLUETOOTH},
-        data=HTPWX_SERVICE_INFO,
+        data=MMC_T201_1_SERVICE_INFO,
     )
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
@@ -57,7 +57,7 @@ async def test_async_step_user_with_found_devices(hass):
     """Test setup from service info cache with devices found."""
     with patch(
         "homeassistant.components.xiaomi_ble.config_flow.async_discovered_service_info",
-        return_value=[HTW_SERVICE_INFO],
+        return_value=[LYWSDCGQ_SERVICE_INFO],
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -88,7 +88,7 @@ async def test_async_step_user_with_found_devices_already_setup(hass):
 
     with patch(
         "homeassistant.components.xiaomi_ble.config_flow.async_discovered_service_info",
-        return_value=[HTW_SERVICE_INFO],
+        return_value=[LYWSDCGQ_SERVICE_INFO],
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

@@ -13,7 +13,7 @@ NOT_SENSOR_PUSH_SERVICE_INFO = BluetoothServiceInfo(
     source="local",
 )
 
-HTW_SERVICE_INFO = BluetoothServiceInfo(
+LYWSDCGQ_SERVICE_INFO = BluetoothServiceInfo(
     name="LYWSDCGQ",
     address="61DE521B-F0BF-9F44-64D4-75BBE1738105",
     rssi=-63,
@@ -25,7 +25,7 @@ HTW_SERVICE_INFO = BluetoothServiceInfo(
     source="local",
 )
 
-HTPWX_SERVICE_INFO = BluetoothServiceInfo(
+MMC_T201_1_SERVICE_INFO = BluetoothServiceInfo(
     name="MMC_T201_1",
     address="4125DDBA-2774-4851-9889-6AADDD4CAC3D",
     rssi=-56,

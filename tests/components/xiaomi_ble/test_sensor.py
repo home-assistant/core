@@ -7,7 +7,7 @@ from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.components.xiaomi_ble.const import DOMAIN
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT
 
-from . import HTPWX_SERVICE_INFO
+from . import MMC_T201_1_SERVICE_INFO
 
 from tests.common import MockConfigEntry
 
@@ -35,7 +35,7 @@ async def test_sensors(hass):
         await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 0
-    saved_callback(HTPWX_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    saved_callback(MMC_T201_1_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 2
 
