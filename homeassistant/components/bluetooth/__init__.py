@@ -194,6 +194,13 @@ async def _async_has_bluetooth_adapter() -> bool:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the bluetooth integration."""
+    integration_matchers = await async_get_bluetooth(hass)
+    manager = BluetoothManager(hass, integration_matchers)
+    manager.async_setup()
+    hass.data[DOMAIN] = manager
+    # The config entry is responsible for starting the manager
+    # if its enabled
+
     if hass.config_entries.async_entries(DOMAIN):
         return True
     if DOMAIN in config:
@@ -217,12 +224,8 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: config_entries.ConfigEntry
 ) -> bool:
     """Set up the bluetooth integration from a config entry."""
-    integration_matchers = await async_get_bluetooth(hass)
-    manager = BluetoothManager(
-        hass, integration_matchers, BluetoothScanningMode.PASSIVE
-    )
-    await manager.async_setup()
-    hass.data[DOMAIN] = manager
+    manager: BluetoothManager = hass.data[DOMAIN]
+    await manager.async_start(BluetoothScanningMode.ACTIVE)
     return True
 
 
@@ -287,11 +290,9 @@ class BluetoothManager:
         self,
         hass: HomeAssistant,
         integration_matchers: list[BluetoothMatcher],
-        scanning_mode: BluetoothScanningMode,
     ) -> None:
         """Init bluetooth discovery."""
         self.hass = hass
-        self.scanning_mode = scanning_mode
         self._integration_matchers = integration_matchers
         self.scanner: HaBleakScanner | None = None
         self._cancel_device_detected: CALLBACK_TYPE | None = None
@@ -304,11 +305,17 @@ class BluetoothManager:
         # an LRU to avoid memory issues.
         self._matched: LRU = LRU(MAX_REMEMBER_ADDRESSES)
 
-    async def async_setup(self) -> None:
+    @hass_callback
+    def async_setup(self) -> None:
+        """Set up the bluetooth manager."""
+        self.scanner = HaBleakScanner()
+
+    async def async_start(self, scanning_mode: BluetoothScanningMode) -> None:
         """Set up BT Discovery."""
+        assert self.scanner is not None
         try:
-            self.scanner = HaBleakScanner(
-                scanning_mode=SCANNING_MODE_TO_BLEAK[self.scanning_mode]
+            self.scanner.async_setup(
+                scanning_mode=SCANNING_MODE_TO_BLEAK[scanning_mode]
             )
         except (FileNotFoundError, BleakError) as ex:
             raise RuntimeError(f"Failed to initialize Bluetooth: {ex}") from ex
@@ -321,11 +328,11 @@ class BluetoothManager:
         self._cancel_device_detected = self.scanner.async_register_callback(
             self._device_detected, {}
         )
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
         try:
             await self.scanner.start()
         except (FileNotFoundError, BleakError) as ex:
             raise RuntimeError(f"Failed to start Bluetooth: {ex}") from ex
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
 
     @hass_callback
     def async_setup_unavailable_tracking(self) -> None:

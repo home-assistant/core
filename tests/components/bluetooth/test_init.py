@@ -47,7 +47,8 @@ async def test_setup_and_stop_no_bluetooth(hass, caplog):
         {"domain": "switchbot", "service_uuid": "cba20d00-224d-11e6-9fb8-0002a5d5c51b"}
     ]
     with patch(
-        "homeassistant.components.bluetooth.HaBleakScanner", side_effect=BleakError
+        "homeassistant.components.bluetooth.HaBleakScanner.async_setup",
+        side_effect=BleakError,
     ) as mock_ha_bleak_scanner, patch(
         "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
     ):
@@ -70,27 +71,9 @@ async def test_setup_and_stop_broken_bluetooth(hass, caplog):
         {"domain": "switchbot", "service_uuid": "cba20d00-224d-11e6-9fb8-0002a5d5c51b"}
     ]
 
-    class MockBleakScanner:
-        def __init__(self, *args, **kwargs):
-            """Mock the BleakScanner."""
-
-        async def start(self, *args, **kwargs):
-            raise FileNotFoundError
-
-        async def stop(self):
-            pass
-
-        def async_callback_dispatcher(self, *args, **kwargs):
-            pass
-
-        def register_detection_callback(self, *args, **kwargs):
-            pass
-
-        def async_register_callback(self, *args, **kwargs):
-            pass
-
-    with patch(
-        "homeassistant.components.bluetooth.HaBleakScanner", MockBleakScanner
+    with patch("homeassistant.components.bluetooth.HaBleakScanner.async_setup"), patch(
+        "homeassistant.components.bluetooth.HaBleakScanner.start",
+        side_effect=BleakError,
     ), patch(
         "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
     ):
@@ -111,8 +94,9 @@ async def test_calling_async_discovered_devices_no_bluetooth(hass, caplog):
     """Test we fail gracefully when asking for discovered devices and there is no blueooth."""
     mock_bt = []
     with patch(
-        "homeassistant.components.bluetooth.HaBleakScanner", side_effect=BleakError
-    ) as mock_ha_bleak_scanner, patch(
+        "homeassistant.components.bluetooth.HaBleakScanner.async_setup",
+        side_effect=FileNotFoundError,
+    ), patch(
         "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
     ):
         assert await async_setup_component(
@@ -123,7 +107,6 @@ async def test_calling_async_discovered_devices_no_bluetooth(hass, caplog):
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
-    assert len(mock_ha_bleak_scanner.mock_calls) == 1
     assert "Failed to initialize Bluetooth" in caplog.text
     assert not bluetooth.async_discovered_service_info(hass)
     assert not bluetooth.async_address_present(hass, "aa:bb:bb:dd:ee:ff")
