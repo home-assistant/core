@@ -60,7 +60,7 @@ class MockDevices:
 
     async def async_load(self, *args, **kwargs):
         """Load the mock devices."""
-        if self._connected:
+        if self._connected and not self._devices:
             addr0 = Address("AA.AA.AA")
             addr1 = Address("11.11.11")
             addr2 = Address("22.22.22")
@@ -104,7 +104,9 @@ class MockDevices:
                     return_value=ResponseStatus.SUCCESS
                 )
 
-            for device in [self._devices[addr] for addr in [addr2, addr3, addr4]]:
+            for device in [
+                self._devices[addr] for addr in [addr2, addr3, addr4, addr5]
+            ]:
                 device.async_status = AsyncMock()
             self._devices[addr1].async_status = AsyncMock(side_effect=AttributeError)
             self._devices[addr0].aldb.async_load = AsyncMock()
@@ -121,13 +123,13 @@ class MockDevices:
             self._devices[addr2].async_write_ext_properties = AsyncMock(
                 return_value=ResponseStatus.FAILURE
             )
+
             self._devices[addr5].async_lock = AsyncMock(
                 return_value=ResponseStatus.SUCCESS
             )
             self._devices[addr5].async_unlock = AsyncMock(
                 return_value=ResponseStatus.SUCCESS
             )
-
             self.modem = self._devices[addr0]
             self.modem.async_read_config = AsyncMock()
 
