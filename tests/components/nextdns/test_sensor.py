@@ -11,6 +11,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, PERCENTAGE, STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
 
@@ -19,7 +20,7 @@ from . import DNSSEC, ENCRYPTION, IP_VERSIONS, PROTOCOLS, STATUS, init_integrati
 from tests.common import async_fire_time_changed
 
 
-async def test_sensor(hass):
+async def test_sensor(hass: HomeAssistant) -> None:
     """Test states of sensors."""
     registry = er.async_get(hass)
 
@@ -356,7 +357,7 @@ async def test_sensor(hass):
     assert entry.unique_id == "xyz12_udp_queries_ratio"
 
 
-async def test_availability(hass):
+async def test_availability(hass: HomeAssistant) -> None:
     """Ensure that we mark the entities unavailable correctly when service causes an error."""
     registry = er.async_get(hass)
 
