@@ -100,3 +100,39 @@ async def test_async_step_user_with_found_devices_already_setup(hass):
         )
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
+
+
+async def test_async_step_bluetooth_devices_already_setup(hass):
+    """Test we can't start a flow if there is already a config entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="00:81:F9:DD:6F:C1",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+        data=MMC_T201_1_SERVICE_INFO,
+    )
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_async_step_bluetooth_already_in_progress(hass):
+    """Test we can't start a flow for the same device twice."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+        data=MMC_T201_1_SERVICE_INFO,
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "bluetooth_confirm"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+        data=MMC_T201_1_SERVICE_INFO,
+    )
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_in_progress"
