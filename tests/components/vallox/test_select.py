@@ -14,7 +14,7 @@ from .conftest import patch_metrics, patch_profile, patch_profile_set
 
 from tests.common import MockConfigEntry
 
-VALLOX_PROFILE_ENTITY_ID = "select.vallox_current_profile"
+VALLOX_PROFILE_ENTITY_ID = "select.vallox_profile"
 
 
 @pytest.mark.parametrize(
