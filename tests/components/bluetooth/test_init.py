@@ -856,3 +856,49 @@ async def test_can_unsetup_bluetooth(hass, mock_bleak_scanner_start, enable_blue
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+
+async def test_auto_detect_bluetooth_adapters_linux(hass):
+    """Test we auto detect bluetooth adapters on linux."""
+    with patch(
+        "bluetooth_adapters.get_bluetooth_adapters", return_value={"hci0"}
+    ), patch(
+        "homeassistant.components.bluetooth.platform.system", return_value="Linux"
+    ):
+        assert await async_setup_component(hass, bluetooth.DOMAIN, {})
+        await hass.async_block_till_done()
+    assert not hass.config_entries.async_entries(bluetooth.DOMAIN)
+    assert len(hass.config_entries.flow.async_progress(bluetooth.DOMAIN)) == 1
+
+
+async def test_auto_detect_bluetooth_adapters_linux_none_found(hass):
+    """Test we auto detect bluetooth adapters on linux with no adapters found."""
+    with patch("bluetooth_adapters.get_bluetooth_adapters", return_value=set()), patch(
+        "homeassistant.components.bluetooth.platform.system", return_value="Linux"
+    ):
+        assert await async_setup_component(hass, bluetooth.DOMAIN, {})
+        await hass.async_block_till_done()
+    assert not hass.config_entries.async_entries(bluetooth.DOMAIN)
+    assert len(hass.config_entries.flow.async_progress(bluetooth.DOMAIN)) == 0
+
+
+async def test_auto_detect_bluetooth_adapters_macos(hass):
+    """Test we auto detect bluetooth adapters on macos."""
+    with patch(
+        "homeassistant.components.bluetooth.platform.system", return_value="Darwin"
+    ):
+        assert await async_setup_component(hass, bluetooth.DOMAIN, {})
+        await hass.async_block_till_done()
+    assert not hass.config_entries.async_entries(bluetooth.DOMAIN)
+    assert len(hass.config_entries.flow.async_progress(bluetooth.DOMAIN)) == 1
+
+
+async def test_no_auto_detect_bluetooth_adapters_windows(hass):
+    """Test we auto detect bluetooth adapters on windows."""
+    with patch(
+        "homeassistant.components.bluetooth.platform.system", return_value="Windows"
+    ):
+        assert await async_setup_component(hass, bluetooth.DOMAIN, {})
+        await hass.async_block_till_done()
+    assert not hass.config_entries.async_entries(bluetooth.DOMAIN)
+    assert len(hass.config_entries.flow.async_progress(bluetooth.DOMAIN)) == 0
