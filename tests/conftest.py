@@ -871,6 +871,24 @@ def mock_integration_frame():
         yield correct_frame
 
 
+@pytest.fixture(name="enable_bluetooth")
+async def mock_enable_bluetooth(
+    hass, mock_bleak_scanner_start, mock_bluetooth_adapters
+):
+    """Fixture to mock starting the bleak scanner."""
+    entry = MockConfigEntry(domain="bluetooth")
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+@pytest.fixture(name="mock_bluetooth_adapters")
+def mock_bluetooth_adapters():
+    """Fixture to mock bluetooth adapters."""
+    with patch("bluetooth_adapters.get_bluetooth_adapters", return_value=set()):
+        yield
+
+
 @pytest.fixture(name="mock_bleak_scanner_start")
 def mock_bleak_scanner_start():
     """Fixture to mock starting the bleak scanner."""
@@ -900,5 +918,5 @@ def mock_bleak_scanner_start():
 
 
 @pytest.fixture(name="mock_bluetooth")
-def mock_bluetooth(mock_bleak_scanner_start):
+def mock_bluetooth(mock_bleak_scanner_start, mock_bluetooth_adapters):
     """Mock out bluetooth from starting."""
