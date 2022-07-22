@@ -124,17 +124,18 @@ async def test_discovery_match_by_service_uuid(
         assert mock_config_flow.mock_calls[0][1][0] == "switchbot"
 
 
-async def test_discovery_match_by_local_name(
-    hass, mock_bleak_scanner_start, enable_bluetooth
-):
+async def test_discovery_match_by_local_name(hass, mock_bleak_scanner_start):
     """Test bluetooth discovery match by local_name."""
     mock_bt = [{"domain": "switchbot", "local_name": "wohand"}]
     with patch(
         "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
-    ), patch.object(hass.config_entries.flow, "async_init") as mock_config_flow:
+    ):
         assert await async_setup_component(
             hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
         )
+        await hass.async_block_till_done()
+
+    with patch.object(hass.config_entries.flow, "async_init") as mock_config_flow:
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
@@ -159,7 +160,7 @@ async def test_discovery_match_by_local_name(
 
 
 async def test_discovery_match_by_manufacturer_id_and_first_byte(
-    hass, mock_bleak_scanner_start, enable_bluetooth
+    hass, mock_bleak_scanner_start
 ):
     """Test bluetooth discovery match by manufacturer_id and manufacturer_data_start."""
     mock_bt = [
@@ -171,10 +172,13 @@ async def test_discovery_match_by_manufacturer_id_and_first_byte(
     ]
     with patch(
         "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
-    ), patch.object(hass.config_entries.flow, "async_init") as mock_config_flow:
+    ):
         assert await async_setup_component(
             hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
         )
+        await hass.async_block_till_done()
+
+    with patch.object(hass.config_entries.flow, "async_init") as mock_config_flow:
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
