@@ -1,9 +1,8 @@
 """The Bluetooth integration."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 import dataclasses
-from datetime import datetime
 import logging
 import time
 from typing import Any, Generic, TypeVar
@@ -14,18 +13,14 @@ from homeassistant.const import ATTR_IDENTIFIERS, ATTR_NAME
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_call_later
 
 from . import (
     BluetoothCallbackMatcher,
     BluetoothChange,
-    async_address_present,
     async_register_callback,
+    async_track_unavailable,
 )
 from .const import DOMAIN
-
-UNAVAILABLE_SECONDS = 60 * 5
-NEVER_TIME = -UNAVAILABLE_SECONDS
 
 
 @dataclasses.dataclass(frozen=True)
@@ -49,10 +44,13 @@ class PassiveBluetoothDataUpdate(Generic[_T]):
     """Generic bluetooth data."""
 
     devices: dict[str | None, DeviceInfo] = dataclasses.field(default_factory=dict)
-    entity_descriptions: dict[
+    entity_descriptions: Mapping[
         PassiveBluetoothEntityKey, EntityDescription
     ] = dataclasses.field(default_factory=dict)
-    entity_data: dict[PassiveBluetoothEntityKey, _T] = dataclasses.field(
+    entity_names: Mapping[PassiveBluetoothEntityKey, str | None] = dataclasses.field(
+        default_factory=dict
+    )
+    entity_data: Mapping[PassiveBluetoothEntityKey, _T] = dataclasses.field(
         default_factory=dict
     )
 
@@ -106,6 +104,7 @@ class PassiveBluetoothDataUpdateCoordinator(Generic[_T]):
         ] = {}
         self.update_method = update_method
 
+        self.entity_names: dict[PassiveBluetoothEntityKey, str | None] = {}
         self.entity_data: dict[PassiveBluetoothEntityKey, _T] = {}
         self.entity_descriptions: dict[
             PassiveBluetoothEntityKey, EntityDescription
@@ -113,54 +112,45 @@ class PassiveBluetoothDataUpdateCoordinator(Generic[_T]):
         self.devices: dict[str | None, DeviceInfo] = {}
 
         self.last_update_success = True
-        self._last_callback_time: float = NEVER_TIME
-        self._cancel_track_available: CALLBACK_TYPE | None = None
-        self._present = False
+        self._cancel_track_unavailable: CALLBACK_TYPE | None = None
+        self._cancel_bluetooth_advertisements: CALLBACK_TYPE | None = None
+        self.present = False
+        self.last_seen = 0.0
 
     @property
     def available(self) -> bool:
         """Return if the device is available."""
-        return self._present and self.last_update_success
+        return self.present and self.last_update_success
 
     @callback
-    def _async_cancel_available_tracker(self) -> None:
-        """Reset the available tracker."""
-        if self._cancel_track_available:
-            self._cancel_track_available()
-            self._cancel_track_available = None
-
-    @callback
-    def _async_schedule_available_tracker(self, time_remaining: float) -> None:
-        """Schedule the available tracker."""
-        self._cancel_track_available = async_call_later(
-            self.hass, time_remaining, self._async_check_device_present
-        )
-
-    @callback
-    def _async_check_device_present(self, _: datetime) -> None:
-        """Check if the device is present."""
-        time_passed_since_seen = time.monotonic() - self._last_callback_time
-        self._async_cancel_available_tracker()
-        if (
-            not self._present
-            or time_passed_since_seen < UNAVAILABLE_SECONDS
-            or async_address_present(self.hass, self.address)
-        ):
-            self._async_schedule_available_tracker(
-                UNAVAILABLE_SECONDS - time_passed_since_seen
-            )
-            return
-        self._present = False
+    def _async_handle_unavailable(self, _address: str) -> None:
+        """Handle the device going unavailable."""
+        self.present = False
         self.async_update_listeners(None)
 
     @callback
-    def async_setup(self) -> CALLBACK_TYPE:
-        """Start the callback."""
-        return async_register_callback(
+    def _async_start(self) -> None:
+        """Start the callbacks."""
+        self._cancel_bluetooth_advertisements = async_register_callback(
             self.hass,
             self._async_handle_bluetooth_event,
             BluetoothCallbackMatcher(address=self.address),
         )
+        self._cancel_track_unavailable = async_track_unavailable(
+            self.hass,
+            self._async_handle_unavailable,
+            self.address,
+        )
+
+    @callback
+    def _async_stop(self) -> None:
+        """Stop the callbacks."""
+        if self._cancel_bluetooth_advertisements is not None:
+            self._cancel_bluetooth_advertisements()
+            self._cancel_bluetooth_advertisements = None
+        if self._cancel_track_unavailable is not None:
+            self._cancel_track_unavailable()
+            self._cancel_track_unavailable = None
 
     @callback
     def async_add_entities_listener(
@@ -199,9 +189,21 @@ class PassiveBluetoothDataUpdateCoordinator(Generic[_T]):
         def remove_listener() -> None:
             """Remove update listener."""
             self._listeners.remove(update_callback)
+            self._async_handle_listeners_changed()
 
         self._listeners.append(update_callback)
+        self._async_handle_listeners_changed()
         return remove_listener
+
+    @callback
+    def _async_handle_listeners_changed(self) -> None:
+        """Handle listeners changed."""
+        has_listeners = self._listeners or self._entity_key_listeners
+        running = bool(self._cancel_bluetooth_advertisements)
+        if running and not has_listeners:
+            self._async_stop()
+        elif not running and has_listeners:
+            self._async_start()
 
     @callback
     def async_add_entity_key_listener(
@@ -217,8 +219,10 @@ class PassiveBluetoothDataUpdateCoordinator(Generic[_T]):
             self._entity_key_listeners[entity_key].remove(update_callback)
             if not self._entity_key_listeners[entity_key]:
                 del self._entity_key_listeners[entity_key]
+            self._async_handle_listeners_changed()
 
         self._entity_key_listeners.setdefault(entity_key, []).append(update_callback)
+        self._async_handle_listeners_changed()
         return remove_listener
 
     @callback
@@ -242,11 +246,9 @@ class PassiveBluetoothDataUpdateCoordinator(Generic[_T]):
         change: BluetoothChange,
     ) -> None:
         """Handle a Bluetooth event."""
+        self.last_seen = time.monotonic()
         self.name = service_info.name
-        self._last_callback_time = time.monotonic()
-        self._present = True
-        if not self._cancel_track_available:
-            self._async_schedule_available_tracker(UNAVAILABLE_SECONDS)
+        self.present = True
         if self.hass.is_stopping:
             return
 
@@ -272,6 +274,7 @@ class PassiveBluetoothDataUpdateCoordinator(Generic[_T]):
         self.devices.update(new_data.devices)
         self.entity_descriptions.update(new_data.entity_descriptions)
         self.entity_data.update(new_data.entity_data)
+        self.entity_names.update(new_data.entity_names)
         self.async_update_listeners(new_data)
 
 
@@ -315,6 +318,7 @@ class PassiveBluetoothCoordinatorEntity(
             self._attr_unique_id = f"{address}-{key}"
         if ATTR_NAME not in self._attr_device_info:
             self._attr_device_info[ATTR_NAME] = self.coordinator.name
+        self._attr_name = coordinator.entity_names.get(entity_key)
 
     @property
     def available(self) -> bool:
