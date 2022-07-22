@@ -1854,8 +1854,6 @@ def relative_time(value):
         return value
     if not value.tzinfo:
         value = dt_util.as_local(value)
-    if dt_util.now() < value:
-        return value
     return dt_util.get_age(value)
 
 
