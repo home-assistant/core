@@ -1,7 +1,8 @@
-"""Tests for the bluetooth_le_tracker component."""
+"""Session fixtures."""
+
 import pytest
 
 
 @pytest.fixture(autouse=True)
-def bluetooth_le_tracker_auto_mock_bluetooth(mock_bluetooth):
-    """Mock the bluetooth integration scanner."""
+def mock_bluetooth(enable_bluetooth):
+    """Auto mock bluetooth."""
