@@ -436,16 +436,13 @@ class Recorder(threading.Thread):
         self.async_db_connected.set_result(True)
 
     @callback
-    def async_set_recorder_ready(self) -> None:
+    def async_set_db_ready(self) -> None:
         """Database live and ready for use.
 
         Called after non-live migration steps are finished.
         """
-        _LOGGER.debug("Recorder ready")
         if self.async_db_ready.done():
             return
-        _LOGGER.debug("Recorder ready 2")
-
         self.async_db_ready.set_result(True)
         self.async_start_executor()
 
@@ -563,7 +560,6 @@ class Recorder(threading.Thread):
 
     def run(self) -> None:
         """Start processing events to save."""
-        _LOGGER.debug("Starting recorder")
         current_version = self._setup_recorder()
 
         if current_version is None:
@@ -572,17 +568,23 @@ class Recorder(threading.Thread):
 
         self.schema_version = current_version
 
-        _LOGGER.debug("Recorder setup 1")
         schema_is_current = migration.schema_is_current(current_version)
         if schema_is_current:
             self._setup_run()
         else:
             self.migration_in_progress = True
             self.migration_is_live = migration.live_migration(current_version)
-        _LOGGER.debug("Recorder setup 2")
 
         self.hass.add_job(self.async_connection_success)
-        _LOGGER.debug("Recorder setup 3")
+
+        # If shutdown happened before Home Assistant finished starting
+        if self._wait_startup_or_shutdown() is SHUTDOWN_TASK:
+            self.migration_in_progress = False
+            # Make sure we cleanly close the run if
+            # we restart before startup finishes
+            self._shutdown()
+            self.hass.add_job(self.async_set_db_ready)
+            return
 
         # We wait to start the migration until startup has finished
         # since it can be cpu intensive and we do not want it to compete
@@ -602,21 +604,11 @@ class Recorder(threading.Thread):
                     "Database Migration Failed",
                     "recorder_database_migration",
                 )
-                self.hass.add_job(self.async_set_recorder_ready)
+                self.hass.add_job(self.async_set_db_ready)
                 self._shutdown()
                 return
-        _LOGGER.debug("Recorder setup 5")
-        # If shutdown happened before Home Assistant finished starting
-        if self._wait_startup_or_shutdown() is SHUTDOWN_TASK:
-            self.migration_in_progress = False
-            # Make sure we cleanly close the run if
-            # we restart before startup finishes
-            self._shutdown()
-            self.hass.add_job(self.async_set_recorder_ready)
-            return
 
-        self.hass.add_job(self.async_set_recorder_ready)
-        _LOGGER.debug("Recorder setup 6")
+        self.hass.add_job(self.async_set_db_ready)
 
         _LOGGER.debug("Recorder processing the queue")
         self.hass.add_job(self._async_set_recorder_ready_migration_done)
