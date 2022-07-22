@@ -87,6 +87,8 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             self._discovered_devices = await self._get_switchbots()
+            for device in self._discovered_devices.values():
+                _LOGGER.debug("Found %s", device)
 
         except NotConnectedError:
             return self.async_abort(reason="cannot_connect")
