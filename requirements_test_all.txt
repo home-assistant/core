@@ -651,6 +651,9 @@ influxdb-client==1.24.0
 # homeassistant.components.influxdb
 influxdb==5.3.1
 
+# homeassistant.components.inkbird
+inkbird-ble==0.5.1
+
 # homeassistant.components.insteon
 insteon-frontend-home-assistant==0.2.0
 
@@ -1440,6 +1443,9 @@ securetar==2022.2.0
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
 sense_energy==0.10.4
+
+# homeassistant.components.sensorpush
+sensorpush-ble==1.4.2
 
 # homeassistant.components.sentry
 sentry-sdk==1.7.2

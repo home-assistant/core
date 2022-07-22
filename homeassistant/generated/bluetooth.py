@@ -15,6 +15,26 @@ BLUETOOTH: list[dict[str, str | int | list[int]]] = [
         ]
     },
     {
+        "domain": "inkbird",
+        "local_name": "sps"
+    },
+    {
+        "domain": "inkbird",
+        "local_name": "Inkbird*"
+    },
+    {
+        "domain": "inkbird",
+        "local_name": "iBBQ*"
+    },
+    {
+        "domain": "inkbird",
+        "local_name": "tps"
+    },
+    {
+        "domain": "sensorpush",
+        "local_name": "SensorPush*"
+    },
+    {
         "domain": "switchbot",
         "service_uuid": "cba20d00-224d-11e6-9fb8-0002a5d5c51b"
     }
