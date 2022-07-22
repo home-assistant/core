@@ -584,16 +584,6 @@ class Recorder(threading.Thread):
         self.hass.add_job(self.async_connection_success)
         _LOGGER.debug("Recorder setup 3")
 
-        # If shutdown happened before Home Assistant finished starting
-        if self._wait_startup_or_shutdown() is SHUTDOWN_TASK:
-            self.migration_in_progress = False
-            # Make sure we cleanly close the run if
-            # we restart before startup finishes
-            self._shutdown()
-            self.hass.add_job(self.async_set_recorder_ready)
-            return
-        _LOGGER.debug("Recorder setup 4")
-
         # We wait to start the migration until startup has finished
         # since it can be cpu intensive and we do not want it to compete
         # with startup which is also cpu intensive
@@ -616,6 +606,14 @@ class Recorder(threading.Thread):
                 self._shutdown()
                 return
         _LOGGER.debug("Recorder setup 5")
+        # If shutdown happened before Home Assistant finished starting
+        if self._wait_startup_or_shutdown() is SHUTDOWN_TASK:
+            self.migration_in_progress = False
+            # Make sure we cleanly close the run if
+            # we restart before startup finishes
+            self._shutdown()
+            self.hass.add_job(self.async_set_recorder_ready)
+            return
 
         self.hass.add_job(self.async_set_recorder_ready)
         _LOGGER.debug("Recorder setup 6")
