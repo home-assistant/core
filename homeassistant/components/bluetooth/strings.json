@@ -2,6 +2,9 @@
   "config": {
     "flow_title": "{name}",
     "step": {
+      "enable_bluetooth": {
+        "description": "Do you want to setup Bluetooth?"
+      },
       "user": {
         "description": "Choose a device to setup",
         "data": {
@@ -11,6 +14,9 @@
       "bluetooth_confirm": {
         "description": "Do you want to setup {name}?"
       }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     }
   }
 }
