@@ -33,7 +33,7 @@ async def test_async_step_bluetooth_valid_device(hass):
     assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == "MMC_T201_1"
     assert result2["data"] == {}
-    assert result2["result"].unique_id == "4125DDBA-2774-4851-9889-6AADDD4CAC3D"
+    assert result2["result"].unique_id == "00:00:00:00:00:02"
 
 
 async def test_async_step_bluetooth_not_xiaomi(hass):
@@ -74,19 +74,19 @@ async def test_async_step_user_with_found_devices(hass):
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={"address": "61DE521B-F0BF-9F44-64D4-75BBE1738105"},
+            user_input={"address": "00:00:00:00:00:01"},
         )
     assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == "LYWSDCGQ"
     assert result2["data"] == {}
-    assert result2["result"].unique_id == "61DE521B-F0BF-9F44-64D4-75BBE1738105"
+    assert result2["result"].unique_id == "00:00:00:00:00:01"
 
 
 async def test_async_step_user_with_found_devices_already_setup(hass):
     """Test setup from service info cache with devices found."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="61DE521B-F0BF-9F44-64D4-75BBE1738105",
+        unique_id="00:00:00:00:00:01",
     )
     entry.add_to_hass(hass)
 

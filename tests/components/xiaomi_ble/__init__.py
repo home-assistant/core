@@ -5,7 +5,7 @@ from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
 NOT_SENSOR_PUSH_SERVICE_INFO = BluetoothServiceInfo(
     name="Not it",
-    address="61DE521B-F0BF-9F44-64D4-75BBE1738105",
+    address="00:00:00:00:00:00",
     rssi=-63,
     manufacturer_data={3234: b"\x00\x01"},
     service_data={},
@@ -15,7 +15,7 @@ NOT_SENSOR_PUSH_SERVICE_INFO = BluetoothServiceInfo(
 
 LYWSDCGQ_SERVICE_INFO = BluetoothServiceInfo(
     name="LYWSDCGQ",
-    address="61DE521B-F0BF-9F44-64D4-75BBE1738105",
+    address="00:00:00:00:00:01",
     rssi=-63,
     manufacturer_data={},
     service_data={
@@ -27,7 +27,7 @@ LYWSDCGQ_SERVICE_INFO = BluetoothServiceInfo(
 
 MMC_T201_1_SERVICE_INFO = BluetoothServiceInfo(
     name="MMC_T201_1",
-    address="4125DDBA-2774-4851-9889-6AADDD4CAC3D",
+    address="00:00:00:00:00:02",
     rssi=-56,
     manufacturer_data={},
     service_data={

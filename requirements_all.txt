@@ -2468,7 +2468,7 @@ xbox-webapi==2.0.11
 xboxapi==2.0.1
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==0.0.3
+xiaomi-ble==0.1.0
 
 # homeassistant.components.knx
 xknx==0.21.5
