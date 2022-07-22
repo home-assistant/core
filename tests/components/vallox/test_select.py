@@ -1,4 +1,4 @@
-"""Tests for Vallox number platform."""
+"""Tests for Vallox select platform."""
 import pytest
 from vallox_websocket_api import PROFILE as VALLOX_PROFILE
 

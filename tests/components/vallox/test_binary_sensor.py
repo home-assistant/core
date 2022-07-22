@@ -1,4 +1,4 @@
-"""Tests for Vallox number platform."""
+"""Tests for Vallox binary sensor platform."""
 from typing import Any
 
 import pytest
