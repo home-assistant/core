@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 from functools import partial
-from typing import cast
+from typing import Any, cast
 
 from aiolifx.aiolifx import Light
 from aiolifx.connection import LIFXConnection
@@ -123,6 +123,14 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
             # We only await multizone responses so don't ask for just one
             if zone == top - 1:
                 zone -= 1
+
+    async def async_set_waveform_optional(
+        self, value: dict[str, Any], rapid: bool = False
+    ) -> None:
+        """Send a set_waveform_optional message to the device."""
+        await async_execute_lifx(
+            partial(self.device.set_waveform_optional, value=value, rapid=rapid)
+        )
 
     async def async_get_color(self) -> None:
         """Send a get color message to the device."""

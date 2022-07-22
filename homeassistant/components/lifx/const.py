@@ -14,6 +14,7 @@ UNAVAILABLE_GRACE = 90
 
 CONF_SERIAL = "serial"
 
+IDENTIFY = "identify"
 RESTART = "restart"
 
 DATA_LIFX_MANAGER = "lifx_manager"
