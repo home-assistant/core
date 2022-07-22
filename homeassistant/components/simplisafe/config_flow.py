@@ -20,7 +20,7 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
-from .const import CONF_USER_ID, DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER
 
 CONF_AUTH_CODE = "auth_code"
 
@@ -96,30 +96,27 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if self._errors:
             return await self.async_step_user()
 
-        data = {CONF_USER_ID: simplisafe.user_id, CONF_TOKEN: simplisafe.refresh_token}
-        unique_id = str(simplisafe.user_id)
+        simplisafe_user_id = str(simplisafe.user_id)
+        data = {CONF_USERNAME: simplisafe_user_id, CONF_TOKEN: simplisafe.refresh_token}
 
         if self._reauth:
-            # "Old" config entries utilized the user's email address (username) as the
-            # unique ID, whereas "new" config entries utilize the SimpliSafe user ID –
-            # either one is a candidate for re-auth:
-            existing_entry = await self.async_set_unique_id(self._username or unique_id)
+            existing_entry = await self.async_set_unique_id(simplisafe_user_id)
             if not existing_entry:
                 # If we don't have an entry that matches this user ID, the user logged
                 # in with different credentials:
                 return self.async_abort(reason="wrong_account")
 
             self.hass.config_entries.async_update_entry(
-                existing_entry, unique_id=unique_id, data=data
+                existing_entry, unique_id=simplisafe_user_id, data=data
             )
             self.hass.async_create_task(
                 self.hass.config_entries.async_reload(existing_entry.entry_id)
             )
             return self.async_abort(reason="reauth_successful")
 
-        await self.async_set_unique_id(unique_id)
+        await self.async_set_unique_id(simplisafe_user_id)
         self._abort_if_unique_id_configured()
-        return self.async_create_entry(title=unique_id, data=data)
+        return self.async_create_entry(title=simplisafe_user_id, data=data)
 
     async def async_step_reauth(self, config: Mapping[str, Any]) -> FlowResult:
         """Handle configuration by re-auth."""
