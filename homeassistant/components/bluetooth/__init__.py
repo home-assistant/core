@@ -35,7 +35,7 @@ from homeassistant.loader import (
 
 from . import models
 from .const import DOMAIN
-from .models import HaBleakScanner
+from .models import HaBleakScanner, HaBleakScannerWrapper
 from .usage import install_multiple_bleak_catcher, uninstall_multiple_bleak_catcher
 
 _LOGGER = logging.getLogger(__name__)
@@ -117,7 +117,7 @@ BluetoothCallback = Callable[
 
 
 @hass_callback
-def async_get_scanner(hass: HomeAssistant) -> models.HaBleakScannerWrapper:
+def async_get_scanner(hass: HomeAssistant) -> HaBleakScannerWrapper:
     """Return a HaBleakScanner."""
     if DOMAIN not in hass.data:
         raise RuntimeError("Bluetooth integration not loaded")
@@ -320,9 +320,9 @@ class BluetoothManager:
         models.HA_BLEAK_SCANNER = self.scanner = HaBleakScanner()
 
     @hass_callback
-    def async_get_scanner(self) -> models.HaBleakScannerWrapper:
+    def async_get_scanner(self) -> HaBleakScannerWrapper:
         """Get the scanner."""
-        return models.HaBleakScannerWrapper()
+        return HaBleakScannerWrapper()
 
     async def async_start(self, scanning_mode: BluetoothScanningMode) -> None:
         """Set up BT Discovery."""
