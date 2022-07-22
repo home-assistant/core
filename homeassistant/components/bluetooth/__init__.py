@@ -35,7 +35,7 @@ from homeassistant.loader import (
 
 from . import models
 from .const import DOMAIN
-from .models import HaBleakScanner
+from .models import HaBleakScanner, HaBleakScannerWrapper
 from .usage import install_multiple_bleak_catcher, uninstall_multiple_bleak_catcher
 
 _LOGGER = logging.getLogger(__name__)
@@ -117,8 +117,12 @@ BluetoothCallback = Callable[
 
 
 @hass_callback
-def async_get_scanner(hass: HomeAssistant) -> HaBleakScanner:
-    """Return a HaBleakScanner."""
+def async_get_scanner(hass: HomeAssistant) -> HaBleakScannerWrapper:
+    """Return a HaBleakScannerWrapper.
+
+    This is a wrapper around our BleakScanner singleton that allows
+    multiple integrations to share the same BleakScanner.
+    """
     if DOMAIN not in hass.data:
         raise RuntimeError("Bluetooth integration not loaded")
     manager: BluetoothManager = hass.data[DOMAIN]
@@ -320,10 +324,9 @@ class BluetoothManager:
         models.HA_BLEAK_SCANNER = self.scanner = HaBleakScanner()
 
     @hass_callback
-    def async_get_scanner(self) -> HaBleakScanner:
+    def async_get_scanner(self) -> HaBleakScannerWrapper:
         """Get the scanner."""
-        assert self.scanner is not None
-        return self.scanner
+        return HaBleakScannerWrapper()
 
     async def async_start(self, scanning_mode: BluetoothScanningMode) -> None:
         """Set up BT Discovery."""
