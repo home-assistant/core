@@ -552,7 +552,7 @@ def write_lock_db_sqlite(instance: Recorder) -> Generator[None, None, None]:
 
 
 def async_migration_in_progress(hass: HomeAssistant) -> bool:
-    """Determine is a migration is in progress.
+    """Determine if a migration is in progress.
 
     This is a thin wrapper that allows us to change
     out the implementation later.
@@ -561,6 +561,18 @@ def async_migration_in_progress(hass: HomeAssistant) -> bool:
         return False
     instance = get_instance(hass)
     return instance.migration_in_progress
+
+
+def async_migration_is_live(hass: HomeAssistant) -> bool:
+    """Determine if a migration is live.
+
+    This is a thin wrapper that allows us to change
+    out the implementation later.
+    """
+    if DATA_INSTANCE not in hass.data:
+        return False
+    instance: Recorder = hass.data[DATA_INSTANCE]
+    return instance.migration_is_live
 
 
 def second_sunday(year: int, month: int) -> date:
