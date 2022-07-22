@@ -1,4 +1,4 @@
-"""Config flow for xiaomi integration."""
+"""Config flow for Xiaomi Bluetooth integration."""
 from __future__ import annotations
 
 from typing import Any
