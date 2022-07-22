@@ -830,3 +830,17 @@ async def test_async_ble_device_from_address(
         assert (
             bluetooth.async_ble_device_from_address(hass, "00:66:33:22:11:22") is None
         )
+
+
+async def test_setup_without_bluetooth_in_configuration_yaml(hass):
+    """Test setting up without bluetooth in configuration.yaml does not create the config entry."""
+    assert await async_setup_component(hass, bluetooth.DOMAIN, {})
+    await hass.async_block_till_done()
+    assert not hass.config_entries.async_entries(bluetooth.DOMAIN)
+
+
+async def test_setup_with_bluetooth_in_configuration_yaml(hass, mock_bluetooth):
+    """Test setting up with bluetooth in configuration.yaml creates the config entry."""
+    assert await async_setup_component(hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}})
+    await hass.async_block_till_done()
+    assert hass.config_entries.async_entries(bluetooth.DOMAIN)
