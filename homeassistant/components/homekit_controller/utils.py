@@ -33,12 +33,6 @@ async def async_get_controller(hass: HomeAssistant) -> Controller:
 
     bleak_scanner_instance = bluetooth.async_get_scanner(hass)
 
-    _LOGGER.warning(
-        "Creating aiohomekit Controller instance: %s %s",
-        async_zeroconf_instance,
-        bleak_scanner_instance,
-    )
-
     controller = Controller(
         async_zeroconf_instance=async_zeroconf_instance,
         bleak_scanner_instance=bleak_scanner_instance,
