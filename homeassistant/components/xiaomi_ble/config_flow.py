@@ -18,7 +18,7 @@ from .const import DOMAIN
 
 
 class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for xiaomi."""
+    """Handle a config flow for Xiaomi Bluetooth."""
 
     VERSION = 1
 
