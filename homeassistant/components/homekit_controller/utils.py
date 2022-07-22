@@ -1,4 +1,5 @@
 """Helper functions for the homekit_controller component."""
+import logging
 from typing import cast
 
 from aiohomekit import Controller
@@ -8,6 +9,8 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
 
 from .const import CONTROLLER
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def folded_name(name: str) -> str:
@@ -29,6 +32,12 @@ async def async_get_controller(hass: HomeAssistant) -> Controller:
         return cast(Controller, existing)
 
     bleak_scanner_instance = bluetooth.async_get_scanner(hass)
+
+    _LOGGER.warning(
+        "Creating aiohomekit Controller instance: %s %s",
+        async_zeroconf_instance,
+        bleak_scanner_instance,
+    )
 
     controller = Controller(
         async_zeroconf_instance=async_zeroconf_instance,

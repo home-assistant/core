@@ -117,7 +117,7 @@ BluetoothCallback = Callable[
 
 
 @hass_callback
-def async_get_scanner(hass: HomeAssistant) -> HaBleakScanner:
+def async_get_scanner(hass: HomeAssistant) -> models.HaBleakScannerWrapper:
     """Return a HaBleakScanner."""
     if DOMAIN not in hass.data:
         raise RuntimeError("Bluetooth integration not loaded")
@@ -320,10 +320,9 @@ class BluetoothManager:
         models.HA_BLEAK_SCANNER = self.scanner = HaBleakScanner()
 
     @hass_callback
-    def async_get_scanner(self) -> HaBleakScanner:
+    def async_get_scanner(self) -> models.HaBleakScannerWrapper:
         """Get the scanner."""
-        assert self.scanner is not None
-        return self.scanner
+        return models.HaBleakScannerWrapper()
 
     async def async_start(self, scanning_mode: BluetoothScanningMode) -> None:
         """Set up BT Discovery."""
