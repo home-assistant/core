@@ -1,5 +1,4 @@
 """Helper functions for the homekit_controller component."""
-import logging
 from typing import cast
 
 from aiohomekit import Controller
