@@ -23,3 +23,9 @@ send_magic_packet:
         number:
           min: 1
           max: 65535
+    interface:
+      name: Source interface address
+      description: IP of interface to source the magic packet from.
+      example: 192.168.255.20
+      selector:
+        text:
