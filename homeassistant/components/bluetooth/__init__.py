@@ -117,6 +117,15 @@ BluetoothCallback = Callable[
 
 
 @hass_callback
+def async_get_scanner(hass: HomeAssistant) -> HaBleakScanner:
+    """Return a HaBleakScanner."""
+    if DOMAIN not in hass.data:
+        raise RuntimeError("Bluetooth integration not loaded")
+    manager: BluetoothManager = hass.data[DOMAIN]
+    return manager.async_get_scanner()
+
+
+@hass_callback
 def async_discovered_service_info(
     hass: HomeAssistant,
 ) -> list[BluetoothServiceInfoBleak]:
@@ -233,7 +242,7 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: config_entries.ConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    manager: BluetoothManager = hass.data.pop(DOMAIN)
+    manager: BluetoothManager = hass.data[DOMAIN]
     await manager.async_stop()
     return True
 
@@ -308,7 +317,13 @@ class BluetoothManager:
     @hass_callback
     def async_setup(self) -> None:
         """Set up the bluetooth manager."""
-        self.scanner = HaBleakScanner()
+        models.HA_BLEAK_SCANNER = self.scanner = HaBleakScanner()
+
+    @hass_callback
+    def async_get_scanner(self) -> HaBleakScanner:
+        """Get the scanner."""
+        assert self.scanner is not None
+        return self.scanner
 
     async def async_start(self, scanning_mode: BluetoothScanningMode) -> None:
         """Set up BT Discovery."""
@@ -319,7 +334,7 @@ class BluetoothManager:
             )
         except (FileNotFoundError, BleakError) as ex:
             raise RuntimeError(f"Failed to initialize Bluetooth: {ex}") from ex
-        install_multiple_bleak_catcher(self.scanner)
+        install_multiple_bleak_catcher()
         self.async_setup_unavailable_tracking()
         # We have to start it right away as some integrations might
         # need it straight away.
@@ -341,8 +356,8 @@ class BluetoothManager:
         @hass_callback
         def _async_check_unavailable(now: datetime) -> None:
             """Watch for unavailable devices."""
-            assert models.HA_BLEAK_SCANNER is not None
-            scanner = models.HA_BLEAK_SCANNER
+            scanner = self.scanner
+            assert scanner is not None
             history = set(scanner.history)
             active = {device.address for device in scanner.discovered_devices}
             disappeared = history.difference(active)
@@ -458,8 +473,8 @@ class BluetoothManager:
         if (
             matcher
             and (address := matcher.get(ADDRESS))
-            and models.HA_BLEAK_SCANNER
-            and (device_adv_data := models.HA_BLEAK_SCANNER.history.get(address))
+            and self.scanner
+            and (device_adv_data := self.scanner.history.get(address))
         ):
             try:
                 callback(
@@ -476,26 +491,22 @@ class BluetoothManager:
     @hass_callback
     def async_ble_device_from_address(self, address: str) -> BLEDevice | None:
         """Return the BLEDevice if present."""
-        if models.HA_BLEAK_SCANNER and (
-            ble_adv := models.HA_BLEAK_SCANNER.history.get(address)
-        ):
+        if self.scanner and (ble_adv := self.scanner.history.get(address)):
             return ble_adv[0]
         return None
 
     @hass_callback
     def async_address_present(self, address: str) -> bool:
         """Return if the address is present."""
-        return bool(
-            models.HA_BLEAK_SCANNER and address in models.HA_BLEAK_SCANNER.history
-        )
+        return bool(self.scanner and address in self.scanner.history)
 
     @hass_callback
     def async_discovered_service_info(self) -> list[BluetoothServiceInfoBleak]:
         """Return if the address is present."""
-        assert models.HA_BLEAK_SCANNER is not None
+        assert self.scanner is not None
         return [
             BluetoothServiceInfoBleak.from_advertisement(*device_adv, SOURCE_LOCAL)
-            for device_adv in models.HA_BLEAK_SCANNER.history.values()
+            for device_adv in self.scanner.history.values()
         ]
 
     async def async_stop(self, event: Event | None = None) -> None:
@@ -508,5 +519,4 @@ class BluetoothManager:
             self._cancel_unavailable_tracking = None
         if self.scanner:
             await self.scanner.stop()
-        models.HA_BLEAK_SCANNER = None
         uninstall_multiple_bleak_catcher()
