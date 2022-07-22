@@ -118,7 +118,11 @@ BluetoothCallback = Callable[
 
 @hass_callback
 def async_get_scanner(hass: HomeAssistant) -> HaBleakScannerWrapper:
-    """Return a HaBleakScanner."""
+    """Return a HaBleakScannerWrapper.
+
+    This is a wrapper around our BleakScanner singleton that allows
+    multiple integrations to share the same BleakScanner.
+    """
     if DOMAIN not in hass.data:
         raise RuntimeError("Bluetooth integration not loaded")
     manager: BluetoothManager = hass.data[DOMAIN]
