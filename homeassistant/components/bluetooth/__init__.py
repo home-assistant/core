@@ -7,11 +7,14 @@ from datetime import datetime, timedelta
 from enum import Enum
 import fnmatch
 import logging
+import platform
 from typing import Final, TypedDict, Union
 
 from bleak import BleakError
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
+from dbus_next import BusType, Message, MessageType
+from dbus_next.aio import MessageBus
 from lru import LRU  # pylint: disable=no-name-in-module
 
 from homeassistant import config_entries
@@ -35,7 +38,7 @@ from homeassistant.loader import (
 from . import models
 from .const import DOMAIN
 from .models import HaBleakScanner
-from .usage import install_multiple_bleak_catcher
+from .usage import install_multiple_bleak_catcher, uninstall_multiple_bleak_catcher
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -178,14 +181,83 @@ def async_track_unavailable(
     return manager.async_track_unavailable(callback, address)
 
 
+async def _async_has_bluetooth_adapter() -> bool:
+    """Return if the device has a bluetooth adapter."""
+    if platform.system() == "Darwin":  # CoreBluetooth is built in on MacOS hardware
+        return True
+    if platform.system() == "Windows":  # We don't have a good way to detect on windows
+        return False
+    return bool(await _async_get_bluetooth_adapters())
+
+
+async def _async_get_bluetooth_adapters() -> set[str]:
+    """Return a list of bluetooth adapters."""
+    adapters: set[str] = set()
+    try:
+        bus = await MessageBus(
+            bus_type=BusType.SYSTEM, negotiate_unix_fd=True
+        ).connect()
+    except FileNotFoundError:
+        return adapters
+    msg = Message(
+        destination="org.bluez",
+        path="/",
+        interface="org.freedesktop.DBus.ObjectManager",
+        member="GetManagedObjects",
+    )
+    if (
+        not (reply := await bus.call(msg))
+        or reply.message_type != MessageType.METHOD_RETURN
+    ):
+        return adapters
+    for path in reply.body[0]:
+        path_str = str(path)
+        if path_str.startswith("/org/bluez/hci"):
+            split_path = path_str.split("/")
+            adapters.add(split_path[3])
+    return adapters
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the bluetooth integration."""
+    if hass.config_entries.async_entries(DOMAIN):
+        return True
+    if DOMAIN in config:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data={}
+            )
+        )
+    elif await _async_has_bluetooth_adapter():
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+                data={},
+            )
+        )
+    return True
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: config_entries.ConfigEntry
+) -> bool:
+    """Set up the bluetooth integration from a config entry."""
     integration_matchers = await async_get_bluetooth(hass)
-    bluetooth_discovery = BluetoothManager(
+    manager = BluetoothManager(
         hass, integration_matchers, BluetoothScanningMode.PASSIVE
     )
-    await bluetooth_discovery.async_setup()
-    hass.data[DOMAIN] = bluetooth_discovery
+    await manager.async_setup()
+    hass.data[DOMAIN] = manager
+    return True
+
+
+async def async_unload_entry(
+    hass: HomeAssistant, entry: config_entries.ConfigEntry
+) -> bool:
+    """Unload a config entry."""
+    manager: BluetoothManager = hass.data.pop(DOMAIN)
+    await manager.async_stop()
     return True
 
 
@@ -265,11 +337,7 @@ class BluetoothManager:
                 scanning_mode=SCANNING_MODE_TO_BLEAK[self.scanning_mode]
             )
         except (FileNotFoundError, BleakError) as ex:
-            _LOGGER.warning(
-                "Could not create bluetooth scanner (is bluetooth present and enabled?): %s",
-                ex,
-            )
-            return
+            raise RuntimeError("Failed to initialize Bluetooth: {ex}") from ex
         install_multiple_bleak_catcher(self.scanner)
         self.async_setup_unavailable_tracking()
         # We have to start it right away as some integrations might
@@ -280,7 +348,10 @@ class BluetoothManager:
             self._device_detected, {}
         )
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
-        await self.scanner.start()
+        try:
+            await self.scanner.start()
+        except (FileNotFoundError, BleakError) as ex:
+            raise RuntimeError("Failed to start Bluetooth: {ex}") from ex
 
     @hass_callback
     def async_setup_unavailable_tracking(self) -> None:
@@ -448,7 +519,7 @@ class BluetoothManager:
             ]
         return []
 
-    async def async_stop(self, event: Event) -> None:
+    async def async_stop(self, *event: Event) -> None:
         """Stop bluetooth discovery."""
         if self._cancel_device_detected:
             self._cancel_device_detected()
@@ -459,3 +530,4 @@ class BluetoothManager:
         if self.scanner:
             await self.scanner.stop()
         models.HA_BLEAK_SCANNER = None
+        uninstall_multiple_bleak_catcher()
