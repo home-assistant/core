@@ -1,4 +1,25 @@
 {
+    "issues": {
+        "out_of_blinker_fluid": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Fla\u015f\u00f6r yeniden dolduruldu\u011funda Tamam'a bas\u0131n",
+                        "title": "Fla\u015f\u00f6r\u00fcn yeniden doldurulmas\u0131 gerekiyor"
+                    }
+                }
+            },
+            "title": "Fla\u015f\u00f6r bo\u015f ve yeniden doldurulmas\u0131 gerekiyor"
+        },
+        "transmogrifier_deprecated": {
+            "description": "Transmogrifier bile\u015feni, yeni API'de mevcut olan yerel kontrol eksikli\u011fi nedeniyle art\u0131k kullan\u0131mdan kald\u0131r\u0131lm\u0131\u015ft\u0131r",
+            "title": "Transmogrifier bile\u015feni kullan\u0131mdan kald\u0131r\u0131ld\u0131"
+        },
+        "unfixable_problem": {
+            "description": "Bu konudan asla vazge\u00e7ilmeyecek.",
+            "title": "Bu d\u00fczeltilebilir bir sorun de\u011fil"
+        }
+    },
     "options": {
         "step": {
             "init": {
