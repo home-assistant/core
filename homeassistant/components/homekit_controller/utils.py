@@ -10,8 +10,6 @@ from homeassistant.core import Event, HomeAssistant
 
 from .const import CONTROLLER
 
-_LOGGER = logging.getLogger(__name__)
-
 
 def folded_name(name: str) -> str:
     """Return a name that is used for matching a similar string."""
