@@ -8,7 +8,6 @@ import pytest
 from pytest import approx
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder.const import DATA_INSTANCE
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
     get_last_statistics,
@@ -304,7 +303,7 @@ async def test_recorder_info_bad_recorder_config(hass, hass_ws_client):
     await hass.async_block_till_done()
 
     # Wait for recorder to shut down
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].join)
+    await hass.async_add_executor_job(recorder.get_instance(hass).join)
 
     await client.send_json({"id": 1, "type": "recorder/info"})
     response = await client.receive_json()
