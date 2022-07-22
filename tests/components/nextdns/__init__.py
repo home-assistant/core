@@ -24,7 +24,11 @@ DNSSEC = AnalyticsDnssec(not_validated_queries=25, validated_queries=75)
 ENCRYPTION = AnalyticsEncryption(encrypted_queries=60, unencrypted_queries=40)
 IP_VERSIONS = AnalyticsIpVersions(ipv4_queries=90, ipv6_queries=10)
 PROTOCOLS = AnalyticsProtocols(
-    doh_queries=20, doq_queries=10, dot_queries=30, udp_queries=40
+    doh_queries=20,
+    doq_queries=10,
+    dot_queries=30,
+    tcp_queries=0,
+    udp_queries=40,
 )
 SETTINGS = Settings(
     ai_threat_detection=True,
