@@ -636,7 +636,7 @@ class Light(BaseLight, ZhaEntity):
                         self._attr_xy_color = None
                         self._attr_color_temp = None
                 else:
-                    self._attr_color_mode = Color.ColorMode.X_and_Y
+                    self._attr_color_mode = ColorMode.XY
                     color_x = results.get("current_x")
                     color_y = results.get("current_y")
                     if color_x is not None and color_y is not None:
