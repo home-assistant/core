@@ -53,7 +53,7 @@ async def test_form_create_entry(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "error",
+    "exc,base_error",
     [
         (ApiError("API Error"), "cannot_connect"),
         (InvalidApiKeyError, "invalid_api_key"),
@@ -61,9 +61,10 @@ async def test_form_create_entry(hass: HomeAssistant) -> None:
         (ValueError, "unknown"),
     ],
 )
-async def test_form_errors(hass: HomeAssistant, error: tuple[Exception, str]) -> None:
+async def test_form_errors(
+    hass: HomeAssistant, exc: Exception, base_error: str
+) -> None:
     """Test we handle errors."""
-    exc, base_error = error
     with patch(
         "homeassistant.components.nextdns.NextDns.get_profiles", side_effect=exc
     ):
