@@ -566,8 +566,6 @@ class Recorder(threading.Thread):
             self.hass.add_job(self.async_connection_failed)
             return
 
-        self.hass.add_job(self.async_connection_success)
-
         self.schema_version = current_version
 
         schema_is_current = migration.schema_is_current(current_version)
@@ -576,6 +574,8 @@ class Recorder(threading.Thread):
         else:
             self.migration_in_progress = True
             self.migration_is_live = migration.live_migration(current_version)
+
+        self.hass.add_job(self.async_connection_success)
 
         if self.migration_is_live or schema_is_current:
             # If the migrate is live or the schema is current, we need to
