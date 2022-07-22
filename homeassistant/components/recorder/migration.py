@@ -99,7 +99,7 @@ def migrate_schema(
         if live_migration(version) and not db_ready:
             db_ready = True
             instance.migration_is_live = True
-            hass.add_job(instance.async_set_recorder_ready)
+            hass.add_job(instance.async_set_db_ready)
         new_version = version + 1
         _LOGGER.info("Upgrading recorder db schema to version %s", new_version)
         _apply_update(hass, engine, session_maker, new_version, current_version)
