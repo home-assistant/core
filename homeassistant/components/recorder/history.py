@@ -690,20 +690,11 @@ def _sorted_states_to_dict(
         prev_state: Column | str
         ent_results = result[ent_id]
         if row := initial_states.pop(ent_id, None):
-            if row.entity_id != ent_id:
-                raise RuntimeError(
-                    f"Row does not match entity_id (expected:{ent_id}) (got:{row.entity_id}) - result={result}"
-                )
             prev_state = row.state
             ent_results.append(state_class(row, attr_cache, start_time))
 
         if not minimal_response or split_entity_id(ent_id)[0] in NEED_ATTRIBUTE_DOMAINS:
-            for row in group:
-                if row.entity_id != ent_id:
-                    raise RuntimeError(
-                        f"Row does not match entity_id (expected:{ent_id}) (got:{row.entity_id}) - result={result}"
-                    )
-                ent_results.append(state_class(row, attr_cache))
+            ent_results.extend(state_class(db_state, attr_cache) for db_state in group)
             continue
 
         # With minimal response we only provide a native
@@ -717,10 +708,6 @@ def _sorted_states_to_dict(
             ent_results.append(state_class(first_state, attr_cache))
 
         for row in group:
-            if row.entity_id != ent_id:
-                raise RuntimeError(
-                    f"Row does not match entity_id (expected:{ent_id}) (got:{row.entity_id}) - result={result}"
-                )
             # With minimal response we do not care about attribute
             # changes so we can filter out duplicate states
             if (state := row.state) == prev_state:
