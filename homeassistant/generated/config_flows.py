@@ -308,6 +308,7 @@ FLOWS = {
         "sense",
         "senseme",
         "sensibo",
+        "sensorpush",
         "sentry",
         "senz",
         "sharkiq",
