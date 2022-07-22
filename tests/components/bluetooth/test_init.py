@@ -19,7 +19,7 @@ from homeassistant.core import callback
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_setup_and_stop(hass, mock_bleak_scanner_start, enable_bluetooth):
@@ -844,3 +844,15 @@ async def test_setup_with_bluetooth_in_configuration_yaml(hass, mock_bluetooth):
     assert await async_setup_component(hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}})
     await hass.async_block_till_done()
     assert hass.config_entries.async_entries(bluetooth.DOMAIN)
+
+
+async def test_can_unsetup_bluetooth(hass, mock_bleak_scanner_start, enable_bluetooth):
+    """Test we can setup and unsetup bluetooth."""
+    entry = MockConfigEntry(domain=bluetooth.DOMAIN, data={})
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
