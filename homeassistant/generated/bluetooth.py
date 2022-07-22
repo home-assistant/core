@@ -31,6 +31,10 @@ BLUETOOTH: list[dict[str, str | int | list[int]]] = [
         "local_name": "tps"
     },
     {
+        "domain": "sensorpush",
+        "local_name": "SensorPush*"
+    },
+    {
         "domain": "switchbot",
         "service_uuid": "cba20d00-224d-11e6-9fb8-0002a5d5c51b"
     }
