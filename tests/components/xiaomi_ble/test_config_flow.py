@@ -6,7 +6,11 @@ from homeassistant import config_entries
 from homeassistant.components.xiaomi_ble.const import DOMAIN
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import LYWSDCGQ_SERVICE_INFO, MMC_T201_1_SERVICE_INFO, NOT_SENSOR_PUSH_SERVICE_INFO
+from . import (
+    LYWSDCGQ_SERVICE_INFO,
+    MMC_T201_1_SERVICE_INFO,
+    NOT_SENSOR_PUSH_SERVICE_INFO,
+)
 
 from tests.common import MockConfigEntry
 
