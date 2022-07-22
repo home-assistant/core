@@ -485,13 +485,11 @@ class BluetoothManager:
     @hass_callback
     def async_discovered_service_info(self) -> list[BluetoothServiceInfoBleak]:
         """Return if the address is present."""
-        if models.HA_BLEAK_SCANNER:
-            history = models.HA_BLEAK_SCANNER.history
-            return [
-                BluetoothServiceInfoBleak.from_advertisement(*device_adv, SOURCE_LOCAL)
-                for device_adv in history.values()
-            ]
-        return []
+        assert models.HA_BLEAK_SCANNER is not None
+        return [
+            BluetoothServiceInfoBleak.from_advertisement(*device_adv, SOURCE_LOCAL)
+            for device_adv in models.HA_BLEAK_SCANNER.history.values()
+        ]
 
     async def async_stop(self, event: Event | None = None) -> None:
         """Stop bluetooth discovery."""

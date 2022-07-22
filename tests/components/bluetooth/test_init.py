@@ -64,6 +64,49 @@ async def test_setup_and_stop_no_bluetooth(hass, caplog):
     assert "Failed to initialize Bluetooth" in caplog.text
 
 
+async def test_setup_and_stop_broken_bluetooth(hass, caplog):
+    """Test we fail gracefully when bluetooth/dbus is broken."""
+    mock_bt = [
+        {"domain": "switchbot", "service_uuid": "cba20d00-224d-11e6-9fb8-0002a5d5c51b"}
+    ]
+
+    class MockBleakScanner:
+        def __init__(self, *args, **kwargs):
+            """Mock the BleakScanner."""
+
+        async def start(self, *args, **kwargs):
+            raise FileNotFoundError
+
+        async def stop(self):
+            pass
+
+        def async_callback_dispatcher(self, *args, **kwargs):
+            pass
+
+        def register_detection_callback(self, *args, **kwargs):
+            pass
+
+        def async_register_callback(self, *args, **kwargs):
+            pass
+
+    with patch(
+        "homeassistant.components.bluetooth.HaBleakScanner", MockBleakScanner
+    ), patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
+    ):
+        assert await async_setup_component(
+            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
+        )
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    assert "Failed to start Bluetooth" in caplog.text
+    assert len(bluetooth.async_discovered_service_info(hass)) == 0
+
+
 async def test_calling_async_discovered_devices_no_bluetooth(hass, caplog):
     """Test we fail gracefully when asking for discovered devices and there is no blueooth."""
     mock_bt = []
@@ -790,9 +833,7 @@ async def test_wrapped_instance_unsupported_filter(
         assert "Only UUIDs filters are supported" in caplog.text
 
 
-async def test_async_ble_device_from_address(
-    hass, mock_bleak_scanner_start, enable_bluetooth
-):
+async def test_async_ble_device_from_address(hass, mock_bleak_scanner_start):
     """Test the async_ble_device_from_address api."""
     mock_bt = []
     with patch(
