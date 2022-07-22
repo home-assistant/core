@@ -1,15 +1,15 @@
 {
   "config": {
-    "flow_title": "{name}",
+    "flow_title": "[%key:component::bluetooth::config::flow_title%]",
     "step": {
       "user": {
-        "description": "Choose a device to setup",
+        "description": "[%key:component::bluetooth::config::step::user::description%]",
         "data": {
-          "address": "Device"
+          "address": "[%key:component::bluetooth::config::step::user::data::address%]"
         }
       },
       "bluetooth_confirm": {
-        "description": "Do you want to setup {name}?"
+        "description": "[%key:component::bluetooth::config::step::bluetooth_confirm::description%]"
       }
     },
     "abort": {

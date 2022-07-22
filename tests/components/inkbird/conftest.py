@@ -1,4 +1,4 @@
-"""SensorPush session fixtures."""
+"""INKBIRD session fixtures."""
 
 import pytest
 

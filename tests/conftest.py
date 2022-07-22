@@ -858,7 +858,7 @@ def mock_integration_frame():
         yield correct_frame
 
 
-@pytest.fixture(name="enable_bluetooh")
+@pytest.fixture(name="enable_bluetooth")
 async def mock_enable_bluetooth(hass, mock_bleak_scanner_start):
     """Fixture to mock starting the bleak scanner."""
     entry = MockConfigEntry(domain="bluetooth")
