@@ -574,7 +574,6 @@ class Group(Entity):
         return group
 
     @staticmethod
-    @callback
     async def async_create_group(
         hass: HomeAssistant,
         name: str,
