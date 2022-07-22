@@ -77,8 +77,7 @@ async def test_form_errors(hass, error):
 
 async def test_form_already_configured(hass):
     """Test that errors are shown when duplicates are added."""
-    entry = await init_integration(hass)
-    entry.add_to_hass(hass)
+    await init_integration(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
