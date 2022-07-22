@@ -566,6 +566,8 @@ class Recorder(threading.Thread):
             self.hass.add_job(self.async_connection_failed)
             return
 
+        self.hass.add_job(self.async_connection_success)
+
         self.schema_version = current_version
 
         schema_is_current = migration.schema_is_current(current_version)
@@ -575,16 +577,19 @@ class Recorder(threading.Thread):
             self.migration_in_progress = True
             self.migration_is_live = migration.live_migration(current_version)
 
-        self.hass.add_job(self.async_connection_success)
-
-        # If shutdown happened before Home Assistant finished starting
-        if self._wait_startup_or_shutdown() is SHUTDOWN_TASK:
-            self.migration_in_progress = False
-            # Make sure we cleanly close the run if
-            # we restart before startup finishes
-            self._shutdown()
+        if self.migration_is_live or schema_is_current:
+            # If the migrate is live or the schema is current, we need to
+            # wait for startup to complete. If its not live, we need to continue
+            # on.
             self.hass.add_job(self.async_set_db_ready)
-            return
+            # If shutdown happened before Home Assistant finished starting
+            if self._wait_startup_or_shutdown() is SHUTDOWN_TASK:
+                self.migration_in_progress = False
+                # Make sure we cleanly close the run if
+                # we restart before startup finishes
+                self._shutdown()
+                self.hass.add_job(self.async_set_db_ready)
+                return
 
         # We wait to start the migration until startup has finished
         # since it can be cpu intensive and we do not want it to compete
