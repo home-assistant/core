@@ -20,6 +20,21 @@ BLUETOOTH: list[dict[str, str | int | list[int]]] = [
         "local_name": "B5178*"
     },
     {
+        "domain": "govee_ble",
+        "manufacturer_id": 26589,
+        "service_uuid": "00008151-0000-1000-8000-00805f9b34fb"
+    },
+    {
+        "domain": "govee_ble",
+        "manufacturer_id": 18994,
+        "service_uuid": "00008151-0000-1000-8000-00805f9b34fb"
+    },
+    {
+        "domain": "govee_ble",
+        "manufacturer_id": 14474,
+        "service_uuid": "00008151-0000-1000-8000-00805f9b34fb"
+    },
+    {
         "domain": "homekit_controller",
         "manufacturer_id": 76,
         "manufacturer_data_start": [
