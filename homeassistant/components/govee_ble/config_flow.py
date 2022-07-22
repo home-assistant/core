@@ -1,4 +1,4 @@
-"""Config flow for govee_ble integration."""
+"""Config flow for govee ble integration."""
 from __future__ import annotations
 
 from typing import Any
@@ -15,8 +15,6 @@ from homeassistant.const import CONF_ADDRESS
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
-
-DISCOVERY_TIMEOUT = 10
 
 
 class GoveeConfigFlow(ConfigFlow, domain=DOMAIN):
