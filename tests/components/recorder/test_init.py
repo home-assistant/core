@@ -103,7 +103,7 @@ async def test_shutdown_before_startup_finishes(
 
     recorder_helper.async_initialize_recorder(hass)
     hass.create_task(async_setup_recorder_instance(hass, config))
-    await hass.data[DOMAIN].db_connected
+    await recorder_helper.async_wait_recorder(hass)
     instance = get_instance(hass)
 
     session = await hass.async_add_executor_job(instance.get_session)
@@ -129,7 +129,7 @@ async def test_canceled_before_startup_finishes(
     hass.state = CoreState.not_running
     recorder_helper.async_initialize_recorder(hass)
     hass.create_task(async_setup_recorder_instance(hass))
-    await hass.data[DOMAIN].db_connected
+    await recorder_helper.async_wait_recorder(hass)
 
     instance = get_instance(hass)
     instance._hass_started.cancel()
@@ -176,7 +176,7 @@ async def test_state_gets_saved_when_set_before_start_event(
 
     recorder_helper.async_initialize_recorder(hass)
     hass.create_task(async_setup_recorder_instance(hass))
-    await hass.data[DOMAIN].db_connected
+    await recorder_helper.async_wait_recorder(hass)
 
     entity_id = "test.recorder"
     state = "restoring_from_db"

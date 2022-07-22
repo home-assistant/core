@@ -343,7 +343,7 @@ async def test_schema_migrate(hass, start_version, live):
                 hass, "recorder", {"recorder": {"db_url": "sqlite://"}}
             )
         )
-        await hass.data[recorder.DOMAIN].db_connected
+        await recorder_helper.async_wait_recorder(hass)
 
         assert recorder.util.async_migration_in_progress(hass) is True
         assert recorder.util.async_migration_is_live(hass) == live
