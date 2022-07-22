@@ -436,7 +436,7 @@ class Recorder(threading.Thread):
         self.async_db_connected.set_result(True)
 
     @callback
-    def async_set_recorder_ready(self) -> None:
+    def async_set_db_ready(self) -> None:
         """Database live and ready for use.
 
         Called after non-live migration steps are finished.
@@ -577,14 +577,19 @@ class Recorder(threading.Thread):
 
         self.hass.add_job(self.async_connection_success)
 
-        # If shutdown happened before Home Assistant finished starting
-        if self._wait_startup_or_shutdown() is SHUTDOWN_TASK:
-            self.migration_in_progress = False
-            # Make sure we cleanly close the run if
-            # we restart before startup finishes
-            self._shutdown()
-            self.hass.add_job(self.async_set_recorder_ready)
-            return
+        if self.migration_is_live or schema_is_current:
+            # If the migrate is live or the schema is current, we need to
+            # wait for startup to complete. If its not live, we need to continue
+            # on.
+            self.hass.add_job(self.async_set_db_ready)
+            # If shutdown happened before Home Assistant finished starting
+            if self._wait_startup_or_shutdown() is SHUTDOWN_TASK:
+                self.migration_in_progress = False
+                # Make sure we cleanly close the run if
+                # we restart before startup finishes
+                self._shutdown()
+                self.hass.add_job(self.async_set_db_ready)
+                return
 
         # We wait to start the migration until startup has finished
         # since it can be cpu intensive and we do not want it to compete
@@ -604,11 +609,11 @@ class Recorder(threading.Thread):
                     "Database Migration Failed",
                     "recorder_database_migration",
                 )
-                self.hass.add_job(self.async_set_recorder_ready)
+                self.hass.add_job(self.async_set_db_ready)
                 self._shutdown()
                 return
 
-        self.hass.add_job(self.async_set_recorder_ready)
+        self.hass.add_job(self.async_set_db_ready)
 
         _LOGGER.debug("Recorder processing the queue")
         self.hass.add_job(self._async_set_recorder_ready_migration_done)
