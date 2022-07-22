@@ -165,3 +165,6 @@ async def test_async_step_user_takes_precedence_over_discovery(hass):
     assert result2["title"] == "H5177_2EC8"
     assert result2["data"] == {}
     assert result2["result"].unique_id == "4125DDBA-2774-4851-9889-6AADDD4CAC3D"
+
+    # Verify the original one was aborted
+    assert not hass.config_entries.flow.async_progress(DOMAIN)
