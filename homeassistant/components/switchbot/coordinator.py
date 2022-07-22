@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+import json
 import logging
 
 import switchbot
@@ -16,8 +17,20 @@ _LOGGER = logging.getLogger(__name__)
 
 def flatten_sensors_data(sensor):
     """Deconstruct SwitchBot library temp object C/Fº readings from dictionary."""
+
+    _LOGGER.debug(
+        "Sensor '%s' data retrieved from API: %s",
+        sensor["mac_address"],
+        json.dumps(sensor["data"]),
+    )
+
     if "temp" in sensor["data"]:
         sensor["data"]["temperature"] = sensor["data"]["temp"]["c"]
+        _LOGGER.debug(
+            "Enriched sensor '%s' data: %s",
+            sensor["mac_address"],
+            json.dumps(sensor["data"]),
+        )
 
     return sensor
 
