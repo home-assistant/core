@@ -343,7 +343,6 @@ class MQTT:
 
         self.init_client()
 
-        @callback
         async def async_stop_mqtt(_event: Event):
             """Stop MQTT component."""
             await self.async_disconnect()
