@@ -69,8 +69,8 @@ class ValloxProfileEntity(ValloxSelectEntity):
 
 SELECT_ENTITIES: tuple[ValloxSelectEntityDescription, ...] = (
     ValloxSelectEntityDescription(
-        key="current_profile",
-        name="Current profile",
+        key="profile",
+        name="Profile",
         icon="mdi:gauge",
         entity_type=ValloxProfileEntity,
     ),

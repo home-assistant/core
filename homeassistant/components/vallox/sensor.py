@@ -24,7 +24,13 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt
 
 from . import ValloxDataUpdateCoordinator, ValloxEntity
-from .const import DOMAIN, METRIC_KEY_MODE, MODE_ON, VALLOX_CELL_STATE_TO_STR
+from .const import (
+    DOMAIN,
+    METRIC_KEY_MODE,
+    MODE_ON,
+    VALLOX_CELL_STATE_TO_STR,
+    VALLOX_PROFILE_TO_STR_REPORTABLE,
+)
 
 
 class ValloxSensorEntity(ValloxEntity, SensorEntity):
@@ -111,7 +117,24 @@ class ValloxSensorEntityDescription(SensorEntityDescription):
     entity_type: type[ValloxSensorEntity] = ValloxSensorEntity
 
 
+class ValloxProfileSensor(ValloxSensorEntity):
+    """Child class for profile reporting."""
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the value reported by the sensor."""
+        vallox_profile = self.coordinator.data.profile
+        return VALLOX_PROFILE_TO_STR_REPORTABLE.get(vallox_profile)
+
+
 SENSOR_ENTITIES: tuple[ValloxSensorEntityDescription, ...] = (
+    ValloxSensorEntityDescription(
+        key="current_profile",
+        name="Current profile",
+        icon="mdi:gauge",
+        entity_type=ValloxProfileSensor,
+        entity_registry_enabled_default=False,
+    ),
     ValloxSensorEntityDescription(
         key="fan_speed",
         name="Fan speed",
