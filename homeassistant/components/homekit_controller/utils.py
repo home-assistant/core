@@ -1,5 +1,4 @@
 """Helper functions for the homekit_controller component."""
-import logging
 from typing import cast
 
 from aiohomekit import Controller
@@ -9,8 +8,6 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
 
 from .const import CONTROLLER
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def folded_name(name: str) -> str:
