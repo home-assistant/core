@@ -4,5 +4,5 @@ import pytest
 
 
 @pytest.fixture(autouse=True)
-def mock_bluetooth(mock_bleak_scanner_start, enable_bluetooh):
+def mock_bluetooth(enable_bluetooth):
     """Auto mock bluetooth."""

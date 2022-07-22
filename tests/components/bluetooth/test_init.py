@@ -22,7 +22,7 @@ from homeassistant.util import dt as dt_util
 from tests.common import async_fire_time_changed
 
 
-async def test_setup_and_stop(hass, mock_bleak_scanner_start):
+async def test_setup_and_stop(hass, mock_bleak_scanner_start, enable_bluetooth):
     """Test we and setup and stop the scanner."""
     mock_bt = [
         {"domain": "switchbot", "service_uuid": "cba20d00-224d-11e6-9fb8-0002a5d5c51b"}
@@ -50,19 +50,18 @@ async def test_setup_and_stop_no_bluetooth(hass, caplog):
         "homeassistant.components.bluetooth.HaBleakScanner", side_effect=BleakError
     ) as mock_ha_bleak_scanner, patch(
         "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
-    ), patch.object(
-        hass.config_entries.flow, "async_init"
     ):
         assert await async_setup_component(
             hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
         )
+        await hass.async_block_till_done()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
     assert len(mock_ha_bleak_scanner.mock_calls) == 1
-    assert "Could not create bluetooth scanner" in caplog.text
+    assert "Failed to initialize Bluetooth" in caplog.text
 
 
 async def test_calling_async_discovered_devices_no_bluetooth(hass, caplog):
@@ -72,8 +71,6 @@ async def test_calling_async_discovered_devices_no_bluetooth(hass, caplog):
         "homeassistant.components.bluetooth.HaBleakScanner", side_effect=BleakError
     ) as mock_ha_bleak_scanner, patch(
         "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
-    ), patch.object(
-        hass.config_entries.flow, "async_init"
     ):
         assert await async_setup_component(
             hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
@@ -84,12 +81,14 @@ async def test_calling_async_discovered_devices_no_bluetooth(hass, caplog):
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
     assert len(mock_ha_bleak_scanner.mock_calls) == 1
-    assert "Could not create bluetooth scanner" in caplog.text
+    assert "Failed to initialize Bluetooth" in caplog.text
     assert not bluetooth.async_discovered_service_info(hass)
     assert not bluetooth.async_address_present(hass, "aa:bb:bb:dd:ee:ff")
 
 
-async def test_discovery_match_by_service_uuid(hass, mock_bleak_scanner_start):
+async def test_discovery_match_by_service_uuid(
+    hass, mock_bleak_scanner_start, enable_bluetooth
+):
     """Test bluetooth discovery match by service_uuid."""
     mock_bt = [
         {"domain": "switchbot", "service_uuid": "cba20d00-224d-11e6-9fb8-0002a5d5c51b"}
@@ -125,7 +124,9 @@ async def test_discovery_match_by_service_uuid(hass, mock_bleak_scanner_start):
         assert mock_config_flow.mock_calls[0][1][0] == "switchbot"
 
 
-async def test_discovery_match_by_local_name(hass, mock_bleak_scanner_start):
+async def test_discovery_match_by_local_name(
+    hass, mock_bleak_scanner_start, enable_bluetooth
+):
     """Test bluetooth discovery match by local_name."""
     mock_bt = [{"domain": "switchbot", "local_name": "wohand"}]
     with patch(
@@ -158,7 +159,7 @@ async def test_discovery_match_by_local_name(hass, mock_bleak_scanner_start):
 
 
 async def test_discovery_match_by_manufacturer_id_and_first_byte(
-    hass, mock_bleak_scanner_start
+    hass, mock_bleak_scanner_start, enable_bluetooth
 ):
     """Test bluetooth discovery match by manufacturer_id and manufacturer_data_start."""
     mock_bt = [
@@ -220,7 +221,9 @@ async def test_discovery_match_by_manufacturer_id_and_first_byte(
         assert len(mock_config_flow.mock_calls) == 0
 
 
-async def test_async_discovered_device_api(hass, mock_bleak_scanner_start):
+async def test_async_discovered_device_api(
+    hass, mock_bleak_scanner_start, enable_bluetooth
+):
     """Test the async_discovered_device_api."""
     mock_bt = []
     with patch(
@@ -308,7 +311,7 @@ async def test_async_discovered_device_api(hass, mock_bleak_scanner_start):
         assert bluetooth.async_address_present(hass, "44:44:33:11:23:45") is True
 
 
-async def test_register_callbacks(hass, mock_bleak_scanner_start):
+async def test_register_callbacks(hass, mock_bleak_scanner_start, enable_bluetooth):
     """Test registering a callback."""
     mock_bt = []
     callbacks = []
@@ -389,7 +392,9 @@ async def test_register_callbacks(hass, mock_bleak_scanner_start):
     assert service_info.manufacturer_id is None
 
 
-async def test_register_callback_by_address(hass, mock_bleak_scanner_start):
+async def test_register_callback_by_address(
+    hass, mock_bleak_scanner_start, enable_bluetooth
+):
     """Test registering a callback by address."""
     mock_bt = []
     callbacks = []
@@ -475,7 +480,9 @@ async def test_register_callback_by_address(hass, mock_bleak_scanner_start):
         assert service_info.manufacturer_id == 89
 
 
-async def test_wrapped_instance_with_filter(hass, mock_bleak_scanner_start):
+async def test_wrapped_instance_with_filter(
+    hass, mock_bleak_scanner_start, enable_bluetooth
+):
     """Test consumers can use the wrapped instance with a filter as if it was normal BleakScanner."""
     with patch(
         "homeassistant.components.bluetooth.async_get_bluetooth", return_value=[]
@@ -541,7 +548,9 @@ async def test_wrapped_instance_with_filter(hass, mock_bleak_scanner_start):
     assert len(detected) == 4
 
 
-async def test_wrapped_instance_with_service_uuids(hass, mock_bleak_scanner_start):
+async def test_wrapped_instance_with_service_uuids(
+    hass, mock_bleak_scanner_start, enable_bluetooth
+):
     """Test consumers can use the wrapped instance with a service_uuids list as if it was normal BleakScanner."""
     with patch(
         "homeassistant.components.bluetooth.async_get_bluetooth", return_value=[]
@@ -589,7 +598,9 @@ async def test_wrapped_instance_with_service_uuids(hass, mock_bleak_scanner_star
     assert len(detected) == 2
 
 
-async def test_wrapped_instance_with_broken_callbacks(hass, mock_bleak_scanner_start):
+async def test_wrapped_instance_with_broken_callbacks(
+    hass, mock_bleak_scanner_start, enable_bluetooth
+):
     """Test broken callbacks do not cause the scanner to fail."""
     with patch(
         "homeassistant.components.bluetooth.async_get_bluetooth", return_value=[]
@@ -631,7 +642,9 @@ async def test_wrapped_instance_with_broken_callbacks(hass, mock_bleak_scanner_s
     assert len(detected) == 1
 
 
-async def test_wrapped_instance_changes_uuids(hass, mock_bleak_scanner_start):
+async def test_wrapped_instance_changes_uuids(
+    hass, mock_bleak_scanner_start, enable_bluetooth
+):
     """Test consumers can use the wrapped instance can change the uuids later."""
     with patch(
         "homeassistant.components.bluetooth.async_get_bluetooth", return_value=[]
@@ -678,7 +691,9 @@ async def test_wrapped_instance_changes_uuids(hass, mock_bleak_scanner_start):
     assert len(detected) == 2
 
 
-async def test_wrapped_instance_changes_filters(hass, mock_bleak_scanner_start):
+async def test_wrapped_instance_changes_filters(
+    hass, mock_bleak_scanner_start, enable_bluetooth
+):
     """Test consumers can use the wrapped instance can change the filter later."""
     with patch(
         "homeassistant.components.bluetooth.async_get_bluetooth", return_value=[]
@@ -728,7 +743,7 @@ async def test_wrapped_instance_changes_filters(hass, mock_bleak_scanner_start):
 
 
 async def test_wrapped_instance_unsupported_filter(
-    hass, mock_bleak_scanner_start, caplog
+    hass, mock_bleak_scanner_start, caplog, enable_bluetooth
 ):
     """Test we want when their filter is ineffective."""
     with patch(
@@ -751,7 +766,9 @@ async def test_wrapped_instance_unsupported_filter(
     assert "Only UUIDs filters are supported" in caplog.text
 
 
-async def test_async_ble_device_from_address(hass, mock_bleak_scanner_start):
+async def test_async_ble_device_from_address(
+    hass, mock_bleak_scanner_start, enable_bluetooth
+):
     """Test the async_ble_device_from_address api."""
     mock_bt = []
     with patch(

@@ -311,7 +311,7 @@ class BluetoothManager:
                 scanning_mode=SCANNING_MODE_TO_BLEAK[self.scanning_mode]
             )
         except (FileNotFoundError, BleakError) as ex:
-            raise RuntimeError("Failed to initialize Bluetooth: {ex}") from ex
+            raise RuntimeError(f"Failed to initialize Bluetooth: {ex}") from ex
         install_multiple_bleak_catcher(self.scanner)
         self.async_setup_unavailable_tracking()
         # We have to start it right away as some integrations might
@@ -325,7 +325,7 @@ class BluetoothManager:
         try:
             await self.scanner.start()
         except (FileNotFoundError, BleakError) as ex:
-            raise RuntimeError("Failed to start Bluetooth: {ex}") from ex
+            raise RuntimeError(f"Failed to start Bluetooth: {ex}") from ex
 
     @hass_callback
     def async_setup_unavailable_tracking(self) -> None:
