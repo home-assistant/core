@@ -411,6 +411,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/google_cloud/ @lufton
 /homeassistant/components/google_travel_time/ @eifinger
 /tests/components/google_travel_time/ @eifinger
+/homeassistant/components/govee_ble/ @bdraco
+/tests/components/govee_ble/ @bdraco
 /homeassistant/components/gpsd/ @fabaff
 /homeassistant/components/gree/ @cmroche
 /tests/components/gree/ @cmroche

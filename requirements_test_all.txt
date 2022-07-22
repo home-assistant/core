@@ -557,6 +557,9 @@ google-nest-sdm==2.0.0
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
 
+# homeassistant.components.govee_ble
+govee-ble==0.12.1
+
 # homeassistant.components.gree
 greeclimate==1.2.0
 
