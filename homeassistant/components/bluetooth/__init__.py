@@ -13,8 +13,6 @@ from typing import Final, TypedDict, Union
 from bleak import BleakError
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
-from dbus_next import BusType, Message, MessageType
-from dbus_next.aio import MessageBus
 from lru import LRU  # pylint: disable=no-name-in-module
 
 from homeassistant import config_entries
@@ -187,35 +185,11 @@ async def _async_has_bluetooth_adapter() -> bool:
         return True
     if platform.system() == "Windows":  # We don't have a good way to detect on windows
         return False
-    return bool(await _async_get_bluetooth_adapters())
-
-
-async def _async_get_bluetooth_adapters() -> set[str]:
-    """Return a list of bluetooth adapters."""
-    adapters: set[str] = set()
-    try:
-        bus = await MessageBus(
-            bus_type=BusType.SYSTEM, negotiate_unix_fd=True
-        ).connect()
-    except FileNotFoundError:
-        return adapters
-    msg = Message(
-        destination="org.bluez",
-        path="/",
-        interface="org.freedesktop.DBus.ObjectManager",
-        member="GetManagedObjects",
+    from bluetooth_adapters import (  # pylint: disable=import-outside-toplevel
+        get_bluetooth_adapters,
     )
-    if (
-        not (reply := await bus.call(msg))
-        or reply.message_type != MessageType.METHOD_RETURN
-    ):
-        return adapters
-    for path in reply.body[0]:
-        path_str = str(path)
-        if path_str.startswith("/org/bluez/hci"):
-            split_path = path_str.split("/")
-            adapters.add(split_path[3])
-    return adapters
+
+    return bool(await get_bluetooth_adapters())
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -519,7 +493,7 @@ class BluetoothManager:
             ]
         return []
 
-    async def async_stop(self, *event: Event) -> None:
+    async def async_stop(self, event: Event | None = None) -> None:
         """Stop bluetooth discovery."""
         if self._cancel_device_detected:
             self._cancel_device_detected()

@@ -3,7 +3,7 @@
     "flow_title": "{name}",
     "step": {
       "enable_bluetooth": {
-        "description": "This integration allows Home Assistant to discover Bluetooth devices and share the Bluetooth adapter with `bleak` based integrations. If you find your legacy integrations need exclusive use of the Bluetooth adapter, deleting this integration will release control of the adapter."
+        "description": "This integration allows Home Assistant to discover Bluetooth devices and share the Bluetooth adapter with integrations. If you find your legacy integrations need exclusive use of the Bluetooth adapter, deleting this integration will release control of the adapter."
       },
       "user": {
         "description": "Choose a device to setup",
@@ -14,6 +14,9 @@
       "bluetooth_confirm": {
         "description": "Do you want to setup {name}?"
       }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     }
   }
 }
