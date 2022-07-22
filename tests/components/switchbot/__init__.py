@@ -26,6 +26,12 @@ USER_INPUT_CURTAIN = {
     CONF_MAC: "e7:89:43:90:90:90",
 }
 
+USER_INPUT_SENSOR = {
+    CONF_NAME: "test-name",
+    CONF_PASSWORD: "test-password",
+    CONF_MAC: "c0:ce:b0:d4:26:be",
+}
+
 USER_INPUT_UNSUPPORTED_DEVICE = {
     CONF_NAME: "test-name",
     CONF_PASSWORD: "test-password",
