@@ -28,6 +28,7 @@ def tempsensor_fixture():
         device_class="temperature",
         unit="celsius",
         current=None,
+        native_value=None,
     )
     product = feature.product
     type(product).name = PropertyMock(return_value="My temperature sensor")

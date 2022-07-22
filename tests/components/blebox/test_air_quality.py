@@ -11,19 +11,22 @@ from homeassistant.helpers import device_registry as dr
 
 from .conftest import async_setup_entity, mock_feature
 
+apmi = ["pm1", "pm2_5", "pm10"]  # apmi - airQuality particle matter indicators
 
-@pytest.fixture(name="airsensor")
+
+@pytest.fixture(params=apmi, name="airsensor")
 def airsensor_fixture():
     """Return a default air quality fixture."""
     feature = mock_feature(
         "air_qualities",
-        blebox_uniapi.air_quality.AirQuality,
+        blebox_uniapi.sensor.AirQuality,
         unique_id="BleBox-airSensor-1afe34db9437-0.air",
         full_name="airSensor-0.air",
         device_class=None,
         pm1=None,
         pm2_5=None,
         pm10=None,
+        native_value=None,
     )
     product = feature.product
     type(product).name = PropertyMock(return_value="My air sensor")
