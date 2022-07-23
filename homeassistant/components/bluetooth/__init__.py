@@ -23,6 +23,7 @@ from homeassistant.core import (
     HomeAssistant,
     callback as hass_callback,
 )
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
@@ -338,7 +339,6 @@ class BluetoothManager:
         except (FileNotFoundError, BleakError) as ex:
             raise RuntimeError(f"Failed to initialize Bluetooth: {ex}") from ex
         install_multiple_bleak_catcher()
-        self.async_setup_unavailable_tracking()
         # We have to start it right away as some integrations might
         # need it straight away.
         _LOGGER.debug("Starting bluetooth scanner")
@@ -349,7 +349,9 @@ class BluetoothManager:
         try:
             await self.scanner.start()
         except (FileNotFoundError, BleakError) as ex:
-            raise RuntimeError(f"Failed to start Bluetooth: {ex}") from ex
+            self._cancel_device_detected()
+            raise ConfigEntryNotReady(f"Failed to start Bluetooth: {ex}") from ex
+        self.async_setup_unavailable_tracking()
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
 
     @hass_callback
