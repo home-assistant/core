@@ -21,10 +21,16 @@ class Gateway:
         self._worker.configure(config)
         self._hass = hass
         self._first_pull = True
+        self.manufacturer = None
+        self.model = None
+        self.firmware = None
 
     async def init_async(self):
         """Initialize the sms gateway asynchronously."""
         await self._worker.init_async()
+        self.manufacturer = await self.get_manufacturer_async()
+        self.model = await self.get_model_async()
+        self.firmware = await self.get_firmware_async()
 
     def sms_pull(self, state_machine):
         """Pull device.
@@ -157,6 +163,19 @@ class Gateway:
     async def get_network_info_async(self):
         """Get the current network info of the modem."""
         return await self._worker.get_network_info_async()
+
+    async def get_manufacturer_async(self):
+        """Get the manufacturer of the modem."""
+        return await self._worker.get_manufacturer_async()
+
+    async def get_model_async(self):
+        """Get the model of the modem."""
+        return await self._worker.get_model_async()
+
+    async def get_firmware_async(self):
+        """Get the firmware information of the modem."""
+        firmware = await self._worker.get_firmware_async()
+        return f"{firmware[0]} ({firmware[1]})"
 
     async def terminate_async(self):
         """Terminate modem connection."""

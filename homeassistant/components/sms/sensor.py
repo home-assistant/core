@@ -90,19 +90,11 @@ async def async_setup_entry(
     entities = []
     for description in SIGNAL_SENSORS:
         entities.append(
-            DeviceSensor(
-                signal_coordinator,
-                description,
-                unique_id,
-            )
+            DeviceSensor(signal_coordinator, description, unique_id, gateway)
         )
     for description in NETWORK_SENSORS:
         entities.append(
-            DeviceSensor(
-                network_coordinator,
-                description,
-                unique_id,
-            )
+            DeviceSensor(network_coordinator, description, unique_id, gateway)
         )
     async_add_entities(entities, True)
 
@@ -110,12 +102,15 @@ async def async_setup_entry(
 class DeviceSensor(CoordinatorEntity, SensorEntity):
     """Implementation of a device sensor."""
 
-    def __init__(self, coordinator, description, unique_id):
+    def __init__(self, coordinator, description, unique_id, gateway):
         """Initialize the device sensor."""
         super().__init__(coordinator)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
             name="SMS Gateway",
+            manufacturer=gateway.manufacturer,
+            model=gateway.model,
+            sw_version=gateway.firmware,
         )
         self._attr_unique_id = f"{unique_id}_{description.key}"
         self.entity_description = description
