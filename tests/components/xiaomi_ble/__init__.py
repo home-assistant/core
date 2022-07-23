@@ -36,3 +36,18 @@ MMC_T201_1_SERVICE_INFO = BluetoothServiceInfo(
     service_uuids=["0000fe95-0000-1000-8000-00805f9b34fb"],
     source="local",
 )
+
+
+def make_advertisement(address: str, payload: bytes) -> BluetoothServiceInfo:
+    """Make a dummy advertisement."""
+    return BluetoothServiceInfo(
+        name="Test Device",
+        address=address,
+        rssi=-56,
+        manufacturer_data={},
+        service_data={
+            "0000fe95-0000-1000-8000-00805f9b34fb": payload,
+        },
+        service_uuids=["0000fe95-0000-1000-8000-00805f9b34fb"],
+        source="local",
+    )
