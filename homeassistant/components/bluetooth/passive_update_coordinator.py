@@ -1,4 +1,4 @@
-"""Passive update coordinator the Bluetooth integration."""
+"""Passive update coordinator for the Bluetooth integration."""
 from __future__ import annotations
 
 from collections.abc import Callable, Generator
