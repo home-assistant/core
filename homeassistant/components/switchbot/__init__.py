@@ -27,7 +27,6 @@ from .const import (
     CONF_RETRY_TIMEOUT,
     DEFAULT_RETRY_COUNT,
     DEFAULT_RETRY_TIMEOUT,
-    DEPRECATED_CONFIG_OPTIONS,
     DOMAIN,
 )
 from .coordinator import SwitchbotCoordinator
@@ -48,7 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     domain_data = hass.data[DOMAIN]
 
-    if CONF_MAC in entry.data:
+    if CONF_ADDRESS not in entry.data and CONF_MAC in entry.data:
         # Bleak uses addresses not mac addresses which are are actually
         # UUIDs on some platforms (MacOS).
         mac = entry.data[CONF_MAC]
@@ -56,8 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             mac = dr.format_mac(mac)
         hass.config_entries.async_update_entry(
             entry,
-            data={k: v for k, v in entry.data.items() if k != CONF_MAC}
-            | {CONF_ADDRESS: mac},
+            data={**entry.data, CONF_ADDRESS: mac},
         )
 
     if not entry.options:
@@ -66,16 +64,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             options={
                 CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT,
                 CONF_RETRY_TIMEOUT: DEFAULT_RETRY_TIMEOUT,
-            },
-        )
-
-    if DEPRECATED_CONFIG_OPTIONS.intersection(entry.options):
-        hass.config_entries.async_update_entry(
-            entry,
-            options={
-                k: v
-                for k, v in entry.options.items()
-                if k not in DEPRECATED_CONFIG_OPTIONS
             },
         )
 

@@ -18,11 +18,12 @@ DEFAULT_RETRY_COUNT = 3
 DEFAULT_RETRY_TIMEOUT = 5
 
 # Config Options
-CONF_TIME_BETWEEN_UPDATE_COMMAND = "update_time"
 CONF_RETRY_COUNT = "retry_count"
-CONF_RETRY_TIMEOUT = "retry_timeout"
 CONF_SCAN_TIMEOUT = "scan_timeout"
-DEPRECATED_CONFIG_OPTIONS = {CONF_TIME_BETWEEN_UPDATE_COMMAND, CONF_SCAN_TIMEOUT}
+
+# Deprecated config Entry Options to be removed in 2023.4
+CONF_TIME_BETWEEN_UPDATE_COMMAND = "update_time"
+CONF_RETRY_TIMEOUT = "retry_timeout"
 
 # Data
 COMMON_OPTIONS = "common_options"
