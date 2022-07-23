@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from homeassistant.components import onboarding
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.data_entry_flow import FlowResult
 
@@ -27,7 +28,7 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
         if self._async_current_entries():
             return self.async_abort(reason="already_configured")
 
-        if user_input is not None:
+        if user_input is not None or not onboarding.async_is_onboarded(self.hass):
             return self.async_create_entry(title=DEFAULT_NAME, data={})
 
         return self.async_show_form(step_id="enable_bluetooth")
