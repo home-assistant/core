@@ -5,16 +5,18 @@ from collections.abc import Mapping
 from typing import Any
 
 from homeassistant.components import bluetooth
+from homeassistant.components.bluetooth.passive_update_coordinator import (
+    PassiveBluetoothCoordinatorEntity,
+)
 from homeassistant.const import ATTR_CONNECTIONS
-from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import DeviceInfo
 
 from .const import MANUFACTURER
 from .coordinator import SwitchbotCoordinator
 
 
-class SwitchbotEntity(Entity):
+class SwitchbotEntity(PassiveBluetoothCoordinatorEntity):
     """Generic entity encapsulating common features of Switchbot device."""
 
     coordinator: SwitchbotCoordinator
@@ -27,7 +29,7 @@ class SwitchbotEntity(Entity):
         name: str,
     ) -> None:
         """Initialize the entity."""
-        self.coordinator = coordinator
+        super().__init__(coordinator)
         self._last_run_success: bool | None = None
         self._unique_id = unique_id
         self._address = address
@@ -46,28 +48,11 @@ class SwitchbotEntity(Entity):
         }
 
     @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return self.coordinator.available
+    def extra_state_attributes(self) -> Mapping[Any, Any]:
+        """Return the state attributes."""
+        return {"last_run_success": self._last_run_success}
 
     @property
     def data(self) -> dict[str, Any]:
         """Return coordinator data for this entity."""
         return self.coordinator.data
-
-    @property
-    def extra_state_attributes(self) -> Mapping[Any, Any]:
-        """Return the state attributes."""
-        return {"last_run_success": self._last_run_success}
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self.async_write_ha_state()
-
-    async def async_added_to_hass(self) -> None:
-        """When entity is added to hass."""
-        await super().async_added_to_hass()
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self._handle_coordinator_update)
-        )

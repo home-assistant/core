@@ -13,6 +13,7 @@ from homeassistant.const import ATTR_IDENTIFIERS, ATTR_NAME
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import (
     BluetoothCallbackMatcher,
@@ -55,11 +56,10 @@ class PassiveBluetoothDataUpdate(Generic[_T]):
     )
 
 
-class PassiveBluetoothDataUpdateCoordinator:
-    """Passive bluetooth data update coordinator for bluetooth advertisements.
+class _BasePassiveBluetoothCoordinator:
+    """Base class for passive bluetooth coordinator for bluetooth advertisements.
 
-    The coordinator is responsible for dispatching the bluetooth data,
-    to each processor, and tracking devices.
+    The coordinator is responsible for tracking devices.
     """
 
     def __init__(
@@ -73,7 +73,6 @@ class PassiveBluetoothDataUpdateCoordinator:
         self.logger = logger
         self.name: str | None = None
         self.address = address
-        self._processors: list[PassiveBluetoothDataProcessor] = []
         self._cancel_track_unavailable: CALLBACK_TYPE | None = None
         self._cancel_bluetooth_advertisements: CALLBACK_TYPE | None = None
         self._present = False
@@ -109,6 +108,91 @@ class PassiveBluetoothDataUpdateCoordinator:
             self._cancel_track_unavailable = None
 
     @callback
+    def _async_handle_unavailable(self, address: str) -> None:
+        """Handle the device going unavailable."""
+        self._present = False
+
+    @callback
+    def _async_handle_bluetooth_event(
+        self,
+        service_info: BluetoothServiceInfo,
+        change: BluetoothChange,
+    ) -> None:
+        """Handle a Bluetooth event."""
+        self.last_seen = time.monotonic()
+        self.name = service_info.name
+        self._present = True
+
+
+class PassiveBluetoothDataUpdateCoordinator(_BasePassiveBluetoothCoordinator):
+    """Class to manage passive bluetooth advertisements.
+
+    This coordinator is responsible for dispatching the bluetooth data
+    and tracking devices.
+    """
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        logger: logging.Logger,
+        address: str,
+    ) -> None:
+        """Initialize PassiveBluetoothDataUpdateCoordinator."""
+        super().__init__(hass, logger, address)
+        self._listeners: list[Callable[[], None]] = []
+
+    def _async_call_listeners(self) -> None:
+        for listener in self._listeners:
+            listener()
+
+    @callback
+    def _async_handle_unavailable(self, address: str) -> None:
+        """Handle the device going unavailable."""
+        super()._async_handle_unavailable(address)
+        self._async_call_listeners()
+
+    @callback
+    def async_start(self) -> CALLBACK_TYPE:
+        """Start the data updater."""
+        self._async_start()
+
+        @callback
+        def _async_cancel() -> None:
+            self._async_stop()
+
+        return _async_cancel
+
+    @callback
+    def async_add_listener(self, update_callback: CALLBACK_TYPE) -> Callable[[], None]:
+        """Listen for data updates."""
+
+        @callback
+        def remove_listener() -> None:
+            """Remove update listener."""
+            self._listeners.remove(update_callback)
+
+        self._listeners.append(update_callback)
+        return remove_listener
+
+
+class PassiveBluetoothProcessorCoordinator(_BasePassiveBluetoothCoordinator):
+    """Passive bluetooth data update coordinator for bluetooth advertisements.
+
+    The coordinator is responsible for dispatching the bluetooth data,
+    to each processor, and tracking devices.
+    """
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        logger: logging.Logger,
+        address: str,
+    ) -> None:
+        """Initialize the coordinator."""
+        super().__init__(hass, logger, address)
+        self._processors: list[PassiveBluetoothDataProcessor] = []
+
+    @callback
     def async_register_processor(
         self, processor: PassiveBluetoothDataProcessor
     ) -> Callable[[], None]:
@@ -135,9 +219,9 @@ class PassiveBluetoothDataUpdateCoordinator:
             self._async_start()
 
     @callback
-    def _async_handle_unavailable(self, _address: str) -> None:
+    def _async_handle_unavailable(self, address: str) -> None:
         """Handle the device going unavailable."""
-        self._present = False
+        super()._async_handle_unavailable(address)
         for processor in self._processors:
             processor.async_handle_unavailable()
 
@@ -148,9 +232,7 @@ class PassiveBluetoothDataUpdateCoordinator:
         change: BluetoothChange,
     ) -> None:
         """Handle a Bluetooth event."""
-        self.last_seen = time.monotonic()
-        self.name = service_info.name
-        self._present = True
+        super()._async_handle_bluetooth_event(service_info, change)
         if self.hass.is_stopping:
             return
         for processor in self._processors:
@@ -185,7 +267,7 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
     is available in the devices, entity_data, and entity_descriptions attributes.
     """
 
-    coordinator: PassiveBluetoothDataUpdateCoordinator
+    coordinator: PassiveBluetoothProcessorCoordinator
 
     def __init__(
         self,
@@ -325,6 +407,15 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
         self.entity_data.update(new_data.entity_data)
         self.entity_names.update(new_data.entity_names)
         self.async_update_listeners(new_data)
+
+
+class PassiveBluetoothCoordinatorEntity(CoordinatorEntity):
+    """A class for entities using DataUpdateCoordinator."""
+
+    coordinator: PassiveBluetoothDataUpdateCoordinator
+
+    async def async_update(self) -> None:
+        """All updates are passive."""
 
 
 class PassiveBluetoothProcessorEntity(Entity, Generic[_PassiveBluetoothDataProcessorT]):
