@@ -492,7 +492,7 @@ async def test_set_percentage(hass, calls):
     for state, value in [
         (STATE_ON, 100),
         (STATE_ON, 66),
-        (STATE_OFF, 0),
+        (STATE_ON, 0),
     ]:
         await common.async_set_percentage(hass, _TEST_FAN, value)
         assert int(float(hass.states.get(_PERCENTAGE_INPUT_NUMBER).state)) == value
@@ -517,7 +517,7 @@ async def test_increase_decrease_speed(hass, calls):
         (common.async_set_percentage, 100, STATE_ON, 100),
         (common.async_decrease_speed, None, STATE_ON, 66),
         (common.async_decrease_speed, None, STATE_ON, 33),
-        (common.async_decrease_speed, None, STATE_OFF, 0),
+        (common.async_decrease_speed, None, STATE_ON, 0),
         (common.async_increase_speed, None, STATE_ON, 33),
     ]:
         await func(hass, _TEST_FAN, extra)
