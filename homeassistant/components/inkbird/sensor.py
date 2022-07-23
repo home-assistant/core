@@ -16,8 +16,8 @@ from homeassistant import config_entries
 from homeassistant.components.bluetooth.passive_update_coordinator import (
     PassiveBluetoothDataProcessor,
     PassiveBluetoothDataUpdate,
-    PassiveBluetoothDataUpdateCoordinator,
     PassiveBluetoothEntityKey,
+    PassiveBluetoothProcessorCoordinator,
     PassiveBluetoothProcessorEntity,
 )
 from homeassistant.components.sensor import (
@@ -126,7 +126,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the INKBIRD BLE sensors."""
-    coordinator: PassiveBluetoothDataUpdateCoordinator = hass.data[DOMAIN][
+    coordinator: PassiveBluetoothProcessorCoordinator = hass.data[DOMAIN][
         entry.entry_id
     ]
     data = INKBIRDBluetoothDeviceData()

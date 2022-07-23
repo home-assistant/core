@@ -20,8 +20,8 @@ from homeassistant.components.bluetooth import (
 from homeassistant.components.bluetooth.passive_update_coordinator import (
     PassiveBluetoothDataProcessor,
     PassiveBluetoothDataUpdate,
-    PassiveBluetoothDataUpdateCoordinator,
     PassiveBluetoothEntityKey,
+    PassiveBluetoothProcessorCoordinator,
     PassiveBluetoothProcessorEntity,
 )
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
@@ -79,7 +79,7 @@ GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE = PassiveBluetoothDataUpdate(
 
 
 async def test_basic_usage(hass, mock_bleak_scanner_start):
-    """Test basic usage of the PassiveBluetoothDataUpdateCoordinator."""
+    """Test basic usage of the PassiveBluetoothProcessorCoordinator."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
     @callback
@@ -89,7 +89,7 @@ async def test_basic_usage(hass, mock_bleak_scanner_start):
         """Generate mock data."""
         return GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE
 
-    coordinator = PassiveBluetoothDataUpdateCoordinator(
+    coordinator = PassiveBluetoothProcessorCoordinator(
         hass, _LOGGER, "aa:bb:cc:dd:ee:ff"
     )
     assert coordinator.available is False  # no data yet
@@ -189,7 +189,7 @@ async def test_unavailable_after_no_data(hass, mock_bleak_scanner_start):
         """Generate mock data."""
         return GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE
 
-    coordinator = PassiveBluetoothDataUpdateCoordinator(
+    coordinator = PassiveBluetoothProcessorCoordinator(
         hass, _LOGGER, "aa:bb:cc:dd:ee:ff"
     )
     assert coordinator.available is False  # no data yet
@@ -272,7 +272,7 @@ async def test_no_updates_once_stopping(hass, mock_bleak_scanner_start):
         """Generate mock data."""
         return GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE
 
-    coordinator = PassiveBluetoothDataUpdateCoordinator(
+    coordinator = PassiveBluetoothProcessorCoordinator(
         hass, _LOGGER, "aa:bb:cc:dd:ee:ff"
     )
     assert coordinator.available is False  # no data yet
@@ -329,7 +329,7 @@ async def test_exception_from_update_method(hass, caplog, mock_bleak_scanner_sta
             raise Exception("Test exception")
         return GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE
 
-    coordinator = PassiveBluetoothDataUpdateCoordinator(
+    coordinator = PassiveBluetoothProcessorCoordinator(
         hass, _LOGGER, "aa:bb:cc:dd:ee:ff"
     )
     assert coordinator.available is False  # no data yet
@@ -380,7 +380,7 @@ async def test_bad_data_from_update_method(hass, mock_bleak_scanner_start):
             return "bad_data"
         return GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE
 
-    coordinator = PassiveBluetoothDataUpdateCoordinator(
+    coordinator = PassiveBluetoothProcessorCoordinator(
         hass, _LOGGER, "aa:bb:cc:dd:ee:ff"
     )
     assert coordinator.available is False  # no data yet
@@ -704,7 +704,7 @@ GOVEE_B5178_PRIMARY_AND_REMOTE_PASSIVE_BLUETOOTH_DATA_UPDATE = (
 
 
 async def test_integration_with_entity(hass, mock_bleak_scanner_start):
-    """Test integration of PassiveBluetoothDataUpdateCoordinator with PassiveBluetoothCoordinatorEntity."""
+    """Test integration of PassiveBluetoothProcessorCoordinator with PassiveBluetoothCoordinatorEntity."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
     update_count = 0
@@ -720,7 +720,7 @@ async def test_integration_with_entity(hass, mock_bleak_scanner_start):
             return GOVEE_B5178_PRIMARY_AND_REMOTE_PASSIVE_BLUETOOTH_DATA_UPDATE
         return GOVEE_B5178_REMOTE_PASSIVE_BLUETOOTH_DATA_UPDATE
 
-    coordinator = PassiveBluetoothDataUpdateCoordinator(
+    coordinator = PassiveBluetoothProcessorCoordinator(
         hass, _LOGGER, "aa:bb:cc:dd:ee:ff"
     )
     assert coordinator.available is False  # no data yet
@@ -828,7 +828,7 @@ async def test_integration_with_entity_without_a_device(hass, mock_bleak_scanner
         """Generate mock data."""
         return NO_DEVICES_PASSIVE_BLUETOOTH_DATA_UPDATE
 
-    coordinator = PassiveBluetoothDataUpdateCoordinator(
+    coordinator = PassiveBluetoothProcessorCoordinator(
         hass, _LOGGER, "aa:bb:cc:dd:ee:ff"
     )
     assert coordinator.available is False  # no data yet
@@ -890,7 +890,7 @@ async def test_passive_bluetooth_entity_with_entity_platform(
         """Generate mock data."""
         return NO_DEVICES_PASSIVE_BLUETOOTH_DATA_UPDATE
 
-    coordinator = PassiveBluetoothDataUpdateCoordinator(
+    coordinator = PassiveBluetoothProcessorCoordinator(
         hass, _LOGGER, "aa:bb:cc:dd:ee:ff"
     )
     assert coordinator.available is False  # no data yet
@@ -972,10 +972,10 @@ BINARY_SENSOR_PASSIVE_BLUETOOTH_DATA_UPDATE = PassiveBluetoothDataUpdate(
 
 
 async def test_integration_multiple_entity_platforms(hass, mock_bleak_scanner_start):
-    """Test integration of PassiveBluetoothDataUpdateCoordinator with multiple platforms."""
+    """Test integration of PassiveBluetoothProcessorCoordinator with multiple platforms."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
-    coordinator = PassiveBluetoothDataUpdateCoordinator(
+    coordinator = PassiveBluetoothProcessorCoordinator(
         hass, _LOGGER, "aa:bb:cc:dd:ee:ff"
     )
     assert coordinator.available is False  # no data yet

@@ -176,7 +176,7 @@ class PassiveBluetoothDataUpdateCoordinator(_BasePassiveBluetoothCoordinator):
 
 
 class PassiveBluetoothProcessorCoordinator(_BasePassiveBluetoothCoordinator):
-    """Passive bluetooth data update coordinator for bluetooth advertisements.
+    """Passive bluetooth processor coordinator for bluetooth advertisements.
 
     The coordinator is responsible for dispatching the bluetooth data,
     to each processor, and tracking devices.
