@@ -1,0 +1,16 @@
+{
+    "config": {
+        "flow_title": "{name}",
+        "step": {
+            "bluetooth_confirm": {
+                "description": "Ingin menyiapkan {name}?"
+            },
+            "user": {
+                "data": {
+                    "address": "Perangkat"
+                },
+                "description": "Pilih perangkat untuk disiapkan"
+            }
+        }
+    }
+}
