@@ -8,6 +8,10 @@ from unittest.mock import MagicMock, patch
 from home_assistant_bluetooth import BluetoothServiceInfo
 import pytest
 
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntityDescription,
+)
 from homeassistant.components.bluetooth import (
     DOMAIN,
     UNAVAILABLE_TRACK_SECONDS,
@@ -909,4 +913,134 @@ async def test_passive_bluetooth_entity_with_entity_platform(
     assert (
         hass.states.get("test_domain.test_platform_aa_bb_cc_dd_ee_ff_pressure")
         is not None
+    )
+
+
+SENSOR_PASSIVE_BLUETOOTH_DATA_UPDATE = PassiveBluetoothDataUpdate(
+    devices={
+        None: DeviceInfo(
+            name="Test Device", model="Test Model", manufacturer="Test Manufacturer"
+        ),
+    },
+    entity_data={
+        PassiveBluetoothEntityKey("pressure", None): 1234,
+    },
+    entity_names={
+        PassiveBluetoothEntityKey("pressure", None): "Pressure",
+    },
+    entity_descriptions={
+        PassiveBluetoothEntityKey("pressure", None): SensorEntityDescription(
+            key="pressure",
+            native_unit_of_measurement="hPa",
+            device_class=SensorDeviceClass.PRESSURE,
+        ),
+    },
+)
+
+
+BINARY_SENSOR_PASSIVE_BLUETOOTH_DATA_UPDATE = PassiveBluetoothDataUpdate(
+    devices={
+        None: DeviceInfo(
+            name="Test Device", model="Test Model", manufacturer="Test Manufacturer"
+        ),
+    },
+    entity_data={
+        PassiveBluetoothEntityKey("motion", None): True,
+    },
+    entity_names={
+        PassiveBluetoothEntityKey("motion", None): "Motion",
+    },
+    entity_descriptions={
+        PassiveBluetoothEntityKey("motion", None): BinarySensorEntityDescription(
+            key="motion",
+            device_class=BinarySensorDeviceClass.MOTION,
+        ),
+    },
+)
+
+
+async def test_integration_multiple_entity_platforms(hass, mock_bleak_scanner_start):
+    """Test integration of PassiveBluetoothDataUpdateCoordinator with multiple platforms."""
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+
+    coordinator = PassiveBluetoothDataUpdateCoordinator(
+        hass, _LOGGER, "aa:bb:cc:dd:ee:ff"
+    )
+    assert coordinator.available is False  # no data yet
+    saved_callback = None
+
+    def _async_register_callback(_hass, _callback, _matcher):
+        nonlocal saved_callback
+        saved_callback = _callback
+        return lambda: None
+
+    binary_sensor_processor = PassiveBluetoothDataProcessor(
+        lambda service_info: BINARY_SENSOR_PASSIVE_BLUETOOTH_DATA_UPDATE
+    )
+    sesnor_processor = PassiveBluetoothDataProcessor(
+        lambda service_info: SENSOR_PASSIVE_BLUETOOTH_DATA_UPDATE
+    )
+
+    with patch(
+        "homeassistant.components.bluetooth.passive_update_coordinator.async_register_callback",
+        _async_register_callback,
+    ):
+        coordinator.async_register_processor(binary_sensor_processor)
+        coordinator.async_register_processor(sesnor_processor)
+
+    binary_sensor_processor.async_add_listener(MagicMock())
+    sesnor_processor.async_add_listener(MagicMock())
+
+    mock_add_sensor_entities = MagicMock()
+    mock_add_binary_sensor_entities = MagicMock()
+
+    sesnor_processor.async_add_entities_listener(
+        PassiveBluetoothProcessorEntity,
+        mock_add_sensor_entities,
+    )
+    binary_sensor_processor.async_add_entities_listener(
+        PassiveBluetoothProcessorEntity,
+        mock_add_binary_sensor_entities,
+    )
+
+    saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    # First call with just the remote sensor entities results in them being added
+    assert len(mock_add_binary_sensor_entities.mock_calls) == 1
+    assert len(mock_add_sensor_entities.mock_calls) == 1
+
+    binary_sesnor_entities = [
+        *mock_add_binary_sensor_entities.mock_calls[0][1][0],
+    ]
+    sesnor_entities = [
+        *mock_add_sensor_entities.mock_calls[0][1][0],
+    ]
+
+    sensor_entity_one: PassiveBluetoothProcessorEntity = sesnor_entities[0]
+    sensor_entity_one.hass = hass
+    assert sensor_entity_one.available is True
+    assert sensor_entity_one.unique_id == "aa:bb:cc:dd:ee:ff-pressure"
+    assert sensor_entity_one.device_info == {
+        "identifiers": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
+        "manufacturer": "Test Manufacturer",
+        "model": "Test Model",
+        "name": "Test Device",
+    }
+    assert sensor_entity_one.entity_key == PassiveBluetoothEntityKey(
+        key="pressure", device_id=None
+    )
+
+    binary_sensor_entity_one: PassiveBluetoothProcessorEntity = binary_sesnor_entities[
+        0
+    ]
+    binary_sensor_entity_one.hass = hass
+    assert binary_sensor_entity_one.available is True
+    assert binary_sensor_entity_one.unique_id == "aa:bb:cc:dd:ee:ff-motion"
+    assert binary_sensor_entity_one.device_info == {
+        "identifiers": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
+        "manufacturer": "Test Manufacturer",
+        "model": "Test Model",
+        "name": "Test Device",
+    }
+    assert binary_sensor_entity_one.entity_key == PassiveBluetoothEntityKey(
+        key="motion", device_id=None
     )
