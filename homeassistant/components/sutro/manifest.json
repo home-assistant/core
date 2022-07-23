@@ -1,13 +1,11 @@
 {
   "domain": "sutro",
   "name": "Sutro",
-  "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/sutro",
-  "requirements": [],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
+  "documentation": "https://github.com/ydogandjiev/hass-sutro",
+  "issue_tracker": "https://github.com/ydogandjiev/hass-sutro/issues",
   "dependencies": [],
+  "config_flow": true,
   "codeowners": ["@ydogandjiev"],
+  "requirements": [],
   "iot_class": "cloud_polling"
 }

@@ -1,138 +1,159 @@
-"""Platform for sensor integration."""
-from __future__ import annotations
-
-from homeassistant.components.sensor import SensorEntity, SensorStateClass
+"""Sensor platform for Sutro."""
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONCENTRATION_PARTS_PER_MILLION, TEMP_FAHRENHEIT
+from homeassistant.const import (
+    CONCENTRATION_PARTS_PER_MILLION,
+    PERCENTAGE,
+    TEMP_FAHRENHEIT,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
-from .sutro_api import SutroApi
+from .const import (
+    ATTRIBUTION,
+    DOMAIN,
+    ICON_ACIDITY,
+    ICON_ALKALINITY,
+    ICON_BATTERY,
+    ICON_CHLORINE,
+    ICON_TEMPERATURE,
+    NAME,
+    VERSION,
+)
+from .entity import SutroEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up the Sutro sensor entities."""
-    sutro_api: SutroApi = hass.data[DOMAIN]
-
-    info = await sutro_api.async_get_info()
+    """Set up the Sutro sensors."""
+    coordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         [
-            AciditySensor(sutro_api, info),
-            AlkalinitySensor(sutro_api, info),
-            FreeChlorineSensor(sutro_api, info),
-            TemperatureSensor(sutro_api, info),
+            AciditySensor(coordinator, entry),
+            AlkalinitySensor(coordinator, entry),
+            FreeChlorineSensor(coordinator, entry),
+            TemperatureSensor(coordinator, entry),
+            BatterySensor(coordinator, entry),
         ]
     )
 
 
-class AciditySensor(SensorEntity):
+class SutroSensor(SutroEntity, SensorEntity):
+    """sutro Sensor class."""
+
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    @property
+    def device_info(self):
+        """Return the parent device information."""
+        device_unique_id = self.coordinator.data["me"]["device"]["serialNumber"]
+        return {
+            "identifiers": {(DOMAIN, device_unique_id)},
+            "name": NAME,
+            "model": VERSION,
+            "manufacturer": NAME,
+        }
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return {
+            "attribution": ATTRIBUTION,
+            "integration": DOMAIN,
+        }
+
+
+class AciditySensor(SutroSensor):
     """Representation of an Acidity Sensor."""
 
-    _attr_name = "Acidity"
-    _attr_icon = "mdi:ph"
+    _attr_name = f"{NAME} Acidity Sensor"
+    _attr_icon = ICON_ACIDITY
     _attr_native_unit_of_measurement = "pH"
-    _attr_state_class = SensorStateClass.MEASUREMENT
 
-    def __init__(self, api, info):
-        """Initialize Acidity Sensor."""
-        self._api = api
-        self._attr_unique_id = f"{info['data']['me']['device']['serialNumber']}_acidity"
-        self._attr_native_value = float(
-            info["data"]["me"]["pool"]["latestReading"]["ph"]
-        )
+    @property
+    def native_value(self):
+        """Return the native value of the sensor."""
+        return float(self.coordinator.data["me"]["pool"]["latestReading"]["ph"])
 
-    async def async_update(self) -> None:
-        """Fetch new state data for the sensor.
-
-        This is the only method that should fetch new data for Home Assistant.
-        """
-        info = await self._api.async_get_info()
-        self._attr_native_value = float(
-            info["data"]["me"]["pool"]["latestReading"]["ph"]
-        )
+    @property
+    def unique_id(self):
+        """Return a unique ID to use for the sensor."""
+        return f"{self.coordinator.data['me']['device']['serialNumber']}-acidity"
 
 
-class AlkalinitySensor(SensorEntity):
+class AlkalinitySensor(SutroSensor):
     """Representation of an Alkalinity Sensor."""
 
-    _attr_name = "Alkalinity"
-    _attr_icon = "mdi:test-tube"
+    _attr_name = f"{NAME} Alkalinity Sensor"
+    _attr_icon = ICON_ALKALINITY
     _attr_native_unit_of_measurement = "mg/L CaC03"
-    _attr_state_class = SensorStateClass.MEASUREMENT
 
-    def __init__(self, api, info):
-        """Initialize Alkalinity Sensor."""
-        self._api = api
-        self._attr_unique_id = (
-            f"{info['data']['me']['device']['serialNumber']}_alkalinity"
-        )
-        self._attr_native_value = float(
-            info["data"]["me"]["pool"]["latestReading"]["alkalinity"]
-        )
+    @property
+    def native_value(self):
+        """Return the native value of the sensor."""
+        return float(self.coordinator.data["me"]["pool"]["latestReading"]["alkalinity"])
 
-    async def async_update(self) -> None:
-        """Fetch new state data for the sensor.
-
-        This is the only method that should fetch new data for Home Assistant.
-        """
-        info = await self._api.async_get_info()
-        self._attr_native_value = info["data"]["me"]["pool"]["latestReading"][
-            "alkalinity"
-        ]
+    @property
+    def unique_id(self):
+        """Return a unique ID to use for the sensor."""
+        return f"{self.coordinator.data['me']['device']['serialNumber']}-alkalinity"
 
 
-class FreeChlorineSensor(SensorEntity):
+class FreeChlorineSensor(SutroSensor):
     """Representation of a Free Chlorine Sensor."""
 
-    _attr_name = "Free Chlorine"
-    _attr_icon = "mdi:water-percent"
+    _attr_name = f"{NAME} Free Chlorine Sensor"
+    _attr_icon = ICON_CHLORINE
     _attr_native_unit_of_measurement = CONCENTRATION_PARTS_PER_MILLION
-    _attr_state_class = SensorStateClass.MEASUREMENT
 
-    def __init__(self, api, info):
-        """Initialize Free Chlorine Sensor."""
-        self._api = api
-        self._attr_unique_id = (
-            f"{info['data']['me']['device']['serialNumber']}_chlorine"
-        )
-        self._attr_native_value = float(
-            info["data"]["me"]["pool"]["latestReading"]["chlorine"]
-        )
+    @property
+    def native_value(self):
+        """Return the native value of the sensor."""
+        return float(self.coordinator.data["me"]["pool"]["latestReading"]["chlorine"])
 
-    async def async_update(self) -> None:
-        """Fetch new state data for the sensor.
-
-        This is the only method that should fetch new data for Home Assistant.
-        """
-        info = await self._api.async_get_info()
-        self._attr_native_value = float(
-            info["data"]["me"]["pool"]["latestReading"]["chlorine"]
-        )
+    @property
+    def unique_id(self):
+        """Return a unique ID to use for the sensor."""
+        return f"{self.coordinator.data['me']['device']['serialNumber']}-chlorine"
 
 
-class TemperatureSensor(SensorEntity):
+class TemperatureSensor(SutroSensor):
     """Representation of a Temperature Sensor."""
 
-    _attr_name = "Temperature"
-    _attr_icon = "mdi:thermometer"
+    _attr_name = f"{NAME} Temperature Sensor"
+    _attr_icon = ICON_TEMPERATURE
     _attr_native_unit_of_measurement = TEMP_FAHRENHEIT
-    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
 
-    def __init__(self, api, info):
-        """Initialize Temperature Sensor."""
-        self._api = api
-        self._attr_unique_id = (
-            f"{info['data']['me']['device']['serialNumber']}_temperature"
-        )
-        self._attr_native_value = float(info["data"]["me"]["device"]["temperature"])
+    @property
+    def native_value(self):
+        """Return the native value of the sensor."""
+        return float(self.coordinator.data["me"]["device"]["temperature"])
 
-    async def async_update(self) -> None:
-        """Fetch new state data for the sensor.
+    @property
+    def unique_id(self):
+        """Return a unique ID to use for the sensor."""
+        return f"{self.coordinator.data['me']['device']['serialNumber']}-temperature"
 
-        This is the only method that should fetch new data for Home Assistant.
-        """
-        info = await self._api.async_get_info()
-        self._attr_native_value = float(info["data"]["me"]["device"]["temperature"])
+
+class BatterySensor(SutroSensor):
+    """Representation of a Battery Sensor."""
+
+    _attr_name = f"{NAME} Battery"
+    _attr_icon = ICON_BATTERY
+    _attr_native_unit_of_measurement = PERCENTAGE
+
+    @property
+    def native_value(self):
+        """Return the native value of the sensor."""
+        return float(self.coordinator.data["me"]["device"]["batteryLevel"])
+
+    @property
+    def unique_id(self):
+        """Return a unique ID to use for the sensor."""
+        return f"{self.coordinator.data['me']['device']['serialNumber']}-battery"

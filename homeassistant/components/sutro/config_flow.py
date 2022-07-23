@@ -1,135 +1,101 @@
-"""Config flow for Sutro integration."""
+"""Adds config flow for Sutro."""
 from __future__ import annotations
 
-import logging
-import time
-from typing import Any
-
-import jwt
-import requests
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_API_TOKEN
-from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import ConfigEntry, OptionsFlow
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
-
-STEP_USER_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_API_TOKEN): str,
-    }
-)
+from .api import SutroApiClient
+from .const import CONF_TOKEN, DOMAIN, PLATFORMS
 
 
-class SutroHub:
-    """Sutro API."""
-
-    def __init__(self, hass: HomeAssistant, api_token: str) -> None:
-        """Initialize."""
-        self.hass = hass
-        self.api_token = api_token
-
-    async def authenticate(self) -> bool:
-        """Test if we can authenticate with the host."""
-        payload = jwt.decode(
-            self.api_token, "", algorithm="HS512", options={"verify_signature": False}
-        )
-        if payload["aud"] == "sutro" and payload["exp"] > time.time():
-            return True
-        return False
-
-    def get_info(self) -> dict[str, Any]:
-        """Get info about user and device."""
-        query = """
-        {
-            me {
-                id
-                firstName
-                pool {
-                    latestReading {
-                        alkalinity
-                        chlorine
-                        ph
-                        readingTime
-                    }
-                }
-            }
-        }
-        """
-
-        response = requests.post(
-            "https://api.mysutro.com/graphql",
-            data=query,
-            headers={"Authorization": f"Bearer {self.api_token}"},
-        )
-
-        return response.json()
-
-    async def async_get_info(self) -> dict[str, Any]:
-        """Asynchronously get info about user and device."""
-        return await self.hass.async_add_executor_job(self.get_info)
-
-
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
-    """Validate the user input allows us to connect.
-
-    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-    """
-
-    hub = SutroHub(hass, data["api_token"])
-
-    if not await hub.authenticate():
-        raise InvalidAuth
-
-    info = await hub.async_get_info()
-    if not info:
-        raise CannotConnect
-
-    # Return info that you want to store in the config entry.
-    return {"title": f"{info['data']['me']['firstName']}'s Pool/Spa"}
-
-
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Sutro."""
+class SutroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+    """Config flow for sutro."""
 
     VERSION = 1
+    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle the initial step."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA
-            )
+    def __init__(self):
+        """Initialize."""
+        self._errors = {}
 
-        errors = {}
+    async def async_step_user(self, user_input=None) -> FlowResult:
+        """Handle a flow initialized by the user."""
+        self._errors = {}
 
-        try:
-            info = await validate_input(self.hass, user_input)
-        except CannotConnect:
-            errors["base"] = "cannot_connect"
-        except InvalidAuth:
-            errors["base"] = "invalid_auth"
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
-        else:
-            return self.async_create_entry(title=info["title"], data=user_input)
+        if user_input is not None:
+            data = await self._test_credentials(user_input[CONF_TOKEN])
+            if data:
+                return self.async_create_entry(
+                    title=f"{data['me']['firstName']}'s Pool/Spa", data=user_input
+                )
 
+            self._errors["base"] = "auth"
+            return await self._show_config_form(user_input)
+
+        return await self._show_config_form(user_input)
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+        """Get options flow for configuring Sutro."""
+        return SutroOptionsFlowHandler(config_entry)
+
+    async def _show_config_form(self, user_input):  # pylint: disable=unused-argument
+        """Show the configuration form to edit location data."""
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=vol.Schema({vol.Required(CONF_TOKEN): str}),
+            errors=self._errors,
         )
 
+    async def _test_credentials(self, token) -> dict | None:
+        """Return true if credentials is valid."""
+        try:
+            session = async_create_clientsession(self.hass)
+            client = SutroApiClient(token, session)
+            return await client.async_get_data()
+        except Exception:  # pylint: disable=broad-except
+            pass
+        return None
 
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
 
+class SutroOptionsFlowHandler(config_entries.OptionsFlow):
+    """Config flow options handler for sutro."""
 
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""
+    def __init__(self, config_entry):
+        """Initialize HACS options flow."""
+        self.config_entry = config_entry
+        self.options = dict(config_entry.options)
+
+    async def async_step_init(
+        self, user_input=None
+    ) -> FlowResult:  # pylint: disable=unused-argument
+        """Manage the options."""
+        return await self.async_step_user()
+
+    async def async_step_user(self, user_input=None) -> FlowResult:
+        """Handle a flow initialized by the user."""
+        if user_input is not None:
+            self.options.update(user_input)
+            return await self._update_options()
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(x, default=self.options.get(x, True)): bool
+                    for x in sorted(PLATFORMS)
+                }
+            ),
+        )
+
+    async def _update_options(self):
+        """Update config entry options."""
+        return self.async_create_entry(
+            title=self.config_entry.data.get(CONF_TOKEN), data=self.options
+        )
