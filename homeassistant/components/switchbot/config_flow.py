@@ -80,7 +80,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(format_unique_id(address))
             self._abort_if_unique_id_configured()
             user_input[CONF_SENSOR_TYPE] = SUPPORTED_MODEL_TYPES[
-                self._discovered_devices[address]["modelName"]
+                self._discovered_devices[address].data["modelName"]
             ]
             return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
 
