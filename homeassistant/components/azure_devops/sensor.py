@@ -63,6 +63,31 @@ def filter_work_items_by_type(
     return [item for item in work_items if item.fields.work_item_type == work_item_type]
 
 
+def build_sensor_attributes(build: DevOpsBuild) -> dict:
+    """Build sensor attributes."""
+    return {
+        "definition_id": build.definition.id,
+        "definition_name": build.definition.name,
+        "id": build.id,
+        "reason": build.reason,
+        "result": build.result,
+        "source_branch": build.source_branch,
+        "source_version": build.source_version,
+        "status": build.status,
+        "url": build.links.web,
+        "queue_time": build.queue_time,
+        "start_time": build.start_time,
+        "finish_time": build.finish_time,
+    }
+
+
+def work_item_sensor_value(
+    work_items: list[DevOpsWorkItemValue], work_item_type: str
+) -> StateType:
+    """Return the value of a work item sensor."""
+    return len(filter_work_items_by_type(work_items, work_item_type))
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -81,20 +106,7 @@ async def async_setup_entry(
                     key=f"{project.id}_{build.definition.id}_latest_build",
                     name=f"{project.name} {build.definition.name} Latest Build",
                     icon="mdi:pipe",
-                    attrs=lambda build: {
-                        "definition_id": build.definition.id,
-                        "definition_name": build.definition.name,
-                        "id": build.id,
-                        "reason": build.reason,
-                        "result": build.result,
-                        "source_branch": build.source_branch,
-                        "source_version": build.source_version,
-                        "status": build.status,
-                        "url": build.links.web,
-                        "queue_time": build.queue_time,
-                        "start_time": build.start_time,
-                        "finish_time": build.finish_time,
-                    },
+                    attrs=build_sensor_attributes,
                     item_key=key,
                     organization=entry.data[CONF_ORG],
                     project=project,
@@ -130,9 +142,7 @@ async def async_setup_entry(
                         item_key=work_item_type,
                         organization=entry.data[CONF_ORG],
                         project=project,
-                        value=lambda work_items, work_item_type: len(
-                            filter_work_items_by_type(work_items, work_item_type)
-                        ),
+                        value=work_item_sensor_value,
                     ),
                 )
                 for work_item_type in list({wi.fields.work_item_type: wi for wi in wis})
