@@ -224,9 +224,15 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     ) -> FlowResult:
         """Handle channels options flow."""
         if not user_input:
+            implementation = (
+                await config_entry_oauth2_flow.async_get_config_entry_implementation(
+                    self.hass, self.config_entry
+                )
+            )
+
             configured_channels: list[str] = self.config_entry.options[CONF_CHANNELS]
 
-            client_id = self.config_entry.data["auth_implementation"].split("_")[1]
+            client_id = implementation.__dict__[CONF_CLIENT_ID]
             access_token = self.config_entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN]
             refresh_token = self.config_entry.data[CONF_TOKEN][CONF_REFRESH_TOKEN]
 

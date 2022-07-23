@@ -6,7 +6,7 @@ import logging
 from twitchAPI.twitch import Twitch
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN, Platform
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_entry_oauth2_flow, device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntryType
@@ -35,7 +35,7 @@ async def async_setup_entry(
 
     await session.async_ensure_token_valid()
 
-    client_id = entry.data["auth_implementation"].split("_")[1]
+    client_id = implementation.__dict__[CONF_CLIENT_ID]
     access_token = entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN]
     refresh_token = entry.data[CONF_TOKEN][CONF_REFRESH_TOKEN]
 
