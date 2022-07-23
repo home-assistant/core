@@ -28,7 +28,7 @@ async def test_sensors(hass):
         return lambda: None
 
     with patch(
-        "homeassistant.components.bluetooth._coordinator.async_register_callback",
+        "homeassistant.components.bluetooth.update_coordinator.async_register_callback",
         _async_register_callback,
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -66,7 +66,7 @@ async def test_xiaomi_HHCCJCY01(hass):
         return lambda: None
 
     with patch(
-        "homeassistant.components.bluetooth._coordinator.async_register_callback",
+        "homeassistant.components.bluetooth.update_coordinator.async_register_callback",
         _async_register_callback,
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)

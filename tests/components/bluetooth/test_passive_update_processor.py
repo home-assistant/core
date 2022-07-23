@@ -103,7 +103,7 @@ async def test_basic_usage(hass, mock_bleak_scanner_start):
     processor = PassiveBluetoothDataProcessor(_async_generate_mock_data)
 
     with patch(
-        "homeassistant.components.bluetooth._coordinator.async_register_callback",
+        "homeassistant.components.bluetooth.update_coordinator.async_register_callback",
         _async_register_callback,
     ):
         unregister_processor = coordinator.async_register_processor(processor)
@@ -202,7 +202,7 @@ async def test_unavailable_after_no_data(hass, mock_bleak_scanner_start):
 
     processor = PassiveBluetoothDataProcessor(_async_generate_mock_data)
     with patch(
-        "homeassistant.components.bluetooth._coordinator.async_register_callback",
+        "homeassistant.components.bluetooth.update_coordinator.async_register_callback",
         _async_register_callback,
     ):
         unregister_processor = coordinator.async_register_processor(processor)
@@ -286,7 +286,7 @@ async def test_no_updates_once_stopping(hass, mock_bleak_scanner_start):
     processor = PassiveBluetoothDataProcessor(_async_generate_mock_data)
 
     with patch(
-        "homeassistant.components.bluetooth._coordinator.async_register_callback",
+        "homeassistant.components.bluetooth.update_coordinator.async_register_callback",
         _async_register_callback,
     ):
         unregister_processor = coordinator.async_register_processor(processor)
@@ -342,7 +342,7 @@ async def test_exception_from_update_method(hass, caplog, mock_bleak_scanner_sta
 
     processor = PassiveBluetoothDataProcessor(_async_generate_mock_data)
     with patch(
-        "homeassistant.components.bluetooth._coordinator.async_register_callback",
+        "homeassistant.components.bluetooth.update_coordinator.async_register_callback",
         _async_register_callback,
     ):
         unregister_processor = coordinator.async_register_processor(processor)
@@ -393,7 +393,7 @@ async def test_bad_data_from_update_method(hass, mock_bleak_scanner_start):
 
     processor = PassiveBluetoothDataProcessor(_async_generate_mock_data)
     with patch(
-        "homeassistant.components.bluetooth._coordinator.async_register_callback",
+        "homeassistant.components.bluetooth.update_coordinator.async_register_callback",
         _async_register_callback,
     ):
         unregister_processor = coordinator.async_register_processor(processor)
@@ -733,7 +733,7 @@ async def test_integration_with_entity(hass, mock_bleak_scanner_start):
 
     processor = PassiveBluetoothDataProcessor(_async_generate_mock_data)
     with patch(
-        "homeassistant.components.bluetooth._coordinator.async_register_callback",
+        "homeassistant.components.bluetooth.update_coordinator.async_register_callback",
         _async_register_callback,
     ):
         coordinator.async_register_processor(processor)
@@ -841,7 +841,7 @@ async def test_integration_with_entity_without_a_device(hass, mock_bleak_scanner
 
     processor = PassiveBluetoothDataProcessor(_async_generate_mock_data)
     with patch(
-        "homeassistant.components.bluetooth._coordinator.async_register_callback",
+        "homeassistant.components.bluetooth.update_coordinator.async_register_callback",
         _async_register_callback,
     ):
         coordinator.async_register_processor(processor)
@@ -903,7 +903,7 @@ async def test_passive_bluetooth_entity_with_entity_platform(
 
     processor = PassiveBluetoothDataProcessor(_async_generate_mock_data)
     with patch(
-        "homeassistant.components.bluetooth._coordinator.async_register_callback",
+        "homeassistant.components.bluetooth.update_coordinator.async_register_callback",
         _async_register_callback,
     ):
         coordinator.async_register_processor(processor)
@@ -994,7 +994,7 @@ async def test_integration_multiple_entity_platforms(hass, mock_bleak_scanner_st
     )
 
     with patch(
-        "homeassistant.components.bluetooth._coordinator.async_register_callback",
+        "homeassistant.components.bluetooth.update_coordinator.async_register_callback",
         _async_register_callback,
     ):
         coordinator.async_register_processor(binary_sensor_processor)
