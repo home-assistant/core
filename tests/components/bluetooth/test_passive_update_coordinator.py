@@ -106,7 +106,7 @@ async def test_basic_usage(hass, mock_bleak_scanner_start):
         "homeassistant.components.bluetooth.passive_update_coordinator.async_register_callback",
         _async_register_callback,
     ):
-        coordinator.async_register_processor(processor)
+        unregister_processor = coordinator.async_register_processor(processor)
 
     entity_key = PassiveBluetoothEntityKey("temperature", None)
     entity_key_events = []
@@ -170,6 +170,8 @@ async def test_basic_usage(hass, mock_bleak_scanner_start):
     assert len(mock_entity.mock_calls) == 2
     assert coordinator.available is True
 
+    unregister_processor()
+
 
 async def test_unavailable_after_no_data(hass, mock_bleak_scanner_start):
     """Test that the coordinator is unavailable after no data for a while."""
@@ -203,7 +205,7 @@ async def test_unavailable_after_no_data(hass, mock_bleak_scanner_start):
         "homeassistant.components.bluetooth.passive_update_coordinator.async_register_callback",
         _async_register_callback,
     ):
-        coordinator.async_register_processor(processor)
+        unregister_processor = coordinator.async_register_processor(processor)
 
     mock_entity = MagicMock()
     mock_add_entities = MagicMock()
@@ -213,10 +215,12 @@ async def test_unavailable_after_no_data(hass, mock_bleak_scanner_start):
     )
 
     assert coordinator.available is False
+    assert processor.available is False
 
     saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
     assert len(mock_add_entities.mock_calls) == 1
     assert coordinator.available is True
+    assert processor.available is True
     scanner = _get_underlying_scanner()
 
     with patch(
@@ -232,10 +236,12 @@ async def test_unavailable_after_no_data(hass, mock_bleak_scanner_start):
         )
         await hass.async_block_till_done()
     assert coordinator.available is False
+    assert processor.available is False
 
     saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
     assert len(mock_add_entities.mock_calls) == 1
     assert coordinator.available is True
+    assert processor.available is True
 
     with patch(
         "homeassistant.components.bluetooth.models.HaBleakScanner.discovered_devices",
@@ -250,6 +256,9 @@ async def test_unavailable_after_no_data(hass, mock_bleak_scanner_start):
         )
         await hass.async_block_till_done()
     assert coordinator.available is False
+    assert processor.available is False
+
+    unregister_processor()
 
 
 async def test_no_updates_once_stopping(hass, mock_bleak_scanner_start):
@@ -280,7 +289,7 @@ async def test_no_updates_once_stopping(hass, mock_bleak_scanner_start):
         "homeassistant.components.bluetooth.passive_update_coordinator.async_register_callback",
         _async_register_callback,
     ):
-        coordinator.async_register_processor(processor)
+        unregister_processor = coordinator.async_register_processor(processor)
 
     all_events = []
 
@@ -300,6 +309,7 @@ async def test_no_updates_once_stopping(hass, mock_bleak_scanner_start):
     # We should stop processing events once hass is stopping
     saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
     assert len(all_events) == 1
+    unregister_processor()
 
 
 async def test_exception_from_update_method(hass, caplog, mock_bleak_scanner_start):
@@ -335,7 +345,7 @@ async def test_exception_from_update_method(hass, caplog, mock_bleak_scanner_sta
         "homeassistant.components.bluetooth.passive_update_coordinator.async_register_callback",
         _async_register_callback,
     ):
-        coordinator.async_register_processor(processor)
+        unregister_processor = coordinator.async_register_processor(processor)
 
     processor.async_add_listener(MagicMock())
 
@@ -350,6 +360,7 @@ async def test_exception_from_update_method(hass, caplog, mock_bleak_scanner_sta
     # We should go available again once we get data again
     saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
     assert processor.available is True
+    unregister_processor()
 
 
 async def test_bad_data_from_update_method(hass, mock_bleak_scanner_start):
@@ -385,7 +396,7 @@ async def test_bad_data_from_update_method(hass, mock_bleak_scanner_start):
         "homeassistant.components.bluetooth.passive_update_coordinator.async_register_callback",
         _async_register_callback,
     ):
-        coordinator.async_register_processor(processor)
+        unregister_processor = coordinator.async_register_processor(processor)
 
     processor.async_add_listener(MagicMock())
 
@@ -401,6 +412,7 @@ async def test_bad_data_from_update_method(hass, mock_bleak_scanner_start):
     # We should go available again once we get good data again
     saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
     assert processor.available is True
+    unregister_processor()
 
 
 GOVEE_B5178_REMOTE_SERVICE_INFO = BluetoothServiceInfo(
