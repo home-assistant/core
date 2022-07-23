@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
-MOCK_DEVICE_HOST_ADDR = "192.88.99.4"
+MOCK_DEVICE_HOST_ADDR = "198.51.100.4"
 MOCK_DEVICE_LOCATION = f"http://{MOCK_DEVICE_HOST_ADDR}/dmr_description.xml"
 MOCK_DEVICE_NAME = "Test Renderer Device"
 MOCK_DEVICE_TYPE = "urn:schemas-upnp-org:device:MediaRenderer:1"
@@ -24,10 +24,10 @@ MOCK_DEVICE_UDN = "uuid:7cc6da13-7f5d-4ace-9729-58b275c52f1e"
 MOCK_DEVICE_USN = f"{MOCK_DEVICE_UDN}::{MOCK_DEVICE_TYPE}"
 MOCK_MAC_ADDRESS = "ab:cd:ef:01:02:03"
 
-LOCAL_IP = "192.88.99.1"
-EVENT_CALLBACK_URL = "http://192.88.99.1/notify"
+LOCAL_IP = "198.51.100.1"
+EVENT_CALLBACK_URL = "http://198.51.100.1/notify"
 
-NEW_DEVICE_LOCATION = "http://192.88.99.7" + "/dmr_description.xml"
+NEW_DEVICE_LOCATION = "http://198.51.100.7" + "/dmr_description.xml"
 
 
 @pytest.fixture
@@ -124,7 +124,7 @@ def dmr_device_mock(domain_data_mock: Mock) -> Iterable[Mock]:
         device.profile_device = (
             domain_data_mock.upnp_factory.async_create_device.return_value
         )
-        device.media_image_url = "http://192.88.99.20:8200/AlbumArt/2624-17620.jpg"
+        device.media_image_url = "http://198.51.100.20:8200/AlbumArt/2624-17620.jpg"
         device.udn = "device_udn"
         device.manufacturer = "device_manufacturer"
         device.model_name = "device_model_name"

@@ -273,7 +273,7 @@ async def test_setup_entry_with_options(
     config_entry_mock.options = MappingProxyType(
         {
             CONF_LISTEN_PORT: 2222,
-            CONF_CALLBACK_URL_OVERRIDE: "http://192.88.99.10/events",
+            CONF_CALLBACK_URL_OVERRIDE: "http://198.51.100.10/events",
             CONF_POLL_AVAILABILITY: True,
         }
     )
@@ -287,7 +287,7 @@ async def test_setup_entry_with_options(
     )
     # Check event notifiers are acquired with the configured port and callback URL
     domain_data_mock.async_get_event_notifier.assert_awaited_once_with(
-        EventListenAddr(LOCAL_IP, 2222, "http://192.88.99.10/events"), hass
+        EventListenAddr(LOCAL_IP, 2222, "http://198.51.100.10/events"), hass
     )
     # Check UPnP services are subscribed
     dmr_device_mock.async_subscribe_services.assert_awaited_once_with(
@@ -665,21 +665,21 @@ async def test_play_media_stopped(
         {
             ATTR_ENTITY_ID: mock_entity_id,
             mp_const.ATTR_MEDIA_CONTENT_TYPE: mp_const.MEDIA_TYPE_MUSIC,
-            mp_const.ATTR_MEDIA_CONTENT_ID: "http://192.88.99.20:8200/MediaItems/17621.mp3",
+            mp_const.ATTR_MEDIA_CONTENT_ID: "http://198.51.100.20:8200/MediaItems/17621.mp3",
             mp_const.ATTR_MEDIA_ENQUEUE: False,
         },
         blocking=True,
     )
 
     dmr_device_mock.construct_play_media_metadata.assert_awaited_once_with(
-        media_url="http://192.88.99.20:8200/MediaItems/17621.mp3",
+        media_url="http://198.51.100.20:8200/MediaItems/17621.mp3",
         media_title="Home Assistant",
         override_upnp_class="object.item.audioItem.musicTrack",
         meta_data={},
     )
     dmr_device_mock.async_stop.assert_awaited_once_with()
     dmr_device_mock.async_set_transport_uri.assert_awaited_once_with(
-        "http://192.88.99.20:8200/MediaItems/17621.mp3", "Home Assistant", ANY
+        "http://198.51.100.20:8200/MediaItems/17621.mp3", "Home Assistant", ANY
     )
     dmr_device_mock.async_wait_for_can_play.assert_awaited_once_with()
     dmr_device_mock.async_play.assert_awaited_once_with()
@@ -697,21 +697,21 @@ async def test_play_media_playing(
         {
             ATTR_ENTITY_ID: mock_entity_id,
             mp_const.ATTR_MEDIA_CONTENT_TYPE: mp_const.MEDIA_TYPE_MUSIC,
-            mp_const.ATTR_MEDIA_CONTENT_ID: "http://192.88.99.20:8200/MediaItems/17621.mp3",
+            mp_const.ATTR_MEDIA_CONTENT_ID: "http://198.51.100.20:8200/MediaItems/17621.mp3",
             mp_const.ATTR_MEDIA_ENQUEUE: False,
         },
         blocking=True,
     )
 
     dmr_device_mock.construct_play_media_metadata.assert_awaited_once_with(
-        media_url="http://192.88.99.20:8200/MediaItems/17621.mp3",
+        media_url="http://198.51.100.20:8200/MediaItems/17621.mp3",
         media_title="Home Assistant",
         override_upnp_class="object.item.audioItem.musicTrack",
         meta_data={},
     )
     dmr_device_mock.async_stop.assert_not_awaited()
     dmr_device_mock.async_set_transport_uri.assert_awaited_once_with(
-        "http://192.88.99.20:8200/MediaItems/17621.mp3", "Home Assistant", ANY
+        "http://198.51.100.20:8200/MediaItems/17621.mp3", "Home Assistant", ANY
     )
     dmr_device_mock.async_wait_for_can_play.assert_not_awaited()
     dmr_device_mock.async_play.assert_not_awaited()
@@ -730,7 +730,7 @@ async def test_play_media_no_autoplay(
         {
             ATTR_ENTITY_ID: mock_entity_id,
             mp_const.ATTR_MEDIA_CONTENT_TYPE: mp_const.MEDIA_TYPE_MUSIC,
-            mp_const.ATTR_MEDIA_CONTENT_ID: "http://192.88.99.20:8200/MediaItems/17621.mp3",
+            mp_const.ATTR_MEDIA_CONTENT_ID: "http://198.51.100.20:8200/MediaItems/17621.mp3",
             mp_const.ATTR_MEDIA_ENQUEUE: False,
             mp_const.ATTR_MEDIA_EXTRA: {"autoplay": False},
         },
@@ -738,14 +738,14 @@ async def test_play_media_no_autoplay(
     )
 
     dmr_device_mock.construct_play_media_metadata.assert_awaited_once_with(
-        media_url="http://192.88.99.20:8200/MediaItems/17621.mp3",
+        media_url="http://198.51.100.20:8200/MediaItems/17621.mp3",
         media_title="Home Assistant",
         override_upnp_class="object.item.audioItem.musicTrack",
         meta_data={},
     )
     dmr_device_mock.async_stop.assert_awaited_once_with()
     dmr_device_mock.async_set_transport_uri.assert_awaited_once_with(
-        "http://192.88.99.20:8200/MediaItems/17621.mp3", "Home Assistant", ANY
+        "http://198.51.100.20:8200/MediaItems/17621.mp3", "Home Assistant", ANY
     )
     dmr_device_mock.async_wait_for_can_play.assert_not_awaited()
     dmr_device_mock.async_play.assert_not_awaited()
@@ -761,11 +761,11 @@ async def test_play_media_metadata(
         {
             ATTR_ENTITY_ID: mock_entity_id,
             mp_const.ATTR_MEDIA_CONTENT_TYPE: mp_const.MEDIA_TYPE_MUSIC,
-            mp_const.ATTR_MEDIA_CONTENT_ID: "http://192.88.99.20:8200/MediaItems/17621.mp3",
+            mp_const.ATTR_MEDIA_CONTENT_ID: "http://198.51.100.20:8200/MediaItems/17621.mp3",
             mp_const.ATTR_MEDIA_ENQUEUE: False,
             mp_const.ATTR_MEDIA_EXTRA: {
                 "title": "Mock song",
-                "thumb": "http://192.88.99.20:8200/MediaItems/17621.jpg",
+                "thumb": "http://198.51.100.20:8200/MediaItems/17621.jpg",
                 "metadata": {"artist": "Mock artist", "album": "Mock album"},
             },
         },
@@ -773,13 +773,13 @@ async def test_play_media_metadata(
     )
 
     dmr_device_mock.construct_play_media_metadata.assert_awaited_once_with(
-        media_url="http://192.88.99.20:8200/MediaItems/17621.mp3",
+        media_url="http://198.51.100.20:8200/MediaItems/17621.mp3",
         media_title="Mock song",
         override_upnp_class="object.item.audioItem.musicTrack",
         meta_data={
             "artist": "Mock artist",
             "album": "Mock album",
-            "album_art_uri": "http://192.88.99.20:8200/MediaItems/17621.jpg",
+            "album_art_uri": "http://198.51.100.20:8200/MediaItems/17621.jpg",
         },
     )
 
@@ -791,7 +791,7 @@ async def test_play_media_metadata(
         {
             ATTR_ENTITY_ID: mock_entity_id,
             mp_const.ATTR_MEDIA_CONTENT_TYPE: mp_const.MEDIA_TYPE_TVSHOW,
-            mp_const.ATTR_MEDIA_CONTENT_ID: "http://192.88.99.20:8200/MediaItems/123.mkv",
+            mp_const.ATTR_MEDIA_CONTENT_ID: "http://198.51.100.20:8200/MediaItems/123.mkv",
             mp_const.ATTR_MEDIA_ENQUEUE: False,
             mp_const.ATTR_MEDIA_EXTRA: {
                 "title": "Mock show",
@@ -802,7 +802,7 @@ async def test_play_media_metadata(
     )
 
     dmr_device_mock.construct_play_media_metadata.assert_awaited_once_with(
-        media_url="http://192.88.99.20:8200/MediaItems/123.mkv",
+        media_url="http://198.51.100.20:8200/MediaItems/123.mkv",
         media_title="Mock show",
         override_upnp_class="object.item.videoItem.videoBroadcast",
         meta_data={"episodeSeason": 1, "episodeNumber": 12},
@@ -1271,7 +1271,7 @@ async def test_unavailable_device(
             mp_const.SERVICE_PLAY_MEDIA,
             {
                 mp_const.ATTR_MEDIA_CONTENT_TYPE: mp_const.MEDIA_TYPE_MUSIC,
-                mp_const.ATTR_MEDIA_CONTENT_ID: "http://192.88.99.20:8200/MediaItems/17621.mp3",
+                mp_const.ATTR_MEDIA_CONTENT_ID: "http://198.51.100.20:8200/MediaItems/17621.mp3",
                 mp_const.ATTR_MEDIA_ENQUEUE: False,
             },
         ),

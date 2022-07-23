@@ -40,7 +40,7 @@ pytestmark = [
 ]
 
 WRONG_DEVICE_TYPE = "urn:schemas-upnp-org:device:InternetGatewayDevice:1"
-CHANGED_DEVICE_LOCATION = "http://192.88.99.55/dmr_description.xml"
+CHANGED_DEVICE_LOCATION = "http://198.51.100.55/dmr_description.xml"
 CHANGED_DEVICE_UDN = "uuid:7cc6da13-7f5d-4ace-9729-badbadbadbad"
 
 MOCK_ROOT_DEVICE_UDN = "ROOT_DEVICE"
