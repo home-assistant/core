@@ -2,13 +2,23 @@
 from datetime import timedelta
 import logging
 
-from pyrisco import CannotConnectError, OperationError, RiscoCloud, UnauthorizedError
+
+from pyrisco import (
+    CannotConnectError,
+    OperationError,
+    UnauthorizedError,
+    RiscoCloud,
+    RiscoLocal,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONF_HOST,
     CONF_PASSWORD,
     CONF_PIN,
+    CONF_PORT,
     CONF_SCAN_INTERVAL,
+    CONF_TYPE,
     CONF_USERNAME,
     Platform,
 )
@@ -18,10 +28,16 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DATA_COORDINATOR, DEFAULT_SCAN_INTERVAL, DOMAIN, EVENTS_COORDINATOR
+from .const import (
+    DATA_COORDINATOR,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    EVENTS_COORDINATOR,
+    TYPE_LOCAL,
+)
 
 PLATFORMS = [Platform.ALARM_CONTROL_PANEL, Platform.BINARY_SENSOR, Platform.SENSOR]
-UNDO_UPDATE_LISTENER = "undo_update_listener"
+UNDO_LISTENERS = "undo_listeners"
 LAST_EVENT_STORAGE_VERSION = 1
 LAST_EVENT_TIMESTAMP_KEY = "last_event_timestamp"
 _LOGGER = logging.getLogger(__name__)
@@ -29,6 +45,71 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Risco from a config entry."""
+    if entry.data.get(CONF_TYPE) != TYPE_LOCAL:
+        return await _async_setup_cloud_entry(hass, entry)
+    return await _async_setup_local_entry(hass, entry)
+
+
+async def _async_setup_local_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    data = entry.data
+    risco = RiscoLocal(data[CONF_HOST], data[CONF_PORT], data[CONF_PIN])
+
+    try:
+        await risco.connect()
+    except CannotConnectError as error:
+        raise ConfigEntryNotReady() from error
+    except UnauthorizedError:
+        _LOGGER.exception("Failed to login to Risco cloud")
+        return False
+
+    # async def _error(error):
+    #     _LOGGER.error(f"Error in Risco library: {error}")
+
+    # remove_error = risco.add_error_handler(_error)
+
+    # async def _default(command, result, *params):
+    #     _LOGGER.debug(
+    #         f"Unhandled update from Risco library: {command}, {result}, {params}"
+    #     )
+
+    # remove_default = risco.add_default_handler(_default)
+
+    # zone_updates = {}
+
+    # async def _zone(zone_id, zone):
+    #     _LOGGER.debug(f"Risco zone update for {zone_id}")
+    #     cb = zone_updates.get(zone_id)
+    #     if cb:
+    #         cb()
+
+    # remove_zone = risco.add_zone_handler(_zone)
+
+    # partition_updates = {}
+
+    # async def _partition(partition_id, partition):
+    #     _LOGGER.debug(f"Risco partition update for {partition_id}")
+    #     cb = partition_updates.get(partition_id)
+    #     if cb:
+    #         cb()
+
+    # remove_partition = risco.add_partition_handler(_partition)
+
+    # listenrs = [remove_error, remove_default, remove_zone, remove_partition]
+
+    listenrs = []
+    listenrs.append(entry.add_update_listener(_update_listener))
+
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = {
+        UNDO_LISTENERS: listenrs,
+    }
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    return True
+
+
+async def _async_setup_cloud_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     data = entry.data
     risco = RiscoCloud(data[CONF_USERNAME], data[CONF_PASSWORD], data[CONF_PIN])
     try:
@@ -51,7 +132,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_COORDINATOR: coordinator,
-        UNDO_UPDATE_LISTENER: undo_listener,
+        UNDO_LISTENERS: [undo_listener],
         EVENTS_COORDINATOR: events_coordinator,
     }
 
@@ -65,7 +146,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
+        for undo in hass.data[DOMAIN][entry.entry_id][UNDO_LISTENERS]:
+            undo()
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
