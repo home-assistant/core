@@ -70,7 +70,7 @@ class LIFXButton(CoordinatorEntity[LIFXUpdateCoordinator], ButtonEntity):
             f"{self.coordinator.serial_number}_{self.entity_description.key}"
         )
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._attr_unique_id)},
+            identifiers={(DOMAIN, self.coordinator.serial_number)},
             connections={(dr.CONNECTION_NETWORK_MAC, self.coordinator.mac_address)},
             manufacturer="LIFX",
             name=self.coordinator.label,
