@@ -73,10 +73,10 @@ class PassiveBluetoothDataUpdateCoordinator:
         self.logger = logger
         self.name: str | None = None
         self.address = address
+        self.devices: dict[str | None, DeviceInfo] = {}
         self._processors: list[PassiveBluetoothDataProcessor] = []
         self._cancel_track_unavailable: CALLBACK_TYPE | None = None
         self._cancel_bluetooth_advertisements: CALLBACK_TYPE | None = None
-        self.devices: dict[str | None, DeviceInfo] = {}
         self.present = False
         self.last_seen = 0.0
 
