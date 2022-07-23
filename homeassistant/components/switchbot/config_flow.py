@@ -106,7 +106,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._discovered_devices[address] = parsed
 
         if not self._discovered_devices:
-            return self.async_abort(reason="no_devices_found")
+            return self.async_abort(reason="no_unconfigured_devices")
 
         data_schema = vol.Schema(
             {

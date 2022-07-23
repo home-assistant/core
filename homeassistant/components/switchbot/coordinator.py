@@ -39,7 +39,7 @@ class SwitchbotCoordinator:
         self.common_options = common_options
         self.data: dict[str, Any] = {}
         self._listeners: list[Callable[[], None]] = []
-        self.available = True
+        self.available = False
 
     @property
     def retry_count(self) -> int:
