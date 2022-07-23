@@ -2,12 +2,7 @@
 from datetime import timedelta
 import logging
 
-from pyrisco import (
-    CannotConnectError,
-    OperationError,
-    UnauthorizedError,
-    get_risco_cloud,
-)
+from pyrisco import CannotConnectError, OperationError, RiscoCloud, UnauthorizedError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -35,7 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Risco from a config entry."""
     data = entry.data
-    risco = get_risco_cloud(data[CONF_USERNAME], data[CONF_PASSWORD], data[CONF_PIN])
+    risco = RiscoCloud(data[CONF_USERNAME], data[CONF_PASSWORD], data[CONF_PIN])
     try:
         await risco.login(async_get_clientsession(hass))
     except CannotConnectError as error:

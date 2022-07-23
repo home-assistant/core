@@ -17,77 +17,30 @@ TEST_SITE_UUID = "test-site-uuid"
 TEST_SITE_NAME = "test-site-name"
 
 
-class MockRiscoCloud:
-    """Mock for PyRisco cloud object."""
-
-    def __init__(self, site_name="", site_uuid="", events=[], alarm=None):
-        """Init mock object."""
-        self._site_name = site_name
-        self._site_uuid = site_uuid
-        self._events = events
-        self._alarm = alarm
-
-    async def login(self, session=None):
-        """Login to cloud."""
-        return True
-
-    async def close(self):
-        """Close the connection."""
-        return True
-
-    async def get_state(self):
-        """Get the alarm state."""
-        return self._alarm
-
-    async def get_events(self, newer_than, count):
-        """Get the alarm event."""
-        return self._events
-
-    async def disarm(self, partition):
-        """Disarm the alarm."""
-        return self._alarm
-
-    async def arm(self, partition):
-        """Arm the alarm."""
-        return self._alarm
-
-    async def partial_arm(self, partition):
-        """Partially-arm the alarm."""
-        return self._alarm
-
-    async def group_arm(self, partition, group):
-        """Arm a specific group."""
-        return self._alarm
-
-    async def bypass_zone(self, zone, bypass):
-        """Bypasses or unbypasses a zone."""
-        return self._alarm
-
-    @property
-    def site_name(self):
-        """Get the site name."""
-        return self._site_name
-
-    @property
-    def site_uuid(self):
-        """Get the site uuid."""
-        return self._site_uuid
-
-
-async def setup_risco(hass, events=[], alarm=None, options={}):
+async def setup_risco(hass, events=[], options={}):
     """Set up a Risco integration for testing."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONFIG, options=options)
     config_entry.add_to_hass(hass)
 
-    mock = MockRiscoCloud(TEST_SITE_NAME, TEST_SITE_UUID, events, alarm)
     with patch(
-        "homeassistant.components.risco.get_risco_cloud",
-        return_value=mock,
+        "homeassistant.components.risco.RiscoCloud.login",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.risco.RiscoCloud.site_uuid",
+        new_callable=PropertyMock(return_value=TEST_SITE_UUID),
+    ), patch(
+        "homeassistant.components.risco.RiscoCloud.site_name",
+        new_callable=PropertyMock(return_value=TEST_SITE_NAME),
+    ), patch(
+        "homeassistant.components.risco.RiscoCloud.close"
+    ), patch(
+        "homeassistant.components.risco.RiscoCloud.get_events",
+        return_value=events,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    return mock
+    return config_entry
 
 
 def _zone_mock():
@@ -114,9 +67,8 @@ def two_zone_alarm():
         alarm_mock,
         "zones",
         new_callable=PropertyMock(return_value=zone_mocks),
-    ), patch.object(
-        alarm_mock,
-        "partitions",
-        new_callable=PropertyMock(return_value=[]),
+    ), patch(
+        "homeassistant.components.risco.RiscoCloud.get_state",
+        return_value=alarm_mock,
     ):
         yield alarm_mock

@@ -1,5 +1,5 @@
 """Test the Risco config flow."""
-from unittest.mock import patch
+from unittest.mock import PropertyMock, patch
 
 import pytest
 import voluptuous as vol
@@ -10,8 +10,6 @@ from homeassistant.components.risco.config_flow import (
     UnauthorizedError,
 )
 from homeassistant.components.risco.const import DOMAIN
-
-from .util import MockRiscoCloud
 
 from tests.common import MockConfigEntry
 
@@ -52,12 +50,15 @@ async def test_form(hass):
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    mock = MockRiscoCloud(TEST_SITE_NAME)
-
     with patch(
-        "homeassistant.components.risco.config_flow.get_risco_cloud",
-        return_value=mock,
-    ), patch.object(mock, "close") as mock_close, patch(
+        "homeassistant.components.risco.config_flow.RiscoCloud.login",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.risco.config_flow.RiscoCloud.site_name",
+        new_callable=PropertyMock(return_value=TEST_SITE_NAME),
+    ), patch(
+        "homeassistant.components.risco.config_flow.RiscoCloud.close"
+    ) as mock_close, patch(
         "homeassistant.components.risco.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -87,12 +88,11 @@ async def test_error(hass, exception, error):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock = MockRiscoCloud()
     with patch(
-        "homeassistant.components.risco.config_flow.get_risco_cloud",
-        return_value=mock,
-    ), patch.object(mock, "login", side_effect=exception,), patch.object(
-        mock, "close"
+        "homeassistant.components.risco.config_flow.RiscoCloud.login",
+        side_effect=exception,
+    ), patch(
+        "homeassistant.components.risco.config_flow.RiscoCloud.close"
     ) as mock_close:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], TEST_DATA
