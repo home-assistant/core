@@ -213,7 +213,7 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
     @property
     def available(self) -> bool:
         """Return if the device is available."""
-        return self.coordinator.available
+        return self.coordinator.available and self.last_update_success
 
     @callback
     def async_handle_unavailable(self) -> None:
