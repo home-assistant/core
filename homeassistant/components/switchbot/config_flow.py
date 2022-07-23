@@ -57,19 +57,21 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: BluetoothServiceInfo
     ) -> FlowResult:
         """Handle the bluetooth discovery step."""
-        _LOGGER.debug("Discovered bluetooth device: %s", discovery_info)
         await self.async_set_unique_id(format_unique_id(discovery_info.address))
         self._abort_if_unique_id_configured()
         discovery_info_bleak = cast(BluetoothServiceInfoBleak, discovery_info)
         parsed = parse_advertisement_data(
             discovery_info_bleak.device, discovery_info_bleak.advertisement
         )
-        if not parsed or parsed.data.get("modelName") in SUPPORTED_MODEL_TYPES:
+        if not parsed or parsed.data.get("modelName") not in SUPPORTED_MODEL_TYPES:
             return self.async_abort(reason="not_supported")
         self._discovery_info = discovery_info
         self._discovered_device = parsed
         data = parsed.data
-        self.context["title_placeholders"] = f"{data['address']} {data['modelName']}"
+        self.context["title_placeholders"] = {
+            "name": data["modelName"],
+            "address": discovery_info.address,
+        }
         return await self.async_step_user()
 
     async def async_step_user(
@@ -88,10 +90,9 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
 
         if self._discovered_device:
-            data = self._discovered_device.data
             self._discovered_devices[
                 self._discovered_device.address
-            ] = f"{data['address']} {data['modelName']}"
+            ] = self._discovered_device
         else:
             current_addresses = self._async_current_ids()
             for discovery_info in async_discovered_service_info(self.hass):
@@ -102,17 +103,19 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
                     discovery_info.device, discovery_info.advertisement
                 )
                 if parsed and parsed.data.get("modelName") in SUPPORTED_MODEL_TYPES:
-                    data = parsed.data
-                    self._discovered_devices[
-                        address
-                    ] = f"{data['address']} {data['modelName']}"
+                    self._discovered_devices[address] = parsed
 
         if not self._discovered_devices:
             return self.async_abort(reason="no_devices_found")
 
         data_schema = vol.Schema(
             {
-                vol.Required(CONF_ADDRESS): vol.In(self._discovered_devices),
+                vol.Required(CONF_ADDRESS): vol.In(
+                    {
+                        address: f"{parsed.data['modelName']} ({address})"
+                        for address, parsed in self._discovered_devices.items()
+                    }
+                ),
                 vol.Required(CONF_NAME): str,
                 vol.Optional(CONF_PASSWORD): str,
             }
