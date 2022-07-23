@@ -84,11 +84,15 @@ class TwitchUpdateCoordinator(DataUpdateCoordinator[TwitchCoordinatorData]):
                     **self._client.get_users_follows(to_id=channel.id)
                 )
                 channel.followers = followers_response.total
+
+                follower_response = TwitchResponse(
+                    **self._client.get_users_follows(from_id=user.id, to_id=channel.id)
+                )
                 if (
-                    followers_response.data is not None
-                    and len(followers_response.data) > 0
+                    follower_response.data is not None
+                    and len(follower_response.data) > 0
                 ):
-                    channel.following = TwitchFollower(**followers_response.data[0])
+                    channel.following = TwitchFollower(**follower_response.data[0])
 
                 streams_response = TwitchResponse(
                     **self._client.get_streams(user_id=channel.id)
