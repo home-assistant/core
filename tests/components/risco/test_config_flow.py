@@ -44,19 +44,6 @@ TEST_OPTIONS = {
 }
 
 
-async def _configure_with_exception(hass, flow_id, exception):
-    mock = MockRiscoCloud()
-    with patch(
-        "homeassistant.components.risco.config_flow.get_risco_cloud",
-        return_value=mock,
-    ), patch.object(mock, "login", side_effect=exception,), patch.object(
-        mock, "close"
-    ) as mock_close:
-        result = await hass.config_entries.flow.async_configure(flow_id, TEST_DATA)
-    mock_close.assert_awaited_once()
-    return result
-
-
 async def test_form(hass):
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
@@ -86,44 +73,34 @@ async def test_form(hass):
     mock_close.assert_awaited_once()
 
 
-async def test_form_invalid_auth(hass):
-    """Test we handle invalid auth."""
+errors = [
+    (UnauthorizedError, "invalid_auth"),
+    (CannotConnectError, "cannot_connect"),
+    (Exception, "unknown"),
+]
+
+
+@pytest.mark.parametrize("exception, error", errors)
+async def test_error(hass, exception, error):
+    """Test we handle config flow errors."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    result2 = await _configure_with_exception(
-        hass, result["flow_id"], UnauthorizedError
-    )
+    mock = MockRiscoCloud()
+    with patch(
+        "homeassistant.components.risco.config_flow.get_risco_cloud",
+        return_value=mock,
+    ), patch.object(mock, "login", side_effect=exception,), patch.object(
+        mock, "close"
+    ) as mock_close:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], TEST_DATA
+        )
 
+    mock_close.assert_awaited_once()
     assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "invalid_auth"}
-
-
-async def test_form_cannot_connect(hass):
-    """Test we handle cannot connect error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    result2 = await _configure_with_exception(
-        hass, result["flow_id"], CannotConnectError
-    )
-
-    assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "cannot_connect"}
-
-
-async def test_form_exception(hass):
-    """Test we handle unknown exception."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    result2 = await _configure_with_exception(hass, result["flow_id"], Exception)
-
-    assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "unknown"}
+    assert result2["errors"] == {"base": error}
 
 
 async def test_form_already_exists(hass):
