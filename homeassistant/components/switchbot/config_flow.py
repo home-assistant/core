@@ -1,6 +1,7 @@
 """Config flow for Switchbot."""
 from __future__ import annotations
 
+import logging
 from typing import Any, cast
 
 from switchbot import SwitchBotAdvertisement, parse_advertisement_data
@@ -24,6 +25,8 @@ from .const import (
     DOMAIN,
     SUPPORTED_MODEL_TYPES,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def format_unique_id(address: str) -> str:
@@ -54,7 +57,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: BluetoothServiceInfo
     ) -> FlowResult:
         """Handle the bluetooth discovery step."""
-
+        _LOGGER.debug("Discovered bluetooth device: %s", discovery_info)
         await self.async_set_unique_id(format_unique_id(discovery_info.address))
         self._abort_if_unique_id_configured()
         discovery_info_bleak = cast(BluetoothServiceInfoBleak, discovery_info)
