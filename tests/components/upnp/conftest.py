@@ -41,6 +41,7 @@ TEST_DISCOVERY = ssdp.SsdpServiceInfo(
         ssdp.ATTR_UPNP_FRIENDLY_NAME: TEST_FRIENDLY_NAME,
         ssdp.ATTR_UPNP_MANUFACTURER: "mock-manufacturer",
         ssdp.ATTR_UPNP_MODEL_NAME: "mock-model-name",
+        ssdp.ATTR_UPNP_SERIAL: "mock-serial",
         ssdp.ATTR_UPNP_UDN: TEST_UDN,
     },
     ssdp_headers={
@@ -54,8 +55,10 @@ def mock_igd_device() -> IgdDevice:
     """Mock async_upnp_client device."""
     mock_upnp_device = create_autospec(UpnpDevice, instance=True)
     mock_upnp_device.device_url = TEST_DISCOVERY.ssdp_location
+    mock_upnp_device.serial_number = TEST_DISCOVERY.upnp[ssdp.ATTR_UPNP_SERIAL]
 
     mock_igd_device = create_autospec(IgdDevice)
+    mock_igd_device.device_type = TEST_DISCOVERY.ssdp_st
     mock_igd_device.name = TEST_DISCOVERY.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME]
     mock_igd_device.manufacturer = TEST_DISCOVERY.upnp[ssdp.ATTR_UPNP_MANUFACTURER]
     mock_igd_device.model_name = TEST_DISCOVERY.upnp[ssdp.ATTR_UPNP_MODEL_NAME]

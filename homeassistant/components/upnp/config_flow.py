@@ -13,6 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
+    CONFIG_ENTRY_HOST,
     CONFIG_ENTRY_LOCATION,
     CONFIG_ENTRY_MAC_ADDRESS,
     CONFIG_ENTRY_ORIGINAL_UDN,
@@ -161,12 +162,14 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         unique_id = discovery_info.ssdp_usn
         await self.async_set_unique_id(unique_id)
         mac_address = await _async_mac_address_from_discovery(self.hass, discovery_info)
+        host = discovery_info.ssdp_headers["_host"]
         self._abort_if_unique_id_configured(
             # Store mac address for older entries.
             # The location is stored in the config entry such that when the location changes, the entry is reloaded.
             updates={
                 CONFIG_ENTRY_MAC_ADDRESS: mac_address,
                 CONFIG_ENTRY_LOCATION: discovery_info.ssdp_location,
+                CONFIG_ENTRY_HOST: host,
             },
         )
 
