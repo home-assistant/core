@@ -7,7 +7,8 @@
             "switchbot_unsupported_type": "Unsupported Switchbot Type.",
             "unknown": "Unexpected error"
         },
-        "flow_title": "{name}",
+        "error": {},
+        "flow_title": "{name} ({address})",
         "step": {
             "user": {
                 "data": {
@@ -24,9 +25,7 @@
             "init": {
                 "data": {
                     "retry_count": "Retry count",
-                    "retry_timeout": "Timeout between retries",
-                    "scan_timeout": "How long to scan for advertisement data",
-                    "update_time": "Time between updates (seconds)"
+                    "retry_timeout": "Timeout between retries"
                 }
             }
         }

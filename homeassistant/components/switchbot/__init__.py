@@ -1,5 +1,6 @@
 """Support for Switchbot devices."""
 
+from types import MappingProxyType
 from typing import Any
 
 import switchbot
@@ -85,7 +86,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(f"Could not find Switchbot with address {address}")
 
     if COMMON_OPTIONS not in domain_data:
-        domain_data[COMMON_OPTIONS] = {**entry.options}
+        domain_data[COMMON_OPTIONS] = entry.options
 
     common_options: dict[str, int] = domain_data[COMMON_OPTIONS]
     switchbot.DEFAULT_RETRY_TIMEOUT = common_options[CONF_RETRY_TIMEOUT]
@@ -126,9 +127,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     # Update entity options stored in hass.
-    common_options: dict[str, Any] = hass.data[DOMAIN][COMMON_OPTIONS]
-    changed = dict(entry.options) != common_options
-    common_options.update(entry.options)
-
-    if changed:
+    common_options: MappingProxyType[str, Any] = hass.data[DOMAIN][COMMON_OPTIONS]
+    if entry.options != common_options:
         await hass.config_entries.async_reload(entry.entry_id)
