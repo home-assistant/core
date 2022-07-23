@@ -22,43 +22,16 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
+from . import (
+    CHANNELS,
+    CLIENT_ID,
+    CLIENT_SECRET,
+    TWITCH_FOLLOWER,
+    TWITCH_USER,
+    create_response,
+)
+
 from tests.common import MockConfigEntry
-
-CLIENT_ID = "1234"
-CLIENT_SECRET = "5678"
-
-TWITCH_USER = {
-    "id": "123",
-    "login": "test",
-    "display_name": "Test",
-    "type": "user",
-    "broadcaster_type": "",
-    "description": "",
-    "profile_image_url": "",
-    "offline_image_url": "",
-    "view_count": 0,
-    "created_at": "",
-}
-
-TWITCH_FOLLOWER = {
-    "from_id": "123",
-    "from_login": "test",
-    "from_name": "Test",
-    "to_id": "456",
-    "to_login": "test2",
-    "to_name": "Test 2",
-    "followed_at": "2022-01-01T00:00:00Z",
-}
-
-CHANNELS = ["123", "456"]
-
-
-def _create_response(data: list) -> dict:
-    """Create a response."""
-    return {
-        "data": data,
-        "total": len(data),
-    }
 
 
 @pytest.fixture
@@ -126,10 +99,10 @@ async def _setup_test_good(
         "homeassistant.components.twitch.config_flow.Twitch.set_user_authentication"
     ), patch(
         "homeassistant.components.twitch.config_flow.Twitch.get_users",
-        return_value=_create_response([TWITCH_USER]),
+        return_value=create_response([TWITCH_USER]),
     ), patch(
         "homeassistant.components.twitch.config_flow.Twitch.get_users_follows",
-        return_value=_create_response([TWITCH_FOLLOWER]),
+        return_value=create_response([TWITCH_FOLLOWER]),
     ), patch(
         "homeassistant.components.twitch.async_setup_entry", return_value=True
     ):
@@ -179,7 +152,7 @@ async def test_full_flow(
 
     with patch(
         "homeassistant.components.twitch.config_flow.Twitch.get_users",
-        return_value=_create_response([TWITCH_USER]),
+        return_value=create_response([TWITCH_USER]),
     ), patch(
         "homeassistant.components.twitch.async_setup_entry", return_value=True
     ) as mock_setup_entry:
@@ -207,13 +180,13 @@ async def test_pagination(
     """Check paginated follower response."""
     result = await _setup_test(hass, hass_client_no_auth, aioclient_mock)
 
-    followers = _create_response([TWITCH_FOLLOWER])
+    followers = create_response([TWITCH_FOLLOWER])
 
     with patch(
         "homeassistant.components.twitch.config_flow.Twitch.set_user_authentication"
     ), patch(
         "homeassistant.components.twitch.config_flow.Twitch.get_users",
-        return_value=_create_response([TWITCH_USER]),
+        return_value=create_response([TWITCH_USER]),
     ), patch(
         "homeassistant.components.twitch.config_flow.Twitch.get_users_follows",
         side_effect=[
@@ -312,7 +285,7 @@ async def test_followers_api_error(
         "homeassistant.components.twitch.config_flow.Twitch.set_user_authentication"
     ), patch(
         "homeassistant.components.twitch.config_flow.Twitch.get_users",
-        return_value=_create_response([TWITCH_USER]),
+        return_value=create_response([TWITCH_USER]),
     ), patch(
         "homeassistant.components.twitch.config_flow.Twitch.get_users_follows",
         side_effect=TwitchAPIException,
@@ -354,10 +327,10 @@ async def test_options_flow(
         "homeassistant.components.twitch.config_flow.Twitch.set_user_authentication"
     ), patch(
         "homeassistant.components.twitch.config_flow.Twitch.get_users",
-        return_value=_create_response([TWITCH_USER]),
+        return_value=create_response([TWITCH_USER]),
     ), patch(
         "homeassistant.components.twitch.config_flow.Twitch.get_users_follows",
-        return_value=_create_response([TWITCH_FOLLOWER]),
+        return_value=create_response([TWITCH_FOLLOWER]),
     ):
         result = await hass.config_entries.options.async_init(
             mock_config_entry.entry_id
