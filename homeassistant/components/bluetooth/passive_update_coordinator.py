@@ -157,6 +157,8 @@ class PassiveBluetoothDataUpdateCoordinator(Generic[_T]):
         self,
         entity_class: type[PassiveBluetoothCoordinatorEntity],
         async_add_entites: AddEntitiesCallback,
+        entity_filter: Callable[[PassiveBluetoothEntityKey, EntityDescription], bool]
+        | None = None,
     ) -> Callable[[], None]:
         """Add a listener for new entities."""
         created: set[PassiveBluetoothEntityKey] = set()
@@ -170,9 +172,14 @@ class PassiveBluetoothDataUpdateCoordinator(Generic[_T]):
                 return
             entities: list[PassiveBluetoothCoordinatorEntity] = []
             for entity_key, description in data.entity_descriptions.items():
-                if entity_key not in created:
-                    entities.append(entity_class(self, entity_key, description))
-                    created.add(entity_key)
+                if entity_key in created:
+                    continue
+                if entity_filter is not None and not entity_filter(
+                    entity_key, description
+                ):
+                    continue
+                entities.append(entity_class(self, entity_key, description))
+                created.add(entity_key)
             if entities:
                 async_add_entites(entities)
 

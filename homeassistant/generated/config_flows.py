@@ -217,6 +217,7 @@ FLOWS = {
         "mill",
         "minecraft_server",
         "mjpeg",
+        "moat",
         "mobile_app",
         "modem_callerid",
         "modern_forms",
