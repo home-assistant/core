@@ -276,7 +276,7 @@ class TraccarScanner:
                 ATTR_SPEED: position.speed,
                 ATTR_ALTITUDE: position.altitude,
                 ATTR_MOTION: position.attributes.get("motion", False),
-                ATTR_TRACCAR_ID: position.id,
+                ATTR_TRACCAR_ID: device.id,
                 ATTR_GEOFENCE: next(
                     (
                         geofence.name
@@ -315,7 +315,7 @@ class TraccarScanner:
                 continue
 
             await self._async_see(
-                dev_id=slugify(str(position.device_id)),
+                dev_id=slugify(device.name),
                 gps=(position.latitude, position.longitude),
                 gps_accuracy=accuracy,
                 battery=position.attributes.get("batteryLevel", -1),
