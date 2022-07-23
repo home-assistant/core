@@ -380,7 +380,7 @@ class BaseLight(LogMixin, light.LightEntity):
         # is not none looks odd here but it will override built in bulb transition times if we pass 0 in here
         if transition is not None and supports_level:
             result = await self._level_channel.move_to_level_with_on_off(
-                0, transition * 10
+                0, transition * 10 or self._DEFAULT_MIN_TRANSITION_TIME
             )
         else:
             result = await self._on_off_channel.off()
