@@ -20,7 +20,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import DOMAIN
-from .coordinator import SwitchbotCoordinator
+from .coordinator import SwitchbotDataUpdateCoordinator
 from .entity import SwitchbotEntity
 
 # Initialize the logger
@@ -32,7 +32,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Switchbot curtain based on a config entry."""
-    coordinator: SwitchbotCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: SwitchbotDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     unique_id = entry.unique_id
     assert unique_id is not None
     async_add_entities(
@@ -61,7 +61,7 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
 
     def __init__(
         self,
-        coordinator: SwitchbotCoordinator,
+        coordinator: SwitchbotDataUpdateCoordinator,
         unique_id: str,
         address: str,
         name: str,

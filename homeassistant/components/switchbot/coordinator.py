@@ -28,7 +28,7 @@ def flatten_sensors_data(sensor):
     return sensor
 
 
-class SwitchbotCoordinator(PassiveBluetoothDataUpdateCoordinator):
+class SwitchbotDataUpdateCoordinator(PassiveBluetoothDataUpdateCoordinator):
     """Class to manage fetching switchbot data."""
 
     def __init__(
