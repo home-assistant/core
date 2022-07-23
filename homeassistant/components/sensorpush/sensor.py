@@ -13,7 +13,7 @@ from sensorpush_ble import (
 )
 
 from homeassistant import config_entries
-from homeassistant.components.bluetooth.passive_update_coordinator import (
+from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothDataProcessor,
     PassiveBluetoothDataUpdate,
     PassiveBluetoothEntityKey,
