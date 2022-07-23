@@ -4,8 +4,8 @@ from __future__ import annotations
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEFAULT_NAME, DOMAIN
@@ -19,7 +19,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = SteamDataUpdateCoordinator(hass)
     await coordinator.async_config_entry_first_refresh()
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -35,14 +35,23 @@ class SteamEntity(CoordinatorEntity[SteamDataUpdateCoordinator]):
     """Representation of a Steam entity."""
 
     _attr_attribution = "Data provided by Steam"
+    _attr_has_entity_name = True
 
-    def __init__(self, coordinator: SteamDataUpdateCoordinator) -> None:
+    def __init__(
+        self,
+        coordinator: SteamDataUpdateCoordinator,
+        description: EntityDescription,
+        account: int,
+    ) -> None:
         """Initialize a Steam entity."""
         super().__init__(coordinator)
+        self._account = account
+        self.entity_description = description
+        self._attr_unique_id = f"{account}_{description.key}"
         self._attr_device_info = DeviceInfo(
-            configuration_url="https://store.steampowered.com",
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
+            configuration_url=coordinator.data[account].profile_url,
+            entry_type=dr.DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, str(account))},
             manufacturer=DEFAULT_NAME,
-            name=DEFAULT_NAME,
+            name=coordinator.data[account].persona,
         )

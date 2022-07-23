@@ -3,13 +3,14 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-import steam
-from steam.api import _interface_method as INTMethod
+from steam.api import HTTPError, HTTPTimeoutError, interface, key
+from steam.user import profile, profile_batch
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_ACCOUNTS, DOMAIN, LOGGER
@@ -19,6 +20,7 @@ class SteamDataUpdateCoordinator(DataUpdateCoordinator):
     """Data update coordinator for the Steam integration."""
 
     config_entry: ConfigEntry
+    data: dict[int, profile]
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the coordinator."""
@@ -29,42 +31,40 @@ class SteamDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(seconds=30),
         )
         self.game_icons: dict[int, str] = {}
-        self.player_interface: INTMethod = None
-        self.user_interface: INTMethod = None
-        steam.api.key.set(self.config_entry.data[CONF_API_KEY])
+        key.set(self.config_entry.data[CONF_API_KEY])
 
     def _update(self) -> dict[str, dict[str, str | int]]:
         """Fetch data from API endpoint."""
-        accounts = self.config_entry.options[CONF_ACCOUNTS]
-        _ids = list(accounts)
-        if not self.user_interface or not self.player_interface:
-            self.user_interface = steam.api.interface("ISteamUser")
-            self.player_interface = steam.api.interface("IPlayerService")
+        _ids = list(self.config_entry.options[CONF_ACCOUNTS])
+        reg = er.async_get(self.hass)
         if not self.game_icons:
+            _interface = interface("IPlayerService")
             for _id in _ids:
-                res = self.player_interface.GetOwnedGames(
-                    steamid=_id, include_appinfo=1
-                )["response"]
-                self.game_icons = self.game_icons | {
-                    game["appid"]: game["img_icon_url"] for game in res.get("games", [])
-                }
-        response = self.user_interface.GetPlayerSummaries(steamids=_ids)
-        players = {
-            player["steamid"]: player
-            for player in response["response"]["players"]["player"]
-            if player["steamid"] in _ids
-        }
-        for k in players:
-            data = self.player_interface.GetSteamLevel(steamid=players[k]["steamid"])
-            players[k]["level"] = data["response"].get("player_level")
-        return players
+                # Some users might have their games hidden
+                if games := _interface.GetOwnedGames(steamid=_id, include_appinfo=1)[
+                    "response"
+                ].get("games"):
+                    self.game_icons = self.game_icons | {
+                        game["appid"]: game["img_icon_url"] for game in games
+                    }
+
+        profiles = {}
+        _profile: profile
+        for _profile in profile_batch(_ids):
+            entity_id = f"sensor.{_profile.persona}_level".replace(" ", "_").lower()
+            if (entry := reg.async_get(entity_id)) and not entry.disabled:
+                # Property is blocking. So we call it here
+                # Has it's own separate api call. Saving IO as level is off by default
+                _profile.level  # pylint:disable=pointless-statement
+            profiles[_profile.id64] = _profile
+        return profiles
 
     async def _async_update_data(self) -> dict[str, dict[str, str | int]]:
         """Send request to the executor."""
         try:
             return await self.hass.async_add_executor_job(self._update)
 
-        except (steam.api.HTTPError, steam.api.HTTPTimeoutError) as ex:
+        except (HTTPError, HTTPTimeoutError) as ex:
             if "401" in str(ex):
                 raise ConfigEntryAuthFailed from ex
             raise UpdateFailed(ex) from ex

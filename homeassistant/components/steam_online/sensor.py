@@ -1,15 +1,24 @@
 """Sensor for Steam account status."""
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import datetime
-from time import localtime, mktime
+from time import mktime
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from steam.user import profile
+
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.util.dt import utc_from_timestamp
+from homeassistant.util.dt import utc_from_timestamp as utc
 
 from . import SteamEntity
 from .const import (
@@ -26,68 +35,113 @@ from .coordinator import SteamDataUpdateCoordinator
 PARALLEL_UPDATES = 1
 
 
+def _get_game_icon(data: profile, icons: dict[int, str]) -> str | None:
+    """Get game icon."""
+    if (gid := data.current_game[0]) is None:
+        return None
+    if image_id := icons.get(gid):
+        return f"{STEAM_ICON_URL}{gid}/{image_id}.jpg"
+    return ""
+
+
+@dataclass
+class SteamSensorEntityMixin:
+    """Mixin for Steam sensor."""
+
+    value_fn: Callable[[profile], StateType | datetime]
+    entity_picture_fn: Callable[[profile, dict[int, str]], str | None]
+
+
+@dataclass
+class SteamSensorEntityDescription(SensorEntityDescription, SteamSensorEntityMixin):
+    """Describes a Steam sensor."""
+
+
+SENSOR_TYPES: tuple[SteamSensorEntityDescription, ...] = (
+    SteamSensorEntityDescription(
+        key="state",
+        name="State",
+        icon="mdi:steam",
+        value_fn=lambda data: STEAM_STATUSES[data.status],
+        entity_picture_fn=lambda data, _: f"{STEAM_API_URL}{data.current_game[0]}/{STEAM_MAIN_IMAGE_FILE}"
+        if data.current_game[0]
+        else data.avatar_medium,
+    ),
+    SteamSensorEntityDescription(
+        key="game",
+        name="Game",
+        icon="mdi:steam",
+        value_fn=lambda data: data.current_game[2],
+        entity_picture_fn=lambda data, _: f"{STEAM_API_URL}{data.current_game[0]}/{STEAM_HEADER_IMAGE_FILE}"
+        if data.current_game[0]
+        else None,
+    ),
+    SteamSensorEntityDescription(
+        key="game_id",
+        name="Game ID",
+        icon="mdi:steam",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: data.current_game[0],
+        entity_picture_fn=_get_game_icon,
+    ),
+    SteamSensorEntityDescription(
+        key="last_online",
+        name="Last online",
+        icon="mdi:clock-outline",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: utc(mktime(data.last_online)),
+        entity_picture_fn=lambda _, __: None,
+    ),
+    SteamSensorEntityDescription(
+        key="level",
+        name="Level",
+        icon="mdi:upload-multiple",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: data.level,
+        entity_picture_fn=lambda _, __: None,
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Steam platform."""
+    coordinator: SteamDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        SteamSensor(hass.data[DOMAIN][entry.entry_id], account)
+        SteamSensor(hass.data[DOMAIN][entry.entry_id], description, int(account))
+        for description in SENSOR_TYPES
         for account in entry.options[CONF_ACCOUNTS]
+        if int(account) in coordinator.data
     )
 
 
 class SteamSensor(SteamEntity, SensorEntity):
     """A class for the Steam account."""
 
-    def __init__(self, coordinator: SteamDataUpdateCoordinator, account: str) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator)
-        self.entity_description = SensorEntityDescription(
-            key=account,
-            name=f"steam_{account}",
-            icon="mdi:steam",
-        )
-        self._attr_unique_id = f"sensor.steam_{account}"
+    entity_description: SteamSensorEntityDescription
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
-        if self.entity_description.key in self.coordinator.data:
-            player = self.coordinator.data[self.entity_description.key]
-            return STEAM_STATUSES[player["personastate"]]
-        return None
+        account = self.coordinator.data.get(self._account)
+        return self.entity_description.value_fn(account)
 
     @property
-    def extra_state_attributes(self) -> dict[str, str | datetime]:
-        """Return the state attributes of the sensor."""
-        if self.entity_description.key not in self.coordinator.data:
-            return {}
-        player = self.coordinator.data[self.entity_description.key]
-
-        attrs: dict[str, str | datetime] = {}
-        if game := player.get("gameextrainfo"):
-            attrs["game"] = game
-        if game_id := player.get("gameid"):
-            attrs["game_id"] = game_id
-            game_url = f"{STEAM_API_URL}{player['gameid']}/"
-            attrs["game_image_header"] = f"{game_url}{STEAM_HEADER_IMAGE_FILE}"
-            attrs["game_image_main"] = f"{game_url}{STEAM_MAIN_IMAGE_FILE}"
-            if info := self._get_game_icon(player):
-                attrs["game_icon"] = f"{STEAM_ICON_URL}{game_id}/{info}.jpg"
-        self._attr_name = player["personaname"]
-        self._attr_entity_picture = player["avatarmedium"]
-        if last_online := player.get("lastlogoff"):
-            attrs["last_online"] = utc_from_timestamp(mktime(localtime(last_online)))
-        if level := self.coordinator.data[self.entity_description.key]["level"]:
-            attrs["level"] = level
-        return attrs
-
-    def _get_game_icon(self, player: dict) -> str | None:
-        """Get game icon identifier."""
-        if player.get("gameid") in self.coordinator.game_icons:
-            return self.coordinator.game_icons[player["gameid"]]
-        # Reset game icons to have coordinator get id for new game
-        self.coordinator.game_icons = {}
-        return None
+    def entity_picture(self) -> str | None:
+        """Return the entity picture to use in the frontend, if any."""
+        if (
+            res := self.entity_description.entity_picture_fn(
+                self.coordinator.data.get(self._account), self.coordinator.game_icons
+            )
+        ) and res == "":
+            # Reset game icons to have coordinator get id for new game
+            self.coordinator.game_icons = {}
+            return None
+        return res

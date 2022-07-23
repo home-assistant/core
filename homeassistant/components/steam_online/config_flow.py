@@ -2,26 +2,36 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+import operator
 from typing import Any
 
-import steam
+from steam.api import HTTPError, HTTPTimeoutError, key
+from steam.user import ProfileNotFoundError, friend_list, profile, profile_batch
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_API_KEY, Platform
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 
-from .const import CONF_ACCOUNT, CONF_ACCOUNTS, DOMAIN, LOGGER, PLACEHOLDERS
+from .const import (
+    CONF_ACCOUNT,
+    CONF_ACCOUNTS,
+    DEFAULT_NAME,
+    DOMAIN,
+    LOGGER,
+    PLACEHOLDERS,
+)
 
 
-def validate_input(user_input: dict[str, str]) -> dict[str, str | int]:
+def validate_input(user_input: dict[str, str]) -> profile:
     """Handle common flow input validation."""
-    steam.api.key.set(user_input[CONF_API_KEY])
-    interface = steam.api.interface("ISteamUser")
-    names = interface.GetPlayerSummaries(steamids=user_input[CONF_ACCOUNT])
-    return names["response"]["players"]["player"][0]
+    key.set(user_input[CONF_API_KEY])
+    user = profile(user_input[CONF_ACCOUNT])
+    # Property is blocking. So we call it here
+    user.persona  # pylint:disable=pointless-statement
+    return user
 
 
 class SteamFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -48,12 +58,10 @@ class SteamFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             user_input = {CONF_ACCOUNT: self.entry.data[CONF_ACCOUNT]}
         elif user_input is not None:
             try:
-                res = await self.hass.async_add_executor_job(validate_input, user_input)
-                if res is not None:
-                    name = str(res["personaname"])
-                else:
-                    errors["base"] = "invalid_account"
-            except (steam.api.HTTPError, steam.api.HTTPTimeoutError) as ex:
+                usr = await self.hass.async_add_executor_job(validate_input, user_input)
+            except ProfileNotFoundError:
+                errors["base"] = "invalid_account"
+            except (HTTPError, HTTPTimeoutError) as ex:
                 errors["base"] = "cannot_connect"
                 if "403" in str(ex):
                     errors["base"] = "invalid_auth"
@@ -68,9 +76,9 @@ class SteamFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     return self.async_abort(reason="reauth_successful")
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=name,
+                    title=DEFAULT_NAME,
                     data=user_input,
-                    options={CONF_ACCOUNTS: {user_input[CONF_ACCOUNT]: name}},
+                    options={CONF_ACCOUNTS: {user_input[CONF_ACCOUNT]: usr.persona}},
                 )
         user_input = user_input or {}
         return self.async_show_form(
@@ -121,14 +129,6 @@ class SteamOptionsFlowHandler(config_entries.OptionsFlow):
     ) -> FlowResult:
         """Manage Steam options."""
         if user_input is not None:
-            await self.hass.config_entries.async_unload(self.entry.entry_id)
-            for _id in self.options[CONF_ACCOUNTS]:
-                if _id not in user_input[CONF_ACCOUNTS] and (
-                    entity_id := er.async_get(self.hass).async_get_entity_id(
-                        Platform.SENSOR, DOMAIN, f"sensor.steam_{_id}"
-                    )
-                ):
-                    er.async_get(self.hass).async_remove(entity_id)
             channel_data = {
                 CONF_ACCOUNTS: {
                     _id: name
@@ -136,39 +136,43 @@ class SteamOptionsFlowHandler(config_entries.OptionsFlow):
                     if _id in user_input[CONF_ACCOUNTS]
                 }
             }
+            reg = dr.async_get(self.hass)
             await self.hass.config_entries.async_reload(self.entry.entry_id)
+            for _id in self.options[CONF_ACCOUNTS].keys():
+                if _id not in user_input[CONF_ACCOUNTS]:
+                    if device := reg.async_get_device({(DOMAIN, _id)}):
+                        reg.async_remove_device(device.id)
             return self.async_create_entry(title="", data=channel_data)
         error = None
-        try:
-            users = {
-                name["steamid"]: name["personaname"]
-                for name in await self.hass.async_add_executor_job(self.get_accounts)
-            }
-            if not users:
-                error = {"base": "unauthorized"}
 
-        except steam.api.HTTPTimeoutError:
-            users = self.options[CONF_ACCOUNTS]
+        accs = await self.hass.async_add_executor_job(self.get_accounts)
+        if not (users := {str(user.id64): user.persona for user in accs}):
+            error = {"base": "problem"}
+
+        users = users | self.options[CONF_ACCOUNTS]
+        _options = dict(sorted(users.items(), key=operator.itemgetter(1)))
 
         options = {
             vol.Required(
                 CONF_ACCOUNTS,
                 default=set(self.options[CONF_ACCOUNTS]),
-            ): cv.multi_select(users | self.options[CONF_ACCOUNTS]),
+            ): cv.multi_select(_options),
         }
-        self.options[CONF_ACCOUNTS] = users | self.options[CONF_ACCOUNTS]
-
+        self.options[CONF_ACCOUNTS] = _options
         return self.async_show_form(
             step_id="init", data_schema=vol.Schema(options), errors=error
         )
 
-    def get_accounts(self) -> list[dict[str, str | int]]:
+    def get_accounts(self) -> list[profile]:
         """Get accounts."""
-        interface = steam.api.interface("ISteamUser")
         try:
-            friends = interface.GetFriendList(steamid=self.entry.data[CONF_ACCOUNT])
-            _users_str = [user["steamid"] for user in friends["friendslist"]["friends"]]
-        except steam.api.HTTPError:
+            friends = friend_list(self.entry.data[CONF_ACCOUNT])
+            profiles = []
+            _profile: profile
+            for _profile in profile_batch([friend.steamid for friend in friends]):
+                # Property is blocking. So we call it here
+                _profile.persona  # pylint:disable=pointless-statement
+                profiles.append(_profile)
+            return profiles
+        except HTTPError:
             return []
-        names = interface.GetPlayerSummaries(steamids=_users_str)
-        return names["response"]["players"]["player"]
