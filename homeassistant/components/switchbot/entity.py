@@ -38,6 +38,11 @@ class SwitchbotEntity(Entity):
         )
 
     @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self.coordinator.available
+
+    @property
     def data(self) -> dict[str, Any]:
         """Return coordinator data for this entity."""
         return self.coordinator.data
