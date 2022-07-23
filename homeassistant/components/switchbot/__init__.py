@@ -30,7 +30,7 @@ from .const import (
     DEFAULT_RETRY_TIMEOUT,
     DOMAIN,
 )
-from .coordinator import SwitchbotCoordinator
+from .coordinator import SwitchbotDataUpdateCoordinator
 
 PLATFORMS_BY_TYPE = {
     ATTR_BOT: [Platform.SWITCH, Platform.SENSOR],
@@ -90,7 +90,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         password=entry.data.get(CONF_PASSWORD),
         retry_count=entry.options[CONF_RETRY_COUNT],
     )
-    coordinator = hass.data[DOMAIN][entry.entry_id] = SwitchbotCoordinator(
+    coordinator = hass.data[DOMAIN][entry.entry_id] = SwitchbotDataUpdateCoordinator(
         hass, _LOGGER, ble_device, device, common_options
     )
     entry.async_on_unload(coordinator.async_start())

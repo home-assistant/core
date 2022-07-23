@@ -12,17 +12,17 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo
 
 from .const import MANUFACTURER
-from .coordinator import SwitchbotCoordinator
+from .coordinator import SwitchbotDataUpdateCoordinator
 
 
 class SwitchbotEntity(PassiveBluetoothCoordinatorEntity):
     """Generic entity encapsulating common features of Switchbot device."""
 
-    coordinator: SwitchbotCoordinator
+    coordinator: SwitchbotDataUpdateCoordinator
 
     def __init__(
         self,
-        coordinator: SwitchbotCoordinator,
+        coordinator: SwitchbotDataUpdateCoordinator,
         unique_id: str,
         address: str,
         name: str,

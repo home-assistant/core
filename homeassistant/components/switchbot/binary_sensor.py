@@ -12,7 +12,7 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import SwitchbotCoordinator
+from .coordinator import SwitchbotDataUpdateCoordinator
 from .entity import SwitchbotEntity
 
 PARALLEL_UPDATES = 1
@@ -29,7 +29,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Switchbot curtain based on a config entry."""
-    coordinator: SwitchbotCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: SwitchbotDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     unique_id = entry.unique_id
     assert unique_id is not None
     async_add_entities(
@@ -52,7 +52,7 @@ class SwitchBotBinarySensor(SwitchbotEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        coordinator: SwitchbotCoordinator,
+        coordinator: SwitchbotDataUpdateCoordinator,
         unique_id: str,
         binary_sensor: str,
         mac: str,
