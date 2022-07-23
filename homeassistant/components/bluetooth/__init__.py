@@ -347,7 +347,7 @@ class BluetoothManager:
             self._device_detected, {}
         )
         try:
-            await self.scanner.start()  # type: ignore[no-untyped-call]
+            await self.scanner.start()
         except (FileNotFoundError, BleakError) as ex:
             self._cancel_device_detected()
             raise ConfigEntryNotReady(f"Failed to start Bluetooth: {ex}") from ex
@@ -523,5 +523,5 @@ class BluetoothManager:
             self._cancel_unavailable_tracking()
             self._cancel_unavailable_tracking = None
         if self.scanner:
-            await self.scanner.stop()  # type: ignore[no-untyped-call]
+            await self.scanner.stop()
         uninstall_multiple_bleak_catcher()
