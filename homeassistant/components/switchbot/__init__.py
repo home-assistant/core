@@ -53,7 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # UUIDs on some platforms (MacOS).
         mac = entry.data[CONF_MAC]
         if "-" not in mac:
-            mac = dr.format_mac(mac).upper()
+            mac = dr.format_mac(mac)
         hass.config_entries.async_update_entry(
             entry,
             data={k: v for k, v in entry.data.items() if k != CONF_MAC}
