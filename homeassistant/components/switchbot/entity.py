@@ -4,7 +4,6 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.passive_update_coordinator import (
     PassiveBluetoothCoordinatorEntity,
 )
@@ -35,7 +34,7 @@ class SwitchbotEntity(PassiveBluetoothCoordinatorEntity):
         self._address = address
         self._attr_name = name
         self._attr_device_info = DeviceInfo(
-            identifiers={(bluetooth.DOMAIN, self._address)},
+            connections={(dr.CONNECTION_BLUETOOTH, self._address)},
             manufacturer=MANUFACTURER,
             model=self.data["modelName"],
             name=name,
@@ -43,9 +42,13 @@ class SwitchbotEntity(PassiveBluetoothCoordinatorEntity):
         if ":" not in self._address:
             # MacOS Bluetooth addresses are not mac addresses
             return
-        self._attr_device_info[ATTR_CONNECTIONS] = {
+        # If the bluetooth address is also a mac address,
+        # add this connection as well to prevent a new device
+        # entry from being created when upgrading from a previous
+        # version of the integration.
+        self._attr_device_info[ATTR_CONNECTIONS].add(
             (dr.CONNECTION_NETWORK_MAC, self._address)
-        }
+        )
 
     @property
     def extra_state_attributes(self) -> Mapping[Any, Any]:
