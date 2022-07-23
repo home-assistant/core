@@ -67,7 +67,6 @@ async def test_basic_usage(hass, mock_bleak_scanner_start):
     assert saved_callback is not None
 
     saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
-    await hass.async_block_till_done()
 
     assert len(mock_listener.mock_calls) == 1
     assert coordinator.data == {"rssi": GENERIC_BLUETOOTH_SERVICE_INFO.rssi}
@@ -75,7 +74,6 @@ async def test_basic_usage(hass, mock_bleak_scanner_start):
 
     unregister_listener()
     saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
-    await hass.async_block_till_done()
 
     assert len(mock_listener.mock_calls) == 1
     assert coordinator.data == {"rssi": GENERIC_BLUETOOTH_SERVICE_INFO.rssi}
