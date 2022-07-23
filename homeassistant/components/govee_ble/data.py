@@ -12,7 +12,7 @@ from homeassistant.helpers.entity import DeviceInfo
 
 from .sensor import SENSOR_DESCRIPTIONS
 
-ALL_DESCRIPTIONS = SENSOR_DESCRIPTIONS
+ALL_PLATFORM_DESCRIPTIONS = SENSOR_DESCRIPTIONS
 
 
 def _device_key_to_bluetooth_entity_key(
@@ -46,7 +46,7 @@ def sensor_update_to_bluetooth_data_update(
             for device_id, device_info in sensor_update.devices.items()
         },
         entity_descriptions={
-            _device_key_to_bluetooth_entity_key(device_key): ALL_DESCRIPTIONS[
+            _device_key_to_bluetooth_entity_key(device_key): ALL_PLATFORM_DESCRIPTIONS[
                 (description.device_class, description.native_unit_of_measurement)
             ]
             for device_key, description in sensor_update.entity_descriptions.items()
