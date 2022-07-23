@@ -120,6 +120,12 @@ async def test_setup_and_retry_adapter_not_yet_available(hass, caplog):
         await hass.async_block_till_done()
     assert entry.state == ConfigEntryState.LOADED
 
+    with patch(
+        "homeassistant.components.bluetooth.HaBleakScanner.stop",
+    ):
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        await hass.async_block_till_done()
+
 
 async def test_calling_async_discovered_devices_no_bluetooth(hass, caplog):
     """Test we fail gracefully when asking for discovered devices and there is no blueooth."""
