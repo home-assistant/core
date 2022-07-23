@@ -16,13 +16,13 @@ from homeassistant.components.bluetooth import (
     DOMAIN,
     UNAVAILABLE_TRACK_SECONDS,
     BluetoothChange,
-    async_get_scanner,
 )
 from homeassistant.components.bluetooth.passive_update_coordinator import (
-    PassiveBluetoothCoordinatorEntity,
+    PassiveBluetoothDataProcessor,
     PassiveBluetoothDataUpdate,
     PassiveBluetoothDataUpdateCoordinator,
     PassiveBluetoothEntityKey,
+    PassiveBluetoothProcessorEntity,
 )
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
 from homeassistant.const import TEMP_CELSIUS
@@ -30,6 +30,8 @@ from homeassistant.core import CoreState, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
+
+from . import _get_underlying_scanner
 
 from tests.common import MockEntityPlatform, async_fire_time_changed
 
@@ -88,7 +90,7 @@ async def test_basic_usage(hass, mock_bleak_scanner_start):
         return GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE
 
     coordinator = PassiveBluetoothDataUpdateCoordinator(
-        hass, _LOGGER, "aa:bb:cc:dd:ee:ff", _async_generate_mock_data
+        hass, _LOGGER, "aa:bb:cc:dd:ee:ff"
     )
     assert coordinator.available is False  # no data yet
     saved_callback = None
@@ -98,40 +100,41 @@ async def test_basic_usage(hass, mock_bleak_scanner_start):
         saved_callback = _callback
         return lambda: None
 
+    processor = PassiveBluetoothDataProcessor(_async_generate_mock_data)
+
     with patch(
         "homeassistant.components.bluetooth.passive_update_coordinator.async_register_callback",
         _async_register_callback,
     ):
+        unregister_processor = coordinator.async_register_processor(processor)
 
-        entity_key = PassiveBluetoothEntityKey("temperature", None)
-        entity_key_events = []
-        all_events = []
-        mock_entity = MagicMock()
-        mock_add_entities = MagicMock()
+    entity_key = PassiveBluetoothEntityKey("temperature", None)
+    entity_key_events = []
+    all_events = []
+    mock_entity = MagicMock()
+    mock_add_entities = MagicMock()
 
-        def _async_entity_key_listener(data: PassiveBluetoothDataUpdate | None) -> None:
-            """Mock entity key listener."""
-            entity_key_events.append(data)
+    def _async_entity_key_listener(data: PassiveBluetoothDataUpdate | None) -> None:
+        """Mock entity key listener."""
+        entity_key_events.append(data)
 
-        cancel_async_add_entity_key_listener = (
-            coordinator.async_add_entity_key_listener(
-                _async_entity_key_listener,
-                entity_key,
-            )
-        )
+    cancel_async_add_entity_key_listener = processor.async_add_entity_key_listener(
+        _async_entity_key_listener,
+        entity_key,
+    )
 
-        def _all_listener(data: PassiveBluetoothDataUpdate | None) -> None:
-            """Mock an all listener."""
-            all_events.append(data)
+    def _all_listener(data: PassiveBluetoothDataUpdate | None) -> None:
+        """Mock an all listener."""
+        all_events.append(data)
 
-        cancel_listener = coordinator.async_add_listener(
-            _all_listener,
-        )
+    cancel_listener = processor.async_add_listener(
+        _all_listener,
+    )
 
-        cancel_async_add_entities_listener = coordinator.async_add_entities_listener(
-            mock_entity,
-            mock_add_entities,
-        )
+    cancel_async_add_entities_listener = processor.async_add_entities_listener(
+        mock_entity,
+        mock_add_entities,
+    )
 
     saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
 
@@ -167,6 +170,8 @@ async def test_basic_usage(hass, mock_bleak_scanner_start):
     assert len(mock_entity.mock_calls) == 2
     assert coordinator.available is True
 
+    unregister_processor()
+
 
 async def test_unavailable_after_no_data(hass, mock_bleak_scanner_start):
     """Test that the coordinator is unavailable after no data for a while."""
@@ -185,7 +190,7 @@ async def test_unavailable_after_no_data(hass, mock_bleak_scanner_start):
         return GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE
 
     coordinator = PassiveBluetoothDataUpdateCoordinator(
-        hass, _LOGGER, "aa:bb:cc:dd:ee:ff", _async_generate_mock_data
+        hass, _LOGGER, "aa:bb:cc:dd:ee:ff"
     )
     assert coordinator.available is False  # no data yet
     saved_callback = None
@@ -195,24 +200,28 @@ async def test_unavailable_after_no_data(hass, mock_bleak_scanner_start):
         saved_callback = _callback
         return lambda: None
 
+    processor = PassiveBluetoothDataProcessor(_async_generate_mock_data)
     with patch(
         "homeassistant.components.bluetooth.passive_update_coordinator.async_register_callback",
         _async_register_callback,
     ):
+        unregister_processor = coordinator.async_register_processor(processor)
 
-        mock_entity = MagicMock()
-        mock_add_entities = MagicMock()
-        coordinator.async_add_entities_listener(
-            mock_entity,
-            mock_add_entities,
-        )
+    mock_entity = MagicMock()
+    mock_add_entities = MagicMock()
+    processor.async_add_entities_listener(
+        mock_entity,
+        mock_add_entities,
+    )
 
     assert coordinator.available is False
+    assert processor.available is False
 
     saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
     assert len(mock_add_entities.mock_calls) == 1
     assert coordinator.available is True
-    scanner = async_get_scanner(hass)
+    assert processor.available is True
+    scanner = _get_underlying_scanner()
 
     with patch(
         "homeassistant.components.bluetooth.models.HaBleakScanner.discovered_devices",
@@ -227,10 +236,12 @@ async def test_unavailable_after_no_data(hass, mock_bleak_scanner_start):
         )
         await hass.async_block_till_done()
     assert coordinator.available is False
+    assert processor.available is False
 
     saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
     assert len(mock_add_entities.mock_calls) == 1
     assert coordinator.available is True
+    assert processor.available is True
 
     with patch(
         "homeassistant.components.bluetooth.models.HaBleakScanner.discovered_devices",
@@ -245,6 +256,9 @@ async def test_unavailable_after_no_data(hass, mock_bleak_scanner_start):
         )
         await hass.async_block_till_done()
     assert coordinator.available is False
+    assert processor.available is False
+
+    unregister_processor()
 
 
 async def test_no_updates_once_stopping(hass, mock_bleak_scanner_start):
@@ -259,7 +273,7 @@ async def test_no_updates_once_stopping(hass, mock_bleak_scanner_start):
         return GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE
 
     coordinator = PassiveBluetoothDataUpdateCoordinator(
-        hass, _LOGGER, "aa:bb:cc:dd:ee:ff", _async_generate_mock_data
+        hass, _LOGGER, "aa:bb:cc:dd:ee:ff"
     )
     assert coordinator.available is False  # no data yet
     saved_callback = None
@@ -269,20 +283,23 @@ async def test_no_updates_once_stopping(hass, mock_bleak_scanner_start):
         saved_callback = _callback
         return lambda: None
 
+    processor = PassiveBluetoothDataProcessor(_async_generate_mock_data)
+
     with patch(
         "homeassistant.components.bluetooth.passive_update_coordinator.async_register_callback",
         _async_register_callback,
     ):
+        unregister_processor = coordinator.async_register_processor(processor)
 
-        all_events = []
+    all_events = []
 
-        def _all_listener(data: PassiveBluetoothDataUpdate | None) -> None:
-            """Mock an all listener."""
-            all_events.append(data)
+    def _all_listener(data: PassiveBluetoothDataUpdate | None) -> None:
+        """Mock an all listener."""
+        all_events.append(data)
 
-        coordinator.async_add_listener(
-            _all_listener,
-        )
+    processor.async_add_listener(
+        _all_listener,
+    )
 
     saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
     assert len(all_events) == 1
@@ -292,6 +309,7 @@ async def test_no_updates_once_stopping(hass, mock_bleak_scanner_start):
     # We should stop processing events once hass is stopping
     saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
     assert len(all_events) == 1
+    unregister_processor()
 
 
 async def test_exception_from_update_method(hass, caplog, mock_bleak_scanner_start):
@@ -312,7 +330,7 @@ async def test_exception_from_update_method(hass, caplog, mock_bleak_scanner_sta
         return GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE
 
     coordinator = PassiveBluetoothDataUpdateCoordinator(
-        hass, _LOGGER, "aa:bb:cc:dd:ee:ff", _async_generate_mock_data
+        hass, _LOGGER, "aa:bb:cc:dd:ee:ff"
     )
     assert coordinator.available is False  # no data yet
     saved_callback = None
@@ -322,23 +340,27 @@ async def test_exception_from_update_method(hass, caplog, mock_bleak_scanner_sta
         saved_callback = _callback
         return lambda: None
 
+    processor = PassiveBluetoothDataProcessor(_async_generate_mock_data)
     with patch(
         "homeassistant.components.bluetooth.passive_update_coordinator.async_register_callback",
         _async_register_callback,
     ):
-        coordinator.async_add_listener(MagicMock())
+        unregister_processor = coordinator.async_register_processor(processor)
+
+    processor.async_add_listener(MagicMock())
 
     saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
-    assert coordinator.available is True
+    assert processor.available is True
 
     # We should go unavailable once we get an exception
     saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
     assert "Test exception" in caplog.text
-    assert coordinator.available is False
+    assert processor.available is False
 
     # We should go available again once we get data again
     saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
-    assert coordinator.available is True
+    assert processor.available is True
+    unregister_processor()
 
 
 async def test_bad_data_from_update_method(hass, mock_bleak_scanner_start):
@@ -359,7 +381,7 @@ async def test_bad_data_from_update_method(hass, mock_bleak_scanner_start):
         return GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE
 
     coordinator = PassiveBluetoothDataUpdateCoordinator(
-        hass, _LOGGER, "aa:bb:cc:dd:ee:ff", _async_generate_mock_data
+        hass, _LOGGER, "aa:bb:cc:dd:ee:ff"
     )
     assert coordinator.available is False  # no data yet
     saved_callback = None
@@ -369,24 +391,28 @@ async def test_bad_data_from_update_method(hass, mock_bleak_scanner_start):
         saved_callback = _callback
         return lambda: None
 
+    processor = PassiveBluetoothDataProcessor(_async_generate_mock_data)
     with patch(
         "homeassistant.components.bluetooth.passive_update_coordinator.async_register_callback",
         _async_register_callback,
     ):
-        coordinator.async_add_listener(MagicMock())
+        unregister_processor = coordinator.async_register_processor(processor)
+
+    processor.async_add_listener(MagicMock())
 
     saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
-    assert coordinator.available is True
+    assert processor.available is True
 
     # We should go unavailable once we get bad data
     with pytest.raises(ValueError):
         saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
 
-    assert coordinator.available is False
+    assert processor.available is False
 
     # We should go available again once we get good data again
     saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
-    assert coordinator.available is True
+    assert processor.available is True
+    unregister_processor()
 
 
 GOVEE_B5178_REMOTE_SERVICE_INFO = BluetoothServiceInfo(
@@ -695,7 +721,7 @@ async def test_integration_with_entity(hass, mock_bleak_scanner_start):
         return GOVEE_B5178_REMOTE_PASSIVE_BLUETOOTH_DATA_UPDATE
 
     coordinator = PassiveBluetoothDataUpdateCoordinator(
-        hass, _LOGGER, "aa:bb:cc:dd:ee:ff", _async_generate_mock_data
+        hass, _LOGGER, "aa:bb:cc:dd:ee:ff"
     )
     assert coordinator.available is False  # no data yet
     saved_callback = None
@@ -705,16 +731,19 @@ async def test_integration_with_entity(hass, mock_bleak_scanner_start):
         saved_callback = _callback
         return lambda: None
 
+    processor = PassiveBluetoothDataProcessor(_async_generate_mock_data)
     with patch(
         "homeassistant.components.bluetooth.passive_update_coordinator.async_register_callback",
         _async_register_callback,
     ):
-        coordinator.async_add_listener(MagicMock())
+        coordinator.async_register_processor(processor)
+
+    processor.async_add_listener(MagicMock())
 
     mock_add_entities = MagicMock()
 
-    coordinator.async_add_entities_listener(
-        PassiveBluetoothCoordinatorEntity,
+    processor.async_add_entities_listener(
+        PassiveBluetoothProcessorEntity,
         mock_add_entities,
     )
 
@@ -739,7 +768,7 @@ async def test_integration_with_entity(hass, mock_bleak_scanner_start):
         *mock_add_entities.mock_calls[1][1][0],
     ]
 
-    entity_one: PassiveBluetoothCoordinatorEntity = entities[0]
+    entity_one: PassiveBluetoothProcessorEntity = entities[0]
     entity_one.hass = hass
     assert entity_one.available is True
     assert entity_one.unique_id == "aa:bb:cc:dd:ee:ff-temperature-remote"
@@ -800,7 +829,7 @@ async def test_integration_with_entity_without_a_device(hass, mock_bleak_scanner
         return NO_DEVICES_PASSIVE_BLUETOOTH_DATA_UPDATE
 
     coordinator = PassiveBluetoothDataUpdateCoordinator(
-        hass, _LOGGER, "aa:bb:cc:dd:ee:ff", _async_generate_mock_data
+        hass, _LOGGER, "aa:bb:cc:dd:ee:ff"
     )
     assert coordinator.available is False  # no data yet
     saved_callback = None
@@ -810,17 +839,19 @@ async def test_integration_with_entity_without_a_device(hass, mock_bleak_scanner
         saved_callback = _callback
         return lambda: None
 
+    processor = PassiveBluetoothDataProcessor(_async_generate_mock_data)
     with patch(
         "homeassistant.components.bluetooth.passive_update_coordinator.async_register_callback",
         _async_register_callback,
     ):
+        coordinator.async_register_processor(processor)
 
-        mock_add_entities = MagicMock()
+    mock_add_entities = MagicMock()
 
-        coordinator.async_add_entities_listener(
-            PassiveBluetoothCoordinatorEntity,
-            mock_add_entities,
-        )
+    processor.async_add_entities_listener(
+        PassiveBluetoothProcessorEntity,
+        mock_add_entities,
+    )
 
     saved_callback(NO_DEVICES_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
     # First call with just the remote sensor entities results in them being added
@@ -831,7 +862,7 @@ async def test_integration_with_entity_without_a_device(hass, mock_bleak_scanner
     assert len(mock_add_entities.mock_calls) == 1
 
     entities = mock_add_entities.mock_calls[0][1][0]
-    entity_one: PassiveBluetoothCoordinatorEntity = entities[0]
+    entity_one: PassiveBluetoothProcessorEntity = entities[0]
     entity_one.hass = hass
     assert entity_one.available is True
     assert entity_one.unique_id == "aa:bb:cc:dd:ee:ff-temperature"
@@ -860,7 +891,7 @@ async def test_passive_bluetooth_entity_with_entity_platform(
         return NO_DEVICES_PASSIVE_BLUETOOTH_DATA_UPDATE
 
     coordinator = PassiveBluetoothDataUpdateCoordinator(
-        hass, _LOGGER, "aa:bb:cc:dd:ee:ff", _async_generate_mock_data
+        hass, _LOGGER, "aa:bb:cc:dd:ee:ff"
     )
     assert coordinator.available is False  # no data yet
     saved_callback = None
@@ -870,18 +901,19 @@ async def test_passive_bluetooth_entity_with_entity_platform(
         saved_callback = _callback
         return lambda: None
 
+    processor = PassiveBluetoothDataProcessor(_async_generate_mock_data)
     with patch(
         "homeassistant.components.bluetooth.passive_update_coordinator.async_register_callback",
         _async_register_callback,
     ):
+        coordinator.async_register_processor(processor)
 
-        coordinator.async_add_entities_listener(
-            PassiveBluetoothCoordinatorEntity,
-            lambda entities: hass.async_create_task(
-                entity_platform.async_add_entities(entities)
-            ),
-        )
-
+    processor.async_add_entities_listener(
+        PassiveBluetoothProcessorEntity,
+        lambda entities: hass.async_create_task(
+            entity_platform.async_add_entities(entities)
+        ),
+    )
     saved_callback(NO_DEVICES_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
     await hass.async_block_till_done()
     saved_callback(NO_DEVICES_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
@@ -896,25 +928,19 @@ async def test_passive_bluetooth_entity_with_entity_platform(
     )
 
 
-MIXED_PLATFORMS_PASSIVE_BLUETOOTH_DATA_UPDATE = PassiveBluetoothDataUpdate(
+SENSOR_PASSIVE_BLUETOOTH_DATA_UPDATE = PassiveBluetoothDataUpdate(
     devices={
         None: DeviceInfo(
             name="Test Device", model="Test Model", manufacturer="Test Manufacturer"
         ),
     },
     entity_data={
-        PassiveBluetoothEntityKey("motion", None): True,
         PassiveBluetoothEntityKey("pressure", None): 1234,
     },
     entity_names={
-        PassiveBluetoothEntityKey("motion", None): "Motion",
         PassiveBluetoothEntityKey("pressure", None): "Pressure",
     },
     entity_descriptions={
-        PassiveBluetoothEntityKey("motion", None): BinarySensorEntityDescription(
-            key="motion",
-            device_class=BinarySensorDeviceClass.MOTION,
-        ),
         PassiveBluetoothEntityKey("pressure", None): SensorEntityDescription(
             key="pressure",
             native_unit_of_measurement="hPa",
@@ -924,19 +950,33 @@ MIXED_PLATFORMS_PASSIVE_BLUETOOTH_DATA_UPDATE = PassiveBluetoothDataUpdate(
 )
 
 
+BINARY_SENSOR_PASSIVE_BLUETOOTH_DATA_UPDATE = PassiveBluetoothDataUpdate(
+    devices={
+        None: DeviceInfo(
+            name="Test Device", model="Test Model", manufacturer="Test Manufacturer"
+        ),
+    },
+    entity_data={
+        PassiveBluetoothEntityKey("motion", None): True,
+    },
+    entity_names={
+        PassiveBluetoothEntityKey("motion", None): "Motion",
+    },
+    entity_descriptions={
+        PassiveBluetoothEntityKey("motion", None): BinarySensorEntityDescription(
+            key="motion",
+            device_class=BinarySensorDeviceClass.MOTION,
+        ),
+    },
+)
+
+
 async def test_integration_multiple_entity_platforms(hass, mock_bleak_scanner_start):
     """Test integration of PassiveBluetoothDataUpdateCoordinator with multiple platforms."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
-    @callback
-    def _async_generate_mock_data(
-        service_info: BluetoothServiceInfo,
-    ) -> PassiveBluetoothDataUpdate:
-        """Generate mock data."""
-        return MIXED_PLATFORMS_PASSIVE_BLUETOOTH_DATA_UPDATE
-
     coordinator = PassiveBluetoothDataUpdateCoordinator(
-        hass, _LOGGER, "aa:bb:cc:dd:ee:ff", _async_generate_mock_data
+        hass, _LOGGER, "aa:bb:cc:dd:ee:ff"
     )
     assert coordinator.available is False  # no data yet
     saved_callback = None
@@ -946,24 +986,33 @@ async def test_integration_multiple_entity_platforms(hass, mock_bleak_scanner_st
         saved_callback = _callback
         return lambda: None
 
+    binary_sensor_processor = PassiveBluetoothDataProcessor(
+        lambda service_info: BINARY_SENSOR_PASSIVE_BLUETOOTH_DATA_UPDATE
+    )
+    sesnor_processor = PassiveBluetoothDataProcessor(
+        lambda service_info: SENSOR_PASSIVE_BLUETOOTH_DATA_UPDATE
+    )
+
     with patch(
         "homeassistant.components.bluetooth.passive_update_coordinator.async_register_callback",
         _async_register_callback,
     ):
-        coordinator.async_add_listener(MagicMock())
+        coordinator.async_register_processor(binary_sensor_processor)
+        coordinator.async_register_processor(sesnor_processor)
+
+    binary_sensor_processor.async_add_listener(MagicMock())
+    sesnor_processor.async_add_listener(MagicMock())
 
     mock_add_sensor_entities = MagicMock()
     mock_add_binary_sensor_entities = MagicMock()
 
-    coordinator.async_add_entities_listener(
-        PassiveBluetoothCoordinatorEntity,
+    sesnor_processor.async_add_entities_listener(
+        PassiveBluetoothProcessorEntity,
         mock_add_sensor_entities,
-        lambda key, description: isinstance(description, SensorEntityDescription),
     )
-    coordinator.async_add_entities_listener(
-        PassiveBluetoothCoordinatorEntity,
+    binary_sensor_processor.async_add_entities_listener(
+        PassiveBluetoothProcessorEntity,
         mock_add_binary_sensor_entities,
-        lambda key, description: isinstance(description, BinarySensorEntityDescription),
     )
 
     saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
@@ -978,7 +1027,7 @@ async def test_integration_multiple_entity_platforms(hass, mock_bleak_scanner_st
         *mock_add_sensor_entities.mock_calls[0][1][0],
     ]
 
-    sensor_entity_one: PassiveBluetoothCoordinatorEntity = sesnor_entities[0]
+    sensor_entity_one: PassiveBluetoothProcessorEntity = sesnor_entities[0]
     sensor_entity_one.hass = hass
     assert sensor_entity_one.available is True
     assert sensor_entity_one.unique_id == "aa:bb:cc:dd:ee:ff-pressure"
@@ -992,9 +1041,9 @@ async def test_integration_multiple_entity_platforms(hass, mock_bleak_scanner_st
         key="pressure", device_id=None
     )
 
-    binary_sensor_entity_one: PassiveBluetoothCoordinatorEntity = (
-        binary_sesnor_entities[0]
-    )
+    binary_sensor_entity_one: PassiveBluetoothProcessorEntity = binary_sesnor_entities[
+        0
+    ]
     binary_sensor_entity_one.hass = hass
     assert binary_sensor_entity_one.available is True
     assert binary_sensor_entity_one.unique_id == "aa:bb:cc:dd:ee:ff-motion"
