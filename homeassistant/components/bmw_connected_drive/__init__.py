@@ -127,7 +127,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
     # Set up all platforms except notify
-    hass.config_entries.async_setup_platforms(
+    await hass.config_entries.async_forward_entry_setups(
         entry, [platform for platform in PLATFORMS if platform != Platform.NOTIFY]
     )
 

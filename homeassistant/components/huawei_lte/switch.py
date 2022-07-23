@@ -16,7 +16,11 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HuaweiLteBaseEntityWithDevice
-from .const import DOMAIN, KEY_DIALUP_MOBILE_DATASWITCH
+from .const import (
+    DOMAIN,
+    KEY_DIALUP_MOBILE_DATASWITCH,
+    KEY_WLAN_WIFI_GUEST_NETWORK_SWITCH,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,6 +36,9 @@ async def async_setup_entry(
 
     if router.data.get(KEY_DIALUP_MOBILE_DATASWITCH):
         switches.append(HuaweiLteMobileDataSwitch(router))
+
+    if router.data.get(KEY_WLAN_WIFI_GUEST_NETWORK_SWITCH).get("WifiEnable"):
+        switches.append(HuaweiLteWifiGuestNetworkSwitch(router))
 
     async_add_entities(switches, True)
 
@@ -113,3 +120,41 @@ class HuaweiLteMobileDataSwitch(HuaweiLteBaseSwitch):
     def icon(self) -> str:
         """Return switch icon."""
         return "mdi:signal" if self.is_on else "mdi:signal-off"
+
+
+@dataclass
+class HuaweiLteWifiGuestNetworkSwitch(HuaweiLteBaseSwitch):
+    """Huawei LTE WiFi guest network switch device."""
+
+    def __post_init__(self) -> None:
+        """Initialize identifiers."""
+        self.key = KEY_WLAN_WIFI_GUEST_NETWORK_SWITCH
+        self.item = "WifiEnable"
+
+    @property
+    def _entity_name(self) -> str:
+        return "WiFi guest network"
+
+    @property
+    def _device_unique_id(self) -> str:
+        return f"{self.key}.{self.item}"
+
+    @property
+    def is_on(self) -> bool:
+        """Return whether the switch is on."""
+        return self._raw_state == "1"
+
+    def _turn(self, state: bool) -> None:
+        self.router.client.wlan.wifi_guest_network_switch(state)
+        self._raw_state = "1" if state else "0"
+        self.schedule_update_ha_state()
+
+    @property
+    def icon(self) -> str:
+        """Return switch icon."""
+        return "mdi:wifi" if self.is_on else "mdi:wifi-off"
+
+    @property
+    def extra_state_attributes(self) -> dict[str, str]:
+        """Return the state attributes."""
+        return {"ssid": self.router.data[self.key].get("WifiSsid")}

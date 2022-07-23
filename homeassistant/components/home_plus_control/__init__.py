@@ -1,5 +1,4 @@
 """The Legrand Home+ Control integration."""
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -145,18 +144,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     entry.async_on_unload(coordinator.async_add_listener(_async_update_entities))
 
-    async def start_platforms():
-        """Continue setting up the platforms."""
-        await asyncio.gather(
-            *(
-                hass.config_entries.async_forward_entry_setup(entry, platform)
-                for platform in PLATFORMS
-            )
-        )
-        # Only refresh the coordinator after all platforms are loaded.
-        await coordinator.async_refresh()
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    hass.async_create_task(start_platforms())
+    # Only refresh the coordinator after all platforms are loaded.
+    await coordinator.async_refresh()
 
     return True
 

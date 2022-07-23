@@ -5,7 +5,7 @@ import steam
 
 from homeassistant import data_entry_flow
 from homeassistant.components.steam_online.const import CONF_ACCOUNTS, DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -15,8 +15,6 @@ from . import (
     ACCOUNT_2,
     ACCOUNT_NAME_1,
     CONF_DATA,
-    CONF_IMPORT_DATA,
-    CONF_IMPORT_OPTIONS,
     CONF_OPTIONS,
     CONF_OPTIONS_2,
     create_entry,
@@ -135,34 +133,6 @@ async def test_flow_reauth(hass: HomeAssistant) -> None:
         assert result["type"] == data_entry_flow.FlowResultType.ABORT
         assert result["reason"] == "reauth_successful"
         assert entry.data == new_conf
-
-
-async def test_flow_import(hass: HomeAssistant) -> None:
-    """Test import step."""
-    with patch_interface():
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=CONF_IMPORT_DATA,
-        )
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-        assert result["title"] == ACCOUNT_NAME_1
-        assert result["data"] == CONF_DATA
-        assert result["options"] == CONF_IMPORT_OPTIONS
-        assert result["result"].unique_id == ACCOUNT_1
-
-
-async def test_flow_import_already_configured(hass: HomeAssistant) -> None:
-    """Test import step already configured."""
-    create_entry(hass)
-    with patch_interface():
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=CONF_IMPORT_DATA,
-        )
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
-        assert result["reason"] == "already_configured"
 
 
 async def test_options_flow(hass: HomeAssistant) -> None:

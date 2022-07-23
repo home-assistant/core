@@ -62,8 +62,17 @@ class SensorMeta(NamedTuple):
 
 
 SENSOR_META: dict[str | tuple[str, str], SensorMeta] = {
+    #
+    # Device information
+    #
     KEY_DEVICE_INFORMATION: SensorMeta(
         include=re.compile(r"^(WanIP.*Address|uptime)$", re.IGNORECASE)
+    ),
+    (KEY_DEVICE_INFORMATION, "uptime"): SensorMeta(
+        name="Uptime",
+        icon="mdi:timer-outline",
+        native_unit_of_measurement=TIME_SECONDS,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     (KEY_DEVICE_INFORMATION, "WanIPAddress"): SensorMeta(
         name="WAN IP address",
@@ -76,12 +85,9 @@ SENSOR_META: dict[str | tuple[str, str], SensorMeta] = {
         icon="mdi:ip",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    (KEY_DEVICE_INFORMATION, "uptime"): SensorMeta(
-        name="Uptime",
-        icon="mdi:timer-outline",
-        native_unit_of_measurement=TIME_SECONDS,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
+    #
+    # Signal
+    #
     (KEY_DEVICE_SIGNAL, "band"): SensorMeta(
         name="Band",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -90,6 +96,15 @@ SENSOR_META: dict[str | tuple[str, str], SensorMeta] = {
         name="Cell ID",
         icon="mdi:transmission-tower",
         entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    (KEY_DEVICE_SIGNAL, "cqi0"): SensorMeta(
+        name="CQI 0",
+        icon="mdi:speedometer",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    (KEY_DEVICE_SIGNAL, "cqi1"): SensorMeta(
+        name="CQI 1",
+        icon="mdi:speedometer",
     ),
     (KEY_DEVICE_SIGNAL, "dl_mcs"): SensorMeta(
         name="Downlink MCS",
@@ -108,49 +123,42 @@ SENSOR_META: dict[str | tuple[str, str], SensorMeta] = {
         name="EARFCN",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    (KEY_DEVICE_SIGNAL, "ecio"): SensorMeta(
+        name="EC/IO",
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        # https://wiki.teltonika.lt/view/EC/IO
+        icon=lambda x: (
+            "mdi:signal-cellular-outline",
+            "mdi:signal-cellular-1",
+            "mdi:signal-cellular-2",
+            "mdi:signal-cellular-3",
+        )[bisect((-20, -10, -6), x if x is not None else -1000)],
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    (KEY_DEVICE_SIGNAL, "enodeb_id"): SensorMeta(
+        name="eNodeB ID",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
     (KEY_DEVICE_SIGNAL, "lac"): SensorMeta(
         name="LAC",
         icon="mdi:map-marker",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    (KEY_DEVICE_SIGNAL, "plmn"): SensorMeta(
-        name="PLMN",
+    (KEY_DEVICE_SIGNAL, "ltedlfreq"): SensorMeta(
+        name="Downlink frequency",
+        formatter=lambda x: (
+            round(int(x) / 10) if x is not None else None,
+            FREQUENCY_MEGAHERTZ,
+        ),
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    (KEY_DEVICE_SIGNAL, "rac"): SensorMeta(
-        name="RAC",
-        icon="mdi:map-marker",
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    (KEY_DEVICE_SIGNAL, "rrc_status"): SensorMeta(
-        name="RRC status",
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    (KEY_DEVICE_SIGNAL, "tac"): SensorMeta(
-        name="TAC",
-        icon="mdi:map-marker",
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    (KEY_DEVICE_SIGNAL, "tdd"): SensorMeta(
-        name="TDD",
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    (KEY_DEVICE_SIGNAL, "txpower"): SensorMeta(
-        name="Transmit power",
-        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    (KEY_DEVICE_SIGNAL, "ul_mcs"): SensorMeta(
-        name="Uplink MCS",
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    (KEY_DEVICE_SIGNAL, "ulbandwidth"): SensorMeta(
-        name="Uplink bandwidth",
-        icon=lambda x: (
-            "mdi:speedometer-slow",
-            "mdi:speedometer-medium",
-            "mdi:speedometer",
-        )[bisect((8, 15), x if x is not None else -1000)],
+    (KEY_DEVICE_SIGNAL, "lteulfreq"): SensorMeta(
+        name="Uplink frequency",
+        formatter=lambda x: (
+            round(int(x) / 10) if x is not None else None,
+            FREQUENCY_MEGAHERTZ,
+        ),
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     (KEY_DEVICE_SIGNAL, "mode"): SensorMeta(
@@ -168,19 +176,31 @@ SENSOR_META: dict[str | tuple[str, str], SensorMeta] = {
         icon="mdi:transmission-tower",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    (KEY_DEVICE_SIGNAL, "rsrq"): SensorMeta(
-        name="RSRQ",
+    (KEY_DEVICE_SIGNAL, "plmn"): SensorMeta(
+        name="PLMN",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    (KEY_DEVICE_SIGNAL, "rac"): SensorMeta(
+        name="RAC",
+        icon="mdi:map-marker",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    (KEY_DEVICE_SIGNAL, "rrc_status"): SensorMeta(
+        name="RRC status",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    (KEY_DEVICE_SIGNAL, "rscp"): SensorMeta(
+        name="RSCP",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
-        # http://www.lte-anbieter.info/technik/rsrq.php
+        # https://wiki.teltonika.lt/view/RSCP
         icon=lambda x: (
             "mdi:signal-cellular-outline",
             "mdi:signal-cellular-1",
             "mdi:signal-cellular-2",
             "mdi:signal-cellular-3",
-        )[bisect((-11, -8, -5), x if x is not None else -1000)],
+        )[bisect((-95, -85, -75), x if x is not None else -1000)],
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=True,
     ),
     (KEY_DEVICE_SIGNAL, "rsrp"): SensorMeta(
         name="RSRP",
@@ -192,6 +212,20 @@ SENSOR_META: dict[str | tuple[str, str], SensorMeta] = {
             "mdi:signal-cellular-2",
             "mdi:signal-cellular-3",
         )[bisect((-110, -95, -80), x if x is not None else -1000)],
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=True,
+    ),
+    (KEY_DEVICE_SIGNAL, "rsrq"): SensorMeta(
+        name="RSRQ",
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        # http://www.lte-anbieter.info/technik/rsrq.php
+        icon=lambda x: (
+            "mdi:signal-cellular-outline",
+            "mdi:signal-cellular-1",
+            "mdi:signal-cellular-2",
+            "mdi:signal-cellular-3",
+        )[bisect((-11, -8, -5), x if x is not None else -1000)],
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=True,
@@ -224,65 +258,40 @@ SENSOR_META: dict[str | tuple[str, str], SensorMeta] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=True,
     ),
-    (KEY_DEVICE_SIGNAL, "rscp"): SensorMeta(
-        name="RSCP",
-        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
-        # https://wiki.teltonika.lt/view/RSCP
-        icon=lambda x: (
-            "mdi:signal-cellular-outline",
-            "mdi:signal-cellular-1",
-            "mdi:signal-cellular-2",
-            "mdi:signal-cellular-3",
-        )[bisect((-95, -85, -75), x if x is not None else -1000)],
-        state_class=SensorStateClass.MEASUREMENT,
+    (KEY_DEVICE_SIGNAL, "tac"): SensorMeta(
+        name="TAC",
+        icon="mdi:map-marker",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    (KEY_DEVICE_SIGNAL, "ecio"): SensorMeta(
-        name="EC/IO",
-        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
-        # https://wiki.teltonika.lt/view/EC/IO
-        icon=lambda x: (
-            "mdi:signal-cellular-outline",
-            "mdi:signal-cellular-1",
-            "mdi:signal-cellular-2",
-            "mdi:signal-cellular-3",
-        )[bisect((-20, -10, -6), x if x is not None else -1000)],
-        state_class=SensorStateClass.MEASUREMENT,
+    (KEY_DEVICE_SIGNAL, "tdd"): SensorMeta(
+        name="TDD",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     (KEY_DEVICE_SIGNAL, "transmode"): SensorMeta(
         name="Transmission mode",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    (KEY_DEVICE_SIGNAL, "cqi0"): SensorMeta(
-        name="CQI 0",
-        icon="mdi:speedometer",
+    (KEY_DEVICE_SIGNAL, "txpower"): SensorMeta(
+        name="Transmit power",
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    (KEY_DEVICE_SIGNAL, "cqi1"): SensorMeta(
-        name="CQI 1",
-        icon="mdi:speedometer",
-    ),
-    (KEY_DEVICE_SIGNAL, "enodeb_id"): SensorMeta(
-        name="eNodeB ID",
+    (KEY_DEVICE_SIGNAL, "ul_mcs"): SensorMeta(
+        name="Uplink MCS",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    (KEY_DEVICE_SIGNAL, "ltedlfreq"): SensorMeta(
-        name="Downlink frequency",
-        formatter=lambda x: (
-            round(int(x) / 10) if x is not None else None,
-            FREQUENCY_MEGAHERTZ,
-        ),
+    (KEY_DEVICE_SIGNAL, "ulbandwidth"): SensorMeta(
+        name="Uplink bandwidth",
+        icon=lambda x: (
+            "mdi:speedometer-slow",
+            "mdi:speedometer-medium",
+            "mdi:speedometer",
+        )[bisect((8, 15), x if x is not None else -1000)],
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    (KEY_DEVICE_SIGNAL, "lteulfreq"): SensorMeta(
-        name="Uplink frequency",
-        formatter=lambda x: (
-            round(int(x) / 10) if x is not None else None,
-            FREQUENCY_MEGAHERTZ,
-        ),
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
+    #
+    # Monitoring
+    #
     KEY_MONITORING_CHECK_NOTIFICATIONS: SensorMeta(
         exclude=re.compile(
             r"^(onlineupdatestatus|smsstoragefull)$",
@@ -331,13 +340,13 @@ SENSOR_META: dict[str | tuple[str, str], SensorMeta] = {
         icon="mdi:ip",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    (KEY_MONITORING_STATUS, "SecondaryDns"): SensorMeta(
-        name="Secondary DNS server",
+    (KEY_MONITORING_STATUS, "PrimaryIPv6Dns"): SensorMeta(
+        name="Primary IPv6 DNS server",
         icon="mdi:ip",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    (KEY_MONITORING_STATUS, "PrimaryIPv6Dns"): SensorMeta(
-        name="Primary IPv6 DNS server",
+    (KEY_MONITORING_STATUS, "SecondaryDns"): SensorMeta(
+        name="Secondary DNS server",
         icon="mdi:ip",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -396,13 +405,11 @@ SENSOR_META: dict[str | tuple[str, str], SensorMeta] = {
         icon="mdi:upload",
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
+    #
+    # Network
+    #
     KEY_NET_CURRENT_PLMN: SensorMeta(
         exclude=re.compile(r"^(Rat|ShortName|Spn)$", re.IGNORECASE)
-    ),
-    (KEY_NET_CURRENT_PLMN, "State"): SensorMeta(
-        name="Operator search mode",
-        formatter=lambda x: ({"0": "Auto", "1": "Manual"}.get(x, "Unknown"), None),
-        entity_category=EntityCategory.CONFIG,
     ),
     (KEY_NET_CURRENT_PLMN, "FullName"): SensorMeta(
         name="Operator name",
@@ -411,6 +418,11 @@ SENSOR_META: dict[str | tuple[str, str], SensorMeta] = {
     (KEY_NET_CURRENT_PLMN, "Numeric"): SensorMeta(
         name="Operator code",
         entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    (KEY_NET_CURRENT_PLMN, "State"): SensorMeta(
+        name="Operator search mode",
+        formatter=lambda x: ({"0": "Auto", "1": "Manual"}.get(x, "Unknown"), None),
+        entity_category=EntityCategory.CONFIG,
     ),
     KEY_NET_NET_MODE: SensorMeta(include=re.compile(r"^NetworkMode$", re.IGNORECASE)),
     (KEY_NET_NET_MODE, "NetworkMode"): SensorMeta(
@@ -429,6 +441,9 @@ SENSOR_META: dict[str | tuple[str, str], SensorMeta] = {
         ),
         entity_category=EntityCategory.CONFIG,
     ),
+    #
+    # SMS
+    #
     (KEY_SMS_SMS_COUNT, "LocalDeleted"): SensorMeta(
         name="SMS deleted (device)",
         icon="mdi:email-minus",

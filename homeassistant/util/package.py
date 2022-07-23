@@ -89,9 +89,6 @@ def install_package(
         # This only works if not running in venv
         args += ["--user"]
         env["PYTHONUSERBASE"] = os.path.abspath(target)
-        # Workaround for incompatible prefix setting
-        # See http://stackoverflow.com/a/4495175
-        args += ["--prefix="]
     _LOGGER.debug("Running pip command: args=%s", args)
     with Popen(args, stdin=PIPE, stdout=PIPE, stderr=PIPE, env=env) as process:
         _, stderr = process.communicate()

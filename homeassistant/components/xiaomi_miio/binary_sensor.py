@@ -1,7 +1,7 @@
 """Support for Xiaomi Miio binary sensors."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 import logging
 
@@ -180,7 +180,7 @@ async def async_setup_entry(
 
     if config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
         model = config_entry.data[CONF_MODEL]
-        sensors = []
+        sensors: Iterable[str] = []
         if model in MODEL_AIRFRESH_A1 or model in MODEL_AIRFRESH_T2017:
             sensors = AIRFRESH_A1_BINARY_SENSORS
         elif model in MODEL_FAN_ZA5:

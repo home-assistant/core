@@ -41,7 +41,7 @@ async def test_cover_async_setup_entry(hass, aioclient_mock):
     assert len(aioclient_mock.mock_calls) == 1
 
     # Test Switch Entity
-    entity_id = "switch.ac_one_fresh_air"
+    entity_id = "switch.testname_ac_one_fresh_air"
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_OFF

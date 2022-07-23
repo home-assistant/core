@@ -5,6 +5,7 @@
   "requirements": ["PySwitchbot==0.14.0"],
   "config_flow": true,
   "codeowners": ["@danielhiversen", "@RenierM26"],
+  "bluetooth": [{ "service_uuid": "cba20d00-224d-11e6-9fb8-0002a5d5c51b" }],
   "iot_class": "local_polling",
   "loggers": ["switchbot"]
 }

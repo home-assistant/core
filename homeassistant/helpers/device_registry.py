@@ -164,7 +164,7 @@ def _async_get_device_id_from_index(
     return None
 
 
-class DeviceRegistryStore(storage.Store):
+class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
     """Store entity registry data."""
 
     async def _async_migrate_func(
@@ -569,7 +569,6 @@ class DeviceRegistry:
         deleted_devices = OrderedDict()
 
         if data is not None:
-            data = cast("dict[str, Any]", data)
             for device in data["devices"]:
                 devices[device["id"]] = DeviceEntry(
                     area_id=device["area_id"],

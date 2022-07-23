@@ -110,7 +110,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     # Schedule directly on the loop to avoid blocking HA startup.
     hass.loop.create_task(gateway.connect_and_subscribe())
 
-    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     register_services(hass)
     return True

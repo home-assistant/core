@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import dataclasses
-from typing import cast
+from typing import Optional, cast
 
 from homeassistant.const import __version__ as ha_version
 from homeassistant.core import HomeAssistant, callback
@@ -25,6 +25,7 @@ class IssueEntry:
     breaks_in_ha_version: str | None
     dismissed_version: str | None
     domain: str
+    is_fixable: bool | None
     issue_id: str
     learn_more_url: str | None
     severity: IssueSeverity | None
@@ -39,7 +40,9 @@ class IssueRegistry:
         """Initialize the issue registry."""
         self.hass = hass
         self.issues: dict[tuple[str, str], IssueEntry] = {}
-        self._store = Store(hass, STORAGE_VERSION, STORAGE_KEY, atomic_writes=True)
+        self._store = Store[dict[str, list[dict[str, Optional[str]]]]](
+            hass, STORAGE_VERSION, STORAGE_KEY, atomic_writes=True
+        )
 
     @callback
     def async_get_issue(self, domain: str, issue_id: str) -> IssueEntry | None:
@@ -53,6 +56,7 @@ class IssueRegistry:
         issue_id: str,
         *,
         breaks_in_ha_version: str | None = None,
+        is_fixable: bool,
         learn_more_url: str | None = None,
         severity: IssueSeverity,
         translation_key: str,
@@ -66,6 +70,7 @@ class IssueRegistry:
                 breaks_in_ha_version=breaks_in_ha_version,
                 dismissed_version=None,
                 domain=domain,
+                is_fixable=is_fixable,
                 issue_id=issue_id,
                 learn_more_url=learn_more_url,
                 severity=severity,
@@ -79,6 +84,7 @@ class IssueRegistry:
                 issue,
                 active=True,
                 breaks_in_ha_version=breaks_in_ha_version,
+                is_fixable=is_fixable,
                 learn_more_url=learn_more_url,
                 severity=severity,
                 translation_key=translation_key,
@@ -119,11 +125,13 @@ class IssueRegistry:
 
         if isinstance(data, dict):
             for issue in data["issues"]:
+                assert issue["domain"] and issue["issue_id"]
                 issues[(issue["domain"], issue["issue_id"])] = IssueEntry(
                     active=False,
                     breaks_in_ha_version=None,
                     dismissed_version=issue["dismissed_version"],
                     domain=issue["domain"],
+                    is_fixable=None,
                     issue_id=issue["issue_id"],
                     learn_more_url=None,
                     severity=None,

@@ -1,6 +1,7 @@
 """Support for Xiaomi Mi Air Quality Monitor (PM2.5) and Humidifier."""
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
 import logging
 
@@ -470,7 +471,7 @@ FAN_V2_V3_SENSORS = (
 
 FAN_ZA5_SENSORS = (ATTR_HUMIDITY, ATTR_TEMPERATURE)
 
-MODEL_TO_SENSORS_MAP = {
+MODEL_TO_SENSORS_MAP: dict[str, tuple[str, ...]] = {
     MODEL_AIRFRESH_A1: AIRFRESH_SENSORS_A1,
     MODEL_AIRFRESH_VA2: AIRFRESH_SENSORS,
     MODEL_AIRFRESH_T2017: AIRFRESH_SENSORS_T2017,
@@ -661,7 +662,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Xiaomi sensor from a config entry."""
-    entities = []
+    entities: list[SensorEntity] = []
 
     if config_entry.data[CONF_FLOW_TYPE] == CONF_GATEWAY:
         gateway = hass.data[DOMAIN][config_entry.entry_id][CONF_GATEWAY]
@@ -715,7 +716,7 @@ async def async_setup_entry(
             )
         else:
             device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
-            sensors = []
+            sensors: Iterable[str] = []
             if model in MODEL_TO_SENSORS_MAP:
                 sensors = MODEL_TO_SENSORS_MAP[model]
             elif model in MODELS_HUMIDIFIER_MIOT:

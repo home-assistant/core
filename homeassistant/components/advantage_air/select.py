@@ -36,7 +36,7 @@ class AdvantageAirMyZone(AdvantageAirEntity, SelectEntity):
     def __init__(self, instance, ac_key):
         """Initialize an Advantage Air MyZone control."""
         super().__init__(instance, ac_key)
-        self._attr_name = f'{self._ac["name"]} MyZone'
+        self._attr_name = f'{self._ac["name"]} myZone'
         self._attr_unique_id = (
             f'{self.coordinator.data["system"]["rid"]}-{ac_key}-myzone'
         )

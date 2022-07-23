@@ -22,6 +22,7 @@ from homeassistant.exceptions import (
     TemplateError,
     Unauthorized,
 )
+from homeassistant.generated import supported_brands
 from homeassistant.helpers import config_validation as cv, entity, template
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import (
@@ -68,6 +69,7 @@ def async_register_commands(
     async_reg(hass, handle_unsubscribe_events)
     async_reg(hass, handle_validate_config)
     async_reg(hass, handle_subscribe_entities)
+    async_reg(hass, handle_supported_brands)
 
 
 def pong_message(iden: int) -> dict[str, Any]:
@@ -691,3 +693,25 @@ async def handle_validate_config(
             result[key] = {"valid": True, "error": None}
 
     connection.send_result(msg["id"], result)
+
+
+@decorators.websocket_command(
+    {
+        vol.Required("type"): "supported_brands",
+    }
+)
+@decorators.async_response
+async def handle_supported_brands(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle supported brands command."""
+    data = {}
+    for integration in await asyncio.gather(
+        *[
+            async_get_integration(hass, integration)
+            for integration in supported_brands.HAS_SUPPORTED_BRANDS
+        ]
+    ):
+        data[integration.domain] = integration.manifest["supported_brands"]
+
+    connection.send_result(msg["id"], data)

@@ -184,9 +184,9 @@ class XiaomiCoordinatedMiioEntity(CoordinatorEntity[_T]):
         return int(timedelta.total_seconds())
 
     @staticmethod
-    def _parse_datetime_time(time: datetime.time) -> str:
+    def _parse_datetime_time(initial_time: datetime.time) -> str:
         time = datetime.datetime.now().replace(
-            hour=time.hour, minute=time.minute, second=0, microsecond=0
+            hour=initial_time.hour, minute=initial_time.minute, second=0, microsecond=0
         )
 
         if time < datetime.datetime.now():

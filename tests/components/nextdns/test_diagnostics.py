@@ -43,11 +43,13 @@ async def test_entry_diagnostics(hass, hass_client):
         "doh_queries": 20,
         "doq_queries": 10,
         "dot_queries": 30,
+        "tcp_queries": 0,
         "udp_queries": 40,
-        "doh_queries_ratio": 22.2,
-        "doq_queries_ratio": 11.1,
-        "dot_queries_ratio": 33.3,
-        "udp_queries_ratio": 44.4,
+        "doh_queries_ratio": 20.0,
+        "doq_queries_ratio": 10.0,
+        "dot_queries_ratio": 30.0,
+        "tcp_queries_ratio": 0.0,
+        "udp_queries_ratio": 40.0,
     }
     assert result["status_coordinator_data"] == {
         "all_queries": 100,

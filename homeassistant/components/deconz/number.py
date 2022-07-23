@@ -65,8 +65,7 @@ async def async_setup_entry(
     def async_add_sensor(_: EventType, sensor_id: str) -> None:
         """Add sensor from deCONZ."""
         sensor = gateway.api.sensors.presence[sensor_id]
-        if sensor.type.startswith("CLIP"):
-            return
+
         for description in ENTITY_DESCRIPTIONS.get(type(sensor), []):
             if (
                 not hasattr(sensor, description.key)
@@ -78,6 +77,7 @@ async def async_setup_entry(
     gateway.register_platform_add_device_callback(
         async_add_sensor,
         gateway.api.sensors.presence,
+        always_ignore_clip_sensors=True,
     )
 
 
@@ -113,8 +113,10 @@ class DeconzNumber(DeconzDevice, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set sensor config."""
-        data = {self.entity_description.key: int(value)}
-        await self._device.set_config(**data)
+        await self.gateway.api.sensors.presence.set_config(
+            id=self._device.resource_id,
+            delay=int(value),
+        )
 
     @property
     def unique_id(self) -> str:

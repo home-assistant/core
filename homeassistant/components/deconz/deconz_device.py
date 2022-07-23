@@ -120,6 +120,8 @@ class DeconzDevice(DeconzBase, Entity):
 class DeconzSceneMixin(DeconzDevice):
     """Representation of a deCONZ scene."""
 
+    _attr_has_entity_name = True
+
     _device: PydeconzScene
 
     def __init__(
@@ -130,7 +132,9 @@ class DeconzSceneMixin(DeconzDevice):
         """Set up a scene."""
         super().__init__(device, gateway)
 
-        self._attr_name = device.full_name
+        self.group = self.gateway.api.groups[device.group_id]
+
+        self._attr_name = device.name
         self._group_identifier = self.get_parent_identifier()
 
     def get_device_identifier(self) -> str:
@@ -139,7 +143,7 @@ class DeconzSceneMixin(DeconzDevice):
 
     def get_parent_identifier(self) -> str:
         """Describe a unique identifier for group this scene belongs to."""
-        return f"{self.gateway.bridgeid}-{self._device.group_deconz_id}"
+        return f"{self.gateway.bridgeid}-{self.group.deconz_id}"
 
     @property
     def unique_id(self) -> str:
@@ -149,4 +153,10 @@ class DeconzSceneMixin(DeconzDevice):
     @property
     def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
-        return DeviceInfo(identifiers={(DECONZ_DOMAIN, self._group_identifier)})
+        return DeviceInfo(
+            identifiers={(DECONZ_DOMAIN, self._group_identifier)},
+            manufacturer="Dresden Elektronik",
+            model="deCONZ group",
+            name=self.group.name,
+            via_device=(DECONZ_DOMAIN, self.gateway.api.config.bridge_id),
+        )

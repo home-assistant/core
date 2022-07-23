@@ -321,20 +321,17 @@ async def async_setup_entry(  # noqa: C901
         on_connect_error=on_connect_error,
     )
 
-    async def complete_setup() -> None:
-        """Complete the config entry setup."""
-        infos, services = await entry_data.async_load_from_store()
-        await entry_data.async_update_static_infos(hass, entry, infos)
-        await _setup_services(hass, entry_data, services)
+    infos, services = await entry_data.async_load_from_store()
+    await entry_data.async_update_static_infos(hass, entry, infos)
+    await _setup_services(hass, entry_data, services)
 
-        if entry_data.device_info is not None and entry_data.device_info.name:
-            cli.expected_name = entry_data.device_info.name
-            reconnect_logic.name = entry_data.device_info.name
+    if entry_data.device_info is not None and entry_data.device_info.name:
+        cli.expected_name = entry_data.device_info.name
+        reconnect_logic.name = entry_data.device_info.name
 
-        await reconnect_logic.start()
-        entry_data.cleanup_callbacks.append(reconnect_logic.stop_callback)
+    await reconnect_logic.start()
+    entry_data.cleanup_callbacks.append(reconnect_logic.stop_callback)
 
-    hass.async_create_task(complete_setup())
     return True
 
 

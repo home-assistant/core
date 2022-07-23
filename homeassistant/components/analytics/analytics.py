@@ -1,6 +1,6 @@
 """Analytics helper class for the analytics integration."""
 import asyncio
-from typing import cast
+from typing import Any
 import uuid
 
 import aiohttp
@@ -66,12 +66,12 @@ class Analytics:
         """Initialize the Analytics class."""
         self.hass: HomeAssistant = hass
         self.session = async_get_clientsession(hass)
-        self._data: dict = {
+        self._data: dict[str, Any] = {
             ATTR_PREFERENCES: {},
             ATTR_ONBOARDED: False,
             ATTR_UUID: None,
         }
-        self._store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
+        self._store = Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY)
 
     @property
     def preferences(self) -> dict:
@@ -109,7 +109,7 @@ class Analytics:
 
     async def load(self) -> None:
         """Load preferences."""
-        stored = cast(dict, await self._store.async_load())
+        stored = await self._store.async_load()
         if stored:
             self._data = stored
 

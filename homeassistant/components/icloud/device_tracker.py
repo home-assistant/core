@@ -36,7 +36,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up device tracker for iCloud component."""
     account = hass.data[DOMAIN][entry.unique_id]
-    tracked = set()
+    tracked = set[str]()
 
     @callback
     def update_account():
@@ -51,7 +51,7 @@ async def async_setup_entry(
 
 
 @callback
-def add_entities(account, async_add_entities, tracked):
+def add_entities(account: IcloudAccount, async_add_entities, tracked):
     """Add new tracker entities from the account."""
     new_tracked = []
 
@@ -101,7 +101,7 @@ class IcloudTrackerEntity(TrackerEntity):
         return self._device.location[DEVICE_LOCATION_LONGITUDE]
 
     @property
-    def battery_level(self) -> int:
+    def battery_level(self) -> int | None:
         """Return the battery level of the device."""
         return self._device.battery_level
 

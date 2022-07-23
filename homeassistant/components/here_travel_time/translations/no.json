@@ -39,6 +39,11 @@
                 },
                 "title": "Velg Opprinnelse"
             },
+            "origin_menu": {
+                "menu_options": {
+                    "origin_coordinates": "Bruk kartplassering"
+                }
+            },
             "user": {
                 "data": {
                     "api_key": "API-n\u00f8kkel",

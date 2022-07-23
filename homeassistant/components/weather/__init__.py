@@ -171,16 +171,16 @@ class Forecast(TypedDict, total=False):
     datetime: str
     precipitation_probability: int | None
     native_precipitation: float | None
-    precipitation: float | None
+    precipitation: None
     native_pressure: float | None
-    pressure: float | None
+    pressure: None
     native_temperature: float | None
-    temperature: float | None
+    temperature: None
     native_templow: float | None
-    templow: float | None
+    templow: None
     wind_bearing: float | str | None
     native_wind_speed: float | None
-    wind_speed: float | None
+    wind_speed: None
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -218,33 +218,33 @@ class WeatherEntity(Entity):
     _attr_humidity: float | None = None
     _attr_ozone: float | None = None
     _attr_precision: float
-    _attr_pressure: float | None = (
+    _attr_pressure: None = (
         None  # Provide backwards compatibility. Use _attr_native_pressure
     )
-    _attr_pressure_unit: str | None = (
+    _attr_pressure_unit: None = (
         None  # Provide backwards compatibility. Use _attr_native_pressure_unit
     )
     _attr_state: None = None
-    _attr_temperature: float | None = (
+    _attr_temperature: None = (
         None  # Provide backwards compatibility. Use _attr_native_temperature
     )
-    _attr_temperature_unit: str | None = (
+    _attr_temperature_unit: None = (
         None  # Provide backwards compatibility. Use _attr_native_temperature_unit
     )
-    _attr_visibility: float | None = (
+    _attr_visibility: None = (
         None  # Provide backwards compatibility. Use _attr_native_visibility
     )
-    _attr_visibility_unit: str | None = (
+    _attr_visibility_unit: None = (
         None  # Provide backwards compatibility. Use _attr_native_visibility_unit
     )
-    _attr_precipitation_unit: str | None = (
+    _attr_precipitation_unit: None = (
         None  # Provide backwards compatibility. Use _attr_native_precipitation_unit
     )
     _attr_wind_bearing: float | str | None = None
-    _attr_wind_speed: float | None = (
+    _attr_wind_speed: None = (
         None  # Provide backwards compatibility. Use _attr_native_wind_speed
     )
-    _attr_wind_speed_unit: str | None = (
+    _attr_wind_speed_unit: None = (
         None  # Provide backwards compatibility. Use _attr_native_wind_speed_unit
     )
 
@@ -321,6 +321,7 @@ class WeatherEntity(Entity):
             return
         self.async_registry_entry_updated()
 
+    @final
     @property
     def temperature(self) -> float | None:
         """Return the temperature for backward compatibility.
@@ -345,6 +346,7 @@ class WeatherEntity(Entity):
 
         return self._attr_native_temperature_unit
 
+    @final
     @property
     def temperature_unit(self) -> str | None:
         """Return the temperature unit for backward compatibility.
@@ -376,6 +378,7 @@ class WeatherEntity(Entity):
 
         return self._default_temperature_unit
 
+    @final
     @property
     def pressure(self) -> float | None:
         """Return the pressure for backward compatibility.
@@ -400,6 +403,7 @@ class WeatherEntity(Entity):
 
         return self._attr_native_pressure_unit
 
+    @final
     @property
     def pressure_unit(self) -> str | None:
         """Return the pressure unit for backward compatibility.
@@ -436,6 +440,7 @@ class WeatherEntity(Entity):
         """Return the humidity in native units."""
         return self._attr_humidity
 
+    @final
     @property
     def wind_speed(self) -> float | None:
         """Return the wind_speed for backward compatibility.
@@ -460,6 +465,7 @@ class WeatherEntity(Entity):
 
         return self._attr_native_wind_speed_unit
 
+    @final
     @property
     def wind_speed_unit(self) -> str | None:
         """Return the wind_speed unit for backward compatibility.
@@ -505,6 +511,7 @@ class WeatherEntity(Entity):
         """Return the ozone level."""
         return self._attr_ozone
 
+    @final
     @property
     def visibility(self) -> float | None:
         """Return the visibility for backward compatibility.
@@ -529,6 +536,7 @@ class WeatherEntity(Entity):
 
         return self._attr_native_visibility_unit
 
+    @final
     @property
     def visibility_unit(self) -> str | None:
         """Return the visibility unit for backward compatibility.
@@ -573,6 +581,7 @@ class WeatherEntity(Entity):
 
         return self._attr_native_precipitation_unit
 
+    @final
     @property
     def precipitation_unit(self) -> str | None:
         """Return the precipitation unit for backward compatibility.

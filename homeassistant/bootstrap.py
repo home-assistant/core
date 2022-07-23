@@ -70,7 +70,7 @@ LOGGING_INTEGRATIONS = {
     # To record data
     "recorder",
 }
-DISCOVERY_INTEGRATIONS = ("dhcp", "ssdp", "usb", "zeroconf")
+DISCOVERY_INTEGRATIONS = ("bluetooth", "dhcp", "ssdp", "usb", "zeroconf")
 STAGE_1_INTEGRATIONS = {
     # We need to make sure discovery integrations
     # update their deps before stage 2 integrations
