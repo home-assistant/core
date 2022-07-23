@@ -13,7 +13,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import SONOS_CREATE_LEVELS
 from .entity import SonosEntity
-from .helpers import soco_error
+from .helpers import SocoFeatures, soco_error
 from .speaker import SonosSpeaker
 
 LEVEL_TYPES = {
@@ -35,9 +35,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Sonos number platform from a config entry."""
 
-    def available_soco_attributes(
-        speaker: SonosSpeaker,
-    ) -> list[tuple[str, tuple[int, int]]]:
+    def available_soco_attributes(speaker: SonosSpeaker) -> SocoFeatures:
         features = []
         for level_type, valid_range in LEVEL_TYPES.items():
             if (state := getattr(speaker.soco, level_type, None)) is not None:
@@ -48,9 +46,9 @@ async def async_setup_entry(
     async def _async_create_entities(speaker: SonosSpeaker) -> None:
         entities = []
 
-        available_features: list[
-            tuple[str, tuple[int, int]]
-        ] = await hass.async_add_executor_job(available_soco_attributes, speaker)
+        available_features = await hass.async_add_executor_job(
+            available_soco_attributes, speaker
+        )
 
         for level_type, valid_range in available_features:
             _LOGGER.debug(

@@ -31,6 +31,8 @@ _T = TypeVar(
 _R = TypeVar("_R")
 _P = ParamSpec("_P")
 
+SocoFeatures = list[tuple[str, tuple[int, int]]]
+
 
 @overload
 def soco_error(

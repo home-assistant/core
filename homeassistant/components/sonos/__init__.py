@@ -9,7 +9,7 @@ import datetime
 from functools import partial
 import logging
 import socket
-from typing import cast
+from typing import Union, cast
 from urllib.parse import urlparse
 
 from soco import events_asyncio
@@ -298,7 +298,7 @@ class SonosDiscoveryManager:
         )
 
     async def _async_handle_discovery_message(
-        self, uid: str, discovered_ip: str, boot_seqnum: int
+        self, uid: str, discovered_ip: str, boot_seqnum: int | None
     ) -> None:
         """Handle discovered player creation and activity."""
         async with self.discovery_lock:
@@ -343,7 +343,7 @@ class SonosDiscoveryManager:
             info,
             cast(str, urlparse(info.ssdp_location).hostname),
             uid,
-            cast(int, info.ssdp_headers.get("X-RINCON-BOOTSEQ")),
+            info.ssdp_headers.get("X-RINCON-BOOTSEQ"),
             cast(str, info.upnp.get(ssdp.ATTR_UPNP_MODEL_NAME)),
             None,
         )
@@ -355,7 +355,7 @@ class SonosDiscoveryManager:
         info: ssdp.SsdpServiceInfo,
         discovered_ip: str,
         uid: str,
-        boot_seqnum: int,
+        boot_seqnum: str | int | None,
         model: str,
         mdns_name: str | None,
     ) -> None:
@@ -381,7 +381,9 @@ class SonosDiscoveryManager:
             _LOGGER.debug("New %s discovery uid=%s: %s", source, uid, info)
             self.data.discovery_known.add(uid)
         asyncio.create_task(
-            self._async_handle_discovery_message(uid, discovered_ip, boot_seqnum)
+            self._async_handle_discovery_message(
+                uid, discovered_ip, cast(Union[int, None], boot_seqnum)
+            )
         )
 
     async def setup_platforms_and_discovery(self) -> None:
