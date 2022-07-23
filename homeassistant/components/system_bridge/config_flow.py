@@ -60,7 +60,10 @@ async def _validate_input(
             hass.async_create_task(websocket_client.listen())
             response = await websocket_client.get_data(GetData(modules=["system"]))
             _LOGGER.info("Got response: %s", response.json())
-            system = System(**response.data)
+            try:
+                system = System(**response.data)
+            except ValueError as err:
+                raise CannotConnect from err
     except AuthenticationException as exception:
         _LOGGER.warning(
             "Authentication error when connecting to %s: %s", data[CONF_HOST], exception
@@ -79,10 +82,6 @@ async def _validate_input(
         raise CannotConnect from exception
 
     _LOGGER.debug("Got System data: %s", system.json())
-
-    if system.uuid is None:
-        error = "No UUID in result!"
-        raise CannotConnect(error)
 
     return {"hostname": host, "uuid": system.uuid}
 
