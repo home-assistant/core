@@ -55,32 +55,11 @@ class PassiveBluetoothDataUpdate(Generic[_T]):
     )
 
 
-_PassiveBluetoothDataUpdateCoordinatorT = TypeVar(
-    "_PassiveBluetoothDataUpdateCoordinatorT",
-    bound="PassiveBluetoothDataUpdateCoordinator[Any]",
-)
-
-
-class PassiveBluetoothDataUpdateCoordinator(Generic[_T]):
+class PassiveBluetoothDataUpdateCoordinator:
     """Passive bluetooth data update coordinator for bluetooth advertisements.
 
-    The coordinator is responsible for keeping track of the bluetooth data,
-    updating subscribers, and device availability.
-
-    The update_method must return a PassiveBluetoothDataUpdate object. Callers
-    are responsible for formatting the data returned from their parser into
-    the appropriate format.
-
-    The coordinator will call the update_method every time the bluetooth device
-    receives a new advertisement with the following signature:
-
-    update_method(service_info: BluetoothServiceInfo) -> PassiveBluetoothDataUpdate
-
-    As the size of each advertisement is limited, the update_method should
-    return a PassiveBluetoothDataUpdate object that contains only data that
-    should be updated. The coordinator will then dispatch subscribers based
-    on the data in the PassiveBluetoothDataUpdate object. The accumulated data
-    is available in the devices, entity_data, and entity_descriptions attributes.
+    The coordinator is responsible dispatching the bluetooth data,
+    to each processor, and tracking devices.
     """
 
     def __init__(
@@ -88,45 +67,23 @@ class PassiveBluetoothDataUpdateCoordinator(Generic[_T]):
         hass: HomeAssistant,
         logger: logging.Logger,
         address: str,
-        update_method: Callable[[BluetoothServiceInfo], PassiveBluetoothDataUpdate[_T]],
     ) -> None:
         """Initialize the coordinator."""
         self.hass = hass
         self.logger = logger
         self.name: str | None = None
         self.address = address
-        self._listeners: list[
-            Callable[[PassiveBluetoothDataUpdate[_T] | None], None]
-        ] = []
-        self._entity_key_listeners: dict[
-            PassiveBluetoothEntityKey,
-            list[Callable[[PassiveBluetoothDataUpdate[_T] | None], None]],
-        ] = {}
-        self.update_method = update_method
-
-        self.entity_names: dict[PassiveBluetoothEntityKey, str | None] = {}
-        self.entity_data: dict[PassiveBluetoothEntityKey, _T] = {}
-        self.entity_descriptions: dict[
-            PassiveBluetoothEntityKey, EntityDescription
-        ] = {}
-        self.devices: dict[str | None, DeviceInfo] = {}
-
-        self.last_update_success = True
+        self._processors: list[PassiveBluetoothDataProcessor] = []
         self._cancel_track_unavailable: CALLBACK_TYPE | None = None
         self._cancel_bluetooth_advertisements: CALLBACK_TYPE | None = None
+        self.devices: dict[str | None, DeviceInfo] = {}
         self.present = False
         self.last_seen = 0.0
 
     @property
     def available(self) -> bool:
         """Return if the device is available."""
-        return self.present and self.last_update_success
-
-    @callback
-    def _async_handle_unavailable(self, _address: str) -> None:
-        """Handle the device going unavailable."""
-        self.present = False
-        self.async_update_listeners(None)
+        return self.present
 
     @callback
     def _async_start(self) -> None:
@@ -153,12 +110,121 @@ class PassiveBluetoothDataUpdateCoordinator(Generic[_T]):
             self._cancel_track_unavailable = None
 
     @callback
+    def async_register_processor(
+        self, processor: PassiveBluetoothDataProcessor
+    ) -> Callable[[], None]:
+        """Register a processor that subscribes to updates."""
+        processor.coordinator = self
+
+        @callback
+        def remove_processors() -> None:
+            """Remove update listener."""
+            self._processors.remove(processor)
+            self._async_handle_processors_changed()
+
+        self._processors.append(processor)
+        self._async_handle_processors_changed()
+        return remove_processors
+
+    @callback
+    def _async_handle_processors_changed(self) -> None:
+        """Handle processors changed."""
+        running = bool(self._cancel_bluetooth_advertisements)
+        if running and not self._processors:
+            self._async_stop()
+        elif not running and self._processors:
+            self._async_start()
+
+    @callback
+    def _async_handle_unavailable(self, _address: str) -> None:
+        """Handle the device going unavailable."""
+        self.present = False
+        for processor in self._processors:
+            processor.async_handle_unavailable()
+
+    @callback
+    def _async_handle_bluetooth_event(
+        self,
+        service_info: BluetoothServiceInfo,
+        change: BluetoothChange,
+    ) -> None:
+        """Handle a Bluetooth event."""
+        self.last_seen = time.monotonic()
+        self.name = service_info.name
+        self.present = True
+        if self.hass.is_stopping:
+            return
+        for processor in self._processors:
+            processor.async_handle_bluetooth_event(service_info, change)
+
+
+_PassiveBluetoothDataProcessorT = TypeVar(
+    "_PassiveBluetoothDataProcessorT",
+    bound="PassiveBluetoothDataProcessor[Any]",
+)
+
+
+class PassiveBluetoothDataProcessor(Generic[_T]):
+    """Passive bluetooth data processor for bluetooth advertisements.
+
+    The processor is responsible for keeping track of the bluetooth data
+    and updating subscribers.
+
+    The update_method must return a PassiveBluetoothDataUpdate object. Callers
+    are responsible for formatting the data returned from their parser into
+    the appropriate format.
+
+    The processor will call the update_method every time the bluetooth device
+    receives a new advertisement data from the coordinator with the following signature:
+
+    update_method(service_info: BluetoothServiceInfo) -> PassiveBluetoothDataUpdate
+
+    As the size of each advertisement is limited, the update_method should
+    return a PassiveBluetoothDataUpdate object that contains only data that
+    should be updated. The coordinator will then dispatch subscribers based
+    on the data in the PassiveBluetoothDataUpdate object. The accumulated data
+    is available in the devices, entity_data, and entity_descriptions attributes.
+    """
+
+    coordinator: PassiveBluetoothDataUpdateCoordinator
+
+    def __init__(
+        self,
+        update_method: Callable[[BluetoothServiceInfo], PassiveBluetoothDataUpdate[_T]],
+    ) -> None:
+        """Initialize the coordinator."""
+        self.coordinator: PassiveBluetoothDataUpdateCoordinator
+        self._listeners: list[
+            Callable[[PassiveBluetoothDataUpdate[_T] | None], None]
+        ] = []
+        self._entity_key_listeners: dict[
+            PassiveBluetoothEntityKey,
+            list[Callable[[PassiveBluetoothDataUpdate[_T] | None], None]],
+        ] = {}
+        self.update_method = update_method
+        self.entity_names: dict[PassiveBluetoothEntityKey, str | None] = {}
+        self.entity_data: dict[PassiveBluetoothEntityKey, _T] = {}
+        self.entity_descriptions: dict[
+            PassiveBluetoothEntityKey, EntityDescription
+        ] = {}
+
+        self.last_update_success = True
+
+    @property
+    def available(self) -> bool:
+        """Return if the device is available."""
+        return self.coordinator.available
+
+    @callback
+    def async_handle_unavailable(self) -> None:
+        """Handle the device going unavailable."""
+        self.async_update_listeners(None)
+
+    @callback
     def async_add_entities_listener(
         self,
-        entity_class: type[PassiveBluetoothCoordinatorEntity],
+        entity_class: type[PassiveBluetoothProcessorEntity],
         async_add_entites: AddEntitiesCallback,
-        entity_filter: Callable[[PassiveBluetoothEntityKey, EntityDescription], bool]
-        | None = None,
     ) -> Callable[[], None]:
         """Add a listener for new entities."""
         created: set[PassiveBluetoothEntityKey] = set()
@@ -170,16 +236,11 @@ class PassiveBluetoothDataUpdateCoordinator(Generic[_T]):
             """Listen for new entities."""
             if data is None:
                 return
-            entities: list[PassiveBluetoothCoordinatorEntity] = []
+            entities: list[PassiveBluetoothProcessorEntity] = []
             for entity_key, description in data.entity_descriptions.items():
-                if entity_key in created:
-                    continue
-                if entity_filter is not None and not entity_filter(
-                    entity_key, description
-                ):
-                    continue
-                entities.append(entity_class(self, entity_key, description))
-                created.add(entity_key)
+                if entity_key not in created:
+                    entities.append(entity_class(self, entity_key, description))
+                    created.add(entity_key)
             if entities:
                 async_add_entites(entities)
 
@@ -196,21 +257,9 @@ class PassiveBluetoothDataUpdateCoordinator(Generic[_T]):
         def remove_listener() -> None:
             """Remove update listener."""
             self._listeners.remove(update_callback)
-            self._async_handle_listeners_changed()
 
         self._listeners.append(update_callback)
-        self._async_handle_listeners_changed()
         return remove_listener
-
-    @callback
-    def _async_handle_listeners_changed(self) -> None:
-        """Handle listeners changed."""
-        has_listeners = self._listeners or self._entity_key_listeners
-        running = bool(self._cancel_bluetooth_advertisements)
-        if running and not has_listeners:
-            self._async_stop()
-        elif not running and has_listeners:
-            self._async_start()
 
     @callback
     def async_add_entity_key_listener(
@@ -226,10 +275,8 @@ class PassiveBluetoothDataUpdateCoordinator(Generic[_T]):
             self._entity_key_listeners[entity_key].remove(update_callback)
             if not self._entity_key_listeners[entity_key]:
                 del self._entity_key_listeners[entity_key]
-            self._async_handle_listeners_changed()
 
         self._entity_key_listeners.setdefault(entity_key, []).append(update_callback)
-        self._async_handle_listeners_changed()
         return remove_listener
 
     @callback
@@ -247,67 +294,61 @@ class PassiveBluetoothDataUpdateCoordinator(Generic[_T]):
                 update_callback(data)
 
     @callback
-    def _async_handle_bluetooth_event(
+    def async_handle_bluetooth_event(
         self,
         service_info: BluetoothServiceInfo,
         change: BluetoothChange,
     ) -> None:
         """Handle a Bluetooth event."""
-        self.last_seen = time.monotonic()
-        self.name = service_info.name
-        self.present = True
-        if self.hass.is_stopping:
-            return
-
         try:
             new_data = self.update_method(service_info)
         except Exception as err:  # pylint: disable=broad-except
             self.last_update_success = False
-            self.logger.exception(
-                "Unexpected error updating %s data: %s", self.name, err
+            self.coordinator.logger.exception(
+                "Unexpected error updating %s data: %s", self.coordinator.name, err
             )
             return
 
         if not isinstance(new_data, PassiveBluetoothDataUpdate):
             self.last_update_success = False  # type: ignore[unreachable]
             raise ValueError(
-                f"The update_method for {self.name} returned {new_data} instead of a PassiveBluetoothDataUpdate"
+                f"The update_method for {self.coordinator.name} returned {new_data} instead of a PassiveBluetoothDataUpdate"
             )
 
         if not self.last_update_success:
             self.last_update_success = True
-            self.logger.info("Processing %s data recovered", self.name)
+            self.coordinator.logger.info(
+                "Processing %s data recovered", self.coordinator.name
+            )
 
-        self.devices.update(new_data.devices)
+        self.coordinator.devices.update(new_data.devices)
         self.entity_descriptions.update(new_data.entity_descriptions)
         self.entity_data.update(new_data.entity_data)
         self.entity_names.update(new_data.entity_names)
         self.async_update_listeners(new_data)
 
 
-class PassiveBluetoothCoordinatorEntity(
-    Entity, Generic[_PassiveBluetoothDataUpdateCoordinatorT]
-):
-    """A class for entities using PassiveBluetoothDataUpdateCoordinator."""
+class PassiveBluetoothProcessorEntity(Entity, Generic[_PassiveBluetoothDataProcessorT]):
+    """A class for entities using PassiveBluetoothDataProcessor."""
 
     _attr_has_entity_name = True
     _attr_should_poll = False
 
     def __init__(
         self,
-        coordinator: _PassiveBluetoothDataUpdateCoordinatorT,
+        processor: _PassiveBluetoothDataProcessorT,
         entity_key: PassiveBluetoothEntityKey,
         description: EntityDescription,
         context: Any = None,
     ) -> None:
-        """Create the entity with a PassiveBluetoothDataUpdateCoordinator."""
+        """Create the entity with a PassiveBluetoothDataProcessor."""
         self.entity_description = description
         self.entity_key = entity_key
-        self.coordinator = coordinator
-        self.coordinator_context = context
-        address = coordinator.address
+        self.processor = processor
+        self.processor_context = context
+        address = processor.coordinator.address
         device_id = entity_key.device_id
-        devices = coordinator.devices
+        devices = processor.coordinator.devices
         key = entity_key.key
         if device_id in devices:
             base_device_info = devices[device_id]
@@ -324,26 +365,26 @@ class PassiveBluetoothCoordinatorEntity(
             )
             self._attr_unique_id = f"{address}-{key}"
         if ATTR_NAME not in self._attr_device_info:
-            self._attr_device_info[ATTR_NAME] = self.coordinator.name
-        self._attr_name = coordinator.entity_names.get(entity_key)
+            self._attr_device_info[ATTR_NAME] = self.processor.coordinator.name
+        self._attr_name = processor.entity_names.get(entity_key)
 
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return self.coordinator.available
+        return self.processor.available
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
         self.async_on_remove(
-            self.coordinator.async_add_entity_key_listener(
-                self._handle_coordinator_update, self.entity_key
+            self.processor.async_add_entity_key_listener(
+                self._handle_processor_update, self.entity_key
             )
         )
 
     @callback
-    def _handle_coordinator_update(
+    def _handle_processor_update(
         self, new_data: PassiveBluetoothDataUpdate | None
     ) -> None:
-        """Handle updated data from the coordinator."""
+        """Handle updated data from the processor."""
         self.async_write_ha_state()
