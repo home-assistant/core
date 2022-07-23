@@ -39,7 +39,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(
+async def _validate_input(
     hass: HomeAssistant,
     data: dict[str, Any],
 ) -> dict[str, str]:
@@ -47,18 +47,6 @@ async def validate_input(
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    system: System | None = None
-
-    async def async_handle_module(
-        module_name: str,
-        module: Any,
-    ) -> None:
-        """Handle data from the WebSocket client."""
-        _LOGGER.debug("Got data for: %s", module_name)
-        if module_name == "system":
-            nonlocal system
-            system = module
-
     host = data[CONF_HOST]
 
     websocket_client = WebSocketClient(
@@ -69,14 +57,10 @@ async def validate_input(
     try:
         async with async_timeout.timeout(30):
             await websocket_client.connect(session=async_get_clientsession(hass))
-            hass.async_create_task(
-                websocket_client.listen(callback=async_handle_module)
-            )
+            hass.async_create_task(websocket_client.listen())
             response = await websocket_client.get_data(GetData(modules=["system"]))
             _LOGGER.info("Got response: %s", response.json())
-            while system is None:
-                _LOGGER.debug("Waiting for system data")
-                await asyncio.sleep(1)
+            system = System(**response.data)
     except AuthenticationException as exception:
         _LOGGER.warning(
             "Authentication error when connecting to %s: %s", data[CONF_HOST], exception
@@ -94,7 +78,7 @@ async def validate_input(
         _LOGGER.warning("Timed out connecting to %s: %s", data[CONF_HOST], exception)
         raise CannotConnect from exception
 
-    _LOGGER.debug("Got System data: %s", system)
+    _LOGGER.debug("Got System data: %s", system.json())
 
     if system.uuid is None:
         error = "No UUID in result!"
@@ -110,7 +94,7 @@ async def _async_get_info(
     errors = {}
 
     try:
-        info = await validate_input(hass, user_input)
+        info = await _validate_input(hass, user_input)
     except CannotConnect:
         errors["base"] = "cannot_connect"
     except InvalidAuth:
