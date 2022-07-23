@@ -3,14 +3,22 @@ from __future__ import annotations
 
 from typing import Optional, Union
 
-from xiaomi_ble import DeviceClass, DeviceKey, SensorDeviceInfo, SensorUpdate, Units
+from xiaomi_ble import (
+    DeviceClass,
+    DeviceKey,
+    SensorDeviceInfo,
+    SensorUpdate,
+    Units,
+    XiaomiBluetoothDeviceData,
+)
 
 from homeassistant import config_entries
 from homeassistant.components.bluetooth.passive_update_coordinator import (
-    PassiveBluetoothCoordinatorEntity,
+    PassiveBluetoothDataProcessor,
     PassiveBluetoothDataUpdate,
     PassiveBluetoothDataUpdateCoordinator,
     PassiveBluetoothEntityKey,
+    PassiveBluetoothProcessorEntity,
 )
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -22,6 +30,8 @@ from homeassistant.const import (
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_NAME,
+    CONDUCTIVITY,
+    LIGHT_LUX,
     PERCENTAGE,
     PRESSURE_MBAR,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
@@ -46,6 +56,12 @@ SENSOR_DESCRIPTIONS = {
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    (DeviceClass.ILLUMINANCE, Units.LIGHT_LUX): SensorEntityDescription(
+        key=f"{DeviceClass.ILLUMINANCE}_{Units.LIGHT_LUX}",
+        device_class=SensorDeviceClass.ILLUMINANCE,
+        native_unit_of_measurement=LIGHT_LUX,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
     (DeviceClass.PRESSURE, Units.PRESSURE_MBAR): SensorEntityDescription(
         key=f"{DeviceClass.PRESSURE}_{Units.PRESSURE_MBAR}",
         device_class=SensorDeviceClass.PRESSURE,
@@ -67,6 +83,20 @@ SENSOR_DESCRIPTIONS = {
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
+    ),
+    # Used for e.g. moisture sensor on HHCCJCY01
+    (None, Units.PERCENTAGE): SensorEntityDescription(
+        key=str(Units.PERCENTAGE),
+        device_class=None,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # Used for e.g. conductivity sensor on HHCCJCY01
+    (None, Units.CONDUCTIVITY): SensorEntityDescription(
+        key=str(Units.CONDUCTIVITY),
+        device_class=None,
+        native_unit_of_measurement=CONDUCTIVITY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 }
 
@@ -106,7 +136,7 @@ def sensor_update_to_bluetooth_data_update(
                 (description.device_class, description.native_unit_of_measurement)
             ]
             for device_key, description in sensor_update.entity_descriptions.items()
-            if description.device_class and description.native_unit_of_measurement
+            if description.native_unit_of_measurement
         },
         entity_data={
             _device_key_to_bluetooth_entity_key(device_key): sensor_values.native_value
@@ -128,16 +158,23 @@ async def async_setup_entry(
     coordinator: PassiveBluetoothDataUpdateCoordinator = hass.data[DOMAIN][
         entry.entry_id
     ]
+    data = XiaomiBluetoothDeviceData()
+    processor = PassiveBluetoothDataProcessor(
+        lambda service_info: sensor_update_to_bluetooth_data_update(
+            data.update(service_info)
+        )
+    )
+    entry.async_on_unload(coordinator.async_register_processor(processor))
     entry.async_on_unload(
-        coordinator.async_add_entities_listener(
+        processor.async_add_entities_listener(
             XiaomiBluetoothSensorEntity, async_add_entities
         )
     )
 
 
 class XiaomiBluetoothSensorEntity(
-    PassiveBluetoothCoordinatorEntity[
-        PassiveBluetoothDataUpdateCoordinator[Optional[Union[float, int]]]
+    PassiveBluetoothProcessorEntity[
+        PassiveBluetoothDataProcessor[Optional[Union[float, int]]]
     ],
     SensorEntity,
 ):
@@ -146,4 +183,4 @@ class XiaomiBluetoothSensorEntity(
     @property
     def native_value(self) -> int | float | None:
         """Return the native value."""
-        return self.coordinator.entity_data.get(self.entity_key)
+        return self.processor.entity_data.get(self.entity_key)
