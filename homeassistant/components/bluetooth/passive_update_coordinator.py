@@ -73,7 +73,6 @@ class PassiveBluetoothDataUpdateCoordinator:
         self.logger = logger
         self.name: str | None = None
         self.address = address
-        self.devices: dict[str | None, DeviceInfo] = {}
         self._processors: list[PassiveBluetoothDataProcessor] = []
         self._cancel_track_unavailable: CALLBACK_TYPE | None = None
         self._cancel_bluetooth_advertisements: CALLBACK_TYPE | None = None
@@ -207,7 +206,7 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
         self.entity_descriptions: dict[
             PassiveBluetoothEntityKey, EntityDescription
         ] = {}
-
+        self.devices: dict[str | None, DeviceInfo] = {}
         self.last_update_success = True
 
     @property
@@ -321,7 +320,7 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
                 "Processing %s data recovered", self.coordinator.name
             )
 
-        self.coordinator.devices.update(new_data.devices)
+        self.devices.update(new_data.devices)
         self.entity_descriptions.update(new_data.entity_descriptions)
         self.entity_data.update(new_data.entity_data)
         self.entity_names.update(new_data.entity_names)
@@ -348,7 +347,7 @@ class PassiveBluetoothProcessorEntity(Entity, Generic[_PassiveBluetoothDataProce
         self.processor_context = context
         address = processor.coordinator.address
         device_id = entity_key.device_id
-        devices = processor.coordinator.devices
+        devices = processor.devices
         key = entity_key.key
         if device_id in devices:
             base_device_info = devices[device_id]
