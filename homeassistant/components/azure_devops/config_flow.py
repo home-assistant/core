@@ -1,4 +1,6 @@
 """Config flow to configure the Azure DevOps integration."""
+from __future__ import annotations
+
 from collections.abc import Mapping
 from typing import Any
 
@@ -17,13 +19,16 @@ class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize config flow."""
         self._organization = None
         self._project = None
         self._pat = None
 
-    async def _show_setup_form(self, errors=None):
+    async def _show_setup_form(
+        self,
+        errors: dict | None = None,
+    ) -> FlowResult:
         """Show the setup form to the user."""
         return self.async_show_form(
             step_id="user",
@@ -37,7 +42,10 @@ class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors or {},
         )
 
-    async def _show_reauth_form(self, errors=None):
+    async def _show_reauth_form(
+        self,
+        errors: dict | None = None,
+    ) -> FlowResult:
         """Show the reauth form to the user."""
         return self.async_show_form(
             step_id="reauth",
@@ -48,7 +56,7 @@ class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors or {},
         )
 
-    async def _check_setup(self):
+    async def _check_setup(self) -> dict | None:
         """Check the setup of the flow."""
         errors = {}
 
@@ -69,7 +77,10 @@ class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):
             return errors
         return None
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self,
+        user_input: dict | None = None,
+    ) -> FlowResult:
         """Handle a flow initiated by the user."""
         if user_input is None:
             return await self._show_setup_form(user_input)
@@ -86,7 +97,10 @@ class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):
             return await self._show_setup_form(errors)
         return self._async_create_entry()
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self,
+        entry_data: Mapping[str, Any],
+    ) -> FlowResult:
         """Handle configuration by re-auth."""
         if entry_data.get(CONF_ORG) and entry_data.get(CONF_PROJECT):
             self._organization = entry_data[CONF_ORG]
@@ -115,7 +129,7 @@ class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):
         )
         return self.async_abort(reason="reauth_successful")
 
-    def _async_create_entry(self):
+    def _async_create_entry(self) -> FlowResult:
         """Handle create entry."""
         return self.async_create_entry(
             title=f"{self._organization}/{self._project}",
