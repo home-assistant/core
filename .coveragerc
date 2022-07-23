@@ -1279,6 +1279,7 @@ omit =
     homeassistant/components/system_bridge/const.py
     homeassistant/components/system_bridge/coordinator.py
     homeassistant/components/system_bridge/media_source.py
+    homeassistant/components/system_bridge/notify.py
     homeassistant/components/system_bridge/sensor.py
     homeassistant/components/systemmonitor/sensor.py
     homeassistant/components/tado/__init__.py
