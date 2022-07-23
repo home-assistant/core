@@ -154,7 +154,7 @@ class OAuth2FlowHandler(
             self.logger.error("Twitch API error: %s", err)
             return self.async_abort(reason="cannot_connect")
 
-        if not user:
+        if user is None:
             self.logger.error("No user found")
             return self.async_abort(reason="user_not_found")
 
@@ -186,7 +186,7 @@ class OAuth2FlowHandler(
 
         return self.async_create_entry(
             title=user.display_name,
-            data={**self._oauth_data, "user": user},
+            data={**self._oauth_data, "user": user.__dict__},
             options={CONF_CHANNELS: user_input[CONF_CHANNELS]},
         )
 
