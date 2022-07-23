@@ -58,7 +58,6 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         | CoverEntityFeature.STOP
         | CoverEntityFeature.SET_POSITION
     )
-    _attr_assumed_state = True
 
     def __init__(
         self,
@@ -119,4 +118,5 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         """Handle updated data from the coordinator."""
         self._attr_current_cover_position = self.data["data"]["position"]
         self._attr_is_closed = self.data["data"]["position"] <= 20
+        self._attr_is_opening = self.data["data"]["inMotion"]
         self.async_write_ha_state()
