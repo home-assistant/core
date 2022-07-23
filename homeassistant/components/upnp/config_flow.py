@@ -176,10 +176,11 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # Handle devices changing their UDN, only allow a single host.
         for entry in self._async_current_entries(include_ignore=True):
             entry_mac_address = entry.data.get(CONFIG_ENTRY_MAC_ADDRESS)
-            entry_st = entry.data.get(CONFIG_ENTRY_ST)
-            if entry_mac_address != mac_address:
+            entry_host = entry.data.get(CONFIG_ENTRY_HOST)
+            if entry_mac_address != mac_address and entry_host != host:
                 continue
 
+            entry_st = entry.data.get(CONFIG_ENTRY_ST)
             if discovery_info.ssdp_st != entry_st:
                 # Check ssdp_st to prevent swapping between IGDv1 and IGDv2.
                 continue
