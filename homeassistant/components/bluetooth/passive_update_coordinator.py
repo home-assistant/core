@@ -7,7 +7,7 @@ import logging
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from ._coordinator import BasePassiveBluetoothCoordinator
+from .update_coordinator import BasePassiveBluetoothCoordinator
 
 
 class PassiveBluetoothDataUpdateCoordinator(BasePassiveBluetoothCoordinator):
