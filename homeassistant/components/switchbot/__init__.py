@@ -1,10 +1,21 @@
 """Support for Switchbot devices."""
 
+from typing import Any
+
 import switchbot
 
+from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_SENSOR_TYPE, Platform
+from homeassistant.const import (
+    CONF_ADDRESS,
+    CONF_MAC,
+    CONF_PASSWORD,
+    CONF_SENSOR_TYPE,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 
 from .const import (
     ATTR_BOT,
@@ -13,73 +24,83 @@ from .const import (
     COMMON_OPTIONS,
     CONF_RETRY_COUNT,
     CONF_RETRY_TIMEOUT,
-    CONF_SCAN_TIMEOUT,
-    CONF_TIME_BETWEEN_UPDATE_COMMAND,
-    DATA_COORDINATOR,
     DEFAULT_RETRY_COUNT,
     DEFAULT_RETRY_TIMEOUT,
-    DEFAULT_SCAN_TIMEOUT,
-    DEFAULT_TIME_BETWEEN_UPDATE_COMMAND,
+    DEPRECATED_CONFIG_OPTIONS,
     DOMAIN,
 )
-from .coordinator import SwitchbotDataUpdateCoordinator
+from .coordinator import SwitchbotCoordinator
 
 PLATFORMS_BY_TYPE = {
     ATTR_BOT: [Platform.SWITCH, Platform.SENSOR],
     ATTR_CURTAIN: [Platform.COVER, Platform.BINARY_SENSOR, Platform.SENSOR],
     ATTR_HYGROMETER: [Platform.SENSOR],
 }
+CLASS_BY_DEVICE = {
+    ATTR_CURTAIN: switchbot.SwitchbotCurtain,
+    ATTR_BOT: switchbot.Switchbot,
+}
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Switchbot from a config entry."""
     hass.data.setdefault(DOMAIN, {})
+    domain_data = hass.data[DOMAIN]
 
-    if not entry.options:
-        options = {
-            CONF_TIME_BETWEEN_UPDATE_COMMAND: DEFAULT_TIME_BETWEEN_UPDATE_COMMAND,
-            CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT,
-            CONF_RETRY_TIMEOUT: DEFAULT_RETRY_TIMEOUT,
-            CONF_SCAN_TIMEOUT: DEFAULT_SCAN_TIMEOUT,
-        }
-
-        hass.config_entries.async_update_entry(entry, options=options)
-
-    # Use same coordinator instance for all entities.
-    # Uses BTLE advertisement data, all Switchbot devices in range is stored here.
-    if DATA_COORDINATOR not in hass.data[DOMAIN]:
-
-        if COMMON_OPTIONS not in hass.data[DOMAIN]:
-            hass.data[DOMAIN][COMMON_OPTIONS] = {**entry.options}
-
-        switchbot.DEFAULT_RETRY_TIMEOUT = hass.data[DOMAIN][COMMON_OPTIONS][
-            CONF_RETRY_TIMEOUT
-        ]
-
-        # Store api in coordinator.
-        coordinator = SwitchbotDataUpdateCoordinator(
-            hass,
-            update_interval=hass.data[DOMAIN][COMMON_OPTIONS][
-                CONF_TIME_BETWEEN_UPDATE_COMMAND
-            ],
-            api=switchbot,
-            retry_count=hass.data[DOMAIN][COMMON_OPTIONS][CONF_RETRY_COUNT],
-            scan_timeout=hass.data[DOMAIN][COMMON_OPTIONS][CONF_SCAN_TIMEOUT],
+    if CONF_MAC in entry.data:
+        # Bleak uses addresses not mac addresses which are are actually
+        # UUIDs on some platforms (MacOS).
+        mac = entry.data[CONF_MAC]
+        if "-" not in mac:
+            mac = dr.format_mac(mac)
+        hass.config_entries.async_update_entry(
+            entry,
+            data={k: v for k, v in entry.data.items() if k != CONF_MAC}
+            | {CONF_ADDRESS: mac},
         )
 
-        hass.data[DOMAIN][DATA_COORDINATOR] = coordinator
+    if not entry.options:
+        hass.config_entries.async_update_entry(
+            entry,
+            options={
+                CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT,
+                CONF_RETRY_TIMEOUT: DEFAULT_RETRY_TIMEOUT,
+            },
+        )
 
-    else:
-        coordinator = hass.data[DOMAIN][DATA_COORDINATOR]
-
-    await coordinator.async_config_entry_first_refresh()
-
-    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
-
-    hass.data[DOMAIN][entry.entry_id] = {DATA_COORDINATOR: coordinator}
+    if DEPRECATED_CONFIG_OPTIONS.intersection(entry.options):
+        hass.config_entries.async_update_entry(
+            entry,
+            options={
+                k: v
+                for k, v in entry.options.items()
+                if k not in DEPRECATED_CONFIG_OPTIONS
+            },
+        )
 
     sensor_type = entry.data[CONF_SENSOR_TYPE]
+    address = entry.data[CONF_ADDRESS]
+    ble_device = bluetooth.async_ble_device_from_address(hass, address)
+    if not ble_device:
+        raise ConfigEntryNotReady(f"Could not find Switchbot with address {address}")
 
+    if COMMON_OPTIONS not in domain_data:
+        domain_data[COMMON_OPTIONS] = {**entry.options}
+
+    common_options: dict[str, int] = domain_data[COMMON_OPTIONS]
+    switchbot.DEFAULT_RETRY_TIMEOUT = common_options[CONF_RETRY_TIMEOUT]
+
+    cls = CLASS_BY_DEVICE.get(sensor_type, switchbot.SwitchbotDevice)
+    device = cls(
+        device=ble_device,
+        password=entry.data.get(CONF_PASSWORD),
+        retry_count=entry.options[CONF_RETRY_COUNT],
+    )
+    coordinator = hass.data[DOMAIN][entry.entry_id] = SwitchbotCoordinator(
+        hass, ble_device=ble_device, device=device, common_options=common_options
+    )
+    entry.async_on_unload(coordinator.async_start())
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     await hass.config_entries.async_forward_entry_setups(
         entry, PLATFORMS_BY_TYPE[sensor_type]
     )
@@ -96,8 +117,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
-
-        if len(hass.config_entries.async_entries(DOMAIN)) == 0:
+        if not hass.config_entries.async_entries(DOMAIN):
             hass.data.pop(DOMAIN)
 
     return unload_ok
@@ -106,8 +126,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     # Update entity options stored in hass.
-    if {**entry.options} != hass.data[DOMAIN][COMMON_OPTIONS]:
-        hass.data[DOMAIN][COMMON_OPTIONS] = {**entry.options}
-        hass.data[DOMAIN].pop(DATA_COORDINATOR)
+    common_options: dict[str, Any] = hass.data[DOMAIN][COMMON_OPTIONS]
+    changed = dict(entry.options) != common_options
+    common_options.update(entry.options)
 
-    await hass.config_entries.async_reload(entry.entry_id)
+    if changed:
+        await hass.config_entries.async_reload(entry.entry_id)

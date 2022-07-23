@@ -24,10 +24,8 @@
     "step": {
       "init": {
         "data": {
-          "update_time": "Time between updates (seconds)",
           "retry_count": "Retry count",
-          "retry_timeout": "Timeout between retries",
-          "scan_timeout": "How long to scan for advertisement data"
+          "retry_timeout": "Timeout between retries"
         }
       }
     }

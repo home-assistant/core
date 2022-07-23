@@ -4,32 +4,34 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from homeassistant.helpers import device_registry as dr
+from homeassistant.components import bluetooth
+from homeassistant.core import callback
 from homeassistant.helpers.entity import DeviceInfo, Entity
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import MANUFACTURER
-from .coordinator import SwitchbotDataUpdateCoordinator
+from .coordinator import SwitchbotCoordinator
 
 
-class SwitchbotEntity(CoordinatorEntity[SwitchbotDataUpdateCoordinator], Entity):
+class SwitchbotEntity(Entity):
     """Generic entity encapsulating common features of Switchbot device."""
+
+    coordinator: SwitchbotCoordinator
 
     def __init__(
         self,
-        coordinator: SwitchbotDataUpdateCoordinator,
-        idx: str | None,
-        mac: str,
+        coordinator: SwitchbotCoordinator,
+        unique_id: str,
+        address: str,
         name: str,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(coordinator)
+        self.coordinator = coordinator
         self._last_run_success: bool | None = None
-        self._idx = idx
-        self._mac = mac
+        self._unique_id = unique_id
+        self._address = address
         self._attr_name = name
         self._attr_device_info = DeviceInfo(
-            connections={(dr.CONNECTION_NETWORK_MAC, self._mac)},
+            identifiers={(bluetooth.DOMAIN, self._address)},
             manufacturer=MANUFACTURER,
             model=self.data["modelName"],
             name=name,
@@ -38,9 +40,21 @@ class SwitchbotEntity(CoordinatorEntity[SwitchbotDataUpdateCoordinator], Entity)
     @property
     def data(self) -> dict[str, Any]:
         """Return coordinator data for this entity."""
-        return self.coordinator.data[self._idx]
+        return self.coordinator.data
 
     @property
     def extra_state_attributes(self) -> Mapping[Any, Any]:
         """Return the state attributes."""
-        return {"last_run_success": self._last_run_success, "mac_address": self._mac}
+        return {"last_run_success": self._last_run_success}
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self.coordinator.async_add_listener(self._handle_coordinator_update)
+        )

@@ -1,17 +1,18 @@
 """Provides the switchbot DataUpdateCoordinator."""
 from __future__ import annotations
 
-from datetime import timedelta
-import logging
+from collections.abc import Callable
+import time
+from typing import Any, cast
 
+from bleak.backends.device import BLEDevice
 import switchbot
+from switchbot import parse_advertisement_data
 
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.components import bluetooth
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 
-from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .const import CONF_RETRY_COUNT
 
 
 def flatten_sensors_data(sensor):
@@ -22,40 +23,63 @@ def flatten_sensors_data(sensor):
     return sensor
 
 
-class SwitchbotDataUpdateCoordinator(DataUpdateCoordinator):
+class SwitchbotCoordinator:
     """Class to manage fetching switchbot data."""
 
     def __init__(
         self,
         hass: HomeAssistant,
-        *,
-        update_interval: int,
-        api: switchbot,
-        retry_count: int,
-        scan_timeout: int,
+        ble_device: BLEDevice,
+        device: switchbot.SwitchbotDevice,
+        common_options: dict[str, int],
     ) -> None:
         """Initialize global switchbot data updater."""
-        self.switchbot_api = api
-        self.switchbot_data = self.switchbot_api.GetSwitchbotDevices()
-        self.retry_count = retry_count
-        self.scan_timeout = scan_timeout
-        self.update_interval = timedelta(seconds=update_interval)
+        self.hass = hass
+        self.ble_device = ble_device
+        self.device = device
+        self.common_options = common_options
+        self.data: dict[str, Any] = {}
+        self._listeners: list[Callable[[], None]] = []
+        self.last_update = 0.0
 
-        super().__init__(
-            hass, _LOGGER, name=DOMAIN, update_interval=self.update_interval
+    @property
+    def retry_count(self) -> int:
+        """Return retry count."""
+        return self.common_options[CONF_RETRY_COUNT]
+
+    @callback
+    def _async_handle_bluetooth_event(
+        self,
+        service_info: bluetooth.BluetoothServiceInfo,
+        change: bluetooth.BluetoothChange,
+    ) -> None:
+        """Handle a Bluetooth event."""
+        self.last_update = time.monotonic()
+        discovery_info_bleak = cast(bluetooth.BluetoothServiceInfoBleak, service_info)
+        if adv := parse_advertisement_data(
+            discovery_info_bleak.device, discovery_info_bleak.advertisement
+        ):
+            self.data = flatten_sensors_data(adv.data)
+            self.device.update_from_advertisement(adv)
+            for listener in self._listeners:
+                listener()
+
+    def async_start(self) -> CALLBACK_TYPE:
+        """Start the data updater."""
+        return bluetooth.async_register_callback(
+            self.hass,
+            self._async_handle_bluetooth_event,
+            bluetooth.BluetoothCallbackMatcher(address=self.ble_device.address),
         )
 
-    async def _async_update_data(self) -> dict | None:
-        """Fetch data from switchbot."""
+    @callback
+    def async_add_listener(self, update_callback: CALLBACK_TYPE) -> Callable[[], None]:
+        """Listen for data updates."""
 
-        switchbot_data = await self.switchbot_data.discover(
-            retry=self.retry_count, scan_timeout=self.scan_timeout
-        )
+        @callback
+        def remove_listener() -> None:
+            """Remove update listener."""
+            self._listeners.remove(remove_listener)
 
-        if not switchbot_data:
-            raise UpdateFailed("Unable to fetch switchbot services data")
-
-        return {
-            identifier: flatten_sensors_data(sensor)
-            for identifier, sensor in switchbot_data.items()
-        }
+        self._listeners.append(update_callback)
+        return remove_listener
