@@ -45,6 +45,7 @@ from .core.const import (
     CONF_ALWAYS_PREFER_XY_COLOR_MODE,
     CONF_DEFAULT_LIGHT_TRANSITION,
     CONF_ENABLE_ENHANCED_LIGHT_TRANSITION,
+    CONF_ENABLE_LIGHT_TRANSITIONING_FLAG,
     DATA_ZHA,
     EFFECT_BLINK,
     EFFECT_BREATHE,
@@ -130,6 +131,7 @@ class BaseLight(LogMixin, light.LightEntity):
         self._off_brightness: int | None = None
         self._zha_config_transition = self._DEFAULT_MIN_TRANSITION_TIME
         self._zha_config_enhanced_light_transition: bool = False
+        self._zha_config_enable_light_transitioning_flag: bool = True
         self._zha_config_always_prefer_xy_color_mode: bool = True
         self._on_off_channel = None
         self._level_channel = None
@@ -192,7 +194,7 @@ class BaseLight(LogMixin, light.LightEntity):
             or temperature is not None
             or xy_color is not None
             or hs_color is not None
-        )
+        ) and self._zha_config_enable_light_transitioning_flag
         transition_time = (
             (
                 duration / 10 + DEFAULT_EXTRA_TRANSITION_DELAY_SHORT
@@ -399,7 +401,8 @@ class BaseLight(LogMixin, light.LightEntity):
             else DEFAULT_ON_OFF_TRANSITION
         ) + DEFAULT_EXTRA_TRANSITION_DELAY_SHORT
         # Start pausing attribute report parsing
-        self.async_transition_set_flag()
+        if self._zha_config_enable_light_transitioning_flag:
+            self.async_transition_set_flag()
 
         # is not none looks odd here but it will override built in bulb transition times if we pass 0 in here
         if transition is not None and supports_level:
@@ -410,7 +413,8 @@ class BaseLight(LogMixin, light.LightEntity):
             result = await self._on_off_channel.off()
 
         # Pause parsing attribute reports until transition is complete
-        self.async_transition_start_timer(transition_time)
+        if self._zha_config_enable_light_transitioning_flag:
+            self.async_transition_start_timer(transition_time)
         self.debug("turned off: %s", result)
         if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
             return
@@ -648,6 +652,12 @@ class Light(BaseLight, ZhaEntity):
             ZHA_OPTIONS,
             CONF_ENABLE_ENHANCED_LIGHT_TRANSITION,
             False,
+        )
+        self._zha_config_enable_light_transitioning_flag = async_get_zha_config_value(
+            zha_device.gateway.config_entry,
+            ZHA_OPTIONS,
+            CONF_ENABLE_LIGHT_TRANSITIONING_FLAG,
+            True,
         )
 
     @callback
@@ -915,6 +925,12 @@ class LightGroup(BaseLight, ZhaGroupEntity):
             ZHA_OPTIONS,
             CONF_DEFAULT_LIGHT_TRANSITION,
             0,
+        )
+        self._zha_config_enable_light_transitioning_flag = async_get_zha_config_value(
+            zha_device.gateway.config_entry,
+            ZHA_OPTIONS,
+            CONF_ENABLE_LIGHT_TRANSITIONING_FLAG,
+            True,
         )
         self._zha_config_always_prefer_xy_color_mode = async_get_zha_config_value(
             zha_device.gateway.config_entry,
