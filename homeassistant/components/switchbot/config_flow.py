@@ -28,7 +28,7 @@ from .const import (
 
 def format_unique_id(address: str) -> str:
     """Format the unique ID for a switchbot."""
-    return address.replace(":", "")
+    return address.replace(":", "").lower()
 
 
 class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
