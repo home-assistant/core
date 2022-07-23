@@ -181,7 +181,10 @@ class MetWeather(CoordinatorEntity[MetDataUpdateCoordinator], WeatherEntity):
         if self._hourly:
             met_forecast = self.coordinator.data.hourly_forecast
         else:
-            met_forecast = self.coordinator.data.daily_forecast
+            met_forecast = [
+                self.coordinator.data.current_weather_data,
+                *self.coordinator.data.daily_forecast,
+            ]
         required_keys = {"temperature", ATTR_FORECAST_TIME}
         ha_forecast: list[Forecast] = []
         for met_item in met_forecast:
