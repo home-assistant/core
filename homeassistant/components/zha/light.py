@@ -265,69 +265,16 @@ class BaseLight(LogMixin, light.LightEntity):
                 return
             self._attr_state = True
 
-        if temperature is not None:
-            result = await self._color_channel.move_to_color_temp(
-                temperature,
-                self._DEFAULT_MIN_TRANSITION_TIME
-                if new_color_provided_while_off
-                else duration,
-            )
-            t_log["move_to_color_temp"] = result
-            if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
-                self.debug("turned on: %s", t_log)
-                return
-            self._attr_color_mode = ColorMode.COLOR_TEMP
-            self._attr_color_temp = temperature
-            self._attr_xy_color = None
-            self._attr_hs_color = None
-
-        if hs_color is not None:
-            if (
-                not isinstance(self, LightGroup)
-                and self._color_channel.enhanced_hue_supported
-            ):
-                result = await self._color_channel.enhanced_move_to_hue_and_saturation(
-                    int(hs_color[0] * 65535 / 360),
-                    int(hs_color[1] * 2.54),
-                    self._DEFAULT_MIN_TRANSITION_TIME
-                    if new_color_provided_while_off
-                    else duration,
-                )
-                t_log["enhanced_move_to_hue_and_saturation"] = result
-            else:
-                result = await self._color_channel.move_to_hue_and_saturation(
-                    int(hs_color[0] * 254 / 360),
-                    int(hs_color[1] * 2.54),
-                    self._DEFAULT_MIN_TRANSITION_TIME
-                    if new_color_provided_while_off
-                    else duration,
-                )
-                t_log["move_to_hue_and_saturation"] = result
-            if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
-                self.debug("turned on: %s", t_log)
-                return
-            self._attr_color_mode = ColorMode.HS
-            self._attr_hs_color = hs_color
-            self._attr_xy_color = None
-            self._attr_color_temp = None
-            xy_color = None  # don't set xy_color if it is also present
-
-        if xy_color is not None:
-            result = await self._color_channel.move_to_color(
-                int(xy_color[0] * 65535),
-                int(xy_color[1] * 65535),
-                self._DEFAULT_MIN_TRANSITION_TIME
-                if new_color_provided_while_off
-                else duration,
-            )
-            t_log["move_to_color"] = result
-            if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
-                self.debug("turned on: %s", t_log)
-                return
-            self._attr_color_mode = ColorMode.XY
-            self._attr_xy_color = xy_color
-            self._attr_color_temp = None
-            self._attr_hs_color = None
+        if not await self.async_handle_color_commands(
+            temperature,
+            duration,
+            hs_color,
+            xy_color,
+            new_color_provided_while_off,
+            t_log,
+        ):
+            self.debug("turned on: %s", t_log)
+            return
 
         if new_color_provided_while_off:
             # The light is has the correct color, so we can now transition it to the correct brightness level.
@@ -400,6 +347,79 @@ class BaseLight(LogMixin, light.LightEntity):
             self._off_brightness = self._attr_brightness
 
         self.async_write_ha_state()
+
+    async def async_handle_color_commands(
+        self,
+        temperature,
+        duration,
+        hs_color,
+        xy_color,
+        new_color_provided_while_off,
+        t_log,
+    ):
+        """Process ZCL color commands."""
+        if temperature is not None:
+            result = await self._color_channel.move_to_color_temp(
+                temperature,
+                self._DEFAULT_MIN_TRANSITION_TIME
+                if new_color_provided_while_off
+                else duration,
+            )
+            t_log["move_to_color_temp"] = result
+            if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
+                return False
+            self._attr_color_mode = ColorMode.COLOR_TEMP
+            self._attr_color_temp = temperature
+            self._attr_xy_color = None
+            self._attr_hs_color = None
+
+        if hs_color is not None:
+            if (
+                not isinstance(self, LightGroup)
+                and self._color_channel.enhanced_hue_supported
+            ):
+                result = await self._color_channel.enhanced_move_to_hue_and_saturation(
+                    int(hs_color[0] * 65535 / 360),
+                    int(hs_color[1] * 2.54),
+                    self._DEFAULT_MIN_TRANSITION_TIME
+                    if new_color_provided_while_off
+                    else duration,
+                )
+                t_log["enhanced_move_to_hue_and_saturation"] = result
+            else:
+                result = await self._color_channel.move_to_hue_and_saturation(
+                    int(hs_color[0] * 254 / 360),
+                    int(hs_color[1] * 2.54),
+                    self._DEFAULT_MIN_TRANSITION_TIME
+                    if new_color_provided_while_off
+                    else duration,
+                )
+                t_log["move_to_hue_and_saturation"] = result
+            if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
+                return False
+            self._attr_color_mode = ColorMode.HS
+            self._attr_hs_color = hs_color
+            self._attr_xy_color = None
+            self._attr_color_temp = None
+            xy_color = None  # don't set xy_color if it is also present
+
+        if xy_color is not None:
+            result = await self._color_channel.move_to_color(
+                int(xy_color[0] * 65535),
+                int(xy_color[1] * 65535),
+                self._DEFAULT_MIN_TRANSITION_TIME
+                if new_color_provided_while_off
+                else duration,
+            )
+            t_log["move_to_color"] = result
+            if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
+                return False
+            self._attr_color_mode = ColorMode.XY
+            self._attr_xy_color = xy_color
+            self._attr_color_temp = None
+            self._attr_hs_color = None
+
+        return True
 
 
 @STRICT_MATCH(channel_names=CHANNEL_ON_OFF, aux_channels={CHANNEL_COLOR, CHANNEL_LEVEL})
