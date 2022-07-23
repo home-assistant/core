@@ -1,7 +1,6 @@
 """Config flow for Switchbot."""
 from __future__ import annotations
 
-import logging
 from typing import Any, cast
 
 from switchbot import SwitchBotAdvertisement, parse_advertisement_data
@@ -25,8 +24,6 @@ from .const import (
     DOMAIN,
     SUPPORTED_MODEL_TYPES,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def format_unique_id(address: str) -> str:
