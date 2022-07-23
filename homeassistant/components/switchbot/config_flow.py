@@ -1,60 +1,40 @@
 """Config flow for Switchbot."""
 from __future__ import annotations
 
-import logging
-from typing import Any
+from typing import Any, cast
 
-from switchbot import GetSwitchbotDevices
+from switchbot import SwitchBotAdvertisement, parse_advertisement_data
 import voluptuous as vol
 
+from homeassistant.components.bluetooth import (
+    BluetoothServiceInfoBleak,
+    async_discovered_service_info,
+)
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
-from homeassistant.const import CONF_MAC, CONF_NAME, CONF_PASSWORD, CONF_SENSOR_TYPE
+from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PASSWORD, CONF_SENSOR_TYPE
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
 from .const import (
     CONF_RETRY_COUNT,
     CONF_RETRY_TIMEOUT,
-    CONF_SCAN_TIMEOUT,
-    CONF_TIME_BETWEEN_UPDATE_COMMAND,
     DEFAULT_RETRY_COUNT,
     DEFAULT_RETRY_TIMEOUT,
-    DEFAULT_SCAN_TIMEOUT,
-    DEFAULT_TIME_BETWEEN_UPDATE_COMMAND,
     DOMAIN,
     SUPPORTED_MODEL_TYPES,
 )
 
-_LOGGER = logging.getLogger(__name__)
 
-
-async def _btle_connect() -> dict:
-    """Scan for BTLE advertisement data."""
-
-    switchbot_devices = await GetSwitchbotDevices().discover()
-
-    if not switchbot_devices:
-        raise NotConnectedError("Failed to discover switchbot")
-
-    return switchbot_devices
+def format_unique_id(address: str) -> str:
+    """Format the unique ID for a switchbot."""
+    return address.replace(":", "")
 
 
 class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Switchbot."""
 
     VERSION = 1
-
-    async def _get_switchbots(self) -> dict:
-        """Try to discover nearby Switchbot devices."""
-        # asyncio.lock prevents btle adapter exceptions if there are multiple calls to this method.
-        # store asyncio.lock in hass data if not present.
-        if DOMAIN not in self.hass.data:
-            self.hass.data.setdefault(DOMAIN, {})
-
-        # Discover switchbots nearby.
-        _btle_adv_data = await _btle_connect()
-
-        return _btle_adv_data
 
     @staticmethod
     @callback
@@ -66,62 +46,74 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize the config flow."""
-        self._discovered_devices = {}
+        self._discovery_info: BluetoothServiceInfo | None = None
+        self._discovered_device: SwitchBotAdvertisement | None = None
+        self._discovered_devices: dict[str, SwitchBotAdvertisement] = {}
+
+    async def async_step_bluetooth(
+        self, discovery_info: BluetoothServiceInfo
+    ) -> FlowResult:
+        """Handle the bluetooth discovery step."""
+
+        await self.async_set_unique_id(format_unique_id(discovery_info.address))
+        self._abort_if_unique_id_configured()
+        discovery_info_bleak = cast(BluetoothServiceInfoBleak, discovery_info)
+        parsed = parse_advertisement_data(
+            discovery_info_bleak.device, discovery_info_bleak.advertisement
+        )
+        if not parsed or parsed.data.get("modelName") in SUPPORTED_MODEL_TYPES:
+            return self.async_abort(reason="not_supported")
+        self._discovery_info = discovery_info
+        self._discovered_device = parsed
+        data = parsed.data
+        self.context["title_placeholders"] = f"{data['address']} {data['modelName']}"
+        return await self.async_step_user()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Handle a flow initiated by the user."""
-
+        """Handle the user step to pick discovered device."""
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            await self.async_set_unique_id(user_input[CONF_MAC].replace(":", ""))
+            address = user_input[CONF_ADDRESS]
+            await self.async_set_unique_id(format_unique_id(address))
             self._abort_if_unique_id_configured()
-
             user_input[CONF_SENSOR_TYPE] = SUPPORTED_MODEL_TYPES[
-                self._discovered_devices[self.unique_id]["modelName"]
+                self._discovered_devices[address]["modelName"]
             ]
-
             return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
 
-        try:
-            self._discovered_devices = await self._get_switchbots()
-            for device in self._discovered_devices.values():
-                _LOGGER.debug("Found %s", device)
+        if self._discovered_device:
+            data = self._discovered_device.data
+            self._discovered_devices[
+                self._discovered_device.address
+            ] = f"{data['address']} {data['modelName']}"
+        else:
+            current_addresses = self._async_current_ids()
+            for discovery_info in async_discovered_service_info(self.hass):
+                address = discovery_info.address
+                if address in current_addresses or address in self._discovered_devices:
+                    continue
+                parsed = parse_advertisement_data(
+                    discovery_info.device, discovery_info.advertisement
+                )
+                if parsed and parsed.data.get("modelName") in SUPPORTED_MODEL_TYPES:
+                    data = parsed.data
+                    self._discovered_devices[
+                        address
+                    ] = f"{data['address']} {data['modelName']}"
 
-        except NotConnectedError:
-            return self.async_abort(reason="cannot_connect")
-
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
-            return self.async_abort(reason="unknown")
-
-        # Get devices already configured.
-        configured_devices = {
-            item.data[CONF_MAC]
-            for item in self._async_current_entries(include_ignore=False)
-        }
-
-        # Get supported devices not yet configured.
-        unconfigured_devices = {
-            device["mac_address"]: f"{device['mac_address']} {device['modelName']}"
-            for device in self._discovered_devices.values()
-            if device.get("modelName") in SUPPORTED_MODEL_TYPES
-            and device["mac_address"] not in configured_devices
-        }
-
-        if not unconfigured_devices:
-            return self.async_abort(reason="no_unconfigured_devices")
+        if not self._discovered_devices:
+            return self.async_abort(reason="no_devices_found")
 
         data_schema = vol.Schema(
             {
-                vol.Required(CONF_MAC): vol.In(unconfigured_devices),
+                vol.Required(CONF_ADDRESS): vol.In(self._discovered_devices),
                 vol.Required(CONF_NAME): str,
                 vol.Optional(CONF_PASSWORD): str,
             }
         )
-
         return self.async_show_form(
             step_id="user", data_schema=data_schema, errors=errors
         )
@@ -149,13 +141,6 @@ class SwitchbotOptionsFlowHandler(OptionsFlow):
 
         options = {
             vol.Optional(
-                CONF_TIME_BETWEEN_UPDATE_COMMAND,
-                default=self.config_entry.options.get(
-                    CONF_TIME_BETWEEN_UPDATE_COMMAND,
-                    DEFAULT_TIME_BETWEEN_UPDATE_COMMAND,
-                ),
-            ): int,
-            vol.Optional(
                 CONF_RETRY_COUNT,
                 default=self.config_entry.options.get(
                     CONF_RETRY_COUNT, DEFAULT_RETRY_COUNT
@@ -167,16 +152,6 @@ class SwitchbotOptionsFlowHandler(OptionsFlow):
                     CONF_RETRY_TIMEOUT, DEFAULT_RETRY_TIMEOUT
                 ),
             ): int,
-            vol.Optional(
-                CONF_SCAN_TIMEOUT,
-                default=self.config_entry.options.get(
-                    CONF_SCAN_TIMEOUT, DEFAULT_SCAN_TIMEOUT
-                ),
-            ): int,
         }
 
         return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
-
-
-class NotConnectedError(Exception):
-    """Exception for unable to find device."""

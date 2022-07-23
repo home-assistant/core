@@ -14,14 +14,13 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MAC, CONF_NAME, CONF_PASSWORD
+from homeassistant.const import CONF_ADDRESS, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import CONF_RETRY_COUNT, DATA_COORDINATOR, DOMAIN
-from .coordinator import SwitchbotDataUpdateCoordinator
+from .const import DOMAIN
+from .coordinator import SwitchbotCoordinator
 from .entity import SwitchbotEntity
 
 # Initialize the logger
@@ -33,25 +32,17 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Switchbot curtain based on a config entry."""
-    coordinator: SwitchbotDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        DATA_COORDINATOR
-    ]
-
-    if not coordinator.data.get(entry.unique_id):
-        raise PlatformNotReady
-
+    coordinator: SwitchbotCoordinator = hass.data[DOMAIN][entry.entry_id]
+    unique_id = entry.unique_id
+    assert unique_id is not None
     async_add_entities(
         [
             SwitchBotCurtainEntity(
                 coordinator,
-                entry.unique_id,
-                entry.data[CONF_MAC],
+                unique_id,
+                entry.data[CONF_ADDRESS],
                 entry.data[CONF_NAME],
-                coordinator.switchbot_api.SwitchbotCurtain(
-                    mac=entry.data[CONF_MAC],
-                    password=entry.data.get(CONF_PASSWORD),
-                    retry_count=entry.options[CONF_RETRY_COUNT],
-                ),
+                coordinator.device,
             )
         ]
     )
@@ -71,15 +62,15 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
 
     def __init__(
         self,
-        coordinator: SwitchbotDataUpdateCoordinator,
-        idx: str | None,
-        mac: str,
+        coordinator: SwitchbotCoordinator,
+        unique_id: str,
+        address: str,
         name: str,
         device: SwitchbotCurtain,
     ) -> None:
         """Initialize the Switchbot."""
-        super().__init__(coordinator, idx, mac, name)
-        self._attr_unique_id = idx
+        super().__init__(coordinator, unique_id, address, name)
+        self._attr_unique_id = unique_id
         self._attr_is_closed = None
         self._device = device
 
@@ -97,21 +88,21 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the curtain."""
 
-        _LOGGER.debug("Switchbot to open curtain %s", self._mac)
+        _LOGGER.debug("Switchbot to open curtain %s", self._address)
         self._last_run_success = bool(await self._device.open())
         self.async_write_ha_state()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the curtain."""
 
-        _LOGGER.debug("Switchbot to close the curtain %s", self._mac)
+        _LOGGER.debug("Switchbot to close the curtain %s", self._address)
         self._last_run_success = bool(await self._device.close())
         self.async_write_ha_state()
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the moving of this device."""
 
-        _LOGGER.debug("Switchbot to stop %s", self._mac)
+        _LOGGER.debug("Switchbot to stop %s", self._address)
         self._last_run_success = bool(await self._device.stop())
         self.async_write_ha_state()
 
@@ -119,7 +110,7 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         """Move the cover shutter to a specific position."""
         position = kwargs.get(ATTR_POSITION)
 
-        _LOGGER.debug("Switchbot to move at %d %s", position, self._mac)
+        _LOGGER.debug("Switchbot to move at %d %s", position, self._address)
         self._last_run_success = bool(await self._device.set_position(position))
         self.async_write_ha_state()
 
