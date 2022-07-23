@@ -162,7 +162,13 @@ class Gateway:
 
     async def get_network_info_async(self):
         """Get the current network info of the modem."""
-        return await self._worker.get_network_info_async()
+        network_info = await self._worker.get_network_info_async()
+        # Looks like there is a bug and it's empty for any modem https://github.com/gammu/python-gammu/issues/31, so try workaround
+        if not network_info["NetworkName"]:
+            network_info["NetworkName"] = gammu.GSMNetworks.get(
+                network_info["NetworkCode"]
+            )
+        return network_info
 
     async def get_manufacturer_async(self):
         """Get the manufacturer of the modem."""
@@ -177,8 +183,8 @@ class Gateway:
         firmware = await self._worker.get_firmware_async()
         if not firmware or not firmware[0]:
             return
-        display = firmware[0]  # version
-        if firmware[1]:  # date
+        display = firmware[0]  # Version
+        if firmware[1]:  # Date
             display = f"{display} ({firmware[1]})"
         return display
 
