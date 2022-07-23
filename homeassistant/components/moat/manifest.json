@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/moat",
   "bluetooth": [{ "local_name": "Moat_S*" }],
-  "requirements": ["moat-ble==0.1.0"],
+  "requirements": ["moat-ble==0.1.1"],
   "dependencies": ["bluetooth"],
   "codeowners": ["@bdraco"],
   "iot_class": "local_push"
