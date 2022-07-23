@@ -11,6 +11,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import COORDINATORS, DOMAIN, ProxmoxEntity
+from .const import ProxmoxType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,6 +29,11 @@ async def async_setup_entry(
     for node_config in config_entry.data["nodes"]:
         node_name = node_config["name"]
 
+        proxmox_version = None
+        coordinator = coordinators[node_name][ProxmoxType.Proxmox]
+        if not (coordinator_data := coordinator.data) is None:
+            proxmox_version = coordinator_data["version"]
+
         for vm_id in node_config["vms"]:
             coordinator = coordinators[node_name][vm_id]
             coordinator_data = coordinator.data
@@ -38,7 +44,7 @@ async def async_setup_entry(
 
             vm_name = coordinator_data["name"]
             vm_sensor = create_binary_sensor(
-                coordinator, node_name, vm_id, vm_name, config_entry
+                coordinator, node_name, vm_id, vm_name, proxmox_version, config_entry
             )
             sensors.append(vm_sensor)
 
@@ -56,6 +62,7 @@ async def async_setup_entry(
                 node_name,
                 container_id,
                 container_name,
+                proxmox_version,
                 config_entry,
             )
             sensors.append(container_sensor)
@@ -63,7 +70,9 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-def create_binary_sensor(coordinator, node_name, vm_id, name, config_entry):
+def create_binary_sensor(
+    coordinator, node_name, vm_id, name, proxmox_version, config_entry
+):
     """Create a binary sensor based on the given data."""
     return ProxmoxBinarySensor(
         coordinator=coordinator,
@@ -73,6 +82,7 @@ def create_binary_sensor(coordinator, node_name, vm_id, name, config_entry):
         node_name=node_name,
         vm_id=vm_id,
         vm_name=name,
+        proxmox_version=proxmox_version,
         config_entry=config_entry,
     )
 
@@ -89,6 +99,7 @@ class ProxmoxBinarySensor(ProxmoxEntity, BinarySensorEntity):
         node_name,
         vm_id,
         vm_name,
+        proxmox_version,
         config_entry,
     ):
         """Create the binary sensor for vms or containers."""
@@ -101,10 +112,10 @@ class ProxmoxBinarySensor(ProxmoxEntity, BinarySensorEntity):
             entry_type=device_registry.DeviceEntryType.SERVICE,
             configuration_url=f"https://{host}:{port}",
             identifiers={(DOMAIN, host_node_vm)},
-            manufacturer="Proxmox VE",
+            default_manufacturer="Proxmox VE",
             name=f"{node_name} {vm_name} ({vm_id})",
-            model="Proxmox VE",
-            sw_version=None,
+            default_model="Proxmox VE",
+            sw_version=proxmox_version,
             hw_version=None,
         )
 

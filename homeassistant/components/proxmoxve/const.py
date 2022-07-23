@@ -1,4 +1,6 @@
 """Constants for ProxmoxVE."""
+from homeassistant.backports.enum import StrEnum
+
 DOMAIN = "proxmoxve"
 
 CONF_REALM = "realm"
@@ -13,6 +15,16 @@ DEFAULT_VERIFY_SSL = False
 
 COORDINATORS = "coordinators"
 API_DATA = "api_data"
+
+
+class ProxmoxType(StrEnum):
+    """Proxmox type of information."""
+
+    Proxmox = "proxmox"
+    Node = "node"
+    QEMU = "qemu"
+    LXC = "lxc"
+
 
 TYPE_VM = 0
 TYPE_CONTAINER = 1

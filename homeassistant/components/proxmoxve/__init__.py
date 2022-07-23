@@ -40,9 +40,8 @@ from .const import (
     DOMAIN,
     PLATFORMS,
     PROXMOX_CLIENT,
-    TYPE_CONTAINER,
-    TYPE_VM,
     UPDATE_INTERVAL,
+    ProxmoxType,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -147,9 +146,30 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         node_name = node_config["name"]
         node_coordinators = coordinators[node_name] = {}
 
+        # Proxmox instance info
+        coordinator = create_coordinator_container_vm(
+            hass, proxmox, entry_data["host"], None, None, ProxmoxType.Proxmox
+        )
+
+        # Fetch initial data
+        await coordinator.async_refresh()
+
+        node_coordinators[ProxmoxType.Proxmox] = coordinator
+
+        # Node info
+        coordinator = create_coordinator_container_vm(
+            hass, proxmox, entry_data["host"], node_name, None, ProxmoxType.Node
+        )
+
+        # Fetch initial data
+        await coordinator.async_refresh()
+
+        node_coordinators[ProxmoxType.Node] = coordinator
+
+        # QEMU info
         for vm_id in node_config["vms"]:
             coordinator = create_coordinator_container_vm(
-                hass, proxmox, entry_data["host"], node_name, vm_id, TYPE_VM
+                hass, proxmox, entry_data["host"], node_name, vm_id, ProxmoxType.QEMU
             )
 
             # Fetch initial data
@@ -157,6 +177,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
             node_coordinators[vm_id] = coordinator
 
+        # LXC info
         for container_id in node_config["containers"]:
             coordinator = create_coordinator_container_vm(
                 hass,
@@ -164,7 +185,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                 entry_data["host"],
                 node_name,
                 container_id,
-                TYPE_CONTAINER,
+                ProxmoxType.LXC,
             )
 
             # Fetch initial data
@@ -207,7 +228,7 @@ def create_coordinator_container_vm(
             )
             return None
 
-        return parse_api_container_vm(vm_status)
+        return parse_api_container_vm(vm_status, vm_type)
 
     return DataUpdateCoordinator(
         hass,
@@ -218,24 +239,39 @@ def create_coordinator_container_vm(
     )
 
 
-def parse_api_container_vm(status):
+def parse_api_container_vm(status, info_type):
     """Get the container or vm api data and return it formatted in a dictionary.
 
     It is implemented in this way to allow for more data to be added for sensors
     in the future.
     """
+    if info_type == ProxmoxType.Proxmox:
+        return {
+            "version": status["version"],
+        }
+    if info_type is ProxmoxType.Node:
+        return {
+            "uptime": status["uptime"],
+        }
+    if info_type in (ProxmoxType.QEMU, ProxmoxType.LXC):
+        return {
+            "status": status["status"],
+            "name": status["name"],
+        }
 
-    return {"status": status["status"], "name": status["name"]}
 
-
-def call_api_container_vm(proxmox, node_name, vm_id, machine_type):
+def call_api_container_vm(proxmox, node_name, vm_id, info_type):
     """Make proper api calls."""
     status = None
 
     try:
-        if machine_type == TYPE_VM:
+        if info_type == ProxmoxType.Proxmox:
+            status = proxmox.version.get()
+        elif info_type is ProxmoxType.Node:
+            status = proxmox.nodes(node_name).status.get()
+        elif info_type == ProxmoxType.QEMU:
             status = proxmox.nodes(node_name).qemu(vm_id).status.current.get()
-        elif machine_type == TYPE_CONTAINER:
+        elif info_type == ProxmoxType.LXC:
             status = proxmox.nodes(node_name).lxc(vm_id).status.current.get()
     except (ResourceException, requests.exceptions.ConnectionError):
         return None
