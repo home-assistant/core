@@ -51,11 +51,11 @@ class SwitchbotEntity(PassiveBluetoothCoordinatorEntity):
         )
 
     @property
-    def extra_state_attributes(self) -> Mapping[Any, Any]:
-        """Return the state attributes."""
-        return {"last_run_success": self._last_run_success}
-
-    @property
     def data(self) -> dict[str, Any]:
         """Return coordinator data for this entity."""
         return self.coordinator.data
+
+    @property
+    def extra_state_attributes(self) -> Mapping[Any, Any]:
+        """Return the state attributes."""
+        return {"last_run_success": self._last_run_success}
