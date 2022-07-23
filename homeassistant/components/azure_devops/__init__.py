@@ -1,39 +1,28 @@
 """Support for Azure DevOps."""
 from __future__ import annotations
 
-import asyncio
 from dataclasses import dataclass
-from datetime import timedelta
 import logging
-from typing import Final
 
-from aioazuredevops.builds import DevOpsBuild
 from aioazuredevops.client import DevOpsClient
 from aioazuredevops.core import DevOpsProject
-from aioazuredevops.wiql import DevOpsWiqlResult
-from aioazuredevops.work_item import DevOpsWorkItemValue
-import aiohttp
-import async_timeout
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
-    UpdateFailed,
 )
 
-from .const import CONF_ORG, CONF_PAT, CONF_PROJECT, DOMAIN
+from .const import DOMAIN
+from .coordinator import AzureDevOpsCoordinatorData, AzureDevOpsDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SENSOR]
-
-BUILDS_QUERY: Final = "?queryOrder=queueTimeDescending&maxBuildsPerDefinition=1"
 
 
 @dataclass
@@ -48,69 +37,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Azure DevOps from a config entry."""
     client = DevOpsClient()
 
-    pat = entry.data.get(CONF_PAT)
-    if pat is not None:
-        await client.authorize(entry.data[CONF_PAT], entry.data[CONF_ORG])
-        if not client.authorized:
-            raise ConfigEntryAuthFailed(
-                "Could not authorize with Azure DevOps. You will need to update your token"
-            )
-
-    project = await client.get_project(
-        entry.data[CONF_ORG],
-        entry.data[CONF_PROJECT],
-    )
-
-    async def async_update_data() -> tuple[
-        list[DevOpsBuild], list[DevOpsWorkItemValue] | None
-    ]:
-        """Fetch data from Azure DevOps."""
-        try:
-            async with async_timeout.timeout(20):
-                try:
-                    builds: list[DevOpsBuild] = await client.get_builds(
-                        entry.data[CONF_ORG],
-                        entry.data[CONF_PROJECT],
-                        BUILDS_QUERY,
-                    )
-                    if pat is not None:
-                        wiql_result: DevOpsWiqlResult = (
-                            await client.get_work_items_ids_all(
-                                entry.data[CONF_ORG],
-                                entry.data[CONF_PROJECT],
-                            )
-                        )
-                        if wiql_result:
-                            ids: list[int] = [
-                                item.id for item in wiql_result.work_items
-                            ]
-                            work_items: list[DevOpsWorkItemValue] = (
-                                await client.get_work_items(
-                                    entry.data[CONF_ORG],
-                                    entry.data[CONF_PROJECT],
-                                    ids,
-                                )
-                            ).value
-                            return builds, work_items
-
-                    return builds, None
-                except (aiohttp.ClientError, aiohttp.ClientError) as exception:
-                    raise UpdateFailed from exception
-        except (asyncio.TimeoutError) as exception:
-            raise UpdateFailed from exception
-
-    coordinator = DataUpdateCoordinator(
+    coordinator = AzureDevOpsDataUpdateCoordinator(
         hass,
         _LOGGER,
-        name=f"{DOMAIN}_coordinator",
-        update_method=async_update_data,
-        update_interval=timedelta(seconds=300),
+        entry=entry,
+        client=client,
     )
 
-    await coordinator.async_config_entry_first_refresh()
+    await coordinator.authorize()
+    project: DevOpsProject = await coordinator.get_project()
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator, project
+
+    # Update data for the first time
+    await coordinator.async_config_entry_first_refresh()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -125,14 +66,16 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class AzureDevOpsEntity(CoordinatorEntity[DataUpdateCoordinator[list[DevOpsBuild]]]):
+class AzureDevOpsEntity(
+    CoordinatorEntity[DataUpdateCoordinator[AzureDevOpsCoordinatorData]]
+):
     """Defines a base Azure DevOps entity."""
 
     entity_description: AzureDevOpsEntityDescription
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[list[DevOpsBuild]],
+        coordinator: DataUpdateCoordinator[AzureDevOpsCoordinatorData],
         entity_description: AzureDevOpsEntityDescription,
     ) -> None:
         """Initialize the Azure DevOps entity."""

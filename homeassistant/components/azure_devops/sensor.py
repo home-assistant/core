@@ -16,6 +16,7 @@ from homeassistant.helpers.typing import StateType
 
 from . import AzureDevOpsDeviceEntity, AzureDevOpsEntityDescription
 from .const import CONF_ORG, DOMAIN
+from .coordinator import AzureDevOpsCoordinatorData
 
 
 @dataclass
@@ -82,7 +83,8 @@ def build_sensor_attributes(build: DevOpsBuild) -> dict:
 
 
 def work_item_sensor_value(
-    work_items: list[DevOpsWorkItemValue], work_item_type: str
+    work_items: list[DevOpsWorkItemValue],
+    work_item_type: str,
 ) -> StateType:
     """Return the value of a work item sensor."""
     return len(filter_work_items_by_type(work_items, work_item_type))
@@ -95,28 +97,31 @@ async def async_setup_entry(
 ) -> None:
     """Set up Azure DevOps sensor based on a config entry."""
     coordinator, project = hass.data[DOMAIN][entry.entry_id]
-    [builds, wis] = coordinator.data
+    data: AzureDevOpsCoordinatorData = coordinator.data
 
     sensors: list[AzureDevOpsSensor] = []
-    sensors.extend(
-        [
-            AzureDevOpsBuildSensor(
-                coordinator,
-                AzureDevOpsBuildSensorEntityDescription(
-                    key=f"{project.id}_{build.definition.id}_latest_build",
-                    name=f"{project.name} {build.definition.name} Latest Build",
-                    icon="mdi:pipe",
-                    attrs=build_sensor_attributes,
-                    item_key=key,
-                    organization=entry.data[CONF_ORG],
-                    project=project,
-                    value=lambda build: build.build_number,
-                ),
-            )
-            for key, build in enumerate(builds)
-        ]
-    )
-    if wis is not None:
+
+    if data.builds is not None:
+        sensors.extend(
+            [
+                AzureDevOpsBuildSensor(
+                    coordinator,
+                    AzureDevOpsBuildSensorEntityDescription(
+                        key=f"{project.id}_{build.definition.id}_latest_build",
+                        name=f"{project.name} {build.definition.name} Latest Build",
+                        icon="mdi:pipe",
+                        attrs=build_sensor_attributes,
+                        item_key=key,
+                        organization=entry.data[CONF_ORG],
+                        project=project,
+                        value=lambda build: build.build_number,
+                    ),
+                )
+                for key, build in enumerate(data.builds)
+            ]
+        )
+
+    if data.work_items is not None:
         sensors.append(
             AzureDevOpsWorkItemSensor(
                 coordinator,
@@ -145,7 +150,9 @@ async def async_setup_entry(
                         value=work_item_sensor_value,
                     ),
                 )
-                for work_item_type in list({wi.fields.work_item_type: wi for wi in wis})
+                for work_item_type in list(
+                    {wi.fields.work_item_type: wi for wi in data.work_items}
+                )
             ]
         )
 
@@ -166,14 +173,18 @@ class AzureDevOpsBuildSensor(AzureDevOpsSensor):
     @property
     def native_value(self) -> StateType:
         """Return the state."""
-        [builds, _] = self.coordinator.data
-        return self.entity_description.value(builds[self.entity_description.item_key])
+        data: AzureDevOpsCoordinatorData = self.coordinator.data
+        return self.entity_description.value(
+            data.builds[self.entity_description.item_key],
+        )
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the entity."""
-        [builds, _] = self.coordinator.data
-        return self.entity_description.attrs(builds[self.entity_description.item_key])
+        data: AzureDevOpsCoordinatorData = self.coordinator.data
+        return self.entity_description.attrs(
+            data.builds[self.entity_description.item_key],
+        )
 
 
 class AzureDevOpsWorkItemSensor(AzureDevOpsSensor):
@@ -184,7 +195,8 @@ class AzureDevOpsWorkItemSensor(AzureDevOpsSensor):
     @property
     def native_value(self) -> StateType:
         """Return the state."""
-        [_, work_items] = self.coordinator.data
+        data: AzureDevOpsCoordinatorData = self.coordinator.data
         return self.entity_description.value(
-            work_items, self.entity_description.item_key
+            data.work_items,
+            self.entity_description.item_key,
         )
