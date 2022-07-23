@@ -34,8 +34,6 @@ from . import KNOWN_DEVICES, CharacteristicEntity, HomeKitEntity
 from .connection import HKDevice
 from .utils import folded_name
 
-CO2_ICON = "mdi:molecule-co2"
-
 
 @dataclass
 class HomeKitSensorEntityDescription(SensorEntityDescription):
@@ -200,8 +198,10 @@ SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
 }
 
 
-class HomeKitSensor(HomeKitEntity):
+class HomeKitSensor(HomeKitEntity, SensorEntity):
     """Representation of a HomeKit sensor."""
+
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     @property
     def name(self) -> str | None:
@@ -217,7 +217,7 @@ class HomeKitSensor(HomeKitEntity):
         return full_name
 
 
-class HomeKitHumiditySensor(HomeKitSensor, SensorEntity):
+class HomeKitHumiditySensor(HomeKitSensor):
     """Representation of a Homekit humidity sensor."""
 
     _attr_device_class = SensorDeviceClass.HUMIDITY
@@ -238,7 +238,7 @@ class HomeKitHumiditySensor(HomeKitSensor, SensorEntity):
         return self.service.value(CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT)
 
 
-class HomeKitTemperatureSensor(HomeKitSensor, SensorEntity):
+class HomeKitTemperatureSensor(HomeKitSensor):
     """Representation of a Homekit temperature sensor."""
 
     _attr_device_class = SensorDeviceClass.TEMPERATURE
@@ -259,7 +259,7 @@ class HomeKitTemperatureSensor(HomeKitSensor, SensorEntity):
         return self.service.value(CharacteristicsTypes.TEMPERATURE_CURRENT)
 
 
-class HomeKitLightSensor(HomeKitSensor, SensorEntity):
+class HomeKitLightSensor(HomeKitSensor):
     """Representation of a Homekit light level sensor."""
 
     _attr_device_class = SensorDeviceClass.ILLUMINANCE
@@ -280,10 +280,10 @@ class HomeKitLightSensor(HomeKitSensor, SensorEntity):
         return self.service.value(CharacteristicsTypes.LIGHT_LEVEL_CURRENT)
 
 
-class HomeKitCarbonDioxideSensor(HomeKitEntity, SensorEntity):
+class HomeKitCarbonDioxideSensor(HomeKitSensor):
     """Representation of a Homekit Carbon Dioxide sensor."""
 
-    _attr_icon = CO2_ICON
+    _attr_device_class = SensorDeviceClass.CO2
     _attr_native_unit_of_measurement = CONCENTRATION_PARTS_PER_MILLION
 
     def get_characteristic_types(self) -> list[str]:
@@ -293,7 +293,7 @@ class HomeKitCarbonDioxideSensor(HomeKitEntity, SensorEntity):
     @property
     def default_name(self) -> str:
         """Return the default name of the device."""
-        return "CO2"
+        return "Carbon Dioxide"
 
     @property
     def native_value(self) -> int:
@@ -301,7 +301,7 @@ class HomeKitCarbonDioxideSensor(HomeKitEntity, SensorEntity):
         return self.service.value(CharacteristicsTypes.CARBON_DIOXIDE_LEVEL)
 
 
-class HomeKitBatterySensor(HomeKitSensor, SensorEntity):
+class HomeKitBatterySensor(HomeKitSensor):
     """Representation of a Homekit battery sensor."""
 
     _attr_device_class = SensorDeviceClass.BATTERY
