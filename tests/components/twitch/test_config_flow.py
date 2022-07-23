@@ -153,7 +153,7 @@ async def _setup_mock_config_entry(
             "user": TWITCH_USER,
         },
         options={
-            CONF_CHANNELS: CHANNELS,
+            CONF_CHANNELS: [*CHANNELS, "789"],
         },
     )
     mock_config_entry.add_to_hass(hass)
