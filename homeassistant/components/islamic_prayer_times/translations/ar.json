@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "تم الإعداد بالفعل، يمكنك إضافة التكوين مرة واحدة فقط."
+        },
+        "step": {
+            "user": {
+                "description": "هل تريد إعداد مواقيت الصلاة؟",
+                "title": "قم بإعداد أوقات الصلاة "
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "calculation_method": "طريقة حساب الصلاة"
+                }
+            }
+        }
+    },
+    "title": "Islamic Prayer Times"
+}
