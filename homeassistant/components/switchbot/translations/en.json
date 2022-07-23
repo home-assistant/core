@@ -12,7 +12,7 @@
         "step": {
             "user": {
                 "data": {
-                    "mac": "Device MAC address",
+                    "address": "Device address",
                     "name": "Name",
                     "password": "Password"
                 },

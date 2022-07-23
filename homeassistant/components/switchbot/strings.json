@@ -5,7 +5,7 @@
       "user": {
         "title": "Setup Switchbot device",
         "data": {
-          "mac": "Device MAC address",
+          "address": "Device address",
           "name": "[%key:common::config_flow::data::name%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
