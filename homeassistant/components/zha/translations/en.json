@@ -51,7 +51,7 @@
             "default_light_transition": "Default light transition time (seconds)",
             "enable_identify_on_join": "Enable identify effect when devices join the network",
             "enhanced_light_transition": "Enable enhanced light color/temperature transition from an off-state",
-            "always_prefer_xy_color_mode": "Always prefer XY color mode.",
+            "always_prefer_xy_color_mode": "Always prefer XY color mode",
             "title": "Global Options"
         }
     },
