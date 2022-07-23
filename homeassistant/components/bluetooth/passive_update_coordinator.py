@@ -79,3 +79,8 @@ class PassiveBluetoothCoordinatorEntity(CoordinatorEntity):
 
     async def async_update(self) -> None:
         """All updates are passive."""
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self.coordinator.available
