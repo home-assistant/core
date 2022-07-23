@@ -14,8 +14,8 @@ from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BluetoothChange
-from ._coordinator import BasePassiveBluetoothCoordinator
 from .const import DOMAIN
+from .update_coordinator import BasePassiveBluetoothCoordinator
 
 
 @dataclasses.dataclass(frozen=True)
