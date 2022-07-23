@@ -1,5 +1,6 @@
 """Support for Switchbot devices."""
 
+import logging
 from types import MappingProxyType
 from typing import Any
 
@@ -40,6 +41,8 @@ CLASS_BY_DEVICE = {
     ATTR_CURTAIN: switchbot.SwitchbotCurtain,
     ATTR_BOT: switchbot.Switchbot,
 }
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -88,7 +91,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         retry_count=entry.options[CONF_RETRY_COUNT],
     )
     coordinator = hass.data[DOMAIN][entry.entry_id] = SwitchbotCoordinator(
-        hass, ble_device=ble_device, device=device, common_options=common_options
+        hass, _LOGGER, ble_device, device, common_options
     )
     entry.async_on_unload(coordinator.async_start())
     if not await coordinator.async_wait_ready():
