@@ -1,4 +1,9 @@
 {
+    "issues": {
+        "unfixable_problem": {
+            "title": "Questo non \u00e8 un problema risolvibile"
+        }
+    },
     "options": {
         "step": {
             "init": {
