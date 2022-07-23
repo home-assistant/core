@@ -1,0 +1,16 @@
+{
+    "config": {
+        "flow_title": "{name}",
+        "step": {
+            "bluetooth_confirm": {
+                "description": "Deseja configurar {name}?"
+            },
+            "user": {
+                "data": {
+                    "address": "Dispositivo"
+                },
+                "description": "Escolha um dispositivo para configurar"
+            }
+        }
+    }
+}
