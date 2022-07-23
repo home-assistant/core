@@ -73,17 +73,17 @@ class PassiveBluetoothDataUpdateCoordinator:
         self.logger = logger
         self.name: str | None = None
         self.address = address
+        self.devices: dict[str | None, DeviceInfo] = {}
         self._processors: list[PassiveBluetoothDataProcessor] = []
         self._cancel_track_unavailable: CALLBACK_TYPE | None = None
         self._cancel_bluetooth_advertisements: CALLBACK_TYPE | None = None
-        self.devices: dict[str | None, DeviceInfo] = {}
-        self.present = False
+        self._present = False
         self.last_seen = 0.0
 
     @property
     def available(self) -> bool:
         """Return if the device is available."""
-        return self.present
+        return self._present
 
     @callback
     def _async_start(self) -> None:
@@ -117,14 +117,14 @@ class PassiveBluetoothDataUpdateCoordinator:
         processor.coordinator = self
 
         @callback
-        def remove_processors() -> None:
-            """Remove update listener."""
+        def remove_processor() -> None:
+            """Remove a processor."""
             self._processors.remove(processor)
             self._async_handle_processors_changed()
 
         self._processors.append(processor)
         self._async_handle_processors_changed()
-        return remove_processors
+        return remove_processor
 
     @callback
     def _async_handle_processors_changed(self) -> None:
@@ -138,7 +138,7 @@ class PassiveBluetoothDataUpdateCoordinator:
     @callback
     def _async_handle_unavailable(self, _address: str) -> None:
         """Handle the device going unavailable."""
-        self.present = False
+        self._present = False
         for processor in self._processors:
             processor.async_handle_unavailable()
 
@@ -151,7 +151,7 @@ class PassiveBluetoothDataUpdateCoordinator:
         """Handle a Bluetooth event."""
         self.last_seen = time.monotonic()
         self.name = service_info.name
-        self.present = True
+        self._present = True
         if self.hass.is_stopping:
             return
         for processor in self._processors:
@@ -213,7 +213,7 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
     @property
     def available(self) -> bool:
         """Return if the device is available."""
-        return self.coordinator.available
+        return self.coordinator.available and self.last_update_success
 
     @callback
     def async_handle_unavailable(self) -> None:
