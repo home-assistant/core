@@ -11,8 +11,6 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
 
-# from tests.components.climate import   # noqa: F401
-
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
