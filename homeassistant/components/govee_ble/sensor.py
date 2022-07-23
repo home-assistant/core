@@ -27,7 +27,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -121,9 +121,16 @@ async def async_setup_entry(
     coordinator: PassiveBluetoothDataUpdateCoordinator = hass.data[DOMAIN][
         entry.entry_id
     ]
+
+    def _entities_filter(
+        entity_key: PassiveBluetoothEntityKey, description: EntityDescription
+    ) -> bool:
+        """Check if the entity should be added to this platform."""
+        return isinstance(description, SensorEntityDescription)
+
     entry.async_on_unload(
         coordinator.async_add_entities_listener(
-            GoveeBluetoothSensorEntity, async_add_entities
+            GoveeBluetoothSensorEntity, async_add_entities, _entities_filter
         )
     )
 
