@@ -25,7 +25,7 @@ TEST_UDN = "uuid:device"
 TEST_ST = "urn:schemas-upnp-org:device:InternetGatewayDevice:1"
 TEST_USN = f"{TEST_UDN}::{TEST_ST}"
 TEST_LOCATION = "http://192.168.1.1/desc.xml"
-TEST_HOSTNAME = urlparse(TEST_LOCATION).hostname
+TEST_HOST = urlparse(TEST_LOCATION).hostname
 TEST_FRIENDLY_NAME = "mock-name"
 TEST_MAC_ADDRESS = "00:11:22:33:44:55"
 TEST_DISCOVERY = ssdp.SsdpServiceInfo(
@@ -45,7 +45,7 @@ TEST_DISCOVERY = ssdp.SsdpServiceInfo(
         ssdp.ATTR_UPNP_UDN: TEST_UDN,
     },
     ssdp_headers={
-        "_host": TEST_HOSTNAME,
+        "_host": TEST_HOST,
     },
 )
 
