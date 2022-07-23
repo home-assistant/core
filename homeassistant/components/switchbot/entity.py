@@ -5,7 +5,9 @@ from collections.abc import Mapping
 from typing import Any
 
 from homeassistant.components import bluetooth
+from homeassistant.const import ATTR_CONNECTIONS
 from homeassistant.core import callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import MANUFACTURER
@@ -36,6 +38,12 @@ class SwitchbotEntity(Entity):
             model=self.data["modelName"],
             name=name,
         )
+        if ":" not in self._address:
+            # MacOS Bluetooth addresses are not mac addresses
+            return
+        self._attr_device_info[ATTR_CONNECTIONS] = {
+            (dr.CONNECTION_NETWORK_MAC, self._address)
+        }
 
     @property
     def available(self) -> bool:
