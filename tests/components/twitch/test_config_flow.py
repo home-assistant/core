@@ -136,6 +136,34 @@ async def _setup_test_good(
         return await hass.config_entries.flow.async_configure(result["flow_id"])
 
 
+async def _setup_mock_config_entry(
+    hass: HomeAssistant,
+) -> MockConfigEntry:
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "auth_implementation": DOMAIN,
+            "token": {
+                "refresh_token": "mock-refresh-token",
+                "access_token": "mock-access-token",
+                "type": "Bearer",
+                "expires_in": 60,
+                "expires_at": time.time() + 60,
+            },
+            "user": TWITCH_USER,
+        },
+        options={
+            CONF_CHANNELS: CHANNELS,
+        },
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    return mock_config_entry
+
+
 async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth,
@@ -320,27 +348,7 @@ async def test_options_flow(
     setup_credentials,  # pylint: disable=redefined-outer-name
 ) -> None:
     """Test options flow."""
-    mock_config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "auth_implementation": DOMAIN,
-            "token": {
-                "refresh_token": "mock-refresh-token",
-                "access_token": "mock-access-token",
-                "type": "Bearer",
-                "expires_in": 60,
-                "expires_at": time.time() + 60,
-            },
-            "user": TWITCH_USER,
-        },
-        options={
-            CONF_CHANNELS: CHANNELS,
-        },
-    )
-    mock_config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    mock_config_entry = await _setup_mock_config_entry(hass)
 
     with patch(
         "homeassistant.components.twitch.config_flow.Twitch.set_user_authentication"
@@ -367,3 +375,51 @@ async def test_options_flow(
 
     assert "123" in result["data"][CONF_CHANNELS]
     assert "456" not in result["data"][CONF_CHANNELS]
+
+
+async def test_options_authorization_error(
+    hass: HomeAssistant,
+    hass_client_no_auth,
+    aioclient_mock,
+    current_request_with_host,
+    setup_credentials,  # pylint: disable=redefined-outer-name
+) -> None:
+    """Test authorization error when getting users in options flow."""
+    mock_config_entry = await _setup_mock_config_entry(hass)
+
+    with patch(
+        "homeassistant.components.twitch.config_flow.Twitch.set_user_authentication"
+    ), patch(
+        "homeassistant.components.twitch.config_flow.Twitch.get_users_follows",
+        side_effect=TwitchAuthorizationException,
+    ):
+        result = await hass.config_entries.options.async_init(
+            mock_config_entry.entry_id
+        )
+
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "invalid_auth"
+
+
+async def test_options_api_error(
+    hass: HomeAssistant,
+    hass_client_no_auth,
+    aioclient_mock,
+    current_request_with_host,
+    setup_credentials,  # pylint: disable=redefined-outer-name
+) -> None:
+    """Test api error when getting users in options flow."""
+    mock_config_entry = await _setup_mock_config_entry(hass)
+
+    with patch(
+        "homeassistant.components.twitch.config_flow.Twitch.set_user_authentication"
+    ), patch(
+        "homeassistant.components.twitch.config_flow.Twitch.get_users_follows",
+        side_effect=TwitchAPIException,
+    ):
+        result = await hass.config_entries.options.async_init(
+            mock_config_entry.entry_id
+        )
+
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
