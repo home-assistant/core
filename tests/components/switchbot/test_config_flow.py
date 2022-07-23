@@ -266,6 +266,22 @@ async def test_async_step_user_takes_precedence_over_discovery(hass):
 
 async def test_options_flow(hass):
     """Test updating options."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
+            CONF_NAME: "test-name",
+            CONF_PASSWORD: "test-password",
+            CONF_SENSOR_TYPE: "bot",
+        },
+        options={
+            CONF_RETRY_COUNT: 10,
+            CONF_RETRY_TIMEOUT: 10,
+        },
+        unique_id="aabbccddeeff",
+    )
+    entry.add_to_hass(hass)
+
     with patch_async_setup_entry() as mock_setup_entry:
         entry = await init_integration(hass)
 
@@ -287,7 +303,7 @@ async def test_options_flow(hass):
     assert result["data"][CONF_RETRY_COUNT] == 3
     assert result["data"][CONF_RETRY_TIMEOUT] == 5
 
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 2
 
     # Test changing of entry options.
 
@@ -313,3 +329,6 @@ async def test_options_flow(hass):
     assert result["data"][CONF_RETRY_TIMEOUT] == 6
 
     assert len(mock_setup_entry.mock_calls) == 1
+
+    assert entry.options[CONF_RETRY_COUNT] == 6
+    assert entry.options[CONF_RETRY_TIMEOUT] == 6
