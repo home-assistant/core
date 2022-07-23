@@ -64,6 +64,27 @@ async def test_async_step_integration_discovery(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_async_step_integration_discovery_during_onboarding(hass):
+    """Test setting up from integration discovery during onboarding."""
+
+    with patch(
+        "homeassistant.components.bluetooth.async_setup_entry", return_value=True
+    ) as mock_setup_entry, patch(
+        "homeassistant.components.onboarding.async_is_onboarded",
+        return_value=False,
+    ) as mock_onboarding:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+            data={},
+        )
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Bluetooth"
+    assert result["data"] == {}
+    assert len(mock_setup_entry.mock_calls) == 1
+    assert len(mock_onboarding.mock_calls) == 1
+
+
 async def test_async_step_integration_discovery_already_exists(hass):
     """Test setting up from integration discovery when an entry already exists."""
     entry = MockConfigEntry(domain=DOMAIN)
