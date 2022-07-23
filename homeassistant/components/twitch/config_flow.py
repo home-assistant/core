@@ -13,7 +13,7 @@ from twitchAPI.twitch import (
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_TOKEN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -115,7 +115,7 @@ class OAuth2FlowHandler(
         if self._async_current_entries():
             return self.async_abort(reason="already_configured")
 
-        client_id = data["auth_implementation"].split("_")[1]
+        client_id = self.flow_impl.__dict__[CONF_CLIENT_ID]
         access_token = data[CONF_TOKEN][CONF_ACCESS_TOKEN]
         refresh_token = data[CONF_TOKEN][CONF_REFRESH_TOKEN]
 
