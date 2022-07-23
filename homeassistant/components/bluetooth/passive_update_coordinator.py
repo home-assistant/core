@@ -117,14 +117,14 @@ class PassiveBluetoothDataUpdateCoordinator:
         processor.coordinator = self
 
         @callback
-        def remove_processors() -> None:
-            """Remove update listener."""
+        def remove_processor() -> None:
+            """Remove a processor."""
             self._processors.remove(processor)
             self._async_handle_processors_changed()
 
         self._processors.append(processor)
         self._async_handle_processors_changed()
-        return remove_processors
+        return remove_processor
 
     @callback
     def _async_handle_processors_changed(self) -> None:
