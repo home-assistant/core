@@ -1,8 +1,9 @@
 """The Bluetooth integration."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 import logging
+from typing import Any
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -25,17 +26,19 @@ class PassiveBluetoothDataUpdateCoordinator(BasePassiveBluetoothCoordinator):
     ) -> None:
         """Initialize PassiveBluetoothDataUpdateCoordinator."""
         super().__init__(hass, logger, address)
-        self._listeners: list[Callable[[], None]] = []
+        self._listeners: dict[CALLBACK_TYPE, tuple[CALLBACK_TYPE, object | None]] = {}
 
-    def _async_call_listeners(self) -> None:
-        for listener in self._listeners:
-            listener()
+    @callback
+    def async_update_listeners(self) -> None:
+        """Update all registered listeners."""
+        for update_callback, _ in list(self._listeners.values()):
+            update_callback()
 
     @callback
     def _async_handle_unavailable(self, address: str) -> None:
         """Handle the device going unavailable."""
         super()._async_handle_unavailable(address)
-        self._async_call_listeners()
+        self.async_update_listeners()
 
     @callback
     def async_start(self) -> CALLBACK_TYPE:
@@ -49,16 +52,24 @@ class PassiveBluetoothDataUpdateCoordinator(BasePassiveBluetoothCoordinator):
         return _async_cancel
 
     @callback
-    def async_add_listener(self, update_callback: CALLBACK_TYPE) -> Callable[[], None]:
+    def async_add_listener(
+        self, update_callback: CALLBACK_TYPE, context: Any = None
+    ) -> Callable[[], None]:
         """Listen for data updates."""
 
         @callback
         def remove_listener() -> None:
             """Remove update listener."""
-            self._listeners.remove(update_callback)
+            self._listeners.pop(remove_listener)
 
-        self._listeners.append(update_callback)
+        self._listeners[remove_listener] = (update_callback, context)
         return remove_listener
+
+    def async_contexts(self) -> Generator[Any, None, None]:
+        """Return all registered contexts."""
+        yield from (
+            context for _, context in self._listeners.values() if context is not None
+        )
 
 
 class PassiveBluetoothCoordinatorEntity(CoordinatorEntity):

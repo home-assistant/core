@@ -69,7 +69,7 @@ class SwitchbotCoordinator(PassiveBluetoothDataUpdateCoordinator):
                 self._ready_event.set()
             _LOGGER.debug("%s: Switchbot data: %s", self.ble_device.address, self.data)
             self.device.update_from_advertisement(adv)
-        self._async_call_listeners()
+        self.async_update_listeners()
 
     async def async_wait_ready(self) -> bool:
         """Wait for the device to be ready."""
