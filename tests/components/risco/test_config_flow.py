@@ -73,14 +73,14 @@ async def test_form(hass):
     mock_close.assert_awaited_once()
 
 
-errors = [
-    (UnauthorizedError, "invalid_auth"),
-    (CannotConnectError, "cannot_connect"),
-    (Exception, "unknown"),
-]
-
-
-@pytest.mark.parametrize("exception, error", errors)
+@pytest.mark.parametrize(
+    "exception, error",
+    [
+        (UnauthorizedError, "invalid_auth"),
+        (CannotConnectError, "cannot_connect"),
+        (Exception, "unknown"),
+    ],
+)
 async def test_error(hass, exception, error):
     """Test we handle config flow errors."""
     result = await hass.config_entries.flow.async_init(
