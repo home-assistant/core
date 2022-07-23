@@ -58,7 +58,7 @@ class PassiveBluetoothDataUpdate(Generic[_T]):
 class PassiveBluetoothDataUpdateCoordinator:
     """Passive bluetooth data update coordinator for bluetooth advertisements.
 
-    The coordinator is responsible dispatching the bluetooth data,
+    The coordinator is responsible for dispatching the bluetooth data,
     to each processor, and tracking devices.
     """
 
