@@ -585,3 +585,13 @@ class MotionEyeEntity(CoordinatorEntity):
     def available(self) -> bool:
         """Return if entity is available."""
         return self._camera is not None and super().available
+
+    async def async_send_set_camera(self, key: str, value: bool) -> None:
+        """Set a config value."""
+
+        # Fetch the very latest camera config to reduce the risk of updating with a
+        # stale configuration.
+        camera = await self._client.async_get_camera(self._camera_id)
+        if camera:
+            camera[key] = value
+            await self._client.async_set_camera(self._camera_id, camera)

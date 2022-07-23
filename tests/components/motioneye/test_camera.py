@@ -25,7 +25,15 @@ from motioneye_client.const import (
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.camera import async_get_image, async_get_mjpeg_stream
+from homeassistant.components.camera import (
+    async_get_image,
+    async_get_mjpeg_stream,
+    DOMAIN as CAMERA_DOMAIN,
+    SERVICE_TURN_ON,
+    SERVICE_TURN_OFF,
+    SERVICE_ENABLE_MOTION,
+    SERVICE_DISABLE_MOTION,
+)
 from homeassistant.components.motioneye import get_motioneye_device_identifier
 from homeassistant.components.motioneye.const import (
     CONF_ACTION,
@@ -33,6 +41,7 @@ from homeassistant.components.motioneye.const import (
     CONF_SURVEILLANCE_USERNAME,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    KEY_ENABLED,
     MOTIONEYE_MANUFACTURER,
     SERVICE_ACTION,
     SERVICE_SET_TEXT_OVERLAY,
@@ -542,3 +551,79 @@ async def test_request_snapshot(hass: HomeAssistant) -> None:
     await hass.services.async_call(DOMAIN, SERVICE_SNAPSHOT, data)
     await hass.async_block_till_done()
     assert client.async_action.call_args == call(TEST_CAMERA_ID, "snapshot")
+
+
+async def test_camera_on(hass: HomeAssistant) -> None:
+    """Test a working camera on."""
+    client = create_mock_motioneye_client()
+    await setup_mock_motioneye_config_entry(hass, client=client)
+
+    data = {
+        ATTR_ENTITY_ID: TEST_CAMERA_ENTITY_ID,
+    }
+    client.async_get_camera = AsyncMock(return_value=copy.deepcopy(TEST_CAMERA))
+
+    await hass.services.async_call(CAMERA_DOMAIN, SERVICE_TURN_ON, data)
+    await hass.async_block_till_done()
+    assert client.async_get_camera.called
+
+    expected_camera = copy.deepcopy(TEST_CAMERA)
+    expected_camera[KEY_ENABLED] = True
+    assert client.async_set_camera.call_args == call(TEST_CAMERA_ID, expected_camera)
+
+
+async def test_camera_off(hass: HomeAssistant) -> None:
+    """Test a working camera off."""
+    client = create_mock_motioneye_client()
+    await setup_mock_motioneye_config_entry(hass, client=client)
+
+    data = {
+        ATTR_ENTITY_ID: TEST_CAMERA_ENTITY_ID,
+    }
+    client.async_get_camera = AsyncMock(return_value=copy.deepcopy(TEST_CAMERA))
+
+    await hass.services.async_call(CAMERA_DOMAIN, SERVICE_TURN_OFF, data)
+    await hass.async_block_till_done()
+    assert client.async_get_camera.called
+
+    expected_camera = copy.deepcopy(TEST_CAMERA)
+    expected_camera[KEY_ENABLED] = False
+    assert client.async_set_camera.call_args == call(TEST_CAMERA_ID, expected_camera)
+
+
+async def test_camera_enable_motion_detection(hass: HomeAssistant) -> None:
+    """Test a working camera enable motion detection."""
+    client = create_mock_motioneye_client()
+    await setup_mock_motioneye_config_entry(hass, client=client)
+
+    data = {
+        ATTR_ENTITY_ID: TEST_CAMERA_ENTITY_ID,
+    }
+    client.async_get_camera = AsyncMock(return_value=copy.deepcopy(TEST_CAMERA))
+
+    await hass.services.async_call(CAMERA_DOMAIN, SERVICE_ENABLE_MOTION, data)
+    await hass.async_block_till_done()
+    assert client.async_get_camera.called
+
+    expected_camera = copy.deepcopy(TEST_CAMERA)
+    expected_camera[KEY_MOTION_DETECTION] = True
+    assert client.async_set_camera.call_args == call(TEST_CAMERA_ID, expected_camera)
+
+
+async def test_camera_disable_motion_detection(hass: HomeAssistant) -> None:
+    """Test a working camera disable motion detection."""
+    client = create_mock_motioneye_client()
+    await setup_mock_motioneye_config_entry(hass, client=client)
+
+    data = {
+        ATTR_ENTITY_ID: TEST_CAMERA_ENTITY_ID,
+    }
+    client.async_get_camera = AsyncMock(return_value=copy.deepcopy(TEST_CAMERA))
+
+    await hass.services.async_call(CAMERA_DOMAIN, SERVICE_DISABLE_MOTION, data)
+    await hass.async_block_till_done()
+    assert client.async_get_camera.called
+
+    expected_camera = copy.deepcopy(TEST_CAMERA)
+    expected_camera[KEY_MOTION_DETECTION] = False
+    assert client.async_set_camera.call_args == call(TEST_CAMERA_ID, expected_camera)

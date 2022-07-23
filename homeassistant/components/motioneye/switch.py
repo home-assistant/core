@@ -127,23 +127,13 @@ class MotionEyeSwitch(MotionEyeEntity, SwitchEntity):
             self._camera and self._camera.get(self.entity_description.key, False)
         )
 
-    async def _async_send_set_camera(self, value: bool) -> None:
-        """Set a switch value."""
-
-        # Fetch the very latest camera config to reduce the risk of updating with a
-        # stale configuration.
-        camera = await self._client.async_get_camera(self._camera_id)
-        if camera:
-            camera[self.entity_description.key] = value
-            await self._client.async_set_camera(self._camera_id, camera)
-
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
-        await self._async_send_set_camera(True)
+        await self.async_send_set_camera(self.entity_description.key, True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
-        await self._async_send_set_camera(False)
+        await self.async_send_set_camera(self.entity_description.key, False)
 
     @callback
     def _handle_coordinator_update(self) -> None:

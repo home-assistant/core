@@ -24,6 +24,7 @@ from motioneye_client.const import (
 )
 import voluptuous as vol
 
+from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.components.mjpeg import (
     CONF_MJPEG_URL,
     CONF_STILL_IMAGE_URL,
@@ -58,6 +59,7 @@ from .const import (
     CONF_SURVEILLANCE_PASSWORD,
     CONF_SURVEILLANCE_USERNAME,
     DOMAIN,
+    KEY_ENABLED,
     MOTIONEYE_MANUFACTURER,
     SERVICE_ACTION,
     SERVICE_SET_TEXT_OVERLAY,
@@ -162,6 +164,7 @@ class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
 
         # motionEye cameras are always streaming or unavailable.
         self._attr_is_streaming = True
+        self._attr_supported_features = CameraEntityFeature.ON_OFF
 
         MotionEyeEntity.__init__(
             self,
@@ -247,11 +250,14 @@ class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._camera = get_camera_from_cameras(self._camera_id, self.coordinator.data)
-        if self._camera and self._is_acceptable_streaming_camera():
-            self._set_mjpeg_camera_state_for_camera(self._camera)
-            self._motion_detection_enabled = self._camera.get(
-                KEY_MOTION_DETECTION, False
-            )
+        if self._camera:
+            self._attr_is_streaming = self._camera.get(KEY_ENABLED, False)
+
+            if self._is_acceptable_streaming_camera():
+                self._set_mjpeg_camera_state_for_camera(self._camera)
+                self._motion_detection_enabled = self._camera.get(
+                    KEY_MOTION_DETECTION, False
+                )
         super()._handle_coordinator_update()
 
     @property
@@ -298,3 +304,19 @@ class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
     async def async_request_snapshot(self) -> None:
         """Request a motionEye snapshot be saved."""
         await self.async_request_action(KEY_ACTION_SNAPSHOT)
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on the camera."""
+        await self.async_send_set_camera(KEY_ENABLED, True)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off the camera."""
+        await self.async_send_set_camera(KEY_ENABLED, False)
+
+    async def async_enable_motion_detection(self, **kwargs: Any) -> None:
+        """Turn on the motion detection."""
+        await self.async_send_set_camera(KEY_MOTION_DETECTION, True)
+
+    async def async_disable_motion_detection(self, **kwargs: Any) -> None:
+        """Turn off the motion detection."""
+        await self.async_send_set_camera(KEY_MOTION_DETECTION, False)
