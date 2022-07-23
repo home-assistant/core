@@ -175,7 +175,11 @@ class Gateway:
     async def get_firmware_async(self):
         """Get the firmware information of the modem."""
         firmware = await self._worker.get_firmware_async()
-        return f"{firmware[0]} ({firmware[1]})"
+        display = firmware[0]  # version
+        # date may be unavailable
+        if firmware[1]:
+            display = f"{display} ({firmware[1]})"
+        return display
 
     async def terminate_async(self):
         """Terminate modem connection."""
