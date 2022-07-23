@@ -1,4 +1,4 @@
-"""The Bluetooth integration."""
+"""Update coordinator for the Bluetooth integration."""
 from __future__ import annotations
 
 import logging

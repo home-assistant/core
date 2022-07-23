@@ -1,4 +1,4 @@
-"""The Bluetooth integration."""
+"""Passive update processors for the Bluetooth integration."""
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
