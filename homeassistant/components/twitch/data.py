@@ -81,6 +81,9 @@ class TwitchSubscription:
     broadcaster_login: str
     is_gift: bool
     tier: str
+    gifter_id: str | None = None
+    gifter_login: str | None = None
+    gifter_name: str | None = None
 
 
 @dataclass
