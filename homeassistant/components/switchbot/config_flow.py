@@ -46,9 +46,8 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize the config flow."""
-        self._discovery_info: BluetoothServiceInfo | None = None
-        self._discovered_device: SwitchBotAdvertisement | None = None
-        self._discovered_devices: dict[str, SwitchBotAdvertisement] = {}
+        self._discovered_adv: SwitchBotAdvertisement | None = None
+        self._discovered_advs: dict[str, SwitchBotAdvertisement] = {}
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfo
@@ -62,8 +61,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         if not parsed or parsed.data.get("modelName") not in SUPPORTED_MODEL_TYPES:
             return self.async_abort(reason="not_supported")
-        self._discovery_info = discovery_info
-        self._discovered_device = parsed
+        self._discovered_adv = parsed
         data = parsed.data
         self.context["title_placeholders"] = {
             "name": data["modelName"],
@@ -79,30 +77,33 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             address = user_input[CONF_ADDRESS]
-            await self.async_set_unique_id(format_unique_id(address))
+            await self.async_set_unique_id(
+                format_unique_id(address), raise_on_progress=False
+            )
             self._abort_if_unique_id_configured()
             user_input[CONF_SENSOR_TYPE] = SUPPORTED_MODEL_TYPES[
-                self._discovered_devices[address].data["modelName"]
+                self._discovered_advs[address].data["modelName"]
             ]
             return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
 
-        if self._discovered_device:
-            self._discovered_devices[
-                self._discovered_device.address
-            ] = self._discovered_device
+        if discovery := self._discovered_adv:
+            self._discovered_advs[discovery.address] = discovery
         else:
             current_addresses = self._async_current_ids()
             for discovery_info in async_discovered_service_info(self.hass):
                 address = discovery_info.address
-                if address in current_addresses or address in self._discovered_devices:
+                if (
+                    format_unique_id(address) in current_addresses
+                    or address in self._discovered_advs
+                ):
                     continue
                 parsed = parse_advertisement_data(
                     discovery_info.device, discovery_info.advertisement
                 )
                 if parsed and parsed.data.get("modelName") in SUPPORTED_MODEL_TYPES:
-                    self._discovered_devices[address] = parsed
+                    self._discovered_advs[address] = parsed
 
-        if not self._discovered_devices:
+        if not self._discovered_advs:
             return self.async_abort(reason="no_unconfigured_devices")
 
         data_schema = vol.Schema(
@@ -110,7 +111,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_ADDRESS): vol.In(
                     {
                         address: f"{parsed.data['modelName']} ({address})"
-                        for address, parsed in self._discovered_devices.items()
+                        for address, parsed in self._discovered_advs.items()
                     }
                 ),
                 vol.Required(CONF_NAME): str,
