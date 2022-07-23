@@ -75,6 +75,7 @@ async def get_followed_channels(
         ):
             cursor = TwitchResponsePagination(**followers_response.pagination).cursor
         else:
+            cursor = None
             break
 
     return sorted(
