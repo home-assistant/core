@@ -1,6 +1,6 @@
 """Tests for the Risco event sensors."""
 from datetime import timedelta
-from unittest.mock import MagicMock, PropertyMock, patch
+from unittest.mock import MagicMock, patch
 
 from homeassistant.components.risco import (
     LAST_EVENT_TIMESTAMP_KEY,
@@ -11,7 +11,7 @@ from homeassistant.components.risco.const import DOMAIN
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt
 
-from .util import TEST_CONFIG, TEST_SITE_UUID, setup_risco
+from .util import TEST_CONFIG, MockRiscoCloud, setup_risco
 from .util import two_zone_alarm  # noqa: F401
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -112,10 +112,11 @@ CATEGORIES_TO_EVENTS = {
 async def test_cannot_connect(hass):
     """Test connection error."""
 
+    mock = MockRiscoCloud()
     with patch(
-        "homeassistant.components.risco.RiscoAPI.login",
-        side_effect=CannotConnectError,
-    ):
+        "homeassistant.components.risco.get_risco_cloud",
+        return_value=mock,
+    ), patch.object(mock, "login", side_effect=CannotConnectError):
         config_entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONFIG)
         config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -129,10 +130,11 @@ async def test_cannot_connect(hass):
 async def test_unauthorized(hass):
     """Test unauthorized error."""
 
+    mock = MockRiscoCloud()
     with patch(
-        "homeassistant.components.risco.RiscoAPI.login",
-        side_effect=UnauthorizedError,
-    ):
+        "homeassistant.components.risco.get_risco_cloud",
+        return_value=mock,
+    ), patch.object(mock, "login", side_effect=UnauthorizedError):
         config_entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONFIG)
         config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -175,12 +177,9 @@ async def test_setup(hass, two_zone_alarm):  # noqa: F811
         assert not registry.async_is_registered(id)
 
     with patch(
-        "homeassistant.components.risco.RiscoAPI.site_uuid",
-        new_callable=PropertyMock(return_value=TEST_SITE_UUID),
-    ), patch(
         "homeassistant.components.risco.Store.async_save",
     ) as save_mock:
-        await setup_risco(hass, TEST_EVENTS)
+        mock = await setup_risco(hass, TEST_EVENTS, two_zone_alarm)
         for id in ENTITY_IDS.values():
             assert registry.async_is_registered(id)
 
@@ -190,9 +189,7 @@ async def test_setup(hass, two_zone_alarm):  # noqa: F811
         for category, entity_id in ENTITY_IDS.items():
             _check_state(hass, category, entity_id)
 
-    with patch(
-        "homeassistant.components.risco.RiscoAPI.get_events", return_value=[]
-    ) as events_mock, patch(
+    with patch.object(mock, "get_events", return_value=[]) as events_mock, patch(
         "homeassistant.components.risco.Store.async_load",
         return_value={LAST_EVENT_TIMESTAMP_KEY: TEST_EVENTS[0].time},
     ):

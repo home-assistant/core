@@ -1,5 +1,5 @@
 """Test the Risco config flow."""
-from unittest.mock import PropertyMock, patch
+from unittest.mock import patch
 
 import pytest
 import voluptuous as vol
@@ -10,6 +10,8 @@ from homeassistant.components.risco.config_flow import (
     UnauthorizedError,
 )
 from homeassistant.components.risco.const import DOMAIN
+
+from .util import MockRiscoCloud
 
 from tests.common import MockConfigEntry
 
@@ -42,6 +44,19 @@ TEST_OPTIONS = {
 }
 
 
+async def _configure_with_exception(hass, flow_id, exception):
+    mock = MockRiscoCloud()
+    with patch(
+        "homeassistant.components.risco.config_flow.get_risco_cloud",
+        return_value=mock,
+    ), patch.object(mock, "login", side_effect=exception,), patch.object(
+        mock, "close"
+    ) as mock_close:
+        result = await hass.config_entries.flow.async_configure(flow_id, TEST_DATA)
+    mock_close.assert_awaited_once()
+    return result
+
+
 async def test_form(hass):
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
@@ -50,15 +65,12 @@ async def test_form(hass):
     assert result["type"] == "form"
     assert result["errors"] == {}
 
+    mock = MockRiscoCloud(TEST_SITE_NAME)
+
     with patch(
-        "homeassistant.components.risco.config_flow.RiscoAPI.login",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.risco.config_flow.RiscoAPI.site_name",
-        new_callable=PropertyMock(return_value=TEST_SITE_NAME),
-    ), patch(
-        "homeassistant.components.risco.config_flow.RiscoAPI.close"
-    ) as mock_close, patch(
+        "homeassistant.components.risco.config_flow.get_risco_cloud",
+        return_value=mock,
+    ), patch.object(mock, "close") as mock_close, patch(
         "homeassistant.components.risco.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -80,17 +92,12 @@ async def test_form_invalid_auth(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.risco.config_flow.RiscoAPI.login",
-        side_effect=UnauthorizedError,
-    ), patch("homeassistant.components.risco.config_flow.RiscoAPI.close") as mock_close:
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], TEST_DATA
-        )
+    result2 = await _configure_with_exception(
+        hass, result["flow_id"], UnauthorizedError
+    )
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "invalid_auth"}
-    mock_close.assert_awaited_once()
 
 
 async def test_form_cannot_connect(hass):
@@ -99,17 +106,12 @@ async def test_form_cannot_connect(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.risco.config_flow.RiscoAPI.login",
-        side_effect=CannotConnectError,
-    ), patch("homeassistant.components.risco.config_flow.RiscoAPI.close") as mock_close:
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], TEST_DATA
-        )
+    result2 = await _configure_with_exception(
+        hass, result["flow_id"], CannotConnectError
+    )
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "cannot_connect"}
-    mock_close.assert_awaited_once()
 
 
 async def test_form_exception(hass):
@@ -118,17 +120,10 @@ async def test_form_exception(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.risco.config_flow.RiscoAPI.login",
-        side_effect=Exception,
-    ), patch("homeassistant.components.risco.config_flow.RiscoAPI.close") as mock_close:
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], TEST_DATA
-        )
+    result2 = await _configure_with_exception(hass, result["flow_id"], Exception)
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "unknown"}
-    mock_close.assert_awaited_once()
 
 
 async def test_form_already_exists(hass):
