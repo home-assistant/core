@@ -54,6 +54,7 @@ from .const import (
     SERVICE_REQUEST_CHANNEL_LEVEL,
 )
 from .convert_config import convert_config
+from .panel import async_register_dynalite_frontend
 
 
 def num_string(value: int | str) -> str:
@@ -276,6 +277,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    await async_register_dynalite_frontend(hass)
 
     return True
 

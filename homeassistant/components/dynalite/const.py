@@ -20,6 +20,7 @@ CONF_CHANNEL = "channel"
 CONF_CHANNEL_COVER = "channel_cover"
 CONF_CLOSE_PRESET = "close"
 CONF_DEVICE_CLASS = "class"
+CONF_DEV_PATH = "dev_path"  # TBD TODO
 CONF_DURATION = "duration"
 CONF_FADE = "fade"
 CONF_LEVEL = "level"

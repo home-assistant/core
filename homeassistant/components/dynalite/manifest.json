@@ -6,5 +6,7 @@
   "documentation": "https://www.home-assistant.io/integrations/dynalite",
   "iot_class": "local_push",
   "loggers": ["dynalite_devices_lib"],
-  "requirements": ["dynalite_devices==0.1.47"]
+  "requirements": ["dynalite_devices==0.1.47", "dynalite_panel==0.0.1"],
+  "dependencies": ["http", "websocket_api"],
+  "after_dependencies": ["panel_custom"]
 }
