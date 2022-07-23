@@ -1,7 +1,9 @@
 """Provides the switchbot DataUpdateCoordinator."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
+import logging
 from typing import Any, cast
 
 from bleak.backends.device import BLEDevice
@@ -12,6 +14,8 @@ from homeassistant.components import bluetooth
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 
 from .const import CONF_RETRY_COUNT
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def flatten_sensors_data(sensor):
@@ -39,6 +43,7 @@ class SwitchbotCoordinator:
         self.common_options = common_options
         self.data: dict[str, Any] = {}
         self._listeners: list[Callable[[], None]] = []
+        self.ready_event = asyncio.Event()
         self.available = False
 
     @property
@@ -59,8 +64,19 @@ class SwitchbotCoordinator:
             discovery_info_bleak.device, discovery_info_bleak.advertisement
         ):
             self.data = flatten_sensors_data(adv.data)
+            if "modelName" in self.data:
+                self.ready_event.set()
+            _LOGGER.debug("%s: Switchbot data: %s", self.ble_device.address, self.data)
             self.device.update_from_advertisement(adv)
         self._async_call_listeners()
+
+    async def async_wait_ready(self) -> bool:
+        """Wait for the device to be ready."""
+        try:
+            await asyncio.wait_for(self.ready_event.wait(), timeout=55)
+        except asyncio.TimeoutError:
+            return False
+        return True
 
     def _async_call_listeners(self) -> None:
         for listener in self._listeners:

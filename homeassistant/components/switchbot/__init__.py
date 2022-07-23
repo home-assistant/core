@@ -83,7 +83,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     address = entry.data[CONF_ADDRESS]
     ble_device = bluetooth.async_ble_device_from_address(hass, address)
     if not ble_device:
-        raise ConfigEntryNotReady(f"Could not find Switchbot with address {address}")
+        raise ConfigEntryNotReady(
+            f"Could not find Switchbot {sensor_type} with address {address}"
+        )
 
     if COMMON_OPTIONS not in domain_data:
         domain_data[COMMON_OPTIONS] = entry.options
@@ -101,6 +103,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass, ble_device=ble_device, device=device, common_options=common_options
     )
     entry.async_on_unload(coordinator.async_start())
+    if not await coordinator.async_wait_ready():
+        raise ConfigEntryNotReady(f"Switchbot {sensor_type} with {address} not ready")
+
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     await hass.config_entries.async_forward_entry_setups(
         entry, PLATFORMS_BY_TYPE[sensor_type]
