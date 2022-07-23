@@ -154,7 +154,7 @@ async def async_setup_entry(
     entry: config_entries.ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the SensorPush BLE sensors."""
+    """Set up the Xiaomi BLE sensors."""
     coordinator: PassiveBluetoothDataUpdateCoordinator = hass.data[DOMAIN][
         entry.entry_id
     ]
