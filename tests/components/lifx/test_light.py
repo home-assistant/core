@@ -71,11 +71,7 @@ async def test_light_unique_id(hass: HomeAssistant) -> None:
     device = device_registry.async_get_device(
         identifiers=set(), connections={(dr.CONNECTION_NETWORK_MAC, SERIAL)}
     )
-    assert device.identifiers == {
-        (DOMAIN, SERIAL),
-        (DOMAIN, f"{SERIAL}_identify"),
-        (DOMAIN, f"{SERIAL}_restart"),
-    }
+    assert device.identifiers == {(DOMAIN, SERIAL)}
 
 
 async def test_light_unique_id_new_firmware(hass: HomeAssistant) -> None:
@@ -99,11 +95,7 @@ async def test_light_unique_id_new_firmware(hass: HomeAssistant) -> None:
         identifiers=set(),
         connections={(dr.CONNECTION_NETWORK_MAC, MAC_ADDRESS)},
     )
-    assert device.identifiers == {
-        (DOMAIN, SERIAL),
-        (DOMAIN, f"{SERIAL}_identify"),
-        (DOMAIN, f"{SERIAL}_restart"),
-    }
+    assert device.identifiers == {(DOMAIN, SERIAL)}
 
 
 @patch("homeassistant.components.lifx.light.COLOR_ZONE_POPULATE_DELAY", 0)
