@@ -162,13 +162,11 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
 
             if discovery.device.encryption_scheme == EncryptionScheme.MIBEACON_LEGACY:
                 self._discovery_info = discovery.discovery_info
-                self._discovered_device = discovery.device
                 self.context["title_placeholders"] = {"name": discovery.title}
                 return await self.async_step_get_encryption_key_legacy()
 
             if discovery.device.encryption_scheme == EncryptionScheme.MIBEACON_4_5:
                 self._discovery_info = discovery.discovery_info
-                self._discovered_device = discovery.device
                 self.context["title_placeholders"] = {"name": discovery.title}
                 return await self.async_step_get_encryption_key_4_5()
 
