@@ -24,8 +24,7 @@
         "step": {
             "init": {
                 "data": {
-                    "retry_count": "Retry count",
-                    "retry_timeout": "Timeout between retries"
+                    "retry_count": "Retry count"
                 }
             }
         }
