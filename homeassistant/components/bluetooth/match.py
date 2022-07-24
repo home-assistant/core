@@ -70,9 +70,7 @@ class IntegrationMatcher:
             MAX_REMEMBER_ADDRESSES
         )
 
-    def matched_domains(
-        self, device: BLEDevice, adv_data: AdvertisementData
-    ) -> set[str]:
+    def match_domains(self, device: BLEDevice, adv_data: AdvertisementData) -> set[str]:
         """Return the domains that are matched."""
         matched_domains: set[str] = set()
         if (previous_match := self._matched.get(device.address)) and seen_all_fields(
