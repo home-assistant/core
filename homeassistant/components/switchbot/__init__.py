@@ -1,7 +1,7 @@
 """Support for Switchbot devices."""
 
+from collections.abc import Mapping
 import logging
-from types import MappingProxyType
 from typing import Any
 
 import switchbot
@@ -23,7 +23,6 @@ from .const import (
     ATTR_BOT,
     ATTR_CURTAIN,
     ATTR_HYGROMETER,
-    COMMON_OPTIONS,
     CONF_RETRY_COUNT,
     DEFAULT_RETRY_COUNT,
     DOMAIN,
@@ -41,6 +40,21 @@ CLASS_BY_DEVICE = {
 }
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class OptionsListener:
+    """Listen for changes in options."""
+
+    def __init__(self, original_options: Mapping[str, Any]) -> None:
+        """Initialize the options listener."""
+        self._original_options = dict(original_options)
+
+    async def async_update_listener(
+        self, hass: HomeAssistant, entry: ConfigEntry
+    ) -> None:
+        """Handle options update."""
+        if dict(entry.options) != self._original_options:
+            await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -83,7 +97,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not await coordinator.async_wait_ready():
         raise ConfigEntryNotReady(f"Switchbot {sensor_type} with {address} not ready")
 
-    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+    # Holding a reference here since add_update_listener
+    # holds a weak reference to the callback.
+    options_listener = OptionsListener(entry.options)
+
+    entry.async_on_unload(
+        entry.add_update_listener(options_listener.async_update_listener)
+    )
     await hass.config_entries.async_forward_entry_setups(
         entry, PLATFORMS_BY_TYPE[sensor_type]
     )
@@ -104,11 +124,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass.data.pop(DOMAIN)
 
     return unload_ok
-
-
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Handle options update."""
-    # Update entity options stored in hass.
-    common_options: MappingProxyType[str, Any] = hass.data[DOMAIN][COMMON_OPTIONS]
-    if entry.options != common_options:
-        await hass.config_entries.async_reload(entry.entry_id)
