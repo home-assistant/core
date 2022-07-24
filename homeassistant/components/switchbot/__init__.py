@@ -1,8 +1,6 @@
 """Support for Switchbot devices."""
 
-from collections.abc import Mapping
 import logging
-from typing import Any
 
 import switchbot
 
@@ -40,21 +38,6 @@ CLASS_BY_DEVICE = {
 }
 
 _LOGGER = logging.getLogger(__name__)
-
-
-class OptionsListener:
-    """Listen for changes in options."""
-
-    def __init__(self, original_options: Mapping[str, Any]) -> None:
-        """Initialize the options listener."""
-        self._original_options = dict(original_options)
-
-    async def async_update_listener(
-        self, hass: HomeAssistant, entry: ConfigEntry
-    ) -> None:
-        """Handle options update."""
-        if dict(entry.options) != self._original_options:
-            await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -97,18 +80,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not await coordinator.async_wait_ready():
         raise ConfigEntryNotReady(f"Switchbot {sensor_type} with {address} not ready")
 
-    # Holding a reference here since add_update_listener
-    # holds a weak reference to the callback.
-    options_listener = OptionsListener(entry.options)
-
-    entry.async_on_unload(
-        entry.add_update_listener(options_listener.async_update_listener)
-    )
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     await hass.config_entries.async_forward_entry_setups(
         entry, PLATFORMS_BY_TYPE[sensor_type]
     )
 
     return True
+
+
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
