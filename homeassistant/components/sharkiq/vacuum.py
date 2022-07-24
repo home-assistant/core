@@ -4,7 +4,9 @@ from __future__ import annotations
 from collections.abc import Iterable
 
 from sharkiq import OperatingModes, PowerModes, Properties, SharkIqVacuum
+import voluptuous as vol
 
+from homeassistant import exceptions
 from homeassistant.components.vacuum import (
     STATE_CLEANING,
     STATE_DOCKED,
@@ -16,12 +18,15 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, LOGGER, SHARK
 from .update_coordinator import SharkIqUpdateCoordinator
+
+SERVICE_CLEAN_ROOM = "clean_room"
 
 OPERATING_STATE_MAP = {
     OperatingModes.PAUSE: STATE_PAUSED,
@@ -43,7 +48,9 @@ ATTR_ERROR_CODE = "last_error_code"
 ATTR_ERROR_MSG = "last_error_message"
 ATTR_LOW_LIGHT = "low_light"
 ATTR_RECHARGE_RESUME = "recharge_and_resume"
+ATTR_AVAILABLE_ROOMS = "available_rooms"
 ATTR_RSSI = "rssi"
+ATTR_ROOMS = "rooms"
 
 
 async def async_setup_entry(
@@ -62,6 +69,17 @@ async def async_setup_entry(
     )
     async_add_entities([SharkVacuumEntity(d, coordinator) for d in devices])
 
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_CLEAN_ROOM,
+        {
+            vol.Required("rooms"): list,
+        },
+        "async_clean_room",
+    )
+
+    # hass.services.register(DOMAIN, "clean_room", SharkVacuumEntity.async_clean_room)
+
 
 class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuumEntity):
     """Shark IQ vacuum entity."""
@@ -77,6 +95,7 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
         | VacuumEntityFeature.STATUS
         | VacuumEntityFeature.STOP
         | VacuumEntityFeature.LOCATE
+        | VacuumEntityFeature.CLEAN_SPOT
     )
 
     def __init__(
@@ -89,12 +108,15 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
         self._attr_unique_id = sharkiq.serial_number
         self._serial_number = sharkiq.serial_number
 
-    def clean_spot(self, **kwargs):
-        """Clean a spot. Not yet implemented."""
-        raise NotImplementedError()
+    class InvalidRoomSelection(exceptions.HomeAssistantError):
+        """Error to indicate an invalid room was included in the selection."""
 
     def send_command(self, command, params=None, **kwargs):
         """Send a command to the vacuum. Not yet implemented."""
+        raise NotImplementedError()
+
+    def clean_spot(self, **kwargs):
+        """Spot clean an area. Not yet implemented."""
         raise NotImplementedError()
 
     @property
@@ -136,7 +158,7 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
 
     @property
     def operating_mode(self) -> str | None:
-        """Operating mode.."""
+        """Operating mode."""
         op_mode = self.sharkiq.get_property_value(Properties.OPERATING_MODE)
         return OPERATING_STATE_MAP.get(op_mode)
 
@@ -193,6 +215,26 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
         """Cause the device to generate a loud chirp."""
         await self.sharkiq.async_find_device()
 
+    async def async_clean_room(self, **kwargs):
+        """Clean a specific room."""
+        if ATTR_ROOMS in kwargs:
+            all_rooms_reachable = True
+            for room in kwargs.get(ATTR_ROOMS):
+                if room not in self.available_rooms:
+                    all_rooms_reachable = False
+                    LOGGER.error("Room not reachable: %s", room)
+            if all_rooms_reachable:
+                await self.sharkiq.async_clean_rooms(kwargs.get(ATTR_ROOMS))
+            else:
+                LOGGER.error("Invalid room selection - service not run")
+                raise self.InvalidRoomSelection
+
+        else:
+            LOGGER.error("No target specified")
+            raise self.InvalidRoomSelection
+
+        await self.coordinator.async_refresh()
+
     @property
     def fan_speed(self) -> str | None:
         """Return the current fan speed."""
@@ -227,6 +269,11 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
         return self.sharkiq.get_property_value(Properties.LOW_LIGHT_MISSION)
 
     @property
+    def available_rooms(self) -> list | None:
+        """Return a list of rooms available to clean."""
+        return self.sharkiq.get_room_list()
+
+    @property
     def extra_state_attributes(self) -> dict:
         """Return a dictionary of device state attributes specific to sharkiq."""
         data = {
@@ -234,5 +281,6 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
             ATTR_ERROR_MSG: self.sharkiq.error_text,
             ATTR_LOW_LIGHT: self.low_light,
             ATTR_RECHARGE_RESUME: self.recharge_resume,
+            ATTR_ROOMS: self.available_rooms,
         }
         return data

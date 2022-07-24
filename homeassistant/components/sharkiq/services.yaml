@@ -1,0 +1,43 @@
+clean_room:
+  # Service name as shown in UI
+  name: Clean Room
+  # Description of the service
+  description: Cleans a specific room or set of user-defined rooms.
+  # If the service accepts entity IDs, target allows the user to specify entities by entity, device, or area. If `target` is specified, `entity_id` should not be defined in the `fields` map. By default it shows only targets matching entities from the same domain as the service, but if further customization is required, target supports the entity, device, and area selectors (https://www.home-assistant.io/docs/blueprint/selectors/). Entity selector parameters will automatically be applied to device and area, and device selector parameters will automatically be applied to area.
+  target:
+    entity:
+      integration: "sharkiq"
+      domain: "vacuum"
+
+  # Different fields that your service accepts
+  fields:
+    # vacuum:
+    #   name: Vacuum
+    #   description: Which vacuum you want to use
+    #   required: true
+    #   advanced: false
+    #   example: "vacuum.downstairs"
+    #   default: ""
+    #   selector:
+    #     device:
+    #       integration: "sharkiq"
+    #       domain: "vacuum"
+    #       multiple: false
+    # Key of the field
+    rooms:
+      # Field name as shown in UI
+      name: Rooms
+      # Description of the field
+      description: List of rooms to clean
+      # Whether or not field is required (default = false)
+      required: true
+      # Advanced fields are only shown when the advanced mode is enabled for the user (default = false)
+      advanced: false
+      # Example value that can be passed for this field
+      example: "Kitchen"
+      # The default field value
+      default: ""
+      # Selector (https://www.home-assistant.io/docs/blueprint/selectors/) to control the input UI for this field
+      selector:
+        area:
+          multiple: true
