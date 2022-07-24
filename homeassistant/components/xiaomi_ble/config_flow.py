@@ -5,6 +5,7 @@ from typing import Any
 
 import voluptuous as vol
 from xiaomi_ble import XiaomiBluetoothDeviceData as DeviceData
+from xiaomi_ble.parser import EncryptionScheme
 
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfo,
@@ -39,25 +40,94 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="not_supported")
         self._discovery_info = discovery_info
         self._discovered_device = device
+
+        title = device.title or device.get_device_name() or discovery_info.name
+        self.context["title_placeholders"] = {"name": title}
+
+        if device.encryption_scheme == EncryptionScheme.MIBEACON_LEGACY:
+            return await self.async_step_get_encryption_key_legacy()
+        if device.encryption_scheme == EncryptionScheme.MIBEACON_4_5:
+            return await self.async_step_get_encryption_key_4_5()
         return await self.async_step_bluetooth_confirm()
+
+    async def async_step_get_encryption_key_legacy(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Enter a legacy bindkey for a v2/v3 MiBeacon device."""
+        errors = {}
+
+        if user_input is not None:
+            bindkey = user_input["bindkey"]
+
+            if len(bindkey) != 24:
+                errors["bindkey"] = "expected_24_characters"
+            else:
+                device = DeviceData(user_input["bindkey"])
+
+                # If we got this far we already know supported will
+                # return true so we don't bother checking that again
+                # We just want to retry the decryption
+                device.supported(self._discovery_info)
+
+                if device.bindkey_verified:
+                    return self.async_create_entry(
+                        title=self.context["title_placeholders"]["name"],
+                        data={"bindkey": user_input["bindkey"]},
+                    )
+
+        return self.async_show_form(
+            step_id="get_encryption_key_legacy",
+            description_placeholders=self.context["title_placeholders"],
+            data_schema=vol.Schema({vol.Required("bindkey"): vol.All(str, vol.Strip)}),
+            errors=errors,
+        )
+
+    async def async_step_get_encryption_key_4_5(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Enter a bindkey for a v4/v5 MiBeacon device."""
+        errors = {}
+
+        if user_input is not None:
+            bindkey = user_input["bindkey"]
+
+            if len(bindkey) != 32:
+                errors["bindkey"] = "expected_32_characters"
+            else:
+                device = DeviceData(user_input["bindkey"])
+
+                # If we got this far we already know supported will
+                # return true so we don't bother checking that again
+                # We just want to retry the decryption
+                device.supported(self._discovery_info)
+
+                if device.bindkey_verified:
+                    return self.async_create_entry(
+                        title=self.context["title_placeholders"]["name"],
+                        data={"bindkey": user_input["bindkey"]},
+                    )
+
+        return self.async_show_form(
+            step_id="get_encryption_key_4_5",
+            description_placeholders=self.context["title_placeholders"],
+            data_schema=vol.Schema({vol.Required("bindkey"): vol.All(str, vol.Strip)}),
+            errors=errors,
+        )
 
     async def async_step_bluetooth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Confirm discovery."""
-        assert self._discovered_device is not None
-        device = self._discovered_device
-        assert self._discovery_info is not None
-        discovery_info = self._discovery_info
-        title = device.title or device.get_device_name() or discovery_info.name
         if user_input is not None:
-            return self.async_create_entry(title=title, data={})
+            return self.async_create_entry(
+                title=self.context["title_placeholders"]["name"],
+                data={},
+            )
 
         self._set_confirm_only()
-        placeholders = {"name": title}
-        self.context["title_placeholders"] = placeholders
         return self.async_show_form(
-            step_id="bluetooth_confirm", description_placeholders=placeholders
+            step_id="bluetooth_confirm",
+            description_placeholders=self.context["title_placeholders"],
         )
 
     async def async_step_user(
