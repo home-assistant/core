@@ -106,42 +106,34 @@ def ble_device_matches(
     adv_data: AdvertisementData,
 ) -> bool:
     """Check if a ble device and advertisement_data matches the matcher."""
-    if (
-        matcher_address := matcher.get(ADDRESS)
-    ) is not None and device.address != matcher_address:
+    if (address := matcher.get(ADDRESS)) is not None and device.address != address:
         return False
 
-    if (
-        matcher_local_name := matcher.get(LOCAL_NAME)
-    ) is not None and not fnmatch.fnmatch(
+    if (local_name := matcher.get(LOCAL_NAME)) is not None and not fnmatch.fnmatch(
         adv_data.local_name or device.name or device.address,
-        matcher_local_name,
+        local_name,
     ):
         return False
 
     if (
-        matcher_service_uuid := matcher.get(SERVICE_UUID)
-    ) is not None and matcher_service_uuid not in adv_data.service_uuids:
+        service_uuid := matcher.get(SERVICE_UUID)
+    ) is not None and service_uuid not in adv_data.service_uuids:
         return False
 
     if (
-        matcher_service_data_uuid := matcher.get(SERVICE_DATA_UUID)
-    ) is not None and matcher_service_data_uuid not in adv_data.service_data:
+        service_data_uuid := matcher.get(SERVICE_DATA_UUID)
+    ) is not None and service_data_uuid not in adv_data.service_data:
         return False
 
     if (
-        matcher_manfacturer_id := matcher.get(MANUFACTURER_ID)
-    ) is not None and matcher_manfacturer_id not in adv_data.manufacturer_data:
+        manfacturer_id := matcher.get(MANUFACTURER_ID)
+    ) is not None and manfacturer_id not in adv_data.manufacturer_data:
         return False
 
-    if (
-        matcher_manufacturer_data_start := matcher.get(MANUFACTURER_DATA_START)
-    ) is not None:
-        matcher_manufacturer_data_start_bytes = bytearray(
-            matcher_manufacturer_data_start
-        )
+    if (manufacturer_data_start := matcher.get(MANUFACTURER_DATA_START)) is not None:
+        manufacturer_data_start_bytes = bytearray(manufacturer_data_start)
         if not any(
-            manufacturer_data.startswith(matcher_manufacturer_data_start_bytes)
+            manufacturer_data.startswith(manufacturer_data_start_bytes)
             for manufacturer_data in adv_data.manufacturer_data.values()
         ):
             return False
