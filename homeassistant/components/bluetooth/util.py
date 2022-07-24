@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import platform
 
-from .const import LINUX_DEFAULT_BLUETOOTH_ADAPTER, MACOS_DEFAULT_BLUETOOTH_ADAPTER
+from .const import MACOS_DEFAULT_BLUETOOTH_ADAPTER, UNIX_DEFAULT_BLUETOOTH_ADAPTER
 
 
 async def async_get_bluetooth_adapters() -> list[str]:
@@ -17,9 +17,9 @@ async def async_get_bluetooth_adapters() -> list[str]:
     )
 
     adapters = await get_bluetooth_adapters()
-    if LINUX_DEFAULT_BLUETOOTH_ADAPTER in adapters:
+    if UNIX_DEFAULT_BLUETOOTH_ADAPTER in adapters:
         # The default adapter always needs to be the first in the list
         # because that is how bleak works.
-        adapters.remove(LINUX_DEFAULT_BLUETOOTH_ADAPTER)
-        return [LINUX_DEFAULT_BLUETOOTH_ADAPTER, *adapters]
+        adapters.remove(UNIX_DEFAULT_BLUETOOTH_ADAPTER)
+        return [UNIX_DEFAULT_BLUETOOTH_ADAPTER, *adapters]
     return adapters
