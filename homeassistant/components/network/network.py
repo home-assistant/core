@@ -22,7 +22,6 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @singleton(DATA_NETWORK)
-@callback
 async def async_get_network(hass: HomeAssistant) -> Network:
     """Get network singleton."""
     network = Network(hass)

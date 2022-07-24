@@ -8,7 +8,6 @@ import pytest
 from pytest import approx
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder.const import DATA_INSTANCE
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
     get_last_statistics,
@@ -16,6 +15,7 @@ from homeassistant.components.recorder.statistics import (
     list_statistic_ids,
     statistics_during_period,
 )
+from homeassistant.helpers import recorder as recorder_helper
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
@@ -275,6 +275,7 @@ async def test_recorder_info(hass, hass_ws_client, recorder_mock):
         "backlog": 0,
         "max_backlog": 40000,
         "migration_in_progress": False,
+        "migration_is_live": False,
         "recording": True,
         "thread_running": True,
     }
@@ -297,6 +298,7 @@ async def test_recorder_info_bad_recorder_config(hass, hass_ws_client):
     client = await hass_ws_client()
 
     with patch("homeassistant.components.recorder.migration.migrate_schema"):
+        recorder_helper.async_initialize_recorder(hass)
         assert not await async_setup_component(
             hass, recorder.DOMAIN, {recorder.DOMAIN: config}
         )
@@ -304,7 +306,7 @@ async def test_recorder_info_bad_recorder_config(hass, hass_ws_client):
     await hass.async_block_till_done()
 
     # Wait for recorder to shut down
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].join)
+    await hass.async_add_executor_job(recorder.get_instance(hass).join)
 
     await client.send_json({"id": 1, "type": "recorder/info"})
     response = await client.receive_json()
@@ -319,7 +321,7 @@ async def test_recorder_info_migration_queue_exhausted(hass, hass_ws_client):
 
     migration_done = threading.Event()
 
-    real_migration = recorder.migration.migrate_schema
+    real_migration = recorder.migration._apply_update
 
     def stalled_migration(*args):
         """Make migration stall."""
@@ -335,12 +337,16 @@ async def test_recorder_info_migration_queue_exhausted(hass, hass_ws_client):
     ), patch.object(
         recorder.core, "MAX_QUEUE_BACKLOG", 1
     ), patch(
-        "homeassistant.components.recorder.migration.migrate_schema",
+        "homeassistant.components.recorder.migration._apply_update",
         wraps=stalled_migration,
     ):
-        await async_setup_component(
-            hass, "recorder", {"recorder": {"db_url": "sqlite://"}}
+        recorder_helper.async_initialize_recorder(hass)
+        hass.create_task(
+            async_setup_component(
+                hass, "recorder", {"recorder": {"db_url": "sqlite://"}}
+            )
         )
+        await recorder_helper.async_wait_recorder(hass)
         hass.states.async_set("my.entity", "on", {})
         await hass.async_block_till_done()
 

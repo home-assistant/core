@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder import history, statistics
-from homeassistant.components.recorder.const import DATA_INSTANCE, SQLITE_URL_PREFIX
+from homeassistant.components.recorder.const import SQLITE_URL_PREFIX
 from homeassistant.components.recorder.db_schema import StatisticsShortTerm
 from homeassistant.components.recorder.models import process_timestamp_to_utc_isoformat
 from homeassistant.components.recorder.statistics import (
@@ -31,6 +31,7 @@ from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import recorder as recorder_helper
 from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
 
@@ -45,7 +46,7 @@ ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
 def test_compile_hourly_statistics(hass_recorder):
     """Test compiling hourly statistics."""
     hass = hass_recorder()
-    recorder = hass.data[DATA_INSTANCE]
+    instance = recorder.get_instance(hass)
     setup_component(hass, "sensor", {})
     zero, four, states = record_states(hass)
     hist = history.get_significant_states(hass, zero, four)
@@ -142,7 +143,7 @@ def test_compile_hourly_statistics(hass_recorder):
     stats = get_last_short_term_statistics(hass, 1, "sensor.test3", True)
     assert stats == {}
 
-    recorder.get_session().query(StatisticsShortTerm).delete()
+    instance.get_session().query(StatisticsShortTerm).delete()
     # Should not fail there is nothing in the table
     stats = get_latest_short_term_statistics(hass, ["sensor.test1"])
     assert stats == {}
@@ -1128,6 +1129,7 @@ def test_delete_metadata_duplicates(caplog, tmpdir):
         "homeassistant.components.recorder.core.create_engine", new=_create_engine_28
     ):
         hass = get_test_home_assistant()
+        recorder_helper.async_initialize_recorder(hass)
         setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
         wait_recording_done(hass)
         wait_recording_done(hass)
@@ -1158,6 +1160,7 @@ def test_delete_metadata_duplicates(caplog, tmpdir):
 
     # Test that the duplicates are removed during migration from schema 28
     hass = get_test_home_assistant()
+    recorder_helper.async_initialize_recorder(hass)
     setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
     hass.start()
     wait_recording_done(hass)
@@ -1217,6 +1220,7 @@ def test_delete_metadata_duplicates_many(caplog, tmpdir):
         "homeassistant.components.recorder.core.create_engine", new=_create_engine_28
     ):
         hass = get_test_home_assistant()
+        recorder_helper.async_initialize_recorder(hass)
         setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
         wait_recording_done(hass)
         wait_recording_done(hass)
@@ -1249,6 +1253,7 @@ def test_delete_metadata_duplicates_many(caplog, tmpdir):
 
     # Test that the duplicates are removed during migration from schema 28
     hass = get_test_home_assistant()
+    recorder_helper.async_initialize_recorder(hass)
     setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
     hass.start()
     wait_recording_done(hass)

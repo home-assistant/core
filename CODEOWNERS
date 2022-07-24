@@ -411,6 +411,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/google_cloud/ @lufton
 /homeassistant/components/google_travel_time/ @eifinger
 /tests/components/google_travel_time/ @eifinger
+/homeassistant/components/govee_ble/ @bdraco
+/tests/components/govee_ble/ @bdraco
 /homeassistant/components/gpsd/ @fabaff
 /homeassistant/components/gree/ @cmroche
 /tests/components/gree/ @cmroche
@@ -498,6 +500,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/incomfort/ @zxdavb
 /homeassistant/components/influxdb/ @mdegat01
 /tests/components/influxdb/ @mdegat01
+/homeassistant/components/inkbird/ @bdraco
+/tests/components/inkbird/ @bdraco
 /homeassistant/components/input_boolean/ @home-assistant/core
 /tests/components/input_boolean/ @home-assistant/core
 /homeassistant/components/input_button/ @home-assistant/core
@@ -646,6 +650,8 @@ build.json @home-assistant/supervisor
 /tests/components/minecraft_server/ @elmurato
 /homeassistant/components/minio/ @tkislan
 /tests/components/minio/ @tkislan
+/homeassistant/components/moat/ @bdraco
+/tests/components/moat/ @bdraco
 /homeassistant/components/mobile_app/ @home-assistant/core
 /tests/components/mobile_app/ @home-assistant/core
 /homeassistant/components/modbus/ @adamchengtkc @janiversen @vzahradnik
@@ -922,6 +928,8 @@ build.json @home-assistant/supervisor
 /tests/components/sensibo/ @andrey-git @gjohansson-ST
 /homeassistant/components/sensor/ @home-assistant/core
 /tests/components/sensor/ @home-assistant/core
+/homeassistant/components/sensorpush/ @bdraco
+/tests/components/sensorpush/ @bdraco
 /homeassistant/components/sentry/ @dcramer @frenck
 /tests/components/sentry/ @dcramer @frenck
 /homeassistant/components/senz/ @milanmeu
@@ -1034,8 +1042,8 @@ build.json @home-assistant/supervisor
 /tests/components/switch/ @home-assistant/core
 /homeassistant/components/switch_as_x/ @home-assistant/core
 /tests/components/switch_as_x/ @home-assistant/core
-/homeassistant/components/switchbot/ @danielhiversen @RenierM26
-/tests/components/switchbot/ @danielhiversen @RenierM26
+/homeassistant/components/switchbot/ @danielhiversen @RenierM26 @murtas
+/tests/components/switchbot/ @danielhiversen @RenierM26 @murtas
 /homeassistant/components/switcher_kis/ @tomerfi @thecode
 /tests/components/switcher_kis/ @tomerfi @thecode
 /homeassistant/components/switchmate/ @danielhiversen
@@ -1216,6 +1224,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/xbox_live/ @MartinHjelmare
 /homeassistant/components/xiaomi_aqara/ @danielhiversen @syssi
 /tests/components/xiaomi_aqara/ @danielhiversen @syssi
+/homeassistant/components/xiaomi_ble/ @Jc2k @Ernst79
+/tests/components/xiaomi_ble/ @Jc2k @Ernst79
 /homeassistant/components/xiaomi_miio/ @rytilahti @syssi @starkillerOG @bieniu
 /tests/components/xiaomi_miio/ @rytilahti @syssi @starkillerOG @bieniu
 /homeassistant/components/xiaomi_tv/ @simse

@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El servei ja est\u00e0 configurat"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "bluetooth_confirm": {
+                "description": "Vols configurar {name}?"
+            },
+            "enable_bluetooth": {
+                "description": "Vols configurar Bluetooth?"
+            },
+            "user": {
+                "data": {
+                    "address": "Dispositiu"
+                },
+                "description": "Tria un dispositiu a configurar"
+            }
+        }
+    }
+}

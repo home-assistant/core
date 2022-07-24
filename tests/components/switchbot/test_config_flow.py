@@ -11,7 +11,13 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_MAC, CONF_NAME, CONF_PASSWORD, CONF_SENSOR_TYPE
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import USER_INPUT, USER_INPUT_CURTAIN, init_integration, patch_async_setup_entry
+from . import (
+    USER_INPUT,
+    USER_INPUT_CURTAIN,
+    USER_INPUT_SENSOR,
+    init_integration,
+    patch_async_setup_entry,
+)
 
 DOMAIN = "switchbot"
 
@@ -67,6 +73,33 @@ async def test_user_form_valid_mac(hass):
         CONF_NAME: "test-name",
         CONF_PASSWORD: "test-password",
         CONF_SENSOR_TYPE: "curtain",
+    }
+
+    assert len(mock_setup_entry.mock_calls) == 1
+
+    # test sensor device creation.
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    with patch_async_setup_entry() as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            USER_INPUT_SENSOR,
+        )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "test-name"
+    assert result["data"] == {
+        CONF_MAC: "c0:ce:b0:d4:26:be",
+        CONF_NAME: "test-name",
+        CONF_PASSWORD: "test-password",
+        CONF_SENSOR_TYPE: "hygrometer",
     }
 
     assert len(mock_setup_entry.mock_calls) == 1
