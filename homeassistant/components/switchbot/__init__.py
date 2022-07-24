@@ -1,5 +1,6 @@
 """Support for Switchbot devices."""
 
+from collections.abc import Mapping
 import logging
 from types import MappingProxyType
 from typing import Any
