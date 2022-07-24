@@ -15,6 +15,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import (
     _LOGGER,
+    IDENTIFY_WAVEFORM,
     MESSAGE_RETRIES,
     MESSAGE_TIMEOUT,
     TARGET_ANY,
@@ -79,6 +80,10 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
     def label(self) -> str:
         """Return the label of the bulb."""
         return cast(str, self.device.label)
+
+    async def async_identify_bulb(self) -> None:
+        """Identify the device by flashing it three times."""
+        await self.async_set_waveform_optional(value=IDENTIFY_WAVEFORM)
 
     async def _async_update_data(self) -> None:
         """Fetch all device data from the api."""

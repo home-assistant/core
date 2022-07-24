@@ -8,13 +8,12 @@ from homeassistant.components.button import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, IDENTIFY, RESTART
 from .coordinator import LIFXUpdateCoordinator
+from .entity import LIFXEntity
 
 RESTART_BUTTON_DESCRIPTION = ButtonEntityDescription(
     key=RESTART,
@@ -52,7 +51,7 @@ async def async_setup_entry(
     )
 
 
-class LIFXButton(CoordinatorEntity[LIFXUpdateCoordinator], ButtonEntity):
+class LIFXButton(LIFXEntity, ButtonEntity):
     """Representation of a LIFX restart button."""
 
     _attr_has_entity_name: bool = True
@@ -62,19 +61,9 @@ class LIFXButton(CoordinatorEntity[LIFXUpdateCoordinator], ButtonEntity):
         self, coordinator: LIFXUpdateCoordinator, description: ButtonEntityDescription
     ) -> None:
         """Initialise a LIFX button."""
-        super().__init__(coordinator=coordinator)
-        self.entity_description: ButtonEntityDescription = description
-        self.coordinator: LIFXUpdateCoordinator = coordinator
-        self._attr_name = self.entity_description.name
-        self._attr_unique_id = (
-            f"{self.coordinator.serial_number}_{self.entity_description.key}"
-        )
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.coordinator.serial_number)},
-            connections={(dr.CONNECTION_NETWORK_MAC, self.coordinator.mac_address)},
-            manufacturer="LIFX",
-            name=self.coordinator.label,
-        )
+        super().__init__(coordinator)
+        self.entity_description = description
+        self._attr_unique_id = f"{coordinator.serial_number}_{description.key}"
 
 
 class LIFXRestartButton(LIFXButton):
@@ -82,7 +71,7 @@ class LIFXRestartButton(LIFXButton):
 
     async def async_press(self) -> None:
         """Restart the bulb on button press."""
-        self.coordinator.device.set_reboot()
+        self.bulb.set_reboot()
 
 
 class LIFXIdentifyButton(LIFXButton):
@@ -90,16 +79,4 @@ class LIFXIdentifyButton(LIFXButton):
 
     async def async_press(self) -> None:
         """Identify the bulb by flashing it when the button is pressed."""
-        identify = {
-            "transient": True,
-            "color": [0, 0, 1, 3500],
-            "skew_ratio": 0,
-            "period": 1000,
-            "cycles": 3,
-            "waveform": 1,
-            "set_hue": True,
-            "set_saturation": True,
-            "set_brightness": True,
-            "set_kelvin": True,
-        }
-        await self.coordinator.async_set_waveform_optional(value=identify)
+        await self.coordinator.async_identify_bulb()
