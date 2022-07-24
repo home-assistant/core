@@ -26,6 +26,7 @@ base_platforms: &base_platforms
   - homeassistant/components/geo_location/**
   - homeassistant/components/humidifier/**
   - homeassistant/components/image_processing/**
+  - homeassistant/components/lawn_mower/**
   - homeassistant/components/light/**
   - homeassistant/components/lock/**
   - homeassistant/components/media_player/**

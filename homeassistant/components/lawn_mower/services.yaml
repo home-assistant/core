@@ -1,0 +1,50 @@
+# Describes the format for available lawn_mower services
+
+turn_on:
+  name: Turn on
+  description: Start a new mowing task.
+  target:
+    entity:
+      domain: lawn_mower
+
+turn_off:
+  name: Turn off
+  description: Stop the current mowing task and return to home.
+  target:
+    entity:
+      domain: lawn_mower
+
+start:
+  name: Start
+  description: Start or resume the mowing task.
+  target:
+    entity:
+      domain: lawn_mower
+
+start_pause:
+  name: Start/Pause
+  description: Start, pause, or resume the mowing task.
+  target:
+    entity:
+      domain: lawn_mower
+
+pause:
+  name: Pause
+  description: Pause the mowing task.
+  target:
+    entity:
+      domain: lawn_mower
+
+stop:
+  name: Stop
+  description: Stop the current mowing task.
+  target:
+    entity:
+      domain: lawn_mower
+
+return_to_base:
+  name: Return to base
+  description: Tell the lawn mower to return to its dock.
+  target:
+    entity:
+      domain: lawn_mower

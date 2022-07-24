@@ -35,6 +35,7 @@ class Platform(StrEnum):
     GEO_LOCATION = "geo_location"
     HUMIDIFIER = "humidifier"
     IMAGE_PROCESSING = "image_processing"
+    LAWN_MOWER = "lawn_mower"
     LIGHT = "light"
     LOCK = "lock"
     MAILBOX = "mailbox"
