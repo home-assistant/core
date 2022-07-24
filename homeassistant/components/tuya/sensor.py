@@ -19,6 +19,7 @@ from homeassistant.const import (
     PERCENTAGE,
     POWER_KILO_WATT,
     TIME_MINUTES,
+    TIME_SECONDS,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -504,6 +505,26 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             entity_category=EntityCategory.DIAGNOSTIC,
             state_class=SensorStateClass.MEASUREMENT,
         ),
+    ),
+    # Smart Water Timer
+    "sfkzq": (
+        TuyaSensorEntityDescription(
+            key=DPCode.WORK_STATE,
+            name="Status",
+            device_class=TuyaDeviceClass.STATUS,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.TIME_USE,
+            name="Last runtime",
+            native_unit_of_measurement=TIME_SECONDS,
+            icon="mdi:timer",
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.SMART_WEATHER,
+            name="Weather forecast",
+            icon="mdi:weather-partly-cloudy",
+        ),
+        *BATTERY_SENSORS,
     ),
     # Fingerbot
     "szjqr": BATTERY_SENSORS,

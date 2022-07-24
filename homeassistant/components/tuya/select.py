@@ -136,6 +136,15 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Smart Water Timer
+    "sfkzq": (
+        SelectEntityDescription(
+            key=DPCode.WEATHER_DELAY,
+            name="Weather delay",
+            device_class=TuyaDeviceClass.WEATHER_DELAY,
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     # IoT Switch?
     # Note: Undocumented
     "tdq": (
