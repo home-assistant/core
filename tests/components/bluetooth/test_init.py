@@ -336,6 +336,12 @@ async def test_discovery_match_by_service_data_uuid_then_others(
             service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"\x01\x02\x03"},
             service_uuids=["0000fd3d-0000-1000-8000-00805f9b34fd"],
         )
+        adv_with_service_uuid = AdvertisementData(
+            local_name="lock",
+            manufacturer_data={},
+            service_data={},
+            service_uuids=["0000fd3d-0000-1000-8000-00805f9b34fd"],
+        )
         # 1st discovery should not generate a flow because the
         # service_data_uuid is not in the advertisement
         _get_underlying_scanner()._callback(device, adv_without_service_data_uuid)
@@ -384,6 +390,25 @@ async def test_discovery_match_by_service_data_uuid_then_others(
         _get_underlying_scanner()._callback(
             device, adv_with_service_data_uuid_and_mfr_data_and_service_uuid
         )
+        await hass.async_block_till_done()
+        assert len(mock_config_flow.mock_calls) == 0
+        mock_config_flow.reset_mock()
+
+        # 7th discovery should not generate a flow
+        # since all fields have been seen at this point
+        _get_underlying_scanner()._callback(device, adv_with_service_uuid)
+        await hass.async_block_till_done()
+        assert len(mock_config_flow.mock_calls) == 0
+
+        # 8th discovery should not generate a flow
+        # since all fields have been seen at this point
+        _get_underlying_scanner()._callback(device, adv_with_service_data_uuid)
+        await hass.async_block_till_done()
+        assert len(mock_config_flow.mock_calls) == 0
+
+        # 9th discovery should not generate a flow
+        # since all fields have been seen at this point
+        _get_underlying_scanner()._callback(device, adv_without_service_data_uuid)
         await hass.async_block_till_done()
         assert len(mock_config_flow.mock_calls) == 0
 
