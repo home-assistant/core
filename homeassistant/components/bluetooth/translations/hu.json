@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "A szolg\u00e1ltat\u00e1s m\u00e1r konfigur\u00e1lva van"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "bluetooth_confirm": {
+                "description": "Szeretn\u00e9 be\u00e1ll\u00edtani: {name}?"
+            },
+            "enable_bluetooth": {
+                "description": "Szeretn\u00e9 be\u00e1ll\u00edtani a Bluetooth-ot?"
+            },
+            "user": {
+                "data": {
+                    "address": "Eszk\u00f6z"
+                },
+                "description": "V\u00e1lassza ki a be\u00e1ll\u00edtani k\u00edv\u00e1nt eszk\u00f6zt"
+            }
+        }
+    }
+}
