@@ -2,3 +2,5 @@
 
 DOMAIN = "bluetooth"
 DEFAULT_NAME = "Bluetooth"
+
+CONF_ADAPTER = "adapter"

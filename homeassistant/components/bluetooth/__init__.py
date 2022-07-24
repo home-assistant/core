@@ -6,7 +6,6 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
 import logging
-import platform
 from typing import Final, Union
 
 from bleak import BleakError
@@ -29,7 +28,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_bluetooth
 
 from . import models
-from .const import DOMAIN
+from .const import CONF_ADAPTER, DOMAIN
 from .match import (
     ADDRESS,
     BluetoothCallbackMatcher,
@@ -38,6 +37,7 @@ from .match import (
 )
 from .models import HaBleakScanner, HaBleakScannerWrapper
 from .usage import install_multiple_bleak_catcher, uninstall_multiple_bleak_catcher
+from .util import async_get_bluetooth_adapters
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -175,15 +175,7 @@ def async_track_unavailable(
 
 async def _async_has_bluetooth_adapter() -> bool:
     """Return if the device has a bluetooth adapter."""
-    if platform.system() == "Darwin":  # CoreBluetooth is built in on MacOS hardware
-        return True
-    if platform.system() == "Windows":  # We don't have a good way to detect on windows
-        return False
-    from bluetooth_adapters import (  # pylint: disable=import-outside-toplevel
-        get_bluetooth_adapters,
-    )
-
-    return bool(await get_bluetooth_adapters())
+    return bool(await async_get_bluetooth_adapters())
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -219,7 +211,9 @@ async def async_setup_entry(
 ) -> bool:
     """Set up the bluetooth integration from a config entry."""
     manager: BluetoothManager = hass.data[DOMAIN]
-    await manager.async_start(BluetoothScanningMode.ACTIVE)
+    await manager.async_start(
+        BluetoothScanningMode.ACTIVE, entry.data.get(CONF_ADAPTER)
+    )
     return True
 
 
@@ -261,12 +255,15 @@ class BluetoothManager:
         """Get the scanner."""
         return HaBleakScannerWrapper()
 
-    async def async_start(self, scanning_mode: BluetoothScanningMode) -> None:
+    async def async_start(
+        self, scanning_mode: BluetoothScanningMode, adapter: str | None
+    ) -> None:
         """Set up BT Discovery."""
         assert self.scanner is not None
         try:
             self.scanner.async_setup(
-                scanning_mode=SCANNING_MODE_TO_BLEAK[scanning_mode]
+                scanning_mode=SCANNING_MODE_TO_BLEAK[scanning_mode],
+                adapter=adapter,
             )
         except (FileNotFoundError, BleakError) as ex:
             raise RuntimeError(f"Failed to initialize Bluetooth: {ex}") from ex
