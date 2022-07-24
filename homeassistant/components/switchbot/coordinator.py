@@ -37,7 +37,7 @@ class SwitchbotDataUpdateCoordinator(PassiveBluetoothDataUpdateCoordinator):
         logger: logging.Logger,
         ble_device: BLEDevice,
         device: switchbot.SwitchbotDevice,
-        common_options: dict[str, int],
+        common_options: Mapping[str, int],
     ) -> None:
         """Initialize global switchbot data updater."""
         super().__init__(hass, logger, ble_device.address)
