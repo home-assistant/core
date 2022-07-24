@@ -7,9 +7,7 @@
                     "adb_server_port": "Puerto del servidor ADB",
                     "adbkey": "Ruta a su archivo de clave ADB (d\u00e9jelo en blanco para generarlo autom\u00e1ticamente)",
                     "device_class": "El tipo de dispositivo"
-                },
-                "description": "Establezca los par\u00e1metros requeridos para conectarse a su dispositivo Android TV",
-                "title": "Android TV"
+                }
             }
         }
     },
@@ -36,8 +34,7 @@
                     "state_detection_rules": "Configurar reglas de detecci\u00f3n de estado",
                     "turn_off_command": "Comando de apagado de shell ADB (d\u00e9jelo vac\u00edo por defecto)",
                     "turn_on_command": "Comando de activaci\u00f3n de shell ADB (d\u00e9jelo vac\u00edo por defecto)"
-                },
-                "title": "Opciones de Android TV"
+                }
             },
             "rules": {
                 "data": {

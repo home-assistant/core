@@ -23,7 +23,7 @@ from tests.components.advantage_air import (
 
 
 async def test_cover_async_setup_entry(hass, aioclient_mock):
-    """Test climate setup without sensors."""
+    """Test switch platform."""
 
     aioclient_mock.get(
         TEST_SYSTEM_URL,

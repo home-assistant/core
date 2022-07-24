@@ -30,8 +30,7 @@
                     "home_interval": "N\u00famero m\u00ednimo de minutos entre escaneamento de dispositivos ativos (preservar bateria)",
                     "hosts": "Endere\u00e7os de rede (separados por v\u00edrgula) para digitalizar",
                     "interval_seconds": "Intervalo de varredura",
-                    "scan_options": "Op\u00e7\u00f5es de escaneamento bruto configur\u00e1veis para Nmap",
-                    "track_new_devices": "Rastrear novos dispositivos"
+                    "scan_options": "Op\u00e7\u00f5es de escaneamento bruto configur\u00e1veis para Nmap"
                 },
                 "description": "Configure os hosts a serem verificados pelo Nmap. O endere\u00e7o de rede e as exclus\u00f5es podem ser endere\u00e7os IP (192.168.1.1), redes IP (192.168.0.0/24) ou intervalos de IP (192.168.1.0-32)."
             }

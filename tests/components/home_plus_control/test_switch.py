@@ -16,6 +16,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import async_fire_time_changed
 from tests.components.home_plus_control.conftest import (
@@ -33,8 +34,8 @@ def entity_assertions(
     expected_devices=None,
 ):
     """Assert number of entities and devices."""
-    entity_reg = hass.helpers.entity_registry.async_get(hass)
-    device_reg = hass.helpers.device_registry.async_get(hass)
+    entity_reg = er.async_get(hass)
+    device_reg = dr.async_get(hass)
 
     if num_exp_devices is None:
         num_exp_devices = num_exp_entities
@@ -53,13 +54,11 @@ def entity_assertions(
 
 def one_entity_state(hass, device_uid):
     """Assert the presence of an entity and return its state."""
-    entity_reg = hass.helpers.entity_registry.async_get(hass)
-    device_reg = hass.helpers.device_registry.async_get(hass)
+    entity_reg = er.async_get(hass)
+    device_reg = dr.async_get(hass)
 
     device_id = device_reg.async_get_device({(DOMAIN, device_uid)}).id
-    entity_entries = hass.helpers.entity_registry.async_entries_for_device(
-        entity_reg, device_id
-    )
+    entity_entries = er.async_entries_for_device(entity_reg, device_id)
 
     assert len(entity_entries) == 1
     entity_entry = entity_entries[0]

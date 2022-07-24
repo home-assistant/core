@@ -1,6 +1,11 @@
 {
     "config": {
         "step": {
+            "user": {
+                "data": {
+                    "port": "Port"
+                }
+            },
             "user_gateway": {
                 "data": {
                     "host": "IP address",

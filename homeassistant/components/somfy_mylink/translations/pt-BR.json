@@ -25,17 +25,8 @@
             "cannot_connect": "Falha ao conectar"
         },
         "step": {
-            "entity_config": {
-                "data": {
-                    "reverse": "A cobertura est\u00e1 invertida"
-                },
-                "description": "Configurar op\u00e7\u00f5es para ` {entity_id} `",
-                "title": "Configurar entidade"
-            },
             "init": {
                 "data": {
-                    "default_reverse": "Status de revers\u00e3o padr\u00e3o para coberturas n\u00e3o configuradas",
-                    "entity_id": "Configure uma entidade espec\u00edfica.",
                     "target_id": "Configure as op\u00e7\u00f5es para uma cobertura."
                 },
                 "title": "Configurar op\u00e7\u00f5es do MyLink"
@@ -48,6 +39,5 @@
                 "title": "Configurar a MyLink Cover"
             }
         }
-    },
-    "title": "Somfy MyLink"
+    }
 }

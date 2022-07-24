@@ -20,9 +20,7 @@
             },
             "user": {
                 "data": {
-                    "scan_interval": "Intervallo di aggiornamento (secondi, minimo 30)",
-                    "unique_id": "Dispositivo",
-                    "usn": "Dispositivo"
+                    "unique_id": "Dispositivo"
                 }
             }
         }

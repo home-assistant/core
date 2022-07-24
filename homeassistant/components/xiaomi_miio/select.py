@@ -4,16 +4,26 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import NamedTuple
 
-from miio.airfresh import LedBrightness as AirfreshLedBrightness
-from miio.airfresh_t2017 import (
+from miio.fan_common import LedBrightness as FanLedBrightness
+from miio.integrations.airpurifier.dmaker.airfresh_t2017 import (
     DisplayOrientation as AirfreshT2017DisplayOrientation,
     PtcLevel as AirfreshT2017PtcLevel,
 )
-from miio.airhumidifier import LedBrightness as AirhumidifierLedBrightness
-from miio.airhumidifier_miot import LedBrightness as AirhumidifierMiotLedBrightness
-from miio.airpurifier import LedBrightness as AirpurifierLedBrightness
-from miio.airpurifier_miot import LedBrightness as AirpurifierMiotLedBrightness
-from miio.fan_common import LedBrightness as FanLedBrightness
+from miio.integrations.airpurifier.zhimi.airfresh import (
+    LedBrightness as AirfreshLedBrightness,
+)
+from miio.integrations.airpurifier.zhimi.airpurifier import (
+    LedBrightness as AirpurifierLedBrightness,
+)
+from miio.integrations.airpurifier.zhimi.airpurifier_miot import (
+    LedBrightness as AirpurifierMiotLedBrightness,
+)
+from miio.integrations.humidifier.zhimi.airhumidifier import (
+    LedBrightness as AirhumidifierLedBrightness,
+)
+from miio.integrations.humidifier.zhimi.airhumidifier_miot import (
+    LedBrightness as AirhumidifierMiotLedBrightness,
+)
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -180,7 +190,6 @@ async def async_setup_entry(
             if description.key == attribute.attr_name:
                 entities.append(
                     XiaomiGenericSelector(
-                        f"{config_entry.title} {description.name}",
                         device,
                         config_entry,
                         f"{description.key}_{unique_id}",
@@ -196,9 +205,9 @@ async def async_setup_entry(
 class XiaomiSelector(XiaomiCoordinatedMiioEntity, SelectEntity):
     """Representation of a generic Xiaomi attribute selector."""
 
-    def __init__(self, name, device, entry, unique_id, coordinator, description):
+    def __init__(self, device, entry, unique_id, coordinator, description):
         """Initialize the generic Xiaomi attribute selector."""
-        super().__init__(name, device, entry, unique_id, coordinator)
+        super().__init__(device, entry, unique_id, coordinator)
         self._attr_options = list(description.options)
         self.entity_description = description
 
@@ -209,10 +218,10 @@ class XiaomiGenericSelector(XiaomiSelector):
     entity_description: XiaomiMiioSelectDescription
 
     def __init__(
-        self, name, device, entry, unique_id, coordinator, description, enum_class
+        self, device, entry, unique_id, coordinator, description, enum_class
     ):
         """Initialize the generic Xiaomi attribute selector."""
-        super().__init__(name, device, entry, unique_id, coordinator, description)
+        super().__init__(device, entry, unique_id, coordinator, description)
         self._current_attr = enum_class(
             self._extract_value_from_attribute(
                 self.coordinator.data, self.entity_description.attr_name

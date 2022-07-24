@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "flow_title": "{name} {model} ({host})",
+        "step": {
+            "confirm": {
+                "description": "M\u00f6chtest du {name} {model} ({host}) einrichten?"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "hold_temp": "Stelle beim Einstellen der Temperatur eine permanente Sperre ein."
+                }
+            }
+        }
+    }
+}

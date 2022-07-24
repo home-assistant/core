@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from homeassistant import config as hass_config
 from homeassistant.components.min_max.const import DOMAIN
+from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
@@ -76,6 +77,7 @@ async def test_min_sensor(hass):
 
     assert str(float(MIN_VALUE)) == state.state
     assert entity_ids[2] == state.attributes.get("min_entity_id")
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
 
 async def test_max_sensor(hass):
@@ -102,6 +104,7 @@ async def test_max_sensor(hass):
 
     assert str(float(MAX_VALUE)) == state.state
     assert entity_ids[1] == state.attributes.get("max_entity_id")
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
 
 async def test_mean_sensor(hass):
@@ -127,6 +130,7 @@ async def test_mean_sensor(hass):
     state = hass.states.get("sensor.test_mean")
 
     assert str(float(MEAN)) == state.state
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
 
 async def test_mean_1_digit_sensor(hass):
@@ -204,6 +208,7 @@ async def test_median_sensor(hass):
     state = hass.states.get("sensor.test_median")
 
     assert str(float(MEDIAN)) == state.state
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
 
 async def test_not_enough_sensor_value(hass):
@@ -327,6 +332,7 @@ async def test_last_sensor(hass):
         state = hass.states.get("sensor.test_last")
         assert str(float(value)) == state.state
         assert entity_id == state.attributes.get("last_entity_id")
+        assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
 
 async def test_reload(hass):

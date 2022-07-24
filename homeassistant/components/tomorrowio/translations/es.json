@@ -1,0 +1,31 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Fall\u00f3 la conexi\u00f3n",
+            "invalid_api_key": "Clave API inv\u00e1lida",
+            "rate_limited": "Actualmente la tarifa est\u00e1 limitada, por favor int\u00e9ntelo m\u00e1s tarde.",
+            "unknown": "Error inesperado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Clave API",
+                    "location": "Ubicaci\u00f3n",
+                    "name": "Nombre"
+                },
+                "description": "Para obtener una clave API, reg\u00edstrate en [Tomorrow.io](https://app.tomorrow.io/signup)"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "timestep": "Min. entre previsiones de NowCast"
+                },
+                "description": "Si elige habilitar la entidad de pron\u00f3stico \"nowcast\", puede configurar el n\u00famero de minutos entre cada pron\u00f3stico. El n\u00famero de pron\u00f3sticos proporcionados depende del n\u00famero de minutos elegidos entre los pron\u00f3sticos.",
+                "title": "Actualizar las opciones de Tomorrow.io"
+            }
+        }
+    }
+}

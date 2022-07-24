@@ -34,7 +34,7 @@ from tests.components.advantage_air import (
 
 
 async def test_climate_async_setup_entry(hass, aioclient_mock):
-    """Test climate setup."""
+    """Test climate platform."""
 
     aioclient_mock.get(
         TEST_SYSTEM_URL,
@@ -122,7 +122,7 @@ async def test_climate_async_setup_entry(hass, aioclient_mock):
     assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
 
     # Test Climate Zone Entity
-    entity_id = "climate.zone_open_with_sensor"
+    entity_id = "climate.ac_one_zone_open_with_sensor"
     state = hass.states.get(entity_id)
     assert state
     assert state.attributes.get("min_temp") == 16

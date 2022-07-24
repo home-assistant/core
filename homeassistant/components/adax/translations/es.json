@@ -7,8 +7,7 @@
             "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida"
         },
         "error": {
-            "cannot_connect": "No se pudo conectar",
-            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida"
+            "cannot_connect": "No se pudo conectar"
         },
         "step": {
             "cloud": {
@@ -26,10 +25,7 @@
             },
             "user": {
                 "data": {
-                    "account_id": "ID de la cuenta",
-                    "connection_type": "Seleccione el tipo de conexi\u00f3n",
-                    "host": "Host",
-                    "password": "Contrase\u00f1a"
+                    "connection_type": "Seleccione el tipo de conexi\u00f3n"
                 },
                 "description": "Seleccione el tipo de conexi\u00f3n. Local requiere calentadores con bluetooth"
             }

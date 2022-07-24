@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 
+from aiohttp import ClientConnectionError
 from plugwise.exceptions import InvalidAuthentication, PlugwiseException
 from plugwise.smile import Smile
 
@@ -44,7 +45,7 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except InvalidAuthentication:
         LOGGER.error("Invalid username or Smile ID")
         return False
-    except PlugwiseException as err:
+    except (ClientConnectionError, PlugwiseException) as err:
         raise ConfigEntryNotReady(
             f"Error while communicating to device {api.smile_name}"
         ) from err
@@ -76,7 +77,7 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         sw_version=api.smile_version[0],
     )
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS_GATEWAY)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS_GATEWAY)
 
     return True
 
@@ -112,7 +113,7 @@ def migrate_sensor_entities(
 
     # Migrating opentherm_outdoor_temperature to opentherm_outdoor_air_temperature sensor
     for device_id, device in coordinator.data.devices.items():
-        if device["class"] != "heater_central":
+        if device.get("dev_class") != "heater_central":
             continue
 
         old_unique_id = f"{device_id}-outdoor_temperature"

@@ -30,14 +30,6 @@
                 },
                 "description": "Inicia sessi\u00f3 al teu compte de Vulcan mitjan\u00e7ant la p\u00e0gina de registre de l'aplicaci\u00f3 m\u00f2bil."
             },
-            "reauth": {
-                "data": {
-                    "pin": "PIN",
-                    "region": "S\u00edmbol",
-                    "token": "Token"
-                },
-                "description": "Inicia sessi\u00f3 al teu compte de Vulcan mitjan\u00e7ant la p\u00e0gina de registre de l'aplicaci\u00f3 m\u00f2bil."
-            },
             "reauth_confirm": {
                 "data": {
                     "pin": "PIN",
@@ -57,21 +49,6 @@
                     "student_name": "Selecciona l'alumne"
                 },
                 "description": "Selecciona l'alumne, pots afegir m\u00e9s alumnes tornant a afegir la integraci\u00f3 de nou."
-            }
-        }
-    },
-    "options": {
-        "error": {
-            "error": "S'ha produ\u00eft un error"
-        },
-        "step": {
-            "init": {
-                "data": {
-                    "attendance_notify": "Mostra les notificacions sobre les darreres assist\u00e8ncies",
-                    "grade_notify": "Mostra notificacions de les \u00faltimes qualificacions",
-                    "message_notify": "Mostra notificacions quan es rebi un missatge nou",
-                    "scan_interval": "Interval d'actualitzaci\u00f3 (minuts)"
-                }
             }
         }
     }

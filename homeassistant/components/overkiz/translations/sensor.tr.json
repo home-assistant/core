@@ -36,6 +36,11 @@
         "overkiz__sensor_room": {
             "clean": "Temiz",
             "dirty": "Kirli"
+        },
+        "overkiz__three_way_handle_direction": {
+            "closed": "Kapal\u0131",
+            "open": "A\u00e7\u0131k",
+            "tilt": "E\u011fim"
         }
     }
 }

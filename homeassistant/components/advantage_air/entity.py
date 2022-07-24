@@ -9,6 +9,8 @@ from .const import DOMAIN
 class AdvantageAirEntity(CoordinatorEntity):
     """Parent class for Advantage Air Entities."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, instance, ac_key, zone_key=None):
         """Initialize common aspects of an Advantage Air sensor."""
         super().__init__(instance["coordinator"])
@@ -16,11 +18,13 @@ class AdvantageAirEntity(CoordinatorEntity):
         self.ac_key = ac_key
         self.zone_key = zone_key
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.coordinator.data["system"]["rid"])},
+            via_device=(DOMAIN, self.coordinator.data["system"]["rid"]),
+            identifiers={
+                (DOMAIN, f"{self.coordinator.data['system']['rid']}_{ac_key}")
+            },
             manufacturer="Advantage Air",
             model=self.coordinator.data["system"]["sysType"],
-            name=self.coordinator.data["system"]["name"],
-            sw_version=self.coordinator.data["system"]["myAppRev"],
+            name=self._ac["name"],
         )
 
     @property

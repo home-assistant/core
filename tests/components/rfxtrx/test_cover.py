@@ -146,8 +146,11 @@ async def test_rfy_cover(hass, rfxtrx):
             "071a000001020301": {
                 "venetian_blind_mode": "Unknown",
             },
-            "071a000001020302": {"venetian_blind_mode": "US"},
-            "071a000001020303": {"venetian_blind_mode": "EU"},
+            "0c1a0000010203010000000000": {
+                "venetian_blind_mode": "Unknown",
+            },
+            "0c1a0000010203020000000000": {"venetian_blind_mode": "US"},
+            "0c1a0000010203030000000000": {"venetian_blind_mode": "EU"},
         }
     )
     mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
@@ -199,9 +202,9 @@ async def test_rfy_cover(hass, rfxtrx):
         )
 
     assert rfxtrx.transport.send.mock_calls == [
-        call(bytearray(b"\x08\x1a\x00\x00\x01\x02\x03\x01\x00")),
-        call(bytearray(b"\x08\x1a\x00\x01\x01\x02\x03\x01\x01")),
-        call(bytearray(b"\x08\x1a\x00\x02\x01\x02\x03\x01\x03")),
+        call(bytearray(b"\x0C\x1a\x00\x00\x01\x02\x03\x01\x00\x00\x00\x00\x00")),
+        call(bytearray(b"\x0C\x1a\x00\x01\x01\x02\x03\x01\x01\x00\x00\x00\x00")),
+        call(bytearray(b"\x0C\x1a\x00\x02\x01\x02\x03\x01\x03\x00\x00\x00\x00")),
     ]
 
     # Test a blind with venetian mode set to US
@@ -252,12 +255,12 @@ async def test_rfy_cover(hass, rfxtrx):
     )
 
     assert rfxtrx.transport.send.mock_calls == [
-        call(bytearray(b"\x08\x1a\x00\x00\x01\x02\x03\x02\x00")),
-        call(bytearray(b"\x08\x1a\x00\x01\x01\x02\x03\x02\x0F")),
-        call(bytearray(b"\x08\x1a\x00\x02\x01\x02\x03\x02\x10")),
-        call(bytearray(b"\x08\x1a\x00\x03\x01\x02\x03\x02\x11")),
-        call(bytearray(b"\x08\x1a\x00\x04\x01\x02\x03\x02\x12")),
-        call(bytearray(b"\x08\x1a\x00\x00\x01\x02\x03\x02\x00")),
+        call(bytearray(b"\x0C\x1a\x00\x00\x01\x02\x03\x02\x00\x00\x00\x00\x00")),
+        call(bytearray(b"\x0C\x1a\x00\x01\x01\x02\x03\x02\x0F\x00\x00\x00\x00")),
+        call(bytearray(b"\x0C\x1a\x00\x02\x01\x02\x03\x02\x10\x00\x00\x00\x00")),
+        call(bytearray(b"\x0C\x1a\x00\x03\x01\x02\x03\x02\x11\x00\x00\x00\x00")),
+        call(bytearray(b"\x0C\x1a\x00\x04\x01\x02\x03\x02\x12\x00\x00\x00\x00")),
+        call(bytearray(b"\x0C\x1a\x00\x00\x01\x02\x03\x02\x00\x00\x00\x00\x00")),
     ]
 
     # Test a blind with venetian mode set to EU
@@ -308,10 +311,10 @@ async def test_rfy_cover(hass, rfxtrx):
     )
 
     assert rfxtrx.transport.send.mock_calls == [
-        call(bytearray(b"\x08\x1a\x00\x00\x01\x02\x03\x03\x00")),
-        call(bytearray(b"\x08\x1a\x00\x01\x01\x02\x03\x03\x11")),
-        call(bytearray(b"\x08\x1a\x00\x02\x01\x02\x03\x03\x12")),
-        call(bytearray(b"\x08\x1a\x00\x03\x01\x02\x03\x03\x0F")),
-        call(bytearray(b"\x08\x1a\x00\x04\x01\x02\x03\x03\x10")),
-        call(bytearray(b"\x08\x1a\x00\x00\x01\x02\x03\x03\x00")),
+        call(bytearray(b"\x0C\x1a\x00\x00\x01\x02\x03\x03\x00\x00\x00\x00\x00")),
+        call(bytearray(b"\x0C\x1a\x00\x01\x01\x02\x03\x03\x11\x00\x00\x00\x00")),
+        call(bytearray(b"\x0C\x1a\x00\x02\x01\x02\x03\x03\x12\x00\x00\x00\x00")),
+        call(bytearray(b"\x0C\x1a\x00\x03\x01\x02\x03\x03\x0F\x00\x00\x00\x00")),
+        call(bytearray(b"\x0C\x1a\x00\x04\x01\x02\x03\x03\x10\x00\x00\x00\x00")),
+        call(bytearray(b"\x0C\x1a\x00\x00\x01\x02\x03\x03\x00\x00\x00\x00\x00")),
     ]

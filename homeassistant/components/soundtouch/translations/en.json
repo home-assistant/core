@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host"
+                }
+            },
+            "zeroconf_confirm": {
+                "description": "You are about to add the SoundTouch device named `{name}` to Home Assistant.",
+                "title": "Confirm adding Bose SoundTouch device"
+            }
+        }
+    }
+}

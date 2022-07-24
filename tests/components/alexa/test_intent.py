@@ -490,8 +490,11 @@ async def test_intent_session_ended_request(alexa_client):
 
     req = await _intent_req(alexa_client, data)
     assert req.status == HTTPStatus.OK
-    text = await req.text()
-    assert text == ""
+    data = await req.json()
+    assert (
+        data["response"]["outputSpeech"]["text"]
+        == "This intent is not yet configured within Home Assistant."
+    )
 
 
 async def test_intent_from_built_in_intent_library(alexa_client):

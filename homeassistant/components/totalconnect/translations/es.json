@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "La cuenta ya ha sido configurada",
+            "already_configured": "La cuenta ya est\u00e1 configurada",
             "no_locations": "No hay ubicaciones disponibles para este usuario, compruebe la configuraci\u00f3n de TotalConnect",
             "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente"
         },
@@ -12,7 +12,6 @@
         "step": {
             "locations": {
                 "data": {
-                    "location": "Localizaci\u00f3n",
                     "usercode": "Codigo de usuario"
                 },
                 "description": "Introduce el c\u00f3digo de usuario para este usuario en la ubicaci\u00f3n {location_id}",
@@ -26,8 +25,18 @@
                 "data": {
                     "password": "Contrase\u00f1a",
                     "username": "Usuario"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "auto_bypass_low_battery": "Ignorar autom\u00e1ticamente bater\u00eda baja"
                 },
-                "title": "Total Connect"
+                "description": "Ignorar autom\u00e1ticamente las zonas en el momento en que informan de que la bater\u00eda est\u00e1 baja.",
+                "title": "Opciones de TotalConnect"
             }
         }
     }

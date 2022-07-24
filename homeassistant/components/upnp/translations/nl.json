@@ -20,9 +20,7 @@
             },
             "user": {
                 "data": {
-                    "scan_interval": "Update-interval (seconden, minimaal 30)",
-                    "unique_id": "Apparaat",
-                    "usn": "Apparaat"
+                    "unique_id": "Apparaat"
                 }
             }
         }

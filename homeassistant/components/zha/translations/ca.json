@@ -50,6 +50,7 @@
             "consider_unavailable_mains": "Considera els dispositius connectats a la xarxa el\u00e8ctrica com a no disponibles al cap de (segons)",
             "default_light_transition": "Temps de transici\u00f3 predeterminat (segons)",
             "enable_identify_on_join": "Activa l'efecte d'identificaci\u00f3 quan els dispositius s'uneixin a la xarxa",
+            "enhanced_light_transition": "Activa la transici\u00f3 millorada de color/temperatura de llum des de l'estat apagat",
             "title": "Opcions globals"
         }
     },

@@ -9,6 +9,7 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, dispatcher
 from homeassistant.helpers.network import NoURLAvailableError, get_url
+from homeassistant.helpers.service import async_register_admin_service
 
 from .const import DOMAIN, SIGNAL_HASS_CAST_SHOW_VIEW
 
@@ -65,7 +66,8 @@ async def async_setup_ha_cast(
             call.data.get(ATTR_URL_PATH),
         )
 
-    hass.helpers.service.async_register_admin_service(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_SHOW_VIEW,
         handle_show_view,

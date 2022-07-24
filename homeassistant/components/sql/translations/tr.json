@@ -5,8 +5,7 @@
         },
         "error": {
             "db_url_invalid": "Veritaban\u0131 URL'si ge\u00e7ersiz",
-            "query_invalid": "SQL Sorgusu ge\u00e7ersiz",
-            "value_template_invalid": "De\u011fer \u015eablonu ge\u00e7ersiz"
+            "query_invalid": "SQL Sorgusu ge\u00e7ersiz"
         },
         "step": {
             "user": {
@@ -32,8 +31,7 @@
     "options": {
         "error": {
             "db_url_invalid": "Veritaban\u0131 URL'si ge\u00e7ersiz",
-            "query_invalid": "SQL Sorgusu ge\u00e7ersiz",
-            "value_template_invalid": "De\u011fer \u015eablonu ge\u00e7ersiz"
+            "query_invalid": "SQL Sorgusu ge\u00e7ersiz"
         },
         "step": {
             "init": {

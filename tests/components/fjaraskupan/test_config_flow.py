@@ -9,11 +9,7 @@ from pytest import fixture
 from homeassistant import config_entries
 from homeassistant.components.fjaraskupan.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 
 @fixture(name="mock_setup_entry", autouse=True)
@@ -32,10 +28,10 @@ async def test_configure(hass: HomeAssistant, mock_setup_entry) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "Fjäråskupan"
     assert result["data"] == {}
 
@@ -51,8 +47,8 @@ async def test_scan_no_devices(hass: HomeAssistant, scanner: list[BLEDevice]) ->
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"

@@ -5,11 +5,7 @@ from unittest.mock import patch
 from homeassistant.components.pi_hole.const import CONF_STATISTICS_ONLY, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_API_KEY
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
     CONF_CONFIG_ENTRY,
@@ -44,7 +40,7 @@ async def test_flow_import(hass, caplog):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=CONF_DATA
         )
-        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == FlowResultType.CREATE_ENTRY
         assert result["title"] == NAME
         assert result["data"] == CONF_CONFIG_ENTRY
 
@@ -52,7 +48,7 @@ async def test_flow_import(hass, caplog):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=CONF_DATA
         )
-        assert result["type"] == RESULT_TYPE_ABORT
+        assert result["type"] == FlowResultType.ABORT
         assert result["reason"] == "already_configured"
 
 
@@ -63,7 +59,7 @@ async def test_flow_import_invalid(hass, caplog):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=CONF_DATA
         )
-        assert result["type"] == RESULT_TYPE_ABORT
+        assert result["type"] == FlowResultType.ABORT
         assert result["reason"] == "cannot_connect"
         assert len([x for x in caplog.records if x.levelno == logging.ERROR]) == 1
 
@@ -76,7 +72,7 @@ async def test_flow_user(hass):
             DOMAIN,
             context={"source": SOURCE_USER},
         )
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"] == {}
         _flow_next(hass, result["flow_id"])
@@ -85,7 +81,7 @@ async def test_flow_user(hass):
             result["flow_id"],
             user_input=CONF_CONFIG_FLOW_USER,
         )
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "api_key"
         assert result["errors"] is None
         _flow_next(hass, result["flow_id"])
@@ -94,7 +90,7 @@ async def test_flow_user(hass):
             result["flow_id"],
             user_input=CONF_CONFIG_FLOW_API_KEY,
         )
-        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == FlowResultType.CREATE_ENTRY
         assert result["title"] == NAME
         assert result["data"] == CONF_CONFIG_ENTRY
 
@@ -104,7 +100,7 @@ async def test_flow_user(hass):
             context={"source": SOURCE_USER},
             data=CONF_CONFIG_FLOW_USER,
         )
-        assert result["type"] == RESULT_TYPE_ABORT
+        assert result["type"] == FlowResultType.ABORT
         assert result["reason"] == "already_configured"
 
 
@@ -116,7 +112,7 @@ async def test_flow_statistics_only(hass):
             DOMAIN,
             context={"source": SOURCE_USER},
         )
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"] == {}
         _flow_next(hass, result["flow_id"])
@@ -130,7 +126,7 @@ async def test_flow_statistics_only(hass):
             result["flow_id"],
             user_input=user_input,
         )
-        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == FlowResultType.CREATE_ENTRY
         assert result["title"] == NAME
         assert result["data"] == config_entry_data
 
@@ -142,6 +138,6 @@ async def test_flow_user_invalid(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONF_CONFIG_FLOW_USER
         )
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"] == {"base": "cannot_connect"}

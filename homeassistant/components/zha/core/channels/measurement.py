@@ -8,14 +8,16 @@ from ..const import (
     REPORT_CONFIG_MAX_INT,
     REPORT_CONFIG_MIN_INT,
 )
-from .base import ZigbeeChannel
+from .base import AttrReportConfig, ZigbeeChannel
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(measurement.FlowMeasurement.cluster_id)
 class FlowMeasurement(ZigbeeChannel):
     """Flow Measurement channel."""
 
-    REPORT_CONFIG = [{"attr": "measured_value", "config": REPORT_CONFIG_DEFAULT}]
+    REPORT_CONFIG = (
+        AttrReportConfig(attr="measured_value", config=REPORT_CONFIG_DEFAULT),
+    )
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(
@@ -24,7 +26,9 @@ class FlowMeasurement(ZigbeeChannel):
 class IlluminanceLevelSensing(ZigbeeChannel):
     """Illuminance Level Sensing channel."""
 
-    REPORT_CONFIG = [{"attr": "level_status", "config": REPORT_CONFIG_DEFAULT}]
+    REPORT_CONFIG = (
+        AttrReportConfig(attr="level_status", config=REPORT_CONFIG_DEFAULT),
+    )
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(
@@ -33,57 +37,63 @@ class IlluminanceLevelSensing(ZigbeeChannel):
 class IlluminanceMeasurement(ZigbeeChannel):
     """Illuminance Measurement channel."""
 
-    REPORT_CONFIG = [{"attr": "measured_value", "config": REPORT_CONFIG_DEFAULT}]
+    REPORT_CONFIG = (
+        AttrReportConfig(attr="measured_value", config=REPORT_CONFIG_DEFAULT),
+    )
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(measurement.OccupancySensing.cluster_id)
 class OccupancySensing(ZigbeeChannel):
     """Occupancy Sensing channel."""
 
-    REPORT_CONFIG = [{"attr": "occupancy", "config": REPORT_CONFIG_IMMEDIATE}]
+    REPORT_CONFIG = (
+        AttrReportConfig(attr="occupancy", config=REPORT_CONFIG_IMMEDIATE),
+    )
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(measurement.PressureMeasurement.cluster_id)
 class PressureMeasurement(ZigbeeChannel):
     """Pressure measurement channel."""
 
-    REPORT_CONFIG = [{"attr": "measured_value", "config": REPORT_CONFIG_DEFAULT}]
+    REPORT_CONFIG = (
+        AttrReportConfig(attr="measured_value", config=REPORT_CONFIG_DEFAULT),
+    )
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(measurement.RelativeHumidity.cluster_id)
 class RelativeHumidity(ZigbeeChannel):
     """Relative Humidity measurement channel."""
 
-    REPORT_CONFIG = [
-        {
-            "attr": "measured_value",
-            "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 100),
-        }
-    ]
+    REPORT_CONFIG = (
+        AttrReportConfig(
+            attr="measured_value",
+            config=(REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 100),
+        ),
+    )
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(measurement.SoilMoisture.cluster_id)
 class SoilMoisture(ZigbeeChannel):
     """Soil Moisture measurement channel."""
 
-    REPORT_CONFIG = [
-        {
-            "attr": "measured_value",
-            "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 100),
-        }
-    ]
+    REPORT_CONFIG = (
+        AttrReportConfig(
+            attr="measured_value",
+            config=(REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 100),
+        ),
+    )
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(measurement.LeafWetness.cluster_id)
 class LeafWetness(ZigbeeChannel):
     """Leaf Wetness measurement channel."""
 
-    REPORT_CONFIG = [
-        {
-            "attr": "measured_value",
-            "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 100),
-        }
-    ]
+    REPORT_CONFIG = (
+        AttrReportConfig(
+            attr="measured_value",
+            config=(REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 100),
+        ),
+    )
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(
@@ -92,12 +102,12 @@ class LeafWetness(ZigbeeChannel):
 class TemperatureMeasurement(ZigbeeChannel):
     """Temperature measurement channel."""
 
-    REPORT_CONFIG = [
-        {
-            "attr": "measured_value",
-            "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 50),
-        }
-    ]
+    REPORT_CONFIG = (
+        AttrReportConfig(
+            attr="measured_value",
+            config=(REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 50),
+        ),
+    )
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(
@@ -106,12 +116,12 @@ class TemperatureMeasurement(ZigbeeChannel):
 class CarbonMonoxideConcentration(ZigbeeChannel):
     """Carbon Monoxide measurement channel."""
 
-    REPORT_CONFIG = [
-        {
-            "attr": "measured_value",
-            "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 0.000001),
-        }
-    ]
+    REPORT_CONFIG = (
+        AttrReportConfig(
+            attr="measured_value",
+            config=(REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 0.000001),
+        ),
+    )
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(
@@ -120,12 +130,24 @@ class CarbonMonoxideConcentration(ZigbeeChannel):
 class CarbonDioxideConcentration(ZigbeeChannel):
     """Carbon Dioxide measurement channel."""
 
-    REPORT_CONFIG = [
-        {
-            "attr": "measured_value",
-            "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 0.000001),
-        }
-    ]
+    REPORT_CONFIG = (
+        AttrReportConfig(
+            attr="measured_value",
+            config=(REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 0.000001),
+        ),
+    )
+
+
+@registries.ZIGBEE_CHANNEL_REGISTRY.register(measurement.PM25.cluster_id)
+class PM25(ZigbeeChannel):
+    """Particulate Matter 2.5 microns or less measurement channel."""
+
+    REPORT_CONFIG = (
+        AttrReportConfig(
+            attr="measured_value",
+            config=(REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 0.1),
+        ),
+    )
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(
@@ -134,9 +156,9 @@ class CarbonDioxideConcentration(ZigbeeChannel):
 class FormaldehydeConcentration(ZigbeeChannel):
     """Formaldehyde measurement channel."""
 
-    REPORT_CONFIG = [
-        {
-            "attr": "measured_value",
-            "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 0.000001),
-        }
-    ]
+    REPORT_CONFIG = (
+        AttrReportConfig(
+            attr="measured_value",
+            config=(REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 0.000001),
+        ),
+    )

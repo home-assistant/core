@@ -1,7 +1,9 @@
 """Config flow for Risco integration."""
+from __future__ import annotations
+
 import logging
 
-from pyrisco import CannotConnectError, RiscoAPI, UnauthorizedError
+from pyrisco import CannotConnectError, RiscoCloud, UnauthorizedError
 import voluptuous as vol
 
 from homeassistant import config_entries, core
@@ -50,7 +52,7 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
-    risco = RiscoAPI(data[CONF_USERNAME], data[CONF_PASSWORD], data[CONF_PIN])
+    risco = RiscoCloud(data[CONF_USERNAME], data[CONF_PASSWORD], data[CONF_PIN])
 
     try:
         await risco.login(async_get_clientsession(hass))
@@ -67,7 +69,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @core.callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> RiscoOptionsFlowHandler:
         """Define the config flow to handle options."""
         return RiscoOptionsFlowHandler(config_entry)
 
@@ -98,7 +102,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class RiscoOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle a Risco options flow."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize."""
         self.config_entry = config_entry
         self._data = {**DEFAULT_OPTIONS, **config_entry.options}

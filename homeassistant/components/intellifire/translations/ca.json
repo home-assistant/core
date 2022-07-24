@@ -8,8 +8,7 @@
         "error": {
             "api_error": "Ha fallat l'inici de sessi\u00f3",
             "cannot_connect": "Ha fallat la connexi\u00f3",
-            "iftapi_connect": "S'ha produ\u00eft un error en connectar a iftapi.net",
-            "unknown": "Error inesperat"
+            "iftapi_connect": "S'ha produ\u00eft un error en connectar a iftapi.net"
         },
         "flow_title": "{serial} ({host})",
         "step": {
@@ -34,11 +33,6 @@
                 },
                 "description": "S'han descobert els dispositius IntelliFire seg\u00fcents. Selecciona el que vulguis configurar.",
                 "title": "Selecci\u00f3 de dispositiu"
-            },
-            "user": {
-                "data": {
-                    "host": "Amfitri\u00f3"
-                }
             }
         }
     }

@@ -4,7 +4,6 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from aiohttp.hdrs import CONTENT_TYPE
 import requests
 import voluptuous as vol
 
@@ -144,7 +143,7 @@ class PyLoadAPI:
         """Initialize pyLoad API and set headers needed later."""
         self.api_url = api_url
         self.status = None
-        self.headers = {CONTENT_TYPE: CONTENT_TYPE_JSON}
+        self.headers = {"Content-Type": CONTENT_TYPE_JSON}
 
         if username is not None and password is not None:
             self.payload = {"username": username, "password": password}

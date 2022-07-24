@@ -29,12 +29,6 @@
                 "data_description": {
                     "round": "Styrer antall desimaler i utdataene."
                 }
-            },
-            "options": {
-                "data": {
-                    "round": "Presisjon"
-                },
-                "description": "Presisjon styrer antall desimaler i utdataene."
             }
         }
     },

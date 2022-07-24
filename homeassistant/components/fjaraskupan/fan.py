@@ -1,6 +1,8 @@
 """Support for Fjäråskupan fans."""
 from __future__ import annotations
 
+from typing import Any
+
 from fjaraskupan import (
     COMMAND_AFTERCOOKINGTIMERAUTO,
     COMMAND_AFTERCOOKINGTIMERMANUAL,
@@ -16,16 +18,13 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.percentage import (
     ordered_list_item_to_percentage,
     percentage_to_ordered_list_item,
 )
 
-from . import DeviceState, async_setup_entry_platform
+from . import Coordinator, async_setup_entry_platform
 
 ORDERED_NAMED_FAN_SPEEDS = ["1", "2", "3", "4", "5", "6", "7", "8"]
 
@@ -58,22 +57,21 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensors dynamically through discovery."""
 
-    def _constructor(device_state: DeviceState):
-        return [
-            Fan(device_state.coordinator, device_state.device, device_state.device_info)
-        ]
+    def _constructor(coordinator: Coordinator):
+        return [Fan(coordinator, coordinator.device, coordinator.device_info)]
 
     async_setup_entry_platform(hass, config_entry, async_add_entities, _constructor)
 
 
-class Fan(CoordinatorEntity[DataUpdateCoordinator[State]], FanEntity):
+class Fan(CoordinatorEntity[Coordinator], FanEntity):
     """Fan entity."""
 
     _attr_supported_features = FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
+    _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[State],
+        coordinator: Coordinator,
         device: Device,
         device_info: DeviceInfo,
     ) -> None:
@@ -81,7 +79,6 @@ class Fan(CoordinatorEntity[DataUpdateCoordinator[State]], FanEntity):
         super().__init__(coordinator)
         self._device = device
         self._default_on_speed = 25
-        self._attr_name = device_info["name"]
         self._attr_unique_id = device.address
         self._attr_device_info = device_info
         self._percentage = 0
@@ -98,9 +95,9 @@ class Fan(CoordinatorEntity[DataUpdateCoordinator[State]], FanEntity):
 
     async def async_turn_on(
         self,
-        percentage: int = None,
-        preset_mode: str = None,
-        **kwargs,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
+        **kwargs: Any,
     ) -> None:
         """Turn on the fan."""
 
@@ -138,7 +135,7 @@ class Fan(CoordinatorEntity[DataUpdateCoordinator[State]], FanEntity):
         else:
             raise UnsupportedPreset(f"The preset {preset_mode} is unsupported")
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self._device.send_command(COMMAND_STOP_FAN)
         self.coordinator.async_set_updated_data(self._device.state)

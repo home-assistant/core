@@ -16,6 +16,7 @@ class Gateway:
 
     def __init__(self, config, hass):
         """Initialize the sms gateway."""
+        _LOGGER.debug("Init with connection mode:%s", config["Connection"])
         self._worker = GammuAsyncWorker(self.sms_pull)
         self._worker.configure(config)
         self._hass = hass
@@ -152,6 +153,10 @@ class Gateway:
     async def get_signal_quality_async(self):
         """Get the current signal level of the modem."""
         return await self._worker.get_signal_quality_async()
+
+    async def get_network_info_async(self):
+        """Get the current network info of the modem."""
+        return await self._worker.get_network_info_async()
 
     async def terminate_async(self):
         """Terminate modem connection."""

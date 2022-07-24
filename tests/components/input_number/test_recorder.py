@@ -10,7 +10,7 @@ from homeassistant.components.input_number import (
     ATTR_STEP,
     DOMAIN,
 )
-from homeassistant.components.recorder.models import StateAttributes, States
+from homeassistant.components.recorder.db_schema import StateAttributes, States
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import ATTR_EDITABLE
 from homeassistant.core import HomeAssistant, State

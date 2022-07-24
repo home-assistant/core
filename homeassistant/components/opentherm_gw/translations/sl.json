@@ -10,8 +10,7 @@
                     "device": "Pot ali URL",
                     "id": "ID",
                     "name": "Ime"
-                },
-                "title": "OpenTherm Prehod"
+                }
             }
         }
     },
@@ -20,8 +19,7 @@
             "init": {
                 "data": {
                     "floor_temperature": "Temperatura nadstropja"
-                },
-                "description": "Mo\u017enosti za prehod OpenTherm"
+                }
             }
         }
     }

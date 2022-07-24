@@ -29,12 +29,6 @@
                 "data_description": {
                     "round": "Controla el nombre de d\u00edgits decimals a la sortida."
                 }
-            },
-            "options": {
-                "data": {
-                    "round": "Precisi\u00f3"
-                },
-                "description": "La precisi\u00f3 controla el nombre de d\u00edgits decimals a la sortida."
             }
         }
     },

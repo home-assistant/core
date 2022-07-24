@@ -1,4 +1,8 @@
 """Support for StarLine lock."""
+from __future__ import annotations
+
+from typing import Any
+
 from homeassistant.components.lock import LockEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -31,12 +35,12 @@ class StarlineLock(StarlineEntity, LockEntity):
         super().__init__(account, device, "lock", "Security")
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self._device.online
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, bool]:
         """Return the state attributes of the lock.
 
         Possible dictionary keys:
@@ -57,21 +61,21 @@ class StarlineLock(StarlineEntity, LockEntity):
         return self._device.alarm_state
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Icon to use in the frontend, if any."""
         return (
             "mdi:shield-check-outline" if self.is_locked else "mdi:shield-alert-outline"
         )
 
     @property
-    def is_locked(self):
+    def is_locked(self) -> bool | None:
         """Return true if lock is locked."""
         return self._device.car_state.get("arm")
 
-    def lock(self, **kwargs):
+    def lock(self, **kwargs: Any) -> None:
         """Lock the car."""
         self._account.api.set_car_state(self._device.device_id, "arm", True)
 
-    def unlock(self, **kwargs):
+    def unlock(self, **kwargs: Any) -> None:
         """Unlock the car."""
         self._account.api.set_car_state(self._device.device_id, "arm", False)

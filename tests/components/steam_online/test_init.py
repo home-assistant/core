@@ -41,7 +41,7 @@ async def test_device_info(hass: HomeAssistant) -> None:
     entry = create_entry(hass)
     with patch_interface():
         await hass.config_entries.async_setup(entry.entry_id)
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
     await hass.async_block_till_done()
     device = device_registry.async_get_device({(DOMAIN, entry.entry_id)})
 

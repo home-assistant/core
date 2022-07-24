@@ -47,6 +47,14 @@ def is_on(hass: HomeAssistant, entity_id: str) -> bool:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the device tracker."""
+
+    # We need to add the component here break the deadlock
+    # when setting up integrations from config entries as
+    # they would otherwise wait for the device tracker to be
+    # setup and thus the config entries would not be able to
+    # setup their platforms.
+    hass.config.components.add(DOMAIN)
+
     await async_setup_legacy_integration(hass, config)
 
     return True

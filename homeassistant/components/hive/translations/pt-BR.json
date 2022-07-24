@@ -20,6 +20,13 @@
                 "description": "Digite seu c\u00f3digo de autentica\u00e7\u00e3o Hive. \n\n Insira o c\u00f3digo 0000 para solicitar outro c\u00f3digo.",
                 "title": "Autentica\u00e7\u00e3o de dois fatores do Hive."
             },
+            "configuration": {
+                "data": {
+                    "device_name": "Nome do dispositivo"
+                },
+                "description": "Digite sua configura\u00e7\u00e3o de Hive",
+                "title": "Configura\u00e7\u00e3o Hive"
+            },
             "reauth": {
                 "data": {
                     "password": "Senha",
@@ -34,7 +41,7 @@
                     "scan_interval": "Intervalo de escaneamento (segundos)",
                     "username": "Usu\u00e1rio"
                 },
-                "description": "Insira suas informa\u00e7\u00f5es de login e configura\u00e7\u00e3o do Hive.",
+                "description": "Insira suas informa\u00e7\u00f5es de login de Hive.",
                 "title": "Login do Hive"
             }
         }

@@ -5,7 +5,6 @@
             "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
             "no_bridges": "Ingen deCONZ broer oppdaget",
             "no_hardware_available": "Ingen radiomaskinvare koblet til deCONZ",
-            "not_deconz_bridge": "Ikke en deCONZ bro",
             "updated_instance": "Oppdatert deCONZ forekomst med ny vertsadresse"
         },
         "error": {

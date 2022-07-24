@@ -11,13 +11,6 @@
         },
         "flow_title": "{name} ( {host} )",
         "step": {
-            "init": {
-                "data": {
-                    "host": "Nome do host"
-                },
-                "description": "Selecione um Roomba ou Braava.",
-                "title": "Conecte-se automaticamente ao dispositivo"
-            },
             "link": {
                 "description": "Pressione e segure o bot\u00e3o Home em {name} at\u00e9 que o dispositivo gere um som (cerca de dois segundos) e envie em 30 segundos.",
                 "title": "Recuperar Senha"
@@ -31,7 +24,6 @@
             },
             "manual": {
                 "data": {
-                    "blid": "BLID",
                     "host": "Nome do host"
                 },
                 "description": "Nenhum Roomba ou Braava foi descoberto em sua rede.",
@@ -39,11 +31,7 @@
             },
             "user": {
                 "data": {
-                    "blid": "BLID",
-                    "continuous": "Cont\u00ednuo",
-                    "delay": "Atraso",
-                    "host": "Nome do host",
-                    "password": "Senha"
+                    "host": "Nome do host"
                 },
                 "description": "Selecione um Roomba ou Braava.",
                 "title": "Conecte-se ao dispositivo"

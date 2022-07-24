@@ -159,7 +159,7 @@ class FreeboxDiskSensor(FreeboxSensor):
         self._disk = disk
         self._partition = partition
         self._attr_name = f"{partition['label']} {description.name}"
-        self._unique_id = f"{self._router.mac} {description.key} {self._disk['id']} {self._partition['id']}"
+        self._attr_unique_id = f"{self._router.mac} {description.key} {self._disk['id']} {self._partition['id']}"
 
     @property
     def device_info(self) -> DeviceInfo:

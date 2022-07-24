@@ -10,7 +10,6 @@
             "is_on": "{entity_name} \u5df2\u6253\u5f00"
         },
         "trigger_type": {
-            "toggled": "{entity_name} \u88ab\u6253\u5f00\u6216\u5173\u95ed",
             "turned_off": "{entity_name} \u88ab\u5173\u95ed",
             "turned_on": "{entity_name} \u88ab\u6253\u5f00"
         }

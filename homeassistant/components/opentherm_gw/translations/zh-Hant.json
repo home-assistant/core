@@ -11,8 +11,7 @@
                     "device": "\u8def\u5f91\u6216 URL",
                     "id": "ID",
                     "name": "\u540d\u7a31"
-                },
-                "title": "OpenTherm \u9598\u9053\u5668"
+                }
             }
         }
     },
@@ -24,8 +23,7 @@
                     "read_precision": "\u8b80\u53d6\u7cbe\u6e96\u5ea6",
                     "set_precision": "\u8a2d\u5b9a\u7cbe\u6e96\u5ea6",
                     "temporary_override_mode": "\u81e8\u6642 Setpoint \u8986\u84cb\u6a21\u5f0f"
-                },
-                "description": "OpenTherm \u9598\u9053\u5668\u9078\u9805"
+                }
             }
         }
     }

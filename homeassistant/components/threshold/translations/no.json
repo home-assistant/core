@@ -9,7 +9,6 @@
                     "entity_id": "Inngangssensor",
                     "hysteresis": "Hysterese",
                     "lower": "Nedre grense",
-                    "mode": "Terskelverdi-modus",
                     "name": "Navn",
                     "upper": "\u00d8vre grense"
                 },
@@ -28,7 +27,6 @@
                     "entity_id": "Inngangssensor",
                     "hysteresis": "Hysterese",
                     "lower": "Nedre grense",
-                    "mode": "Terskelverdi-modus",
                     "name": "Navn",
                     "upper": "\u00d8vre grense"
                 },

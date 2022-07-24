@@ -17,10 +17,8 @@
                     "longitude": "Longitud",
                     "radius": "Radio de la estaci\u00f3n (millas; opcional)"
                 },
-                "description": "Configurar la integraci\u00f3n de calidad del aire de AirNow. Para generar una clave API, ve a https://docs.airnowapi.org/account/request/",
-                "title": "AirNow"
+                "description": "Configurar la integraci\u00f3n de calidad del aire de AirNow. Para generar una clave API, ve a https://docs.airnowapi.org/account/request/"
             }
         }
-    },
-    "title": "AirNow"
+    }
 }

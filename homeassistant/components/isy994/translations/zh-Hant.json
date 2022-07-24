@@ -17,7 +17,7 @@
                     "password": "\u5bc6\u78bc",
                     "username": "\u4f7f\u7528\u8005\u540d\u7a31"
                 },
-                "description": "{username} \u6191\u8b49\u4e0d\u518d\u6709\u6548\u3002",
+                "description": "{host} \u6191\u8b49\u4e0d\u518d\u6709\u6548\u3002",
                 "title": "\u91cd\u65b0\u8a8d\u8b49 ISY \u5e33\u865f"
             },
             "user": {

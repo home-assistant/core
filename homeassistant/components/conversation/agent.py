@@ -26,5 +26,5 @@ class AbstractConversationAgent(ABC):
     @abstractmethod
     async def async_process(
         self, text: str, context: Context, conversation_id: str | None = None
-    ) -> intent.IntentResponse:
+    ) -> intent.IntentResponse | None:
         """Process a sentence."""

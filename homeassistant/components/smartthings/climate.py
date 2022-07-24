@@ -106,10 +106,7 @@ def get_capabilities(capabilities: Sequence[str]) -> Sequence[str] | None:
         Capability.air_conditioner_mode,
         Capability.demand_response_load_control,
         Capability.air_conditioner_fan_mode,
-        Capability.power_consumption_report,
-        Capability.relative_humidity_measurement,
         Capability.switch,
-        Capability.temperature_measurement,
         Capability.thermostat,
         Capability.thermostat_cooling_setpoint,
         Capability.thermostat_fan_mode,
@@ -422,10 +419,6 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
             "drlc_status_level",
             "drlc_status_start",
             "drlc_status_override",
-            "power_consumption_start",
-            "power_consumption_power",
-            "power_consumption_energy",
-            "power_consumption_end",
         ]
         state_attributes = {}
         for attribute in attributes:
