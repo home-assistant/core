@@ -214,7 +214,15 @@ async def async_setup_entry(
     await manager.async_start(
         BluetoothScanningMode.ACTIVE, entry.data.get(CONF_ADAPTER)
     )
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     return True
+
+
+async def _async_update_listener(
+    hass: HomeAssistant, entry: config_entries.ConfigEntry
+) -> None:
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(
