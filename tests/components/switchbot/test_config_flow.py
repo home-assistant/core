@@ -301,7 +301,6 @@ async def test_options_flow(hass):
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_RETRY_COUNT] == 3
-    assert result["data"][CONF_RETRY_TIMEOUT] == 5
 
     assert len(mock_setup_entry.mock_calls) == 2
 
@@ -326,9 +325,7 @@ async def test_options_flow(hass):
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_RETRY_COUNT] == 6
-    assert result["data"][CONF_RETRY_TIMEOUT] == 6
 
     assert len(mock_setup_entry.mock_calls) == 1
 
     assert entry.options[CONF_RETRY_COUNT] == 6
-    assert entry.options[CONF_RETRY_TIMEOUT] == 6
