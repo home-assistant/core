@@ -24,8 +24,8 @@ class NextDnsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self.nextdns: NextDns
-        self.api_key: str
+        self.nextdns: NextDns | None = None
+        self.api_key: str | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -62,6 +62,8 @@ class NextDnsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the profiles step."""
         errors: dict[str, str] = {}
+
+        assert self.nextdns is not None
 
         if user_input is not None:
             profile_name = user_input[CONF_PROFILE_NAME]
