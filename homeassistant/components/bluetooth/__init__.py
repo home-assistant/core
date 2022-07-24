@@ -28,7 +28,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_bluetooth
 
 from . import models
-from .const import CONF_ADAPTER, DOMAIN
+from .const import CONF_ADAPTER, DEFAULT_ADAPTERS, DOMAIN
 from .match import (
     ADDRESS,
     BluetoothCallbackMatcher,
@@ -268,11 +268,11 @@ class BluetoothManager:
     ) -> None:
         """Set up BT Discovery."""
         assert self.scanner is not None
+        scanner_kwargs = {"scanning_mode": SCANNING_MODE_TO_BLEAK[scanning_mode]}
+        if adapter and adapter not in DEFAULT_ADAPTERS:
+            scanner_kwargs["adapter"] = adapter
         try:
-            self.scanner.async_setup(
-                scanning_mode=SCANNING_MODE_TO_BLEAK[scanning_mode],
-                adapter=adapter,
-            )
+            self.scanner.async_setup(**scanner_kwargs)
         except (FileNotFoundError, BleakError) as ex:
             raise RuntimeError(f"Failed to initialize Bluetooth: {ex}") from ex
         install_multiple_bleak_catcher()
