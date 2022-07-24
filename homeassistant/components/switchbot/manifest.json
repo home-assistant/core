@@ -5,7 +5,7 @@
   "requirements": ["PySwitchbot==0.15.0"],
   "config_flow": true,
   "dependencies": ["bluetooth"],
-  "codeowners": ["@danielhiversen", "@RenierM26", "@murtas"],
+  "codeowners": ["@bdraco", "@danielhiversen", "@RenierM26", "@murtas"],
   "bluetooth": [
     {
       "service_data_uuid": "0000fd3d-0000-1000-8000-00805f9b34fb"
@@ -14,6 +14,7 @@
       "service_uuid": "cba20d00-224d-11e6-9fb8-0002a5d5c51b"
     }
   ],
+  "bluetooth": [{ "service_uuid": "cba20d00-224d-11e6-9fb8-0002a5d5c51b" }],
   "iot_class": "local_push",
   "loggers": ["switchbot"]
 }
