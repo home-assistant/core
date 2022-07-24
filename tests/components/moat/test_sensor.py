@@ -1,4 +1,4 @@
-"""Test the Moat BLE config flow."""
+"""Test the Moat sensors."""
 
 from unittest.mock import patch
 
