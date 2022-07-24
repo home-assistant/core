@@ -59,7 +59,17 @@ class ValloxSensorEntity(ValloxEntity, SensorEntity):
         if (metric_key := self.entity_description.metric_key) is None:
             return None
 
-        return self.coordinator.data.get_metric(metric_key)
+        value = self.coordinator.data.get_metric(metric_key)
+
+        if value == 0xFFFF:
+            return None
+
+        if self.entity_description.round_ndigits is not None and isinstance(
+            value, float
+        ):
+            value = round(value, self.entity_description.round_ndigits)
+
+        return value
 
 
 # There is a quirk with respect to the fan speed reporting. The device keeps on reporting the last
@@ -115,6 +125,7 @@ class ValloxSensorEntityDescription(SensorEntityDescription):
 
     metric_key: str | None = None
     entity_type: type[ValloxSensorEntity] = ValloxSensorEntity
+    round_ndigits: int | None = None
 
 
 class ValloxProfileSensor(ValloxSensorEntity):
@@ -242,6 +253,7 @@ SENSOR_ENTITIES: tuple[ValloxSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         entity_registry_enabled_default=False,
+        round_ndigits=0,
     ),
     ValloxSensorEntityDescription(
         key="co2",
