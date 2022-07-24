@@ -751,7 +751,7 @@ moat-ble==0.1.1
 moehlenhoff-alpha2==1.2.1
 
 # homeassistant.components.motion_blinds
-motionblinds==0.6.8
+motionblinds==0.6.11
 
 # homeassistant.components.motioneye
 motioneye-client==0.3.12
@@ -1665,7 +1665,7 @@ wolf_smartset==0.1.11
 xbox-webapi==2.0.11
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==0.2.0
+xiaomi-ble==0.5.1
 
 # homeassistant.components.knx
 xknx==0.21.5
