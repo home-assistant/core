@@ -11,15 +11,11 @@
             "unknown": "Unexpected error"
         },
         "step": {
-            "input_auth_code": {
+            "user": {
                 "data": {
                     "auth_code": "Authorization Code"
                 },
-                "description": "Input the authorization code from the SimpliSafe web app URL:",
-                "title": "Finish Authorization"
-            },
-            "user": {
-                "description": "SimpliSafe authenticates users via its web app. Due to technical limitations, there is a manual step at the end of this process; please ensure that you read the [documentation](http://home-assistant.io/integrations/simplisafe#getting-an-authorization-code) before starting.\n\nWhen you are ready, click [here]({url}) to open the SimpliSafe web app and input your credentials. When the process is complete, return here and click Submit."
+                "description": "SimpliSafe authenticates users via its web app. Due to technical limitations, there is a manual step at the end of this process; please ensure that you read the [documentation](http://home-assistant.io/integrations/simplisafe#getting-an-authorization-code) before starting.\n\nWhen you are ready, click [here]({url}) to open the SimpliSafe web app and input your credentials. When the process is complete, return here and input the authorization code from the SimpliSafe web app URL."
             }
         }
     },

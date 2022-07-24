@@ -24,7 +24,7 @@ from .const import DOMAIN, LOGGER
 
 CONF_AUTH_CODE = "auth_code"
 
-STEP_INPUT_AUTH_CODE_SCHEMA = vol.Schema(
+STEP_USER_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_AUTH_CODE): cv.string,
     }
@@ -54,10 +54,8 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self._errors: dict[str, Any] = {}
         self._oauth_values: SimpliSafeOAuthValues = async_get_simplisafe_oauth_values()
         self._reauth: bool = False
-        self._username: str | None = None
 
     @staticmethod
     @callback
@@ -67,18 +65,23 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Define the config flow to handle options."""
         return SimpliSafeOptionsFlowHandler(config_entry)
 
-    async def async_step_input_auth_code(
+    async def async_step_reauth(self, config: Mapping[str, Any]) -> FlowResult:
+        """Handle configuration by re-auth."""
+        self._reauth = True
+        return await self.async_step_user()
+
+    async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Handle the input of a SimpliSafe OAuth authorization code."""
+        """Handle the start of the config flow."""
         if user_input is None:
             return self.async_show_form(
-                step_id="input_auth_code", data_schema=STEP_INPUT_AUTH_CODE_SCHEMA
+                step_id="user",
+                data_schema=STEP_USER_SCHEMA,
+                description_placeholders={CONF_URL: self._oauth_values.auth_url},
             )
 
-        assert self._oauth_values
-
-        self._errors = {}
+        errors = {}
         session = aiohttp_client.async_get_clientsession(self.hass)
 
         try:
@@ -88,13 +91,18 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 session=session,
             )
         except InvalidCredentialsError:
-            self._errors = {"base": "invalid_auth"}
+            errors = {"base": "invalid_auth"}
         except SimplipyError as err:
             LOGGER.error("Unknown error while logging into SimpliSafe: %s", err)
-            self._errors = {"base": "unknown"}
+            errors = {"base": "unknown"}
 
-        if self._errors:
-            return await self.async_step_user()
+        if errors:
+            return self.async_show_form(
+                step_id="user",
+                data_schema=STEP_USER_SCHEMA,
+                errors=errors,
+                description_placeholders={CONF_URL: self._oauth_values.auth_url},
+            )
 
         simplisafe_user_id = str(simplisafe.user_id)
         data = {CONF_USERNAME: simplisafe_user_id, CONF_TOKEN: simplisafe.refresh_token}
@@ -117,25 +125,6 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(simplisafe_user_id)
         self._abort_if_unique_id_configured()
         return self.async_create_entry(title=simplisafe_user_id, data=data)
-
-    async def async_step_reauth(self, config: Mapping[str, Any]) -> FlowResult:
-        """Handle configuration by re-auth."""
-        self._username = config.get(CONF_USERNAME)
-        self._reauth = True
-        return await self.async_step_user()
-
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle the start of the config flow."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="user",
-                errors=self._errors,
-                description_placeholders={CONF_URL: self._oauth_values.auth_url},
-            )
-
-        return await self.async_step_input_auth_code()
 
 
 class SimpliSafeOptionsFlowHandler(config_entries.OptionsFlow):
