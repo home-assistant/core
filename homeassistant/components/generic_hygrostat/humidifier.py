@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import math
 
 from homeassistant.components.humidifier import (
     PLATFORM_SCHEMA,
@@ -239,6 +240,11 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         return self._target_humidity
 
     @property
+    def current_humidity(self):
+        """Return the current humidity."""
+        return self._cur_humidity
+
+    @property
     def mode(self):
         """Return the current mode."""
         if self._away_humidity is None:
@@ -346,10 +352,12 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
     async def _async_update_humidity(self, humidity):
         """Update hygrostat with latest state from sensor."""
         try:
-            self._cur_humidity = float(humidity)
+            cur_humidity = float(humidity)
+            if math.isnan(cur_humidity) or math.isinf(cur_humidity):
+                raise ValueError(f"Sensor has illegal state {humidity}")
+            self._cur_humidity = cur_humidity
         except ValueError as ex:
             _LOGGER.warning("Unable to update from sensor: %s", ex)
-            self._cur_humidity = None
             self._active = False
             if self._is_device_active:
                 await self._async_device_turn_off()

@@ -13,6 +13,7 @@ MODE_BABY = "baby"
 
 ATTR_AVAILABLE_MODES = "available_modes"
 ATTR_HUMIDITY = "humidity"
+ATTR_CURRENT_HUMIDITY = "current_humidity"
 ATTR_MAX_HUMIDITY = "max_humidity"
 ATTR_MIN_HUMIDITY = "min_humidity"
 
