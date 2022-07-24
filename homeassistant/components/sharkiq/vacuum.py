@@ -78,8 +78,6 @@ async def async_setup_entry(
         "async_clean_room",
     )
 
-    # hass.services.register(DOMAIN, "clean_room", SharkVacuumEntity.async_clean_room)
-
 
 class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuumEntity):
     """Shark IQ vacuum entity."""
