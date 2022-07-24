@@ -1,0 +1,7 @@
+{
+    "config": {
+        "abort": {
+            "already_in_progress": "Alur konfigurasi sedang berlangsung"
+        }
+    }
+}
