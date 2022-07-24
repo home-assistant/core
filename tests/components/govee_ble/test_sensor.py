@@ -1,4 +1,4 @@
-"""Test the Govee BLE config flow."""
+"""Test the Govee BLE sensors."""
 
 from unittest.mock import patch
 
