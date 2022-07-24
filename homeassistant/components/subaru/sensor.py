@@ -56,27 +56,12 @@ FUEL_CONSUMPTION_L_PER_100KM = "L/100km"
 FUEL_CONSUMPTION_MPG = "mi/gal"
 FUEL_CONSUMPTION_UNITS = [FUEL_CONSUMPTION_L_PER_100KM, FUEL_CONSUMPTION_MPG]
 
-SENSOR_KEY_TO_SUFFIX = {
-    sc.ODOMETER: "Odometer",
-    sc.AVG_FUEL_CONSUMPTION: "Avg Fuel Consumption",
-    sc.DIST_TO_EMPTY: "Range",
-    sc.TIRE_PRESSURE_FL: "Tire Pressure FL",
-    sc.TIRE_PRESSURE_FR: "Tire Pressure FR",
-    sc.TIRE_PRESSURE_RL: "Tire Pressure RL",
-    sc.TIRE_PRESSURE_RR: "Tire Pressure RR",
-    sc.EXTERNAL_TEMP: "External Temp",
-    sc.BATTERY_VOLTAGE: "12V Battery Voltage",
-    sc.EV_DISTANCE_TO_EMPTY: "EV Range",
-    sc.EV_STATE_OF_CHARGE_PERCENT: "EV Battery Level",
-    sc.EV_TIME_TO_FULLY_CHARGED_UTC: "EV Time to Full Charge",
-}
-
 # Sensor available to "Subaru Safety Plus" subscribers with Gen1 or Gen2 vehicles
 SAFETY_SENSORS = [
     SensorEntityDescription(
         key=sc.ODOMETER,
-        device_class=None,
         icon="mdi:road-variant",
+        name="Odometer",
         native_unit_of_measurement=LENGTH_KILOMETERS,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -86,51 +71,57 @@ SAFETY_SENSORS = [
 API_GEN_2_SENSORS = [
     SensorEntityDescription(
         key=sc.AVG_FUEL_CONSUMPTION,
-        device_class=None,
         icon="mdi:leaf",
+        name="Avg Fuel Consumption",
         native_unit_of_measurement=FUEL_CONSUMPTION_L_PER_100KM,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=sc.DIST_TO_EMPTY,
-        device_class=None,
         icon="mdi:gas-station",
+        name="Range",
         native_unit_of_measurement=LENGTH_KILOMETERS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=sc.TIRE_PRESSURE_FL,
         device_class=SensorDeviceClass.PRESSURE,
+        name="Tire Pressure FL",
         native_unit_of_measurement=PRESSURE_HPA,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=sc.TIRE_PRESSURE_FR,
         device_class=SensorDeviceClass.PRESSURE,
+        name="Tire Pressure FR",
         native_unit_of_measurement=PRESSURE_HPA,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=sc.TIRE_PRESSURE_RL,
         device_class=SensorDeviceClass.PRESSURE,
+        name="Tire Pressure RL",
         native_unit_of_measurement=PRESSURE_HPA,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=sc.TIRE_PRESSURE_RR,
         device_class=SensorDeviceClass.PRESSURE,
+        name="Tire Pressure RR",
         native_unit_of_measurement=PRESSURE_HPA,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=sc.EXTERNAL_TEMP,
         device_class=SensorDeviceClass.TEMPERATURE,
+        name="External Temp",
         native_unit_of_measurement=TEMP_CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=sc.BATTERY_VOLTAGE,
         device_class=SensorDeviceClass.VOLTAGE,
+        name="12V Battery Voltage",
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -140,21 +131,22 @@ API_GEN_2_SENSORS = [
 EV_SENSORS = [
     SensorEntityDescription(
         key=sc.EV_DISTANCE_TO_EMPTY,
-        device_class=None,
         icon="mdi:ev-station",
+        name="EV Range",
         native_unit_of_measurement=LENGTH_MILES,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=sc.EV_STATE_OF_CHARGE_PERCENT,
         device_class=SensorDeviceClass.BATTERY,
+        name="EV Battery Level",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=sc.EV_TIME_TO_FULLY_CHARGED_UTC,
         device_class=SensorDeviceClass.TIMESTAMP,
-        native_unit_of_measurement=None,
+        name="EV Time to Full Charge",
         state_class=SensorStateClass.MEASUREMENT,
     ),
 ]
@@ -170,8 +162,8 @@ async def async_setup_entry(
     coordinator = entry[ENTRY_COORDINATOR]
     vehicle_info = entry[ENTRY_VEHICLES]
     entities = []
-    for vin in vehicle_info:
-        entities.extend(create_vehicle_sensors(vehicle_info[vin], coordinator))
+    for _, info in vehicle_info.items():
+        entities.extend(create_vehicle_sensors(info, coordinator))
     async_add_entities(entities)
 
 
@@ -208,14 +200,12 @@ class SubaruSensor(CoordinatorEntity, SensorEntity):
     ):
         """Initialize the sensor."""
         super().__init__(coordinator)
-        suffix = SENSOR_KEY_TO_SUFFIX[description.key]
         self.vin = vehicle_info[VEHICLE_VIN]
         self.entity_description = description
         self._attr_device_info = get_device_info(vehicle_info)
-        self._attr_name = f"{vehicle_info[VEHICLE_NAME]} {suffix}"
+        self._attr_name = f"{vehicle_info[VEHICLE_NAME]} {description.name}"
         self._attr_should_poll = False
-        self._attr_unique_id = f"{self.vin}_{suffix}"
-        _LOGGER.debug("Initialized SubaruSensor for %s", self._attr_name)
+        self._attr_unique_id = f"{self.vin}_{description.name}"
 
     @property
     def native_value(self):
@@ -264,8 +254,6 @@ class SubaruSensor(CoordinatorEntity, SensorEntity):
         """Return if entity is available."""
         last_update_success = super().available
         if last_update_success and self.vin not in self.coordinator.data:
-            return False
-        if self.state is None:
             return False
         return last_update_success
 

@@ -6,7 +6,6 @@ from homeassistant.components.subaru.sensor import (
     API_GEN_2_SENSORS,
     EV_SENSORS,
     SAFETY_SENSORS,
-    SENSOR_KEY_TO_SUFFIX,
 )
 from homeassistant.util import slugify
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM
@@ -62,7 +61,7 @@ def _assert_data(hass, expected_state):
     expected_states = {}
     for item in sensor_list:
         expected_states[
-            f"sensor.{slugify(f'{VEHICLE_NAME} {SENSOR_KEY_TO_SUFFIX[item.key]}')}"
+            f"sensor.{slugify(f'{VEHICLE_NAME} {item.name}')}"
         ] = expected_state[item.key]
 
     for sensor in expected_states:
