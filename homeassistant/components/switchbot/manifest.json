@@ -5,7 +5,7 @@
   "requirements": ["PySwitchbot==0.15.1"],
   "config_flow": true,
   "dependencies": ["bluetooth"],
-  "codeowners": ["@danielhiversen", "@RenierM26", "@murtas"],
+  "codeowners": ["@bdraco", "@danielhiversen", "@RenierM26", "@murtas"],
   "bluetooth": [
     {
       "service_data_uuid": "0000fd3d-0000-1000-8000-00805f9b34fb"

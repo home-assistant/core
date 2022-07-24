@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Service is already configured"
+            "already_configured": "Service is already configured",
+            "no_adapters": "No Bluetooth adapters found"
         },
         "flow_title": "{name}",
         "step": {
@@ -16,6 +17,15 @@
                     "address": "Device"
                 },
                 "description": "Choose a device to setup"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "adapter": "The Bluetooth Adapter to use for scanning"
+                }
             }
         }
     }
