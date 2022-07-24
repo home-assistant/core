@@ -18,9 +18,7 @@ from .const import (
     DOMAIN,
     ICON_ACIDITY,
     ICON_ALKALINITY,
-    ICON_BATTERY,
     ICON_CHLORINE,
-    ICON_TEMPERATURE,
     NAME,
     VERSION,
 )
@@ -144,8 +142,8 @@ class BatterySensor(SutroSensor):
     """Representation of a Battery Sensor."""
 
     _attr_name = f"{NAME} Battery"
-    _attr_icon = ICON_BATTERY
     _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_device_class = SensorDeviceClass.BATTERY
 
     @property
     def native_value(self):

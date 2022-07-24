@@ -1,9 +1,4 @@
-"""
-Custom integration to integrate Sutro with Home Assistant.
-
-For more details about this integration, please refer to
-https://github.com/ydogandjiev/hass-sutro
-"""
+"""Support for Sutro Smart Pool Monitor."""
 from __future__ import annotations
 
 import asyncio
@@ -14,11 +9,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import SutroApiClient
-from .const import CONF_TOKEN, DOMAIN, PLATFORMS, STARTUP_MESSAGE
+from .const import CONF_TOKEN, DOMAIN, PLATFORMS
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
