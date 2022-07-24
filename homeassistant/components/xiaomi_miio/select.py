@@ -217,9 +217,7 @@ class XiaomiGenericSelector(XiaomiSelector):
 
     entity_description: XiaomiMiioSelectDescription
 
-    def __init__(
-        self, device, entry, unique_id, coordinator, description, enum_class
-    ):
+    def __init__(self, device, entry, unique_id, coordinator, description, enum_class):
         """Initialize the generic Xiaomi attribute selector."""
         super().__init__(device, entry, unique_id, coordinator, description)
         self._current_attr = enum_class(
