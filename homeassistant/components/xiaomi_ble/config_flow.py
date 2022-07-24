@@ -54,6 +54,8 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Enter a legacy bindkey for a v2/v3 MiBeacon device."""
+        assert self._discovery_info
+
         errors = {}
 
         if user_input is not None:
@@ -88,6 +90,8 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Enter a bindkey for a v4/v5 MiBeacon device."""
+        assert self._discovery_info
+
         errors = {}
 
         if user_input is not None:
