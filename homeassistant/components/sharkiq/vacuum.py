@@ -283,6 +283,7 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
             ATTR_ERROR_MSG: self.sharkiq.error_text,
             ATTR_LOW_LIGHT: self.low_light,
             ATTR_RECHARGE_RESUME: self.recharge_resume,
+            ATTR_RSSI: self.rssi,
             ATTR_ROOMS: self.available_rooms,
         }
         return data
