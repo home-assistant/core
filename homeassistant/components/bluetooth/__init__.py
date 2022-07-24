@@ -276,8 +276,11 @@ class BluetoothManager:
     ) -> None:
         """Set up BT Discovery."""
         if self._reloading:
-            # On reload, we need to replace the scanner.
+            # On reload, we need to replace the scanner instance
+            # since the devices in its history may not be reachable
+            # anymore.
             self.async_setup()
+            self._integration_matcher.async_clear_history()
             self._reloading = False
         assert self.scanner is not None
         scanner_kwargs = {"scanning_mode": SCANNING_MODE_TO_BLEAK[scanning_mode]}
