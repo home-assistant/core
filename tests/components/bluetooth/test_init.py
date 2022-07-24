@@ -1215,13 +1215,10 @@ async def test_getting_the_scanner_returns_the_wrapped_instance(hass, enable_blu
     assert isinstance(scanner, models.HaBleakScannerWrapper)
 
 
-async def test_config_entry_can_be_reloaded_when_stop_raises(hass, caplog):
+async def test_config_entry_can_be_reloaded_when_stop_raises(
+    hass, caplog, enable_bluetooth
+):
     """Test we can reload if stopping the scanner raises."""
-    assert await async_setup_component(hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}})
-    await hass.async_block_till_done()
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-    await hass.async_block_till_done()
-
     entry = hass.config_entries.async_entries(bluetooth.DOMAIN)[0]
     assert entry.state == ConfigEntryState.LOADED
 
