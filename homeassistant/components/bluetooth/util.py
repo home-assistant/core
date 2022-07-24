@@ -17,9 +17,11 @@ async def async_get_bluetooth_adapters() -> list[str]:
     )
 
     adapters = await get_bluetooth_adapters()
-    if UNIX_DEFAULT_BLUETOOTH_ADAPTER in adapters:
+    if (
+        UNIX_DEFAULT_BLUETOOTH_ADAPTER in adapters
+        and adapters[0] != UNIX_DEFAULT_BLUETOOTH_ADAPTER
+    ):
         # The default adapter always needs to be the first in the list
         # because that is how bleak works.
-        adapters.remove(UNIX_DEFAULT_BLUETOOTH_ADAPTER)
-        return [UNIX_DEFAULT_BLUETOOTH_ADAPTER, *adapters]
+        adapters.insert(0, adapters.pop(adapters.index(UNIX_DEFAULT_BLUETOOTH_ADAPTER)))
     return adapters
