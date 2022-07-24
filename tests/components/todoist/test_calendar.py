@@ -1,7 +1,11 @@
 """Unit tests for the Todoist calendar platform."""
 from datetime import datetime
+from unittest.mock import Mock
 
-from homeassistant.components.todoist.calendar import _parse_due_date
+from homeassistant.components.todoist.calendar import (
+    TodoistProjectEntity,
+    _parse_due_date,
+)
 from homeassistant.components.todoist.types import DueDate
 from homeassistant.util import dt
 
@@ -42,3 +46,14 @@ def test_parse_due_date_without_timezone_uses_offset():
     }
     actual = _parse_due_date(data, timezone_offset=-8)
     assert datetime(2022, 2, 2, 22, 0, 0, tzinfo=dt.UTC) == actual
+
+
+def test_calendar_entity_unique_id():
+    """Test unique id is set to project id."""
+    entity = TodoistProjectEntity(
+        hass=Mock(),
+        data={"id": 12345, "name": "My project"},
+        labels=[],
+        token=Mock(),
+    )
+    assert 12345 == entity.unique_id
