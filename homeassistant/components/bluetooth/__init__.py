@@ -276,8 +276,11 @@ class BluetoothManager:
     ) -> None:
         """Set up BT Discovery."""
         if self._reloading:
-            # On reload, we need to replace the scanner.
+            # On reload, we need to replace the scanner instance
+            # since the devices in its history may not be reachable
+            # anymore.
             self.async_setup()
+            self._integration_matcher.async_clear_history()
             self._reloading = False
         assert self.scanner is not None
         scanner_kwargs = {"scanning_mode": SCANNING_MODE_TO_BLEAK[scanning_mode]}
@@ -458,5 +461,11 @@ class BluetoothManager:
             self._cancel_unavailable_tracking()
             self._cancel_unavailable_tracking = None
         if self.scanner:
-            await self.scanner.stop()
+            try:
+                await self.scanner.stop()
+            except BleakError as ex:
+                # This is not fatal, and they may want to reload
+                # the config entry to restart the scanner if they
+                # change the bluetooth dongle.
+                _LOGGER.error("Error stopping scanner: %s", ex)
         uninstall_multiple_bleak_catcher()
