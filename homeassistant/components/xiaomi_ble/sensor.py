@@ -158,7 +158,10 @@ async def async_setup_entry(
     coordinator: PassiveBluetoothProcessorCoordinator = hass.data[DOMAIN][
         entry.entry_id
     ]
-    data = XiaomiBluetoothDeviceData()
+    kwargs = {}
+    if bindkey := entry.data.get("bindkey"):
+        kwargs["bindkey"] = bytes.fromhex(bindkey)
+    data = XiaomiBluetoothDeviceData(**kwargs)
     processor = PassiveBluetoothDataProcessor(
         lambda service_info: sensor_update_to_bluetooth_data_update(
             data.update(service_info)
