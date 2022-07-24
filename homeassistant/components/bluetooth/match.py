@@ -46,14 +46,14 @@ class IntegrationMatchHistory:
 
 
 def seen_all_fields(
-    previous_match: IntegrationMatchHistory, advertisement_data: AdvertisementData
+    previous_match: IntegrationMatchHistory, adv_data: AdvertisementData
 ) -> bool:
     """Return if we have seen all fields."""
-    if not previous_match.manufacturer_data and advertisement_data.manufacturer_data:
+    if not previous_match.manufacturer_data and adv_data.manufacturer_data:
         return False
-    if not previous_match.service_data and advertisement_data.service_data:
+    if not previous_match.service_data and adv_data.service_data:
         return False
-    if not previous_match.service_uuids and advertisement_data.service_uuids:
+    if not previous_match.service_uuids and adv_data.service_uuids:
         return False
     return True
 
@@ -70,34 +70,30 @@ class IntegrationMatcher:
             MAX_REMEMBER_ADDRESSES
         )
 
-    def matched_domains(
-        self, device: BLEDevice, advertisement_data: AdvertisementData
-    ) -> set[str]:
+    def match_domains(self, device: BLEDevice, adv_data: AdvertisementData) -> set[str]:
         """Return the domains that are matched."""
         matched_domains: set[str] = set()
         if (previous_match := self._matched.get(device.address)) and seen_all_fields(
-            previous_match, advertisement_data
+            previous_match, adv_data
         ):
             # We have seen all fields so we can skip the rest of the matchers
             return matched_domains
         matched_domains = {
             matcher["domain"]
             for matcher in self._integration_matchers
-            if ble_device_matches(matcher, device, advertisement_data)
+            if ble_device_matches(matcher, device, adv_data)
         }
         if not matched_domains:
             return matched_domains
         if previous_match:
-            previous_match.manufacturer_data &= bool(
-                advertisement_data.manufacturer_data
-            )
-            previous_match.service_data &= bool(advertisement_data.service_data)
-            previous_match.service_uuids &= bool(advertisement_data.service_uuids)
+            previous_match.manufacturer_data &= bool(adv_data.manufacturer_data)
+            previous_match.service_data &= bool(adv_data.service_data)
+            previous_match.service_uuids &= bool(adv_data.service_uuids)
         else:
             self._matched[device.address] = IntegrationMatchHistory(  # type: ignore[index]
-                manufacturer_data=bool(advertisement_data.manufacturer_data),
-                service_data=bool(advertisement_data.service_data),
-                service_uuids=bool(advertisement_data.service_uuids),
+                manufacturer_data=bool(adv_data.manufacturer_data),
+                service_data=bool(adv_data.service_data),
+                service_uuids=bool(adv_data.service_uuids),
             )
         return matched_domains
 
@@ -105,48 +101,38 @@ class IntegrationMatcher:
 def ble_device_matches(
     matcher: BluetoothCallbackMatcher | BluetoothMatcher,
     device: BLEDevice,
-    advertisement_data: AdvertisementData,
+    adv_data: AdvertisementData,
 ) -> bool:
     """Check if a ble device and advertisement_data matches the matcher."""
-    if (
-        matcher_address := matcher.get(ADDRESS)
-    ) is not None and device.address != matcher_address:
+    if (address := matcher.get(ADDRESS)) is not None and device.address != address:
         return False
 
-    if (
-        matcher_local_name := matcher.get(LOCAL_NAME)
-    ) is not None and not fnmatch.fnmatch(
-        advertisement_data.local_name or device.name or device.address,
-        matcher_local_name,
+    if (local_name := matcher.get(LOCAL_NAME)) is not None and not fnmatch.fnmatch(
+        adv_data.local_name or device.name or device.address,
+        local_name,
     ):
         return False
 
     if (
-        matcher_service_uuid := matcher.get(SERVICE_UUID)
-    ) is not None and matcher_service_uuid not in advertisement_data.service_uuids:
+        service_uuid := matcher.get(SERVICE_UUID)
+    ) is not None and service_uuid not in adv_data.service_uuids:
         return False
 
     if (
-        (matcher_service_data_uuid := matcher.get(SERVICE_DATA_UUID)) is not None
-        and matcher_service_data_uuid not in advertisement_data.service_data
-    ):
+        service_data_uuid := matcher.get(SERVICE_DATA_UUID)
+    ) is not None and service_data_uuid not in adv_data.service_data:
         return False
 
     if (
-        (matcher_manfacturer_id := matcher.get(MANUFACTURER_ID)) is not None
-        and matcher_manfacturer_id not in advertisement_data.manufacturer_data
-    ):
+        manfacturer_id := matcher.get(MANUFACTURER_ID)
+    ) is not None and manfacturer_id not in adv_data.manufacturer_data:
         return False
 
-    if (
-        matcher_manufacturer_data_start := matcher.get(MANUFACTURER_DATA_START)
-    ) is not None:
-        matcher_manufacturer_data_start_bytes = bytearray(
-            matcher_manufacturer_data_start
-        )
+    if (manufacturer_data_start := matcher.get(MANUFACTURER_DATA_START)) is not None:
+        manufacturer_data_start_bytes = bytearray(manufacturer_data_start)
         if not any(
-            manufacturer_data.startswith(matcher_manufacturer_data_start_bytes)
-            for manufacturer_data in advertisement_data.manufacturer_data.values()
+            manufacturer_data.startswith(manufacturer_data_start_bytes)
+            for manufacturer_data in adv_data.manufacturer_data.values()
         ):
             return False
 
