@@ -62,7 +62,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
             if len(bindkey) != 24:
                 errors["bindkey"] = "expected_24_characters"
             else:
-                device = DeviceData(user_input["bindkey"])
+                device = DeviceData(bindkey=user_input["bindkey"])
 
                 # If we got this far we already know supported will
                 # return true so we don't bother checking that again
@@ -74,6 +74,8 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
                         title=self.context["title_placeholders"]["name"],
                         data={"bindkey": user_input["bindkey"]},
                     )
+
+                errors["bindkey"] = "decryption_failed"
 
         return self.async_show_form(
             step_id="get_encryption_key_legacy",
@@ -94,7 +96,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
             if len(bindkey) != 32:
                 errors["bindkey"] = "expected_32_characters"
             else:
-                device = DeviceData(user_input["bindkey"])
+                device = DeviceData(bindkey=user_input["bindkey"])
 
                 # If we got this far we already know supported will
                 # return true so we don't bother checking that again
@@ -106,6 +108,8 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
                         title=self.context["title_placeholders"]["name"],
                         data={"bindkey": user_input["bindkey"]},
                     )
+
+                errors["bindkey"] = "decryption_failed"
 
         return self.async_show_form(
             step_id="get_encryption_key_4_5",
