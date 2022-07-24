@@ -65,7 +65,6 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Enter a legacy bindkey for a v2/v3 MiBeacon device."""
         assert self._discovery_info
-
         errors = {}
 
         if user_input is not None:
@@ -74,7 +73,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
             if len(bindkey) != 24:
                 errors["bindkey"] = "expected_24_characters"
             else:
-                device = DeviceData(bindkey=user_input["bindkey"])
+                device = DeviceData(bindkey=bytes.fromhex(bindkey))
 
                 # If we got this far we already know supported will
                 # return true so we don't bother checking that again
@@ -84,7 +83,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
                 if device.bindkey_verified:
                     return self.async_create_entry(
                         title=self.context["title_placeholders"]["name"],
-                        data={"bindkey": user_input["bindkey"]},
+                        data={"bindkey": bindkey},
                     )
 
                 errors["bindkey"] = "decryption_failed"
@@ -110,7 +109,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
             if len(bindkey) != 32:
                 errors["bindkey"] = "expected_32_characters"
             else:
-                device = DeviceData(bindkey=user_input["bindkey"])
+                device = DeviceData(bindkey=bytes.fromhex(bindkey))
 
                 # If we got this far we already know supported will
                 # return true so we don't bother checking that again
@@ -120,7 +119,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
                 if device.bindkey_verified:
                     return self.async_create_entry(
                         title=self.context["title_placeholders"]["name"],
-                        data={"bindkey": user_input["bindkey"]},
+                        data={"bindkey": bindkey},
                     )
 
                 errors["bindkey"] = "decryption_failed"
@@ -160,11 +159,13 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
             if discovery.device.encryption_scheme == EncryptionScheme.MIBEACON_LEGACY:
                 self._discovery_info = discovery.discovery_info
                 self._discovered_device = discovery.device
+                self.context["title_placeholders"] = {"name": discovery.title}
                 return await self.async_step_get_encryption_key_legacy()
 
             if discovery.device.encryption_scheme == EncryptionScheme.MIBEACON_4_5:
                 self._discovery_info = discovery.discovery_info
                 self._discovered_device = discovery.device
+                self.context["title_placeholders"] = {"name": discovery.title}
                 return await self.async_step_get_encryption_key_4_5()
 
             return self.async_create_entry(title=discovery.title, data={})
