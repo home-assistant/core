@@ -11,7 +11,7 @@ import voluptuous as vol
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
@@ -90,8 +90,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     try:
         devices = await api.async_initialize()
-    except SkybellAuthenticationException:
-        return False
+    except SkybellAuthenticationException as ex:
+        raise ConfigEntryAuthFailed("Login failed: Invalid credentials") from ex
     except SkybellException as ex:
         raise ConfigEntryNotReady(f"Unable to connect to Skybell service: {ex}") from ex
 
