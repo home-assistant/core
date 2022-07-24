@@ -30,6 +30,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.service import async_extract_referenced_entity_ids
 
 from .const import DATA_LIFX_MANAGER, DOMAIN
+from .models import LIFXData
 from .util import convert_8_to_16, find_hsbk
 
 _LOGGER = logging.getLogger(__name__)
@@ -182,12 +183,11 @@ class LIFXManager:
         self, entity_ids: set[str], service: str, **kwargs: Any
     ) -> None:
         """Start a light effect on entities."""
-        bulbs = [
-            coordinator.device
-            for entry_id, coordinator in self.hass.data[DOMAIN].items()
-            if entry_id != DATA_LIFX_MANAGER
-            and self.entry_id_to_entity_id[entry_id] in entity_ids
-        ]
+        bulbs = []
+        lifx_data: LIFXData
+        for entry_id, lifx_data in self.hass.data[DOMAIN].items():
+            if entry_id != DATA_LIFX_MANAGER:
+                bulbs.append(lifx_data.coordinator_light.device)
         _LOGGER.debug("Starting effect %s on %s", service, bulbs)
 
         if service == SERVICE_EFFECT_PULSE:
