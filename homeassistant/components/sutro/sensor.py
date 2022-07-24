@@ -126,7 +126,6 @@ class TemperatureSensor(SutroSensor):
     """Representation of a Temperature Sensor."""
 
     _attr_name = f"{NAME} Temperature Sensor"
-    _attr_icon = ICON_TEMPERATURE
     _attr_native_unit_of_measurement = TEMP_FAHRENHEIT
     _attr_device_class = SensorDeviceClass.TEMPERATURE
 
