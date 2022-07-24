@@ -523,5 +523,11 @@ class BluetoothManager:
             self._cancel_unavailable_tracking()
             self._cancel_unavailable_tracking = None
         if self.scanner:
-            await self.scanner.stop()
+            try:
+                await self.scanner.stop()
+            except BleakError as ex:
+                # This is not fatal, and they may want to reload
+                # the config entry to restart the scanner if they
+                # change the bluetooth dongle.
+                _LOGGER.error("Error stopping scanner: %s", ex)
         uninstall_multiple_bleak_catcher()
