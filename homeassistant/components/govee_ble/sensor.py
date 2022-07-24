@@ -82,7 +82,7 @@ def _device_key_to_bluetooth_entity_key(
 def _sensor_device_info_to_hass(
     sensor_device_info: SensorDeviceInfo,
 ) -> DeviceInfo:
-    """Convert a sensor device info to a sensor device info."""
+    """Convert a sensor device info to a hass device info."""
     hass_device_info = DeviceInfo({})
     if sensor_device_info.name is not None:
         hass_device_info[ATTR_NAME] = sensor_device_info.name
