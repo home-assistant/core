@@ -18,7 +18,7 @@
         }
       },
       "get_encryption_key_4_5": {
-        "description": "The sensor data broadcast by the sensor is encrypted. In order to decrypt it we need a 24 character hexadecimal bindkey.",
+        "description": "The sensor data broadcast by the sensor is encrypted. In order to decrypt it we need a 32 character hexadecimal bindkey.",
         "data": {
           "bindkey": "Bindkey"
         }
