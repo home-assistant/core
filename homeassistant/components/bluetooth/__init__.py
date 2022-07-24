@@ -271,6 +271,7 @@ class BluetoothManager:
         scanner_kwargs = {"scanning_mode": SCANNING_MODE_TO_BLEAK[scanning_mode]}
         if adapter and adapter not in DEFAULT_ADAPTERS:
             scanner_kwargs["adapter"] = adapter
+        _LOGGER.debug("Initializing bluetooth scanner with %s", scanner_kwargs)
         try:
             self.scanner.async_setup(**scanner_kwargs)
         except (FileNotFoundError, BleakError) as ex:
