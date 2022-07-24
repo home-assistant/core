@@ -9,7 +9,7 @@ from homeassistant import config_entries
 from homeassistant.components.sharkiq.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
-from .const import CONFIG, TEST_PASSWORD, TEST_USERNAME, UNIQUE_ID
+from .const import CONFIG, TEST_PASSWORD, TEST_REGION, TEST_USERNAME, UNIQUE_ID
 
 from tests.common import MockConfigEntry
 
@@ -37,6 +37,7 @@ async def test_form(hass):
     assert result2["data"] == {
         "username": TEST_USERNAME,
         "password": TEST_PASSWORD,
+        "europe": TEST_REGION,
     }
     await hass.async_block_till_done()
     mock_setup_entry.assert_called_once()

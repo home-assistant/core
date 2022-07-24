@@ -95,7 +95,6 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
         | VacuumEntityFeature.STATUS
         | VacuumEntityFeature.STOP
         | VacuumEntityFeature.LOCATE
-        | VacuumEntityFeature.CLEAN_SPOT
     )
 
     def __init__(
