@@ -28,6 +28,10 @@ class Discovery:
     device: DeviceData
 
 
+def _title(discovery_info: BluetoothServiceInfo, device: DeviceData) -> str:
+    return device.title or device.get_device_name() or discovery_info.name
+
+
 class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Xiaomi Bluetooth."""
 
@@ -51,7 +55,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovery_info = discovery_info
         self._discovered_device = device
 
-        title = device.title or device.get_device_name() or discovery_info.name
+        title = _title(discovery_info, device)
         self.context["title_placeholders"] = {"name": title}
 
         if device.encryption_scheme == EncryptionScheme.MIBEACON_LEGACY:
@@ -178,9 +182,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
             device = DeviceData()
             if device.supported(discovery_info):
                 self._discovered_devices[address] = Discovery(
-                    title=device.title
-                    or device.get_device_name()
-                    or discovery_info.name,
+                    title=_title(discovery_info, device),
                     discovery_info=discovery_info,
                     device=device,
                 )
