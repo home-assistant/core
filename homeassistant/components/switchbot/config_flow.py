@@ -17,14 +17,7 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
-from .const import (
-    CONF_RETRY_COUNT,
-    CONF_RETRY_TIMEOUT,
-    DEFAULT_RETRY_COUNT,
-    DEFAULT_RETRY_TIMEOUT,
-    DOMAIN,
-    SUPPORTED_MODEL_TYPES,
-)
+from .const import CONF_RETRY_COUNT, DEFAULT_RETRY_COUNT, DOMAIN, SUPPORTED_MODEL_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -140,11 +133,6 @@ class SwitchbotOptionsFlowHandler(OptionsFlow):
         """Manage Switchbot options."""
         if user_input is not None:
             # Update common entity options for all other entities.
-            for entry in self.hass.config_entries.async_entries(DOMAIN):
-                if entry.unique_id != self.config_entry.unique_id:
-                    self.hass.config_entries.async_update_entry(
-                        entry, options=user_input
-                    )
             return self.async_create_entry(title="", data=user_input)
 
         options = {
@@ -153,13 +141,7 @@ class SwitchbotOptionsFlowHandler(OptionsFlow):
                 default=self.config_entry.options.get(
                     CONF_RETRY_COUNT, DEFAULT_RETRY_COUNT
                 ),
-            ): int,
-            vol.Optional(
-                CONF_RETRY_TIMEOUT,
-                default=self.config_entry.options.get(
-                    CONF_RETRY_TIMEOUT, DEFAULT_RETRY_TIMEOUT
-                ),
-            ): int,
+            ): int
         }
 
         return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
