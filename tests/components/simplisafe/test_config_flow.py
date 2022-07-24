@@ -23,9 +23,6 @@ async def test_duplicate_error(config_entry, hass, setup_simplisafe):
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
-        )
-        result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_AUTH_CODE: "code123"}
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
@@ -44,9 +41,6 @@ async def test_invalid_credentials(hass):
         assert result["step_id"] == "user"
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
-        )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_AUTH_CODE: "code123"}
         )
@@ -86,9 +80,6 @@ async def test_step_reauth(config_entry, hass, setup_simplisafe):
         "homeassistant.components.simplisafe.async_setup_entry", return_value=True
     ), patch("homeassistant.config_entries.ConfigEntries.async_reload"):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
-        )
-        result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_AUTH_CODE: "code123"}
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
@@ -113,9 +104,6 @@ async def test_step_reauth_wrong_account(config_entry, hass, setup_simplisafe):
         "homeassistant.components.simplisafe.async_setup_entry", return_value=True
     ), patch("homeassistant.config_entries.ConfigEntries.async_reload"):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
-        )
-        result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_AUTH_CODE: "code123"}
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
@@ -132,9 +120,6 @@ async def test_step_user(hass, setup_simplisafe):
     with patch(
         "homeassistant.components.simplisafe.async_setup_entry", return_value=True
     ), patch("homeassistant.config_entries.ConfigEntries.async_reload"):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
-        )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_AUTH_CODE: "code123"}
         )
@@ -157,9 +142,6 @@ async def test_unknown_error(hass, setup_simplisafe):
         assert result["step_id"] == "user"
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
-        )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_AUTH_CODE: "code123"}
         )
