@@ -1735,7 +1735,7 @@ pyopnsense==0.2.0
 pyoppleio==1.0.5
 
 # homeassistant.components.opentherm_gw
-pyotgw==2.0.0
+pyotgw==2.0.1
 
 # homeassistant.auth.mfa_modules.notify
 # homeassistant.auth.mfa_modules.totp
@@ -1794,7 +1794,7 @@ pyrecswitch==1.0.2
 pyrepetierng==0.1.0
 
 # homeassistant.components.risco
-pyrisco==0.3.1
+pyrisco==0.5.0
 
 # homeassistant.components.rituals_perfume_genie
 pyrituals==0.0.6

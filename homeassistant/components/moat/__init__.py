@@ -3,8 +3,8 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.bluetooth.passive_update_coordinator import (
-    PassiveBluetoothDataUpdateCoordinator,
+from homeassistant.components.bluetooth.passive_update_processor import (
+    PassiveBluetoothProcessorCoordinator,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -23,7 +23,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     assert address is not None
     hass.data.setdefault(DOMAIN, {})[
         entry.entry_id
-    ] = PassiveBluetoothDataUpdateCoordinator(
+    ] = PassiveBluetoothProcessorCoordinator(
         hass,
         _LOGGER,
         address=address,

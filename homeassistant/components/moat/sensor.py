@@ -13,11 +13,11 @@ from moat_ble import (
 )
 
 from homeassistant import config_entries
-from homeassistant.components.bluetooth.passive_update_coordinator import (
+from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothDataProcessor,
     PassiveBluetoothDataUpdate,
-    PassiveBluetoothDataUpdateCoordinator,
     PassiveBluetoothEntityKey,
+    PassiveBluetoothProcessorCoordinator,
     PassiveBluetoothProcessorEntity,
 )
 from homeassistant.components.sensor import (
@@ -89,7 +89,7 @@ def _device_key_to_bluetooth_entity_key(
 def _sensor_device_info_to_hass(
     sensor_device_info: SensorDeviceInfo,
 ) -> DeviceInfo:
-    """Convert a sensor device info to a sensor device info."""
+    """Convert a sensor device info to hass device info."""
     hass_device_info = DeviceInfo({})
     if sensor_device_info.name is not None:
         hass_device_info[ATTR_NAME] = sensor_device_info.name
@@ -133,7 +133,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Moat BLE sensors."""
-    coordinator: PassiveBluetoothDataUpdateCoordinator = hass.data[DOMAIN][
+    coordinator: PassiveBluetoothProcessorCoordinator = hass.data[DOMAIN][
         entry.entry_id
     ]
     data = MoatBluetoothDeviceData()
