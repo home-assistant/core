@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from moat_ble import DeviceKey, SensorDeviceInfo, SensorUpdate
 
-from homeassistant.components.bluetooth.passive_update_coordinator import (
+from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothDataUpdate,
     PassiveBluetoothEntityKey,
 )
