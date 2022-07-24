@@ -2,10 +2,7 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.switchbot.const import (
-    CONF_RETRY_COUNT,
-    CONF_RETRY_TIMEOUT,
-)
+from homeassistant.components.switchbot.const import CONF_RETRY_COUNT
 from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_USER
 from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PASSWORD, CONF_SENSOR_TYPE
 from homeassistant.data_entry_flow import FlowResultType
@@ -276,7 +273,6 @@ async def test_options_flow(hass):
         },
         options={
             CONF_RETRY_COUNT: 10,
-            CONF_RETRY_TIMEOUT: 10,
         },
         unique_id="aabbccddeeff",
     )
@@ -294,7 +290,6 @@ async def test_options_flow(hass):
             result["flow_id"],
             user_input={
                 CONF_RETRY_COUNT: 3,
-                CONF_RETRY_TIMEOUT: 5,
             },
         )
         await hass.async_block_till_done()
@@ -318,7 +313,6 @@ async def test_options_flow(hass):
             result["flow_id"],
             user_input={
                 CONF_RETRY_COUNT: 6,
-                CONF_RETRY_TIMEOUT: 6,
             },
         )
         await hass.async_block_till_done()
