@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Mapping
+from doctest import UnexpectedException
 from typing import Any
 
 import aiohttp
@@ -11,14 +12,20 @@ from sharkiq import SharkIqAuthError, get_ayla_api
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, LOGGER
 
 SHARKIQ_SCHEMA = vol.Schema(
-    {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+    {
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str,
+        vol.Required(CONF_REGION, default="Everywhere Else"): vol.In(
+            ["Europe", "Everywhere Else"]
+        ),
+    }
 )
 
 
@@ -30,6 +37,7 @@ async def _validate_input(
         username=data[CONF_USERNAME],
         password=data[CONF_PASSWORD],
         websession=async_get_clientsession(hass),
+        europe=(data[CONF_REGION] == "Europe"),
     )
 
     try:
@@ -40,6 +48,8 @@ async def _validate_input(
         raise CannotConnect from errors
     except SharkIqAuthError as error:
         raise InvalidAuth from error
+    except UnexpectedException as error:
+        raise CannotConnect from error
 
     # Return info that you want to store in the config entry.
     return {"title": data[CONF_USERNAME]}
@@ -114,3 +124,7 @@ class CannotConnect(exceptions.HomeAssistantError):
 
 class InvalidAuth(exceptions.HomeAssistantError):
     """Error to indicate there is invalid auth."""
+
+
+class UnknownAuth(exceptions.HomeAssistantError):
+    """Error to indicate there is an uncaught auth error."""
