@@ -18,6 +18,7 @@ MAX_REMEMBER_ADDRESSES: Final = 2048
 ADDRESS: Final = "address"
 LOCAL_NAME: Final = "local_name"
 SERVICE_UUID: Final = "service_uuid"
+SERVICE_DATA_UUID: Final = "service_data_uuid"
 MANUFACTURER_ID: Final = "manufacturer_id"
 MANUFACTURER_DATA_START: Final = "manufacturer_data_start"
 
@@ -123,6 +124,12 @@ def ble_device_matches(
     if (
         matcher_service_uuid := matcher.get(SERVICE_UUID)
     ) is not None and matcher_service_uuid not in advertisement_data.service_uuids:
+        return False
+
+    if (
+        (matcher_service_data_uuid := matcher.get(SERVICE_DATA_UUID)) is not None
+        and matcher_service_data_uuid not in advertisement_data.service_data
+    ):
         return False
 
     if (
