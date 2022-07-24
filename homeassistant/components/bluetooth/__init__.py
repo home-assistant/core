@@ -324,7 +324,7 @@ class BluetoothManager:
         )
         _LOGGER.debug(
             "Device detected: %s with advertisement_data: %s matched domains: %s",
-            device,
+            device.address,
             advertisement_data,
             matched_domains,
         )
