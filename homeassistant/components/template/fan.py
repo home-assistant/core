@@ -285,7 +285,7 @@ class TemplateFan(TemplateEntity, FanEntity):
             )
 
         if self._template is None:
-            self._state = True
+            self._state = percentage == 0
             self.async_write_ha_state()
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
