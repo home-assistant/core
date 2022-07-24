@@ -1,6 +1,5 @@
 """Support for Switchbot devices."""
 
-from collections.abc import Mapping
 import logging
 from types import MappingProxyType
 from typing import Any
@@ -26,9 +25,7 @@ from .const import (
     ATTR_HYGROMETER,
     COMMON_OPTIONS,
     CONF_RETRY_COUNT,
-    CONF_RETRY_TIMEOUT,
     DEFAULT_RETRY_COUNT,
-    DEFAULT_RETRY_TIMEOUT,
     DOMAIN,
 )
 from .coordinator import SwitchbotDataUpdateCoordinator
@@ -49,8 +46,6 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Switchbot from a config entry."""
     hass.data.setdefault(DOMAIN, {})
-    domain_data = hass.data[DOMAIN]
-
     if CONF_ADDRESS not in entry.data and CONF_MAC in entry.data:
         # Bleak uses addresses not mac addresses which are are actually
         # UUIDs on some platforms (MacOS).
@@ -65,10 +60,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not entry.options:
         hass.config_entries.async_update_entry(
             entry,
-            options={
-                CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT,
-                CONF_RETRY_TIMEOUT: DEFAULT_RETRY_TIMEOUT,
-            },
+            options={CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT},
         )
 
     sensor_type: str = entry.data[CONF_SENSOR_TYPE]
@@ -78,13 +70,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(
             f"Could not find Switchbot {sensor_type} with address {address}"
         )
-
-    if COMMON_OPTIONS not in domain_data:
-        domain_data[COMMON_OPTIONS] = entry.options
-
-    common_options: Mapping[str, int] = domain_data[COMMON_OPTIONS]
-    switchbot.DEFAULT_RETRY_TIMEOUT = common_options[CONF_RETRY_TIMEOUT]
-
     cls = CLASS_BY_DEVICE.get(sensor_type, switchbot.SwitchbotDevice)
     device = cls(
         device=ble_device,
@@ -92,7 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         retry_count=entry.options[CONF_RETRY_COUNT],
     )
     coordinator = hass.data[DOMAIN][entry.entry_id] = SwitchbotDataUpdateCoordinator(
-        hass, _LOGGER, ble_device, device, common_options
+        hass, _LOGGER, ble_device, device
     )
     entry.async_on_unload(coordinator.async_start())
     if not await coordinator.async_wait_ready():
