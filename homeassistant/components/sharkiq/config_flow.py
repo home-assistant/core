@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Mapping
-from doctest import UnexpectedException
 from typing import Any
 
 import aiohttp
@@ -44,12 +43,21 @@ async def _validate_input(
         async with async_timeout.timeout(10):
             LOGGER.debug("Initialize connection to Ayla networks API")
             await ayla_api.async_sign_in()
-    except (asyncio.TimeoutError, aiohttp.ClientError) as errors:
-        raise CannotConnect from errors
+    except (asyncio.TimeoutError, aiohttp.ClientError) as error:
+        LOGGER.error(error)
+        raise CannotConnect(
+            "Unable to connect to SharkIQ services.  Check your region settings."
+        ) from error
     except SharkIqAuthError as error:
-        raise InvalidAuth from error
-    except UnexpectedException as error:
-        raise CannotConnect from error
+        LOGGER.error(error)
+        raise InvalidAuth(
+            "Username or password incorrect.  Please check your credentials."
+        ) from error
+    except Exception as error:
+        LOGGER.error(error)
+        raise CannotConnect(
+            "An unknown error occurred. Check your region settings and open an issue on Github if the issue persists."
+        ) from error
 
     # Return info that you want to store in the config entry.
     return {"title": data[CONF_USERNAME]}
@@ -74,9 +82,10 @@ class SharkIqConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         except InvalidAuth:
             errors["base"] = "invalid_auth"
-        except Exception:  # pylint: disable=broad-except
+        except Exception as error:  # pylint: disable=broad-except
             LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
+            raise UnknownAuth("An unknown error has occurred.") from error
         return info, errors
 
     async def async_step_user(

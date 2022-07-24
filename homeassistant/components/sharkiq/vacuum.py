@@ -224,10 +224,13 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
                     all_rooms_reachable = False
                     LOGGER.error("Room not reachable: %s", room)
             if all_rooms_reachable:
+                LOGGER.info("Cleaning room: %s", kwargs.get(ATTR_ROOMS))
                 await self.sharkiq.async_clean_rooms(kwargs.get(ATTR_ROOMS))
             else:
                 LOGGER.error("Invalid room selection - service not run")
-                raise self.InvalidRoomSelection
+                raise self.InvalidRoomSelection(
+                    "One or more of the rooms listed is not available to your vacuum.  Make sure all rooms match the Shark App including capitalization."
+                )
 
         else:
             LOGGER.error("No target specified")
