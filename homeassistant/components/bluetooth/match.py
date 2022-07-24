@@ -86,9 +86,9 @@ class IntegrationMatcher:
         if not matched_domains:
             return matched_domains
         if previous_match:
-            previous_match.manufacturer_data &= bool(adv_data.manufacturer_data)
-            previous_match.service_data &= bool(adv_data.service_data)
-            previous_match.service_uuids &= bool(adv_data.service_uuids)
+            previous_match.manufacturer_data |= bool(adv_data.manufacturer_data)
+            previous_match.service_data |= bool(adv_data.service_data)
+            previous_match.service_uuids |= bool(adv_data.service_uuids)
         else:
             self._matched[device.address] = IntegrationMatchHistory(  # type: ignore[index]
                 manufacturer_data=bool(adv_data.manufacturer_data),

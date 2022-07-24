@@ -248,20 +248,33 @@ async def test_discovery_match_by_manufacturer_id_and_manufacturer_data_start(
         assert len(mock_bleak_scanner_start.mock_calls) == 1
 
         hkc_device = BLEDevice("44:44:33:11:23:45", "lock")
+        hkc_adv_no_mfr_data = AdvertisementData(
+            local_name="lock",
+            service_uuids=[],
+            manufacturer_data={},
+        )
         hkc_adv = AdvertisementData(
             local_name="lock",
             service_uuids=[],
             manufacturer_data={76: b"\x06\x02\x03\x99"},
         )
 
+        # 1st discovery with no manufacturer data
+        # should not trigger config flow
+        _get_underlying_scanner()._callback(hkc_device, hkc_adv_no_mfr_data)
+        await hass.async_block_till_done()
+        assert len(mock_config_flow.mock_calls) == 0
+        mock_config_flow.reset_mock()
+
+        # 2nd discovery with manufacturer data
+        # should trigger a config flow
         _get_underlying_scanner()._callback(hkc_device, hkc_adv)
         await hass.async_block_till_done()
-
         assert len(mock_config_flow.mock_calls) == 1
         assert mock_config_flow.mock_calls[0][1][0] == "homekit_controller"
         mock_config_flow.reset_mock()
 
-        # 2nd discovery should not generate another flow
+        # 3rd discovery should not generate another flow
         _get_underlying_scanner()._callback(hkc_device, hkc_adv)
         await hass.async_block_till_done()
 
@@ -296,7 +309,15 @@ async def test_discovery_match_by_service_data_uuid_then_others(
         {
             "domain": "my_domain",
             "service_data_uuid": "0000fd3d-0000-1000-8000-00805f9b34fb",
-        }
+        },
+        {
+            "domain": "my_domain",
+            "service_uuid": "0000fd3d-0000-1000-8000-00805f9b34fc",
+        },
+        {
+            "domain": "other_domain",
+            "manufacturer_id": 323,
+        },
     ]
     with patch(
         "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
@@ -318,6 +339,12 @@ async def test_discovery_match_by_service_data_uuid_then_others(
             service_uuids=[],
             manufacturer_data={},
         )
+        adv_with_mfr_data = AdvertisementData(
+            local_name="lock",
+            service_uuids=[],
+            manufacturer_data={323: b"\x01\x02\x03"},
+            service_data={},
+        )
         adv_with_service_data_uuid = AdvertisementData(
             local_name="lock",
             service_uuids=[],
@@ -336,13 +363,35 @@ async def test_discovery_match_by_service_data_uuid_then_others(
             service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"\x01\x02\x03"},
             service_uuids=["0000fd3d-0000-1000-8000-00805f9b34fd"],
         )
+        adv_with_service_uuid = AdvertisementData(
+            local_name="lock",
+            manufacturer_data={},
+            service_data={},
+            service_uuids=["0000fd3d-0000-1000-8000-00805f9b34fd"],
+        )
         # 1st discovery should not generate a flow because the
         # service_data_uuid is not in the advertisement
         _get_underlying_scanner()._callback(device, adv_without_service_data_uuid)
         await hass.async_block_till_done()
         assert len(mock_config_flow.mock_calls) == 0
+        mock_config_flow.reset_mock()
 
-        # 2nd discovery should generate a flow because the
+        # 2nd discovery should not generate a flow because the
+        # service_data_uuid is not in the advertisement
+        _get_underlying_scanner()._callback(device, adv_without_service_data_uuid)
+        await hass.async_block_till_done()
+        assert len(mock_config_flow.mock_calls) == 0
+        mock_config_flow.reset_mock()
+
+        # 3rd discovery should generate a flow because the
+        # manufacturer_data is in the advertisement
+        _get_underlying_scanner()._callback(device, adv_with_mfr_data)
+        await hass.async_block_till_done()
+        assert len(mock_config_flow.mock_calls) == 1
+        assert mock_config_flow.mock_calls[0][1][0] == "other_domain"
+        mock_config_flow.reset_mock()
+
+        # 4th discovery should generate a flow because the
         # service_data_uuid is in the advertisement and
         # we never saw a service_data_uuid before
         _get_underlying_scanner()._callback(device, adv_with_service_data_uuid)
@@ -351,39 +400,127 @@ async def test_discovery_match_by_service_data_uuid_then_others(
         assert mock_config_flow.mock_calls[0][1][0] == "my_domain"
         mock_config_flow.reset_mock()
 
-        # 3rd discovery should not generate a flow because the
+        # 5th discovery should not generate a flow because the
         # we already saw an advertisement with the service_data_uuid
         _get_underlying_scanner()._callback(device, adv_with_service_data_uuid)
         await hass.async_block_till_done()
         assert len(mock_config_flow.mock_calls) == 0
 
-        # 4th discovery should generate a flow because the
+        # 6th discovery should not generate a flow because the
         # manufacturer_data is in the advertisement
-        # and we never saw manufacturer_data before
+        # and we saw manufacturer_data before
         _get_underlying_scanner()._callback(
             device, adv_with_service_data_uuid_and_mfr_data
         )
         await hass.async_block_till_done()
-        assert len(mock_config_flow.mock_calls) == 1
-        assert mock_config_flow.mock_calls[0][1][0] == "my_domain"
+        assert len(mock_config_flow.mock_calls) == 0
         mock_config_flow.reset_mock()
 
-        # 5th discovery should generate a flow because the
+        # 7th discovery should generate a flow because the
         # service_uuids is in the advertisement
         # and we never saw service_uuids before
         _get_underlying_scanner()._callback(
             device, adv_with_service_data_uuid_and_mfr_data_and_service_uuid
         )
         await hass.async_block_till_done()
-        assert len(mock_config_flow.mock_calls) == 1
-        assert mock_config_flow.mock_calls[0][1][0] == "my_domain"
+        assert len(mock_config_flow.mock_calls) == 2
+        assert {
+            mock_config_flow.mock_calls[0][1][0],
+            mock_config_flow.mock_calls[1][1][0],
+        } == {"my_domain", "other_domain"}
         mock_config_flow.reset_mock()
 
-        # 6th discovery should not generate a flow
+        # 8th discovery should not generate a flow
         # since all fields have been seen at this point
         _get_underlying_scanner()._callback(
             device, adv_with_service_data_uuid_and_mfr_data_and_service_uuid
         )
+        await hass.async_block_till_done()
+        assert len(mock_config_flow.mock_calls) == 0
+        mock_config_flow.reset_mock()
+
+        # 9th discovery should not generate a flow
+        # since all fields have been seen at this point
+        _get_underlying_scanner()._callback(device, adv_with_service_uuid)
+        await hass.async_block_till_done()
+        assert len(mock_config_flow.mock_calls) == 0
+
+        # 10th discovery should not generate a flow
+        # since all fields have been seen at this point
+        _get_underlying_scanner()._callback(device, adv_with_service_data_uuid)
+        await hass.async_block_till_done()
+        assert len(mock_config_flow.mock_calls) == 0
+
+        # 11th discovery should not generate a flow
+        # since all fields have been seen at this point
+        _get_underlying_scanner()._callback(device, adv_without_service_data_uuid)
+        await hass.async_block_till_done()
+        assert len(mock_config_flow.mock_calls) == 0
+
+
+async def test_discovery_match_first_by_service_uuid_and_then_manufacturer_id(
+    hass, mock_bleak_scanner_start
+):
+    """Test bluetooth discovery matches twice for service_uuid and then manufacturer_id."""
+    mock_bt = [
+        {
+            "domain": "my_domain",
+            "manufacturer_id": 76,
+        },
+        {
+            "domain": "my_domain",
+            "service_uuid": "0000fd3d-0000-1000-8000-00805f9b34fc",
+        },
+    ]
+    with patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
+    ):
+        assert await async_setup_component(
+            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
+        )
+        await hass.async_block_till_done()
+
+    with patch.object(hass.config_entries.flow, "async_init") as mock_config_flow:
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        assert len(mock_bleak_scanner_start.mock_calls) == 1
+
+        device = BLEDevice("44:44:33:11:23:45", "lock")
+        adv_service_uuids = AdvertisementData(
+            local_name="lock",
+            service_uuids=["0000fd3d-0000-1000-8000-00805f9b34fc"],
+            manufacturer_data={},
+        )
+        adv_manufacturer_data = AdvertisementData(
+            local_name="lock",
+            service_uuids=[],
+            manufacturer_data={76: b"\x06\x02\x03\x99"},
+        )
+
+        # 1st discovery with matches service_uuid
+        # should trigger config flow
+        _get_underlying_scanner()._callback(device, adv_service_uuids)
+        await hass.async_block_till_done()
+        assert len(mock_config_flow.mock_calls) == 1
+        assert mock_config_flow.mock_calls[0][1][0] == "my_domain"
+        mock_config_flow.reset_mock()
+
+        # 2nd discovery with manufacturer data
+        # should trigger a config flow
+        _get_underlying_scanner()._callback(device, adv_manufacturer_data)
+        await hass.async_block_till_done()
+        assert len(mock_config_flow.mock_calls) == 1
+        assert mock_config_flow.mock_calls[0][1][0] == "my_domain"
+        mock_config_flow.reset_mock()
+
+        # 3rd discovery should not generate another flow
+        _get_underlying_scanner()._callback(device, adv_service_uuids)
+        await hass.async_block_till_done()
+        assert len(mock_config_flow.mock_calls) == 0
+
+        # 4th discovery should not generate another flow
+        _get_underlying_scanner()._callback(device, adv_manufacturer_data)
         await hass.async_block_till_done()
         assert len(mock_config_flow.mock_calls) == 0
 
