@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
 import logging
 from typing import Any, cast
 
@@ -37,7 +38,7 @@ class SwitchbotDataUpdateCoordinator(PassiveBluetoothDataUpdateCoordinator):
         logger: logging.Logger,
         ble_device: BLEDevice,
         device: switchbot.SwitchbotDevice,
-        common_options: dict[str, int],
+        common_options: Mapping[str, int],
     ) -> None:
         """Initialize global switchbot data updater."""
         super().__init__(hass, logger, ble_device.address)

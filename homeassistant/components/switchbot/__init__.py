@@ -1,5 +1,6 @@
 """Support for Switchbot devices."""
 
+from collections.abc import Mapping
 import logging
 from types import MappingProxyType
 from typing import Any
@@ -81,7 +82,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if COMMON_OPTIONS not in domain_data:
         domain_data[COMMON_OPTIONS] = entry.options
 
-    common_options: dict[str, int] = domain_data[COMMON_OPTIONS]
+    common_options: Mapping[str, int] = domain_data[COMMON_OPTIONS]
     switchbot.DEFAULT_RETRY_TIMEOUT = common_options[CONF_RETRY_TIMEOUT]
 
     cls = CLASS_BY_DEVICE.get(sensor_type, switchbot.SwitchbotDevice)

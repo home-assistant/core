@@ -5,15 +5,13 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-import fnmatch
 import logging
 import platform
-from typing import Final, TypedDict, Union
+from typing import Final, Union
 
 from bleak import BleakError
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
-from lru import LRU  # pylint: disable=no-name-in-module
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -28,20 +26,21 @@ from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import (
-    BluetoothMatcher,
-    BluetoothMatcherOptional,
-    async_get_bluetooth,
-)
+from homeassistant.loader import async_get_bluetooth
 
 from . import models
 from .const import DOMAIN
+from .match import (
+    ADDRESS,
+    BluetoothCallbackMatcher,
+    IntegrationMatcher,
+    ble_device_matches,
+)
 from .models import HaBleakScanner, HaBleakScannerWrapper
 from .usage import install_multiple_bleak_catcher, uninstall_multiple_bleak_catcher
 
 _LOGGER = logging.getLogger(__name__)
 
-MAX_REMEMBER_ADDRESSES: Final = 2048
 
 UNAVAILABLE_TRACK_SECONDS: Final = 60 * 5
 
@@ -79,19 +78,6 @@ class BluetoothServiceInfoBleak(BluetoothServiceInfo):
         )
 
 
-class BluetoothCallbackMatcherOptional(TypedDict, total=False):
-    """Matcher for the bluetooth integration for callback optional fields."""
-
-    address: str
-
-
-class BluetoothCallbackMatcher(
-    BluetoothMatcherOptional,
-    BluetoothCallbackMatcherOptional,
-):
-    """Callback matcher for the bluetooth integration."""
-
-
 class BluetoothScanningMode(Enum):
     """The mode of scanning for bluetooth devices."""
 
@@ -103,12 +89,6 @@ SCANNING_MODE_TO_BLEAK = {
     BluetoothScanningMode.ACTIVE: "active",
     BluetoothScanningMode.PASSIVE: "passive",
 }
-
-ADDRESS: Final = "address"
-LOCAL_NAME: Final = "local_name"
-SERVICE_UUID: Final = "service_uuid"
-MANUFACTURER_ID: Final = "manufacturer_id"
-MANUFACTURER_DATA_START: Final = "manufacturer_data_start"
 
 
 BluetoothChange = Enum("BluetoothChange", "ADVERTISEMENT")
@@ -208,8 +188,8 @@ async def _async_has_bluetooth_adapter() -> bool:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the bluetooth integration."""
-    integration_matchers = await async_get_bluetooth(hass)
-    manager = BluetoothManager(hass, integration_matchers)
+    integration_matcher = IntegrationMatcher(await async_get_bluetooth(hass))
+    manager = BluetoothManager(hass, integration_matcher)
     manager.async_setup()
     hass.data[DOMAIN] = manager
     # The config entry is responsible for starting the manager
@@ -252,62 +232,17 @@ async def async_unload_entry(
     return True
 
 
-def _ble_device_matches(
-    matcher: BluetoothCallbackMatcher | BluetoothMatcher,
-    device: BLEDevice,
-    advertisement_data: AdvertisementData,
-) -> bool:
-    """Check if a ble device and advertisement_data matches the matcher."""
-    if (
-        matcher_address := matcher.get(ADDRESS)
-    ) is not None and device.address != matcher_address:
-        return False
-
-    if (
-        matcher_local_name := matcher.get(LOCAL_NAME)
-    ) is not None and not fnmatch.fnmatch(
-        advertisement_data.local_name or device.name or device.address,
-        matcher_local_name,
-    ):
-        return False
-
-    if (
-        matcher_service_uuid := matcher.get(SERVICE_UUID)
-    ) is not None and matcher_service_uuid not in advertisement_data.service_uuids:
-        return False
-
-    if (
-        (matcher_manfacturer_id := matcher.get(MANUFACTURER_ID)) is not None
-        and matcher_manfacturer_id not in advertisement_data.manufacturer_data
-    ):
-        return False
-
-    if (
-        matcher_manufacturer_data_start := matcher.get(MANUFACTURER_DATA_START)
-    ) is not None:
-        matcher_manufacturer_data_start_bytes = bytearray(
-            matcher_manufacturer_data_start
-        )
-        if not any(
-            manufacturer_data.startswith(matcher_manufacturer_data_start_bytes)
-            for manufacturer_data in advertisement_data.manufacturer_data.values()
-        ):
-            return False
-
-    return True
-
-
 class BluetoothManager:
     """Manage Bluetooth."""
 
     def __init__(
         self,
         hass: HomeAssistant,
-        integration_matchers: list[BluetoothMatcher],
+        integration_matcher: IntegrationMatcher,
     ) -> None:
         """Init bluetooth discovery."""
         self.hass = hass
-        self._integration_matchers = integration_matchers
+        self._integration_matcher = integration_matcher
         self.scanner: HaBleakScanner | None = None
         self._cancel_device_detected: CALLBACK_TYPE | None = None
         self._cancel_unavailable_tracking: CALLBACK_TYPE | None = None
@@ -315,9 +250,6 @@ class BluetoothManager:
         self._callbacks: list[
             tuple[BluetoothCallback, BluetoothCallbackMatcher | None]
         ] = []
-        # Some devices use a random address so we need to use
-        # an LRU to avoid memory issues.
-        self._matched: LRU = LRU(MAX_REMEMBER_ADDRESSES)
 
     @hass_callback
     def async_setup(self) -> None:
@@ -387,24 +319,9 @@ class BluetoothManager:
         self, device: BLEDevice, advertisement_data: AdvertisementData
     ) -> None:
         """Handle a detected device."""
-        matched_domains: set[str] | None = None
-        match_key = (device.address, bool(advertisement_data.manufacturer_data))
-        match_key_has_mfr_data = (device.address, True)
-
-        # If we matched without manufacturer_data, we need to do it again
-        # since we may think the device is unsupported otherwise
-        if (
-            match_key_has_mfr_data not in self._matched
-            and match_key not in self._matched
-        ):
-            matched_domains = {
-                matcher["domain"]
-                for matcher in self._integration_matchers
-                if _ble_device_matches(matcher, device, advertisement_data)
-            }
-            if matched_domains:
-                self._matched[match_key] = True
-
+        matched_domains = self._integration_matcher.matched_domains(
+            device, advertisement_data
+        )
         _LOGGER.debug(
             "Device detected: %s with advertisement_data: %s matched domains: %s",
             device,
@@ -417,7 +334,7 @@ class BluetoothManager:
 
         service_info: BluetoothServiceInfoBleak | None = None
         for callback, matcher in self._callbacks:
-            if matcher is None or _ble_device_matches(
+            if matcher is None or ble_device_matches(
                 matcher, device, advertisement_data
             ):
                 if service_info is None:
