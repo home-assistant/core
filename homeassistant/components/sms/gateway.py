@@ -176,7 +176,13 @@ class Gateway:
 
     async def get_model_async(self):
         """Get the model of the modem."""
-        return await self._worker.get_model_async()
+        model = await self._worker.get_model_async()
+        if not model or not model[0]:
+            return
+        display = model[0]  # Identification model
+        if model[1]:  # Real model
+            display = f"{display} ({model[1]})"
+        return display
 
     async def get_firmware_async(self):
         """Get the firmware information of the modem."""
