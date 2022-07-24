@@ -37,3 +37,25 @@ PLATFORMS = [
     Platform.LOCK,
     Platform.SENSOR,
 ]
+
+SERVICE_LOCK = "lock"
+SERVICE_UNLOCK = "unlock"
+SERVICE_UNLOCK_SPECIFIC_DOOR = "unlock_specific_door"
+
+ATTR_DOOR = "door"
+
+UNLOCK_DOOR_ALL = "all"
+UNLOCK_DOOR_DRIVERS = "driver"
+UNLOCK_DOOR_TAILGATE = "tailgate"
+UNLOCK_VALID_DOORS = {
+    UNLOCK_DOOR_ALL: ALL_DOORS,
+    UNLOCK_DOOR_DRIVERS: DRIVERS_DOOR,
+    UNLOCK_DOOR_TAILGATE: TAILGATE_DOOR,
+}
+
+ICONS = {
+    "Avg Fuel Consumption": "mdi:leaf",
+    "EV Range": "mdi:ev-station",
+    "Odometer": "mdi:road-variant",
+    "Range": "mdi:gas-station",
+}
