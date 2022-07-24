@@ -222,6 +222,8 @@ async def _async_update_listener(
     hass: HomeAssistant, entry: config_entries.ConfigEntry
 ) -> None:
     """Handle options update."""
+    manager: BluetoothManager = hass.data[DOMAIN]
+    manager.async_start_reload()
     await hass.config_entries.async_reload(entry.entry_id)
 
 
@@ -252,6 +254,7 @@ class BluetoothManager:
         self._callbacks: list[
             tuple[BluetoothCallback, BluetoothCallbackMatcher | None]
         ] = []
+        self._reloading = False
 
     @hass_callback
     def async_setup(self) -> None:
@@ -263,10 +266,19 @@ class BluetoothManager:
         """Get the scanner."""
         return HaBleakScannerWrapper()
 
+    @hass_callback
+    def async_start_reload(self) -> None:
+        """Start reloading."""
+        self._reloading = True
+
     async def async_start(
         self, scanning_mode: BluetoothScanningMode, adapter: str | None
     ) -> None:
         """Set up BT Discovery."""
+        if self._reloading:
+            # On reload, we need to replace the scanner.
+            self.async_setup()
+            self._reloading = False
         assert self.scanner is not None
         scanner_kwargs = {"scanning_mode": SCANNING_MODE_TO_BLEAK[scanning_mode]}
         if adapter and adapter not in DEFAULT_ADAPTERS:
