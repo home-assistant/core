@@ -1,6 +1,7 @@
 """Config flow for Xiaomi Bluetooth integration."""
 from __future__ import annotations
 
+import dataclasses
 from typing import Any
 
 import voluptuous as vol
@@ -18,6 +19,15 @@ from homeassistant.data_entry_flow import FlowResult
 from .const import DOMAIN
 
 
+@dataclasses.dataclass
+class Discovery:
+    """A discovered bluetooth device."""
+
+    title: str
+    discovery_info: BluetoothServiceInfo
+    device: DeviceData
+
+
 class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Xiaomi Bluetooth."""
 
@@ -27,7 +37,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._discovery_info: BluetoothServiceInfo | None = None
         self._discovered_device: DeviceData | None = None
-        self._discovered_devices: dict[str, str] = {}
+        self._discovered_devices: dict[str, Discovery] = {}
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfo
@@ -145,9 +155,19 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             address = user_input[CONF_ADDRESS]
             await self.async_set_unique_id(address, raise_on_progress=False)
-            return self.async_create_entry(
-                title=self._discovered_devices[address], data={}
-            )
+            discovery = self._discovered_devices[address]
+
+            if discovery.device.encryption_scheme == EncryptionScheme.MIBEACON_LEGACY:
+                self._discovery_info = discovery.discovery_info
+                self._discovered_device = discovery.device
+                return await self.async_step_get_encryption_key_legacy()
+
+            if discovery.device.encryption_scheme == EncryptionScheme.MIBEACON_4_5:
+                self._discovery_info = discovery.discovery_info
+                self._discovered_device = discovery.device
+                return await self.async_step_get_encryption_key_4_5()
+
+            return self.async_create_entry(title=discovery.title, data={})
 
         current_addresses = self._async_current_ids()
         for discovery_info in async_discovered_service_info(self.hass):
@@ -156,16 +176,22 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
                 continue
             device = DeviceData()
             if device.supported(discovery_info):
-                self._discovered_devices[address] = (
-                    device.title or device.get_device_name() or discovery_info.name
+                self._discovered_devices[address] = Discovery(
+                    title=device.title
+                    or device.get_device_name()
+                    or discovery_info.name,
+                    discovery_info=discovery_info,
+                    device=device,
                 )
 
         if not self._discovered_devices:
             return self.async_abort(reason="no_devices_found")
 
+        titles = {
+            address: discovery.title
+            for (address, discovery) in self._discovered_devices.items()
+        }
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_ADDRESS): vol.In(self._discovered_devices)}
-            ),
+            data_schema=vol.Schema({vol.Required(CONF_ADDRESS): vol.In(titles)}),
         )
