@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -21,6 +22,31 @@ BINARY_SENSOR_TYPES: dict[str, BinarySensorEntityDescription] = {
     "calibration": BinarySensorEntityDescription(
         key="calibration",
         entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "tested": BinarySensorEntityDescription(
+        key="tested",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "motion_detected": BinarySensorEntityDescription(
+        key="pir_state",
+        name="Motion Detected",
+        device_class=BinarySensorDeviceClass.MOTION,
+    ),
+    "door_open": BinarySensorEntityDescription(
+        key="door_open",
+        name="Door Open",
+        device_class=BinarySensorDeviceClass.DOOR,
+    ),
+    "door_timeout": BinarySensorEntityDescription(
+        key="door_timeout",
+        name="Door Timeout",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "is_light": BinarySensorEntityDescription(
+        key="is_light",
+        name="Light",
+        device_class=BinarySensorDeviceClass.LIGHT,
     ),
 }
 
