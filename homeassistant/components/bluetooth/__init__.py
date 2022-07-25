@@ -275,14 +275,14 @@ class BluetoothManager:
         self, scanning_mode: BluetoothScanningMode, adapter: str | None
     ) -> None:
         """Set up BT Discovery."""
+        assert self.scanner is not None
         if self._reloading:
-            # On reload, we need to replace the scanner instance
+            # On reload, we need to reset the scanner instance
             # since the devices in its history may not be reachable
             # anymore.
-            self.async_setup()
+            self.scanner.async_reset()
             self._integration_matcher.async_clear_history()
             self._reloading = False
-        assert self.scanner is not None
         scanner_kwargs = {"scanning_mode": SCANNING_MODE_TO_BLEAK[scanning_mode]}
         if adapter and adapter not in DEFAULT_ADAPTERS:
             scanner_kwargs["adapter"] = adapter
