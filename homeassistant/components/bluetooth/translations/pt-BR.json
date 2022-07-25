@@ -1,9 +1,15 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "O servi\u00e7o j\u00e1 est\u00e1 configurado"
+        },
         "flow_title": "{name}",
         "step": {
             "bluetooth_confirm": {
                 "description": "Deseja configurar {name}?"
+            },
+            "enable_bluetooth": {
+                "description": "Deseja configurar o Bluetooth?"
             },
             "user": {
                 "data": {

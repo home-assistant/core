@@ -10,7 +10,7 @@
         "step": {
             "user": {
                 "data": {
-                    "house_letter": "Hausbrief/zusatz",
+                    "house_letter": "Hausbrief/Zusatz",
                     "house_number": "Hausnummer",
                     "post_code": "Postleitzahl"
                 },
