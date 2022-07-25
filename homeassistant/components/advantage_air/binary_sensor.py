@@ -11,7 +11,7 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN as ADVANTAGE_AIR_DOMAIN
-from .entity import AdvantageAirEntity
+from .entity import AdvantageAirAcEntity, AdvantageAirZoneEntity
 
 PARALLEL_UPDATES = 0
 
@@ -21,7 +21,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up AdvantageAir motion platform."""
+    """Set up AdvantageAir Binary Sensor platform."""
 
     instance = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
 
@@ -38,19 +38,17 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class AdvantageAirFilter(AdvantageAirEntity, BinarySensorEntity):
-    """Advantage Air Filter."""
+class AdvantageAirFilter(AdvantageAirAcEntity, BinarySensorEntity):
+    """Advantage Air Filter sensor."""
 
     _attr_device_class = BinarySensorDeviceClass.PROBLEM
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_name = "Filter"
 
     def __init__(self, instance, ac_key):
-        """Initialize an Advantage Air Filter."""
+        """Initialize an Advantage Air Filter sensor."""
         super().__init__(instance, ac_key)
-        self._attr_name = f'{self._ac["name"]} filter'
-        self._attr_unique_id = (
-            f'{self.coordinator.data["system"]["rid"]}-{ac_key}-filter'
-        )
+        self._attr_unique_id += "-filter"
 
     @property
     def is_on(self):
@@ -58,18 +56,16 @@ class AdvantageAirFilter(AdvantageAirEntity, BinarySensorEntity):
         return self._ac["filterCleanStatus"]
 
 
-class AdvantageAirZoneMotion(AdvantageAirEntity, BinarySensorEntity):
-    """Advantage Air Zone Motion."""
+class AdvantageAirZoneMotion(AdvantageAirZoneEntity, BinarySensorEntity):
+    """Advantage Air Zone Motion sensor."""
 
     _attr_device_class = BinarySensorDeviceClass.MOTION
 
     def __init__(self, instance, ac_key, zone_key):
-        """Initialize an Advantage Air Zone Motion."""
+        """Initialize an Advantage Air Zone Motion sensor."""
         super().__init__(instance, ac_key, zone_key)
         self._attr_name = f'{self._zone["name"]} motion'
-        self._attr_unique_id = (
-            f'{self.coordinator.data["system"]["rid"]}-{ac_key}-{zone_key}-motion'
-        )
+        self._attr_unique_id += "-motion"
 
     @property
     def is_on(self):
@@ -77,19 +73,17 @@ class AdvantageAirZoneMotion(AdvantageAirEntity, BinarySensorEntity):
         return self._zone["motion"] == 20
 
 
-class AdvantageAirZoneMyZone(AdvantageAirEntity, BinarySensorEntity):
-    """Advantage Air Zone MyZone."""
+class AdvantageAirZoneMyZone(AdvantageAirZoneEntity, BinarySensorEntity):
+    """Advantage Air Zone MyZone sensor."""
 
     _attr_entity_registry_enabled_default = False
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(self, instance, ac_key, zone_key):
-        """Initialize an Advantage Air Zone MyZone."""
+        """Initialize an Advantage Air Zone MyZone sensor."""
         super().__init__(instance, ac_key, zone_key)
         self._attr_name = f'{self._zone["name"]} myZone'
-        self._attr_unique_id = (
-            f'{self.coordinator.data["system"]["rid"]}-{ac_key}-{zone_key}-myzone'
-        )
+        self._attr_unique_id += "-myzone"
 
     @property
     def is_on(self):

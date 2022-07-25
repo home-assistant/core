@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
-import datetime
+from datetime import timedelta
 import logging
 from types import MappingProxyType
 from typing import Any
@@ -14,8 +14,8 @@ from aiohomekit.exceptions import (
     AccessoryNotFoundError,
     EncryptionError,
 )
-from aiohomekit.model import Accessories, Accessory
-from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
+from aiohomekit.model import Accessories, Accessory, Transport
+from aiohomekit.model.characteristics import Characteristic
 from aiohomekit.model.services import Service
 
 from homeassistant.config_entries import ConfigEntry
@@ -40,9 +40,9 @@ from .const import (
 from .device_trigger import async_fire_triggers, async_setup_triggers_for_entry
 from .storage import EntityMapStorage
 
-DEFAULT_SCAN_INTERVAL = datetime.timedelta(seconds=60)
 RETRY_INTERVAL = 60  # seconds
 MAX_POLL_FAILURES_TO_DECLARE_UNAVAILABLE = 3
+BLE_AVAILABILITY_CHECK_INTERVAL = 1800  # seconds
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -122,6 +122,7 @@ class HKDevice:
         # If this is set polling is active and can be disabled by calling
         # this method.
         self._polling_interval_remover: CALLBACK_TYPE | None = None
+        self._ble_available_interval_remover: CALLBACK_TYPE | None = None
 
         # Never allow concurrent polling of the same accessory or bridge
         self._polling_lock = asyncio.Lock()
@@ -132,9 +133,6 @@ class HKDevice:
         self.unreliable_serial_numbers = False
 
         self.watchable_characteristics: list[tuple[int, int]] = []
-
-        self.pairing.dispatcher_connect(self.process_new_events)
-        self.pairing.dispatcher_connect_config_changed(self.process_config_changed)
 
     @property
     def entity_map(self) -> Accessories:
@@ -182,32 +180,15 @@ class HKDevice:
         self.available = available
         async_dispatcher_send(self.hass, self.signal_state_updated)
 
-    async def async_ensure_available(self) -> None:
-        """Verify the accessory is available after processing the entity map."""
-        if self.available:
-            return
-        if self.watchable_characteristics and self.pollable_characteristics:
-            # We already tried, no need to try again
-            return
-        # We there are no watchable and not pollable characteristics,
-        # we need to force a connection to the device to verify its alive.
-        #
-        # This is similar to iOS's behavior for keeping alive connections
-        # to cameras.
-        #
-        primary = self.entity_map.accessories[0]
-        aid = primary.aid
-        iid = primary.accessory_information[CharacteristicsTypes.SERIAL_NUMBER].iid
-        await self.pairing.get_characteristics([(aid, iid)])
-        self.async_set_available_state(True)
-
     async def async_setup(self) -> None:
         """Prepare to use a paired HomeKit device in Home Assistant."""
         entity_storage: EntityMapStorage = self.hass.data[ENTITY_MAP]
+        pairing = self.pairing
+        transport = pairing.transport
+        entry = self.config_entry
+
         if cache := entity_storage.get_map(self.unique_id):
-            self.pairing.restore_accessories_state(
-                cache["accessories"], cache["config_num"]
-            )
+            pairing.restore_accessories_state(cache["accessories"], cache["config_num"])
 
         # We need to force an update here to make sure we have
         # the latest values since the async_update we do in
@@ -219,11 +200,22 @@ class HKDevice:
         # Ideally we would know which entities we are about to add
         # so we only poll those chars but that is not possible
         # yet.
-        await self.pairing.async_populate_accessories_state(force_update=True)
+        try:
+            await self.pairing.async_populate_accessories_state(force_update=True)
+        except AccessoryNotFoundError:
+            if transport != Transport.BLE or not cache:
+                # BLE devices may sleep and we can't force a connection
+                raise
+
+        entry.async_on_unload(pairing.dispatcher_connect(self.process_new_events))
+        entry.async_on_unload(
+            pairing.dispatcher_connect_config_changed(self.process_config_changed)
+        )
+        entry.async_on_unload(
+            pairing.dispatcher_availability_changed(self.async_set_available_state)
+        )
 
         await self.async_process_entity_map()
-
-        await self.async_ensure_available()
 
         if not cache:
             # If its missing from the cache, make sure we save it
@@ -231,9 +223,23 @@ class HKDevice:
         # If everything is up to date, we can create the entities
         # since we know the data is not stale.
         await self.async_add_new_entities()
+
+        self.async_set_available_state(self.pairing.is_available)
+
         self._polling_interval_remover = async_track_time_interval(
-            self.hass, self.async_update, DEFAULT_SCAN_INTERVAL
+            self.hass, self.async_update, self.pairing.poll_interval
         )
+
+        if transport == Transport.BLE:
+            # If we are using BLE, we need to periodically check of the
+            # BLE device is available since we won't get callbacks
+            # when it goes away since we HomeKit supports disconnected
+            # notifications and we cannot treat a disconnect as unavailability.
+            self._ble_available_interval_remover = async_track_time_interval(
+                self.hass,
+                self.async_update_available_state,
+                timedelta(seconds=BLE_AVAILABILITY_CHECK_INTERVAL),
+            )
 
     async def async_add_new_entities(self) -> None:
         """Add new entities to Home Assistant."""
@@ -546,10 +552,15 @@ class HKDevice:
         if tasks:
             await asyncio.gather(*tasks)
 
+    @callback
+    def async_update_available_state(self, *_: Any) -> None:
+        """Update the available state of the device."""
+        self.async_set_available_state(self.pairing.is_available)
+
     async def async_update(self, now=None):
         """Poll state of all entities attached to this bridge/accessory."""
         if not self.pollable_characteristics:
-            self.async_set_available_state(self.pairing.is_connected)
+            self.async_update_available_state()
             _LOGGER.debug(
                 "HomeKit connection not polling any characteristics: %s", self.unique_id
             )

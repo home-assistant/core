@@ -10,12 +10,14 @@
                 "data": {
                     "password": "Palavra-passe",
                     "username": "Nome de Utilizador"
-                }
+                },
+                "title": "Ligar ao Controlo Elk-M1"
             },
             "manual_connection": {
                 "data": {
                     "username": "Nome de Utilizador"
-                }
+                },
+                "title": "Ligar ao Controlo Elk-M1"
             }
         }
     }

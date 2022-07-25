@@ -10,6 +10,7 @@ from stringcase import camelcase
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
+    CONF_SCAN_INTERVAL,
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     SOURCE_TYPE_GPS,
 )
@@ -21,7 +22,6 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_PASSWORD,
     CONF_PORT,
-    CONF_SCAN_INTERVAL,
     CONF_SSL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
