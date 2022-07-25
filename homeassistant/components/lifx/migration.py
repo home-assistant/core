@@ -42,7 +42,8 @@ def async_migrate_legacy_entries(
     return len(remaining_devices)
 
 
-async def async_migrate_entities_devices(
+@callback
+def async_migrate_entities_devices(
     hass: HomeAssistant, legacy_entry_id: str, new_entry: ConfigEntry
 ) -> None:
     """Move entities and devices to the new config entry."""

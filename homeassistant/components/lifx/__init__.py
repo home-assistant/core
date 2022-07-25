@@ -180,7 +180,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if legacy_entry := async_get_legacy_entry(hass):
         # If the legacy entry still exists, harvest the entities
         # that are moving to this config entry.
-        await async_migrate_entities_devices(hass, legacy_entry.entry_id, entry)
+        async_migrate_entities_devices(hass, legacy_entry.entry_id, entry)
 
     assert entry.unique_id is not None
     domain_data = hass.data[DOMAIN]
