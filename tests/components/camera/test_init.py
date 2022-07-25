@@ -16,7 +16,9 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import Context
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv, script
 from homeassistant.setup import async_setup_component
 
 from .common import EMPTY_8_6_JPEG, WEBRTC_ANSWER, mock_camera_prefs, mock_turbo_jpeg
@@ -437,6 +439,47 @@ async def test_record_service(hass, mock_camera, mock_stream):
         # So long as we call stream.record, the rest should be covered
         # by those tests.
         assert mock_record.called
+
+
+async def test_record_service_with_template(hass, mock_camera, mock_stream):
+    """Test record service using a template for filename."""
+    with patch(
+        "homeassistant.components.demo.camera.DemoCamera.stream_source",
+        return_value="http://example.com",
+    ), patch(
+        "homeassistant.components.stream.Stream.async_record",
+        autospec=True,
+    ) as mock_record:
+        # Call service
+        await hass.services.async_call(
+            camera.DOMAIN,
+            camera.SERVICE_RECORD,
+            {
+                ATTR_ENTITY_ID: "camera.demo_camera",
+                camera.CONF_FILENAME: "/my/{{ entity_id.entity_id|replace('.', '_') }}/path",
+            },
+            blocking=True,
+        )
+        # So long as we call stream.record, the rest should be covered
+        # by those tests.
+        assert mock_record.call_count == 1
+        assert mock_record.call_args_list[0][0][1] == "/my/camera_demo_camera/path"
+        sequence = cv.SCRIPT_SCHEMA(
+            [
+                {
+                    "service": f"{camera.DOMAIN}.{camera.SERVICE_RECORD}",
+                    "target": {"entity_id": "camera.demo_camera"},
+                    "data": {
+                        camera.CONF_FILENAME: "/my/{{ entity_id.entity_id|replace('.', '_') }}/path"
+                    },
+                },
+            ]
+        )
+        script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+        await script_obj.async_run(context=Context())
+        await hass.async_block_till_done()
+        assert mock_record.call_count == 2
+        assert mock_record.call_args_list[1][0][1] == "/my/camera_demo_camera/path"
 
 
 async def test_camera_proxy_stream(hass, mock_camera, hass_client):

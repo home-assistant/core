@@ -237,7 +237,9 @@ def async_prepare_call_from_config(
             continue
         try:
             template.attach(hass, config[conf])
-            render = template.render_complex(config[conf], variables)
+            render = template.render_complex(
+                config[conf], variables, pass_undefined=True
+            )
             if not isinstance(render, dict):
                 raise HomeAssistantError(
                     "Error rendering data template: Result is not a Dictionary"

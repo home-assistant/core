@@ -339,7 +339,27 @@ class TestServiceHelpers(unittest.TestCase):
         assert self.calls[0].data["hello"] == "goodbye"
 
     def test_bad_template(self):
-        """Test passing bad template."""
+        """Test passing bad_template."""
+        config = {
+            "service_template": "{{ unknown_var }}",
+            "entity_id": "hello.world",
+            "data_template": {"hello": " goodbye "},
+        }
+
+        service.call_from_config(
+            self.hass,
+            config,
+            variables={
+                "var_service": "test_domain.test_service",
+                "var_data": "goodbye",
+            },
+        )
+        self.hass.block_till_done()
+
+        assert len(self.calls) == 0
+
+    def test_undefined_template_data(self):
+        """Test passing template with undefined data. The call should go through."""
         config = {
             "service_template": "{{ var_service }}",
             "entity_id": "hello.world",
@@ -356,7 +376,8 @@ class TestServiceHelpers(unittest.TestCase):
         )
         self.hass.block_till_done()
 
-        assert len(self.calls) == 0
+        assert len(self.calls) == 1
+        assert self.calls[0].data["hello"] == "{{ states + unknown_var }}"
 
     def test_split_entity_string(self):
         """Test splitting of entity string."""

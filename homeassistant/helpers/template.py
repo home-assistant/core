@@ -124,21 +124,28 @@ def render_complex(
     variables: TemplateVarsType = None,
     limited: bool = False,
     parse_result: bool = True,
+    pass_undefined: bool = False,
 ) -> Any:
     """Recursive template creator helper function."""
     if isinstance(value, list):
         return [
-            render_complex(item, variables, limited, parse_result) for item in value
+            render_complex(item, variables, limited, parse_result, pass_undefined)
+            for item in value
         ]
     if isinstance(value, collections.abc.Mapping):
         return {
-            render_complex(key, variables, limited, parse_result): render_complex(
-                item, variables, limited, parse_result
-            )
+            render_complex(
+                key, variables, limited, parse_result, pass_undefined
+            ): render_complex(item, variables, limited, parse_result, pass_undefined)
             for key, item in value.items()
         }
     if isinstance(value, Template):
-        return value.async_render(variables, limited=limited, parse_result=parse_result)
+        return value.async_render(
+            variables,
+            limited=limited,
+            parse_result=parse_result,
+            pass_undefined=pass_undefined,
+        )
 
     return value
 
@@ -399,6 +406,7 @@ class Template:
         parse_result: bool = True,
         limited: bool = False,
         strict: bool = False,
+        pass_undefined: bool = False,
         **kwargs: Any,
     ) -> Any:
         """Render given template.
@@ -406,19 +414,27 @@ class Template:
         This method must be run in the event loop.
 
         If limited is True, the template is not allowed to access any function or filter depending on hass or the state machine.
+
+        If pass_undefined is True, the template will be passed through unrendered if a jinja2.Undefined error is encountered.
         """
         if self.is_static:
             if not parse_result or self.hass.config.legacy_templates:
                 return self.template
             return self._parse_result(self.template)
 
-        compiled = self._compiled or self._ensure_compiled(limited, strict)
+        compiled = self._compiled or self._ensure_compiled(
+            limited, strict | pass_undefined
+        )
 
         if variables is not None:
             kwargs.update(variables)
 
         try:
             render_result = _render_with_context(self.template, compiled, **kwargs)
+        except jinja2.UndefinedError as err:
+            if pass_undefined:
+                return self.template
+            raise TemplateError(err) from err
         except Exception as err:
             raise TemplateError(err) from err
 

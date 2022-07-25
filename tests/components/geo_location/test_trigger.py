@@ -285,7 +285,6 @@ async def test_if_fires_on_zone_appear(hass, calls):
                             (
                                 "platform",
                                 "entity_id",
-                                "from_state.state",
                                 "to_state.state",
                                 "zone.name",
                             )
@@ -308,9 +307,7 @@ async def test_if_fires_on_zone_appear(hass, calls):
 
     assert len(calls) == 1
     assert calls[0].context.parent_id == context.id
-    assert (
-        calls[0].data["some"] == "geo_location - geo_location.entity -  - hello - test"
-    )
+    assert calls[0].data["some"] == "geo_location - geo_location.entity - hello - test"
 
 
 async def test_if_fires_on_zone_appear_2(hass, calls):
@@ -400,7 +397,6 @@ async def test_if_fires_on_zone_disappear(hass, calls):
                                 "platform",
                                 "entity_id",
                                 "from_state.state",
-                                "to_state.state",
                                 "zone.name",
                             )
                         )
@@ -415,9 +411,7 @@ async def test_if_fires_on_zone_disappear(hass, calls):
     await hass.async_block_till_done()
 
     assert len(calls) == 1
-    assert (
-        calls[0].data["some"] == "geo_location - geo_location.entity - hello -  - test"
-    )
+    assert calls[0].data["some"] == "geo_location - geo_location.entity - hello - test"
 
 
 async def test_zone_undefined(hass, calls, caplog):
