@@ -69,7 +69,7 @@ async def async_setup_platform(
     coordinator = LondonTubeCoordinator(hass, data)
 
     await coordinator.async_refresh()
-    
+
     if not coordinator.last_update_success:
         raise PlatformNotReady
 
