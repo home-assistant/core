@@ -101,9 +101,7 @@ class LondonTubeSensor(CoordinatorEntity[LondonTubeCoordinator], SensorEntity):
     def __init__(self, coordinator, name):
         """Initialize the London Underground sensor."""
         super().__init__(coordinator)
-        self._description = None
         self._name = name
-        self._state = None
         self.attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     @property
@@ -114,7 +112,7 @@ class LondonTubeSensor(CoordinatorEntity[LondonTubeCoordinator], SensorEntity):
     @property
     def native_value(self):
         """Return the state of the sensor."""
-        return self._state
+        return self.coordinator.data[self.name]["State"]
 
     @property
     def icon(self):
@@ -124,13 +122,5 @@ class LondonTubeSensor(CoordinatorEntity[LondonTubeCoordinator], SensorEntity):
     @property
     def extra_state_attributes(self):
         """Return other details about the sensor state."""
-        self.attrs["Description"] = self._description
+        self.attrs["Description"] = self.coordinator.data[self.name]["Description"]
         return self.attrs
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Update the sensor."""
-        self._state = self.coordinator.data[self.name]["State"]
-        self._description = self.coordinator.data[self.name]["Description"]
-
-        self.async_write_ha_state()
