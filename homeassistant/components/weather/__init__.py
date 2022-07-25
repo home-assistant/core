@@ -482,7 +482,7 @@ class WeatherEntity(Entity):
         Should not be set by integrations.
         """
         return (
-            SPEED_KILOMETERS_PER_HOUR
+            SPEED_METERS_PER_SECOND
             if self.hass.config.units.is_metric
             else SPEED_MILES_PER_HOUR
         )
