@@ -2,7 +2,6 @@
   "config": {
     "step": {
       "user": {
-        "title": "ProxmoxVE",
         "description": "Please fill out the form and then press submit when you're ready",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
@@ -21,6 +20,28 @@
       "general_error": "[%key:common::config_flow::error::unknown%]",
       "invalid_port": "Invalid port number"
     },
-    "abort": {}
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "[%key:component::proxmoxve::config::step::user::description%]",
+        "data": {
+          "username": "[%key:component::proxmoxve::config::step::user::data::username%]",
+          "password": "[%key:component::proxmoxve::config::step::user::data::password%]",
+          "realm": "[%key:component::proxmoxve::config::step::user::data::realm%]",
+          "verify_ssl": "[%key:component::proxmoxve::config::step::user::data::verify_ssl%]"
+        }
+      }
+    },
+    "error": {
+      "auth_error": "[%key:component::proxmoxve::config::error::auth_error%]",
+      "ssl_rejection": "[%key:component::proxmoxve::config::error::ssl_rejection%]",
+      "cant_connect": "[%key:component::proxmoxve::config::error::cant_connect%]",
+      "general_error": "[%key:component::proxmoxve::config::error::general_error%]",
+      "invalid_port": "[%key:component::proxmoxve::config::error::invalid_port%]"
+    }
   }
 }

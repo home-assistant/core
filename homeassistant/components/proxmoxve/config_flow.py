@@ -1,5 +1,6 @@
 """Config Flow for ProxmoxVE."""
 import logging
+from typing import Any
 
 import proxmoxer
 from requests.exceptions import ConnectTimeout, SSLError
@@ -7,18 +8,135 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import (
+    CONF_BASE,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
 from . import ProxmoxClient
-from .const import CONF_REALM, DEFAULT_PORT, DEFAULT_REALM, DEFAULT_VERIFY_SSL, DOMAIN
+from .const import (
+    CONF_NODES,
+    CONF_REALM,
+    DEFAULT_PORT,
+    DEFAULT_REALM,
+    DEFAULT_VERIFY_SSL,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class ProxmoxOptionsFlowHandler(config_entries.OptionsFlow):
+    """Config flow options for ProxmoxVE."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize ProxmoxVE options flow."""
+        self.config_entry = config_entry
+
+        self._proxmox_client: ProxmoxClient
+
+    async def async_step_init(self, user_input: dict[str, Any]) -> FlowResult:
+        """Manage the options."""
+        errors = {}
+
+        if user_input is not None:
+            host = self.config_entry.data[CONF_HOST]
+            port = self.config_entry.data[CONF_PORT]
+            user = user_input.get(CONF_USERNAME)
+            realm = user_input.get(CONF_REALM)
+            password = user_input.get(CONF_PASSWORD)
+            verify_ssl = user_input.get(CONF_VERIFY_SSL)
+
+            try:
+                self._proxmox_client = ProxmoxClient(
+                    host,
+                    port=port,
+                    user=user,
+                    realm=realm,
+                    password=password,
+                    verify_ssl=verify_ssl,
+                )
+
+                await self.hass.async_add_executor_job(
+                    self._proxmox_client.build_client
+                )
+
+            except proxmoxer.backends.https.AuthenticationError:
+                errors[CONF_USERNAME] = "auth_error"
+            except SSLError:
+                errors[CONF_VERIFY_SSL] = "ssl_rejection"
+            except ConnectTimeout:
+                errors[CONF_HOST] = "cant_connect"
+            except Exception:  # pylint: disable=broad-except
+                errors[CONF_BASE] = "general_error"
+
+            else:
+                if CONF_HOST in self.config_entry.data:
+                    user_input[CONF_HOST] = self.config_entry.data[CONF_HOST]
+                if CONF_PORT in self.config_entry.data:
+                    user_input[CONF_PORT] = self.config_entry.data[CONF_PORT]
+                if CONF_NODES in self.config_entry.data:
+                    user_input[CONF_NODES] = self.config_entry.data[CONF_NODES]
+                self.hass.config_entries.async_update_entry(
+                    self.config_entry,
+                    data=user_input,
+                    options=self.config_entry.options,
+                )
+                return self.async_create_entry(title=host, data=user_input)
+
+        if errors:
+            data_schema = vol.Schema(
+                {
+                    vol.Required(
+                        CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")
+                    ): str,
+                    vol.Required(
+                        CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")
+                    ): str,
+                    vol.Optional(
+                        CONF_REALM, default=user_input.get(CONF_REALM, "")
+                    ): str,
+                    vol.Required(
+                        CONF_VERIFY_SSL,
+                        default=user_input.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
+                    ): bool,
+                }
+            )
+
+            return self.async_show_form(
+                step_id="init", data_schema=data_schema, errors=errors
+            )
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_USERNAME,
+                        default=self.config_entry.data.get(CONF_USERNAME, ""),
+                    ): str,
+                    vol.Required(
+                        CONF_PASSWORD,
+                        default=self.config_entry.data.get(CONF_PASSWORD, ""),
+                    ): str,
+                    vol.Optional(
+                        CONF_REALM,
+                        default=self.config_entry.data.get(CONF_REALM, ""),
+                    ): str,
+                    vol.Required(
+                        CONF_VERIFY_SSL,
+                        default=self.config_entry.data.get(
+                            CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL
+                        ),
+                    ): bool,
+                }
+            ),
+        )
 
 
 class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -56,8 +174,9 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if await self._async_endpoint_exists(f"{host}/{port}"):
                 _LOGGER.info(
-                    "Device %s already configured, you can remove it from configuration.yaml if you still have it",
+                    "Device %s:%s already configured, you can remove it from configuration.yaml if you still have it",
                     host,
+                    port,
                 )
                 return self.async_abort(reason="already_configured")
 
@@ -184,3 +303,11 @@ class ProxmoxVEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._config["nodes"].append(
                 {"name": node["node"], "vms": vms, "containers": containers}
             )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> config_entries.OptionsFlow:
+        """Options callback for Proxmox."""
+        return ProxmoxOptionsFlowHandler(config_entry)
