@@ -22,7 +22,7 @@ from .const import CLIENTID_PREFIX, CONF_IGNORED_SOURCES, DOMAIN, NICKNAME
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: Final[list[Platform]] = [Platform.MEDIA_PLAYER, Platform.REMOTE]
-SCAN_INTERVAL: Final = timedelta(seconds=5)
+SCAN_INTERVAL: Final = timedelta(seconds=10)
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
@@ -87,15 +87,15 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         self.ignored_sources = ignored_sources
         self.source: str | None = None
         self.source_list: list[str] = []
-        self.source_map: list[dict] = []
+        self.source_map: dict[str, dict] = {}
         self.media_title: str | None = None
         self.media_content_id: str | None = None
         self.media_content_type: str | None = None
         self.media_uri: str | None = None
         self.media_duration: int | None = None
         self.volume_level: float | None = None
-        self.volume_muted: bool = False
         self.volume_target: str | None = None
+        self.volume_muted = False
         self.is_on = False
         self.is_channel = False
         self.connected = False
@@ -111,6 +111,18 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                 hass, _LOGGER, cooldown=1.0, immediate=False
             ),
         )
+
+    def _sources_extend(self, sources: dict, source_type: str) -> None:
+        """Extend source map and source list."""
+        for item in sources:
+            item["type"] = source_type
+            title = item.get("title")
+            uri = item.get("uri")
+            if not title or not uri:
+                continue
+            self.source_map[uri] = item
+            if title not in self.ignored_sources:
+                self.source_list.append(title)
 
     async def _async_update_data(self) -> None:
         """Connect and fetch data."""
@@ -135,34 +147,21 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         await self._async_update_playing()
 
     async def _async_update_sources(self) -> None:
+        """Update sources."""
         self.source_list = []
-        self.source_map = []
+        self.source_map = {}
 
         externals = await self.client.get_external_status()
-        for item in externals:
-            item["type"] = "input"
-            self.source_map.append(item)
-            title = item.get("title")
-            if title not in self.ignored_sources:
-                self.source_list.append(title)
+        self._sources_extend(externals, "input")
 
         apps = await self.client.get_app_list()
-        for item in apps:
-            item["type"] = "app"
-            self.source_map.append(item)
-            title = item.get("title")
-            if title not in self.ignored_sources:
-                self.source_list.append(title)
+        self._sources_extend(apps, "app")
 
         channels = await self.client.get_content_list_all("tv")
-        for item in channels:
-            item["type"] = "channel"
-            self.source_map.append(item)
-            title = item.get("title")
-            if title not in self.ignored_sources:
-                self.source_list.append(title)
+        self._sources_extend(channels, "channel")
 
     async def _async_update_volume(self) -> None:
+        """Update volume information."""
         volume_info = await self.client.get_volume_info()
         volume_level = volume_info.get("volume")
         if volume_level is not None:
@@ -171,6 +170,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
             self.volume_target = volume_info.get("target")
 
     async def _async_update_playing(self) -> None:
+        """Update current playing information."""
         playing_info = await self.client.get_playing_info()
         self.media_title = playing_info.get("title")
         self.media_uri = playing_info.get("uri")
@@ -178,16 +178,15 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         if program_title := playing_info.get("programTitle"):
             self.media_title = f"{self.media_title}: {program_title}"
         if self.media_uri:
-            source: dict = next(
-                (item for item in self.source_map if item.get("uri") == self.media_uri),
-                {},
-            )
+            source = self.source_map.get(self.media_uri, {})
             self.source = source.get("title")
             self.is_channel = self.media_uri[:2] == "tv"
-            self.media_content_id = (
-                playing_info.get("dispNum") if self.is_channel else self.media_uri
-            )
-            self.media_content_type = MEDIA_TYPE_CHANNEL if self.is_channel else None
+            if self.is_channel:
+                self.media_content_id = playing_info.get("dispNum")
+                self.media_content_type = MEDIA_TYPE_CHANNEL
+            else:
+                self.media_content_id = self.media_uri
+                self.media_content_type = None
         else:
             self.source = None
             self.is_channel = False
@@ -261,12 +260,12 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
 
     async def async_select_source(self, source: str) -> None:
         """Set the input source."""
-        for item in self.source_map:
+        for uri, item in self.source_map.items():
             if item.get("title") == source:
                 if item.get("type") == "app":
-                    await self.client.set_active_app(item.get("uri"))
+                    await self.client.set_active_app(uri)
                 else:
-                    await self.client.set_play_content(item.get("uri"))
+                    await self.client.set_play_content(uri)
                 break
 
     async def async_send_command(self, command: Iterable[str], repeats: int) -> None:

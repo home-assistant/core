@@ -148,7 +148,8 @@ class BraviaTVOptionsFlowHandler(config_entries.OptionsFlow):
 
         assert coordinator is not None
 
-        self.source_list = [item.get("title", "") for item in coordinator.source_map]
+        sources = coordinator.source_map.values()
+        self.source_list = [item.get("title", "") for item in sources]
         return await self.async_step_user()
 
     async def async_step_user(
