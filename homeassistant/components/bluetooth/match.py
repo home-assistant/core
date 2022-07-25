@@ -70,6 +70,10 @@ class IntegrationMatcher:
             MAX_REMEMBER_ADDRESSES
         )
 
+    def async_clear_history(self) -> None:
+        """Clear the history."""
+        self._matched = {}
+
     def match_domains(self, device: BLEDevice, adv_data: AdvertisementData) -> set[str]:
         """Return the domains that are matched."""
         matched_domains: set[str] = set()
