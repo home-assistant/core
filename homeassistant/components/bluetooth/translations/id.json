@@ -1,9 +1,15 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Layanan sudah dikonfigurasi"
+        },
         "flow_title": "{name}",
         "step": {
             "bluetooth_confirm": {
                 "description": "Ingin menyiapkan {name}?"
+            },
+            "enable_bluetooth": {
+                "description": "Ingin menyiapkan Bluetooth?"
             },
             "user": {
                 "data": {
