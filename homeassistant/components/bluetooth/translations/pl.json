@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Us\u0142uga jest ju\u017c skonfigurowana"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "bluetooth_confirm": {
+                "description": "Czy chcesz skonfigurowa\u0107 {name}?"
+            },
+            "enable_bluetooth": {
+                "description": "Czy chcesz skonfigurowa\u0107 Bluetooth?"
+            },
+            "user": {
+                "data": {
+                    "address": "Urz\u0105dzenie"
+                },
+                "description": "Wybierz urz\u0105dzenie do skonfigurowania"
+            }
+        }
+    }
+}
