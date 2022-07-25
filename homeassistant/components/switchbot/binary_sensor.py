@@ -78,6 +78,8 @@ async def async_setup_entry(
 class SwitchBotBinarySensor(SwitchbotEntity, BinarySensorEntity):
     """Representation of a Switchbot binary sensor."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: SwitchbotDataUpdateCoordinator,
@@ -90,8 +92,8 @@ class SwitchBotBinarySensor(SwitchbotEntity, BinarySensorEntity):
         super().__init__(coordinator, unique_id, mac, name=switchbot_name)
         self._sensor = binary_sensor
         self._attr_unique_id = f"{unique_id}-{binary_sensor}"
-        self._attr_name = f"{switchbot_name} {binary_sensor.title()}"
         self.entity_description = BINARY_SENSOR_TYPES[binary_sensor]
+        self._attr_name = self.entity_description.name or binary_sensor.title()
 
     @property
     def is_on(self) -> bool:
