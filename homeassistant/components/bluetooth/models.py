@@ -68,6 +68,12 @@ class HaBleakScanner(BleakScanner):  # type: ignore[misc]
             self._setup = True
 
     @hass_callback
+    def async_reset(self) -> None:
+        """Reset the scanner so it can be setup again."""
+        self.history = {}
+        self._setup = False
+
+    @hass_callback
     def async_register_callback(
         self, callback: AdvertisementDataCallback, filters: dict[str, set[str]]
     ) -> CALLBACK_TYPE:
