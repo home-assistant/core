@@ -12,7 +12,7 @@ SUPPORTED_MODEL_TYPES = {
     "WoHand": ATTR_BOT,
     "WoCurtain": ATTR_CURTAIN,
     "WoSensorTH": ATTR_HYGROMETER,
-    "WoContactSensor": ATTR_CONTACT,
+    "WoContact": ATTR_CONTACT,
 }
 
 # Config Defaults
