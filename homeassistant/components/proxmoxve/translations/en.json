@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device is already configured"
+            "already_configured": "Device is already configured",
+            "reauth_successful": "Re-authentication was successful"
         },
         "error": {
             "auth_error": "Invalid authentication",
@@ -11,6 +12,14 @@
             "ssl_rejection": "Could not verify the SSL certificate"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "description": "The username or password is invalid.",
+                "title": "Reauthenticate Integration"
+            },
             "user": {
                 "data": {
                     "host": "Host",

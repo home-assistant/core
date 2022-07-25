@@ -20,6 +20,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
@@ -123,9 +124,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         # Construct an API client with the given data for the given host
         proxmox_client = ProxmoxClient(host, port, user, realm, password, verify_ssl)
         await hass.async_add_executor_job(proxmox_client.build_client)
-    except AuthenticationError:
-        _LOGGER.warning("Invalid credentials for proxmox instance %s:%d", host, port)
-        return False
+    except AuthenticationError as error:
+        raise ConfigEntryAuthFailed from error
     except SSLError:
         _LOGGER.error(
             "Unable to verify proxmox server SSL. "

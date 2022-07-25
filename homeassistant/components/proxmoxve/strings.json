@@ -11,6 +11,14 @@
           "realm": "Realm",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         }
+      },
+      "reauth_confirm": {
+        "description": "The username or password is invalid.",
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
       }
     },
     "error": {
@@ -21,7 +29,8 @@
       "invalid_port": "Invalid port number"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
   "options": {
