@@ -84,7 +84,7 @@ class OpenReisingerCover(OpenReisingerEntity, CoverEntity):
         status = self.coordinator.data
 
         self._attr_name = f"slidingdoor_{status['serial']}"
-        state = STATES_MAP.get(status.get("open"))
+        state = STATE_OPEN if status.get("open") else STATE_CLOSED
         if self._state_before_move is not None:
             if self._state_before_move != state:
                 self._state = state
