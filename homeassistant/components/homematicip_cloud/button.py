@@ -36,10 +36,6 @@ class HomematicipGarageDoorControllerButton(HomematicipGenericEntity, ButtonEnti
         super().__init__(hap, device)
         self._attr_icon = "mdi:arrow-up-down"
 
-    def press(self) -> None:
-        """Handle the button press."""
-        self._device.send_start_impulse()
-
     async def async_press(self) -> None:
         """Handle the button press."""
         await self._device.send_start_impulse()
