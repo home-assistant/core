@@ -61,7 +61,7 @@ class SharkIqUpdateCoordinator(DataUpdateCoordinator):
         """Update data device by device."""
         try:
             if self.ayla_api.token_expiring_soon:
-                self.ayla_api.refresh_auth()
+                self.ayla_api.async_refresh_auth()
 
             all_vacuums = await self.ayla_api.async_list_devices()
             self._online_dsns = {
