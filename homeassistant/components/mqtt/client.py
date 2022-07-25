@@ -15,6 +15,7 @@ import uuid
 
 import attr
 import certifi
+from paho.mqtt.client import MQTTMessage
 
 from homeassistant.const import (
     CONF_CLIENT_ID,
@@ -606,7 +607,7 @@ class MQTT:
         return subscriptions
 
     @callback
-    def _mqtt_handle_message(self, msg: ReceiveMessage) -> None:
+    def _mqtt_handle_message(self, msg: MQTTMessage) -> None:
         _LOGGER.debug(
             "Received message on %s%s: %s",
             msg.topic,
@@ -622,7 +623,7 @@ class MQTT:
             payload: SubscribePayloadType = msg.payload
             if subscription.encoding is not None:
                 try:
-                    payload = msg.payload.decode(subscription.encoding)  # type: ignore[union-attr]
+                    payload = msg.payload.decode(subscription.encoding)
                 except (AttributeError, UnicodeDecodeError):
                     _LOGGER.warning(
                         "Can't decode payload %s on %s with encoding %s (for %s)",
