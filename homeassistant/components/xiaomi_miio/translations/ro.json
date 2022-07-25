@@ -1,0 +1,65 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dispozitivul este deja configurat",
+            "already_in_progress": "Fluxul de configurare este deja în curs de desfășurare",
+            "incomplete_info": "Informații incomplete pentru configurarea dispozitivului, nu sunt furnizate host-ul sau token-ul.",
+            "not_xiaomi_miio": "Dispozitivul nu este (inca) suportat de Xiaomi Miio.",
+            "reauth_successful": "Re-autentificarea a fost cu succes"
+        },
+        "error": {
+            "cannot_connect": "Eroare de conectare",
+            "cloud_credentials_incomplete": "Credențiale cloud incomplete, vă rugăm să completați numele de utilizator, parola și țara",
+            "cloud_login_error": "Nu s-a putut conecta la Xiaomi Miio Cloud, verificați credențialele.",
+            "cloud_no_devices": "Nu s-au găsit dispozitive în acest cont de cloud Xiaomi Miio.",
+            "unknown_device": "Modelul dispozitivului nu este cunoscut, nu se poate configura dispozitivul folosind fluxul de configurare.",
+            "wrong_token": "Eroare Checksum, token gresit"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "cloud": {
+                "data": {
+                    "cloud_country": "Țara serverului Cloud",
+                    "cloud_password": "Parola Cloud",
+                    "cloud_username": "Nume utilizator Cloud",
+                    "manual": "Configurați manual (nu este recomandat)"
+                },
+                "description": "Conectați-vă la cloud-ul Xiaomi Miio, consultați https://www.openhab.org/addons/bindings/miio/#country-servers pentru utilizarea serverului cloud."
+            },
+            "connect": {
+                "data": {
+                    "model": "Modelul dispozitivului"
+                }
+            },
+            "manual": {
+                "data": {
+                    "host": "Adresa IP",
+                    "token": "Token API"
+                },
+                "description": "Veți avea nevoie de tokenul API de 32 de caractere, consultați https://www.home-assistant.io/integrations/xiaomi_miio#retrieving-the-access-token pentru instrucțiuni. Vă rugăm să rețineți că acest Token API este diferit de cheia utilizată de integrarea Xiaomi Aqara."
+            },
+            "reauth_confirm": {
+                "description": "Integrarea Xiaomi Miio trebuie să vă re-autentifice contul pentru a actualiza token-urile sau pentru a adăuga credențialele cloud lipsă.",
+                "title": "Reautentificați integrarea"
+            },
+            "select": {
+                "data": {
+                    "select_device": "Dispozitiv Miio"
+                },
+                "description": "Selectați dispozitivul Xiaomi Miio pentru a configura."
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "cloud_credentials_incomplete": "Credențialele cloud incomplete, vă rugăm să completați numele de utilizator, parola și țara."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "cloud_subdevices": "Utilizați Cloud pentru a obține sub-dispozitive conectate"
+                }
+            }
+        }
+    }
+}
