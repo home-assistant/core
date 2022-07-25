@@ -130,3 +130,48 @@ async def test_xiaomi_HHCCJCY01(hass):
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+
+async def test_xiaomi_CGDK2(hass):
+    """This device has encrypion so we need to retrieve its bindkey from the configentry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="58:2D:34:12:20:89",
+        data={"bindkey": "a3bfe9853dd85a620debe3620caaa351"},
+    )
+    entry.add_to_hass(hass)
+
+    saved_callback = None
+
+    def _async_register_callback(_hass, _callback, _matcher):
+        nonlocal saved_callback
+        saved_callback = _callback
+        return lambda: None
+
+    with patch(
+        "homeassistant.components.bluetooth.update_coordinator.async_register_callback",
+        _async_register_callback,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 0
+    saved_callback(
+        make_advertisement(
+            "58:2D:34:12:20:89",
+            b"XXo\x06\x07\x89 \x124-X_\x17m\xd5O\x02\x00\x00/\xa4S\xfa",
+        ),
+        BluetoothChange.ADVERTISEMENT,
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 1
+
+    temp_sensor = hass.states.get("sensor.test_device_temperature")
+    temp_sensor_attribtes = temp_sensor.attributes
+    assert temp_sensor.state == "22.6"
+    assert temp_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Test Device Temperature"
+    assert temp_sensor_attribtes[ATTR_UNIT_OF_MEASUREMENT] == "°C"
+    assert temp_sensor_attribtes[ATTR_STATE_CLASS] == "measurement"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()

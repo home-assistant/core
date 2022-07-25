@@ -1,10 +1,12 @@
 """Config flow for Xiaomi Bluetooth integration."""
 from __future__ import annotations
 
+import dataclasses
 from typing import Any
 
 import voluptuous as vol
 from xiaomi_ble import XiaomiBluetoothDeviceData as DeviceData
+from xiaomi_ble.parser import EncryptionScheme
 
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfo,
@@ -17,6 +19,19 @@ from homeassistant.data_entry_flow import FlowResult
 from .const import DOMAIN
 
 
+@dataclasses.dataclass
+class Discovery:
+    """A discovered bluetooth device."""
+
+    title: str
+    discovery_info: BluetoothServiceInfo
+    device: DeviceData
+
+
+def _title(discovery_info: BluetoothServiceInfo, device: DeviceData) -> str:
+    return device.title or device.get_device_name() or discovery_info.name
+
+
 class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Xiaomi Bluetooth."""
 
@@ -26,7 +41,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._discovery_info: BluetoothServiceInfo | None = None
         self._discovered_device: DeviceData | None = None
-        self._discovered_devices: dict[str, str] = {}
+        self._discovered_devices: dict[str, Discovery] = {}
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfo
@@ -39,25 +54,101 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="not_supported")
         self._discovery_info = discovery_info
         self._discovered_device = device
+
+        title = _title(discovery_info, device)
+        self.context["title_placeholders"] = {"name": title}
+
+        if device.encryption_scheme == EncryptionScheme.MIBEACON_LEGACY:
+            return await self.async_step_get_encryption_key_legacy()
+        if device.encryption_scheme == EncryptionScheme.MIBEACON_4_5:
+            return await self.async_step_get_encryption_key_4_5()
         return await self.async_step_bluetooth_confirm()
+
+    async def async_step_get_encryption_key_legacy(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Enter a legacy bindkey for a v2/v3 MiBeacon device."""
+        assert self._discovery_info
+        errors = {}
+
+        if user_input is not None:
+            bindkey = user_input["bindkey"]
+
+            if len(bindkey) != 24:
+                errors["bindkey"] = "expected_24_characters"
+            else:
+                device = DeviceData(bindkey=bytes.fromhex(bindkey))
+
+                # If we got this far we already know supported will
+                # return true so we don't bother checking that again
+                # We just want to retry the decryption
+                device.supported(self._discovery_info)
+
+                if device.bindkey_verified:
+                    return self.async_create_entry(
+                        title=self.context["title_placeholders"]["name"],
+                        data={"bindkey": bindkey},
+                    )
+
+                errors["bindkey"] = "decryption_failed"
+
+        return self.async_show_form(
+            step_id="get_encryption_key_legacy",
+            description_placeholders=self.context["title_placeholders"],
+            data_schema=vol.Schema({vol.Required("bindkey"): vol.All(str, vol.Strip)}),
+            errors=errors,
+        )
+
+    async def async_step_get_encryption_key_4_5(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Enter a bindkey for a v4/v5 MiBeacon device."""
+        assert self._discovery_info
+
+        errors = {}
+
+        if user_input is not None:
+            bindkey = user_input["bindkey"]
+
+            if len(bindkey) != 32:
+                errors["bindkey"] = "expected_32_characters"
+            else:
+                device = DeviceData(bindkey=bytes.fromhex(bindkey))
+
+                # If we got this far we already know supported will
+                # return true so we don't bother checking that again
+                # We just want to retry the decryption
+                device.supported(self._discovery_info)
+
+                if device.bindkey_verified:
+                    return self.async_create_entry(
+                        title=self.context["title_placeholders"]["name"],
+                        data={"bindkey": bindkey},
+                    )
+
+                errors["bindkey"] = "decryption_failed"
+
+        return self.async_show_form(
+            step_id="get_encryption_key_4_5",
+            description_placeholders=self.context["title_placeholders"],
+            data_schema=vol.Schema({vol.Required("bindkey"): vol.All(str, vol.Strip)}),
+            errors=errors,
+        )
 
     async def async_step_bluetooth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Confirm discovery."""
-        assert self._discovered_device is not None
-        device = self._discovered_device
-        assert self._discovery_info is not None
-        discovery_info = self._discovery_info
-        title = device.title or device.get_device_name() or discovery_info.name
         if user_input is not None:
-            return self.async_create_entry(title=title, data={})
+            return self.async_create_entry(
+                title=self.context["title_placeholders"]["name"],
+                data={},
+            )
 
         self._set_confirm_only()
-        placeholders = {"name": title}
-        self.context["title_placeholders"] = placeholders
         return self.async_show_form(
-            step_id="bluetooth_confirm", description_placeholders=placeholders
+            step_id="bluetooth_confirm",
+            description_placeholders=self.context["title_placeholders"],
         )
 
     async def async_step_user(
@@ -67,9 +158,19 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             address = user_input[CONF_ADDRESS]
             await self.async_set_unique_id(address, raise_on_progress=False)
-            return self.async_create_entry(
-                title=self._discovered_devices[address], data={}
-            )
+            discovery = self._discovered_devices[address]
+
+            if discovery.device.encryption_scheme == EncryptionScheme.MIBEACON_LEGACY:
+                self._discovery_info = discovery.discovery_info
+                self.context["title_placeholders"] = {"name": discovery.title}
+                return await self.async_step_get_encryption_key_legacy()
+
+            if discovery.device.encryption_scheme == EncryptionScheme.MIBEACON_4_5:
+                self._discovery_info = discovery.discovery_info
+                self.context["title_placeholders"] = {"name": discovery.title}
+                return await self.async_step_get_encryption_key_4_5()
+
+            return self.async_create_entry(title=discovery.title, data={})
 
         current_addresses = self._async_current_ids()
         for discovery_info in async_discovered_service_info(self.hass):
@@ -78,16 +179,20 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
                 continue
             device = DeviceData()
             if device.supported(discovery_info):
-                self._discovered_devices[address] = (
-                    device.title or device.get_device_name() or discovery_info.name
+                self._discovered_devices[address] = Discovery(
+                    title=_title(discovery_info, device),
+                    discovery_info=discovery_info,
+                    device=device,
                 )
 
         if not self._discovered_devices:
             return self.async_abort(reason="no_devices_found")
 
+        titles = {
+            address: discovery.title
+            for (address, discovery) in self._discovered_devices.items()
+        }
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_ADDRESS): vol.In(self._discovered_devices)}
-            ),
+            data_schema=vol.Schema({vol.Required(CONF_ADDRESS): vol.In(titles)}),
         )

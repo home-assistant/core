@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Mapping
 import logging
 from typing import Any, cast
 
@@ -15,8 +14,6 @@ from homeassistant.components.bluetooth.passive_update_coordinator import (
     PassiveBluetoothDataUpdateCoordinator,
 )
 from homeassistant.core import HomeAssistant, callback
-
-from .const import CONF_RETRY_COUNT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,20 +35,13 @@ class SwitchbotDataUpdateCoordinator(PassiveBluetoothDataUpdateCoordinator):
         logger: logging.Logger,
         ble_device: BLEDevice,
         device: switchbot.SwitchbotDevice,
-        common_options: Mapping[str, int],
     ) -> None:
         """Initialize global switchbot data updater."""
         super().__init__(hass, logger, ble_device.address)
         self.ble_device = ble_device
         self.device = device
-        self.common_options = common_options
         self.data: dict[str, Any] = {}
         self._ready_event = asyncio.Event()
-
-    @property
-    def retry_count(self) -> int:
-        """Return retry count."""
-        return self.common_options[CONF_RETRY_COUNT]
 
     @callback
     def _async_handle_bluetooth_event(
