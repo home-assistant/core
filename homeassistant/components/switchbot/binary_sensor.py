@@ -34,13 +34,13 @@ BINARY_SENSOR_TYPES: dict[str, BinarySensorEntityDescription] = {
         name="Motion Detected",
         device_class=BinarySensorDeviceClass.MOTION,
     ),
-    "door_open": BinarySensorEntityDescription(
-        key="door_open",
+    "contact_open": BinarySensorEntityDescription(
+        key="contact_open",
         name="Door Open",
         device_class=BinarySensorDeviceClass.DOOR,
     ),
-    "door_timeout": BinarySensorEntityDescription(
-        key="door_timeout",
+    "contact_timeout": BinarySensorEntityDescription(
+        key="contact_timeout",
         name="Door Timeout",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
