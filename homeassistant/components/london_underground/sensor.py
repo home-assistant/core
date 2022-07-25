@@ -73,7 +73,7 @@ async def async_setup_platform(
     for line in config[CONF_LINE]:
         sensors.append(LondonTubeSensor(coordinator, line))
 
-    async_add_entities(sensors, True)
+    async_add_entities(sensors)
 
 
 class LondonTubeCoordinator(DataUpdateCoordinator):
