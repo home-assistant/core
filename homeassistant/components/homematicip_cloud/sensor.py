@@ -17,7 +17,7 @@ from homematicip.aio.device import (
     AsyncPlugableSwitchMeasuring,
     AsyncPresenceDetectorIndoor,
     AsyncRoomControlDeviceAnalog,
-    AsyncTemperaturDifferenceSensor2,
+    AsyncTemperatureDifferenceSensor2,
     AsyncTemperatureHumiditySensorDisplay,
     AsyncTemperatureHumiditySensorOutdoor,
     AsyncTemperatureHumiditySensorWithoutDisplay,
@@ -125,7 +125,7 @@ async def async_setup_entry(
             entities.append(HomematicipTodayRainSensor(hap, device))
         if isinstance(device, AsyncPassageDetector):
             entities.append(HomematicipPassageDetectorDeltaCounter(hap, device))
-        if isinstance(device, AsyncTemperaturDifferenceSensor2):
+        if isinstance(device, AsyncTemperatureDifferenceSensor2):
             entities.append(HomematicpTemperatureExternalSensorCh1(hap, device))
             entities.append(HomematicpTemperatureExternalSensorCh2(hap, device))
             entities.append(HomematicpTemperatureExternalSensorDelta(hap, device))
