@@ -61,9 +61,6 @@ class ValloxSensorEntity(ValloxEntity, SensorEntity):
 
         value = self.coordinator.data.get_metric(metric_key)
 
-        if value == 0xFFFF:
-            return None
-
         if self.entity_description.round_ndigits is not None and isinstance(
             value, float
         ):

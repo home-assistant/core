@@ -81,13 +81,13 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the sensors."""
-    name = hass.data[DOMAIN][entry.entry_id]["name"]
-    coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
-    client = hass.data[DOMAIN][entry.entry_id]["client"]
+    data = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
         [
-            description.entity_type(name, coordinator, description, client)
+            description.entity_type(
+                data["name"], data["coordinator"], description, data["client"]
+            )
             for description in SELECT_ENTITIES
         ]
     )
