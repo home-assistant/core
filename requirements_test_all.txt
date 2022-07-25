@@ -331,9 +331,6 @@ bond-async==0.1.22
 # homeassistant.components.bosch_shc
 boschshcpy==0.2.30
 
-# homeassistant.components.braviatv
-bravia-tv==1.0.11
-
 # homeassistant.components.broadlink
 broadlink==0.18.2
 
@@ -960,6 +957,9 @@ pyblackbird==0.5
 
 # homeassistant.components.neato
 pybotvac==0.0.23
+
+# homeassistant.components.braviatv
+pybravia==0.1.1
 
 # homeassistant.components.cloudflare
 pycfdns==1.2.2

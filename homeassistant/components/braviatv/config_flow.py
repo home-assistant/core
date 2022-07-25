@@ -6,8 +6,8 @@ import ipaddress
 import re
 from typing import Any
 
-from bravia_tv import BraviaRC
-from bravia_tv.braviarc import NoIPControl
+import aiohttp
+from pybravia import BraviaTV
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
@@ -15,6 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PIN
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
@@ -44,25 +45,22 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize."""
-        self.braviarc: BraviaRC | None = None
+        self.client: BraviaTV | None = None
         self.host: str | None = None
         self.title = ""
         self.mac: str | None = None
 
     async def init_device(self, pin: str) -> None:
         """Initialize Bravia TV device."""
-        assert self.braviarc is not None
-        await self.hass.async_add_executor_job(
-            self.braviarc.connect, pin, CLIENTID_PREFIX, NICKNAME
-        )
+        assert self.client is not None
 
-        connected = await self.hass.async_add_executor_job(self.braviarc.is_connected)
+        connected = await self.client.connect(
+            pin=pin, clientid=CLIENTID_PREFIX, nickname=NICKNAME
+        )
         if not connected:
             raise CannotConnect()
 
-        system_info = await self.hass.async_add_executor_job(
-            self.braviarc.get_system_info
-        )
+        system_info = await self.client.get_system_info()
         if not system_info:
             raise ModelNotSupported()
 
@@ -86,8 +84,11 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             if host_valid(user_input[CONF_HOST]):
+                session = async_create_clientsession(
+                    self.hass, cookie_jar=aiohttp.CookieJar(unsafe=True)
+                )
                 self.host = user_input[CONF_HOST]
-                self.braviarc = BraviaRC(self.host)
+                self.client = BraviaTV(host=self.host, session=session)
 
                 return await self.async_step_authorize()
 
@@ -116,13 +117,11 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input[CONF_HOST] = self.host
                 user_input[CONF_MAC] = self.mac
                 return self.async_create_entry(title=self.title, data=user_input)
-        # Connecting with th PIN "0000" to start the pairing process on the TV.
-        try:
-            assert self.braviarc is not None
-            await self.hass.async_add_executor_job(
-                self.braviarc.connect, "0000", CLIENTID_PREFIX, NICKNAME
-            )
-        except NoIPControl:
+
+        assert self.client is not None
+
+        pair = await self.client.pair(CLIENTID_PREFIX, NICKNAME)
+        if not pair:
             return self.async_abort(reason="no_ip_control")
 
         return self.async_show_form(
@@ -138,26 +137,18 @@ class BraviaTVOptionsFlowHandler(config_entries.OptionsFlow):
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize Bravia TV options flow."""
         self.config_entry = config_entry
-        self.pin = config_entry.data[CONF_PIN]
         self.ignored_sources = config_entry.options.get(CONF_IGNORED_SOURCES)
-        self.source_list: dict[str, str] = {}
+        self.source_list: list[str] = []
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Manage the options."""
         coordinator = self.hass.data[DOMAIN][self.config_entry.entry_id]
-        braviarc = coordinator.braviarc
-        connected = await self.hass.async_add_executor_job(braviarc.is_connected)
-        if not connected:
-            await self.hass.async_add_executor_job(
-                braviarc.connect, self.pin, CLIENTID_PREFIX, NICKNAME
-            )
 
-        content_mapping = await self.hass.async_add_executor_job(
-            braviarc.load_source_list
-        )
-        self.source_list = {item: item for item in content_mapping}
+        assert coordinator is not None
+
+        self.source_list = [item.get("title", "") for item in coordinator.source_map]
         return await self.async_step_user()
 
     async def async_step_user(
