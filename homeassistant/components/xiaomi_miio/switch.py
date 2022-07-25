@@ -47,6 +47,7 @@ from .const import (
     FEATURE_FLAGS_AIRPURIFIER_MIOT,
     FEATURE_FLAGS_AIRPURIFIER_PRO,
     FEATURE_FLAGS_AIRPURIFIER_PRO_V7,
+    FEATURE_FLAGS_AIRPURIFIER_4,
     FEATURE_FLAGS_AIRPURIFIER_V1,
     FEATURE_FLAGS_AIRPURIFIER_V3,
     FEATURE_FLAGS_FAN,
@@ -62,6 +63,7 @@ from .const import (
     FEATURE_SET_DISPLAY,
     FEATURE_SET_DRY,
     FEATURE_SET_IONIZER,
+    FEATURE_SET_ANION,
     FEATURE_SET_LEARN_MODE,
     FEATURE_SET_LED,
     FEATURE_SET_PTC,
@@ -78,6 +80,8 @@ from .const import (
     MODEL_AIRPURIFIER_3C,
     MODEL_AIRPURIFIER_PRO,
     MODEL_AIRPURIFIER_PRO_V7,
+    MODEL_AIRPURIFIER_4,
+    MODEL_AIRPURIFIER_4PRO,
     MODEL_AIRPURIFIER_V1,
     MODEL_AIRPURIFIER_V3,
     MODEL_FAN_1C,
@@ -128,6 +132,7 @@ ATTR_DRY = "dry"
 ATTR_LEARN_MODE = "learn_mode"
 ATTR_LED = "led"
 ATTR_IONIZER = "ionizer"
+ATTR_ANION = "anion"
 ATTR_LOAD_POWER = "load_power"
 ATTR_MODEL = "model"
 ATTR_POWER = "power"
@@ -188,6 +193,8 @@ MODEL_TO_FEATURES_MAP = {
     MODEL_AIRPURIFIER_PRO_V7: FEATURE_FLAGS_AIRPURIFIER_PRO_V7,
     MODEL_AIRPURIFIER_V1: FEATURE_FLAGS_AIRPURIFIER_V1,
     MODEL_AIRPURIFIER_V3: FEATURE_FLAGS_AIRPURIFIER_V3,
+    MODEL_AIRPURIFIER_4: FEATURE_FLAGS_AIRPURIFIER_4,
+    MODEL_AIRPURIFIER_4PRO: FEATURE_FLAGS_AIRPURIFIER_4,
     MODEL_FAN_1C: FEATURE_FLAGS_FAN_1C,
     MODEL_FAN_P10: FEATURE_FLAGS_FAN_P10_P11,
     MODEL_FAN_P11: FEATURE_FLAGS_FAN_P10_P11,
@@ -298,6 +305,15 @@ SWITCH_TYPES = (
         icon="mdi:shimmer",
         method_on="async_set_ionizer_on",
         method_off="async_set_ionizer_off",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    XiaomiMiioSwitchDescription(
+        key=ATTR_ANION,
+        feature=FEATURE_SET_ANION,
+        name="Ionizer",
+        icon="mdi:shimmer",
+        method_on="async_set_anion_on",
+        method_off="async_set_anion_off",
         entity_category=EntityCategory.CONFIG,
     ),
     XiaomiMiioSwitchDescription(
@@ -678,6 +694,21 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
             False,
         )
 
+    async def async_set_anion_on(self) -> bool:
+        """Turn ionizer on."""
+        return await self._try_command(
+            "Turning ionizer of the miio device on failed.",
+            self._device.set_anion,
+            True,
+        )
+
+    async def async_set_anion_off(self) -> bool:
+        """Turn ionizer off."""
+        return await self._try_command(
+            "Turning ionizer of the miio device off failed.",
+            self._device.set_anion,
+            False,
+        )
     async def async_set_ptc_on(self) -> bool:
         """Turn ionizer on."""
         return await self._try_command(
