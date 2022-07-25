@@ -53,7 +53,9 @@ def async_get_legacy_entry(hass: HomeAssistant) -> ConfigEntry | None:
 
 def get_rssi_from_wifiinfo(wifiinfo: StateWifiInfo) -> int:
     """Derive the RSSI value from the bulb signal field."""
-    return int(math.floor(10 * math.log10(wifiinfo.signal) + 0.5))
+    rssi = int(math.floor(10 * math.log10(wifiinfo.signal) + 0.5))
+    _LOGGER.debug("Signal: %s == RSSI: %s", str(wifiinfo.signal), rssi)
+    return rssi
 
 
 def hev_cycle_status(hev_cycle: StateHevCycle) -> tuple[int, int, bool]:
@@ -185,4 +187,5 @@ async def async_execute_lifx(method: Callable) -> Message:
 
     if result is None:
         raise asyncio.TimeoutError("No response from LIFX bulb")
+
     return result

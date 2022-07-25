@@ -3,9 +3,11 @@ from __future__ import annotations
 
 import asyncio
 from contextlib import contextmanager
+import logging
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from aiolifx.aiolifx import Light
+from aiolifx.msgtypes import LAST_HEV_CYCLE_RESULT
 
 from homeassistant.components.lifx import discovery
 from homeassistant.components.lifx.const import TARGET_ANY
@@ -17,15 +19,17 @@ LABEL = "My Bulb"
 SERIAL = "aa:bb:cc:dd:ee:cc"
 MAC_ADDRESS = "aa:bb:cc:dd:ee:cd"
 DEFAULT_ENTRY_TITLE = LABEL
+_LOGGER = logging.getLogger(__name__)
 
 
 class MockMessage:
     """Mock a lifx message."""
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         """Init message."""
         self.target_addr = SERIAL
         self.count = 9
+        [setattr(self, k, v) for k, v in kwargs.items() if k != "callb"]
 
 
 class MockFailingLifxCommand:
@@ -54,11 +58,12 @@ class MockLifxCommand:
         """Init command."""
         self.bulb = bulb
         self.calls = []
+        self.msg_kwargs = kwargs
 
     def __call__(self, *args, **kwargs):
         """Call command."""
         if callb := kwargs.get("callb"):
-            callb(self.bulb, MockMessage())
+            callb(self.bulb, MockMessage(**self.msg_kwargs))
         self.calls.append([args, kwargs])
 
     def reset_mock(self):
@@ -68,7 +73,7 @@ class MockLifxCommand:
 
 def _mocked_bulb() -> Light:
     bulb = Light(asyncio.get_running_loop(), SERIAL, IP_ADDRESS)
-    bulb.host_firmware_version = "3.00"
+    bulb.host_firmware_version = "2.60"
     bulb.label = LABEL
     bulb.color = [1, 2, 3, 4]
     bulb.power_level = 0
@@ -82,6 +87,8 @@ def _mocked_bulb() -> Light:
     bulb.get_hostfirmware = MockLifxCommand(bulb)
     bulb.get_version = MockLifxCommand(bulb)
     bulb.set_waveform_optional = MockLifxCommand(bulb)
+    bulb.get_wifiinfo = MockLifxCommand(bulb, signal=39.0)
+    bulb.get_hostinfo = MockLifxCommand(bulb, uptime=609814189347000)
     bulb.product = 1  # LIFX Original 1000
     return bulb
 
@@ -120,6 +127,20 @@ def _mocked_light_strip() -> Light:
 def _mocked_bulb_new_firmware() -> Light:
     bulb = _mocked_bulb()
     bulb.host_firmware_version = "3.90"
+    bulb.get_wifiinfo = MockLifxCommand(bulb, signal=6.309576150442808)
+    return bulb
+
+
+def _mocked_hev_bulb() -> Light:
+    bulb = _mocked_bulb()
+    bulb.host_firmware_version = "3.90"
+    bulb.product = 90  # LIFX Clean
+    bulb.get_hev_cycle = MockLifxCommand(
+        bulb, duration=7200, remaining=300, last_power=True
+    )
+    bulb.get_last_hev_cycle_result = MockLifxCommand(
+        bulb, result_str=LAST_HEV_CYCLE_RESULT[4]
+    )
     return bulb
 
 
