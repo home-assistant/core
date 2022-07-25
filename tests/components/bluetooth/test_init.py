@@ -15,6 +15,10 @@ from homeassistant.components.bluetooth import (
     async_track_unavailable,
     models,
 )
+from homeassistant.components.bluetooth.const import (
+    CONF_ADAPTER,
+    UNIX_DEFAULT_BLUETOOTH_ADAPTER,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
@@ -1160,9 +1164,22 @@ async def test_can_unsetup_bluetooth(hass, mock_bleak_scanner_start, enable_blue
 async def test_auto_detect_bluetooth_adapters_linux(hass):
     """Test we auto detect bluetooth adapters on linux."""
     with patch(
-        "bluetooth_adapters.get_bluetooth_adapters", return_value={"hci0"}
+        "bluetooth_adapters.get_bluetooth_adapters", return_value=["hci0"]
     ), patch(
-        "homeassistant.components.bluetooth.platform.system", return_value="Linux"
+        "homeassistant.components.bluetooth.util.platform.system", return_value="Linux"
+    ):
+        assert await async_setup_component(hass, bluetooth.DOMAIN, {})
+        await hass.async_block_till_done()
+    assert not hass.config_entries.async_entries(bluetooth.DOMAIN)
+    assert len(hass.config_entries.flow.async_progress(bluetooth.DOMAIN)) == 1
+
+
+async def test_auto_detect_bluetooth_adapters_linux_multiple(hass):
+    """Test we auto detect bluetooth adapters on linux with multiple adapters."""
+    with patch(
+        "bluetooth_adapters.get_bluetooth_adapters", return_value=["hci1", "hci0"]
+    ), patch(
+        "homeassistant.components.bluetooth.util.platform.system", return_value="Linux"
     ):
         assert await async_setup_component(hass, bluetooth.DOMAIN, {})
         await hass.async_block_till_done()
@@ -1173,7 +1190,7 @@ async def test_auto_detect_bluetooth_adapters_linux(hass):
 async def test_auto_detect_bluetooth_adapters_linux_none_found(hass):
     """Test we auto detect bluetooth adapters on linux with no adapters found."""
     with patch("bluetooth_adapters.get_bluetooth_adapters", return_value=set()), patch(
-        "homeassistant.components.bluetooth.platform.system", return_value="Linux"
+        "homeassistant.components.bluetooth.util.platform.system", return_value="Linux"
     ):
         assert await async_setup_component(hass, bluetooth.DOMAIN, {})
         await hass.async_block_till_done()
@@ -1184,7 +1201,7 @@ async def test_auto_detect_bluetooth_adapters_linux_none_found(hass):
 async def test_auto_detect_bluetooth_adapters_macos(hass):
     """Test we auto detect bluetooth adapters on macos."""
     with patch(
-        "homeassistant.components.bluetooth.platform.system", return_value="Darwin"
+        "homeassistant.components.bluetooth.util.platform.system", return_value="Darwin"
     ):
         assert await async_setup_component(hass, bluetooth.DOMAIN, {})
         await hass.async_block_till_done()
@@ -1195,7 +1212,8 @@ async def test_auto_detect_bluetooth_adapters_macos(hass):
 async def test_no_auto_detect_bluetooth_adapters_windows(hass):
     """Test we auto detect bluetooth adapters on windows."""
     with patch(
-        "homeassistant.components.bluetooth.platform.system", return_value="Windows"
+        "homeassistant.components.bluetooth.util.platform.system",
+        return_value="Windows",
     ):
         assert await async_setup_component(hass, bluetooth.DOMAIN, {})
         await hass.async_block_till_done()
@@ -1213,3 +1231,51 @@ async def test_getting_the_scanner_returns_the_wrapped_instance(hass, enable_blu
     """Test getting the scanner returns the wrapped instance."""
     scanner = bluetooth.async_get_scanner(hass)
     assert isinstance(scanner, models.HaBleakScannerWrapper)
+
+
+async def test_config_entry_can_be_reloaded_when_stop_raises(
+    hass, caplog, enable_bluetooth
+):
+    """Test we can reload if stopping the scanner raises."""
+    entry = hass.config_entries.async_entries(bluetooth.DOMAIN)[0]
+    assert entry.state == ConfigEntryState.LOADED
+
+    with patch(
+        "homeassistant.components.bluetooth.HaBleakScanner.stop", side_effect=BleakError
+    ):
+        await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state == ConfigEntryState.LOADED
+    assert "Error stopping scanner" in caplog.text
+
+
+async def test_changing_the_adapter_at_runtime(hass):
+    """Test we can change the adapter at runtime."""
+    entry = MockConfigEntry(
+        domain=bluetooth.DOMAIN,
+        data={},
+        options={CONF_ADAPTER: UNIX_DEFAULT_BLUETOOTH_ADAPTER},
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.bluetooth.HaBleakScanner.async_setup"
+    ) as mock_setup, patch(
+        "homeassistant.components.bluetooth.HaBleakScanner.start"
+    ), patch(
+        "homeassistant.components.bluetooth.HaBleakScanner.stop"
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert "adapter" not in mock_setup.mock_calls[0][2]
+
+        entry.options = {CONF_ADAPTER: "hci1"}
+
+        await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+        assert mock_setup.mock_calls[1][2]["adapter"] == "hci1"
+
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        await hass.async_block_till_done()
