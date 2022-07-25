@@ -1213,3 +1213,20 @@ async def test_getting_the_scanner_returns_the_wrapped_instance(hass, enable_blu
     """Test getting the scanner returns the wrapped instance."""
     scanner = bluetooth.async_get_scanner(hass)
     assert isinstance(scanner, models.HaBleakScannerWrapper)
+
+
+async def test_config_entry_can_be_reloaded_when_stop_raises(
+    hass, caplog, enable_bluetooth
+):
+    """Test we can reload if stopping the scanner raises."""
+    entry = hass.config_entries.async_entries(bluetooth.DOMAIN)[0]
+    assert entry.state == ConfigEntryState.LOADED
+
+    with patch(
+        "homeassistant.components.bluetooth.HaBleakScanner.stop", side_effect=BleakError
+    ):
+        await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state == ConfigEntryState.LOADED
+    assert "Error stopping scanner" in caplog.text
