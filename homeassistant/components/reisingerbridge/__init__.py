@@ -29,6 +29,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         False,
         async_get_clientsession(hass),
     )
+    
+    try:
+        status = await open_reisinger_connection.update_state()
+    except aiohttp.ClientError as exp:
+        raise CannotConnect from exp
+
+    if status is None:
+        raise InvalidAuth
+
+    if status.get("serial") is None:
+        raise CannotConnect
 
     open_reisinger_data_coordinator = OpenReisingerDataUpdateCoordinator(
         hass,
