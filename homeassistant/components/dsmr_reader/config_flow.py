@@ -28,23 +28,6 @@ class DsmrReaderFlowHandler(DiscoveryFlowHandler[Awaitable[bool]], domain=DOMAIN
         """Set up the config flow."""
         super().__init__(DOMAIN, "DSMR Reader", _async_has_devices)
 
-    async def async_step_import(self, _: dict[str, Any] | None) -> FlowResult:
-        """Import from configuration.yaml and create config entry."""
-        if not self.hass.services.has_service(domain="mqtt", service="publish"):
-            _LOGGER.warning("DSMR Reader configuration import failed. MQTT is missing")
-            return self.async_abort(reason="mqtt_missing")
-
-        return await super().async_step_import(None)
-
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle user step."""
-        if not self.hass.services.has_service(domain="mqtt", service="publish"):
-            return self.async_abort(reason="mqtt_missing")
-
-        return await super().async_step_user(user_input)
-
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
