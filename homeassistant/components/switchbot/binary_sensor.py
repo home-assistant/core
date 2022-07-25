@@ -26,17 +26,17 @@ BINARY_SENSOR_TYPES: dict[str, BinarySensorEntityDescription] = {
     ),
     "motion_detected": BinarySensorEntityDescription(
         key="pir_state",
-        name="Motion Detected",
+        name="Motion detected",
         device_class=BinarySensorDeviceClass.MOTION,
     ),
     "contact_open": BinarySensorEntityDescription(
         key="contact_open",
-        name="Door Open",
+        name="Door open",
         device_class=BinarySensorDeviceClass.DOOR,
     ),
     "contact_timeout": BinarySensorEntityDescription(
         key="contact_timeout",
-        name="Door Timeout",
+        name="Door timeout",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -88,7 +88,6 @@ class SwitchBotBinarySensor(SwitchbotEntity, BinarySensorEntity):
         self._sensor = binary_sensor
         self._attr_unique_id = f"{unique_id}-{binary_sensor}"
         self.entity_description = BINARY_SENSOR_TYPES[binary_sensor]
-        self._attr_name = self.entity_description.name or binary_sensor.title()
 
     @property
     def is_on(self) -> bool:
