@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import update_coordinator
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_DEVICE_KEY, DOMAIN
+from .const import CONF_DEVICE_KEY, DOMAIN, UPDATE_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,7 +66,7 @@ class OpenReisingerDataUpdateCoordinator(update_coordinator.DataUpdateCoordinato
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(seconds=5),
+            update_interval=timedelta(seconds=UPDATE_INTERVAL),
         )
 
     async def _async_update_data(self) -> None:
