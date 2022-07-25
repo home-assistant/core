@@ -7,7 +7,7 @@ import logging
 from typing import Any, TypeVar
 
 from aiohttp.web_exceptions import HTTPException
-from apyhiveapi import Hive
+from apyhiveapi import Auth, Hive
 from apyhiveapi.helper.hive_exceptions import HiveReauthRequired
 from typing_extensions import Concatenate, ParamSpec
 import voluptuous as vol
@@ -22,7 +22,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, PLATFORM_LOOKUP, PLATFORMS
@@ -75,9 +75,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Hive from a config entry."""
 
-    websession = aiohttp_client.async_get_clientsession(hass)
-    hive = Hive(websession)
+    web_session = aiohttp_client.async_get_clientsession(hass)
     hive_config = dict(entry.data)
+    hive = Hive(web_session)
 
     hive_config["options"] = {}
     hive_config["options"].update(
@@ -93,12 +93,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except HiveReauthRequired as err:
         raise ConfigEntryAuthFailed from err
 
-    for ha_type, hive_type in PLATFORM_LOOKUP.items():
-        device_list = devices.get(hive_type)
-        if device_list:
-            hass.async_create_task(
-                hass.config_entries.async_forward_entry_setup(entry, ha_type)
-            )
+    await hass.config_entries.async_forward_entry_setups(
+        entry,
+        [
+            ha_type
+            for ha_type, hive_type in PLATFORM_LOOKUP.items()
+            if devices.get(hive_type)
+        ],
+    )
 
     return True
 
@@ -110,6 +112,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Remove a config entry."""
+    hive = Auth(entry.data["username"], entry.data["password"])
+    await hive.forget_device(
+        entry.data["tokens"]["AuthenticationResult"]["AccessToken"],
+        entry.data["device_data"][1],
+    )
 
 
 def refresh_system(
@@ -132,8 +143,17 @@ class HiveEntity(Entity):
         """Initialize the instance."""
         self.hive = hive
         self.device = hive_device
+        self._attr_name = self.device["haName"]
+        self._attr_unique_id = f'{self.device["hiveID"]}-{self.device["hiveType"]}'
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self.device["device_id"])},
+            model=self.device["deviceData"]["model"],
+            manufacturer=self.device["deviceData"]["manufacturer"],
+            name=self.device["device_name"],
+            sw_version=self.device["deviceData"]["version"],
+            via_device=(DOMAIN, self.device["parentDevice"]),
+        )
         self.attributes = {}
-        self._unique_id = f'{self.device["hiveID"]}-{self.device["hiveType"]}'
 
     async def async_added_to_hass(self):
         """When entity is added to Home Assistant."""

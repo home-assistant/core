@@ -111,7 +111,7 @@ class EsphomeCover(EsphomeEntity[CoverInfo, CoverState], CoverEntity):
         """Stop the cover."""
         await self._client.cover_command(key=self._static_info.key, stop=True)
 
-    async def async_set_cover_position(self, **kwargs: int) -> None:
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         await self._client.cover_command(
             key=self._static_info.key, position=kwargs[ATTR_POSITION] / 100
@@ -125,8 +125,9 @@ class EsphomeCover(EsphomeEntity[CoverInfo, CoverState], CoverEntity):
         """Close the cover tilt."""
         await self._client.cover_command(key=self._static_info.key, tilt=0.0)
 
-    async def async_set_cover_tilt_position(self, **kwargs: int) -> None:
+    async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
+        tilt_position: int = kwargs[ATTR_TILT_POSITION]
         await self._client.cover_command(
-            key=self._static_info.key, tilt=kwargs[ATTR_TILT_POSITION] / 100
+            key=self._static_info.key, tilt=tilt_position / 100
         )

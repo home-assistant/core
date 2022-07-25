@@ -38,7 +38,7 @@ async def test_show_form(hass):
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == SOURCE_USER
 
 
@@ -88,7 +88,7 @@ async def test_authorize_no_ip_control(hass):
             DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: "bravia-host"}
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
         assert result["reason"] == "no_ip_control"
 
 
@@ -117,7 +117,7 @@ async def test_duplicate_error(hass):
             result["flow_id"], user_input={CONF_PIN: "1234"}
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
         assert result["reason"] == "already_configured"
 
 
@@ -135,14 +135,14 @@ async def test_create_entry(hass):
             DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: "bravia-host"}
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "authorize"
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_PIN: "1234"}
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["result"].unique_id == "very_unique_string"
         assert result["title"] == "TV-Model"
         assert result["data"] == {
@@ -168,14 +168,14 @@ async def test_create_entry_with_ipv6_address(hass):
             data={CONF_HOST: "2001:db8::1428:57ab"},
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "authorize"
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_PIN: "1234"}
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["result"].unique_id == "very_unique_string"
         assert result["title"] == "TV-Model"
         assert result["data"] == {
@@ -214,7 +214,7 @@ async def test_options_flow(hass):
     ):
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "user"
 
         result = await hass.config_entries.options.async_configure(
@@ -222,5 +222,5 @@ async def test_options_flow(hass):
         )
         await hass.async_block_till_done()
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert config_entry.options == {CONF_IGNORED_SOURCES: ["HDMI 1", "HDMI 2"]}

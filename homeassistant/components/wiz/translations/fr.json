@@ -14,9 +14,6 @@
         },
         "flow_title": "{name} ({host})",
         "step": {
-            "confirm": {
-                "description": "Voulez-vous commencer la configuration\u00a0?"
-            },
             "discovery_confirm": {
                 "description": "Voulez-vous configurer {name} ({host})\u00a0?"
             },
@@ -27,8 +24,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Adresse IP",
-                    "name": "Nom"
+                    "host": "Adresse IP"
                 },
                 "description": "Si vous laissez l'adresse IP vide, la d\u00e9couverte sera utilis\u00e9e pour trouver des appareils."
             }

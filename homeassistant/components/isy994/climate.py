@@ -6,6 +6,7 @@ from typing import Any
 from pyisy.constants import (
     CMD_CLIMATE_FAN_SETTING,
     CMD_CLIMATE_MODE,
+    ISY_VALUE_UNKNOWN,
     PROP_HEAT_COOL_STATE,
     PROP_HUMIDITY,
     PROP_SETPOINT_COOL,
@@ -115,6 +116,8 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
     def current_humidity(self) -> int | None:
         """Return the current humidity."""
         if not (humidity := self._node.aux_properties.get(PROP_HUMIDITY)):
+            return None
+        if humidity.value == ISY_VALUE_UNKNOWN:
             return None
         return int(humidity.value)
 

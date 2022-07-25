@@ -3,14 +3,8 @@ from __future__ import annotations
 
 from homeassistant.const import Platform
 
-CONF_MOUNT_DIR = "mount_dir"
-
-CONF_TYPE_OWSERVER = "OWServer"
-CONF_TYPE_SYSBUS = "SysBus"
-
-DEFAULT_OWSERVER_HOST = "localhost"
-DEFAULT_OWSERVER_PORT = 4304
-DEFAULT_SYSBUS_MOUNT_DIR = "/sys/bus/w1/devices/"
+DEFAULT_HOST = "localhost"
+DEFAULT_PORT = 4304
 
 DOMAIN = "onewire"
 
@@ -18,7 +12,7 @@ DEVICE_KEYS_0_3 = range(4)
 DEVICE_KEYS_0_7 = range(8)
 DEVICE_KEYS_A_B = ("A", "B")
 
-DEVICE_SUPPORT_OWSERVER = {
+DEVICE_SUPPORT = {
     "05": (),
     "10": (),
     "12": (),
@@ -35,7 +29,6 @@ DEVICE_SUPPORT_OWSERVER = {
     "7E": ("EDS0066", "EDS0068"),
     "EF": ("HB_HUB", "HB_MOISTURE_METER", "HobbyBoards_EF"),
 }
-DEVICE_SUPPORT_SYSBUS = ["10", "22", "28", "3B", "42"]
 
 DEVICE_SUPPORT_OPTIONS = ["28"]
 

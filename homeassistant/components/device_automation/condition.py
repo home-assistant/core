@@ -1,7 +1,7 @@
 """Validate device conditions."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Protocol, cast
+from typing import TYPE_CHECKING, Any, Protocol, cast
 
 import voluptuous as vol
 
@@ -29,13 +29,21 @@ class DeviceAutomationConditionProtocol(Protocol):
         self, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
         """Validate config."""
-        raise NotImplementedError
 
     def async_condition_from_config(
         self, hass: HomeAssistant, config: ConfigType
     ) -> condition.ConditionCheckerType:
         """Evaluate state based on configuration."""
-        raise NotImplementedError
+
+    async def async_get_condition_capabilities(
+        self, hass: HomeAssistant, config: ConfigType
+    ) -> dict[str, vol.Schema]:
+        """List condition capabilities."""
+
+    async def async_get_conditions(
+        self, hass: HomeAssistant, device_id: str
+    ) -> list[dict[str, Any]]:
+        """List conditions."""
 
 
 async def async_validate_condition_config(

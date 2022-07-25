@@ -829,6 +829,12 @@ def zone(
     else:
         entity_id = entity.entity_id
 
+    if entity.state in (
+        STATE_UNAVAILABLE,
+        STATE_UNKNOWN,
+    ):
+        return False
+
     latitude = entity.attributes.get(ATTR_LATITUDE)
     longitude = entity.attributes.get(ATTR_LONGITUDE)
 

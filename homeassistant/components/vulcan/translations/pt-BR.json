@@ -30,14 +30,6 @@
                 },
                 "description": "Fa\u00e7a login na sua conta Vulcan usando a p\u00e1gina de registro do aplicativo m\u00f3vel."
             },
-            "reauth": {
-                "data": {
-                    "pin": "Pin",
-                    "region": "S\u00edmbolo",
-                    "token": "Token"
-                },
-                "description": "Fa\u00e7a login na sua conta Vulcan usando a p\u00e1gina de registro do aplicativo m\u00f3vel."
-            },
             "reauth_confirm": {
                 "data": {
                     "pin": "C\u00f3digo PIN",
@@ -57,21 +49,6 @@
                     "student_name": "Selecionar aluno"
                 },
                 "description": "Selecione aluno, voc\u00ea pode adicionar mais alunos adicionando integra\u00e7\u00e3o novamente."
-            }
-        }
-    },
-    "options": {
-        "error": {
-            "error": "Ocorreu um erro"
-        },
-        "step": {
-            "init": {
-                "data": {
-                    "attendance_notify": "Mostrar notifica\u00e7\u00f5es sobre as entradas de participa\u00e7\u00e3o mais recentes",
-                    "grade_notify": "Mostrar notifica\u00e7\u00f5es sobre as notas mais recentes",
-                    "message_notify": "Mostrar notifica\u00e7\u00f5es quando uma nova mensagem for recebida",
-                    "scan_interval": "Intervalo de atualiza\u00e7\u00e3o (em minutos)"
-                }
             }
         }
     }

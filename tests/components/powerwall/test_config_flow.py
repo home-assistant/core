@@ -12,7 +12,7 @@ from homeassistant import config_entries
 from homeassistant.components import dhcp
 from homeassistant.components.powerwall.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
-from homeassistant.data_entry_flow import RESULT_TYPE_ABORT
+from homeassistant.data_entry_flow import FlowResultType
 
 from .mocks import (
     MOCK_GATEWAY_DIN,
@@ -299,7 +299,7 @@ async def test_dhcp_discovery_cannot_connect(hass):
                 hostname="00GGX",
             ),
         )
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
 
@@ -370,7 +370,7 @@ async def test_dhcp_discovery_update_ip_address(hass):
             ),
         )
         await hass.async_block_till_done()
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_IP_ADDRESS] == "1.1.1.1"
 
@@ -402,7 +402,7 @@ async def test_dhcp_discovery_updates_unique_id(hass):
             ),
         )
         await hass.async_block_till_done()
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_IP_ADDRESS] == "1.2.3.4"
     assert entry.unique_id == MOCK_GATEWAY_DIN

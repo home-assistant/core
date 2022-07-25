@@ -10,8 +10,7 @@
                     "device": "S\u00f6kv\u00e4g eller URL",
                     "id": "ID",
                     "name": "Namn"
-                },
-                "title": "OpenTherm Gateway"
+                }
             }
         }
     },
@@ -20,8 +19,7 @@
             "init": {
                 "data": {
                     "floor_temperature": "Golvetemperatur"
-                },
-                "description": "Alternativ f\u00f6r OpenTherm Gateway"
+                }
             }
         }
     }

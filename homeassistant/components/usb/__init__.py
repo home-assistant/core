@@ -1,6 +1,7 @@
 """The USB Discovery integration."""
 from __future__ import annotations
 
+from collections.abc import Coroutine
 import dataclasses
 import fnmatch
 import logging
@@ -20,7 +21,6 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.data_entry_flow import BaseServiceInfo
 from homeassistant.helpers import discovery_flow, system_info
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.frame import report
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_usb
 
@@ -46,20 +46,6 @@ class UsbServiceInfo(BaseServiceInfo):
     serial_number: str | None
     manufacturer: str | None
     description: str | None
-
-    def __getitem__(self, name: str) -> Any:
-        """
-        Allow property access by name for compatibility reason.
-
-        Deprecated, and will be removed in version 2022.6.
-        """
-        report(
-            f"accessed discovery_info['{name}'] instead of discovery_info.{name}; "
-            "this will fail in version 2022.6",
-            exclude_integrations={DOMAIN},
-            error_if_core=False,
-        )
-        return getattr(self, name)
 
 
 def human_readable_device_name(
@@ -124,7 +110,7 @@ class USBDiscovery:
         self.usb = usb
         self.seen: set[tuple[str, ...]] = set()
         self.observer_active = False
-        self._request_debouncer: Debouncer | None = None
+        self._request_debouncer: Debouncer[Coroutine[Any, Any, None]] | None = None
 
     async def async_setup(self) -> None:
         """Set up USB Discovery."""

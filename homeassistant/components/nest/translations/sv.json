@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Konto har redan konfigurerats",
             "authorize_url_timeout": "Timeout vid generering av en autentisieringsadress."
         },
         "error": {
@@ -27,7 +28,8 @@
     },
     "device_automation": {
         "trigger_type": {
-            "camera_motion": "R\u00f6relse uppt\u00e4ckt"
+            "camera_motion": "R\u00f6relse uppt\u00e4ckt",
+            "camera_person": "Person detekterad"
         }
     }
 }

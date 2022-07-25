@@ -17,32 +17,10 @@ async def test_diagnostics(
 
     diag = await get_diagnostics_for_config_entry(hass, hass_client, entry)
 
-    assert diag == {
-        "status": "success",
-        "result": [
-            {
-                "id": "**REDACTED**",
-                "qrId": "**REDACTED**",
-                "room": {"uid": "**REDACTED**", "name": "Hallway", "icon": "Lounge"},
-                "acState": {
-                    "timestamp": {
-                        "time": "2022-04-30T19:58:15.544787Z",
-                        "secondsAgo": 0,
-                    },
-                    "on": False,
-                    "mode": "fan",
-                    "fanLevel": "high",
-                    "swing": "stopped",
-                    "horizontalSwing": "stopped",
-                    "light": "on",
-                },
-                "location": "**REDACTED**",
-                "accessPoint": {"ssid": "**REDACTED**", "password": None},
-                "macAddress": "**REDACTED**",
-                "autoOffMinutes": None,
-                "autoOffEnabled": False,
-                "antiMoldTimer": None,
-                "antiMoldConfig": None,
-            }
-        ],
-    }
+    assert diag["status"] == "success"
+    for device in diag["result"]:
+        assert device["id"] == "**REDACTED**"
+        assert device["qrId"] == "**REDACTED**"
+        assert device["macAddress"] == "**REDACTED**"
+        assert device["location"] == "**REDACTED**"
+        assert device["productModel"] in ["skyv2", "pure"]

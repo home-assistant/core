@@ -2,17 +2,13 @@
     "config": {
         "abort": {
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
-            "no_devices_found": "Keine Ger\u00e4te im Netzwerk gefunden",
-            "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
+            "no_devices_found": "Keine Ger\u00e4te im Netzwerk gefunden"
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen"
         },
         "flow_title": "{name} {model} ({host})",
         "step": {
-            "confirm": {
-                "description": "M\u00f6chtest du TP-Link Smart Devices einrichten?"
-            },
             "discovery_confirm": {
                 "description": "M\u00f6chtest du {name} {model} ({host}) einrichten?"
             },

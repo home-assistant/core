@@ -3,7 +3,7 @@ from collections.abc import Callable, Iterable
 import contextlib
 from datetime import timedelta
 import logging
-from typing import cast
+from typing import Any, cast
 
 import sqlalchemy
 from sqlalchemy import ForeignKeyConstraint, MetaData, Table, func, text
@@ -22,7 +22,7 @@ from sqlalchemy.sql.expression import true
 from homeassistant.core import HomeAssistant
 
 from .const import SupportedDialect
-from .models import (
+from .db_schema import (
     SCHEMA_VERSION,
     TABLE_STATES,
     Base,
@@ -31,10 +31,16 @@ from .models import (
     StatisticsMeta,
     StatisticsRuns,
     StatisticsShortTerm,
-    process_timestamp,
 )
-from .statistics import delete_duplicates, get_start_time
+from .models import process_timestamp
+from .statistics import (
+    delete_statistics_duplicates,
+    delete_statistics_meta_duplicates,
+    get_start_time,
+)
 from .util import session_scope
+
+LIVE_MIGRATION_MIN_SCHEMA_VERSION = 0
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -74,7 +80,13 @@ def schema_is_current(current_version: int) -> bool:
     return current_version == SCHEMA_VERSION
 
 
+def live_migration(current_version: int) -> bool:
+    """Check if live migration is possible."""
+    return current_version >= LIVE_MIGRATION_MIN_SCHEMA_VERSION
+
+
 def migrate_schema(
+    instance: Any,
     hass: HomeAssistant,
     engine: Engine,
     session_maker: Callable[[], Session],
@@ -82,7 +94,12 @@ def migrate_schema(
 ) -> None:
     """Check if the schema needs to be upgraded."""
     _LOGGER.warning("Database is about to upgrade. Schema version: %s", current_version)
+    db_ready = False
     for version in range(current_version, SCHEMA_VERSION):
+        if live_migration(version) and not db_ready:
+            db_ready = True
+            instance.migration_is_live = True
+            hass.add_job(instance.async_set_db_ready)
         new_version = version + 1
         _LOGGER.info("Upgrading recorder db schema to version %s", new_version)
         _apply_update(hass, engine, session_maker, new_version, current_version)
@@ -670,7 +687,7 @@ def _apply_update(  # noqa: C901
             # There may be duplicated statistics entries, delete duplicated statistics
             # and try again
             with session_scope(session=session_maker()) as session:
-                delete_duplicates(hass, session)
+                delete_statistics_duplicates(hass, session)
             _create_index(
                 session_maker, "statistics", "ix_statistics_statistic_id_start"
             )
@@ -705,6 +722,31 @@ def _apply_update(  # noqa: C901
         _create_index(session_maker, "states", "ix_states_context_id")
         # Once there are no longer any state_changed events
         # in the events table we can drop the index on states.event_id
+    elif new_version == 29:
+        # Recreate statistics_meta index to block duplicated statistic_id
+        _drop_index(session_maker, "statistics_meta", "ix_statistics_meta_statistic_id")
+        if engine.dialect.name == SupportedDialect.MYSQL:
+            # Ensure the row format is dynamic or the index
+            # unique will be too large
+            with contextlib.suppress(SQLAlchemyError):
+                with session_scope(session=session_maker()) as session:
+                    connection = session.connection()
+                    # This is safe to run multiple times and fast since the table is small
+                    connection.execute(
+                        text("ALTER TABLE statistics_meta ROW_FORMAT=DYNAMIC")
+                    )
+        try:
+            _create_index(
+                session_maker, "statistics_meta", "ix_statistics_meta_statistic_id"
+            )
+        except DatabaseError:
+            # There may be duplicated statistics_meta entries, delete duplicates
+            # and try again
+            with session_scope(session=session_maker()) as session:
+                delete_statistics_meta_duplicates(session)
+            _create_index(
+                session_maker, "statistics_meta", "ix_statistics_meta_statistic_id"
+            )
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 

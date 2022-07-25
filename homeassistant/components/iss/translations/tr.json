@@ -6,9 +6,6 @@
         },
         "step": {
             "user": {
-                "data": {
-                    "show_on_map": "Haritada g\u00f6sterilsin mi?"
-                },
                 "description": "Uluslararas\u0131 Uzay \u0130stasyonunu (ISS) yap\u0131land\u0131rmak istiyor musunuz?"
             }
         }

@@ -254,10 +254,30 @@ async def test_webhook_handle_get_zones(hass, create_registrations, webhook_clie
 
 async def test_webhook_handle_get_config(hass, create_registrations, webhook_client):
     """Test that we can get config properly."""
-    resp = await webhook_client.post(
-        "/api/webhook/{}".format(create_registrations[1]["webhook_id"]),
-        json={"type": "get_config"},
-    )
+    webhook_id = create_registrations[1]["webhook_id"]
+    webhook_url = f"/api/webhook/{webhook_id}"
+
+    # Create two entities
+    for sensor in (
+        {
+            "name": "Battery State",
+            "type": "sensor",
+            "unique_id": "battery-state-id",
+        },
+        {
+            "name": "Battery Charging",
+            "type": "sensor",
+            "unique_id": "battery-charging-id",
+            "disabled": True,
+        },
+    ):
+        reg_resp = await webhook_client.post(
+            webhook_url,
+            json={"type": "register_sensor", "data": sensor},
+        )
+        assert reg_resp.status == HTTPStatus.CREATED
+
+    resp = await webhook_client.post(webhook_url, json={"type": "get_config"})
 
     assert resp.status == HTTPStatus.OK
 
@@ -279,6 +299,11 @@ async def test_webhook_handle_get_config(hass, create_registrations, webhook_cli
         "components": hass_config["components"],
         "version": hass_config["version"],
         "theme_color": "#03A9F4",  # Default frontend theme color
+        "entities": {
+            "mock-device-id": {"disabled": False},
+            "battery-state-id": {"disabled": False},
+            "battery-charging-id": {"disabled": True},
+        },
     }
 
     assert expected_dict == json
@@ -902,6 +927,7 @@ async def test_reregister_sensor(hass, create_registrations, webhook_client):
     assert entry.unit_of_measurement is None
     assert entry.entity_category is None
     assert entry.original_icon == "mdi:cellphone"
+    assert entry.disabled_by is None
 
     reg_resp = await webhook_client.post(
         webhook_url,
@@ -917,6 +943,7 @@ async def test_reregister_sensor(hass, create_registrations, webhook_client):
                 "entity_category": "diagnostic",
                 "icon": "mdi:new-icon",
                 "unit_of_measurement": "%",
+                "disabled": True,
             },
         },
     )
@@ -928,3 +955,21 @@ async def test_reregister_sensor(hass, create_registrations, webhook_client):
     assert entry.unit_of_measurement == "%"
     assert entry.entity_category == "diagnostic"
     assert entry.original_icon == "mdi:new-icon"
+    assert entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
+
+    reg_resp = await webhook_client.post(
+        webhook_url,
+        json={
+            "type": "register_sensor",
+            "data": {
+                "name": "New Name",
+                "type": "sensor",
+                "unique_id": "abcd",
+                "disabled": False,
+            },
+        },
+    )
+
+    assert reg_resp.status == HTTPStatus.CREATED
+    entry = ent_reg.async_get("sensor.test_1_battery_state")
+    assert entry.disabled_by is None

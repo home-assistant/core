@@ -312,7 +312,7 @@ async def test_power_level_notification(hass, hank_binary_switch, integration, c
     node.receive_event(event)
     await hass.async_block_till_done()
     assert len(events) == 1
-    assert events[0].data["command_class_name"] == "Power Level"
+    assert events[0].data["command_class_name"] == "Powerlevel"
     assert events[0].data["command_class"] == 115
     assert events[0].data["test_node_id"] == 1
     assert events[0].data["status"] == 0

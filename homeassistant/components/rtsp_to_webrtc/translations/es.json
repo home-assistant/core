@@ -1,6 +1,8 @@
 {
     "config": {
         "abort": {
+            "server_failure": "El servidor RTSPtoWebRTC devolvi\u00f3 un error. Consulte los registros para obtener m\u00e1s informaci\u00f3n.",
+            "server_unreachable": "No se puede comunicar con el servidor RTSPtoWebRTC. Consulte los registros para obtener m\u00e1s informaci\u00f3n.",
             "single_instance_allowed": "Ya configurado. Solo es posible una \u00fanica configuraci\u00f3n."
         },
         "error": {

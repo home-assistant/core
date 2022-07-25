@@ -20,9 +20,7 @@
                     "device_class": "Type enhet",
                     "host": "Vert",
                     "port": "Port"
-                },
-                "description": "Angi n\u00f8dvendige parametere for \u00e5 koble til Android TV-enheten din",
-                "title": ""
+                }
             }
         }
     },
@@ -49,8 +47,7 @@
                     "state_detection_rules": "Konfigurere regler for tilstandsgjenkjenning",
                     "turn_off_command": "ADB shell sl\u00e5 av kommando (la st\u00e5 tomt som standard)",
                     "turn_on_command": "ADB-skall sl\u00e5 p\u00e5 kommando (la st\u00e5 tomt som standard)"
-                },
-                "title": "Android TV-alternativer"
+                }
             },
             "rules": {
                 "data": {

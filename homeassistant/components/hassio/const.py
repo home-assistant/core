@@ -25,8 +25,7 @@ ATTR_METHOD = "method"
 ATTR_RESULT = "result"
 ATTR_TIMEOUT = "timeout"
 
-
-X_HASSIO = "X-Hassio-Key"
+X_AUTH_TOKEN = "X-Supervisor-Token"
 X_INGRESS_PATH = "X-Ingress-Path"
 X_HASS_USER_ID = "X-Hass-User-ID"
 X_HASS_IS_ADMIN = "X-Hass-Is-Admin"

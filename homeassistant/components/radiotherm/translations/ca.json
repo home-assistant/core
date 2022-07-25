@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "unknown": "Error inesperat"
+        },
+        "flow_title": "{name} {model} ({host})",
+        "step": {
+            "confirm": {
+                "description": "Vols configurar {name} {model} ({host})?"
+            },
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "hold_temp": "Configura bloqueig permanent quan s'ajusti la temperatura."
+                }
+            }
+        }
+    }
+}

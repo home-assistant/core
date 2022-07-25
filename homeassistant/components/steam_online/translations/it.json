@@ -25,6 +25,9 @@
         }
     },
     "options": {
+        "error": {
+            "unauthorized": "Elenco amici limitato: consultare la documentazione su come vedere tutti gli altri amici."
+        },
         "step": {
             "init": {
                 "data": {

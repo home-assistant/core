@@ -13,6 +13,7 @@ import pytest
 from homeassistant.components.sensor import ATTR_STATE_CLASS, STATE_CLASS_MEASUREMENT
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
+    ATTR_FRIENDLY_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
@@ -59,6 +60,7 @@ async def test_thermostat_device(
     assert temperature.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
     assert temperature.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_TEMPERATURE
     assert temperature.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert temperature.attributes.get(ATTR_FRIENDLY_NAME) == "My Sensor Temperature"
 
     humidity = hass.states.get("sensor.my_sensor_humidity")
     assert humidity is not None
@@ -66,16 +68,15 @@ async def test_thermostat_device(
     assert humidity.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
     assert humidity.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_HUMIDITY
     assert humidity.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert humidity.attributes.get(ATTR_FRIENDLY_NAME) == "My Sensor Humidity"
 
     registry = er.async_get(hass)
     entry = registry.async_get("sensor.my_sensor_temperature")
     assert entry.unique_id == f"{DEVICE_ID}-temperature"
-    assert entry.original_name == "My Sensor Temperature"
     assert entry.domain == "sensor"
 
     entry = registry.async_get("sensor.my_sensor_humidity")
     assert entry.unique_id == f"{DEVICE_ID}-humidity"
-    assert entry.original_name == "My Sensor Humidity"
     assert entry.domain == "sensor"
 
     device_registry = dr.async_get(hass)
@@ -195,11 +196,11 @@ async def test_device_with_unknown_type(
     temperature = hass.states.get("sensor.my_sensor_temperature")
     assert temperature is not None
     assert temperature.state == "25.1"
+    assert temperature.attributes.get(ATTR_FRIENDLY_NAME) == "My Sensor Temperature"
 
     registry = er.async_get(hass)
     entry = registry.async_get("sensor.my_sensor_temperature")
     assert entry.unique_id == f"{DEVICE_ID}-temperature"
-    assert entry.original_name == "My Sensor Temperature"
     assert entry.domain == "sensor"
 
     device_registry = dr.async_get(hass)

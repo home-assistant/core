@@ -66,20 +66,20 @@ async def test_user(hass: HomeAssistant):
     flow = init_config_flow(hass)
 
     result = await flow.async_step_user()
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await flow.async_step_user(
         {CONF_NAME: "Velbus Test Serial", CONF_PORT: PORT_SERIAL}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == "velbus_test_serial"
     assert result["data"][CONF_PORT] == PORT_SERIAL
 
     result = await flow.async_step_user(
         {CONF_NAME: "Velbus Test TCP", CONF_PORT: PORT_TCP}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == "velbus_test_tcp"
     assert result["data"][CONF_PORT] == PORT_TCP
 
@@ -92,13 +92,13 @@ async def test_user_fail(hass: HomeAssistant):
     result = await flow.async_step_user(
         {CONF_NAME: "Velbus Test Serial", CONF_PORT: PORT_SERIAL}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {CONF_PORT: "cannot_connect"}
 
     result = await flow.async_step_user(
         {CONF_NAME: "Velbus Test TCP", CONF_PORT: PORT_TCP}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {CONF_PORT: "cannot_connect"}
 
 
@@ -108,7 +108,7 @@ async def test_abort_if_already_setup(hass: HomeAssistant):
     flow = init_config_flow(hass)
 
     result = await flow.async_step_user({CONF_PORT: PORT_TCP, CONF_NAME: "velbus test"})
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {"port": "already_configured"}
 
 
@@ -121,14 +121,14 @@ async def test_flow_usb(hass: HomeAssistant):
         context={CONF_SOURCE: SOURCE_USB},
         data=DISCOVERY_INFO,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={},
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
     # test an already configured discovery
     entry = MockConfigEntry(
@@ -141,7 +141,7 @@ async def test_flow_usb(hass: HomeAssistant):
         context={CONF_SOURCE: SOURCE_USB},
         data=DISCOVERY_INFO,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -154,5 +154,5 @@ async def test_flow_usb_failed(hass: HomeAssistant):
         context={CONF_SOURCE: SOURCE_USB},
         data=DISCOVERY_INFO,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"

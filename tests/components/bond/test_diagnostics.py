@@ -39,5 +39,5 @@ async def test_diagnostics(hass, hass_client):
             "data": {"access_token": "**REDACTED**", "host": "some host"},
             "title": "Mock Title",
         },
-        "hub": {"version": {"bondid": "test-bond-id"}},
+        "hub": {"version": {"bondid": "ZXXX12345"}},
     }

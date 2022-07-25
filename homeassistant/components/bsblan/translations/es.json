@@ -1,12 +1,13 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El dispositivo ya est\u00e1 configurado"
+            "already_configured": "El dispositivo ya est\u00e1 configurado",
+            "cannot_connect": "Fallo en la conexi\u00f3n"
         },
         "error": {
             "cannot_connect": "No se pudo conectar"
         },
-        "flow_title": "BSB-Lan: {name}",
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {

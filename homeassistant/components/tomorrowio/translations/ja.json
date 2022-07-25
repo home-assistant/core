@@ -10,9 +10,7 @@
             "user": {
                 "data": {
                     "api_key": "API\u30ad\u30fc",
-                    "latitude": "\u7def\u5ea6",
                     "location": "\u30ed\u30b1\u30fc\u30b7\u30e7\u30f3",
-                    "longitude": "\u7d4c\u5ea6",
                     "name": "\u540d\u524d"
                 },
                 "description": "API\u30ad\u30fc\u3092\u53d6\u5f97\u3059\u308b\u306b\u306f\u3001 [Tomorrow.io](https://app.tomorrow.io/signup) \u306b\u30b5\u30a4\u30f3\u30a2\u30c3\u30d7\u3057\u3066\u304f\u3060\u3055\u3044\u3002"

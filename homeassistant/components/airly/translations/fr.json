@@ -15,8 +15,7 @@
                     "longitude": "Longitude",
                     "name": "Nom"
                 },
-                "description": "Pour g\u00e9n\u00e9rer une cl\u00e9 d'API, rendez-vous sur https://developer.airly.eu/register",
-                "title": "Airly"
+                "description": "Pour g\u00e9n\u00e9rer une cl\u00e9 d'API, rendez-vous sur https://developer.airly.eu/register"
             }
         }
     },

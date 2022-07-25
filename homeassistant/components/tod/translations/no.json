@@ -3,9 +3,7 @@
         "step": {
             "user": {
                 "data": {
-                    "after": "P\u00e5 etter",
                     "after_time": "P\u00e5 tide",
-                    "before": "Av etter",
                     "before_time": "Utenfor arbeidstid",
                     "name": "Navn"
                 },
@@ -18,12 +16,9 @@
         "step": {
             "init": {
                 "data": {
-                    "after": "P\u00e5 etter",
                     "after_time": "P\u00e5 tide",
-                    "before": "Av etter",
                     "before_time": "Utenfor arbeidstid"
-                },
-                "description": "Lag en bin\u00e6r sensor som sl\u00e5s av eller p\u00e5 avhengig av tiden."
+                }
             }
         }
     },

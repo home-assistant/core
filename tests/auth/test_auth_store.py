@@ -236,9 +236,9 @@ async def test_loading_race_condition(hass):
     """Test only one storage load called when concurrent loading occurred ."""
     store = auth_store.AuthStore(hass)
     with patch(
-        "homeassistant.helpers.entity_registry.async_get_registry"
+        "homeassistant.helpers.entity_registry.async_get"
     ) as mock_ent_registry, patch(
-        "homeassistant.helpers.device_registry.async_get_registry"
+        "homeassistant.helpers.device_registry.async_get"
     ) as mock_dev_registry, patch(
         "homeassistant.helpers.storage.Store.async_load", return_value=None
     ) as mock_load:

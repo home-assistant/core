@@ -11,12 +11,9 @@
                 "data": {
                     "host": "Host (Opcional)",
                     "password": "Contrase\u00f1a",
-                    "port": "Puerto (Opcional)",
-                    "ssl": "Utiliza un certificado SSL",
                     "username": "Usuario (Opcional)"
                 },
-                "description": "Host predeterminado: {host}\nPuerto predeterminado: {port}\nNombre de usuario predeterminado: {username}",
-                "title": "Netgear"
+                "description": "Host predeterminado: {host} \nNombre de usuario predeterminado: {username}"
             }
         }
     },
@@ -26,8 +23,7 @@
                 "data": {
                     "consider_home": "Considere el tiempo en casa (segundos)"
                 },
-                "description": "Especifica los ajustes opcionales",
-                "title": "Netgear"
+                "description": "Especifica los ajustes opcionales"
             }
         }
     }

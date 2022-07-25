@@ -10,6 +10,7 @@ from stringcase import camelcase
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
+    CONF_SCAN_INTERVAL,
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     SOURCE_TYPE_GPS,
 )
@@ -21,7 +22,6 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_PASSWORD,
     CONF_PORT,
-    CONF_SCAN_INTERVAL,
     CONF_SSL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
@@ -144,7 +144,7 @@ async def async_setup_entry(
     ] = async_dispatcher_connect(hass, TRACKER_UPDATE, _receive_data)
 
     # Restore previously loaded devices
-    dev_reg = await device_registry.async_get_registry(hass)
+    dev_reg = device_registry.async_get(hass)
     dev_ids = {
         identifier[1]
         for device in dev_reg.devices.values()

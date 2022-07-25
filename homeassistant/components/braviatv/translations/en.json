@@ -21,8 +21,7 @@
                 "data": {
                     "host": "Host"
                 },
-                "description": "Ensure that your TV is turned on before trying to set it up.",
-                "title": "Sony Bravia TV"
+                "description": "Ensure that your TV is turned on before trying to set it up."
             }
         }
     },

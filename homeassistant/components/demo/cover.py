@@ -1,6 +1,8 @@
 """Demo platform for the cover component."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
@@ -108,42 +110,42 @@ class DemoCover(CoverEntity):
         )
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return unique ID for cover."""
         return self._unique_id
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the cover."""
         return self._name
 
     @property
-    def should_poll(self):
+    def should_poll(self) -> bool:
         """No polling needed for a demo cover."""
         return False
 
     @property
-    def current_cover_position(self):
+    def current_cover_position(self) -> int | None:
         """Return the current position of the cover."""
         return self._position
 
     @property
-    def current_cover_tilt_position(self):
+    def current_cover_tilt_position(self) -> int | None:
         """Return the current tilt position of the cover."""
         return self._tilt_position
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool:
         """Return if the cover is closed."""
         return self._closed
 
     @property
-    def is_closing(self):
+    def is_closing(self) -> bool:
         """Return if the cover is closing."""
         return self._is_closing
 
     @property
-    def is_opening(self):
+    def is_opening(self) -> bool:
         """Return if the cover is opening."""
         return self._is_opening
 
@@ -153,13 +155,13 @@ class DemoCover(CoverEntity):
         return self._device_class
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Flag supported features."""
         if self._supported_features is not None:
             return self._supported_features
         return super().supported_features
 
-    async def async_close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         if self._position == 0:
             return
@@ -173,7 +175,7 @@ class DemoCover(CoverEntity):
         self._requested_closing = True
         self.async_write_ha_state()
 
-    async def async_close_cover_tilt(self, **kwargs):
+    async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
         if self._tilt_position in (0, None):
             return
@@ -181,7 +183,7 @@ class DemoCover(CoverEntity):
         self._listen_cover_tilt()
         self._requested_closing_tilt = True
 
-    async def async_open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         if self._position == 100:
             return
@@ -195,7 +197,7 @@ class DemoCover(CoverEntity):
         self._requested_closing = False
         self.async_write_ha_state()
 
-    async def async_open_cover_tilt(self, **kwargs):
+    async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
         if self._tilt_position in (100, None):
             return
@@ -203,9 +205,9 @@ class DemoCover(CoverEntity):
         self._listen_cover_tilt()
         self._requested_closing_tilt = False
 
-    async def async_set_cover_position(self, **kwargs):
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        position = kwargs.get(ATTR_POSITION)
+        position: int = kwargs[ATTR_POSITION]
         self._set_position = round(position, -1)
         if self._position == position:
             return
@@ -213,9 +215,9 @@ class DemoCover(CoverEntity):
         self._listen_cover()
         self._requested_closing = position < self._position
 
-    async def async_set_cover_tilt_position(self, **kwargs):
+    async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover til to a specific position."""
-        tilt_position = kwargs.get(ATTR_TILT_POSITION)
+        tilt_position: int = kwargs[ATTR_TILT_POSITION]
         self._set_tilt_position = round(tilt_position, -1)
         if self._tilt_position == tilt_position:
             return
@@ -223,7 +225,7 @@ class DemoCover(CoverEntity):
         self._listen_cover_tilt()
         self._requested_closing_tilt = tilt_position < self._tilt_position
 
-    async def async_stop_cover(self, **kwargs):
+    async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         self._is_closing = False
         self._is_opening = False
@@ -234,7 +236,7 @@ class DemoCover(CoverEntity):
             self._unsub_listener_cover = None
             self._set_position = None
 
-    async def async_stop_cover_tilt(self, **kwargs):
+    async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop the cover tilt."""
         if self._tilt_position is None:
             return

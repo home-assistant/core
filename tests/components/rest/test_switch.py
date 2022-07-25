@@ -8,6 +8,7 @@ from homeassistant.components.rest import DOMAIN
 import homeassistant.components.rest.switch as rest
 from homeassistant.components.switch import SwitchDeviceClass
 from homeassistant.const import (
+    CONF_DEVICE_CLASS,
     CONF_HEADERS,
     CONF_NAME,
     CONF_PARAMS,
@@ -16,17 +17,19 @@ from homeassistant.const import (
     CONTENT_TYPE_JSON,
     Platform,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.template import Template
 from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 NAME = "foo"
 DEVICE_CLASS = SwitchDeviceClass.SWITCH
 METHOD = "post"
 RESOURCE = "http://localhost/"
 STATE_RESOURCE = RESOURCE
-AUTH = None
 PARAMS = None
 
 
@@ -187,19 +190,22 @@ def _setup_test_switch(hass):
     body_off = Template("off", hass)
     headers = {"Content-type": Template(CONTENT_TYPE_JSON, hass)}
     switch = rest.RestSwitch(
-        NAME,
-        DEVICE_CLASS,
-        RESOURCE,
-        STATE_RESOURCE,
-        METHOD,
-        headers,
-        PARAMS,
-        AUTH,
-        body_on,
-        body_off,
+        hass,
+        {
+            CONF_NAME: Template(NAME, hass),
+            CONF_DEVICE_CLASS: DEVICE_CLASS,
+            CONF_RESOURCE: RESOURCE,
+            rest.CONF_STATE_RESOURCE: STATE_RESOURCE,
+            rest.CONF_METHOD: METHOD,
+            rest.CONF_HEADERS: headers,
+            rest.CONF_PARAMS: PARAMS,
+            rest.CONF_BODY_ON: body_on,
+            rest.CONF_BODY_OFF: body_off,
+            rest.CONF_IS_ON_TEMPLATE: None,
+            rest.CONF_TIMEOUT: 10,
+            rest.CONF_VERIFY_SSL: True,
+        },
         None,
-        10,
-        True,
     )
     switch.hass = hass
     return switch, body_on, body_off
@@ -315,3 +321,38 @@ async def test_update_timeout(hass, aioclient_mock):
     await switch.async_update()
 
     assert switch.is_on is None
+
+
+async def test_entity_config(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test entity configuration."""
+
+    aioclient_mock.get("http://localhost", status=HTTPStatus.OK)
+    config = {
+        Platform.SWITCH: {
+            # REST configuration
+            "platform": "rest",
+            "method": "POST",
+            "resource": "http://localhost",
+            # Entity configuration
+            "icon": "{{'mdi:one_two_three'}}",
+            "picture": "{{'blabla.png'}}",
+            "name": "{{'REST' + ' ' + 'Switch'}}",
+            "unique_id": "very_unique",
+        },
+    }
+
+    assert await async_setup_component(hass, Platform.SWITCH, config)
+    await hass.async_block_till_done()
+
+    entity_registry = er.async_get(hass)
+    assert entity_registry.async_get("switch.rest_switch").unique_id == "very_unique"
+
+    state = hass.states.get("switch.rest_switch")
+    assert state.state == "unknown"
+    assert state.attributes == {
+        "entity_picture": "blabla.png",
+        "friendly_name": "REST Switch",
+        "icon": "mdi:one_two_three",
+    }

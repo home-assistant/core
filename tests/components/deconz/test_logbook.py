@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     STATE_ALARM_ARMED_AWAY,
 )
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 from homeassistant.util import slugify
 
@@ -56,7 +57,7 @@ async def test_humanifying_deconz_alarm_event(hass, aioclient_mock):
     with patch.dict(DECONZ_WEB_REQUEST, data):
         await setup_deconz_integration(hass, aioclient_mock)
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
 
     keypad_event_id = slugify(data["sensors"]["1"]["name"])
     keypad_serial = data["sensors"]["1"]["uniqueid"].split("-", 1)[0]
@@ -85,7 +86,7 @@ async def test_humanifying_deconz_alarm_event(hass, aioclient_mock):
 
     assert events[0]["name"] == "Keypad"
     assert events[0]["domain"] == "deconz"
-    assert events[0]["message"] == "fired event 'armed_away'."
+    assert events[0]["message"] == "fired event 'armed_away'"
 
 
 async def test_humanifying_deconz_event(hass, aioclient_mock):
@@ -127,7 +128,7 @@ async def test_humanifying_deconz_event(hass, aioclient_mock):
     with patch.dict(DECONZ_WEB_REQUEST, data):
         await setup_deconz_integration(hass, aioclient_mock)
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
 
     switch_event_id = slugify(data["sensors"]["1"]["name"])
     switch_serial = data["sensors"]["1"]["uniqueid"].split("-", 1)[0]
@@ -214,20 +215,20 @@ async def test_humanifying_deconz_event(hass, aioclient_mock):
 
     assert events[0]["name"] == "Switch 1"
     assert events[0]["domain"] == "deconz"
-    assert events[0]["message"] == "fired event '2000'."
+    assert events[0]["message"] == "fired event '2000'"
 
     assert events[1]["name"] == "Hue remote"
     assert events[1]["domain"] == "deconz"
-    assert events[1]["message"] == "'Long press' event for 'Dim up' was fired."
+    assert events[1]["message"] == "'Long press' event for 'Dim up' was fired"
 
     assert events[2]["name"] == "Xiaomi cube"
     assert events[2]["domain"] == "deconz"
-    assert events[2]["message"] == "fired event 'Shake'."
+    assert events[2]["message"] == "fired event 'Shake'"
 
     assert events[3]["name"] == "Xiaomi cube"
     assert events[3]["domain"] == "deconz"
-    assert events[3]["message"] == "fired event 'unsupported_gesture'."
+    assert events[3]["message"] == "fired event 'unsupported_gesture'"
 
     assert events[4]["name"] == "Faulty event"
     assert events[4]["domain"] == "deconz"
-    assert events[4]["message"] == "fired an unknown event."
+    assert events[4]["message"] == "fired an unknown event"

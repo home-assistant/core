@@ -8,8 +8,7 @@
         "flow_title": "{name}",
         "step": {
             "confirm": {
-                "description": "A\u015fa\u011f\u0131daki bile\u015fenler desteklenir: {components}",
-                "title": "WiLight"
+                "description": "A\u015fa\u011f\u0131daki bile\u015fenler desteklenir: {components}"
             }
         }
     }

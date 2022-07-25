@@ -21,9 +21,7 @@
             },
             "user": {
                 "data": {
-                    "connection_type": "Select connection type",
-                    "password": "Password",
-                    "username": "Username"
+                    "connection_type": "Select connection type"
                 },
                 "description": "Select connection type. Local requires generation 3 heaters"
             }

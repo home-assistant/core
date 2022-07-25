@@ -14,9 +14,6 @@
         },
         "flow_title": "{name} ({host})",
         "step": {
-            "confirm": {
-                "description": "\u662f\u5426\u8981\u958b\u59cb\u8a2d\u5b9a\uff1f"
-            },
             "discovery_confirm": {
                 "description": "\u662f\u5426\u8981\u8a2d\u5b9a {name} ({host})\uff1f"
             },
@@ -27,8 +24,7 @@
             },
             "user": {
                 "data": {
-                    "host": "IP \u4f4d\u5740",
-                    "name": "\u540d\u7a31"
+                    "host": "IP \u4f4d\u5740"
                 },
                 "description": "\u5047\u5982 IP \u4f4d\u5740\u6b04\u4f4d\u70ba\u7a7a\u767d\uff0c\u5c07\u6703\u641c\u7d22\u6240\u6709\u53ef\u7528\u88dd\u7f6e\u3002"
             }

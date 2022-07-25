@@ -14,9 +14,6 @@
         },
         "flow_title": "{name} ({host})",
         "step": {
-            "confirm": {
-                "description": "Wilt u beginnen met instellen?"
-            },
             "discovery_confirm": {
                 "description": "Wilt u {name} ({host}) instellen?"
             },
@@ -27,8 +24,7 @@
             },
             "user": {
                 "data": {
-                    "host": "IP-adres",
-                    "name": "Naam"
+                    "host": "IP-adres"
                 },
                 "description": "Als u het IP-adres leeg laat, zal discovery worden gebruikt om apparaten te vinden."
             }

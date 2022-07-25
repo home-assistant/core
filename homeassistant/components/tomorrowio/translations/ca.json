@@ -10,9 +10,7 @@
             "user": {
                 "data": {
                     "api_key": "Clau API",
-                    "latitude": "Latitud",
                     "location": "Ubicaci\u00f3",
-                    "longitude": "Longitud",
                     "name": "Nom"
                 },
                 "description": "Per obtenir una clau API, registra't a [Tomorrow.io](https://app.tomorrow.io/signup)."

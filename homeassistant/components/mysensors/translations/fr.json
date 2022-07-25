@@ -75,6 +75,5 @@
                 "description": "Choisissez la m\u00e9thode de connexion \u00e0 la passerelle"
             }
         }
-    },
-    "title": "MySensors"
+    }
 }

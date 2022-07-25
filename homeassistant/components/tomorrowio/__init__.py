@@ -1,6 +1,7 @@
 """The Tomorrow.io integration."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import logging
 from math import ceil
@@ -23,7 +24,6 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LOCATION,
     CONF_LONGITUDE,
-    CONF_NAME,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -40,7 +40,6 @@ from .const import (
     CONF_TIMESTEP,
     DOMAIN,
     INTEGRATION_NAME,
-    MAX_REQUESTS_PER_DAY,
     TMRW_ATTR_CARBON_MONOXIDE,
     TMRW_ATTR_CHINA_AQI,
     TMRW_ATTR_CHINA_HEALTH_CONCERN,
@@ -85,36 +84,33 @@ PLATFORMS = [SENSOR_DOMAIN, WEATHER_DOMAIN]
 
 
 @callback
-def async_set_update_interval(
-    hass: HomeAssistant, current_entry: ConfigEntry
-) -> timedelta:
-    """Recalculate update_interval based on existing Tomorrow.io instances and update them."""
-    api_calls = 2
-    # We check how many Tomorrow.io configured instances are using the same API key and
-    # calculate interval to not exceed allowed numbers of requests. Divide 90% of
-    # MAX_REQUESTS_PER_DAY by the number of API calls because we want a buffer in the
-    # number of API calls left at the end of the day.
-    other_instance_entry_ids = [
-        entry.entry_id
+def async_get_entries_by_api_key(
+    hass: HomeAssistant, api_key: str, exclude_entry: ConfigEntry | None = None
+) -> list[ConfigEntry]:
+    """Get all entries for a given API key."""
+    return [
+        entry
         for entry in hass.config_entries.async_entries(DOMAIN)
-        if entry.entry_id != current_entry.entry_id
-        and entry.data[CONF_API_KEY] == current_entry.data[CONF_API_KEY]
+        if entry.data[CONF_API_KEY] == api_key
+        and (exclude_entry is None or exclude_entry != entry)
     ]
 
-    interval = timedelta(
-        minutes=(
-            ceil(
-                (24 * 60 * (len(other_instance_entry_ids) + 1) * api_calls)
-                / (MAX_REQUESTS_PER_DAY * 0.9)
-            )
-        )
+
+@callback
+def async_set_update_interval(
+    hass: HomeAssistant, api: TomorrowioV4, exclude_entry: ConfigEntry | None = None
+) -> timedelta:
+    """Calculate update_interval."""
+    # We check how many Tomorrow.io configured instances are using the same API key and
+    # calculate interval to not exceed allowed numbers of requests. Divide 90% of
+    # max_requests by the number of API calls because we want a buffer in the
+    # number of API calls left at the end of the day.
+    entries = async_get_entries_by_api_key(hass, api.api_key, exclude_entry)
+    minutes = ceil(
+        (24 * 60 * len(entries) * api.num_api_requests)
+        / (api.max_requests_per_day * 0.9)
     )
-
-    for entry_id in other_instance_entry_ids:
-        if entry_id in hass.data[DOMAIN]:
-            hass.data[DOMAIN][entry_id].update_interval = interval
-
-    return interval
+    return timedelta(minutes=minutes)
 
 
 @callback
@@ -197,24 +193,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if entry.source == SOURCE_IMPORT and "old_config_entry_id" in entry.data:
         async_migrate_entry_from_climacell(hass, dev_reg, entry, device)
 
-    api = TomorrowioV4(
-        entry.data[CONF_API_KEY],
-        entry.data[CONF_LOCATION][CONF_LATITUDE],
-        entry.data[CONF_LOCATION][CONF_LONGITUDE],
-        unit_system="metric",
-        session=async_get_clientsession(hass),
-    )
+    api_key = entry.data[CONF_API_KEY]
+    # If coordinator already exists for this API key, we'll use that, otherwise
+    # we have to create a new one
+    if not (coordinator := hass.data[DOMAIN].get(api_key)):
+        session = async_get_clientsession(hass)
+        # we will not use the class's lat and long so we can pass in garbage
+        # lats and longs
+        api = TomorrowioV4(api_key, 361.0, 361.0, unit_system="metric", session=session)
+        coordinator = TomorrowioDataUpdateCoordinator(hass, api)
+        hass.data[DOMAIN][api_key] = coordinator
 
-    coordinator = TomorrowioDataUpdateCoordinator(
-        hass,
-        entry,
-        api,
-        async_set_update_interval(hass, entry),
-    )
-
-    await coordinator.async_config_entry_first_refresh()
-
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    await coordinator.async_setup_entry(entry)
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
@@ -227,9 +217,13 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
         config_entry, PLATFORMS
     )
 
-    hass.data[DOMAIN].pop(config_entry.entry_id)
-    if not hass.data[DOMAIN]:
-        hass.data.pop(DOMAIN)
+    api_key = config_entry.data[CONF_API_KEY]
+    coordinator: TomorrowioDataUpdateCoordinator = hass.data[DOMAIN][api_key]
+    # If this is true, we can remove the coordinator
+    if await coordinator.async_unload_entry(config_entry):
+        hass.data[DOMAIN].pop(api_key)
+        if not hass.data[DOMAIN]:
+            hass.data.pop(DOMAIN)
 
     return unload_ok
 
@@ -237,44 +231,90 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator):
     """Define an object to hold Tomorrow.io data."""
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config_entry: ConfigEntry,
-        api: TomorrowioV4,
-        update_interval: timedelta,
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, api: TomorrowioV4) -> None:
         """Initialize."""
-
-        self._config_entry = config_entry
         self._api = api
-        self.name = config_entry.data[CONF_NAME]
         self.data = {CURRENT: {}, FORECASTS: {}}
+        self.entry_id_to_location_dict: dict[str, str] = {}
+        self._coordinator_ready: asyncio.Event | None = None
 
-        super().__init__(
-            hass,
-            _LOGGER,
-            name=config_entry.data[CONF_NAME],
-            update_interval=update_interval,
-        )
+        super().__init__(hass, _LOGGER, name=f"{DOMAIN}_{self._api.api_key}")
+
+    def add_entry_to_location_dict(self, entry: ConfigEntry) -> None:
+        """Add an entry to the location dict."""
+        latitude = entry.data[CONF_LOCATION][CONF_LATITUDE]
+        longitude = entry.data[CONF_LOCATION][CONF_LONGITUDE]
+        self.entry_id_to_location_dict[entry.entry_id] = f"{latitude},{longitude}"
+
+    async def async_setup_entry(self, entry: ConfigEntry) -> None:
+        """Load config entry into coordinator."""
+        # If we haven't loaded any data yet, register all entries with this API key and
+        # get the initial data for all of them. We do this because another config entry
+        # may start setup before we finish setting the initial data and we don't want
+        # to do multiple refreshes on startup.
+        if self._coordinator_ready is None:
+            self._coordinator_ready = asyncio.Event()
+            for entry_ in async_get_entries_by_api_key(self.hass, self._api.api_key):
+                self.add_entry_to_location_dict(entry_)
+            await self.async_config_entry_first_refresh()
+            self._coordinator_ready.set()
+        else:
+            # If we have an event, we need to wait for it to be set before we proceed
+            await self._coordinator_ready.wait()
+            # If we're not getting new data because we already know this entry, we
+            # don't need to schedule a refresh
+            if entry.entry_id in self.entry_id_to_location_dict:
+                return
+            # We need a refresh, but it's going to be a partial refresh so we can
+            # minimize repeat API calls
+            self.add_entry_to_location_dict(entry)
+            await self.async_refresh()
+
+        self.update_interval = async_set_update_interval(self.hass, self._api)
+        self._schedule_refresh()
+
+    async def async_unload_entry(self, entry: ConfigEntry) -> bool | None:
+        """
+        Unload a config entry from coordinator.
+
+        Returns whether coordinator can be removed as well because there are no
+        config entries tied to it anymore.
+        """
+        self.entry_id_to_location_dict.pop(entry.entry_id)
+        self.update_interval = async_set_update_interval(self.hass, self._api, entry)
+        return not self.entry_id_to_location_dict
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
-        try:
-            return await self._api.realtime_and_all_forecasts(
-                [
-                    TMRW_ATTR_TEMPERATURE,
-                    TMRW_ATTR_HUMIDITY,
-                    TMRW_ATTR_PRESSURE,
-                    TMRW_ATTR_WIND_SPEED,
-                    TMRW_ATTR_WIND_DIRECTION,
-                    TMRW_ATTR_CONDITION,
-                    TMRW_ATTR_VISIBILITY,
-                    TMRW_ATTR_OZONE,
-                    TMRW_ATTR_WIND_GUST,
-                    TMRW_ATTR_CLOUD_COVER,
-                    TMRW_ATTR_PRECIPITATION_TYPE,
-                    *(
+        data = {}
+        # If we are refreshing because of a new config entry that's not already in our
+        # data, we do a partial refresh to avoid wasted API calls.
+        if self.data and any(
+            entry_id not in self.data for entry_id in self.entry_id_to_location_dict
+        ):
+            data = self.data
+
+        for entry_id, location in self.entry_id_to_location_dict.items():
+            if entry_id in data:
+                continue
+            entry = self.hass.config_entries.async_get_entry(entry_id)
+            assert entry
+            try:
+                data[entry_id] = await self._api.realtime_and_all_forecasts(
+                    [
+                        # Weather
+                        TMRW_ATTR_TEMPERATURE,
+                        TMRW_ATTR_HUMIDITY,
+                        TMRW_ATTR_PRESSURE,
+                        TMRW_ATTR_WIND_SPEED,
+                        TMRW_ATTR_WIND_DIRECTION,
+                        TMRW_ATTR_CONDITION,
+                        TMRW_ATTR_VISIBILITY,
+                        TMRW_ATTR_OZONE,
+                        TMRW_ATTR_WIND_GUST,
+                        TMRW_ATTR_CLOUD_COVER,
+                        TMRW_ATTR_PRECIPITATION_TYPE,
+                        # Sensors
                         TMRW_ATTR_CARBON_MONOXIDE,
                         TMRW_ATTR_CHINA_AQI,
                         TMRW_ATTR_CHINA_HEALTH_CONCERN,
@@ -300,26 +340,28 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator):
                         TMRW_ATTR_SOLAR_GHI,
                         TMRW_ATTR_SULPHUR_DIOXIDE,
                         TMRW_ATTR_WIND_GUST,
-                    ),
-                ],
-                [
-                    TMRW_ATTR_TEMPERATURE_LOW,
-                    TMRW_ATTR_TEMPERATURE_HIGH,
-                    TMRW_ATTR_WIND_SPEED,
-                    TMRW_ATTR_WIND_DIRECTION,
-                    TMRW_ATTR_CONDITION,
-                    TMRW_ATTR_PRECIPITATION,
-                    TMRW_ATTR_PRECIPITATION_PROBABILITY,
-                ],
-                nowcast_timestep=self._config_entry.options[CONF_TIMESTEP],
-            )
-        except (
-            CantConnectException,
-            InvalidAPIKeyException,
-            RateLimitedException,
-            UnknownException,
-        ) as error:
-            raise UpdateFailed from error
+                    ],
+                    [
+                        TMRW_ATTR_TEMPERATURE_LOW,
+                        TMRW_ATTR_TEMPERATURE_HIGH,
+                        TMRW_ATTR_WIND_SPEED,
+                        TMRW_ATTR_WIND_DIRECTION,
+                        TMRW_ATTR_CONDITION,
+                        TMRW_ATTR_PRECIPITATION,
+                        TMRW_ATTR_PRECIPITATION_PROBABILITY,
+                    ],
+                    nowcast_timestep=entry.options[CONF_TIMESTEP],
+                    location=location,
+                )
+            except (
+                CantConnectException,
+                InvalidAPIKeyException,
+                RateLimitedException,
+                UnknownException,
+            ) as error:
+                raise UpdateFailed from error
+
+        return data
 
 
 class TomorrowioEntity(CoordinatorEntity[TomorrowioDataUpdateCoordinator]):
@@ -349,7 +391,8 @@ class TomorrowioEntity(CoordinatorEntity[TomorrowioDataUpdateCoordinator]):
 
         Used for V4 API.
         """
-        return self.coordinator.data.get(CURRENT, {}).get(property_name)
+        entry_id = self._config_entry.entry_id
+        return self.coordinator.data[entry_id].get(CURRENT, {}).get(property_name)
 
     @property
     def attribution(self):

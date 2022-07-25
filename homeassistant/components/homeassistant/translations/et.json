@@ -2,6 +2,7 @@
     "system_health": {
         "info": {
             "arch": "Protsessori arhitektuur",
+            "config_dir": "Konfiguratsiooni kaust",
             "dev": "Arendus",
             "docker": "Docker",
             "hassio": "Haldur",

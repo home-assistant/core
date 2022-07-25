@@ -205,6 +205,7 @@ def test_integration_properties(hass):
                 {"hostname": "tesla_*", "macaddress": "98ED5C*"},
                 {"registered_devices": True},
             ],
+            "bluetooth": [{"manufacturer_id": 76, "manufacturer_data_start": [0x06]}],
             "usb": [
                 {"vid": "10C4", "pid": "EA60"},
                 {"vid": "1CF1", "pid": "0030"},
@@ -242,6 +243,9 @@ def test_integration_properties(hass):
         {"vid": "1A86", "pid": "7523"},
         {"vid": "10C4", "pid": "8A2A"},
     ]
+    assert integration.bluetooth == [
+        {"manufacturer_id": 76, "manufacturer_data_start": [0x06]}
+    ]
     assert integration.ssdp == [
         {
             "manufacturer": "Royal Philips Electronics",
@@ -274,6 +278,7 @@ def test_integration_properties(hass):
     assert integration.homekit is None
     assert integration.zeroconf is None
     assert integration.dhcp is None
+    assert integration.bluetooth is None
     assert integration.usb is None
     assert integration.ssdp is None
     assert integration.mqtt is None
@@ -296,6 +301,7 @@ def test_integration_properties(hass):
     assert integration.zeroconf == [{"type": "_hue._tcp.local.", "name": "hue*"}]
     assert integration.dhcp is None
     assert integration.usb is None
+    assert integration.bluetooth is None
     assert integration.ssdp is None
 
 
@@ -413,6 +419,25 @@ def _get_test_integration_with_dhcp_matcher(hass, name, config_flow):
             ],
             "homekit": {"models": [name]},
             "ssdp": [{"manufacturer": name, "modelName": name}],
+        },
+    )
+
+
+def _get_test_integration_with_bluetooth_matcher(hass, name, config_flow):
+    """Return a generated test integration with a bluetooth matcher."""
+    return loader.Integration(
+        hass,
+        f"homeassistant.components.{name}",
+        None,
+        {
+            "name": name,
+            "domain": name,
+            "config_flow": config_flow,
+            "bluetooth": [
+                {
+                    "local_name": "Prodigio_*",
+                },
+            ],
         },
     )
 
@@ -540,6 +565,26 @@ async def test_get_zeroconf_back_compat(hass):
                     "manufacturer": "legacy*",
                 },
             }
+        ]
+
+
+async def test_get_bluetooth(hass):
+    """Verify that custom components with bluetooth are found."""
+    test_1_integration = _get_test_integration_with_bluetooth_matcher(
+        hass, "test_1", True
+    )
+    test_2_integration = _get_test_integration_with_dhcp_matcher(hass, "test_2", True)
+    with patch("homeassistant.loader.async_get_custom_components") as mock_get:
+        mock_get.return_value = {
+            "test_1": test_1_integration,
+            "test_2": test_2_integration,
+        }
+        bluetooth = await loader.async_get_bluetooth(hass)
+        bluetooth_for_domain = [
+            entry for entry in bluetooth if entry["domain"] == "test_1"
+        ]
+        assert bluetooth_for_domain == [
+            {"domain": "test_1", "local_name": "Prodigio_*"},
         ]
 
 

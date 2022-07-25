@@ -106,7 +106,7 @@ async def test_form_invalid_auth(
         )
 
     assert result["step_id"] == config_entries.SOURCE_USER
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] == {"base": error}
 
 
@@ -131,7 +131,7 @@ async def test_abort_on_duplicate_entry(hass: HomeAssistant) -> None:
             {"username": TEST_EMAIL, "password": TEST_PASSWORD},
         )
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result2["type"] == data_entry_flow.FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
 
 
@@ -177,7 +177,7 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_DHCP},
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == config_entries.SOURCE_USER
 
     with patch("pyoverkiz.client.OverkizClient.login", return_value=True), patch(
@@ -220,7 +220,7 @@ async def test_dhcp_flow_already_configured(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_DHCP},
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -232,7 +232,7 @@ async def test_zeroconf_flow(hass):
         context={"source": config_entries.SOURCE_ZEROCONF},
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == config_entries.SOURCE_USER
 
     with patch("pyoverkiz.client.OverkizClient.login", return_value=True), patch(
@@ -271,7 +271,7 @@ async def test_zeroconf_flow_already_configured(hass):
         context={"source": config_entries.SOURCE_ZEROCONF},
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -295,7 +295,7 @@ async def test_reauth_success(hass):
         data=mock_entry.data,
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
     with patch("pyoverkiz.client.OverkizClient.login", return_value=True), patch(
@@ -311,7 +311,7 @@ async def test_reauth_success(hass):
             },
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
         assert result["reason"] == "reauth_successful"
         assert mock_entry.data["username"] == TEST_EMAIL
         assert mock_entry.data["password"] == TEST_PASSWORD2
@@ -337,7 +337,7 @@ async def test_reauth_wrong_account(hass):
         data=mock_entry.data,
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
     with patch("pyoverkiz.client.OverkizClient.login", return_value=True), patch(
@@ -353,5 +353,5 @@ async def test_reauth_wrong_account(hass):
             },
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
         assert result["reason"] == "reauth_wrong_account"

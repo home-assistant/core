@@ -1,8 +1,6 @@
 """A sensor for incoming calls using a USB modem that supports caller ID."""
 from __future__ import annotations
 
-import logging
-
 from phone_modem import PhoneModem
 
 from homeassistant.components.sensor import SensorEntity
@@ -12,8 +10,6 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import entity_platform
 
 from .const import CID, DATA_KEY_API, DOMAIN, ICON
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(

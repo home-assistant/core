@@ -29,7 +29,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.device_registry import async_entries_for_config_entry
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -393,13 +393,13 @@ async def async_setup_entry(
 
         async_add_entities(await find_entities(data_class_name), True)
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
 
     async def add_public_entities(update: bool = True) -> None:
         """Retrieve Netatmo public weather entities."""
         entities = {
             device.name: device.id
-            for device in async_entries_for_config_entry(
+            for device in dr.async_entries_for_config_entry(
                 device_registry, entry.entry_id
             )
             if device.model == "Public Weather stations"

@@ -39,7 +39,7 @@
             "options_binary": {
                 "data": {
                     "inverse": "Inverter \u00e5pen / lukk tilstand",
-                    "name": "Navn (valgfritt)",
+                    "name": "Navn",
                     "type": "Bin\u00e6r sensortype"
                 },
                 "description": "{zone}-alternativer",
@@ -47,8 +47,8 @@
             },
             "options_digital": {
                 "data": {
-                    "name": "Navn (valgfritt)",
-                    "poll_interval": "Avstemningsintervall (minutter) (valgfritt)",
+                    "name": "Navn",
+                    "poll_interval": "Avstemningsintervall (minutter)",
                     "type": "Sensortype"
                 },
                 "description": "{zone}-alternativer",
@@ -84,7 +84,7 @@
             },
             "options_misc": {
                 "data": {
-                    "api_host": "Overstyre API-vert-URL (valgfritt)",
+                    "api_host": "Overstyr API-verts-URL",
                     "blink": "Blink p\u00e5 LED-lampen n\u00e5r du sender statusendring",
                     "discovery": "Svar p\u00e5 oppdagelsesforesp\u00f8rsler i nettverket ditt",
                     "override_api_host": "Overstyre standard Home Assistant API-vertspanel-URL"
@@ -95,11 +95,11 @@
             "options_switch": {
                 "data": {
                     "activation": "Utgang n\u00e5r den er p\u00e5",
-                    "momentary": "Pulsvarighet (ms) (valgfritt)",
+                    "momentary": "Pulsvarighet (ms)",
                     "more_states": "Konfigurere flere tilstander for denne sonen",
-                    "name": "Navn (valgfritt)",
-                    "pause": "Pause mellom pulser (ms) (valgfritt)",
-                    "repeat": "Tider \u00e5 gjenta (-1 = uendelig) (valgfritt)"
+                    "name": "Navn",
+                    "pause": "Pause mellom pulser (ms)",
+                    "repeat": "Tider \u00e5 gjenta (-1=uendelig)"
                 },
                 "description": "{zone} alternativer: tilstand {state}",
                 "title": "Konfigurer utskiftbar utgang"

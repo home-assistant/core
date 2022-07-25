@@ -1,0 +1,22 @@
+{
+    "config": {
+        "error": {
+            "need_lower_upper": "Undre och \u00f6vre gr\u00e4ns kan inte vara tomma"
+        },
+        "step": {
+            "user": {
+                "title": "L\u00e4gg till gr\u00e4nsv\u00e4rdessensor"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "lower": "Undre gr\u00e4ns"
+                }
+            }
+        }
+    },
+    "title": "Gr\u00e4nsv\u00e4rdessensor"
+}

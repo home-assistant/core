@@ -19,9 +19,12 @@ from aioairzone.const import (
     API_MODES,
     API_NAME,
     API_ON,
+    API_POWER,
     API_ROOM_TEMP,
     API_SET_POINT,
+    API_SYSTEM_FIRMWARE,
     API_SYSTEM_ID,
+    API_SYSTEM_TYPE,
     API_SYSTEMS,
     API_THERMOS_FIRMWARE,
     API_THERMOS_RADIO,
@@ -31,7 +34,6 @@ from aioairzone.const import (
     API_WIFI_RSSI,
     API_ZONE_ID,
 )
-from aioairzone.exceptions import InvalidMethod, SystemOutOfRange
 
 from homeassistant.components.airzone import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_ID, CONF_PORT
@@ -178,6 +180,17 @@ HVAC_MOCK = {
     ]
 }
 
+HVAC_SYSTEMS_MOCK = {
+    API_SYSTEMS: [
+        {
+            API_SYSTEM_ID: 1,
+            API_POWER: 0,
+            API_SYSTEM_FIRMWARE: "3.31",
+            API_SYSTEM_TYPE: 1,
+        }
+    ]
+}
+
 HVAC_WEBSERVER_MOCK = {
     API_MAC: "11:22:33:44:55:66",
     API_WIFI_CHANNEL: 6,
@@ -202,10 +215,10 @@ async def async_init_integration(
         return_value=HVAC_MOCK,
     ), patch(
         "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
-        side_effect=SystemOutOfRange,
+        return_value=HVAC_SYSTEMS_MOCK,
     ), patch(
         "homeassistant.components.airzone.AirzoneLocalApi.get_webserver",
-        side_effect=InvalidMethod,
+        return_value=HVAC_WEBSERVER_MOCK,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()

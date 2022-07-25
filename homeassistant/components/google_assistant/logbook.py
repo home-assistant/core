@@ -1,4 +1,8 @@
 """Describe logbook events."""
+from homeassistant.components.logbook.const import (
+    LOGBOOK_ENTRY_MESSAGE,
+    LOGBOOK_ENTRY_NAME,
+)
 from homeassistant.core import callback
 
 from .const import DOMAIN, EVENT_COMMAND_RECEIVED, SOURCE_CLOUD
@@ -25,6 +29,6 @@ def async_describe_events(hass, async_describe_event):
         if event.data["source"] != SOURCE_CLOUD:
             message += f" (via {event.data['source']})"
 
-        return {"name": "Google Assistant", "message": message}
+        return {LOGBOOK_ENTRY_NAME: "Google Assistant", LOGBOOK_ENTRY_MESSAGE: message}
 
     async_describe_event(DOMAIN, EVENT_COMMAND_RECEIVED, async_describe_logbook_event)

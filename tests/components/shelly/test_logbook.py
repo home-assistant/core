@@ -46,14 +46,14 @@ async def test_humanify_shelly_click_event_block_device(hass, coap_wrapper):
     assert event1["domain"] == DOMAIN
     assert (
         event1["message"]
-        == "'single' click event for Test name channel 1 Input was fired."
+        == "'single' click event for Test name channel 1 Input was fired"
     )
 
     assert event2["name"] == "Shelly"
     assert event2["domain"] == DOMAIN
     assert (
         event2["message"]
-        == "'long' click event for shellyswitch25-12345678 channel 2 Input was fired."
+        == "'long' click event for shellyswitch25-12345678 channel 2 Input was fired"
     )
 
 
@@ -91,12 +91,12 @@ async def test_humanify_shelly_click_event_rpc_device(hass, rpc_wrapper):
     assert event1["domain"] == DOMAIN
     assert (
         event1["message"]
-        == "'single_push' click event for test switch_0 Input was fired."
+        == "'single_push' click event for test switch_0 Input was fired"
     )
 
     assert event2["name"] == "Shelly"
     assert event2["domain"] == DOMAIN
     assert (
         event2["message"]
-        == "'btn_down' click event for shellypro4pm-12345678 channel 2 Input was fired."
+        == "'btn_down' click event for shellypro4pm-12345678 channel 2 Input was fired"
     )

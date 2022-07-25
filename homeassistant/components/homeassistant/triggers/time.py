@@ -5,6 +5,10 @@ from functools import partial
 import voluptuous as vol
 
 from homeassistant.components import sensor
+from homeassistant.components.automation import (
+    AutomationActionType,
+    AutomationTriggerInfo,
+)
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     CONF_AT,
@@ -12,13 +16,14 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HassJob, callback
+from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import (
     async_track_point_in_time,
     async_track_state_change_event,
     async_track_time_change,
 )
+from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
@@ -37,10 +42,15 @@ TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
 )
 
 
-async def async_attach_trigger(hass, config, action, automation_info):
+async def async_attach_trigger(
+    hass: HomeAssistant,
+    config: ConfigType,
+    action: AutomationActionType,
+    automation_info: AutomationTriggerInfo,
+) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
     trigger_data = automation_info["trigger_data"]
-    entities = {}
+    entities: dict[str, CALLBACK_TYPE] = {}
     removes = []
     job = HassJob(action)
 

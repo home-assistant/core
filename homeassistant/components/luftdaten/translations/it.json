@@ -10,8 +10,7 @@
                 "data": {
                     "show_on_map": "Mostra sulla mappa",
                     "station_id": "ID sensore"
-                },
-                "title": "Definisci Luftdaten"
+                }
             }
         }
     }
