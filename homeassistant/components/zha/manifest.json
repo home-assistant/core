@@ -14,6 +14,7 @@
     "zigpy-zigate==0.9.0",
     "zigpy-znp==0.8.1"
   ],
+  "quality_scale": "platinum",
   "usb": [
     {
       "vid": "10C4",
