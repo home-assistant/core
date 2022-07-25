@@ -95,7 +95,7 @@ class LondonTubeCoordinator(DataUpdateCoordinator):
             return self._data.data
 
 
-class LondonTubeSensor(CoordinatorEntity, SensorEntity):
+class LondonTubeSensor(CoordinatorEntity[LondonTubeCoordinator], SensorEntity):
     """Sensor that reads the status of a line from Tube Data."""
 
     def __init__(self, coordinator, name):
