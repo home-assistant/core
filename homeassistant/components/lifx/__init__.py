@@ -77,7 +77,7 @@ async def async_legacy_migration(
     }
     # device.mac_addr is not the mac_address, its the serial number
     hosts_by_serial = {device.mac_addr: device.ip_addr for device in discovered_devices}
-    missing_discovery_count = await async_migrate_legacy_entries(
+    missing_discovery_count = async_migrate_legacy_entries(
         hass, hosts_by_serial, existing_serials, legacy_entry
     )
     if missing_discovery_count:
