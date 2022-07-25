@@ -24,11 +24,6 @@ BINARY_SENSOR_TYPES: dict[str, BinarySensorEntityDescription] = {
         name="Calibration",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "tested": BinarySensorEntityDescription(
-        key="tested",
-        name="Tested",
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
     "motion_detected": BinarySensorEntityDescription(
         key="pir_state",
         name="Motion Detected",
