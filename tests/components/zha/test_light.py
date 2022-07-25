@@ -1184,7 +1184,7 @@ async def async_test_off_from_hass(hass, cluster, entity_id):
 
 
 async def async_test_level_on_off_from_hass(
-    hass, on_off_cluster, level_cluster, entity_id
+    hass, on_off_cluster, level_cluster, entity_id, expected_default_transition: int = 0
 ):
     """Test on off functionality from hass."""
 
@@ -1259,7 +1259,7 @@ async def async_test_level_on_off_from_hass(
         4,
         level_cluster.commands_by_name["move_to_level_with_on_off"].schema,
         10,
-        0,
+        expected_default_transition,
         expect_reply=True,
         manufacturer=None,
         tries=1,
@@ -1417,7 +1417,11 @@ async def test_zha_group_light_entity(
 
     # test turning the lights on and off from the HA
     await async_test_level_on_off_from_hass(
-        hass, group_cluster_on_off, group_cluster_level, group_entity_id
+        hass,
+        group_cluster_on_off,
+        group_cluster_level,
+        group_entity_id,
+        expected_default_transition=1,  # a Sengled light is in that group and needs a minimum 0.1s transition
     )
 
     # test getting a brightness change from the network

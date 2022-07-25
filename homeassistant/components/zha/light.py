@@ -74,6 +74,7 @@ STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.LIGHT)
 GROUP_MATCH = functools.partial(ZHA_ENTITIES.group_match, Platform.LIGHT)
 PARALLEL_UPDATES = 0
 SIGNAL_LIGHT_GROUP_STATE_CHANGED = "zha_light_group_state_changed"
+DEFAULT_MIN_TRANSITION_MANUFACTURERS = {"Sengled"}
 
 COLOR_MODES_GROUP_LIGHT = {ColorMode.COLOR_TEMP, ColorMode.XY}
 SUPPORT_GROUP_LIGHT = (
@@ -379,7 +380,7 @@ class BaseLight(LogMixin, light.LightEntity):
         # is not none looks odd here but it will override built in bulb transition times if we pass 0 in here
         if transition is not None and supports_level:
             result = await self._level_channel.move_to_level_with_on_off(
-                0, transition * 10
+                0, transition * 10 or self._DEFAULT_MIN_TRANSITION_TIME
             )
         else:
             result = await self._on_off_channel.off()
@@ -670,10 +671,10 @@ class ForceOnLight(Light):
 @STRICT_MATCH(
     channel_names=CHANNEL_ON_OFF,
     aux_channels={CHANNEL_COLOR, CHANNEL_LEVEL},
-    manufacturers={"Sengled"},
+    manufacturers=DEFAULT_MIN_TRANSITION_MANUFACTURERS,
 )
-class SengledLight(Light):
-    """Representation of a Sengled light which does not react to move_to_color_temp with 0 as a transition."""
+class MinTransitionLight(Light):
+    """Representation of a light which does not react to any "move to" calls with 0 as a transition."""
 
     _DEFAULT_MIN_TRANSITION_TIME = 1
 
@@ -688,6 +689,10 @@ class LightGroup(BaseLight, ZhaGroupEntity):
         """Initialize a light group."""
         super().__init__(entity_ids, unique_id, group_id, zha_device, **kwargs)
         group = self.zha_device.gateway.get_group(self._group_id)
+        self._DEFAULT_MIN_TRANSITION_TIME = any(  # pylint: disable=invalid-name
+            member.device.manufacturer in DEFAULT_MIN_TRANSITION_MANUFACTURERS
+            for member in group.members
+        )
         self._on_off_channel = group.endpoint[OnOff.cluster_id]
         self._level_channel = group.endpoint[LevelControl.cluster_id]
         self._color_channel = group.endpoint[Color.cluster_id]
