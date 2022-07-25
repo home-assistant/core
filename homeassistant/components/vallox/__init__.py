@@ -60,11 +60,12 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 PLATFORMS: list[str] = [
-    Platform.SENSOR,
-    Platform.FAN,
     Platform.BINARY_SENSOR,
-    Platform.SELECT,
+    Platform.FAN,
     Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
 ]
 
 ATTR_PROFILE_FAN_SPEED = "fan_speed"
