@@ -67,7 +67,10 @@ async def async_setup_platform(
     data = TubeData(session)
     coordinator = LondonTubeCoordinator(hass, data)
 
-    await coordinator.async_config_entry_first_refresh()
+    await coordinator.async_refresh()
+    
+    if not coordinator.last_update_success:
+        raise PlatformNotReady
 
     sensors = []
     for line in config[CONF_LINE]:
