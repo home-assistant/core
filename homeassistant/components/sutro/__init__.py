@@ -14,7 +14,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .api import SutroApiClient
 from .const import CONF_TOKEN, DOMAIN, PLATFORMS
 
-SCAN_INTERVAL = timedelta(seconds=30)
+SCAN_INTERVAL = timedelta(minutes=30)
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
