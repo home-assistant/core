@@ -37,7 +37,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.15.1
+PySwitchbot==0.15.2
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -423,7 +423,6 @@ blinkstick==1.2.0
 blockchain==1.4.4
 
 # homeassistant.components.decora
-# homeassistant.components.miflora
 # homeassistant.components.zengge
 # bluepy==1.3.0
 
@@ -1040,9 +1039,6 @@ mficlient==0.3.0
 # homeassistant.components.xiaomi_miio
 micloud==0.5
 
-# homeassistant.components.miflora
-miflora==0.7.2
-
 # homeassistant.components.mill
 mill-local==0.1.1
 
@@ -1051,9 +1047,6 @@ millheater==0.9.0
 
 # homeassistant.components.minio
 minio==5.0.10
-
-# homeassistant.components.mitemp_bt
-mitemp_bt==0.0.5
 
 # homeassistant.components.moat
 moat-ble==0.1.1
@@ -2170,7 +2163,7 @@ sendgrid==6.8.2
 sense_energy==0.10.4
 
 # homeassistant.components.sensorpush
-sensorpush-ble==1.4.2
+sensorpush-ble==1.5.1
 
 # homeassistant.components.sentry
 sentry-sdk==1.8.0
@@ -2401,7 +2394,7 @@ uscisstatus==0.1.1
 uvcclient==0.11.0
 
 # homeassistant.components.vallox
-vallox-websocket-api==2.11.0
+vallox-websocket-api==2.12.0
 
 # homeassistant.components.rdw
 vehicle==0.4.0

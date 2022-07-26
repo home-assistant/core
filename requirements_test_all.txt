@@ -33,7 +33,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.15.1
+PySwitchbot==0.15.2
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -1454,7 +1454,7 @@ securetar==2022.2.0
 sense_energy==0.10.4
 
 # homeassistant.components.sensorpush
-sensorpush-ble==1.4.2
+sensorpush-ble==1.5.1
 
 # homeassistant.components.sentry
 sentry-sdk==1.8.0
@@ -1610,7 +1610,7 @@ url-normalize==1.4.3
 uvcclient==0.11.0
 
 # homeassistant.components.vallox
-vallox-websocket-api==2.11.0
+vallox-websocket-api==2.12.0
 
 # homeassistant.components.rdw
 vehicle==0.4.0
