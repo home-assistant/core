@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
+from datetime import timedelta
 import logging
 import math
 from typing import Any
@@ -11,7 +12,12 @@ from typing import Any
 from aiolifx import products
 from aiolifx.aiolifx import Light
 from aiolifx.message import Message
-from aiolifx.msgtypes import StateHevCycle, StateLastHevCycleResult, StateWifiInfo
+from aiolifx.msgtypes import (
+    StateHevCycle,
+    StateLastHevCycleResult,
+    StateWifiInfo,
+    StateInfo,
+)
 import async_timeout
 from awesomeversion import AwesomeVersion
 
@@ -32,7 +38,6 @@ from .const import DOMAIN, OVERALL_TIMEOUT
 
 FIX_MAC_FW = AwesomeVersion("3.70")
 
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -51,27 +56,39 @@ def async_get_legacy_entry(hass: HomeAssistant) -> ConfigEntry | None:
     return None
 
 
-def get_rssi_from_wifiinfo(wifiinfo: StateWifiInfo) -> int:
+def get_rssi_from_wifiinfo(wifiinfo: StateWifiInfo) -> int | None:
     """Derive the RSSI value from the bulb signal field."""
-    rssi = int(math.floor(10 * math.log10(wifiinfo.signal) + 0.5))
-    _LOGGER.debug("Signal: %s == RSSI: %s", str(wifiinfo.signal), rssi)
-    return rssi
+    if wifiinfo is not None:
+        return int(math.floor(10 * math.log10(wifiinfo.signal) + 0.5))
+    return None
+
+
+def get_uptime_from_hostinfo(hostinfo: StateInfo) -> int | None:
+    """Return the uptime duration in seconds."""
+    if hostinfo is not None:
+        return math.ceil(
+            timedelta(microseconds=(hostinfo.uptime / 1000)).total_seconds()
+        )
+    return None
 
 
 def hev_cycle_status(hev_cycle: StateHevCycle) -> tuple[int, int, bool]:
     """Return the HEV cycle status."""
-    return (hev_cycle.duration, hev_cycle.remaining, hev_cycle.last_power)
+    if hev_cycle is not None:
+        return (hev_cycle.duration, hev_cycle.remaining, hev_cycle.last_power)
+    return None
 
 
-def last_hev_cycle_result_str(last_hev_cycle_result: StateLastHevCycleResult) -> str:
+def last_hev_cycle_result_str(last_hev_cycle: StateLastHevCycleResult) -> str | None:
     """Make the result text easier to read."""
-    result: str = (
-        last_hev_cycle_result.result_str.title()
-        .replace("_", " ")
-        .replace("Homekit", "HomeKit")
-        .replace("Lan", "LAN")
-    )
-    return result
+    if last_hev_cycle is not None:
+        return str(
+            last_hev_cycle.result_str.title()
+            .replace("_", " ")
+            .replace("Homekit", "HomeKit")
+            .replace("Lan", "LAN")
+        )
+    return None
 
 
 def convert_8_to_16(value: int) -> int:
@@ -177,7 +194,7 @@ async def async_execute_lifx(method: Callable) -> Message:
             # us by async_timeout when we hit the OVERALL_TIMEOUT
             future.set_result(message)
 
-    # _LOGGER.debug("Sending LIFX command: %s", method)
+    _LOGGER.debug("Sending LIFX command: %s", method)
 
     method(callb=_callback)
     result = None

@@ -100,6 +100,8 @@ def _mocked_failing_bulb() -> Light:
     bulb.set_color = MockFailingLifxCommand(bulb)
     bulb.get_hostfirmware = MockFailingLifxCommand(bulb)
     bulb.get_version = MockFailingLifxCommand(bulb)
+    bulb.get_wifiinfo = MockFailingLifxCommand(bulb)
+    bulb.get_hostinfo = MockFailingLifxCommand(bulb)
     return bulb
 
 
@@ -127,7 +129,6 @@ def _mocked_light_strip() -> Light:
 def _mocked_bulb_new_firmware() -> Light:
     bulb = _mocked_bulb()
     bulb.host_firmware_version = "3.90"
-    bulb.get_wifiinfo = MockLifxCommand(bulb, signal=6.309576150442808)
     return bulb
 
 

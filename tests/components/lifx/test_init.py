@@ -126,7 +126,7 @@ async def test_dns_error_at_startup(hass):
     already_migrated_config_entry.add_to_hass(hass)
     bulb = _mocked_failing_bulb()
 
-    class MockLifxConnectonDnsError:
+    class MockLifxConnectionDnsError:
         """Mock lifx connection with a dns error."""
 
         def __init__(self, *args, **kwargs):
@@ -143,7 +143,7 @@ async def test_dns_error_at_startup(hass):
     # Cannot connect due to dns error
     with _patch_discovery(device=bulb), patch(
         "homeassistant.components.lifx.LIFXConnection",
-        MockLifxConnectonDnsError,
+        MockLifxConnectionDnsError,
     ):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()

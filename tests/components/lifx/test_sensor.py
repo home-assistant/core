@@ -1,22 +1,25 @@
 """Tests for the lifx integration sensor platform."""
 
 from homeassistant.components import lifx
-from homeassistant.components.lifx import DOMAIN
+from homeassistant.components.lifx import DOMAIN, LIFXData
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_HOST,
     SIGNAL_STRENGTH_DECIBELS,
     TIME_MINUTES,
     TIME_SECONDS,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
+from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 from homeassistant.setup import async_setup_component
 
 from . import (
     IP_ADDRESS,
     MAC_ADDRESS,
+    MockFailingLifxCommand,
     _mocked_bulb,
     _mocked_hev_bulb,
     _patch_config_flow_try_connect,
@@ -133,3 +136,61 @@ async def test_hev_sensors(hass: HomeAssistant) -> None:
         disabled_by=er.RegistryEntryDisabler.INTEGRATION,
     )
     assert disabled_entity.disabled
+
+
+async def test_failing_sensors(hass: HomeAssistant) -> None:
+    """Test the RSSI sensor on a LIFX bulb."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: IP_ADDRESS},
+        unique_id=MAC_ADDRESS,
+    )
+    config_entry.add_to_hass(hass)
+    bulb = _mocked_hev_bulb()
+    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(
+        device=bulb
+    ), _patch_device(device=bulb):
+        await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    entity_registry = er.async_get(hass)
+    entities = [
+        entity
+        for entity in async_entries_for_config_entry(
+            entity_registry, config_entry.entry_id
+        )
+        if entity.domain == Platform.SENSOR
+    ]
+
+    for entity in entities:
+        entity_registry.async_update_entity(entity.entity_id, disabled_by=None)
+
+    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(
+        device=bulb
+    ), _patch_device(device=bulb):
+        await hass.config_entries.async_reload(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    lifx_data: LIFXData = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = lifx_data.coordinator_sensor
+
+    bulb.get_hostinfo = MockFailingLifxCommand(bulb)
+    bulb.get_wifiinfo = MockFailingLifxCommand(bulb)
+    bulb.get_hev_cycle = MockFailingLifxCommand(bulb)
+    bulb.get_last_hev_cycle_result = MockFailingLifxCommand(bulb)
+
+    for entity in entities:
+
+        [
+            setattr(
+                coordinator,
+                f"update_{sensor.unique_id.removeprefix('aa:bb:cc:dd:ee:cc_')}",
+                False,
+            )
+            for sensor in entities
+            if sensor.entity_id != entity.entity_id
+        ]
+        failing_sensor = entity.unique_id.removeprefix("aa:bb:cc:dd:ee:cc_")
+        setattr(coordinator, f"update_{failing_sensor}", True)
+        await coordinator.async_refresh()
+        assert not coordinator.last_update_success
