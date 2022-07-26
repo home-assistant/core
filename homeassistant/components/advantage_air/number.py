@@ -8,7 +8,7 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN as ADVANTAGE_AIR_DOMAIN
-from .entity import AdvantageAirEntity
+from .entity import AdvantageAirAcEntity
 
 
 async def async_setup_entry(
@@ -27,7 +27,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class AdvantageAirTimeTo(AdvantageAirEntity, NumberEntity):
+class AdvantageAirTimeTo(AdvantageAirAcEntity, NumberEntity):
     """Representation of Advantage Air TimeTo number."""
 
     _attr_native_unit_of_measurement = TIME_MINUTES
