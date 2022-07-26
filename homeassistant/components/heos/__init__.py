@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
+from urllib.parse import unquote
 import logging
 
 from pyheos import Heos, HeosError, const as heos_const
@@ -398,7 +399,7 @@ class SourceManager:
     def _build_source_list(self):
         """Build a single list of inputs from various types."""
         source_list = []
-        source_list.extend([favorite.name for favorite in self.favorites.values()])
+        source_list.extend([unquote(favorite.name) for favorite in self.favorites.values()])
         source_list.extend([source.name for source in self.inputs])
         return source_list
 
@@ -408,7 +409,7 @@ class SourceManager:
             (
                 index
                 for index, favorite in self.favorites.items()
-                if favorite.name == source
+                if unquote(favorite.name) == source
             ),
             None,
         )
@@ -445,9 +446,9 @@ class SourceManager:
         # Try matching favorite by name:station or media_id:album_id
         return next(
             (
-                source.name
+                unquote(source.name)
                 for source in self.favorites.values()
-                if source.name == now_playing_media.station
+                if unquote(source.name) == now_playing_media.station
                 or source.media_id == now_playing_media.album_id
             ),
             None,
