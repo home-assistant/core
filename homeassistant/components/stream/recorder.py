@@ -139,6 +139,17 @@ class RecorderOutput(StreamOutput):
 
             source.close()
 
+        def finish_writing(output: av.OutputContainer, video_path: str) -> None:
+            """Finish writing output."""
+            output.close()
+            try:
+                os.rename(video_path + ".tmp", video_path)
+            except FileNotFoundError:
+                _LOGGER.error(
+                    "Error writing to '%s'. There are likely multiple recordings writing to the same file",
+                    video_path,
+                )
+
         # Write lookback segments
         while len(self._segments) > 1:  # The last segment is in progress
             await self._hass.async_add_executor_job(
@@ -162,11 +173,6 @@ class RecorderOutput(StreamOutput):
         if output is None:
             _LOGGER.error("Recording failed to capture anything")
         else:
-            output.close()
-            try:
-                os.rename(self.video_path + ".tmp", self.video_path)
-            except FileNotFoundError:
-                _LOGGER.error(
-                    "Error writing to '%s'. There are likely multiple recordings writing to the same file",
-                    self.video_path,
-                )
+            await self._hass.async_add_executor_job(
+                finish_writing, output, self.video_path
+            )
