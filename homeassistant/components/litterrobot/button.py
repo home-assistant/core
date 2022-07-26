@@ -26,7 +26,7 @@ async def async_setup_entry(
             LitterRobotResetWasteDrawerButton(
                 robot=robot, entity_type=TYPE_RESET_WASTE_DRAWER, hub=hub
             )
-            for robot in hub.account.robots
+            for robot in hub.litter_robots()
         ]
     )
 

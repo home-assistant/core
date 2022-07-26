@@ -5,7 +5,6 @@ import logging
 from typing import Any
 
 from pylitterbot.enums import LitterBoxStatus
-from pylitterbot.robot import VALID_WAIT_TIMES
 import voluptuous as vol
 
 from homeassistant.components.vacuum import (
@@ -58,7 +57,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             LitterRobotCleaner(robot=robot, entity_type=TYPE_LITTER_BOX, hub=hub)
-            for robot in hub.account.robots
+            for robot in hub.litter_robots()
         ]
     )
 
@@ -75,11 +74,6 @@ async def async_setup_entry(
             vol.Optional("start_time"): cv.time,
         },
         "async_set_sleep_mode",
-    )
-    platform.async_register_entity_service(
-        SERVICE_SET_WAIT_TIME,
-        {vol.Required("minutes"): vol.All(vol.Coerce(int), vol.In(VALID_WAIT_TIMES))},
-        "async_set_wait_time",
     )
 
 
@@ -139,17 +133,6 @@ class LitterRobotCleaner(LitterRobotControlEntity, StateVacuumEntity):
             enabled,
             self.parse_time_at_default_timezone(start_time),
         )
-
-    async def async_set_wait_time(self, minutes: int) -> None:
-        """Set the wait time."""
-        # The Litter-Robot set wait time service has been replaced by a
-        # dedicated select entity and marked as deprecated
-        _LOGGER.warning(
-            "The 'litterrobot.set_wait_time' service is deprecated and "
-            "replaced by a dedicated set wait time select entity; Please "
-            "use that entity to set the wait time instead"
-        )
-        await self.perform_action_and_refresh(self.robot.set_wait_time, minutes)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
