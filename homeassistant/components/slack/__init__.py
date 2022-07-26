@@ -89,7 +89,7 @@ class SlackEntity(Entity):
         """Initialize a Slack entity."""
         self._client = data[DATA_CLIENT]
         self.entity_description = description
-        self._attr_unique_id = f"{description.key}_{data[ATTR_USER_ID]}"
+        self._attr_unique_id = f"{data[ATTR_USER_ID]}_{description.key}"
         self._attr_device_info = DeviceInfo(
             configuration_url=data[ATTR_URL],
             entry_type=DeviceEntryType.SERVICE,
