@@ -19,7 +19,7 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ADVANTAGE_AIR_STATE_OPEN, DOMAIN as ADVANTAGE_AIR_DOMAIN
-from .entity import AdvantageAirAcEntity, AdvantageAirZoneEntity
+from .entity import AdvantageAirZoneEntity
 
 ADVANTAGE_AIR_SET_COUNTDOWN_VALUE = "minutes"
 ADVANTAGE_AIR_SET_COUNTDOWN_UNIT = "min"
