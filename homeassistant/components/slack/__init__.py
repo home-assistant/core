@@ -78,6 +78,7 @@ class SlackEntity(Entity):
     """Representation of a Slack entity."""
 
     _attr_attribution = "Data provided by Slack"
+    _attr_has_entity_name = True
 
     def __init__(
         self,

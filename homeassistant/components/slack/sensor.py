@@ -29,7 +29,7 @@ async def async_setup_entry(
                 hass.data[DOMAIN][entry.entry_id][SLACK_DATA],
                 SensorEntityDescription(
                     key="do_not_disturb_until",
-                    name="Do Not Disturb Until",
+                    name="Do not disturb until",
                     icon="mdi:clock",
                     device_class=SensorDeviceClass.TIMESTAMP,
                 ),
