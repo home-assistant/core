@@ -1,4 +1,6 @@
 """Test KNX services."""
+from unittest.mock import call, patch
+
 import pytest
 from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
 
@@ -140,6 +142,33 @@ async def test_read(hass: HomeAssistant, knx: KNXTestKit):
     await knx.assert_read("3/3/3")
 
 
+async def test_restart_device(hass: HomeAssistant, knx: KNXTestKit):
+    """Test `knx.restart_device` service."""
+    await knx.setup_integration({})
+
+    with patch("xknx.management.procedures.dm_restart") as dm_restart_mock:
+        # send restart telegram
+        await hass.services.async_call(
+            "knx", "restart_device", {"address": "4.5.6"}, blocking=True
+        )
+        assert dm_restart_mock.call_args_list == [
+            call(knx.xknx, individual_address="4.5.6")
+        ]
+        dm_restart_mock.reset_mock()
+
+        # send multiple restart telegrams
+        await hass.services.async_call(
+            "knx",
+            "restart_device",
+            {"address": ["4.5.8", "4.5.9"]},
+            blocking=True,
+        )
+        assert dm_restart_mock.call_args_list == [
+            call(knx.xknx, individual_address="4.5.8"),
+            call(knx.xknx, individual_address="4.5.9"),
+        ]
+
+
 async def test_event_register(hass: HomeAssistant, knx: KNXTestKit):
     """Test `knx.event_register` service."""
     events = async_capture_events(hass, "knx_event")
@@ -215,7 +244,7 @@ async def test_exposure_register(hass: HomeAssistant, knx: KNXTestKit):
     hass.states.async_set(test_entity, STATE_OFF, {})
     await knx.assert_write(test_address, False)
 
-    # register exposure
+    # unregister exposure
     await hass.services.async_call(
         "knx",
         "exposure_register",

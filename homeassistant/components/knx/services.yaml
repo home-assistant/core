@@ -40,6 +40,17 @@ read:
       example: "1/1/0"
       selector:
         object:
+restart_device:
+  name: "Restart a device on the KNX bus"
+  description: "Send a basic restart request to a device on the KNX bus."
+  fields:
+    address:
+      name: "Individual address"
+      description: "Individual address(es) to send restart request to. Single individual address or list accepted."
+      required: true
+      example: "1.1.3"
+      selector:
+        object:
 event_register:
   name: "Register knx_event"
   description: "Add or remove group addresses to knx_event filter for triggering `knx_event`s. Only addresses added with this service can be removed."

@@ -12,6 +12,7 @@ from xknx.core.telegram_queue import TelegramQueue
 from xknx.dpt import DPTArray, DPTBase, DPTBinary
 from xknx.exceptions import ConversionError, XKNXException
 from xknx.io import ConnectionConfig, ConnectionType, SecureConfig
+from xknx.management import procedures as xknx_mgmt_procedures
 from xknx.telegram import AddressFilter, Telegram
 from xknx.telegram.address import (
     DeviceGroupAddress,
@@ -82,20 +83,22 @@ from .schema import (
     SwitchSchema,
     WeatherSchema,
     ga_validator,
+    ia_validator,
     sensor_type_validator,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 
-SERVICE_KNX_SEND: Final = "send"
 SERVICE_KNX_ATTR_PAYLOAD: Final = "payload"
-SERVICE_KNX_ATTR_TYPE: Final = "type"
 SERVICE_KNX_ATTR_RESPONSE: Final = "response"
 SERVICE_KNX_ATTR_REMOVE: Final = "remove"
+SERVICE_KNX_ATTR_TYPE: Final = "type"
+SERVICE_KNX_DEVICE_RESTART: Final = "restart_device"
 SERVICE_KNX_EVENT_REGISTER: Final = "event_register"
 SERVICE_KNX_EXPOSURE_REGISTER: Final = "exposure_register"
 SERVICE_KNX_READ: Final = "read"
+SERVICE_KNX_SEND: Final = "send"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -136,6 +139,15 @@ CONFIG_SCHEMA = vol.Schema(
         )
     },
     extra=vol.ALLOW_EXTRA,
+)
+
+SERVICE_KNX_DEVICE_RESTART_SCHEMA = vol.Schema(
+    {
+        vol.Required(KNX_ADDRESS): vol.All(
+            cv.ensure_list,
+            [ia_validator],
+        )
+    }
 )
 
 SERVICE_KNX_SEND_SCHEMA = vol.Any(
@@ -276,6 +288,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         SERVICE_KNX_READ,
         knx_module.service_read_to_knx_bus,
         schema=SERVICE_KNX_READ_SCHEMA,
+    )
+
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_KNX_DEVICE_RESTART,
+        knx_module.service_device_restart,
+        schema=SERVICE_KNX_DEVICE_RESTART_SCHEMA,
     )
 
     async_register_admin_service(
@@ -609,3 +629,8 @@ class KNXModule:
                 payload=GroupValueRead(),
             )
             await self.xknx.telegrams.put(telegram)
+
+    async def service_device_restart(self, call: ServiceCall) -> None:
+        """Service for restarting a KNX device."""
+        for address in call.data[KNX_ADDRESS]:
+            await xknx_mgmt_procedures.dm_restart(self.xknx, individual_address=address)
