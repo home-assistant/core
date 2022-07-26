@@ -1,8 +1,8 @@
 {
   "issues": {
     "alert": {
-      "title": "{integration} has an active alert",
-      "description": "Home Assistant has detected an active alert for {integration}."
+      "title": "{title}",
+      "description": "{description}"
     }
   }
 }

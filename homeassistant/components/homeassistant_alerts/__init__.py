@@ -1,6 +1,7 @@
 """The Home Assistant alerts integration."""
 from __future__ import annotations
 
+import asyncio
 import dataclasses
 from datetime import timedelta
 import logging
@@ -15,40 +16,76 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from homeassistant.loader import async_get_integration
+from homeassistant.util.yaml import parse_yaml
 
 DOMAIN = "homeassistant_alerts"
 UPDATE_INTERVAL = timedelta(hours=3)
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up alerts."""
-    last_alerts = set()
+    last_alerts: dict[str, str | None] = {}
 
     async def async_update_alerts() -> None:
         nonlocal last_alerts
 
-        active_alerts = set()
+        active_alerts: dict[str, str | None] = {}
 
         for issue_id, alert in coordinator.data.items():
-            if alert.integration not in hass.config.components:
+            # Skip creation if already created and not updated since then
+            if issue_id in last_alerts and alert.date_updated == last_alerts[issue_id]:
+                active_alerts[issue_id] = alert.date_updated
                 continue
 
-            integration = await async_get_integration(hass, alert.integration)
+            # Fetch alert to get title + description
+            try:
+                response = await async_get_clientsession(hass).get(
+                    f"https://alerts.home-assistant.io/alerts/{alert.filename}",
+                    timeout=aiohttp.ClientTimeout(total=10),
+                )
+            except asyncio.TimeoutError:
+                _LOGGER.warning("Error fetching %s: timeout", alert.filename)
+                continue
+
+            alert_content = await response.text()
+            alert_parts = alert_content.split("---")
+
+            if len(alert_parts) != 3:
+                _LOGGER.warning(
+                    "Error parsing %s: unexpected metadata format", alert.filename
+                )
+                continue
+
+            try:
+                alert_info = parse_yaml(alert_parts[1])
+            except ValueError as err:
+                _LOGGER.warning("Error parsing %s metadata: %s", alert.filename, err)
+                continue
+
+            if not isinstance(alert_info, dict) or "title" not in alert_info:
+                _LOGGER.warning("Error in %s metadata: title not found", alert.filename)
+                continue
+
+            alert_title = alert_info["title"]
+            alert_content = alert_parts[2].strip()
 
             async_create_issue(
                 hass,
                 DOMAIN,
                 issue_id,
                 is_fixable=False,
-                learn_more_url=alert.learn_more_url,
+                learn_more_url=alert.alert_url,
                 severity=IssueSeverity.WARNING,
                 translation_key="alert",
-                translation_placeholders={"integration": integration.name},
+                translation_placeholders={
+                    "title": alert_title,
+                    "description": alert_content,
+                },
             )
-            active_alerts.add(issue_id)
+            active_alerts[issue_id] = alert.date_updated
 
-        inactive_alerts = last_alerts - active_alerts
+        inactive_alerts = last_alerts.keys() - active_alerts.keys()
         for issue_id in inactive_alerts:
             async_delete_issue(hass, DOMAIN, issue_id)
 
@@ -73,8 +110,14 @@ class IntegrationAlert:
     """Issue Registry Entry."""
 
     integration: str
-    issue_id: str
-    learn_more_url: str | None
+    filename: str
+    date_updated: str | None
+    alert_url: str | None
+
+    @property
+    def issue_id(self) -> str:
+        """Return the issue id."""
+        return f"{self.filename}_{self.integration}"
 
 
 class AlertUpdateCoordinator(DataUpdateCoordinator[dict[str, IntegrationAlert]]):
@@ -84,7 +127,7 @@ class AlertUpdateCoordinator(DataUpdateCoordinator[dict[str, IntegrationAlert]])
         """Initialize the data updater."""
         super().__init__(
             hass,
-            logging.getLogger(__name__),
+            _LOGGER,
             name=DOMAIN,
             update_interval=UPDATE_INTERVAL,
         )
@@ -95,8 +138,7 @@ class AlertUpdateCoordinator(DataUpdateCoordinator[dict[str, IntegrationAlert]])
         )
 
     async def _async_update_data(self) -> dict[str, IntegrationAlert]:
-        response = await async_get_clientsession(self.hass).request(
-            "get",
+        response = await async_get_clientsession(self.hass).get(
             "https://alerts.home-assistant.io/alerts.json",
             timeout=aiohttp.ClientTimeout(total=10),
         )
@@ -127,9 +169,17 @@ class AlertUpdateCoordinator(DataUpdateCoordinator[dict[str, IntegrationAlert]])
             for integration in alert["integrations"]:
                 if "package" not in integration:
                     continue
-                issue_id = f"{alert['filename']}_{integration['package']}"
-                result[issue_id] = IntegrationAlert(
-                    integration["package"], issue_id, alert["alert_url"]
+
+                if integration["package"] not in self.hass.config.components:
+                    continue
+
+                integration_alert = IntegrationAlert(
+                    integration=integration["package"],
+                    filename=alert["filename"],
+                    date_updated=alert.get("date_updated"),
+                    alert_url=alert["alert_url"],
                 )
+
+                result[integration_alert.issue_id] = integration_alert
 
         return result

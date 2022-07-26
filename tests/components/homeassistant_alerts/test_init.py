@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+import json
 from unittest.mock import ANY, patch
 
 import pytest
@@ -11,14 +12,20 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import (
-    MockModule,
-    assert_lists_same,
-    async_fire_time_changed,
-    load_fixture,
-    mock_integration,
-)
+from tests.common import assert_lists_same, async_fire_time_changed, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
+
+
+def stub_alert(aioclient_mock, filename):
+    """Stub an alert."""
+    aioclient_mock.get(
+        f"https://alerts.home-assistant.io/alerts/{filename}",
+        text=f"""---
+title: Title for {filename}
+---
+Content for {filename}
+""",
+    )
 
 
 @pytest.mark.parametrize(
@@ -86,6 +93,8 @@ async def test_alerts(
         "https://alerts.home-assistant.io/alerts.json",
         text=load_fixture("alerts_1.json", "homeassistant_alerts"),
     )
+    for alert in expected_alerts:
+        stub_alert(aioclient_mock, alert[0])
 
     activated_components = (
         "aladdin_connect",
@@ -101,7 +110,6 @@ async def test_alerts(
         "sochain",
     )
     for domain in activated_components:
-        mock_integration(hass, MockModule(domain))
         hass.config.components.add(domain)
 
     with patch(
@@ -128,7 +136,10 @@ async def test_alerts(
                 "learn_more_url": f"https://alerts.home-assistant.io/#{alert}",
                 "severity": "warning",
                 "translation_key": "alert",
-                "translation_placeholders": {"integration": integration},
+                "translation_placeholders": {
+                    "title": f"Title for {alert}",
+                    "description": f"Content for {alert}",
+                },
             }
             for alert, integration in expected_alerts
         ]
@@ -171,12 +182,14 @@ async def test_bad_alerts(
     expected_alerts,
 ) -> None:
     """Test creating issues based on alerts."""
-
+    fixture_content = load_fixture(fixture, "homeassistant_alerts")
     aioclient_mock.clear_requests()
     aioclient_mock.get(
         "https://alerts.home-assistant.io/alerts.json",
-        text=load_fixture(fixture, "homeassistant_alerts"),
+        text=fixture_content,
     )
+    for alert in json.loads(fixture_content):
+        stub_alert(aioclient_mock, alert["filename"])
 
     activated_components = (
         "darksky",
@@ -184,7 +197,6 @@ async def test_bad_alerts(
         "hikvisioncam",
     )
     for domain in activated_components:
-        mock_integration(hass, MockModule(domain))
         hass.config.components.add(domain)
 
     with patch(
@@ -211,7 +223,10 @@ async def test_bad_alerts(
                 "learn_more_url": f"https://alerts.home-assistant.io/#{alert}",
                 "severity": "warning",
                 "translation_key": "alert",
-                "translation_placeholders": {"integration": integration},
+                "translation_placeholders": {
+                    "title": f"Title for {alert}",
+                    "description": f"Content for {alert}",
+                },
             }
             for alert, integration in expected_alerts
         ]
@@ -317,12 +332,14 @@ async def test_alerts_change(
     expected_alerts_2: list[tuple(str, str)],
 ) -> None:
     """Test creating issues based on alerts."""
-
+    fixture_1_content = load_fixture(fixture_1, "homeassistant_alerts")
     aioclient_mock.clear_requests()
     aioclient_mock.get(
         "https://alerts.home-assistant.io/alerts.json",
-        text=load_fixture(fixture_1, "homeassistant_alerts"),
+        text=fixture_1_content,
     )
+    for alert in json.loads(fixture_1_content):
+        stub_alert(aioclient_mock, alert["filename"])
 
     activated_components = (
         "aladdin_connect",
@@ -338,7 +355,6 @@ async def test_alerts_change(
         "sochain",
     )
     for domain in activated_components:
-        mock_integration(hass, MockModule(domain))
         hass.config.components.add(domain)
 
     with patch(
@@ -368,17 +384,23 @@ async def test_alerts_change(
                 "learn_more_url": f"https://alerts.home-assistant.io/#{alert}",
                 "severity": "warning",
                 "translation_key": "alert",
-                "translation_placeholders": {"integration": integration},
+                "translation_placeholders": {
+                    "title": f"Title for {alert}",
+                    "description": f"Content for {alert}",
+                },
             }
             for alert, integration in expected_alerts_1
         ],
     )
 
+    fixture_2_content = load_fixture(fixture_2, "homeassistant_alerts")
     aioclient_mock.clear_requests()
     aioclient_mock.get(
         "https://alerts.home-assistant.io/alerts.json",
-        text=load_fixture(fixture_2, "homeassistant_alerts"),
+        text=fixture_2_content,
     )
+    for alert in json.loads(fixture_2_content):
+        stub_alert(aioclient_mock, alert["filename"])
 
     future = now + UPDATE_INTERVAL + timedelta(seconds=1)
     async_fire_time_changed(hass, future)
@@ -401,7 +423,10 @@ async def test_alerts_change(
                 "learn_more_url": f"https://alerts.home-assistant.io/#{alert}",
                 "severity": "warning",
                 "translation_key": "alert",
-                "translation_placeholders": {"integration": integration},
+                "translation_placeholders": {
+                    "title": f"Title for {alert}",
+                    "description": f"Content for {alert}",
+                },
             }
             for alert, integration in expected_alerts_2
         ],
