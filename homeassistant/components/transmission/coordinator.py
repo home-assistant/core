@@ -26,11 +26,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import (
     ATTR_DELETE_DATA,
     ATTR_TORRENT,
-    CONF_LIMIT,
-    CONF_ORDER,
     DEFAULT_DELETE_DATA,
-    DEFAULT_LIMIT,
-    DEFAULT_ORDER,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     EVENT_DOWNLOADED_TORRENT,
@@ -141,7 +137,6 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[transmissionrpc.Se
     async def async_setup(self) -> None:
         """Set up the Transmission client."""
 
-        self.add_options()
         await self.hass.async_add_executor_job(self._tm_data.init_torrent_list)
 
         async def async_add_torrent(service: ServiceCall) -> None:
@@ -248,20 +243,6 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[transmissionrpc.Se
             async_stop_torrent,
             schema=SERVICE_STOP_TORRENT_SCHEMA,
         )
-
-    def add_options(self) -> None:
-        """Add options for entry."""
-        if not self.config_entry.options:
-            limit = self.config_entry.data.get(CONF_LIMIT, DEFAULT_LIMIT)
-            order = self.config_entry.data.get(CONF_ORDER, DEFAULT_ORDER)
-            options = {
-                CONF_LIMIT: limit,
-                CONF_ORDER: order,
-            }
-
-            self.hass.config_entries.async_update_entry(
-                self.config_entry, options=options
-            )
 
 
 class TransmissionData:

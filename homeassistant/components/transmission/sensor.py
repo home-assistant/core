@@ -15,6 +15,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import (
     CONF_LIMIT,
     CONF_ORDER,
+    DEFAULT_LIMIT,
+    DEFAULT_ORDER,
     DOMAIN,
     STATE_ATTR_TORRENT_INFO,
     SUPPORTED_ORDER_MODES,
@@ -124,9 +126,9 @@ class TransmissionTorrentsSensor(TransmissionSensor):
     def extra_state_attributes(self):
         """Return the state attributes, if any."""
         info = _torrents_info(
-            torrents=self.coordinator.api.torrents,
-            order=self.coordinator.config_entry.options[CONF_ORDER],
-            limit=self.coordinator.config_entry.options[CONF_LIMIT],
+            torrents=self.coordinator.torrents,
+            order=self.coordinator.config_entry.options.get(CONF_ORDER, DEFAULT_ORDER),
+            limit=self.coordinator.config_entry.options.get(CONF_LIMIT, DEFAULT_LIMIT),
             statuses=self.SUBTYPE_MODES[self._sub_type],
         )
         return {
@@ -137,7 +139,7 @@ class TransmissionTorrentsSensor(TransmissionSensor):
     def native_value(self):
         """Return the state of the entity."""
         torrents = _filter_torrents(
-            self.coordinator.api.torrents,
+            self.coordinator.torrents,
             statuses=self.SUBTYPE_MODES[self._sub_type],
         )
         return len(torrents)
