@@ -18,4 +18,4 @@ async def async_pre_backup(hass: HomeAssistant) -> None:
 
 
 async def async_post_backup(hass: HomeAssistant) -> None:
-    """Perform operations before a backup starts."""
+    """Perform operations after a backup finishes."""
