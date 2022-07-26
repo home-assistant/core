@@ -141,7 +141,7 @@ def threaded_listener_factory(
 def async_track_state_change(
     hass: HomeAssistant,
     entity_ids: str | Iterable[str],
-    action: Callable[[str, State, State], Awaitable[None] | None],
+    action: Callable[[str, State | None, State], Awaitable[None] | None],
     from_state: None | str | Iterable[str] = None,
     to_state: None | str | Iterable[str] = None,
 ) -> CALLBACK_TYPE:
@@ -198,7 +198,7 @@ def async_track_state_change(
         hass.async_run_hass_job(
             job,
             event.data["entity_id"],
-            event.data["old_state"],
+            event.data.get("old_state"),
             event.data["new_state"],
         )
 
