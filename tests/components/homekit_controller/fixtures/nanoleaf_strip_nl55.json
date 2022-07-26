@@ -45,7 +45,7 @@
             "iid": 6,
             "perms": ["pr"],
             "format": "string",
-            "value": "**REDACTED**",
+            "value": "AAAA011111111111",
             "description": "Serial Number",
             "maxLen": 64
           },
