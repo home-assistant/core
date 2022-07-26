@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "O dispositivo j\u00e1 est\u00e1 configurado",
+            "already_in_progress": "A configura\u00e7\u00e3o j\u00e1 est\u00e1 em andamento",
+            "decryption_failed": "A bindkey fornecida n\u00e3o funcionou, os dados do sensor n\u00e3o puderam ser descriptografados. Por favor verifique e tente novamente.",
+            "expected_24_characters": "Espera-se uma bindkey hexadecimal de 24 caracteres.",
+            "expected_32_characters": "Esperado um bindkey hexadecimal de 32 caracteres.",
+            "no_devices_found": "Nenhum dispositivo encontrado na rede"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "bluetooth_confirm": {
+                "description": "Deseja configurar {name}?"
+            },
+            "get_encryption_key_4_5": {
+                "data": {
+                    "bindkey": "Bindkey"
+                },
+                "description": "Os dados do sensor transmitidos pelo sensor s\u00e3o criptografados. Para decifr\u00e1-lo, precisamos de uma chave de liga\u00e7\u00e3o hexadecimal de 32 caracteres."
+            },
+            "get_encryption_key_legacy": {
+                "data": {
+                    "bindkey": "Bindkey"
+                },
+                "description": "Os dados do sensor transmitidos pelo sensor s\u00e3o criptografados. Para decifr\u00e1-lo, precisamos de uma bindkey hexadecimal de 24 caracteres."
+            },
+            "user": {
+                "data": {
+                    "address": "Dispositivo"
+                },
+                "description": "Escolha um dispositivo para configurar"
+            }
+        }
+    }
+}

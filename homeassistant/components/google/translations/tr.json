@@ -11,7 +11,8 @@
             "invalid_access_token": "Ge\u00e7ersiz eri\u015fim anahtar\u0131",
             "missing_configuration": "Bile\u015fen yap\u0131land\u0131r\u0131lmam\u0131\u015f. L\u00fctfen belgeleri takip edin.",
             "oauth_error": "Ge\u00e7ersiz anahtar verileri al\u0131nd\u0131.",
-            "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu"
+            "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu",
+            "timeout_connect": "Ba\u011flant\u0131 kurulurken zaman a\u015f\u0131m\u0131"
         },
         "create_entry": {
             "default": "Ba\u015far\u0131yla do\u011fruland\u0131"

@@ -13,7 +13,6 @@ from bleak.backends.scanner import (
     AdvertisementDataCallback,
     BaseBleakScanner,
 )
-from lru import LRU  # pylint: disable=no-name-in-module
 
 from homeassistant.core import CALLBACK_TYPE, callback as hass_callback
 
@@ -22,8 +21,6 @@ _LOGGER = logging.getLogger(__name__)
 FILTER_UUIDS: Final = "UUIDs"
 
 HA_BLEAK_SCANNER: HaBleakScanner | None = None
-
-MAX_HISTORY_SIZE: Final = 512
 
 
 def _dispatch_callback(
@@ -51,13 +48,30 @@ def _dispatch_callback(
 class HaBleakScanner(BleakScanner):  # type: ignore[misc]
     """BleakScanner that cannot be stopped."""
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(  # pylint: disable=super-init-not-called
+        self, *args: Any, **kwargs: Any
+    ) -> None:
         """Initialize the BleakScanner."""
         self._callbacks: list[
             tuple[AdvertisementDataCallback, dict[str, set[str]]]
         ] = []
-        self.history: LRU = LRU(MAX_HISTORY_SIZE)
-        super().__init__(*args, **kwargs)
+        self.history: dict[str, tuple[BLEDevice, AdvertisementData]] = {}
+        # Init called later in async_setup if we are enabling the scanner
+        # since init has side effects that can throw exceptions
+        self._setup = False
+
+    @hass_callback
+    def async_setup(self, *args: Any, **kwargs: Any) -> None:
+        """Deferred setup of the BleakScanner since __init__ has side effects."""
+        if not self._setup:
+            super().__init__(*args, **kwargs)
+            self._setup = True
+
+    @hass_callback
+    def async_reset(self) -> None:
+        """Reset the scanner so it can be setup again."""
+        self.history = {}
+        self._setup = False
 
     @hass_callback
     def async_register_callback(
