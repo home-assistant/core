@@ -5,7 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import Any, cast
 
 from fritzconnection.core.exceptions import FritzConnectionException
 from fritzconnection.lib.fritzstatus import FritzStatus
@@ -68,7 +68,7 @@ def _retrieve_external_ip_state(status: FritzStatus, last_value: str) -> str:
 
 def _retrieve_external_ipv6_state(status: FritzStatus, last_value: str) -> str:
     """Return external ipv6 from device."""
-    return status.external_ipv6  # type: ignore[no-any-return]
+    return cast(str, status.external_ipv6)
 
 
 def _retrieve_kb_s_sent_state(status: FritzStatus, last_value: str) -> float:
