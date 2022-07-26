@@ -1045,9 +1045,6 @@ millheater==0.9.0
 # homeassistant.components.minio
 minio==5.0.10
 
-# homeassistant.components.mitemp_bt
-mitemp_bt==0.0.5
-
 # homeassistant.components.moat
 moat-ble==0.1.1
 
