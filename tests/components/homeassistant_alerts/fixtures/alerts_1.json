@@ -9,7 +9,7 @@
     ],
     "homeassistant": {
       "package": "homeassistant",
-      "max": "2022.7"
+      "resolved_in_version": "2022.7"
     },
     "filename": "aladdin_connect.markdown",
     "alert_url": "https://alerts.home-assistant.io/#aladdin_connect.markdown"
@@ -25,7 +25,7 @@
     "github_issue": "https://github.com/home-assistant/home-assistant.io/pull/12591",
     "homeassistant": {
       "package": "homeassistant",
-      "min": "0.30"
+      "affected_from_version": "0.30"
     },
     "filename": "dark_sky.markdown",
     "alert_url": "https://alerts.home-assistant.io/#dark_sky.markdown"
@@ -57,7 +57,7 @@
     ],
     "homeassistant": {
       "package": "homeassistant",
-      "min": "2021.11.0"
+      "affected_from_version": "2021.11.0"
     },
     "filename": "hive_us.markdown",
     "alert_url": "https://alerts.home-assistant.io/#hive_us.markdown"
@@ -77,7 +77,7 @@
     ],
     "homeassistant": {
       "package": "homeassistant",
-      "min": "0.7"
+      "affected_from_version": "0.7"
     },
     "filename": "homematicip_cloud.markdown",
     "alert_url": "https://alerts.home-assistant.io/#homematicip_cloud.markdown"
@@ -93,7 +93,7 @@
     "github_issue": "https://github.com/home-assistant/core/issues/71945",
     "homeassistant": {
       "package": "homeassistant",
-      "min": "0.92.0"
+      "affected_from_version": "0.92.0"
     },
     "filename": "logi_circle.markdown",
     "alert_url": "https://alerts.home-assistant.io/#logi_circle.markdown"
@@ -108,7 +108,7 @@
     ],
     "homeassistant": {
       "package": "homeassistant",
-      "min": "0.30"
+      "affected_from_version": "0.30"
     },
     "filename": "neato.markdown",
     "alert_url": "https://alerts.home-assistant.io/#neato.markdown"
@@ -166,7 +166,7 @@
     ],
     "homeassistant": {
       "package": "homeassistant",
-      "min": "0.89"
+      "affected_from_version": "0.89"
     },
     "filename": "yeelight.markdown",
     "alert_url": "https://alerts.home-assistant.io/#yeelight.markdown"

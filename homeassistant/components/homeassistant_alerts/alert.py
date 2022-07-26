@@ -8,11 +8,8 @@ import logging
 import aiohttp
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 
-from homeassistant.components.resolution_center import (
-    async_create_issue,
-    async_delete_issue,
-)
-from homeassistant.components.resolution_center.models import IssueSeverity
+from homeassistant.components.repairs import async_create_issue, async_delete_issue
+from homeassistant.components.repairs.models import IssueSeverity
 from homeassistant.const import __version__
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -21,6 +18,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+UPDATE_INTERVAL = timedelta(hours=3)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -53,23 +51,25 @@ async def async_setup(hass: HomeAssistant) -> None:
         result = {}
 
         for alert in alerts:
-            if "homeassistant" in alert:
-                if "min" in alert["homeassistant"]:
-                    min_version = AwesomeVersion(
-                        alert["homeassistant"]["min"],
-                        find_first_match=False,
-                    )
-                    if ha_version < min_version:
-                        continue
-                if "max" in alert["homeassistant"]:
-                    max_version = AwesomeVersion(
-                        alert["homeassistant"]["max"],
-                        find_first_match=False,
-                    )
-                    if ha_version >= max_version:
-                        continue
             if "alert_url" not in alert or "integrations" not in alert:
                 continue
+
+            if "homeassistant" in alert:
+                if "affected_from_version" in alert["homeassistant"]:
+                    affected_from_version = AwesomeVersion(
+                        alert["homeassistant"]["affected_from_version"],
+                        find_first_match=False,
+                    )
+                    if ha_version < affected_from_version:
+                        continue
+                if "resolved_in_version" in alert["homeassistant"]:
+                    resolved_in_version = AwesomeVersion(
+                        alert["homeassistant"]["resolved_in_version"],
+                        find_first_match=False,
+                    )
+                    if ha_version >= resolved_in_version:
+                        continue
+
             for integration in alert["integrations"]:
                 if "package" not in integration:
                     continue
@@ -94,7 +94,7 @@ async def async_setup(hass: HomeAssistant) -> None:
                 continue
             async_create_issue(
                 hass,
-                "homeassistant_alerts",
+                DOMAIN,
                 issue_id,
                 is_fixable=False,
                 learn_more_url=alert.learn_more_url,
@@ -106,7 +106,7 @@ async def async_setup(hass: HomeAssistant) -> None:
 
         inactive_alerts = old_alerts - active_alerts
         for issue_id in inactive_alerts:
-            async_delete_issue(hass, "homeassistant_alerts", issue_id)
+            async_delete_issue(hass, DOMAIN, issue_id)
 
         hass.data[DOMAIN]["alerts"] = active_alerts
 
@@ -114,11 +114,9 @@ async def async_setup(hass: HomeAssistant) -> None:
     coordinator = DataUpdateCoordinator[dict[str, IntegrationAlert]](
         hass,
         _LOGGER,
-        # Name of the data. For logging purposes.
-        name="homeassistant_alerts",
+        name=DOMAIN,
         update_method=async_update_data,
-        # Polling interval. Will only be polled if there are subscribers.
-        update_interval=timedelta(minutes=60),
+        update_interval=UPDATE_INTERVAL,
     )
     coordinator.async_add_listener(async_update_alerts)
     await coordinator.async_refresh()

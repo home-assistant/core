@@ -1,4 +1,4 @@
-"""Test the resolution center creates issues from alerts."""
+"""Test creating repairs from alerts."""
 from __future__ import annotations
 
 from datetime import timedelta
@@ -6,7 +6,7 @@ from unittest.mock import ANY, patch
 
 import pytest
 
-from homeassistant.components.homeassistant_alerts.const import DOMAIN
+from homeassistant.components.homeassistant_alerts.alert import DOMAIN, UPDATE_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -105,7 +105,7 @@ async def test_alerts(
 
     client = await hass_ws_client(hass)
 
-    await client.send_json({"id": 1, "type": "resolution_center/list_issues"})
+    await client.send_json({"id": 1, "type": "repairs/list_issues"})
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == {
@@ -187,7 +187,7 @@ async def test_bad_alerts(
 
     client = await hass_ws_client(hass)
 
-    await client.send_json({"id": 1, "type": "resolution_center/list_issues"})
+    await client.send_json({"id": 1, "type": "repairs/list_issues"})
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == {
@@ -227,7 +227,7 @@ async def test_no_alerts(
 
     client = await hass_ws_client(hass)
 
-    await client.send_json({"id": 1, "type": "resolution_center/list_issues"})
+    await client.send_json({"id": 1, "type": "repairs/list_issues"})
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == {"issues": []}
@@ -342,7 +342,7 @@ async def test_alerts_change(
 
     client = await hass_ws_client(hass)
 
-    await client.send_json({"id": 1, "type": "resolution_center/list_issues"})
+    await client.send_json({"id": 1, "type": "repairs/list_issues"})
     msg = await client.receive_json()
     assert msg["success"]
     assert_lists_same(
@@ -371,11 +371,11 @@ async def test_alerts_change(
         text=load_fixture(fixture_2, "homeassistant_alerts"),
     )
 
-    future = now + timedelta(minutes=60, seconds=1)
+    future = now + UPDATE_INTERVAL + timedelta(seconds=1)
     async_fire_time_changed(hass, future)
     await hass.async_block_till_done()
 
-    await client.send_json({"id": 2, "type": "resolution_center/list_issues"})
+    await client.send_json({"id": 2, "type": "repairs/list_issues"})
     msg = await client.receive_json()
     assert msg["success"]
     assert_lists_same(
