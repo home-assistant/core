@@ -15,6 +15,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.loader import async_get_integration
 
 DOMAIN = "homeassistant_alerts"
 UPDATE_INTERVAL = timedelta(hours=3)
@@ -24,11 +25,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up alerts."""
     last_alerts = set()
 
-    @callback
-    def async_update_alerts() -> None:
-        if not coordinator.last_update_success:
-            return
-
+    async def async_update_alerts() -> None:
         nonlocal last_alerts
 
         active_alerts = set()
@@ -36,6 +33,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         for issue_id, alert in coordinator.data.items():
             if alert.integration not in hass.config.components:
                 continue
+
+            integration = await async_get_integration(hass, alert.integration)
+
             async_create_issue(
                 hass,
                 DOMAIN,
@@ -44,7 +44,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 learn_more_url=alert.learn_more_url,
                 severity=IssueSeverity.WARNING,
                 translation_key="alert",
-                translation_placeholders={"integration": alert.integration},
+                translation_placeholders={"integration": integration.name},
             )
             active_alerts.add(issue_id)
 
@@ -54,8 +54,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         last_alerts = active_alerts
 
+    @callback
+    def async_schedule_update_alerts() -> None:
+        if not coordinator.last_update_success:
+            return
+
+        hass.async_create_task(async_update_alerts())
+
     coordinator = AlertUpdateCoordinator(hass)
-    coordinator.async_add_listener(async_update_alerts)
+    coordinator.async_add_listener(async_schedule_update_alerts)
     await coordinator.async_refresh()
 
     return True

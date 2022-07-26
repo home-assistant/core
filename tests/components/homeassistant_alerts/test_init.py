@@ -11,7 +11,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import assert_lists_same, async_fire_time_changed, load_fixture
+from tests.common import (
+    MockModule,
+    assert_lists_same,
+    async_fire_time_changed,
+    load_fixture,
+    mock_integration,
+)
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -95,6 +101,7 @@ async def test_alerts(
         "sochain",
     )
     for domain in activated_components:
+        mock_integration(hass, MockModule(domain))
         hass.config.components.add(domain)
 
     with patch(
@@ -177,6 +184,7 @@ async def test_bad_alerts(
         "hikvisioncam",
     )
     for domain in activated_components:
+        mock_integration(hass, MockModule(domain))
         hass.config.components.add(domain)
 
     with patch(
@@ -330,6 +338,7 @@ async def test_alerts_change(
         "sochain",
     )
     for domain in activated_components:
+        mock_integration(hass, MockModule(domain))
         hass.config.components.add(domain)
 
     with patch(
