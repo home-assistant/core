@@ -8,6 +8,7 @@ import voluptuous as vol
 from xiaomi_ble import XiaomiBluetoothDeviceData as DeviceData
 from xiaomi_ble.parser import EncryptionScheme
 
+from homeassistant.components import onboarding
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfo,
     async_discovered_service_info,
@@ -139,7 +140,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Confirm discovery."""
-        if user_input is not None:
+        if user_input is not None or not onboarding.async_is_onboarded(self.hass):
             return self.async_create_entry(
                 title=self.context["title_placeholders"]["name"],
                 data={},
