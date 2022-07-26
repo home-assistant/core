@@ -243,6 +243,7 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
             change[ADVANTAGE_AIR_MYAUTO_ENABLED] = preset_mode == ADVANTAGE_AIR_MYAUTO
         await self.async_change({self.ac_key: {"info": change}})
 
+
 class AdvantageAirZone(AdvantageAirZoneEntity, ClimateEntity):
     """AdvantageAir MyTemp Zone control."""
 

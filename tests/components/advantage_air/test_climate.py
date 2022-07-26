@@ -7,6 +7,8 @@ from homeassistant.components.advantage_air.climate import (
     ADVANTAGE_AIR_MYAUTO,
     ADVANTAGE_AIR_MYAUTO_ENABLED,
     ADVANTAGE_AIR_MYTEMP_ENABLED,
+    HASS_FAN_MODES,
+    HASS_HVAC_MODES,
 )
 from homeassistant.components.advantage_air.const import (
     ADVANTAGE_AIR_STATE_OFF,
@@ -227,6 +229,7 @@ async def test_climate_async_setup_entry(hass, aioclient_mock):
     assert data["ac3"]["info"][ADVANTAGE_AIR_COOL_TARGET] == 23
     assert aioclient_mock.mock_calls[-1][0] == "GET"
     assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
+
 
 async def test_climate_async_failed_update(hass, aioclient_mock):
     """Test climate change failure."""
