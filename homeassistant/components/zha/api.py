@@ -1118,7 +1118,7 @@ async def websocket_create_network_backup(
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zha/network/backups/restore",
-        vol.Required("data"): _cv_zigpy_network_backup,
+        vol.Required("backup"): _cv_zigpy_network_backup,
     }
 )
 @websocket_api.async_response
@@ -1131,7 +1131,7 @@ async def websocket_restore_network_backup(
 
     # This can take 30-40s
     try:
-        await application_controller.backups.restore_backup(msg["data"])
+        await application_controller.backups.restore_backup(msg["backup"])
     except ValueError as err:
         connection.send_error(msg[ID], websocket_api.const.ERR_INVALID_FORMAT, str(err))
     else:
