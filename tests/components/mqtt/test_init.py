@@ -281,7 +281,7 @@ async def test_command_template_value(hass):
 
 
 async def test_command_template_variables(hass, mqtt_mock_entry_with_yaml_config):
-    """Test the rendering of enitity_variables."""
+    """Test the rendering of entity variables."""
     topic = "test/select"
 
     fake_state = ha.State("select.test", "milk")
