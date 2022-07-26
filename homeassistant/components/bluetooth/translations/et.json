@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Teenus on juba h\u00e4\u00e4lestatud"
+            "already_configured": "Teenus on juba h\u00e4\u00e4lestatud",
+            "no_adapters": "Bluetoothi adaptereid ei leitud"
         },
         "flow_title": "{name}",
         "step": {
@@ -16,6 +17,15 @@
                     "address": "Seade"
                 },
                 "description": "Vali h\u00e4\u00e4lestatav seade"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "adapter": "Sk\u00e4nnimiseks kasutatav Bluetoothi adapter"
+                }
             }
         }
     }
