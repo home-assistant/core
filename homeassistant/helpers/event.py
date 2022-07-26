@@ -197,9 +197,9 @@ def async_track_state_change(
         """Handle specific state changes."""
         hass.async_run_hass_job(
             job,
-            event.data.get("entity_id"),
-            event.data.get("old_state"),
-            event.data.get("new_state"),
+            event.data["entity_id"],
+            event.data["old_state"],
+            event.data["new_state"],
         )
 
     @callback
