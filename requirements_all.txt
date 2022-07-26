@@ -610,7 +610,7 @@ envoy_reader==0.20.1
 ephem==4.1.2
 
 # homeassistant.components.epson
-epson-projector==0.4.2
+epson-projector==0.4.6
 
 # homeassistant.components.epsonworkforce
 epsonprinter==0.0.9
@@ -1532,7 +1532,7 @@ pygatt[GATTTOOL]==4.0.5
 pygtfs==0.1.6
 
 # homeassistant.components.hvv_departures
-pygti==0.9.2
+pygti==0.9.3
 
 # homeassistant.components.version
 pyhaversion==22.4.1
@@ -1715,7 +1715,7 @@ pyopnsense==0.2.0
 pyoppleio==1.0.5
 
 # homeassistant.components.opentherm_gw
-pyotgw==2.0.0
+pyotgw==2.0.1
 
 # homeassistant.auth.mfa_modules.notify
 # homeassistant.auth.mfa_modules.totp
@@ -2168,7 +2168,7 @@ simplehound==0.3
 simplepush==1.1.4
 
 # homeassistant.components.simplisafe
-simplisafe-python==2022.07.0
+simplisafe-python==2022.07.1
 
 # homeassistant.components.sisyphus
 sisyphus-control==3.1.2
