@@ -38,6 +38,28 @@ async def test_async_step_bluetooth_valid_device(hass):
     assert result2["result"].unique_id == "00:81:F9:DD:6F:C1"
 
 
+async def test_async_step_bluetooth_during_onboarding(hass):
+    """Test discovery via bluetooth during onboarding."""
+    with patch(
+        "homeassistant.components.xiaomi_ble.async_setup_entry", return_value=True
+    ) as mock_setup_entry, patch(
+        "homeassistant.components.onboarding.async_is_onboarded",
+        return_value=False,
+    ) as mock_onboarding:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_BLUETOOTH},
+            data=MMC_T201_1_SERVICE_INFO,
+        )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "MMC_T201_1"
+    assert result["data"] == {}
+    assert result["result"].unique_id == "00:81:F9:DD:6F:C1"
+    assert len(mock_setup_entry.mock_calls) == 1
+    assert len(mock_onboarding.mock_calls) == 1
+
+
 async def test_async_step_bluetooth_valid_device_legacy_encryption(hass):
     """Test discovery via bluetooth with a valid device, with legacy encryption."""
     result = await hass.config_entries.flow.async_init(
