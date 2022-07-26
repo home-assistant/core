@@ -167,12 +167,12 @@ async def async_setup_entry(
             data.update(service_info)
         )
     )
-    entry.async_on_unload(coordinator.async_register_processor(processor))
     entry.async_on_unload(
         processor.async_add_entities_listener(
             XiaomiBluetoothSensorEntity, async_add_entities
         )
     )
+    entry.async_on_unload(coordinator.async_register_processor(processor))
 
 
 class XiaomiBluetoothSensorEntity(

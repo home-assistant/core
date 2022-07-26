@@ -78,20 +78,9 @@ class PassiveBluetoothProcessorCoordinator(BasePassiveBluetoothCoordinator):
         def remove_processor() -> None:
             """Remove a processor."""
             self._processors.remove(processor)
-            self._async_handle_processors_changed()
 
         self._processors.append(processor)
-        self._async_handle_processors_changed()
         return remove_processor
-
-    @callback
-    def _async_handle_processors_changed(self) -> None:
-        """Handle processors changed."""
-        running = bool(self._cancel_bluetooth_advertisements)
-        if running and not self._processors:
-            self._async_stop()
-        elif not running and self._processors:
-            self._async_start()
 
     @callback
     def _async_handle_unavailable(self, address: str) -> None:
