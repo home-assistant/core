@@ -91,14 +91,14 @@ LOGI_CIRCLE_SERVICE_SET_CONFIG = vol.Schema(
 LOGI_CIRCLE_SERVICE_SNAPSHOT = vol.Schema(
     {
         vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
-        vol.Required(ATTR_FILENAME): str,
+        vol.Required(ATTR_FILENAME): cv.template,
     }
 )
 
 LOGI_CIRCLE_SERVICE_RECORD = vol.Schema(
     {
         vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
-        vol.Required(ATTR_FILENAME): str,
+        vol.Required(ATTR_FILENAME): cv.template,
         vol.Required(ATTR_DURATION): cv.positive_int,
     }
 )
