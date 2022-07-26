@@ -7,10 +7,11 @@
             "switchbot_unsupported_type": "Toetamata Switchboti t\u00fc\u00fcp.",
             "unknown": "Ootamatu t\u00f5rge"
         },
-        "flow_title": "{name}",
+        "flow_title": "{name} ({address})",
         "step": {
             "user": {
                 "data": {
+                    "address": "Seadme aadress",
                     "mac": "Seadme MAC-aadress",
                     "name": "Nimi",
                     "password": "Salas\u00f5na"
