@@ -187,7 +187,6 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
         super()._unschedule_refresh()
         self._async_notify_stop()
 
-    @callback
     async def _async_update_data(self):
         """Fetch the latest data from the source."""
         try:

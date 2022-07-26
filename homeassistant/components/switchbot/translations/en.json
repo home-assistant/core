@@ -7,10 +7,11 @@
             "switchbot_unsupported_type": "Unsupported Switchbot Type.",
             "unknown": "Unexpected error"
         },
-        "flow_title": "{name}",
+        "flow_title": "{name} ({address})",
         "step": {
             "user": {
                 "data": {
+                    "address": "Device address",
                     "mac": "Device MAC address",
                     "name": "Name",
                     "password": "Password"

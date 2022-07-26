@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Der Dienst ist bereits konfiguriert"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "bluetooth_confirm": {
+                "description": "M\u00f6chtest du {name} einrichten?"
+            },
+            "enable_bluetooth": {
+                "description": "M\u00f6chtest du Bluetooth einrichten?"
+            },
+            "user": {
+                "data": {
+                    "address": "Ger\u00e4t"
+                },
+                "description": "W\u00e4hle ein Ger\u00e4t zum Einrichten aus"
+            }
+        }
+    }
+}

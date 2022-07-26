@@ -17,7 +17,6 @@ from homeassistant.components.climate.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -27,7 +26,7 @@ from .const import (
     ADVANTAGE_AIR_STATE_OPEN,
     DOMAIN as ADVANTAGE_AIR_DOMAIN,
 )
-from .entity import AdvantageAirEntity
+from .entity import AdvantageAirAcEntity, AdvantageAirZoneEntity
 
 ADVANTAGE_AIR_HVAC_MODES = {
     "heat": HVACMode.HEAT,
@@ -49,7 +48,6 @@ FAN_SPEEDS = {FAN_LOW: 30, FAN_MEDIUM: 60, FAN_HIGH: 100}
 
 ADVANTAGE_AIR_AUTOFAN = "aaAutoFanModeEnabled"
 ADVANTAGE_AIR_MYZONE = "MyZone"
-ADVANTAGE_AIR_SERVICE_SET_MYZONE = "set_myzone"
 ADVANTAGE_AIR_MYAUTO = "MyAuto"
 ADVANTAGE_AIR_MYAUTO_ENABLED = "myAutoModeEnabled"
 ADVANTAGE_AIR_MYTEMP = "MyTemp"
@@ -80,15 +78,8 @@ async def async_setup_entry(
                 entities.append(AdvantageAirZone(instance, ac_key, zone_key))
     async_add_entities(entities)
 
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        ADVANTAGE_AIR_SERVICE_SET_MYZONE,
-        {},
-        "set_myzone",
-    )
 
-
-class AdvantageAirAC(AdvantageAirEntity, ClimateEntity):
+class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
     """AdvantageAir AC unit."""
 
     _attr_fan_modes = [FAN_LOW, FAN_MEDIUM, FAN_HIGH]
@@ -252,8 +243,7 @@ class AdvantageAirAC(AdvantageAirEntity, ClimateEntity):
             change[ADVANTAGE_AIR_MYAUTO_ENABLED] = preset_mode == ADVANTAGE_AIR_MYAUTO
         await self.async_change({self.ac_key: {"info": change}})
 
-
-class AdvantageAirZone(AdvantageAirEntity, ClimateEntity):
+class AdvantageAirZone(AdvantageAirZoneEntity, ClimateEntity):
     """AdvantageAir MyTemp Zone control."""
 
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT_COOL]
@@ -309,13 +299,4 @@ class AdvantageAirZone(AdvantageAirEntity, ClimateEntity):
         temp = kwargs.get(ATTR_TEMPERATURE)
         await self.async_change(
             {self.ac_key: {"zones": {self.zone_key: {"setTemp": temp}}}}
-        )
-
-    async def set_myzone(self, **kwargs):
-        """Set this zone as the 'MyZone'."""
-        _LOGGER.warning(
-            "The advantage_air.set_myzone service has been deprecated and will be removed in a future version, please use the select.select_option service on the MyZone entity"
-        )
-        await self.async_change(
-            {self.ac_key: {"info": {"myZone": self._zone["number"]}}}
         )
