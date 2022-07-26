@@ -5,6 +5,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -36,21 +37,25 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         key="battery",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
+        state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "lightLevel": SensorEntityDescription(
         key="lightLevel",
         native_unit_of_measurement="Level",
+        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.ILLUMINANCE,
     ),
     "humidity": SensorEntityDescription(
         key="humidity",
         native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.HUMIDITY,
     ),
     "temperature": SensorEntityDescription(
         key="temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
 }
