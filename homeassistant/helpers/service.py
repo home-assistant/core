@@ -221,6 +221,11 @@ def async_prepare_call_from_config(
                         registry, entity_ids
                     )
                 target[CONF_ENTITY_ID] = entity_ids
+                variables = dict(variables) if variables else {}
+                variables["entities"] = config.get(
+                    CONF_SERVICE_ENTITY_ID,
+                    [registry.async_get(id) for id in entity_ids],
+                )
         except TemplateError as ex:
             raise HomeAssistantError(
                 f"Error rendering service target template: {ex}"

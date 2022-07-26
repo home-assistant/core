@@ -318,6 +318,26 @@ class TestServiceHelpers(unittest.TestCase):
 
         assert self.calls[0].data["hello"] == "goodbye"
 
+    def test_entities_available_in_template_service_call(self):
+        """Test entities are available in service_data and data."""
+        config = {
+            "service": "{{ 'test_domain.test_service' }}",
+            "entity_id": "hello.world",
+            "data": {
+                "hello": "{{ entities[0] }} says goodbye",
+            },
+            "target": {"area_id": "test-area-id", "entity_id": "will.be_overridden"},
+        }
+
+        service.call_from_config(self.hass, config)
+        self.hass.block_till_done()
+
+        assert dict(self.calls[0].data) == {
+            "hello": "hello.world says goodbye",
+            "entity_id": ["hello.world"],
+            "area_id": ["test-area-id"],
+        }
+
     def test_passing_variables_to_templates(self):
         """Test passing variables to templates."""
         config = {

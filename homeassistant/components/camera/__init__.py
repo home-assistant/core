@@ -116,7 +116,7 @@ _RND: Final = SystemRandom()
 
 MIN_STREAM_INTERVAL: Final = 0.5  # seconds
 
-CAMERA_SERVICE_SNAPSHOT: Final = {vol.Required(ATTR_FILENAME): cv.template}
+CAMERA_SERVICE_SNAPSHOT: Final = {vol.Required(ATTR_FILENAME): str}
 
 CAMERA_SERVICE_PLAY_STREAM: Final = {
     vol.Required(ATTR_MEDIA_PLAYER): cv.entities_domain(DOMAIN_MP),
@@ -124,7 +124,7 @@ CAMERA_SERVICE_PLAY_STREAM: Final = {
 }
 
 CAMERA_SERVICE_RECORD: Final = {
-    vol.Required(CONF_FILENAME): cv.template,
+    vol.Required(CONF_FILENAME): str,
     vol.Optional(CONF_DURATION, default=30): vol.Coerce(int),
     vol.Optional(CONF_LOOKBACK, default=0): vol.Coerce(int),
 }
@@ -902,9 +902,8 @@ async def async_handle_snapshot_service(
     """Handle snapshot services calls."""
     hass = camera.hass
     filename = service_call.data[ATTR_FILENAME]
-    filename.hass = hass
 
-    snapshot_file = filename.async_render(variables={ATTR_ENTITY_ID: camera})
+    snapshot_file = filename
 
     # check if we allow to access to that file
     if not hass.config.is_allowed_path(snapshot_file):
@@ -977,10 +976,8 @@ async def async_handle_record_service(
     if not stream:
         raise HomeAssistantError(f"{camera.entity_id} does not support record service")
 
-    hass = camera.hass
     filename = service_call.data[CONF_FILENAME]
-    filename.hass = hass
-    video_path = filename.async_render(variables={ATTR_ENTITY_ID: camera})
+    video_path = filename
 
     await stream.async_record(
         video_path,

@@ -182,37 +182,27 @@ class LogiCam(Camera):
 
     async def download_livestream(self, filename, duration):
         """Download a recording from the camera's livestream."""
-        # Render filename from template.
-        filename.hass = self.hass
-        stream_file = filename.async_render(variables={ATTR_ENTITY_ID: self.entity_id})
 
         # Respect configured allowed paths.
-        if not self.hass.config.is_allowed_path(stream_file):
-            _LOGGER.error("Can't write %s, no access to path!", stream_file)
+        if not self.hass.config.is_allowed_path(filename):
+            _LOGGER.error("Can't write %s, no access to path!", filename)
             return
 
         await self._camera.live_stream.download_rtsp(
-            filename=stream_file,
+            filename=filename,
             duration=timedelta(seconds=duration),
             ffmpeg_bin=self._ffmpeg.binary,
         )
 
     async def livestream_snapshot(self, filename):
         """Download a still frame from the camera's livestream."""
-        # Render filename from template.
-        filename.hass = self.hass
-        snapshot_file = filename.async_render(
-            variables={ATTR_ENTITY_ID: self.entity_id}
-        )
 
         # Respect configured allowed paths.
-        if not self.hass.config.is_allowed_path(snapshot_file):
-            _LOGGER.error("Can't write %s, no access to path!", snapshot_file)
+        if not self.hass.config.is_allowed_path(filename):
+            _LOGGER.error("Can't write %s, no access to path!", filename)
             return
 
-        await self._camera.live_stream.download_jpeg(
-            filename=snapshot_file, refresh=True
-        )
+        await self._camera.live_stream.download_jpeg(filename=filename, refresh=True)
 
     async def async_update(self):
         """Update camera entity and refresh attributes."""
