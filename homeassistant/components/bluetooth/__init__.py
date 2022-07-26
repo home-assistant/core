@@ -6,12 +6,12 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
 import logging
-from typing import Final, Union
+from typing import Any, Final, Union
 
 from bleak import BleakError
 from bleak.assigned_numbers import AdvertisementDataType
 from bleak.backends.bluezdbus.advertisement_monitor import OrPattern
-from bleak.backends.bluezdbus.scanner import BlueZArgs
+from bleak.backends.bluezdbus.scanner import BlueZScannerArgs
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
 
@@ -286,14 +286,16 @@ class BluetoothManager:
             self.scanner.async_reset()
             self._integration_matcher.async_clear_history()
             self._reloading = False
-        scanner_kwargs = {"scanning_mode": SCANNING_MODE_TO_BLEAK[scanning_mode]}
+        scanner_kwargs: dict[str, Any] = {
+            "scanning_mode": SCANNING_MODE_TO_BLEAK[scanning_mode]
+        }
         if adapter and adapter not in DEFAULT_ADAPTERS:
             scanner_kwargs["adapter"] = adapter
         if scanning_mode == BluetoothScanningMode.PASSIVE:
             # This is a workaround for the fact that passive scanning
             # needs at least one matcher to be set. The below matcher
             # will match all devices.
-            scanner_kwargs["bluez"] = BlueZArgs(
+            scanner_kwargs["bluez"] = BlueZScannerArgs(
                 or_patterns=[
                     OrPattern(0, AdvertisementDataType.FLAGS, b"\x06"),
                     OrPattern(0, AdvertisementDataType.FLAGS, b"\x1a"),
