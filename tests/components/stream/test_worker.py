@@ -153,6 +153,8 @@ class PacketSequence:
 
         class FakePacket(bytearray):
             # Be a bytearray so that memoryview works
+            """A fake packet."""
+
             def __init__(self):
                 super().__init__(3)
 
@@ -167,6 +169,11 @@ class PacketSequence:
 
             def __str__(self) -> str:
                 return f"FakePacket<stream={self.stream}, pts={self.pts}, key={self.is_keyframe}>"
+
+            @property
+            def is_corrupt(self) -> bool:
+                """Whether this packet is corrupt."""
+                return False
 
         return FakePacket()
 

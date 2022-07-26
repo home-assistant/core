@@ -527,7 +527,11 @@ def stream_worker(
 
     dts_validator = TimestampValidator()
     container_packets = PeekIterator(
-        filter(dts_validator.is_valid, container.demux((video_stream, audio_stream)))
+        filter(
+            lambda pkt: (not (pkt.stream.type == "video" and pkt.is_corrupt))
+            and dts_validator.is_valid(pkt),
+            container.demux((video_stream, audio_stream)),
+        )
     )
 
     def is_video(packet: av.Packet) -> Any:
