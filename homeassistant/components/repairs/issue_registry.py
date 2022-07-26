@@ -13,6 +13,7 @@ import homeassistant.util.dt as dt_util
 from .models import IssueSeverity
 
 DATA_REGISTRY = "issue_registry"
+EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED = "repairs_issue_registry_updated"
 STORAGE_KEY = "repairs.issue_registry"
 STORAGE_VERSION = 1
 SAVE_DELAY = 10
@@ -82,6 +83,10 @@ class IssueRegistry:
             )
             self.issues[(domain, issue_id)] = issue
             self.async_schedule_save()
+            self.hass.bus.async_fire(
+                EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED,
+                {"action": "create", "domain": domain, "issue_id": issue_id},
+            )
         else:
             issue = self.issues[(domain, issue_id)] = dataclasses.replace(
                 issue,
@@ -93,6 +98,10 @@ class IssueRegistry:
                 translation_key=translation_key,
                 translation_placeholders=translation_placeholders,
             )
+            self.hass.bus.async_fire(
+                EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED,
+                {"action": "update", "domain": domain, "issue_id": issue_id},
+            )
 
         return issue
 
@@ -103,6 +112,10 @@ class IssueRegistry:
             return
 
         self.async_schedule_save()
+        self.hass.bus.async_fire(
+            EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED,
+            {"action": "remove", "domain": domain, "issue_id": issue_id},
+        )
 
     @callback
     def async_ignore(self, domain: str, issue_id: str, ignore: bool) -> IssueEntry:
@@ -118,6 +131,10 @@ class IssueRegistry:
         )
 
         self.async_schedule_save()
+        self.hass.bus.async_fire(
+            EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED,
+            {"action": "update", "domain": domain, "issue_id": issue_id},
+        )
 
         return issue
 
