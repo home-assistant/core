@@ -163,4 +163,10 @@ class RecorderOutput(StreamOutput):
             _LOGGER.error("Recording failed to capture anything")
         else:
             output.close()
-            os.rename(self.video_path + ".tmp", self.video_path)
+            try:
+                os.rename(self.video_path + ".tmp", self.video_path)
+            except FileNotFoundError:
+                _LOGGER.error(
+                    "Error writing to '%s'. There are likely multiple recordings writing to the same file",
+                    self.video_path,
+                )

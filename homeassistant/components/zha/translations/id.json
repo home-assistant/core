@@ -50,6 +50,7 @@
             "consider_unavailable_mains": "Anggap perangkat bertenaga listrik sebagai tidak tersedia setelah (detik)",
             "default_light_transition": "Waktu transisi lampu default (detik)",
             "enable_identify_on_join": "Aktifkan efek identifikasi saat perangkat bergabung dengan jaringan",
+            "enhanced_light_transition": "Aktifkan versi canggih untuk transisi warna/suhu cahaya dari keadaan tidak aktif",
             "title": "Opsi Global"
         }
     },
