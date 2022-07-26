@@ -171,10 +171,12 @@ async def async_setup_entry(
 class TadoDeviceBinarySensor(TadoDeviceEntity, BinarySensorEntity):
     """Representation of a tado Sensor."""
 
+    entity_description: TadoBinarySensorEntityDescription
+
     _attr_has_entity_name = True
 
     def __init__(
-        self, tado, device_info, entity_description: BinarySensorEntityDescription
+        self, tado, device_info, entity_description: TadoBinarySensorEntityDescription
     ):
         """Initialize of the Tado Sensor."""
         self.entity_description = entity_description
@@ -223,6 +225,8 @@ class TadoDeviceBinarySensor(TadoDeviceEntity, BinarySensorEntity):
 class TadoZoneBinarySensor(TadoZoneEntity, BinarySensorEntity):
     """Representation of a tado Sensor."""
 
+    entity_description: TadoBinarySensorEntityDescription
+
     _attr_has_entity_name = True
 
     def __init__(
@@ -230,7 +234,7 @@ class TadoZoneBinarySensor(TadoZoneEntity, BinarySensorEntity):
         tado,
         zone_name,
         zone_id,
-        entity_description: BinarySensorEntityDescription,
+        entity_description: TadoBinarySensorEntityDescription,
     ):
         """Initialize of the Tado Sensor."""
         self.entity_description = entity_description
