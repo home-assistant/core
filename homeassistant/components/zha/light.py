@@ -40,6 +40,7 @@ from .core.const import (
     CHANNEL_COLOR,
     CHANNEL_LEVEL,
     CHANNEL_ON_OFF,
+    CONF_ALWAYS_PREFER_XY_COLOR_MODE,
     CONF_DEFAULT_LIGHT_TRANSITION,
     CONF_ENABLE_ENHANCED_LIGHT_TRANSITION,
     DATA_ZHA,
@@ -120,6 +121,7 @@ class BaseLight(LogMixin, light.LightEntity):
         self._off_brightness: int | None = None
         self._zha_config_transition = self._DEFAULT_MIN_TRANSITION_TIME
         self._zha_config_enhanced_light_transition: bool = False
+        self._zha_config_always_prefer_xy_color_mode: bool = True
         self._on_off_channel = None
         self._level_channel = None
         self._color_channel = None
@@ -280,7 +282,10 @@ class BaseLight(LogMixin, light.LightEntity):
             self._attr_hs_color = None
 
         if hs_color is not None:
-            if self._color_channel.enhanced_hue_supported:
+            if (
+                not isinstance(self, LightGroup)
+                and self._color_channel.enhanced_hue_supported
+            ):
                 result = await self._color_channel.enhanced_move_to_hue_and_saturation(
                     int(hs_color[0] * 65535 / 360),
                     int(hs_color[1] * 2.54),
@@ -418,6 +423,13 @@ class Light(BaseLight, ZhaEntity):
         self._cancel_refresh_handle = None
         effect_list = []
 
+        self._zha_config_always_prefer_xy_color_mode = async_get_zha_config_value(
+            zha_device.gateway.config_entry,
+            ZHA_OPTIONS,
+            CONF_ALWAYS_PREFER_XY_COLOR_MODE,
+            True,
+        )
+
         self._attr_supported_color_modes = {ColorMode.ONOFF}
         if self._level_channel:
             self._attr_supported_color_modes.add(ColorMode.BRIGHTNESS)
@@ -429,9 +441,9 @@ class Light(BaseLight, ZhaEntity):
                 self._attr_supported_color_modes.add(ColorMode.COLOR_TEMP)
                 self._attr_color_temp = self._color_channel.color_temperature
 
-            if (
-                self._color_channel.xy_supported
-                and not self._color_channel.hs_supported
+            if self._color_channel.xy_supported and (
+                self._zha_config_always_prefer_xy_color_mode
+                or not self._color_channel.hs_supported
             ):
                 self._attr_supported_color_modes.add(ColorMode.XY)
                 curr_x = self._color_channel.current_x
@@ -441,7 +453,10 @@ class Light(BaseLight, ZhaEntity):
                 else:
                     self._attr_xy_color = (0, 0)
 
-            if self._color_channel.hs_supported:
+            if (
+                self._color_channel.hs_supported
+                and not self._zha_config_always_prefer_xy_color_mode
+            ):
                 self._attr_supported_color_modes.add(ColorMode.HS)
                 if self._color_channel.enhanced_hue_supported:
                     curr_hue = self._color_channel.enhanced_current_hue * 65535 / 360
@@ -572,12 +587,16 @@ class Light(BaseLight, ZhaEntity):
                 "current_x",
                 "current_y",
             ]
-            if self._color_channel.enhanced_hue_supported:
+            if (
+                not self._zha_config_always_prefer_xy_color_mode
+                and self._color_channel.enhanced_hue_supported
+            ):
                 attributes.append("enhanced_current_hue")
                 attributes.append("current_saturation")
             if (
                 self._color_channel.hs_supported
                 and not self._color_channel.enhanced_hue_supported
+                and not self._zha_config_always_prefer_xy_color_mode
             ):
                 attributes.append("current_hue")
                 attributes.append("current_saturation")
@@ -598,7 +617,10 @@ class Light(BaseLight, ZhaEntity):
                         self._attr_color_temp = color_temp
                         self._attr_xy_color = None
                         self._attr_hs_color = None
-                elif color_mode == Color.ColorMode.Hue_and_saturation:
+                elif (
+                    color_mode == Color.ColorMode.Hue_and_saturation
+                    and not self._zha_config_always_prefer_xy_color_mode
+                ):
                     self._attr_color_mode = ColorMode.HS
                     if self._color_channel.enhanced_hue_supported:
                         current_hue = results.get("enhanced_current_hue")
@@ -610,12 +632,12 @@ class Light(BaseLight, ZhaEntity):
                             int(current_hue * 360 / 65535)
                             if self._color_channel.enhanced_hue_supported
                             else int(current_hue * 360 / 254),
-                            int(current_saturation / 254),
+                            int(current_saturation / 2.54),
                         )
                         self._attr_xy_color = None
                         self._attr_color_temp = None
                 else:
-                    self._attr_color_mode = Color.ColorMode.X_and_Y
+                    self._attr_color_mode = ColorMode.XY
                     color_x = results.get("current_x")
                     color_y = results.get("current_y")
                     if color_x is not None and color_y is not None:
@@ -704,6 +726,12 @@ class LightGroup(BaseLight, ZhaGroupEntity):
             CONF_DEFAULT_LIGHT_TRANSITION,
             0,
         )
+        self._zha_config_always_prefer_xy_color_mode = async_get_zha_config_value(
+            zha_device.gateway.config_entry,
+            ZHA_OPTIONS,
+            CONF_ALWAYS_PREFER_XY_COLOR_MODE,
+            True,
+        )
         self._zha_config_enhanced_light_transition = False
         self._attr_color_mode = None
 
@@ -753,9 +781,10 @@ class LightGroup(BaseLight, ZhaGroupEntity):
             on_states, light.ATTR_XY_COLOR, reduce=helpers.mean_tuple
         )
 
-        self._attr_hs_color = helpers.reduce_attribute(
-            on_states, light.ATTR_HS_COLOR, reduce=helpers.mean_tuple
-        )
+        if not self._zha_config_always_prefer_xy_color_mode:
+            self._attr_hs_color = helpers.reduce_attribute(
+                on_states, light.ATTR_HS_COLOR, reduce=helpers.mean_tuple
+            )
 
         self._attr_color_temp = helpers.reduce_attribute(
             on_states, light.ATTR_COLOR_TEMP
@@ -794,6 +823,11 @@ class LightGroup(BaseLight, ZhaGroupEntity):
             if ColorMode.BRIGHTNESS in color_mode_count:
                 color_mode_count[ColorMode.BRIGHTNESS] = 0
             self._attr_color_mode = color_mode_count.most_common(1)[0][0]
+            if self._attr_color_mode == ColorMode.HS and (
+                color_mode_count[ColorMode.HS] != len(self._group.members)
+                or self._zha_config_always_prefer_xy_color_mode
+            ):  # switch to XY if all members do not support HS
+                self._attr_color_mode = ColorMode.XY
 
         self._attr_supported_color_modes = None
         all_supported_color_modes = list(
