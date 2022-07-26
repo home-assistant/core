@@ -586,10 +586,7 @@ class HuaweiLteBaseEntity(Entity):
 
     _available: bool = field(default=True, init=False)
     _unsub_handlers: list[Callable] = field(default_factory=list, init=False)
-
-    @property
-    def _entity_name(self) -> str:
-        raise NotImplementedError
+    _attr_has_entity_name: bool = field(default=True, init=False)
 
     @property
     def _device_unique_id(self) -> str:
@@ -600,11 +597,6 @@ class HuaweiLteBaseEntity(Entity):
     def unique_id(self) -> str:
         """Return unique ID for entity."""
         return f"{self.router.config_entry.unique_id}-{self._device_unique_id}"
-
-    @property
-    def name(self) -> str:
-        """Return entity name."""
-        return f"Huawei {self.router.device_name} {self._entity_name}"
 
     @property
     def available(self) -> bool:

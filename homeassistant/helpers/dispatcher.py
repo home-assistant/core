@@ -1,7 +1,7 @@
 """Helpers for Home Assistant dispatcher & internal component/platform."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
 import logging
 from typing import Any
 
@@ -62,7 +62,9 @@ def dispatcher_send(hass: HomeAssistant, signal: str, *args: Any) -> None:
     hass.loop.call_soon_threadsafe(async_dispatcher_send, hass, signal, *args)
 
 
-def _generate_job(signal: str, target: Callable[..., Any]) -> HassJob:
+def _generate_job(
+    signal: str, target: Callable[..., Any]
+) -> HassJob[..., None | Coroutine[Any, Any, None]]:
     """Generate a HassJob for a signal and target."""
     return HassJob(
         catch_log_exception(
@@ -84,16 +86,18 @@ def async_dispatcher_send(hass: HomeAssistant, signal: str, *args: Any) -> None:
 
     This method must be run in the event loop.
     """
-    target_list = hass.data.get(DATA_DISPATCHER, {}).get(signal, {})
+    target_list: dict[
+        Callable[..., Any], HassJob[..., None | Coroutine[Any, Any, None]] | None
+    ] = hass.data.get(DATA_DISPATCHER, {}).get(signal, {})
 
-    run: list[HassJob] = []
+    run: list[HassJob[..., None | Coroutine[Any, Any, None]]] = []
     for target, job in target_list.items():
         if job is None:
             job = _generate_job(signal, target)
             target_list[target] = job
 
         # Run the jobs all at the end
-        # to ensure no jobs add more disptachers
+        # to ensure no jobs add more dispatchers
         # which can result in the target_list
         # changing size during iteration
         run.append(job)

@@ -77,7 +77,7 @@ async def async_legacy_migration(
     }
     # device.mac_addr is not the mac_address, its the serial number
     hosts_by_serial = {device.mac_addr: device.ip_addr for device in discovered_devices}
-    missing_discovery_count = await async_migrate_legacy_entries(
+    missing_discovery_count = async_migrate_legacy_entries(
         hass, hosts_by_serial, existing_serials, legacy_entry
     )
     if missing_discovery_count:
@@ -180,7 +180,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if legacy_entry := async_get_legacy_entry(hass):
         # If the legacy entry still exists, harvest the entities
         # that are moving to this config entry.
-        await async_migrate_entities_devices(hass, legacy_entry.entry_id, entry)
+        async_migrate_entities_devices(hass, legacy_entry.entry_id, entry)
 
     assert entry.unique_id is not None
     domain_data = hass.data[DOMAIN]

@@ -18,6 +18,7 @@ from homeassistant.components.climate.const import (
     HVACAction,
     HVACMode,
 )
+from homeassistant.components.repairs import IssueSeverity, async_create_issue
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
@@ -125,13 +126,22 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Radio Thermostat."""
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2022.9.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+    )
     _LOGGER.warning(
-        # config flow added in 2022.7 and should be removed in 2022.9
         "Configuration of the Radio Thermostat climate platform in YAML is deprecated and "
         "will be removed in Home Assistant 2022.9; Your existing configuration "
         "has been imported into the UI automatically and can be safely removed "
         "from your configuration.yaml file"
     )
+
     hosts: list[str] = []
     if CONF_HOST in config:
         hosts = config[CONF_HOST]

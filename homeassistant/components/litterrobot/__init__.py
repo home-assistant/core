@@ -1,4 +1,5 @@
 """The Litter-Robot integration."""
+from __future__ import annotations
 
 from pylitterbot.exceptions import LitterRobotException, LitterRobotLoginException
 
