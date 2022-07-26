@@ -6,7 +6,7 @@ from unittest.mock import ANY, patch
 
 import pytest
 
-from homeassistant.components.homeassistant_alerts.alert import DOMAIN, UPDATE_INTERVAL
+from homeassistant.components.homeassistant_alerts import DOMAIN, UPDATE_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -98,7 +98,7 @@ async def test_alerts(
         hass.config.components.add(domain)
 
     with patch(
-        "homeassistant.components.homeassistant_alerts.alert.__version__",
+        "homeassistant.components.homeassistant_alerts.__version__",
         ha_version,
     ):
         assert await async_setup_component(hass, DOMAIN, {})
@@ -180,7 +180,7 @@ async def test_bad_alerts(
         hass.config.components.add(domain)
 
     with patch(
-        "homeassistant.components.homeassistant_alerts.alert.__version__",
+        "homeassistant.components.homeassistant_alerts.__version__",
         ha_version,
     ):
         assert await async_setup_component(hass, DOMAIN, {})
@@ -333,7 +333,7 @@ async def test_alerts_change(
         hass.config.components.add(domain)
 
     with patch(
-        "homeassistant.components.homeassistant_alerts.alert.__version__",
+        "homeassistant.components.homeassistant_alerts.__version__",
         ha_version,
     ):
         assert await async_setup_component(hass, DOMAIN, {})
