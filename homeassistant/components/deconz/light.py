@@ -3,16 +3,12 @@ from __future__ import annotations
 
 from typing import Any, Generic, TypedDict, TypeVar
 
+from pydeconz.interfaces.groups import GroupHandler
+from pydeconz.interfaces.lights import LightHandler
 from pydeconz.models import ResourceType
 from pydeconz.models.event import EventType
 from pydeconz.models.group import Group
-from pydeconz.models.light import (
-    ALERT_LONG,
-    ALERT_SHORT,
-    EFFECT_COLOR_LOOP,
-    EFFECT_NONE,
-)
-from pydeconz.models.light.light import Light
+from pydeconz.models.light.light import Light, LightAlert, LightColorMode, LightEffect
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -42,8 +38,14 @@ from .deconz_device import DeconzDevice
 from .gateway import DeconzGateway, get_gateway_from_config_entry
 
 DECONZ_GROUP = "is_deconz_group"
-EFFECT_TO_DECONZ = {EFFECT_COLORLOOP: EFFECT_COLOR_LOOP, "None": EFFECT_NONE}
-FLASH_TO_DECONZ = {FLASH_SHORT: ALERT_SHORT, FLASH_LONG: ALERT_LONG}
+EFFECT_TO_DECONZ = {EFFECT_COLORLOOP: LightEffect.COLOR_LOOP, "None": LightEffect.NONE}
+FLASH_TO_DECONZ = {FLASH_SHORT: LightAlert.SHORT, FLASH_LONG: LightAlert.LONG}
+
+DECONZ_TO_COLOR_MODE = {
+    LightColorMode.CT: ColorMode.COLOR_TEMP,
+    LightColorMode.HS: ColorMode.HS,
+    LightColorMode.XY: ColorMode.XY,
+}
 
 _L = TypeVar("_L", Group, Light)
 
@@ -51,10 +53,10 @@ _L = TypeVar("_L", Group, Light)
 class SetStateAttributes(TypedDict, total=False):
     """Attributes available with set state call."""
 
-    alert: str
+    alert: LightAlert
     brightness: int
     color_temperature: int
-    effect: str
+    effect: LightEffect
     hue: int
     on: bool
     saturation: int
@@ -130,7 +132,13 @@ class DeconzBaseLight(Generic[_L], DeconzDevice, LightEntity):
         """Set up light."""
         super().__init__(device, gateway)
 
-        self._attr_supported_color_modes: set[str] = set()
+        self.api: GroupHandler | LightHandler
+        if isinstance(self._device, Light):
+            self.api = self.gateway.api.lights.lights
+        elif isinstance(self._device, Group):
+            self.api = self.gateway.api.groups
+
+        self._attr_supported_color_modes: set[ColorMode] = set()
 
         if device.color_temp is not None:
             self._attr_supported_color_modes.add(ColorMode.COLOR_TEMP)
@@ -158,12 +166,8 @@ class DeconzBaseLight(Generic[_L], DeconzDevice, LightEntity):
     @property
     def color_mode(self) -> str | None:
         """Return the color mode of the light."""
-        if self._device.color_mode == "ct":
-            color_mode = ColorMode.COLOR_TEMP
-        elif self._device.color_mode == "hs":
-            color_mode = ColorMode.HS
-        elif self._device.color_mode == "xy":
-            color_mode = ColorMode.XY
+        if self._device.color_mode in DECONZ_TO_COLOR_MODE:
+            color_mode = DECONZ_TO_COLOR_MODE[self._device.color_mode]
         elif self._device.brightness is not None:
             color_mode = ColorMode.BRIGHTNESS
         else:
@@ -229,7 +233,7 @@ class DeconzBaseLight(Generic[_L], DeconzDevice, LightEntity):
         if ATTR_EFFECT in kwargs and kwargs[ATTR_EFFECT] in EFFECT_TO_DECONZ:
             data["effect"] = EFFECT_TO_DECONZ[kwargs[ATTR_EFFECT]]
 
-        await self._device.set_state(**data)
+        await self.api.set_state(id=self._device.resource_id, **data)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off light."""
@@ -246,7 +250,7 @@ class DeconzBaseLight(Generic[_L], DeconzDevice, LightEntity):
             data["alert"] = FLASH_TO_DECONZ[kwargs[ATTR_FLASH]]
             del data["on"]
 
-        await self._device.set_state(**data)
+        await self.api.set_state(id=self._device.resource_id, **data)
 
     @property
     def extra_state_attributes(self) -> dict[str, bool]:

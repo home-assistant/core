@@ -49,13 +49,6 @@ def load_json(filename: str, default: list | dict | None = None) -> list | dict:
     return {} if default is None else default
 
 
-def _orjson_encoder(data: Any) -> str:
-    """JSON encoder that uses orjson."""
-    return orjson.dumps(
-        data, option=orjson.OPT_INDENT_2 | orjson.OPT_NON_STR_KEYS
-    ).decode("utf-8")
-
-
 def _orjson_default_encoder(data: Any) -> str:
     """JSON encoder that uses orjson with hass defaults."""
     return orjson.dumps(
@@ -79,21 +72,17 @@ def save_json(
     """
     dump: Callable[[Any], Any]
     try:
-        if encoder:
-            # For backwards compatibility, if they pass in the
-            # default json encoder we use _orjson_default_encoder
-            # which is the orjson equivalent to the default encoder.
-            if encoder is DefaultHASSJSONEncoder:
-                dump = _orjson_default_encoder
-                json_data = _orjson_default_encoder(data)
+        # For backwards compatibility, if they pass in the
+        # default json encoder we use _orjson_default_encoder
+        # which is the orjson equivalent to the default encoder.
+        if encoder and encoder is not DefaultHASSJSONEncoder:
             # If they pass a custom encoder that is not the
             # DefaultHASSJSONEncoder, we use the slow path of json.dumps
-            else:
-                dump = json.dumps
-                json_data = json.dumps(data, indent=2, cls=encoder)
+            dump = json.dumps
+            json_data = json.dumps(data, indent=2, cls=encoder)
         else:
-            dump = _orjson_encoder
-            json_data = _orjson_encoder(data)
+            dump = _orjson_default_encoder
+            json_data = _orjson_default_encoder(data)
     except TypeError as error:
         msg = f"Failed to serialize to JSON: {filename}. Bad data at {format_unserializable_data(find_paths_unserializable_data(data, dump=dump))}"
         _LOGGER.error(msg)

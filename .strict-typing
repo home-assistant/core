@@ -15,12 +15,17 @@ homeassistant.auth.auth_store
 homeassistant.auth.providers.*
 homeassistant.helpers.area_registry
 homeassistant.helpers.condition
+homeassistant.helpers.debounce
+homeassistant.helpers.deprecation
 homeassistant.helpers.discovery
+homeassistant.helpers.dispatcher
 homeassistant.helpers.entity
+homeassistant.helpers.entity_platform
 homeassistant.helpers.entity_values
 homeassistant.helpers.event
 homeassistant.helpers.reload
 homeassistant.helpers.script_variables
+homeassistant.helpers.singleton
 homeassistant.helpers.sun
 homeassistant.helpers.translation
 homeassistant.util.async_
@@ -146,6 +151,8 @@ homeassistant.components.lametric.*
 homeassistant.components.laundrify.*
 homeassistant.components.lcn.*
 homeassistant.components.light.*
+homeassistant.components.lifx.*
+homeassistant.components.litterrobot.*
 homeassistant.components.local_ip.*
 homeassistant.components.lock.*
 homeassistant.components.logbook.*
@@ -192,7 +199,7 @@ homeassistant.components.recollect_waste.*
 homeassistant.components.recorder.*
 homeassistant.components.remote.*
 homeassistant.components.renault.*
-homeassistant.components.resolution_center.*
+homeassistant.components.repairs.*
 homeassistant.components.rhasspy.*
 homeassistant.components.ridwell.*
 homeassistant.components.rituals_perfume_genie.*

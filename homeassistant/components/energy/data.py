@@ -54,7 +54,7 @@ class FlowToGridSourceType(TypedDict):
     stat_compensation: str | None
 
     # Used to generate costs if stat_compensation is set to None
-    entity_energy_from: str | None  # entity_id of an energy meter (kWh), entity_id of the energy meter for stat_energy_from
+    entity_energy_to: str | None  # entity_id of an energy meter (kWh), entity_id of the energy meter for stat_energy_to
     entity_energy_price: str | None  # entity_id of an entity providing price ($/kWh)
     number_energy_price: float | None  # Price for energy ($/kWh)
 

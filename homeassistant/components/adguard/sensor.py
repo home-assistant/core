@@ -15,8 +15,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AdGuardHomeDeviceEntity
 from .const import DATA_ADGUARD_CLIENT, DATA_ADGUARD_VERSION, DOMAIN
+from .entity import AdGuardHomeEntity
 
 SCAN_INTERVAL = timedelta(seconds=300)
 PARALLEL_UPDATES = 4
@@ -118,7 +118,7 @@ async def async_setup_entry(
     )
 
 
-class AdGuardHomeSensor(AdGuardHomeDeviceEntity, SensorEntity):
+class AdGuardHomeSensor(AdGuardHomeEntity, SensorEntity):
     """Defines a AdGuard Home sensor."""
 
     entity_description: AdGuardHomeEntityDescription
@@ -130,8 +130,8 @@ class AdGuardHomeSensor(AdGuardHomeDeviceEntity, SensorEntity):
         description: AdGuardHomeEntityDescription,
     ) -> None:
         """Initialize AdGuard Home sensor."""
+        super().__init__(adguard, entry)
         self.entity_description = description
-
         self._attr_unique_id = "_".join(
             [
                 DOMAIN,
@@ -140,14 +140,6 @@ class AdGuardHomeSensor(AdGuardHomeDeviceEntity, SensorEntity):
                 "sensor",
                 description.key,
             ]
-        )
-
-        super().__init__(
-            adguard,
-            entry,
-            description.name,
-            description.icon,
-            description.entity_registry_enabled_default,
         )
 
     async def _adguard_update(self) -> None:

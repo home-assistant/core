@@ -51,7 +51,7 @@ class TrafikverketSensorEntityDescription(
 SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
     TrafikverketSensorEntityDescription(
         key="departure_time",
-        name="Departure Time",
+        name="Departure time",
         icon="mdi:clock",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda data: as_utc(data["departure_time"]),
@@ -59,21 +59,21 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
     ),
     TrafikverketSensorEntityDescription(
         key="departure_from",
-        name="Departure From",
+        name="Departure from",
         icon="mdi:ferry",
         value_fn=lambda data: cast(str, data["departure_from"]),
         info_fn=lambda data: cast(list[str], data["departure_information"]),
     ),
     TrafikverketSensorEntityDescription(
         key="departure_to",
-        name="Departure To",
+        name="Departure to",
         icon="mdi:ferry",
         value_fn=lambda data: cast(str, data["departure_to"]),
         info_fn=lambda data: cast(list[str], data["departure_information"]),
     ),
     TrafikverketSensorEntityDescription(
         key="departure_modified",
-        name="Departure Modified",
+        name="Departure modified",
         icon="mdi:clock",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda data: as_utc(data["departure_modified"]),
@@ -82,7 +82,7 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
     ),
     TrafikverketSensorEntityDescription(
         key="departure_time_next",
-        name="Departure Time Next",
+        name="Departure time next",
         icon="mdi:clock",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda data: as_utc(data["departure_time_next"]),
@@ -91,7 +91,7 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
     ),
     TrafikverketSensorEntityDescription(
         key="departure_time_next_next",
-        name="Departure Time Next After",
+        name="Departure time next after",
         icon="mdi:clock",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda data: as_utc(data["departure_time_next_next"]),
@@ -121,6 +121,7 @@ class FerrySensor(CoordinatorEntity[TVDataUpdateCoordinator], SensorEntity):
 
     entity_description: TrafikverketSensorEntityDescription
     _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -131,7 +132,6 @@ class FerrySensor(CoordinatorEntity[TVDataUpdateCoordinator], SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._attr_name = f"{name} {entity_description.name}"
         self._attr_unique_id = f"{entry_id}-{entity_description.key}"
         self.entity_description = entity_description
         self._attr_device_info = DeviceInfo(
