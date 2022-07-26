@@ -1068,12 +1068,12 @@ async def websocket_get_network_settings(
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     application_controller = zha_gateway.application_controller
 
+    # Serialize the current network settings
     backup = NetworkBackup(
         node_info=application_controller.state.node_info,
         network_info=application_controller.state.network_info,
     )
 
-    # Serialize the most recent backup
     connection.send_result(msg[ID], backup.as_dict())
 
 
@@ -1087,7 +1087,7 @@ async def websocket_list_network_backups(
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     application_controller = zha_gateway.application_controller
 
-    # Serialize the most recent backup
+    # Serialize known backups
     connection.send_result(
         msg[ID], [backup.as_dict() for backup in application_controller.backups]
     )
