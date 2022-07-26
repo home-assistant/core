@@ -43,17 +43,6 @@ class PassiveBluetoothDataUpdateCoordinator(BasePassiveBluetoothCoordinator):
         self.async_update_listeners()
 
     @callback
-    def async_start(self) -> CALLBACK_TYPE:
-        """Start the data updater."""
-        self._async_start()
-
-        @callback
-        def _async_cancel() -> None:
-            self._async_stop()
-
-        return _async_cancel
-
-    @callback
     def async_add_listener(
         self, update_callback: CALLBACK_TYPE, context: Any = None
     ) -> Callable[[], None]:
