@@ -19,6 +19,7 @@ from homeassistant.helpers import device_registry as dr
 
 from .const import (
     ATTR_BOT,
+    ATTR_CONTACT,
     ATTR_CURTAIN,
     ATTR_HYGROMETER,
     CONF_RETRY_COUNT,
@@ -31,6 +32,7 @@ PLATFORMS_BY_TYPE = {
     ATTR_BOT: [Platform.SWITCH, Platform.SENSOR],
     ATTR_CURTAIN: [Platform.COVER, Platform.BINARY_SENSOR, Platform.SENSOR],
     ATTR_HYGROMETER: [Platform.SENSOR],
+    ATTR_CONTACT: [Platform.BINARY_SENSOR, Platform.SENSOR],
 }
 CLASS_BY_DEVICE = {
     ATTR_CURTAIN: switchbot.SwitchbotCurtain,
