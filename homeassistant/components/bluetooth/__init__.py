@@ -215,7 +215,7 @@ async def async_setup_entry(
     """Set up the bluetooth integration from a config entry."""
     manager: BluetoothManager = hass.data[DOMAIN]
     await manager.async_start(
-        BluetoothScanningMode.ACTIVE, entry.options.get(CONF_ADAPTER)
+        BluetoothScanningMode.PASSIVE, entry.options.get(CONF_ADAPTER)
     )
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     return True
