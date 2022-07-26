@@ -31,7 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except LitterRobotException as ex:
         raise ConfigEntryNotReady from ex
 
-    if hub.account.robots:
+    if any(hub.litter_robots()):
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
