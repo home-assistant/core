@@ -61,7 +61,7 @@ class ValloxNumberEntity(ValloxEntity, NumberEntity):
 
 @dataclass
 class ValloxNumberEntityDescription(NumberEntityDescription):
-    """Describes Vallox select entity."""
+    """Describes Vallox number entity."""
 
     metric_key: str | None = None
     entity_type: type[ValloxNumberEntity] = ValloxNumberEntity
