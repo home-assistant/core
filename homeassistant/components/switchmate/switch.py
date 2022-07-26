@@ -17,7 +17,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 CONF_FLIP_ON_OFF = "flip_on_off"
 DEFAULT_NAME = "Switchmate"
 
-SCAN_INTERVAL = timedelta(seconds=10)
+SCAN_INTERVAL = timedelta(minutes=30)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
