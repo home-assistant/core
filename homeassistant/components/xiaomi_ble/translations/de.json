@@ -14,9 +14,15 @@
                 "description": "M\u00f6chtest du {name} einrichten?"
             },
             "get_encryption_key_4_5": {
+                "data": {
+                    "bindkey": "Bindungsschl\u00fcssel"
+                },
                 "description": "Die vom Sensor \u00fcbertragenen Sensordaten sind verschl\u00fcsselt. Um sie zu entschl\u00fcsseln, ben\u00f6tigen wir einen 32-stelligen hexadezimalen Bindungsschl\u00fcssel."
             },
             "get_encryption_key_legacy": {
+                "data": {
+                    "bindkey": "Bindungsschl\u00fcssel"
+                },
                 "description": "Die vom Sensor \u00fcbertragenen Sensordaten sind verschl\u00fcsselt. Um sie zu entschl\u00fcsseln, ben\u00f6tigen wir einen 24-stelligen hexadezimalen Bindungsschl\u00fcssel."
             },
             "user": {

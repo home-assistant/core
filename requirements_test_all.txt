@@ -7,7 +7,7 @@
 AEMET-OpenData==0.2.1
 
 # homeassistant.components.aladdin_connect
-AIOAladdinConnect==0.1.27
+AIOAladdinConnect==0.1.31
 
 # homeassistant.components.adax
 Adax-local==0.1.4
@@ -465,7 +465,7 @@ envoy_reader==0.20.1
 ephem==4.1.2
 
 # homeassistant.components.epson
-epson-projector==0.4.2
+epson-projector==0.4.6
 
 # homeassistant.components.faa_delays
 faadelays==0.0.7
@@ -549,7 +549,7 @@ glances_api==0.3.5
 goalzero==0.2.1
 
 # homeassistant.components.goodwe
-goodwe==0.2.15
+goodwe==0.2.18
 
 # homeassistant.components.google_pubsub
 google-cloud-pubsub==2.11.0
@@ -622,7 +622,7 @@ home-assistant-frontend==20220707.1
 homeconnect==0.7.1
 
 # homeassistant.components.homematicip_cloud
-homematicip==1.0.5
+homematicip==1.0.7
 
 # homeassistant.components.home_plus_control
 homepluscontrol==0.0.5
@@ -1340,7 +1340,7 @@ pytile==2022.02.0
 pytomorrowio==0.3.4
 
 # homeassistant.components.traccar
-pytraccar==0.10.0
+pytraccar==1.0.0
 
 # homeassistant.components.tradfri
 pytradfri[async]==9.0.0
