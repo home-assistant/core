@@ -104,6 +104,15 @@ class OscillationAngleValues:
     step: float | None = None
 
 
+@dataclass
+class FavoriteLevelValues:
+    """A class that describes favorite level values."""
+
+    max_value: float | None = None
+    min_value: float | None = None
+    step: float | None = None
+
+
 NUMBER_TYPES = {
     FEATURE_SET_MOTOR_SPEED: XiaomiMiioNumberDescription(
         key=ATTR_MOTOR_SPEED,
@@ -237,6 +246,11 @@ OSCILLATION_ANGLE_VALUES = {
     MODEL_FAN_P11: OscillationAngleValues(max_value=140, min_value=30, step=30),
 }
 
+FAVORITE_LEVEL_VALUES = {
+    tuple(MODELS_PURIFIER_MIIO): FavoriteLevelValues(max_value=17, min_value=0, step=1),
+    tuple(MODELS_PURIFIER_MIOT): FavoriteLevelValues(max_value=14, min_value=0, step=1),
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -280,6 +294,15 @@ async def async_setup_entry(
                     native_min_value=OSCILLATION_ANGLE_VALUES[model].min_value,
                     native_step=OSCILLATION_ANGLE_VALUES[model].step,
                 )
+            elif description.key == ATTR_FAVORITE_LEVEL:
+                for list_models, favorite_level_value in FAVORITE_LEVEL_VALUES.items():
+                    if model in list_models:
+                        description = dataclasses.replace(
+                            description,
+                            native_max_value=favorite_level_value.max_value,
+                            native_min_value=favorite_level_value.min_value,
+                            native_step=favorite_level_value.step,
+                        )
 
             entities.append(
                 XiaomiNumberEntity(

@@ -842,7 +842,7 @@ hole==0.7.0
 holidays==0.14.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220707.1
+home-assistant-frontend==20220727.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.1
@@ -945,6 +945,9 @@ kostal_plenticore==0.2.0
 
 # homeassistant.components.kraken
 krakenex==2.1.0
+
+# homeassistant.components.lacrosse_view
+lacrosse-view==0.0.9
 
 # homeassistant.components.eufy
 lakeside==0.12
@@ -2473,7 +2476,7 @@ xbox-webapi==2.0.11
 xboxapi==2.0.1
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==0.5.1
+xiaomi-ble==0.6.1
 
 # homeassistant.components.knx
 xknx==0.22.0
@@ -2491,6 +2494,9 @@ xs1-api-client==3.0.0
 
 # homeassistant.components.yale_smart_alarm
 yalesmartalarmclient==0.3.8
+
+# homeassistant.components.yalexs_ble
+yalexs-ble==0.4.0
 
 # homeassistant.components.august
 yalexs==1.1.25
@@ -2544,7 +2550,7 @@ zigpy==0.48.0
 zm-py==0.5.2
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.39.0
+zwave-js-server-python==0.40.0
 
 # homeassistant.components.zwave_me
 zwave_me_ws==0.2.4

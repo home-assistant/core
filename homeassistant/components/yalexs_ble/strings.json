@@ -1,0 +1,27 @@
+{
+  "config": {
+    "flow_title": "{name} ({address})",
+    "step": {
+      "user": {
+        "data": {
+          "local_name": "Bluetooth local name",
+          "key": "Key",
+          "slot": "Slot (Key Index)"
+        }
+      },
+      "integration_discovery_confirm": {
+        "description": "Do you want to setup {name} ({address})?"
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_unconfigured_devices": "No unconfigured devices found.",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    }
+  }
+}
