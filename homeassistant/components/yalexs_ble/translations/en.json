@@ -17,10 +17,11 @@
             },
             "user": {
                 "data": {
-                    "key": "Key",
+                    "key": "Offline Key",
                     "local_name": "Bluetooth local name",
-                    "slot": "Slot (Key Index)"
-                }
+                    "slot": "Offline Key Slot (Key Index)"
+                },
+                "description": "Check the documentation at {docs_url} for how to find the offline key."
             }
         }
     }

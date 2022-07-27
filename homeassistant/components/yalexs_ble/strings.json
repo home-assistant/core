@@ -3,10 +3,11 @@
     "flow_title": "{name} ({address})",
     "step": {
       "user": {
+        "description": "Check the documentation at {docs_url} for how to find the offline key.",
         "data": {
           "local_name": "Bluetooth local name",
-          "key": "Key",
-          "slot": "Slot (Key Index)"
+          "key": "Offline Key",
+          "slot": "Offline Key Slot (Key Index)"
         }
       },
       "integration_discovery_confirm": {

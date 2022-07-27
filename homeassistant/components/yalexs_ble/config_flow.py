@@ -17,6 +17,7 @@ from homeassistant.const import CONF_ADDRESS
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 from homeassistant.helpers.typing import DiscoveryInfoType
+from homeassistant.loader import async_get_integration
 
 from .const import CONF_KEY, CONF_LOCAL_NAME, CONF_SLOT, DOMAIN
 
@@ -34,6 +35,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._discovered_devices: dict[str, BluetoothServiceInfoBleak] = {}
         self._discovered_key: str | None = None
         self._discovered_slot: int | None = None
+        self._discovered_name: str | None = None
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfo
@@ -52,6 +54,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: DiscoveryInfoType
     ) -> FlowResult:
         """Handle a discovered integration."""
+        name = discovery_info["name"]
         serial = discovery_info["serial"]
         discovered_key = discovery_info["key"]
         discovered_slot = discovery_info["slot"]
@@ -74,9 +77,23 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 break
         if not self._discovery_info:
             return self.async_abort(reason="no_devices_found")
+        self._discovered_name = name
         self._discovered_key = discovered_key
         self._discovered_slot = discovered_slot
+        for progress in self._async_in_progress(include_uninitialized=True):
+            # Integration discovery should abort other discovery types
+            # since it already has the keys and slots, and the other
+            # discovery types do not.
+            context = progress["context"]
+            if context.get(
+                "unique_id"
+            ) == self._discovery_info.name and not context.get("active"):
+                self.hass.config_entries.flow.async_abort(progress["flow_id"])
         await self.async_set_unique_id(self._discovery_info.name)
+        self.context["title_placeholders"] = {
+            "name": self._discovered_name,
+            "address": self._discovery_info.address,
+        }
         return await self.async_step_integration_discovery_confirm()
 
     async def async_step_integration_discovery_confirm(
@@ -86,9 +103,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         assert self._discovered_key is not None
         assert self._discovered_slot is not None
         assert self._discovery_info is not None
+        assert self._discovered_name is not None
         if user_input is not None:
             return self.async_create_entry(
-                title=self._discovery_info.name,
+                title=self._discovered_name,
                 data={
                     CONF_KEY: self._discovered_key,
                     CONF_SLOT: self._discovered_slot,
@@ -111,17 +129,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            self.context["active"] = True
             local_name = user_input[CONF_LOCAL_NAME]
+            discovery_info = self._discovered_devices[local_name]
             key = user_input[CONF_KEY]
             slot = user_input[CONF_SLOT]
             await self.async_set_unique_id(local_name, raise_on_progress=False)
             self._abort_if_unique_id_configured()
-            push_lock = PushLock(local_name_to_serial(local_name))
+            push_lock = PushLock(local_name)
+            push_lock.set_ble_device(discovery_info.device)
             push_lock.set_lock_key(key, slot)
             try:
                 await push_lock.update()
             except BleakError:
                 errors["base"] = "cannot_connect"
+            except ValueError:
+                errors["key"] = "invalid_auth"
             except AuthError:
                 errors["key"] = "invalid_auth"
             except Exception:  # pylint: disable=broad-except
@@ -157,6 +180,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_SLOT): int,
             }
         )
+        integration = await async_get_integration(self.hass, DOMAIN)
         return self.async_show_form(
-            step_id="user", data_schema=data_schema, errors=errors
+            step_id="user",
+            data_schema=data_schema,
+            errors=errors,
+            description_placeholders={"docs_url": integration.documentation},
         )
