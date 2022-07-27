@@ -13,7 +13,7 @@ async def _async_has_devices(hass: HomeAssistant) -> bool:
     gree_discovery = Discovery(DISCOVERY_TIMEOUT)
     bcast_addr = list(await async_get_ipv4_broadcast_addresses(hass))
     devices = await gree_discovery.scan(
-        wait_for=DISCOVERY_TIMEOUT, bcast_iface=bcast_addr
+        wait_for=DISCOVERY_TIMEOUT, bcast_ifaces=bcast_addr
     )
     return len(devices) > 0
 
