@@ -94,7 +94,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         assert self._discovered_slot is not None
         assert self._discovery_info is not None
         if user_input is not None:
-            self.context["active"] = True
             return self.async_create_entry(
                 title=self._discovery_info.name,
                 data={
