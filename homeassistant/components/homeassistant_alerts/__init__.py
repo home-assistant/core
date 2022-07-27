@@ -75,6 +75,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 DOMAIN,
                 issue_id,
                 is_fixable=False,
+                issue_domain=alert.integration,
                 severity=IssueSeverity.WARNING,
                 translation_key="alert",
                 translation_placeholders={
