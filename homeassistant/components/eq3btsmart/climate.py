@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import logging
 
-from bluepy.btle import BTLEException  # pylint: disable=import-error
 import eq3bt as eq3  # pylint: disable=import-error
 import voluptuous as vol
 
@@ -218,5 +217,5 @@ class EQ3BTSmartThermostat(ClimateEntity):
 
         try:
             self._thermostat.update()
-        except BTLEException as ex:
+        except eq3.BackendException as ex:
             _LOGGER.warning("Updating the state failed: %s", ex)

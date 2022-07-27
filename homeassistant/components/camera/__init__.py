@@ -129,14 +129,6 @@ CAMERA_SERVICE_RECORD: Final = {
     vol.Optional(CONF_LOOKBACK, default=0): vol.Coerce(int),
 }
 
-WS_TYPE_CAMERA_THUMBNAIL: Final = "camera_thumbnail"
-SCHEMA_WS_CAMERA_THUMBNAIL: Final = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {
-        vol.Required("type"): WS_TYPE_CAMERA_THUMBNAIL,
-        vol.Required("entity_id"): cv.entity_id,
-    }
-)
-
 
 @dataclass
 class CameraEntityDescription(EntityDescription):
