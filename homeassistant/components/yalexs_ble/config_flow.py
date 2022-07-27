@@ -105,12 +105,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 },
             )
 
-        integration = await async_get_integration(self.hass, DOMAIN)
         self._set_confirm_only()
         return self.async_show_form(
             step_id="integration_discovery_confirm",
             description_placeholders={
-                "docs_url": integration.documentation,
                 CONF_LOCAL_NAME: self._discovery_info.name,
                 CONF_ADDRESS: self._discovery_info.address,
             },
@@ -125,16 +123,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self.context["active"] = True
             local_name = user_input[CONF_LOCAL_NAME]
+            discovery_info = self._discovered_devices[local_name]
             key = user_input[CONF_KEY]
             slot = user_input[CONF_SLOT]
             await self.async_set_unique_id(local_name, raise_on_progress=False)
             self._abort_if_unique_id_configured()
             push_lock = PushLock(local_name)
+            push_lock.set_ble_device(discovery_info.device)
             push_lock.set_lock_key(key, slot)
             try:
                 await push_lock.update()
             except BleakError:
                 errors["base"] = "cannot_connect"
+            except ValueError:
+                errors["key"] = "invalid_auth"
             except AuthError:
                 errors["key"] = "invalid_auth"
             except Exception:  # pylint: disable=broad-except
@@ -170,6 +172,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_SLOT): int,
             }
         )
+        integration = await async_get_integration(self.hass, DOMAIN)
         return self.async_show_form(
-            step_id="user", data_schema=data_schema, errors=errors
+            step_id="user",
+            data_schema=data_schema,
+            errors=errors,
+            description_placeholders={"docs_url": integration.documentation},
         )
