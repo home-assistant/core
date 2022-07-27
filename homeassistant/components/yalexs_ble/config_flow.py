@@ -81,7 +81,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if context.get("unique_id") == local_name and not context.get("active"):
                 self.hass.config_entries.flow.async_abort(progress["flow_id"])
         await self.async_set_unique_id(serial_to_local_name(serial))
-        self.context["title_placeholders"] = {"name": name}
+        self.context["title_placeholders"] = {"name": name, "local_name": local_name}
         return await self.async_step_integration_discovery_confirm()
 
     async def async_step_integration_discovery_confirm(
@@ -91,6 +91,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         assert self._discovered_key is not None
         assert self._discovered_slot is not None
         assert self._discovered_name is not None
+        assert self.unique_id is not None
         if user_input is not None:
             return self.async_create_entry(
                 title=self._discovered_name,
@@ -105,6 +106,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="integration_discovery_confirm",
             description_placeholders={
                 "name": self._discovered_name,
+                "local_name": self.unique_id,
             },
         )
 
