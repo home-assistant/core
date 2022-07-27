@@ -77,6 +77,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_devices_found")
         self._discovered_key = discovered_key
         self._discovered_slot = discovered_slot
+        for progress in self._async_in_progress(include_uninitialized=True):
+            context = progress["context"]
+            if context.get(
+                "unique_id"
+            ) == self._discovery_info.name and not context.get("active"):
+                self.hass.config_entries.flow.async_abort(progress["flow_id"])
         await self.async_set_unique_id(self._discovery_info.name)
         return await self.async_step_integration_discovery_confirm()
 
@@ -88,6 +94,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         assert self._discovered_slot is not None
         assert self._discovery_info is not None
         if user_input is not None:
+            self.context["active"] = True
             return self.async_create_entry(
                 title=self._discovery_info.name,
                 data={
@@ -114,6 +121,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            self.context["active"] = True
             local_name = user_input[CONF_LOCAL_NAME]
             key = user_input[CONF_KEY]
             slot = user_input[CONF_SLOT]
