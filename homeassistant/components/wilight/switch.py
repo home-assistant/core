@@ -169,7 +169,7 @@ def hass_to_wilight_pause_time(value: int) -> int:
     return int(value * 3600)
 
 
-class WiLightValveSwitch(WiLightDevice, ToggleEntity):
+class WiLightValveSwitch(WiLightDevice, SwitchEntity):
     """Representation of a WiLights Valve switch."""
 
     @property
