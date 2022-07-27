@@ -35,6 +35,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._discovered_devices: dict[str, BluetoothServiceInfoBleak] = {}
         self._discovered_key: str | None = None
         self._discovered_slot: int | None = None
+        self._discovered_name: str | None = None
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfo
@@ -53,6 +54,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: DiscoveryInfoType
     ) -> FlowResult:
         """Handle a discovered integration."""
+        name = discovery_info["name"]
         serial = discovery_info["serial"]
         discovered_key = discovery_info["key"]
         discovered_slot = discovery_info["slot"]
@@ -75,6 +77,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 break
         if not self._discovery_info:
             return self.async_abort(reason="no_devices_found")
+        self._discovered_name = name
         self._discovered_key = discovered_key
         self._discovered_slot = discovered_slot
         for progress in self._async_in_progress(include_uninitialized=True):
@@ -87,6 +90,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ) == self._discovery_info.name and not context.get("active"):
                 self.hass.config_entries.flow.async_abort(progress["flow_id"])
         await self.async_set_unique_id(self._discovery_info.name)
+        self.context["title_placeholders"] = {
+            "name": self._discovered_name,
+            "address": self._discovery_info.address,
+        }
         return await self.async_step_integration_discovery_confirm()
 
     async def async_step_integration_discovery_confirm(
@@ -96,9 +103,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         assert self._discovered_key is not None
         assert self._discovered_slot is not None
         assert self._discovery_info is not None
+        assert self._discovered_name is not None
         if user_input is not None:
             return self.async_create_entry(
-                title=self._discovery_info.name,
+                title=self._discovered_name,
                 data={
                     CONF_KEY: self._discovered_key,
                     CONF_SLOT: self._discovered_slot,
