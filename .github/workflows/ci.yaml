@@ -622,7 +622,7 @@ jobs:
         run: |
           . venv/bin/activate
           python --version
-          pylint homeassistant
+          pylint --ignore-missing-annotations=y homeassistant -d fixme
       - name: Run pylint (partially)
         if: needs.info.outputs.test_full_suite == 'false'
         shell: bash
