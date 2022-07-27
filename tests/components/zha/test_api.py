@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 import voluptuous as vol
+import zigpy.backups
 import zigpy.profiles.zha
 import zigpy.types
 import zigpy.zcl.clusters.general as general
@@ -664,17 +665,57 @@ async def test_create_network_backup(app_controller, zha_client):
     assert "backup" in msg["result"] and "is_complete" in msg["result"]
 
 
-@patch("zigpy.backups.NetworkBackup.from_dict", new=lambda v: v)
 async def test_restore_network_backup_success(app_controller, zha_client):
     """Test successfully restoring a backup."""
 
+    backup = zigpy.backups.NetworkBackup()
+
     with patch.object(app_controller.backups, "restore_backup", new=AsyncMock()) as p:
         await zha_client.send_json(
-            {ID: 6, TYPE: f"{DOMAIN}/network/backups/restore", "backup": "a backup"}
+            {
+                ID: 6,
+                TYPE: f"{DOMAIN}/network/backups/restore",
+                "backup": backup.as_dict(),
+            }
         )
         msg = await zha_client.receive_json()
 
-    p.assert_called_once_with("a backup")
+    p.assert_called_once_with(backup)
+    assert "ezsp" not in backup.network_info.stack_specific
+
+    assert msg["id"] == 6
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+
+async def test_restore_network_backup_force_write_eui64(app_controller, zha_client):
+    """Test successfully restoring a backup."""
+
+    backup = zigpy.backups.NetworkBackup()
+
+    with patch.object(app_controller.backups, "restore_backup", new=AsyncMock()) as p:
+        await zha_client.send_json(
+            {
+                ID: 6,
+                TYPE: f"{DOMAIN}/network/backups/restore",
+                "backup": backup.as_dict(),
+                "ezsp_force_write_eui64": True,
+            }
+        )
+        msg = await zha_client.receive_json()
+
+    # EUI64 will be overwritten
+    p.assert_called_once_with(
+        backup.replace(
+            network_info=backup.network_info.replace(
+                stack_specific={
+                    "ezsp": {
+                        "i_understand_i_can_update_eui64_only_once_and_i_still_want_to_do_it": True
+                    }
+                }
+            )
+        )
+    )
 
     assert msg["id"] == 6
     assert msg["type"] == const.TYPE_RESULT

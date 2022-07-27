@@ -1119,6 +1119,7 @@ async def websocket_create_network_backup(
     {
         vol.Required(TYPE): "zha/network/backups/restore",
         vol.Required("backup"): _cv_zigpy_network_backup,
+        vol.Optional("ezsp_force_write_eui64", default=False): cv.boolean,
     }
 )
 @websocket_api.async_response
@@ -1128,10 +1129,16 @@ async def websocket_restore_network_backup(
     """Restore a ZHA network backup."""
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     application_controller = zha_gateway.application_controller
+    backup = msg["backup"]
+
+    if msg["ezsp_force_write_eui64"]:
+        backup.network_info.stack_specific.setdefault("ezsp", {})[
+            "i_understand_i_can_update_eui64_only_once_and_i_still_want_to_do_it"
+        ] = True
 
     # This can take 30-40s
     try:
-        await application_controller.backups.restore_backup(msg["backup"])
+        await application_controller.backups.restore_backup(backup)
     except ValueError as err:
         connection.send_error(msg[ID], websocket_api.const.ERR_INVALID_FORMAT, str(err))
     else:
