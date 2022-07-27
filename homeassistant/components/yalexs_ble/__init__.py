@@ -34,7 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     push_lock = PushLock(local_name)
     push_lock.set_lock_key(key, slot)
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = YaleXSBLEData(
-        local_name, push_lock
+        entry.title, local_name, push_lock
     )
     startup_event = asyncio.Event()
 
@@ -75,7 +75,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             local_name,
         )
 
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+
     return True
+
+
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle options update."""
+    coordinator: YaleXSBLEData = hass.data[DOMAIN][entry.entry_id]
+    if entry.title != coordinator.title:
+        await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

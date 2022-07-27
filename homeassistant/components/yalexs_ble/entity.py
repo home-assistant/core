@@ -22,7 +22,7 @@ class YALEXSBLEEntity(Entity):
         self._attr_available = False
         self._attr_unique_id = data.local_name
         self._attr_device_info = DeviceInfo(
-            name=data.local_name,
+            name=data.title,
             manufacturer="Yale",
             identifiers={(DOMAIN, data.local_name)},
         )
