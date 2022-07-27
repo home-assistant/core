@@ -1,9 +1,9 @@
 """Demo platform for the Device tracker component."""
 from __future__ import annotations
 
-from collections.abc import Callable
 import random
 
+from homeassistant.components.device_tracker import SeeCallback
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -13,7 +13,7 @@ from .const import DOMAIN, SERVICE_RANDOMIZE_DEVICE_TRACKER_DATA
 def setup_scanner(
     hass: HomeAssistant,
     config: ConfigType,
-    see: Callable[..., None],
+    see: SeeCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> bool:
     """Set up the demo tracker."""
