@@ -166,7 +166,7 @@ def wilight_to_hass_pause_time(value: int) -> int:
 
 def hass_to_wilight_pause_time(value: int) -> int:
     """Convert hass pause_time hours to wilight seconds."""
-    return int(value * 3600)
+    return round(value * 3600)
 
 
 class WiLightValveSwitch(WiLightDevice, SwitchEntity):
