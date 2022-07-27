@@ -50,6 +50,154 @@ async def test_sensors(hass):
     await hass.async_block_till_done()
 
 
+async def test_xiaomi_formaldeyhde(hass):
+    """Make sure that formldehyde sensors are correctly mapped."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="C4:7C:8D:6A:3E:7A",
+    )
+    entry.add_to_hass(hass)
+
+    saved_callback = None
+
+    def _async_register_callback(_hass, _callback, _matcher):
+        nonlocal saved_callback
+        saved_callback = _callback
+        return lambda: None
+
+    with patch(
+        "homeassistant.components.bluetooth.update_coordinator.async_register_callback",
+        _async_register_callback,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 0
+
+    # WARNING: This test data is synthetic, rather than captured from a real device
+    # obj type is 0x1010, payload len is 0x2 and payload is 0xf400
+    saved_callback(
+        make_advertisement(
+            "C4:7C:8D:6A:3E:7A", b"q \x98\x00iz>j\x8d|\xc4\r\x10\x10\x02\xf4\x00"
+        ),
+        BluetoothChange.ADVERTISEMENT,
+    )
+
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 1
+
+    sensor = hass.states.get("sensor.test_device_formaldehyde")
+    sensor_attr = sensor.attributes
+    assert sensor.state == "2.44"
+    assert sensor_attr[ATTR_FRIENDLY_NAME] == "Test Device Formaldehyde"
+    assert sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "mg/m³"
+    assert sensor_attr[ATTR_STATE_CLASS] == "measurement"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_xiaomi_consumable(hass):
+    """Make sure that consumable sensors are correctly mapped."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="C4:7C:8D:6A:3E:7A",
+    )
+    entry.add_to_hass(hass)
+
+    saved_callback = None
+
+    def _async_register_callback(_hass, _callback, _matcher):
+        nonlocal saved_callback
+        saved_callback = _callback
+        return lambda: None
+
+    with patch(
+        "homeassistant.components.bluetooth.update_coordinator.async_register_callback",
+        _async_register_callback,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 0
+
+    # WARNING: This test data is synthetic, rather than captured from a real device
+    # obj type is 0x1310, payload len is 0x2 and payload is 0x6000
+    saved_callback(
+        make_advertisement(
+            "C4:7C:8D:6A:3E:7A", b"q \x98\x00iz>j\x8d|\xc4\r\x13\x10\x02\x60\x00"
+        ),
+        BluetoothChange.ADVERTISEMENT,
+    )
+
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 1
+
+    sensor = hass.states.get("sensor.test_device_consumable")
+    sensor_attr = sensor.attributes
+    assert sensor.state == "96"
+    assert sensor_attr[ATTR_FRIENDLY_NAME] == "Test Device Consumable"
+    assert sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "%"
+    assert sensor_attr[ATTR_STATE_CLASS] == "measurement"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_xiaomi_battery_voltage(hass):
+    """Make sure that battery voltage sensors are correctly mapped."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="C4:7C:8D:6A:3E:7A",
+    )
+    entry.add_to_hass(hass)
+
+    saved_callback = None
+
+    def _async_register_callback(_hass, _callback, _matcher):
+        nonlocal saved_callback
+        saved_callback = _callback
+        return lambda: None
+
+    with patch(
+        "homeassistant.components.bluetooth.update_coordinator.async_register_callback",
+        _async_register_callback,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 0
+
+    # WARNING: This test data is synthetic, rather than captured from a real device
+    # obj type is 0x0a10, payload len is 0x2 and payload is 0x6400
+    saved_callback(
+        make_advertisement(
+            "C4:7C:8D:6A:3E:7A", b"q \x98\x00iz>j\x8d|\xc4\r\x0a\x10\x02\x64\x00"
+        ),
+        BluetoothChange.ADVERTISEMENT,
+    )
+
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 2
+
+    volt_sensor = hass.states.get("sensor.test_device_voltage")
+    volt_sensor_attr = volt_sensor.attributes
+    assert volt_sensor.state == "3.1"
+    assert volt_sensor_attr[ATTR_FRIENDLY_NAME] == "Test Device Voltage"
+    assert volt_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "V"
+    assert volt_sensor_attr[ATTR_STATE_CLASS] == "measurement"
+
+    bat_sensor = hass.states.get("sensor.test_device_battery")
+    bat_sensor_attr = bat_sensor.attributes
+    assert bat_sensor.state == "100"
+    assert bat_sensor_attr[ATTR_FRIENDLY_NAME] == "Test Device Battery"
+    assert bat_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "%"
+    assert bat_sensor_attr[ATTR_STATE_CLASS] == "measurement"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
 async def test_xiaomi_HHCCJCY01(hass):
     """This device has multiple advertisements before all sensors are visible. Test that this works."""
     entry = MockConfigEntry(
