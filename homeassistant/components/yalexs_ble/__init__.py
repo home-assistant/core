@@ -62,19 +62,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     entry.async_on_unload(await push_lock.start())
 
-    if hass.state.starting:
-        # We don't want the overhead of tearing down and trying
-        # again since the BLE device may take a while to discover,
-        # but if we can avoid setting up in an unavailable state
-        # because the device just hasn't been discovered yet, we
-        # try to wait a bit for bluetooth discovery to finish.
-        try:
-            await asyncio.wait_for(startup_event.wait(), timeout=STARTUP_TIMEOUT)
-        except asyncio.TimeoutError:
-            _LOGGER.debug(
-                "%s: Timeout waiting for startup, starting up in an unavailable state",
-                local_name,
-            )
+    # We don't want the overhead of tearing down and trying
+    # again since the BLE device may take a while to discover,
+    # but if we can avoid setting up in an unavailable state
+    # because the device just hasn't been discovered yet, we
+    # try to wait a bit for bluetooth discovery to finish.
+    try:
+        await asyncio.wait_for(startup_event.wait(), timeout=STARTUP_TIMEOUT)
+    except asyncio.TimeoutError:
+        _LOGGER.debug(
+            "%s: Timeout waiting for startup, starting up in an unavailable state",
+            local_name,
+        )
 
     return True
 
