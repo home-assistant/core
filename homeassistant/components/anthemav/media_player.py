@@ -12,6 +12,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
 )
+from homeassistant.components.repairs import IssueSeverity, async_create_issue
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
@@ -55,8 +56,20 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up our socket to the AVR."""
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2022.10.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+    )
     _LOGGER.warning(
-        "AnthemAV configuration is deprecated and has been automatically imported. Please remove the integration from your configuration file"
+        "Configuration of the Anthem A/V Receivers integration in YAML is "
+        "deprecated and will be removed in Home Assistant 2022.10; Your "
+        "existing configuration has been imported into the UI automatically "
+        "and can be safely removed from your configuration.yaml file"
     )
     await hass.config_entries.flow.async_init(
         DOMAIN,
