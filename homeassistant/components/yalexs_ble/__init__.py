@@ -62,7 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await asyncio.wait_for(startup_event.wait(), timeout=STARTUP_TIMEOUT)
     except asyncio.TimeoutError as ex:
         raise ConfigEntryNotReady(
-            "Could not communicate with {local_name}, try moving closer to the device."
+            "Could not communicate with {local_name}, try moving the Bluetooth adapter closer the device."
         ) from ex
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = YaleXSBLEData(
