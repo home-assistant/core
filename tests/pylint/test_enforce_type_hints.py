@@ -40,53 +40,34 @@ def test_regex_get_module_platform(
 
 
 @pytest.mark.parametrize(
-    ("string", "expected_x", "expected_y", "expected_z", "expected_a"),
+    ("string", "expected_count", "expected_items"),
     [
-        ("list[dict[str, str]]", "list", "dict", "str", "str"),
-        ("list[dict[str, Any]]", "list", "dict", "str", "Any"),
+        ("Callable[..., None]", 2, ("Callable", "...", "None")),
+        ("Callable[..., Awaitable[None]]", 2, ("Callable", "...", "Awaitable[None]")),
+        ("tuple[int, int, int, int]", 4, ("tuple", "int", "int", "int", "int")),
+        (
+            "tuple[int, int, int, int, int]",
+            5,
+            ("tuple", "int", "int", "int", "int", "int"),
+        ),
+        ("Awaitable[None]", 1, ("Awaitable", "None")),
+        ("list[dict[str, str]]", 1, ("list", "dict[str, str]")),
+        ("list[dict[str, Any]]", 1, ("list", "dict[str, Any]")),
     ],
 )
-def test_regex_x_of_y_of_z_comma_a(
+def test_regex_x_of_y_i(
     hass_enforce_type_hints: ModuleType,
     string: str,
-    expected_x: str,
-    expected_y: str,
-    expected_z: str,
-    expected_a: str,
+    expected_count: int,
+    expected_items: tuple[str, ...],
 ) -> None:
-    """Test x_of_y_of_z_comma_a regexes."""
+    """Test x_of_y_i regexes."""
     matchers: dict[str, re.Pattern] = hass_enforce_type_hints._TYPE_HINT_MATCHERS
 
-    assert (match := matchers["x_of_y_of_z_comma_a"].match(string))
+    assert (match := matchers[f"x_of_y_{expected_count}"].match(string))
     assert match.group(0) == string
-    assert match.group(1) == expected_x
-    assert match.group(2) == expected_y
-    assert match.group(3) == expected_z
-    assert match.group(4) == expected_a
-
-
-@pytest.mark.parametrize(
-    ("string", "expected_x", "expected_y", "expected_z"),
-    [
-        ("Callable[..., None]", "Callable", "...", "None"),
-        ("Callable[..., Awaitable[None]]", "Callable", "...", "Awaitable[None]"),
-    ],
-)
-def test_regex_x_of_y_comma_z(
-    hass_enforce_type_hints: ModuleType,
-    string: str,
-    expected_x: str,
-    expected_y: str,
-    expected_z: str,
-) -> None:
-    """Test x_of_y_comma_z regexes."""
-    matchers: dict[str, re.Pattern] = hass_enforce_type_hints._TYPE_HINT_MATCHERS
-
-    assert (match := matchers["x_of_y_comma_z"].match(string))
-    assert match.group(0) == string
-    assert match.group(1) == expected_x
-    assert match.group(2) == expected_y
-    assert match.group(3) == expected_z
+    for index in range(expected_count):
+        assert match.group(index + 1) == expected_items[index]
 
 
 @pytest.mark.parametrize(
@@ -742,4 +723,106 @@ def test_valid_mapping_return_type(
     type_hint_checker.visit_module(class_node.parent)
 
     with assert_no_messages(linter):
+        type_hint_checker.visit_classdef(class_node)
+
+
+def test_valid_long_tuple(
+    linter: UnittestLinter, type_hint_checker: BaseChecker
+) -> None:
+    """Check invalid entity properties are ignored by default."""
+    # Set ignore option
+    type_hint_checker.config.ignore_missing_annotations = False
+
+    class_node, _, _ = astroid.extract_node(
+        """
+    class Entity():
+        pass
+
+    class ToggleEntity(Entity):
+        pass
+
+    class LightEntity(ToggleEntity):
+        pass
+
+    class TestLight( #@
+        LightEntity
+    ):
+        @property
+        def rgbw_color( #@
+            self
+        ) -> tuple[int, int, int, int]:
+            pass
+
+        @property
+        def rgbww_color( #@
+            self
+        ) -> tuple[int, int, int, int, int]:
+            pass
+    """,
+        "homeassistant.components.pylint_test.light",
+    )
+    type_hint_checker.visit_module(class_node.parent)
+
+    with assert_no_messages(linter):
+        type_hint_checker.visit_classdef(class_node)
+
+
+def test_invalid_long_tuple(
+    linter: UnittestLinter, type_hint_checker: BaseChecker
+) -> None:
+    """Check invalid entity properties are ignored by default."""
+    # Set ignore option
+    type_hint_checker.config.ignore_missing_annotations = False
+
+    class_node, rgbw_node, rgbww_node = astroid.extract_node(
+        """
+    class Entity():
+        pass
+
+    class ToggleEntity(Entity):
+        pass
+
+    class LightEntity(ToggleEntity):
+        pass
+
+    class TestLight( #@
+        LightEntity
+    ):
+        @property
+        def rgbw_color( #@
+            self
+        ) -> tuple[int, int, int, int, int]:
+            pass
+
+        @property
+        def rgbww_color( #@
+            self
+        ) -> tuple[int, int, int, int, float]:
+            pass
+    """,
+        "homeassistant.components.pylint_test.light",
+    )
+    type_hint_checker.visit_module(class_node.parent)
+
+    with assert_adds_messages(
+        linter,
+        pylint.testutils.MessageTest(
+            msg_id="hass-return-type",
+            node=rgbw_node,
+            args=["tuple[int, int, int, int]", None],
+            line=15,
+            col_offset=4,
+            end_line=15,
+            end_col_offset=18,
+        ),
+        pylint.testutils.MessageTest(
+            msg_id="hass-return-type",
+            node=rgbww_node,
+            args=["tuple[int, int, int, int, int]", None],
+            line=21,
+            col_offset=4,
+            end_line=21,
+            end_col_offset=19,
+        ),
+    ):
         type_hint_checker.visit_classdef(class_node)

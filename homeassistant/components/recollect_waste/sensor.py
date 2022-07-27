@@ -28,11 +28,11 @@ SENSOR_TYPE_NEXT_PICKUP = "next_pickup"
 SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=SENSOR_TYPE_CURRENT_PICKUP,
-        name="Current Pickup",
+        name="Current pickup",
     ),
     SensorEntityDescription(
         key=SENSOR_TYPE_NEXT_PICKUP,
-        name="Next Pickup",
+        name="Next pickup",
     ),
 )
 
@@ -68,6 +68,7 @@ class ReCollectWasteSensor(CoordinatorEntity, SensorEntity):
     """ReCollect Waste Sensor."""
 
     _attr_device_class = SensorDeviceClass.DATE
+    _attr_has_entity_name = True
 
     def __init__(
         self,

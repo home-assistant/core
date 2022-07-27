@@ -10,8 +10,8 @@ from typing import TYPE_CHECKING, Any, cast
 import async_timeout
 from pydeconz import DeconzSession, errors
 from pydeconz.interfaces import sensors
-from pydeconz.interfaces.api import APIItems, GroupedAPIItems
-from pydeconz.interfaces.groups import Groups
+from pydeconz.interfaces.api_handlers import APIHandler, GroupedAPIHandler
+from pydeconz.interfaces.groups import GroupHandler
 from pydeconz.models.event import EventType
 
 from homeassistant.config_entries import SOURCE_HASSIO, ConfigEntry
@@ -127,7 +127,7 @@ class DeconzGateway:
     def register_platform_add_device_callback(
         self,
         add_device_callback: Callable[[EventType, str], None],
-        deconz_device_interface: APIItems | GroupedAPIItems,
+        deconz_device_interface: APIHandler | GroupedAPIHandler,
         always_ignore_clip_sensors: bool = False,
     ) -> None:
         """Wrap add_device_callback to check allow_new_devices option."""
@@ -148,7 +148,7 @@ class DeconzGateway:
                 self.ignored_devices.add((async_add_device, device_id))
                 return
 
-            if isinstance(deconz_device_interface, Groups):
+            if isinstance(deconz_device_interface, GroupHandler):
                 self.deconz_groups.add((async_add_device, device_id))
                 if not self.option_allow_deconz_groups:
                     return

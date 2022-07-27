@@ -274,6 +274,7 @@ class CastDevice:
 class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
     """Representation of a Cast device on the network."""
 
+    _attr_has_entity_name = True
     _attr_should_poll = False
     _attr_media_image_remotely_accessible = True
     _mz_only = False
@@ -293,7 +294,6 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
 
         self._cast_view_remove_handler = None
         self._attr_unique_id = str(cast_info.uuid)
-        self._attr_name = cast_info.friendly_name
         self._attr_device_info = DeviceInfo(
             identifiers={(CAST_DOMAIN, str(cast_info.uuid).replace("-", ""))},
             manufacturer=str(cast_info.cast_info.manufacturer),

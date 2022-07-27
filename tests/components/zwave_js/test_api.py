@@ -3459,12 +3459,12 @@ async def test_get_firmware_update_progress(
 
     assert len(client.async_send_command.call_args_list) == 1
     args = client.async_send_command.call_args[0][0]
-    assert args["command"] == "node.get_firmware_update_progress"
+    assert args["command"] == "node.is_firmware_update_in_progress"
     assert args["nodeId"] == multisensor_6.node_id
 
     # Test FailedZWaveCommand is caught
     with patch(
-        "zwave_js_server.model.node.Node.async_get_firmware_update_progress",
+        "zwave_js_server.model.node.Node.async_is_firmware_update_in_progress",
         side_effect=FailedZWaveCommand("failed_command", 1, "error message"),
     ):
         await ws_client.send_json(
@@ -3744,11 +3744,11 @@ async def test_get_any_firmware_update_progress(
 
     assert len(client.async_send_command.call_args_list) == 1
     args = client.async_send_command.call_args[0][0]
-    assert args["command"] == "controller.get_any_firmware_update_progress"
+    assert args["command"] == "controller.is_any_ota_firmware_update_in_progress"
 
     # Test FailedZWaveCommand is caught
     with patch(
-        "zwave_js_server.model.controller.Controller.async_get_any_firmware_update_progress",
+        "zwave_js_server.model.controller.Controller.async_is_any_ota_firmware_update_in_progress",
         side_effect=FailedZWaveCommand("failed_command", 1, "error message"),
     ):
         await ws_client.send_json(

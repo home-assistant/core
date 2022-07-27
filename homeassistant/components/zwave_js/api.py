@@ -1888,7 +1888,7 @@ async def websocket_get_firmware_update_progress(
     node: Node,
 ) -> None:
     """Get whether firmware update is in progress."""
-    connection.send_result(msg[ID], await node.async_get_firmware_update_progress())
+    connection.send_result(msg[ID], await node.async_is_firmware_update_in_progress())
 
 
 def _get_firmware_update_progress_dict(
@@ -2012,7 +2012,7 @@ async def websocket_get_any_firmware_update_progress(
 ) -> None:
     """Get whether any firmware updates are in progress."""
     connection.send_result(
-        msg[ID], await driver.controller.async_get_any_firmware_update_progress()
+        msg[ID], await driver.controller.async_is_any_ota_firmware_update_in_progress()
     )
 
 

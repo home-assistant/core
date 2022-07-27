@@ -1091,10 +1091,7 @@ def async_load_api(hass: HomeAssistant) -> None:
         zha_gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
         ieee: EUI64 = service.data[ATTR_IEEE]
         zha_device: ZHADevice | None = zha_gateway.get_device(ieee)
-        if zha_device is not None and (
-            zha_device.is_coordinator
-            and zha_device.ieee == zha_gateway.application_controller.ieee
-        ):
+        if zha_device is not None and zha_device.is_active_coordinator:
             _LOGGER.info("Removing the coordinator (%s) is not allowed", ieee)
             return
         _LOGGER.info("Removing node %s", ieee)

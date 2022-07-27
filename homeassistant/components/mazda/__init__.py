@@ -222,6 +222,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class MazdaEntity(CoordinatorEntity):
     """Defines a base Mazda entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, client, coordinator, index):
         """Initialize the Mazda entity."""
         super().__init__(coordinator)

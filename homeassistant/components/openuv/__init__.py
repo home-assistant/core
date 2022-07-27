@@ -183,6 +183,8 @@ class OpenUV:
 class OpenUvEntity(Entity):
     """Define a generic OpenUV entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, openuv: OpenUV, description: EntityDescription) -> None:
         """Initialize."""
         self._attr_extra_state_attributes = {}
