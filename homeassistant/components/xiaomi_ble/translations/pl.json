@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "already_in_progress": "Konfiguracja jest ju\u017c w toku",
+            "decryption_failed": "Podany klucz (bindkey) nie zadzia\u0142a\u0142, dane czujnika nie mog\u0142y zosta\u0107 odszyfrowane. Sprawd\u017a go i spr\u00f3buj ponownie.",
+            "expected_24_characters": "Oczekiwano 24-znakowego szesnastkowego klucza bindkey.",
+            "expected_32_characters": "Oczekiwano 32-znakowego szesnastkowego klucza bindkey.",
+            "no_devices_found": "Nie znaleziono urz\u0105dze\u0144 w sieci"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "bluetooth_confirm": {
+                "description": "Czy chcesz skonfigurowa\u0107 {name}?"
+            },
+            "get_encryption_key_4_5": {
+                "data": {
+                    "bindkey": "Bindkey"
+                },
+                "description": "Dane przesy\u0142ane przez sensor s\u0105 szyfrowane. Aby je odszyfrowa\u0107, potrzebujemy 32-znakowego szesnastkowego klucza bindkey."
+            },
+            "get_encryption_key_legacy": {
+                "data": {
+                    "bindkey": "Bindkey"
+                },
+                "description": "Dane przesy\u0142ane przez sensor s\u0105 szyfrowane. Aby je odszyfrowa\u0107, potrzebujemy 24-znakowego szesnastkowego klucza bindkey."
+            },
+            "user": {
+                "data": {
+                    "address": "Urz\u0105dzenie"
+                },
+                "description": "Wybierz urz\u0105dzenie do skonfigurowania"
+            }
+        }
+    }
+}

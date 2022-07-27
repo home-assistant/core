@@ -14,7 +14,7 @@ from __future__ import annotations
 
 # fmt: off
 
-BLUETOOTH: list[dict[str, str | int]] = {}
+BLUETOOTH: list[dict[str, str | int | list[int]]] = {}
 """.strip()
 
 

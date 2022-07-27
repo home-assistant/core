@@ -30,7 +30,6 @@ COMMENT_REQUIREMENTS = (
     "opencv-python-headless",
     "pybluez",
     "pycups",
-    "pySwitchmate",
     "python-eq3bt",
     "python-gammu",
     "python-lirc",
@@ -136,6 +135,10 @@ pydantic!=1.9.1
 # Breaks asyncio
 # https://github.com/pubnub/python/issues/130
 pubnub!=6.4.0
+
+# Package's __init__.pyi stub has invalid syntax and breaks mypy
+# https://github.com/dahlia/iso4217/issues/16
+iso4217!=1.10.20220401
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import functools
 import numbers
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from homeassistant.components.climate.const import HVACAction
 from homeassistant.components.sensor import (
@@ -69,6 +69,13 @@ if TYPE_CHECKING:
     from .core.channels.base import ZigbeeChannel
     from .core.device import ZHADevice
 
+_SensorSelfT = TypeVar("_SensorSelfT", bound="Sensor")
+_BatterySelfT = TypeVar("_BatterySelfT", bound="Battery")
+_ThermostatHVACActionSelfT = TypeVar(
+    "_ThermostatHVACActionSelfT", bound="ThermostatHVACAction"
+)
+_RSSISensorSelfT = TypeVar("_RSSISensorSelfT", bound="RSSISensor")
+
 PARALLEL_UPDATES = 5
 
 BATTERY_SIZES = {
@@ -126,7 +133,7 @@ class Sensor(ZhaEntity, SensorEntity):
         unique_id: str,
         zha_device: ZHADevice,
         channels: list[ZigbeeChannel],
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """Init this sensor."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
@@ -134,12 +141,12 @@ class Sensor(ZhaEntity, SensorEntity):
 
     @classmethod
     def create_entity(
-        cls,
+        cls: type[_SensorSelfT],
         unique_id: str,
         zha_device: ZHADevice,
         channels: list[ZigbeeChannel],
-        **kwargs,
-    ) -> ZhaEntity | None:
+        **kwargs: Any,
+    ) -> _SensorSelfT | None:
         """Entity Factory.
 
         Return entity if it is a supported configuration, otherwise return None
@@ -214,12 +221,12 @@ class Battery(Sensor):
 
     @classmethod
     def create_entity(
-        cls,
+        cls: type[_BatterySelfT],
         unique_id: str,
         zha_device: ZHADevice,
         channels: list[ZigbeeChannel],
-        **kwargs,
-    ) -> ZhaEntity | None:
+        **kwargs: Any,
+    ) -> _BatterySelfT | None:
         """Entity Factory.
 
         Unlike any other entity, PowerConfiguration cluster may not support
@@ -641,12 +648,12 @@ class ThermostatHVACAction(Sensor, id_suffix="hvac_action"):
 
     @classmethod
     def create_entity(
-        cls,
+        cls: type[_ThermostatHVACActionSelfT],
         unique_id: str,
         zha_device: ZHADevice,
         channels: list[ZigbeeChannel],
-        **kwargs,
-    ) -> ZhaEntity | None:
+        **kwargs: Any,
+    ) -> _ThermostatHVACActionSelfT | None:
         """Entity Factory.
 
         Return entity if it is a supported configuration, otherwise return None
@@ -767,12 +774,12 @@ class RSSISensor(Sensor, id_suffix="rssi"):
 
     @classmethod
     def create_entity(
-        cls,
+        cls: type[_RSSISensorSelfT],
         unique_id: str,
         zha_device: ZHADevice,
         channels: list[ZigbeeChannel],
-        **kwargs,
-    ) -> ZhaEntity | None:
+        **kwargs: Any,
+    ) -> _RSSISensorSelfT | None:
         """Entity Factory.
 
         Return entity if it is a supported configuration, otherwise return None
