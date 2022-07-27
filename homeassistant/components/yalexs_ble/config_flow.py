@@ -78,6 +78,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._discovered_key = discovered_key
         self._discovered_slot = discovered_slot
         for progress in self._async_in_progress(include_uninitialized=True):
+            # Integration discovery should abort other discovery types
+            # since it already has the keys and slots, and the other
+            # discovery types do not.
             context = progress["context"]
             if context.get(
                 "unique_id"
