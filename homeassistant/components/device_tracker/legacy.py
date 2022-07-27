@@ -6,7 +6,7 @@ from collections.abc import Callable, Coroutine, Sequence
 from datetime import datetime, timedelta
 import hashlib
 from types import ModuleType
-from typing import Any, Final, final
+from typing import Any, Final, Protocol, final
 
 import attr
 import voluptuous as vol
@@ -124,6 +124,48 @@ YAML_DEVICES: Final = "known_devices.yaml"
 EVENT_NEW_DEVICE: Final = "device_tracker_new_device"
 
 
+class SeeCallback(Protocol):
+    """Protocol type for DeviceTracker.see callback."""
+
+    def __call__(
+        self,
+        mac: str | None = None,
+        dev_id: str | None = None,
+        host_name: str | None = None,
+        location_name: str | None = None,
+        gps: GPSType | None = None,
+        gps_accuracy: int | None = None,
+        battery: int | None = None,
+        attributes: dict[str, Any] | None = None,
+        source_type: str = SOURCE_TYPE_GPS,
+        picture: str | None = None,
+        icon: str | None = None,
+        consider_home: timedelta | None = None,
+    ) -> None:
+        """Define see type."""
+
+
+class AsyncSeeCallback(Protocol):
+    """Protocol type for DeviceTracker.async_see callback."""
+
+    async def __call__(
+        self,
+        mac: str | None = None,
+        dev_id: str | None = None,
+        host_name: str | None = None,
+        location_name: str | None = None,
+        gps: GPSType | None = None,
+        gps_accuracy: int | None = None,
+        battery: int | None = None,
+        attributes: dict[str, Any] | None = None,
+        source_type: str = SOURCE_TYPE_GPS,
+        picture: str | None = None,
+        icon: str | None = None,
+        consider_home: timedelta | None = None,
+    ) -> None:
+        """Define async_see type."""
+
+
 def see(
     hass: HomeAssistant,
     mac: str | None = None,
@@ -133,7 +175,7 @@ def see(
     gps: GPSType | None = None,
     gps_accuracy: int | None = None,
     battery: int | None = None,
-    attributes: dict | None = None,
+    attributes: dict[str, Any] | None = None,
 ) -> None:
     """Call service to notify you see device."""
     data: dict[str, Any] = {
@@ -447,7 +489,7 @@ class DeviceTracker:
         gps: GPSType | None = None,
         gps_accuracy: int | None = None,
         battery: int | None = None,
-        attributes: dict | None = None,
+        attributes: dict[str, Any] | None = None,
         source_type: str = SOURCE_TYPE_GPS,
         picture: str | None = None,
         icon: str | None = None,
@@ -480,7 +522,7 @@ class DeviceTracker:
         gps: GPSType | None = None,
         gps_accuracy: int | None = None,
         battery: int | None = None,
-        attributes: dict | None = None,
+        attributes: dict[str, Any] | None = None,
         source_type: str = SOURCE_TYPE_GPS,
         picture: str | None = None,
         icon: str | None = None,
