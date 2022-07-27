@@ -42,7 +42,7 @@ def setup_scanner(
     see(
         dev_id="demo_home_boy",
         host_name="Home Boy",
-        gps=[hass.config.latitude - 0.00002, hass.config.longitude + 0.00002],
+        gps=(hass.config.latitude - 0.00002, hass.config.longitude + 0.00002),
         gps_accuracy=20,
         battery=53,
     )
