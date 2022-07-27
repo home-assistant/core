@@ -181,9 +181,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await push_lock.update()
             except BleakError:
                 errors["base"] = "cannot_connect"
-            except ValueError:
-                errors["key"] = "invalid_auth"
-            except AuthError:
+            except (AuthError, ValueError):
                 errors["key"] = "invalid_auth"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected error")
