@@ -30,6 +30,8 @@ class IssueEntry:
     domain: str
     is_fixable: bool | None
     issue_id: str
+    # Used if an integration creates issues for other integrations (ie alerts)
+    issue_domain: str | None
     learn_more_url: str | None
     severity: IssueSeverity | None
     translation_key: str | None
@@ -58,6 +60,7 @@ class IssueRegistry:
         domain: str,
         issue_id: str,
         *,
+        issue_domain: str | None = None,
         breaks_in_ha_version: str | None = None,
         is_fixable: bool,
         learn_more_url: str | None = None,
@@ -75,6 +78,7 @@ class IssueRegistry:
                 dismissed_version=None,
                 domain=domain,
                 is_fixable=is_fixable,
+                issue_domain=issue_domain,
                 issue_id=issue_id,
                 learn_more_url=learn_more_url,
                 severity=severity,
@@ -93,6 +97,7 @@ class IssueRegistry:
                 active=True,
                 breaks_in_ha_version=breaks_in_ha_version,
                 is_fixable=is_fixable,
+                issue_domain=issue_domain,
                 learn_more_url=learn_more_url,
                 severity=severity,
                 translation_key=translation_key,
@@ -155,6 +160,7 @@ class IssueRegistry:
                     domain=issue["domain"],
                     is_fixable=None,
                     issue_id=issue["issue_id"],
+                    issue_domain=None,
                     learn_more_url=None,
                     severity=None,
                     translation_key=None,
