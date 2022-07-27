@@ -115,6 +115,7 @@ homeassistant.components.group.*
 homeassistant.components.guardian.*
 homeassistant.components.history.*
 homeassistant.components.homeassistant.triggers.event
+homeassistant.components.homeassistant_alerts.*
 homeassistant.components.homekit
 homeassistant.components.homekit.accessories
 homeassistant.components.homekit.aidmanager
@@ -147,6 +148,7 @@ homeassistant.components.jewish_calendar.*
 homeassistant.components.kaleidescape.*
 homeassistant.components.knx.*
 homeassistant.components.kraken.*
+homeassistant.components.lacrosse_view.*
 homeassistant.components.lametric.*
 homeassistant.components.laundrify.*
 homeassistant.components.lcn.*
