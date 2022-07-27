@@ -7,6 +7,7 @@ from typing import Any, cast
 from bleak_retry_connector import BleakError
 import voluptuous as vol
 from yalexs_ble import AuthError, PushLock, local_name_to_serial, serial_to_local_name
+from yalexs_ble.const import YALE_MFR_ID
 
 from homeassistant import config_entries
 from homeassistant.components.bluetooth import (
@@ -161,6 +162,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if (
                     discovery.name in current_local_names
                     or discovery.name in self._discovered_devices
+                    or YALE_MFR_ID not in discovery.manufacturer_data
                 ):
                     continue
                 self._discovered_devices[discovery.name] = discovery
