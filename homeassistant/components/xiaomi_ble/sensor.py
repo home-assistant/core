@@ -30,7 +30,9 @@ from homeassistant.const import (
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_NAME,
+    CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
     CONDUCTIVITY,
+    ELECTRIC_POTENTIAL_VOLT,
     LIGHT_LUX,
     PERCENTAGE,
     PRESSURE_MBAR,
@@ -74,6 +76,12 @@ SENSOR_DESCRIPTIONS = {
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    (DeviceClass.VOLTAGE, Units.ELECTRIC_POTENTIAL_VOLT): SensorEntityDescription(
+        key=str(Units.ELECTRIC_POTENTIAL_VOLT),
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
     (
         DeviceClass.SIGNAL_STRENGTH,
         Units.SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
@@ -96,6 +104,12 @@ SENSOR_DESCRIPTIONS = {
         key=str(Units.CONDUCTIVITY),
         device_class=None,
         native_unit_of_measurement=CONDUCTIVITY,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # Used for e.g. formaldehyde
+    (None, Units.CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER): SensorEntityDescription(
+        key=str(Units.CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER),
+        native_unit_of_measurement=CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 }
