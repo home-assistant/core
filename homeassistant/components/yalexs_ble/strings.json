@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "{name} ({local_name})",
+    "flow_title": "{name} ({local_name}) {address}",
     "step": {
       "user": {
         "description": "Check the documentation at {docs_url} for how to find the offline key.",
@@ -11,10 +11,11 @@
         }
       },
       "integration_discovery_confirm": {
-        "description": "Do you want to setup {name} ({local_name})?"
+        "description": "Do you want to setup {name} ({local_name}) {address}?"
       }
     },
     "error": {
+      "not_found": "Bluetooth device not found.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
