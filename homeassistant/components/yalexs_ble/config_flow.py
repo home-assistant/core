@@ -111,7 +111,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             self._discovery_info = await async_wait_for_discovery(self.hass, local_name)
         except asyncio.TimeoutError:
-            return self.async_abort(reason="not_found")
+            return self.async_abort(reason="no_devices_found")
         self._discovered_name = name
         self._discovered_key = discovered_key
         self._discovered_slot = discovered_slot

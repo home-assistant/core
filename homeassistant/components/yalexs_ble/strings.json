@@ -11,11 +11,10 @@
         }
       },
       "integration_discovery_confirm": {
-        "description": "Do you want to setup {name} ({local_name}) {address}?"
+        "description": "Do you want to setup {name} ({local_name}) over Bluetooth with {address}?"
       }
     },
     "error": {
-      "not_found": "Bluetooth device not found.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
