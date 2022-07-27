@@ -31,7 +31,7 @@ COMMON_ENTITY_DESCRIPTIONS = (
     SensorEntityDescription(
         entity_registry_enabled_default=False,
         key=ATTR_VERSION_LATEST,
-        name="Newest Version",
+        name="Newest version",
     ),
 )
 
@@ -39,7 +39,7 @@ ADDON_ENTITY_DESCRIPTIONS = COMMON_ENTITY_DESCRIPTIONS + (
     SensorEntityDescription(
         entity_registry_enabled_default=False,
         key=ATTR_CPU_PERCENT,
-        name="CPU Percent",
+        name="CPU percent",
         icon="mdi:cpu-64-bit",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -47,7 +47,7 @@ ADDON_ENTITY_DESCRIPTIONS = COMMON_ENTITY_DESCRIPTIONS + (
     SensorEntityDescription(
         entity_registry_enabled_default=False,
         key=ATTR_MEMORY_PERCENT,
-        name="Memory Percent",
+        name="Memory percent",
         icon="mdi:memory",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -65,7 +65,7 @@ async def async_setup_entry(
     """Sensor set up for Hass.io config entry."""
     coordinator = hass.data[ADDONS_COORDINATOR]
 
-    entities = []
+    entities: list[HassioOSSensor | HassioAddonSensor] = []
 
     for addon in coordinator.data[DATA_KEY_ADDONS].values():
         for entity_description in ADDON_ENTITY_DESCRIPTIONS:

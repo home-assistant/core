@@ -1,13 +1,33 @@
 pause:
   name: Pause
   description: Pauses downloads.
+  fields:
+    api_key:
+      name: Sabnzbd API key
+      description: The Sabnzbd API key to pause downloads
+      required: true
+      selector:
+        text:
 resume:
   name: Resume
   description: Resumes downloads.
+  fields:
+    api_key:
+      name: Sabnzbd API key
+      description: The Sabnzbd API key to resume downloads
+      required: true
+      selector:
+        text:
 set_speed:
   name: Set speed
   description: Sets the download speed limit.
   fields:
+    api_key:
+      name: Sabnzbd API key
+      description: The Sabnzbd API key to set speed limit
+      required: true
+      selector:
+        text:
     speed:
       name: Speed
       description: Speed limit. If specified as a number with no units, will be interpreted as a percent. If units are provided (e.g., 500K) will be interpreted absolutely.

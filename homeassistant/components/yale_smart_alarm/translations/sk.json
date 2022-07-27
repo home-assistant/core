@@ -9,7 +9,8 @@
         "step": {
             "reauth_confirm": {
                 "data": {
-                    "name": "N\u00e1zov"
+                    "name": "N\u00e1zov",
+                    "password": "Heslo"
                 }
             },
             "user": {

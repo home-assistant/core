@@ -6,6 +6,7 @@
             "already_in_progress": "Alur konfigurasi sedang berlangsung",
             "cannot_connect": "Gagal terhubung",
             "discover_timeout": "Tidak dapat menemukan bridge Hue",
+            "invalid_host": "Host tidak valid",
             "no_bridges": "Bridge Philips Hue tidak ditemukan",
             "not_hue_bridge": "Bukan bridge Hue",
             "unknown": "Kesalahan yang tidak diharapkan"

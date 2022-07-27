@@ -1,5 +1,7 @@
 """Test ZHA select entities."""
 
+from unittest.mock import call, patch
+
 import pytest
 from zigpy.const import SIG_EP_PROFILE
 import zigpy.profiles.zha as zha
@@ -12,6 +14,24 @@ from homeassistant.util import dt as dt_util
 
 from .common import find_entity_id
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
+
+
+@pytest.fixture(autouse=True)
+def select_select_only():
+    """Only setup the select and required base platforms to speed up tests."""
+    with patch(
+        "homeassistant.components.zha.PLATFORMS",
+        (
+            Platform.BUTTON,
+            Platform.DEVICE_TRACKER,
+            Platform.SIREN,
+            Platform.LIGHT,
+            Platform.NUMBER,
+            Platform.SELECT,
+            Platform.SENSOR,
+        ),
+    ):
+        yield
 
 
 @pytest.fixture
@@ -50,6 +70,7 @@ async def light(hass, zigpy_device_mock):
                 SIG_EP_OUTPUT: [general.Ota.cluster_id],
             }
         },
+        node_descriptor=b"\x02@\x84_\x11\x7fd\x00\x00,d\x00\x00",
     )
 
     return zigpy_device
@@ -92,12 +113,11 @@ async def test_select(hass, siren):
     entity_registry = er.async_get(hass)
     zha_device, cluster = siren
     assert cluster is not None
-    select_name = security.IasWd.Warning.WarningMode.__name__
     entity_id = await find_entity_id(
         Platform.SELECT,
         zha_device,
         hass,
-        qualifier=select_name.lower(),
+        qualifier="tone",
     )
     assert entity_id is not None
 
@@ -142,7 +162,7 @@ async def test_select_restore_state(
 ):
     """Test zha select entity restore state."""
 
-    entity_id = "select.fakemanufacturer_fakemodel_e769900a_ias_wd_warningmode"
+    entity_id = "select.fakemanufacturer_fakemodel_defaulttoneselect"
     core_rs(entity_id, state="Burglar")
 
     zigpy_device = zigpy_device_mock(
@@ -159,12 +179,11 @@ async def test_select_restore_state(
     zha_device = await zha_device_restored(zigpy_device)
     cluster = zigpy_device.endpoints[1].ias_wd
     assert cluster is not None
-    select_name = security.IasWd.Warning.WarningMode.__name__
     entity_id = await find_entity_id(
         Platform.SELECT,
         zha_device,
         hass,
-        qualifier=select_name.lower(),
+        qualifier="tone",
     )
 
     assert entity_id is not None
@@ -173,15 +192,15 @@ async def test_select_restore_state(
     assert state.state == security.IasWd.Warning.WarningMode.Burglar.name
 
 
-async def test_on_off_select(hass, light, zha_device_joined_restored):
-    """Test zha on off select."""
+async def test_on_off_select_new_join(hass, light, zha_device_joined):
+    """Test zha on off select - new join."""
 
     entity_registry = er.async_get(hass)
     on_off_cluster = light.endpoints[1].on_off
     on_off_cluster.PLUGGED_ATTR_READS = {
         "start_up_on_off": general.OnOff.StartUpOnOff.On
     }
-    zha_device = await zha_device_joined_restored(light)
+    zha_device = await zha_device_joined(light)
     select_name = general.OnOff.StartUpOnOff.__name__
     entity_id = await find_entity_id(
         Platform.SELECT,
@@ -191,9 +210,20 @@ async def test_on_off_select(hass, light, zha_device_joined_restored):
     )
     assert entity_id is not None
 
+    assert on_off_cluster.read_attributes.call_count == 2
+    assert (
+        call(["start_up_on_off"], allow_cache=True, only_cache=False, manufacturer=None)
+        in on_off_cluster.read_attributes.call_args_list
+    )
+    assert (
+        call(["on_off"], allow_cache=False, only_cache=False, manufacturer=None)
+        in on_off_cluster.read_attributes.call_args_list
+    )
+
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_UNKNOWN
+    assert state.state == general.OnOff.StartUpOnOff.On.name
+
     assert state.attributes["options"] == ["Off", "On", "Toggle", "PreviousValue"]
 
     entity_entry = entity_registry.async_get(entity_id)
@@ -219,6 +249,58 @@ async def test_on_off_select(hass, light, zha_device_joined_restored):
     state = hass.states.get(entity_id)
     assert state
     assert state.state == general.OnOff.StartUpOnOff.Off.name
+
+
+async def test_on_off_select_restored(hass, light, zha_device_restored):
+    """Test zha on off select - restored."""
+
+    entity_registry = er.async_get(hass)
+    on_off_cluster = light.endpoints[1].on_off
+    on_off_cluster.PLUGGED_ATTR_READS = {
+        "start_up_on_off": general.OnOff.StartUpOnOff.On
+    }
+    zha_device = await zha_device_restored(light)
+
+    assert zha_device.is_mains_powered
+
+    assert on_off_cluster.read_attributes.call_count == 4
+    # first 2 calls hit cache only
+    assert (
+        call(["start_up_on_off"], allow_cache=True, only_cache=True, manufacturer=None)
+        in on_off_cluster.read_attributes.call_args_list
+    )
+    assert (
+        call(["on_off"], allow_cache=True, only_cache=True, manufacturer=None)
+        in on_off_cluster.read_attributes.call_args_list
+    )
+
+    # 2nd set of calls can actually read from the device
+    assert (
+        call(["start_up_on_off"], allow_cache=True, only_cache=False, manufacturer=None)
+        in on_off_cluster.read_attributes.call_args_list
+    )
+    assert (
+        call(["on_off"], allow_cache=False, only_cache=False, manufacturer=None)
+        in on_off_cluster.read_attributes.call_args_list
+    )
+
+    select_name = general.OnOff.StartUpOnOff.__name__
+    entity_id = await find_entity_id(
+        Platform.SELECT,
+        zha_device,
+        hass,
+        qualifier=select_name.lower(),
+    )
+    assert entity_id is not None
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == general.OnOff.StartUpOnOff.On.name
+    assert state.attributes["options"] == ["Off", "On", "Toggle", "PreviousValue"]
+
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    assert entity_entry.entity_category == ENTITY_CATEGORY_CONFIG
 
 
 async def test_on_off_select_unsupported(hass, light, zha_device_joined_restored):

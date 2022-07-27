@@ -58,7 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Cast from a config entry."""
     await home_assistant_cast.async_setup_ha_cast(hass, entry)
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
-    hass.data[DOMAIN] = {}
+    hass.data[DOMAIN] = {"cast_platform": {}, "unknown_models": {}}
     await async_process_integration_platforms(hass, DOMAIN, _register_cast_platform)
     return True
 
@@ -107,7 +107,7 @@ async def _register_cast_platform(
         or not hasattr(platform, "async_play_media")
     ):
         raise HomeAssistantError(f"Invalid cast platform {platform}")
-    hass.data[DOMAIN][integration_domain] = platform
+    hass.data[DOMAIN]["cast_platform"][integration_domain] = platform
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:

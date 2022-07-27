@@ -1,6 +1,5 @@
 """Support for MQTT JSON lights."""
 from contextlib import suppress
-import json
 import logging
 
 import voluptuous as vol
@@ -24,13 +23,11 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
-    SUPPORT_EFFECT,
-    SUPPORT_FLASH,
-    SUPPORT_TRANSITION,
     SUPPORT_WHITE_VALUE,
     VALID_COLOR_MODES,
     ColorMode,
     LightEntity,
+    LightEntityFeature,
     legacy_supported_features,
     valid_supported_color_modes,
 )
@@ -48,12 +45,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.json import json_dumps, json_loads
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.color as color_util
 
 from .. import subscription
-from ... import mqtt
+from ..config import DEFAULT_QOS, DEFAULT_RETAIN, MQTT_RW_SCHEMA
 from ..const import (
     CONF_COMMAND_TOPIC,
     CONF_ENCODING,
@@ -63,6 +61,7 @@ from ..const import (
 )
 from ..debug_info import log_messages
 from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity
+from ..util import valid_subscribe_topic
 from .schema import MQTT_LIGHT_SCHEMA_SCHEMA
 from .schema_basic import CONF_BRIGHTNESS_SCALE, MQTT_LIGHT_ATTRIBUTES_BLOCKED
 
@@ -105,7 +104,7 @@ def valid_color_configuration(config):
 
 
 _PLATFORM_SCHEMA_BASE = (
-    mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
+    MQTT_RW_SCHEMA.extend(
         {
             vol.Optional(CONF_BRIGHTNESS, default=DEFAULT_BRIGHTNESS): cv.boolean,
             vol.Optional(
@@ -128,12 +127,12 @@ _PLATFORM_SCHEMA_BASE = (
             vol.Optional(CONF_MIN_MIREDS): cv.positive_int,
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
-            vol.Optional(CONF_QOS, default=mqtt.DEFAULT_QOS): vol.All(
+            vol.Optional(CONF_QOS, default=DEFAULT_QOS): vol.All(
                 vol.Coerce(int), vol.In([0, 1, 2])
             ),
-            vol.Optional(CONF_RETAIN, default=mqtt.DEFAULT_RETAIN): cv.boolean,
+            vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
             vol.Optional(CONF_RGB, default=DEFAULT_RGB): cv.boolean,
-            vol.Optional(CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
+            vol.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
             vol.Inclusive(CONF_SUPPORTED_COLOR_MODES, "color_mode"): vol.All(
                 cv.ensure_list,
                 [vol.In(VALID_COLOR_MODES)],
@@ -148,13 +147,23 @@ _PLATFORM_SCHEMA_BASE = (
     .extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema)
 )
 
+# Configuring MQTT Lights under the light platform key is deprecated in HA Core 2022.6
 PLATFORM_SCHEMA_JSON = vol.All(
-    _PLATFORM_SCHEMA_BASE,
+    # CONF_WHITE_VALUE is deprecated, support will be removed in release 2022.9
+    cv.deprecated(CONF_WHITE_VALUE),
+    cv.PLATFORM_SCHEMA.extend(_PLATFORM_SCHEMA_BASE.schema),
     valid_color_configuration,
 )
 
 DISCOVERY_SCHEMA_JSON = vol.All(
+    # CONF_WHITE_VALUE is deprecated, support will be removed in release 2022.9
+    cv.deprecated(CONF_WHITE_VALUE),
     _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
+    valid_color_configuration,
+)
+
+PLATFORM_SCHEMA_MODERN_JSON = vol.All(
+    _PLATFORM_SCHEMA_BASE,
     valid_color_configuration,
 )
 
@@ -211,8 +220,10 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             for key in (CONF_FLASH_TIME_SHORT, CONF_FLASH_TIME_LONG)
         }
 
-        self._supported_features = SUPPORT_TRANSITION | SUPPORT_FLASH
-        self._supported_features |= config[CONF_EFFECT] and SUPPORT_EFFECT
+        self._supported_features = (
+            LightEntityFeature.TRANSITION | LightEntityFeature.FLASH
+        )
+        self._supported_features |= config[CONF_EFFECT] and LightEntityFeature.EFFECT
         if not self._config[CONF_COLOR_MODE]:
             self._supported_features |= config[CONF_BRIGHTNESS] and SUPPORT_BRIGHTNESS
             self._supported_features |= config[CONF_COLOR_TEMP] and SUPPORT_COLOR_TEMP
@@ -306,7 +317,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
         @log_messages(self.hass, self.entity_id)
         def state_received(msg):
             """Handle new MQTT messages."""
-            values = json.loads(msg.payload)
+            values = json_loads(msg.payload)
 
             if values["state"] == "ON":
                 self._state = True
@@ -351,7 +362,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 except ValueError:
                     _LOGGER.warning("Invalid color temp value received")
 
-            if self._supported_features and SUPPORT_EFFECT:
+            if self._supported_features and LightEntityFeature.EFFECT:
                 with suppress(KeyError):
                     self._effect = values["effect"]
 
@@ -633,7 +644,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
 
         await self.async_publish(
             self._topic[CONF_COMMAND_TOPIC],
-            json.dumps(message),
+            json_dumps(message),
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
             self._config[CONF_ENCODING],
@@ -658,7 +669,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
 
         await self.async_publish(
             self._topic[CONF_COMMAND_TOPIC],
-            json.dumps(message),
+            json_dumps(message),
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
             self._config[CONF_ENCODING],

@@ -13,8 +13,7 @@
                 "data": {
                     "host": ""
                 },
-                "description": "Seadista Dune HD sidumine. Kui seadistamisega on probleeme, mine aadressile https://www.home-assistant.io/integrations/dunehd\n\n Veendu, et seade on sisse l\u00fclitatud.",
-                "title": ""
+                "description": "Veendu, et m\u00e4ngija on sisse l\u00fclitatud."
             }
         }
     }

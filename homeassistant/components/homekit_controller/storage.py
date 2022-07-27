@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Any, TypedDict, cast
+from typing import Any, TypedDict
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.storage import Store
 
-from .const import DOMAIN
+from .const import DOMAIN, ENTITY_MAP
 
 ENTITY_MAP_STORAGE_KEY = f"{DOMAIN}-entity-map"
 ENTITY_MAP_STORAGE_VERSION = 1
@@ -46,7 +46,9 @@ class EntityMapStorage:
     def __init__(self, hass: HomeAssistant) -> None:
         """Create a new entity map store."""
         self.hass = hass
-        self.store = Store(hass, ENTITY_MAP_STORAGE_VERSION, ENTITY_MAP_STORAGE_KEY)
+        self.store = Store[StorageLayout](
+            hass, ENTITY_MAP_STORAGE_VERSION, ENTITY_MAP_STORAGE_KEY
+        )
         self.storage_data: dict[str, Pairing] = {}
 
     async def async_initialize(self) -> None:
@@ -55,8 +57,7 @@ class EntityMapStorage:
             # There is no cached data about HomeKit devices yet
             return
 
-        storage = cast(StorageLayout, raw_storage)
-        self.storage_data = storage.get("pairings", {})
+        self.storage_data = raw_storage.get("pairings", {})
 
     def get_map(self, homekit_id: str) -> Pairing | None:
         """Get a pairing cache item."""
@@ -87,6 +88,16 @@ class EntityMapStorage:
         self.store.async_delay_save(self._data_to_save, ENTITY_MAP_SAVE_DELAY)
 
     @callback
-    def _data_to_save(self) -> dict[str, Any]:
+    def _data_to_save(self) -> StorageLayout:
         """Return data of entity map to store in a file."""
-        return {"pairings": self.storage_data}
+        return StorageLayout(pairings=self.storage_data)
+
+
+async def async_get_entity_storage(hass: HomeAssistant) -> EntityMapStorage:
+    """Get entity storage."""
+    if ENTITY_MAP in hass.data:
+        map_storage: EntityMapStorage = hass.data[ENTITY_MAP]
+        return map_storage
+    map_storage = hass.data[ENTITY_MAP] = EntityMapStorage(hass)
+    await map_storage.async_initialize()
+    return map_storage

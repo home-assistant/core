@@ -12,15 +12,13 @@ async def test_climate_zones(hass):
     state = hass.states.get("climate.nick_office")
     assert state.state == HVACMode.HEAT_COOL
     expected_attributes = {
-        "attribution": "Data provided by mynexia.com",
+        "attribution": "Data provided by Trane Technologies",
         "current_humidity": 52.0,
         "current_temperature": 22.8,
         "dehumidify_setpoint": 45.0,
-        "dehumidify_supported": True,
         "fan_mode": "Auto",
         "fan_modes": ["Auto", "On", "Circulate"],
         "friendly_name": "Nick Office",
-        "humidify_supported": False,
         "humidity": 45.0,
         "hvac_action": "cooling",
         "hvac_modes": ["off", "auto", "heat_cool", "heat", "cool"],
@@ -35,7 +33,6 @@ async def test_climate_zones(hass):
         "target_temp_low": 17.2,
         "target_temp_step": 1.0,
         "temperature": None,
-        "zone_status": "Relieving Air",
     }
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
@@ -47,15 +44,13 @@ async def test_climate_zones(hass):
     assert state.state == HVACMode.HEAT_COOL
 
     expected_attributes = {
-        "attribution": "Data provided by mynexia.com",
+        "attribution": "Data provided by Trane Technologies",
         "current_humidity": 36.0,
         "current_temperature": 25.0,
         "dehumidify_setpoint": 50.0,
-        "dehumidify_supported": True,
         "fan_mode": "Auto",
         "fan_modes": ["Auto", "On", "Circulate"],
         "friendly_name": "Kitchen",
-        "humidify_supported": False,
         "humidity": 50.0,
         "hvac_action": "idle",
         "hvac_modes": ["off", "auto", "heat_cool", "heat", "cool"],
@@ -70,7 +65,6 @@ async def test_climate_zones(hass):
         "target_temp_low": 17.2,
         "target_temp_step": 1.0,
         "temperature": None,
-        "zone_status": "Idle",
     }
 
     # Only test for a subset of attributes in case

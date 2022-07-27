@@ -20,9 +20,9 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_PICTURE, PERCENTAGE, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import AugustData
@@ -154,7 +154,7 @@ async def async_setup_entry(
 
 async def _async_migrate_old_unique_ids(hass, devices):
     """Keypads now have their own serial number."""
-    registry = await async_get_registry(hass)
+    registry = er.async_get(hass)
     for device in devices:
         old_entity_id = registry.async_get_entity_id(
             "sensor", DOMAIN, device.old_unique_id

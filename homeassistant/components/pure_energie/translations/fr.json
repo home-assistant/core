@@ -13,6 +13,10 @@
                 "data": {
                     "host": "H\u00f4te"
                 }
+            },
+            "zeroconf_confirm": {
+                "description": "Voulez-vous ajouter Pure Energie Meter (`{model}`) \u00e0 Home Assistant\u00a0?",
+                "title": "D\u00e9couverte de l'appareil Pure Energie Meter"
             }
         }
     }

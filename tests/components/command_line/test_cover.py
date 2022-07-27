@@ -155,7 +155,7 @@ async def test_reload(hass: HomeAssistant) -> None:
 async def test_move_cover_failure(
     caplog: LogCaptureFixture, hass: HomeAssistant
 ) -> None:
-    """Test with state value."""
+    """Test command failure."""
 
     await setup_test_entity(
         hass,
@@ -165,6 +165,7 @@ async def test_move_cover_failure(
         DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: "cover.test"}, blocking=True
     )
     assert "Command failed" in caplog.text
+    assert "return code 1" in caplog.text
 
 
 async def test_unique_id(hass: HomeAssistant) -> None:

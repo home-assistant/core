@@ -5,16 +5,10 @@
             "reauth_successful": "Erfollegr\u00e4ich re-authentifiz\u00e9iert."
         },
         "error": {
-            "identifier_exists": "Konto ass scho registr\u00e9iert",
             "invalid_auth": "Ong\u00eblteg Authentifikatioun",
-            "still_awaiting_mfa": "Waart nach den MFA E-Mail Klick.",
             "unknown": "Onerwaarte Feeler"
         },
         "step": {
-            "mfa": {
-                "description": "Kuck den E-Mailen fir ee Link vun SimpliSafe. Nodeem de Link opgeruff gouf, komm heihinner zer\u00e9ck fir d'Installatioun vun der Integratioun ofzeschl\u00e9issen.",
-                "title": "SimpliSafe Multi-Faktor Authentifikatioun"
-            },
             "reauth_confirm": {
                 "data": {
                     "password": "Passwuert"
@@ -24,11 +18,9 @@
             },
             "user": {
                 "data": {
-                    "code": "Code (benotzt am Home Assistant Benotzer Interface)",
                     "password": "Passwuert",
                     "username": "E-Mail"
-                },
-                "title": "F\u00ebllt \u00e4r Informatiounen aus"
+                }
             }
         }
     },

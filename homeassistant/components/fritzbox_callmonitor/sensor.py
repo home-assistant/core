@@ -1,51 +1,35 @@
 """Sensor to monitor incoming/outgoing phone calls on a Fritz!Box router."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import datetime, timedelta
 import logging
 import queue
 from threading import Event as ThreadingEvent, Thread
 from time import sleep
+from typing import Any, cast
 
 from fritzconnection.core.fritzmonitor import FritzMonitor
-import voluptuous as vol
 
 from homeassistant.backports.enum import StrEnum
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_USERNAME,
-    EVENT_HOMEASSISTANT_STOP,
-)
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .base import FritzBoxPhonebook
 from .const import (
     ATTR_PREFIXES,
     CONF_PHONEBOOK,
     CONF_PREFIXES,
-    DEFAULT_HOST,
-    DEFAULT_NAME,
-    DEFAULT_PHONEBOOK,
-    DEFAULT_PORT,
-    DEFAULT_USERNAME,
     DOMAIN,
-    FRITZ_STATE_CALL,
-    FRITZ_STATE_CONNECT,
-    FRITZ_STATE_DISCONNECT,
-    FRITZ_STATE_RING,
     FRITZBOX_PHONEBOOK,
     ICON_PHONE,
     MANUFACTURER,
     SERIAL_NUMBER,
-    UNKNOWN_NAME,
+    FritzState,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -62,54 +46,22 @@ class CallState(StrEnum):
     IDLE = "idle"
 
 
-# Deprecated in Home Assistant 2022.3
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
-        vol.Optional(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PHONEBOOK, default=DEFAULT_PHONEBOOK): cv.positive_int,
-        vol.Optional(CONF_PREFIXES): vol.All(cv.ensure_list, [cv.string]),
-    }
-)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Import the platform into a config entry."""
-    _LOGGER.warning(
-        "Configuration of the AVM FRITZ!Box Call Monitor sensor platform in YAML "
-        "is deprecated and will be removed in Home Assistant 2022.5; "
-        "Your existing configuration has been imported into the UI automatically "
-        "and can be safely removed from your configuration.yaml file"
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
-    )
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the fritzbox_callmonitor sensor from config_entry."""
-    fritzbox_phonebook = hass.data[DOMAIN][config_entry.entry_id][FRITZBOX_PHONEBOOK]
+    fritzbox_phonebook: FritzBoxPhonebook = hass.data[DOMAIN][config_entry.entry_id][
+        FRITZBOX_PHONEBOOK
+    ]
 
-    phonebook_name = config_entry.title
-    phonebook_id = config_entry.data[CONF_PHONEBOOK]
-    prefixes = config_entry.options.get(CONF_PREFIXES)
-    serial_number = config_entry.data[SERIAL_NUMBER]
-    host = config_entry.data[CONF_HOST]
-    port = config_entry.data[CONF_PORT]
+    phonebook_name: str = config_entry.title
+    phonebook_id: int = config_entry.data[CONF_PHONEBOOK]
+    prefixes: list[str] | None = config_entry.options.get(CONF_PREFIXES)
+    serial_number: str = config_entry.data[SERIAL_NUMBER]
+    host: str = config_entry.data[CONF_HOST]
+    port: int = config_entry.data[CONF_PORT]
 
     name = f"{fritzbox_phonebook.fph.modelname} Call Monitor {phonebook_name}"
     unique_id = f"{serial_number}-{phonebook_id}"
@@ -129,17 +81,35 @@ async def async_setup_entry(
 class FritzBoxCallSensor(SensorEntity):
     """Implementation of a Fritz!Box call monitor."""
 
-    def __init__(self, name, unique_id, fritzbox_phonebook, prefixes, host, port):
+    _attr_icon = ICON_PHONE
+
+    def __init__(
+        self,
+        name: str,
+        unique_id: str,
+        fritzbox_phonebook: FritzBoxPhonebook,
+        prefixes: list[str] | None,
+        host: str,
+        port: int,
+    ) -> None:
         """Initialize the sensor."""
-        self._state: CallState = CallState.IDLE
-        self._attributes = {}
-        self._name = name.title()
-        self._unique_id = unique_id
         self._fritzbox_phonebook = fritzbox_phonebook
         self._prefixes = prefixes
         self._host = host
         self._port = port
-        self._monitor = None
+        self._monitor: FritzBoxCallMonitor | None = None
+        self._attributes: dict[str, str | list[str]] = {}
+
+        self._attr_name = name.title()
+        self._attr_unique_id = unique_id
+        self._attr_native_value = CallState.IDLE
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, unique_id)},
+            manufacturer=MANUFACTURER,
+            model=self._fritzbox_phonebook.fph.modelname,
+            name=self._fritzbox_phonebook.fph.modelname,
+            sw_version=self._fritzbox_phonebook.fph.fc.system_version,
+        )
 
     async def async_added_to_hass(self) -> None:
         """Connect to FRITZ!Box to monitor its call state."""
@@ -181,84 +151,45 @@ class FritzBoxCallSensor(SensorEntity):
 
     def set_state(self, state: CallState) -> None:
         """Set the state."""
-        self._state = state
+        self._attr_native_value = state
 
-    def set_attributes(self, attributes):
+    def set_attributes(self, attributes: Mapping[str, str]) -> None:
         """Set the state attributes."""
-        self._attributes = attributes
+        self._attributes = {**attributes}
 
     @property
-    def name(self):
-        """Return name of this sensor."""
-        return self._name
-
-    @property
-    def should_poll(self):
-        """Only poll to update phonebook, if defined."""
-        return self._fritzbox_phonebook is not None
-
-    @property
-    def native_value(self):
-        """Return the state of the device."""
-        return self._state
-
-    @property
-    def icon(self):
-        """Return the icon of the sensor."""
-        return ICON_PHONE
-
-    @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, str | list[str]]:
         """Return the state attributes."""
         if self._prefixes:
             self._attributes[ATTR_PREFIXES] = self._prefixes
         return self._attributes
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device specific attributes."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._unique_id)},
-            manufacturer=MANUFACTURER,
-            model=self._fritzbox_phonebook.fph.modelname,
-            name=self._fritzbox_phonebook.fph.modelname,
-            sw_version=self._fritzbox_phonebook.fph.fc.system_version,
-        )
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of the device."""
-        return self._unique_id
-
-    def number_to_name(self, number):
+    def number_to_name(self, number: str) -> str:
         """Return a name for a given phone number."""
-        if self._fritzbox_phonebook is None:
-            return UNKNOWN_NAME
         return self._fritzbox_phonebook.get_name(number)
 
-    def update(self):
+    def update(self) -> None:
         """Update the phonebook if it is defined."""
-        if self._fritzbox_phonebook is not None:
-            self._fritzbox_phonebook.update_phonebook()
+        self._fritzbox_phonebook.update_phonebook()
 
 
 class FritzBoxCallMonitor:
     """Event listener to monitor calls on the Fritz!Box."""
 
-    def __init__(self, host, port, sensor):
+    def __init__(self, host: str, port: int, sensor: FritzBoxCallSensor) -> None:
         """Initialize Fritz!Box monitor instance."""
         self.host = host
         self.port = port
-        self.connection = None
+        self.connection: FritzMonitor | None = None
         self.stopped = ThreadingEvent()
         self._sensor = sensor
 
-    def connect(self):
+    def connect(self) -> None:
         """Connect to the Fritz!Box."""
         _LOGGER.debug("Setting up socket connection")
         try:
             self.connection = FritzMonitor(address=self.host, port=self.port)
-            kwargs = {"event_queue": self.connection.start()}
+            kwargs: dict[str, Any] = {"event_queue": self.connection.start()}
             Thread(target=self._process_events, kwargs=kwargs).start()
         except OSError as err:
             self.connection = None
@@ -266,14 +197,17 @@ class FritzBoxCallMonitor:
                 "Cannot connect to %s on port %s: %s", self.host, self.port, err
             )
 
-    def _process_events(self, event_queue):
+    def _process_events(self, event_queue: queue.Queue[str]) -> None:
         """Listen to incoming or outgoing calls."""
         _LOGGER.debug("Connection established, waiting for events")
         while not self.stopped.is_set():
             try:
                 event = event_queue.get(timeout=10)
             except queue.Empty:
-                if not self.connection.is_alive and not self.stopped.is_set():
+                if (
+                    not cast(FritzMonitor, self.connection).is_alive
+                    and not self.stopped.is_set()
+                ):
                     _LOGGER.error("Connection has abruptly ended")
                 _LOGGER.debug("Empty event queue")
                 continue
@@ -282,13 +216,13 @@ class FritzBoxCallMonitor:
                 self._parse(event)
                 sleep(1)
 
-    def _parse(self, line):
+    def _parse(self, event: str) -> None:
         """Parse the call information and set the sensor states."""
-        line = line.split(";")
+        line = event.split(";")
         df_in = "%d.%m.%y %H:%M:%S"
         df_out = "%Y-%m-%dT%H:%M:%S"
         isotime = datetime.strptime(line[0], df_in).strftime(df_out)
-        if line[1] == FRITZ_STATE_RING:
+        if line[1] == FritzState.RING:
             self._sensor.set_state(CallState.RINGING)
             att = {
                 "type": "incoming",
@@ -299,7 +233,7 @@ class FritzBoxCallMonitor:
                 "from_name": self._sensor.number_to_name(line[3]),
             }
             self._sensor.set_attributes(att)
-        elif line[1] == FRITZ_STATE_CALL:
+        elif line[1] == FritzState.CALL:
             self._sensor.set_state(CallState.DIALING)
             att = {
                 "type": "outgoing",
@@ -310,7 +244,7 @@ class FritzBoxCallMonitor:
                 "to_name": self._sensor.number_to_name(line[5]),
             }
             self._sensor.set_attributes(att)
-        elif line[1] == FRITZ_STATE_CONNECT:
+        elif line[1] == FritzState.CONNECT:
             self._sensor.set_state(CallState.TALKING)
             att = {
                 "with": line[4],
@@ -319,7 +253,7 @@ class FritzBoxCallMonitor:
                 "with_name": self._sensor.number_to_name(line[4]),
             }
             self._sensor.set_attributes(att)
-        elif line[1] == FRITZ_STATE_DISCONNECT:
+        elif line[1] == FritzState.DISCONNECT:
             self._sensor.set_state(CallState.IDLE)
             att = {"duration": line[3], "closed": isotime}
             self._sensor.set_attributes(att)

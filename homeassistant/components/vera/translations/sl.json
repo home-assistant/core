@@ -9,9 +9,7 @@
                     "exclude": "ID-ji naprav Vera, ki jih \u017eelite izklju\u010diti iz programa Home Assistant.",
                     "lights": "ID-ji stikal Vera, ki naj jih Home Assistant tretira kot lu\u010di.",
                     "vera_controller_url": "URL krmilnika"
-                },
-                "description": "Spodaj navedite URL krmilnika Vera. Izgledati bi moral takole: http://192.168.1.161:3480.",
-                "title": "Nastavite krmilnik Vera"
+                }
             }
         }
     },

@@ -3,6 +3,10 @@ from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
+from homeassistant.components.automation import (
+    AutomationActionType,
+    AutomationTriggerInfo,
+)
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
@@ -16,7 +20,9 @@ from homeassistant.const import (
     CONF_TYPE,
     CONF_UNIQUE_ID,
 )
+from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.typing import ConfigType
 
 from ..const import ATTR_HUE_EVENT, CONF_SUBTYPE, DOMAIN
 
@@ -94,7 +100,7 @@ HUE_FOHSWITCH_REMOTE = {
 }
 
 
-REMOTES = {
+REMOTES: dict[str, dict[tuple[str, str], dict[str, int]]] = {
     HUE_DIMMER_REMOTE_MODEL: HUE_DIMMER_REMOTE,
     HUE_TAP_REMOTE_MODEL: HUE_TAP_REMOTE,
     HUE_BUTTON_REMOTE_MODEL: HUE_BUTTON_REMOTE,
@@ -113,7 +119,9 @@ def _get_hue_event_from_device_id(hass, device_id):
     return None
 
 
-async def async_validate_trigger_config(bridge, device_entry, config):
+async def async_validate_trigger_config(
+    bridge: "HueBridge", device_entry: DeviceEntry, config: ConfigType
+) -> ConfigType:
     """Validate config."""
     config = TRIGGER_SCHEMA(config)
     trigger = (config[CONF_TYPE], config[CONF_SUBTYPE])
@@ -136,7 +144,13 @@ async def async_validate_trigger_config(bridge, device_entry, config):
     return config
 
 
-async def async_attach_trigger(bridge, device_entry, config, action, automation_info):
+async def async_attach_trigger(
+    bridge: "HueBridge",
+    device_entry: DeviceEntry,
+    config: ConfigType,
+    action: AutomationActionType,
+    automation_info: AutomationTriggerInfo,
+) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
     hass = bridge.hass
 
@@ -144,9 +158,10 @@ async def async_attach_trigger(bridge, device_entry, config, action, automation_
     if hue_event is None:
         raise InvalidDeviceAutomationConfig
 
-    trigger = (config[CONF_TYPE], config[CONF_SUBTYPE])
+    trigger_key: tuple[str, str] = (config[CONF_TYPE], config[CONF_SUBTYPE])
 
-    trigger = REMOTES[device_entry.model][trigger]
+    assert device_entry.model
+    trigger = REMOTES[device_entry.model][trigger_key]
 
     event_config = {
         event_trigger.CONF_PLATFORM: "event",
@@ -160,7 +175,10 @@ async def async_attach_trigger(bridge, device_entry, config, action, automation_
     )
 
 
-async def async_get_triggers(bridge: "HueBridge", device: DeviceEntry):
+@callback
+def async_get_triggers(
+    bridge: "HueBridge", device: DeviceEntry
+) -> list[dict[str, str]]:
     """Return device triggers for device on `v1` bridge.
 
     Make sure device is a supported remote model.
@@ -168,7 +186,7 @@ async def async_get_triggers(bridge: "HueBridge", device: DeviceEntry):
     Generate device trigger list.
     """
     if device.model not in REMOTES:
-        return
+        return []
 
     triggers = []
     for trigger, subtype in REMOTES[device.model]:

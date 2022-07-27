@@ -23,9 +23,9 @@
         "step": {
             "init": {
                 "data": {
-                    "fallback": "Activa el mode salvaguarda."
+                    "fallback": "Tria el mode alternatiu."
                 },
-                "description": "El mode salvaguarda canviar\u00e0 a Planificaci\u00f3 Intel\u00b7ligent en el proper canvi de programaci\u00f3 o quan s'ajusti manualment una zona.",
+                "description": "El mode alternatiu et permet triar quan passar al mode alternatiu d'horari intel\u00b7ligent des de la teva zona manual. (NEXT_TIME_BLOCK:= Canvia al pr\u00f2xim canvi de l'horari intel\u00b7ligent; MANUAL:= No canvia fins que es cancel\u00b7la; TADO_DEFAULT:= Canvia en funci\u00f3 de la configuraci\u00f3 de l'app Tado).",
                 "title": "Ajusta les opcions de Tado"
             }
         }

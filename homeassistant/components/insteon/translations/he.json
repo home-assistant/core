@@ -7,6 +7,7 @@
         "error": {
             "cannot_connect": "\u05d4\u05d4\u05ea\u05d7\u05d1\u05e8\u05d5\u05ea \u05e0\u05db\u05e9\u05dc\u05d4"
         },
+        "flow_title": "{name}",
         "step": {
             "hubv1": {
                 "data": {

@@ -26,7 +26,6 @@
         "step": {
             "configure_addon": {
                 "data": {
-                    "network_key": "A\u011f Anahtar\u0131",
                     "s0_legacy_key": "S0 Anahtar\u0131 (Eski)",
                     "s2_access_control_key": "S2 Eri\u015fim Kontrol Anahtar\u0131",
                     "s2_authenticated_key": "S2 Kimli\u011fi Do\u011frulanm\u0131\u015f Anahtar",
@@ -59,6 +58,10 @@
             },
             "usb_confirm": {
                 "description": "{name} Z-Wave JS eklentisiyle kurmak istiyor musunuz?"
+            },
+            "zeroconf_confirm": {
+                "description": "{url} adresinde bulunan {home_id} ev kimli\u011fine sahip Z-Wave JS Sunucusunu Home Assistant'a eklemek istiyor musunuz?",
+                "title": "Ke\u015ffedilen Z-Wave JS Sunucusu"
             }
         }
     },
@@ -113,7 +116,6 @@
                 "data": {
                     "emulate_hardware": "Donan\u0131m\u0131 Taklit Et",
                     "log_level": "G\u00fcnl\u00fck d\u00fczeyi",
-                    "network_key": "A\u011f Anahtar\u0131",
                     "s0_legacy_key": "S0 Anahtar\u0131 (Eski)",
                     "s2_access_control_key": "S2 Eri\u015fim Kontrol Anahtar\u0131",
                     "s2_authenticated_key": "S2 Kimli\u011fi Do\u011frulanm\u0131\u015f Anahtar",
@@ -142,6 +144,5 @@
                 "title": "Z-Wave JS eklentisi ba\u015fl\u0131yor."
             }
         }
-    },
-    "title": "Z-Wave JS"
+    }
 }

@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "no_home": "Home Assistant\uc5d0 \ud648 \uc88c\ud45c\uac00 \uc124\uc815\ub418\uc5b4 \uc788\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4."
+        },
         "error": {
             "already_configured": "\uc11c\ube44\uc2a4\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
         },

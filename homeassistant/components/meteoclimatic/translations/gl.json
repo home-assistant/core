@@ -1,9 +1,0 @@
-{
-    "config": {
-        "step": {
-            "user": {
-                "description": "Introduza o c\u00f3digo da estaci\u00f3n Meteoclimatic (por exemplo, ESCAT4300000043206B)"
-            }
-        }
-    }
-}

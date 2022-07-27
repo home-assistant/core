@@ -52,7 +52,7 @@ async def test_import_query(hass: HomeAssistant) -> None:
 
     assert hass.config_entries.async_entries(DOMAIN)
     options = hass.config_entries.async_entries(DOMAIN)[0].options
-    assert options[CONF_NAME] == "Select value SQL query"
+    assert options[CONF_NAME] == "count_tables"
 
 
 async def test_query_value_template(hass: HomeAssistant) -> None:
@@ -115,7 +115,30 @@ async def test_query_no_value(
     state = hass.states.get("sensor.count_tables")
     assert state.state == STATE_UNKNOWN
 
-    text = "SELECT 5 as value where 1=2 returned no results"
+    text = "SELECT 5 as value where 1=2 LIMIT 1; returned no results"
+    assert text in caplog.text
+
+
+async def test_query_mssql_no_result(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test the SQL sensor with a query that returns no value."""
+    config = {
+        "db_url": "mssql://",
+        "query": "SELECT 5 as value where 1=2",
+        "column": "value",
+        "name": "count_tables",
+    }
+    with patch("homeassistant.components.sql.sensor.sqlalchemy"), patch(
+        "homeassistant.components.sql.sensor.sqlalchemy.text",
+        return_value="SELECT TOP 1 5 as value where 1=2",
+    ):
+        await init_integration(hass, config)
+
+    state = hass.states.get("sensor.count_tables")
+    assert state.state == STATE_UNKNOWN
+
+    text = "SELECT TOP 1 5 AS VALUE WHERE 1=2 returned no results"
     assert text in caplog.text
 
 

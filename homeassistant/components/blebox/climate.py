@@ -1,4 +1,6 @@
 """BleBox climate entity."""
+from datetime import timedelta
+
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ClimateEntityFeature,
@@ -11,6 +13,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BleBoxEntity, create_blebox_entities
+
+SCAN_INTERVAL = timedelta(seconds=5)
 
 
 async def async_setup_entry(

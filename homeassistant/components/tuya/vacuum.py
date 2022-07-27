@@ -78,51 +78,54 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
 
     _fan_speed: EnumTypeData | None = None
     _battery_level: IntegerTypeData | None = None
-    _supported_features = 0
 
     def __init__(self, device: TuyaDevice, device_manager: TuyaDeviceManager) -> None:
         """Init Tuya vacuum."""
         super().__init__(device, device_manager)
 
-        self._supported_features |= VacuumEntityFeature.SEND_COMMAND
+        self._attr_supported_features = 0
+        self._attr_fan_speed_list = []
+
+        self._attr_supported_features |= VacuumEntityFeature.SEND_COMMAND
         if self.find_dpcode(DPCode.PAUSE, prefer_function=True):
-            self._supported_features |= VacuumEntityFeature.PAUSE
+            self._attr_supported_features |= VacuumEntityFeature.PAUSE
 
         if self.find_dpcode(DPCode.SWITCH_CHARGE, prefer_function=True):
-            self._supported_features |= VacuumEntityFeature.RETURN_HOME
+            self._attr_supported_features |= VacuumEntityFeature.RETURN_HOME
         elif (
             enum_type := self.find_dpcode(
                 DPCode.MODE, dptype=DPType.ENUM, prefer_function=True
             )
         ) and TUYA_MODE_RETURN_HOME in enum_type.range:
-            self._supported_features |= VacuumEntityFeature.RETURN_HOME
+            self._attr_supported_features |= VacuumEntityFeature.RETURN_HOME
 
         if self.find_dpcode(DPCode.SEEK, prefer_function=True):
-            self._supported_features |= VacuumEntityFeature.LOCATE
+            self._attr_supported_features |= VacuumEntityFeature.LOCATE
 
         if self.find_dpcode(DPCode.STATUS, prefer_function=True):
-            self._supported_features |= (
+            self._attr_supported_features |= (
                 VacuumEntityFeature.STATE | VacuumEntityFeature.STATUS
             )
 
         if self.find_dpcode(DPCode.POWER, prefer_function=True):
-            self._supported_features |= (
+            self._attr_supported_features |= (
                 VacuumEntityFeature.TURN_ON | VacuumEntityFeature.TURN_OFF
             )
 
         if self.find_dpcode(DPCode.POWER_GO, prefer_function=True):
-            self._supported_features |= (
+            self._attr_supported_features |= (
                 VacuumEntityFeature.STOP | VacuumEntityFeature.START
             )
 
         if enum_type := self.find_dpcode(
             DPCode.SUCTION, dptype=DPType.ENUM, prefer_function=True
         ):
-            self._supported_features |= VacuumEntityFeature.FAN_SPEED
             self._fan_speed = enum_type
+            self._attr_fan_speed_list = enum_type.range
+            self._attr_supported_features |= VacuumEntityFeature.FAN_SPEED
 
         if int_type := self.find_dpcode(DPCode.ELECTRICITY_LEFT, dptype=DPType.INTEGER):
-            self._supported_features |= VacuumEntityFeature.BATTERY
+            self._attr_supported_features |= VacuumEntityFeature.BATTERY
             self._battery_level = int_type
 
     @property
@@ -140,13 +143,6 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
         return self.device.status.get(DPCode.SUCTION)
 
     @property
-    def fan_speed_list(self) -> list[str]:
-        """Get the list of available fan speed steps of the vacuum cleaner."""
-        if self._fan_speed is None:
-            return []
-        return self._fan_speed.range
-
-    @property
     def state(self) -> str | None:
         """Return Tuya vacuum device state."""
         if self.device.status.get(DPCode.PAUSE) and not (
@@ -156,11 +152,6 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
         if not (status := self.device.status.get(DPCode.STATUS)):
             return None
         return TUYA_STATUS_TO_HA.get(status)
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return self._supported_features
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""

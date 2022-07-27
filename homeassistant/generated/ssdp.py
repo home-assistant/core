@@ -24,7 +24,8 @@ SSDP = {
     ],
     "deconz": [
         {
-            "manufacturer": "Royal Philips Electronics"
+            "manufacturer": "Royal Philips Electronics",
+            "manufacturerURL": "http://www.dresden-elektronik.de"
         }
     ],
     "denonavr": [

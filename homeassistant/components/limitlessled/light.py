@@ -24,13 +24,9 @@ from homeassistant.components.light import (
     EFFECT_WHITE,
     FLASH_LONG,
     PLATFORM_SCHEMA,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_COLOR_TEMP,
-    SUPPORT_EFFECT,
-    SUPPORT_FLASH,
-    SUPPORT_TRANSITION,
+    ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -62,24 +58,17 @@ MIN_SATURATION = 10
 
 WHITE = [0, 0]
 
-SUPPORT_LIMITLESSLED_WHITE = (
-    SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_EFFECT | SUPPORT_TRANSITION
-)
-SUPPORT_LIMITLESSLED_DIMMER = SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
+COLOR_MODES_LIMITLESS_WHITE = {ColorMode.COLOR_TEMP}
+SUPPORT_LIMITLESSLED_WHITE = LightEntityFeature.EFFECT | LightEntityFeature.TRANSITION
+COLOR_MODES_LIMITLESS_DIMMER = {ColorMode.BRIGHTNESS}
+SUPPORT_LIMITLESSLED_DIMMER = LightEntityFeature.TRANSITION
+COLOR_MODES_LIMITLESS_RGB = {ColorMode.HS}
 SUPPORT_LIMITLESSLED_RGB = (
-    SUPPORT_BRIGHTNESS
-    | SUPPORT_EFFECT
-    | SUPPORT_FLASH
-    | SUPPORT_COLOR
-    | SUPPORT_TRANSITION
+    LightEntityFeature.EFFECT | LightEntityFeature.FLASH | LightEntityFeature.TRANSITION
 )
+COLOR_MODES_LIMITLESS_RGBWW = {ColorMode.COLOR_TEMP, ColorMode.HS}
 SUPPORT_LIMITLESSLED_RGBWW = (
-    SUPPORT_BRIGHTNESS
-    | SUPPORT_COLOR_TEMP
-    | SUPPORT_EFFECT
-    | SUPPORT_FLASH
-    | SUPPORT_COLOR
-    | SUPPORT_TRANSITION
+    LightEntityFeature.EFFECT | LightEntityFeature.FLASH | LightEntityFeature.TRANSITION
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -218,17 +207,30 @@ class LimitlessLEDGroup(LightEntity, RestoreEntity):
         """Initialize a group."""
 
         if isinstance(group, WhiteGroup):
-            self._supported = SUPPORT_LIMITLESSLED_WHITE
+            self._attr_supported_color_modes = COLOR_MODES_LIMITLESS_WHITE
+            self._attr_supported_features = SUPPORT_LIMITLESSLED_WHITE
             self._effect_list = [EFFECT_NIGHT]
         elif isinstance(group, DimmerGroup):
-            self._supported = SUPPORT_LIMITLESSLED_DIMMER
+            self._attr_supported_color_modes = COLOR_MODES_LIMITLESS_DIMMER
+            self._attr_supported_features = SUPPORT_LIMITLESSLED_DIMMER
             self._effect_list = []
         elif isinstance(group, RgbwGroup):
-            self._supported = SUPPORT_LIMITLESSLED_RGB
+            self._attr_supported_color_modes = COLOR_MODES_LIMITLESS_RGB
+            self._attr_supported_features = SUPPORT_LIMITLESSLED_RGB
             self._effect_list = [EFFECT_COLORLOOP, EFFECT_NIGHT, EFFECT_WHITE]
         elif isinstance(group, RgbwwGroup):
-            self._supported = SUPPORT_LIMITLESSLED_RGBWW
+            self._attr_supported_color_modes = COLOR_MODES_LIMITLESS_RGBWW
+            self._attr_supported_features = SUPPORT_LIMITLESSLED_RGBWW
             self._effect_list = [EFFECT_COLORLOOP, EFFECT_NIGHT, EFFECT_WHITE]
+
+        self._fixed_color_mode = None
+        if len(self._attr_supported_color_modes) == 1:
+            self._fixed_color_mode = next(iter(self._attr_supported_color_modes))
+        else:
+            assert self._attr_supported_color_modes == {
+                ColorMode.COLOR_TEMP,
+                ColorMode.HS,
+            }
 
         self.group = group
         self.config = config
@@ -286,27 +288,25 @@ class LimitlessLEDGroup(LightEntity, RestoreEntity):
         return 370
 
     @property
+    def color_mode(self) -> str | None:
+        """Return the color mode of the light."""
+        if self._fixed_color_mode:
+            return self._fixed_color_mode
+
+        # The light supports both hs and white with adjustable color temperature
+        if self._effect == EFFECT_NIGHT or self._color is None or self._color[1] == 0:
+            return ColorMode.COLOR_TEMP
+        return ColorMode.HS
+
+    @property
     def color_temp(self):
         """Return the temperature property."""
-        if self.hs_color is not None:
-            return None
         return self._temperature
 
     @property
     def hs_color(self):
         """Return the color property."""
-        if self._effect == EFFECT_NIGHT:
-            return None
-
-        if self._color is None or self._color[1] == 0:
-            return None
-
         return self._color
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return self._supported
 
     @property
     def effect(self):
@@ -348,7 +348,7 @@ class LimitlessLEDGroup(LightEntity, RestoreEntity):
             self._brightness = kwargs[ATTR_BRIGHTNESS]
             args["brightness"] = self.limitlessled_brightness()
 
-        if ATTR_HS_COLOR in kwargs and self._supported & SUPPORT_COLOR:
+        if ATTR_HS_COLOR in kwargs:
             self._color = kwargs[ATTR_HS_COLOR]
             # White is a special case.
             if self._color[1] < MIN_SATURATION:
@@ -358,18 +358,17 @@ class LimitlessLEDGroup(LightEntity, RestoreEntity):
                 args["color"] = self.limitlessled_color()
 
         if ATTR_COLOR_TEMP in kwargs:
-            if self._supported & SUPPORT_COLOR:
+            if ColorMode.HS in self.supported_color_modes:
                 pipeline.white()
             self._color = WHITE
-            if self._supported & SUPPORT_COLOR_TEMP:
-                self._temperature = kwargs[ATTR_COLOR_TEMP]
-                args["temperature"] = self.limitlessled_temperature()
+            self._temperature = kwargs[ATTR_COLOR_TEMP]
+            args["temperature"] = self.limitlessled_temperature()
 
         if args:
             pipeline.transition(transition_time, **args)
 
         # Flash.
-        if ATTR_FLASH in kwargs and self._supported & SUPPORT_FLASH:
+        if ATTR_FLASH in kwargs and self.supported_features & LightEntityFeature.FLASH:
             duration = 0
             if kwargs[ATTR_FLASH] == FLASH_LONG:
                 duration = 1

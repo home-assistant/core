@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "device_key": "Klucz Twojego urz\u0105dzenia",
+                    "event": "Wydarzenie dla wydarze\u0144.",
+                    "name": "Nazwa",
+                    "password": "Has\u0142o szyfrowania u\u017cywane przez Twoje urz\u0105dzenie",
+                    "salt": "Salt u\u017cywane przez Twoje urz\u0105dzenie."
+                }
+            }
+        }
+    }
+}

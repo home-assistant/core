@@ -1,7 +1,9 @@
 """Config flow for Netatmo."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
+from typing import Any
 import uuid
 
 import voluptuous as vol
@@ -66,7 +68,7 @@ class NetatmoFlowHandler(
 
         return await super().async_step_user(user_input)
 
-    async def async_step_reauth(self, user_input: dict | None = None) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""
         return await self.async_step_reauth_confirm()
 

@@ -13,9 +13,7 @@
             "user": {
                 "data": {
                     "host": "Vert"
-                },
-                "description": "Sett opp Twinkly-led-strengen",
-                "title": "Twinkly"
+                }
             }
         }
     }

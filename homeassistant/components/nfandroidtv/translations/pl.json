@@ -13,8 +13,7 @@
                     "host": "Nazwa hosta lub adres IP",
                     "name": "Nazwa"
                 },
-                "description": "Ta integracja wymaga aplikacji Powiadomienia dla Androida TV. \n\nAndroid TV: https://play.google.com/store/apps/details?id=de.cyberdream.androidtv.notifications.google\nFire TV: https://www.amazon.com/Christian-Fees-Notifications-for-Fire/dp/B00OESCXEK \n\nNale\u017cy skonfigurowa\u0107 rezerwacj\u0119 DHCP na routerze (patrz instrukcja obs\u0142ugi routera) lub ustawi\u0107 statyczny adres IP na urz\u0105dzeniu. Je\u015bli tego nie zrobisz, urz\u0105dzenie ostatecznie stanie si\u0119 niedost\u0119pne.",
-                "title": "Powiadomienia dla Android TV / Fire TV"
+                "description": "Zapoznaj si\u0119 z dokumentacj\u0105, aby upewni\u0107 si\u0119, \u017ce wszystkie wymagania s\u0105 spe\u0142nione."
             }
         }
     }

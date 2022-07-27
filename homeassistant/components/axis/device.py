@@ -274,7 +274,9 @@ class AxisNetworkDevice:
         )
 
 
-async def get_device(hass, host, port, username, password):
+async def get_device(
+    hass: HomeAssistant, host: str, port: int, username: str, password: str
+) -> axis.AxisDevice:
     """Create a Axis device."""
     session = get_async_client(hass, verify_ssl=False)
 

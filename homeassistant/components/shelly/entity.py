@@ -46,7 +46,8 @@ from .utils import (
 )
 
 
-async def async_setup_entry_attribute_entities(
+@callback
+def async_setup_entry_attribute_entities(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
@@ -62,11 +63,11 @@ async def async_setup_entry_attribute_entities(
     ][BLOCK]
 
     if wrapper.device.initialized:
-        await async_setup_block_attribute_entities(
+        async_setup_block_attribute_entities(
             hass, async_add_entities, wrapper, sensors, sensor_class
         )
     else:
-        await async_restore_block_attribute_entities(
+        async_restore_block_attribute_entities(
             hass,
             config_entry,
             async_add_entities,
@@ -77,7 +78,8 @@ async def async_setup_entry_attribute_entities(
         )
 
 
-async def async_setup_block_attribute_entities(
+@callback
+def async_setup_block_attribute_entities(
     hass: HomeAssistant,
     async_add_entities: AddEntitiesCallback,
     wrapper: BlockDeviceWrapper,
@@ -105,7 +107,7 @@ async def async_setup_block_attribute_entities(
             ):
                 domain = sensor_class.__module__.split(".")[-1]
                 unique_id = f"{wrapper.mac}-{block.description}-{sensor_id}"
-                await async_remove_shelly_entity(hass, domain, unique_id)
+                async_remove_shelly_entity(hass, domain, unique_id)
             else:
                 blocks.append((block, sensor_id, description))
 
@@ -120,7 +122,8 @@ async def async_setup_block_attribute_entities(
     )
 
 
-async def async_restore_block_attribute_entities(
+@callback
+def async_restore_block_attribute_entities(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
@@ -134,7 +137,7 @@ async def async_restore_block_attribute_entities(
     """Restore block attributes entities."""
     entities = []
 
-    ent_reg = await entity_registry.async_get_registry(hass)
+    ent_reg = entity_registry.async_get(hass)
     entries = entity_registry.async_entries_for_config_entry(
         ent_reg, config_entry.entry_id
     )
@@ -158,7 +161,8 @@ async def async_restore_block_attribute_entities(
     async_add_entities(entities)
 
 
-async def async_setup_entry_rpc(
+@callback
+def async_setup_entry_rpc(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
@@ -192,7 +196,7 @@ async def async_setup_entry_rpc(
             ):
                 domain = sensor_class.__module__.split(".")[-1]
                 unique_id = f"{wrapper.mac}-{key}-{sensor_id}"
-                await async_remove_shelly_entity(hass, domain, unique_id)
+                async_remove_shelly_entity(hass, domain, unique_id)
             else:
                 if description.use_polling_wrapper:
                     entities.append(
@@ -207,7 +211,8 @@ async def async_setup_entry_rpc(
     async_add_entities(entities)
 
 
-async def async_setup_entry_rest(
+@callback
+def async_setup_entry_rest(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,

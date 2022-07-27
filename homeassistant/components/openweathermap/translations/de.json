@@ -15,10 +15,9 @@
                     "latitude": "Breitengrad",
                     "longitude": "L\u00e4ngengrad",
                     "mode": "Modus",
-                    "name": "Name der Integration"
+                    "name": "Name"
                 },
-                "description": "Richte die OpenWeatherMap-Integration ein. Zum Generieren des API-Schl\u00fcssels gehe auf https://openweathermap.org/appid",
-                "title": "OpenWeatherMap"
+                "description": "Um den API-Schl\u00fcssel zu generieren, besuche https://openweathermap.org/appid"
             }
         }
     },

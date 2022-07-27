@@ -9,9 +9,6 @@
         },
         "flow_title": "{name}",
         "step": {
-            "confirm": {
-                "description": "Wilt u beginnen met instellen?"
-            },
             "user": {
                 "data": {
                     "host": "Host"
@@ -23,6 +20,5 @@
                 "title": "Ontdekt Modern Forms ventilator apparaat"
             }
         }
-    },
-    "title": "Modern Forms"
+    }
 }

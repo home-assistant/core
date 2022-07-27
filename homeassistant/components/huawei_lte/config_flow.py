@@ -5,9 +5,9 @@ import logging
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
 
-from huawei_lte_api.AuthorizedConnection import AuthorizedConnection
 from huawei_lte_api.Client import Client
-from huawei_lte_api.Connection import GetResponseType
+from huawei_lte_api.Connection import Connection
+from huawei_lte_api.Session import GetResponseType
 from huawei_lte_api.exceptions import (
     LoginErrorPasswordWrongException,
     LoginErrorUsernamePasswordOverrunException,
@@ -108,19 +108,17 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input=user_input, errors=errors
             )
 
-        conn: AuthorizedConnection
-
         def logout() -> None:
             try:
-                conn.user.logout()
+                conn.user_session.user.logout()  # type: ignore[union-attr]
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.debug("Could not logout", exc_info=True)
 
-        def try_connect(user_input: dict[str, Any]) -> AuthorizedConnection:
+        def try_connect(user_input: dict[str, Any]) -> Connection:
             """Try connecting with given credentials."""
             username = user_input.get(CONF_USERNAME) or ""
             password = user_input.get(CONF_PASSWORD) or ""
-            conn = AuthorizedConnection(
+            conn = Connection(
                 user_input[CONF_URL],
                 username=username,
                 password=password,

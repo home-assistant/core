@@ -198,7 +198,8 @@ async def test_fetch_blueprint_from_github_url(hass, aioclient_mock, url):
     assert imported_blueprint.blueprint.domain == "automation"
     assert imported_blueprint.blueprint.inputs == {
         "service_to_call": None,
-        "trigger_event": None,
+        "trigger_event": {"selector": {"text": {}}},
+        "a_number": {"selector": {"number": {"mode": "box", "step": 1.0}}},
     }
     assert imported_blueprint.suggested_filename == "balloob/motion_light"
     assert imported_blueprint.blueprint.metadata["source_url"] == url

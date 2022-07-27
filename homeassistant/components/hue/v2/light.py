@@ -17,11 +17,9 @@ from homeassistant.components.light import (
     ATTR_TRANSITION,
     ATTR_XY_COLOR,
     FLASH_SHORT,
-    SUPPORT_EFFECT,
-    SUPPORT_FLASH,
-    SUPPORT_TRANSITION,
     ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -74,7 +72,7 @@ class HueLight(HueBaseEntity, LightEntity):
         """Initialize the light."""
         super().__init__(bridge, controller, resource)
         if self.resource.alert and self.resource.alert.action_values:
-            self._attr_supported_features |= SUPPORT_FLASH
+            self._attr_supported_features |= LightEntityFeature.FLASH
         self.resource = resource
         self.controller = controller
         self._supported_color_modes: set[ColorMode | str] = set()
@@ -87,7 +85,7 @@ class HueLight(HueBaseEntity, LightEntity):
                 # only add color mode brightness if no color variants
                 self._supported_color_modes.add(ColorMode.BRIGHTNESS)
             # support transition if brightness control
-            self._attr_supported_features |= SUPPORT_TRANSITION
+            self._attr_supported_features |= LightEntityFeature.TRANSITION
         # get list of supported effects (combine effects and timed_effects)
         self._attr_effect_list = []
         if effects := resource.effects:
@@ -102,7 +100,7 @@ class HueLight(HueBaseEntity, LightEntity):
             ]
         if len(self._attr_effect_list) > 0:
             self._attr_effect_list.insert(0, EFFECT_NONE)
-            self._attr_supported_features |= SUPPORT_EFFECT
+            self._attr_supported_features |= LightEntityFeature.EFFECT
 
     @property
     def brightness(self) -> int | None:

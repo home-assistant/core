@@ -20,11 +20,7 @@ from homeassistant.const import (
     HTTP_BASIC_AUTHENTICATION,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -39,7 +35,7 @@ async def test_full_user_flow(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") == RESULT_TYPE_FORM
+    assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == SOURCE_USER
     assert "flow_id" in result
 
@@ -55,7 +51,7 @@ async def test_full_user_flow(
         },
     )
 
-    assert result2.get("type") == RESULT_TYPE_CREATE_ENTRY
+    assert result2.get("type") == FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "Spy cam"
     assert result2.get("data") == {}
     assert result2.get("options") == {
@@ -85,7 +81,7 @@ async def test_full_flow_with_authentication_error(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") == RESULT_TYPE_FORM
+    assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == SOURCE_USER
     assert "flow_id" in result
 
@@ -102,7 +98,7 @@ async def test_full_flow_with_authentication_error(
         },
     )
 
-    assert result2.get("type") == RESULT_TYPE_FORM
+    assert result2.get("type") == FlowResultType.FORM
     assert result2.get("step_id") == SOURCE_USER
     assert result2.get("errors") == {"username": "invalid_auth"}
     assert "flow_id" in result2
@@ -121,7 +117,7 @@ async def test_full_flow_with_authentication_error(
         },
     )
 
-    assert result3.get("type") == RESULT_TYPE_CREATE_ENTRY
+    assert result3.get("type") == FlowResultType.CREATE_ENTRY
     assert result3.get("title") == "Sky cam"
     assert result3.get("data") == {}
     assert result3.get("options") == {
@@ -147,7 +143,7 @@ async def test_connection_error(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") == RESULT_TYPE_FORM
+    assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == SOURCE_USER
     assert "flow_id" in result
 
@@ -164,7 +160,7 @@ async def test_connection_error(
         },
     )
 
-    assert result2.get("type") == RESULT_TYPE_FORM
+    assert result2.get("type") == FlowResultType.FORM
     assert result2.get("step_id") == SOURCE_USER
     assert result2.get("errors") == {"mjpeg_url": "cannot_connect"}
     assert "flow_id" in result2
@@ -188,7 +184,7 @@ async def test_connection_error(
         },
     )
 
-    assert result3.get("type") == RESULT_TYPE_FORM
+    assert result3.get("type") == FlowResultType.FORM
     assert result3.get("step_id") == SOURCE_USER
     assert result3.get("errors") == {"still_image_url": "cannot_connect"}
     assert "flow_id" in result3
@@ -209,7 +205,7 @@ async def test_connection_error(
         },
     )
 
-    assert result4.get("type") == RESULT_TYPE_CREATE_ENTRY
+    assert result4.get("type") == FlowResultType.CREATE_ENTRY
     assert result4.get("title") == "My cam"
     assert result4.get("data") == {}
     assert result4.get("options") == {
@@ -247,7 +243,7 @@ async def test_already_configured(
         },
     )
 
-    assert result2.get("type") == RESULT_TYPE_ABORT
+    assert result2.get("type") == FlowResultType.ABORT
     assert result2.get("reason") == "already_configured"
 
 
@@ -259,7 +255,7 @@ async def test_options_flow(
     """Test options config flow."""
     result = await hass.config_entries.options.async_init(init_integration.entry_id)
 
-    assert result.get("type") == RESULT_TYPE_FORM
+    assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == "init"
     assert "flow_id" in result
 
@@ -288,7 +284,7 @@ async def test_options_flow(
         },
     )
 
-    assert result2.get("type") == RESULT_TYPE_FORM
+    assert result2.get("type") == FlowResultType.FORM
     assert result2.get("step_id") == "init"
     assert result2.get("errors") == {"mjpeg_url": "already_configured"}
     assert "flow_id" in result2
@@ -307,7 +303,7 @@ async def test_options_flow(
         },
     )
 
-    assert result3.get("type") == RESULT_TYPE_FORM
+    assert result3.get("type") == FlowResultType.FORM
     assert result3.get("step_id") == "init"
     assert result3.get("errors") == {"mjpeg_url": "cannot_connect"}
     assert "flow_id" in result3
@@ -326,7 +322,7 @@ async def test_options_flow(
         },
     )
 
-    assert result4.get("type") == RESULT_TYPE_FORM
+    assert result4.get("type") == FlowResultType.FORM
     assert result4.get("step_id") == "init"
     assert result4.get("errors") == {"still_image_url": "cannot_connect"}
     assert "flow_id" in result4
@@ -346,7 +342,7 @@ async def test_options_flow(
         },
     )
 
-    assert result5.get("type") == RESULT_TYPE_FORM
+    assert result5.get("type") == FlowResultType.FORM
     assert result5.get("step_id") == "init"
     assert result5.get("errors") == {"username": "invalid_auth"}
     assert "flow_id" in result5
@@ -363,7 +359,7 @@ async def test_options_flow(
         },
     )
 
-    assert result6.get("type") == RESULT_TYPE_CREATE_ENTRY
+    assert result6.get("type") == FlowResultType.CREATE_ENTRY
     assert result6.get("data") == {
         CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
         CONF_MJPEG_URL: "https://example.com/mjpeg",

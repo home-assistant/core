@@ -8,7 +8,6 @@ import ipaddress
 import logging
 import os
 from typing import Any, cast
-from uuid import UUID
 
 from aiohttp import web
 from pyhap.const import STANDALONE_AID
@@ -46,7 +45,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CoreState, HomeAssistant, ServiceCall, State, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
-from homeassistant.helpers import device_registry, entity_registry
+from homeassistant.helpers import device_registry, entity_registry, instance_id
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import (
     BASE_FILTER_SCHEMA,
@@ -54,7 +53,10 @@ from homeassistant.helpers.entityfilter import (
     EntityFilter,
 )
 from homeassistant.helpers.reload import async_integration_yaml_config
-from homeassistant.helpers.service import async_extract_referenced_entity_ids
+from homeassistant.helpers.service import (
+    async_extract_referenced_entity_ids,
+    async_register_admin_service,
+)
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import IntegrationNotFound, async_get_integration
 
@@ -461,7 +463,8 @@ def _async_register_events_and_services(hass: HomeAssistant) -> None:
 
         await asyncio.gather(*reload_tasks)
 
-    hass.helpers.service.async_register_admin_service(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_RELOAD,
         _handle_homekit_reload,
@@ -506,7 +509,7 @@ class HomeKit:
 
         self.bridge: HomeBridge | None = None
 
-    def setup(self, async_zeroconf_instance: AsyncZeroconf, uuid: UUID) -> None:
+    def setup(self, async_zeroconf_instance: AsyncZeroconf, uuid: str) -> None:
         """Set up bridge and accessory driver."""
         persist_file = get_persist_fullpath_for_entry_id(self.hass, self._entry_id)
 
@@ -722,7 +725,7 @@ class HomeKit:
             return
         self.status = STATUS_WAIT
         async_zc_instance = await zeroconf.async_get_async_instance(self.hass)
-        uuid = await self.hass.helpers.instance_id.async_get()
+        uuid = await instance_id.async_get(self.hass)
         await self.hass.async_add_executor_job(self.setup, async_zc_instance, uuid)
         self.aid_storage = AccessoryAidStorage(self.hass, self._entry_id)
         await self.aid_storage.async_initialize()

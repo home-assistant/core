@@ -86,11 +86,9 @@ async def async_setup_entry(
     entities = []
 
     if config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
-        name = config_entry.title
         unique_id = config_entry.unique_id
 
         mirobo = MiroboVacuum(
-            name,
             hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE],
             config_entry,
             unique_id,
@@ -201,14 +199,13 @@ class MiroboVacuum(
 
     def __init__(
         self,
-        name,
         device,
         entry,
         unique_id,
         coordinator: DataUpdateCoordinator[VacuumCoordinatorData],
     ):
         """Initialize the Xiaomi vacuum cleaner robot handler."""
-        super().__init__(name, device, entry, unique_id, coordinator)
+        super().__init__(device, entry, unique_id, coordinator)
         self._state: str | None = None
 
     async def async_added_to_hass(self) -> None:
@@ -227,12 +224,12 @@ class MiroboVacuum(
         return self._state
 
     @property
-    def battery_level(self):
+    def battery_level(self) -> int:
         """Return the battery level of the vacuum cleaner."""
         return self.coordinator.data.status.battery
 
     @property
-    def fan_speed(self):
+    def fan_speed(self) -> str:
         """Return the fan speed of the vacuum cleaner."""
         speed = self.coordinator.data.status.fanspeed
         if speed in self.coordinator.data.fan_speeds_reverse:
@@ -240,16 +237,14 @@ class MiroboVacuum(
 
         _LOGGER.debug("Unable to find reverse for %s", speed)
 
-        return speed
+        return str(speed)
 
     @property
-    def fan_speed_list(self):
+    def fan_speed_list(self) -> list[str]:
         """Get the list of available fan speed steps of the vacuum cleaner."""
-        return (
-            list(self.coordinator.data.fan_speeds)
-            if self.coordinator.data.fan_speeds
-            else []
-        )
+        if speed_list := self.coordinator.data.fan_speeds:
+            return list(speed_list)
+        return []
 
     @property
     def timers(self):
@@ -275,11 +270,6 @@ class MiroboVacuum(
         if self.timers:
             attrs[ATTR_TIMERS] = self.timers
         return attrs
-
-    @property
-    def supported_features(self):
-        """Flag vacuum cleaner robot features that are supported."""
-        return self._attr_supported_features
 
     async def _try_command(self, mask_error, func, *args, **kwargs):
         """Call a vacuum command handling error messages."""

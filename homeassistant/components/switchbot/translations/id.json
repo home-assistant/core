@@ -7,9 +7,6 @@
             "switchbot_unsupported_type": "Jenis Switchbot yang tidak didukung.",
             "unknown": "Kesalahan yang tidak diharapkan"
         },
-        "error": {
-            "cannot_connect": "Gagal terhubung"
-        },
         "flow_title": "{name}",
         "step": {
             "user": {

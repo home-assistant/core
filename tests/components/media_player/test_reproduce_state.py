@@ -6,7 +6,6 @@ from homeassistant.components.media_player.const import (
     ATTR_INPUT_SOURCE,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
-    ATTR_MEDIA_ENQUEUE,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     ATTR_SOUND_MODE,
@@ -26,6 +25,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
+    STATE_BUFFERING,
     STATE_IDLE,
     STATE_OFF,
     STATE_ON,
@@ -45,6 +45,7 @@ ENTITY_2 = "media_player.test2"
     [
         (SERVICE_TURN_ON, STATE_ON, MediaPlayerEntityFeature.TURN_ON),
         (SERVICE_TURN_OFF, STATE_OFF, MediaPlayerEntityFeature.TURN_OFF),
+        (SERVICE_MEDIA_PLAY, STATE_BUFFERING, MediaPlayerEntityFeature.PLAY),
         (SERVICE_MEDIA_PLAY, STATE_PLAYING, MediaPlayerEntityFeature.PLAY),
         (SERVICE_MEDIA_STOP, STATE_IDLE, MediaPlayerEntityFeature.STOP),
         (SERVICE_MEDIA_PAUSE, STATE_PAUSED, MediaPlayerEntityFeature.PAUSE),
@@ -251,7 +252,6 @@ async def test_play_media(hass):
 
     value_1 = "dummy_1"
     value_2 = "dummy_2"
-    value_3 = "dummy_3"
 
     await async_reproduce_states(
         hass,
@@ -273,7 +273,6 @@ async def test_play_media(hass):
                 {
                     ATTR_MEDIA_CONTENT_TYPE: value_1,
                     ATTR_MEDIA_CONTENT_ID: value_2,
-                    ATTR_MEDIA_ENQUEUE: value_3,
                 },
             )
         ],
@@ -292,5 +291,4 @@ async def test_play_media(hass):
         "entity_id": ENTITY_1,
         ATTR_MEDIA_CONTENT_TYPE: value_1,
         ATTR_MEDIA_CONTENT_ID: value_2,
-        ATTR_MEDIA_ENQUEUE: value_3,
     }

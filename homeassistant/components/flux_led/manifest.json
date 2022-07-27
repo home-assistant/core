@@ -4,7 +4,7 @@
   "config_flow": true,
   "dependencies": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/flux_led",
-  "requirements": ["flux_led==0.28.28"],
+  "requirements": ["flux_led==0.28.30"],
   "quality_scale": "platinum",
   "codeowners": ["@icemanch", "@bdraco"],
   "iot_class": "local_push",
@@ -37,6 +37,9 @@
     {
       "macaddress": "8CCE4E*",
       "hostname": "lwip*"
+    },
+    {
+      "hostname": "hf-lpb100-zj*"
     },
     {
       "hostname": "zengge_[0-9a-f][0-9a-f]_*"

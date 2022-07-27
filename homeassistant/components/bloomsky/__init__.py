@@ -3,7 +3,6 @@ from datetime import timedelta
 from http import HTTPStatus
 import logging
 
-from aiohttp.hdrs import AUTHORIZATION
 import requests
 import voluptuous as vol
 
@@ -67,7 +66,7 @@ class BloomSky:
         _LOGGER.debug("Fetching BloomSky update")
         response = requests.get(
             f"{self.API_URL}?{self._endpoint_argument}",
-            headers={AUTHORIZATION: self._api_key},
+            headers={"Authorization": self._api_key},
             timeout=10,
         )
         if response.status_code == HTTPStatus.UNAUTHORIZED:

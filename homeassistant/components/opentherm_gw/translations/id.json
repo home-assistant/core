@@ -11,8 +11,7 @@
                     "device": "Jalur atau URL",
                     "id": "ID",
                     "name": "Nama"
-                },
-                "title": "Gateway OpenTherm"
+                }
             }
         }
     },
@@ -24,8 +23,7 @@
                     "read_precision": "Tingkat Presisi Baca",
                     "set_precision": "Atur Presisi",
                     "temporary_override_mode": "Mode Penimpaan Setpoint Sementara"
-                },
-                "description": "Pilihan untuk Gateway OpenTherm"
+                }
             }
         }
     }

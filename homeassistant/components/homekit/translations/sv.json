@@ -19,9 +19,6 @@
                 "title": "V\u00e4lj kamerans videoavkodare."
             },
             "init": {
-                "data": {
-                    "include_domains": "Dom\u00e4ner att inkludera"
-                },
                 "title": "V\u00e4lj dom\u00e4ner som ska inkluderas."
             }
         }

@@ -264,7 +264,7 @@ class SensorEntity(Entity):
     _attr_device_class: SensorDeviceClass | str | None
     _attr_last_reset: datetime | None
     _attr_native_unit_of_measurement: str | None
-    _attr_native_value: StateType | date | datetime = None
+    _attr_native_value: StateType | date | datetime | Decimal = None
     _attr_state_class: SensorStateClass | str | None
     _attr_state: None = None  # Subclasses of SensorEntity should not set this
     _attr_unit_of_measurement: None = (
@@ -349,7 +349,7 @@ class SensorEntity(Entity):
         return None
 
     @property
-    def native_value(self) -> StateType | date | datetime:
+    def native_value(self) -> StateType | date | datetime | Decimal:
         """Return the value reported by the sensor."""
         return self._attr_native_value
 
@@ -404,10 +404,10 @@ class SensorEntity(Entity):
                     value = value.astimezone(timezone.utc)
 
                 return value.isoformat(timespec="seconds")
-            except (AttributeError, TypeError) as err:
+            except (AttributeError, OverflowError, TypeError) as err:
                 raise ValueError(
-                    f"Invalid datetime: {self.entity_id} has a timestamp device class "
-                    f"but does not provide a datetime state but {type(value)}"
+                    f"Invalid datetime: {self.entity_id} has timestamp device class "
+                    f"but provides state {value}:{type(value)} resulting in '{err}'"
                 ) from err
 
         # Received a date value
@@ -419,14 +419,14 @@ class SensorEntity(Entity):
                 return value.isoformat()
             except (AttributeError, TypeError) as err:
                 raise ValueError(
-                    f"Invalid date: {self.entity_id} has a date device class "
-                    f"but does not provide a date state but {type(value)}"
+                    f"Invalid date: {self.entity_id} has date device class "
+                    f"but provides state {value}:{type(value)} resulting in '{err}'"
                 ) from err
 
         if (
             value is not None
             and native_unit_of_measurement != unit_of_measurement
-            and self.device_class in UNIT_CONVERSIONS
+            and device_class in UNIT_CONVERSIONS
         ):
             assert unit_of_measurement
             assert native_unit_of_measurement
@@ -439,8 +439,8 @@ class SensorEntity(Entity):
             ratio_log = max(
                 0,
                 log10(
-                    UNIT_RATIOS[self.device_class][native_unit_of_measurement]
-                    / UNIT_RATIOS[self.device_class][unit_of_measurement]
+                    UNIT_RATIOS[device_class][native_unit_of_measurement]
+                    / UNIT_RATIOS[device_class][unit_of_measurement]
                 ),
             )
             prec = prec + floor(ratio_log)
@@ -448,7 +448,7 @@ class SensorEntity(Entity):
             # Suppress ValueError (Could not convert sensor_value to float)
             with suppress(ValueError):
                 value_f = float(value)  # type: ignore[arg-type]
-                value_f_new = UNIT_CONVERSIONS[self.device_class](
+                value_f_new = UNIT_CONVERSIONS[device_class](
                     value_f,
                     native_unit_of_measurement,
                     unit_of_measurement,

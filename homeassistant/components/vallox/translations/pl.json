@@ -14,11 +14,8 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Nazwa hosta lub adres IP",
-                    "name": "Nazwa"
-                },
-                "description": "Konfiguracja integracji Vallox. Je\u015bli masz problemy z konfiguracj\u0105 przejd\u017a do {integration_docs_url} .",
-                "title": "Vallox"
+                    "host": "Nazwa hosta lub adres IP"
+                }
             }
         }
     }

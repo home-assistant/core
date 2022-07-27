@@ -12,7 +12,7 @@ from ..const import (
     REPORT_CONFIG_OP,
     SIGNAL_ATTR_UPDATED,
 )
-from .base import ZigbeeChannel
+from .base import AttrReportConfig, ZigbeeChannel
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(
@@ -63,15 +63,15 @@ class ElectricalMeasurementChannel(ZigbeeChannel):
         POWER_QUALITY_MEASUREMENT = 256
 
     REPORT_CONFIG = (
-        {"attr": "active_power", "config": REPORT_CONFIG_OP},
-        {"attr": "active_power_max", "config": REPORT_CONFIG_DEFAULT},
-        {"attr": "apparent_power", "config": REPORT_CONFIG_OP},
-        {"attr": "rms_current", "config": REPORT_CONFIG_OP},
-        {"attr": "rms_current_max", "config": REPORT_CONFIG_DEFAULT},
-        {"attr": "rms_voltage", "config": REPORT_CONFIG_OP},
-        {"attr": "rms_voltage_max", "config": REPORT_CONFIG_DEFAULT},
-        {"attr": "ac_frequency", "config": REPORT_CONFIG_OP},
-        {"attr": "ac_frequency_max", "config": REPORT_CONFIG_DEFAULT},
+        AttrReportConfig(attr="active_power", config=REPORT_CONFIG_OP),
+        AttrReportConfig(attr="active_power_max", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(attr="apparent_power", config=REPORT_CONFIG_OP),
+        AttrReportConfig(attr="rms_current", config=REPORT_CONFIG_OP),
+        AttrReportConfig(attr="rms_current_max", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(attr="rms_voltage", config=REPORT_CONFIG_OP),
+        AttrReportConfig(attr="rms_voltage_max", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(attr="ac_frequency", config=REPORT_CONFIG_OP),
+        AttrReportConfig(attr="ac_frequency_max", config=REPORT_CONFIG_DEFAULT),
     )
     ZCL_INIT_ATTRS = {
         "ac_current_divisor": True,
@@ -97,12 +97,12 @@ class ElectricalMeasurementChannel(ZigbeeChannel):
             for a in self.REPORT_CONFIG
             if a["attr"] not in self.cluster.unsupported_attributes
         ]
-        result = await self.get_attributes(attrs, from_cache=False)
+        result = await self.get_attributes(attrs, from_cache=False, only_cache=False)
         if result:
             for attr, value in result.items():
                 self.async_send_signal(
                     f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
-                    self.cluster.attridx.get(attr, attr),
+                    self.cluster.find_attribute(attr).id,
                     attr,
                     value,
                 )
@@ -158,7 +158,11 @@ class ElectricalMeasurementChannel(ZigbeeChannel):
             return None
 
         meas_type = self.MeasurementType(meas_type)
-        return ", ".join(m.name for m in self.MeasurementType if m in meas_type)
+        return ", ".join(
+            m.name
+            for m in self.MeasurementType
+            if m in meas_type and m.name is not None
+        )
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(

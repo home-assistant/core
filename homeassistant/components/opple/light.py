@@ -10,8 +10,7 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
     PLATFORM_SCHEMA,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR_TEMP,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME
@@ -54,6 +53,9 @@ def setup_platform(
 
 class OppleLight(LightEntity):
     """Opple light device."""
+
+    _attr_color_mode = ColorMode.COLOR_TEMP
+    _attr_supported_color_modes = {ColorMode.COLOR_TEMP}
 
     def __init__(self, name, host):
         """Initialize an Opple light."""
@@ -104,11 +106,6 @@ class OppleLight(LightEntity):
     def max_mireds(self):
         """Return maximum supported color temperature."""
         return 333
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP
 
     def turn_on(self, **kwargs):
         """Instruct the light to turn on."""

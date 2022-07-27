@@ -19,7 +19,7 @@
                     "api_key": "Klucz API",
                     "tailnet": "Tailnet"
                 },
-                "description": "Aby uwierzytelni\u0107 si\u0119 w Tailscale, musisz utworzy\u0107 klucz API na stronie https://login.tailscale.com/admin/settings/authkeys.\n\nTailnet to nazwa Twojej sieci Tailscale. Mo\u017cna j\u0105 znale\u017a\u0107 w lewym g\u00f3rnym rogu w panelu administracyjnym Tailscale (obok loga Tailscale)."
+                "description": "Ta integracja monitoruje Twoj\u0105 sie\u0107 Tailscale, a **NIE SPRAWIA**, \u017ce Tw\u00f3j Home Assistant jest dost\u0119pny przez Tailscale VPN.\n\nAby uwierzytelni\u0107 si\u0119 w Tailscale, musisz utworzy\u0107 klucz API na stronie {authkeys_url}.\n\nTailnet to nazwa Twojej sieci Tailscale. Mo\u017cna j\u0105 znale\u017a\u0107 w lewym g\u00f3rnym rogu w panelu administracyjnym Tailscale (obok loga Tailscale)."
             }
         }
     }

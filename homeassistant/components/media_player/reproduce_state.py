@@ -14,6 +14,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
+    STATE_BUFFERING,
     STATE_IDLE,
     STATE_OFF,
     STATE_ON,
@@ -26,7 +27,6 @@ from .const import (
     ATTR_INPUT_SOURCE,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
-    ATTR_MEDIA_ENQUEUE,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     ATTR_SOUND_MODE,
@@ -71,10 +71,11 @@ async def _async_reproduce_states(
     if (
         state.state
         in (
-            STATE_ON,
-            STATE_PLAYING,
+            STATE_BUFFERING,
             STATE_IDLE,
+            STATE_ON,
             STATE_PAUSED,
+            STATE_PLAYING,
         )
         and features & MediaPlayerEntityFeature.TURN_ON
     ):
@@ -116,13 +117,13 @@ async def _async_reproduce_states(
         if features & MediaPlayerEntityFeature.PLAY_MEDIA:
             await call_service(
                 SERVICE_PLAY_MEDIA,
-                [ATTR_MEDIA_CONTENT_TYPE, ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_ENQUEUE],
+                [ATTR_MEDIA_CONTENT_TYPE, ATTR_MEDIA_CONTENT_ID],
             )
         already_playing = True
 
     if (
         not already_playing
-        and state.state == STATE_PLAYING
+        and state.state in (STATE_BUFFERING, STATE_PLAYING)
         and features & MediaPlayerEntityFeature.PLAY
     ):
         await call_service(SERVICE_MEDIA_PLAY, [])

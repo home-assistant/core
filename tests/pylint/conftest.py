@@ -1,17 +1,21 @@
 """Configuration for pylint tests."""
 from importlib.machinery import SourceFileLoader
+from pathlib import Path
 from types import ModuleType
 
 from pylint.checkers import BaseChecker
 from pylint.testutils.unittest_linter import UnittestLinter
 import pytest
 
+BASE_PATH = Path(__file__).parents[2]
 
-@pytest.fixture(name="hass_enforce_type_hints")
+
+@pytest.fixture(name="hass_enforce_type_hints", scope="session")
 def hass_enforce_type_hints_fixture() -> ModuleType:
     """Fixture to provide a requests mocker."""
     loader = SourceFileLoader(
-        "hass_enforce_type_hints", "pylint/plugins/hass_enforce_type_hints.py"
+        "hass_enforce_type_hints",
+        str(BASE_PATH.joinpath("pylint/plugins/hass_enforce_type_hints.py")),
     )
     return loader.load_module(None)
 

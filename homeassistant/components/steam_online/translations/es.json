@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El servicio ya est\u00e1 configurado",
+            "reauth_successful": "Re-autenticaci\u00f3n realizada correctamente"
+        },
+        "error": {
+            "cannot_connect": "Fall\u00f3 la conexi\u00f3n",
+            "invalid_account": "ID de la cuenta inv\u00e1lida",
+            "invalid_auth": "Autenticaci\u00f3n inv\u00e1lida",
+            "unknown": "Error inesperado"
+        },
+        "step": {
+            "reauth_confirm": {
+                "description": "La integraci\u00f3n de Steam debe volver a autenticarse manualmente \n\n Puede encontrar su clave aqu\u00ed: {api_key_url}",
+                "title": "Volver a autenticar la integraci\u00f3n"
+            },
+            "user": {
+                "data": {
+                    "account": "ID de la cuenta de Steam",
+                    "api_key": "Clave API"
+                },
+                "description": "Utiliza {account_id_url} para encontrar el ID de tu cuenta de Steam"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "unauthorized": "Lista de amigos restringida: Por favor, consulte la documentaci\u00f3n sobre c\u00f3mo ver a todos los dem\u00e1s amigos"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "accounts": "Nombres de las cuentas a controlar"
+                }
+            }
+        }
+    }
+}

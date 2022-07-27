@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado",
-            "no_devices_found": "Nenhum dispositivo encontrado na rede"
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado"
         },
         "error": {
             "cannot_connect": "Falha ao conectar"

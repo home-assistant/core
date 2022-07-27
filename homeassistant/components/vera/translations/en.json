@@ -10,8 +10,9 @@
                     "lights": "Vera switch device ids to treat as lights in Home Assistant.",
                     "vera_controller_url": "Controller URL"
                 },
-                "description": "Provide a Vera controller URL below. It should look like this: http://192.168.1.161:3480.",
-                "title": "Setup Vera controller"
+                "data_description": {
+                    "vera_controller_url": "It should look like this: http://192.168.1.161:3480"
+                }
             }
         }
     },

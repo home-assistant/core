@@ -8,15 +8,10 @@
         "error": {
             "cannot_connect": "Fallo al conectar"
         },
-        "flow_title": "Roku: {name}",
+        "flow_title": "{name}",
         "step": {
             "discovery_confirm": {
-                "description": "\u00bfQuieres configurar {name} ?",
-                "title": "Roku"
-            },
-            "ssdp_confirm": {
-                "description": "\u00bfQuieres configurar {name}?",
-                "title": "Roku"
+                "description": "\u00bfQuieres configurar {name} ?"
             },
             "user": {
                 "data": {

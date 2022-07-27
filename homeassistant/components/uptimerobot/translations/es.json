@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "La cuenta ya ha sido configurada",
+            "already_configured": "La cuenta ya est\u00e1 configurada",
             "reauth_failed_existing": "No se pudo actualizar la entrada de configuraci\u00f3n, elimine la integraci\u00f3n y config\u00farela nuevamente.",
             "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente",
             "unknown": "Error inesperado"
@@ -9,6 +9,7 @@
         "error": {
             "cannot_connect": "No se pudo conectar",
             "invalid_api_key": "Clave API no v\u00e1lida",
+            "not_main_key": "Se ha detectado un tipo de clave API incorrecta, utiliza la clave API 'principal'",
             "reauth_failed_matching_account": "La clave de API que has proporcionado no coincide con el ID de cuenta para la configuraci\u00f3n existente.",
             "unknown": "Error inesperado"
         },

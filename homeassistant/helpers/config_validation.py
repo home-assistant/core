@@ -758,7 +758,7 @@ def ensure_list_csv(value: Any) -> list:
 class multi_select:
     """Multi select validator returning list of selected values."""
 
-    def __init__(self, options: dict) -> None:
+    def __init__(self, options: dict | list) -> None:
         """Initialize multi select."""
         self.options = options
 
@@ -1599,7 +1599,7 @@ def determine_script_action(action: dict[str, Any]) -> str:
     if CONF_WAIT_TEMPLATE in action:
         return SCRIPT_ACTION_WAIT_TEMPLATE
 
-    if CONF_CONDITION in action:
+    if any(key in action for key in (CONF_CONDITION, "and", "or", "not")):
         return SCRIPT_ACTION_CHECK_CONDITION
 
     if CONF_EVENT in action:

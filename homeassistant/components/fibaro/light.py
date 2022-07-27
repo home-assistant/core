@@ -16,11 +16,14 @@ from homeassistant.components.light import (
     color_supported,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FIBARO_DEVICES, FibaroDevice
 from .const import DOMAIN
+
+PARALLEL_UPDATES = 2
 
 
 def scaleto255(value: int | None) -> int:
@@ -53,7 +56,9 @@ async def async_setup_entry(
     async_add_entities(
         [
             FibaroLight(device)
-            for device in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES]["light"]
+            for device in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES][
+                Platform.LIGHT
+            ]
         ],
         True,
     )
@@ -81,7 +86,10 @@ class FibaroLight(FibaroDevice, LightEntity):
             or "RGBW" in fibaro_device.type
             or "rgbw" in fibaro_device.type
         )
-        supports_dimming = "levelChange" in fibaro_device.interfaces
+        supports_dimming = (
+            "levelChange" in fibaro_device.interfaces
+            and "setValue" in fibaro_device.actions
+        )
 
         if supports_color and supports_white_v:
             self._attr_supported_color_modes = {ColorMode.RGBW}
@@ -109,6 +117,7 @@ class FibaroLight(FibaroDevice, LightEntity):
         if ATTR_BRIGHTNESS in kwargs:
             self._attr_brightness = kwargs[ATTR_BRIGHTNESS]
             self.set_level(scaleto99(self._attr_brightness))
+            return
 
         if ATTR_RGB_COLOR in kwargs:
             # Update based on parameters
@@ -182,6 +191,6 @@ class FibaroLight(FibaroDevice, LightEntity):
             rgbw_list = [int(i) for i in rgbw_s.split(",")][:4]
 
             if self._attr_color_mode == ColorMode.RGB:
-                self._attr_rgb_color = tuple(*rgbw_list[:3])
+                self._attr_rgb_color = tuple(rgbw_list[:3])
             else:
                 self._attr_rgbw_color = tuple(rgbw_list)

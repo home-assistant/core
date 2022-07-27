@@ -9,6 +9,7 @@
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
             "invalid_api_key": "Nieprawid\u0142owy klucz API",
+            "not_main_key": "Wykryto nieprawid\u0142owy typ klucza API, u\u017cyj \"g\u0142\u00f3wnego\" klucza API",
             "reauth_failed_matching_account": "Podany klucz API nie jest zgodny z identyfikatorem konta istniej\u0105cej konfiguracji.",
             "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
@@ -17,14 +18,14 @@
                 "data": {
                     "api_key": "Klucz API"
                 },
-                "description": "Musisz poda\u0107 nowy, tylko do odczytu, klucz API od Uptime Robot",
+                "description": "Musisz poda\u0107 nowy \"g\u0142\u00f3wny\" klucz API od Uptime Robot",
                 "title": "Ponownie uwierzytelnij integracj\u0119"
             },
             "user": {
                 "data": {
                     "api_key": "Klucz API"
                 },
-                "description": "Musisz poda\u0107 klucz API (tylko do odczytu) od Uptime Robot"
+                "description": "Musisz poda\u0107 \"g\u0142\u00f3wny\" klucz API od Uptime Robot"
             }
         }
     }

@@ -11,13 +11,6 @@
             "cannot_connect": "\u05d4\u05d4\u05ea\u05d7\u05d1\u05e8\u05d5\u05ea \u05e0\u05db\u05e9\u05dc\u05d4"
         },
         "step": {
-            "auth": {
-                "data": {
-                    "password": "\u05e1\u05d9\u05e1\u05de\u05d4",
-                    "username": "\u05e9\u05dd \u05de\u05e9\u05ea\u05de\u05e9"
-                },
-                "title": "\u05e7\u05d1\u05d9\u05e2\u05ea \u05ea\u05e6\u05d5\u05e8\u05d4 \u05e9\u05dc \u05d0\u05d9\u05de\u05d5\u05ea"
-            },
             "configure": {
                 "data": {
                     "host": "\u05de\u05d0\u05e8\u05d7",
@@ -40,14 +33,6 @@
                     "host": "\u05d1\u05d7\u05e8 \u05d4\u05ea\u05e7\u05df ONVIF \u05e9\u05d4\u05ea\u05d2\u05dc\u05d4"
                 },
                 "title": "\u05d1\u05d7\u05e8 \u05d4\u05ea\u05e7\u05df ONVIF"
-            },
-            "manual_input": {
-                "data": {
-                    "host": "\u05de\u05d0\u05e8\u05d7",
-                    "name": "\u05e9\u05dd",
-                    "port": "\u05e4\u05d5\u05e8\u05d8"
-                },
-                "title": "\u05e7\u05d1\u05d9\u05e2\u05ea \u05ea\u05e6\u05d5\u05e8\u05d4 \u05e9\u05dc \u05d4\u05ea\u05e7\u05df ONVIF"
             },
             "user": {
                 "data": {

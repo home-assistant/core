@@ -1,15 +1,8 @@
 {
     "options": {
         "step": {
-            "usb_config_option": {
-                "data": {
-                    "usb_path": "USB \uc7a5\uce58 \uacbd\ub85c"
-                }
-            },
-            "usb_manual_config_option": {
-                "data": {
-                    "usb_manual_path": "USB \uc7a5\uce58 \uacbd\ub85c"
-                }
+            "usb_sphere_config": {
+                "title": "\ud06c\ub77c\uc6b4\uc2a4\ud1a4 USB \uc2a4\ud53c\uc5b4"
             }
         }
     }

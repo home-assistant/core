@@ -1,0 +1,43 @@
+{
+    "application_credentials": {
+        "description": "Sigue las [instrucciones]({more_info_url}) para la [pantalla de consentimiento de OAuth]({oauth_consent_url}) para dar acceso a Home Assistant a tu Google Calendar. Tambi\u00e9n necesita crear credenciales de aplicaci\u00f3n vinculadas a su calendario:\n1. Vaya a [Credenciales]({oauth_creds_url}) y haga clic en **Crear credenciales**.\n1. En la lista desplegable, seleccione **ID de cliente de OAuth**.\n1. Seleccione **TV y dispositivos de entrada limitada** para el tipo de aplicaci\u00f3n."
+    },
+    "config": {
+        "abort": {
+            "already_configured": "La cuenta ya est\u00e1 configurada",
+            "already_in_progress": "El proceso de configuraci\u00f3n ya est\u00e1 en curso",
+            "code_expired": "El c\u00f3digo de autenticaci\u00f3n caduc\u00f3 o la configuraci\u00f3n de la credencial no es v\u00e1lida, int\u00e9ntelo de nuevo.",
+            "invalid_access_token": "Token de acceso no v\u00e1lido",
+            "missing_configuration": "El componente no est\u00e1 configurado. Por favor, sigue la documentaci\u00f3n.",
+            "oauth_error": "Se han recibido datos token inv\u00e1lidos.",
+            "reauth_successful": "Re-autenticaci\u00f3n realizada correctamente"
+        },
+        "create_entry": {
+            "default": "Autenticaci\u00f3n exitosa"
+        },
+        "progress": {
+            "exchange": "Para vincular su cuenta de Google, visite [ {url} ]( {url} ) e ingrese el c\u00f3digo: \n\n {user_code}"
+        },
+        "step": {
+            "auth": {
+                "title": "Vincular cuenta de Google"
+            },
+            "pick_implementation": {
+                "title": "Selecciona el m\u00e9todo de autenticaci\u00f3n"
+            },
+            "reauth_confirm": {
+                "description": "La integraci\u00f3n de Google Calendar necesita volver a autenticar su cuenta",
+                "title": "Integraci\u00f3n de la reautenticaci\u00f3n"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "calendar_access": "Acceso de Home Assistant a Google Calendar"
+                }
+            }
+        }
+    }
+}

@@ -6,7 +6,6 @@
         },
         "error": {
             "invalid_auth": "Invalid authentication",
-            "no_devices": "No devices found in account",
             "unknown": "Unexpected error"
         },
         "step": {

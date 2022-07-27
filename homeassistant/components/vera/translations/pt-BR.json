@@ -10,8 +10,9 @@
                     "lights": "Vera - alternar os IDs do dispositivo para tratar como luzes no Home Assistant.",
                     "vera_controller_url": "URL do controlador"
                 },
-                "description": "Forne\u00e7a um URL do controlador Vera abaixo. Deve ficar assim: http://192.168.1.161:3480.",
-                "title": "Configurar controlador Vera"
+                "data_description": {
+                    "vera_controller_url": "Deve ficar assim: http://192.168.1.161:3480"
+                }
             }
         }
     },
