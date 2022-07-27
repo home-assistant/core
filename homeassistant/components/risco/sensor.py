@@ -8,6 +8,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
+from . import is_local
 from .const import DOMAIN, EVENTS_COORDINATOR
 from .entity import binary_sensor_unique_id
 
@@ -38,6 +39,10 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensors for device."""
+    if is_local(config_entry):
+        # no events in local comm
+        return
+
     coordinator = hass.data[DOMAIN][config_entry.entry_id][EVENTS_COORDINATOR]
     sensors = [
         RiscoSensor(coordinator, id, [], name, config_entry.entry_id)

@@ -12,6 +12,9 @@ RISCO_EVENT = "risco_event"
 
 DATA_COORDINATOR = "risco"
 EVENTS_COORDINATOR = "risco_events"
+ZONE_UPDATES = "zone_updates"
+PARTITION_UPDATES = "partition_updates"
+SYSTEM = "system"
 
 DEFAULT_SCAN_INTERVAL = 30
 

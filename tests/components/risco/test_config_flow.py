@@ -23,7 +23,7 @@ TEST_CLOUD_DATA = {
 
 TEST_LOCAL_DATA = {
     "host": "test-host",
-    "port": "test-port",
+    "port": 5004,
     "pin": "1234",
 }
 

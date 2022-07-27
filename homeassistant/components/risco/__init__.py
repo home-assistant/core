@@ -1,14 +1,15 @@
 """The Risco integration."""
+from collections.abc import Callable
 from datetime import timedelta
 import logging
-
+from typing import Any
 
 from pyrisco import (
     CannotConnectError,
     OperationError,
-    UnauthorizedError,
     RiscoCloud,
     RiscoLocal,
+    UnauthorizedError,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -33,7 +34,10 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     EVENTS_COORDINATOR,
+    PARTITION_UPDATES,
+    SYSTEM,
     TYPE_LOCAL,
+    ZONE_UPDATES,
 )
 
 PLATFORMS = [Platform.ALARM_CONTROL_PANEL, Platform.BINARY_SENSOR, Platform.SENSOR]
@@ -43,11 +47,17 @@ LAST_EVENT_TIMESTAMP_KEY = "last_event_timestamp"
 _LOGGER = logging.getLogger(__name__)
 
 
+def is_local(entry: ConfigEntry) -> bool:
+    """Return whether the entry represents an instance with local communication."""
+    return entry.data.get(CONF_TYPE) == TYPE_LOCAL
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Risco from a config entry."""
-    if entry.data.get(CONF_TYPE) != TYPE_LOCAL:
-        return await _async_setup_cloud_entry(hass, entry)
-    return await _async_setup_local_entry(hass, entry)
+    if is_local(entry):
+        return await _async_setup_local_entry(hass, entry)
+
+    return await _async_setup_cloud_entry(hass, entry)
 
 
 async def _async_setup_local_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -62,48 +72,49 @@ async def _async_setup_local_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
         _LOGGER.exception("Failed to login to Risco cloud")
         return False
 
-    # async def _error(error):
-    #     _LOGGER.error(f"Error in Risco library: {error}")
+    async def _error(error):
+        _LOGGER.error("Error in Risco library: %s", error)
 
-    # remove_error = risco.add_error_handler(_error)
+    remove_error = risco.add_error_handler(_error)
 
-    # async def _default(command, result, *params):
-    #     _LOGGER.debug(
-    #         f"Unhandled update from Risco library: {command}, {result}, {params}"
-    #     )
+    async def _default(command, result, *params):
+        _LOGGER.debug(
+            "Unhandled update from Risco library: %s, %s, %s", command, result, params
+        )
 
-    # remove_default = risco.add_default_handler(_default)
+    remove_default = risco.add_default_handler(_default)
 
-    # zone_updates = {}
+    zone_updates: dict[int, Callable[[], Any]] = {}
 
-    # async def _zone(zone_id, zone):
-    #     _LOGGER.debug(f"Risco zone update for {zone_id}")
-    #     cb = zone_updates.get(zone_id)
-    #     if cb:
-    #         cb()
+    async def _zone(zone_id, zone):
+        _LOGGER.debug("Risco zone update for %d", zone_id)
+        callback = zone_updates.get(zone_id)
+        if callback:
+            callback()
 
-    # remove_zone = risco.add_zone_handler(_zone)
+    remove_zone = risco.add_zone_handler(_zone)
 
-    # partition_updates = {}
+    partition_updates: dict[int, Callable[[], Any]] = {}
 
-    # async def _partition(partition_id, partition):
-    #     _LOGGER.debug(f"Risco partition update for {partition_id}")
-    #     cb = partition_updates.get(partition_id)
-    #     if cb:
-    #         cb()
+    async def _partition(partition_id, partition):
+        _LOGGER.debug("Risco partition update for %d", partition_id)
+        callback = partition_updates.get(partition_id)
+        if callback:
+            callback()
 
-    # remove_partition = risco.add_partition_handler(_partition)
+    remove_partition = risco.add_partition_handler(_partition)
 
-    # listenrs = [remove_error, remove_default, remove_zone, remove_partition]
+    listenrs = [remove_error, remove_default, remove_zone, remove_partition]
 
-    listenrs = []
     listenrs.append(entry.add_update_listener(_update_listener))
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         UNDO_LISTENERS: listenrs,
+        ZONE_UPDATES: zone_updates,
+        PARTITION_UPDATES: partition_updates,
+        SYSTEM: risco,
     }
-
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
