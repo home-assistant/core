@@ -27,7 +27,7 @@ from .const import DOMAIN, LOGGER
 class LaCrosseSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[], float]
+    value_fn: Callable[..., float]
 
 
 @dataclass
@@ -87,7 +87,7 @@ async def async_setup_entry(
                         != sensor.name  # If the name is the same as the field, don't include it.
                         else sub(r"(?<!^)(?=[A-Z])", " ", field),
                         state_class=SensorStateClass.MEASUREMENT,
-                        value_fn=lambda sensor=sensor, field=field: float(  # type: ignore[misc]
+                        value_fn=lambda sensor=sensor, field=field: float(
                             sensor.data[field]["values"][-1]["s"]
                         ),
                         native_unit_of_measurement=UNIT_LIST.get(

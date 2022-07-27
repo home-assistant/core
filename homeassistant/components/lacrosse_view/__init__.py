@@ -35,18 +35,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         yesterday = yesterday.replace(hour=18, minute=0, second=0, microsecond=0)
         yesterday_timestamp = datetime.timestamp(yesterday)
 
-        return await api.get_sensors(  # type: ignore[no-any-return]
+        return await api.get_sensors(
             location=Location(id=entry.data["id"], name=entry.data["name"]),
             tz=hass.config.time_zone,
-            start=int(yesterday_timestamp),
-            end=int(datetime.timestamp(now)),
+            start=str(int(yesterday_timestamp)),
+            end=str(int(datetime.timestamp(now))),
         )
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         "api": LaCrosse(async_get_clientsession(hass)),
         "last_update": datetime.utcnow(),
     }
-    api = hass.data[DOMAIN][entry.entry_id]["api"]
+    api: LaCrosse = hass.data[DOMAIN][entry.entry_id]["api"]
 
     try:
         await api.login(entry.data["username"], entry.data["password"])
