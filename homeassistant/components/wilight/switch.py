@@ -161,7 +161,7 @@ async def async_setup_entry(
 
 def wilight_to_hass_pause_time(value: int) -> int:
     """Convert wilight pause_time seconds to hass hour."""
-    return int(value / 3600)
+    return round(value / 3600)
 
 
 def hass_to_wilight_pause_time(value: int) -> int:
