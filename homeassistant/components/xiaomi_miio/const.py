@@ -48,7 +48,7 @@ class SetupException(Exception):
 
 # Fan Models
 MODEL_AIRPURIFIER_4 = "zhimi.airp.mb5"
-MODEL_AIRPURIFIER_4PRO = "zhimi.airp.vb4"
+MODEL_AIRPURIFIER_4_PRO = "zhimi.airp.vb4"
 MODEL_AIRPURIFIER_2H = "zhimi.airpurifier.mc2"
 MODEL_AIRPURIFIER_2S = "zhimi.airpurifier.mc1"
 MODEL_AIRPURIFIER_3 = "zhimi.airpurifier.ma4"
@@ -117,7 +117,7 @@ MODELS_PURIFIER_MIOT = [
     MODEL_AIRPURIFIER_3H,
     MODEL_AIRPURIFIER_PROH,
     MODEL_AIRPURIFIER_4,
-    MODEL_AIRPURIFIER_4PRO,
+    MODEL_AIRPURIFIER_4_PRO,
 ]
 MODELS_PURIFIER_MIIO = [
     MODEL_AIRPURIFIER_V1,
