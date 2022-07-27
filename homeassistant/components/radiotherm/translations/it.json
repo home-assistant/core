@@ -19,6 +19,11 @@
             }
         }
     },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "La configurazione della piattaforma climatica Radio Thermostat tramite YAML \u00e8 stata rimossa in Home Assistant 2022.9. \n\nLa configurazione esistente \u00e8 stata importata automaticamente nell'interfaccia utente. Rimuovere la configurazione YAML dal file configuration.yaml e riavviare Home Assistant per risolvere questo problema."
+        }
+    },
     "options": {
         "step": {
             "init": {
