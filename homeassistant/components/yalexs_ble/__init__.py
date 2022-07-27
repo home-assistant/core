@@ -1,10 +1,13 @@
 """The Yale Access Bluetooth integration."""
 from __future__ import annotations
 
-from yalexs_ble import PushLock, local_name_to_serial
+from yalexs_ble import PushLock
 
 from homeassistant.components import bluetooth
-from homeassistant.components.bluetooth.match import BluetoothCallbackMatcher
+from homeassistant.components.bluetooth.match import (
+    LOCAL_NAME,
+    BluetoothCallbackMatcher,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
@@ -12,7 +15,7 @@ from homeassistant.core import HomeAssistant, callback
 from .const import CONF_KEY, CONF_SLOT, DOMAIN
 from .models import YaleXSBLEData
 
-PLATFORMS: list[Platform] = [Platform.LOCK]
+PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.LOCK]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -22,8 +25,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     key = entry.data[CONF_KEY]
     slot = entry.data[CONF_SLOT]
 
-    push_lock = PushLock(local_name_to_serial(local_name))
+    push_lock = PushLock(local_name)
     push_lock.set_lock_key(key, slot)
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = YaleXSBLEData(
+        local_name, push_lock
+    )
+
+    # Platforms need to subscribe first
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     @callback
     def _async_update_ble(
@@ -39,16 +48,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         bluetooth.async_register_callback(
             hass,
             _async_update_ble,
-            BluetoothCallbackMatcher({"local_name": local_name}),
+            BluetoothCallbackMatcher({LOCAL_NAME: local_name}),
         )
     )
     entry.async_on_unload(await push_lock.start())
-
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = YaleXSBLEData(
-        local_name, push_lock
-    )
-
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

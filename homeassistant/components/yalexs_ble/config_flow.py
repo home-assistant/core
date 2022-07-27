@@ -116,7 +116,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             slot = user_input[CONF_SLOT]
             await self.async_set_unique_id(local_name, raise_on_progress=False)
             self._abort_if_unique_id_configured()
-            push_lock = PushLock(local_name_to_serial(local_name))
+            push_lock = PushLock(local_name)
             push_lock.set_lock_key(key, slot)
             try:
                 await push_lock.update()
