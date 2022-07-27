@@ -95,22 +95,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         discovered_key = discovery_info["key"]
         discovered_slot = discovery_info["slot"]
         local_name = serial_to_local_name(serial)
-        for entry in self._async_current_entries(include_ignore=False):
-            if entry.unique_id != local_name:
-                continue
-            updates: dict[str, str | int] = {}
-            if entry.data[CONF_KEY] != discovered_key:
-                updates[CONF_KEY] = discovered_key
-                updates[CONF_SLOT] = discovered_slot
-            if updates:
-                self.hass.config_entries.async_update_entry(entry, data=updates)
-                self.hass.async_create_task(
-                    self.hass.config_entries.async_reload(entry.entry_id)
-                )
-            return self.async_abort(reason="already_configured")
         # We do not want to raise on progress as integration_discovery takes
         # precedence over other discovery flows since we already have the keys.
         await self.async_set_unique_id(local_name, raise_on_progress=False)
+        self._abort_if_unique_id_configured(
+            updates={CONF_KEY: discovered_key, CONF_SLOT: discovered_slot}
+        )
         for progress in self._async_in_progress(include_uninitialized=True):
             # Integration discovery should abort other discovery types
             # since it already has the keys and slots, and the other
