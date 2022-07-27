@@ -22,6 +22,8 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.LOCK]
 
+STARTUP_TIMEOUT = 9
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Yale Access Bluetooth from a config entry."""
@@ -67,10 +69,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # because the device just hasn't been discovered yet, we
         # try to wait a bit for bluetooth discovery to finish.
         try:
-            await asyncio.wait_for(startup_event.wait(), timeout=9)
+            await asyncio.wait_for(startup_event.wait(), timeout=STARTUP_TIMEOUT)
         except asyncio.TimeoutError:
             _LOGGER.debug(
-                "Timeout waiting for startup, starting up in an unavailable state"
+                "%s: Timeout waiting for startup, starting up in an unavailable state",
+                local_name,
             )
 
     return True
