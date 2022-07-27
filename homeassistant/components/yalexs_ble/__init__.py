@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-import logging
 
 from yalexs_ble import PushLock
 
@@ -18,8 +17,6 @@ from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import CONF_KEY, CONF_SLOT, DOMAIN
 from .models import YaleXSBLEData
-
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.LOCK]
 
@@ -64,7 +61,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await asyncio.wait_for(startup_event.wait(), timeout=STARTUP_TIMEOUT)
     except asyncio.TimeoutError as ex:
-        raise ConfigEntryNotReady("Could not discover BLE device {local_name}") from ex
+        raise ConfigEntryNotReady(
+            "Could not communicate with {local_name}, try moving closer to the device."
+        ) from ex
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = YaleXSBLEData(
         entry.title, local_name, push_lock
