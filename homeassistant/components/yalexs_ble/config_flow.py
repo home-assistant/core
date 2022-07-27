@@ -111,6 +111,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._discovered_name = name
         self._discovered_key = discovered_key
         self._discovered_slot = discovered_slot
+        # We do not want to raise on progress as integration_discovery takes
+        # precedence over other discovery flows since we already have the keys.
+        await self.async_set_unique_id(local_name, raise_on_progress=False)
         for progress in self._async_in_progress(include_uninitialized=True):
             # Integration discovery should abort other discovery types
             # since it already has the keys and slots, and the other
@@ -122,7 +125,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._discovery_info = await async_wait_for_discovery(self.hass, local_name)
         except asyncio.TimeoutError:
             return self.async_abort(reason="not_found")
-        await self.async_set_unique_id(local_name)
         self.context["title_placeholders"] = {
             "name": name,
             "local_name": local_name,
