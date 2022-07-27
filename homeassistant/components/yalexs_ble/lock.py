@@ -32,9 +32,8 @@ class YaleXSBLELock(YALEXSBLEEntity, LockEntity):
     _attr_name = "Lock"
 
     @callback
-    def _async_update_callback(self, new_state: LockState) -> None:
+    def _async_update_state(self, new_state: LockState) -> None:
         """Update the state."""
-        self._attr_available = True
         self._attr_is_locked = False
         self._attr_is_locking = False
         self._attr_is_unlocking = False
@@ -51,7 +50,7 @@ class YaleXSBLELock(YALEXSBLEEntity, LockEntity):
             LockStatus.UNKNOWN_06,
         ):
             self._attr_is_jammed = True
-        super()._async_update_callback(new_state)
+        super()._async_update_state(new_state)
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""

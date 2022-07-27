@@ -1,27 +1,64 @@
 """Config flow for Yale Access Bluetooth integration."""
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any, cast
 
 from bleak_retry_connector import BleakError
 import voluptuous as vol
 from yalexs_ble import AuthError, PushLock, local_name_to_serial, serial_to_local_name
+from yalexs_ble.const import YALE_MFR_ID
 
 from homeassistant import config_entries
+from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
 )
-from homeassistant.const import CONF_ADDRESS
+from homeassistant.components.bluetooth.match import (
+    LOCAL_NAME,
+    BluetoothCallbackMatcher,
+)
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant.loader import async_get_integration
 
-from .const import CONF_KEY, CONF_LOCAL_NAME, CONF_SLOT, DOMAIN
+from .const import CONF_KEY, CONF_LOCAL_NAME, CONF_SLOT, DISCOVERY_TIMEOUT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def async_wait_for_discovery(
+    hass: HomeAssistant, local_name: str
+) -> bluetooth.BluetoothServiceInfoBleak:
+    """Wait for a device to be discovered."""
+    discovery_info_future: asyncio.Future[
+        bluetooth.BluetoothServiceInfoBleak
+    ] = asyncio.Future()
+
+    @callback
+    def _async_update_ble(
+        service_info: bluetooth.BluetoothServiceInfoBleak
+        | bluetooth.BluetoothServiceInfo,
+        change: bluetooth.BluetoothChange,
+    ) -> None:
+        """Update from a ble callback."""
+        assert isinstance(service_info, bluetooth.BluetoothServiceInfoBleak)
+        if not discovery_info_future.done():
+            discovery_info_future.set_result(service_info)
+
+    cancel = bluetooth.async_register_callback(
+        hass,
+        _async_update_ble,
+        BluetoothCallbackMatcher({LOCAL_NAME: local_name}),
+    )
+    try:
+        return await asyncio.wait_for(discovery_info_future, timeout=DISCOVERY_TIMEOUT)
+    finally:
+        cancel()
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -46,7 +83,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._discovery_info = cast(BluetoothServiceInfoBleak, discovery_info)
         self.context["title_placeholders"] = {
             "name": local_name_to_serial(discovery_info.name),
-            "address": discovery_info.address,
         }
         return await self.async_step_user()
 
@@ -59,39 +95,29 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         discovered_key = discovery_info["key"]
         discovered_slot = discovery_info["slot"]
         local_name = serial_to_local_name(serial)
-        for entry in self._async_current_entries(include_ignore=False):
-            if entry.unique_id == local_name:
-                updates: dict[str, str | int] = {}
-                if entry.data[CONF_KEY] != discovered_key:
-                    updates[CONF_KEY] = discovered_key
-                    updates[CONF_SLOT] = discovered_slot
-                if updates:
-                    self.hass.config_entries.async_update_entry(entry, data=updates)
-                    self.hass.async_create_task(
-                        self.hass.config_entries.async_reload(entry.entry_id)
-                    )
-                return self.async_abort(reason="already_configured")
-        for ble_discovery in async_discovered_service_info(self.hass):
-            if local_name == ble_discovery.name:
-                self._discovery_info = ble_discovery
-                break
-        if not self._discovery_info:
-            return self.async_abort(reason="no_devices_found")
-        self._discovered_name = name
-        self._discovered_key = discovered_key
-        self._discovered_slot = discovered_slot
+        # We do not want to raise on progress as integration_discovery takes
+        # precedence over other discovery flows since we already have the keys.
+        await self.async_set_unique_id(local_name, raise_on_progress=False)
+        self._abort_if_unique_id_configured(
+            updates={CONF_KEY: discovered_key, CONF_SLOT: discovered_slot}
+        )
         for progress in self._async_in_progress(include_uninitialized=True):
             # Integration discovery should abort other discovery types
             # since it already has the keys and slots, and the other
             # discovery types do not.
             context = progress["context"]
-            if context.get(
-                "unique_id"
-            ) == self._discovery_info.name and not context.get("active"):
+            if context.get("unique_id") == local_name and not context.get("active"):
                 self.hass.config_entries.flow.async_abort(progress["flow_id"])
-        await self.async_set_unique_id(self._discovery_info.name)
+        try:
+            self._discovery_info = await async_wait_for_discovery(self.hass, local_name)
+        except asyncio.TimeoutError:
+            return self.async_abort(reason="no_devices_found")
+        self._discovered_name = name
+        self._discovered_key = discovered_key
+        self._discovered_slot = discovered_slot
         self.context["title_placeholders"] = {
-            "name": self._discovered_name,
+            "name": name,
+            "local_name": local_name,
             "address": self._discovery_info.address,
         }
         return await self.async_step_integration_discovery_confirm()
@@ -100,10 +126,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a confirmation of discovered integration."""
+        assert self._discovery_info is not None
         assert self._discovered_key is not None
         assert self._discovered_slot is not None
-        assert self._discovery_info is not None
         assert self._discovered_name is not None
+        assert self.unique_id is not None
         if user_input is not None:
             return self.async_create_entry(
                 title=self._discovered_name,
@@ -117,8 +144,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="integration_discovery_confirm",
             description_placeholders={
-                CONF_LOCAL_NAME: self._discovery_info.name,
-                CONF_ADDRESS: self._discovery_info.address,
+                "name": self._discovered_name,
+                "local_name": self.unique_id,
+                "address": self._discovery_info.address,
             },
         )
 
@@ -143,9 +171,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await push_lock.update()
             except BleakError:
                 errors["base"] = "cannot_connect"
-            except ValueError:
-                errors["key"] = "invalid_auth"
-            except AuthError:
+            except (AuthError, ValueError):
                 errors["key"] = "invalid_auth"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected error")
@@ -161,6 +187,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if (
                     discovery.name in current_local_names
                     or discovery.name in self._discovered_devices
+                    or YALE_MFR_ID not in discovery.manufacturer_data
                 ):
                     continue
                 self._discovered_devices[discovery.name] = discovery

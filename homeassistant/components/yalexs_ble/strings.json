@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "{name} ({address})",
+    "flow_title": "{name} ({local_name}) {address}",
     "step": {
       "user": {
         "description": "Check the documentation at {docs_url} for how to find the offline key.",
@@ -11,7 +11,7 @@
         }
       },
       "integration_discovery_confirm": {
-        "description": "Do you want to setup {name} ({address})?"
+        "description": "Do you want to setup {name} ({local_name}) over Bluetooth with address {address}?"
       }
     },
     "error": {
