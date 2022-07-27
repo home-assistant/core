@@ -122,7 +122,7 @@ async def test_xiaomi_consumable(hass):
     assert len(hass.states.async_all()) == 0
 
     # WARNING: This test data is synthetic, rather than captured from a real device
-    # obj type is 0x1010, payload len is 0x2 and payload is 0xf400
+    # obj type is 0x1310, payload len is 0x2 and payload is 0x6000
     saved_callback(
         make_advertisement(
             "C4:7C:8D:6A:3E:7A", b"q \x98\x00iz>j\x8d|\xc4\r\x13\x10\x02\x60\x00"
