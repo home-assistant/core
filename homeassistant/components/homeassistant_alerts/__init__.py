@@ -75,7 +75,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 DOMAIN,
                 issue_id,
                 is_fixable=False,
-                learn_more_url=alert.alert_url,
                 severity=IssueSeverity.WARNING,
                 translation_key="alert",
                 translation_placeholders={
@@ -112,7 +111,6 @@ class IntegrationAlert:
     integration: str
     filename: str
     date_updated: str | None
-    alert_url: str | None
 
     @property
     def issue_id(self) -> str:
@@ -147,7 +145,7 @@ class AlertUpdateCoordinator(DataUpdateCoordinator[dict[str, IntegrationAlert]])
         result = {}
 
         for alert in alerts:
-            if "alert_url" not in alert or "integrations" not in alert:
+            if "integrations" not in alert:
                 continue
 
             if "homeassistant" in alert:
@@ -177,7 +175,6 @@ class AlertUpdateCoordinator(DataUpdateCoordinator[dict[str, IntegrationAlert]])
                     integration=integration["package"],
                     filename=alert["filename"],
                     date_updated=alert.get("date_updated"),
-                    alert_url=alert["alert_url"],
                 )
 
                 result[integration_alert.issue_id] = integration_alert

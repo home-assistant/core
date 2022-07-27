@@ -133,7 +133,7 @@ async def test_alerts(
                 "ignored": False,
                 "is_fixable": False,
                 "issue_id": f"{alert}_{integration}",
-                "learn_more_url": f"https://alerts.home-assistant.io/#{alert}",
+                "learn_more_url": None,
                 "severity": "warning",
                 "translation_key": "alert",
                 "translation_placeholders": {
@@ -149,13 +149,6 @@ async def test_alerts(
 @pytest.mark.parametrize(
     "ha_version, fixture, expected_alerts",
     (
-        (
-            "2022.7.0",
-            "alerts_no_url.json",
-            [
-                ("dark_sky.markdown", "darksky"),
-            ],
-        ),
         (
             "2022.7.0",
             "alerts_no_integrations.json",
@@ -220,7 +213,7 @@ async def test_bad_alerts(
                 "ignored": False,
                 "is_fixable": False,
                 "issue_id": f"{alert}_{integration}",
-                "learn_more_url": f"https://alerts.home-assistant.io/#{alert}",
+                "learn_more_url": None,
                 "severity": "warning",
                 "translation_key": "alert",
                 "translation_placeholders": {
@@ -381,7 +374,7 @@ async def test_alerts_change(
                 "ignored": False,
                 "is_fixable": False,
                 "issue_id": f"{alert}_{integration}",
-                "learn_more_url": f"https://alerts.home-assistant.io/#{alert}",
+                "learn_more_url": None,
                 "severity": "warning",
                 "translation_key": "alert",
                 "translation_placeholders": {
@@ -420,7 +413,7 @@ async def test_alerts_change(
                 "ignored": False,
                 "is_fixable": False,
                 "issue_id": f"{alert}_{integration}",
-                "learn_more_url": f"https://alerts.home-assistant.io/#{alert}",
+                "learn_more_url": None,
                 "severity": "warning",
                 "translation_key": "alert",
                 "translation_placeholders": {
