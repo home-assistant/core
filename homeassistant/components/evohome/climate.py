@@ -126,6 +126,8 @@ async def async_setup_platform(
 class EvoClimateEntity(EvoDevice, ClimateEntity):
     """Base for an evohome Climate device."""
 
+    _attr_temperature_unit = TEMP_CELSIUS
+
     def __init__(self, evo_broker, evo_device) -> None:
         """Initialize a Climate device."""
         super().__init__(evo_broker, evo_device)
@@ -316,7 +318,6 @@ class EvoController(EvoClimateEntity):
 
     _attr_icon = "mdi:thermostat"
     _attr_precision = PRECISION_TENTHS
-    _attr_temperature_unit = TEMP_CELSIUS
 
     def __init__(self, evo_broker, evo_device) -> None:
         """Initialize a Honeywell TCC Controller/Location."""
