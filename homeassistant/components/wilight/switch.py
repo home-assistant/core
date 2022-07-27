@@ -231,7 +231,7 @@ class WiLightValveSwitch(WiLightDevice, ToggleEntity):
         return wilight_to_hass_trigger(self._status.get("trigger_4"))
 
     @property
-    def state_attributes(self) -> dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         attr: dict[str, Any] = {}
 
