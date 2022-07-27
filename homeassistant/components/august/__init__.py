@@ -13,7 +13,7 @@ from yalexs.lock import Lock, LockDetail
 from yalexs.pubnub_activity import activities_from_pubnub_message
 from yalexs.pubnub_async import AugustPubNub, async_create_pubnub
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY, ConfigEntry
 from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import (
@@ -133,6 +133,7 @@ class AugustData(AugustSubscriberMixin):
         # detail as we cannot determine if they are usable.
         # This also allows us to avoid checking for
         # detail being None all over the place
+        self._async_trigger_ble_lock_discovery()
         self._remove_inoperative_locks()
         self._remove_inoperative_doorbells()
 
@@ -152,6 +153,29 @@ class AugustData(AugustSubscriberMixin):
             # but it is not a fatal error as the lock
             # will recover automatically when it comes back online.
             asyncio.create_task(self._async_initial_sync())
+
+    @callback
+    def _async_trigger_ble_lock_discovery(self):
+        """Update keys for the yalexs-ble integration if available."""
+        for lock in list(self.locks):
+            device_id = lock.device_id
+            lock_detail = self.get_device_detail(device_id)
+            if not lock_detail.offline_key:
+                continue
+            assert isinstance(lock_detail, LockDetail)
+            discovery_info = {
+                "name": lock_detail.device_name,
+                "serial": lock_detail.serial_number,
+                "key": lock_detail.offline_key,
+                "slot": lock_detail.offline_slot,
+            }
+            self._hass.async_create_task(
+                self._hass.config_entries.flow.async_init(
+                    "yalexs_ble",
+                    context={"source": SOURCE_INTEGRATION_DISCOVERY},
+                    data=discovery_info,
+                )
+            )
 
     async def _async_initial_sync(self):
         """Attempt to request an initial sync."""
