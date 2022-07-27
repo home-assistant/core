@@ -83,6 +83,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._discovery_info = cast(BluetoothServiceInfoBleak, discovery_info)
         self.context["title_placeholders"] = {
             "name": local_name_to_serial(discovery_info.name),
+            "local_name": discovery_info.name,
+            "address": self._discovery_info.address,
         }
         return await self.async_step_user()
 
