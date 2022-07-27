@@ -44,7 +44,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     entry.async_on_unload(await push_lock.start())
 
-    hass.data[DOMAIN][entry.entry_id] = YaleXSBLEData(local_name, push_lock)
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = YaleXSBLEData(
+        local_name, push_lock
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

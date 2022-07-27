@@ -1,19 +1,25 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device is already configured"
+            "already_configured": "Device is already configured",
+            "no_devices_found": "No devices found on the network",
+            "no_unconfigured_devices": "No unconfigured devices found."
         },
         "error": {
             "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication",
             "unknown": "Unexpected error"
         },
+        "flow_title": "{name} ({address})",
         "step": {
+            "integration_discovery_confirm": {
+                "description": "Do you want to setup {name} ({address})?"
+            },
             "user": {
                 "data": {
-                    "host": "Host",
-                    "password": "Password",
-                    "username": "Username"
+                    "key": "Key",
+                    "local_name": "Bluetooth local name",
+                    "slot": "Slot (Key Index)"
                 }
             }
         }
