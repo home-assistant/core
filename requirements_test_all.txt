@@ -684,6 +684,9 @@ kostal_plenticore==0.2.0
 # homeassistant.components.kraken
 krakenex==2.1.0
 
+# homeassistant.components.lacrosse_view
+lacrosse-view==0.0.9
+
 # homeassistant.components.laundrify
 laundrify_aio==1.1.2
 
