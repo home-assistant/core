@@ -4,6 +4,7 @@ from __future__ import annotations
 from io import BytesIO
 import logging
 import os
+from typing import TYPE_CHECKING
 
 import av
 
@@ -15,6 +16,9 @@ from .const import (
     SEGMENT_CONTAINER_FORMAT,
 )
 from .core import PROVIDERS, IdleTimer, Segment, StreamOutput, StreamSettings
+
+if TYPE_CHECKING:
+    import deque
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -139,8 +143,16 @@ class RecorderOutput(StreamOutput):
 
             source.close()
 
-        def finish_writing(output: av.OutputContainer, video_path: str) -> None:
+        def finish_writing(
+            segments: deque[Segment], output: av.OutputContainer, video_path: str
+        ) -> None:
             """Finish writing output."""
+            # Should only have 0 or 1 segments, but loop through just in case
+            while segments:
+                write_segment(segments.popleft())
+            if output is None:
+                _LOGGER.error("Recording failed to capture anything")
+                return
             output.close()
             try:
                 os.rename(video_path + ".tmp", video_path)
@@ -164,15 +176,7 @@ class RecorderOutput(StreamOutput):
             await self._hass.async_add_executor_job(
                 write_segment, self._segments.popleft()
             )
-        # Write remaining segments
-        # Should only have 0 or 1 segments, but loop through just in case
-        while self._segments:
-            await self._hass.async_add_executor_job(
-                write_segment, self._segments.popleft()
-            )
-        if output is None:
-            _LOGGER.error("Recording failed to capture anything")
-        else:
-            await self._hass.async_add_executor_job(
-                finish_writing, output, self.video_path
-            )
+        # Write remaining segments and close output
+        await self._hass.async_add_executor_job(
+            finish_writing, self._segments, output, self.video_path
+        )
