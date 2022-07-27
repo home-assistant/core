@@ -109,7 +109,6 @@ SENSOR_DESCRIPTIONS = {
     # Used for e.g. formaldehyde
     (None, Units.CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER): SensorEntityDescription(
         key=str(Units.CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER),
-        device_class=None,
         native_unit_of_measurement=CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
