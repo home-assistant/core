@@ -169,6 +169,11 @@ class AugustData(AugustSubscriberMixin):
                 "key": lock_detail.offline_key,
                 "slot": lock_detail.offline_slot,
             }
+            _LOGGER.debug(
+                "Trigger discovery of BLE lock: %s (%s)",
+                lock_detail.device_name,
+                lock_detail.serial_number,
+            )
             self._hass.async_create_task(
                 self._hass.config_entries.flow.async_init(
                     "yalexs_ble",

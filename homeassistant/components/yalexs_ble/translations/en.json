@@ -10,10 +10,10 @@
             "invalid_auth": "Invalid authentication",
             "unknown": "Unexpected error"
         },
-        "flow_title": "{name} ({address})",
+        "flow_title": "{name}",
         "step": {
             "integration_discovery_confirm": {
-                "description": "Do you want to setup {name} ({address})?"
+                "description": "Do you want to setup {name}?"
             },
             "user": {
                 "data": {

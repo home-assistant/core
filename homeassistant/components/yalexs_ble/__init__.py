@@ -14,6 +14,7 @@ from homeassistant.components.bluetooth.match import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import CONF_KEY, CONF_SLOT, DOMAIN
 from .models import YaleXSBLEData
@@ -22,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.LOCK]
 
-STARTUP_TIMEOUT = 9
+STARTUP_TIMEOUT = 29
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -33,13 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     slot = entry.data[CONF_SLOT]
     push_lock = PushLock(local_name)
     push_lock.set_lock_key(key, slot)
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = YaleXSBLEData(
-        entry.title, local_name, push_lock
-    )
     startup_event = asyncio.Event()
-
-    # Platforms need to subscribe first
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     @callback
     def _async_update_ble(
@@ -60,7 +55,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             BluetoothCallbackMatcher({LOCAL_NAME: local_name}),
         )
     )
-    entry.async_on_unload(await push_lock.start())
 
     # We don't want the overhead of tearing down and trying
     # again since the BLE device may take a while to discover,
@@ -69,14 +63,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # try to wait a bit for bluetooth discovery to finish.
     try:
         await asyncio.wait_for(startup_event.wait(), timeout=STARTUP_TIMEOUT)
-    except asyncio.TimeoutError:
-        _LOGGER.debug(
-            "%s: Timeout waiting for startup, starting up in an unavailable state",
-            local_name,
-        )
+    except asyncio.TimeoutError as ex:
+        raise ConfigEntryNotReady("Could not discover BLE device {local_name}") from ex
 
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = YaleXSBLEData(
+        entry.title, local_name, push_lock
+    )
+
+    # Platforms need to subscribe first
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    entry.async_on_unload(await push_lock.start())
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
-
     return True
 
 

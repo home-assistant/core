@@ -26,16 +26,16 @@ class YALEXSBLEEntity(Entity):
             manufacturer="Yale",
             identifiers={(DOMAIN, data.local_name)},
         )
+        if self._device.lock_state:
+            self._async_update_state(self._device.lock_state)
 
     @callback
-    def _async_update_callback(self, new_state: LockState) -> None:
+    def _async_update_state(self, new_state: LockState) -> None:
         """Update the state."""
         self._attr_available = True
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
-        self.async_on_remove(
-            self._device.register_callback(self._async_update_callback)
-        )
+        self.async_on_remove(self._device.register_callback(self._async_update_state))
         return await super().async_added_to_hass()

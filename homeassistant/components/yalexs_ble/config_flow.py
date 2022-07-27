@@ -14,7 +14,6 @@ from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
 )
-from homeassistant.const import CONF_ADDRESS
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 from homeassistant.helpers.typing import DiscoveryInfoType
@@ -47,7 +46,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._discovery_info = cast(BluetoothServiceInfoBleak, discovery_info)
         self.context["title_placeholders"] = {
             "name": local_name_to_serial(discovery_info.name),
-            "address": discovery_info.address,
         }
         return await self.async_step_user()
 
@@ -72,12 +70,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         self.hass.config_entries.async_reload(entry.entry_id)
                     )
                 return self.async_abort(reason="already_configured")
-        for ble_discovery in async_discovered_service_info(self.hass):
-            if local_name == ble_discovery.name:
-                self._discovery_info = ble_discovery
-                break
-        if not self._discovery_info:
-            return self.async_abort(reason="no_devices_found")
         self._discovered_name = name
         self._discovered_key = discovered_key
         self._discovered_slot = discovered_slot
@@ -86,15 +78,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # since it already has the keys and slots, and the other
             # discovery types do not.
             context = progress["context"]
-            if context.get(
-                "unique_id"
-            ) == self._discovery_info.name and not context.get("active"):
+            if context.get("unique_id") == local_name and not context.get("active"):
                 self.hass.config_entries.flow.async_abort(progress["flow_id"])
-        await self.async_set_unique_id(self._discovery_info.name)
-        self.context["title_placeholders"] = {
-            "name": self._discovered_name,
-            "address": self._discovery_info.address,
-        }
+        await self.async_set_unique_id(serial_to_local_name(serial))
+        self.context["title_placeholders"] = {"name": name}
         return await self.async_step_integration_discovery_confirm()
 
     async def async_step_integration_discovery_confirm(
@@ -103,7 +90,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a confirmation of discovered integration."""
         assert self._discovered_key is not None
         assert self._discovered_slot is not None
-        assert self._discovery_info is not None
         assert self._discovered_name is not None
         if user_input is not None:
             return self.async_create_entry(
@@ -118,8 +104,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="integration_discovery_confirm",
             description_placeholders={
-                CONF_LOCAL_NAME: self._discovery_info.name,
-                CONF_ADDRESS: self._discovery_info.address,
+                "name": self._discovered_name,
             },
         )
 
