@@ -86,6 +86,7 @@ def async_create_issue(
     domain: str,
     issue_id: str,
     *,
+    issue_domain: str | None = None,
     breaks_in_ha_version: str | None = None,
     is_fixable: bool,
     learn_more_url: str | None = None,
@@ -106,6 +107,7 @@ def async_create_issue(
     issue_registry.async_get_or_create(
         domain,
         issue_id,
+        issue_domain=issue_domain,
         breaks_in_ha_version=breaks_in_ha_version,
         is_fixable=is_fixable,
         learn_more_url=learn_more_url,
