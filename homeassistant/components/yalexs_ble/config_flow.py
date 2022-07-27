@@ -17,6 +17,7 @@ from homeassistant.const import CONF_ADDRESS
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 from homeassistant.helpers.typing import DiscoveryInfoType
+from homeassistant.loader import async_get_integration
 
 from .const import CONF_KEY, CONF_LOCAL_NAME, CONF_SLOT, DOMAIN
 
@@ -95,10 +96,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 },
             )
 
+        integration = await async_get_integration(self.hass, DOMAIN)
         self._set_confirm_only()
         return self.async_show_form(
             step_id="integration_discovery_confirm",
             description_placeholders={
+                "docs_url": integration.documentation,
                 CONF_LOCAL_NAME: self._discovery_info.name,
                 CONF_ADDRESS: self._discovery_info.address,
             },

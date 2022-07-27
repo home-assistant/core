@@ -36,5 +36,5 @@ class YaleXSBLEDoorSensor(YALEXSBLEEntity, BinarySensorEntity):
     @callback
     def _async_update_callback(self, new_state: LockState) -> None:
         """Update the state."""
-        self._attr_is_on = new_state.door == DoorStatus.CLOSED
+        self._attr_is_on = new_state.door == DoorStatus.OPENED
         super()._async_update_callback(new_state)
