@@ -69,6 +69,16 @@ class ValloxSensorEntity(ValloxEntity, SensorEntity):
         return value
 
 
+class ValloxProfileSensor(ValloxSensorEntity):
+    """Child class for profile reporting."""
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the value reported by the sensor."""
+        vallox_profile = self.coordinator.data.profile
+        return VALLOX_PROFILE_TO_STR_REPORTABLE.get(vallox_profile)
+
+
 # There is a quirk with respect to the fan speed reporting. The device keeps on reporting the last
 # valid fan speed from when the device was in regular operation mode, even if it left that state and
 # has been shut off in the meantime.
@@ -123,16 +133,6 @@ class ValloxSensorEntityDescription(SensorEntityDescription):
     metric_key: str | None = None
     entity_type: type[ValloxSensorEntity] = ValloxSensorEntity
     round_ndigits: int | None = None
-
-
-class ValloxProfileSensor(ValloxSensorEntity):
-    """Child class for profile reporting."""
-
-    @property
-    def native_value(self) -> StateType:
-        """Return the value reported by the sensor."""
-        vallox_profile = self.coordinator.data.profile
-        return VALLOX_PROFILE_TO_STR_REPORTABLE.get(vallox_profile)
 
 
 SENSOR_ENTITIES: tuple[ValloxSensorEntityDescription, ...] = (
