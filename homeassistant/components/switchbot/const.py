@@ -7,12 +7,15 @@ ATTR_BOT = "bot"
 ATTR_CURTAIN = "curtain"
 ATTR_HYGROMETER = "hygrometer"
 ATTR_CONTACT = "contact"
+ATTR_PLUG_MINI = "plug_mini"
 DEFAULT_NAME = "Switchbot"
+
 SUPPORTED_MODEL_TYPES = {
     "WoHand": ATTR_BOT,
     "WoCurtain": ATTR_CURTAIN,
     "WoSensorTH": ATTR_HYGROMETER,
     "WoContact": ATTR_CONTACT,
+    "WoPlugMini": ATTR_PLUG_MINI,
 }
 
 # Config Defaults
