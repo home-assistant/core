@@ -39,8 +39,8 @@
             "title": "The Google Calendar YAML configuration is being removed"
         },
         "removed_track_new_yaml": {
-            "description": "Your Google Calendar configuration.yaml has disabled new entity tracking, which is no longer supported. You must manually set the integration System Options in the UI to disable newly discovered entities going forward. Remove the track_new setting from configuration.yaml and restart Home Assistant to fix this issue.",
-            "title": "The Google Calendar entity tracking has changed"
+            "description": "You have disabled entity tracking for Google Calendar in configuration.yaml, which is no longer supported. You must manually change the integration System Options in the UI to disable newly discovered entities going forward. Remove the track_new setting from configuration.yaml and restart Home Assistant to fix this issue.",
+            "title": "Google Calendar entity tracking has changed"
         }
     },
     "options": {

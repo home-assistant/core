@@ -13,10 +13,11 @@
             "one": "Pusty",
             "other": ""
         },
-        "flow_title": "{name}",
+        "flow_title": "{name} ({address})",
         "step": {
             "user": {
                 "data": {
+                    "address": "Adres urz\u0105dzenia",
                     "mac": "Adres MAC urz\u0105dzenia",
                     "name": "Nazwa",
                     "password": "Has\u0142o"
