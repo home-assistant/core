@@ -634,7 +634,8 @@ async def test_get_network_settings(app_controller, zha_client):
     assert msg["id"] == 6
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
-    assert "network_info" in msg["result"]
+    assert "radio_type" in msg["result"]
+    assert "network_info" in msg["result"]["settings"]
 
 
 async def test_list_network_backups(app_controller, zha_client):

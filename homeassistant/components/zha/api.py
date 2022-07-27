@@ -45,6 +45,7 @@ from .core.const import (
     CLUSTER_COMMANDS_SERVER,
     CLUSTER_TYPE_IN,
     CLUSTER_TYPE_OUT,
+    CONF_RADIO_TYPE,
     CUSTOM_CONFIGURATION,
     DATA_ZHA,
     DATA_ZHA_GATEWAY,
@@ -1000,7 +1001,7 @@ async def websocket_get_configuration(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Get ZHA configuration."""
-    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    zha_gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     import voluptuous_serialize  # pylint: disable=import-outside-toplevel
 
     def custom_serializer(schema: Any) -> Any:
@@ -1065,7 +1066,7 @@ async def websocket_get_network_settings(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Get ZHA network settings."""
-    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    zha_gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     application_controller = zha_gateway.application_controller
 
     # Serialize the current network settings
@@ -1074,7 +1075,13 @@ async def websocket_get_network_settings(
         network_info=application_controller.state.network_info,
     )
 
-    connection.send_result(msg[ID], backup.as_dict())
+    connection.send_result(
+        msg[ID],
+        {
+            "radio_type": zha_gateway.config_entry.data[CONF_RADIO_TYPE],
+            "settings": backup.as_dict(),
+        },
+    )
 
 
 @websocket_api.require_admin
@@ -1084,7 +1091,7 @@ async def websocket_list_network_backups(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Get ZHA network settings."""
-    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    zha_gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     application_controller = zha_gateway.application_controller
 
     # Serialize known backups
@@ -1100,7 +1107,7 @@ async def websocket_create_network_backup(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Create a ZHA network backup."""
-    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    zha_gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     application_controller = zha_gateway.application_controller
 
     # This can take 5-30s
@@ -1127,7 +1134,7 @@ async def websocket_restore_network_backup(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Restore a ZHA network backup."""
-    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    zha_gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     application_controller = zha_gateway.application_controller
     backup = msg["backup"]
 
