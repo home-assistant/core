@@ -1,5 +1,4 @@
 """BleBox sensor entities."""
-import traceback
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -27,12 +26,6 @@ async def async_setup_entry(
 
 class BleBoxBinarySensorEntity(BleBoxEntity, BinarySensorEntity):
     """Representation of a BleBox sensor feature."""
-
-    def __init__(self, feature):
-        """Initialize a BleBox sensor feature."""
-        print("BleBoxBinarySensorEntity_ini")
-        traceback.print_stack()
-        super().__init__(feature)
 
     @property
     def is_on(self):
