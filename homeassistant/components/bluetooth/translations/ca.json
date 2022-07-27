@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El servei ja est\u00e0 configurat"
+            "already_configured": "El servei ja est\u00e0 configurat",
+            "no_adapters": "No s'ha trobat cap adaptador Bluetooth"
         },
         "flow_title": "{name}",
         "step": {
@@ -16,6 +17,15 @@
                     "address": "Dispositiu"
                 },
                 "description": "Tria un dispositiu a configurar"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "adapter": "Adaptador Bluetooth a utilitzar per escanejar"
+                }
             }
         }
     }

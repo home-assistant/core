@@ -107,6 +107,7 @@ async def test_basic_usage(hass, mock_bleak_scanner_start):
         _async_register_callback,
     ):
         unregister_processor = coordinator.async_register_processor(processor)
+        cancel_coordinator = coordinator.async_start()
 
     entity_key = PassiveBluetoothEntityKey("temperature", None)
     entity_key_events = []
@@ -171,6 +172,7 @@ async def test_basic_usage(hass, mock_bleak_scanner_start):
     assert coordinator.available is True
 
     unregister_processor()
+    cancel_coordinator()
 
 
 async def test_unavailable_after_no_data(hass, mock_bleak_scanner_start):
@@ -206,6 +208,7 @@ async def test_unavailable_after_no_data(hass, mock_bleak_scanner_start):
         _async_register_callback,
     ):
         unregister_processor = coordinator.async_register_processor(processor)
+        cancel_coordinator = coordinator.async_start()
 
     mock_entity = MagicMock()
     mock_add_entities = MagicMock()
@@ -259,6 +262,7 @@ async def test_unavailable_after_no_data(hass, mock_bleak_scanner_start):
     assert processor.available is False
 
     unregister_processor()
+    cancel_coordinator()
 
 
 async def test_no_updates_once_stopping(hass, mock_bleak_scanner_start):
@@ -290,6 +294,7 @@ async def test_no_updates_once_stopping(hass, mock_bleak_scanner_start):
         _async_register_callback,
     ):
         unregister_processor = coordinator.async_register_processor(processor)
+        cancel_coordinator = coordinator.async_start()
 
     all_events = []
 
@@ -310,6 +315,7 @@ async def test_no_updates_once_stopping(hass, mock_bleak_scanner_start):
     saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
     assert len(all_events) == 1
     unregister_processor()
+    cancel_coordinator()
 
 
 async def test_exception_from_update_method(hass, caplog, mock_bleak_scanner_start):
@@ -346,6 +352,7 @@ async def test_exception_from_update_method(hass, caplog, mock_bleak_scanner_sta
         _async_register_callback,
     ):
         unregister_processor = coordinator.async_register_processor(processor)
+        cancel_coordinator = coordinator.async_start()
 
     processor.async_add_listener(MagicMock())
 
@@ -361,6 +368,7 @@ async def test_exception_from_update_method(hass, caplog, mock_bleak_scanner_sta
     saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
     assert processor.available is True
     unregister_processor()
+    cancel_coordinator()
 
 
 async def test_bad_data_from_update_method(hass, mock_bleak_scanner_start):
@@ -397,6 +405,7 @@ async def test_bad_data_from_update_method(hass, mock_bleak_scanner_start):
         _async_register_callback,
     ):
         unregister_processor = coordinator.async_register_processor(processor)
+        cancel_coordinator = coordinator.async_start()
 
     processor.async_add_listener(MagicMock())
 
@@ -413,6 +422,7 @@ async def test_bad_data_from_update_method(hass, mock_bleak_scanner_start):
     saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
     assert processor.available is True
     unregister_processor()
+    cancel_coordinator()
 
 
 GOVEE_B5178_REMOTE_SERVICE_INFO = BluetoothServiceInfo(
@@ -737,6 +747,7 @@ async def test_integration_with_entity(hass, mock_bleak_scanner_start):
         _async_register_callback,
     ):
         coordinator.async_register_processor(processor)
+        cancel_coordinator = coordinator.async_start()
 
     processor.async_add_listener(MagicMock())
 
@@ -781,6 +792,7 @@ async def test_integration_with_entity(hass, mock_bleak_scanner_start):
     assert entity_one.entity_key == PassiveBluetoothEntityKey(
         key="temperature", device_id="remote"
     )
+    cancel_coordinator()
 
 
 NO_DEVICES_BLUETOOTH_SERVICE_INFO = BluetoothServiceInfo(
@@ -845,6 +857,7 @@ async def test_integration_with_entity_without_a_device(hass, mock_bleak_scanner
         _async_register_callback,
     ):
         coordinator.async_register_processor(processor)
+        cancel_coordinator = coordinator.async_start()
 
     mock_add_entities = MagicMock()
 
@@ -873,6 +886,7 @@ async def test_integration_with_entity_without_a_device(hass, mock_bleak_scanner
     assert entity_one.entity_key == PassiveBluetoothEntityKey(
         key="temperature", device_id=None
     )
+    cancel_coordinator()
 
 
 async def test_passive_bluetooth_entity_with_entity_platform(
@@ -907,6 +921,7 @@ async def test_passive_bluetooth_entity_with_entity_platform(
         _async_register_callback,
     ):
         coordinator.async_register_processor(processor)
+        cancel_coordinator = coordinator.async_start()
 
     processor.async_add_entities_listener(
         PassiveBluetoothProcessorEntity,
@@ -926,6 +941,7 @@ async def test_passive_bluetooth_entity_with_entity_platform(
         hass.states.get("test_domain.test_platform_aa_bb_cc_dd_ee_ff_pressure")
         is not None
     )
+    cancel_coordinator()
 
 
 SENSOR_PASSIVE_BLUETOOTH_DATA_UPDATE = PassiveBluetoothDataUpdate(
@@ -999,6 +1015,7 @@ async def test_integration_multiple_entity_platforms(hass, mock_bleak_scanner_st
     ):
         coordinator.async_register_processor(binary_sensor_processor)
         coordinator.async_register_processor(sesnor_processor)
+        cancel_coordinator = coordinator.async_start()
 
     binary_sensor_processor.async_add_listener(MagicMock())
     sesnor_processor.async_add_listener(MagicMock())
@@ -1056,3 +1073,4 @@ async def test_integration_multiple_entity_platforms(hass, mock_bleak_scanner_st
     assert binary_sensor_entity_one.entity_key == PassiveBluetoothEntityKey(
         key="motion", device_id=None
     )
+    cancel_coordinator()

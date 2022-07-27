@@ -3,5 +3,6 @@
   "name": "OpenALPR Local",
   "documentation": "https://www.home-assistant.io/integrations/openalpr_local",
   "codeowners": [],
+  "dependencies": ["repairs"],
   "iot_class": "local_push"
 }
