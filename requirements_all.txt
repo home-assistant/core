@@ -1028,7 +1028,7 @@ meater-python==0.0.8
 messagebird==1.2.0
 
 # homeassistant.components.meteoalarm
-meteoalertapi==0.2.0
+meteoalertapi==0.3.0
 
 # homeassistant.components.meteo_france
 meteofrance-api==1.0.2
