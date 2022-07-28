@@ -1,6 +1,7 @@
 """The bluetooth integration."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -8,6 +9,7 @@ from enum import Enum
 import logging
 from typing import Final, Union
 
+import async_timeout
 from bleak import BleakError
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
@@ -43,6 +45,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 UNAVAILABLE_TRACK_SECONDS: Final = 60 * 5
+START_TIMEOUT = 15
 
 SOURCE_LOCAL: Final = "local"
 
@@ -300,7 +303,13 @@ class BluetoothManager:
             self._device_detected, {}
         )
         try:
-            await self.scanner.start()
+            async with async_timeout.timeout(START_TIMEOUT):
+                await self.scanner.start()
+        except asyncio.TimeoutError as ex:
+            self._cancel_device_detected()
+            raise ConfigEntryNotReady(
+                f"Timed out starting Bluetooth after {START_TIMEOUT} seconds"
+            ) from ex
         except (FileNotFoundError, BleakError) as ex:
             self._cancel_device_detected()
             raise ConfigEntryNotReady(f"Failed to start Bluetooth: {ex}") from ex
