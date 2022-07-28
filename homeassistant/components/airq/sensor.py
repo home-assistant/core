@@ -61,12 +61,6 @@ async def async_setup_entry(
     # for the first time (right?). If so I can iterate the keys of the data, and compare
     # them to SENSOR_TYPES (keys?)
     # TODO: fetch the list of sensors from the AirQ object and iterate over them
-    # For that I need to access the api here. Does it mean, I need to store the
-    # AirQ object in hass.data[DOMAIN][config.entry_id] instead of the coordinator?..
-    # Or define a custom coordinator which references the API?
-    # This is done in airly, airzone and
-    # https://developers.home-assistant.io/docs/integration_fetching_data?_highlight=dataupdatecoo#coordinated-single-api-poll-for-data-for-all-entities)
-    # TODO: define own coordinator
     entities = [AirQSensor(coordinator, description) for description in SENSOR_TYPES]
     async_add_entities(entities)
 
@@ -94,7 +88,7 @@ class AirQSensor(CoordinatorEntity, SensorEntity):
         # airthings has a neat way of doing it when the data returned by the API
         # are a dictionary with keys for each device, and values being dictionaries
         # of sensor values. Under this condition, the call should be:
-        # self._attr_native_value = self.coordinator.data[self._id].sensors[self.entity_description.key]
+        # return self.coordinator.data[self._id].sensors[self.entity_description.key]
         # In our case now, only one device is allowed and self.coordinator.data
         # contains the regular dict retrieved from a single device
         return self.coordinator.data[self.entity_description.key]

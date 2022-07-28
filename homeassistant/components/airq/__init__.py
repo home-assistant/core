@@ -15,7 +15,6 @@ from .const import CONF_IP_ADDRESS, CONF_SECRET, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-# For your initial PR, limit it to 1 platform.
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 SCAN_INTERVAL = timedelta(minutes=2)
 TARGET_ROUTE = "data"  # TODO: expose somehow
@@ -27,8 +26,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # {CONF_IP_ADDRESS: ..., CONF_SECRET: ...}
 
     # Set up the "access point"
-    # TODO: add necessary fields to the config
-    # Could I have carried this instance over from ConfigFlow?
     airq = AirQ(entry.data[CONF_IP_ADDRESS], entry.data[CONF_SECRET])
 
     # TODO: expose the configuration to retrieve the averages or the momentary data
@@ -39,12 +36,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # ), f"CONF_TARGET_ROUTE must be in {TARGET_ROUTS}, got {target_route}"
 
     # TODO: consider adding a more specific type alias, e.g.
-    # Data = int | float | list[float] | str
-    # I am mostly unsure of 'Status'. If its type can vary, may as well not bother here
+    # Data = int | float | list[float] | str | dict[str, str]
     async def update_callback() -> dict:
-        """Fetch desired route (data or average) from the device.
+        """Fetch the data from the device.
 
-        Function is meant as an async closure, or partial(airq.get, target_route)
+        Function is meant as an async closure, or partial(airq.get, TARGET_ROUTE)
         Additionally, the result dictionary is stripped of the errors. Subject to
         a discussion
         """

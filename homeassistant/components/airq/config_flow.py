@@ -17,7 +17,6 @@ from .const import CONF_ID, CONF_IP_ADDRESS, CONF_SECRET, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-# -> adjust the data schema to the data that you need
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_IP_ADDRESS): str,
@@ -42,7 +41,7 @@ class PlaceholderHub:
         return await self.airq.test_authentication()
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
+async def validate_input(_: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
