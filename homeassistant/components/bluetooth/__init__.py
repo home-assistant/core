@@ -9,6 +9,7 @@ from enum import Enum
 import logging
 from typing import Final, Union
 
+import async_timeout
 from bleak import BleakError
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
