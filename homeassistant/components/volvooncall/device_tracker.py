@@ -22,9 +22,9 @@ async def async_setup_scanner(
     if discovery_info is None:
         return False
 
-    vin, component, attr, slug_attr, _ = discovery_info
-    data = hass.data[DATA_KEY]
-    instrument = data.instrument(vin, component, attr, slug_attr)
+    vin, component, attr, slug_attr = discovery_info
+    volvo_data = hass.data[DATA_KEY].volvo_data
+    instrument = volvo_data.instrument(vin, component, attr, slug_attr)
 
     async def see_vehicle():
         """Handle the reporting of the vehicle position."""

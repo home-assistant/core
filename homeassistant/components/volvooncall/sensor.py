@@ -6,7 +6,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import VolvoEntity
+from . import DATA_KEY, VolvoEntity, VolvoUpdateCoordinator
 
 
 async def async_setup_platform(
@@ -18,19 +18,22 @@ async def async_setup_platform(
     """Set up the Volvo sensors."""
     if discovery_info is None:
         return
-    async_add_entities([VolvoSensor(hass, *discovery_info)])
+    async_add_entities([VolvoSensor(hass.data[DATA_KEY], *discovery_info)])
 
 
 class VolvoSensor(VolvoEntity, SensorEntity):
     """Representation of a Volvo sensor."""
 
     def __init__(
-        self, hass: HomeAssistant, vin, component, attribute, slug_attr, coordinator
-    ):
+        self,
+        coordinator: VolvoUpdateCoordinator,
+        vin: str,
+        component: str,
+        attribute: str,
+        slug_attr: str,
+    ) -> None:
         """Initialize the sensor."""
-        VolvoEntity.__init__(
-            self, hass, vin, component, attribute, slug_attr, coordinator
-        )
+        VolvoEntity.__init__(self, vin, component, attribute, slug_attr, coordinator)
 
         self._attr_native_value = self.instrument.state
         self._attr_native_unit_of_measurement = self.instrument.unit

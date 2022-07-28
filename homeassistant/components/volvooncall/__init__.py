@@ -131,46 +131,29 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.data[DATA_KEY] = {}
 
-    coordinator = VolvoUpdateCoordinator(hass)
+    volvo_data = VolvoData(hass, connection, config)
 
-    data = hass.data[DATA_KEY] = VolvoData(hass, connection, config, coordinator)
+    hass.data[DATA_KEY] = VolvoUpdateCoordinator(hass, volvo_data)
 
-    _LOGGER.info("Logging in to service")
-    return await data.update()
-
-
-class VolvoUpdateCoordinator(DataUpdateCoordinator):
-    """Volvo coordinator."""
-
-    def __init__(self, hass):
-        """Initialize the data update coordinator."""
-
-        super().__init__(
-            hass,
-            _LOGGER,
-            name="volvooncall",
-            update_interval=DEFAULT_UPDATE_INTERVAL,
-        )
-
-    async def _async_update_data(self):
-        """Fetch data from API endpoint."""
-
-        async with async_timeout.timeout(10):
-            if not await self.hass.data[DATA_KEY].update():
-                raise UpdateFailed("Error communicating with API")
+    _LOGGER.debug("Logging in to service")
+    return await volvo_data.update()
 
 
 class VolvoData:
     """Hold component state."""
 
-    def __init__(self, hass, connection: Connection, config, coordinator):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        connection: Connection,
+        config: ConfigType,
+    ) -> None:
         """Initialize the component state."""
         self.hass = hass
         self.vehicles = set()  # type: ignore[var-annotated]
         self.instruments = set()  # type: ignore[var-annotated]
         self.config = config[DOMAIN]
         self.connection = connection
-        self.coordinator = coordinator
 
     def instrument(self, vin, component, attr, slug_attr):
         """Return corresponding instrument."""
@@ -221,7 +204,6 @@ class VolvoData:
                         instrument.component,
                         instrument.attr,
                         instrument.slug_attr,
-                        self.coordinator,
                     ),
                     self.config,
                 )
@@ -243,32 +225,52 @@ class VolvoData:
         return True
 
 
+class VolvoUpdateCoordinator(DataUpdateCoordinator):
+    """Volvo coordinator."""
+
+    def __init__(self, hass: HomeAssistant, volvo_data: VolvoData) -> None:
+        """Initialize the data update coordinator."""
+
+        super().__init__(
+            hass,
+            _LOGGER,
+            name="volvooncall",
+            update_interval=DEFAULT_UPDATE_INTERVAL,
+        )
+
+        self.volvo_data = volvo_data
+
+    async def _async_update_data(self):
+        """Fetch data from API endpoint."""
+
+        async with async_timeout.timeout(10):
+            if not await self.volvo_data.update():
+                raise UpdateFailed("Error communicating with API")
+
+
 class VolvoEntity(CoordinatorEntity):
     """Base class for all VOC entities."""
 
     def __init__(
         self,
-        hass: HomeAssistant,
-        vin,
-        component,
-        attribute,
-        slug_attr,
-        coordinator,
-    ):
+        vin: str,
+        component: str,
+        attribute: str,
+        slug_attr: str,
+        coordinator: VolvoUpdateCoordinator,
+    ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
 
-        self.hass = hass
         self.vin = vin
         self.component = component
         self.attribute = attribute
         self.slug_attr = slug_attr
-        self.coordinator = coordinator
 
     @property
     def instrument(self):
         """Return corresponding instrument."""
-        return self.hass.data[DATA_KEY].instrument(
+        return self.coordinator.volvo_data.instrument(
             self.vin, self.component, self.attribute, self.slug_attr
         )
 
@@ -288,7 +290,7 @@ class VolvoEntity(CoordinatorEntity):
 
     @property
     def _vehicle_name(self):
-        return self.hass.data[DATA_KEY].vehicle_name(self.vehicle)
+        return self.coordinator.volvo_data.vehicle_name(self.vehicle)
 
     @property
     def name(self):

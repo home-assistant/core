@@ -6,7 +6,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import VolvoEntity
+from . import DATA_KEY, VolvoEntity, VolvoUpdateCoordinator
 
 
 async def async_setup_platform(
@@ -18,35 +18,34 @@ async def async_setup_platform(
     """Set up the Volvo sensors."""
     if discovery_info is None:
         return
-    async_add_entities([VolvoSensor(hass, *discovery_info)])
+    async_add_entities([VolvoSensor(hass.data[DATA_KEY], *discovery_info)])
 
 
 class VolvoSensor(VolvoEntity, BinarySensorEntity):
     """Representation of a Volvo sensor."""
 
     def __init__(
-        self, hass: HomeAssistant, vin, component, attribute, slug_attr, coordinator
-    ):
+        self,
+        coordinator: VolvoUpdateCoordinator,
+        vin: str,
+        component: str,
+        attribute: str,
+        slug_attr: str,
+    ) -> None:
         """Initialize the sensor."""
-        VolvoEntity.__init__(
-            self, hass, vin, component, attribute, slug_attr, coordinator
-        )
+        super().__init__(vin, component, attribute, slug_attr, coordinator)
 
         if self.instrument.device_class in DEVICE_CLASSES:
             self._attr_device_class = self.instrument.device_class
-        else:
-            self._attr_device_class = None
 
+    @property
+    def is_on(self) -> bool | None:
+        """Fetch from update coordinator."""
         if self.instrument.attr == "is_locked":
-            self._attr_is_on = not self.instrument.is_on
-        else:
-            self._attr_is_on = self.instrument.is_on
+            return not self.instrument.is_on
+        return self.instrument.is_on
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        if self.instrument.attr == "is_locked":
-            self._attr_is_on = not self.instrument.is_on
-        else:
-            self._attr_is_on = self.instrument.is_on
         self.async_write_ha_state()

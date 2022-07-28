@@ -6,7 +6,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import VolvoEntity
+from . import DATA_KEY, VolvoEntity, VolvoUpdateCoordinator
 
 
 async def async_setup_platform(
@@ -18,19 +18,22 @@ async def async_setup_platform(
     """Set up a Volvo switch."""
     if discovery_info is None:
         return
-    async_add_entities([VolvoSwitch(hass, *discovery_info)])
+    async_add_entities([VolvoSwitch(hass.data[DATA_KEY], *discovery_info)])
 
 
 class VolvoSwitch(VolvoEntity, SwitchEntity):
     """Representation of a Volvo switch."""
 
     def __init__(
-        self, hass: HomeAssistant, vin, component, attribute, slug_attr, coordinator
-    ):
+        self,
+        coordinator: VolvoUpdateCoordinator,
+        vin: str,
+        component: str,
+        attribute: str,
+        slug_attr: str,
+    ) -> None:
         """Initialize the switch."""
-        VolvoEntity.__init__(
-            self, hass, vin, component, attribute, slug_attr, coordinator
-        )
+        VolvoEntity.__init__(self, vin, component, attribute, slug_attr, coordinator)
 
         self._attr_is_on = self.instrument.state
 
