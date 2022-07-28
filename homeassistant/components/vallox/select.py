@@ -8,6 +8,7 @@ from vallox_websocket_api import Vallox
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ValloxDataUpdateCoordinator, ValloxEntity
@@ -23,6 +24,7 @@ class ValloxSelectEntity(ValloxEntity, SelectEntity):
 
     entity_description: ValloxSelectEntityDescription
     _attr_has_entity_name = True
+    _attr_entity_category: EntityCategory | None = EntityCategory.CONFIG
 
     def __init__(
         self,
