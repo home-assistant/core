@@ -1,6 +1,7 @@
 """Config flow for Xiaomi Bluetooth integration."""
 from __future__ import annotations
 
+import asyncio
 import dataclasses
 from typing import Any
 
@@ -79,7 +80,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
         # Wait until we have received enough information about this device to detect its encryption type
         try:
             await self._async_wait_for_full_advertisement(discovery_info, device)
-        except TimeoutError:
+        except asyncio.TimeoutError:
             # If we don't see a valid packet within the timeout then this device is not supported.
             return self.async_abort(reason="not_supported")
 
@@ -196,7 +197,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self._async_wait_for_full_advertisement(
                     discovery.discovery_info, discovery.device
                 )
-            except TimeoutError:
+            except asyncio.TimeoutError:
                 # If we don't see a valid packet within the timeout then this device is not supported.
                 return self.async_abort(reason="not_supported")
 

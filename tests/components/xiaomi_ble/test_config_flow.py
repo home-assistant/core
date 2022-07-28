@@ -9,6 +9,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from . import (
     JTYJGD03MI_SERVICE_INFO,
     LYWSDCGQ_SERVICE_INFO,
+    MISSING_PAYLOAD_ENCRYPTED,
     MMC_T201_1_SERVICE_INFO,
     NOT_SENSOR_PUSH_SERVICE_INFO,
     YLKG07YL_SERVICE_INFO,
@@ -36,6 +37,21 @@ async def test_async_step_bluetooth_valid_device(hass):
     assert result2["title"] == "MMC_T201_1"
     assert result2["data"] == {}
     assert result2["result"].unique_id == "00:81:F9:DD:6F:C1"
+
+
+async def test_async_step_bluetooth_valid_device_but_missing_payload(hass):
+    """Test discovery via bluetooth with a valid device but missing payload."""
+    with patch(
+        "homeassistant.components.xiaomi_ble.config_flow.ADDITIONAL_DISCOVERY_TIMEOUT",
+        0,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_BLUETOOTH},
+            data=MISSING_PAYLOAD_ENCRYPTED,
+        )
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "not_supported"
 
 
 async def test_async_step_bluetooth_during_onboarding(hass):
@@ -285,6 +301,30 @@ async def test_async_step_user_with_found_devices(hass):
     assert result2["title"] == "LYWSDCGQ"
     assert result2["data"] == {}
     assert result2["result"].unique_id == "58:2D:34:35:93:21"
+
+
+async def test_async_step_user_short_payload(hass):
+    """Test setup from service info cache with devices found but short payloads."""
+    with patch(
+        "homeassistant.components.xiaomi_ble.config_flow.async_discovered_service_info",
+        return_value=[MISSING_PAYLOAD_ENCRYPTED],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+        )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+    with patch(
+        "homeassistant.components.xiaomi_ble.config_flow.ADDITIONAL_DISCOVERY_TIMEOUT",
+        0,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"address": "A4:C1:38:D4:3C:48"},
+        )
+    assert result2["type"] == FlowResultType.ABORT
+    assert result2["reason"] == "not_supported"
 
 
 async def test_async_step_user_with_found_devices_v4_encryption(hass):
