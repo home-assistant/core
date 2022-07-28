@@ -18,7 +18,7 @@ VALLOX_PROFILE_ENTITY_ID = "select.vallox_profile"
 
 
 @pytest.mark.parametrize(
-    "profile,expected_state",
+    "profile, expected_state",
     [
         (VALLOX_PROFILE.HOME, "Home"),
         (VALLOX_PROFILE.AWAY, "Away"),
