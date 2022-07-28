@@ -144,6 +144,21 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
         ),
         TAMPER_BINARY_SENSOR,
     ),
+    # Smart Water Timer
+    "sfkzq": (
+        TuyaBinarySensorEntityDescription(
+            key=f"{DPCode.WORK_STATE}_manual",
+            name="Work state",
+            icon="mdi:information",
+            on_value="manual",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=f"{DPCode.WORK_STATE}_auto",
+            name="Work state",
+            icon="mdi:information",
+            on_value="auto",
+        ),
+    ),
     # Smart Pet Feeder
     # https://developer.tuya.com/en/docs/iot/categorycwwsq?id=Kaiuz2b6vydld
     "cwwsq": (

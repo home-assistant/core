@@ -104,7 +104,7 @@
       "6h": "6 hours"
     },
     "tuya__weather_delay": {
-      "cancel": "Cancel",
+      "cancel": "[%key:common::state::off%]",
       "24h": "24 hours",
       "48h": "48 hours",
       "72h": "72 hours"

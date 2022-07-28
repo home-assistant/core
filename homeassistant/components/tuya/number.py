@@ -70,6 +70,13 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    "sfkzq": (
+        NumberEntityDescription(
+            key=DPCode.ONE_OFF,
+            name="Countdown",
+            icon="mdi:timer",
+        ),
+    ),
     # Smart Pet Feeder
     # https://developer.tuya.com/en/docs/iot/categorycwwsq?id=Kaiuz2b6vydld
     "cwwsq": (

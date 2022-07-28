@@ -141,6 +141,7 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
         SelectEntityDescription(
             key=DPCode.WEATHER_DELAY,
             name="Weather delay",
+            icon="mdi:weather-partly-cloudy",
             device_class=TuyaDeviceClass.WEATHER_DELAY,
             entity_category=EntityCategory.CONFIG,
         ),
