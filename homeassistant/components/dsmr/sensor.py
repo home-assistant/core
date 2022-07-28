@@ -85,7 +85,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRSensorEntityDescription(
-        key="electricity_delivery",
+        key="current_electricity_delivery",
         name="Power production",
         obis_reference=obis_references.CURRENT_ELECTRICITY_DELIVERY,
         device_class=SensorDeviceClass.POWER,

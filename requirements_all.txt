@@ -839,7 +839,7 @@ hole==0.7.0
 holidays==0.14.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220727.0
+home-assistant-frontend==20220728.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.1
@@ -2126,7 +2126,7 @@ rtsp-to-webrtc==0.5.1
 russound==0.1.9
 
 # homeassistant.components.russound_rio
-russound_rio==0.1.7
+russound_rio==0.1.8
 
 # homeassistant.components.yamaha
 rxv==0.7.0
