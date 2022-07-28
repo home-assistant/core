@@ -34,7 +34,7 @@ from .setup import (
     async_set_domains_to_be_loaded,
     async_setup_component,
 )
-from .util import dt as dt_util
+from .util import bluezdbus_workaround, dt as dt_util
 from .util.logging import async_activate_log_queue_handler
 from .util.package import async_get_user_site, is_virtual_env
 
@@ -526,6 +526,7 @@ async def _async_set_up_integrations(
         area_registry.async_load(hass),
         hass.async_add_executor_job(_cache_uname_processor),
     )
+    sys.modules["bleak.backends.bluezdbus"] = bluezdbus_workaround
 
     # Initialize recorder
     if "recorder" in domains_to_setup:
