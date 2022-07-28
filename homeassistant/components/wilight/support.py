@@ -61,7 +61,7 @@ def wilight_to_hass_trigger(value: str | None) -> str | None:
     days = bin(int(value[0:3]))[2:].zfill(8)
     desc = ""
     if int(days[7:8]) == 1:
-        desc = desc + week_days[6] + " "
+        desc += f"{week_days[6]} "
     if int(days[6:7]) == 1:
         desc = desc + week_days[0] + " "
     if int(days[5:6]) == 1:
