@@ -29,18 +29,17 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 class PlaceholderHub:
     """Placeholder class to make tests pass.
 
-    TODO Remove this placeholder class and replace with things from your PyPI package.
+    TODO Understand the context of this class, consider persisting the device reference
+    and refactoing this solution
     """
 
     def __init__(self, address: str, password: str) -> None:
         """Initialize."""
-        try:
-            self.airq = AirQ(address, password)
-        except UnicodeDecodeError as exc:
-            # It is hugely unspecific and must be fixed in aioairq
-            # but now wrong password leads to the message not being correctly
-            # decoded
-            raise InvalidAuth from exc
+        self.airq = AirQ(address, password)
+
+    async def authenticate(self) -> bool:
+        """Test if we can authenticate with the host."""
+        return await self.airq.test_authentication()
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
@@ -57,6 +56,9 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     # )
 
     hub = PlaceholderHub(data[CONF_IP_ADDRESS], data[CONF_SECRET])
+
+    if not await hub.authenticate():
+        raise InvalidAuth
     config = await hub.airq.get("config")
 
     # If you cannot connect:
