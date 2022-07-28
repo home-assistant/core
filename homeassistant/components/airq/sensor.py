@@ -88,15 +88,13 @@ class AirQSensor(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = f"airq_{description.key}"
 
     # TODO: check the guidelines on properties vs attributes...
-    def update(self) -> None:
-        """Fetch new state data for the sensor.
-
-        This is the only method that should fetch new data for Home Assistant.
-        """
+    @property
+    def native_value(self):
+        """Return the value reported by the sensor."""
         # airthings has a neat way of doing it when the data returned by the API
         # are a dictionary with keys for each device, and values being dictionaries
         # of sensor values. Under this condition, the call should be:
         # self._attr_native_value = self.coordinator.data[self._id].sensors[self.entity_description.key]
         # In our case now, only one device is allowed and self.coordinator.data
         # contains the regular dict retrieved from a single device
-        self._attr_native_value = self.coordinator.data[self.entity_description.key]
+        return self.coordinator.data[self.entity_description.key]

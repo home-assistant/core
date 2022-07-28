@@ -11,28 +11,32 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import CONF_IP_ADDRESS, CONF_SECRET, CONF_TARGET_ROUTE, DOMAIN, TARGET_ROUTS
+from .const import CONF_IP_ADDRESS, CONF_SECRET, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 # For your initial PR, limit it to 1 platform.
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 SCAN_INTERVAL = timedelta(minutes=2)
+TARGET_ROUTE = "data"  # TODO: expose somehow
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up air-Q from a config entry."""
+    # entry.data is a dict with the data from STEP_USER_SCHEMA:
+    # {CONF_IP_ADDRESS: ..., CONF_SECRET: ...}
 
     # Set up the "access point"
     # TODO: add necessary fields to the config
+    # Could I have carried this instance over from ConfigFlow?
     airq = AirQ(entry.data[CONF_IP_ADDRESS], entry.data[CONF_SECRET])
 
     # TODO: expose the configuration to retrieve the averages or the momentary data
-    target_route = entry.data[CONF_TARGET_ROUTE]
-    # Perhaps, this check should happen elsewhere
-    assert (
-        target_route in TARGET_ROUTS
-    ), f"CONF_TARGET_ROUTE must be in {TARGET_ROUTS}, got {target_route}"
+    # target_route = entry.data[CONF_TARGET_ROUTE]
+    # # Perhaps, this check should happen elsewhere
+    # assert (
+    #     target_route in TARGET_ROUTS
+    # ), f"CONF_TARGET_ROUTE must be in {TARGET_ROUTS}, got {target_route}"
 
     # TODO: consider adding a more specific type alias, e.g.
     # Data = int | float | list[float] | str
@@ -44,7 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         Additionally, the result dictionary is stripped of the errors. Subject to
         a discussion
         """
-        data = await airq.get(target_route)
+        data = await airq.get(TARGET_ROUTE)
         return airq.drop_errors_from_data(data)
 
     # Coordinator is responsible for querying the device through the callback.
