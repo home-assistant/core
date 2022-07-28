@@ -8,7 +8,15 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONCENTRATION_PARTS_PER_MILLION, TEMP_CELSIUS
+from homeassistant.const import (
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_PARTS_PER_BILLION,
+    CONCENTRATION_PARTS_PER_MILLION,
+    PERCENTAGE,
+    PRESSURE_HPA,
+    TEMP_CELSIUS,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
@@ -22,10 +30,10 @@ from .const import DOMAIN
 # NOTE: keys must match those in the data dictionary
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
-        key="temperature",
-        name="Temperature",
-        device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        key="co",
+        name="CO",
+        device_class=SensorDeviceClass.CO,
+        native_unit_of_measurement=CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
@@ -33,6 +41,77 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name="CO2",
         device_class=SensorDeviceClass.CO2,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="humidity",
+        name="Humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="no2",
+        name="NO2",
+        device_class=SensorDeviceClass.NITROGEN_DIOXIDE,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="o3",
+        name="Ozone",
+        device_class=SensorDeviceClass.OZONE,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # TODO: check the definition in SensorDeviceClass.PM1. It says <= 0.1µm, not 1µm
+    SensorEntityDescription(
+        key="pm1",
+        name="PM1",
+        device_class=SensorDeviceClass.PM1,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="pm2_5",
+        name="PM25",
+        device_class=SensorDeviceClass.PM25,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="pm10",
+        name="PM10",
+        device_class=SensorDeviceClass.PM10,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="pressure",
+        name="Pressure",
+        device_class=SensorDeviceClass.PRESSURE,
+        native_unit_of_measurement=PRESSURE_HPA,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="temperature",
+        name="Temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=TEMP_CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="so2",
+        name="SO2",
+        device_class=SensorDeviceClass.SULPHUR_DIOXIDE,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="tvoc",
+        name="VOC",
+        device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 )
@@ -57,11 +136,30 @@ async def async_setup_entry(
     # NOTE: In other components this function is called async_setup_entry
 
     coordinator = hass.data[DOMAIN][config.entry_id]
-    # Once the coordinator is instantiated, it does the first refresh / fetches the data
-    # for the first time (right?). If so I can iterate the keys of the data, and compare
-    # them to SENSOR_TYPES (keys?)
-    # TODO: fetch the list of sensors from the AirQ object and iterate over them
-    entities = [AirQSensor(coordinator, description) for description in SENSOR_TYPES]
+    available_sensors = list(coordinator.data.keys())
+
+    # Add sensors under warmup
+    status = coordinator.data["Status"]
+    if isinstance(status, dict):
+        warming_up_sensors = [
+            k for k, v in status.items() if "sensor still in warm up phase" in v
+        ]
+        available_sensors.extend(warming_up_sensors)
+
+    # A potential nicer alternative to the iteration above is to fetch the list
+    # of sensors from AirQ.sensors dynamic property. The issue with it is that I
+    # only have access to them in __init__.async_setup_entry. The only way I see
+    # to pass this info is to either define a custom coordinator (which can hold
+    # both the AirQ instance, and the queried list of sensors, and anything else,
+    # or to pass the list in the config entry, which I do not feel very comfortable
+    # modifying (Should its .data field remain consistent with the STEP_USER_DATA_SCHEMA
+    # defined in config_flow.py?
+
+    entities = [
+        AirQSensor(coordinator, description)
+        for description in SENSOR_TYPES
+        if description.key in available_sensors
+    ]
     async_add_entities(entities)
 
 
@@ -83,7 +181,7 @@ class AirQSensor(CoordinatorEntity, SensorEntity):
 
     # TODO: check the guidelines on properties vs attributes...
     @property
-    def native_value(self):
+    def native_value(self) -> float | int | None:
         """Return the value reported by the sensor."""
         # airthings has a neat way of doing it when the data returned by the API
         # are a dictionary with keys for each device, and values being dictionaries
@@ -91,4 +189,7 @@ class AirQSensor(CoordinatorEntity, SensorEntity):
         # return self.coordinator.data[self._id].sensors[self.entity_description.key]
         # In our case now, only one device is allowed and self.coordinator.data
         # contains the regular dict retrieved from a single device
-        return self.coordinator.data[self.entity_description.key]
+
+        # .get(key, None) over [key] to guard against the keys of the warming up
+        # sensors not being present in the returned dictionary
+        return self.coordinator.data.get(self.entity_description.key, None)
