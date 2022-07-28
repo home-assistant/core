@@ -1,19 +1,20 @@
-"""Support for BMW connected drive button entities."""
+"""Support for MyBMW button entities."""
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
-from bimmer_connected.vehicle import ConnectedDriveVehicle
+from bimmer_connected.vehicle import MyBMWVehicle
+from bimmer_connected.vehicle.remote_services import RemoteServiceStatus
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BMWConnectedDriveBaseEntity
+from . import BMWBaseEntity
 from .const import DOMAIN
 
 if TYPE_CHECKING:
@@ -27,7 +28,9 @@ class BMWButtonEntityDescription(ButtonEntityDescription):
     """Class describing BMW button entities."""
 
     enabled_when_read_only: bool = False
-    remote_function: str | None = None
+    remote_function: Callable[
+        [MyBMWVehicle], Coroutine[Any, Any, RemoteServiceStatus]
+    ] | None = None
     account_function: Callable[[BMWDataUpdateCoordinator], Coroutine] | None = None
 
 
@@ -36,31 +39,31 @@ BUTTON_TYPES: tuple[BMWButtonEntityDescription, ...] = (
         key="light_flash",
         icon="mdi:car-light-alert",
         name="Flash Lights",
-        remote_function="trigger_remote_light_flash",
+        remote_function=lambda vehicle: vehicle.remote_services.trigger_remote_light_flash(),
     ),
     BMWButtonEntityDescription(
         key="sound_horn",
         icon="mdi:bullhorn",
         name="Sound Horn",
-        remote_function="trigger_remote_horn",
+        remote_function=lambda vehicle: vehicle.remote_services.trigger_remote_horn(),
     ),
     BMWButtonEntityDescription(
         key="activate_air_conditioning",
         icon="mdi:hvac",
         name="Activate Air Conditioning",
-        remote_function="trigger_remote_air_conditioning",
+        remote_function=lambda vehicle: vehicle.remote_services.trigger_remote_air_conditioning(),
     ),
     BMWButtonEntityDescription(
         key="deactivate_air_conditioning",
         icon="mdi:hvac-off",
         name="Deactivate Air Conditioning",
-        remote_function="trigger_remote_air_conditioning_stop",
+        remote_function=lambda vehicle: vehicle.remote_services.trigger_remote_air_conditioning_stop(),
     ),
     BMWButtonEntityDescription(
         key="find_vehicle",
         icon="mdi:crosshairs-question",
         name="Find Vehicle",
-        remote_function="trigger_remote_vehicle_finder",
+        remote_function=lambda vehicle: vehicle.remote_services.trigger_remote_vehicle_finder(),
     ),
     BMWButtonEntityDescription(
         key="refresh",
@@ -77,7 +80,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the BMW ConnectedDrive buttons from config entry."""
+    """Set up the BMW buttons from config entry."""
     coordinator: BMWDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     entities: list[BMWButton] = []
@@ -95,15 +98,15 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class BMWButton(BMWConnectedDriveBaseEntity, ButtonEntity):
-    """Representation of a BMW Connected Drive button."""
+class BMWButton(BMWBaseEntity, ButtonEntity):
+    """Representation of a MyBMW button."""
 
     entity_description: BMWButtonEntityDescription
 
     def __init__(
         self,
         coordinator: BMWDataUpdateCoordinator,
-        vehicle: ConnectedDriveVehicle,
+        vehicle: MyBMWVehicle,
         description: BMWButtonEntityDescription,
     ) -> None:
         """Initialize BMW vehicle sensor."""
@@ -116,12 +119,7 @@ class BMWButton(BMWConnectedDriveBaseEntity, ButtonEntity):
     async def async_press(self) -> None:
         """Press the button."""
         if self.entity_description.remote_function:
-            await self.hass.async_add_executor_job(
-                getattr(
-                    self.vehicle.remote_services,
-                    self.entity_description.remote_function,
-                )
-            )
+            await self.entity_description.remote_function(self.vehicle)
         elif self.entity_description.account_function:
             _LOGGER.warning(
                 "The 'Refresh from cloud' button is deprecated. Use the 'homeassistant.update_entity' "
@@ -133,4 +131,4 @@ class BMWButton(BMWConnectedDriveBaseEntity, ButtonEntity):
         # Always update HA states after a button was executed.
         # BMW remote services that change the vehicle's state update the local object
         # when executing the service, so only the HA state machine needs further updates.
-        self.coordinator.notify_listeners()
+        self.coordinator.async_update_listeners()

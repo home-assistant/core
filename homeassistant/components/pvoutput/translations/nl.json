@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "reauth_successful": "Herauthenticatie was succesvol"
+            "reauth_successful": "Herauthenticatie geslaagd"
         },
         "error": {
             "cannot_connect": "Kan geen verbinding maken",
@@ -10,7 +10,7 @@
         "step": {
             "reauth_confirm": {
                 "data": {
-                    "api_key": "API sleutel"
+                    "api_key": "API-sleutel"
                 },
                 "description": "Om opnieuw te verifi\u00ebren met PVOutput, moet u de API-sleutel op {account_url} ophalen."
             },

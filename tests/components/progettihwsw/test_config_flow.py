@@ -4,11 +4,7 @@ from unittest.mock import patch
 from homeassistant import config_entries
 from homeassistant.components.progettihwsw.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -26,7 +22,7 @@ async def test_form(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -43,7 +39,7 @@ async def test_form(hass):
             {CONF_HOST: "", CONF_PORT: 80},
         )
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["step_id"] == "relay_modes"
     assert result2["errors"] == {}
 
@@ -56,7 +52,7 @@ async def test_form(hass):
             mock_value_step_rm,
         )
 
-    assert result3["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
     assert result3["data"]
     assert result3["data"]["title"] == "1R & 1IN Board"
     assert result3["data"]["is_old"] is False
@@ -80,7 +76,7 @@ async def test_form_cannot_connect(hass):
             {CONF_HOST: "", CONF_PORT: 80},
         )
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "cannot_connect"}
 
@@ -107,7 +103,7 @@ async def test_form_existing_entry_exception(hass):
         {CONF_HOST: "", CONF_PORT: 80},
     )
 
-    assert result2["type"] == RESULT_TYPE_ABORT
+    assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
 
 
@@ -128,6 +124,6 @@ async def test_form_user_exception(hass):
             {CONF_HOST: "", CONF_PORT: 80},
         )
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "unknown"}

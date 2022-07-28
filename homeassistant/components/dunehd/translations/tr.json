@@ -13,8 +13,7 @@
                 "data": {
                     "host": "Sunucu"
                 },
-                "description": "Dune HD entegrasyonunu ayarlay\u0131n. Yap\u0131land\u0131rmayla ilgili sorunlar\u0131n\u0131z varsa \u015fu adrese gidin: https://www.home-assistant.io/integrations/dunehd \n\n Oynat\u0131c\u0131n\u0131z\u0131n a\u00e7\u0131k oldu\u011fundan emin olun.",
-                "title": "Dune HD"
+                "description": "Oynat\u0131c\u0131n\u0131z\u0131n a\u00e7\u0131k oldu\u011fundan emin olun."
             }
         }
     }

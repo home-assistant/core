@@ -20,7 +20,6 @@
             },
             "user": {
                 "data": {
-                    "account_id": "ID de cuenta",
                     "connection_type": "Seleccione el tipo de conexi\u00f3n"
                 },
                 "description": "Seleccione el tipo de conexi\u00f3n. Local requiere calentadores con bluetooth"

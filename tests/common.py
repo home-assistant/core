@@ -50,12 +50,13 @@ from homeassistant.helpers import (
     entity_platform,
     entity_registry,
     intent,
+    recorder as recorder_helper,
     restore_state,
     storage,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.json import JSONEncoder
-from homeassistant.setup import async_setup_component, setup_component
+from homeassistant.setup import setup_component
 from homeassistant.util.async_ import run_callback_threadsafe
 import homeassistant.util.dt as date_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
@@ -292,8 +293,6 @@ async def async_test_home_assistant(loop, load_registries=True):
             "_": "Not empty or else some bad checks for hass config in discovery.py breaks"
         },
     )
-    hass.config_entries._entries = {}
-    hass.config_entries._store._async_ensure_stop_listener = lambda: None
 
     # Load the registries
     if load_registries:
@@ -380,7 +379,10 @@ def async_fire_time_changed(
 ) -> None:
     """Fire a time changed event."""
     if datetime_ is None:
-        datetime_ = date_util.utcnow()
+        utc_datetime = date_util.utcnow()
+    else:
+        utc_datetime = date_util.as_utc(datetime_)
+    timestamp = date_util.utc_to_timestamp(utc_datetime)
 
     for task in list(hass.loop._scheduled):
         if not isinstance(task, asyncio.TimerHandle):
@@ -388,13 +390,16 @@ def async_fire_time_changed(
         if task.cancelled():
             continue
 
-        mock_seconds_into_future = datetime_.timestamp() - time.time()
+        mock_seconds_into_future = timestamp - time.time()
         future_seconds = task.when() - hass.loop.time()
 
         if fire_all or mock_seconds_into_future >= future_seconds:
             with patch(
                 "homeassistant.helpers.event.time_tracker_utcnow",
-                return_value=date_util.as_utc(datetime_),
+                return_value=utc_datetime,
+            ), patch(
+                "homeassistant.helpers.event.time_tracker_timestamp",
+                return_value=timestamp,
             ):
                 task._run()
                 task.cancel()
@@ -907,33 +912,12 @@ def init_recorder_component(hass, add_config=None):
         if recorder.CONF_COMMIT_INTERVAL not in config:
             config[recorder.CONF_COMMIT_INTERVAL] = 0
 
-    with patch(
-        "homeassistant.components.recorder.ALLOW_IN_MEMORY_DB",
-        True,
-    ), patch("homeassistant.components.recorder.migration.migrate_schema"):
+    with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
+        "homeassistant.components.recorder.migration.migrate_schema"
+    ):
+        if recorder.DOMAIN not in hass.data:
+            recorder_helper.async_initialize_recorder(hass)
         assert setup_component(hass, recorder.DOMAIN, {recorder.DOMAIN: config})
-        assert recorder.DOMAIN in hass.config.components
-    _LOGGER.info(
-        "Test recorder successfully started, database location: %s",
-        config[recorder.CONF_DB_URL],
-    )
-
-
-async def async_init_recorder_component(hass, add_config=None):
-    """Initialize the recorder asynchronously."""
-    config = dict(add_config) if add_config else {}
-    if recorder.CONF_DB_URL not in config:
-        config[recorder.CONF_DB_URL] = "sqlite://"  # In memory DB
-        if recorder.CONF_COMMIT_INTERVAL not in config:
-            config[recorder.CONF_COMMIT_INTERVAL] = 0
-
-    with patch(
-        "homeassistant.components.recorder.ALLOW_IN_MEMORY_DB",
-        True,
-    ), patch("homeassistant.components.recorder.migration.migrate_schema"):
-        assert await async_setup_component(
-            hass, recorder.DOMAIN, {recorder.DOMAIN: config}
-        )
         assert recorder.DOMAIN in hass.config.components
     _LOGGER.info(
         "Test recorder successfully started, database location: %s",
@@ -1025,6 +1009,11 @@ class MockEntity(entity.Entity):
     def entity_category(self):
         """Return the entity category."""
         return self._handle("entity_category")
+
+    @property
+    def has_entity_name(self):
+        """Return the has_entity_name name flag."""
+        return self._handle("has_entity_name")
 
     @property
     def entity_registry_enabled_default(self):

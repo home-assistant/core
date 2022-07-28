@@ -5,6 +5,7 @@ import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.media_player import DOMAIN
 from homeassistant.const import (
+    STATE_BUFFERING,
     STATE_IDLE,
     STATE_OFF,
     STATE_ON,
@@ -63,7 +64,14 @@ async def test_get_conditions(hass, device_reg, entity_reg):
             "entity_id": f"{DOMAIN}.test_5678",
             "metadata": {"secondary": False},
         }
-        for condition in ["is_off", "is_on", "is_idle", "is_paused", "is_playing"]
+        for condition in [
+            "is_buffering",
+            "is_off",
+            "is_on",
+            "is_idle",
+            "is_paused",
+            "is_playing",
+        ]
     ]
     conditions = await async_get_device_automations(
         hass, DeviceAutomationType.CONDITION, device_entry.id
@@ -111,7 +119,14 @@ async def test_get_conditions_hidden_auxiliary(
             "entity_id": f"{DOMAIN}.test_5678",
             "metadata": {"secondary": True},
         }
-        for condition in ["is_off", "is_on", "is_idle", "is_paused", "is_playing"]
+        for condition in [
+            "is_buffering",
+            "is_off",
+            "is_on",
+            "is_idle",
+            "is_paused",
+            "is_playing",
+        ]
     ]
     conditions = await async_get_device_automations(
         hass, DeviceAutomationType.CONDITION, device_entry.id
@@ -218,6 +233,24 @@ async def test_if_state(hass, calls):
                         },
                     },
                 },
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event6"},
+                    "condition": [
+                        {
+                            "condition": "device",
+                            "domain": DOMAIN,
+                            "device_id": "",
+                            "entity_id": "media_player.entity",
+                            "type": "is_buffering",
+                        }
+                    ],
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": "is_buffering - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                        },
+                    },
+                },
             ]
         },
     )
@@ -226,6 +259,7 @@ async def test_if_state(hass, calls):
     hass.bus.async_fire("test_event3")
     hass.bus.async_fire("test_event4")
     hass.bus.async_fire("test_event5")
+    hass.bus.async_fire("test_event6")
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0].data["some"] == "is_on - event - test_event1"
@@ -236,6 +270,7 @@ async def test_if_state(hass, calls):
     hass.bus.async_fire("test_event3")
     hass.bus.async_fire("test_event4")
     hass.bus.async_fire("test_event5")
+    hass.bus.async_fire("test_event6")
     await hass.async_block_till_done()
     assert len(calls) == 2
     assert calls[1].data["some"] == "is_off - event - test_event2"
@@ -246,6 +281,7 @@ async def test_if_state(hass, calls):
     hass.bus.async_fire("test_event3")
     hass.bus.async_fire("test_event4")
     hass.bus.async_fire("test_event5")
+    hass.bus.async_fire("test_event6")
     await hass.async_block_till_done()
     assert len(calls) == 3
     assert calls[2].data["some"] == "is_idle - event - test_event3"
@@ -256,6 +292,7 @@ async def test_if_state(hass, calls):
     hass.bus.async_fire("test_event3")
     hass.bus.async_fire("test_event4")
     hass.bus.async_fire("test_event5")
+    hass.bus.async_fire("test_event6")
     await hass.async_block_till_done()
     assert len(calls) == 4
     assert calls[3].data["some"] == "is_paused - event - test_event4"
@@ -266,6 +303,18 @@ async def test_if_state(hass, calls):
     hass.bus.async_fire("test_event3")
     hass.bus.async_fire("test_event4")
     hass.bus.async_fire("test_event5")
+    hass.bus.async_fire("test_event6")
     await hass.async_block_till_done()
     assert len(calls) == 5
     assert calls[4].data["some"] == "is_playing - event - test_event5"
+
+    hass.states.async_set("media_player.entity", STATE_BUFFERING)
+    hass.bus.async_fire("test_event1")
+    hass.bus.async_fire("test_event2")
+    hass.bus.async_fire("test_event3")
+    hass.bus.async_fire("test_event4")
+    hass.bus.async_fire("test_event5")
+    hass.bus.async_fire("test_event6")
+    await hass.async_block_till_done()
+    assert len(calls) == 6
+    assert calls[5].data["some"] == "is_buffering - event - test_event6"

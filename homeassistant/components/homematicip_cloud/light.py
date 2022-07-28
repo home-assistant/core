@@ -20,9 +20,7 @@ from homeassistant.components.light import (
     ATTR_COLOR_NAME,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_HS,
-    COLOR_MODE_ONOFF,
+    ColorMode,
     LightEntity,
     LightEntityFeature,
 )
@@ -71,8 +69,8 @@ async def async_setup_entry(
 class HomematicipLight(HomematicipGenericEntity, LightEntity):
     """Representation of the HomematicIP light."""
 
-    _attr_color_mode = COLOR_MODE_ONOFF
-    _attr_supported_color_modes = {COLOR_MODE_ONOFF}
+    _attr_color_mode = ColorMode.ONOFF
+    _attr_supported_color_modes = {ColorMode.ONOFF}
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the light entity."""
@@ -99,8 +97,8 @@ class HomematicipLightMeasuring(HomematicipLight):
 class HomematicipMultiDimmer(HomematicipGenericEntity, LightEntity):
     """Representation of HomematicIP Cloud dimmer."""
 
-    _attr_color_mode = COLOR_MODE_BRIGHTNESS
-    _attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
+    _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
     def __init__(
         self,
@@ -152,8 +150,8 @@ class HomematicipDimmer(HomematicipMultiDimmer, LightEntity):
 class HomematicipNotificationLight(HomematicipGenericEntity, LightEntity):
     """Representation of HomematicIP Cloud notification light."""
 
-    _attr_color_mode = COLOR_MODE_HS
-    _attr_supported_color_modes = {COLOR_MODE_HS}
+    _attr_color_mode = ColorMode.HS
+    _attr_supported_color_modes = {ColorMode.HS}
     _attr_supported_features = LightEntityFeature.TRANSITION
 
     def __init__(self, hap: HomematicipHAP, device, channel: int) -> None:

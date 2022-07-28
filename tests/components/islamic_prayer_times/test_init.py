@@ -9,7 +9,6 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import islamic_prayer_times
-from homeassistant.setup import async_setup_component
 
 from . import (
     NEW_PRAYER_TIMES,
@@ -26,22 +25,6 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 def set_utc(hass):
     """Set timezone to UTC."""
     hass.config.set_time_zone("UTC")
-
-
-async def test_setup_with_config(hass):
-    """Test that we import the config and setup the client."""
-    config = {
-        islamic_prayer_times.DOMAIN: {islamic_prayer_times.CONF_CALC_METHOD: "isna"}
-    }
-    with patch(
-        "prayer_times_calculator.PrayerTimesCalculator.fetch_prayer_times",
-        return_value=PRAYER_TIMES,
-    ):
-        assert (
-            await async_setup_component(hass, islamic_prayer_times.DOMAIN, config)
-            is True
-        )
-        await hass.async_block_till_done()
 
 
 async def test_successful_config_entry(hass):

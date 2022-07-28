@@ -22,7 +22,7 @@
                 "data": {
                     "pairing_code": "Parningskod"
                 },
-                "description": "Ange din HomeKit-parningskod (i formatet XXX-XX-XXX) f\u00f6r att anv\u00e4nda det h\u00e4r tillbeh\u00f6ret",
+                "description": "HomeKit Controller kommunicerar med {name} \u00f6ver det lokala n\u00e4tverket med hj\u00e4lp av en s\u00e4ker krypterad anslutning utan en separat HomeKit-kontroller eller iCloud. Ange din HomeKit-kopplingskod (i formatet XXX-XX-XXX) f\u00f6r att anv\u00e4nda detta tillbeh\u00f6r. Denna kod finns vanligtvis p\u00e5 sj\u00e4lva enheten eller i f\u00f6rpackningen.",
                 "title": "Para HomeKit-tillbeh\u00f6r"
             },
             "user": {

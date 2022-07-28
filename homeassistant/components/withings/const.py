@@ -13,7 +13,6 @@ DOMAIN = "withings"
 LOG_NAMESPACE = "homeassistant.components.withings"
 PROFILE = "profile"
 PUSH_HANDLER = "push_handler"
-CONF_WEBHOOK_URL = "webhook_url"
 
 
 class Measurement(Enum):

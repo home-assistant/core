@@ -12,8 +12,9 @@
                 "data": {
                     "code": "\u30b9\u30c6\u30fc\u30b7\u30e7\u30f3\u30b3\u30fc\u30c9"
                 },
-                "description": "Meteoclimatic\u30b9\u30c6\u30fc\u30b7\u30e7\u30f3\u30b3\u30fc\u30c9\u3092\u5165\u529b(\u4f8b: ESCAT4300000043206B)",
-                "title": "Meteoclimatic"
+                "data_description": {
+                    "code": "ESCAT4300000043206B\u306e\u3088\u3046\u306b\u898b\u3048\u307e\u3059"
+                }
             }
         }
     }

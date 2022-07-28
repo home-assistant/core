@@ -10,10 +10,8 @@
         "step": {
             "user": {
                 "data": {
-                    "dsn": "DSN"
-                },
-                "description": "Masukkan DSN Sentry Anda",
-                "title": "Sentry"
+                    "dsn": "Sentry DSN"
+                }
             }
         }
     },

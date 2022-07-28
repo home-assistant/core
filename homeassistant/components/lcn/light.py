@@ -8,11 +8,10 @@ import pypck
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_TRANSITION,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_ONOFF,
     DOMAIN as DOMAIN_LIGHT,
-    SUPPORT_TRANSITION,
+    ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_DOMAIN, CONF_ENTITIES
@@ -65,7 +64,7 @@ async def async_setup_entry(
 class LcnOutputLight(LcnEntity, LightEntity):
     """Representation of a LCN light for output ports."""
 
-    _attr_supported_features = SUPPORT_TRANSITION
+    _attr_supported_features = LightEntityFeature.TRANSITION
 
     def __init__(
         self, config: ConfigType, entry_id: str, device_connection: DeviceConnectionType
@@ -85,9 +84,9 @@ class LcnOutputLight(LcnEntity, LightEntity):
         self._is_dimming_to_zero = False
 
         if self.dimmable:
-            self._attr_color_mode = COLOR_MODE_BRIGHTNESS
+            self._attr_color_mode = ColorMode.BRIGHTNESS
         else:
-            self._attr_color_mode = COLOR_MODE_ONOFF
+            self._attr_color_mode = ColorMode.ONOFF
         self._attr_supported_color_modes = {self._attr_color_mode}
 
     async def async_added_to_hass(self) -> None:
@@ -169,8 +168,8 @@ class LcnOutputLight(LcnEntity, LightEntity):
 class LcnRelayLight(LcnEntity, LightEntity):
     """Representation of a LCN light for relay ports."""
 
-    _attr_color_mode = COLOR_MODE_ONOFF
-    _attr_supported_color_modes = {COLOR_MODE_ONOFF}
+    _attr_color_mode = ColorMode.ONOFF
+    _attr_supported_color_modes = {ColorMode.ONOFF}
 
     def __init__(
         self, config: ConfigType, entry_id: str, device_connection: DeviceConnectionType

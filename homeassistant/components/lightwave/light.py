@@ -1,11 +1,7 @@
 """Support for LightwaveRF lights."""
 from __future__ import annotations
 
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    SUPPORT_BRIGHTNESS,
-    LightEntity,
-)
+from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -39,7 +35,8 @@ async def async_setup_platform(
 class LWRFLight(LightEntity):
     """Representation of a LightWaveRF light."""
 
-    _attr_supported_features = SUPPORT_BRIGHTNESS
+    _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
     _attr_should_poll = False
 
     def __init__(self, name, device_id, lwlink):

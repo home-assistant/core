@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "admin_username": "Admin Anv\u00e4ndarnamn"
+                }
+            }
+        }
+    }
+}

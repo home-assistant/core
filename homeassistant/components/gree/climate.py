@@ -15,18 +15,12 @@ from greeclimate.device import (
     VerticalSwing,
 )
 
-from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_COOL,
-    HVAC_MODE_DRY,
-    HVAC_MODE_FAN_ONLY,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
     PRESET_AWAY,
     PRESET_BOOST,
     PRESET_ECO,
@@ -36,6 +30,8 @@ from homeassistant.components.climate.const import (
     SWING_HORIZONTAL,
     SWING_OFF,
     SWING_VERTICAL,
+    ClimateEntityFeature,
+    HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -64,11 +60,11 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 HVAC_MODES = {
-    Mode.Auto: HVAC_MODE_AUTO,
-    Mode.Cool: HVAC_MODE_COOL,
-    Mode.Dry: HVAC_MODE_DRY,
-    Mode.Fan: HVAC_MODE_FAN_ONLY,
-    Mode.Heat: HVAC_MODE_HEAT,
+    Mode.Auto: HVACMode.AUTO,
+    Mode.Cool: HVACMode.COOL,
+    Mode.Dry: HVACMode.DRY,
+    Mode.Fan: HVACMode.FAN_ONLY,
+    Mode.Heat: HVACMode.HEAT,
 }
 HVAC_MODES_REVERSE = {v: k for k, v in HVAC_MODES.items()}
 
@@ -202,14 +198,14 @@ class GreeClimateEntity(CoordinatorEntity, ClimateEntity):
         return TARGET_TEMPERATURE_STEP
 
     @property
-    def hvac_mode(self) -> str:
+    def hvac_mode(self) -> HVACMode | None:
         """Return the current HVAC mode for the device."""
         if not self.coordinator.device.power:
-            return HVAC_MODE_OFF
+            return HVACMode.OFF
 
         return HVAC_MODES.get(self.coordinator.device.mode)
 
-    async def async_set_hvac_mode(self, hvac_mode) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         if hvac_mode not in self.hvac_modes:
             raise ValueError(f"Invalid hvac_mode: {hvac_mode}")
@@ -220,7 +216,7 @@ class GreeClimateEntity(CoordinatorEntity, ClimateEntity):
             self._name,
         )
 
-        if hvac_mode == HVAC_MODE_OFF:
+        if hvac_mode == HVACMode.OFF:
             self.coordinator.device.power = False
             await self.coordinator.push_state_update()
             self.async_write_ha_state()
@@ -250,10 +246,10 @@ class GreeClimateEntity(CoordinatorEntity, ClimateEntity):
         self.async_write_ha_state()
 
     @property
-    def hvac_modes(self) -> list[str]:
+    def hvac_modes(self) -> list[HVACMode]:
         """Return the HVAC modes support by the device."""
         modes = [*HVAC_MODES_REVERSE]
-        modes.append(HVAC_MODE_OFF)
+        modes.append(HVACMode.OFF)
         return modes
 
     @property
@@ -303,7 +299,7 @@ class GreeClimateEntity(CoordinatorEntity, ClimateEntity):
         return PRESET_MODES
 
     @property
-    def fan_mode(self) -> str:
+    def fan_mode(self) -> str | None:
         """Return the current fan mode for the device."""
         speed = self.coordinator.device.fan_speed
         return FAN_MODES.get(speed)

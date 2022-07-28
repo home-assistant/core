@@ -1,0 +1,11 @@
+{
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "threshold": "Gr\u00e4nsv\u00e4rde (%)"
+                }
+            }
+        }
+    }
+}

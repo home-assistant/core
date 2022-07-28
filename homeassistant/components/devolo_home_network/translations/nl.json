@@ -14,7 +14,7 @@
                 "data": {
                     "ip_address": "IP-adres"
                 },
-                "description": "Wilt u beginnen met instellen?"
+                "description": "Wil je beginnen met instellen?"
             },
             "zeroconf_confirm": {
                 "description": "Wilt u het devolo-thuisnetwerkapparaat met de hostnaam ` {host_name} ` aan Home Assistant toevoegen?",

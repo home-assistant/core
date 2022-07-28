@@ -28,6 +28,22 @@ from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
 from tests.common import async_fire_time_changed, mock_coro
 
 
+@pytest.fixture(autouse=True)
+def siren_platform_only():
+    """Only setup the siren and required base platforms to speed up tests."""
+    with patch(
+        "homeassistant.components.zha.PLATFORMS",
+        (
+            Platform.DEVICE_TRACKER,
+            Platform.NUMBER,
+            Platform.SENSOR,
+            Platform.SELECT,
+            Platform.SIREN,
+        ),
+    ):
+        yield
+
+
 @pytest.fixture
 async def siren(hass, zigpy_device_mock, zha_device_joined_restored):
     """Siren fixture."""

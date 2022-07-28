@@ -6,7 +6,6 @@
         },
         "error": {
             "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
-            "no_devices": "Nem tal\u00e1lhat\u00f3 eszk\u00f6z a fi\u00f3kban",
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
         "step": {

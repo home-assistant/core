@@ -1,0 +1,34 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "entity_ids": "Invoerentiteiten",
+                    "name": "Naam",
+                    "round_digits": "Precisie",
+                    "type": "statistisch kenmerk"
+                },
+                "data_description": {
+                    "round_digits": "Regelt het aantal decimale cijfers in de uitvoer wanneer de statistische eigenschap gemiddelde of mediaan is."
+                },
+                "description": "Maak een sensor die een min, max, gemiddelde of mediaanwaarde berekent uit een lijst van invoersensoren.",
+                "title": "Voeg min / max / gemiddelde / mediaan sensor toe"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "entity_ids": "Invoerentiteiten",
+                    "round_digits": "Precisie",
+                    "type": "statistisch kenmerk"
+                },
+                "data_description": {
+                    "round_digits": "Regelt het aantal decimale cijfers in de uitvoer wanneer de statistische eigenschap gemiddelde of mediaan is."
+                }
+            }
+        }
+    },
+    "title": "Min / max / gemiddelde / mediaan sensor"
+}

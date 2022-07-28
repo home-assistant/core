@@ -1,0 +1,43 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Nome",
+                    "round": "Precis\u00e3o",
+                    "source": "Sensor de entrada",
+                    "time_window": "Janela do tempo",
+                    "unit_prefix": "Prefixo da m\u00e9trica",
+                    "unit_time": "Unidade de tempo"
+                },
+                "data_description": {
+                    "round": "Controla o n\u00famero de d\u00edgitos decimais na sa\u00edda.",
+                    "time_window": "Se definido, o valor do sensor \u00e9 uma m\u00e9dia m\u00f3vel ponderada no tempo das derivadas dentro desta janela.",
+                    "unit_prefix": "A sa\u00edda ser\u00e1 dimensionada de acordo com o prefixo m\u00e9trico selecionado e a unidade de tempo da derivada."
+                },
+                "description": "Crie um sensor que estime a derivada de um sensor.",
+                "title": "Adicionar sensor Derivative"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "name": "Nome",
+                    "round": "Precis\u00e3o",
+                    "source": "Sensor de entrada",
+                    "time_window": "Janela do tempo",
+                    "unit_prefix": "Prefixo da m\u00e9trica",
+                    "unit_time": "Unidade de tempo"
+                },
+                "data_description": {
+                    "round": "Controla o n\u00famero de d\u00edgitos decimais na sa\u00edda.",
+                    "time_window": "Se definido, o valor do sensor \u00e9 uma m\u00e9dia m\u00f3vel ponderada no tempo das derivadas dentro desta janela.",
+                    "unit_prefix": "A sa\u00edda ser\u00e1 dimensionada de acordo com o prefixo m\u00e9trico selecionado e a unidade de tempo da derivada.."
+                }
+            }
+        }
+    },
+    "title": "Sensor derivativo"
+}

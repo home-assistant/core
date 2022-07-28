@@ -1,0 +1,24 @@
+{
+    "config": {
+        "step": {
+            "reauth_confirm": {
+                "description": "Steam-integrationen m\u00e5ste autentiseras p\u00e5 nytt manuellt\n\nDu hittar din nyckel h\u00e4r: {api_key_url}"
+            },
+            "user": {
+                "data": {
+                    "api_key": "API Nyckel"
+                },
+                "description": "Anv\u00e4nd {account_id_url} f\u00f6r att hitta ditt Steam-konto-ID"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "accounts": "Namn p\u00e5 konton som ska \u00f6vervakas"
+                }
+            }
+        }
+    }
+}

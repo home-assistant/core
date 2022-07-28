@@ -18,10 +18,6 @@
             "user": {
                 "data": {
                     "api_key": "API-Schl\u00fcssel",
-                    "base_path": "Pfad zur API",
-                    "host": "Host",
-                    "port": "Port",
-                    "ssl": "Verwendet ein SSL-Zertifikat",
                     "url": "URL",
                     "verify_ssl": "SSL-Zertifikat \u00fcberpr\u00fcfen"
                 }

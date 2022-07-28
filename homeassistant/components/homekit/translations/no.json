@@ -27,7 +27,6 @@
             },
             "advanced": {
                 "data": {
-                    "auto_start": "Autostart (deaktiver hvis du ringer til homekit.start-tjenesten manuelt)",
                     "devices": "Enheter (utl\u00f8sere)"
                 },
                 "description": "Programmerbare brytere opprettes for hver valgt enhet. N\u00e5r en enhetstrigger utl\u00f8ses, kan HomeKit konfigureres til \u00e5 kj\u00f8re en automatisering eller scene.",
@@ -55,18 +54,9 @@
                 "description": "Alle \" {domains} \"-enheter vil bli inkludert med mindre spesifikke enheter er valgt.",
                 "title": "Velg enhetene som skal inkluderes"
             },
-            "include_exclude": {
-                "data": {
-                    "entities": "Entiteter",
-                    "mode": "Modus"
-                },
-                "description": "Velg entitetene som skal inkluderes. I tilbeh\u00f8rsmodus er bare en enkelt entitet inkludert. I bridge-inkluderingsmodus vil alle entiteter i domenet bli inkludert, med mindre spesifikke entiteter er valgt. I bridge-ekskluderingsmodus vil alle entiteter i domenet bli inkludert, bortsett fra de ekskluderte entitetene. For best ytelse opprettes et eget HomeKit-tilbeh\u00f8r for hver tv-mediaspiller, aktivitetsbasert fjernkontroll, l\u00e5s og kamera.",
-                "title": "Velg entiteter som skal inkluderes"
-            },
             "init": {
                 "data": {
                     "domains": "Domener \u00e5 inkludere",
-                    "include_domains": "Domener \u00e5 inkludere",
                     "include_exclude_mode": "Inkluderingsmodus",
                     "mode": "HomeKit-modus"
                 },

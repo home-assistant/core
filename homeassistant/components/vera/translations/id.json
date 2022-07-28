@@ -10,8 +10,9 @@
                     "lights": "ID perangkat sakelar Vera yang diperlakukan sebagai lampu di Home Assistant",
                     "vera_controller_url": "URL Pengontrol"
                 },
-                "description": "Tentukan URL pengontrol Vera di bawah. Ini akan terlihat seperti ini: http://192.168.1.161:3480.",
-                "title": "Siapkan pengontrol Vera"
+                "data_description": {
+                    "vera_controller_url": "Seharusnya terlihat seperti ini: http://192.168.1.161:3480"
+                }
             }
         }
     },

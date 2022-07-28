@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dispositivo j\u00e1 configurado"
+        },
+        "error": {
+            "cannot_connect": "Falha ao conectar"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "device_key": "A chave do dispositivo do seu dispositivo",
+                    "event": "O evento para os eventos.",
+                    "name": "Nome",
+                    "password": "A senha da criptografia usada pelo seu dispositivo",
+                    "salt": "O salto utilizado pelo seu dispositivo"
+                }
+            }
+        }
+    }
+}

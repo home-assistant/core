@@ -45,8 +45,7 @@
         "step": {
             "configure_addon": {
                 "data": {
-                    "log_level": "\u00darove\u0148 protokolu",
-                    "network_key": "S\u00ed\u0165ov\u00fd kl\u00ed\u010d"
+                    "log_level": "\u00darove\u0148 protokolu"
                 }
             },
             "manual": {

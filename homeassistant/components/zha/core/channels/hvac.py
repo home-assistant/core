@@ -22,7 +22,7 @@ from ..const import (
     REPORT_CONFIG_OP,
     SIGNAL_ATTR_UPDATED,
 )
-from .base import ZigbeeChannel
+from .base import AttrReportConfig, ZigbeeChannel
 
 AttributeUpdateRecord = namedtuple("AttributeUpdateRecord", "attr_id, attr_name, value")
 REPORT_CONFIG_CLIMATE = (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 25)
@@ -41,7 +41,7 @@ class FanChannel(ZigbeeChannel):
 
     _value_attribute = 0
 
-    REPORT_CONFIG = ({"attr": "fan_mode", "config": REPORT_CONFIG_OP},)
+    REPORT_CONFIG = (AttrReportConfig(attr="fan_mode", config=REPORT_CONFIG_OP),)
     ZCL_INIT_ATTRS = {"fan_mode_sequence": True}
 
     @property
@@ -90,17 +90,25 @@ class ThermostatChannel(ZigbeeChannel):
     """Thermostat channel."""
 
     REPORT_CONFIG = (
-        {"attr": "local_temperature", "config": REPORT_CONFIG_CLIMATE},
-        {"attr": "occupied_cooling_setpoint", "config": REPORT_CONFIG_CLIMATE},
-        {"attr": "occupied_heating_setpoint", "config": REPORT_CONFIG_CLIMATE},
-        {"attr": "unoccupied_cooling_setpoint", "config": REPORT_CONFIG_CLIMATE},
-        {"attr": "unoccupied_heating_setpoint", "config": REPORT_CONFIG_CLIMATE},
-        {"attr": "running_mode", "config": REPORT_CONFIG_CLIMATE},
-        {"attr": "running_state", "config": REPORT_CONFIG_CLIMATE_DEMAND},
-        {"attr": "system_mode", "config": REPORT_CONFIG_CLIMATE},
-        {"attr": "occupancy", "config": REPORT_CONFIG_CLIMATE_DISCRETE},
-        {"attr": "pi_cooling_demand", "config": REPORT_CONFIG_CLIMATE_DEMAND},
-        {"attr": "pi_heating_demand", "config": REPORT_CONFIG_CLIMATE_DEMAND},
+        AttrReportConfig(attr="local_temperature", config=REPORT_CONFIG_CLIMATE),
+        AttrReportConfig(
+            attr="occupied_cooling_setpoint", config=REPORT_CONFIG_CLIMATE
+        ),
+        AttrReportConfig(
+            attr="occupied_heating_setpoint", config=REPORT_CONFIG_CLIMATE
+        ),
+        AttrReportConfig(
+            attr="unoccupied_cooling_setpoint", config=REPORT_CONFIG_CLIMATE
+        ),
+        AttrReportConfig(
+            attr="unoccupied_heating_setpoint", config=REPORT_CONFIG_CLIMATE
+        ),
+        AttrReportConfig(attr="running_mode", config=REPORT_CONFIG_CLIMATE),
+        AttrReportConfig(attr="running_state", config=REPORT_CONFIG_CLIMATE_DEMAND),
+        AttrReportConfig(attr="system_mode", config=REPORT_CONFIG_CLIMATE),
+        AttrReportConfig(attr="occupancy", config=REPORT_CONFIG_CLIMATE_DISCRETE),
+        AttrReportConfig(attr="pi_cooling_demand", config=REPORT_CONFIG_CLIMATE_DEMAND),
+        AttrReportConfig(attr="pi_heating_demand", config=REPORT_CONFIG_CLIMATE_DEMAND),
     )
     ZCL_INIT_ATTRS: dict[int | str, bool] = {
         "abs_min_heat_setpoint_limit": True,
@@ -285,6 +293,7 @@ class ThermostatChannel(ZigbeeChannel):
             return bool(self.occupancy)
         except ZigbeeException as ex:
             self.debug("Couldn't read 'occupancy' attribute: %s", ex)
+            return None
 
     async def write_attributes(self, data, **kwargs):
         """Write attributes helper."""

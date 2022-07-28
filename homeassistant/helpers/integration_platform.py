@@ -48,7 +48,7 @@ async def _async_process_single_integration_platform_component(
         return
 
     try:
-        await integration_platform.process_platform(hass, component_name, platform)  # type: ignore[misc,operator] # https://github.com/python/mypy/issues/5485
+        await integration_platform.process_platform(hass, component_name, platform)
     except Exception:  # pylint: disable=broad-except
         _LOGGER.exception(
             "Error processing platform %s.%s", component_name, platform_name

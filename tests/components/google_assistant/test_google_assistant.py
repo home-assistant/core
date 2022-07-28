@@ -149,18 +149,11 @@ async def test_sync_request(hass_fixture, assistant_client, auth_header):
     entity_entry3 = entity_registry.async_get_or_create(
         "switch",
         "test",
-        "switch_system_id",
-        suggested_object_id="system_switch",
-        entity_category=EntityCategory.SYSTEM,
-    )
-    entity_entry4 = entity_registry.async_get_or_create(
-        "switch",
-        "test",
         "switch_hidden_integration_id",
         suggested_object_id="hidden_integration_switch",
         hidden_by=er.RegistryEntryHider.INTEGRATION,
     )
-    entity_entry5 = entity_registry.async_get_or_create(
+    entity_entry4 = entity_registry.async_get_or_create(
         "switch",
         "test",
         "switch_hidden_user_id",
@@ -173,7 +166,6 @@ async def test_sync_request(hass_fixture, assistant_client, auth_header):
     hass_fixture.states.async_set(entity_entry2.entity_id, "something_else")
     hass_fixture.states.async_set(entity_entry3.entity_id, "blah")
     hass_fixture.states.async_set(entity_entry4.entity_id, "foo")
-    hass_fixture.states.async_set(entity_entry5.entity_id, "bar")
 
     reqid = "5711642932632160983"
     data = {"requestId": reqid, "inputs": [{"intent": "action.devices.SYNC"}]}
@@ -233,7 +225,7 @@ async def test_query_request(hass_fixture, assistant_client, auth_header):
     assert len(devices) == 4
     assert devices["light.bed_light"]["on"] is False
     assert devices["light.ceiling_lights"]["on"] is True
-    assert devices["light.ceiling_lights"]["brightness"] == 70
+    assert devices["light.ceiling_lights"]["brightness"] == 71
     assert devices["light.ceiling_lights"]["color"]["temperatureK"] == 2631
     assert devices["light.kitchen_lights"]["color"]["spectrumHsv"] == {
         "hue": 345,

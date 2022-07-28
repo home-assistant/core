@@ -1,7 +1,6 @@
 """Commands part of Websocket API."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable
 import datetime as dt
 import json
@@ -22,6 +21,7 @@ from homeassistant.exceptions import (
     TemplateError,
     Unauthorized,
 )
+from homeassistant.generated import supported_brands
 from homeassistant.helpers import config_validation as cv, entity, template
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import (
@@ -29,9 +29,14 @@ from homeassistant.helpers.event import (
     TrackTemplateResult,
     async_track_template_result,
 )
-from homeassistant.helpers.json import ExtendedJSONEncoder
+from homeassistant.helpers.json import JSON_DUMP, ExtendedJSONEncoder
 from homeassistant.helpers.service import async_get_all_descriptions
-from homeassistant.loader import IntegrationNotFound, async_get_integration
+from homeassistant.loader import (
+    Integration,
+    IntegrationNotFound,
+    async_get_integration,
+    async_get_integrations,
+)
 from homeassistant.setup import DATA_SETUP_TIME, async_get_loaded_integrations
 from homeassistant.util.json import (
     find_paths_unserializable_data,
@@ -68,6 +73,7 @@ def async_register_commands(
     async_reg(hass, handle_unsubscribe_events)
     async_reg(hass, handle_validate_config)
     async_reg(hass, handle_subscribe_entities)
+    async_reg(hass, handle_supported_brands)
 
 
 def pong_message(iden: int) -> dict[str, Any]:
@@ -105,17 +111,21 @@ def handle_subscribe_events(
             ):
                 return
 
-            connection.send_message(messages.cached_event_message(msg["id"], event))
+            connection.send_message(
+                lambda: messages.cached_event_message(msg["id"], event)
+            )
 
     else:
 
         @callback
         def forward_events(event: Event) -> None:
             """Forward events to websocket."""
-            connection.send_message(messages.cached_event_message(msg["id"], event))
+            connection.send_message(
+                lambda: messages.cached_event_message(msg["id"], event)
+            )
 
     connection.subscriptions[msg["id"]] = hass.bus.async_listen(
-        event_type, forward_events
+        event_type, forward_events, run_immediately=True
     )
 
     connection.send_result(msg["id"])
@@ -237,13 +247,13 @@ def handle_get_states(
     # to succeed for the UI to show.
     response = messages.result_message(msg["id"], states)
     try:
-        connection.send_message(const.JSON_DUMP(response))
+        connection.send_message(JSON_DUMP(response))
         return
     except (ValueError, TypeError):
         connection.logger.error(
             "Unable to serialize to JSON. Bad data found at %s",
             format_unserializable_data(
-                find_paths_unserializable_data(response, dump=const.JSON_DUMP)
+                find_paths_unserializable_data(response, dump=JSON_DUMP)
             ),
         )
     del response
@@ -252,13 +262,13 @@ def handle_get_states(
     serialized = []
     for state in states:
         try:
-            serialized.append(const.JSON_DUMP(state))
+            serialized.append(JSON_DUMP(state))
         except (ValueError, TypeError):
             # Error is already logged above
             pass
 
     # We now have partially serialized states. Craft some JSON.
-    response2 = const.JSON_DUMP(messages.result_message(msg["id"], ["TO_REPLACE"]))
+    response2 = JSON_DUMP(messages.result_message(msg["id"], ["TO_REPLACE"]))
     response2 = response2.replace('"TO_REPLACE"', ", ".join(serialized))
     connection.send_message(response2)
 
@@ -286,14 +296,16 @@ def handle_subscribe_entities(
         if entity_ids and event.data["entity_id"] not in entity_ids:
             return
 
-        connection.send_message(messages.cached_state_diff_message(msg["id"], event))
+        connection.send_message(
+            lambda: messages.cached_state_diff_message(msg["id"], event)
+        )
 
     # We must never await between sending the states and listening for
     # state changed events or we will introduce a race condition
     # where some states are missed
     states = _async_get_allowed_states(hass, connection)
     connection.subscriptions[msg["id"]] = hass.bus.async_listen(
-        "state_changed", forward_entity_changes
+        EVENT_STATE_CHANGED, forward_entity_changes, run_immediately=True
     )
     connection.send_result(msg["id"])
     data: dict[str, dict[str, dict]] = {
@@ -309,13 +321,13 @@ def handle_subscribe_entities(
     # to succeed for the UI to show.
     response = messages.event_message(msg["id"], data)
     try:
-        connection.send_message(const.JSON_DUMP(response))
+        connection.send_message(JSON_DUMP(response))
         return
     except (ValueError, TypeError):
         connection.logger.error(
             "Unable to serialize to JSON. Bad data found at %s",
             format_unserializable_data(
-                find_paths_unserializable_data(response, dump=const.JSON_DUMP)
+                find_paths_unserializable_data(response, dump=JSON_DUMP)
             ),
         )
     del response
@@ -324,14 +336,14 @@ def handle_subscribe_entities(
     cannot_serialize: list[str] = []
     for entity_id, state_dict in add_entities.items():
         try:
-            const.JSON_DUMP(state_dict)
+            JSON_DUMP(state_dict)
         except (ValueError, TypeError):
             cannot_serialize.append(entity_id)
 
     for entity_id in cannot_serialize:
         del add_entities[entity_id]
 
-    connection.send_message(const.JSON_DUMP(messages.event_message(msg["id"], data)))
+    connection.send_message(JSON_DUMP(messages.event_message(msg["id"], data)))
 
 
 @decorators.websocket_command({vol.Required("type"): "get_services"})
@@ -353,16 +365,24 @@ def handle_get_config(
     connection.send_result(msg["id"], hass.config.as_dict())
 
 
-@decorators.websocket_command({vol.Required("type"): "manifest/list"})
+@decorators.websocket_command(
+    {vol.Required("type"): "manifest/list", vol.Optional("integrations"): [str]}
+)
 @decorators.async_response
 async def handle_manifest_list(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle integrations command."""
-    loaded_integrations = async_get_loaded_integrations(hass)
-    integrations = await asyncio.gather(
-        *(async_get_integration(hass, domain) for domain in loaded_integrations)
-    )
+    wanted_integrations = msg.get("integrations")
+    if wanted_integrations is None:
+        wanted_integrations = async_get_loaded_integrations(hass)
+
+    ints_or_excs = await async_get_integrations(hass, wanted_integrations)
+    integrations: list[Integration] = []
+    for int_or_exc in ints_or_excs.values():
+        if isinstance(int_or_exc, Exception):
+            raise int_or_exc
+        integrations.append(int_or_exc)
     connection.send_result(
         msg["id"], [integration.manifest for integration in integrations]
     )
@@ -681,3 +701,25 @@ async def handle_validate_config(
             result[key] = {"valid": True, "error": None}
 
     connection.send_result(msg["id"], result)
+
+
+@decorators.websocket_command(
+    {
+        vol.Required("type"): "supported_brands",
+    }
+)
+@decorators.async_response
+async def handle_supported_brands(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle supported brands command."""
+    data = {}
+
+    ints_or_excs = await async_get_integrations(
+        hass, supported_brands.HAS_SUPPORTED_BRANDS
+    )
+    for int_or_exc in ints_or_excs.values():
+        if isinstance(int_or_exc, Exception):
+            raise int_or_exc
+        data[int_or_exc.domain] = int_or_exc.manifest["supported_brands"]
+    connection.send_result(msg["id"], data)

@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan."
+            "invalid_unique_id": "Penentuan ID unik yang valid untuk perangkat tidak dimungkinkan",
+            "no_unique_id": "Perangkat tanpa ID unik yang valid sudah dikonfigurasi. Konfigurasi beberapa instans tidak dimungkinkan"
         },
         "error": {
             "cannot_connect": "Gagal terhubung",
@@ -18,7 +19,7 @@
                     "mode": "Mode",
                     "name": "Nama",
                     "password": "Kata Sandi",
-                    "port": "Port",
+                    "port": "Port (Biarkan kosong untuk nilai default)",
                     "protocol": "Protokol komunikasi yang akan digunakan",
                     "ssh_key": "Jalur ke file kunci SSH Anda (bukan kata sandi)",
                     "username": "Nama Pengguna"

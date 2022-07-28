@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-import base64
 import collections
 from collections.abc import Awaitable, Callable, Iterable
 from contextlib import suppress
@@ -10,7 +9,6 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import IntEnum
 from functools import partial
-import hashlib
 import logging
 import os
 from random import SystemRandom
@@ -29,8 +27,12 @@ from homeassistant.components.media_player.const import (
     DOMAIN as DOMAIN_MP,
     SERVICE_PLAY_MEDIA,
 )
-from homeassistant.components.stream import Stream, create_stream
-from homeassistant.components.stream.const import FORMAT_CONTENT_TYPE, OUTPUT_FORMATS
+from homeassistant.components.stream import (
+    FORMAT_CONTENT_TYPE,
+    OUTPUT_FORMATS,
+    Stream,
+    create_stream,
+)
 from homeassistant.components.websocket_api import ActiveConnection
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -50,6 +52,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
@@ -103,7 +106,7 @@ class CameraEntityFeature(IntEnum):
 SUPPORT_ON_OFF: Final = 1
 SUPPORT_STREAM: Final = 2
 
-RTSP_PREFIXES = {"rtsp://", "rtsps://"}
+RTSP_PREFIXES = {"rtsp://", "rtsps://", "rtmp://"}
 
 DEFAULT_CONTENT_TYPE: Final = "image/jpeg"
 ENTITY_IMAGE_URL: Final = "/api/camera_proxy/{0}?token={1}"
@@ -125,14 +128,6 @@ CAMERA_SERVICE_RECORD: Final = {
     vol.Optional(CONF_DURATION, default=30): vol.Coerce(int),
     vol.Optional(CONF_LOOKBACK, default=0): vol.Coerce(int),
 }
-
-WS_TYPE_CAMERA_THUMBNAIL: Final = "camera_thumbnail"
-SCHEMA_WS_CAMERA_THUMBNAIL: Final = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {
-        vol.Required("type"): WS_TYPE_CAMERA_THUMBNAIL,
-        vol.Required("entity_id"): cv.entity_id,
-    }
-)
 
 
 @dataclass
@@ -358,12 +353,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.http.register_view(CameraImageView(component))
     hass.http.register_view(CameraMjpegStream(component))
-    websocket_api.async_register_command(
-        hass,
-        WS_TYPE_CAMERA_THUMBNAIL,
-        websocket_camera_thumbnail,
-        SCHEMA_WS_CAMERA_THUMBNAIL,
-    )
+
     websocket_api.async_register_command(hass, ws_camera_stream)
     websocket_api.async_register_command(hass, ws_camera_web_rtc_offer)
     websocket_api.async_register_command(hass, websocket_get_prefs)
@@ -382,7 +372,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 continue
             stream.keepalive = True
             stream.add_provider("hls")
-            stream.start()
+            await stream.start()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, preload_stream)
 
@@ -394,7 +384,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             entity.async_update_token()
             entity.async_write_ha_state()
 
-    hass.helpers.event.async_track_time_interval(update_tokens, TOKEN_CHANGE_INTERVAL)
+    async_track_time_interval(hass, update_tokens, TOKEN_CHANGE_INTERVAL)
 
     component.async_register_entity_service(
         SERVICE_ENABLE_MOTION, {}, "async_enable_motion_detection"
@@ -450,7 +440,7 @@ class Camera(Entity):
     def __init__(self) -> None:
         """Initialize a camera."""
         self.stream: Stream | None = None
-        self.stream_options: dict[str, str] = {}
+        self.stream_options: dict[str, str | bool | float] = {}
         self.content_type: str = DEFAULT_CONTENT_TYPE
         self.access_tokens: collections.deque = collections.deque([], 2)
         self._warned_old_signature = False
@@ -549,7 +539,6 @@ class Camera(Entity):
         This is used by cameras with CameraEntityFeature.STREAM
         and StreamType.HLS.
         """
-        # pylint: disable=no-self-use
         return None
 
     async def async_handle_web_rtc_offer(self, offer_sdp: str) -> str | None:
@@ -671,9 +660,7 @@ class Camera(Entity):
     @callback
     def async_update_token(self) -> None:
         """Update the used token."""
-        self.access_tokens.append(
-            hashlib.sha256(_RND.getrandbits(256).to_bytes(32, "little")).hexdigest()
-        )
+        self.access_tokens.append(hex(_RND.getrandbits(256))[2:])
 
     async def async_internal_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
@@ -790,32 +777,6 @@ class CameraMjpegStream(CameraView):
             return await camera.handle_async_still_stream(request, interval)
         except ValueError as err:
             raise web.HTTPBadRequest() from err
-
-
-@websocket_api.async_response
-async def websocket_camera_thumbnail(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict
-) -> None:
-    """Handle get camera thumbnail websocket command.
-
-    Async friendly.
-    """
-    _LOGGER.warning("The websocket command 'camera_thumbnail' has been deprecated")
-    try:
-        image = await async_get_image(hass, msg["entity_id"])
-        await connection.send_big_result(
-            msg["id"],
-            {
-                "content_type": image.content_type,
-                "content": base64.b64encode(image.content).decode("utf-8"),
-            },
-        )
-    except HomeAssistantError:
-        connection.send_message(
-            websocket_api.error_message(
-                msg["id"], "image_fetch_failed", "Unable to fetch image"
-            )
-        )
 
 
 @websocket_api.websocket_command(
@@ -995,7 +956,7 @@ async def _async_stream_endpoint_url(
     stream.keepalive = camera_prefs.preload_stream
 
     stream.add_provider(fmt)
-    stream.start()
+    await stream.start()
     return stream.endpoint_url(fmt)
 
 

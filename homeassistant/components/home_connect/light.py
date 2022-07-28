@@ -7,8 +7,7 @@ from homeconnect.api import HomeConnectError
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_HS,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -68,15 +67,15 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
             self._key = BSH_AMBIENT_LIGHT_ENABLED
             self._custom_color_key = BSH_AMBIENT_LIGHT_CUSTOM_COLOR
             self._color_key = BSH_AMBIENT_LIGHT_COLOR
-            self._attr_color_mode = COLOR_MODE_HS
-            self._attr_supported_color_modes = {COLOR_MODE_HS}
+            self._attr_color_mode = ColorMode.HS
+            self._attr_supported_color_modes = {ColorMode.HS}
         else:
             self._brightness_key = COOKING_LIGHTING_BRIGHTNESS
             self._key = COOKING_LIGHTING
             self._custom_color_key = None
             self._color_key = None
-            self._attr_color_mode = COLOR_MODE_BRIGHTNESS
-            self._attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
+            self._attr_color_mode = ColorMode.BRIGHTNESS
+            self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
     @property
     def is_on(self):

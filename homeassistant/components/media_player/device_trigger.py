@@ -1,8 +1,6 @@
 """Provides device automations for Media player."""
 from __future__ import annotations
 
-from typing import Any
-
 import voluptuous as vol
 
 from homeassistant.components.automation import (
@@ -21,6 +19,7 @@ from homeassistant.const import (
     CONF_FOR,
     CONF_PLATFORM,
     CONF_TYPE,
+    STATE_BUFFERING,
     STATE_IDLE,
     STATE_OFF,
     STATE_ON,
@@ -33,7 +32,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 
-TRIGGER_TYPES = {"turned_on", "turned_off", "idle", "paused", "playing"}
+TRIGGER_TYPES = {"turned_on", "turned_off", "buffering", "idle", "paused", "playing"}
 
 MEDIA_PLAYER_TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
@@ -54,9 +53,9 @@ TRIGGER_SCHEMA = vol.All(
 
 async def async_get_triggers(
     hass: HomeAssistant, device_id: str
-) -> list[dict[str, Any]]:
+) -> list[dict[str, str]]:
     """List device triggers for Media player entities."""
-    registry = await entity_registry.async_get_registry(hass)
+    registry = entity_registry.async_get(hass)
     triggers = await entity.async_get_triggers(hass, device_id, DOMAIN)
 
     # Get all the integration entities for this device
@@ -101,15 +100,17 @@ async def async_attach_trigger(
     """Attach a trigger."""
     if config[CONF_TYPE] not in TRIGGER_TYPES:
         return await entity.async_attach_trigger(hass, config, action, automation_info)
-    if config[CONF_TYPE] == "turned_on":
-        to_state = STATE_ON
-    elif config[CONF_TYPE] == "turned_off":
-        to_state = STATE_OFF
+    if config[CONF_TYPE] == "buffering":
+        to_state = STATE_BUFFERING
     elif config[CONF_TYPE] == "idle":
         to_state = STATE_IDLE
+    elif config[CONF_TYPE] == "turned_off":
+        to_state = STATE_OFF
+    elif config[CONF_TYPE] == "turned_on":
+        to_state = STATE_ON
     elif config[CONF_TYPE] == "paused":
         to_state = STATE_PAUSED
-    else:
+    else:  # "playing"
         to_state = STATE_PLAYING
 
     state_config = {

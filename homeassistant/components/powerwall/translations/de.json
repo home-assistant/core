@@ -15,7 +15,7 @@
         "step": {
             "confirm_discovery": {
                 "description": "M\u00f6chtest du {name} ({ip_address}) einrichten?",
-                "title": "Powerwall verbinden"
+                "title": "Stelle eine Verbindung zur Powerwall her"
             },
             "reauth_confim": {
                 "data": {

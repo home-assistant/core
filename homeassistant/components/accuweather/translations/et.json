@@ -3,6 +3,9 @@
         "abort": {
             "single_instance_allowed": "Sidumine juba tehtud. V\u00f5imalik on ainult 1 sidumine."
         },
+        "create_entry": {
+            "default": "M\u00f5ned andurid ei ole vaikimisi lubatud. Saad neid lubada \u00fcksuse registris p\u00e4rast sidumise seadistamist.\nIlmaprognoos ei ole vaikimisi lubatud. Saad selle lubada sidumise valikutes."
+        },
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
             "invalid_api_key": "API v\u00f5ti on vale",
@@ -15,9 +18,7 @@
                     "latitude": "Laiuskraad",
                     "longitude": "Pikkuskraad",
                     "name": "Sidumise nimi"
-                },
-                "description": "Kui vajate seadistamisel abi vaadake siit: https://www.home-assistant.io/integrations/accuweather/ \n\n M\u00f5ni andur pole vaikimisi lubatud. P\u00e4rast sidumise seadistamist saate need \u00fcksused lubada. \n Ilmapennustus pole vaikimisi lubatud. Saate selle lubada sidumise s\u00e4tetes.",
-                "title": "AccuWeather"
+                }
             }
         }
     },
@@ -27,8 +28,7 @@
                 "data": {
                     "forecast": "Ilmateade"
                 },
-                "description": "AccuWeather API tasuta versioonis toimub ilmaennustuse lubamisel andmete v\u00e4rskendamine iga 80 minuti  j\u00e4rel (muidu 40 minutit).",
-                "title": "AccuWeatheri valikud"
+                "description": "AccuWeather API tasuta versioonis toimub ilmaennustuse lubamisel andmete v\u00e4rskendamine iga 80 minuti  j\u00e4rel (muidu 40 minutit)."
             }
         }
     },

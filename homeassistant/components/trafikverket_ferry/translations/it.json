@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'account \u00e8 gi\u00e0 configurato",
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "incorrect_api_key": "Chiave API non valida per l'account selezionato",
+            "invalid_auth": "Autenticazione non valida",
+            "invalid_route": "Impossibile trovare il percorso con le informazioni fornite"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "Chiave API"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "Chiave API",
+                    "from": "Dal porto",
+                    "time": "Orario",
+                    "to": "Al porto",
+                    "weekday": "Giorni della settimana"
+                }
+            }
+        }
+    }
+}

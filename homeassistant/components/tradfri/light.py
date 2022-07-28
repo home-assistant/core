@@ -11,9 +11,7 @@ from homeassistant.components.light import (
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_COLOR_TEMP,
-    COLOR_MODE_HS,
+    ColorMode,
     LightEntity,
     LightEntityFeature,
 )
@@ -73,18 +71,18 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
         self._hs_color = None
 
         # Calculate supported color modes
-        self._attr_supported_color_modes = set()
+        self._attr_supported_color_modes: set[ColorMode] = set()
         if self._device.light_control.can_set_color:
-            self._attr_supported_color_modes.add(COLOR_MODE_HS)
+            self._attr_supported_color_modes.add(ColorMode.HS)
         if self._device.light_control.can_set_temp:
-            self._attr_supported_color_modes.add(COLOR_MODE_COLOR_TEMP)
+            self._attr_supported_color_modes.add(ColorMode.COLOR_TEMP)
         if (
             not self._attr_supported_color_modes
             and self._device.light_control.can_set_dimmer
         ):
             # Must be the only supported mode according to docs for
-            # COLOR_MODE_BRIGHTNESS
-            self._attr_supported_color_modes.add(COLOR_MODE_BRIGHTNESS)
+            # ColorMode.BRIGHTNESS
+            self._attr_supported_color_modes.add(ColorMode.BRIGHTNESS)
 
         if self._device_control:
             self._attr_min_mireds = self._device_control.min_mireds

@@ -168,7 +168,6 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-# pylint: disable=no-self-use
 class NumatoAPI:
     """Home-Assistant specific API for numato device access."""
 

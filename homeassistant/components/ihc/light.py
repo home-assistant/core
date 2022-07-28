@@ -3,12 +3,7 @@ from __future__ import annotations
 
 from ihcsdk.ihccontroller import IHCController
 
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_ONOFF,
-    LightEntity,
-)
+from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -80,9 +75,9 @@ class IhcLight(IHCDevice, LightEntity):
         self._state = False
 
         if self._dimmable:
-            self._attr_color_mode = COLOR_MODE_BRIGHTNESS
+            self._attr_color_mode = ColorMode.BRIGHTNESS
         else:
-            self._attr_color_mode = COLOR_MODE_ONOFF
+            self._attr_color_mode = ColorMode.ONOFF
         self._attr_supported_color_modes = {self._attr_color_mode}
 
     @property

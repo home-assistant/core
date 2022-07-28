@@ -11,11 +11,10 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
-    COLOR_MODE_HS,
     PLATFORM_SCHEMA,
-    SUPPORT_EFFECT,
-    SUPPORT_FLASH,
+    ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.core import HomeAssistant
@@ -71,9 +70,9 @@ async def async_setup_platform(
 class MyStromLight(LightEntity):
     """Representation of the myStrom WiFi bulb."""
 
-    _attr_color_mode = COLOR_MODE_HS
-    _attr_supported_color_modes = {COLOR_MODE_HS}
-    _attr_supported_features = SUPPORT_EFFECT | SUPPORT_FLASH
+    _attr_color_mode = ColorMode.HS
+    _attr_supported_color_modes = {ColorMode.HS}
+    _attr_supported_features = LightEntityFeature.EFFECT | LightEntityFeature.FLASH
 
     def __init__(self, bulb, name, mac):
         """Initialize the light."""

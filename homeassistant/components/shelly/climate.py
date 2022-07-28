@@ -8,18 +8,12 @@ from typing import Any, cast
 from aioshelly.block_device import Block
 import async_timeout
 
-from homeassistant.components.climate import (
-    DOMAIN as CLIMATE_DOMAIN,
-    ClimateEntity,
-    ClimateEntityFeature,
-)
+from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN, ClimateEntity
 from homeassistant.components.climate.const import (
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
-    CURRENT_HVAC_OFF,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
     PRESET_NONE,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
@@ -56,14 +50,13 @@ async def async_setup_entry(
     ][BLOCK]
 
     if wrapper.device.initialized:
-        await async_setup_climate_entities(async_add_entities, wrapper)
+        async_setup_climate_entities(async_add_entities, wrapper)
     else:
-        await async_restore_climate_entities(
-            hass, config_entry, async_add_entities, wrapper
-        )
+        async_restore_climate_entities(hass, config_entry, async_add_entities, wrapper)
 
 
-async def async_setup_climate_entities(
+@callback
+def async_setup_climate_entities(
     async_add_entities: AddEntitiesCallback,
     wrapper: BlockDeviceWrapper,
 ) -> None:
@@ -85,7 +78,8 @@ async def async_setup_climate_entities(
         async_add_entities([BlockSleepingClimate(wrapper, sensor_block, device_block)])
 
 
-async def async_restore_climate_entities(
+@callback
+def async_restore_climate_entities(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
@@ -93,7 +87,7 @@ async def async_restore_climate_entities(
 ) -> None:
     """Restore sleeping climate devices."""
 
-    ent_reg = await entity_registry.async_get_registry(hass)
+    ent_reg = entity_registry.async_get(hass)
     entries = entity_registry.async_entries_for_config_entry(
         ent_reg, config_entry.entry_id
     )
@@ -116,7 +110,7 @@ class BlockSleepingClimate(
 ):
     """Representation of a Shelly climate device."""
 
-    _attr_hvac_modes = [HVAC_MODE_OFF, HVAC_MODE_HEAT]
+    _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
     _attr_icon = "mdi:thermostat"
     _attr_max_temp = SHTRV_01_TEMPERATURE_SETTINGS["max"]
     _attr_min_temp = SHTRV_01_TEMPERATURE_SETTINGS["min"]
@@ -191,14 +185,14 @@ class BlockSleepingClimate(
         return self.wrapper.last_update_success
 
     @property
-    def hvac_mode(self) -> str:
+    def hvac_mode(self) -> HVACMode:
         """HVAC current mode."""
         if self.device_block is None:
-            return self.last_state.state if self.last_state else HVAC_MODE_OFF
+            return HVACMode(self.last_state.state) if self.last_state else HVACMode.OFF
         if self.device_block.mode is None or self._check_is_off():
-            return HVAC_MODE_OFF
+            return HVACMode.OFF
 
-        return HVAC_MODE_HEAT
+        return HVACMode.HEAT
 
     @property
     def preset_mode(self) -> str | None:
@@ -210,18 +204,16 @@ class BlockSleepingClimate(
         return self._preset_modes[cast(int, self.device_block.mode)]
 
     @property
-    def hvac_action(self) -> str | None:
+    def hvac_action(self) -> HVACAction:
         """HVAC current action."""
         if (
             self.device_block is None
             or self.device_block.status is None
             or self._check_is_off()
         ):
-            return CURRENT_HVAC_OFF
+            return HVACAction.OFF
 
-        return (
-            CURRENT_HVAC_HEAT if bool(self.device_block.status) else CURRENT_HVAC_IDLE
-        )
+        return HVACAction.HEATING if bool(self.device_block.status) else HVACAction.IDLE
 
     @property
     def preset_modes(self) -> list[str]:
@@ -266,9 +258,9 @@ class BlockSleepingClimate(
             return
         await self.set_state_full_path(target_t_enabled=1, target_t=f"{current_temp}")
 
-    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
-        if hvac_mode == HVAC_MODE_OFF:
+        if hvac_mode == HVACMode.OFF:
             await self.set_state_full_path(
                 target_t_enabled=1, target_t=f"{self._attr_min_temp}"
             )

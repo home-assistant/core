@@ -4,7 +4,7 @@ from __future__ import annotations
 import pytest
 
 from homeassistant.components import script
-from homeassistant.components.recorder.models import StateAttributes, States
+from homeassistant.components.recorder.db_schema import StateAttributes, States
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.components.script import (
     ATTR_CUR,
@@ -18,7 +18,7 @@ from homeassistant.core import Context, State, callback
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service
-from tests.components.recorder.common import async_wait_recording_done_without_instance
+from tests.components.recorder.common import async_wait_recording_done
 
 
 @pytest.fixture
@@ -59,7 +59,7 @@ async def test_exclude_attributes(hass, recorder_mock, calls):
         script.DOMAIN, "test", {"greeting": "world"}, context=context
     )
     await hass.async_block_till_done()
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
     assert len(calls) == 1
 
     def _fetch_states() -> list[State]:

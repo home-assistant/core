@@ -1,9 +1,13 @@
 """Config flow to configure the Azure DevOps integration."""
+from collections.abc import Mapping
+from typing import Any
+
 from aioazuredevops.client import DevOpsClient
 import aiohttp
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import CONF_ORG, CONF_PAT, CONF_PROJECT, DOMAIN
 
@@ -82,12 +86,12 @@ class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):
             return await self._show_setup_form(errors)
         return self._async_create_entry()
 
-    async def async_step_reauth(self, user_input):
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle configuration by re-auth."""
-        if user_input.get(CONF_ORG) and user_input.get(CONF_PROJECT):
-            self._organization = user_input[CONF_ORG]
-            self._project = user_input[CONF_PROJECT]
-        self._pat = user_input[CONF_PAT]
+        if entry_data.get(CONF_ORG) and entry_data.get(CONF_PROJECT):
+            self._organization = entry_data[CONF_ORG]
+            self._project = entry_data[CONF_PROJECT]
+        self._pat = entry_data[CONF_PAT]
 
         self.context["title_placeholders"] = {
             "project_url": f"{self._organization}/{self._project}",
@@ -100,6 +104,7 @@ class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):
             return await self._show_reauth_form(errors)
 
         entry = await self.async_set_unique_id(self.unique_id)
+        assert entry
         self.hass.config_entries.async_update_entry(
             entry,
             data={

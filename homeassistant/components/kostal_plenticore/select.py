@@ -24,6 +24,8 @@ async def async_setup_entry(
 ) -> None:
     """Add kostal plenticore Select widget."""
     plenticore: Plenticore = hass.data[DOMAIN][entry.entry_id]
+
+    available_settings_data = await plenticore.client.get_settings()
     select_data_update_coordinator = SelectDataUpdateCoordinator(
         hass,
         _LOGGER,
@@ -32,23 +34,34 @@ async def async_setup_entry(
         plenticore,
     )
 
-    async_add_entities(
-        PlenticoreDataSelect(
-            select_data_update_coordinator,
-            entry_id=entry.entry_id,
-            platform_name=entry.title,
-            device_class="kostal_plenticore__battery",
-            module_id=select.module_id,
-            data_id=select.data_id,
-            name=select.name,
-            current_option="None",
-            options=select.options,
-            is_on=select.is_on,
-            device_info=plenticore.device_info,
-            unique_id=f"{entry.entry_id}_{select.module_id}",
+    entities = []
+    for select in SELECT_SETTINGS_DATA:
+        if select.module_id not in available_settings_data:
+            continue
+        needed_data_ids = {data_id for data_id in select.options if data_id != "None"}
+        available_data_ids = {
+            setting.id for setting in available_settings_data[select.module_id]
+        }
+        if not needed_data_ids <= available_data_ids:
+            continue
+        entities.append(
+            PlenticoreDataSelect(
+                select_data_update_coordinator,
+                entry_id=entry.entry_id,
+                platform_name=entry.title,
+                device_class="kostal_plenticore__battery",
+                module_id=select.module_id,
+                data_id=select.data_id,
+                name=select.name,
+                current_option="None",
+                options=select.options,
+                is_on=select.is_on,
+                device_info=plenticore.device_info,
+                unique_id=f"{entry.entry_id}_{select.module_id}",
+            )
         )
-        for select in SELECT_SETTINGS_DATA
-    )
+
+    async_add_entities(entities)
 
 
 class PlenticoreDataSelect(CoordinatorEntity, SelectEntity, ABC):

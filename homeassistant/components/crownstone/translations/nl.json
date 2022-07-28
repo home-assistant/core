@@ -56,13 +56,6 @@
                 "description": "Selecteer de seri\u00eble poort van de Crownstone USB dongle.\n\nZoek naar een apparaat met VID 10C4 en PID EA60.",
                 "title": "Crownstone USB dongle configuratie"
             },
-            "usb_config_option": {
-                "data": {
-                    "usb_path": "USB-apparaatpad"
-                },
-                "description": "Selecteer de seri\u00eble poort van de Crownstone USB dongle.\n\nZoek naar een apparaat met VID 10C4 en PID EA60.",
-                "title": "Crownstone USB dongle configuratie"
-            },
             "usb_manual_config": {
                 "data": {
                     "usb_manual_path": "USB-apparaatpad"
@@ -70,21 +63,7 @@
                 "description": "Voer handmatig het pad van een Crownstone USB dongle in.",
                 "title": "Crownstone USB-dongle handmatig pad"
             },
-            "usb_manual_config_option": {
-                "data": {
-                    "usb_manual_path": "USB-apparaatpad"
-                },
-                "description": "Voer handmatig het pad van een Crownstone USB dongle in.",
-                "title": "Crownstone USB-dongle handmatig pad"
-            },
             "usb_sphere_config": {
-                "data": {
-                    "usb_sphere": "Crownstone Sphere"
-                },
-                "description": "Selecteer een Crownstone Sphere waar de USB zich bevindt.",
-                "title": "Crownstone USB Sphere"
-            },
-            "usb_sphere_config_option": {
                 "data": {
                     "usb_sphere": "Crownstone Sphere"
                 },

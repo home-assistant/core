@@ -4,14 +4,14 @@
             "already_configured": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
         },
         "error": {
-            "one": "Pi\u00f9",
-            "other": "Altri"
+            "one": "Vuoto",
+            "other": "Vuoti"
         },
         "step": {
             "user": {
                 "data": {
-                    "one": "Pi\u00f9",
-                    "other": "Altri"
+                    "one": "Vuoto",
+                    "other": "Vuoti"
                 },
                 "description": "Vuoi iniziare la configurazione?"
             }

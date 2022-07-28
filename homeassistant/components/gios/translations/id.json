@@ -14,7 +14,6 @@
                     "name": "Nama",
                     "station_id": "ID stasiun pengukuran"
                 },
-                "description": "Siapkan integrasi kualitas udara GIO\u015a (Inspektorat Jenderal Perlindungan Lingkungan Polandia). Jika Anda memerlukan bantuan tentang konfigurasi, baca di sini: https://www.home-assistant.io/integrations/gios",
                 "title": "GIO\u015a (Inspektorat Jenderal Perlindungan Lingkungan Polandia)"
             }
         }

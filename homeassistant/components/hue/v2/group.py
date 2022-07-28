@@ -14,14 +14,10 @@ from homeassistant.components.light import (
     ATTR_FLASH,
     ATTR_TRANSITION,
     ATTR_XY_COLOR,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_COLOR_TEMP,
-    COLOR_MODE_ONOFF,
-    COLOR_MODE_XY,
     FLASH_SHORT,
-    SUPPORT_FLASH,
-    SUPPORT_TRANSITION,
+    ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -84,8 +80,8 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
         self.group = group
         self.controller = controller
         self.api: HueBridgeV2 = bridge.api
-        self._attr_supported_features |= SUPPORT_FLASH
-        self._attr_supported_features |= SUPPORT_TRANSITION
+        self._attr_supported_features |= LightEntityFeature.FLASH
+        self._attr_supported_features |= LightEntityFeature.TRANSITION
 
         self._dynamic_mode_active = False
         self._update_values()
@@ -204,7 +200,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
     @callback
     def _update_values(self) -> None:
         """Set base values from underlying lights of a group."""
-        supported_color_modes = set()
+        supported_color_modes: set[ColorMode | str] = set()
         lights_with_color_support = 0
         lights_with_color_temp_support = 0
         lights_with_dimming_support = 0
@@ -241,18 +237,18 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
         # this means that the state is derived from only some of the lights
         # and will never be 100% accurate but it will be close
         if lights_with_color_support > 0:
-            supported_color_modes.add(COLOR_MODE_XY)
+            supported_color_modes.add(ColorMode.XY)
         if lights_with_color_temp_support > 0:
-            supported_color_modes.add(COLOR_MODE_COLOR_TEMP)
+            supported_color_modes.add(ColorMode.COLOR_TEMP)
         if lights_with_dimming_support > 0:
             if len(supported_color_modes) == 0:
                 # only add color mode brightness if no color variants
-                supported_color_modes.add(COLOR_MODE_BRIGHTNESS)
+                supported_color_modes.add(ColorMode.BRIGHTNESS)
             self._attr_brightness = round(
                 ((total_brightness / lights_with_dimming_support) / 100) * 255
             )
         else:
-            supported_color_modes.add(COLOR_MODE_ONOFF)
+            supported_color_modes.add(ColorMode.ONOFF)
         self._dynamic_mode_active = lights_in_dynamic_mode > 0
         self._attr_supported_color_modes = supported_color_modes
         # pick a winner for the current colormode
@@ -260,10 +256,10 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
             lights_with_color_temp_support > 0
             and lights_in_colortemp_mode == lights_with_color_temp_support
         ):
-            self._attr_color_mode = COLOR_MODE_COLOR_TEMP
+            self._attr_color_mode = ColorMode.COLOR_TEMP
         elif lights_with_color_support > 0:
-            self._attr_color_mode = COLOR_MODE_XY
+            self._attr_color_mode = ColorMode.XY
         elif lights_with_dimming_support > 0:
-            self._attr_color_mode = COLOR_MODE_BRIGHTNESS
+            self._attr_color_mode = ColorMode.BRIGHTNESS
         else:
-            self._attr_color_mode = COLOR_MODE_ONOFF
+            self._attr_color_mode = ColorMode.ONOFF

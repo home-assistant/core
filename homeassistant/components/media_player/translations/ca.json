@@ -1,6 +1,7 @@
 {
     "device_automation": {
         "condition_type": {
+            "is_buffering": "{entity_name} s'est\u00e0 carregant en mem\u00f2ria",
             "is_idle": "{entity_name} est\u00e0 inactiu",
             "is_off": "{entity_name} est\u00e0 apagat",
             "is_on": "{entity_name} est\u00e0 enc\u00e8s",
@@ -8,6 +9,7 @@
             "is_playing": "{entity_name} est\u00e0 reproduint"
         },
         "trigger_type": {
+            "buffering": "{entity_name} comen\u00e7a a carregar-se en mem\u00f2ria",
             "changed_states": "{entity_name} canvia d'estat",
             "idle": "{entity_name} es torna inactiu",
             "paused": "{entity_name} est\u00e0 en pausa",
@@ -18,6 +20,7 @@
     },
     "state": {
         "_": {
+            "buffering": "Carregant",
             "idle": "Inactiu",
             "off": "OFF",
             "on": "ON",

@@ -10,10 +10,10 @@
         "step": {
             "user": {
                 "data": {
-                    "token": "Token",
+                    "token": "API Token",
                     "url": "URL"
                 },
-                "description": "Adja meg a Z-Way szerver IP-c\u00edm\u00e9t \u00e9s a Z-Way hozz\u00e1f\u00e9r\u00e9si tokent. Az IP-c\u00edm el\u00e9 wss:// el\u0151tagot lehet tenni, ha HTTP helyett HTTPS-t kell haszn\u00e1lni. A token megszerz\u00e9s\u00e9hez l\u00e9pjen a Z-Way felhaszn\u00e1l\u00f3i fel\u00fcletre > Men\u00fc > Be\u00e1ll\u00edt\u00e1sok > Felhaszn\u00e1l\u00f3 > API token men\u00fcpontba. Javasoljuk, hogy hozzon l\u00e9tre egy \u00faj felhaszn\u00e1l\u00f3t a Home Assistanthoz, \u00e9s adjon hozz\u00e1f\u00e9r\u00e9st azoknak az eszk\u00f6z\u00f6knek, amelyeket a Home Assistantb\u00f3l kell vez\u00e9relnie. A t\u00e1voli Z-Way csatlakoztat\u00e1s\u00e1hoz a find.z-wave.me oldalon kereszt\u00fcl t\u00e1voli hozz\u00e1f\u00e9r\u00e9st is haszn\u00e1lhat. \u00cdrja be az IP mez\u0151be a wss://find.z-wave.me c\u00edmet, \u00e9s m\u00e1solja be a tokent glob\u00e1lis hat\u00f3k\u00f6rrel (ehhez jelentkezzen be a Z-Way-be a find.z-wave.me oldalon kereszt\u00fcl)."
+                "description": "Adja meg a Z-Way szerver IP-c\u00edm\u00e9t, portj\u00e1t \u00e9s hozz\u00e1f\u00e9r\u00e9si jel\u00e9t. A token megszerz\u00e9s\u00e9hez n\u00e9zze meg a Z-Way felhaszn\u00e1l\u00f3i fel\u00fclet\u00e9n a Smart Home UI > Menu > Settings > Users > Administrator > API token men\u00fcpontot.\n\nP\u00e9lda a Z-Wayhez val\u00f3 csatlakoz\u00e1sra a helyi h\u00e1l\u00f3zaton:\nURL: {local_url}\nToken: {local_token}\n\nP\u00e9lda a Z-Wayhez t\u00e1voli el\u00e9r\u00e9ssel t\u00f6rt\u00e9n\u0151 csatlakoz\u00e1sra find.z-wave.me:\nURL: {find_url}\nToken: {find_token}\n\nP\u00e9lda a Z-Wayhez val\u00f3 csatlakoz\u00e1sra statikus nyilv\u00e1nos IP-c\u00edmmel:\nURL: {remote_url}\nToken: {local_token}\n\nA find.z-wave.me oldalon kereszt\u00fcl t\u00f6rt\u00e9n\u0151 csatlakoz\u00e1skor glob\u00e1lis hat\u00f3k\u00f6r\u0171 tokent kell haszn\u00e1lnia (ehhez a find.z-wave.me oldalon kereszt\u00fcl kell bejelentkeznie a Z-Way-be)."
             }
         }
     }

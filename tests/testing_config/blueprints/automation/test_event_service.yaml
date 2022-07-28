@@ -3,7 +3,13 @@ blueprint:
   domain: automation
   input:
     trigger_event:
+      selector:
+        text:
     service_to_call:
+    a_number:
+      selector:
+        number:
+          mode: "box"
 trigger:
   platform: event
   event_type: !input trigger_event

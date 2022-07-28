@@ -9,12 +9,6 @@
         "step": {
             "ssdp_confirm": {
                 "description": "Chcete nastavit toto za\u0159\u00edzen\u00ed UPnP/IGD?"
-            },
-            "user": {
-                "data": {
-                    "scan_interval": "Interval aktualizace (v sekund\u00e1ch, minim\u00e1ln\u011b 30)",
-                    "usn": "Za\u0159\u00edzen\u00ed"
-                }
             }
         }
     }

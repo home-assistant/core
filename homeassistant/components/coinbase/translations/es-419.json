@@ -7,9 +7,7 @@
         "step": {
             "user": {
                 "data": {
-                    "api_token": "Secreto de la API",
-                    "currencies": "Monedas del saldo de la cuenta",
-                    "exchange_rates": "Tipos de cambio"
+                    "api_token": "Secreto de la API"
                 },
                 "description": "Ingrese los detalles de su clave API proporcionada por Coinbase.",
                 "title": "Detalles clave de la API de Coinbase"
@@ -19,9 +17,7 @@
     "options": {
         "error": {
             "currency_unavailable": "Su API de Coinbase no proporciona uno o m\u00e1s de los saldos de divisas solicitados.",
-            "currency_unavaliable": "Su API de Coinbase no proporciona uno o m\u00e1s de los saldos de divisas solicitados.",
-            "exchange_rate_unavailable": "Coinbase no proporciona uno o m\u00e1s de los tipos de cambio solicitados.",
-            "exchange_rate_unavaliable": "Coinbase no proporciona uno o m\u00e1s de los tipos de cambio solicitados."
+            "exchange_rate_unavailable": "Coinbase no proporciona uno o m\u00e1s de los tipos de cambio solicitados."
         }
     }
 }

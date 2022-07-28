@@ -14,8 +14,7 @@
                     "longitude": "Logitudine",
                     "name": "Nome dell'integrazione"
                 },
-                "description": "Imposta l'integrazione di AEMET OpenData. Per generare la chiave API, vai su https://opendata.aemet.es/centrodedescargas/altaUsuario",
-                "title": "AEMET OpenData"
+                "description": "Per generare la chiave API, vai su https://opendata.aemet.es/centrodescargas/altaUsuario"
             }
         }
     },

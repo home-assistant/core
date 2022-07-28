@@ -6,7 +6,7 @@ from typing import Any, cast
 from async_timeout import timeout
 
 from homeassistant.components import light
-from homeassistant.components.light import LightEntity, LightEntityFeature
+from homeassistant.components.light import ColorMode, LightEntity, LightEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -33,8 +33,8 @@ class EvilGeniusLight(EvilGeniusEntity, LightEntity):
     """Evil Genius Labs light."""
 
     _attr_supported_features = LightEntityFeature.EFFECT
-    _attr_supported_color_modes = {light.COLOR_MODE_RGB}
-    _attr_color_mode = light.COLOR_MODE_RGB
+    _attr_supported_color_modes = {ColorMode.RGB}
+    _attr_color_mode = ColorMode.RGB
 
     def __init__(self, coordinator: EvilGeniusUpdateCoordinator) -> None:
         """Initialize the Evil Genius light."""

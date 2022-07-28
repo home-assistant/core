@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Enheten er allerede konfigurert"
+            "already_configured": "Enheten er allerede konfigurert",
+            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
         },
         "error": {
             "cannot_connect": "Tilkobling mislyktes",
@@ -9,6 +10,13 @@
             "name_exists": "Navn eksisterer allerede"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Passord"
+                },
+                "description": "Passordet for {username} er ugyldig.",
+                "title": "Godkjenne integrering p\u00e5 nytt"
+            },
             "user": {
                 "data": {
                     "host": "Vert",

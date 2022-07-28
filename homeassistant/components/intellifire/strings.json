@@ -5,7 +5,7 @@
       "manual_device_entry": {
         "description": "Local Configuration",
         "data": {
-          "host": "[%key:common::config_flow::data::host%] (IP Address)"
+          "host": "Host (IP Address)"
         }
       },
       "api_config": {

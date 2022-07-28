@@ -3,12 +3,6 @@
         "error": {
             "bad_dsn": "Ogiltig DSN",
             "unknown": "Ov\u00e4ntat fel"
-        },
-        "step": {
-            "user": {
-                "description": "Ange din Sentry DSN",
-                "title": "Sentry"
-            }
         }
     }
 }

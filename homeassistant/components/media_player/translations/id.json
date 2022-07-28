@@ -1,6 +1,7 @@
 {
     "device_automation": {
         "condition_type": {
+            "is_buffering": "{entity_name} sedang buffering",
             "is_idle": "{entity_name} siaga",
             "is_off": "{entity_name} mati",
             "is_on": "{entity_name} nyala",
@@ -8,6 +9,7 @@
             "is_playing": "{entity_name} sedang memutar"
         },
         "trigger_type": {
+            "buffering": "{entity_name} mulai buffering",
             "changed_states": "{entity_name} mengubah status",
             "idle": "{entity_name} menjadi siaga",
             "paused": "{entity_name} dijeda",
@@ -18,6 +20,7 @@
     },
     "state": {
         "_": {
+            "buffering": "Buffering",
             "idle": "Siaga",
             "off": "Mati",
             "on": "Nyala",

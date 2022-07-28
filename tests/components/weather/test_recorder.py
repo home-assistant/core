@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from homeassistant.components.recorder.models import StateAttributes, States
+from homeassistant.components.recorder.db_schema import StateAttributes, States
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.components.weather import ATTR_FORECAST, DOMAIN
 from homeassistant.core import HomeAssistant, State
@@ -12,7 +12,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from tests.common import async_fire_time_changed
-from tests.components.recorder.common import async_wait_recording_done_without_instance
+from tests.components.recorder.common import async_wait_recording_done
 
 
 async def test_exclude_attributes(hass: HomeAssistant, recorder_mock) -> None:
@@ -27,7 +27,7 @@ async def test_exclude_attributes(hass: HomeAssistant, recorder_mock) -> None:
     await hass.async_block_till_done()
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
     await hass.async_block_till_done()
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
 
     def _fetch_states() -> list[State]:
         with session_scope(hass=hass) as session:

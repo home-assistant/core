@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "reauth_successful": "Herauthenticatie was succesvol",
-            "single_instance_allowed": "Al geconfigureerd. Slechts een enkele configuratie mogelijk.",
+            "reauth_successful": "Herauthenticatie geslaagd",
+            "single_instance_allowed": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk.",
             "unknown": "Onverwachte fout"
         },
         "error": {

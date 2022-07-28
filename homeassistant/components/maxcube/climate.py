@@ -11,19 +11,16 @@ from maxcube.device import (
     MAX_DEVICE_MODE_VACATION,
 )
 
-from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
-    CURRENT_HVAC_OFF,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
     PRESET_AWAY,
     PRESET_BOOST,
     PRESET_COMFORT,
     PRESET_ECO,
     PRESET_NONE,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
@@ -69,6 +66,7 @@ def setup_platform(
 class MaxCubeClimate(ClimateEntity):
     """MAX! Cube ClimateEntity."""
 
+    _attr_hvac_modes = [HVACMode.OFF, HVACMode.AUTO, HVACMode.HEAT]
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
@@ -82,7 +80,6 @@ class MaxCubeClimate(ClimateEntity):
         self._attr_should_poll = True
         self._attr_unique_id = self._device.serial
         self._attr_temperature_unit = TEMP_CELSIUS
-        self._attr_hvac_modes = [HVAC_MODE_OFF, HVAC_MODE_AUTO, HVAC_MODE_HEAT]
         self._attr_preset_modes = [
             PRESET_NONE,
             PRESET_BOOST,
@@ -97,7 +94,7 @@ class MaxCubeClimate(ClimateEntity):
         """Return the minimum temperature."""
         temp = self._device.min_temperature or MIN_TEMPERATURE
         # OFF_TEMPERATURE (always off) a is valid temperature to maxcube but not to Home Assistant.
-        # We use HVAC_MODE_OFF instead to represent a turned off thermostat.
+        # We use HVACMode.OFF instead to represent a turned off thermostat.
         return max(temp, MIN_TEMPERATURE)
 
     @property
@@ -111,27 +108,27 @@ class MaxCubeClimate(ClimateEntity):
         return self._device.actual_temperature
 
     @property
-    def hvac_mode(self):
+    def hvac_mode(self) -> HVACMode:
         """Return current operation mode."""
         mode = self._device.mode
         if mode in (MAX_DEVICE_MODE_AUTOMATIC, MAX_DEVICE_MODE_BOOST):
-            return HVAC_MODE_AUTO
+            return HVACMode.AUTO
         if (
             mode == MAX_DEVICE_MODE_MANUAL
             and self._device.target_temperature == OFF_TEMPERATURE
         ):
-            return HVAC_MODE_OFF
+            return HVACMode.OFF
 
-        return HVAC_MODE_HEAT
+        return HVACMode.HEAT
 
-    def set_hvac_mode(self, hvac_mode: str):
+    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-        if hvac_mode == HVAC_MODE_OFF:
+        if hvac_mode == HVACMode.OFF:
             self._set_target(MAX_DEVICE_MODE_MANUAL, OFF_TEMPERATURE)
-        elif hvac_mode == HVAC_MODE_HEAT:
+        elif hvac_mode == HVACMode.HEAT:
             temp = max(self._device.target_temperature, self.min_temp)
             self._set_target(MAX_DEVICE_MODE_MANUAL, temp)
-        elif hvac_mode == HVAC_MODE_AUTO:
+        elif hvac_mode == HVACMode.AUTO:
             self._set_target(MAX_DEVICE_MODE_AUTOMATIC, None)
         else:
             raise ValueError(f"unsupported HVAC mode {hvac_mode}")
@@ -156,7 +153,7 @@ class MaxCubeClimate(ClimateEntity):
                 _LOGGER.error("Setting HVAC mode failed")
 
     @property
-    def hvac_action(self):
+    def hvac_action(self) -> HVACAction | None:
         """Return the current running hvac operation if supported."""
         valve = 0
 
@@ -174,11 +171,9 @@ class MaxCubeClimate(ClimateEntity):
 
         # Assume heating when valve is open
         if valve > 0:
-            return CURRENT_HVAC_HEAT
+            return HVACAction.HEATING
 
-        return (
-            CURRENT_HVAC_OFF if self.hvac_mode == HVAC_MODE_OFF else CURRENT_HVAC_IDLE
-        )
+        return HVACAction.OFF if self.hvac_mode == HVACMode.OFF else HVACAction.IDLE
 
     @property
     def target_temperature(self):

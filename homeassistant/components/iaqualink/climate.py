@@ -11,15 +11,19 @@ from iaqualink.const import (
 )
 from iaqualink.device import AqualinkHeater, AqualinkPump, AqualinkSensor, AqualinkState
 
-from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
-from homeassistant.components.climate.const import DOMAIN, HVAC_MODE_HEAT, HVAC_MODE_OFF
+from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate.const import (
+    DOMAIN as CLIMATE_DOMAIN,
+    ClimateEntityFeature,
+    HVACMode,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AqualinkEntity, refresh_system
-from .const import CLIMATE_SUPPORTED_MODES, DOMAIN as AQUALINK_DOMAIN
+from .const import DOMAIN as AQUALINK_DOMAIN
 from .utils import await_or_reraise
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,7 +38,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up discovered switches."""
     devs = []
-    for dev in hass.data[AQUALINK_DOMAIN][DOMAIN]:
+    for dev in hass.data[AQUALINK_DOMAIN][CLIMATE_DOMAIN]:
         devs.append(HassAqualinkThermostat(dev))
     async_add_entities(devs, True)
 
@@ -42,6 +46,7 @@ async def async_setup_entry(
 class HassAqualinkThermostat(AqualinkEntity, ClimateEntity):
     """Representation of a thermostat."""
 
+    _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
 
     @property
@@ -50,30 +55,25 @@ class HassAqualinkThermostat(AqualinkEntity, ClimateEntity):
         return self.dev.label.split(" ")[0]
 
     @property
-    def hvac_modes(self) -> list[str]:
-        """Return the list of supported HVAC modes."""
-        return CLIMATE_SUPPORTED_MODES
-
-    @property
     def pump(self) -> AqualinkPump:
         """Return the pump device for the current thermostat."""
         pump = f"{self.name.lower()}_pump"
         return self.dev.system.devices[pump]
 
     @property
-    def hvac_mode(self) -> str:
+    def hvac_mode(self) -> HVACMode:
         """Return the current HVAC mode."""
         state = AqualinkState(self.heater.state)
         if state == AqualinkState.ON:
-            return HVAC_MODE_HEAT
-        return HVAC_MODE_OFF
+            return HVACMode.HEAT
+        return HVACMode.OFF
 
     @refresh_system
-    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Turn the underlying heater switch on or off."""
-        if hvac_mode == HVAC_MODE_HEAT:
+        if hvac_mode == HVACMode.HEAT:
             await await_or_reraise(self.heater.turn_on())
-        elif hvac_mode == HVAC_MODE_OFF:
+        elif hvac_mode == HVACMode.OFF:
             await await_or_reraise(self.heater.turn_off())
         else:
             _LOGGER.warning("Unknown operation mode: %s", hvac_mode)

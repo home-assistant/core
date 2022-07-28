@@ -7,16 +7,14 @@
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
             "invalid_auth": "Tuvastamine nurjus",
-            "protect_version": "Minimaalne n\u00f5utav versioon on v1.20.0. Uuenda UniFi Protecti ja proovi seej\u00e4rel uuesti.",
-            "unknown": "Ootamatu t\u00f5rge"
+            "protect_version": "Minimaalne n\u00f5utav versioon on v1.20.0. Uuenda UniFi Protecti ja proovi seej\u00e4rel uuesti."
         },
         "flow_title": "{name} ( {ip_address} )",
         "step": {
             "discovery_confirm": {
                 "data": {
                     "password": "Salas\u00f5na",
-                    "username": "Kasutajanimi",
-                    "verify_ssl": "Kontrolli SSL \u00fchendust"
+                    "username": "Kasutajanimi"
                 },
                 "description": "Kas soovid seadistada kasutaja {name} ( {ip_address} )? Sisselogimiseks on vaja UniFi OS-i konsoolis loodud kohalikku kasutajat. Ubiquiti pilve kasutajad ei t\u00f6\u00f6ta. Lisateabe saamiseks: {local_user_documentation_url}",
                 "title": "Avastati UniFi Protect"

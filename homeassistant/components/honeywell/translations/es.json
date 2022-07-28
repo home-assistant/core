@@ -9,8 +9,18 @@
                     "password": "Contrase\u00f1a",
                     "username": "Usuario"
                 },
-                "description": "Por favor, introduzca las credenciales utilizadas para iniciar sesi\u00f3n en mytotalconnectcomfort.com.",
-                "title": "Honeywell Total Connect Comfort (US)"
+                "description": "Por favor, introduzca las credenciales utilizadas para iniciar sesi\u00f3n en mytotalconnectcomfort.com."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "away_cool_temperature": "Temperatura fria, modo fuera",
+                    "away_heat_temperature": "Temperatura del calor exterior"
+                },
+                "description": "Opciones de configuraci\u00f3n adicionales de Honeywell. Las temperaturas se establecen en Fahrenheit."
             }
         }
     }

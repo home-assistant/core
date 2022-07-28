@@ -19,7 +19,7 @@
                     "api_key": "Kunci API",
                     "tailnet": "Tailnet"
                 },
-                "description": "Untuk mengautentikasi dengan Tailscale, Anda harus membuat kunci API di https://login.tailscale.com/admin/settings/authkeys. \n\nTailnet adalah nama jaringan Tailscale Anda. Anda dapat menemukannya di pojok kiri atas di Panel Admin Tailscale (di samping logo Tailscale)."
+                "description": "Integrasi ini memantau jaringan Tailscale Anda, integrasi ini **TIDAK** membuat Home Assistant dapat diakses melalui Tailscale VPN. \n\nUntuk mengautentikasi dengan Tailscale, Anda harus membuat kunci API di {authkeys_url} . \n\nTailnet adalah nama jaringan Tailscale Anda. Anda dapat menemukannya di sudut kiri atas di Panel Admin Tailscale (di samping logo Tailscale)."
             }
         }
     }

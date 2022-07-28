@@ -6,6 +6,7 @@
             "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
             "cannot_connect": "Impossibile connettersi",
             "discover_timeout": "Impossibile trovare i bridge Hue",
+            "invalid_host": "Host non valido",
             "no_bridges": "Nessun bridge di Philips Hue trovato",
             "not_hue_bridge": "Non \u00e8 un bridge Hue",
             "unknown": "Errore imprevisto"

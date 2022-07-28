@@ -23,7 +23,7 @@ async def async_setup(hass):
         if action != ACTION_DELETE:
             return
 
-        ent_reg = await entity_registry.async_get_registry(hass)
+        ent_reg = entity_registry.async_get(hass)
 
         entity_id = ent_reg.async_get_entity_id(DOMAIN, DOMAIN, config_key)
 

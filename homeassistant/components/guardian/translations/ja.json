@@ -15,9 +15,6 @@
                     "port": "\u30dd\u30fc\u30c8"
                 },
                 "description": "\u30ed\u30fc\u30ab\u30eb\u306eElexa Guardian\u30c7\u30d0\u30a4\u30b9\u3092\u8a2d\u5b9a\u3057\u307e\u3059\u3002"
-            },
-            "zeroconf_confirm": {
-                "description": "\u3053\u306eGuardian\u30c7\u30d0\u30a4\u30b9\u3092\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7\u3057\u307e\u3059\u304b\uff1f"
             }
         }
     }

@@ -3,11 +3,9 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_FLASH,
     ATTR_TRANSITION,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_ONOFF,
-    SUPPORT_FLASH,
-    SUPPORT_TRANSITION,
+    ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -51,17 +49,19 @@ async def async_setup_entry(
 class UpbLight(UpbAttachedEntity, LightEntity):
     """Representation of an UPB Light."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, element, unique_id, upb):
         """Initialize an UpbLight."""
         super().__init__(element, unique_id, upb)
         self._brightness = self._element.status
 
     @property
-    def color_mode(self) -> str:
+    def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         if self._element.dimmable:
-            return COLOR_MODE_BRIGHTNESS
-        return COLOR_MODE_ONOFF
+            return ColorMode.BRIGHTNESS
+        return ColorMode.ONOFF
 
     @property
     def supported_color_modes(self) -> set[str]:
@@ -69,11 +69,11 @@ class UpbLight(UpbAttachedEntity, LightEntity):
         return {self.color_mode}
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Flag supported features."""
         if self._element.dimmable:
-            return SUPPORT_TRANSITION | SUPPORT_FLASH
-        return SUPPORT_FLASH
+            return LightEntityFeature.TRANSITION | LightEntityFeature.FLASH
+        return LightEntityFeature.FLASH
 
     @property
     def brightness(self):

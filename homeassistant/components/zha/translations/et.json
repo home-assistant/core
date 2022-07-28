@@ -50,6 +50,7 @@
             "consider_unavailable_mains": "Arvesta, et v\u00f5rgutoitega seadmed pole p\u00e4rast (sekundit) saadaval",
             "default_light_transition": "Heleduse vaike\u00fclemineku aeg (sekundites)",
             "enable_identify_on_join": "Luba tuvastamine kui seadmed liituvad v\u00f5rguga",
+            "enhanced_light_transition": "Luba t\u00e4iustatud valguse v\u00e4rvi/temperatuuri \u00fcleminek v\u00e4ljal\u00fclitatud olekust",
             "title": "\u00dcldised valikud"
         }
     },

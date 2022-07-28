@@ -7,14 +7,14 @@
         },
         "error": {
             "cannot_connect": "Kan geen verbinding maken",
-            "invalid_pin_code": "De PIN-code die u hebt ingevoerd is ongeldig"
+            "invalid_pin_code": "De Pincode die u hebt ingevoerd is ongeldig"
         },
         "step": {
             "pairing": {
                 "data": {
-                    "pin": "PIN-code"
+                    "pin": "Pincode"
                 },
-                "description": "Voer de PIN-code in die op uw TV wordt weergegeven",
+                "description": "Voer de Pincode in die op uw TV wordt weergegeven",
                 "title": "Koppelen"
             },
             "user": {

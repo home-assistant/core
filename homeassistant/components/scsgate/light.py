@@ -6,7 +6,7 @@ import logging
 from scsgate.tasks import ToggleStatusTask
 import voluptuous as vol
 
-from homeassistant.components.light import PLATFORM_SCHEMA, LightEntity
+from homeassistant.components.light import PLATFORM_SCHEMA, ColorMode, LightEntity
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_STATE, CONF_DEVICES, CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -54,9 +54,13 @@ def setup_platform(
 class SCSGateLight(LightEntity):
     """Representation of a SCSGate light."""
 
+    _attr_color_mode = ColorMode.ONOFF
+    _attr_supported_color_modes = {ColorMode.ONOFF}
+    _attr_should_poll = False
+
     def __init__(self, scs_id, name, logger, scsgate):
         """Initialize the light."""
-        self._name = name
+        self._attr_name = name
         self._scs_id = scs_id
         self._toggled = False
         self._logger = logger
@@ -66,16 +70,6 @@ class SCSGateLight(LightEntity):
     def scs_id(self):
         """Return the SCS ID."""
         return self._scs_id
-
-    @property
-    def should_poll(self):
-        """No polling needed for a SCSGate light."""
-        return False
-
-    @property
-    def name(self):
-        """Return the name of the device if any."""
-        return self._name
 
     @property
     def is_on(self):

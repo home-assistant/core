@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "UniFi Network site is already configured",
-            "configuration_updated": "Configuration updated.",
+            "configuration_updated": "Configuration updated",
             "reauth_successful": "Re-authentication was successful"
         },
         "error": {
@@ -26,6 +26,9 @@
         }
     },
     "options": {
+        "abort": {
+            "integration_not_setup": "UniFi integration is not setup"
+        },
         "step": {
             "client_control": {
                 "data": {

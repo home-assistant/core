@@ -3,23 +3,20 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.climate import (
-    ENTITY_ID_FORMAT,
-    ClimateEntity,
-    ClimateEntityFeature,
-)
+from homeassistant.components.climate import ENTITY_ID_FORMAT, ClimateEntity
 from homeassistant.components.climate.const import (
-    HVAC_MODE_AUTO,
-    HVAC_MODE_COOL,
-    HVAC_MODE_DRY,
-    HVAC_MODE_FAN_ONLY,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
     PRESET_AWAY,
     PRESET_BOOST,
+    ClimateEntityFeature,
+    HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -73,30 +70,30 @@ OPMODES_PRESET = {
 HA_OPMODES_PRESET = {v: k for k, v in OPMODES_PRESET.items()}
 
 OPMODES_HVAC = {
-    0: HVAC_MODE_OFF,
-    1: HVAC_MODE_HEAT,
-    2: HVAC_MODE_COOL,
-    3: HVAC_MODE_AUTO,
-    4: HVAC_MODE_HEAT,
-    5: HVAC_MODE_AUTO,
-    6: HVAC_MODE_FAN_ONLY,
-    7: HVAC_MODE_HEAT,
-    8: HVAC_MODE_DRY,
-    9: HVAC_MODE_DRY,
-    10: HVAC_MODE_AUTO,
-    11: HVAC_MODE_HEAT,
-    12: HVAC_MODE_COOL,
-    13: HVAC_MODE_AUTO,
-    15: HVAC_MODE_AUTO,
-    31: HVAC_MODE_HEAT,
+    0: HVACMode.OFF,
+    1: HVACMode.HEAT,
+    2: HVACMode.COOL,
+    3: HVACMode.AUTO,
+    4: HVACMode.HEAT,
+    5: HVACMode.AUTO,
+    6: HVACMode.FAN_ONLY,
+    7: HVACMode.HEAT,
+    8: HVACMode.DRY,
+    9: HVACMode.DRY,
+    10: HVACMode.AUTO,
+    11: HVACMode.HEAT,
+    12: HVACMode.COOL,
+    13: HVACMode.AUTO,
+    15: HVACMode.AUTO,
+    31: HVACMode.HEAT,
 }
 
 HA_OPMODES_HVAC = {
-    HVAC_MODE_OFF: 0,
-    HVAC_MODE_HEAT: 1,
-    HVAC_MODE_COOL: 2,
-    HVAC_MODE_AUTO: 3,
-    HVAC_MODE_FAN_ONLY: 6,
+    HVACMode.OFF: 0,
+    HVACMode.HEAT: 1,
+    HVACMode.COOL: 2,
+    HVACMode.AUTO: 3,
+    HVACMode.FAN_ONLY: 6,
 }
 
 
@@ -109,7 +106,9 @@ async def async_setup_entry(
     async_add_entities(
         [
             FibaroThermostat(device)
-            for device in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES]["climate"]
+            for device in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES][
+                Platform.CLIMATE
+            ]
         ],
         True,
     )
@@ -268,7 +267,7 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
     def hvac_modes(self):
         """Return the list of available operation modes."""
         if not self._op_mode_device:
-            return [HVAC_MODE_AUTO]  # Default to this
+            return [HVACMode.AUTO]  # Default to this
         return self._hvac_support
 
     def set_hvac_mode(self, hvac_mode):
