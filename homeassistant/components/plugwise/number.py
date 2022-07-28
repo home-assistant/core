@@ -1,10 +1,7 @@
 """Number platform for Plugwise integration."""
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-
-from plugwise import Smile
 
 from homeassistant.components.number import (
     NumberDeviceClass,
@@ -24,23 +21,13 @@ from .entity import PlugwiseEntity
 
 
 @dataclass
-class PlugwiseEntityDescriptionMixin:
-    """Mixin values for Plugwse entities."""
-
-    command: Callable[[Smile, float], Awaitable[None]]
-
-
-@dataclass
-class PlugwiseNumberEntityDescription(
-    NumberEntityDescription, PlugwiseEntityDescriptionMixin
-):
+class PlugwiseNumberEntityDescription(NumberEntityDescription):
     """Class describing Plugwise Number entities."""
 
 
 NUMBER_TYPES = (
     PlugwiseNumberEntityDescription(
         key="maximum_boiler_temperature",
-        command=lambda api, value: api.set_max_boiler_temperature(value),
         device_class=NumberDeviceClass.TEMPERATURE,
         name="Maximum boiler temperature setpoint",
         entity_category=EntityCategory.CONFIG,
@@ -87,28 +74,29 @@ class PlugwiseNumberEntity(PlugwiseEntity, NumberEntity):
         self.entity_description = description
         self._attr_unique_id = f"{device_id}-{description.key}"
         self._attr_mode = NumberMode.BOX
+        self._item = description.key
 
     @property
     def native_step(self) -> float:
         """Return the setpoint step value."""
-        return max(self.device["resolution"], 1)
+        return max(self.device[self._item]["resolution"], 1)
 
     @property
     def native_value(self) -> float:
         """Return the present setpoint value."""
-        return self.device[self.entity_description.key]
+        return self.device[self._item]["setpoint"]
 
     @property
     def native_min_value(self) -> float:
         """Return the setpoint min. value."""
-        return self.device["lower_bound"]
+        return self.device[self._item]["lower_bound"]
 
     @property
     def native_max_value(self) -> float:
         """Return the setpoint max. value."""
-        return self.device["upper_bound"]
+        return self.device[self._item]["upper_bound"]
 
     async def async_set_native_value(self, value: float) -> None:
         """Change to the new setpoint value."""
-        await self.entity_description.command(self.coordinator.api, value)
+        await self.coordinator.api.set_number_setpoint(self._item, value)
         await self.coordinator.async_request_refresh()
