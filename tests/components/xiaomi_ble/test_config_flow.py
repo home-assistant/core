@@ -1,9 +1,9 @@
 """Test the Xiaomi config flow."""
 
+import asyncio
 from unittest.mock import patch
 
 from homeassistant import config_entries
-from homeassistant.components.bluetooth import BluetoothChange
 from homeassistant.components.xiaomi_ble.const import DOMAIN
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -44,8 +44,8 @@ async def test_async_step_bluetooth_valid_device(hass):
 async def test_async_step_bluetooth_valid_device_but_missing_payload(hass):
     """Test discovery via bluetooth with a valid device but missing payload."""
     with patch(
-        "homeassistant.components.xiaomi_ble.config_flow.ADDITIONAL_DISCOVERY_TIMEOUT",
-        0,
+        "homeassistant.components.xiaomi_ble.config_flow.async_process_advertisements",
+        side_effect=asyncio.TimeoutError(),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -59,19 +59,17 @@ async def test_async_step_bluetooth_valid_device_but_missing_payload(hass):
 async def test_async_step_bluetooth_valid_device_but_missing_payload_then_full(hass):
     """Test discovering a valid device. Payload is too short, but later we get full one."""
 
-    def _async_register_callback(_hass, callback, _matcher):
-        callback(
-            make_advertisement(
-                "A4:C1:38:56:53:84",
-                b"XX\xe4\x16,\x84SV8\xc1\xa4+n\xf2\xe9\x12\x00\x00l\x88M\x9e",
-            ),
-            BluetoothChange.ADVERTISEMENT,
+    async def _async_process_advertisements(_hass, _callback, _matcher, _timeout):
+        service_info = make_advertisement(
+            "A4:C1:38:56:53:84",
+            b"XX\xe4\x16,\x84SV8\xc1\xa4+n\xf2\xe9\x12\x00\x00l\x88M\x9e",
         )
-        return lambda: None
+        assert _callback(service_info)
+        return service_info
 
     with patch(
-        "homeassistant.components.bluetooth.async_register_callback",
-        _async_register_callback,
+        "homeassistant.components.xiaomi_ble.config_flow.async_process_advertisements",
+        _async_process_advertisements,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -356,8 +354,8 @@ async def test_async_step_user_short_payload(hass):
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     with patch(
-        "homeassistant.components.xiaomi_ble.config_flow.ADDITIONAL_DISCOVERY_TIMEOUT",
-        0,
+        "homeassistant.components.xiaomi_ble.config_flow.async_process_advertisements",
+        side_effect=asyncio.TimeoutError(),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -380,19 +378,17 @@ async def test_async_step_user_short_payload_then_full(hass):
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    def _async_register_callback(_hass, callback, _matcher):
-        callback(
-            make_advertisement(
-                "A4:C1:38:56:53:84",
-                b"XX\xe4\x16,\x84SV8\xc1\xa4+n\xf2\xe9\x12\x00\x00l\x88M\x9e",
-            ),
-            BluetoothChange.ADVERTISEMENT,
+    async def _async_process_advertisements(_hass, _callback, _matcher, _timeout):
+        service_info = make_advertisement(
+            "A4:C1:38:56:53:84",
+            b"XX\xe4\x16,\x84SV8\xc1\xa4+n\xf2\xe9\x12\x00\x00l\x88M\x9e",
         )
-        return lambda: None
+        assert _callback(service_info)
+        return service_info
 
     with patch(
-        "homeassistant.components.bluetooth.async_register_callback",
-        _async_register_callback,
+        "homeassistant.components.xiaomi_ble.config_flow.async_process_advertisements",
+        _async_process_advertisements,
     ):
         result1 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
