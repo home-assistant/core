@@ -9,8 +9,8 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
-    SOURCE_TYPE_ROUTER,
     AsyncSeeCallback,
+    SourceType,
 )
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
@@ -127,7 +127,7 @@ class MerakiView(HomeAssistantView):
                 self.async_see(
                     gps=gps_location,
                     mac=mac,
-                    source_type=SOURCE_TYPE_ROUTER,
+                    source_type=SourceType.ROUTER,
                     gps_accuracy=accuracy,
                     attributes=attrs,
                 )
