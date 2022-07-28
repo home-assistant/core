@@ -7,9 +7,9 @@ from typing import Final
 
 from homeassistant.const import Platform
 
-DOMAIN: Final = "plugwise"
-
 LOGGER = logging.getLogger(__package__)
+
+DOMAIN: Final = "plugwise"
 
 API: Final = "api"
 FLOW_SMILE: Final = "smile (Adam/Anna/P1)"
@@ -30,14 +30,7 @@ PLATFORMS_GATEWAY: Final[list[str]] = [
     Platform.SENSOR,
     Platform.SWITCH,
 ]
-ZEROCONF_MAP: Final[dict[str, str]] = {
-    "smile": "P1",
-    "smile_thermo": "Anna",
-    "smile_open_therm": "Adam",
-    "stretch": "Stretch",
-}
 
-# Default directives
 DEFAULT_MAX_TEMP: Final = 30
 DEFAULT_MIN_TEMP: Final = 4
 DEFAULT_PORT: Final = 80
@@ -48,9 +41,16 @@ DEFAULT_SCAN_INTERVAL: Final[dict[str, timedelta]] = {
 }
 DEFAULT_USERNAME: Final = "smile"
 
-THERMOSTAT_CLASSES: Final[list[str]] = [
+MASTER_THERMOSTATS: Final[list[str]] = [
     "thermostat",
     "thermostatic_radiator_valve",
     "zone_thermometer",
     "zone_thermostat",
 ]
+
+ZEROCONF_MAP: Final[dict[str, str]] = {
+    "smile": "P1",
+    "smile_thermo": "Anna",
+    "smile_open_therm": "Adam",
+    "stretch": "Stretch",
+}
