@@ -1,4 +1,5 @@
 """Tests for the Bluetooth integration."""
+import asyncio
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
@@ -93,6 +94,33 @@ async def test_setup_and_stop_broken_bluetooth(hass, caplog):
     await hass.async_block_till_done()
     assert "Failed to start Bluetooth" in caplog.text
     assert len(bluetooth.async_discovered_service_info(hass)) == 0
+
+
+async def test_setup_and_stop_broken_bluetooth_hanging(hass, caplog):
+    """Test we fail gracefully when bluetooth/dbus is hanging."""
+    mock_bt = []
+
+    async def _mock_hang():
+        await asyncio.sleep(1)
+
+    with patch.object(bluetooth, "START_TIMEOUT", 0), patch(
+        "homeassistant.components.bluetooth.HaBleakScanner.async_setup"
+    ), patch(
+        "homeassistant.components.bluetooth.HaBleakScanner.start",
+        side_effect=_mock_hang,
+    ), patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
+    ):
+        assert await async_setup_component(
+            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
+        )
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    assert "Timed out starting Bluetooth" in caplog.text
 
 
 async def test_setup_and_retry_adapter_not_yet_available(hass, caplog):
