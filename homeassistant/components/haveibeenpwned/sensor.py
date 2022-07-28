@@ -164,7 +164,6 @@ class HaveIBeenPwnedData:
         _LOGGER.debug('Getting the latest data for the current email from the REST service for email: %s', self._email)
         try:
             url = f"{URL}{self._email}"
-            # header = str({USER_AGENT: HA_USER_AGENT, "hibp-api-key": self._api_key})
             paramspayload = {
                 'truncateResponse': 'false'
             }
