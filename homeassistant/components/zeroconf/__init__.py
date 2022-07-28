@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 from contextlib import suppress
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import fnmatch
 from ipaddress import IPv4Address, IPv6Address, ip_address
 import logging
@@ -78,6 +78,9 @@ ATTR_PROPERTIES: Final = "properties"
 # Attributes for ZeroconfServiceInfo[ATTR_PROPERTIES]
 ATTR_PROPERTIES_ID: Final = "id"
 
+# Attributes for accessing info added by Home Assistant
+ATTR_HA_MATCHING_DOMAINS: Final = "x_homeassistant_matching_domains"
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
@@ -96,7 +99,14 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 @dataclass
-class ZeroconfServiceInfo(BaseServiceInfo):
+class _HaServiceDescription:
+    """Keys added by HA."""
+
+    x_homeassistant_matching_domains: set[str] = field(default_factory=set)
+
+
+@dataclass
+class _ZeroconfServiceInfo:
     """Prepared info from mDNS entries."""
 
     host: str
@@ -106,6 +116,15 @@ class ZeroconfServiceInfo(BaseServiceInfo):
     type: str
     name: str
     properties: dict[str, Any]
+
+
+@dataclass
+class ZeroconfServiceInfo(
+    _HaServiceDescription,
+    _ZeroconfServiceInfo,
+    BaseServiceInfo,
+):
+    """Prepared info from zeroconf entries."""
 
 
 @bind_hass
@@ -402,11 +421,40 @@ class ZeroconfDiscovery:
 
         _LOGGER.debug("Discovered new device %s %s", name, info)
         props: dict[str, str] = info.properties
+        # Matches either via HomeKit or zeroconf
+        matching_domains: set[str] = set()
+        # Matches only by zeroconf
+        zeroconf_match_domains: list[str] = []
+        info.x_homeassistant_matching_domains = matching_domains
+
+        match_data: dict[str, str] = {}
+        for key in LOWER_MATCH_ATTRS:
+            attr_value: str = getattr(info, key)
+            match_data[key] = attr_value.lower()
+
+        # Not all homekit types are currently used for discovery
+        # so not all service type exist in zeroconf_types
+        for matcher in self.zeroconf_types.get(service_type, []):
+            if len(matcher) > 1:
+                if not _match_against_data(matcher, match_data):
+                    continue
+                if ATTR_PROPERTIES in matcher:
+                    matcher_props = matcher[ATTR_PROPERTIES]
+                    assert isinstance(matcher_props, dict)
+                    if not _match_against_props(matcher_props, props):
+                        continue
+
+            matcher_domain = cast(str, matcher["domain"])
+            matching_domains.add(matcher_domain)
+            zeroconf_match_domains.append(matcher_domain)
+
+        info.x_homeassistant_matching_domains = matching_domains
 
         # If we can handle it as a HomeKit discovery, we do that here.
         if service_type in HOMEKIT_TYPES and (
             domain := async_get_homekit_discovery_domain(self.homekit_models, props)
         ):
+            matching_domains.add(domain)
             discovery_flow.async_create_flow(
                 self.hass, domain, {"source": config_entries.SOURCE_HOMEKIT}, info
             )
@@ -437,25 +485,7 @@ class ZeroconfDiscovery:
                 ):
                     return
 
-        match_data: dict[str, str] = {}
-        for key in LOWER_MATCH_ATTRS:
-            attr_value: str = getattr(info, key)
-            match_data[key] = attr_value.lower()
-
-        # Not all homekit types are currently used for discovery
-        # so not all service type exist in zeroconf_types
-        for matcher in self.zeroconf_types.get(service_type, []):
-            if len(matcher) > 1:
-                if not _match_against_data(matcher, match_data):
-                    continue
-                if ATTR_PROPERTIES in matcher:
-                    matcher_props = matcher[ATTR_PROPERTIES]
-                    assert isinstance(matcher_props, dict)
-                    if not _match_against_props(matcher_props, props):
-                        continue
-
-            matcher_domain = matcher["domain"]
-            assert isinstance(matcher_domain, str)
+        for matcher_domain in zeroconf_match_domains:
             discovery_flow.async_create_flow(
                 self.hass,
                 matcher_domain,

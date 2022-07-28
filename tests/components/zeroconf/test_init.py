@@ -649,7 +649,13 @@ async def test_homekit_already_paired(hass, mock_async_zeroconf):
     assert len(mock_service_browser.mock_calls) == 1
     assert len(mock_config_flow.mock_calls) == 2
     assert mock_config_flow.mock_calls[0][1][0] == "tado"
+    assert mock_config_flow.mock_calls[0].kwargs[
+        "data"
+    ].x_homeassistant_matching_domains == {"tado", "homekit_controller"}
     assert mock_config_flow.mock_calls[1][1][0] == "homekit_controller"
+    assert mock_config_flow.mock_calls[1].kwargs[
+        "data"
+    ].x_homeassistant_matching_domains == {"tado", "homekit_controller"}
 
 
 async def test_homekit_invalid_paring_status(hass, mock_async_zeroconf):
@@ -739,7 +745,13 @@ async def test_homekit_controller_still_discovered_unpaired_for_cloud(
     assert len(mock_service_browser.mock_calls) == 1
     assert len(mock_config_flow.mock_calls) == 2
     assert mock_config_flow.mock_calls[0][1][0] == "rachio"
+    assert mock_config_flow.mock_calls[0].kwargs[
+        "data"
+    ].x_homeassistant_matching_domains == {"rachio", "homekit_controller"}
     assert mock_config_flow.mock_calls[1][1][0] == "homekit_controller"
+    assert mock_config_flow.mock_calls[1].kwargs[
+        "data"
+    ].x_homeassistant_matching_domains == {"rachio", "homekit_controller"}
 
 
 async def test_homekit_controller_still_discovered_unpaired_for_polling(
@@ -777,7 +789,13 @@ async def test_homekit_controller_still_discovered_unpaired_for_polling(
     assert len(mock_service_browser.mock_calls) == 1
     assert len(mock_config_flow.mock_calls) == 2
     assert mock_config_flow.mock_calls[0][1][0] == "gogogate2"
+    assert mock_config_flow.mock_calls[0].kwargs[
+        "data"
+    ].x_homeassistant_matching_domains == {"gogogate2", "homekit_controller"}
     assert mock_config_flow.mock_calls[1][1][0] == "homekit_controller"
+    assert mock_config_flow.mock_calls[1].kwargs[
+        "data"
+    ].x_homeassistant_matching_domains == {"gogogate2", "homekit_controller"}
 
 
 async def test_info_from_service_non_utf8(hass):
