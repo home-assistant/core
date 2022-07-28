@@ -63,6 +63,7 @@ PLATFORMS: list[str] = [
     Platform.SENSOR,
     Platform.FAN,
     Platform.BINARY_SENSOR,
+    Platform.NUMBER,
 ]
 
 ATTR_PROFILE_FAN_SPEED = "fan_speed"
@@ -307,6 +308,12 @@ class ValloxServiceHandler:
         if not hasattr(self, service_details.method):
             _LOGGER.error("Service not implemented: %s", service_details.method)
             return
+
+        _LOGGER.warning(
+            "The %s.%s service is deprecated and will be removed in future release. Please use the corresponding number entity",
+            DOMAIN,
+            call.service,
+        )
 
         result = await getattr(self, service_details.method)(**params)
 
