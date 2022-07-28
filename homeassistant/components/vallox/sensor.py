@@ -141,6 +141,7 @@ SENSOR_ENTITIES: tuple[ValloxSensorEntityDescription, ...] = (
         name="Current profile",
         icon="mdi:gauge",
         entity_type=ValloxProfileSensor,
+        entity_registry_enabled_default=False,
     ),
     ValloxSensorEntityDescription(
         key="fan_speed",
