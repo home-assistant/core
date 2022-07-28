@@ -77,8 +77,10 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="not_supported")
 
         # Wait until we have received enough information about this device to detect its encryption type
-        await self._async_wait_for_full_advertisement(discovery_info, device)
-        if device.pending:
+        try:
+            await self._async_wait_for_full_advertisement(discovery_info, device)
+        except TimeoutError:
+            # If we don't see a valid packet within the timeout then this device is not supported.
             return self.async_abort(reason="not_supported")
 
         self._discovery_info = discovery_info
@@ -190,10 +192,12 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
             discovery = self._discovered_devices[address]
 
             # Wait until we have received enough information about this device to detect its encryption type
-            await self._async_wait_for_full_advertisement(
-                discovery.discovery_info, discovery.device
-            )
-            if discovery.device.pending:
+            try:
+                await self._async_wait_for_full_advertisement(
+                    discovery.discovery_info, discovery.device
+                )
+            except TimeoutError:
+                # If we don't see a valid packet within the timeout then this device is not supported.
                 return self.async_abort(reason="not_supported")
 
             if discovery.device.encryption_scheme == EncryptionScheme.MIBEACON_LEGACY:
