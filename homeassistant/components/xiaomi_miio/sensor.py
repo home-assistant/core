@@ -297,7 +297,7 @@ SENSOR_TYPES = {
     ),
     ATTR_FILTER_LEFT_TIME: XiaomiMiioSensorDescription(
         key=ATTR_FILTER_LEFT_TIME,
-        name="Filter left time",
+        name="Filter time left",
         native_unit_of_measurement=TIME_DAYS,
         icon="mdi:clock-outline",
         state_class=SensorStateClass.MEASUREMENT,
