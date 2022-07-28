@@ -35,7 +35,7 @@ async def test_switch_entities(
 
 
 @pytest.mark.parametrize(
-    "command, metric_key, value",
+    "service, metric_key, value",
     [
         (SERVICE_TURN_ON, "A_CYC_BYPASS_LOCKED", 1),
         (SERVICE_TURN_OFF, "A_CYC_BYPASS_LOCKED", 0),
