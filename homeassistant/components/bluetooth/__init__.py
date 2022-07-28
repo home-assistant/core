@@ -302,7 +302,8 @@ class BluetoothManager:
             self._device_detected, {}
         )
         try:
-            await asyncio.wait_for(self.scanner.start(), timeout=START_TIMEOUT)
+            async with async_timeout.timeout(START_TIMEOUT):
+                await self.scanner.start()
         except asyncio.TimeoutError as ex:
             self._cancel_device_detected()
             raise ConfigEntryNotReady(
