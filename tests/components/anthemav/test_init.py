@@ -69,7 +69,7 @@ async def test_anthemav_dispatcher_signal(
     assert states.state == STATE_OFF
 
     # change state of the AVR
-    mock_anthemav.protocol.power = True
+    mock_anthemav.protocol.zones[1].power = True
 
     # get the callback function that trigger the signal to update the state
     avr_update_callback = mock_connection_create.call_args[1]["update_callback"]

@@ -12,7 +12,7 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_VOLUME_MUTED,
 )
 from homeassistant.components.siren.const import ATTR_VOLUME_LEVEL
-from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -55,9 +55,7 @@ async def test_update_states_zone1(
     mock_zone.input_format = "2.0 PCM"
     mock_anthemav.protocol.input_list = ["TEST INPUT", "INPUT 2"]
 
-    async_dispatcher_send(
-        hass, f"{ANTHEMAV_UDATE_SIGNAL}_{init_integration.data[CONF_NAME]}"
-    )
+    async_dispatcher_send(hass, f"{ANTHEMAV_UDATE_SIGNAL}_{init_integration.entry_id}")
     await hass.async_block_till_done()
 
     states = hass.states.get("media_player.anthem_av")

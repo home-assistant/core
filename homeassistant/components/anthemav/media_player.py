@@ -92,10 +92,10 @@ async def async_setup_entry(
     avr: Connection = hass.data[DOMAIN][config_entry.entry_id]
 
     entities = []
-    for zone in avr.protocol.zones:
-        _LOGGER.debug("Initializing Zone %s", zone)
+    for zone_number in avr.protocol.zones:
+        _LOGGER.debug("Initializing Zone %s", zone_number)
         entity = AnthemAVR(
-            avr.protocol, name, mac_address, model, zone, config_entry.entry_id
+            avr.protocol, name, mac_address, model, zone_number, config_entry.entry_id
         )
         entities.append(entity)
 
@@ -134,8 +134,10 @@ class AnthemAVR(MediaPlayerEntity):
         self._zone = avr.zones[zone_number]
         if zone_number > 1:
             self._attr_name = f"zone {zone_number}"
+            self._attr_unique_id = f"{mac_address}_{zone_number}"
+        else:
+            self._attr_unique_id = mac_address
 
-        self._attr_unique_id = f"{mac_address}_{zone_number}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, mac_address)},
             name=name,
@@ -152,7 +154,7 @@ class AnthemAVR(MediaPlayerEntity):
             async_dispatcher_connect(
                 self.hass,
                 f"{ANTHEMAV_UDATE_SIGNAL}_{self._entry_id}",
-                self.async_write_ha_state,
+                self.update_states,
             )
         )
 
