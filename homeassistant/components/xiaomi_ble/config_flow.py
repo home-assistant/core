@@ -51,16 +51,16 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _async_wait_for_full_advertisement(
         self, discovery_info: BluetoothServiceInfo, device: DeviceData
-    ) -> None:
+    ) -> BluetoothServiceInfo:
         """Sometimes first advertisement we receive is blank or incomplete. Wait until we get a useful one."""
         if not device.pending:
-            return
+            return discovery_info
 
         def _process_more_advertisements(service_info: BluetoothServiceInfo) -> bool:
             device.update(service_info)
             return not device.pending
 
-        await async_process_advertisements(
+        return await async_process_advertisements(
             self.hass,
             _process_more_advertisements,
             {"address": discovery_info.address},
@@ -79,7 +79,9 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Wait until we have received enough information about this device to detect its encryption type
         try:
-            await self._async_wait_for_full_advertisement(discovery_info, device)
+            discovery_info = await self._async_wait_for_full_advertisement(
+                discovery_info, device
+            )
         except asyncio.TimeoutError:
             # If we don't see a valid packet within the timeout then this device is not supported.
             return self.async_abort(reason="not_supported")
@@ -194,7 +196,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
 
             # Wait until we have received enough information about this device to detect its encryption type
             try:
-                await self._async_wait_for_full_advertisement(
+                self._discovery_info = await self._async_wait_for_full_advertisement(
                     discovery.discovery_info, discovery.device
                 )
             except asyncio.TimeoutError:
@@ -202,12 +204,10 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="not_supported")
 
             if discovery.device.encryption_scheme == EncryptionScheme.MIBEACON_LEGACY:
-                self._discovery_info = discovery.discovery_info
                 self.context["title_placeholders"] = {"name": discovery.title}
                 return await self.async_step_get_encryption_key_legacy()
 
             if discovery.device.encryption_scheme == EncryptionScheme.MIBEACON_4_5:
-                self._discovery_info = discovery.discovery_info
                 self.context["title_placeholders"] = {"name": discovery.title}
                 return await self.async_step_get_encryption_key_4_5()
 

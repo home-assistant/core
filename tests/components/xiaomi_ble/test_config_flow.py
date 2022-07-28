@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from homeassistant import config_entries
+from homeassistant.components.bluetooth import BluetoothChange
 from homeassistant.components.xiaomi_ble.const import DOMAIN
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -13,6 +14,7 @@ from . import (
     MMC_T201_1_SERVICE_INFO,
     NOT_SENSOR_PUSH_SERVICE_INFO,
     YLKG07YL_SERVICE_INFO,
+    make_advertisement,
 )
 
 from tests.common import MockConfigEntry
@@ -52,6 +54,44 @@ async def test_async_step_bluetooth_valid_device_but_missing_payload(hass):
         )
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "not_supported"
+
+
+async def test_async_step_bluetooth_valid_device_but_missing_payload_then_full(hass):
+    """Test discovering a valid device. Payload is too short, but later we get full one."""
+
+    def _async_register_callback(_hass, callback, _matcher):
+        callback(
+            make_advertisement(
+                "A4:C1:38:56:53:84",
+                b"XX\xe4\x16,\x84SV8\xc1\xa4+n\xf2\xe9\x12\x00\x00l\x88M\x9e",
+            ),
+            BluetoothChange.ADVERTISEMENT,
+        )
+        return lambda: None
+
+    with patch(
+        "homeassistant.components.bluetooth.async_register_callback",
+        _async_register_callback,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_BLUETOOTH},
+            data=MISSING_PAYLOAD_ENCRYPTED,
+        )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "get_encryption_key_4_5"
+
+    with patch(
+        "homeassistant.components.xiaomi_ble.async_setup_entry", return_value=True
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"bindkey": "a115210eed7a88e50ad52662e732a9fb"},
+        )
+
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["data"] == {"bindkey": "a115210eed7a88e50ad52662e732a9fb"}
+    assert result2["result"].unique_id == "A4:C1:38:56:53:84"
 
 
 async def test_async_step_bluetooth_during_onboarding(hass):
@@ -321,10 +361,57 @@ async def test_async_step_user_short_payload(hass):
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={"address": "A4:C1:38:D4:3C:48"},
+            user_input={"address": "A4:C1:38:56:53:84"},
         )
     assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "not_supported"
+
+
+async def test_async_step_user_short_payload_then_full(hass):
+    """Test setup from service info cache with devices found."""
+    with patch(
+        "homeassistant.components.xiaomi_ble.config_flow.async_discovered_service_info",
+        return_value=[MISSING_PAYLOAD_ENCRYPTED],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+        )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    def _async_register_callback(_hass, callback, _matcher):
+        callback(
+            make_advertisement(
+                "A4:C1:38:56:53:84",
+                b"XX\xe4\x16,\x84SV8\xc1\xa4+n\xf2\xe9\x12\x00\x00l\x88M\x9e",
+            ),
+            BluetoothChange.ADVERTISEMENT,
+        )
+        return lambda: None
+
+    with patch(
+        "homeassistant.components.bluetooth.async_register_callback",
+        _async_register_callback,
+    ):
+        result1 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"address": "A4:C1:38:56:53:84"},
+        )
+    assert result1["type"] == FlowResultType.FORM
+    assert result1["step_id"] == "get_encryption_key_4_5"
+
+    with patch(
+        "homeassistant.components.xiaomi_ble.async_setup_entry", return_value=True
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"bindkey": "a115210eed7a88e50ad52662e732a9fb"},
+        )
+
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "LYWSD02MMC"
+    assert result2["data"] == {"bindkey": "a115210eed7a88e50ad52662e732a9fb"}
 
 
 async def test_async_step_user_with_found_devices_v4_encryption(hass):

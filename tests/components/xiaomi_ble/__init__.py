@@ -62,8 +62,8 @@ YLKG07YL_SERVICE_INFO = BluetoothServiceInfo(
 )
 
 MISSING_PAYLOAD_ENCRYPTED = BluetoothServiceInfo(
-    name="LYWSD03MMC",
-    address="A4:C1:38:D4:3C:48",
+    name="LYWSD02MMC",
+    address="A4:C1:38:56:53:84",
     rssi=-56,
     manufacturer_data={},
     service_data={
