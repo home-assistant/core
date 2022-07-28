@@ -1,10 +1,9 @@
 """Support for tracking for iCloud devices."""
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
 from typing import Any
 
-from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
+from homeassistant.components.device_tracker import SOURCE_TYPE_GPS, AsyncSeeCallback
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -25,7 +24,7 @@ from .const import (
 async def async_setup_scanner(
     hass: HomeAssistant,
     config: ConfigType,
-    see: Callable[..., Awaitable[None]],
+    async_see: AsyncSeeCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> bool:
     """Old way of setting up the iCloud tracker."""
