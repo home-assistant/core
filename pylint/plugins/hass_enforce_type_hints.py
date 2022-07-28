@@ -293,7 +293,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             arg_types={
                 0: "HomeAssistant",
                 1: "ConfigType",
-                2: "Callable[..., None]",
+                2: "SeeCallback",
                 3: "DiscoveryInfoType | None",
             },
             return_type="bool",
@@ -303,7 +303,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             arg_types={
                 0: "HomeAssistant",
                 1: "ConfigType",
-                2: "Callable[..., Awaitable[None]]",
+                2: "AsyncSeeCallback",
                 3: "DiscoveryInfoType | None",
             },
             return_type="bool",
