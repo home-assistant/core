@@ -11,7 +11,7 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_platform, service
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN, WiLightDevice
@@ -111,54 +111,50 @@ async def async_setup_entry(
     async_add_entities(entities)
 
     # Handle services for a discovered WiLight device.
-    async def set_watering_time(service: Any) -> None:
+    async def set_watering_time(entity, service: Any) -> None:
         entity_id = service.data[ATTR_ENTITY_ID]
 
-        for entity in entities:
-            if (entity.entity_id == entity_id) & isinstance(entity, WiLightValveSwitch):
-                watering_time = service.data[ATTR_WATERING_TIME]
-                await entity.async_set_switch_time(watering_time=watering_time)
+        if (entity.entity_id == entity_id) & isinstance(entity, WiLightValveSwitch):
+            watering_time = service.data[ATTR_WATERING_TIME]
+            await entity.async_set_switch_time(watering_time=watering_time)
 
-    async def set_trigger(service: Any) -> None:
+    async def set_trigger(entity, service: Any) -> None:
         entity_id = service.data[ATTR_ENTITY_ID]
 
-        for entity in entities:
-            if (entity.entity_id == entity_id) & isinstance(entity, WiLightValveSwitch):
-                trigger_index = service.data[ATTR_TRIGGER_INDEX]
-                trigger = service.data[ATTR_TRIGGER]
-                await entity.async_set_trigger(
-                    trigger_index=trigger_index, trigger=trigger
-                )
+        if (entity.entity_id == entity_id) & isinstance(entity, WiLightValveSwitch):
+            trigger_index = service.data[ATTR_TRIGGER_INDEX]
+            trigger = service.data[ATTR_TRIGGER]
+            await entity.async_set_trigger(
+                trigger_index=trigger_index, trigger=trigger
+            )
 
-    async def set_pause_time(service: Any) -> None:
+    async def set_pause_time(entity, service: Any) -> None:
         entity_id = service.data[ATTR_ENTITY_ID]
 
-        for entity in entities:
-            if (entity.entity_id == entity_id) & isinstance(
-                entity, WiLightValvePauseSwitch
-            ):
-                pause_time = service.data[ATTR_PAUSE_TIME]
-                await entity.async_set_switch_time(pause_time=pause_time)
+        if (entity.entity_id == entity_id) & isinstance(
+            entity, WiLightValvePauseSwitch
+        ):
+            pause_time = service.data[ATTR_PAUSE_TIME]
+            await entity.async_set_switch_time(pause_time=pause_time)
 
-    hass.services.async_register(
-        DOMAIN,
+    platform = entity_platform.async_get_current_platform()
+
+    platform.async_register_entity_service(
         SERVICE_SET_WATERING_TIME,
+        SERVICE_SCHEMA_WATERING_TIME,
         set_watering_time,
-        schema=SERVICE_SCHEMA_WATERING_TIME,
     )
 
-    hass.services.async_register(
-        DOMAIN,
+    platform.async_register_entity_service(
         SERVICE_SET_TRIGGER,
+        SERVICE_SCHEMA_TRIGGER,
         set_trigger,
-        schema=SERVICE_SCHEMA_TRIGGER,
     )
 
-    hass.services.async_register(
-        DOMAIN,
+    platform.async_register_entity_service(
         SERVICE_SET_PAUSE_TIME,
+        SERVICE_SCHEMA_PAUSE_TIME,
         set_pause_time,
-        schema=SERVICE_SCHEMA_PAUSE_TIME,
     )
 
 
