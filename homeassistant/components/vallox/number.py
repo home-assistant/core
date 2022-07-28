@@ -45,19 +45,20 @@ class ValloxNumberEntity(ValloxEntity, NumberEntity):
     @property
     def native_value(self) -> float | None:
         """Return the value reported by the sensor."""
-        if (metric_key := self.entity_description.metric_key) is None:
-            return None
-
-        if (value := self.coordinator.data.get_metric(metric_key)) is None:
+        if (
+            value := self.coordinator.data.get_metric(
+                self.entity_description.metric_key
+            )
+        ) is None:
             return None
 
         return float(value)
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
-        if (metric_key := self.entity_description.metric_key) is None:
-            return
-        await self._client.set_values({metric_key: float(value)})
+        await self._client.set_values(
+            {self.entity_description.metric_key: float(value)}
+        )
         await self.coordinator.async_request_refresh()
 
 
@@ -65,7 +66,7 @@ class ValloxNumberEntity(ValloxEntity, NumberEntity):
 class ValloxNumberEntityDescription(NumberEntityDescription):
     """Describes Vallox number entity."""
 
-    metric_key: str | None = None
+    metric_key: str = ""
     entity_type: type[ValloxNumberEntity] = ValloxNumberEntity
 
 
