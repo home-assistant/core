@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from homeassistant.components.update import (
     DOMAIN,
@@ -71,13 +72,17 @@ class UniFiDeviceUpdateEntity(UniFiBase, UpdateEntity):
     DOMAIN = DOMAIN
     TYPE = DEVICE_UPDATE
     _attr_device_class = UpdateDeviceClass.FIRMWARE
-    _attr_supported_features = UpdateEntityFeature.PROGRESS
 
     def __init__(self, device, controller):
         """Set up device update entity."""
         super().__init__(device, controller)
 
         self.device = self._item
+
+        self._attr_supported_features = UpdateEntityFeature.PROGRESS
+
+        if self.controller.site_role == "admin":
+            self._attr_supported_features |= UpdateEntityFeature.INSTALL
 
     @property
     def name(self) -> str:
@@ -126,3 +131,9 @@ class UniFiDeviceUpdateEntity(UniFiBase, UpdateEntity):
 
     async def options_updated(self) -> None:
         """No action needed."""
+
+    async def async_install(
+        self, version: str | None, backup: bool, **kwargs: Any
+    ) -> None:
+        """Install an update."""
+        await self.controller.api.devices.upgrade(self.device.mac)

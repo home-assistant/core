@@ -2,17 +2,18 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Coroutine
 from contextlib import suppress
 from datetime import datetime
 from http import HTTPStatus
 from ipaddress import IPv4Address, IPv6Address, ip_address
 import logging
 from socket import gethostbyaddr, herror
-from typing import Any, Final
+from typing import Any, Final, TypeVar
 
-from aiohttp.web import Application, Request, StreamResponse, middleware
+from aiohttp.web import Application, Request, Response, StreamResponse, middleware
 from aiohttp.web_exceptions import HTTPForbidden, HTTPUnauthorized
+from typing_extensions import Concatenate, ParamSpec
 import voluptuous as vol
 
 from homeassistant.components import persistent_notification
@@ -23,6 +24,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt as dt_util, yaml
 
 from .view import HomeAssistantView
+
+_HassViewT = TypeVar("_HassViewT", bound=HomeAssistantView)
+_P = ParamSpec("_P")
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -82,13 +86,13 @@ async def ban_middleware(
 
 
 def log_invalid_auth(
-    func: Callable[..., Awaitable[StreamResponse]]
-) -> Callable[..., Awaitable[StreamResponse]]:
+    func: Callable[Concatenate[_HassViewT, Request, _P], Awaitable[Response]]
+) -> Callable[Concatenate[_HassViewT, Request, _P], Coroutine[Any, Any, Response]]:
     """Decorate function to handle invalid auth or failed login attempts."""
 
     async def handle_req(
-        view: HomeAssistantView, request: Request, *args: Any, **kwargs: Any
-    ) -> StreamResponse:
+        view: _HassViewT, request: Request, *args: _P.args, **kwargs: _P.kwargs
+    ) -> Response:
         """Try to log failed login attempts if response status >= BAD_REQUEST."""
         resp = await func(view, request, *args, **kwargs)
         if resp.status >= HTTPStatus.BAD_REQUEST:
