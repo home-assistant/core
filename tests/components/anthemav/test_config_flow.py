@@ -8,6 +8,8 @@ from homeassistant.components.anthemav.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from tests.common import MockConfigEntry
+
 
 async def test_form_with_valid_connection(
     hass: HomeAssistant, mock_connection_create: AsyncMock, mock_anthemav: AsyncMock
@@ -113,3 +115,24 @@ async def test_import_configuration(
         "mac": "00:00:00:00:00:01",
         "model": "MRX 520",
     }
+
+
+async def test_device_already_configured(
+    hass: HomeAssistant,
+    mock_connection_create: AsyncMock,
+    mock_anthemav: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test we import existing configuration."""
+    config = {
+        "host": "1.1.1.1",
+        "port": 14999,
+    }
+
+    mock_config_entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config
+    )
+
+    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("reason") == "already_configured"
