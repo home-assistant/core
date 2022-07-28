@@ -67,7 +67,7 @@ MISSING_PAYLOAD_ENCRYPTED = BluetoothServiceInfo(
     rssi=-56,
     manufacturer_data={},
     service_data={
-        "0000fe95-0000-1000-8000-00805f9b34fb": b"0X[\x05\x02H<\xd48\xc1\xa4\x08",
+        "0000fe95-0000-1000-8000-00805f9b34fb": b"0X[\x05\x02\x84\x53\x568\xc1\xa4\x08",
     },
     service_uuids=["0000fe95-0000-1000-8000-00805f9b34fb"],
     source="local",
