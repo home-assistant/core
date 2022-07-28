@@ -10,7 +10,6 @@ atomicwrites-homeassistant==1.4.1
 attrs==21.2.0
 awesomeversion==22.6.0
 bcrypt==3.1.7
-bleak==0.14.3
 bluetooth-adapters==0.1.2
 certifi>=2021.5.30
 ciso8601==2.2.0
