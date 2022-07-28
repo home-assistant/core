@@ -1,7 +1,7 @@
 """The bluetooth integration."""
 from __future__ import annotations
 
-from asyncio import CancelledError, Future
+from asyncio import Future
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
