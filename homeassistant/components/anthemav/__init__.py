@@ -23,7 +23,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Anthem A/V Receivers from a config entry."""
 
     @callback
-    def async_anthemav_update_callback(message):
+    def async_anthemav_update_callback(message: str) -> None:
         """Receive notification from transport that new data exists."""
         _LOGGER.debug("Received update callback from AVR: %s", message)
         async_dispatcher_send(hass, f"{ANTHEMAV_UDATE_SIGNAL}_{entry.entry_id}")
