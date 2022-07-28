@@ -29,8 +29,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     device = hass.data[AXIS_DOMAIN][config_entry.unique_id] = AxisNetworkDevice(
         hass, config_entry, api
     )
-    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     await device.async_update_device_registry()
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     device.async_setup_events()
 
     config_entry.add_update_listener(device.async_new_address_callback)
