@@ -90,12 +90,12 @@ async def async_setup_entry(
 
     avr = hass.data[DOMAIN][config_entry.entry_id]
 
-    device = AnthemAVR(avr, name, mac_address, model, config_entry.entry_id)
+    entity = AnthemAVR(avr, name, mac_address, model, config_entry.entry_id)
 
-    _LOGGER.debug("dump_devicedata: %s", device.dump_avrdata)
-    _LOGGER.debug("dump_conndata: %s", avr.dump_conndata)
+    _LOGGER.debug("Device data dump: %s", entity.dump_avrdata)
+    _LOGGER.debug("Connection data dump: %s", avr.dump_conndata)
 
-    async_add_entities([device])
+    async_add_entities([entity])
 
 
 class AnthemAVR(MediaPlayerEntity):
@@ -111,12 +111,12 @@ class AnthemAVR(MediaPlayerEntity):
     )
 
     def __init__(
-        self, avr: Connection, name: str, mac_address: str, model: str, _entry_id: str
+        self, avr: Connection, name: str, mac_address: str, model: str, entry_id: str
     ) -> None:
         """Initialize entity with transport."""
         super().__init__()
         self.avr = avr
-        self._entry_id = _entry_id
+        self._entry_id = entry_id
         self._attr_name = name
         self._attr_unique_id = mac_address
         self._attr_device_info = DeviceInfo(

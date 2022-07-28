@@ -1,10 +1,9 @@
 """Test the Anthem A/V Receivers config flow."""
-from unittest.mock import ANY, AsyncMock, Mock, patch
+from unittest.mock import ANY, AsyncMock, patch
 
 from homeassistant import config_entries
-from homeassistant.components.anthemav.const import ANTHEMAV_UDATE_SIGNAL
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from tests.common import MockConfigEntry
 
@@ -60,19 +59,18 @@ async def test_anthemav_dispatcher_signal(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # get the callback function that trigger the signal
+    states = hass.states.get("media_player.anthem_av")
+    assert states
+    assert states.state == STATE_OFF
+
+    # change state of the AVR
+    mock_anthemav.protocol.power = True
+
+    # get the callback function that trigger the signal to update the state
     avr_update_callback = mock_connection_create.call_args[1]["update_callback"]
-
-    mock_signal_received = Mock()
-
-    async_dispatcher_connect(
-        hass,
-        f"{ANTHEMAV_UDATE_SIGNAL}_{mock_config_entry.entry_id}",
-        mock_signal_received,
-    )
-
-    avr_update_callback("Fake Command")
+    avr_update_callback("power")
 
     await hass.async_block_till_done()
 
-    mock_signal_received.assert_called()
+    states = hass.states.get("media_player.anthem_av")
+    assert states.state == STATE_ON

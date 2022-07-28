@@ -19,6 +19,7 @@ def mock_anthemav() -> AsyncMock:
     avr.close = MagicMock()
     avr.protocol.input_list = []
     avr.protocol.audio_listening_mode_list = []
+    avr.protocol.power = False
     return avr
 
 
