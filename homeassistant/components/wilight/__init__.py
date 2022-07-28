@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from pywilight.wilight_device import Device as PyWiLightDevice
+from pywilight.wilight_device import PyWiLightDevice
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
