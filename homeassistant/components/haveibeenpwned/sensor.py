@@ -18,6 +18,7 @@ from homeassistant.helpers.event import track_point_in_time
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
+import json
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -122,7 +123,6 @@ class HaveIBeenPwnedSensor(SensorEntity):
                 dt_util.now() + MIN_TIME_BETWEEN_FORCED_UPDATES,
             )
             return
-
         self._state = len(self._data.data[self._email])
         self.schedule_update_ha_state()
 
@@ -139,6 +139,7 @@ class HaveIBeenPwnedData:
 
     def __init__(self, emails, api_key):
         """Initialize the data object."""
+        _LOGGER.debug('Instantiating HaveIBeenPwnedData class and initializing the data object')
         self._email_count = len(emails)
         self._current_index = 0
         self.data = {}
@@ -148,36 +149,58 @@ class HaveIBeenPwnedData:
 
     def set_next_email(self):
         """Set the next email to be looked up."""
+        _LOGGER.debug('Setting the next email to look up email: %s', self._email)
         self._current_index = (self._current_index + 1) % self._email_count
         self._email = self._emails[self._current_index]
 
     def update_no_throttle(self):
         """Get the data for a specific email."""
+        _LOGGER.debug('Getting data for a specific email: %s', self._email)
         self.update(no_throttle=True)
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES, MIN_TIME_BETWEEN_FORCED_UPDATES)
     def update(self, **kwargs):
         """Get the latest data for current email from REST service."""
+        _LOGGER.debug('Getting the latest data for the current email from the REST service for email: %s', self._email)
         try:
-            url = f"{URL}{self._email}?truncateResponse=false"
-            header = {USER_AGENT: HA_USER_AGENT, "hibp-api-key": self._api_key}
+            url = f"{URL}{self._email}"
+            # header = str({USER_AGENT: HA_USER_AGENT, "hibp-api-key": self._api_key})
+            paramspayload = {
+                'truncateResponse': 'false'
+            }
+            header = {
+                'USER_AGENT': HA_USER_AGENT,
+                'hibp-api-key': self._api_key,
+            }
             _LOGGER.debug("Checking for breaches for email: %s", self._email)
-            req = requests.get(url, headers=header, allow_redirects=True, timeout=5)
+            req = requests.get(url, params=paramspayload, headers=header, allow_redirects=True, timeout=5)
+            _LOGGER.debug("Requested URL is %s", url)
+            _LOGGER.debug("Request object URL is %s", req.request.url)
+            _LOGGER.debug("Request headers are %s", req.request.headers)
 
         except requests.exceptions.RequestException:
             _LOGGER.error("Failed fetching data for %s", self._email)
+            _LOGGER.debug("Response was %s", req.text)
             return
 
         if req.status_code == HTTPStatus.OK:
+            _LOGGER.debug("HTTP Status OK fetching data for %s", self._email)
+            _LOGGER.debug("Response: %s", req.text)
+            json_object = req.json()
+            json_formatted_str = json.dumps(json_object, indent=2)
+            _LOGGER.debug("The returned JSON data: %s", json_formatted_str)
+            _LOGGER.debug("The returned text data: %s", req.text)
             self.data[self._email] = sorted(
                 req.json(), key=lambda k: k["AddedDate"], reverse=True
             )
 
             # Only goto next email if we had data so that
             # the forced updates try this current email again
+            _LOGGER.debug("Setting to the next email: %s", self._email)
             self.set_next_email()
 
         elif req.status_code == HTTPStatus.NOT_FOUND:
+            _LOGGER.debug("HTTP Status Not Found fetching data for %s", self._email)
             self.data[self._email] = []
 
             # only goto next email if we had data so that
@@ -185,8 +208,10 @@ class HaveIBeenPwnedData:
             self.set_next_email()
 
         else:
+            _LOGGER.debug("An unhandled error occurred fetching data for %s", self._email)
+            _LOGGER.debug("The response was: %s", req.text)
             _LOGGER.error(
                 "Failed fetching data for %s (HTTP Status_code = %d)",
                 self._email,
-                req.status_code,
+                req.status_code
             )
