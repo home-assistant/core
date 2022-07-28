@@ -20,7 +20,6 @@ _LOGGER = logging.getLogger(__name__)
 # -> adjust the data schema to the data that you need
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        # vol.Required(CONF_ID): str,
         vol.Required(CONF_IP_ADDRESS): str,
         vol.Required(CONF_SECRET): str,
     }
