@@ -1,6 +1,7 @@
 """The bluetooth integration."""
 from __future__ import annotations
 
+from asyncio import Future
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -8,6 +9,7 @@ from enum import Enum
 import logging
 from typing import Final, Union
 
+import async_timeout
 from bleak import BleakError
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
@@ -95,6 +97,9 @@ BluetoothChange = Enum("BluetoothChange", "ADVERTISEMENT")
 BluetoothCallback = Callable[
     [Union[BluetoothServiceInfoBleak, BluetoothServiceInfo], BluetoothChange], None
 ]
+ProcessAdvertisementCallback = Callable[
+    [Union[BluetoothServiceInfoBleak, BluetoothServiceInfo]], bool
+]
 
 
 @hass_callback
@@ -157,6 +162,31 @@ def async_register_callback(
     """
     manager: BluetoothManager = hass.data[DOMAIN]
     return manager.async_register_callback(callback, match_dict)
+
+
+async def async_process_advertisements(
+    hass: HomeAssistant,
+    callback: ProcessAdvertisementCallback,
+    match_dict: BluetoothCallbackMatcher,
+    timeout: int,
+) -> BluetoothServiceInfo:
+    """Process advertisements until callback returns true or timeout expires."""
+    done: Future[BluetoothServiceInfo] = Future()
+
+    @hass_callback
+    def _async_discovered_device(
+        service_info: BluetoothServiceInfo, change: BluetoothChange
+    ) -> None:
+        if callback(service_info):
+            done.set_result(service_info)
+
+    unload = async_register_callback(hass, _async_discovered_device, match_dict)
+
+    try:
+        async with async_timeout.timeout(timeout):
+            return await done
+    finally:
+        unload()
 
 
 @hass_callback
