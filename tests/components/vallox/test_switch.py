@@ -11,7 +11,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    "entity_id,metric_key, value",
+    "entity_id, metric_key, value",
     [
         ("switch.vallox_bypass_locked", "A_CYC_BYPASS_LOCKED", 1),
         ("switch.vallox_bypass_locked", "A_CYC_BYPASS_LOCKED", 0),
