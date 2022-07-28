@@ -12,6 +12,7 @@ from homeassistant.components import onboarding
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfo,
     async_discovered_service_info,
+    async_process_advertisements,
 )
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_ADDRESS
@@ -44,6 +45,24 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_device: DeviceData | None = None
         self._discovered_devices: dict[str, Discovery] = {}
 
+    async def _async_wait_for_full_advertisement(
+        self, discovery_info: BluetoothServiceInfo, device: DeviceData
+    ) -> None:
+        """Sometimes first advertisement we receive is blank or incomplete. Wait until we get a useful one."""
+        if not device.pending:
+            return
+
+        def _process_more_advertisements(service_info: BluetoothServiceInfo) -> bool:
+            device.update(service_info)
+            return not device.pending
+
+        await async_process_advertisements(
+            self.hass,
+            _process_more_advertisements,
+            {"address": discovery_info.address},
+            5,
+        )
+
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfo
     ) -> FlowResult:
@@ -53,6 +72,12 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
         device = DeviceData()
         if not device.supported(discovery_info):
             return self.async_abort(reason="not_supported")
+
+        # Wait until we have received enough information about this device to detect its encryption type
+        await self._async_wait_for_full_advertisement(discovery_info, device)
+        if device.pending:
+            return self.async_abort(reason="not_supported")
+
         self._discovery_info = discovery_info
         self._discovered_device = device
 
@@ -160,6 +185,13 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
             address = user_input[CONF_ADDRESS]
             await self.async_set_unique_id(address, raise_on_progress=False)
             discovery = self._discovered_devices[address]
+
+            # Wait until we have received enough information about this device to detect its encryption type
+            await self._async_wait_for_full_advertisement(
+                discovery.discovery_info, discovery.device
+            )
+            if discovery.device.pending:
+                return self.async_abort(reason="not_supported")
 
             if discovery.device.encryption_scheme == EncryptionScheme.MIBEACON_LEGACY:
                 self._discovery_info = discovery.discovery_info
