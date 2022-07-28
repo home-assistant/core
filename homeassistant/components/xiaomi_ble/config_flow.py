@@ -20,6 +20,9 @@ from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
 
+# How long to wait for additional advertisement packets if we don't have the right ones
+ADDITIONAL_DISCOVERY_TIMEOUT = 5
+
 
 @dataclasses.dataclass
 class Discovery:
@@ -60,7 +63,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
             self.hass,
             _process_more_advertisements,
             {"address": discovery_info.address},
-            5,
+            ADDITIONAL_DISCOVERY_TIMEOUT,
         )
 
     async def async_step_bluetooth(
