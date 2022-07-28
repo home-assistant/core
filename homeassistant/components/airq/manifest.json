@@ -5,9 +5,15 @@
   "documentation": "https://www.home-assistant.io/integrations/airq",
   "requirements": [],
   "ssdp": [],
-  "zeroconf": [],
+  "zeroconf": [
+    {
+      "type": "_http._tcp.local.",
+      "name": "*_air-q.local"
+    }
+  ],
   "homekit": {},
   "dependencies": [],
   "codeowners": ["@Sibgatulin", "@dl2080"],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["airq"]
 }

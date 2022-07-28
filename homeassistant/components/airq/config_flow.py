@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from aioairq import AirQ
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -11,16 +12,16 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DOMAIN
+from .const import CONF_ID, CONF_IP_ADDRESS, CONF_SECRET, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 # -> adjust the data schema to the data that you need
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required("host"): str,
-        vol.Required("username"): str,
-        vol.Required("password"): str,
+        # vol.Required(CONF_ID): str,
+        vol.Required(CONF_IP_ADDRESS): str,
+        vol.Required(CONF_SECRET): str,
     }
 )
 
@@ -31,13 +32,15 @@ class PlaceholderHub:
     TODO Remove this placeholder class and replace with things from your PyPI package.
     """
 
-    def __init__(self, host: str) -> None:
+    def __init__(self, address: str, password: str) -> None:
         """Initialize."""
-        self.host = host
-
-    async def authenticate(self, username: str, password: str) -> bool:
-        """Test if we can authenticate with the host."""
-        return True
+        try:
+            self.airq = AirQ(address, password)
+        except UnicodeDecodeError as exc:
+            # It is hugely unspecific and must be fixed in aioairq
+            # but now wrong password leads to the message not being correctly
+            # decoded
+            raise InvalidAuth from exc
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
@@ -53,10 +56,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     #     your_validate_func, data["username"], data["password"]
     # )
 
-    hub = PlaceholderHub(data["host"])
-
-    if not await hub.authenticate(data["username"], data["password"]):
-        raise InvalidAuth
+    hub = PlaceholderHub(data[CONF_IP_ADDRESS], data[CONF_SECRET])
+    config = await hub.airq.get("config")
 
     # If you cannot connect:
     # throw CannotConnect
@@ -64,7 +65,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     # InvalidAuth
 
     # Return info that you want to store in the config entry.
-    return {"title": "Name of the device"}
+    return {"title": f"Air-Q {config['devicename']}", "id": config["id"]}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -93,6 +94,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
+            await self.async_set_unique_id(info[CONF_ID])
+            self._abort_if_unique_id_configured()
+
             return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(

@@ -188,6 +188,10 @@ ZEROCONF = {
             "name": "awair*"
         },
         {
+            "domain": "airq",
+            "name": "*_air-q.local"
+        },
+        {
             "domain": "bosch_shc",
             "name": "bosch shc*"
         },
