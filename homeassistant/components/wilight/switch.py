@@ -4,9 +4,10 @@ from __future__ import annotations
 from typing import Any
 
 from pywilight.const import ITEM_SWITCH, SWITCH_PAUSE_VALVE, SWITCH_VALVE
+from pywilight.wilight_device import PyWiLightDevice
 import voluptuous as vol
 
-from homeassistant.components.switch import ToggleEntity
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
@@ -82,7 +83,7 @@ ICON_WATERING = "mdi:water"
 ICON_PAUSE = "mdi:pause-circle-outline"
 
 
-def entities_from_discovered_wilight(api_device: Any) -> tuple[Any]:
+def entities_from_discovered_wilight(api_device: PyWiLightDevice) -> tuple[Any]:
     """Parse configuration and add WiLight switch entities."""
     entities: Any = []
     for item in api_device.items:
@@ -175,7 +176,7 @@ class WiLightValveSwitch(WiLightDevice, SwitchEntity):
     @property
     def name(self) -> str:
         """Return the name of the switch."""
-        return f"{self._name} {DESC_WATERING}"
+        return f"{self._attr_name} {DESC_WATERING}"
 
     @property
     def is_on(self) -> bool:
@@ -279,32 +280,29 @@ class WiLightValveSwitch(WiLightDevice, SwitchEntity):
 
     async def async_set_switch_time(self, **kwargs: Any) -> None:
         """Set the watering time."""
-        if ATTR_WATERING_TIME in kwargs:
-            target_time = kwargs[ATTR_WATERING_TIME]
-            await self._client.set_switch_time(self._index, target_time)
+        await self._client.set_switch_time(self._index, kwargs[ATTR_WATERING_TIME])
 
     async def async_set_trigger(self, **kwargs: Any) -> None:
         """Set the trigger according to index."""
-        if (ATTR_TRIGGER_INDEX in kwargs) & (ATTR_TRIGGER in kwargs):
-            trigger_index = kwargs[ATTR_TRIGGER_INDEX]
-            trigger = kwargs[ATTR_TRIGGER]
-            if trigger_index == 1:
-                await self._client.set_switch_trigger_1(self._index, trigger)
-            if trigger_index == 2:
-                await self._client.set_switch_trigger_2(self._index, trigger)
-            if trigger_index == 3:
-                await self._client.set_switch_trigger_3(self._index, trigger)
-            if trigger_index == 4:
-                await self._client.set_switch_trigger_4(self._index, trigger)
+        trigger_index = kwargs[ATTR_TRIGGER_INDEX]
+        trigger = kwargs[ATTR_TRIGGER]
+        if trigger_index == 1:
+            await self._client.set_switch_trigger_1(self._index, trigger)
+        if trigger_index == 2:
+            await self._client.set_switch_trigger_2(self._index, trigger)
+        if trigger_index == 3:
+            await self._client.set_switch_trigger_3(self._index, trigger)
+        if trigger_index == 4:
+            await self._client.set_switch_trigger_4(self._index, trigger)
 
 
-class WiLightValvePauseSwitch(WiLightDevice, ToggleEntity):
+class WiLightValvePauseSwitch(WiLightDevice, SwitchEntity):
     """Representation of a WiLights Valve Pause switch."""
 
     @property
     def name(self) -> str:
         """Return the name of the switch."""
-        return f"{self._name} {DESC_PAUSE}"
+        return f"{self._attr_name} {DESC_PAUSE}"
 
     @property
     def is_on(self) -> bool:
