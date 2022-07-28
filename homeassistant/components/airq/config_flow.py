@@ -5,6 +5,7 @@ import logging
 from typing import Any
 
 from aioairq import AirQ
+from aiohttp.client_exceptions import ClientConnectionError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -47,24 +48,18 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    # -> validate the data can be used to set up a connection.
-
-    # If your PyPI package is not built with async, pass your methods
-    # to the executor:
-    # await hass.async_add_executor_job(
-    #     your_validate_func, data["username"], data["password"]
-    # )
 
     hub = PlaceholderHub(data[CONF_IP_ADDRESS], data[CONF_SECRET])
 
-    if not await hub.authenticate():
-        raise InvalidAuth
-    config = await hub.airq.get("config")
+    try:
+        auth_success = await hub.authenticate()
+    except ClientConnectionError as exc:
+        raise CannotConnect from exc
 
-    # If you cannot connect:
-    # throw CannotConnect
-    # If the authentication is wrong:
-    # InvalidAuth
+    if not auth_success:
+        raise InvalidAuth
+
+    config = await hub.airq.get("config")
 
     # Return info that you want to store in the config entry.
     return {"title": f"Air-Q {config['devicename']}", "id": config["id"]}
