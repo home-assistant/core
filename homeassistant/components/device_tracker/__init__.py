@@ -33,7 +33,9 @@ from .legacy import (  # noqa: F401
     SERVICE_SEE,
     SERVICE_SEE_PAYLOAD_SCHEMA,
     SOURCE_TYPES,
+    AsyncSeeCallback,
     DeviceScanner,
+    SeeCallback,
     async_setup_integration as async_setup_legacy_integration,
     see,
 )
