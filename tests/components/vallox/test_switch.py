@@ -2,7 +2,7 @@
 import pytest
 
 from homeassistant.components.switch.const import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
 
 from .conftest import patch_metrics, patch_metrics_set
@@ -34,7 +34,17 @@ async def test_switch_entities(
     assert sensor.state == "on" if value else "off"
 
 
+@pytest.mark.parametrize(
+    "command, metric_key, value",
+    [
+        (SERVICE_TURN_ON, "A_CYC_BYPASS_LOCKED", 1),
+        (SERVICE_TURN_OFF, "A_CYC_BYPASS_LOCKED", 0),
+    ],
+)
 async def test_bypass_lock_switch_entitity_set(
+    service: str,
+    metric_key: str,
+    value: int,
     mock_entry: MockConfigEntry,
     hass: HomeAssistant,
 ):
@@ -45,8 +55,8 @@ async def test_bypass_lock_switch_entitity_set(
         await hass.async_block_till_done()
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
+            service,
             service_data={ATTR_ENTITY_ID: "switch.vallox_bypass_locked"},
         )
         await hass.async_block_till_done()
-        metrics_set.assert_called_once_with({"A_CYC_BYPASS_LOCKED": 1})
+        metrics_set.assert_called_once_with({metric_key: value})

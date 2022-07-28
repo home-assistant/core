@@ -41,7 +41,13 @@ class ValloxSwitchEntity(ValloxEntity, SwitchEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if the switch is on."""
-        return self.coordinator.data.get_metric(self.entity_description.metric_key) == 1
+        if (
+            value := self.coordinator.data.get_metric(
+                self.entity_description.metric_key
+            )
+        ) is None:
+            return None
+        return value == 1
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on."""
