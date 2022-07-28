@@ -10,17 +10,19 @@
     "1cbf783bb11e4a7c8a6843dee3a86927": {
       "dev_class": "heater_central",
       "location": "a57efe5f145f498c9be62a9b63626fbf",
-      "model": "Generic heater",
+      "model": "Generic heater/cooler",
       "name": "OpenTherm",
       "vendor": "Techneco",
-      "lower_bound": 0.0,
-      "upper_bound": 100.0,
-      "resolution": 1.0,
-      "maximum_boiler_temperature": 60.0,
+      "maximum_boiler_temperature": {
+        "setpoint": 60.0,
+        "lower_bound": 0.0,
+        "upper_bound": 100.0,
+        "resolution": 1.0
+      },
       "binary_sensors": {
         "dhw_state": false,
-        "heating_state": true,
-        "compressor_state": true,
+        "heating_state": false,
+        "compressor_state": false,
         "cooling_state": false,
         "slave_boiler_state": false,
         "flame_state": false
@@ -61,9 +63,13 @@
       "model": "Anna",
       "name": "Anna",
       "vendor": "Plugwise",
-      "lower_bound": 4.0,
-      "upper_bound": 30.0,
-      "resolution": 0.1,
+      "thermostat": {
+        "setpoint_low": 20.5,
+        "setpoint_high": 24.0,
+        "lower_bound": 4.0,
+        "upper_bound": 30.0,
+        "resolution": 0.1
+      },
       "preset_modes": ["no_frost", "home", "away", "asleep", "vacation"],
       "active_preset": "home",
       "available_schedules": ["standaard"],
@@ -71,11 +77,12 @@
       "last_used": "standaard",
       "mode": "auto",
       "sensors": {
-        "temperature": 19.3,
-        "setpoint": 21.0,
+        "temperature": 21.3,
         "illuminance": 86.0,
         "cooling_activation_outdoor_temperature": 21.0,
-        "cooling_deactivation_threshold": 4.0
+        "cooling_deactivation_threshold": 4.0,
+        "setpoint_low": 20.5,
+        "setpoint_high": 24.0
       }
     }
   }
