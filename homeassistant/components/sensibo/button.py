@@ -76,14 +76,16 @@ class SensiboDeviceButton(SensiboDeviceBaseEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Press the button."""
-        await self.api_call(
+        await self.async_send_api_call(
             device_data=self.device_data,
             key=self.entity_description.data_key,
             value=False,
         )
 
     @api_call_decorator
-    async def api_call(self, device_data: SensiboDevice, key: Any, value: Any) -> bool:
+    async def async_send_api_call(
+        self, device_data: SensiboDevice, key: Any, value: Any
+    ) -> bool:
         """Make service call to api."""
         result = await self._client.async_reset_filter(
             self._device_id,

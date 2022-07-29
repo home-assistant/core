@@ -114,13 +114,13 @@ class SensiboDeviceSwitch(SensiboDeviceBaseEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         if self.entity_description.key == "timer_on_switch":
-            await self.turn_on_timer(
+            await self.async_turn_on_timer(
                 device_data=self.device_data,
                 key=self.entity_description.data_key,
                 value=True,
             )
         if self.entity_description.key == "pure_boost_switch":
-            await self.turn_on_off_pure_boost(
+            await self.async_turn_on_off_pure_boost(
                 device_data=self.device_data,
                 key=self.entity_description.data_key,
                 value=True,
@@ -129,13 +129,13 @@ class SensiboDeviceSwitch(SensiboDeviceBaseEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         if self.entity_description.key == "timer_on_switch":
-            await self.turn_off_timer(
+            await self.async_turn_off_timer(
                 device_data=self.device_data,
                 key=self.entity_description.data_key,
                 value=True,
             )
         if self.entity_description.key == "pure_boost_switch":
-            await self.turn_on_off_pure_boost(
+            await self.async_turn_on_off_pure_boost(
                 device_data=self.device_data,
                 key=self.entity_description.data_key,
                 value=True,
@@ -149,7 +149,7 @@ class SensiboDeviceSwitch(SensiboDeviceBaseEntity, SwitchEntity):
         return None
 
     @api_call_decorator
-    async def turn_on_timer(
+    async def async_turn_on_timer(
         self, device_data: SensiboDevice, key: Any, value: Any
     ) -> bool:
         """Make service call to api for setting timer."""
@@ -163,7 +163,7 @@ class SensiboDeviceSwitch(SensiboDeviceBaseEntity, SwitchEntity):
         return bool(result.get("status") == "success")
 
     @api_call_decorator
-    async def turn_off_timer(
+    async def async_turn_off_timer(
         self, device_data: SensiboDevice, key: Any, value: Any
     ) -> bool:
         """Make service call to api for deleting timer."""
@@ -172,7 +172,7 @@ class SensiboDeviceSwitch(SensiboDeviceBaseEntity, SwitchEntity):
         return bool(result.get("status") == "success")
 
     @api_call_decorator
-    async def turn_on_off_pure_boost(
+    async def async_turn_on_off_pure_boost(
         self, device_data: SensiboDevice, key: Any, value: Any
     ) -> bool:
         """Make service call to api for setting Pure Boost."""
