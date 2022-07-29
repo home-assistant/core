@@ -26,6 +26,7 @@ from .const import (  # noqa: F401
     SOURCE_TYPE_BLUETOOTH_LE,
     SOURCE_TYPE_GPS,
     SOURCE_TYPE_ROUTER,
+    SourceType,
 )
 from .legacy import (  # noqa: F401
     PLATFORM_SCHEMA,
