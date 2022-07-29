@@ -11,7 +11,7 @@ from aioshelly.rpc_device import RpcDevice
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry, singleton
+from homeassistant.helpers import device_registry, entity_registry, singleton
 from homeassistant.helpers.typing import EventType
 from homeassistant.util.dt import utcnow
 
@@ -30,11 +30,12 @@ from .const import (
 )
 
 
-async def async_remove_shelly_entity(
+@callback
+def async_remove_shelly_entity(
     hass: HomeAssistant, domain: str, unique_id: str
 ) -> None:
     """Remove a Shelly entity."""
-    entity_reg = await hass.helpers.entity_registry.async_get_registry()
+    entity_reg = entity_registry.async_get(hass)
     entity_id = entity_reg.async_get_entity_id(domain, DOMAIN, unique_id)
     if entity_id:
         LOGGER.debug("Removing entity: %s", entity_id)
@@ -296,6 +297,9 @@ def get_rpc_key_instances(keys_dict: dict[str, Any], key: str) -> list[str]:
     """Return list of key instances for RPC device from a dict."""
     if key in keys_dict:
         return [key]
+
+    if key == "switch" and "cover:0" in keys_dict:
+        key = "cover"
 
     keys_list: list[str] = []
     for i in range(MAX_RPC_KEY_INSTANCES):

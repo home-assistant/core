@@ -1,8 +1,7 @@
 """The test for the sensibo entity."""
 from __future__ import annotations
 
-from datetime import timedelta
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from pysensibo.model import SensiboData
 import pytest
@@ -23,9 +22,6 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.util import dt
-
-from tests.common import async_fire_time_changed
 
 
 async def test_entity(
@@ -98,25 +94,12 @@ async def test_entity_send_command(
 
 
 async def test_entity_send_command_calibration(
-    hass: HomeAssistant, load_int: ConfigEntry, get_data: SensiboData
+    hass: HomeAssistant,
+    entity_registry_enabled_by_default: AsyncMock,
+    load_int: ConfigEntry,
+    get_data: SensiboData,
 ) -> None:
     """Test the Sensibo send command for calibration."""
-
-    registry = er.async_get(hass)
-    registry.async_update_entity(
-        "number.hallway_temperature_calibration", disabled_by=None
-    )
-    await hass.async_block_till_done()
-
-    with patch(
-        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
-        return_value=get_data,
-    ):
-        async_fire_time_changed(
-            hass,
-            dt.utcnow() + timedelta(minutes=5),
-        )
-        await hass.async_block_till_done()
 
     state = hass.states.get("number.hallway_temperature_calibration")
     assert state.state == "0.1"

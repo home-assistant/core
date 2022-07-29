@@ -1,6 +1,7 @@
 """Config flow for tractive integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -69,7 +70,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=USER_DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_reauth(self, _: dict[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle configuration by re-auth."""
         return await self.async_step_reauth_confirm()
 

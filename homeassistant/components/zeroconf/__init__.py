@@ -28,7 +28,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.data_entry_flow import BaseServiceInfo
-from homeassistant.helpers import discovery_flow
+from homeassistant.helpers import discovery_flow, instance_id
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import ConfigType
@@ -198,7 +198,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         Wait till started or otherwise HTTP is not up and running.
         """
-        uuid = await hass.helpers.instance_id.async_get()
+        uuid = await instance_id.async_get(hass)
         await _async_register_hass_zc_service(hass, aio_zc, uuid)
 
     async def _async_zeroconf_hass_stop(_event: Event) -> None:
@@ -424,11 +424,16 @@ class ZeroconfDiscovery:
                 # Since we prefer local control, if the integration that is being discovered
                 # is cloud AND the homekit device is UNPAIRED we still want to discovery it.
                 #
+                # Additionally if the integration is polling, HKC offers a local push
+                # experience for the user to control the device so we want to offer that
+                # as well.
+                #
                 # As soon as the device becomes paired, the config flow will be dismissed
                 # in the event the user does not want to pair with Home Assistant.
                 #
-                if not integration.iot_class or not integration.iot_class.startswith(
-                    "cloud"
+                if not integration.iot_class or (
+                    not integration.iot_class.startswith("cloud")
+                    and "polling" not in integration.iot_class
                 ):
                     return
 

@@ -14,9 +14,6 @@
         },
         "flow_title": "{name} ({host})",
         "step": {
-            "confirm": {
-                "description": "Kuruluma ba\u015flamak ister misiniz?"
-            },
             "discovery_confirm": {
                 "description": "{name} ( {host} ) kurulumu yapmak istiyor musunuz?"
             },
@@ -27,8 +24,7 @@
             },
             "user": {
                 "data": {
-                    "host": "IP Adresi",
-                    "name": "Ad"
+                    "host": "IP Adresi"
                 },
                 "description": "IP Adresini bo\u015f b\u0131rak\u0131rsan\u0131z, cihazlar\u0131 bulmak i\u00e7in ke\u015fif kullan\u0131lacakt\u0131r."
             }

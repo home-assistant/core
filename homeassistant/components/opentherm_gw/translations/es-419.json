@@ -10,8 +10,7 @@
                     "device": "Ruta o URL",
                     "id": "Identificaci\u00f3n",
                     "name": "Nombre"
-                },
-                "title": "OpenTherm Gateway"
+                }
             }
         }
     },
@@ -22,8 +21,7 @@
                     "floor_temperature": "Temperatura del piso",
                     "read_precision": "Leer precisi\u00f3n",
                     "set_precision": "Establecer precisi\u00f3n"
-                },
-                "description": "Opciones para OpenTherm Gateway"
+                }
             }
         }
     }

@@ -37,16 +37,13 @@ def _handle_errors(func):
             connection.send_error(msg["id"], *error)
             return
 
-        if msg is not None:
-            await connection.send_big_result(msg["id"], result)
-        else:
-            connection.send_result(msg["id"], result)
+        connection.send_result(msg["id"], result)
 
     return send_with_error_handling
 
 
-@websocket_api.async_response
 @websocket_api.websocket_command({"type": "lovelace/resources"})
+@websocket_api.async_response
 async def websocket_lovelace_resources(hass, connection, msg):
     """Send Lovelace UI resources over WebSocket configuration."""
     resources = hass.data[DOMAIN]["resources"]
@@ -58,7 +55,6 @@ async def websocket_lovelace_resources(hass, connection, msg):
     connection.send_result(msg["id"], resources.async_items())
 
 
-@websocket_api.async_response
 @websocket_api.websocket_command(
     {
         "type": "lovelace/config",
@@ -66,6 +62,7 @@ async def websocket_lovelace_resources(hass, connection, msg):
         vol.Optional(CONF_URL_PATH): vol.Any(None, cv.string),
     }
 )
+@websocket_api.async_response
 @_handle_errors
 async def websocket_lovelace_config(hass, connection, msg, config):
     """Send Lovelace UI config over WebSocket configuration."""
@@ -73,7 +70,6 @@ async def websocket_lovelace_config(hass, connection, msg, config):
 
 
 @websocket_api.require_admin
-@websocket_api.async_response
 @websocket_api.websocket_command(
     {
         "type": "lovelace/config/save",
@@ -81,6 +77,7 @@ async def websocket_lovelace_config(hass, connection, msg, config):
         vol.Optional(CONF_URL_PATH): vol.Any(None, cv.string),
     }
 )
+@websocket_api.async_response
 @_handle_errors
 async def websocket_lovelace_save_config(hass, connection, msg, config):
     """Save Lovelace UI configuration."""
@@ -88,13 +85,13 @@ async def websocket_lovelace_save_config(hass, connection, msg, config):
 
 
 @websocket_api.require_admin
-@websocket_api.async_response
 @websocket_api.websocket_command(
     {
         "type": "lovelace/config/delete",
         vol.Optional(CONF_URL_PATH): vol.Any(None, cv.string),
     }
 )
+@websocket_api.async_response
 @_handle_errors
 async def websocket_lovelace_delete_config(hass, connection, msg, config):
     """Delete Lovelace UI configuration."""

@@ -17,6 +17,13 @@
                 },
                 "description": "Taassisesta oma Awairi arendaja juurdep\u00e4\u00e4suluba."
             },
+            "reauth_confirm": {
+                "data": {
+                    "access_token": "Juurdep\u00e4\u00e4sut\u00f5end",
+                    "email": "Meiliaadress"
+                },
+                "description": "Taassisesta oma Awairi arendaja juurdep\u00e4\u00e4suluba."
+            },
             "user": {
                 "data": {
                     "access_token": "Juurdep\u00e4\u00e4sut\u00f5end",

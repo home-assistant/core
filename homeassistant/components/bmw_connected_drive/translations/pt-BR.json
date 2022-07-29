@@ -21,8 +21,7 @@
         "step": {
             "account_options": {
                 "data": {
-                    "read_only": "Somente leitura (somente sensores e notificar, sem execu\u00e7\u00e3o de servi\u00e7os, sem bloqueio)",
-                    "use_location": "Use a localiza\u00e7\u00e3o do Home Assistant para pesquisas de localiza\u00e7\u00e3o de carros (necess\u00e1rio para ve\u00edculos n\u00e3o i3/i8 produzidos antes de 7/2014)"
+                    "read_only": "Somente leitura (somente sensores e notificar, sem execu\u00e7\u00e3o de servi\u00e7os, sem bloqueio)"
                 }
             }
         }

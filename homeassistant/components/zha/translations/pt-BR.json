@@ -46,10 +46,13 @@
             "title": "Op\u00e7\u00f5es do painel de controle de alarme"
         },
         "zha_options": {
+            "always_prefer_xy_color_mode": "Sempre prefira o modo de cor XY",
             "consider_unavailable_battery": "Considerar dispositivos alimentados por bateria indispon\u00edveis ap\u00f3s (segundos)",
             "consider_unavailable_mains": "Considerar os dispositivos alimentados pela rede indispon\u00edveis ap\u00f3s (segundos)",
             "default_light_transition": "Tempo de transi\u00e7\u00e3o de luz padr\u00e3o (segundos)",
             "enable_identify_on_join": "Ativar o efeito de identifica\u00e7\u00e3o quando os dispositivos ingressarem na rede",
+            "enhanced_light_transition": "Ative a transi\u00e7\u00e3o de cor/temperatura da luz aprimorada de um estado desligado",
+            "light_transitioning_flag": "Ative o controle deslizante de brilho aprimorado durante a transi\u00e7\u00e3o de luz",
             "title": "Op\u00e7\u00f5es globais"
         }
     },

@@ -1,6 +1,9 @@
 """Config flow for Meater."""
 from __future__ import annotations
 
+from collections.abc import Mapping
+from typing import Any
+
 from meater import AuthenticationError, MeaterApi, ServiceUnavailableError
 import voluptuous as vol
 
@@ -42,10 +45,10 @@ class MeaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self._try_connect_meater("user", None, username, password)
 
-    async def async_step_reauth(self, data: dict[str, str]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle configuration by re-auth."""
         self._data_schema = REAUTH_SCHEMA
-        self._username = data[CONF_USERNAME]
+        self._username = entry_data[CONF_USERNAME]
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(

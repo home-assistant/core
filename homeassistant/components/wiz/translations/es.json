@@ -14,9 +14,6 @@
         },
         "flow_title": "{name} ({host})",
         "step": {
-            "confirm": {
-                "description": "\u00bfDesea iniciar la configuraci\u00f3n?"
-            },
             "discovery_confirm": {
                 "description": "\u00bfDesea configurar {name} ({host})?"
             },
@@ -27,8 +24,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Direcci\u00f3n IP",
-                    "name": "Nombre"
+                    "host": "Direcci\u00f3n IP"
                 },
                 "description": "Si deja la direcci\u00f3n IP vac\u00eda, la detecci\u00f3n se utilizar\u00e1 para buscar dispositivos."
             }

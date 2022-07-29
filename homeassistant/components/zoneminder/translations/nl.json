@@ -11,7 +11,7 @@
         },
         "error": {
             "auth_fail": "Gebruikersnaam of wachtwoord is onjuist.",
-            "cannot_connect": "Kon niet verbinden",
+            "cannot_connect": "Kan geen verbinding maken",
             "connection_error": "Kan geen verbinding maken met een ZoneMinder-server.",
             "invalid_auth": "Ongeldige authenticatie"
         },
@@ -23,9 +23,9 @@
                     "password": "Wachtwoord",
                     "path": "ZM-pad",
                     "path_zms": "ZMS-pad",
-                    "ssl": "Gebruik een SSL-certificaat",
+                    "ssl": "Maakt gebruik van een SSL-certificaat",
                     "username": "Gebruikersnaam",
-                    "verify_ssl": "Verifieer SSL-certificaat"
+                    "verify_ssl": "SSL-certificaat verifi\u00ebren"
                 },
                 "title": "Voeg ZoneMinder server toe."
             }

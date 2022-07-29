@@ -14,7 +14,6 @@
                     "name": "Jm\u00e9no",
                     "station_id": "ID m\u011b\u0159ic\u00ed stanice"
                 },
-                "description": "Nastaven\u00ed integrace kvality ovzdu\u0161\u00ed GIO\u015a (polsk\u00fd hlavn\u00ed inspektor\u00e1t ochrany \u017eivotn\u00edho prost\u0159ed\u00ed). Pokud pot\u0159ebujete pomoc s nastaven\u00edm, pod\u00edvejte se na: https://www.home-assistant.io/integrations/gios",
                 "title": "GIO\u015a (polsk\u00fd hlavn\u00ed inspektor\u00e1t ochrany \u017eivotn\u00edho prost\u0159ed\u00ed)"
             }
         }

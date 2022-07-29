@@ -46,8 +46,8 @@ async def test_vocolinc_flowerbud_setup(hass):
                     state="off",
                 ),
                 EntityTestInfo(
-                    entity_id="light.vocolinc_flowerbud_0d324b",
-                    friendly_name="VOCOlinc-Flowerbud-0d324b",
+                    entity_id="light.vocolinc_flowerbud_0d324b_mood_light",
+                    friendly_name="VOCOlinc-Flowerbud-0d324b Mood Light",
                     unique_id="homekit-AM01121849000327-9",
                     supported_features=0,
                     capabilities={"supported_color_modes": ["hs"]},

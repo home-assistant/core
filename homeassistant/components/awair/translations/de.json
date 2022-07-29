@@ -15,7 +15,14 @@
                     "access_token": "Zugangstoken",
                     "email": "E-Mail"
                 },
-                "description": "Bitte gib dein Awair-Entwicklerzugriffstoken erneut ein."
+                "description": "Bitte gib deinen Awair-Entwicklerzugriffstoken erneut ein."
+            },
+            "reauth_confirm": {
+                "data": {
+                    "access_token": "Zugangstoken",
+                    "email": "E-Mail"
+                },
+                "description": "Bitte gib deinen Awair-Entwicklerzugriffstoken erneut ein."
             },
             "user": {
                 "data": {

@@ -7,9 +7,7 @@
             "user": {
                 "data": {
                     "county": "Maakond"
-                },
-                "description": "Vali allpool oma maakond.",
-                "title": "PECO katkestuste loendur"
+                }
             }
         }
     }

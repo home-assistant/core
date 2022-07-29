@@ -52,22 +52,22 @@ class EsphomeNumber(EsphomeEntity[NumberInfo, NumberState], NumberEntity):
     """A number implementation for esphome."""
 
     @property
-    def min_value(self) -> float:
+    def native_min_value(self) -> float:
         """Return the minimum value."""
         return super()._static_info.min_value
 
     @property
-    def max_value(self) -> float:
+    def native_max_value(self) -> float:
         """Return the maximum value."""
         return super()._static_info.max_value
 
     @property
-    def step(self) -> float:
+    def native_step(self) -> float:
         """Return the increment/decrement step."""
         return super()._static_info.step
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
         return super()._static_info.unit_of_measurement
 
@@ -79,7 +79,7 @@ class EsphomeNumber(EsphomeEntity[NumberInfo, NumberState], NumberEntity):
         return NumberMode.AUTO
 
     @esphome_state_property
-    def value(self) -> float | None:
+    def native_value(self) -> float | None:
         """Return the state of the entity."""
         if math.isnan(self._state.state):
             return None
@@ -87,6 +87,6 @@ class EsphomeNumber(EsphomeEntity[NumberInfo, NumberState], NumberEntity):
             return None
         return self._state.state
 
-    async def async_set_value(self, value: float) -> None:
+    async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         await self._client.number_command(self._static_info.key, value)

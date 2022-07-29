@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "cannot_connect": "No es pot connectar amb el n\u00favol d'Eight Sleep: {error}"
+        },
+        "error": {
+            "cannot_connect": "No es pot connectar amb el n\u00favol d'Eight Sleep: {error}"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Contrasenya",
+                    "username": "Nom d'usuari"
+                }
+            }
+        }
+    }
+}

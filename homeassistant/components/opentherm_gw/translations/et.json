@@ -11,8 +11,7 @@
                     "device": "Rada v\u00f5i URL",
                     "id": "",
                     "name": "Nimi"
-                },
-                "title": ""
+                }
             }
         }
     },
@@ -24,8 +23,7 @@
                     "read_precision": "Lugemi t\u00e4psus",
                     "set_precision": "M\u00e4\u00e4ra lugemi t\u00e4psus",
                     "temporary_override_mode": "Ajutine seadepunkti alistamine"
-                },
-                "description": "OpenTherm Gateway suvandid"
+                }
             }
         }
     }

@@ -1,8 +1,8 @@
 """Config flow for BleBox devices integration."""
 import logging
 
+from blebox_uniapi.box import Box
 from blebox_uniapi.error import Error, UnsupportedBoxVersion
-from blebox_uniapi.products import Products
 from blebox_uniapi.session import ApiHost
 import voluptuous as vol
 
@@ -65,7 +65,6 @@ class BleBoxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, step, exception, schema, host, port, message_id, log_fn
     ):
         """Handle step exceptions."""
-
         log_fn("%s at %s:%d (%s)", LOG_MSG[message_id], host, port, exception)
 
         return self.async_show_form(
@@ -101,9 +100,8 @@ class BleBoxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         websession = async_get_clientsession(hass)
         api_host = ApiHost(*addr, DEFAULT_SETUP_TIMEOUT, websession, hass.loop, _LOGGER)
-
         try:
-            product = await Products.async_from_host(api_host)
+            product = await Box.async_from_host(api_host)
 
         except UnsupportedBoxVersion as ex:
             return self.handle_step_exception(

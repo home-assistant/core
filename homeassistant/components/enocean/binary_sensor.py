@@ -1,6 +1,7 @@
 """Support for EnOcean binary sensors."""
 from __future__ import annotations
 
+from enocean.utils import combine_hex
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -57,6 +58,7 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
         self._device_class = device_class
         self.which = -1
         self.onoff = -1
+        self._attr_unique_id = f"{combine_hex(dev_id)}-{device_class}"
 
     @property
     def name(self):

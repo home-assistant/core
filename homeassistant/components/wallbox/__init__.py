@@ -70,7 +70,7 @@ CHARGER_STATUS: dict[int, ChargerStatus] = {
     195: ChargerStatus.CHARGING,
     196: ChargerStatus.DISCHARGING,
     209: ChargerStatus.LOCKED,
-    210: ChargerStatus.LOCKED,
+    210: ChargerStatus.LOCKED_CAR_CONNECTED,
 }
 
 
@@ -208,7 +208,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = wallbox_coordinator
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

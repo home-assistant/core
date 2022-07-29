@@ -5,7 +5,7 @@ from homeassistant.core import callback
 
 from .. import registries
 from ..const import REPORT_CONFIG_IMMEDIATE, SIGNAL_ATTR_UPDATED
-from .base import ClientChannel, ZigbeeChannel
+from .base import AttrReportConfig, ClientChannel, ZigbeeChannel
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(closures.DoorLock.cluster_id)
@@ -13,7 +13,9 @@ class DoorLockChannel(ZigbeeChannel):
     """Door lock channel."""
 
     _value_attribute = 0
-    REPORT_CONFIG = ({"attr": "lock_state", "config": REPORT_CONFIG_IMMEDIATE},)
+    REPORT_CONFIG = (
+        AttrReportConfig(attr="lock_state", config=REPORT_CONFIG_IMMEDIATE),
+    )
 
     async def async_update(self):
         """Retrieve latest state."""
@@ -121,7 +123,9 @@ class WindowCovering(ZigbeeChannel):
 
     _value_attribute = 8
     REPORT_CONFIG = (
-        {"attr": "current_position_lift_percentage", "config": REPORT_CONFIG_IMMEDIATE},
+        AttrReportConfig(
+            attr="current_position_lift_percentage", config=REPORT_CONFIG_IMMEDIATE
+        ),
     )
 
     async def async_update(self):

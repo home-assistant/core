@@ -29,11 +29,11 @@
     "state": {
         "_": {
             "closed": "Gesloten",
-            "closing": "Sluiten",
+            "closing": "Sluitend",
             "open": "Open",
             "opening": "Opent",
             "stopped": "Gestopt"
         }
     },
-    "title": "Rolluik"
+    "title": "Afdekkingen"
 }

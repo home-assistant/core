@@ -52,15 +52,6 @@ class CecSwitchEntity(CecEntity, SwitchEntity):
         self._state = STATE_OFF
         self.schedule_update_ha_state(force_refresh=False)
 
-    def toggle(self, **kwargs):
-        """Toggle the entity."""
-        self._device.toggle()
-        if self._state == STATE_ON:
-            self._state = STATE_OFF
-        else:
-            self._state = STATE_ON
-        self.schedule_update_ha_state(force_refresh=False)
-
     @property
     def is_on(self) -> bool:
         """Return True if entity is on."""

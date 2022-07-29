@@ -18,6 +18,7 @@ from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -127,21 +128,15 @@ class ArcamFmj(MediaPlayerEntity):
                 self.async_schedule_update_ha_state(force_refresh=True)
 
         self.async_on_remove(
-            self.hass.helpers.dispatcher.async_dispatcher_connect(
-                SIGNAL_CLIENT_DATA, _data
-            )
+            async_dispatcher_connect(self.hass, SIGNAL_CLIENT_DATA, _data)
         )
 
         self.async_on_remove(
-            self.hass.helpers.dispatcher.async_dispatcher_connect(
-                SIGNAL_CLIENT_STARTED, _started
-            )
+            async_dispatcher_connect(self.hass, SIGNAL_CLIENT_STARTED, _started)
         )
 
         self.async_on_remove(
-            self.hass.helpers.dispatcher.async_dispatcher_connect(
-                SIGNAL_CLIENT_STOPPED, _stopped
-            )
+            async_dispatcher_connect(self.hass, SIGNAL_CLIENT_STOPPED, _stopped)
         )
 
     async def async_update(self):

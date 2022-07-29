@@ -18,10 +18,6 @@
             "user": {
                 "data": {
                     "api_key": "API \ud0a4",
-                    "base_path": "API \uacbd\ub85c",
-                    "host": "\ud638\uc2a4\ud2b8",
-                    "port": "\ud3ec\ud2b8",
-                    "ssl": "SSL \uc778\uc99d\uc11c \uc0ac\uc6a9",
                     "verify_ssl": "SSL \uc778\uc99d\uc11c \ud655\uc778"
                 }
             }

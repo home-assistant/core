@@ -8,7 +8,7 @@
             "unknown": "Erro inesperado"
         },
         "step": {
-            "user": {
+            "fallback": {
                 "data": {
                     "host": "Servidor"
                 }

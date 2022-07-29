@@ -30,14 +30,6 @@
                 },
                 "description": "Accedi al tuo account Vulcan utilizzando la pagina di registrazione dell'applicazione mobile."
             },
-            "reauth": {
-                "data": {
-                    "pin": "PIN",
-                    "region": "Simbolo",
-                    "token": "Token"
-                },
-                "description": "Accedi al tuo account Vulcan utilizzando la pagina di registrazione dell'applicazione mobile."
-            },
             "reauth_confirm": {
                 "data": {
                     "pin": "PIN",
@@ -57,21 +49,6 @@
                     "student_name": "Seleziona studente"
                 },
                 "description": "Seleziona studente, puoi aggiungere pi\u00f9 studenti aggiungendo nuovamente l'integrazione."
-            }
-        }
-    },
-    "options": {
-        "error": {
-            "error": "Si \u00e8 verificato un errore"
-        },
-        "step": {
-            "init": {
-                "data": {
-                    "attendance_notify": "Mostra le notifiche sulle ultime voci di partecipazione",
-                    "grade_notify": "Mostra le notifiche sugli ultimi voti",
-                    "message_notify": "Mostra le notifiche quando viene ricevuto un nuovo messaggio",
-                    "scan_interval": "Intervallo di aggiornamento (in minuti)"
-                }
             }
         }
     }

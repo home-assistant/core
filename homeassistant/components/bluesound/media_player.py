@@ -24,10 +24,7 @@ from homeassistant.components.media_player import (
 from homeassistant.components.media_player.browse_media import (
     async_process_play_media_url,
 )
-from homeassistant.components.media_player.const import (
-    ATTR_MEDIA_ENQUEUE,
-    MEDIA_TYPE_MUSIC,
-)
+from homeassistant.components.media_player.const import MEDIA_TYPE_MUSIC
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_HOST,
@@ -1023,24 +1020,19 @@ class BluesoundPlayer(MediaPlayerEntity):
         return await self.send_bluesound_command(f"Play?seek={float(position)}")
 
     async def async_play_media(self, media_type, media_id, **kwargs):
-        """
-        Send the play_media command to the media player.
-
-        If ATTR_MEDIA_ENQUEUE is True, add `media_id` to the queue.
-        """
+        """Send the play_media command to the media player."""
         if self.is_grouped and not self.is_master:
             return
 
         if media_source.is_media_source_id(media_id):
-            play_item = await media_source.async_resolve_media(self.hass, media_id)
+            play_item = await media_source.async_resolve_media(
+                self.hass, media_id, self.entity_id
+            )
             media_id = play_item.url
 
         media_id = async_process_play_media_url(self.hass, media_id)
 
         url = f"Play?url={media_id}"
-
-        if kwargs.get(ATTR_MEDIA_ENQUEUE):
-            return await self.send_bluesound_command(url)
 
         return await self.send_bluesound_command(url)
 

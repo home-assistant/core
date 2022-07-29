@@ -7,16 +7,14 @@
         "error": {
             "cannot_connect": "Kan geen verbinding maken",
             "invalid_auth": "Ongeldige authenticatie",
-            "protect_version": "Minimaal vereiste versie is v1.20.0. Upgrade UniFi Protect en probeer het opnieuw.",
-            "unknown": "Onverwachte fout"
+            "protect_version": "Minimaal vereiste versie is v1.20.0. Upgrade UniFi Protect en probeer het opnieuw."
         },
         "flow_title": "{name} ({ip_address})",
         "step": {
             "discovery_confirm": {
                 "data": {
                     "password": "Wachtwoord",
-                    "username": "Gebruikersnaam",
-                    "verify_ssl": "SSL-certificaat verifi\u00ebren"
+                    "username": "Gebruikersnaam"
                 },
                 "description": "Wilt u {name} ({ip_address}) instellen? U heeft een lokale gebruiker nodig die is aangemaakt in uw UniFi OS Console om mee in te loggen. Ubiquiti Cloud gebruikers zullen niet werken. Voor meer informatie: {local_user_documentation_url}",
                 "title": "UniFi Protect ontdekt"

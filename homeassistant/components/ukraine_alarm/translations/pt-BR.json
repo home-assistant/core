@@ -1,12 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "O local j\u00e1 est\u00e1 configurado"
-        },
-        "error": {
-            "cannot_connect": "Falhou ao conectar",
-            "invalid_api_key": "Chave de API inv\u00e1lida",
-            "timeout": "Tempo limite estabelecendo conex\u00e3o",
+            "already_configured": "Localiza\u00e7\u00e3o j\u00e1 est\u00e1 configurada",
+            "cannot_connect": "Falha ao conectar",
+            "max_regions": "M\u00e1ximo de 5 regi\u00f5es podem ser configuradas",
+            "rate_limit": "Excesso de pedidos",
+            "timeout": "Tempo limite para estabelecer conex\u00e3o atingido",
             "unknown": "Erro inesperado"
         },
         "step": {
@@ -22,17 +21,11 @@
                 },
                 "description": "Se voc\u00ea deseja monitorar n\u00e3o apenas o estado, escolha seu distrito espec\u00edfico"
             },
-            "state": {
+            "user": {
                 "data": {
                     "region": "Regi\u00e3o"
                 },
                 "description": "Escolha o estado para monitorar"
-            },
-            "user": {
-                "data": {
-                    "api_key": "Chave de API"
-                },
-                "description": "Configure a integra\u00e7\u00e3o do Alarme da Ucr\u00e2nia. Para gerar uma chave de API, acesse {api_url}"
             }
         }
     }

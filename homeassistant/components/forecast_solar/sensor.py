@@ -39,6 +39,7 @@ class ForecastSolarSensorEntity(CoordinatorEntity, SensorEntity):
     """Defines a Forecast.Solar sensor."""
 
     entity_description: ForecastSolarSensorEntityDescription
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -58,7 +59,7 @@ class ForecastSolarSensorEntity(CoordinatorEntity, SensorEntity):
             identifiers={(DOMAIN, entry_id)},
             manufacturer="Forecast.Solar",
             model=coordinator.data.account_type.value,
-            name="Solar Production Forecast",
+            name="Solar production forecast",
             configuration_url="https://forecast.solar",
         )
 

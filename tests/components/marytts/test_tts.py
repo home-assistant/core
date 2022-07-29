@@ -21,7 +21,7 @@ async def get_media_source_url(hass, media_content_id):
     if media_source.DOMAIN not in hass.config.components:
         assert await async_setup_component(hass, media_source.DOMAIN, {})
 
-    resolved = await media_source.async_resolve_media(hass, media_content_id)
+    resolved = await media_source.async_resolve_media(hass, media_content_id, None)
     return resolved.url
 
 

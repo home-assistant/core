@@ -14,9 +14,6 @@
         },
         "flow_title": "{name} ({host})",
         "step": {
-            "confirm": {
-                "description": "M\u00f6chtest Du mit der Einrichtung beginnen?"
-            },
             "discovery_confirm": {
                 "description": "M\u00f6chtest du {name} ({host}) einrichten?"
             },
@@ -27,8 +24,7 @@
             },
             "user": {
                 "data": {
-                    "host": "IP-Adresse",
-                    "name": "Name"
+                    "host": "IP-Adresse"
                 },
                 "description": "Wenn du die IP-Adresse leer l\u00e4sst, wird die Erkennung verwendet, um Ger\u00e4te zu finden."
             }

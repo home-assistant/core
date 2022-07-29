@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Deze printer is al geconfigureerd.",
+            "already_configured": "Apparaat is al geconfigureerd",
             "unsupported_model": "Dit printermodel wordt niet ondersteund."
         },
         "error": {

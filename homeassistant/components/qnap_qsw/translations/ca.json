@@ -9,6 +9,12 @@
             "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida"
         },
         "step": {
+            "discovered_connection": {
+                "data": {
+                    "password": "Contrasenya",
+                    "username": "Nom d'usuari"
+                }
+            },
             "user": {
                 "data": {
                     "password": "Contrasenya",

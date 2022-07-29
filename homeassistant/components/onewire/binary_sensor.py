@@ -94,19 +94,19 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up 1-Wire platform."""
-    onewirehub = hass.data[DOMAIN][config_entry.entry_id]
+    onewire_hub = hass.data[DOMAIN][config_entry.entry_id]
 
-    entities = await hass.async_add_executor_job(get_entities, onewirehub)
+    entities = await hass.async_add_executor_job(get_entities, onewire_hub)
     async_add_entities(entities, True)
 
 
-def get_entities(onewirehub: OneWireHub) -> list[OneWireBinarySensor]:
+def get_entities(onewire_hub: OneWireHub) -> list[OneWireBinarySensor]:
     """Get a list of entities."""
-    if not onewirehub.devices:
+    if not onewire_hub.devices:
         return []
 
     entities: list[OneWireBinarySensor] = []
-    for device in onewirehub.devices:
+    for device in onewire_hub.devices:
         family = device.family
         device_id = device.id
         device_type = device.type
@@ -128,7 +128,7 @@ def get_entities(onewirehub: OneWireHub) -> list[OneWireBinarySensor]:
                     device_file=device_file,
                     device_info=device_info,
                     name=name,
-                    owproxy=onewirehub.owproxy,
+                    owproxy=onewire_hub.owproxy,
                 )
             )
 

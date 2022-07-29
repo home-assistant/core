@@ -7,6 +7,7 @@ from typing import Any
 import pybotvac
 
 from homeassistant import config_entries, core
+from homeassistant.components.application_credentials import AuthImplementation
 from homeassistant.helpers import config_entry_oauth2_flow
 
 
@@ -35,7 +36,7 @@ class ConfigEntryAuth(pybotvac.OAuthSession):  # type: ignore[misc]
         return self.session.token["access_token"]  # type: ignore[no-any-return]
 
 
-class NeatoImplementation(config_entry_oauth2_flow.LocalOAuth2Implementation):
+class NeatoImplementation(AuthImplementation):
     """Neato implementation of LocalOAuth2Implementation.
 
     We need this class because we have to add client_secret and scope to the authorization request.

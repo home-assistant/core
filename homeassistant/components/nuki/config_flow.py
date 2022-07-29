@@ -1,5 +1,7 @@
 """Config flow to configure the Nuki integration."""
+from collections.abc import Mapping
 import logging
+from typing import Any
 
 from pynuki import NukiBridge
 from pynuki.bridge import InvalidCredentialsException
@@ -80,9 +82,9 @@ class NukiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_validate()
 
-    async def async_step_reauth(self, data):
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""
-        self._data = data
+        self._data = entry_data
 
         return await self.async_step_reauth_confirm()
 

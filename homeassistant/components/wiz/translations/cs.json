@@ -10,13 +10,9 @@
             "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
         },
         "step": {
-            "confirm": {
-                "description": "Chcete za\u010d\u00edt nastavovat?"
-            },
             "user": {
                 "data": {
-                    "host": "IP adresa",
-                    "name": "Jm\u00e9no"
+                    "host": "IP adresa"
                 }
             }
         }

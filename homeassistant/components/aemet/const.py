@@ -17,14 +17,6 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_RAINY,
     ATTR_CONDITION_SNOWY,
     ATTR_CONDITION_SUNNY,
-    ATTR_FORECAST_CONDITION,
-    ATTR_FORECAST_PRECIPITATION,
-    ATTR_FORECAST_PRECIPITATION_PROBABILITY,
-    ATTR_FORECAST_TEMP,
-    ATTR_FORECAST_TEMP_LOW,
-    ATTR_FORECAST_TIME,
-    ATTR_FORECAST_WIND_BEARING,
-    ATTR_FORECAST_WIND_SPEED,
 )
 from homeassistant.const import (
     DEGREE,
@@ -45,8 +37,16 @@ ENTRY_NAME = "name"
 ENTRY_WEATHER_COORDINATOR = "weather_coordinator"
 
 ATTR_API_CONDITION = "condition"
+ATTR_API_FORECAST_CONDITION = "condition"
 ATTR_API_FORECAST_DAILY = "forecast-daily"
 ATTR_API_FORECAST_HOURLY = "forecast-hourly"
+ATTR_API_FORECAST_PRECIPITATION = "precipitation"
+ATTR_API_FORECAST_PRECIPITATION_PROBABILITY = "precipitation_probability"
+ATTR_API_FORECAST_TEMP = "temperature"
+ATTR_API_FORECAST_TEMP_LOW = "templow"
+ATTR_API_FORECAST_TIME = "datetime"
+ATTR_API_FORECAST_WIND_BEARING = "wind_bearing"
+ATTR_API_FORECAST_WIND_SPEED = "wind_speed"
 ATTR_API_HUMIDITY = "humidity"
 ATTR_API_PRESSURE = "pressure"
 ATTR_API_RAIN = "rain"
@@ -158,14 +158,14 @@ CONDITIONS_MAP = {
 }
 
 FORECAST_MONITORED_CONDITIONS = [
-    ATTR_FORECAST_CONDITION,
-    ATTR_FORECAST_PRECIPITATION,
-    ATTR_FORECAST_PRECIPITATION_PROBABILITY,
-    ATTR_FORECAST_TEMP,
-    ATTR_FORECAST_TEMP_LOW,
-    ATTR_FORECAST_TIME,
-    ATTR_FORECAST_WIND_BEARING,
-    ATTR_FORECAST_WIND_SPEED,
+    ATTR_API_FORECAST_CONDITION,
+    ATTR_API_FORECAST_PRECIPITATION,
+    ATTR_API_FORECAST_PRECIPITATION_PROBABILITY,
+    ATTR_API_FORECAST_TEMP,
+    ATTR_API_FORECAST_TEMP_LOW,
+    ATTR_API_FORECAST_TIME,
+    ATTR_API_FORECAST_WIND_BEARING,
+    ATTR_API_FORECAST_WIND_SPEED,
 ]
 MONITORED_CONDITIONS = [
     ATTR_API_CONDITION,
@@ -202,43 +202,43 @@ FORECAST_MODE_ATTR_API = {
 
 FORECAST_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
-        key=ATTR_FORECAST_CONDITION,
+        key=ATTR_API_FORECAST_CONDITION,
         name="Condition",
     ),
     SensorEntityDescription(
-        key=ATTR_FORECAST_PRECIPITATION,
+        key=ATTR_API_FORECAST_PRECIPITATION,
         name="Precipitation",
         native_unit_of_measurement=PRECIPITATION_MILLIMETERS_PER_HOUR,
     ),
     SensorEntityDescription(
-        key=ATTR_FORECAST_PRECIPITATION_PROBABILITY,
+        key=ATTR_API_FORECAST_PRECIPITATION_PROBABILITY,
         name="Precipitation probability",
         native_unit_of_measurement=PERCENTAGE,
     ),
     SensorEntityDescription(
-        key=ATTR_FORECAST_TEMP,
+        key=ATTR_API_FORECAST_TEMP,
         name="Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
     SensorEntityDescription(
-        key=ATTR_FORECAST_TEMP_LOW,
+        key=ATTR_API_FORECAST_TEMP_LOW,
         name="Temperature Low",
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
     SensorEntityDescription(
-        key=ATTR_FORECAST_TIME,
+        key=ATTR_API_FORECAST_TIME,
         name="Time",
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
     SensorEntityDescription(
-        key=ATTR_FORECAST_WIND_BEARING,
+        key=ATTR_API_FORECAST_WIND_BEARING,
         name="Wind bearing",
         native_unit_of_measurement=DEGREE,
     ),
     SensorEntityDescription(
-        key=ATTR_FORECAST_WIND_SPEED,
+        key=ATTR_API_FORECAST_WIND_SPEED,
         name="Wind speed",
         native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
     ),

@@ -8,12 +8,6 @@
             "unknown": "Ov\u00e4ntat fel"
         },
         "step": {
-            "resources": {
-                "data": {
-                    "resources": "Resurser"
-                },
-                "title": "V\u00e4lj resurser som ska \u00f6vervakas"
-            },
             "ups": {
                 "data": {
                     "alias": "Alias"
@@ -31,10 +25,6 @@
         }
     },
     "options": {
-        "error": {
-            "cannot_connect": "Kunde inte ansluta",
-            "unknown": "Ov\u00e4ntat fel"
-        },
         "step": {
             "init": {
                 "data": {

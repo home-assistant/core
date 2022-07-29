@@ -14,6 +14,7 @@ import async_timeout
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 
 from .auth import AuthPhase, auth_required_message
@@ -203,9 +204,7 @@ class WebSocketHandler:
             self.hass.data[DATA_CONNECTIONS] = (
                 self.hass.data.get(DATA_CONNECTIONS, 0) + 1
             )
-            self.hass.helpers.dispatcher.async_dispatcher_send(
-                SIGNAL_WEBSOCKET_CONNECTED
-            )
+            async_dispatcher_send(self.hass, SIGNAL_WEBSOCKET_CONNECTED)
 
             # Command phase
             while not wsock.closed:
@@ -258,8 +257,6 @@ class WebSocketHandler:
 
                 if connection is not None:
                     self.hass.data[DATA_CONNECTIONS] -= 1
-                self.hass.helpers.dispatcher.async_dispatcher_send(
-                    SIGNAL_WEBSOCKET_DISCONNECTED
-                )
+                async_dispatcher_send(self.hass, SIGNAL_WEBSOCKET_DISCONNECTED)
 
         return wsock

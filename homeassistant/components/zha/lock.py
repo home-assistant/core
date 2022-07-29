@@ -1,5 +1,6 @@
 """Locks on Zigbee Home Automation networks."""
 import functools
+from typing import Any
 
 import voluptuous as vol
 from zigpy.zcl.foundation import Status
@@ -10,6 +11,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.typing import StateType
 
 from .core import discovery
 from .core.const import (
@@ -52,7 +54,7 @@ async def async_setup_entry(
 
     platform = entity_platform.async_get_current_platform()
 
-    platform.async_register_entity_service(  # type: ignore
+    platform.async_register_entity_service(
         SERVICE_SET_LOCK_USER_CODE,
         {
             vol.Required("code_slot"): vol.Coerce(int),
@@ -61,7 +63,7 @@ async def async_setup_entry(
         "async_set_lock_user_code",
     )
 
-    platform.async_register_entity_service(  # type: ignore
+    platform.async_register_entity_service(
         SERVICE_ENABLE_LOCK_USER_CODE,
         {
             vol.Required("code_slot"): vol.Coerce(int),
@@ -69,7 +71,7 @@ async def async_setup_entry(
         "async_enable_lock_user_code",
     )
 
-    platform.async_register_entity_service(  # type: ignore
+    platform.async_register_entity_service(
         SERVICE_DISABLE_LOCK_USER_CODE,
         {
             vol.Required("code_slot"): vol.Coerce(int),
@@ -77,7 +79,7 @@ async def async_setup_entry(
         "async_disable_lock_user_code",
     )
 
-    platform.async_register_entity_service(  # type: ignore
+    platform.async_register_entity_service(
         SERVICE_CLEAR_LOCK_USER_CODE,
         {
             vol.Required("code_slot"): vol.Coerce(int),
@@ -95,7 +97,7 @@ class ZhaDoorLock(ZhaEntity, LockEntity):
         super().__init__(unique_id, zha_device, channels, **kwargs)
         self._doorlock_channel = self.cluster_channels.get(CHANNEL_DOORLOCK)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
         self.async_accept_signal(
@@ -115,11 +117,11 @@ class ZhaDoorLock(ZhaEntity, LockEntity):
         return self._state == STATE_LOCKED
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, StateType]:
         """Return state attributes."""
         return self.state_attributes
 
-    async def async_lock(self, **kwargs):
+    async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
         result = await self._doorlock_channel.lock_door()
         if isinstance(result, Exception) or result[0] is not Status.SUCCESS:
@@ -127,7 +129,7 @@ class ZhaDoorLock(ZhaEntity, LockEntity):
             return
         self.async_write_ha_state()
 
-    async def async_unlock(self, **kwargs):
+    async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
         result = await self._doorlock_channel.unlock_door()
         if isinstance(result, Exception) or result[0] is not Status.SUCCESS:
@@ -135,7 +137,7 @@ class ZhaDoorLock(ZhaEntity, LockEntity):
             return
         self.async_write_ha_state()
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Attempt to retrieve state from the lock."""
         await super().async_update()
         await self.async_get_state()

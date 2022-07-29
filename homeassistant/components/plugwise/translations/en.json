@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Service is already configured"
+            "already_configured": "Service is already configured",
+            "anna_with_adam": "Both Anna and Adam detected. Add your Adam instead of your Anna"
         },
         "error": {
             "cannot_connect": "Failed to connect",
@@ -13,10 +14,14 @@
         "step": {
             "user": {
                 "data": {
-                    "flow_type": "Connection type"
+                    "flow_type": "Connection type",
+                    "host": "IP Address",
+                    "password": "Smile ID",
+                    "port": "Port",
+                    "username": "Smile Username"
                 },
-                "description": "Product:",
-                "title": "Plugwise type"
+                "description": "Please enter",
+                "title": "Connect to the Smile"
             },
             "user_gateway": {
                 "data": {

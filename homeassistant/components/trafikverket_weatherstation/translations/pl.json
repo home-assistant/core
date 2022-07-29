@@ -13,8 +13,6 @@
             "user": {
                 "data": {
                     "api_key": "Klucz API",
-                    "conditions": "Monitorowane warunki pogodowe",
-                    "name": "Nazwa u\u017cytkownika",
                     "station": "Stacja"
                 }
             }

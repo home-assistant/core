@@ -1,10 +1,10 @@
 """Data template classes for discovery used to generate additional data for setup."""
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 import logging
-from typing import Any
+from typing import Any, Union, cast
 
 from zwave_js_server.const import CommandClass
 from zwave_js_server.const.command_class.meter import (
@@ -242,7 +242,7 @@ class BaseDiscoverySchemaDataTemplate:
         """
         return {}
 
-    def values_to_watch(self, resolved_data: Any) -> Iterable[ZwaveValue]:
+    def values_to_watch(self, resolved_data: Any) -> Iterable[ZwaveValue | None]:
         """
         Return list of all ZwaveValues resolved by helper that should be watched.
 
@@ -261,7 +261,7 @@ class BaseDiscoverySchemaDataTemplate:
     @staticmethod
     def _get_value_from_id(
         node: ZwaveNode, value_id_obj: ZwaveValueID
-    ) -> ZwaveValue | None:
+    ) -> ZwaveValue | ZwaveConfigurationValue | None:
         """Get a ZwaveValue from a node using a ZwaveValueDict."""
         value_id = get_value_id(
             node,
@@ -295,7 +295,9 @@ class DynamicCurrentTempClimateDataTemplate(BaseDiscoverySchemaDataTemplate):
 
         return data
 
-    def values_to_watch(self, resolved_data: dict[str, Any]) -> Iterable[ZwaveValue]:
+    def values_to_watch(
+        self, resolved_data: dict[str, Any]
+    ) -> Iterable[ZwaveValue | None]:
         """Return list of all ZwaveValues resolved by helper that should be watched."""
         return [
             *resolved_data["lookup_table"].values(),
@@ -331,8 +333,11 @@ class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
     @staticmethod
     def find_key_from_matching_set(
         enum_value: MultilevelSensorType | MultilevelSensorScaleType | MeterScaleType,
-        set_map: dict[
-            str, set[MultilevelSensorType | MultilevelSensorScaleType | MeterScaleType]
+        set_map: Mapping[
+            str,
+            set[MultilevelSensorType]
+            | set[MultilevelSensorScaleType]
+            | set[MeterScaleType],
         ],
     ) -> str | None:
         """Find a key in a set map that matches a given enum value."""
@@ -354,11 +359,11 @@ class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
             return NumericSensorDataTemplateData(ENTITY_DESC_KEY_BATTERY, PERCENTAGE)
 
         if value.command_class == CommandClass.METER:
-            scale_type = get_meter_scale_type(value)
-            unit = self.find_key_from_matching_set(scale_type, METER_UNIT_MAP)
+            meter_scale_type = get_meter_scale_type(value)
+            unit = self.find_key_from_matching_set(meter_scale_type, METER_UNIT_MAP)
             # We do this because even though these are energy scales, they don't meet
             # the unit requirements for the energy device class.
-            if scale_type in (
+            if meter_scale_type in (
                 ElectricScale.PULSE_COUNT,
                 ElectricScale.KILOVOLT_AMPERE_HOUR,
                 ElectricScale.KILOVOLT_AMPERE_REACTIVE_HOUR,
@@ -368,19 +373,21 @@ class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
                 )
             # We do this because even though these are power scales, they don't meet
             # the unit requirements for the power device class.
-            if scale_type == ElectricScale.KILOVOLT_AMPERE_REACTIVE:
+            if meter_scale_type == ElectricScale.KILOVOLT_AMPERE_REACTIVE:
                 return NumericSensorDataTemplateData(ENTITY_DESC_KEY_MEASUREMENT, unit)
 
             return NumericSensorDataTemplateData(
-                self.find_key_from_matching_set(scale_type, METER_DEVICE_CLASS_MAP),
+                self.find_key_from_matching_set(
+                    meter_scale_type, METER_DEVICE_CLASS_MAP
+                ),
                 unit,
             )
 
         if value.command_class == CommandClass.SENSOR_MULTILEVEL:
             sensor_type = get_multilevel_sensor_type(value)
-            scale_type = get_multilevel_sensor_scale_type(value)
+            multilevel_sensor_scale_type = get_multilevel_sensor_scale_type(value)
             unit = self.find_key_from_matching_set(
-                scale_type, MULTILEVEL_SENSOR_UNIT_MAP
+                multilevel_sensor_scale_type, MULTILEVEL_SENSOR_UNIT_MAP
             )
             if sensor_type == MultilevelSensorType.TARGET_TEMPERATURE:
                 return NumericSensorDataTemplateData(
@@ -406,16 +413,20 @@ class TiltValueMix:
 class CoverTiltDataTemplate(BaseDiscoverySchemaDataTemplate, TiltValueMix):
     """Tilt data template class for Z-Wave Cover entities."""
 
-    def resolve_data(self, value: ZwaveValue) -> dict[str, Any]:
+    def resolve_data(self, value: ZwaveValue) -> dict[str, ZwaveValue | None]:
         """Resolve helper class data for a discovered value."""
         return {"tilt_value": self._get_value_from_id(value.node, self.tilt_value_id)}
 
-    def values_to_watch(self, resolved_data: dict[str, Any]) -> Iterable[ZwaveValue]:
+    def values_to_watch(
+        self, resolved_data: dict[str, Any]
+    ) -> Iterable[ZwaveValue | None]:
         """Return list of all ZwaveValues resolved by helper that should be watched."""
         return [resolved_data["tilt_value"]]
 
     @staticmethod
-    def current_tilt_value(resolved_data: dict[str, Any]) -> ZwaveValue | None:
+    def current_tilt_value(
+        resolved_data: dict[str, ZwaveValue | None]
+    ) -> ZwaveValue | None:
         """Get current tilt ZwaveValue from resolved data."""
         return resolved_data["tilt_value"]
 
@@ -490,24 +501,29 @@ class ConfigurableFanValueMappingDataTemplate(
     `configuration_option` to the value mapping object.
     """
 
-    def resolve_data(self, value: ZwaveValue) -> dict[str, ZwaveConfigurationValue]:
+    def resolve_data(
+        self, value: ZwaveValue
+    ) -> dict[str, ZwaveConfigurationValue | None]:
         """Resolve helper class data for a discovered value."""
-        zwave_value: ZwaveValue = self._get_value_from_id(
-            value.node, self.configuration_option
+        zwave_value = cast(
+            Union[ZwaveConfigurationValue, None],
+            self._get_value_from_id(value.node, self.configuration_option),
         )
         return {"configuration_value": zwave_value}
 
-    def values_to_watch(self, resolved_data: dict[str, Any]) -> Iterable[ZwaveValue]:
+    def values_to_watch(
+        self, resolved_data: dict[str, ZwaveConfigurationValue | None]
+    ) -> Iterable[ZwaveConfigurationValue | None]:
         """Return list of all ZwaveValues that should be watched."""
         return [
             resolved_data["configuration_value"],
         ]
 
     def get_fan_value_mapping(
-        self, resolved_data: dict[str, ZwaveConfigurationValue]
+        self, resolved_data: dict[str, ZwaveConfigurationValue | None]
     ) -> FanValueMapping | None:
         """Get current fan properties from resolved data."""
-        zwave_value: ZwaveValue = resolved_data["configuration_value"]
+        zwave_value = resolved_data["configuration_value"]
 
         if zwave_value is None:
             _LOGGER.warning("Unable to read device configuration value")

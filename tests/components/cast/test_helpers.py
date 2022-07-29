@@ -27,6 +27,11 @@ from tests.common import load_fixture
             "rthkaudio2.m3u8",
             "application/vnd.apple.mpegurl",
         ),
+        (
+            "https://rthkaudio2-lh.akamaihd.net/i/radio2_1@355865/master.m3u8",
+            "rthkaudio2.m3u8",
+            None,
+        ),
     ),
 )
 async def test_hls_playlist_supported(hass, aioclient_mock, url, fixture, content_type):
@@ -38,11 +43,12 @@ async def test_hls_playlist_supported(hass, aioclient_mock, url, fixture, conten
 
 
 @pytest.mark.parametrize(
-    "url,fixture,expected_playlist",
+    "url,fixture,content_type,expected_playlist",
     (
         (
             "https://sverigesradio.se/topsy/direkt/209-hi-mp3.m3u",
             "209-hi-mp3.m3u",
+            "audio/x-mpegurl",
             [
                 PlaylistItem(
                     length=["-1"],
@@ -54,6 +60,7 @@ async def test_hls_playlist_supported(hass, aioclient_mock, url, fixture, conten
         (
             "https://sverigesradio.se/topsy/direkt/209-hi-mp3.m3u",
             "209-hi-mp3_bad_extinf.m3u",
+            "audio/x-mpegurl",
             [
                 PlaylistItem(
                     length=None,
@@ -65,6 +72,7 @@ async def test_hls_playlist_supported(hass, aioclient_mock, url, fixture, conten
         (
             "https://sverigesradio.se/topsy/direkt/209-hi-mp3.m3u",
             "209-hi-mp3_no_extinf.m3u",
+            "audio/x-mpegurl",
             [
                 PlaylistItem(
                     length=None,
@@ -76,6 +84,7 @@ async def test_hls_playlist_supported(hass, aioclient_mock, url, fixture, conten
         (
             "http://sverigesradio.se/topsy/direkt/164-hi-aac.pls",
             "164-hi-aac.pls",
+            "audio/x-mpegurl",
             [
                 PlaylistItem(
                     length="-1",
@@ -86,9 +95,12 @@ async def test_hls_playlist_supported(hass, aioclient_mock, url, fixture, conten
         ),
     ),
 )
-async def test_parse_playlist(hass, aioclient_mock, url, fixture, expected_playlist):
+async def test_parse_playlist(
+    hass, aioclient_mock, url, fixture, content_type, expected_playlist
+):
     """Test playlist parsing of HLS playlist."""
-    aioclient_mock.get(url, text=load_fixture(fixture, "cast"))
+    headers = {"content-type": content_type}
+    aioclient_mock.get(url, text=load_fixture(fixture, "cast"), headers=headers)
     playlist = await parse_playlist(hass, url)
     assert expected_playlist == playlist
 

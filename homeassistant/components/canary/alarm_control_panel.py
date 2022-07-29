@@ -3,12 +3,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from canary.api import (
-    LOCATION_MODE_AWAY,
-    LOCATION_MODE_HOME,
-    LOCATION_MODE_NIGHT,
-    Location,
-)
+from canary.const import LOCATION_MODE_AWAY, LOCATION_MODE_HOME, LOCATION_MODE_NIGHT
+from canary.model import Location
 
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,

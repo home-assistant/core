@@ -20,7 +20,7 @@ from homeassistant.helpers.integration_platform import (
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
-from . import history, statistics, websocket_api
+from . import statistics, websocket_api
 from .const import (
     CONF_DB_INTEGRITY_CHECK,
     DATA_INSTANCE,
@@ -31,6 +31,7 @@ from .const import (
 from .core import Recorder
 from .services import async_register_services
 from .tasks import AddRecorderPlatformTask
+from .util import get_instance
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -108,12 +109,6 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def get_instance(hass: HomeAssistant) -> Recorder:
-    """Get the recorder instance."""
-    instance: Recorder = hass.data[DATA_INSTANCE]
-    return instance
-
-
 @bind_hass
 def is_entity_recorded(hass: HomeAssistant, entity_id: str) -> bool:
     """Check if an entity is being recorded.
@@ -122,13 +117,12 @@ def is_entity_recorded(hass: HomeAssistant, entity_id: str) -> bool:
     """
     if DATA_INSTANCE not in hass.data:
         return False
-    instance: Recorder = hass.data[DATA_INSTANCE]
+    instance = get_instance(hass)
     return instance.entity_filter(entity_id)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the recorder."""
-    hass.data[DOMAIN] = {}
     exclude_attributes_by_domain: dict[str, set[str]] = {}
     hass.data[EXCLUDE_ATTRIBUTES] = exclude_attributes_by_domain
     conf = config[DOMAIN]
@@ -166,7 +160,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     instance.async_register()
     instance.start()
     async_register_services(hass, instance)
-    history.async_setup(hass)
     statistics.async_setup(hass)
     websocket_api.async_setup(hass)
     await async_process_integration_platforms(hass, DOMAIN, _process_recorder_platform)
@@ -178,5 +171,5 @@ async def _process_recorder_platform(
     hass: HomeAssistant, domain: str, platform: Any
 ) -> None:
     """Process a recorder platform."""
-    instance: Recorder = hass.data[DATA_INSTANCE]
+    instance = get_instance(hass)
     instance.queue_task(AddRecorderPlatformTask(domain, platform))

@@ -42,6 +42,20 @@ ZEROCONF = {
             "domain": "apple_tv"
         }
     ],
+    "_api._tcp.local.": [
+        {
+            "domain": "baf",
+            "properties": {
+                "model": "haiku*"
+            }
+        },
+        {
+            "domain": "baf",
+            "properties": {
+                "model": "i6*"
+            }
+        }
+    ],
     "_api._udp.local.": [
         {
             "domain": "guardian"
@@ -153,6 +167,11 @@ ZEROCONF = {
             "name": "*z.wave-me*"
         }
     ],
+    "_hap._udp.local.": [
+        {
+            "domain": "homekit_controller"
+        }
+    ],
     "_homekit._tcp.local.": [
         {
             "domain": "homekit"
@@ -218,10 +237,6 @@ ZEROCONF = {
     "_kizbox._tcp.local.": [
         {
             "domain": "overkiz",
-            "name": "gateway*"
-        },
-        {
-            "domain": "somfy",
             "name": "gateway*"
         }
     ],
@@ -342,6 +357,11 @@ ZEROCONF = {
             "domain": "sonos"
         }
     ],
+    "_soundtouch._tcp.local.": [
+        {
+            "domain": "soundtouch"
+        }
+    ],
     "_spotify-connect._tcp.local.": [
         {
             "domain": "spotify"
@@ -361,7 +381,7 @@ ZEROCONF = {
             "name": "smappee50*"
         }
     ],
-    "_system-bridge._udp.local.": [
+    "_system-bridge._tcp.local.": [
         {
             "domain": "system_bridge"
         }
@@ -401,6 +421,7 @@ ZEROCONF = {
 
 HOMEKIT = {
     "3810X": "roku",
+    "3820X": "roku",
     "4660X": "roku",
     "7820X": "roku",
     "819LMB": "myq",
@@ -410,6 +431,7 @@ HOMEKIT = {
     "C105X": "roku",
     "C135X": "roku",
     "EB-*": "ecobee",
+    "HHKBridge*": "hive",
     "Healty Home Coach": "netatmo",
     "Iota": "abode",
     "LIFX A19": "lifx",

@@ -3,9 +3,7 @@
         "step": {
             "user": {
                 "data": {
-                    "after": "On after",
                     "after_time": "On time",
-                    "before": "Off after",
                     "before_time": "Off time",
                     "name": "Name"
                 },
@@ -18,12 +16,9 @@
         "step": {
             "init": {
                 "data": {
-                    "after": "On after",
                     "after_time": "On time",
-                    "before": "Off after",
                     "before_time": "Off time"
-                },
-                "description": "Create a binary sensor that turns on or off depending on the time."
+                }
             }
         }
     },

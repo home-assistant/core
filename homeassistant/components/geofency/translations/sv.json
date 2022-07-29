@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "cloud_not_connected": "Ej ansluten till Home Assistant Cloud."
+        },
         "create_entry": {
             "default": "F\u00f6r att skicka h\u00e4ndelser till Home Assistant m\u00e5ste du konfigurera webhook funktionen i Geofency.\n\n Fyll i f\u00f6ljande information:\n \n- URL: `{webhook_url}`\n- Method: POST\n\nSe [dokumentation]({docs_url}) om hur du konfigurerar detta f\u00f6r mer information."
         },
