@@ -120,13 +120,13 @@ class HaBleakScannerWrapper(BaseBleakScanner):  # type: ignore[misc]
         self._detection_cancel: CALLBACK_TYPE | None = None
         self._mapped_filters: dict[str, set[str]] = {}
         self._adv_data_callback: AdvertisementDataCallback | None = None
-        self._map_filters(*args, **kwargs)
-        super().__init__(
-            *args,
-            detection_callback=detection_callback,
-            service_uuids=service_uuids,
+        remapped_kwargs = {
+            "detection_callback": detection_callback,
+            "service_uuids": service_uuids or [],
             **kwargs,
-        )
+        }
+        self._map_filters(*args, **remapped_kwargs)
+        super().__init__(*args, **remapped_kwargs)
 
     async def stop(self, *args: Any, **kwargs: Any) -> None:
         """Stop scanning for devices."""
