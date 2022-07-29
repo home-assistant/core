@@ -7,7 +7,7 @@ from homeassistant import config_entries
 from homeassistant.components.scrape.const import CONF_SELECT, DOMAIN
 from homeassistant.const import CONF_NAME, CONF_RESOURCE, CONF_VALUE_TEMPLATE
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import MockRestData
 
@@ -20,7 +20,7 @@ async def test_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
 
     with patch(
         "homeassistant.components.scrape.sensor.RestData",
@@ -40,7 +40,7 @@ async def test_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Release"
     assert result2["options"] == {
         "resource": "https://www.home-assistant.io",
@@ -93,7 +93,7 @@ async def test_options_form(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["data"] == {
         "resource": "https://www.home-assistant.io",
         "name": "Release",
