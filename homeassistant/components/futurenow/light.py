@@ -115,7 +115,7 @@ class FutureNowLight(LightEntity):
         return ColorMode.ONOFF
 
     @property
-    def supported_color_modes(self) -> set[str]:
+    def supported_color_modes(self) -> set[ColorMode]:
         """Flag supported color modes."""
         return {self.color_mode}
 
