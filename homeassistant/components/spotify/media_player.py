@@ -243,7 +243,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
 
     @property
     def media_context_id(self):
-        """The url of the context (e.g. album, playlist) of the currently playing track"""
+        """Return the url of the context (e.g. album, playlist) of the currently playing track."""
         if (
             not self._currently_playing
             or self._currently_playing.get("context") is None
