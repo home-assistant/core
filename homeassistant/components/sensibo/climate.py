@@ -349,7 +349,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
             "minutesFromNow": minutes,
             "acState": {**self.device_data.ac_states, "on": new_state},
         }
-        await self.api_call_custom_services(
+        await self.api_call_custom_service_timer(
             device_data=self.device_data,
             key="timer_on",
             value=True,
@@ -381,7 +381,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         if outdoor_integration is not None:
             params["primeIntegration"] = outdoor_integration
 
-        await self.api_call_custom_services(
+        await self.api_call_custom_service_pure_boost(
             device_data=self.device_data,
             key="pure_boost_enabled",
             value=True,
@@ -409,7 +409,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         return bool(result.get("result", {}).get("status") == "Success")
 
     @async_handle_api_call
-    async def api_call_custom_services(
+    async def api_call_custom_service_timer(
         self,
         device_data: SensiboDevice,
         key: Any,
@@ -419,8 +419,19 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
     ) -> bool:
         """Make service call to api."""
         result = {}
-        if command == "set_timer":
-            result = await self._client.async_set_timer(self._device_id, data)
-        if command == "set_pure_boost":
-            result = await self._client.async_set_pureboost(self._device_id, data)
+        result = await self._client.async_set_timer(self._device_id, data)
+        return bool(result.get("status") == "success")
+
+    @async_handle_api_call
+    async def api_call_custom_service_pure_boost(
+        self,
+        device_data: SensiboDevice,
+        key: Any,
+        value: Any,
+        command: str,
+        data: dict,
+    ) -> bool:
+        """Make service call to api."""
+        result = {}
+        result = await self._client.async_set_pureboost(self._device_id, data)
         return bool(result.get("status") == "success")
