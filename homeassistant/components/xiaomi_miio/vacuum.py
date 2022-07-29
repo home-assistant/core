@@ -21,10 +21,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.dt import as_utc
 
 from . import VacuumCoordinatorData
-from ...helpers.update_coordinator import DataUpdateCoordinator
 from .const import (
     CONF_DEVICE,
     CONF_FLOW_TYPE,
@@ -86,11 +86,9 @@ async def async_setup_entry(
     entities = []
 
     if config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
-        name = config_entry.title
         unique_id = config_entry.unique_id
 
         mirobo = MiroboVacuum(
-            name,
             hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE],
             config_entry,
             unique_id,
@@ -201,14 +199,13 @@ class MiroboVacuum(
 
     def __init__(
         self,
-        name,
         device,
         entry,
         unique_id,
         coordinator: DataUpdateCoordinator[VacuumCoordinatorData],
     ):
         """Initialize the Xiaomi vacuum cleaner robot handler."""
-        super().__init__(name, device, entry, unique_id, coordinator)
+        super().__init__(device, entry, unique_id, coordinator)
         self._state: str | None = None
 
     async def async_added_to_hass(self) -> None:

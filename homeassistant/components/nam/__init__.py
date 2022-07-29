@@ -30,7 +30,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import (
     ATTR_SDS011,
     ATTR_SPS30,
-    DEFAULT_NAME,
     DEFAULT_UPDATE_INTERVAL,
     DOMAIN,
     MANUFACTURER,
@@ -130,7 +129,7 @@ class NAMDataUpdateCoordinator(DataUpdateCoordinator):
         """Return the device info."""
         return DeviceInfo(
             connections={(CONNECTION_NETWORK_MAC, cast(str, self._unique_id))},
-            name=DEFAULT_NAME,
+            name="Nettigo Air Monitor",
             sw_version=self.nam.software_version,
             manufacturer=MANUFACTURER,
             configuration_url=f"http://{self.nam.host}/",

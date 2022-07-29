@@ -68,7 +68,7 @@ class RainMachineSensorDescriptionUid(
 SENSOR_DESCRIPTIONS = (
     RainMachineSensorDescriptionApiCategory(
         key=TYPE_FLOW_SENSOR_CLICK_M3,
-        name="Flow Sensor Clicks per Cubic Meter",
+        name="Flow sensor clicks per cubic meter",
         icon="mdi:water-pump",
         native_unit_of_measurement=f"clicks/{VOLUME_CUBIC_METERS}",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -79,7 +79,7 @@ SENSOR_DESCRIPTIONS = (
     ),
     RainMachineSensorDescriptionApiCategory(
         key=TYPE_FLOW_SENSOR_CONSUMED_LITERS,
-        name="Flow Sensor Consumed Liters",
+        name="Flow sensor consumed liters",
         icon="mdi:water-pump",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement="liter",
@@ -90,7 +90,7 @@ SENSOR_DESCRIPTIONS = (
     ),
     RainMachineSensorDescriptionApiCategory(
         key=TYPE_FLOW_SENSOR_START_INDEX,
-        name="Flow Sensor Start Index",
+        name="Flow sensor start index",
         icon="mdi:water-pump",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement="index",
@@ -100,7 +100,7 @@ SENSOR_DESCRIPTIONS = (
     ),
     RainMachineSensorDescriptionApiCategory(
         key=TYPE_FLOW_SENSOR_WATERING_CLICKS,
-        name="Flow Sensor Clicks",
+        name="Flow sensor clicks",
         icon="mdi:water-pump",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement="clicks",
@@ -111,7 +111,7 @@ SENSOR_DESCRIPTIONS = (
     ),
     RainMachineSensorDescriptionApiCategory(
         key=TYPE_FREEZE_TEMP,
-        name="Freeze Protect Temperature",
+        name="Freeze protect temperature",
         icon="mdi:thermometer",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=TEMP_CELSIUS,
@@ -243,10 +243,8 @@ class TimeRemainingSensor(RainMachineEntity, RestoreSensor):
             seconds_remaining = self.calculate_seconds_remaining()
             new_timestamp = now + timedelta(seconds=seconds_remaining)
 
-            assert isinstance(self._attr_native_value, datetime)
-
             if (
-                self._attr_native_value
+                isinstance(self._attr_native_value, datetime)
                 and new_timestamp - self._attr_native_value
                 < DEFAULT_ZONE_COMPLETION_TIME_WOBBLE_TOLERANCE
             ):

@@ -118,6 +118,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class IQVIAEntity(CoordinatorEntity):
     """Define a base IQVIA entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,

@@ -27,6 +27,7 @@ SCAN_INTERVAL = timedelta(minutes=5)
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
+    Platform.COVER,
     Platform.LOCK,
     Platform.SENSOR,
     Platform.SIREN,

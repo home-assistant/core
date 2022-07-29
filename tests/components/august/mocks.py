@@ -1,10 +1,11 @@
 """Mocks for the august component."""
 from __future__ import annotations
 
+from collections.abc import Iterable
 import json
 import os
 import time
-from typing import Any, Iterable
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 from yalexs.activity import (

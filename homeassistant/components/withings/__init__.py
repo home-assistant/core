@@ -6,6 +6,7 @@ For more details about this platform, please refer to the documentation at
 from __future__ import annotations
 
 import asyncio
+from typing import Any
 
 from aiohttp.web import Request, Response
 import voluptuous as vol
@@ -103,7 +104,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Withings from a config entry."""
-    config_updates = {}
+    config_updates: dict[str, Any] = {}
 
     # Add a unique id if it's an older config entry.
     if entry.unique_id != entry.data["token"]["userid"] or not isinstance(
@@ -197,7 +198,7 @@ async def async_webhook_handler(
         return json_message_response("Parameter appli not provided", message_code=20)
 
     try:
-        appli = NotifyAppli(int(params.getone("appli")))
+        appli = NotifyAppli(int(params.getone("appli")))  # type: ignore[arg-type]
     except ValueError:
         return json_message_response("Invalid appli provided", message_code=21)
 

@@ -201,7 +201,7 @@ def test_invalid_discovery_info(
     async def async_setup_scanner( #@
         hass: HomeAssistant,
         config: ConfigType,
-        async_see: Callable[..., Awaitable[None]],
+        async_see: AsyncSeeCallback,
         discovery_info: dict[str, Any] | None = None, #@
     ) -> bool:
         pass
@@ -234,7 +234,7 @@ def test_valid_discovery_info(
     async def async_setup_scanner( #@
         hass: HomeAssistant,
         config: ConfigType,
-        async_see: Callable[..., Awaitable[None]],
+        async_see: AsyncSeeCallback,
         discovery_info: DiscoveryInfoType | None = None,
     ) -> bool:
         pass

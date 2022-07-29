@@ -12,6 +12,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
 )
+from homeassistant.components.repairs import IssueSeverity, async_create_issue
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
@@ -55,8 +56,20 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up our socket to the AVR."""
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2022.10.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+    )
     _LOGGER.warning(
-        "AnthemAV configuration is deprecated and has been automatically imported. Please remove the integration from your configuration file"
+        "Configuration of the Anthem A/V Receivers integration in YAML is "
+        "deprecated and will be removed in Home Assistant 2022.10; Your "
+        "existing configuration has been imported into the UI automatically "
+        "and can be safely removed from your configuration.yaml file"
     )
     await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -72,17 +85,17 @@ async def async_setup_entry(
 ) -> None:
     """Set up entry."""
     name = config_entry.data[CONF_NAME]
-    macaddress = config_entry.data[CONF_MAC]
+    mac_address = config_entry.data[CONF_MAC]
     model = config_entry.data[CONF_MODEL]
 
     avr = hass.data[DOMAIN][config_entry.entry_id]
 
-    device = AnthemAVR(avr, name, macaddress, model)
+    entity = AnthemAVR(avr, name, mac_address, model, config_entry.entry_id)
 
-    _LOGGER.debug("dump_devicedata: %s", device.dump_avrdata)
-    _LOGGER.debug("dump_conndata: %s", avr.dump_conndata)
+    _LOGGER.debug("Device data dump: %s", entity.dump_avrdata)
+    _LOGGER.debug("Connection data dump: %s", avr.dump_conndata)
 
-    async_add_entities([device])
+    async_add_entities([entity])
 
 
 class AnthemAVR(MediaPlayerEntity):
@@ -97,14 +110,17 @@ class AnthemAVR(MediaPlayerEntity):
         | MediaPlayerEntityFeature.SELECT_SOURCE
     )
 
-    def __init__(self, avr: Connection, name: str, macaddress: str, model: str) -> None:
+    def __init__(
+        self, avr: Connection, name: str, mac_address: str, model: str, entry_id: str
+    ) -> None:
         """Initialize entity with transport."""
         super().__init__()
         self.avr = avr
+        self._entry_id = entry_id
         self._attr_name = name
-        self._attr_unique_id = macaddress
+        self._attr_unique_id = mac_address
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, macaddress)},
+            identifiers={(DOMAIN, mac_address)},
             name=name,
             manufacturer=MANUFACTURER,
             model=model,
@@ -118,7 +134,7 @@ class AnthemAVR(MediaPlayerEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{ANTHEMAV_UDATE_SIGNAL}_{self._attr_name}",
+                f"{ANTHEMAV_UDATE_SIGNAL}_{self._entry_id}",
                 self.async_write_ha_state,
             )
         )

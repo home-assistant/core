@@ -102,7 +102,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={
-            (DOMAIN, coordinator.data.agreement.agreement_id, "meter_adapter")
+            (
+                DOMAIN,
+                coordinator.data.agreement.agreement_id,
+                "meter_adapter",
+            )  # type: ignore[arg-type]
         },
         manufacturer="Eneco",
         name="Meter Adapter",

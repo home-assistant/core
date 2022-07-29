@@ -92,14 +92,12 @@ class HuaweiLteBaseSwitch(HuaweiLteBaseEntityWithDevice, SwitchEntity):
 class HuaweiLteMobileDataSwitch(HuaweiLteBaseSwitch):
     """Huawei LTE mobile data switch device."""
 
+    _attr_name: str = field(default="Mobile data", init=False)
+
     def __post_init__(self) -> None:
         """Initialize identifiers."""
         self.key = KEY_DIALUP_MOBILE_DATASWITCH
         self.item = "dataswitch"
-
-    @property
-    def _entity_name(self) -> str:
-        return "Mobile data"
 
     @property
     def _device_unique_id(self) -> str:
@@ -126,14 +124,12 @@ class HuaweiLteMobileDataSwitch(HuaweiLteBaseSwitch):
 class HuaweiLteWifiGuestNetworkSwitch(HuaweiLteBaseSwitch):
     """Huawei LTE WiFi guest network switch device."""
 
+    _attr_name: str = field(default="WiFi guest network", init=False)
+
     def __post_init__(self) -> None:
         """Initialize identifiers."""
         self.key = KEY_WLAN_WIFI_GUEST_NETWORK_SWITCH
         self.item = "WifiEnable"
-
-    @property
-    def _entity_name(self) -> str:
-        return "WiFi guest network"
 
     @property
     def _device_unique_id(self) -> str:

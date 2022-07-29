@@ -1,0 +1,20 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "round": "Precis\u00e3o"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data_description": {
+                    "unit_prefix": "."
+                }
+            }
+        }
+    }
+}

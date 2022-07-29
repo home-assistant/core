@@ -14,6 +14,8 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_TYPE
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.dt import utcnow
@@ -121,13 +123,18 @@ class SeasonSensorEntity(SensorEntity):
     """Representation of the current season."""
 
     _attr_device_class = "season__season"
+    _attr_has_entity_name = True
 
     def __init__(self, entry: ConfigEntry, hemisphere: str) -> None:
         """Initialize the season."""
-        self._attr_name = entry.title
         self._attr_unique_id = entry.entry_id
         self.hemisphere = hemisphere
         self.type = entry.data[CONF_TYPE]
+        self._attr_device_info = DeviceInfo(
+            name=entry.title,
+            identifiers={(DOMAIN, entry.entry_id)},
+            entry_type=DeviceEntryType.SERVICE,
+        )
 
     def update(self) -> None:
         """Update season."""
