@@ -20,7 +20,7 @@ class ValloxSwitchEntity(ValloxEntity, SwitchEntity):
     """Representation of a Vallox switch."""
 
     entity_description: ValloxSwitchEntityDescription
-    _attr_entity_category: EntityCategory | None = EntityCategory.CONFIG
+    _attr_entity_category = EntityCategory.CONFIG
     _attr_has_entity_name = True
 
     def __init__(
