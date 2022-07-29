@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
 import logging
-from typing import Any, Final
+from typing import Final
 
 import async_timeout
 from bleak import BleakError
