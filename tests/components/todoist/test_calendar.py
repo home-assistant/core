@@ -73,7 +73,6 @@ async def test_calendar_entity_unique_id(todoist_api, hass, state):
             "calendar": {
                 "platform": DOMAIN,
                 CONF_TOKEN: "token",
-                "custom_projects": [{"name": "custom"}],
             }
         },
     )
