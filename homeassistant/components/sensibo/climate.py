@@ -248,7 +248,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
             return
 
         new_temp = _find_valid_target_temp(temperature, self.device_data.temp_list)
-        await self.api_call(
+        await self.async_send_api_call(
             device_data=self.device_data,
             key=AC_STATE_TO_DATA["targetTemperature"],
             value=new_temp,
@@ -261,7 +261,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         if "fanLevel" not in self.device_data.active_features:
             raise HomeAssistantError("Current mode doesn't support setting Fanlevel")
 
-        await self.api_call(
+        await self.async_send_api_call(
             device_data=self.device_data,
             key=AC_STATE_TO_DATA["fanLevel"],
             value=fan_mode,
@@ -272,7 +272,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
         if hvac_mode == HVACMode.OFF:
-            await self.api_call(
+            await self.async_send_api_call(
                 device_data=self.device_data,
                 key=AC_STATE_TO_DATA["on"],
                 value=False,
@@ -283,7 +283,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
 
         # Turn on if not currently on.
         if not self.device_data.device_on:
-            await self.api_call(
+            await self.async_send_api_call(
                 device_data=self.device_data,
                 key=AC_STATE_TO_DATA["on"],
                 value=True,
@@ -291,7 +291,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
                 assumed_state=False,
             )
 
-        await self.api_call(
+        await self.async_send_api_call(
             device_data=self.device_data,
             key=AC_STATE_TO_DATA["mode"],
             value=HA_TO_SENSIBO[hvac_mode],
@@ -304,7 +304,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         if "swing" not in self.device_data.active_features:
             raise HomeAssistantError("Current mode doesn't support setting Swing")
 
-        await self.api_call(
+        await self.async_send_api_call(
             device_data=self.device_data,
             key=AC_STATE_TO_DATA["swing"],
             value=swing_mode,
@@ -314,7 +314,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
 
     async def async_turn_on(self) -> None:
         """Turn Sensibo unit on."""
-        await self.api_call(
+        await self.async_send_api_call(
             device_data=self.device_data,
             key=AC_STATE_TO_DATA["on"],
             value=True,
@@ -324,7 +324,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
 
     async def async_turn_off(self) -> None:
         """Turn Sensibo unit on."""
-        await self.api_call(
+        await self.async_send_api_call(
             device_data=self.device_data,
             key=AC_STATE_TO_DATA["on"],
             value=False,
@@ -334,7 +334,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
 
     async def async_assume_state(self, state: str) -> None:
         """Sync state with api."""
-        await self.api_call(
+        await self.async_send_api_call(
             device_data=self.device_data,
             key=AC_STATE_TO_DATA["on"],
             value=state != HVACMode.OFF,
@@ -390,7 +390,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         )
 
     @api_call_decorator
-    async def api_call(
+    async def async_send_api_call(
         self,
         device_data: SensiboDevice,
         key: Any,

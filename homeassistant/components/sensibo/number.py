@@ -100,12 +100,14 @@ class SensiboNumber(SensiboDeviceBaseEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set value for calibration."""
-        await self.api_call(
+        await self.async_send_api_call(
             device_data=self.device_data, key=self.entity_description.key, value=value
         )
 
     @api_call_decorator
-    async def api_call(self, device_data: SensiboDevice, key: Any, value: Any) -> bool:
+    async def async_send_api_call(
+        self, device_data: SensiboDevice, key: Any, value: Any
+    ) -> bool:
         """Make service call to api."""
         data = {self.entity_description.remote_key: value}
         result = await self._client.async_set_calibration(
