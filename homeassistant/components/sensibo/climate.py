@@ -25,7 +25,7 @@ from homeassistant.util.temperature import convert as convert_temperature
 
 from .const import DOMAIN
 from .coordinator import SensiboDataUpdateCoordinator
-from .entity import SensiboDeviceBaseEntity, api_call_decorator
+from .entity import SensiboDeviceBaseEntity, async_handle_api_call
 
 SERVICE_ASSUME_STATE = "assume_state"
 SERVICE_ENABLE_TIMER = "enable_timer"
@@ -389,7 +389,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
             data=params,
         )
 
-    @api_call_decorator
+    @async_handle_api_call
     async def async_send_api_call(
         self,
         device_data: SensiboDevice,
@@ -408,7 +408,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         )
         return bool(result.get("result", {}).get("status") == "Success")
 
-    @api_call_decorator
+    @async_handle_api_call
     async def api_call_custom_services(
         self,
         device_data: SensiboDevice,
