@@ -405,7 +405,7 @@ bimmer_connected==0.10.1
 bizkaibus==0.1.1
 
 # homeassistant.components.bluetooth
-bleak==0.14.3
+bleak==0.15.0
 
 # homeassistant.components.blebox
 blebox_uniapi==2.0.2
@@ -2479,7 +2479,7 @@ xboxapi==2.0.1
 xiaomi-ble==0.6.2
 
 # homeassistant.components.knx
-xknx==0.22.0
+xknx==0.22.1
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz

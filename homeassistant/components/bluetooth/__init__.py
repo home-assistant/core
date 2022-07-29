@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
 import logging
-from typing import Final, Union
+from typing import Any, Final
 
 import async_timeout
 from bleak import BleakError
@@ -96,12 +96,8 @@ SCANNING_MODE_TO_BLEAK = {
 
 
 BluetoothChange = Enum("BluetoothChange", "ADVERTISEMENT")
-BluetoothCallback = Callable[
-    [Union[BluetoothServiceInfoBleak, BluetoothServiceInfo], BluetoothChange], None
-]
-ProcessAdvertisementCallback = Callable[
-    [Union[BluetoothServiceInfoBleak, BluetoothServiceInfo]], bool
-]
+BluetoothCallback = Callable[[BluetoothServiceInfoBleak, BluetoothChange], None]
+ProcessAdvertisementCallback = Callable[[BluetoothServiceInfoBleak], bool]
 
 
 @hass_callback
@@ -157,8 +153,14 @@ def async_register_callback(
     hass: HomeAssistant,
     callback: BluetoothCallback,
     match_dict: BluetoothCallbackMatcher | None,
+    mode: BluetoothScanningMode,
 ) -> Callable[[], None]:
     """Register to receive a callback on bluetooth change.
+
+    mode is currently not used as we only support active scanning
+    and passive scanning will be available in the future. The flag
+    is required to be present to avoid a future breaking change
+    when we support passive scanning.
 
     Returns a callback that can be used to cancel the registration.
     """
@@ -170,19 +172,20 @@ async def async_process_advertisements(
     hass: HomeAssistant,
     callback: ProcessAdvertisementCallback,
     match_dict: BluetoothCallbackMatcher,
+    mode: BluetoothScanningMode,
     timeout: int,
-) -> BluetoothServiceInfo:
+) -> BluetoothServiceInfoBleak:
     """Process advertisements until callback returns true or timeout expires."""
-    done: Future[BluetoothServiceInfo] = Future()
+    done: Future[BluetoothServiceInfoBleak] = Future()
 
     @hass_callback
     def _async_discovered_device(
-        service_info: BluetoothServiceInfo, change: BluetoothChange
+        service_info: BluetoothServiceInfoBleak, change: BluetoothChange
     ) -> None:
         if callback(service_info):
             done.set_result(service_info)
 
-    unload = async_register_callback(hass, _async_discovered_device, match_dict)
+    unload = async_register_callback(hass, _async_discovered_device, match_dict, mode)
 
     try:
         async with async_timeout.timeout(timeout):
@@ -315,7 +318,9 @@ class BluetoothManager:
             self.scanner.async_reset()
             self._integration_matcher.async_clear_history()
             self._reloading = False
-        scanner_kwargs = {"scanning_mode": SCANNING_MODE_TO_BLEAK[scanning_mode]}
+        scanner_kwargs: dict[str, Any] = {
+            "scanning_mode": SCANNING_MODE_TO_BLEAK[scanning_mode]
+        }
         if adapter and adapter not in DEFAULT_ADAPTERS:
             scanner_kwargs["adapter"] = adapter
         _LOGGER.debug("Initializing bluetooth scanner with %s", scanner_kwargs)

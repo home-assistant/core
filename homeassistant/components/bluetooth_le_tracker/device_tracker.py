@@ -7,7 +7,6 @@ import logging
 from uuid import UUID
 
 from bleak import BleakClient, BleakError
-from bleak.backends.device import BLEDevice
 import voluptuous as vol
 
 from homeassistant.components import bluetooth
@@ -136,15 +135,12 @@ async def async_setup_scanner(  # noqa: C901
     async def _async_see_update_ble_battery(
         mac: str,
         now: datetime,
-        service_info: bluetooth.BluetoothServiceInfo,
+        service_info: bluetooth.BluetoothServiceInfoBleak,
     ) -> None:
         """Lookup Bluetooth LE devices and update status."""
         battery = None
-        ble_device: BLEDevice | str = (
-            bluetooth.async_ble_device_from_address(hass, mac) or mac
-        )
         try:
-            async with BleakClient(ble_device) as client:
+            async with BleakClient(service_info.device) as client:
                 bat_char = await client.read_gatt_char(BATTERY_CHARACTERISTIC_UUID)
                 battery = ord(bat_char)
         except asyncio.TimeoutError:
@@ -165,7 +161,8 @@ async def async_setup_scanner(  # noqa: C901
 
     @callback
     def _async_update_ble(
-        service_info: bluetooth.BluetoothServiceInfo, change: bluetooth.BluetoothChange
+        service_info: bluetooth.BluetoothServiceInfoBleak,
+        change: bluetooth.BluetoothChange,
     ) -> None:
         """Update from a ble callback."""
         mac = service_info.address
@@ -199,7 +196,9 @@ async def async_setup_scanner(  # noqa: C901
             _async_update_ble(service_info, bluetooth.BluetoothChange.ADVERTISEMENT)
 
     cancels = [
-        bluetooth.async_register_callback(hass, _async_update_ble, None),
+        bluetooth.async_register_callback(
+            hass, _async_update_ble, None, bluetooth.BluetoothScanningMode.ACTIVE
+        ),
         async_track_time_interval(hass, _async_refresh_ble, interval),
     ]
 
