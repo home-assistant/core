@@ -41,9 +41,7 @@ class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors or {},
         )
 
-    async def _show_reauth_form(
-        self, errors: dict[str, str] | None = None
-    ) -> FlowResult:
+    async def _show_reauth_form(self, errors: dict[str, str]) -> FlowResult:
         """Show the reauth form to the user."""
         return self.async_show_form(
             step_id="reauth",
@@ -80,7 +78,7 @@ class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle a flow initiated by the user."""
         if user_input is None:
-            return await self._show_setup_form(user_input)
+            return await self._show_setup_form()
 
         self._organization = user_input[CONF_ORG]
         self._project = user_input[CONF_PROJECT]
