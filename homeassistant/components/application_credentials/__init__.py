@@ -255,7 +255,7 @@ async def async_post_remove_config_entry(
             item[CONF_DOMAIN] == config_entry.domain
             and item.get(CONF_AUTH_DOMAIN, item_id) == auth_domain
         ):
-            return {"application_credential_id": item_id}
+            return {"application_credentials_id": item_id}
     return None
 
 
