@@ -5,10 +5,9 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING
 
 from bleak import BleakScanner
-from bleak.backends.device import BLEDevice
-from bleak.backends.scanner import AdvertisementData
 from fjaraskupan import Device, State, device_filter
 
 from homeassistant.config_entries import ConfigEntry
@@ -23,6 +22,11 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DISPATCH_DETECTION, DOMAIN
+
+if TYPE_CHECKING:
+    from bleak.backends.device import BLEDevice
+    from bleak.backends.scanner import AdvertisementData
+
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
