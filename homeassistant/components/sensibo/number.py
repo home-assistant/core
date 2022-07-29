@@ -15,7 +15,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import SensiboDataUpdateCoordinator
-from .entity import SensiboDeviceBaseEntity, api_call_decorator
+from .entity import SensiboDeviceBaseEntity, async_handle_api_call
 
 PARALLEL_UPDATES = 0
 
@@ -104,7 +104,7 @@ class SensiboNumber(SensiboDeviceBaseEntity, NumberEntity):
             device_data=self.device_data, key=self.entity_description.key, value=value
         )
 
-    @api_call_decorator
+    @async_handle_api_call
     async def async_send_api_call(
         self, device_data: SensiboDevice, key: Any, value: Any
     ) -> bool:

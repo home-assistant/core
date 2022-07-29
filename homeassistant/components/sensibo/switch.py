@@ -18,7 +18,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import SensiboDataUpdateCoordinator
-from .entity import SensiboDeviceBaseEntity, api_call_decorator
+from .entity import SensiboDeviceBaseEntity, async_handle_api_call
 
 PARALLEL_UPDATES = 0
 
@@ -148,7 +148,7 @@ class SensiboDeviceSwitch(SensiboDeviceBaseEntity, SwitchEntity):
             return self.entity_description.extra_fn(self.device_data)
         return None
 
-    @api_call_decorator
+    @async_handle_api_call
     async def async_turn_on_timer(
         self, device_data: SensiboDevice, key: Any, value: Any
     ) -> bool:
@@ -162,7 +162,7 @@ class SensiboDeviceSwitch(SensiboDeviceBaseEntity, SwitchEntity):
         result = await self._client.async_set_timer(self._device_id, data)
         return bool(result.get("status") == "success")
 
-    @api_call_decorator
+    @async_handle_api_call
     async def async_turn_off_timer(
         self, device_data: SensiboDevice, key: Any, value: Any
     ) -> bool:
@@ -171,7 +171,7 @@ class SensiboDeviceSwitch(SensiboDeviceBaseEntity, SwitchEntity):
         result = await self._client.async_del_timer(self._device_id)
         return bool(result.get("status") == "success")
 
-    @api_call_decorator
+    @async_handle_api_call
     async def async_turn_on_off_pure_boost(
         self, device_data: SensiboDevice, key: Any, value: Any
     ) -> bool:
