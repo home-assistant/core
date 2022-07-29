@@ -157,8 +157,8 @@ def async_register_callback(
 ) -> Callable[[], None]:
     """Register to receive a callback on bluetooth change.
 
-    mode is currently not used as we only support active scanning
-    and passive scanning will be available in the future. The flag
+    mode is currently not used as we only support active scanning.
+    Passive scanning will be available in the future. The flag
     is required to be present to avoid a future breaking change
     when we support passive scanning.
 
