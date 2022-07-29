@@ -15,7 +15,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    "entity_id,metric_key, value",
+    "entity_id, metric_key, value",
     [
         ("number.vallox_supply_air_temperature_home", "A_CYC_HOME_AIR_TEMP_TARGET", 19),
         ("number.vallox_supply_air_temperature_away", "A_CYC_AWAY_AIR_TEMP_TARGET", 18),
