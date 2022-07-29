@@ -5,6 +5,7 @@ from typing import Any
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
+    ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     ClimateEntityFeature,
@@ -93,7 +94,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
 
     @property
     def hvac_mode(self) -> HVACMode:
-        """Return HVAC operation ie. auto, heat, cool, or off mode."""
+        """Return HVAC operation ie. auto, heat, or cool mode."""
         if (mode := self.device["mode"]) is None or mode not in self.hvac_modes:
             return HVACMode.HEAT  # pragma: no cover
 
@@ -104,10 +105,10 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
         """Return the current hvac modes."""
         hvac_modes = [HVACMode.HEAT]
         if self.gateway["cooling_present"]:
-            if self.gateway["smile_name"] == "Anna":
+            if self.coordinator.api.elga_cooling_enabled:
                 hvac_modes.append(HVACMode.HEAT_COOL)
                 hvac_modes.remove(HVACMode.HEAT)
-            if (
+            if self.coordinator.api.lortherm_cooling_enabled or (
                 self.gateway["smile_name"] == "Adam"
                 and self.devices[self.gateway["gateway_id"]]["regulation_mode"]
                 == "cooling"
@@ -163,6 +164,9 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
     @plugwise_command
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
+        if ATTR_HVAC_MODE in kwargs:
+            raise HomeAssistantError("Changing hvac_mode is not supported.")
+
         data: dict[str, Any] = {}
         if ATTR_TEMPERATURE in kwargs:
             data["setpoint"] = kwargs.get(ATTR_TEMPERATURE)
@@ -175,15 +179,15 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
             if temperature is None or not (
                 self._attr_min_temp <= temperature <= self._attr_max_temp
             ):
-                raise ValueError("Invalid temperature change requested")
+                raise ValueError("Invalid temperature change requested.")
 
         await self.coordinator.api.set_temperature(self.device["location"], data)
 
     @plugwise_command
-    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the hvac mode."""
         if hvac_mode not in self.hvac_modes:
-            raise HomeAssistantError("Unsupported hvac_mode")
+            raise HomeAssistantError("Unsupported hvac_mode.")
 
         await self.coordinator.api.set_schedule_state(
             self.device["location"],
