@@ -859,7 +859,12 @@ class ConfigEntries:
         )
         EntityRegistryDisabledHandler(hass).async_setup()
         self._post_remove_calls: list[
-            Callable[[HomeAssistant, ConfigEntry], Awaitable[dict[str, Any] | None]]
+            tuple[
+                str,
+                Callable[
+                    [HomeAssistant, ConfigEntry], Awaitable[dict[str, Any] | None]
+                ],
+            ]
         ] = []
 
     @callback
@@ -954,17 +959,18 @@ class ConfigEntries:
             )
 
         result: dict[str, Any] = {"require_restart": not unload_success}
-        for call in self._post_remove_calls:
-            if data := await call(self.hass, entry):
+        for (domain, call) in self._post_remove_calls:
+            if domain == entry.domain and (data := await call(self.hass, entry)):
                 result.update(data)
         return result
 
     def async_add_post_remove_call(
         self,
+        domain: str,
         call: Callable[[HomeAssistant, ConfigEntry], Awaitable[dict[str, Any] | None]],
     ) -> None:
         """Register a callback invoked to process the remove and add to the result."""
-        self._post_remove_calls.append(call)
+        self._post_remove_calls.append((domain, call))
 
     async def _async_shutdown(self, event: Event) -> None:
         """Call when Home Assistant is stopping."""

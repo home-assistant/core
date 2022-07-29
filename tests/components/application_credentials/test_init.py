@@ -90,10 +90,12 @@ async def mock_application_credentials_integration(
     authorization_server: AuthorizationServer,
 ):
     """Mock a application_credentials integration."""
-    assert await async_setup_component(hass, "application_credentials", {})
-    await setup_application_credentials_integration(
-        hass, TEST_DOMAIN, authorization_server
-    )
+    with patch("homeassistant.loader.APPLICATION_CREDENTIALS", [TEST_DOMAIN]):
+        assert await async_setup_component(hass, "application_credentials", {})
+        await setup_application_credentials_integration(
+            hass, TEST_DOMAIN, authorization_server
+        )
+        yield
 
 
 class FakeConfigFlow(config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN):
@@ -418,7 +420,7 @@ async def test_config_flow_no_credentials(hass):
         TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result.get("type") == data_entry_flow.FlowResultType.ABORT
-    assert result.get("reason") == "missing_configuration"
+    assert result.get("reason") == "missing_credentials"
 
 
 async def test_config_flow_other_domain(
@@ -445,7 +447,7 @@ async def test_config_flow_other_domain(
         TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result.get("type") == data_entry_flow.FlowResultType.ABORT
-    assert result.get("reason") == "missing_configuration"
+    assert result.get("reason") == "missing_credentials"
 
 
 async def test_config_flow(
@@ -559,7 +561,7 @@ async def test_config_flow_create_delete_credential(
         TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result.get("type") == data_entry_flow.FlowResultType.ABORT
-    assert result.get("reason") == "missing_configuration"
+    assert result.get("reason") == "missing_credentials"
 
 
 @pytest.mark.parametrize("config_credential", [DEVELOPER_CREDENTIAL])

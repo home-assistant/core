@@ -160,7 +160,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass, DOMAIN, _async_provide_implementation
     )
 
-    hass.config_entries.async_add_post_remove_call(async_post_remove_config_entry)
+    for domain in await async_get_application_credentials(hass):
+        hass.config_entries.async_add_post_remove_call(
+            domain, async_post_remove_config_entry
+        )
 
     return True
 
