@@ -5,10 +5,11 @@ import asyncio
 from collections import OrderedDict
 import logging
 
-from satel_integra.satel_integra import AlarmState
+from satel_integra.satel_integra import AlarmState, AsyncSatel
 
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
@@ -19,31 +20,30 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType
 
-from . import (
+from .const import (
     CONF_ARM_HOME_MODE,
     CONF_DEVICE_PARTITIONS,
     CONF_ZONE_NAME,
-    DATA_SATEL,
+    DATA_SATEL_CONFIG,
+    DOMAIN,
     SIGNAL_PANEL_MESSAGE,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up for Satel Integra alarm panels."""
-    if not discovery_info:
-        return
+    """Set up the Satel alarm panel platform."""
+    controller: AsyncSatel = hass.data[DOMAIN]
+    config: ConfigType = hass.data[DATA_SATEL_CONFIG]
 
-    configured_partitions = discovery_info[CONF_DEVICE_PARTITIONS]
-    controller = hass.data[DATA_SATEL]
+    configured_partitions = config[CONF_DEVICE_PARTITIONS]
 
     devices = []
 

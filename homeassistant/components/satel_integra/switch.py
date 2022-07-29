@@ -3,17 +3,21 @@ from __future__ import annotations
 
 import logging
 
+from satel_integra.satel_integra import AsyncSatel
+
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType
 
-from . import (
+from .const import (
     CONF_DEVICE_CODE,
     CONF_SWITCHABLE_OUTPUTS,
     CONF_ZONE_NAME,
-    DATA_SATEL,
+    DATA_SATEL_CONFIG,
+    DOMAIN,
     SIGNAL_OUTPUTS_UPDATED,
 )
 
@@ -22,18 +26,16 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ["satel_integra"]
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Satel Integra switch devices."""
-    if not discovery_info:
-        return
+    """Set up the Satel switch platform."""
+    controller: AsyncSatel = hass.data[DOMAIN]
+    config: ConfigType = hass.data[DATA_SATEL_CONFIG]
 
-    configured_zones = discovery_info[CONF_SWITCHABLE_OUTPUTS]
-    controller = hass.data[DATA_SATEL]
+    configured_zones = config[CONF_SWITCHABLE_OUTPUTS]
 
     devices = []
 
@@ -41,7 +43,7 @@ async def async_setup_platform(
         zone_name = device_config_data[CONF_ZONE_NAME]
 
         device = SatelIntegraSwitch(
-            controller, zone_num, zone_name, discovery_info[CONF_DEVICE_CODE]
+            controller, zone_num, zone_name, config_entry.data.get(CONF_DEVICE_CODE)
         )
         devices.append(device)
 

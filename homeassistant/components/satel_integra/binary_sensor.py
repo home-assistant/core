@@ -1,38 +1,41 @@
 """Support for Satel Integra zone states- represented as binary sensors."""
 from __future__ import annotations
 
+from satel_integra.satel_integra import AsyncSatel
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType
 
-from . import (
+from .const import (
     CONF_OUTPUTS,
     CONF_ZONE_NAME,
     CONF_ZONE_TYPE,
     CONF_ZONES,
-    DATA_SATEL,
+    DATA_SATEL_CONFIG,
+    DOMAIN,
     SIGNAL_OUTPUTS_UPDATED,
     SIGNAL_ZONES_UPDATED,
 )
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Satel Integra binary sensor devices."""
-    if not discovery_info:
-        return
+    """Set up the Satel binary sensor platform."""
+    controller: AsyncSatel = hass.data[DOMAIN]
+    config: ConfigType = hass.data[DATA_SATEL_CONFIG]
 
-    configured_zones = discovery_info[CONF_ZONES]
-    controller = hass.data[DATA_SATEL]
+    configured_zones = config[CONF_ZONES]
+    configured_outputs = config[CONF_OUTPUTS]
 
     devices = []
 
@@ -43,8 +46,6 @@ async def async_setup_platform(
             controller, zone_num, zone_name, zone_type, SIGNAL_ZONES_UPDATED
         )
         devices.append(device)
-
-    configured_outputs = discovery_info[CONF_OUTPUTS]
 
     for zone_num, device_config_data in configured_outputs.items():
         zone_type = device_config_data[CONF_ZONE_TYPE]

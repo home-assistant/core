@@ -1022,7 +1022,11 @@ omit =
     homeassistant/components/sabnzbd/__init__.py
     homeassistant/components/sabnzbd/sensor.py
     homeassistant/components/saj/sensor.py
-    homeassistant/components/satel_integra/*
+    homeassistant/components/satel_integra/__init__.py
+    homeassistant/components/satel_integra/alarm_control_panel.py
+    homeassistant/components/satel_integra/binary_sensor.py
+    homeassistant/components/satel_integra/const.py
+    homeassistant/components/satel_integra/switch.py
     homeassistant/components/schluter/*
     homeassistant/components/screenlogic/__init__.py
     homeassistant/components/screenlogic/binary_sensor.py

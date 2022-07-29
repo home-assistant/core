@@ -5,5 +5,6 @@
   "requirements": ["satel_integra==0.3.7"],
   "codeowners": [],
   "iot_class": "local_push",
-  "loggers": ["satel_integra"]
+  "loggers": ["satel_integra"],
+  "config_flow": true
 }

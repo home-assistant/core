@@ -303,6 +303,7 @@ FLOWS = {
         "ruckus_unleashed",
         "sabnzbd",
         "samsungtv",
+        "satel_integra",
         "screenlogic",
         "season",
         "sense",
