@@ -13,9 +13,9 @@ from homeassistant.components.notify import (
 )
 from homeassistant.components.telegram_bot import (
     ATTR_DISABLE_NOTIF,
+    ATTR_DISABLE_WEB_PREV,
     ATTR_MESSAGE_TAG,
     ATTR_PARSER,
-    ATTR_DISABLE_WEB_PREV,
 )
 from homeassistant.const import ATTR_LOCATION
 from homeassistant.helpers.reload import setup_reload_service
