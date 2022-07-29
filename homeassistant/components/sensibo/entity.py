@@ -28,9 +28,7 @@ def api_call_decorator(function: Callable) -> Callable:
         except SENSIBO_ERRORS as err:
             raise HomeAssistantError from err
 
-        LOGGER.debug("Result: %s", res)
-        LOGGER.debug("Entity: %s", args[0])
-        LOGGER.debug("Arguments: %s", kwargs)
+        LOGGER.debug("Result %s for entity %s with aurgements %s", res, args[0], kwargs)
         entity: SensiboDeviceBaseEntity = args[0]
         if not res:
             raise HomeAssistantError(f"Could not execute service for {entity.name}")
