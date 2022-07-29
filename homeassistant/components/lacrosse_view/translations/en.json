@@ -5,19 +5,14 @@
         },
         "error": {
             "invalid_auth": "Invalid authentication",
-            "unknown": "Unexpected error",
-            "no_locations": "No locations found"
+            "no_locations": "No locations found",
+            "unknown": "Unexpected error"
         },
         "step": {
             "user": {
                 "data": {
                     "password": "Password",
                     "username": "Username"
-                }
-            },
-            "location": {
-                "data": {
-                    "location": "Location"
                 }
             }
         }

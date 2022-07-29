@@ -561,7 +561,7 @@ google-nest-sdm==2.0.0
 googlemaps==2.5.1
 
 # homeassistant.components.govee_ble
-govee-ble==0.12.3
+govee-ble==0.12.4
 
 # homeassistant.components.gree
 greeclimate==1.2.0
@@ -616,7 +616,7 @@ hole==0.7.0
 holidays==0.14.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220727.0
+home-assistant-frontend==20220728.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.1
@@ -1079,7 +1079,7 @@ pyialarm==2.2.0
 pyicloud==1.0.0
 
 # homeassistant.components.insteon
-pyinsteon==1.1.3
+pyinsteon==1.2.0
 
 # homeassistant.components.ipma
 pyipma==2.0.5
@@ -1665,7 +1665,7 @@ wolf_smartset==0.1.11
 xbox-webapi==2.0.11
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==0.6.1
+xiaomi-ble==0.6.2
 
 # homeassistant.components.knx
 xknx==0.22.0
@@ -1715,7 +1715,7 @@ zigpy-znp==0.8.1
 zigpy==0.48.0
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.39.0
+zwave-js-server-python==0.40.0
 
 # homeassistant.components.zwave_me
 zwave_me_ws==0.2.4

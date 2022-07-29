@@ -6,8 +6,8 @@ import logging
 import anthemav
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -25,7 +25,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     def async_anthemav_update_callback(message):
         """Receive notification from transport that new data exists."""
         _LOGGER.debug("Received update callback from AVR: %s", message)
-        async_dispatcher_send(hass, f"{ANTHEMAV_UDATE_SIGNAL}_{entry.data[CONF_NAME]}")
+        async_dispatcher_send(hass, f"{ANTHEMAV_UDATE_SIGNAL}_{entry.entry_id}")
 
     try:
         avr = await anthemav.Connection.create(
@@ -40,6 +40,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = avr
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+
+    @callback
+    def close_avr(event: Event) -> None:
+        avr.close()
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close_avr)
+    )
 
     return True
 

@@ -60,6 +60,8 @@ from .const import (
     MODEL_AIRHUMIDIFIER_CA1,
     MODEL_AIRHUMIDIFIER_CB1,
     MODEL_AIRPURIFIER_3C,
+    MODEL_AIRPURIFIER_4,
+    MODEL_AIRPURIFIER_4_PRO,
     MODEL_AIRPURIFIER_PRO,
     MODEL_AIRPURIFIER_PRO_V7,
     MODEL_AIRPURIFIER_V2,
@@ -100,6 +102,7 @@ ATTR_DISPLAY_CLOCK = "display_clock"
 ATTR_FAVORITE_SPEED = "favorite_speed"
 ATTR_FILTER_LIFE_REMAINING = "filter_life_remaining"
 ATTR_FILTER_HOURS_USED = "filter_hours_used"
+ATTR_FILTER_LEFT_TIME = "filter_left_time"
 ATTR_DUST_FILTER_LIFE_REMAINING = "dust_filter_life_remaining"
 ATTR_DUST_FILTER_LIFE_REMAINING_DAYS = "dust_filter_life_remaining_days"
 ATTR_UPPER_FILTER_LIFE_REMAINING = "upper_filter_life_remaining"
@@ -114,6 +117,7 @@ ATTR_MOTOR_SPEED = "motor_speed"
 ATTR_NIGHT_MODE = "night_mode"
 ATTR_NIGHT_TIME_BEGIN = "night_time_begin"
 ATTR_NIGHT_TIME_END = "night_time_end"
+ATTR_PM10 = "pm10_density"
 ATTR_PM25 = "pm25"
 ATTR_PM25_2 = "pm25_2"
 ATTR_POWER = "power"
@@ -253,6 +257,13 @@ SENSOR_TYPES = {
         icon="mdi:cloud",
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    ATTR_PM10: XiaomiMiioSensorDescription(
+        key=ATTR_PM10,
+        name="PM10",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        device_class=SensorDeviceClass.PM10,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
     ATTR_PM25: XiaomiMiioSensorDescription(
         key=ATTR_AQI,
         name="PM2.5",
@@ -280,6 +291,14 @@ SENSOR_TYPES = {
         key=ATTR_FILTER_HOURS_USED,
         name="Filter use",
         native_unit_of_measurement=TIME_HOURS,
+        icon="mdi:clock-outline",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    ATTR_FILTER_LEFT_TIME: XiaomiMiioSensorDescription(
+        key=ATTR_FILTER_LEFT_TIME,
+        name="Filter time left",
+        native_unit_of_measurement=TIME_DAYS,
         icon="mdi:clock-outline",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -385,6 +404,29 @@ PURIFIER_MIOT_SENSORS = (
     ATTR_TEMPERATURE,
     ATTR_USE_TIME,
 )
+PURIFIER_4_SENSORS = (
+    ATTR_FILTER_LIFE_REMAINING,
+    ATTR_FILTER_LEFT_TIME,
+    ATTR_FILTER_USE,
+    ATTR_HUMIDITY,
+    ATTR_MOTOR_SPEED,
+    ATTR_PM25,
+    ATTR_PURIFY_VOLUME,
+    ATTR_TEMPERATURE,
+    ATTR_USE_TIME,
+)
+PURIFIER_4_PRO_SENSORS = (
+    ATTR_FILTER_LIFE_REMAINING,
+    ATTR_FILTER_LEFT_TIME,
+    ATTR_FILTER_USE,
+    ATTR_HUMIDITY,
+    ATTR_MOTOR_SPEED,
+    ATTR_PM25,
+    ATTR_PM10,
+    ATTR_PURIFY_VOLUME,
+    ATTR_TEMPERATURE,
+    ATTR_USE_TIME,
+)
 PURIFIER_3C_SENSORS = (
     ATTR_FILTER_LIFE_REMAINING,
     ATTR_FILTER_USE,
@@ -478,6 +520,8 @@ MODEL_TO_SENSORS_MAP: dict[str, tuple[str, ...]] = {
     MODEL_AIRHUMIDIFIER_CA1: HUMIDIFIER_CA1_CB1_SENSORS,
     MODEL_AIRHUMIDIFIER_CB1: HUMIDIFIER_CA1_CB1_SENSORS,
     MODEL_AIRPURIFIER_3C: PURIFIER_3C_SENSORS,
+    MODEL_AIRPURIFIER_4: PURIFIER_4_SENSORS,
+    MODEL_AIRPURIFIER_4_PRO: PURIFIER_4_PRO_SENSORS,
     MODEL_AIRPURIFIER_PRO: PURIFIER_PRO_SENSORS,
     MODEL_AIRPURIFIER_PRO_V7: PURIFIER_PRO_V7_SENSORS,
     MODEL_AIRPURIFIER_V2: PURIFIER_V2_SENSORS,

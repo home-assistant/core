@@ -715,7 +715,9 @@ class CameraView(HomeAssistantView):
         )
 
         if not authenticated:
-            raise web.HTTPUnauthorized()
+            if request[KEY_AUTHENTICATED]:
+                raise web.HTTPUnauthorized()
+            raise web.HTTPForbidden()
 
         if not camera.is_on:
             _LOGGER.debug("Camera is off")

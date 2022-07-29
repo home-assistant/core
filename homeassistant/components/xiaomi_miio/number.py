@@ -24,6 +24,7 @@ from .const import (
     FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB,
     FEATURE_FLAGS_AIRPURIFIER_2S,
     FEATURE_FLAGS_AIRPURIFIER_3C,
+    FEATURE_FLAGS_AIRPURIFIER_4,
     FEATURE_FLAGS_AIRPURIFIER_MIIO,
     FEATURE_FLAGS_AIRPURIFIER_MIOT,
     FEATURE_FLAGS_AIRPURIFIER_PRO,
@@ -55,6 +56,8 @@ from .const import (
     MODEL_AIRHUMIDIFIER_CB1,
     MODEL_AIRPURIFIER_2S,
     MODEL_AIRPURIFIER_3C,
+    MODEL_AIRPURIFIER_4,
+    MODEL_AIRPURIFIER_4_PRO,
     MODEL_AIRPURIFIER_PRO,
     MODEL_AIRPURIFIER_PRO_V7,
     MODEL_AIRPURIFIER_V1,
@@ -98,6 +101,15 @@ class XiaomiMiioNumberDescription(NumberEntityDescription):
 @dataclass
 class OscillationAngleValues:
     """A class that describes oscillation angle values."""
+
+    max_value: float | None = None
+    min_value: float | None = None
+    step: float | None = None
+
+
+@dataclass
+class FavoriteLevelValues:
+    """A class that describes favorite level values."""
 
     max_value: float | None = None
     min_value: float | None = None
@@ -215,6 +227,8 @@ MODEL_TO_FEATURES_MAP = {
     MODEL_AIRPURIFIER_PRO_V7: FEATURE_FLAGS_AIRPURIFIER_PRO_V7,
     MODEL_AIRPURIFIER_V1: FEATURE_FLAGS_AIRPURIFIER_V1,
     MODEL_AIRPURIFIER_V3: FEATURE_FLAGS_AIRPURIFIER_V3,
+    MODEL_AIRPURIFIER_4: FEATURE_FLAGS_AIRPURIFIER_4,
+    MODEL_AIRPURIFIER_4_PRO: FEATURE_FLAGS_AIRPURIFIER_4,
     MODEL_FAN_1C: FEATURE_FLAGS_FAN_1C,
     MODEL_FAN_P10: FEATURE_FLAGS_FAN_P10_P11,
     MODEL_FAN_P11: FEATURE_FLAGS_FAN_P10_P11,
@@ -235,6 +249,11 @@ OSCILLATION_ANGLE_VALUES = {
     MODEL_FAN_P9: OscillationAngleValues(max_value=150, min_value=30, step=30),
     MODEL_FAN_P10: OscillationAngleValues(max_value=140, min_value=30, step=30),
     MODEL_FAN_P11: OscillationAngleValues(max_value=140, min_value=30, step=30),
+}
+
+FAVORITE_LEVEL_VALUES = {
+    tuple(MODELS_PURIFIER_MIIO): FavoriteLevelValues(max_value=17, min_value=0, step=1),
+    tuple(MODELS_PURIFIER_MIOT): FavoriteLevelValues(max_value=14, min_value=0, step=1),
 }
 
 
@@ -280,6 +299,15 @@ async def async_setup_entry(
                     native_min_value=OSCILLATION_ANGLE_VALUES[model].min_value,
                     native_step=OSCILLATION_ANGLE_VALUES[model].step,
                 )
+            elif description.key == ATTR_FAVORITE_LEVEL:
+                for list_models, favorite_level_value in FAVORITE_LEVEL_VALUES.items():
+                    if model in list_models:
+                        description = dataclasses.replace(
+                            description,
+                            native_max_value=favorite_level_value.max_value,
+                            native_min_value=favorite_level_value.min_value,
+                            native_step=favorite_level_value.step,
+                        )
 
             entities.append(
                 XiaomiNumberEntity(
