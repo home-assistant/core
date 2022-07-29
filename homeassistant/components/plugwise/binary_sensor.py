@@ -18,7 +18,7 @@ from .const import DOMAIN
 from .coordinator import PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
 
-SEVERITIES = ["other", "info", "warning", "error"]
+SEVERITIES = ["other", "info", "message", "warning", "error"]
 
 
 @dataclass
