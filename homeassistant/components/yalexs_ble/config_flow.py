@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any, cast
+from typing import Any
 
 from bleak_retry_connector import BleakError
 import voluptuous as vol
@@ -22,7 +22,6 @@ from homeassistant.components.bluetooth.match import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant.loader import async_get_integration
 
@@ -54,6 +53,7 @@ async def async_wait_for_discovery(
         hass,
         _async_update_ble,
         BluetoothCallbackMatcher({LOCAL_NAME: local_name}),
+        bluetooth.BluetoothScanningMode.ACTIVE,
     )
     try:
         return await asyncio.wait_for(discovery_info_future, timeout=DISCOVERY_TIMEOUT)
@@ -75,12 +75,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._discovered_name: str | None = None
 
     async def async_step_bluetooth(
-        self, discovery_info: BluetoothServiceInfo
+        self, discovery_info: BluetoothServiceInfoBleak
     ) -> FlowResult:
         """Handle the bluetooth discovery step."""
         await self.async_set_unique_id(discovery_info.name)
         self._abort_if_unique_id_configured()
-        self._discovery_info = cast(BluetoothServiceInfoBleak, discovery_info)
+        self._discovery_info = discovery_info
         self.context["title_placeholders"] = {
             "name": local_name_to_serial(discovery_info.name),
             "local_name": discovery_info.name,
