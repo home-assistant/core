@@ -1,4 +1,5 @@
 """The tests for the Home Assistant HTTP component."""
+from datetime import timedelta
 from http import HTTPStatus
 
 # pylint: disable=protected-access
@@ -23,8 +24,11 @@ from homeassistant.components.http.ban import (
 from homeassistant.components.http.view import request_handler_factory
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt
 
 from . import mock_real_ip
+
+from tests.common import async_fire_time_changed
 
 SUPERVISOR_IP = "1.2.3.4"
 BANNED_IPS = ["200.201.202.203", "100.64.0.2"]
@@ -264,6 +268,7 @@ async def test_ip_bans_file_creation(hass, aiohttp_client, caplog):
         assert len(manager.ip_bans_lookup) == len(BANNED_IPS)
         assert m_open.call_count == 0
 
+        async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=1))
         resp = await client.get("/example")
         assert resp.status == HTTPStatus.UNAUTHORIZED
         assert len(manager.ip_bans_lookup) == len(BANNED_IPS) + 1
@@ -329,6 +334,18 @@ async def test_failed_login_attempts_counter(hass, aiohttp_client):
     assert resp.status == HTTPStatus.UNAUTHORIZED
     assert app[KEY_FAILED_LOGIN_ATTEMPTS][remote_ip] == 1
 
+    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=1))
+    resp = await client.get("/auth_false")
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+    assert app[KEY_FAILED_LOGIN_ATTEMPTS][remote_ip] == 2
+
+    # these two next calls come within the 1s debouncer window
+    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=0.25))
+    resp = await client.get("/auth_false")
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+    assert app[KEY_FAILED_LOGIN_ATTEMPTS][remote_ip] == 2
+
+    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=0.25))
     resp = await client.get("/auth_false")
     assert resp.status == HTTPStatus.UNAUTHORIZED
     assert app[KEY_FAILED_LOGIN_ATTEMPTS][remote_ip] == 2

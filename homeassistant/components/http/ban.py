@@ -21,6 +21,7 @@ from homeassistant.config import load_yaml_config_file
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.util import dt as dt_util, yaml
 
 from .view import HomeAssistantView
@@ -33,6 +34,9 @@ _LOGGER: Final = logging.getLogger(__name__)
 KEY_BAN_MANAGER: Final = "ha_banned_ips_manager"
 KEY_FAILED_LOGIN_ATTEMPTS: Final = "ha_failed_login_attempts"
 KEY_LOGIN_THRESHOLD: Final = "ha_login_threshold"
+KEY_BAN_DEBOUNCER: Final = "ha_ban_debouncer"
+
+BAN_DEBOUNCE_TIME: Final = 1
 
 NOTIFICATION_ID_BAN: Final = "ip-ban"
 NOTIFICATION_ID_LOGIN: Final = "http-login"
@@ -51,6 +55,7 @@ def setup_bans(hass: HomeAssistant, app: Application, login_threshold: int) -> N
     app.middlewares.append(ban_middleware)
     app[KEY_FAILED_LOGIN_ATTEMPTS] = defaultdict(int)
     app[KEY_LOGIN_THRESHOLD] = login_threshold
+    app[KEY_BAN_DEBOUNCER] = None
 
     async def ban_startup(app: Application) -> None:
         """Initialize bans when app starts up."""
@@ -108,7 +113,11 @@ async def process_wrong_login(request: Request) -> None:
     Increase failed login attempts counter for remote IP address.
     Add ip ban entry if failed login attempts exceeds threshold.
     """
-    hass = request.app["hass"]
+    hass: HomeAssistant = request.app["hass"]
+    if not (debouncer := request.app[KEY_BAN_DEBOUNCER]):
+        debouncer = request.app[KEY_BAN_DEBOUNCER] = Debouncer(
+            hass, _LOGGER, cooldown=BAN_DEBOUNCE_TIME, immediate=True
+        )
 
     remote_addr = ip_address(request.remote)  # type: ignore[arg-type]
     remote_host = request.remote
@@ -135,7 +144,11 @@ async def process_wrong_login(request: Request) -> None:
     if KEY_BAN_MANAGER not in request.app or request.app[KEY_LOGIN_THRESHOLD] < 1:
         return
 
-    request.app[KEY_FAILED_LOGIN_ATTEMPTS][remote_addr] += 1
+    def increment_failed_logins() -> None:
+        request.app[KEY_FAILED_LOGIN_ATTEMPTS][remote_addr] += 1
+
+    debouncer.function = increment_failed_logins
+    await debouncer.async_call()
 
     # Supervisor IP should never be banned
     if "hassio" in hass.config.components:
