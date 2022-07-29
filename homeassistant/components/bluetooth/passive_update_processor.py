@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BluetoothChange
+from . import BluetoothChange, BluetoothScanningMode
 from .const import DOMAIN
 from .update_coordinator import BasePassiveBluetoothCoordinator
 
@@ -62,9 +62,10 @@ class PassiveBluetoothProcessorCoordinator(BasePassiveBluetoothCoordinator):
         hass: HomeAssistant,
         logger: logging.Logger,
         address: str,
+        mode: BluetoothScanningMode,
     ) -> None:
         """Initialize the coordinator."""
-        super().__init__(hass, logger, address)
+        super().__init__(hass, logger, address, mode)
         self._processors: list[PassiveBluetoothDataProcessor] = []
 
     @callback

@@ -8,13 +8,10 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
 import logging
-from typing import Any, Final, Union
+from typing import Any, Final
 
 import async_timeout
 from bleak import BleakError
-from bleak.assigned_numbers import AdvertisementDataType
-from bleak.backends.bluezdbus.advertisement_monitor import OrPattern
-from bleak.backends.bluezdbus.scanner import BlueZScannerArgs
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
 
@@ -99,12 +96,8 @@ SCANNING_MODE_TO_BLEAK = {
 
 
 BluetoothChange = Enum("BluetoothChange", "ADVERTISEMENT")
-BluetoothCallback = Callable[
-    [Union[BluetoothServiceInfoBleak, BluetoothServiceInfo], BluetoothChange], None
-]
-ProcessAdvertisementCallback = Callable[
-    [Union[BluetoothServiceInfoBleak, BluetoothServiceInfo]], bool
-]
+BluetoothCallback = Callable[[BluetoothServiceInfoBleak, BluetoothChange], None]
+ProcessAdvertisementCallback = Callable[[BluetoothServiceInfoBleak], bool]
 
 
 @hass_callback
@@ -160,8 +153,14 @@ def async_register_callback(
     hass: HomeAssistant,
     callback: BluetoothCallback,
     match_dict: BluetoothCallbackMatcher | None,
+    mode: BluetoothScanningMode,
 ) -> Callable[[], None]:
     """Register to receive a callback on bluetooth change.
+
+    mode is currently not used as we only support active scanning
+    and passive scanning will be available in the future. The flag
+    is required to be present to avoid a future breaking change
+    when we support passive scanning.
 
     Returns a callback that can be used to cancel the registration.
     """
@@ -173,19 +172,20 @@ async def async_process_advertisements(
     hass: HomeAssistant,
     callback: ProcessAdvertisementCallback,
     match_dict: BluetoothCallbackMatcher,
+    mode: BluetoothScanningMode,
     timeout: int,
 ) -> BluetoothServiceInfo:
     """Process advertisements until callback returns true or timeout expires."""
-    done: Future[BluetoothServiceInfo] = Future()
+    done: Future[BluetoothServiceInfoBleak] = Future()
 
     @hass_callback
     def _async_discovered_device(
-        service_info: BluetoothServiceInfo, change: BluetoothChange
+        service_info: BluetoothServiceInfoBleak, change: BluetoothChange
     ) -> None:
         if callback(service_info):
             done.set_result(service_info)
 
-    unload = async_register_callback(hass, _async_discovered_device, match_dict)
+    unload = async_register_callback(hass, _async_discovered_device, match_dict, mode)
 
     try:
         async with async_timeout.timeout(timeout):
@@ -247,7 +247,7 @@ async def async_setup_entry(
     """Set up the bluetooth integration from a config entry."""
     manager: BluetoothManager = hass.data[DOMAIN]
     await manager.async_start(
-        BluetoothScanningMode.PASSIVE, entry.options.get(CONF_ADAPTER)
+        BluetoothScanningMode.ACTIVE, entry.options.get(CONF_ADAPTER)
     )
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     return True
@@ -323,19 +323,8 @@ class BluetoothManager:
         }
         if adapter and adapter not in DEFAULT_ADAPTERS:
             scanner_kwargs["adapter"] = adapter
-        if scanning_mode == BluetoothScanningMode.PASSIVE:
-            # This is a workaround for the fact that passive scanning
-            # needs at least one matcher to be set. The below matcher
-            # will match all devices.
-            scanner_kwargs["bluez"] = BlueZScannerArgs(
-                or_patterns=[
-                    OrPattern(0, AdvertisementDataType.FLAGS, b"\x06"),
-                    OrPattern(0, AdvertisementDataType.FLAGS, b"\x1a"),
-                ]
-            )
         _LOGGER.debug("Initializing bluetooth scanner with %s", scanner_kwargs)
         try:
-            # TODO : fallback to active scanner if passive fails
             self.scanner.async_setup(**scanner_kwargs)
         except (FileNotFoundError, BleakError) as ex:
             raise RuntimeError(f"Failed to initialize Bluetooth: {ex}") from ex

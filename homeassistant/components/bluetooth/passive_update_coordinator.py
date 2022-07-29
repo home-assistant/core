@@ -9,7 +9,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import BluetoothChange
+from . import BluetoothChange, BluetoothScanningMode
 from .update_coordinator import BasePassiveBluetoothCoordinator
 
 
@@ -25,9 +25,10 @@ class PassiveBluetoothDataUpdateCoordinator(BasePassiveBluetoothCoordinator):
         hass: HomeAssistant,
         logger: logging.Logger,
         address: str,
+        mode: BluetoothScanningMode,
     ) -> None:
         """Initialize PassiveBluetoothDataUpdateCoordinator."""
-        super().__init__(hass, logger, address)
+        super().__init__(hass, logger, address, mode)
         self._listeners: dict[CALLBACK_TYPE, tuple[CALLBACK_TYPE, object | None]] = {}
 
     @callback

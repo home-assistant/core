@@ -11,6 +11,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from . import (
     BluetoothCallbackMatcher,
     BluetoothChange,
+    BluetoothScanningMode,
     async_register_callback,
     async_track_unavailable,
 )
@@ -27,6 +28,7 @@ class BasePassiveBluetoothCoordinator:
         hass: HomeAssistant,
         logger: logging.Logger,
         address: str,
+        mode: BluetoothScanningMode,
     ) -> None:
         """Initialize the coordinator."""
         self.hass = hass
@@ -36,6 +38,7 @@ class BasePassiveBluetoothCoordinator:
         self._cancel_track_unavailable: CALLBACK_TYPE | None = None
         self._cancel_bluetooth_advertisements: CALLBACK_TYPE | None = None
         self._present = False
+        self.mode = mode
         self.last_seen = 0.0
 
     @callback
@@ -61,6 +64,7 @@ class BasePassiveBluetoothCoordinator:
             self.hass,
             self._async_handle_bluetooth_event,
             BluetoothCallbackMatcher(address=self.address),
+            self.mode,
         )
         self._cancel_track_unavailable = async_track_unavailable(
             self.hass,
