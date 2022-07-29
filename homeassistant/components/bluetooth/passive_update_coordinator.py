@@ -6,10 +6,9 @@ import logging
 from typing import Any
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import BluetoothChange, BluetoothScanningMode
+from . import BluetoothChange, BluetoothScanningMode, BluetoothServiceInfoBleak
 from .update_coordinator import BasePassiveBluetoothCoordinator
 
 
@@ -66,7 +65,7 @@ class PassiveBluetoothDataUpdateCoordinator(BasePassiveBluetoothCoordinator):
     @callback
     def _async_handle_bluetooth_event(
         self,
-        service_info: BluetoothServiceInfo,
+        service_info: BluetoothServiceInfoBleak,
         change: BluetoothChange,
     ) -> None:
         """Handle a Bluetooth event."""

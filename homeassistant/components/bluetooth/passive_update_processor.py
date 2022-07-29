@@ -6,14 +6,12 @@ import dataclasses
 import logging
 from typing import Any, Generic, TypeVar
 
-from home_assistant_bluetooth import BluetoothServiceInfo
-
 from homeassistant.const import ATTR_IDENTIFIERS, ATTR_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BluetoothChange, BluetoothScanningMode
+from . import BluetoothChange, BluetoothScanningMode, BluetoothServiceInfoBleak
 from .const import DOMAIN
 from .update_coordinator import BasePassiveBluetoothCoordinator
 
@@ -93,7 +91,7 @@ class PassiveBluetoothProcessorCoordinator(BasePassiveBluetoothCoordinator):
     @callback
     def _async_handle_bluetooth_event(
         self,
-        service_info: BluetoothServiceInfo,
+        service_info: BluetoothServiceInfoBleak,
         change: BluetoothChange,
     ) -> None:
         """Handle a Bluetooth event."""
@@ -123,7 +121,7 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
     The processor will call the update_method every time the bluetooth device
     receives a new advertisement data from the coordinator with the following signature:
 
-    update_method(service_info: BluetoothServiceInfo) -> PassiveBluetoothDataUpdate
+    update_method(service_info: BluetoothServiceInfoBleak) -> PassiveBluetoothDataUpdate
 
     As the size of each advertisement is limited, the update_method should
     return a PassiveBluetoothDataUpdate object that contains only data that
@@ -136,7 +134,9 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
 
     def __init__(
         self,
-        update_method: Callable[[BluetoothServiceInfo], PassiveBluetoothDataUpdate[_T]],
+        update_method: Callable[
+            [BluetoothServiceInfoBleak], PassiveBluetoothDataUpdate[_T]
+        ],
     ) -> None:
         """Initialize the coordinator."""
         self.coordinator: PassiveBluetoothProcessorCoordinator
@@ -242,7 +242,7 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
     @callback
     def async_handle_bluetooth_event(
         self,
-        service_info: BluetoothServiceInfo,
+        service_info: BluetoothServiceInfoBleak,
         change: BluetoothChange,
     ) -> None:
         """Handle a Bluetooth event."""

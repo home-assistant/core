@@ -4,14 +4,13 @@ from __future__ import annotations
 import logging
 import time
 
-from home_assistant_bluetooth import BluetoothServiceInfo
-
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 
 from . import (
     BluetoothCallbackMatcher,
     BluetoothChange,
     BluetoothScanningMode,
+    BluetoothServiceInfoBleak,
     async_register_callback,
     async_track_unavailable,
 )
@@ -90,7 +89,7 @@ class BasePassiveBluetoothCoordinator:
     @callback
     def _async_handle_bluetooth_event(
         self,
-        service_info: BluetoothServiceInfo,
+        service_info: BluetoothServiceInfoBleak,
         change: BluetoothChange,
     ) -> None:
         """Handle a Bluetooth event."""
