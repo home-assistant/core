@@ -3,17 +3,19 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
-from bleak.backends.device import BLEDevice
 import switchbot
-from switchbot import parse_advertisement_data
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.passive_update_coordinator import (
     PassiveBluetoothDataUpdateCoordinator,
 )
 from homeassistant.core import HomeAssistant, callback
+
+if TYPE_CHECKING:
+    from bleak.backends.device import BLEDevice
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,7 +54,7 @@ class SwitchbotDataUpdateCoordinator(PassiveBluetoothDataUpdateCoordinator):
         """Handle a Bluetooth event."""
         super()._async_handle_bluetooth_event(service_info, change)
         discovery_info_bleak = cast(bluetooth.BluetoothServiceInfoBleak, service_info)
-        if adv := parse_advertisement_data(
+        if adv := switchbot.parse_advertisement_data(
             discovery_info_bleak.device, discovery_info_bleak.advertisement
         ):
             self.data = flatten_sensors_data(adv.data)
