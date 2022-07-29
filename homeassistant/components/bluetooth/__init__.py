@@ -1,6 +1,8 @@
 """The bluetooth integration."""
 from __future__ import annotations
 
+import asyncio
+from asyncio import Future
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -8,6 +10,7 @@ from enum import Enum
 import logging
 from typing import Any, Final, Union
 
+import async_timeout
 from bleak import BleakError
 from bleak.assigned_numbers import AdvertisementDataType
 from bleak.backends.bluezdbus.advertisement_monitor import OrPattern
@@ -46,6 +49,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 UNAVAILABLE_TRACK_SECONDS: Final = 60 * 5
+START_TIMEOUT = 15
 
 SOURCE_LOCAL: Final = "local"
 
@@ -97,6 +101,9 @@ SCANNING_MODE_TO_BLEAK = {
 BluetoothChange = Enum("BluetoothChange", "ADVERTISEMENT")
 BluetoothCallback = Callable[
     [Union[BluetoothServiceInfoBleak, BluetoothServiceInfo], BluetoothChange], None
+]
+ProcessAdvertisementCallback = Callable[
+    [Union[BluetoothServiceInfoBleak, BluetoothServiceInfo]], bool
 ]
 
 
@@ -160,6 +167,31 @@ def async_register_callback(
     """
     manager: BluetoothManager = hass.data[DOMAIN]
     return manager.async_register_callback(callback, match_dict)
+
+
+async def async_process_advertisements(
+    hass: HomeAssistant,
+    callback: ProcessAdvertisementCallback,
+    match_dict: BluetoothCallbackMatcher,
+    timeout: int,
+) -> BluetoothServiceInfo:
+    """Process advertisements until callback returns true or timeout expires."""
+    done: Future[BluetoothServiceInfo] = Future()
+
+    @hass_callback
+    def _async_discovered_device(
+        service_info: BluetoothServiceInfo, change: BluetoothChange
+    ) -> None:
+        if callback(service_info):
+            done.set_result(service_info)
+
+    unload = async_register_callback(hass, _async_discovered_device, match_dict)
+
+    try:
+        async with async_timeout.timeout(timeout):
+            return await done
+    finally:
+        unload()
 
 
 @hass_callback
@@ -316,7 +348,13 @@ class BluetoothManager:
             self._device_detected, {}
         )
         try:
-            await self.scanner.start()
+            async with async_timeout.timeout(START_TIMEOUT):
+                await self.scanner.start()
+        except asyncio.TimeoutError as ex:
+            self._cancel_device_detected()
+            raise ConfigEntryNotReady(
+                f"Timed out starting Bluetooth after {START_TIMEOUT} seconds"
+            ) from ex
         except (FileNotFoundError, BleakError) as ex:
             self._cancel_device_detected()
             raise ConfigEntryNotReady(f"Failed to start Bluetooth: {ex}") from ex

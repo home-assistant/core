@@ -2,28 +2,19 @@
 from unittest.mock import ANY, AsyncMock, patch
 
 from homeassistant import config_entries
-from homeassistant.components.anthemav.const import CONF_MODEL, DOMAIN
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 
 async def test_load_unload_config_entry(
-    hass: HomeAssistant, mock_connection_create: AsyncMock, mock_anthemav: AsyncMock
+    hass: HomeAssistant,
+    mock_connection_create: AsyncMock,
+    mock_anthemav: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test load and unload AnthemAv component."""
-    mock_config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_HOST: "1.1.1.1",
-            CONF_PORT: 14999,
-            CONF_NAME: "Anthem AV",
-            CONF_MAC: "aabbccddeeff",
-            CONF_MODEL: "MRX 520",
-        },
-    )
-
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -42,18 +33,10 @@ async def test_load_unload_config_entry(
     mock_anthemav.close.assert_called_once()
 
 
-async def test_config_entry_not_ready(hass: HomeAssistant) -> None:
+async def test_config_entry_not_ready(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test AnthemAV configuration entry not ready."""
-    mock_config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_HOST: "1.1.1.1",
-            CONF_PORT: 14999,
-            CONF_NAME: "Anthem AV",
-            CONF_MAC: "aabbccddeeff",
-            CONF_MODEL: "MRX 520",
-        },
-    )
 
     with patch(
         "anthemav.Connection.create",
@@ -63,3 +46,31 @@ async def test_config_entry_not_ready(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
         assert mock_config_entry.state is config_entries.ConfigEntryState.SETUP_RETRY
+
+
+async def test_anthemav_dispatcher_signal(
+    hass: HomeAssistant,
+    mock_connection_create: AsyncMock,
+    mock_anthemav: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test send update signal to dispatcher."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    states = hass.states.get("media_player.anthem_av")
+    assert states
+    assert states.state == STATE_OFF
+
+    # change state of the AVR
+    mock_anthemav.protocol.power = True
+
+    # get the callback function that trigger the signal to update the state
+    avr_update_callback = mock_connection_create.call_args[1]["update_callback"]
+    avr_update_callback("power")
+
+    await hass.async_block_till_done()
+
+    states = hass.states.get("media_player.anthem_av")
+    assert states.state == STATE_ON

@@ -22,6 +22,7 @@ import homeassistant.util.dt as dt_util
 from .common import (
     async_enable_traffic,
     async_find_group_entity_id,
+    async_shift_time,
     async_test_rejoin,
     find_entity_id,
     get_zha_gateway,
@@ -346,6 +347,7 @@ async def test_light(
         await async_test_level_on_off_from_hass(
             hass, cluster_on_off, cluster_level, entity_id
         )
+        await async_shift_time(hass)
 
         # test getting a brightness change from the network
         await async_test_on_from_light(hass, cluster_on_off, entity_id)
@@ -1190,6 +1192,8 @@ async def async_test_level_on_off_from_hass(
 
     on_off_cluster.request.reset_mock()
     level_cluster.request.reset_mock()
+    await async_shift_time(hass)
+
     # turn on via UI
     await hass.services.async_call(
         LIGHT_DOMAIN, "turn_on", {"entity_id": entity_id}, blocking=True
@@ -1209,6 +1213,8 @@ async def async_test_level_on_off_from_hass(
     )
     on_off_cluster.request.reset_mock()
     level_cluster.request.reset_mock()
+
+    await async_shift_time(hass)
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -1407,10 +1413,14 @@ async def test_zha_group_light_entity(
     # test turning the lights on and off from the HA
     await async_test_on_off_from_hass(hass, group_cluster_on_off, group_entity_id)
 
+    await async_shift_time(hass)
+
     # test short flashing the lights from the HA
     await async_test_flash_from_hass(
         hass, group_cluster_identify, group_entity_id, FLASH_SHORT
     )
+
+    await async_shift_time(hass)
 
     # test turning the lights on and off from the light
     await async_test_on_off_from_light(hass, dev1_cluster_on_off, group_entity_id)
@@ -1423,6 +1433,8 @@ async def test_zha_group_light_entity(
         group_entity_id,
         expected_default_transition=1,  # a Sengled light is in that group and needs a minimum 0.1s transition
     )
+
+    await async_shift_time(hass)
 
     # test getting a brightness change from the network
     await async_test_on_from_light(hass, dev1_cluster_on_off, group_entity_id)
@@ -1442,6 +1454,8 @@ async def test_zha_group_light_entity(
     await async_test_flash_from_hass(
         hass, group_cluster_identify, group_entity_id, FLASH_LONG
     )
+
+    await async_shift_time(hass)
 
     assert len(zha_group.members) == 2
     # test some of the group logic to make sure we key off states correctly

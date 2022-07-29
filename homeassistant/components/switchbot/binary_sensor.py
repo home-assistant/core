@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -20,7 +21,29 @@ PARALLEL_UPDATES = 1
 BINARY_SENSOR_TYPES: dict[str, BinarySensorEntityDescription] = {
     "calibration": BinarySensorEntityDescription(
         key="calibration",
+        name="Calibration",
         entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "motion_detected": BinarySensorEntityDescription(
+        key="pir_state",
+        name="Motion detected",
+        device_class=BinarySensorDeviceClass.MOTION,
+    ),
+    "contact_open": BinarySensorEntityDescription(
+        key="contact_open",
+        name="Door open",
+        device_class=BinarySensorDeviceClass.DOOR,
+    ),
+    "contact_timeout": BinarySensorEntityDescription(
+        key="contact_timeout",
+        name="Door timeout",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "is_light": BinarySensorEntityDescription(
+        key="is_light",
+        name="Light",
+        device_class=BinarySensorDeviceClass.LIGHT,
     ),
 }
 
@@ -50,6 +73,8 @@ async def async_setup_entry(
 class SwitchBotBinarySensor(SwitchbotEntity, BinarySensorEntity):
     """Representation of a Switchbot binary sensor."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: SwitchbotDataUpdateCoordinator,
@@ -62,8 +87,8 @@ class SwitchBotBinarySensor(SwitchbotEntity, BinarySensorEntity):
         super().__init__(coordinator, unique_id, mac, name=switchbot_name)
         self._sensor = binary_sensor
         self._attr_unique_id = f"{unique_id}-{binary_sensor}"
-        self._attr_name = f"{switchbot_name} {binary_sensor.title()}"
         self.entity_description = BINARY_SENSOR_TYPES[binary_sensor]
+        self._attr_name = self.entity_description.name
 
     @property
     def is_on(self) -> bool:

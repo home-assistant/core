@@ -61,6 +61,7 @@ async def create_issues(hass, ws_client):
                 created=ANY,
                 dismissed_version=None,
                 ignored=False,
+                issue_domain=None,
             )
             for issue in issues
         ]
@@ -154,6 +155,7 @@ async def test_dismiss_issue(hass: HomeAssistant, hass_ws_client) -> None:
                 created=ANY,
                 dismissed_version=ha_version,
                 ignored=True,
+                issue_domain=None,
             )
             for issue in issues
         ]
@@ -183,6 +185,7 @@ async def test_dismiss_issue(hass: HomeAssistant, hass_ws_client) -> None:
                 created=ANY,
                 dismissed_version=None,
                 ignored=False,
+                issue_domain=None,
             )
             for issue in issues
         ]
@@ -226,6 +229,7 @@ async def test_fix_non_existing_issue(
                 created=ANY,
                 dismissed_version=None,
                 ignored=False,
+                issue_domain=None,
             )
             for issue in issues
         ]
@@ -383,6 +387,7 @@ async def test_list_issues(hass: HomeAssistant, hass_storage, hass_ws_client) ->
                     "dismissed_version": None,
                     "domain": "test",
                     "issue_id": "issue_3_inactive",
+                    "issue_domain": None,
                 },
             ]
         },
@@ -404,6 +409,7 @@ async def test_list_issues(hass: HomeAssistant, hass_storage, hass_ws_client) ->
             "domain": "test",
             "is_fixable": True,
             "issue_id": "issue_1",
+            "issue_domain": None,
             "learn_more_url": "https://theuselessweb.com",
             "severity": "error",
             "translation_key": "abc_123",
@@ -414,6 +420,7 @@ async def test_list_issues(hass: HomeAssistant, hass_storage, hass_ws_client) ->
             "domain": "test",
             "is_fixable": False,
             "issue_id": "issue_2",
+            "issue_domain": None,
             "learn_more_url": "https://theuselessweb.com/abc",
             "severity": "other",
             "translation_key": "even_worse",

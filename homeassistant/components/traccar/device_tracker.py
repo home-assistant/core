@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable
 from datetime import datetime, timedelta
 import logging
 
@@ -21,6 +20,7 @@ from homeassistant.components.device_tracker import (
     CONF_SCAN_INTERVAL,
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     SOURCE_TYPE_GPS,
+    AsyncSeeCallback,
 )
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.config_entries import ConfigEntry
@@ -174,7 +174,7 @@ async def async_setup_entry(
 async def async_setup_scanner(
     hass: HomeAssistant,
     config: ConfigType,
-    async_see: Callable[..., Awaitable[None]],
+    async_see: AsyncSeeCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> bool:
     """Validate the configuration and return a Traccar scanner."""
@@ -208,7 +208,7 @@ class TraccarScanner:
         self,
         api: ApiClient,
         hass: HomeAssistant,
-        async_see: Callable[..., Awaitable[None]],
+        async_see: AsyncSeeCallback,
         scan_interval: timedelta,
         max_accuracy: int,
         skip_accuracy_on: bool,
