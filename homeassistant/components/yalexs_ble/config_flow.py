@@ -20,7 +20,6 @@ from homeassistant.components.bluetooth.match import (
     LOCAL_NAME,
     BluetoothCallbackMatcher,
 )
-from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant.loader import async_get_integration
@@ -28,37 +27,6 @@ from homeassistant.loader import async_get_integration
 from .const import CONF_KEY, CONF_LOCAL_NAME, CONF_SLOT, DISCOVERY_TIMEOUT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def async_wait_for_discovery(
-    hass: HomeAssistant, local_name: str
-) -> bluetooth.BluetoothServiceInfoBleak:
-    """Wait for a device to be discovered."""
-    discovery_info_future: asyncio.Future[
-        bluetooth.BluetoothServiceInfoBleak
-    ] = asyncio.Future()
-
-    @callback
-    def _async_update_ble(
-        service_info: bluetooth.BluetoothServiceInfoBleak
-        | bluetooth.BluetoothServiceInfo,
-        change: bluetooth.BluetoothChange,
-    ) -> None:
-        """Update from a ble callback."""
-        assert isinstance(service_info, bluetooth.BluetoothServiceInfoBleak)
-        if not discovery_info_future.done():
-            discovery_info_future.set_result(service_info)
-
-    cancel = bluetooth.async_register_callback(
-        hass,
-        _async_update_ble,
-        BluetoothCallbackMatcher({LOCAL_NAME: local_name}),
-        bluetooth.BluetoothScanningMode.ACTIVE,
-    )
-    try:
-        return await asyncio.wait_for(discovery_info_future, timeout=DISCOVERY_TIMEOUT)
-    finally:
-        cancel()
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -110,8 +78,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             context = progress["context"]
             if context.get("unique_id") == local_name and not context.get("active"):
                 self.hass.config_entries.flow.async_abort(progress["flow_id"])
+
         try:
-            self._discovery_info = await async_wait_for_discovery(self.hass, local_name)
+            self._discovery_info = await bluetooth.async_process_advertisements(
+                self.hass,
+                lambda service_info: True,
+                BluetoothCallbackMatcher({LOCAL_NAME: local_name}),
+                bluetooth.BluetoothScanningMode.ACTIVE,
+                DISCOVERY_TIMEOUT,
+            )
         except asyncio.TimeoutError:
             return self.async_abort(reason="no_devices_found")
         self._discovered_name = name
