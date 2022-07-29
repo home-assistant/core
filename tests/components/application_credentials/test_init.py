@@ -489,7 +489,7 @@ async def test_config_flow(
     entries = hass.config_entries.async_entries(TEST_DOMAIN)
     assert len(entries) == 1
     result = await hass.config_entries.async_remove(entries[0].entry_id)
-    assert result.get("application_credential_id") == ID
+    assert result.get("application_credentials_id") == ID
 
     # Application credential can now be removed
     resp = await client.cmd("delete", {"application_credentials_id": ID})
