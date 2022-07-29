@@ -81,7 +81,7 @@ class TelegramNotificationService(BaseNotificationService):
         if data is not None and ATTR_DISABLE_WEB_PREV in data:
             disable_web_page_preview = data[ATTR_DISABLE_WEB_PREV]
             service_data.update({ATTR_DISABLE_WEB_PREV: disable_web_page_preview})
-            
+
         # Get keyboard info
         if data is not None and ATTR_KEYBOARD in data:
             keys = data.get(ATTR_KEYBOARD)
