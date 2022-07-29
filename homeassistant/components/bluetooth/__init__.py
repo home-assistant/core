@@ -336,7 +336,7 @@ class BluetoothManager:
         )
         try:
             async with async_timeout.timeout(START_TIMEOUT):
-                await self.scanner.start()
+                await self.scanner.start()  # type: ignore[no-untyped-call]
         except asyncio.TimeoutError as ex:
             self._cancel_device_detected()
             raise ConfigEntryNotReady(
@@ -503,7 +503,7 @@ class BluetoothManager:
             self._cancel_unavailable_tracking = None
         if self.scanner:
             try:
-                await self.scanner.stop()
+                await self.scanner.stop()  # type: ignore[no-untyped-call]
             except BleakError as ex:
                 # This is not fatal, and they may want to reload
                 # the config entry to restart the scanner if they
