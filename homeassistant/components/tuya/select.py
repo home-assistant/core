@@ -77,6 +77,16 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             icon="mdi:thermometer-lines",
         ),
     ),
+    # Smart Water Timer
+    "sfkzq": (
+        SelectEntityDescription(
+            key=DPCode.WEATHER_DELAY,
+            name="Weather delay",
+            icon="mdi:weather-partly-cloudy",
+            device_class=TuyaDeviceClass.WEATHER_DELAY,
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     # Siren Alarm
     # https://developer.tuya.com/en/docs/iot/categorysgbj?id=Kaiuz37tlpbnu
     "sgbj": (
@@ -133,16 +143,6 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             name="Motion detection sensitivity",
             icon="mdi:motion-sensor",
             device_class=TuyaDeviceClass.MOTION_SENSITIVITY,
-            entity_category=EntityCategory.CONFIG,
-        ),
-    ),
-    # Smart Water Timer
-    "sfkzq": (
-        SelectEntityDescription(
-            key=DPCode.WEATHER_DELAY,
-            name="Weather delay",
-            icon="mdi:weather-partly-cloudy",
-            device_class=TuyaDeviceClass.WEATHER_DELAY,
             entity_category=EntityCategory.CONFIG,
         ),
     ),
