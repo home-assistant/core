@@ -110,7 +110,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Store mac address for changed UDN matching.
     device_mac_address = await device.async_get_mac_address()
-    if device_mac_address and not entry.data.get("CONFIG_ENTRY_MAC_ADDRESS"):
+    if device_mac_address and not entry.data.get(CONFIG_ENTRY_MAC_ADDRESS):
         hass.config_entries.async_update_entry(
             entry=entry,
             data={
