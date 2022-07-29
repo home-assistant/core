@@ -25,7 +25,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = hass.data.setdefault(DOMAIN, {})[
         entry.entry_id
     ] = PassiveBluetoothProcessorCoordinator(
-        hass, _LOGGER, address=address, mode=BluetoothScanningMode.ACTIVE
+        hass, _LOGGER, address=address, mode=BluetoothScanningMode.PASSIVE
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(
