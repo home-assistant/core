@@ -8,6 +8,8 @@ from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
+    DEFAULT_MAX_TEMP,
+    DEFAULT_MIN_TEMP,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -18,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP, DOMAIN, MASTER_THERMOSTATS
+from .const import DOMAIN, MASTER_THERMOSTATS
 from .coordinator import PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
 from .util import plugwise_command

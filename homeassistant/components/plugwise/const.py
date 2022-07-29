@@ -31,8 +31,6 @@ PLATFORMS_GATEWAY: Final[list[str]] = [
     Platform.SWITCH,
 ]
 
-DEFAULT_MAX_TEMP: Final = 30
-DEFAULT_MIN_TEMP: Final = 4
 DEFAULT_PORT: Final = 80
 DEFAULT_SCAN_INTERVAL: Final[dict[str, timedelta]] = {
     "power": timedelta(seconds=10),
