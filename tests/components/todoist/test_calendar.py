@@ -1,12 +1,15 @@
 """Unit tests for the Todoist calendar platform."""
 from datetime import datetime
-from unittest.mock import Mock
+from typing import Any
+from unittest.mock import Mock, patch
 
-from homeassistant.components.todoist.calendar import (
-    TodoistProjectEntity,
-    _parse_due_date,
-)
+import pytest
+
+from homeassistant import setup
+from homeassistant.components.todoist.calendar import DOMAIN, _parse_due_date
 from homeassistant.components.todoist.types import DueDate
+from homeassistant.const import CONF_TOKEN
+from homeassistant.helpers import entity_registry
 from homeassistant.util import dt
 
 
@@ -48,12 +51,34 @@ def test_parse_due_date_without_timezone_uses_offset():
     assert datetime(2022, 2, 2, 22, 0, 0, tzinfo=dt.UTC) == actual
 
 
-def test_calendar_entity_unique_id():
+@pytest.fixture(name="state")
+def mock_state() -> dict[str, Any]:
+    """Mock the api state."""
+    return {
+        "collaborators": [],
+        "labels": [{"name": "label1", "id": 1}],
+        "projects": [{"id": 12345, "name": "Name"}],
+    }
+
+
+@patch("homeassistant.components.todoist.calendar.TodoistAPI")
+async def test_calendar_entity_unique_id(todoist_api, hass, state):
     """Test unique id is set to project id."""
-    entity = TodoistProjectEntity(
-        hass=Mock(),
-        data={"id": 12345, "name": "My project"},
-        labels=[],
-        token=Mock(),
+    api = Mock(state=state)
+    todoist_api.return_value = api
+    assert await setup.async_setup_component(
+        hass,
+        "calendar",
+        {
+            "calendar": {
+                "platform": DOMAIN,
+                CONF_TOKEN: "token",
+                "custom_projects": [{"name": "custom"}],
+            }
+        },
     )
+    await hass.async_block_till_done()
+
+    registry = entity_registry.async_get(hass)
+    entity = registry.async_get("calendar.name")
     assert 12345 == entity.unique_id
