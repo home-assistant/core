@@ -174,7 +174,7 @@ async def async_process_advertisements(
     match_dict: BluetoothCallbackMatcher,
     mode: BluetoothScanningMode,
     timeout: int,
-) -> BluetoothServiceInfo:
+) -> BluetoothServiceInfoBleak:
     """Process advertisements until callback returns true or timeout expires."""
     done: Future[BluetoothServiceInfoBleak] = Future()
 
