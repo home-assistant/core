@@ -36,7 +36,6 @@ def get_zone() -> MagicMock:
 @pytest.fixture
 def mock_connection_create(mock_anthemav: AsyncMock) -> AsyncMock:
     """Return the default mocked connection.create."""
-
     with patch(
         "anthemav.Connection.create",
         return_value=mock_anthemav,
@@ -47,7 +46,6 @@ def mock_connection_create(mock_anthemav: AsyncMock) -> AsyncMock:
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
-
     return MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -67,7 +65,7 @@ async def init_integration(
     mock_config_entry: MockConfigEntry,
     mock_connection_create: AsyncMock,
 ) -> MockConfigEntry:
-    """Set up the WLED integration for testing."""
+    """Set up the AnthemAv integration for testing."""
     mock_config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)

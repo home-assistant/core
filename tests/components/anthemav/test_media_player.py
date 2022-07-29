@@ -32,7 +32,7 @@ async def test_zones_loaded(
     entity_id: str,
     entity_name: str,
 ) -> None:
-    """Test load and unload AnthemAv component."""
+    """Test zones are loaded."""
 
     states = hass.states.get(entity_id)
 
@@ -44,7 +44,7 @@ async def test_zones_loaded(
 async def test_update_states_zone1(
     hass: HomeAssistant, init_integration: MockConfigEntry, mock_anthemav: AsyncMock
 ) -> None:
-    """Test load and unload AnthemAv component."""
+    """Test zone states are updated."""
 
     mock_zone = mock_anthemav.protocol.zones[1]
 

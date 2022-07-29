@@ -15,25 +15,20 @@ async def test_load_unload_config_entry(
     hass: HomeAssistant,
     mock_connection_create: AsyncMock,
     mock_anthemav: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    init_integration: MockConfigEntry,
 ) -> None:
     """Test load and unload AnthemAv component."""
-
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
     # assert avr is created
     mock_connection_create.assert_called_with(
         host="1.1.1.1", port=14999, update_callback=ANY
     )
-    assert mock_config_entry.state == config_entries.ConfigEntryState.LOADED
+    assert init_integration.state == config_entries.ConfigEntryState.LOADED
 
     # unload
-    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.config_entries.async_unload(init_integration.entry_id)
     await hass.async_block_till_done()
     # assert unload and avr is closed
-    assert mock_config_entry.state == config_entries.ConfigEntryState.NOT_LOADED
+    assert init_integration.state == config_entries.ConfigEntryState.NOT_LOADED
     mock_anthemav.close.assert_called_once()
 
 
@@ -41,8 +36,7 @@ async def test_load_unload_config_entry(
 async def test_config_entry_not_ready_when_oserror(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, error: Exception
 ) -> None:
-    """Test AnthemAV configuration entry not ready when OsError."""
-
+    """Test AnthemAV configuration entry not ready."""
     with patch(
         "anthemav.Connection.create",
         side_effect=error,
@@ -57,13 +51,9 @@ async def test_anthemav_dispatcher_signal(
     hass: HomeAssistant,
     mock_connection_create: AsyncMock,
     mock_anthemav: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    init_integration: MockConfigEntry,
 ) -> None:
     """Test send update signal to dispatcher."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
     states = hass.states.get("media_player.anthem_av")
     assert states
     assert states.state == STATE_OFF
