@@ -27,4 +27,4 @@ set_trigger:
       example: "1"
     trigger:
       description: Configuration of trigger
-      example: "00007001"
+      example: "'12707001'"
