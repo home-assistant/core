@@ -105,3 +105,44 @@ async def test_options_form(hass: HomeAssistant) -> None:
     entry_check = hass.config_entries.async_get_entry("1")
     assert entry_check.state == config_entries.ConfigEntryState.LOADED
     assert entry_check.update_listeners is not None
+
+
+async def test_form_entry_already_exist(hass: HomeAssistant) -> None:
+    """Test abort when entry already exist."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        options={
+            "resource": "https://www.home-assistant.io",
+            "name": "Release",
+            "select": ".current-version h1",
+            "value_template": "{{ value.split(':')[1] }}",
+            "index": 0,
+            "verify_ssl": True,
+        },
+        entry_id="1",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.FORM
+
+    with patch(
+        "homeassistant.components.scrape.sensor.RestData",
+        return_value=MockRestData("test_scrape_sensor"),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_RESOURCE: "https://www.home-assistant.io",
+                CONF_NAME: "Release",
+                CONF_SELECT: ".current-version h1",
+                CONF_VALUE_TEMPLATE: "{{ value.split(':')[1] }}",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.ABORT
