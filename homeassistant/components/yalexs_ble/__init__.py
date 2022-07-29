@@ -35,12 +35,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     @callback
     def _async_update_ble(
-        service_info: bluetooth.BluetoothServiceInfoBleak
-        | bluetooth.BluetoothServiceInfo,
+        service_info: bluetooth.BluetoothServiceInfoBleak,
         change: bluetooth.BluetoothChange,
     ) -> None:
         """Update from a ble callback."""
-        assert isinstance(service_info, bluetooth.BluetoothServiceInfoBleak)
         push_lock.update_advertisement(service_info.device, service_info.advertisement)
         if not startup_event.is_set():
             startup_event.set()
@@ -50,6 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass,
             _async_update_ble,
             BluetoothCallbackMatcher({LOCAL_NAME: local_name}),
+            bluetooth.BluetoothScanningMode.PASSIVE,
         )
     )
 
