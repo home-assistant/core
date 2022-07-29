@@ -4,10 +4,10 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime, timedelta
 import logging
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from bleak import BleakClient, BleakError
-from bleak.backends.device import BLEDevice
 import voluptuous as vol
 
 from homeassistant.components import bluetooth
@@ -30,6 +30,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
+
+if TYPE_CHECKING:
+    from bleak.backends.device import BLEDevice
 
 _LOGGER = logging.getLogger(__name__)
 
