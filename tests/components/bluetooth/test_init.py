@@ -12,6 +12,7 @@ from homeassistant.components.bluetooth import (
     SOURCE_LOCAL,
     UNAVAILABLE_TRACK_SECONDS,
     BluetoothChange,
+    BluetoothScanningMode,
     BluetoothServiceInfo,
     async_process_advertisements,
     async_track_unavailable,
@@ -675,6 +676,7 @@ async def test_register_callbacks(hass, mock_bleak_scanner_start, enable_bluetoo
             hass,
             _fake_subscriber,
             {"service_uuids": {"cba20d00-224d-11e6-9fb8-0002a5d5c51b"}},
+            BluetoothScanningMode.ACTIVE,
         )
 
         assert len(mock_bleak_scanner_start.mock_calls) == 1
@@ -760,6 +762,7 @@ async def test_register_callback_by_address(
             hass,
             _fake_subscriber,
             {"address": "44:44:33:11:23:45"},
+            BluetoothScanningMode.ACTIVE,
         )
 
         assert len(mock_bleak_scanner_start.mock_calls) == 1
@@ -799,6 +802,7 @@ async def test_register_callback_by_address(
             hass,
             _fake_subscriber,
             {"address": "44:44:33:11:23:45"},
+            BluetoothScanningMode.ACTIVE,
         )
         cancel()
 
@@ -808,6 +812,7 @@ async def test_register_callback_by_address(
             hass,
             _fake_subscriber,
             {"address": "44:44:33:11:23:45"},
+            BluetoothScanningMode.ACTIVE,
         )
         cancel()
 
@@ -832,7 +837,11 @@ async def test_process_advertisements_bail_on_good_advertisement(
 
     handle = hass.async_create_task(
         async_process_advertisements(
-            hass, _callback, {"address": "aa:44:33:11:23:45"}, 5
+            hass,
+            _callback,
+            {"address": "aa:44:33:11:23:45"},
+            BluetoothScanningMode.ACTIVE,
+            5,
         )
     )
 
@@ -873,7 +882,11 @@ async def test_process_advertisements_ignore_bad_advertisement(
 
     handle = hass.async_create_task(
         async_process_advertisements(
-            hass, _callback, {"address": "aa:44:33:11:23:45"}, 5
+            hass,
+            _callback,
+            {"address": "aa:44:33:11:23:45"},
+            BluetoothScanningMode.ACTIVE,
+            5,
         )
     )
 
@@ -903,7 +916,9 @@ async def test_process_advertisements_timeout(
         return False
 
     with pytest.raises(asyncio.TimeoutError):
-        await async_process_advertisements(hass, _callback, {}, 0)
+        await async_process_advertisements(
+            hass, _callback, {}, BluetoothScanningMode.ACTIVE, 0
+        )
 
 
 async def test_wrapped_instance_with_filter(
