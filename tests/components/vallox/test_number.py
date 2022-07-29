@@ -40,7 +40,7 @@ async def test_temperature_number_entities(
 
 
 @pytest.mark.parametrize(
-    "entity_id,metric_key, value",
+    "entity_id, metric_key, value",
     [
         ("number.vallox_fan_speed_home", "A_CYC_HOME_SPEED_SETTING", 60),
         ("number.vallox_fan_speed_away", "A_CYC_AWAY_SPEED_SETTING", 30),
