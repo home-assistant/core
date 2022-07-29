@@ -363,7 +363,7 @@ class JellyfinSource(MediaSource):
 
 def _media_mime_type(media_item: dict[str, Any]) -> str:
     """Return the mime type of a media item."""
-    if ITEM_KEY_MEDIA_SOURCES not in media_item:
+    if not media_item.get(ITEM_KEY_MEDIA_SOURCES):
         raise BrowseError("Unable to determine mime type for item without media source")
 
     media_source = media_item[ITEM_KEY_MEDIA_SOURCES][0]
