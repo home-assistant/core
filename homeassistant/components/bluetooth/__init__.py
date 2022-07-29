@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
 import logging
-from typing import Any, Final
+from typing import Final
 
 import async_timeout
 from bleak import BleakError
@@ -318,9 +318,7 @@ class BluetoothManager:
             self.scanner.async_reset()
             self._integration_matcher.async_clear_history()
             self._reloading = False
-        scanner_kwargs: dict[str, Any] = {
-            "scanning_mode": SCANNING_MODE_TO_BLEAK[scanning_mode]
-        }
+        scanner_kwargs = {"scanning_mode": SCANNING_MODE_TO_BLEAK[scanning_mode]}
         if adapter and adapter not in DEFAULT_ADAPTERS:
             scanner_kwargs["adapter"] = adapter
         _LOGGER.debug("Initializing bluetooth scanner with %s", scanner_kwargs)
