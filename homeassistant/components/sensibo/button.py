@@ -49,14 +49,10 @@ async def async_setup_entry(
 
     coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    entities: list[SensiboDeviceButton] = []
-
-    entities.extend(
+    async_add_entities(
         SensiboDeviceButton(coordinator, device_id, DEVICE_BUTTON_TYPES)
         for device_id, device_data in coordinator.data.parsed.items()
     )
-
-    async_add_entities(entities)
 
 
 class SensiboDeviceButton(SensiboDeviceBaseEntity, ButtonEntity):
