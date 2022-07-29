@@ -11,7 +11,7 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_platform, service
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN, WiLightDevice
@@ -116,7 +116,7 @@ async def async_setup_entry(
 
         if (entity.entity_id == entity_id) & isinstance(entity, WiLightValveSwitch):
             watering_time = service.data[ATTR_WATERING_TIME]
-            await entity.async_set_switch_time(watering_time=watering_time)
+            await entity.async_set_watering_time(watering_time=watering_time)
 
     async def set_trigger(entity, service: Any) -> None:
         entity_id = service.data[ATTR_ENTITY_ID]
@@ -124,9 +124,7 @@ async def async_setup_entry(
         if (entity.entity_id == entity_id) & isinstance(entity, WiLightValveSwitch):
             trigger_index = service.data[ATTR_TRIGGER_INDEX]
             trigger = service.data[ATTR_TRIGGER]
-            await entity.async_set_trigger(
-                trigger_index=trigger_index, trigger=trigger
-            )
+            await entity.async_set_trigger(trigger_index=trigger_index, trigger=trigger)
 
     async def set_pause_time(entity, service: Any) -> None:
         entity_id = service.data[ATTR_ENTITY_ID]
@@ -135,7 +133,7 @@ async def async_setup_entry(
             entity, WiLightValvePauseSwitch
         ):
             pause_time = service.data[ATTR_PAUSE_TIME]
-            await entity.async_set_switch_time(pause_time=pause_time)
+            await entity.async_set_pause_time(pause_time=pause_time)
 
     platform = entity_platform.async_get_current_platform()
 
@@ -276,14 +274,12 @@ class WiLightValveSwitch(WiLightDevice, SwitchEntity):
         """Turn the device off."""
         await self._client.turn_off(self._index)
 
-    async def async_set_switch_time(self, **kwargs: Any) -> None:
+    async def async_set_watering_time(self, watering_time: int) -> None:
         """Set the watering time."""
-        await self._client.set_switch_time(self._index, kwargs[ATTR_WATERING_TIME])
+        await self._client.set_switch_time(self._index, watering_time)
 
-    async def async_set_trigger(self, **kwargs: Any) -> None:
+    async def async_set_trigger(self, trigger_index: int, trigger: str) -> None:
         """Set the trigger according to index."""
-        trigger_index = kwargs[ATTR_TRIGGER_INDEX]
-        trigger = kwargs[ATTR_TRIGGER]
         if trigger_index == 1:
             await self._client.set_switch_trigger_1(self._index, trigger)
         if trigger_index == 2:
@@ -341,8 +337,7 @@ class WiLightValvePauseSwitch(WiLightDevice, SwitchEntity):
         """Turn the device off."""
         await self._client.turn_off(self._index)
 
-    async def async_set_switch_time(self, **kwargs: Any) -> None:
+    async def async_set_pause_time(self, pause_time: int) -> None:
         """Set the pause time."""
-        if ATTR_PAUSE_TIME in kwargs:
-            target_time = hass_to_wilight_pause_time(kwargs[ATTR_PAUSE_TIME])
-            await self._client.set_switch_time(self._index, target_time)
+        target_time = hass_to_wilight_pause_time(pause_time)
+        await self._client.set_switch_time(self._index, target_time)
