@@ -129,6 +129,8 @@ PURE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
     FILTER_CLEAN_REQUIRED_DESCRIPTION,
 )
 
+DESCRIPTION_BY_MODELS = {"pure": PURE_SENSOR_TYPES}
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -156,15 +158,10 @@ async def async_setup_entry(
     )
     entities.extend(
         SensiboDeviceSensor(coordinator, device_id, description)
-        for description in PURE_SENSOR_TYPES
         for device_id, device_data in coordinator.data.parsed.items()
-        if device_data.model == "pure"
-    )
-    entities.extend(
-        SensiboDeviceSensor(coordinator, device_id, description)
-        for description in DEVICE_SENSOR_TYPES
-        for device_id, device_data in coordinator.data.parsed.items()
-        if device_data.model != "pure"
+        for description in DESCRIPTION_BY_MODELS.get(
+            device_data.model, DEVICE_SENSOR_TYPES
+        )
     )
 
     async_add_entities(entities)
