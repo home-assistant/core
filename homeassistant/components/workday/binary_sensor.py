@@ -12,6 +12,8 @@ from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     BinarySensorEntity,
 )
+from homeassistant.components.repairs.issue_handler import async_create_issue
+from homeassistant.components.repairs.models import IssueSeverity
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
@@ -87,11 +89,14 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Workday sensor."""
-    LOGGER.warning(
-        # Config flow added in Home Assistant Core 2022.8, remove import flow in 2022.10
-        "Loading Workday via platform setup has been deprecated in Home Assistant 2022.8 "
-        "Your configuration has been automatically imported and you can "
-        "remove it from your configuration.yaml"
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2022.10.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
     )
 
     hass.async_create_task(

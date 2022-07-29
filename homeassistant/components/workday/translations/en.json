@@ -34,6 +34,12 @@
             }
         }
     },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Configuring Workday using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the Workday YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue.",
+            "title": "The Workday YAML configuration is being removed"
+        }
+    },
     "options": {
         "error": {
             "add_holiday_error": "Incorrect format on date (YYYY-MM-DD)",
