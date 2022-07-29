@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable
 from datetime import datetime, timedelta
 import logging
 from uuid import UUID
@@ -22,6 +21,7 @@ from homeassistant.components.device_tracker.const import (
 )
 from homeassistant.components.device_tracker.legacy import (
     YAML_DEVICES,
+    AsyncSeeCallback,
     async_load_config,
 )
 from homeassistant.const import CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_STOP
@@ -57,7 +57,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 async def async_setup_scanner(  # noqa: C901
     hass: HomeAssistant,
     config: ConfigType,
-    async_see: Callable[..., Awaitable[None]],
+    async_see: AsyncSeeCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> bool:
     """Set up the Bluetooth LE Scanner."""

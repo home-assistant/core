@@ -1,11 +1,11 @@
 """Support for Tile device trackers."""
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
 import logging
 
 from pytile.tile import Tile
 
+from homeassistant.components.device_tracker import AsyncSeeCallback
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.components.device_tracker.const import SOURCE_TYPE_GPS
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -52,7 +52,7 @@ async def async_setup_entry(
 async def async_setup_scanner(
     hass: HomeAssistant,
     config: ConfigType,
-    async_see: Callable[..., Awaitable[None]],
+    async_see: AsyncSeeCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> bool:
     """Detect a legacy configuration and import it."""
