@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Any
 
 import pyzerproc
 
@@ -165,11 +166,11 @@ class ZerprocLight(LightEntity):
         else:
             await self._light.turn_on()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         await self._light.turn_off()
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Fetch new state data for this light."""
         try:
             if not self._available:
