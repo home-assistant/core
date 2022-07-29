@@ -8,6 +8,7 @@ ATTR_CURTAIN = "curtain"
 ATTR_HYGROMETER = "hygrometer"
 ATTR_CONTACT = "contact"
 ATTR_PLUG = "plug"
+ATTR_MOTION = "motion"
 DEFAULT_NAME = "Switchbot"
 
 SUPPORTED_MODEL_TYPES = {
@@ -16,6 +17,7 @@ SUPPORTED_MODEL_TYPES = {
     "WoSensorTH": ATTR_HYGROMETER,
     "WoContact": ATTR_CONTACT,
     "WoPlug": ATTR_PLUG,
+    "WoMotion": ATTR_MOTION,
 }
 
 # Config Defaults
