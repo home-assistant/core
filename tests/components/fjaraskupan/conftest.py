@@ -17,6 +17,12 @@ def fixture_scanner(hass):
     class MockScanner(BaseBleakScanner):
         """Mock Scanner."""
 
+        def __init__(self, *args, **kwargs) -> None:
+            """Initialize the scanner."""
+            super().__init__(
+                detection_callback=kwargs.pop("detection_callback"), service_uuids=[]
+            )
+
         async def start(self):
             """Start scanning for devices."""
             for device in devices:
