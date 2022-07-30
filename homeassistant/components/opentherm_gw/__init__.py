@@ -113,7 +113,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     try:
         await asyncio.wait_for(
-            hass.async_create_task(gateway.connect_and_subscribe()),
+            gateway.connect_and_subscribe(),
             timeout=CONNECTION_TIMEOUT,
         )
     except (asyncio.TimeoutError, ConnectionError, SerialException) as ex:

@@ -64,7 +64,6 @@ class OpenThermGwConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 status = await otgw.connect(device)
                 await otgw.disconnect()
                 if not status:
-                    await otgw.cleanup()
                     raise ConnectionError
                 return status[gw_vars.OTGW].get(gw_vars.OTGW_ABOUT)
 
