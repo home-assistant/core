@@ -1,4 +1,5 @@
 """Fixtures for anthemav integration tests."""
+from typing import Callable
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -41,6 +42,12 @@ def mock_connection_create(mock_anthemav: AsyncMock) -> AsyncMock:
         return_value=mock_anthemav,
     ) as mock:
         yield mock
+
+
+@pytest.fixture
+def update_callback(mock_connection_create: AsyncMock) -> Callable[[str], None]:
+    """Return the update_callback used when creating the connection."""
+    return mock_connection_create.call_args[1]["update_callback"]
 
 
 @pytest.fixture

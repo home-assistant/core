@@ -1,4 +1,5 @@
 """Test the Anthem A/V Receivers config flow."""
+from typing import Callable
 from unittest.mock import ANY, AsyncMock, patch
 
 from anthemav.device_error import DeviceError
@@ -52,6 +53,7 @@ async def test_anthemav_dispatcher_signal(
     mock_connection_create: AsyncMock,
     mock_anthemav: AsyncMock,
     init_integration: MockConfigEntry,
+    update_callback: Callable[[str], None],
 ) -> None:
     """Test send update signal to dispatcher."""
     states = hass.states.get("media_player.anthem_av")
@@ -61,9 +63,7 @@ async def test_anthemav_dispatcher_signal(
     # change state of the AVR
     mock_anthemav.protocol.zones[1].power = True
 
-    # get the callback function that trigger the signal to update the state
-    avr_update_callback = mock_connection_create.call_args[1]["update_callback"]
-    avr_update_callback("power")
+    update_callback("power")
 
     await hass.async_block_till_done()
 

@@ -1,4 +1,5 @@
 """Test the Anthem A/V Receivers config flow."""
+from typing import Callable
 from unittest.mock import AsyncMock
 
 import pytest
@@ -42,11 +43,15 @@ async def test_zones_loaded(
 
 
 async def test_update_states_zone1(
-    hass: HomeAssistant, init_integration: MockConfigEntry, mock_anthemav: AsyncMock
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_anthemav: AsyncMock,
+    update_callback: Callable[[str], None],
 ) -> None:
     """Test zone states are updated."""
 
     mock_zone = mock_anthemav.protocol.zones[1]
+    update_callback("power")
 
     mock_zone.power = True
     mock_zone.mute = True

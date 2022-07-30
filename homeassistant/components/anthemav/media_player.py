@@ -23,7 +23,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
@@ -109,6 +109,8 @@ class AnthemAVR(MediaPlayerEntity):
 
     _attr_has_entity_name = True
     _attr_should_poll = False
+    _attr_device_class = MediaPlayerDeviceClass.RECEIVER
+    _attr_icon = "mdi:audio-video"
     _attr_supported_features = (
         MediaPlayerEntityFeature.VOLUME_SET
         | MediaPlayerEntityFeature.VOLUME_MUTE
@@ -144,8 +146,6 @@ class AnthemAVR(MediaPlayerEntity):
             manufacturer=MANUFACTURER,
             model=model,
         )
-        self._attr_device_class = MediaPlayerDeviceClass.RECEIVER
-        self._attr_icon = "mdi:audio-video"
         self.set_states()
 
     async def async_added_to_hass(self) -> None:
@@ -158,6 +158,7 @@ class AnthemAVR(MediaPlayerEntity):
             )
         )
 
+    @callback
     def update_states(self) -> None:
         """Update states for the current zone."""
         self.set_states()
