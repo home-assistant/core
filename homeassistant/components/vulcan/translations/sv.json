@@ -1,0 +1,43 @@
+{
+    "config": {
+        "abort": {
+            "no_matching_entries": "Inga matchande poster hittades, anv\u00e4nd ett annat konto eller ta bort integration med f\u00f6r\u00e5ldrad student.."
+        },
+        "step": {
+            "add_next_config_entry": {
+                "data": {
+                    "use_saved_credentials": "Anv\u00e4nd sparade autentiseringsuppgifter"
+                },
+                "description": "L\u00e4gg till ytterligare en elev."
+            },
+            "auth": {
+                "data": {
+                    "pin": "Knappn\u00e5l",
+                    "region": "Symbol",
+                    "token": "Token"
+                },
+                "description": "Logga in p\u00e5 ditt Vulcan-konto med registreringssidan f\u00f6r mobilappen."
+            },
+            "reauth_confirm": {
+                "data": {
+                    "pin": "Knappn\u00e5l",
+                    "region": "Symbol",
+                    "token": "Token"
+                },
+                "description": "Logga in p\u00e5 ditt Vulcan-konto med registreringssidan f\u00f6r mobilappen."
+            },
+            "select_saved_credentials": {
+                "data": {
+                    "credentials": "Logga in"
+                },
+                "description": "V\u00e4lj sparade autentiseringsuppgifter."
+            },
+            "select_student": {
+                "data": {
+                    "student_name": "V\u00e4lj elev"
+                },
+                "description": "V\u00e4lj elev, du kan l\u00e4gga till fler elever genom att l\u00e4gga till integration igen."
+            }
+        }
+    }
+}

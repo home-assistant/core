@@ -28,7 +28,8 @@
                     "unit_time": "Tidsenhet"
                 },
                 "data_description": {
-                    "round": "Anger antal decimaler i resultatet."
+                    "round": "Anger antal decimaler i resultatet.",
+                    "unit_prefix": "."
                 }
             }
         }

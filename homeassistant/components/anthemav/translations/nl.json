@@ -14,5 +14,10 @@
                 }
             }
         }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "title": "De Anthem A/V Receivers YAML-configuratie wordt verwijderd"
+        }
     }
 }
