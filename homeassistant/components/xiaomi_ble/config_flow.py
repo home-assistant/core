@@ -11,7 +11,8 @@ from xiaomi_ble.parser import EncryptionScheme
 
 from homeassistant.components import onboarding
 from homeassistant.components.bluetooth import (
-    BluetoothServiceInfo,
+    BluetoothScanningMode,
+    BluetoothServiceInfoBleak,
     async_discovered_service_info,
     async_process_advertisements,
 )
@@ -30,11 +31,11 @@ class Discovery:
     """A discovered bluetooth device."""
 
     title: str
-    discovery_info: BluetoothServiceInfo
+    discovery_info: BluetoothServiceInfoBleak
     device: DeviceData
 
 
-def _title(discovery_info: BluetoothServiceInfo, device: DeviceData) -> str:
+def _title(discovery_info: BluetoothServiceInfoBleak, device: DeviceData) -> str:
     return device.title or device.get_device_name() or discovery_info.name
 
 
@@ -45,18 +46,20 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self._discovery_info: BluetoothServiceInfo | None = None
+        self._discovery_info: BluetoothServiceInfoBleak | None = None
         self._discovered_device: DeviceData | None = None
         self._discovered_devices: dict[str, Discovery] = {}
 
     async def _async_wait_for_full_advertisement(
-        self, discovery_info: BluetoothServiceInfo, device: DeviceData
-    ) -> BluetoothServiceInfo:
+        self, discovery_info: BluetoothServiceInfoBleak, device: DeviceData
+    ) -> BluetoothServiceInfoBleak:
         """Sometimes first advertisement we receive is blank or incomplete. Wait until we get a useful one."""
         if not device.pending:
             return discovery_info
 
-        def _process_more_advertisements(service_info: BluetoothServiceInfo) -> bool:
+        def _process_more_advertisements(
+            service_info: BluetoothServiceInfoBleak,
+        ) -> bool:
             device.update(service_info)
             return not device.pending
 
@@ -64,11 +67,12 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
             self.hass,
             _process_more_advertisements,
             {"address": discovery_info.address},
+            BluetoothScanningMode.ACTIVE,
             ADDITIONAL_DISCOVERY_TIMEOUT,
         )
 
     async def async_step_bluetooth(
-        self, discovery_info: BluetoothServiceInfo
+        self, discovery_info: BluetoothServiceInfoBleak
     ) -> FlowResult:
         """Handle the bluetooth discovery step."""
         await self.async_set_unique_id(discovery_info.address)
