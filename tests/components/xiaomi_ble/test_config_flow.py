@@ -59,7 +59,9 @@ async def test_async_step_bluetooth_valid_device_but_missing_payload(hass):
 async def test_async_step_bluetooth_valid_device_but_missing_payload_then_full(hass):
     """Test discovering a valid device. Payload is too short, but later we get full one."""
 
-    async def _async_process_advertisements(_hass, _callback, _matcher, _timeout):
+    async def _async_process_advertisements(
+        _hass, _callback, _matcher, _mode, _timeout
+    ):
         service_info = make_advertisement(
             "A4:C1:38:56:53:84",
             b"XX\xe4\x16,\x84SV8\xc1\xa4+n\xf2\xe9\x12\x00\x00l\x88M\x9e",
@@ -378,7 +380,9 @@ async def test_async_step_user_short_payload_then_full(hass):
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    async def _async_process_advertisements(_hass, _callback, _matcher, _timeout):
+    async def _async_process_advertisements(
+        _hass, _callback, _matcher, _mode, _timeout
+    ):
         service_info = make_advertisement(
             "A4:C1:38:56:53:84",
             b"XX\xe4\x16,\x84SV8\xc1\xa4+n\xf2\xe9\x12\x00\x00l\x88M\x9e",

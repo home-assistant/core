@@ -20,12 +20,15 @@ from homeassistant.components import zeroconf
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.service_info import bluetooth
 
 from .connection import HKDevice
 from .const import DOMAIN, KNOWN_DEVICES
 from .storage import async_get_entity_storage
 from .utils import async_get_controller
+
+if TYPE_CHECKING:
+    from homeassistant.components import bluetooth
+
 
 HOMEKIT_DIR = ".homekit"
 HOMEKIT_BRIDGE_DOMAIN = "homekit"
@@ -359,7 +362,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self._async_step_pair_show_form()
 
     async def async_step_bluetooth(
-        self, discovery_info: bluetooth.BluetoothServiceInfo
+        self, discovery_info: bluetooth.BluetoothServiceInfoBleak
     ) -> FlowResult:
         """Handle the bluetooth discovery step."""
         if not aiohomekit_const.BLE_TRANSPORT_SUPPORTED:
