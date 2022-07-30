@@ -15,6 +15,7 @@
                 "title": "Konnected-enheten redo"
             },
             "import_confirm": {
+                "description": "En ansluten larmpanel med ID {id} har uppt\u00e4ckts i configuration.yaml. Detta fl\u00f6de l\u00e5ter dig importera det till en konfigurationspost.",
                 "title": "Importera Konnected enhet"
             },
             "user": {

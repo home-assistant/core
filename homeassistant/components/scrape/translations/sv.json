@@ -6,9 +6,22 @@
         "step": {
             "user": {
                 "data": {
+                    "attribute": "Attribut",
+                    "authentication": "Autentisering",
+                    "device_class": "Enhetsklass",
+                    "headers": "Headers",
+                    "index": "Index",
                     "password": "L\u00f6senord",
+                    "resource": "Resurs",
+                    "select": "V\u00e4lj",
+                    "state_class": "Tillst\u00e5ndsklass",
+                    "unit_of_measurement": "M\u00e5ttenhet",
                     "username": "Anv\u00e4ndarnamn",
+                    "value_template": "V\u00e4rdemall",
                     "verify_ssl": "Verifiera SSL-certifikat"
+                },
+                "data_description": {
+                    "attribute": "H\u00e4mta v\u00e4rdet av ett attribut p\u00e5 den valda taggen"
                 }
             }
         }
@@ -17,7 +30,11 @@
         "step": {
             "init": {
                 "data": {
+                    "attribute": "Attribut",
+                    "authentication": "Autentisering",
+                    "index": "Index",
                     "password": "L\u00f6senord",
+                    "select": "V\u00e4lj",
                     "username": "Anv\u00e4ndarnamn"
                 }
             }

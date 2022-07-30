@@ -4,6 +4,13 @@
             "unknown": "Ov\u00e4ntat fel"
         },
         "step": {
+            "configuration": {
+                "data": {
+                    "device_name": "Enhetsnamn"
+                },
+                "description": "Ange din Hive-konfiguration",
+                "title": "Hive-konfiguration."
+            },
             "reauth": {
                 "data": {
                     "password": "L\u00f6senord",

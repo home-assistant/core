@@ -8,6 +8,12 @@
             "invalid_auth": "Ogiltig autentisering"
         },
         "step": {
+            "discovered_connection": {
+                "data": {
+                    "password": "L\u00f6senord",
+                    "username": "Anv\u00e4ndarnamn"
+                }
+            },
             "user": {
                 "data": {
                     "username": "Anv\u00e4ndarnamn"

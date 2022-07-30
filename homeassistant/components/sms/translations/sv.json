@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "baud_speed": "Baud-hastighet"
+                }
+            }
+        }
+    }
+}

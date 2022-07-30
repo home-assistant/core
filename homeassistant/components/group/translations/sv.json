@@ -12,7 +12,18 @@
             "light": {
                 "title": "L\u00e4gg till grupp"
             },
+            "lock": {
+                "data": {
+                    "entities": "Medlemmar",
+                    "hide_members": "D\u00f6lj medlemmar",
+                    "name": "Namn"
+                },
+                "title": "L\u00e4gg till grupp"
+            },
             "user": {
+                "menu_options": {
+                    "lock": "L\u00e5sgrupp"
+                },
                 "title": "L\u00e4gg till grupp"
             }
         }
@@ -22,6 +33,12 @@
             "binary_sensor": {
                 "data": {
                     "all": "Alla entiteter"
+                }
+            },
+            "lock": {
+                "data": {
+                    "entities": "Medlemmar",
+                    "hide_members": "D\u00f6lj medlemmar"
                 }
             }
         }
