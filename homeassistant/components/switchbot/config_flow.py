@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, cast
+from typing import Any
 
 from switchbot import SwitchBotAdvertisement, parse_advertisement_data
 import voluptuous as vol
@@ -15,7 +15,6 @@ from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PASSWORD, CONF_SENSOR_TYPE
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
 from .const import CONF_RETRY_COUNT, DEFAULT_RETRY_COUNT, DOMAIN, SUPPORTED_MODEL_TYPES
 
@@ -46,15 +45,14 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_advs: dict[str, SwitchBotAdvertisement] = {}
 
     async def async_step_bluetooth(
-        self, discovery_info: BluetoothServiceInfo
+        self, discovery_info: BluetoothServiceInfoBleak
     ) -> FlowResult:
         """Handle the bluetooth discovery step."""
         _LOGGER.debug("Discovered bluetooth device: %s", discovery_info)
         await self.async_set_unique_id(format_unique_id(discovery_info.address))
         self._abort_if_unique_id_configured()
-        discovery_info_bleak = cast(BluetoothServiceInfoBleak, discovery_info)
         parsed = parse_advertisement_data(
-            discovery_info_bleak.device, discovery_info_bleak.advertisement
+            discovery_info.device, discovery_info.advertisement
         )
         if not parsed or parsed.data.get("modelName") not in SUPPORTED_MODEL_TYPES:
             return self.async_abort(reason="not_supported")
