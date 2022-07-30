@@ -16,6 +16,16 @@
       "mild": "Mild",
       "good": "Good",
       "severe": "Severe"
+    },
+    "tuya__work_state": {
+      "auto": "Auto",
+      "manual": "Manual",
+      "idle": "Idle"
+    },
+    "tuya__smart_weather": {
+      "sunny": "Sunny",
+      "cloudy": "Cloudy",
+      "rainy": "Rainy"
     }
   }
 }
