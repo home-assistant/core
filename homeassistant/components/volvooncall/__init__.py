@@ -150,8 +150,8 @@ class VolvoData:
     ) -> None:
         """Initialize the component state."""
         self.hass = hass
-        self.vehicles = set()  # type: ignore[var-annotated]
-        self.instruments = set()  # type: ignore[var-annotated]
+        self.vehicles: set = set()
+        self.instruments: set = set()
         self.config = config[DOMAIN]
         self.connection = connection
 
