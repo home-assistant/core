@@ -4,12 +4,13 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
+from aiohttp.client_exceptions import ClientConnectorError
 from python_awair import Awair, AwairLocal
 from python_awair.exceptions import AuthError, AwairError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOSTS
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -29,12 +30,12 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             if CONF_ACCESS_TOKEN in user_input:
                 return await self.async_step_cloud(user_input)
-            if CONF_HOSTS in user_input:
+            if CONF_HOST in user_input:
                 return await self.async_step_local(user_input)
 
         return self.async_show_menu(
             step_id="user",
-            menu_options=["cloud", "local"],
+            menu_options=["local", "cloud"],
             description_placeholders={"cloud": "Cloud API", "local": "Local API"},
         )
 
@@ -72,23 +73,21 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            devices, error = await self._check_local_connection(user_input[CONF_HOSTS])
+            device, error = await self._check_local_connection(user_input[CONF_HOST])
 
-            if devices is not None:
-                await self.async_set_unique_id(user_input[CONF_HOSTS])
+            if device is not None:
+                await self.async_set_unique_id(device.mac_address)
                 self._abort_if_unique_id_configured()
 
-                title = f"Awair Local Sensors: {user_input[CONF_HOSTS]}"
+                title = f"Awair Local Sensor ({user_input[CONF_HOST]})"
                 return self.async_create_entry(title=title, data=user_input)
 
-            if error != "auth":
-                return self.async_abort(reason=error)
-
-            errors = {CONF_HOSTS: "auth"}
+            if error is not None:
+                errors = {CONF_HOST: error}
 
         return self.async_show_form(
             step_id="local",
-            data_schema=vol.Schema({vol.Required(CONF_HOSTS): str}),
+            data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
             errors=errors,
         )
 
@@ -123,21 +122,21 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def _check_local_connection(self, device_addrs_str: str):
+    async def _check_local_connection(self, device_address: str):
         """Check the access token is valid."""
-        device_addrs = [addr.strip() for addr in device_addrs_str.split(",")]
         session = async_get_clientsession(self.hass)
-        awair = AwairLocal(session=session, device_addrs=device_addrs)
+        awair = AwairLocal(session=session, device_addrs=[device_address])
 
         try:
             devices = await awair.devices()
             if not devices:
                 return (None, "no_devices")
 
-            if len(devices) != len(device_addrs):
-                return (None, "not enough devices")
-
             return (devices[0], None)
+
+        except ClientConnectorError as err:
+            LOGGER.error("Unable to connect error: %s", err)
+            return (None, "unreachable")
 
         except AwairError as err:
             LOGGER.error("Unexpected API error: %s", err)

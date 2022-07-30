@@ -9,7 +9,7 @@ from python_awair import Awair, AwairLocal
 from python_awair.exceptions import AuthError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOSTS, Platform
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -33,7 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     coordinator: AwairDataUpdateCoordinator
 
-    if CONF_HOSTS in config_entry.data:
+    if CONF_HOST in config_entry.data:
         coordinator = AwairLocalDataUpdateCoordinator(hass, config_entry, session)
     elif CONF_ACCESS_TOKEN in config_entry.data:
         coordinator = AwairCloudDataUpdateCoordinator(hass, config_entry, session)
@@ -109,9 +109,9 @@ class AwairLocalDataUpdateCoordinator(AwairDataUpdateCoordinator):
 
     def __init__(self, hass, config_entry, session) -> None:
         """Set up the AwairLocalDataUpdateCoordinator class."""
-        device_addrs_str = config_entry.data[CONF_HOSTS]
-        device_addrs = [addr.strip() for addr in device_addrs_str.split(",")]
-        self._awair = AwairLocal(session=session, device_addrs=device_addrs)
+        self._awair = AwairLocal(
+            session=session, device_addrs=[config_entry.data[CONF_HOST]]
+        )
 
         super().__init__(hass, config_entry, UPDATE_INTERVAL_LOCAL)
 

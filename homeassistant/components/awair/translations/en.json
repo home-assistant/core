@@ -1,13 +1,14 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Account is already configured",
+            "already_configured": "Device or Awair account is already configured",
             "no_devices_found": "No devices found on the network",
             "reauth_successful": "Re-authentication was successful"
         },
         "error": {
             "invalid_access_token": "Invalid access token",
-            "unknown": "Unexpected error"
+            "unknown": "Unexpected error",
+            "unreachable": "Unable to connect to the device."
         },
         "step": {
             "reauth": {
@@ -26,7 +27,7 @@
             },
             "local" :{
                 "data": {
-                    "hosts": "Comma separated host(s)"
+                    "host": "Hostname or IP address of the device"
                 },
                 "description": "Awair Local API must be enabled following these steps: https://support.getawair.com/hc/en-us/articles/360049221014-Awair-Element-Local-API-Feature"
             },
