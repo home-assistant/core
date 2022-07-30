@@ -4,7 +4,6 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from homeassistant.components.anthemav.const import ANTHEMAV_UDATE_SIGNAL
 from homeassistant.components.media_player.const import (
     ATTR_APP_NAME,
     ATTR_INPUT_SOURCE,
@@ -15,7 +14,6 @@ from homeassistant.components.media_player.const import (
 from homeassistant.components.siren.const import ATTR_VOLUME_LEVEL
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from tests.common import MockConfigEntry
 
@@ -51,7 +49,6 @@ async def test_update_states_zone1(
     """Test zone states are updated."""
 
     mock_zone = mock_anthemav.protocol.zones[1]
-    update_callback("power")
 
     mock_zone.power = True
     mock_zone.mute = True
@@ -60,7 +57,7 @@ async def test_update_states_zone1(
     mock_zone.input_format = "2.0 PCM"
     mock_anthemav.protocol.input_list = ["TEST INPUT", "INPUT 2"]
 
-    async_dispatcher_send(hass, f"{ANTHEMAV_UDATE_SIGNAL}_{init_integration.entry_id}")
+    update_callback("command")
     await hass.async_block_till_done()
 
     states = hass.states.get("media_player.anthem_av")
