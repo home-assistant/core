@@ -275,7 +275,6 @@ class TemplateFan(TemplateEntity, FanEntity):
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the percentage speed of the fan."""
         self._percentage = percentage
-        self._preset_mode = None
 
         if self._set_percentage_script:
             await self.async_run_script(
@@ -285,7 +284,7 @@ class TemplateFan(TemplateEntity, FanEntity):
             )
 
         if self._template is None:
-            self._state = percentage == 0
+            self._state = percentage != 0
             self.async_write_ha_state()
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
@@ -300,7 +299,6 @@ class TemplateFan(TemplateEntity, FanEntity):
             return
 
         self._preset_mode = preset_mode
-        self._percentage = None
 
         if self._set_preset_mode_script:
             await self.async_run_script(
