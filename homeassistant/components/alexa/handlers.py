@@ -448,15 +448,16 @@ async def async_api_set_percentage(
 ) -> AlexaResponse:
     """Process a set percentage request."""
     entity = directive.entity
-    service = None
-    data = {ATTR_ENTITY_ID: entity.entity_id}
 
-    if entity.domain == fan.DOMAIN:
-        service = fan.SERVICE_SET_PERCENTAGE
-        percentage = int(directive.payload["percentage"])
-        data[fan.ATTR_PERCENTAGE] = percentage
-    else:
+    if entity.domain != fan.DOMAIN:
         raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
+
+    service = fan.SERVICE_SET_PERCENTAGE
+    percentage = int(directive.payload["percentage"])
+    data = {
+        ATTR_ENTITY_ID: entity.entity_id,
+        fan.ATTR_PERCENTAGE: percentage,
+    }
 
     await hass.services.async_call(
         entity.domain, service, data, blocking=False, context=context
@@ -474,19 +475,19 @@ async def async_api_adjust_percentage(
 ) -> AlexaResponse:
     """Process an adjust percentage request."""
     entity = directive.entity
-    percentage_delta = int(directive.payload["percentageDelta"])
-    service = None
-    data = {ATTR_ENTITY_ID: entity.entity_id}
 
-    if entity.domain == fan.DOMAIN:
-        service = fan.SERVICE_SET_PERCENTAGE
-        current = entity.attributes.get(fan.ATTR_PERCENTAGE) or 0
-
-        # set percentage
-        percentage = min(100, max(0, percentage_delta + current))
-        data[fan.ATTR_PERCENTAGE] = percentage
-    else:
+    if entity.domain != fan.DOMAIN:
         raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
+
+    percentage_delta = int(directive.payload["percentageDelta"])
+    current = entity.attributes.get(fan.ATTR_PERCENTAGE) or 0
+    # set percentage
+    percentage = min(100, max(0, percentage_delta + current))
+    service = fan.SERVICE_SET_PERCENTAGE
+    data = {
+        ATTR_ENTITY_ID: entity.entity_id,
+        fan.ATTR_PERCENTAGE: percentage,
+    }
 
     await hass.services.async_call(
         entity.domain, service, data, blocking=False, context=context
@@ -1187,15 +1188,16 @@ async def async_api_toggle_on(
     entity = directive.entity
     instance = directive.instance
     domain = entity.domain
-    service = None
-    data = {ATTR_ENTITY_ID: entity.entity_id}
 
     # Fan Oscillating
-    if instance == f"{fan.DOMAIN}.{fan.ATTR_OSCILLATING}":
-        service = fan.SERVICE_OSCILLATE
-        data[fan.ATTR_OSCILLATING] = True
-    else:
+    if instance != f"{fan.DOMAIN}.{fan.ATTR_OSCILLATING}":
         raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
+
+    service = fan.SERVICE_OSCILLATE
+    data = {
+        ATTR_ENTITY_ID: entity.entity_id,
+        fan.ATTR_OSCILLATING: True,
+    }
 
     await hass.services.async_call(
         domain, service, data, blocking=False, context=context
@@ -1225,15 +1227,16 @@ async def async_api_toggle_off(
     entity = directive.entity
     instance = directive.instance
     domain = entity.domain
-    service = None
-    data = {ATTR_ENTITY_ID: entity.entity_id}
 
     # Fan Oscillating
-    if instance == f"{fan.DOMAIN}.{fan.ATTR_OSCILLATING}":
-        service = fan.SERVICE_OSCILLATE
-        data[fan.ATTR_OSCILLATING] = False
-    else:
+    if instance != f"{fan.DOMAIN}.{fan.ATTR_OSCILLATING}":
         raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
+
+    service = fan.SERVICE_OSCILLATE
+    data = {
+        ATTR_ENTITY_ID: entity.entity_id,
+        fan.ATTR_OSCILLATING: False,
+    }
 
     await hass.services.async_call(
         domain, service, data, blocking=False, context=context
