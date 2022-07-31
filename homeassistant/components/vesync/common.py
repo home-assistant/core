@@ -2,7 +2,7 @@
 import logging
 from typing import Any
 
-from pyvesync import VeSyncBaseDevice
+from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 
 from homeassistant.helpers.entity import DeviceInfo, Entity, ToggleEntity
 
