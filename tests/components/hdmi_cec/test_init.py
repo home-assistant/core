@@ -451,7 +451,7 @@ async def test_watchdog_down(hass, create_hdmi_network, mock_cec_adapter):
     callback = mock_hdmi_network_instance.set_initialized_callback.call_args.args[0]
     callback()
 
-    async_fire_time_changed(hass, utcnow() + timedelta(WATCHDOG_INTERVAL))
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=WATCHDOG_INTERVAL))
     await hass.async_block_till_done()
 
     adapter_initialized.assert_called_once_with()
@@ -473,7 +473,7 @@ async def test_watchdog_up(hass, create_hdmi_network, mock_cec_adapter):
     callback = mock_hdmi_network_instance.set_initialized_callback.call_args.args[0]
     callback()
 
-    async_fire_time_changed(hass, utcnow() + timedelta(WATCHDOG_INTERVAL))
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=WATCHDOG_INTERVAL))
     await hass.async_block_till_done()
 
     adapter_initialized.assert_called_once_with()
