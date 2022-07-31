@@ -17,7 +17,6 @@ from homeassistant.components.awair.const import (
     SENSOR_TYPES_DUST,
 )
 from homeassistant.const import (
-    ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
@@ -28,6 +27,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_component import async_update_entity
 
 from .const import (
     AWAIR_UUID,
@@ -87,7 +87,7 @@ async def test_awair_gen1_sensors(hass):
         "sensor.living_room_awair_score",
         f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
         "88",
-        {ATTR_ICON: "mdi:blur"},
+        {},
     )
 
     assert_expected_properties(
@@ -115,7 +115,6 @@ async def test_awair_gen1_sensors(hass):
         f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_CO2].unique_id_tag}",
         "654.0",
         {
-            ATTR_ICON: "mdi:cloud",
             ATTR_UNIT_OF_MEASUREMENT: CONCENTRATION_PARTS_PER_MILLION,
             "awair_index": 0.0,
         },
@@ -128,7 +127,6 @@ async def test_awair_gen1_sensors(hass):
         f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_VOC].unique_id_tag}",
         "366",
         {
-            ATTR_ICON: "mdi:cloud",
             ATTR_UNIT_OF_MEASUREMENT: CONCENTRATION_PARTS_PER_BILLION,
             "awair_index": 1.0,
         },
@@ -142,7 +140,6 @@ async def test_awair_gen1_sensors(hass):
         f"{AWAIR_UUID}_DUST",
         "14.3",
         {
-            ATTR_ICON: "mdi:blur",
             ATTR_UNIT_OF_MEASUREMENT: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             "awair_index": 1.0,
         },
@@ -155,7 +152,6 @@ async def test_awair_gen1_sensors(hass):
         f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_PM10].unique_id_tag}",
         "14.3",
         {
-            ATTR_ICON: "mdi:blur",
             ATTR_UNIT_OF_MEASUREMENT: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             "awair_index": 1.0,
         },
@@ -183,7 +179,7 @@ async def test_awair_gen2_sensors(hass):
         "sensor.living_room_awair_score",
         f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
         "97",
-        {ATTR_ICON: "mdi:blur"},
+        {},
     )
 
     assert_expected_properties(
@@ -193,7 +189,6 @@ async def test_awair_gen2_sensors(hass):
         f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_PM25].unique_id_tag}",
         "2.0",
         {
-            ATTR_ICON: "mdi:blur",
             ATTR_UNIT_OF_MEASUREMENT: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             "awair_index": 0.0,
         },
@@ -217,7 +212,7 @@ async def test_awair_mint_sensors(hass):
         "sensor.living_room_awair_score",
         f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
         "98",
-        {ATTR_ICON: "mdi:blur"},
+        {},
     )
 
     assert_expected_properties(
@@ -227,7 +222,6 @@ async def test_awair_mint_sensors(hass):
         f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_PM25].unique_id_tag}",
         "1.0",
         {
-            ATTR_ICON: "mdi:blur",
             ATTR_UNIT_OF_MEASUREMENT: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             "awair_index": 0.0,
         },
@@ -259,7 +253,7 @@ async def test_awair_glow_sensors(hass):
         "sensor.living_room_awair_score",
         f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
         "93",
-        {ATTR_ICON: "mdi:blur"},
+        {},
     )
 
     # The glow does not have a particle sensor
@@ -279,7 +273,7 @@ async def test_awair_omni_sensors(hass):
         "sensor.living_room_awair_score",
         f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
         "99",
-        {ATTR_ICON: "mdi:blur"},
+        {},
     )
 
     assert_expected_properties(
@@ -288,7 +282,7 @@ async def test_awair_omni_sensors(hass):
         "sensor.living_room_sound_level",
         f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SPL_A].unique_id_tag}",
         "47.0",
-        {ATTR_ICON: "mdi:ear-hearing", ATTR_UNIT_OF_MEASUREMENT: "dBa"},
+        {ATTR_UNIT_OF_MEASUREMENT: "dBa"},
     )
 
     assert_expected_properties(
@@ -332,18 +326,16 @@ async def test_awair_unavailable(hass):
         "sensor.living_room_awair_score",
         f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
         "88",
-        {ATTR_ICON: "mdi:blur"},
+        {},
     )
 
     with patch("python_awair.AwairClient.query", side_effect=OFFLINE_FIXTURE):
-        await hass.helpers.entity_component.async_update_entity(
-            "sensor.living_room_awair_score"
-        )
+        await async_update_entity(hass, "sensor.living_room_awair_score")
         assert_expected_properties(
             hass,
             registry,
             "sensor.living_room_awair_score",
             f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
             STATE_UNAVAILABLE,
-            {ATTR_ICON: "mdi:blur"},
+            {},
         )

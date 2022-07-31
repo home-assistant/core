@@ -11,7 +11,7 @@
             "user": {
                 "data": {
                     "api_key": "Chiave API",
-                    "app_key": "Application Key"
+                    "app_key": "Chiave dell'applicazione"
                 },
                 "title": "Inserisci i tuoi dati"
             }

@@ -12,9 +12,8 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "API \u5bc6\u9470"
-                },
-                "title": "Efergy"
+                    "api_key": "API \u91d1\u9470"
+                }
             }
         }
     }

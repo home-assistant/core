@@ -3,7 +3,8 @@ import statistics
 from unittest.mock import patch
 
 from homeassistant import config as hass_config
-from homeassistant.components.min_max import DOMAIN
+from homeassistant.components.min_max.const import DOMAIN
+from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
@@ -25,6 +26,31 @@ MEAN = round(sum(VALUES) / COUNT, 2)
 MEAN_1_DIGIT = round(sum(VALUES) / COUNT, 1)
 MEAN_4_DIGITS = round(sum(VALUES) / COUNT, 4)
 MEDIAN = round(statistics.median(VALUES), 2)
+
+
+async def test_default_name_sensor(hass):
+    """Test the min sensor with a default name."""
+    config = {
+        "sensor": {
+            "platform": "min_max",
+            "type": "min",
+            "entity_ids": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    entity_ids = config["sensor"]["entity_ids"]
+
+    for entity_id, value in dict(zip(entity_ids, VALUES)).items():
+        hass.states.async_set(entity_id, value)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.min_sensor")
+
+    assert str(float(MIN_VALUE)) == state.state
+    assert entity_ids[2] == state.attributes.get("min_entity_id")
 
 
 async def test_min_sensor(hass):
@@ -51,10 +77,7 @@ async def test_min_sensor(hass):
 
     assert str(float(MIN_VALUE)) == state.state
     assert entity_ids[2] == state.attributes.get("min_entity_id")
-    assert state.attributes.get("max_value") == MAX_VALUE
-    assert entity_ids[1] == state.attributes.get("max_entity_id")
-    assert state.attributes.get("mean") == MEAN
-    assert state.attributes.get("median") == MEDIAN
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
 
 async def test_max_sensor(hass):
@@ -80,11 +103,8 @@ async def test_max_sensor(hass):
     state = hass.states.get("sensor.test_max")
 
     assert str(float(MAX_VALUE)) == state.state
-    assert entity_ids[2] == state.attributes.get("min_entity_id")
-    assert state.attributes.get("min_value") == MIN_VALUE
     assert entity_ids[1] == state.attributes.get("max_entity_id")
-    assert state.attributes.get("mean") == MEAN
-    assert state.attributes.get("median") == MEDIAN
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
 
 async def test_mean_sensor(hass):
@@ -110,11 +130,7 @@ async def test_mean_sensor(hass):
     state = hass.states.get("sensor.test_mean")
 
     assert str(float(MEAN)) == state.state
-    assert state.attributes.get("min_value") == MIN_VALUE
-    assert entity_ids[2] == state.attributes.get("min_entity_id")
-    assert state.attributes.get("max_value") == MAX_VALUE
-    assert entity_ids[1] == state.attributes.get("max_entity_id")
-    assert state.attributes.get("median") == MEDIAN
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
 
 async def test_mean_1_digit_sensor(hass):
@@ -141,11 +157,6 @@ async def test_mean_1_digit_sensor(hass):
     state = hass.states.get("sensor.test_mean")
 
     assert str(float(MEAN_1_DIGIT)) == state.state
-    assert state.attributes.get("min_value") == MIN_VALUE
-    assert entity_ids[2] == state.attributes.get("min_entity_id")
-    assert state.attributes.get("max_value") == MAX_VALUE
-    assert entity_ids[1] == state.attributes.get("max_entity_id")
-    assert state.attributes.get("median") == MEDIAN
 
 
 async def test_mean_4_digit_sensor(hass):
@@ -172,11 +183,6 @@ async def test_mean_4_digit_sensor(hass):
     state = hass.states.get("sensor.test_mean")
 
     assert str(float(MEAN_4_DIGITS)) == state.state
-    assert state.attributes.get("min_value") == MIN_VALUE
-    assert entity_ids[2] == state.attributes.get("min_entity_id")
-    assert state.attributes.get("max_value") == MAX_VALUE
-    assert entity_ids[1] == state.attributes.get("max_entity_id")
-    assert state.attributes.get("median") == MEDIAN
 
 
 async def test_median_sensor(hass):
@@ -202,11 +208,7 @@ async def test_median_sensor(hass):
     state = hass.states.get("sensor.test_median")
 
     assert str(float(MEDIAN)) == state.state
-    assert state.attributes.get("min_value") == MIN_VALUE
-    assert entity_ids[2] == state.attributes.get("min_entity_id")
-    assert state.attributes.get("max_value") == MAX_VALUE
-    assert entity_ids[1] == state.attributes.get("max_entity_id")
-    assert state.attributes.get("mean") == MEAN
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
 
 async def test_not_enough_sensor_value(hass):
@@ -241,20 +243,14 @@ async def test_not_enough_sensor_value(hass):
 
     state = hass.states.get("sensor.test_max")
     assert STATE_UNKNOWN != state.state
-    assert entity_ids[1] == state.attributes.get("min_entity_id")
-    assert VALUES[1] == state.attributes.get("min_value")
     assert entity_ids[1] == state.attributes.get("max_entity_id")
-    assert VALUES[1] == state.attributes.get("max_value")
 
     hass.states.async_set(entity_ids[2], STATE_UNKNOWN)
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.test_max")
     assert STATE_UNKNOWN != state.state
-    assert entity_ids[1] == state.attributes.get("min_entity_id")
-    assert VALUES[1] == state.attributes.get("min_value")
     assert entity_ids[1] == state.attributes.get("max_entity_id")
-    assert VALUES[1] == state.attributes.get("max_value")
 
     hass.states.async_set(entity_ids[1], STATE_UNAVAILABLE)
     await hass.async_block_till_done()
@@ -336,11 +332,7 @@ async def test_last_sensor(hass):
         state = hass.states.get("sensor.test_last")
         assert str(float(value)) == state.state
         assert entity_id == state.attributes.get("last_entity_id")
-
-    assert state.attributes.get("min_value") == MIN_VALUE
-    assert state.attributes.get("max_value") == MAX_VALUE
-    assert state.attributes.get("mean") == MEAN
-    assert state.attributes.get("median") == MEDIAN
+        assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
 
 async def test_reload(hass):

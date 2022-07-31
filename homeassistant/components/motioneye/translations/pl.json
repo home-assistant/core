@@ -20,7 +20,7 @@
                     "admin_password": "Has\u0142o administratora",
                     "admin_username": "Nazwa u\u017cytkownika administratora",
                     "surveillance_password": "Has\u0142o podgl\u0105du",
-                    "surveillance_username": "[%key::common::config_flow::data::username%] podgl\u0105du",
+                    "surveillance_username": "Nazwa u\u017cytkownika podgl\u0105du",
                     "url": "URL"
                 }
             }
@@ -30,6 +30,7 @@
         "step": {
             "init": {
                 "data": {
+                    "stream_url_template": "Szablon adresu URL strumienia",
                     "webhook_set": "Skonfiguruj webhook motionEye, aby zg\u0142asza\u0107 zdarzenia do Home Assistanta",
                     "webhook_set_overwrite": "Nadpisz nierozpoznane webhooki"
                 }

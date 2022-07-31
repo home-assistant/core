@@ -3,7 +3,8 @@
   "name": "Epson",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/epson",
-  "requirements": ["epson-projector==0.4.2"],
+  "requirements": ["epson-projector==0.4.6"],
   "codeowners": ["@pszafer"],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["epson_projector"]
 }

@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd",
+            "no_valid_uuid_set": "Geen geldige UUID ingesteld"
+        },
+        "error": {
+            "no_valid_uuid_set": "Geen geldige UUID ingesteld"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "token": "API-token",
+                    "url": "URL"
+                },
+                "description": "Voer IP adres met poort en toegangstoken van Z-Way server in. Om het token te verkrijgen gaat u naar de Z-Way gebruikersinterface Smart Home UI > Menu > Instellingen > Gebruikers > Beheerder > API token.\n\nVoorbeeld van verbinding met Z-Way in het lokale netwerk:\nURL: {local_url}\nToken: {local_token}\n\nVoorbeeld van verbinding maken met Z-Way via remote access find.z-wave.me:\nURL: {find_url}\nToken: {find_token}\n\nVoorbeeld van een verbinding met Z-Way met een statisch publiek IP-adres:\nURL: {remote_url}\nToken: {local_token}\n\nWanneer je verbinding maakt via find.z-wave.me moet je een token gebruiken met een globale scope (log hiervoor in op Z-Way via find.z-wave.me)."
+            }
+        }
+    }
+}

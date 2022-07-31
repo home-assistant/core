@@ -1,5 +1,5 @@
 """Common tradfri test fixtures."""
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, PropertyMock, patch
 
 import pytest
 
@@ -59,7 +59,7 @@ def mock_gateway_fixture():
 def mock_api_fixture(mock_gateway):
     """Mock api."""
 
-    async def api(command):
+    async def api(command, timeout=None):
         """Mock api function."""
         # Store the data for "real" command objects.
         if hasattr(command, "_data") and not isinstance(command, Mock):
@@ -76,3 +76,20 @@ def mock_api_factory(mock_api):
         factory.init.return_value = factory.return_value
         factory.return_value.request = mock_api
         yield factory.return_value
+
+
+@pytest.fixture(autouse=True)
+def setup(request):
+    """
+    Set up patches for pytradfri methods for the fan platform.
+
+    This is used in test_fan as well as in test_sensor.
+    """
+    with patch(
+        "pytradfri.device.AirPurifierControl.raw",
+        new_callable=PropertyMock,
+        return_value=[{"mock": "mock"}],
+    ), patch(
+        "pytradfri.device.AirPurifierControl.air_purifiers",
+    ):
+        yield

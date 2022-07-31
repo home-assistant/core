@@ -20,9 +20,6 @@
     "options": {
         "step": {
             "advanced": {
-                "data": {
-                    "auto_start": "Samodejni zagon (onemogo\u010dite, \u010de uporabljate Z-wave ali kakteri drug sistem z zakasnjenim zagonom)"
-                },
                 "description": "Te nastavitve je treba prilagoditi le, \u010de most HomeKit ni funkcionalen.",
                 "title": "Napredna konfiguracija"
             },
@@ -32,17 +29,7 @@
                 },
                 "title": "Izberite video kodek kamere."
             },
-            "include_exclude": {
-                "data": {
-                    "entities": "Entitete",
-                    "mode": "Na\u010din"
-                },
-                "title": "Izberite entitete, ki jih \u017eelite izpostaviti"
-            },
             "init": {
-                "data": {
-                    "include_domains": "Domene za vklju\u010ditev"
-                },
                 "description": "Subjekti v domenah, ki jih \u017eelite vklju\u010diti, bodo prevezani na HomeKit. Na naslednjem zaslonu boste lahko izbrali subjekte, ki jih \u017eelite izklju\u010diti s tega seznama.",
                 "title": "Izberite domene za premostitev."
             },

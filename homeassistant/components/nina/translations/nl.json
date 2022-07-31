@@ -1,0 +1,44 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk."
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "no_selection": "Selecteer ten minste \u00e9\u00e9n stad/deelstaat",
+            "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "_a_to_d": "Stad/deelstaat (A-D)",
+                    "_e_to_h": "Stad/deelstaat (E-H)",
+                    "_i_to_l": "Stad/deelstaat (I-L)",
+                    "_m_to_q": "Stad/deelstaat (M-Q)",
+                    "_r_to_u": "Stad/Deelstaat (R-U)",
+                    "_v_to_z": "Stad/Deelstaat (V-Z)",
+                    "corona_filter": "Corona-waarschuwingen verwijderen",
+                    "slots": "Maximale waarschuwingen per stad/provincie"
+                },
+                "title": "Selecteer stad/provincie"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "_i_to_l": "Stad/provincie (I-L)",
+                    "_m_to_q": "Stad/provincie (M-Q)",
+                    "_r_to_u": "Stad/provincie (R-U)",
+                    "_v_to_z": "Stad/provincie (V-Z)"
+                },
+                "title": "Opties"
+            }
+        }
+    }
+}

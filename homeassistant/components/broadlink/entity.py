@@ -47,8 +47,8 @@ class BroadlinkEntity(Entity):
 
     @property
     def available(self):
-        """Return True if the remote is available."""
-        return self._device.update_manager.available
+        """Return True if the entity is available."""
+        return self._device.available
 
     @property
     def device_info(self) -> DeviceInfo:

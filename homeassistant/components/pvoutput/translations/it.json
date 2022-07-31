@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_auth": "Autenticazione non valida"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "Chiave API"
+                },
+                "description": "Per eseguire nuovamente l'autenticazione con PVOutput dovrai ottenere la chiave API su {account_url}."
+            },
+            "user": {
+                "data": {
+                    "api_key": "Chiave API",
+                    "system_id": "ID di sistema"
+                },
+                "description": "Per autenticarti con PVOutput dovrai ottenere la chiave API su {account_url}. \n\nGli ID di sistema dei sistemi registrati sono elencati nella stessa pagina."
+            }
+        }
+    }
+}

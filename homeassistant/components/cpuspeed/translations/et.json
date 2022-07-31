@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Juba seadistatud. Lubatud on ainult \u00fcks seadistamine.",
+            "not_compatible": "CPU teavet ei saa hankida, see sidumine ei \u00fchildu s\u00fcsteemiga"
+        },
+        "step": {
+            "user": {
+                "description": "Kas alustada seadistamist?",
+                "title": "Protsessori kiirus"
+            }
+        }
+    },
+    "title": "Protsessori kiirus"
+}

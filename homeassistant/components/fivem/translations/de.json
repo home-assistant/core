@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Der Dienst ist bereits konfiguriert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen. Bitte \u00fcberpr\u00fcfe den Host und den Port und versuche es erneut. Vergewissere dich auch, dass du den neuesten FiveM-Server verwendest.",
+            "invalid_game_name": "Die API des Spiels, mit dem du dich verbinden willst, ist kein FiveM-Spiel.",
+            "unknown_error": "Unerwarteter Fehler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Name",
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

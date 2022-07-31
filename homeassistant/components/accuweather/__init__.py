@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from accuweather import AccuWeather, ApiError, InvalidApiKeyError, RequestsExceededError
 from aiohttp import ClientSession
@@ -11,21 +11,24 @@ from aiohttp.client_exceptions import ClientConnectorError
 from async_timeout import timeout
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import ATTR_FORECAST, CONF_FORECAST, DOMAIN
+from .const import ATTR_FORECAST, CONF_FORECAST, DOMAIN, MANUFACTURER
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["sensor", "weather"]
+PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up AccuWeather as config entry."""
     api_key: str = entry.data[CONF_API_KEY]
+    name: str = entry.data[CONF_NAME]
     assert entry.unique_id is not None
     location_key = entry.unique_id
     forecast: bool = entry.options.get(CONF_FORECAST, False)
@@ -35,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     websession = async_get_clientsession(hass)
 
     coordinator = AccuWeatherDataUpdateCoordinator(
-        hass, websession, api_key, location_key, forecast
+        hass, websession, api_key, location_key, forecast, name
     )
     await coordinator.async_config_entry_first_refresh()
 
@@ -43,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -63,7 +66,7 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-class AccuWeatherDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
+class AccuWeatherDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching AccuWeather data API."""
 
     def __init__(
@@ -73,12 +76,27 @@ class AccuWeatherDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
         api_key: str,
         location_key: str,
         forecast: bool,
+        name: str,
     ) -> None:
         """Initialize."""
         self.location_key = location_key
         self.forecast = forecast
         self.is_metric = hass.config.units.is_metric
-        self.accuweather = AccuWeather(api_key, session, location_key=self.location_key)
+        self.accuweather = AccuWeather(api_key, session, location_key=location_key)
+        self.device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, location_key)},
+            manufacturer=MANUFACTURER,
+            name=name,
+            # You don't need to provide specific details for the URL,
+            # so passing in _ characters is fine if the location key
+            # is correct
+            configuration_url=(
+                "http://accuweather.com/en/"
+                f"_/_/{location_key}/"
+                f"weather-forecast/{location_key}/"
+            ),
+        )
 
         # Enabling the forecast download increases the number of requests per data
         # update, we use 40 minutes for current condition only and 80 minutes for

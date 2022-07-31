@@ -9,9 +9,8 @@
             "user": {
                 "data": {
                     "show_on_map": "Tampilkan di peta",
-                    "station_id": "ID Sensor Luftdaten"
-                },
-                "title": "Konfigurasikan Luftdaten"
+                    "station_id": "ID Sensor"
+                }
             }
         }
     }

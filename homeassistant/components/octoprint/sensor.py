@@ -1,20 +1,19 @@
 """Support for monitoring OctoPrint sensors."""
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 
 from pyoctoprintapi import OctoprintJobInfo, OctoprintPrinterInfo
 
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_TIMESTAMP,
-    PERCENTAGE,
-    TEMP_CELSIUS,
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -22,6 +21,17 @@ from . import OctoprintDataUpdateCoordinator
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+JOB_PRINTING_STATES = ["Printing from SD", "Printing"]
+
+
+def _is_printer_printing(printer: OctoprintPrinterInfo) -> bool:
+    return (
+        printer
+        and printer.state
+        and printer.state.flags
+        and printer.state.flags.printing
+    )
 
 
 async def async_setup_entry(
@@ -37,13 +47,23 @@ async def async_setup_entry(
 
     assert device_id is not None
 
-    entities: list[SensorEntity] = []
-    if coordinator.data["printer"]:
-        printer_info = coordinator.data["printer"]
-        types = ["actual", "target"]
-        for tool in printer_info.temperatures:
-            for temp_type in types:
-                entities.append(
+    known_tools = set()
+
+    @callback
+    def async_add_tool_sensors() -> None:
+        if not coordinator.data["printer"]:
+            return
+
+        new_tools = []
+        for tool in [
+            tool
+            for tool in coordinator.data["printer"].temperatures
+            if tool.name not in known_tools
+        ]:
+            assert device_id is not None
+            known_tools.add(tool.name)
+            for temp_type in ("actual", "target"):
+                new_tools.append(
                     OctoPrintTemperatureSensor(
                         coordinator,
                         tool.name,
@@ -51,21 +71,28 @@ async def async_setup_entry(
                         device_id,
                     )
                 )
-    else:
-        _LOGGER.error("Printer appears to be offline, skipping temperature sensors")
+        if new_tools:
+            async_add_entities(new_tools)
 
-    entities.append(OctoPrintStatusSensor(coordinator, device_id))
-    entities.append(OctoPrintJobPercentageSensor(coordinator, device_id))
-    entities.append(OctoPrintEstimatedFinishTimeSensor(coordinator, device_id))
-    entities.append(OctoPrintStartTimeSensor(coordinator, device_id))
+    config_entry.async_on_unload(coordinator.async_add_listener(async_add_tool_sensors))
+
+    if coordinator.data["printer"]:
+        async_add_tool_sensors()
+
+    entities: list[SensorEntity] = [
+        OctoPrintStatusSensor(coordinator, device_id),
+        OctoPrintJobPercentageSensor(coordinator, device_id),
+        OctoPrintEstimatedFinishTimeSensor(coordinator, device_id),
+        OctoPrintStartTimeSensor(coordinator, device_id),
+    ]
 
     async_add_entities(entities)
 
 
-class OctoPrintSensorBase(CoordinatorEntity, SensorEntity):
+class OctoPrintSensorBase(
+    CoordinatorEntity[OctoprintDataUpdateCoordinator], SensorEntity
+):
     """Representation of an OctoPrint sensor."""
-
-    coordinator: OctoprintDataUpdateCoordinator
 
     def __init__(
         self,
@@ -139,7 +166,7 @@ class OctoPrintJobPercentageSensor(OctoPrintSensorBase):
 class OctoPrintEstimatedFinishTimeSensor(OctoPrintSensorBase):
     """Representation of an OctoPrint sensor."""
 
-    _attr_device_class = DEVICE_CLASS_TIMESTAMP
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
 
     def __init__(
         self, coordinator: OctoprintDataUpdateCoordinator, device_id: str
@@ -148,21 +175,27 @@ class OctoPrintEstimatedFinishTimeSensor(OctoPrintSensorBase):
         super().__init__(coordinator, "Estimated Finish Time", device_id)
 
     @property
-    def native_value(self):
+    def native_value(self) -> datetime | None:
         """Return sensor state."""
         job: OctoprintJobInfo = self.coordinator.data["job"]
-        if not job or not job.progress.print_time_left or job.state != "Printing":
+        if (
+            not job
+            or not job.progress.print_time_left
+            or not _is_printer_printing(self.coordinator.data["printer"])
+        ):
             return None
 
         read_time = self.coordinator.data["last_read_time"]
 
-        return (read_time + timedelta(seconds=job.progress.print_time_left)).isoformat()
+        return (read_time + timedelta(seconds=job.progress.print_time_left)).replace(
+            second=0
+        )
 
 
 class OctoPrintStartTimeSensor(OctoPrintSensorBase):
     """Representation of an OctoPrint sensor."""
 
-    _attr_device_class = DEVICE_CLASS_TIMESTAMP
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
 
     def __init__(
         self, coordinator: OctoprintDataUpdateCoordinator, device_id: str
@@ -171,24 +204,30 @@ class OctoPrintStartTimeSensor(OctoPrintSensorBase):
         super().__init__(coordinator, "Start Time", device_id)
 
     @property
-    def native_value(self):
+    def native_value(self) -> datetime | None:
         """Return sensor state."""
         job: OctoprintJobInfo = self.coordinator.data["job"]
 
-        if not job or not job.progress.print_time or job.state != "Printing":
+        if (
+            not job
+            or not job.progress.print_time
+            or not _is_printer_printing(self.coordinator.data["printer"])
+        ):
             return None
 
         read_time = self.coordinator.data["last_read_time"]
 
-        return (read_time - timedelta(seconds=job.progress.print_time)).isoformat()
+        return (read_time - timedelta(seconds=job.progress.print_time)).replace(
+            second=0
+        )
 
 
 class OctoPrintTemperatureSensor(OctoPrintSensorBase):
     """Representation of an OctoPrint sensor."""
 
     _attr_native_unit_of_measurement = TEMP_CELSIUS
-    _attr_device_class = DEVICE_CLASS_TEMPERATURE
-    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
         self,
@@ -211,12 +250,15 @@ class OctoPrintTemperatureSensor(OctoPrintSensorBase):
 
         for temp in printer.temperatures:
             if temp.name == self._api_tool:
-                return round(
+                val = (
                     temp.actual_temp
                     if self._temp_type == "actual"
-                    else temp.target_temp,
-                    2,
+                    else temp.target_temp
                 )
+                if val is None:
+                    return None
+
+                return round(val, 2)
 
         return None
 

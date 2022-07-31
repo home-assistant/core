@@ -1,4 +1,6 @@
 """Demo platform that offers fake meteorological data."""
+from __future__ import annotations
+
 from datetime import timedelta
 
 from homeassistant.components.weather import (
@@ -16,18 +18,24 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_SUNNY,
     ATTR_CONDITION_WINDY,
     ATTR_CONDITION_WINDY_VARIANT,
-    ATTR_FORECAST_CONDITION,
-    ATTR_FORECAST_PRECIPITATION,
-    ATTR_FORECAST_PRECIPITATION_PROBABILITY,
-    ATTR_FORECAST_TEMP,
-    ATTR_FORECAST_TEMP_LOW,
-    ATTR_FORECAST_TIME,
+    Forecast,
     WeatherEntity,
 )
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    PRESSURE_HPA,
+    PRESSURE_INHG,
+    SPEED_METERS_PER_SECOND,
+    SPEED_MILES_PER_HOUR,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
-CONDITION_CLASSES = {
+CONDITION_CLASSES: dict[str, list[str]] = {
     ATTR_CONDITION_CLOUDY: [],
     ATTR_CONDITION_FOG: [],
     ATTR_CONDITION_HAIL: [],
@@ -45,12 +53,21 @@ CONDITION_CLASSES = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Demo config entry."""
     setup_platform(hass, {}, async_add_entities)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Demo weather."""
     add_entities(
         [
@@ -62,6 +79,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 1099,
                 0.5,
                 TEMP_CELSIUS,
+                PRESSURE_HPA,
+                SPEED_METERS_PER_SECOND,
                 [
                     [ATTR_CONDITION_RAINY, 1, 22, 15, 60],
                     [ATTR_CONDITION_RAINY, 5, 19, 8, 30],
@@ -80,6 +99,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 987,
                 4.8,
                 TEMP_FAHRENHEIT,
+                PRESSURE_INHG,
+                SPEED_MILES_PER_HOUR,
                 [
                     [ATTR_CONDITION_SNOWY, 2, -10, -15, 60],
                     [ATTR_CONDITION_PARTLYCLOUDY, 1, -13, -14, 25],
@@ -99,87 +120,101 @@ class DemoWeather(WeatherEntity):
 
     def __init__(
         self,
-        name,
-        condition,
-        temperature,
-        humidity,
-        pressure,
-        wind_speed,
-        temperature_unit,
-        forecast,
-    ):
+        name: str,
+        condition: str,
+        temperature: float,
+        humidity: float,
+        pressure: float,
+        wind_speed: float,
+        temperature_unit: str,
+        pressure_unit: str,
+        wind_speed_unit: str,
+        forecast: list[list],
+    ) -> None:
         """Initialize the Demo weather."""
         self._name = name
         self._condition = condition
-        self._temperature = temperature
-        self._temperature_unit = temperature_unit
+        self._native_temperature = temperature
+        self._native_temperature_unit = temperature_unit
         self._humidity = humidity
-        self._pressure = pressure
-        self._wind_speed = wind_speed
+        self._native_pressure = pressure
+        self._native_pressure_unit = pressure_unit
+        self._native_wind_speed = wind_speed
+        self._native_wind_speed_unit = wind_speed_unit
         self._forecast = forecast
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the sensor."""
         return f"Demo Weather {self._name}"
 
     @property
-    def should_poll(self):
+    def should_poll(self) -> bool:
         """No polling needed for a demo weather condition."""
         return False
 
     @property
-    def temperature(self):
+    def native_temperature(self) -> float:
         """Return the temperature."""
-        return self._temperature
+        return self._native_temperature
 
     @property
-    def temperature_unit(self):
+    def native_temperature_unit(self) -> str:
         """Return the unit of measurement."""
-        return self._temperature_unit
+        return self._native_temperature_unit
 
     @property
-    def humidity(self):
+    def humidity(self) -> float:
         """Return the humidity."""
         return self._humidity
 
     @property
-    def wind_speed(self):
+    def native_wind_speed(self) -> float:
         """Return the wind speed."""
-        return self._wind_speed
+        return self._native_wind_speed
 
     @property
-    def pressure(self):
+    def native_wind_speed_unit(self) -> str:
+        """Return the wind speed."""
+        return self._native_wind_speed_unit
+
+    @property
+    def native_pressure(self) -> float:
         """Return the pressure."""
-        return self._pressure
+        return self._native_pressure
 
     @property
-    def condition(self):
+    def native_pressure_unit(self) -> str:
+        """Return the pressure."""
+        return self._native_pressure_unit
+
+    @property
+    def condition(self) -> str:
         """Return the weather condition."""
         return [
             k for k, v in CONDITION_CLASSES.items() if self._condition.lower() in v
         ][0]
 
     @property
-    def attribution(self):
+    def attribution(self) -> str:
         """Return the attribution."""
         return "Powered by Home Assistant"
 
     @property
-    def forecast(self):
+    def forecast(self) -> list[Forecast]:
         """Return the forecast."""
         reftime = dt_util.now().replace(hour=16, minute=00)
 
         forecast_data = []
         for entry in self._forecast:
-            data_dict = {
-                ATTR_FORECAST_TIME: reftime.isoformat(),
-                ATTR_FORECAST_CONDITION: entry[0],
-                ATTR_FORECAST_PRECIPITATION: entry[1],
-                ATTR_FORECAST_TEMP: entry[2],
-                ATTR_FORECAST_TEMP_LOW: entry[3],
-                ATTR_FORECAST_PRECIPITATION_PROBABILITY: entry[4],
-            }
+            data_dict = Forecast(
+                datetime=reftime.isoformat(),
+                condition=entry[0],
+                precipitation=entry[1],
+                temperature=entry[2],
+                templow=entry[3],
+                precipitation_probability=entry[4],
+            )
             reftime = reftime + timedelta(hours=4)
             forecast_data.append(data_dict)
 

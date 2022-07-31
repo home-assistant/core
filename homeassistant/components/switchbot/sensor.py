@@ -1,22 +1,25 @@
 """Support for SwitchBot sensors."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_MAC,
+    CONF_ADDRESS,
     CONF_NAME,
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_SIGNAL_STRENGTH,
-    ENTITY_CATEGORY_DIAGNOSTIC,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DATA_COORDINATOR, DOMAIN
+from .const import DOMAIN
 from .coordinator import SwitchbotDataUpdateCoordinator
 from .entity import SwitchbotEntity
 
@@ -26,20 +29,34 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     "rssi": SensorEntityDescription(
         key="rssi",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-        device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_registry_enabled_default=False,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "battery": SensorEntityDescription(
         key="battery",
         native_unit_of_measurement=PERCENTAGE,
-        device_class=DEVICE_CLASS_BATTERY,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        device_class=SensorDeviceClass.BATTERY,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "lightLevel": SensorEntityDescription(
         key="lightLevel",
         native_unit_of_measurement="Level",
-        device_class=DEVICE_CLASS_ILLUMINANCE,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.ILLUMINANCE,
+    ),
+    "humidity": SensorEntityDescription(
+        key="humidity",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.HUMIDITY,
+    ),
+    "temperature": SensorEntityDescription(
+        key="temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
 }
 
@@ -48,23 +65,19 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Switchbot sensor based on a config entry."""
-    coordinator: SwitchbotDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        DATA_COORDINATOR
-    ]
-
-    if not coordinator.data[entry.unique_id].get("data"):
-        return
-
+    coordinator: SwitchbotDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    unique_id = entry.unique_id
+    assert unique_id is not None
     async_add_entities(
         [
             SwitchBotSensor(
                 coordinator,
-                entry.unique_id,
+                unique_id,
                 sensor,
-                entry.data[CONF_MAC],
+                entry.data[CONF_ADDRESS],
                 entry.data[CONF_NAME],
             )
-            for sensor in coordinator.data[entry.unique_id]["data"]
+            for sensor in coordinator.data["data"]
             if sensor in SENSOR_TYPES
         ]
     )
@@ -73,20 +86,18 @@ async def async_setup_entry(
 class SwitchBotSensor(SwitchbotEntity, SensorEntity):
     """Representation of a Switchbot sensor."""
 
-    coordinator: SwitchbotDataUpdateCoordinator
-
     def __init__(
         self,
         coordinator: SwitchbotDataUpdateCoordinator,
-        idx: str | None,
+        unique_id: str,
         sensor: str,
-        mac: str,
+        address: str,
         switchbot_name: str,
     ) -> None:
         """Initialize the Switchbot sensor."""
-        super().__init__(coordinator, idx, mac, name=switchbot_name)
+        super().__init__(coordinator, unique_id, address, name=switchbot_name)
         self._sensor = sensor
-        self._attr_unique_id = f"{idx}-{sensor}"
+        self._attr_unique_id = f"{unique_id}-{sensor}"
         self._attr_name = f"{switchbot_name} {sensor.title()}"
         self.entity_description = SENSOR_TYPES[sensor]
 

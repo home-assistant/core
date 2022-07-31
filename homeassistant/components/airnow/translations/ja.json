@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u30c7\u30d0\u30a4\u30b9\u306f\u3059\u3067\u306b\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u3059"
+        },
+        "error": {
+            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
+            "invalid_auth": "\u7121\u52b9\u306a\u8a8d\u8a3c",
+            "invalid_location": "\u305d\u306e\u5834\u6240\u306b\u5bfe\u3059\u308b\u7d50\u679c\u304c\u898b\u3064\u304b\u308a\u307e\u305b\u3093",
+            "unknown": "\u4e88\u671f\u3057\u306a\u3044\u30a8\u30e9\u30fc"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API\u30ad\u30fc",
+                    "latitude": "\u7def\u5ea6",
+                    "longitude": "\u7d4c\u5ea6",
+                    "radius": "\u30b9\u30c6\u30fc\u30b7\u30e7\u30f3\u534a\u5f84(\u30de\u30a4\u30eb; \u30aa\u30d7\u30b7\u30e7\u30f3)"
+                },
+                "description": "AirNow\u306e\u7a7a\u6c17\u54c1\u8cea\u7d71\u5408\u3092\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7\u3057\u307e\u3059\u3002 API\u30ad\u30fc\u3092\u751f\u6210\u3059\u308b\u306b\u306f\u3001https://docs.airnowapi.org/account/request/ \u306b\u30a2\u30af\u30bb\u30b9\u3057\u3066\u304f\u3060\u3055\u3044"
+            }
+        }
+    }
+}

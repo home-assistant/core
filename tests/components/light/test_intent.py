@@ -1,12 +1,8 @@
 """Tests for the light intents."""
 from homeassistant.components import light
-from homeassistant.components.light import (
-    ATTR_SUPPORTED_COLOR_MODES,
-    COLOR_MODE_HS,
-    intent,
-)
+from homeassistant.components.light import ATTR_SUPPORTED_COLOR_MODES, ColorMode, intent
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON
-from homeassistant.helpers.intent import IntentHandleError
+from homeassistant.helpers.intent import IntentHandleError, async_handle
 
 from tests.common import async_mock_service
 
@@ -14,13 +10,14 @@ from tests.common import async_mock_service
 async def test_intent_set_color(hass):
     """Test the set color intent."""
     hass.states.async_set(
-        "light.hello_2", "off", {ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_HS]}
+        "light.hello_2", "off", {ATTR_SUPPORTED_COLOR_MODES: [ColorMode.HS]}
     )
     hass.states.async_set("switch.hello", "off")
     calls = async_mock_service(hass, light.DOMAIN, light.SERVICE_TURN_ON)
     await intent.async_setup_intents(hass)
 
-    result = await hass.helpers.intent.async_handle(
+    result = await async_handle(
+        hass,
         "test",
         intent.INTENT_SET,
         {"name": {"value": "Hello"}, "color": {"value": "blue"}},
@@ -44,7 +41,8 @@ async def test_intent_set_color_tests_feature(hass):
     await intent.async_setup_intents(hass)
 
     try:
-        await hass.helpers.intent.async_handle(
+        await async_handle(
+            hass,
             "test",
             intent.INTENT_SET,
             {"name": {"value": "Hello"}, "color": {"value": "blue"}},
@@ -59,13 +57,14 @@ async def test_intent_set_color_tests_feature(hass):
 async def test_intent_set_color_and_brightness(hass):
     """Test the set color intent."""
     hass.states.async_set(
-        "light.hello_2", "off", {ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_HS]}
+        "light.hello_2", "off", {ATTR_SUPPORTED_COLOR_MODES: [ColorMode.HS]}
     )
     hass.states.async_set("switch.hello", "off")
     calls = async_mock_service(hass, light.DOMAIN, light.SERVICE_TURN_ON)
     await intent.async_setup_intents(hass)
 
-    result = await hass.helpers.intent.async_handle(
+    result = await async_handle(
+        hass,
         "test",
         intent.INTENT_SET,
         {

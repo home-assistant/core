@@ -1,6 +1,11 @@
 """Tests for the numato switch platform."""
 from homeassistant.components import switch
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    Platform,
+)
 from homeassistant.helpers import discovery
 from homeassistant.setup import async_setup_component
 
@@ -106,7 +111,7 @@ async def test_failing_hass_operations(hass, numato_fixture, monkeypatch):
 async def test_switch_setup_without_discovery_info(hass, config, numato_fixture):
     """Test handling of empty discovery_info."""
     numato_fixture.discover()
-    await discovery.async_load_platform(hass, "switch", "numato", None, config)
+    await discovery.async_load_platform(hass, Platform.SWITCH, "numato", None, config)
     for entity_id in MOCKUP_ENTITY_IDS:
         assert entity_id not in hass.states.async_entity_ids()
     await hass.async_block_till_done()  # wait for numato platform to be loaded

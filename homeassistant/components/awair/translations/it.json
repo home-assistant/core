@@ -13,14 +13,21 @@
             "reauth": {
                 "data": {
                     "access_token": "Token di accesso",
-                    "email": "E-mail"
+                    "email": "Email"
                 },
                 "description": "Inserisci nuovamente il tuo token di accesso per sviluppatori Awair."
+            },
+            "reauth_confirm": {
+                "data": {
+                    "access_token": "Token di accesso",
+                    "email": "Email"
+                },
+                "description": "Inserisci nuovamente il tuo token di accesso sviluppatore Awair."
             },
             "user": {
                 "data": {
                     "access_token": "Token di accesso",
-                    "email": "E-mail"
+                    "email": "Email"
                 },
                 "description": "\u00c8 necessario registrarsi per un token di accesso per sviluppatori Awair all'indirizzo: https://developer.getawair.com/onboard/login"
             }

@@ -1,7 +1,6 @@
 """The Switcher integration."""
 from __future__ import annotations
 
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -9,7 +8,7 @@ from aioswitcher.device import SwitcherBase
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_DEVICE_ID, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_DEVICE_ID, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
@@ -30,7 +29,7 @@ from .const import (
 )
 from .utils import async_start_bridge, async_stop_bridge
 
-PLATFORMS = ["switch", "sensor"]
+PLATFORMS = [Platform.SWITCH, Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -96,26 +95,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ] = SwitcherDataUpdateCoordinator(hass, entry, device)
         coordinator.async_setup()
 
-    async def platforms_setup_task() -> None:
-        # Must be ready before dispatcher is called
-        await asyncio.gather(
-            *(
-                hass.config_entries.async_forward_entry_setup(entry, platform)
-                for platform in PLATFORMS
-            )
-        )
+    # Must be ready before dispatcher is called
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-        discovery_task = hass.data[DOMAIN].pop(DATA_DISCOVERY, None)
-        if discovery_task is not None:
-            discovered_devices = await discovery_task
-            for device in discovered_devices.values():
-                on_device_data_callback(device)
+    discovery_task = hass.data[DOMAIN].pop(DATA_DISCOVERY, None)
+    if discovery_task is not None:
+        discovered_devices = await discovery_task
+        for device in discovered_devices.values():
+            on_device_data_callback(device)
 
-        await async_start_bridge(hass, on_device_data_callback)
+    await async_start_bridge(hass, on_device_data_callback)
 
-    hass.async_create_task(platforms_setup_task())
-
-    @callback
     async def stop_bridge(event: Event) -> None:
         await async_stop_bridge(hass)
 

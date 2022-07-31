@@ -1,6 +1,7 @@
 """The tests for the Media group platform."""
 from unittest.mock import patch
 
+import async_timeout
 import pytest
 
 from homeassistant.components.group import DOMAIN
@@ -42,6 +43,8 @@ from homeassistant.const import (
     SERVICE_VOLUME_DOWN,
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_UP,
+    STATE_BUFFERING,
+    STATE_IDLE,
     STATE_OFF,
     STATE_ON,
     STATE_PAUSED,
@@ -98,7 +101,17 @@ async def test_default_state(hass):
 
 
 async def test_state_reporting(hass):
-    """Test the state reporting."""
+    """Test the state reporting.
+
+    The group state is unavailable if all group members are unavailable.
+    Otherwise, the group state is unknown if all group members are unknown.
+    Otherwise, the group state is buffering if all group members are buffering.
+    Otherwise, the group state is idle if all group members are idle.
+    Otherwise, the group state is paused if all group members are paused.
+    Otherwise, the group state is playing if all group members are playing.
+    Otherwise, the group state is on if at least one group member is not off, unavailable or unknown.
+    Otherwise, the group state is off.
+    """
     await async_setup_component(
         hass,
         MEDIA_DOMAIN,
@@ -113,25 +126,62 @@ async def test_state_reporting(hass):
     await hass.async_start()
     await hass.async_block_till_done()
 
-    assert hass.states.get("media_player.media_group").state == STATE_UNKNOWN
+    # Initial state with no group member in the state machine -> unavailable
+    assert hass.states.get("media_player.media_group").state == STATE_UNAVAILABLE
 
-    hass.states.async_set("media_player.player_1", STATE_ON)
-    hass.states.async_set("media_player.player_2", STATE_UNAVAILABLE)
-    await hass.async_block_till_done()
-    assert hass.states.get("media_player.media_group").state == STATE_ON
-
-    hass.states.async_set("media_player.player_1", STATE_ON)
-    hass.states.async_set("media_player.player_2", STATE_OFF)
-    await hass.async_block_till_done()
-    assert hass.states.get("media_player.media_group").state == STATE_ON
-
-    hass.states.async_set("media_player.player_1", STATE_OFF)
-    hass.states.async_set("media_player.player_2", STATE_UNAVAILABLE)
-    await hass.async_block_till_done()
-    assert hass.states.get("media_player.media_group").state == STATE_OFF
-
+    # All group members unavailable -> unavailable
     hass.states.async_set("media_player.player_1", STATE_UNAVAILABLE)
     hass.states.async_set("media_player.player_2", STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+    assert hass.states.get("media_player.media_group").state == STATE_UNAVAILABLE
+
+    # The group state is unknown if all group members are unknown or unavailable.
+    for state_1 in (
+        STATE_UNAVAILABLE,
+        STATE_UNKNOWN,
+    ):
+        hass.states.async_set("media_player.player_1", state_1)
+        hass.states.async_set("media_player.player_2", STATE_UNKNOWN)
+        await hass.async_block_till_done()
+        assert hass.states.get("media_player.media_group").state == STATE_UNKNOWN
+
+    # All group members buffering -> buffering
+    # All group members idle -> idle
+    # All group members paused -> paused
+    # All group members playing -> playing
+    # All group members unavailable -> unavailable
+    # All group members unknown -> unknown
+    for state in (
+        STATE_BUFFERING,
+        STATE_IDLE,
+        STATE_PAUSED,
+        STATE_PLAYING,
+        STATE_UNAVAILABLE,
+        STATE_UNKNOWN,
+    ):
+        hass.states.async_set("media_player.player_1", state)
+        hass.states.async_set("media_player.player_2", state)
+        await hass.async_block_till_done()
+        assert hass.states.get("media_player.media_group").state == state
+
+    # At least one member not off, unavailable or unknown -> on
+    for state_1 in (STATE_BUFFERING, STATE_IDLE, STATE_ON, STATE_PAUSED, STATE_PLAYING):
+        for state_2 in (STATE_OFF, STATE_UNAVAILABLE, STATE_UNKNOWN):
+            hass.states.async_set("media_player.player_1", state_1)
+            hass.states.async_set("media_player.player_2", state_2)
+            await hass.async_block_till_done()
+            assert hass.states.get("media_player.media_group").state == STATE_ON
+
+    # Otherwise off
+    for state_1 in (STATE_OFF, STATE_UNAVAILABLE, STATE_UNKNOWN):
+        hass.states.async_set("media_player.player_1", state_1)
+        hass.states.async_set("media_player.player_2", STATE_OFF)
+        await hass.async_block_till_done()
+        assert hass.states.get("media_player.media_group").state == STATE_OFF
+
+    # All group members removed from the state machine -> unavailable
+    hass.states.async_remove("media_player.player_1")
+    hass.states.async_remove("media_player.player_2")
     await hass.async_block_till_done()
     assert hass.states.get("media_player.media_group").state == STATE_UNAVAILABLE
 
@@ -486,12 +536,12 @@ async def test_service_calls(hass, mock_media_seek):
 
 async def test_nested_group(hass):
     """Test nested media group."""
-    hass.states.async_set("media_player.player_1", "on")
     await async_setup_component(
         hass,
         MEDIA_DOMAIN,
         {
             MEDIA_DOMAIN: [
+                {"platform": "demo"},
                 {
                     "platform": DOMAIN,
                     "entities": ["media_player.group_1"],
@@ -499,7 +549,7 @@ async def test_nested_group(hass):
                 },
                 {
                     "platform": DOMAIN,
-                    "entities": ["media_player.player_1", "media_player.player_2"],
+                    "entities": ["media_player.bedroom", "media_player.kitchen"],
                     "name": "Group 1",
                 },
             ]
@@ -511,13 +561,28 @@ async def test_nested_group(hass):
 
     state = hass.states.get("media_player.group_1")
     assert state is not None
-    assert state.state == STATE_ON
+    assert state.state == STATE_PLAYING
     assert state.attributes.get(ATTR_ENTITY_ID) == [
-        "media_player.player_1",
-        "media_player.player_2",
+        "media_player.bedroom",
+        "media_player.kitchen",
     ]
 
     state = hass.states.get("media_player.nested_group")
     assert state is not None
-    assert state.state == STATE_ON
+    assert state.state == STATE_PLAYING
     assert state.attributes.get(ATTR_ENTITY_ID) == ["media_player.group_1"]
+
+    # Test controlling the nested group
+    async with async_timeout.timeout(0.5):
+        await hass.services.async_call(
+            MEDIA_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "media_player.group_1"},
+            blocking=True,
+        )
+
+    await hass.async_block_till_done()
+    assert hass.states.get("media_player.bedroom").state == STATE_OFF
+    assert hass.states.get("media_player.kitchen").state == STATE_OFF
+    assert hass.states.get("media_player.group_1").state == STATE_OFF
+    assert hass.states.get("media_player.nested_group").state == STATE_OFF

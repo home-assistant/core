@@ -6,6 +6,7 @@
         },
         "error": {
             "cannot_connect": "Tilkobling mislyktes",
+            "firmware_not_fully_provisioned": "Enheten er ikke fullstendig klargjort. Vennligst kontakt Shelly support",
             "invalid_auth": "Ugyldig godkjenning",
             "unknown": "Uventet feil"
         },

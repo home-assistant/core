@@ -3,6 +3,7 @@
   "name": "De Lijn",
   "documentation": "https://www.home-assistant.io/integrations/delijn",
   "codeowners": ["@bollewolle", "@Emilv2"],
-  "requirements": ["pydelijn==0.6.1"],
-  "iot_class": "cloud_polling"
+  "requirements": ["pydelijn==1.0.0"],
+  "iot_class": "cloud_polling",
+  "loggers": ["pydelijn"]
 }

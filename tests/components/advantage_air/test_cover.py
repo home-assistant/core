@@ -8,11 +8,11 @@ from homeassistant.components.advantage_air.const import (
 )
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    DEVICE_CLASS_DAMPER,
     DOMAIN as COVER_DOMAIN,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
     SERVICE_SET_COVER_POSITION,
+    CoverDeviceClass,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OPEN
 from homeassistant.helpers import entity_registry as er
@@ -27,7 +27,7 @@ from tests.components.advantage_air import (
 
 
 async def test_cover_async_setup_entry(hass, aioclient_mock):
-    """Test climate setup without sensors."""
+    """Test cover platform."""
 
     aioclient_mock.get(
         TEST_SYSTEM_URL,
@@ -45,11 +45,11 @@ async def test_cover_async_setup_entry(hass, aioclient_mock):
     assert len(aioclient_mock.mock_calls) == 1
 
     # Test Cover Zone Entity
-    entity_id = "cover.zone_open_without_sensor"
+    entity_id = "cover.ac_two_zone_open_without_sensor"
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_OPEN
-    assert state.attributes.get("device_class") == DEVICE_CLASS_DAMPER
+    assert state.attributes.get("device_class") == CoverDeviceClass.DAMPER
     assert state.attributes.get("current_position") == 100
 
     entry = registry.async_get(entity_id)
@@ -119,8 +119,8 @@ async def test_cover_async_setup_entry(hass, aioclient_mock):
         SERVICE_CLOSE_COVER,
         {
             ATTR_ENTITY_ID: [
-                "cover.zone_open_without_sensor",
-                "cover.zone_closed_without_sensor",
+                "cover.ac_two_zone_open_without_sensor",
+                "cover.ac_two_zone_closed_without_sensor",
             ]
         },
         blocking=True,
@@ -134,8 +134,8 @@ async def test_cover_async_setup_entry(hass, aioclient_mock):
         SERVICE_OPEN_COVER,
         {
             ATTR_ENTITY_ID: [
-                "cover.zone_open_without_sensor",
-                "cover.zone_closed_without_sensor",
+                "cover.ac_two_zone_open_without_sensor",
+                "cover.ac_two_zone_closed_without_sensor",
             ]
         },
         blocking=True,

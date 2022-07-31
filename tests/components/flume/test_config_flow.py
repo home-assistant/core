@@ -64,44 +64,6 @@ async def test_form(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_import(hass):
-    """Test we can import the sensor platform config."""
-
-    mock_flume_device_list = _get_mocked_flume_device_list()
-
-    with patch(
-        "homeassistant.components.flume.config_flow.FlumeAuth",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.flume.config_flow.FlumeDeviceList",
-        return_value=mock_flume_device_list,
-    ), patch(
-        "homeassistant.components.flume.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-                CONF_CLIENT_ID: "client_id",
-                CONF_CLIENT_SECRET: "client_secret",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] == "create_entry"
-    assert result["title"] == "test-username"
-    assert result["data"] == {
-        CONF_USERNAME: "test-username",
-        CONF_PASSWORD: "test-password",
-        CONF_CLIENT_ID: "client_id",
-        CONF_CLIENT_SECRET: "client_secret",
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
 async def test_form_invalid_auth(hass):
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(

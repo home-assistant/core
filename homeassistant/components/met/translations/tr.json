@@ -1,14 +1,21 @@
 {
     "config": {
+        "abort": {
+            "no_home": "Home Assistant yap\u0131land\u0131rmas\u0131nda hi\u00e7bir ev koordinat\u0131 ayarlanmad\u0131"
+        },
         "error": {
             "already_configured": "Hizmet zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
         },
         "step": {
             "user": {
                 "data": {
+                    "elevation": "Y\u00fckseklik",
                     "latitude": "Enlem",
-                    "longitude": "Boylam"
-                }
+                    "longitude": "Boylam",
+                    "name": "Ad"
+                },
+                "description": "Meteoroloji Enstit\u00fcs\u00fc",
+                "title": "Konum"
             }
         }
     }

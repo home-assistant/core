@@ -4,7 +4,7 @@
             "already_configured": "Apparaat is al geconfigureerd"
         },
         "error": {
-            "cannot_connect": "Kon niet verbinden",
+            "cannot_connect": "Kan geen verbinding maken",
             "invalid_auth": "Ongeldige authenticatie",
             "unknown": "Onverwachte fout"
         },
@@ -12,7 +12,7 @@
             "user": {
                 "data": {
                     "password": "Wachtwoord",
-                    "pin": "PIN-code",
+                    "pin": "Pincode",
                     "username": "Gebruikersnaam"
                 }
             }
@@ -28,13 +28,13 @@
                     "armed_night": "Ingeschakeld nacht"
                 },
                 "description": "Selecteer in welke staat u uw Risco-alarm wilt instellen wanneer u het Home Assistant-alarm inschakelt",
-                "title": "Wijs Home Assistant-staten toe aan Risco-staten"
+                "title": "Wijs Home Assistant statussen toe aan Risco status"
             },
             "init": {
                 "data": {
-                    "code_arm_required": "PIN-code vereist om in te schakelen",
-                    "code_disarm_required": "PIN-code vereist om uit te schakelen",
-                    "scan_interval": "Polling-interval (in seconden)"
+                    "code_arm_required": "Pincode vereist om in te schakelen",
+                    "code_disarm_required": "Pincode vereist om uit te schakelen",
+                    "scan_interval": "Hoe vaak moet Risco worden ververst (in seconden)"
                 },
                 "title": "Configureer opties"
             },
@@ -47,8 +47,8 @@
                     "arm": "Ingeschakeld (AFWEZIG)",
                     "partial_arm": "Gedeeltelijk ingeschakeld (AANWEZIG)"
                 },
-                "description": "Selecteer welke staat uw Home Assistant alarm zal melden voor elke staat gemeld door Risco",
-                "title": "Wijs Risco-staten toe aan Home Assistant-staten"
+                "description": "Selecteer welke status uw Home Assistant alarm zal melden voor elke status gemeld door Risco",
+                "title": "Wijs Risco status toe aan Home Assistant statussen"
             }
         }
     }

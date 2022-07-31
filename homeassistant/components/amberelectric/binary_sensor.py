@@ -24,7 +24,9 @@ PRICE_SPIKE_ICONS = {
 }
 
 
-class AmberPriceGridSensor(CoordinatorEntity, BinarySensorEntity):
+class AmberPriceGridSensor(
+    CoordinatorEntity[AmberUpdateCoordinator], BinarySensorEntity
+):
     """Sensor to show single grid binary values."""
 
     _attr_attribution = ATTRIBUTION
@@ -61,7 +63,7 @@ class AmberPriceSpikeBinarySensor(AmberPriceGridSensor):
         return self.coordinator.data["grid"]["price_spike"] == "spike"
 
     @property
-    def device_state_attributes(self) -> Mapping[str, Any] | None:
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return additional pieces of information about the price spike."""
 
         spike_status = self.coordinator.data["grid"]["price_spike"]

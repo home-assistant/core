@@ -3,9 +3,8 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OFF
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 
 from . import (
@@ -24,7 +23,7 @@ pytestmark = pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicle
 @pytest.fixture(autouse=True)
 def override_platforms():
     """Override PLATFORMS."""
-    with patch("homeassistant.components.renault.PLATFORMS", [BINARY_SENSOR_DOMAIN]):
+    with patch("homeassistant.components.renault.PLATFORMS", [Platform.BINARY_SENSOR]):
         yield
 
 
@@ -42,7 +41,7 @@ async def test_binary_sensors(
     mock_vehicle = MOCK_VEHICLES[vehicle_type]
     check_device_registry(device_registry, mock_vehicle["expected_device"])
 
-    expected_entities = mock_vehicle[BINARY_SENSOR_DOMAIN]
+    expected_entities = mock_vehicle[Platform.BINARY_SENSOR]
     assert len(entity_registry.entities) == len(expected_entities)
 
     check_entities(hass, entity_registry, expected_entities)
@@ -62,9 +61,9 @@ async def test_binary_sensor_empty(
     mock_vehicle = MOCK_VEHICLES[vehicle_type]
     check_device_registry(device_registry, mock_vehicle["expected_device"])
 
-    expected_entities = mock_vehicle[BINARY_SENSOR_DOMAIN]
+    expected_entities = mock_vehicle[Platform.BINARY_SENSOR]
     assert len(entity_registry.entities) == len(expected_entities)
-    check_entities_no_data(hass, entity_registry, expected_entities, STATE_OFF)
+    check_entities_no_data(hass, entity_registry, expected_entities, STATE_UNKNOWN)
 
 
 @pytest.mark.usefixtures("fixtures_with_invalid_upstream_exception")
@@ -81,7 +80,7 @@ async def test_binary_sensor_errors(
     mock_vehicle = MOCK_VEHICLES[vehicle_type]
     check_device_registry(device_registry, mock_vehicle["expected_device"])
 
-    expected_entities = mock_vehicle[BINARY_SENSOR_DOMAIN]
+    expected_entities = mock_vehicle[Platform.BINARY_SENSOR]
     assert len(entity_registry.entities) == len(expected_entities)
 
     check_entities_unavailable(hass, entity_registry, expected_entities)

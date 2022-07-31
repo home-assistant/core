@@ -75,7 +75,13 @@ def substitute_reference(value, flattened_translations):
     new = value
     for key in matches:
         if key in flattened_translations:
-            new = new.replace(f"[%key:{key}%]", flattened_translations[key])
+            new = new.replace(
+                f"[%key:{key}%]",
+                # New value can also be a substitution reference
+                substitute_reference(
+                    flattened_translations[key], flattened_translations
+                ),
+            )
         else:
             print(f"Invalid substitution key '{key}' found in string '{value}'")
             sys.exit(1)

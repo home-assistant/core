@@ -1,4 +1,6 @@
 """Details about printers which are connected to CUPS."""
+from __future__ import annotations
+
 from datetime import timedelta
 import importlib
 import logging
@@ -7,8 +9,11 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_HOST, CONF_PORT, PERCENTAGE
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,7 +55,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the CUPS sensor."""
     host = config[CONF_HOST]
     port = config[CONF_PORT]
@@ -64,7 +74,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             _LOGGER.error("Unable to connect to CUPS server: %s:%s", host, port)
             raise PlatformNotReady()
 
-        dev = []
+        dev: list[SensorEntity] = []
         for printer in printers:
             if printer not in data.printers:
                 _LOGGER.error("Printer is not present: %s", printer)

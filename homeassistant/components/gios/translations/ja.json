@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u30ed\u30b1\u30fc\u30b7\u30e7\u30f3\u306f\u3059\u3067\u306b\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u3059"
+        },
+        "error": {
+            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
+            "invalid_sensors_data": "\u3053\u306e\u6e2c\u5b9a\u30b9\u30c6\u30fc\u30b7\u30e7\u30f3\u306e\u30bb\u30f3\u30b5\u30fc\u306e\u30c7\u30fc\u30bf\u304c\u7121\u52b9\u3067\u3059\u3002",
+            "wrong_station_id": "\u6e2c\u5b9a\u30b9\u30c6\u30fc\u30b7\u30e7\u30f3\u306eID\u304c\u6b63\u3057\u304f\u3042\u308a\u307e\u305b\u3093\u3002"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "\u540d\u524d",
+                    "station_id": "\u6e2c\u5b9a\u30b9\u30c6\u30fc\u30b7\u30e7\u30f3\u306eID"
+                },
+                "title": "GIO\u015a (Polish Chief Inspectorate Of Environmental Protection)"
+            }
+        }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "GIO\u015a\u30b5\u30fc\u30d0\u30fc\u3078\u306e\u30a2\u30af\u30bb\u30b9"
+        }
+    }
+}

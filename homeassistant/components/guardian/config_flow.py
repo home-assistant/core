@@ -8,11 +8,10 @@ from aioguardian.errors import GuardianError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.dhcp import IP_ADDRESS
+from homeassistant.components import dhcp, zeroconf
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import CONF_UID, DOMAIN, LOGGER
 
@@ -69,6 +68,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured(
                 updates={CONF_IP_ADDRESS: self.discovery_info[CONF_IP_ADDRESS]}
             )
+            self._async_abort_entries_match(
+                {CONF_IP_ADDRESS: self.discovery_info[CONF_IP_ADDRESS]}
+            )
         else:
             self._abort_if_unique_id_configured()
 
@@ -98,23 +100,26 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             title=info[CONF_UID], data={CONF_UID: info["uid"], **user_input}
         )
 
-    async def async_step_dhcp(self, discovery_info: DiscoveryInfoType) -> FlowResult:
+    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle the configuration via dhcp."""
         self.discovery_info = {
-            CONF_IP_ADDRESS: discovery_info[IP_ADDRESS],
+            CONF_IP_ADDRESS: discovery_info.ip,
             CONF_PORT: DEFAULT_PORT,
         }
+        await self._async_set_unique_id(
+            async_get_pin_from_uid(discovery_info.macaddress.replace(":", "").upper())
+        )
         return await self._async_handle_discovery()
 
     async def async_step_zeroconf(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle the configuration via zeroconf."""
         self.discovery_info = {
-            CONF_IP_ADDRESS: discovery_info["host"],
-            CONF_PORT: discovery_info["port"],
+            CONF_IP_ADDRESS: discovery_info.host,
+            CONF_PORT: discovery_info.port,
         }
-        pin = async_get_pin_from_discovery_hostname(discovery_info["hostname"])
+        pin = async_get_pin_from_discovery_hostname(discovery_info.hostname)
         await self._async_set_unique_id(pin)
         return await self._async_handle_discovery()
 

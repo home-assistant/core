@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto jest ju\u017c skonfigurowane",
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "incorrect_api_key": "Nieprawid\u0142owy klucz API dla wybranego konta",
+            "invalid_auth": "Niepoprawne uwierzytelnienie",
+            "no_devices": "Nie wykryto urz\u0105dze\u0144",
+            "no_username": "Nie uda\u0142o si\u0119 uzyska\u0107 nazwy u\u017cytkownika"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "Klucz API"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "Klucz API"
+                }
+            }
+        }
+    }
+}

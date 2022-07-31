@@ -1,4 +1,8 @@
 """Support for locks which integrates with other components."""
+from __future__ import annotations
+
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant.components.lock import (
@@ -17,13 +21,19 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNLOCKED,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_AVAILABILITY_TEMPLATE
-from .template_entity import TemplateEntity
+from .const import DOMAIN
+from .template_entity import (
+    TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY,
+    TemplateEntity,
+    rewrite_common_legacy_to_modern_conf,
+)
 
 CONF_LOCK = "lock"
 CONF_UNLOCK = "unlock"
@@ -33,38 +43,28 @@ DEFAULT_OPTIMISTIC = False
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_NAME): cv.string,
         vol.Required(CONF_LOCK): cv.SCRIPT_SCHEMA,
         vol.Required(CONF_UNLOCK): cv.SCRIPT_SCHEMA,
         vol.Required(CONF_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
         vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
-)
+).extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY.schema)
 
 
 async def _async_create_entities(hass, config):
     """Create the Template lock."""
-    device = config.get(CONF_NAME)
-    value_template = config.get(CONF_VALUE_TEMPLATE)
-    availability_template = config.get(CONF_AVAILABILITY_TEMPLATE)
-
-    return [
-        TemplateLock(
-            hass,
-            device,
-            value_template,
-            availability_template,
-            config.get(CONF_LOCK),
-            config.get(CONF_UNLOCK),
-            config.get(CONF_OPTIMISTIC),
-            config.get(CONF_UNIQUE_ID),
-        )
-    ]
+    config = rewrite_common_legacy_to_modern_conf(config)
+    return [TemplateLock(hass, config, config.get(CONF_UNIQUE_ID))]
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the template lock."""
     async_add_entities(await _async_create_entities(hass, config))
 
@@ -72,60 +72,47 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class TemplateLock(TemplateEntity, LockEntity):
     """Representation of a template lock."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         hass,
-        name,
-        value_template,
-        availability_template,
-        command_lock,
-        command_unlock,
-        optimistic,
+        config,
         unique_id,
     ):
         """Initialize the lock."""
-        super().__init__(availability_template=availability_template)
+        super().__init__(
+            hass, config=config, fallback_name=DEFAULT_NAME, unique_id=unique_id
+        )
         self._state = None
-        self._name = name
-        self._state_template = value_template
-        domain = __name__.split(".")[-2]
-        self._command_lock = Script(hass, command_lock, name, domain)
-        self._command_unlock = Script(hass, command_unlock, name, domain)
-        self._optimistic = optimistic
-        self._unique_id = unique_id
+        name = self._attr_name
+        self._state_template = config.get(CONF_VALUE_TEMPLATE)
+        self._command_lock = Script(hass, config[CONF_LOCK], name, DOMAIN)
+        self._command_unlock = Script(hass, config[CONF_UNLOCK], name, DOMAIN)
+        self._optimistic = config.get(CONF_OPTIMISTIC)
 
     @property
-    def assumed_state(self):
+    def assumed_state(self) -> bool:
         """Return true if we do optimistic updates."""
-        return self._optimistic
+        return bool(self._optimistic)
 
     @property
-    def name(self):
-        """Return the name of the lock."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return the unique id of this lock."""
-        return self._unique_id
-
-    @property
-    def is_locked(self):
+    def is_locked(self) -> bool:
         """Return true if lock is locked."""
         return self._state in ("true", STATE_ON, STATE_LOCKED)
 
     @property
-    def is_jammed(self):
+    def is_jammed(self) -> bool:
         """Return true if lock is jammed."""
         return self._state == STATE_JAMMED
 
     @property
-    def is_unlocking(self):
+    def is_unlocking(self) -> bool:
         """Return true if lock is unlocking."""
         return self._state == STATE_UNLOCKING
 
     @property
-    def is_locking(self):
+    def is_locking(self) -> bool:
         """Return true if lock is locking."""
         return self._state == STATE_LOCKING
 
@@ -146,23 +133,23 @@ class TemplateLock(TemplateEntity, LockEntity):
 
         self._state = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.add_template_attribute(
             "_state", self._state_template, None, self._update_state
         )
         await super().async_added_to_hass()
 
-    async def async_lock(self, **kwargs):
+    async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device."""
         if self._optimistic:
             self._state = True
             self.async_write_ha_state()
-        await self._command_lock.async_run(context=self._context)
+        await self.async_run_script(self._command_lock, context=self._context)
 
-    async def async_unlock(self, **kwargs):
+    async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
         if self._optimistic:
             self._state = False
             self.async_write_ha_state()
-        await self._command_unlock.async_run(context=self._context)
+        await self.async_run_script(self._command_unlock, context=self._context)

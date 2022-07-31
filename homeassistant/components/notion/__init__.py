@@ -9,7 +9,7 @@ from aionotion import async_get_client
 from aionotion.errors import InvalidCredentialsError, NotionError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
@@ -24,9 +24,9 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import DATA_COORDINATOR, DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER
 
-PLATFORMS = ["binary_sensor", "sensor"]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 ATTR_SYSTEM_MODE = "system_mode"
 ATTR_SYSTEM_NAME = "system_name"
@@ -34,14 +34,11 @@ ATTR_SYSTEM_NAME = "system_name"
 DEFAULT_ATTRIBUTION = "Data provided by Notion"
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=1)
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Notion as a config entry."""
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {}
-
     if not entry.unique_id:
         hass.config_entries.async_update_entry(
             entry, unique_id=entry.data[CONF_USERNAME]
@@ -99,9 +96,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     await coordinator.async_config_entry_first_refresh()
-    hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR] = coordinator
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -120,19 +118,26 @@ def _async_register_new_bridge(
     hass: HomeAssistant, bridge: dict, entry: ConfigEntry
 ) -> None:
     """Register a new bridge."""
+    if name := bridge["name"]:
+        bridge_name = name.capitalize()
+    else:
+        bridge_name = bridge["id"]
+
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, bridge["hardware_id"])},
         manufacturer="Silicon Labs",
         model=bridge["hardware_revision"],
-        name=bridge["name"] or bridge["id"],
+        name=bridge_name,
         sw_version=bridge["firmware_version"]["wifi"],
     )
 
 
 class NotionEntity(CoordinatorEntity):
     """Define a base Notion entity."""
+
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -152,13 +157,12 @@ class NotionEntity(CoordinatorEntity):
             identifiers={(DOMAIN, sensor["hardware_id"])},
             manufacturer="Silicon Labs",
             model=sensor["hardware_revision"],
-            name=str(sensor["name"]),
+            name=str(sensor["name"]).capitalize(),
             sw_version=sensor["firmware_version"],
             via_device=(DOMAIN, bridge.get("hardware_id")),
         )
 
-        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
-        self._attr_name = f'{sensor["name"]}: {description.name}'
+        self._attr_extra_state_attributes = {}
         self._attr_unique_id = (
             f'{sensor_id}_{coordinator.data["tasks"][task_id]["task_type"]}'
         )

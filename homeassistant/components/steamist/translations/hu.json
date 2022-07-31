@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "already_in_progress": "A be\u00e1ll\u00edt\u00e1si folyamat m\u00e1r el lett kezdve",
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "no_devices_found": "Nem tal\u00e1lhat\u00f3 eszk\u00f6z a h\u00e1l\u00f3zaton",
+            "not_steamist_device": "Nem egy seamist k\u00e9sz\u00fcl\u00e9k"
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "flow_title": "{name} ({ipaddress})",
+        "step": {
+            "discovery_confirm": {
+                "description": "Szeretn\u00e9 be\u00e1ll\u00edtani: {name} ({ipaddress})?"
+            },
+            "pick_device": {
+                "data": {
+                    "device": "Eszk\u00f6z"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "C\u00edm"
+                },
+                "description": "Ha \u00fcresen hagyja a c\u00edm mez\u0151t, a rendszer megpr\u00f3b\u00e1lja az eszk\u00f6z\u00f6ket megkeresni."
+            }
+        }
+    }
+}

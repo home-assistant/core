@@ -3,12 +3,9 @@ from __future__ import annotations
 
 import pyvera as veraApi
 
-from homeassistant.components.binary_sensor import (
-    DOMAIN as PLATFORM_DOMAIN,
-    ENTITY_ID_FORMAT,
-    BinarySensorEntity,
-)
+from homeassistant.components.binary_sensor import ENTITY_ID_FORMAT, BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -26,7 +23,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             VeraBinarySensor(device, controller_data)
-            for device in controller_data.devices.get(PLATFORM_DOMAIN)
+            for device in controller_data.devices[Platform.BINARY_SENSOR]
         ],
         True,
     )

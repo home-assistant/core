@@ -3,12 +3,14 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
+from homeassistant.components.device_tracker import SOURCE_TYPE_GPS, AsyncSeeCallback
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .account import IcloudAccount, IcloudDevice
 from .const import (
@@ -19,16 +21,21 @@ from .const import (
 )
 
 
-async def async_setup_scanner(hass: HomeAssistant, config, see, discovery_info=None):
+async def async_setup_scanner(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_see: AsyncSeeCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> bool:
     """Old way of setting up the iCloud tracker."""
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up device tracker for iCloud component."""
     account = hass.data[DOMAIN][entry.unique_id]
-    tracked = set()
+    tracked = set[str]()
 
     @callback
     def update_account():
@@ -43,7 +50,7 @@ async def async_setup_entry(
 
 
 @callback
-def add_entities(account, async_add_entities, tracked):
+def add_entities(account: IcloudAccount, async_add_entities, tracked):
     """Add new tracker entities from the account."""
     new_tracked = []
 
@@ -93,7 +100,7 @@ class IcloudTrackerEntity(TrackerEntity):
         return self._device.location[DEVICE_LOCATION_LONGITUDE]
 
     @property
-    def battery_level(self) -> int:
+    def battery_level(self) -> int | None:
         """Return the battery level of the device."""
         return self._device.battery_level
 
@@ -140,7 +147,7 @@ def icon_for_icloud_device(icloud_device: IcloudDevice) -> str:
         "iPad": "mdi:tablet",
         "iPhone": "mdi:cellphone",
         "iPod": "mdi:ipod",
-        "iMac": "mdi:desktop-mac",
+        "iMac": "mdi:monitor",
         "MacBookPro": "mdi:laptop",
     }
 

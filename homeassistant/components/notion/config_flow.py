@@ -1,6 +1,7 @@
 """Config flow to configure the Notion integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any
 
 from aionotion import async_get_client
@@ -11,7 +12,6 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, LOGGER
 
@@ -44,23 +44,22 @@ class NotionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             assert self._username
             assert self._password
 
+        errors = {}
         session = aiohttp_client.async_get_clientsession(self.hass)
 
         try:
             await async_get_client(self._username, self._password, session=session)
         except InvalidCredentialsError:
-            return self.async_show_form(
-                step_id=step_id,
-                data_schema=schema,
-                errors={"base": "invalid_auth"},
-                description_placeholders={CONF_USERNAME: self._username},
-            )
+            errors["base"] = "invalid_auth"
         except NotionError as err:
             LOGGER.error("Unknown Notion error: %s", err)
+            errors["base"] = "unknown"
+
+        if errors:
             return self.async_show_form(
                 step_id=step_id,
                 data_schema=schema,
-                errors={"base": "unknown"},
+                errors=errors,
                 description_placeholders={CONF_USERNAME: self._username},
             )
 
@@ -75,9 +74,9 @@ class NotionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=self._username, data=data)
 
-    async def async_step_reauth(self, config: ConfigType) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle configuration by re-auth."""
-        self._username = config[CONF_USERNAME]
+        self._username = entry_data[CONF_USERNAME]
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(

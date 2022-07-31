@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from datetime import date, datetime, timedelta
+from typing import Any
 
 from solaredge import Solaredge
 from stringcase import snakecase
@@ -23,16 +24,17 @@ from .const import (
 class SolarEdgeDataService:
     """Get and update the latest data."""
 
+    coordinator: DataUpdateCoordinator
+
     def __init__(self, hass: HomeAssistant, api: Solaredge, site_id: str) -> None:
         """Initialize the data object."""
         self.api = api
         self.site_id = site_id
 
-        self.data = {}
-        self.attributes = {}
+        self.data: dict[str, Any] = {}
+        self.attributes: dict[str, Any] = {}
 
         self.hass = hass
-        self.coordinator = None
 
     @callback
     def async_setup(self) -> None:
@@ -77,8 +79,9 @@ class SolarEdgeOverviewDataService(SolarEdgeDataService):
 
         self.data = {}
 
+        energy_keys = ["lifeTimeData", "lastYearData", "lastMonthData", "lastDayData"]
         for key, value in overview.items():
-            if key in ["lifeTimeData", "lastYearData", "lastMonthData", "lastDayData"]:
+            if key in energy_keys:
                 data = value["energy"]
             elif key in ["currentPower"]:
                 data = value["power"]
@@ -86,17 +89,23 @@ class SolarEdgeOverviewDataService(SolarEdgeDataService):
                 data = value
             self.data[key] = data
 
+        # Sanity check the energy values. SolarEdge API sometimes report "lifetimedata" of zero,
+        # while values for last Year, Month and Day energy are still OK.
+        # See https://github.com/home-assistant/core/issues/59285 .
+        if set(energy_keys).issubset(self.data.keys()):
+            for index, key in enumerate(energy_keys, start=1):
+                # All coming values in list should be larger than the current value.
+                if any(self.data[k] > self.data[key] for k in energy_keys[index:]):
+                    LOGGER.info(
+                        "Ignoring invalid energy value %s for %s", self.data[key], key
+                    )
+                    self.data.pop(key)
+
         LOGGER.debug("Updated SolarEdge overview: %s", self.data)
 
 
 class SolarEdgeDetailsDataService(SolarEdgeDataService):
     """Get and update the latest details data."""
-
-    def __init__(self, hass: HomeAssistant, api: Solaredge, site_id: str) -> None:
-        """Initialize the details data service."""
-        super().__init__(hass, api, site_id)
-
-        self.data = None
 
     @property
     def update_interval(self) -> timedelta:
@@ -112,7 +121,7 @@ class SolarEdgeDetailsDataService(SolarEdgeDataService):
         except KeyError as ex:
             raise UpdateFailed("Missing details data, skipping update") from ex
 
-        self.data = None
+        self.data = {}
         self.attributes = {}
 
         for key, value in details.items():
@@ -130,9 +139,13 @@ class SolarEdgeDetailsDataService(SolarEdgeDataService):
             ]:
                 self.attributes[key] = value
             elif key == "status":
-                self.data = value
+                self.data["status"] = value
 
-        LOGGER.debug("Updated SolarEdge details: %s, %s", self.data, self.attributes)
+        LOGGER.debug(
+            "Updated SolarEdge details: %s, %s",
+            self.data.get("status"),
+            self.attributes,
+        )
 
 
 class SolarEdgeInventoryDataService(SolarEdgeDataService):

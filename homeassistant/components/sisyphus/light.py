@@ -1,21 +1,31 @@
 """Support for the light on the Sisyphus Kinetic Art Table."""
+from __future__ import annotations
+
 import logging
 
 import aiohttp
 
-from homeassistant.components.light import SUPPORT_BRIGHTNESS, LightEntity
+from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DATA_SISYPHUS
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORTED_FEATURES = SUPPORT_BRIGHTNESS
 
-
-async def async_setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up a single Sisyphus table."""
+    if not discovery_info:
+        return
     host = discovery_info[CONF_HOST]
     try:
         table_holder = hass.data[DATA_SISYPHUS][host]
@@ -28,6 +38,9 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
 
 class SisyphusLight(LightEntity):
     """Representation of a Sisyphus table as a light."""
+
+    _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
     def __init__(self, name, table):
         """Initialize the Sisyphus table."""
@@ -66,11 +79,6 @@ class SisyphusLight(LightEntity):
     def brightness(self):
         """Return the current brightness of the table's ring light."""
         return self._table.brightness * 255
-
-    @property
-    def supported_features(self):
-        """Return the features supported by the table; i.e. brightness."""
-        return SUPPORTED_FEATURES
 
     async def async_turn_off(self, **kwargs):
         """Put the table to sleep."""

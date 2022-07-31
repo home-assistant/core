@@ -1,12 +1,12 @@
 """Support for Nest Thermostat sensors for the legacy API."""
+# mypy: ignore-errors
+
 import logging
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_SENSORS,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     STATE_OFF,
     TEMP_CELSIUS,
@@ -47,7 +47,7 @@ _VALID_SENSOR_TYPES = (
 
 SENSOR_UNITS = {"humidity": PERCENTAGE}
 
-SENSOR_DEVICE_CLASSES = {"humidity": DEVICE_CLASS_HUMIDITY}
+SENSOR_DEVICE_CLASSES = {"humidity": SensorDeviceClass.HUMIDITY}
 
 VARIABLE_NAME_MAPPING = {"eta": "eta_begin", "operation_mode": "mode"}
 
@@ -201,7 +201,7 @@ class NestTempSensor(NestSensorDevice, SensorEntity):
     @property
     def device_class(self):
         """Return the device class of the sensor."""
-        return DEVICE_CLASS_TEMPERATURE
+        return SensorDeviceClass.TEMPERATURE
 
     def update(self):
         """Retrieve latest state."""

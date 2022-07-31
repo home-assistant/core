@@ -9,9 +9,6 @@
         },
         "flow_title": "{name}",
         "step": {
-            "confirm": {
-                "description": "Kas soovid alustada seadistamist?"
-            },
             "user": {
                 "data": {
                     "host": "Host"
@@ -19,10 +16,9 @@
                 "description": "Seadista Modern Forms'i ventilaator sidumiseks Home Assistantiga."
             },
             "zeroconf_confirm": {
-                "description": "Kas lisada Modern Forms'i ventilaator nimega `{nimi}` Home Assistanti?",
+                "description": "Kas lisada Modern Forms'i ventilaator nimega `{name}` Home Assistanti?",
                 "title": "Leitud Modern Forms ventilaator"
             }
         }
-    },
-    "title": "Modern Forms"
+    }
 }

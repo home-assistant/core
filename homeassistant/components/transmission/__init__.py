@@ -8,7 +8,7 @@ import transmissionrpc
 from transmissionrpc.error import TransmissionError
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_ID,
@@ -17,8 +17,10 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
+    Platform,
 )
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
@@ -31,9 +33,7 @@ from .const import (
     DATA_UPDATED,
     DEFAULT_DELETE_DATA,
     DEFAULT_LIMIT,
-    DEFAULT_NAME,
     DEFAULT_ORDER,
-    DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     EVENT_DOWNLOADED_TORRENT,
@@ -75,54 +75,22 @@ SERVICE_STOP_TORRENT_SCHEMA = vol.Schema(
     }
 )
 
-TRANS_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            vol.Required(CONF_HOST): cv.string,
-            vol.Optional(CONF_PASSWORD): cv.string,
-            vol.Optional(CONF_USERNAME): cv.string,
-            vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Optional(
-                CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
-            ): cv.time_period,
-        }
-    )
-)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(cv.deprecated(DOMAIN), {DOMAIN: vol.All(cv.ensure_list, [TRANS_SCHEMA])}),
-    extra=vol.ALLOW_EXTRA,
-)
-
-PLATFORMS = ["sensor", "switch"]
+PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
 
 
-async def async_setup(hass, config):
-    """Import the Transmission Component from config."""
-    if DOMAIN in config:
-        for entry in config[DOMAIN]:
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": SOURCE_IMPORT}, data=entry
-                )
-            )
-
-    return True
-
-
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up the Transmission Component."""
     client = TransmissionClient(hass, config_entry)
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = client
 
-    if not await client.async_setup():
-        return False
+    await client.async_setup()
 
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload Transmission Entry from config_entry."""
     client = hass.data[DOMAIN].pop(config_entry.entry_id)
     if client.unsub_timer:
@@ -183,15 +151,15 @@ class TransmissionClient:
         """Return the TransmissionData object."""
         return self._tm_data
 
-    async def async_setup(self):
+    async def async_setup(self) -> None:
         """Set up the Transmission client."""
 
         try:
             self.tm_api = await get_api(self.hass, self.config_entry.data)
         except CannotConnect as error:
             raise ConfigEntryNotReady from error
-        except (AuthenticationError, UnknownError):
-            return False
+        except (AuthenticationError, UnknownError) as error:
+            raise ConfigEntryAuthFailed from error
 
         self._tm_data = TransmissionData(self.hass, self.config_entry, self.tm_api)
 
@@ -200,9 +168,11 @@ class TransmissionClient:
         self.add_options()
         self.set_scan_interval(self.config_entry.options[CONF_SCAN_INTERVAL])
 
-        self.hass.config_entries.async_setup_platforms(self.config_entry, PLATFORMS)
+        await self.hass.config_entries.async_forward_entry_setups(
+            self.config_entry, PLATFORMS
+        )
 
-        def add_torrent(service):
+        def add_torrent(service: ServiceCall) -> None:
             """Add new torrent to download."""
             tm_client = None
             for entry in self.hass.config_entries.async_entries(DOMAIN):
@@ -223,7 +193,7 @@ class TransmissionClient:
                     "Could not add torrent: unsupported type or no permission"
                 )
 
-        def start_torrent(service):
+        def start_torrent(service: ServiceCall) -> None:
             """Start torrent."""
             tm_client = None
             for entry in self.hass.config_entries.async_entries(DOMAIN):
@@ -237,7 +207,7 @@ class TransmissionClient:
             tm_client.tm_api.start_torrent(torrent_id)
             tm_client.api.update()
 
-        def stop_torrent(service):
+        def stop_torrent(service: ServiceCall) -> None:
             """Stop torrent."""
             tm_client = None
             for entry in self.hass.config_entries.async_entries(DOMAIN):
@@ -251,7 +221,7 @@ class TransmissionClient:
             tm_client.tm_api.stop_torrent(torrent_id)
             tm_client.api.update()
 
-        def remove_torrent(service):
+        def remove_torrent(service: ServiceCall) -> None:
             """Remove torrent."""
             tm_client = None
             for entry in self.hass.config_entries.async_entries(DOMAIN):
@@ -293,8 +263,6 @@ class TransmissionClient:
 
         self.config_entry.add_update_listener(self.async_options_updated)
 
-        return True
-
     def add_options(self):
         """Add options for entry."""
         if not self.config_entry.options:
@@ -327,7 +295,7 @@ class TransmissionClient:
         )
 
     @staticmethod
-    async def async_options_updated(hass, entry):
+    async def async_options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Triggered by config entry options updates."""
         tm_client = hass.data[DOMAIN][entry.entry_id]
         tm_client.set_scan_interval(entry.options[CONF_SCAN_INTERVAL])
@@ -441,13 +409,13 @@ class TransmissionData:
 
     def start_torrents(self):
         """Start all torrents."""
-        if len(self._torrents) <= 0:
+        if not self._torrents:
             return
         self._api.start_all()
 
     def stop_torrents(self):
         """Stop all active torrents."""
-        if len(self._torrents) == 0:
+        if not self._torrents:
             return
         torrent_ids = [torrent.id for torrent in self._torrents]
         self._api.stop_torrent(torrent_ids)

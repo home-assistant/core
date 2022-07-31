@@ -35,7 +35,6 @@ from .hub import SIAHub
 
 _LOGGER = logging.getLogger(__name__)
 
-
 HUB_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_PORT): int,
@@ -95,7 +94,9 @@ class SIAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> SIAOptionsFlowHandler:
         """Get the options flow for this handler."""
         return SIAOptionsFlowHandler(config_entry)
 
@@ -171,7 +172,7 @@ class SIAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class SIAOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle SIA options."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize SIA options flow."""
         self.config_entry = config_entry
         self.options = deepcopy(dict(config_entry.options))

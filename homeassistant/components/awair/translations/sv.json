@@ -1,0 +1,18 @@
+{
+    "config": {
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "access_token": "\u00c5tkomsttoken",
+                    "email": "Epost"
+                },
+                "description": "Ange din Awair-utvecklar\u00e5tkomsttoken igen."
+            },
+            "user": {
+                "data": {
+                    "access_token": "\u00c5tkomstnyckel"
+                }
+            }
+        }
+    }
+}

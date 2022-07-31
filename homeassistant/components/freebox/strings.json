@@ -2,7 +2,6 @@
   "config": {
     "step": {
       "user": {
-        "title": "Freebox",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]"

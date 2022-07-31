@@ -4,13 +4,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY,
-    DEVICE_CLASS_PROBLEM,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import ToonDataUpdateCoordinator
@@ -24,7 +24,7 @@ from .models import (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up a Toon binary sensor based on a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
@@ -113,7 +113,7 @@ BINARY_SENSOR_ENTITIES = (
         name="Boiler Module Connection",
         section="thermostat",
         measurement="boiler_module_connected",
-        device_class=DEVICE_CLASS_CONNECTIVITY,
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_registry_enabled_default=False,
         cls=ToonBoilerModuleBinarySensor,
     ),
@@ -167,7 +167,7 @@ BINARY_SENSOR_ENTITIES_BOILER: tuple[ToonBinarySensorEntityDescription, ...] = (
         name="Boiler Status",
         section="thermostat",
         measurement="error_found",
-        device_class=DEVICE_CLASS_PROBLEM,
+        device_class=BinarySensorDeviceClass.PROBLEM,
         icon="mdi:alert",
         cls=ToonBoilerBinarySensor,
     ),
@@ -176,7 +176,7 @@ BINARY_SENSOR_ENTITIES_BOILER: tuple[ToonBinarySensorEntityDescription, ...] = (
         name="OpenTherm Connection",
         section="thermostat",
         measurement="opentherm_communication_error",
-        device_class=DEVICE_CLASS_PROBLEM,
+        device_class=BinarySensorDeviceClass.PROBLEM,
         icon="mdi:check-network-outline",
         entity_registry_enabled_default=False,
         cls=ToonBoilerBinarySensor,

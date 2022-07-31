@@ -8,16 +8,13 @@ from axis.event_stream import OPERATION_INITIALIZED
 import pytest
 import respx
 
-from homeassistant.components import axis
-from homeassistant.components.axis.const import (
-    CONF_EVENTS,
-    CONF_MODEL,
-    DOMAIN as AXIS_DOMAIN,
-)
+from homeassistant.components import axis, zeroconf
+from homeassistant.components.axis.const import CONF_EVENTS, DOMAIN as AXIS_DOMAIN
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.config_entries import SOURCE_ZEROCONF
 from homeassistant.const import (
     CONF_HOST,
+    CONF_MODEL,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
@@ -383,12 +380,15 @@ async def test_update_address(hass):
         mock_default_vapix_requests(respx, "2.3.4.5")
         await hass.config_entries.flow.async_init(
             AXIS_DOMAIN,
-            data={
-                "host": "2.3.4.5",
-                "port": 80,
-                "name": "name",
-                "properties": {"macaddress": MAC},
-            },
+            data=zeroconf.ZeroconfServiceInfo(
+                host="2.3.4.5",
+                addresses=["2.3.4.5"],
+                hostname="mock_hostname",
+                name="name",
+                port=80,
+                properties={"macaddress": MAC},
+                type="mock_type",
+            ),
             context={"source": SOURCE_ZEROCONF},
         )
         await hass.async_block_till_done()
@@ -441,7 +441,7 @@ async def test_device_reset(hass):
 
 async def test_device_not_accessible(hass):
     """Failed setup schedules a retry of setup."""
-    with patch.object(axis.device, "get_device", side_effect=axis.errors.CannotConnect):
+    with patch.object(axis, "get_axis_device", side_effect=axis.errors.CannotConnect):
         await setup_axis_integration(hass)
     assert hass.data[AXIS_DOMAIN] == {}
 
@@ -449,7 +449,7 @@ async def test_device_not_accessible(hass):
 async def test_device_trigger_reauth_flow(hass):
     """Failed authentication trigger a reauthentication flow."""
     with patch.object(
-        axis.device, "get_device", side_effect=axis.errors.AuthenticationRequired
+        axis, "get_axis_device", side_effect=axis.errors.AuthenticationRequired
     ), patch.object(hass.config_entries.flow, "async_init") as mock_flow_init:
         await setup_axis_integration(hass)
         mock_flow_init.assert_called_once()
@@ -458,7 +458,7 @@ async def test_device_trigger_reauth_flow(hass):
 
 async def test_device_unknown_error(hass):
     """Unknown errors are handled."""
-    with patch.object(axis.device, "get_device", side_effect=Exception):
+    with patch.object(axis, "get_axis_device", side_effect=Exception):
         await setup_axis_integration(hass)
     assert hass.data[AXIS_DOMAIN] == {}
 
@@ -468,7 +468,7 @@ async def test_new_event_sends_signal(hass):
     entry = Mock()
     entry.data = ENTRY_CONFIG
 
-    axis_device = axis.device.AxisNetworkDevice(hass, entry)
+    axis_device = axis.device.AxisNetworkDevice(hass, entry, Mock())
 
     with patch.object(axis.device, "async_dispatcher_send") as mock_dispatch_send:
         axis_device.async_event_callback(action=OPERATION_INITIALIZED, event_id="event")
@@ -484,8 +484,7 @@ async def test_shutdown():
     entry = Mock()
     entry.data = ENTRY_CONFIG
 
-    axis_device = axis.device.AxisNetworkDevice(hass, entry)
-    axis_device.api = Mock()
+    axis_device = axis.device.AxisNetworkDevice(hass, entry, Mock())
 
     await axis_device.shutdown(None)
 
@@ -497,7 +496,7 @@ async def test_get_device_fails(hass):
     with patch(
         "axis.vapix.Vapix.request", side_effect=axislib.Unauthorized
     ), pytest.raises(axis.errors.AuthenticationRequired):
-        await axis.device.get_device(hass, host="", port="", username="", password="")
+        await axis.device.get_axis_device(hass, ENTRY_CONFIG)
 
 
 async def test_get_device_device_unavailable(hass):
@@ -505,7 +504,7 @@ async def test_get_device_device_unavailable(hass):
     with patch(
         "axis.vapix.Vapix.request", side_effect=axislib.RequestError
     ), pytest.raises(axis.errors.CannotConnect):
-        await axis.device.get_device(hass, host="", port="", username="", password="")
+        await axis.device.get_axis_device(hass, ENTRY_CONFIG)
 
 
 async def test_get_device_unknown_error(hass):
@@ -513,4 +512,4 @@ async def test_get_device_unknown_error(hass):
     with patch(
         "axis.vapix.Vapix.request", side_effect=axislib.AxisException
     ), pytest.raises(axis.errors.AuthenticationRequired):
-        await axis.device.get_device(hass, host="", port="", username="", password="")
+        await axis.device.get_axis_device(hass, ENTRY_CONFIG)

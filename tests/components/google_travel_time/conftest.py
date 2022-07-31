@@ -1,21 +1,27 @@
 """Fixtures for Google Time Travel tests."""
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 from googlemaps.exceptions import ApiError
 import pytest
 
+from homeassistant.components.google_travel_time.const import DOMAIN
 
-@pytest.fixture(name="validate_config_entry")
-def validate_config_entry_fixture():
-    """Return valid config entry."""
-    with patch(
-        "homeassistant.components.google_travel_time.helpers.Client",
-        return_value=Mock(),
-    ), patch(
-        "homeassistant.components.google_travel_time.helpers.distance_matrix",
-        return_value=None,
-    ):
-        yield
+from tests.common import MockConfigEntry
+
+
+@pytest.fixture(name="mock_config")
+async def mock_config_fixture(hass, data, options):
+    """Mock a Google Travel Time config entry."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=data,
+        options=options,
+        entry_id="test",
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    yield config_entry
 
 
 @pytest.fixture(name="bypass_setup")
@@ -38,21 +44,17 @@ def bypass_platform_setup_fixture():
         yield
 
 
-@pytest.fixture(name="bypass_update")
-def bypass_update_fixture():
-    """Bypass sensor update."""
-    with patch("homeassistant.components.google_travel_time.sensor.distance_matrix"):
-        yield
+@pytest.fixture(name="validate_config_entry")
+def validate_config_entry_fixture():
+    """Return valid config entry."""
+    with patch("homeassistant.components.google_travel_time.helpers.Client"), patch(
+        "homeassistant.components.google_travel_time.helpers.distance_matrix"
+    ) as distance_matrix_mock:
+        distance_matrix_mock.return_value = None
+        yield distance_matrix_mock
 
 
 @pytest.fixture(name="invalidate_config_entry")
-def invalidate_config_entry_fixture():
+def invalidate_config_entry_fixture(validate_config_entry):
     """Return invalid config entry."""
-    with patch(
-        "homeassistant.components.google_travel_time.helpers.Client",
-        return_value=Mock(),
-    ), patch(
-        "homeassistant.components.google_travel_time.helpers.distance_matrix",
-        side_effect=ApiError("test"),
-    ):
-        yield
+    validate_config_entry.side_effect = ApiError("test")

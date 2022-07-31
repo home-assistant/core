@@ -4,6 +4,8 @@ import logging
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     CONF_RELAY_ADDR,
@@ -34,8 +36,8 @@ ATTR_RF_LOOP1 = "rf_loop1"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
-):
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up for AlarmDecoder sensor."""
 
     zones = entry.options.get(OPTIONS_ZONES, DEFAULT_ZONE_OPTIONS)
@@ -76,35 +78,37 @@ class AlarmDecoderBinarySensor(BinarySensorEntity):
         self._zone_number = int(zone_number)
         self._zone_type = zone_type
         self._attr_name = zone_name
+        self._attr_is_on = False
         self._rfid = zone_rfid
         self._loop = zone_loop
         self._relay_addr = relay_addr
         self._relay_chan = relay_chan
         self._attr_device_class = zone_type
+        self._attr_extra_state_attributes = {
+            CONF_ZONE_NUMBER: self._zone_number,
+        }
 
     async def async_added_to_hass(self):
         """Register callbacks."""
         self.async_on_remove(
-            self.hass.helpers.dispatcher.async_dispatcher_connect(
-                SIGNAL_ZONE_FAULT, self._fault_callback
+            async_dispatcher_connect(self.hass, SIGNAL_ZONE_FAULT, self._fault_callback)
+        )
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_ZONE_RESTORE, self._restore_callback
             )
         )
 
         self.async_on_remove(
-            self.hass.helpers.dispatcher.async_dispatcher_connect(
-                SIGNAL_ZONE_RESTORE, self._restore_callback
+            async_dispatcher_connect(
+                self.hass, SIGNAL_RFX_MESSAGE, self._rfx_message_callback
             )
         )
 
         self.async_on_remove(
-            self.hass.helpers.dispatcher.async_dispatcher_connect(
-                SIGNAL_RFX_MESSAGE, self._rfx_message_callback
-            )
-        )
-
-        self.async_on_remove(
-            self.hass.helpers.dispatcher.async_dispatcher_connect(
-                SIGNAL_REL_MESSAGE, self._rel_message_callback
+            async_dispatcher_connect(
+                self.hass, SIGNAL_REL_MESSAGE, self._rel_message_callback
             )
         )
 

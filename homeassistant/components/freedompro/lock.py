@@ -1,19 +1,24 @@
 """Support for Freedompro lock."""
 import json
+from typing import Any
 
 from pyfreedompro import put_state
 
 from homeassistant.components.lock import LockEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up Freedompro lock."""
     api_key = entry.data[CONF_API_KEY]
     coordinator = hass.data[DOMAIN][entry.entry_id]
@@ -71,10 +76,10 @@ class Device(CoordinatorEntity, LockEntity):
         await super().async_added_to_hass()
         self._handle_coordinator_update()
 
-    async def async_lock(self, **kwargs):
+    async def async_lock(self, **kwargs: Any) -> None:
         """Async function to lock the lock."""
-        payload = {"lock": 1}
-        payload = json.dumps(payload)
+        payload_dict = {"lock": 1}
+        payload = json.dumps(payload_dict)
         await put_state(
             self._session,
             self._api_key,
@@ -83,10 +88,10 @@ class Device(CoordinatorEntity, LockEntity):
         )
         await self.coordinator.async_request_refresh()
 
-    async def async_unlock(self, **kwargs):
+    async def async_unlock(self, **kwargs: Any) -> None:
         """Async function to unlock the lock."""
-        payload = {"lock": 0}
-        payload = json.dumps(payload)
+        payload_dict = {"lock": 0}
+        payload = json.dumps(payload_dict)
         await put_state(
             self._session,
             self._api_key,

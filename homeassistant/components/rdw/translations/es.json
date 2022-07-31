@@ -1,0 +1,15 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "No se pudo conectar",
+            "unknown_license_plate": "Matr\u00edcula desconocida"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "license_plate": "Matr\u00edcula"
+                }
+            }
+        }
+    }
+}

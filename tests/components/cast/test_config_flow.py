@@ -24,10 +24,10 @@ async def test_creating_entry_sets_up_media_player(hass):
         )
 
         # Confirmation form
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
         await hass.async_block_till_done()
 
@@ -116,6 +116,26 @@ async def test_zeroconf_setup(hass):
     }
 
 
+async def test_zeroconf_setup_onboarding(hass):
+    """Test we automatically finish a config flow through zeroconf during onboarding."""
+    with patch(
+        "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+    ):
+        result = await hass.config_entries.flow.async_init(
+            "cast", context={"source": config_entries.SOURCE_ZEROCONF}
+        )
+
+    users = await hass.auth.async_get_users()
+    assert len(users) == 1
+    assert result["type"] == "create_entry"
+    assert result["result"].data == {
+        "ignore_cec": [],
+        "known_hosts": [],
+        "uuid": [],
+        "user_id": users[0].id,  # Home Assistant cast user
+    }
+
+
 def get_suggested(schema, key):
     """Get suggested value for key in voluptuous schema."""
     for k in schema.keys():
@@ -170,7 +190,7 @@ async def test_option_flow(hass, parameter_data):
 
     # Test ignore_cec and uuid options are hidden if advanced options are disabled
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "basic_options"
     data_schema = result["data_schema"].schema
     assert set(data_schema) == {"known_hosts"}
@@ -181,7 +201,7 @@ async def test_option_flow(hass, parameter_data):
     result = await hass.config_entries.options.async_init(
         config_entry.entry_id, context=context
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "basic_options"
     data_schema = result["data_schema"].schema
     for other_param in basic_parameters:
@@ -198,7 +218,7 @@ async def test_option_flow(hass, parameter_data):
         result["flow_id"],
         user_input=user_input_dict,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "advanced_options"
     for other_param in basic_parameters:
         if other_param == parameter:
@@ -223,7 +243,7 @@ async def test_option_flow(hass, parameter_data):
         result["flow_id"],
         user_input=user_input_dict,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"] is None
     for other_param in advanced_parameters:
         if other_param == parameter:
@@ -237,7 +257,7 @@ async def test_option_flow(hass, parameter_data):
         result["flow_id"],
         user_input={"known_hosts": ""},
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"] is None
     expected_data = {**orig_data, "known_hosts": []}
     if parameter in advanced_parameters:
@@ -245,7 +265,7 @@ async def test_option_flow(hass, parameter_data):
     assert dict(config_entry.data) == expected_data
 
 
-async def test_known_hosts(hass, castbrowser_mock, castbrowser_constructor_mock):
+async def test_known_hosts(hass, castbrowser_mock):
     """Test known hosts is passed to pychromecasts."""
     result = await hass.config_entries.flow.async_init(
         "cast", context={"source": config_entries.SOURCE_USER}
@@ -257,12 +277,9 @@ async def test_known_hosts(hass, castbrowser_mock, castbrowser_constructor_mock)
     await hass.async_block_till_done()
     config_entry = hass.config_entries.async_entries("cast")[0]
 
-    assert castbrowser_mock.start_discovery.call_count == 1
-    castbrowser_constructor_mock.assert_called_once_with(
-        ANY, ANY, ["192.168.0.1", "192.168.0.2"]
-    )
+    assert castbrowser_mock.return_value.start_discovery.call_count == 1
+    castbrowser_mock.assert_called_once_with(ANY, ANY, ["192.168.0.1", "192.168.0.2"])
     castbrowser_mock.reset_mock()
-    castbrowser_constructor_mock.reset_mock()
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     result = await hass.config_entries.options.async_configure(
@@ -272,8 +289,8 @@ async def test_known_hosts(hass, castbrowser_mock, castbrowser_constructor_mock)
 
     await hass.async_block_till_done()
 
-    castbrowser_mock.start_discovery.assert_not_called()
-    castbrowser_constructor_mock.assert_not_called()
-    castbrowser_mock.host_browser.update_hosts.assert_called_once_with(
+    castbrowser_mock.return_value.start_discovery.assert_not_called()
+    castbrowser_mock.assert_not_called()
+    castbrowser_mock.return_value.host_browser.update_hosts.assert_called_once_with(
         ["192.168.0.11", "192.168.0.12"]
     )

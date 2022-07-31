@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il servizio \u00e8 gi\u00e0 configurato"
+        },
+        "error": {
+            "cannot_connect": "Connessione non riuscita. Controlla l'host e la porta e riprova. Assicurati inoltre di eseguire il server FiveM pi\u00f9 recente.",
+            "invalid_game_name": "L'API del gioco a cui stai tentando di connetterti non \u00e8 un gioco FiveM.",
+            "unknown_error": "Errore imprevisto"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Nome",
+                    "port": "Porta"
+                }
+            }
+        }
+    }
+}

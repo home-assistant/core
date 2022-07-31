@@ -12,8 +12,9 @@
                 "data": {
                     "code": "Codi d'estaci\u00f3"
                 },
-                "description": "Introdueix el codi d'estaci\u00f3 meteorol\u00f2gica (per exemple, ESCAT4300000043206B)",
-                "title": "Meteoclimatic"
+                "data_description": {
+                    "code": "T\u00e9 el format com ESCAT4300000043206B"
+                }
             }
         }
     }

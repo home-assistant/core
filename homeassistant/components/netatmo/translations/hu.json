@@ -3,7 +3,7 @@
         "abort": {
             "authorize_url_timeout": "Id\u0151t\u00fall\u00e9p\u00e9s a hiteles\u00edt\u00e9si URL gener\u00e1l\u00e1sa sor\u00e1n.",
             "missing_configuration": "A komponens nincs konfigur\u00e1lva. K\u00e9rem, k\u00f6vesse a dokument\u00e1ci\u00f3t.",
-            "no_url_available": "Nincs el\u00e9rhet\u0151 URL. A hib\u00e1r\u00f3l tov\u00e1bbi inform\u00e1ci\u00f3t [a s\u00fag\u00f3ban]({docs_url}) tal\u00e1lsz.",
+            "no_url_available": "Nincs el\u00e9rhet\u0151 URL. A hib\u00e1r\u00f3l tov\u00e1bbi inform\u00e1ci\u00f3 [a s\u00fag\u00f3ban]({docs_url}) tal\u00e1lhat\u00f3.",
             "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt.",
             "single_instance_allowed": "M\u00e1r konfigur\u00e1lva van. Csak egy konfigur\u00e1ci\u00f3 lehets\u00e9ges."
         },
@@ -12,7 +12,7 @@
         },
         "step": {
             "pick_implementation": {
-                "title": "V\u00e1lassz hiteles\u00edt\u00e9si m\u00f3dszert"
+                "title": "V\u00e1lasszon egy hiteles\u00edt\u00e9si m\u00f3dszert"
             },
             "reauth_confirm": {
                 "description": "A Netatmo integr\u00e1ci\u00f3nak \u00fajra kell hiteles\u00edtenie a fi\u00f3kj\u00e1t.",
@@ -52,7 +52,7 @@
                     "lon_ne": "\u00c9szakkeleti sarok hossz\u00fas\u00e1gi fok",
                     "lon_sw": "D\u00e9lnyugati sarok hossz\u00fas\u00e1ggi fok",
                     "mode": "Sz\u00e1m\u00edt\u00e1s",
-                    "show_on_map": "Mutasd a t\u00e9rk\u00e9pen"
+                    "show_on_map": "Megjelen\u00edt\u00e9s a t\u00e9rk\u00e9pen"
                 },
                 "description": "\u00c1ll\u00edtson be egy nyilv\u00e1nos id\u0151j\u00e1r\u00e1s-\u00e9rz\u00e9kel\u0151t egy ter\u00fclethez.",
                 "title": "Netatmo nyilv\u00e1nos id\u0151j\u00e1r\u00e1s-\u00e9rz\u00e9kel\u0151"

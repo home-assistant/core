@@ -4,14 +4,15 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Coroutine
 import logging
+from typing import Any
 
 from soco import SoCo
-from soco.exceptions import SoCoException
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
 
 from .const import DATA_SONOS
+from .exception import SonosUpdateError
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +36,7 @@ class SonosHouseholdCoordinator:
     async def _async_setup(self) -> None:
         """Finish setup in async context."""
         self.cache_update_lock = asyncio.Lock()
-        self.async_poll = Debouncer(
+        self.async_poll = Debouncer[Coroutine[Any, Any, None]](
             self.hass,
             _LOGGER,
             cooldown=3,
@@ -56,11 +57,10 @@ class SonosHouseholdCoordinator:
             _LOGGER.debug("Polling %s using %s", self.class_type, speaker.soco)
             try:
                 await self.async_update_entities(speaker.soco)
-            except (OSError, SoCoException) as err:
+            except SonosUpdateError as err:
                 _LOGGER.error(
-                    "Could not refresh %s using %s: %s",
+                    "Could not refresh %s: %s",
                     self.class_type,
-                    speaker.soco,
                     err,
                 )
             else:

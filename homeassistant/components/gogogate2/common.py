@@ -66,7 +66,7 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator):
         self.api = api
 
 
-class GoGoGate2Entity(CoordinatorEntity):
+class GoGoGate2Entity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
     """Base class for gogogate2 entities."""
 
     def __init__(
@@ -80,17 +80,23 @@ class GoGoGate2Entity(CoordinatorEntity):
         super().__init__(data_update_coordinator)
         self._config_entry = config_entry
         self._door = door
-        self._unique_id = unique_id
+        self._door_id = door.door_id
+        self._api = data_update_coordinator.api
+        self._attr_unique_id = unique_id
 
     @property
-    def unique_id(self) -> str | None:
-        """Return a unique ID."""
-        return self._unique_id
-
-    def _get_door(self) -> AbstractDoor:
+    def door(self) -> AbstractDoor:
+        """Return the door object."""
         door = get_door_by_id(self._door.door_id, self.coordinator.data)
         self._door = door or self._door
         return self._door
+
+    @property
+    def door_status(self) -> AbstractDoor:
+        """Return the door with status."""
+        data = self.coordinator.data
+        door_with_statuses = self._api.async_get_door_statuses_from_info(data)
+        return door_with_statuses[self._door_id]
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -107,6 +113,11 @@ class GoGoGate2Entity(CoordinatorEntity):
             model=data.model,
             sw_version=data.firmwareversion,
         )
+
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes."""
+        return {"door_id": self._door_id}
 
 
 def get_data_update_coordinator(

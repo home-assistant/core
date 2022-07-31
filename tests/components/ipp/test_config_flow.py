@@ -1,15 +1,12 @@
 """Tests for the IPP config flow."""
+import dataclasses
 from unittest.mock import patch
 
 from homeassistant.components.ipp.const import CONF_BASE_PATH, CONF_UUID, DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_SSL
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
     MOCK_USER_INPUT,
@@ -30,7 +27,7 @@ async def test_show_user_form(hass: HomeAssistant) -> None:
     )
 
     assert result["step_id"] == "user"
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
 
 
 async def test_show_zeroconf_form(
@@ -39,7 +36,7 @@ async def test_show_zeroconf_form(
     """Test that the zeroconf confirmation form is served."""
     mock_connection(aioclient_mock)
 
-    discovery_info = MOCK_ZEROCONF_IPP_SERVICE_INFO.copy()
+    discovery_info = dataclasses.replace(MOCK_ZEROCONF_IPP_SERVICE_INFO)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
@@ -47,7 +44,7 @@ async def test_show_zeroconf_form(
     )
 
     assert result["step_id"] == "zeroconf_confirm"
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["description_placeholders"] == {CONF_NAME: "EPSON XP-6000 Series"}
 
 
@@ -65,7 +62,7 @@ async def test_connection_error(
     )
 
     assert result["step_id"] == "user"
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -75,14 +72,14 @@ async def test_zeroconf_connection_error(
     """Test we abort zeroconf flow on IPP connection error."""
     mock_connection(aioclient_mock, conn_error=True)
 
-    discovery_info = MOCK_ZEROCONF_IPP_SERVICE_INFO.copy()
+    discovery_info = dataclasses.replace(MOCK_ZEROCONF_IPP_SERVICE_INFO)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
         data=discovery_info,
     )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
 
@@ -92,12 +89,12 @@ async def test_zeroconf_confirm_connection_error(
     """Test we abort zeroconf flow on IPP connection error."""
     mock_connection(aioclient_mock, conn_error=True)
 
-    discovery_info = MOCK_ZEROCONF_IPP_SERVICE_INFO.copy()
+    discovery_info = dataclasses.replace(MOCK_ZEROCONF_IPP_SERVICE_INFO)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
     )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
 
@@ -115,7 +112,7 @@ async def test_user_connection_upgrade_required(
     )
 
     assert result["step_id"] == "user"
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"base": "connection_upgrade"}
 
 
@@ -125,14 +122,14 @@ async def test_zeroconf_connection_upgrade_required(
     """Test we abort zeroconf flow on IPP connection error."""
     mock_connection(aioclient_mock, conn_upgrade_error=True)
 
-    discovery_info = MOCK_ZEROCONF_IPP_SERVICE_INFO.copy()
+    discovery_info = dataclasses.replace(MOCK_ZEROCONF_IPP_SERVICE_INFO)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
         data=discovery_info,
     )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "connection_upgrade"
 
 
@@ -149,7 +146,7 @@ async def test_user_parse_error(
         data=user_input,
     )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "parse_error"
 
 
@@ -159,14 +156,14 @@ async def test_zeroconf_parse_error(
     """Test we abort zeroconf flow on IPP parse error."""
     mock_connection(aioclient_mock, parse_error=True)
 
-    discovery_info = MOCK_ZEROCONF_IPP_SERVICE_INFO.copy()
+    discovery_info = dataclasses.replace(MOCK_ZEROCONF_IPP_SERVICE_INFO)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
         data=discovery_info,
     )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "parse_error"
 
 
@@ -183,7 +180,7 @@ async def test_user_ipp_error(
         data=user_input,
     )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "ipp_error"
 
 
@@ -193,14 +190,14 @@ async def test_zeroconf_ipp_error(
     """Test we abort zeroconf flow on IPP error."""
     mock_connection(aioclient_mock, ipp_error=True)
 
-    discovery_info = MOCK_ZEROCONF_IPP_SERVICE_INFO.copy()
+    discovery_info = dataclasses.replace(MOCK_ZEROCONF_IPP_SERVICE_INFO)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
         data=discovery_info,
     )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "ipp_error"
 
 
@@ -217,7 +214,7 @@ async def test_user_ipp_version_error(
         data=user_input,
     )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "ipp_version_error"
 
 
@@ -227,14 +224,14 @@ async def test_zeroconf_ipp_version_error(
     """Test we abort zeroconf flow on IPP version not supported error."""
     mock_connection(aioclient_mock, version_not_supported=True)
 
-    discovery_info = {**MOCK_ZEROCONF_IPP_SERVICE_INFO}
+    discovery_info = dataclasses.replace(MOCK_ZEROCONF_IPP_SERVICE_INFO)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
         data=discovery_info,
     )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "ipp_version_error"
 
 
@@ -251,7 +248,7 @@ async def test_user_device_exists_abort(
         data=user_input,
     )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -261,14 +258,14 @@ async def test_zeroconf_device_exists_abort(
     """Test we abort zeroconf flow if printer already configured."""
     await init_integration(hass, aioclient_mock, skip_setup=True)
 
-    discovery_info = MOCK_ZEROCONF_IPP_SERVICE_INFO.copy()
+    discovery_info = dataclasses.replace(MOCK_ZEROCONF_IPP_SERVICE_INFO)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
         data=discovery_info,
     )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -278,20 +275,19 @@ async def test_zeroconf_with_uuid_device_exists_abort(
     """Test we abort zeroconf flow if printer already configured."""
     await init_integration(hass, aioclient_mock, skip_setup=True)
 
-    discovery_info = {
-        **MOCK_ZEROCONF_IPP_SERVICE_INFO,
-        "properties": {
-            **MOCK_ZEROCONF_IPP_SERVICE_INFO["properties"],
-            "UUID": "cfe92100-67c4-11d4-a45f-f8d027761251",
-        },
+    discovery_info = dataclasses.replace(MOCK_ZEROCONF_IPP_SERVICE_INFO)
+    discovery_info.properties = {
+        **MOCK_ZEROCONF_IPP_SERVICE_INFO.properties,
+        "UUID": "cfe92100-67c4-11d4-a45f-f8d027761251",
     }
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
         data=discovery_info,
     )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -301,9 +297,10 @@ async def test_zeroconf_empty_unique_id(
     """Test zeroconf flow if printer lacks (empty) unique identification."""
     mock_connection(aioclient_mock, no_unique_id=True)
 
-    discovery_info = {
-        **MOCK_ZEROCONF_IPP_SERVICE_INFO,
-        "properties": {**MOCK_ZEROCONF_IPP_SERVICE_INFO["properties"], "UUID": ""},
+    discovery_info = dataclasses.replace(MOCK_ZEROCONF_IPP_SERVICE_INFO)
+    discovery_info.properties = {
+        **MOCK_ZEROCONF_IPP_SERVICE_INFO.properties,
+        "UUID": "",
     }
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -311,7 +308,7 @@ async def test_zeroconf_empty_unique_id(
         data=discovery_info,
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
 
 
 async def test_zeroconf_no_unique_id(
@@ -320,14 +317,14 @@ async def test_zeroconf_no_unique_id(
     """Test zeroconf flow if printer lacks unique identification."""
     mock_connection(aioclient_mock, no_unique_id=True)
 
-    discovery_info = MOCK_ZEROCONF_IPP_SERVICE_INFO.copy()
+    discovery_info = dataclasses.replace(MOCK_ZEROCONF_IPP_SERVICE_INFO)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
         data=discovery_info,
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
 
 
 async def test_full_user_flow_implementation(
@@ -342,7 +339,7 @@ async def test_full_user_flow_implementation(
     )
 
     assert result["step_id"] == "user"
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
 
     with patch("homeassistant.components.ipp.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_configure(
@@ -350,7 +347,7 @@ async def test_full_user_flow_implementation(
             user_input={CONF_HOST: "192.168.1.31", CONF_BASE_PATH: "/ipp/print"},
         )
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "192.168.1.31"
 
     assert result["data"]
@@ -367,7 +364,7 @@ async def test_full_zeroconf_flow_implementation(
     """Test the full manual user flow from start to finish."""
     mock_connection(aioclient_mock)
 
-    discovery_info = MOCK_ZEROCONF_IPP_SERVICE_INFO.copy()
+    discovery_info = dataclasses.replace(MOCK_ZEROCONF_IPP_SERVICE_INFO)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
@@ -375,14 +372,14 @@ async def test_full_zeroconf_flow_implementation(
     )
 
     assert result["step_id"] == "zeroconf_confirm"
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
 
     with patch("homeassistant.components.ipp.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
         )
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "EPSON XP-6000 Series"
 
     assert result["data"]
@@ -401,7 +398,7 @@ async def test_full_zeroconf_tls_flow_implementation(
     """Test the full manual user flow from start to finish."""
     mock_connection(aioclient_mock, ssl=True)
 
-    discovery_info = MOCK_ZEROCONF_IPPS_SERVICE_INFO.copy()
+    discovery_info = dataclasses.replace(MOCK_ZEROCONF_IPPS_SERVICE_INFO)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
@@ -409,7 +406,7 @@ async def test_full_zeroconf_tls_flow_implementation(
     )
 
     assert result["step_id"] == "zeroconf_confirm"
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["description_placeholders"] == {CONF_NAME: "EPSON XP-6000 Series"}
 
     with patch("homeassistant.components.ipp.async_setup_entry", return_value=True):
@@ -417,7 +414,7 @@ async def test_full_zeroconf_tls_flow_implementation(
             result["flow_id"], user_input={}
         )
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "EPSON XP-6000 Series"
 
     assert result["data"]

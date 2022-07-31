@@ -11,5 +11,6 @@
       "macaddress": "002338*"
     }
   ],
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "loggers": ["nuheat"]
 }

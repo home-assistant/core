@@ -13,7 +13,8 @@ from zwave_js_server.version import VersionInfo, get_server_version
 
 from homeassistant import config_entries, exceptions
 from homeassistant.components import usb
-from homeassistant.components.hassio import is_hassio
+from homeassistant.components.hassio import HassioServiceInfo, is_hassio
+from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import (
@@ -51,7 +52,7 @@ DEFAULT_URL = "ws://localhost:3000"
 TITLE = "Z-Wave JS"
 
 ADDON_SETUP_TIMEOUT = 5
-ADDON_SETUP_TIMEOUT_ROUNDS = 4
+ADDON_SETUP_TIMEOUT_ROUNDS = 40
 CONF_EMULATE_HARDWARE = "emulate_hardware"
 CONF_LOG_LEVEL = "log_level"
 SERVER_VERSION_TIMEOUT = 10
@@ -301,6 +302,7 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
         super().__init__()
         self.use_addon = False
         self._title: str | None = None
+        self._usb_discovery = False
 
     @property
     def flow_manager(self) -> config_entries.ConfigEntriesFlowManager:
@@ -336,7 +338,34 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_manual()
 
-    async def async_step_usb(self, discovery_info: dict[str, str]) -> FlowResult:
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> FlowResult:
+        """Handle zeroconf discovery."""
+        home_id = str(discovery_info.properties["homeId"])
+        await self.async_set_unique_id(home_id)
+        self._abort_if_unique_id_configured()
+        self.ws_address = f"ws://{discovery_info.host}:{discovery_info.port}"
+        self.context.update({"title_placeholders": {CONF_NAME: home_id}})
+        return await self.async_step_zeroconf_confirm()
+
+    async def async_step_zeroconf_confirm(
+        self, user_input: dict | None = None
+    ) -> FlowResult:
+        """Confirm the setup."""
+        if user_input is not None:
+            return await self.async_step_manual({CONF_URL: self.ws_address})
+
+        assert self.ws_address
+        return self.async_show_form(
+            step_id="zeroconf_confirm",
+            description_placeholders={
+                "home_id": self.unique_id,
+                CONF_URL: self.ws_address[5:],
+            },
+        )
+
+    async def async_step_usb(self, discovery_info: usb.UsbServiceInfo) -> FlowResult:
         """Handle USB Discovery."""
         if not is_hassio(self.hass):
             return self.async_abort(reason="discovery_requires_supervisor")
@@ -345,14 +374,14 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
         if self._async_in_progress():
             return self.async_abort(reason="already_in_progress")
 
-        vid = discovery_info["vid"]
-        pid = discovery_info["pid"]
-        serial_number = discovery_info["serial_number"]
-        device = discovery_info["device"]
-        manufacturer = discovery_info["manufacturer"]
-        description = discovery_info["description"]
+        vid = discovery_info.vid
+        pid = discovery_info.pid
+        serial_number = discovery_info.serial_number
+        device = discovery_info.device
+        manufacturer = discovery_info.manufacturer
+        description = discovery_info.description
         # Zooz uses this vid/pid, but so do 2652 sticks
-        if vid == "10C4" and pid == "EA60" and "2652" in description:
+        if vid == "10C4" and pid == "EA60" and description and "2652" in description:
             return self.async_abort(reason="not_zwave_device")
 
         addon_info = await self._async_get_addon_info()
@@ -384,8 +413,9 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="usb_confirm",
                 description_placeholders={CONF_NAME: self._title},
-                data_schema=vol.Schema({}),
             )
+
+        self._usb_discovery = True
 
         return await self.async_step_on_supervisor({CONF_USE_ADDON: True})
 
@@ -409,7 +439,7 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
         else:
             await self.async_set_unique_id(
-                version_info.home_id, raise_on_progress=False
+                str(version_info.home_id), raise_on_progress=False
             )
             # Make sure we disable any add-on handling
             # if the controller is reconfigured in a manual step.
@@ -427,7 +457,7 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
             step_id="manual", data_schema=get_manual_schema(user_input), errors=errors
         )
 
-    async def async_step_hassio(self, discovery_info: dict[str, Any]) -> FlowResult:
+    async def async_step_hassio(self, discovery_info: HassioServiceInfo) -> FlowResult:
         """Receive configuration from add-on discovery info.
 
         This flow is triggered by the Z-Wave JS add-on.
@@ -435,13 +465,15 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
         if self._async_in_progress():
             return self.async_abort(reason="already_in_progress")
 
-        self.ws_address = f"ws://{discovery_info['host']}:{discovery_info['port']}"
+        self.ws_address = (
+            f"ws://{discovery_info.config['host']}:{discovery_info.config['port']}"
+        )
         try:
             version_info = await async_get_version_info(self.hass, self.ws_address)
         except CannotConnect:
             return self.async_abort(reason="cannot_connect")
 
-        await self.async_set_unique_id(version_info.home_id)
+        await self.async_set_unique_id(str(version_info.home_id))
         self._abort_if_unique_id_configured(updates={CONF_URL: self.ws_address})
 
         return await self.async_step_hassio_confirm()
@@ -504,7 +536,8 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
             self.s2_access_control_key = user_input[CONF_S2_ACCESS_CONTROL_KEY]
             self.s2_authenticated_key = user_input[CONF_S2_AUTHENTICATED_KEY]
             self.s2_unauthenticated_key = user_input[CONF_S2_UNAUTHENTICATED_KEY]
-            self.usb_path = user_input[CONF_USB_PATH]
+            if not self._usb_discovery:
+                self.usb_path = user_input[CONF_USB_PATH]
 
             new_addon_config = {
                 **addon_config,
@@ -534,21 +567,21 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
             CONF_ADDON_S2_UNAUTHENTICATED_KEY, self.s2_unauthenticated_key or ""
         )
 
-        data_schema = vol.Schema(
-            {
-                vol.Required(CONF_USB_PATH, default=usb_path): str,
-                vol.Optional(CONF_S0_LEGACY_KEY, default=s0_legacy_key): str,
-                vol.Optional(
-                    CONF_S2_ACCESS_CONTROL_KEY, default=s2_access_control_key
-                ): str,
-                vol.Optional(
-                    CONF_S2_AUTHENTICATED_KEY, default=s2_authenticated_key
-                ): str,
-                vol.Optional(
-                    CONF_S2_UNAUTHENTICATED_KEY, default=s2_unauthenticated_key
-                ): str,
-            }
-        )
+        schema = {
+            vol.Optional(CONF_S0_LEGACY_KEY, default=s0_legacy_key): str,
+            vol.Optional(
+                CONF_S2_ACCESS_CONTROL_KEY, default=s2_access_control_key
+            ): str,
+            vol.Optional(CONF_S2_AUTHENTICATED_KEY, default=s2_authenticated_key): str,
+            vol.Optional(
+                CONF_S2_UNAUTHENTICATED_KEY, default=s2_unauthenticated_key
+            ): str,
+        }
+
+        if not self._usb_discovery:
+            schema = {vol.Required(CONF_USB_PATH, default=usb_path): str, **schema}
+
+        data_schema = vol.Schema(schema)
 
         return self.async_show_form(step_id="configure_addon", data_schema=data_schema)
 
@@ -574,7 +607,7 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
                     raise AbortFlow("cannot_connect") from err
 
             await self.async_set_unique_id(
-                self.version_info.home_id, raise_on_progress=False
+                str(self.version_info.home_id), raise_on_progress=False
             )
 
         self._abort_if_unique_id_configured(
@@ -662,7 +695,7 @@ class OptionsFlowHandler(BaseZwaveJSFlow, config_entries.OptionsFlow):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            if self.config_entry.unique_id != version_info.home_id:
+            if self.config_entry.unique_id != str(version_info.home_id):
                 return self.async_abort(reason="different_device")
 
             # Make sure we disable any add-on handling
@@ -822,7 +855,7 @@ class OptionsFlowHandler(BaseZwaveJSFlow, config_entries.OptionsFlow):
             except CannotConnect:
                 return await self.async_revert_addon_config(reason="cannot_connect")
 
-        if self.config_entry.unique_id != self.version_info.home_id:
+        if self.config_entry.unique_id != str(self.version_info.home_id):
             return await self.async_revert_addon_config(reason="different_device")
 
         self._async_update_entry(

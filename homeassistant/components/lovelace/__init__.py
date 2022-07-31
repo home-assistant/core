@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components import frontend
+from homeassistant.components import frontend, websocket_api
 from homeassistant.config import async_hass_config_yaml, async_process_component_config
 from homeassistant.const import CONF_FILENAME, CONF_MODE, CONF_RESOURCES
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -86,11 +86,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         config = await async_process_component_config(hass, conf, integration)
 
+        if config is None:
+            raise HomeAssistantError("Config validation failed")
+
         resource_collection = await create_yaml_resource_col(
             hass, config[DOMAIN].get(CONF_RESOURCES)
         )
         hass.data[DOMAIN]["resources"] = resource_collection
 
+    default_config: dashboard.LovelaceConfig
     if mode == MODE_YAML:
         default_config = dashboard.LovelaceYAML(hass, None, None)
         resource_collection = await create_yaml_resource_col(hass, yaml_resources)
@@ -121,25 +125,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             RESOURCE_UPDATE_FIELDS,
         ).async_setup(hass, create_list=False)
 
-    hass.components.websocket_api.async_register_command(
-        websocket.websocket_lovelace_config
+    websocket_api.async_register_command(hass, websocket.websocket_lovelace_config)
+    websocket_api.async_register_command(hass, websocket.websocket_lovelace_save_config)
+    websocket_api.async_register_command(
+        hass, websocket.websocket_lovelace_delete_config
     )
-    hass.components.websocket_api.async_register_command(
-        websocket.websocket_lovelace_save_config
-    )
-    hass.components.websocket_api.async_register_command(
-        websocket.websocket_lovelace_delete_config
-    )
-    hass.components.websocket_api.async_register_command(
-        websocket.websocket_lovelace_resources
-    )
+    websocket_api.async_register_command(hass, websocket.websocket_lovelace_resources)
 
-    hass.components.websocket_api.async_register_command(
-        websocket.websocket_lovelace_dashboards
-    )
+    websocket_api.async_register_command(hass, websocket.websocket_lovelace_dashboards)
 
     hass.data[DOMAIN] = {
         # We store a dictionary mapping url_path: config. None is the default.
+        "mode": mode,
         "dashboards": {None: default_config},
         "resources": resource_collection,
         "yaml_dashboards": config[DOMAIN].get(CONF_DASHBOARDS, {}),
@@ -186,8 +183,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # Process YAML dashboards
     for url_path, dashboard_conf in hass.data[DOMAIN]["yaml_dashboards"].items():
         # For now always mode=yaml
-        config = dashboard.LovelaceYAML(hass, url_path, dashboard_conf)
-        hass.data[DOMAIN]["dashboards"][url_path] = config
+        lovelace_config = dashboard.LovelaceYAML(hass, url_path, dashboard_conf)
+        hass.data[DOMAIN]["dashboards"][url_path] = lovelace_config
 
         try:
             _register_panel(hass, url_path, MODE_YAML, dashboard_conf, False)

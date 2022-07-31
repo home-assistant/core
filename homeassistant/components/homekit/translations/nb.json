@@ -1,0 +1,16 @@
+{
+    "options": {
+        "step": {
+            "exclude": {
+                "data": {
+                    "entities": "Entiteter"
+                }
+            },
+            "include": {
+                "data": {
+                    "entities": "Entiteter"
+                }
+            }
+        }
+    }
+}

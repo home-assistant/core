@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import final
+from typing import Any, final
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
@@ -14,6 +14,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.typing import ConfigType
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -29,7 +30,7 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 SCAN_INTERVAL = timedelta(seconds=60)
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Geolocation component."""
     component = hass.data[DOMAIN] = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
@@ -53,8 +54,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class GeolocationEvent(Entity):
     """Base class for an external event with an associated geolocation."""
 
+    # Entity Properties
+    _attr_source: str
+    _attr_distance: float | None = None
+    _attr_latitude: float | None = None
+    _attr_longitude: float | None = None
+
+    @final
     @property
-    def state(self):
+    def state(self) -> float | None:
         """Return the state of the sensor."""
         if self.distance is not None:
             return round(self.distance, 1)
@@ -63,32 +71,30 @@ class GeolocationEvent(Entity):
     @property
     def source(self) -> str:
         """Return source value of this external event."""
-        raise NotImplementedError
+        return self._attr_source
 
     @property
     def distance(self) -> float | None:
         """Return distance value of this external event."""
-        return None
+        return self._attr_distance
 
     @property
     def latitude(self) -> float | None:
         """Return latitude value of this external event."""
-        return None
+        return self._attr_latitude
 
     @property
     def longitude(self) -> float | None:
         """Return longitude value of this external event."""
-        return None
+        return self._attr_longitude
 
     @final
     @property
-    def state_attributes(self):
+    def state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of this external event."""
-        data = {}
+        data: dict[str, Any] = {ATTR_SOURCE: self.source}
         if self.latitude is not None:
             data[ATTR_LATITUDE] = round(self.latitude, 5)
         if self.longitude is not None:
             data[ATTR_LONGITUDE] = round(self.longitude, 5)
-        if self.source is not None:
-            data[ATTR_SOURCE] = self.source
         return data

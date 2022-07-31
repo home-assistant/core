@@ -1,13 +1,11 @@
 """Support for Rheem EcoNet water heaters."""
 from pyeconet.equipment import EquipmentType
 
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import (
-    DEVICE_CLASS_SIGNAL_STRENGTH,
-    ENERGY_KILO_WATT_HOUR,
-    PERCENTAGE,
-    VOLUME_GALLONS,
-)
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ENERGY_KILO_WATT_HOUR, PERCENTAGE, VOLUME_GALLONS
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import EcoNetEntity
 from .const import DOMAIN, EQUIPMENT
@@ -15,9 +13,9 @@ from .const import DOMAIN, EQUIPMENT
 ENERGY_KILO_BRITISH_THERMAL_UNIT = "kBtu"
 
 TANK_HEALTH = "tank_health"
-AVAILIBLE_HOT_WATER = "availible_hot_water"
+AVAILABLE_HOT_WATER = "available_hot_water"
 COMPRESSOR_HEALTH = "compressor_health"
-OVERRIDE_STATUS = "oveerride_status"
+OVERRIDE_STATUS = "override_status"
 WATER_USAGE_TODAY = "water_usage_today"
 POWER_USAGE_TODAY = "power_usage_today"
 ALERT_COUNT = "alert_count"
@@ -26,7 +24,7 @@ RUNNING_STATE = "running_state"
 
 SENSOR_NAMES_TO_ATTRIBUTES = {
     TANK_HEALTH: "tank_health",
-    AVAILIBLE_HOT_WATER: "tank_hot_water_availability",
+    AVAILABLE_HOT_WATER: "tank_hot_water_availability",
     COMPRESSOR_HEALTH: "compressor_health",
     OVERRIDE_STATUS: "override_status",
     WATER_USAGE_TODAY: "todays_water_usage",
@@ -38,18 +36,20 @@ SENSOR_NAMES_TO_ATTRIBUTES = {
 
 SENSOR_NAMES_TO_UNIT_OF_MEASUREMENT = {
     TANK_HEALTH: PERCENTAGE,
-    AVAILIBLE_HOT_WATER: PERCENTAGE,
+    AVAILABLE_HOT_WATER: PERCENTAGE,
     COMPRESSOR_HEALTH: PERCENTAGE,
     OVERRIDE_STATUS: None,
     WATER_USAGE_TODAY: VOLUME_GALLONS,
     POWER_USAGE_TODAY: None,  # Depends on unit type
     ALERT_COUNT: None,
-    WIFI_SIGNAL: DEVICE_CLASS_SIGNAL_STRENGTH,
+    WIFI_SIGNAL: SensorDeviceClass.SIGNAL_STRENGTH,
     RUNNING_STATE: None,  # This is just a string
 }
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up EcoNet sensor based on a config entry."""
 
     equipment = hass.data[DOMAIN][EQUIPMENT][entry.entry_id]

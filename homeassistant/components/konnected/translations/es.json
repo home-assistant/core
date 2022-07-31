@@ -2,12 +2,13 @@
     "config": {
         "abort": {
             "already_configured": "El dispositivo ya est\u00e1 configurado",
-            "already_in_progress": "El flujo de configuraci\u00f3n para el dispositivo ya est\u00e1 en marcha.",
+            "already_in_progress": "El flujo de configuraci\u00f3n ya est\u00e1 en proceso",
+            "cannot_connect": "No se pudo conectar",
             "not_konn_panel": "No es un dispositivo Konnected.io reconocido",
             "unknown": "Se produjo un error desconocido"
         },
         "error": {
-            "cannot_connect": "No se puede conectar a un Panel conectado en {host}:{port}"
+            "cannot_connect": "No se pudo conectar"
         },
         "step": {
             "confirm": {
@@ -32,7 +33,7 @@
             "not_konn_panel": "No es un dispositivo Konnected.io reconocido"
         },
         "error": {
-            "bad_host": "URL del host de la API de invalidaci\u00f3n no v\u00e1lida"
+            "bad_host": "La URL de sustituci\u00f3n del host de la API es inv\u00e1lida"
         },
         "step": {
             "options_binary": {
@@ -64,7 +65,7 @@
                     "7": "Zona 7",
                     "out": "OUT"
                 },
-                "description": "Descubierto un {model} en {host} . Seleccione la configuraci\u00f3n base de cada E / S a continuaci\u00f3n: seg\u00fan la E / S, puede permitir sensores binarios (contactos de apertura / cierre), sensores digitales (dht y ds18b20) o salidas conmutables. Podr\u00e1 configurar opciones detalladas en los pr\u00f3ximos pasos.",
+                "description": "Descubierto un {model} en {host} . Seleccione la configuraci\u00f3n base de cada I/O a continuaci\u00f3n: seg\u00fan la I/O, puede permitir sensores binarios (contactos de apertura / cierre), sensores digitales (dht y ds18b20) o salidas conmutables. Podr\u00e1 configurar opciones detalladas en los pr\u00f3ximos pasos.",
                 "title": "Configurar E/S"
             },
             "options_io_ext": {
@@ -83,7 +84,7 @@
             },
             "options_misc": {
                 "data": {
-                    "api_host": "Invalidar la direcci\u00f3n URL del host de la API (opcional)",
+                    "api_host": "Sustituye la URL del host de la API (opcional)",
                     "blink": "Parpadea el LED del panel cuando se env\u00eda un cambio de estado",
                     "discovery": "Responde a las solicitudes de descubrimiento en tu red",
                     "override_api_host": "Reemplazar la URL predeterminada del panel host de la API de Home Assistant"

@@ -4,15 +4,29 @@ import logging
 from pylutron import Button, Lutron
 import voluptuous as vol
 
-from homeassistant.const import ATTR_ID, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    ATTR_ID,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    Platform,
+)
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 
 DOMAIN = "lutron"
 
-PLATFORMS = ["light", "cover", "switch", "scene", "binary_sensor"]
+PLATFORMS = [
+    Platform.LIGHT,
+    Platform.COVER,
+    Platform.SWITCH,
+    Platform.SCENE,
+    Platform.BINARY_SENSOR,
+]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +52,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, base_config):
+def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
     """Set up the Lutron integration."""
     hass.data[LUTRON_BUTTONS] = []
     hass.data[LUTRON_CONTROLLER] = None
@@ -50,7 +64,7 @@ def setup(hass, base_config):
         "binary_sensor": [],
     }
 
-    config = base_config.get(DOMAIN)
+    config = base_config[DOMAIN]
     hass.data[LUTRON_CONTROLLER] = Lutron(
         config[CONF_HOST], config[CONF_USERNAME], config[CONF_PASSWORD]
     )
@@ -110,9 +124,7 @@ class LutronDevice(Entity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        self.hass.async_add_executor_job(
-            self._lutron_device.subscribe, self._update_callback, None
-        )
+        self._lutron_device.subscribe(self._update_callback, None)
 
     def _update_callback(self, _device, _context, _event, _params):
         """Run when invoked by pylutron when the device state changes."""

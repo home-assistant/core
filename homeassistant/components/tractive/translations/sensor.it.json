@@ -1,0 +1,10 @@
+{
+    "state": {
+        "tractive__tracker_state": {
+            "not_reporting": "Non segnalante",
+            "operational": "Operativo",
+            "system_shutdown_user": "Spegnimento del sistema utente",
+            "system_startup": "Avvio del sistema"
+        }
+    }
+}

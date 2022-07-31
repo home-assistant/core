@@ -1,13 +1,14 @@
 """Test the Shark IQ vacuum entity."""
 from __future__ import annotations
 
+from collections.abc import Iterable
 from copy import deepcopy
 import enum
-from typing import Any, Iterable
+from typing import Any
 from unittest.mock import patch
 
 import pytest
-from sharkiqpy import AylaApi, SharkIqAuthError, SharkIqNotAuthedError, SharkIqVacuum
+from sharkiq import AylaApi, SharkIqAuthError, SharkIqNotAuthedError, SharkIqVacuum
 
 from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
 from homeassistant.components.sharkiq import DOMAIN
@@ -117,7 +118,7 @@ class MockShark(SharkIqVacuum):
 
 
 @pytest.fixture(autouse=True)
-@patch("sharkiqpy.ayla_api.AylaApi", MockAyla)
+@patch("sharkiq.ayla_api.AylaApi", MockAyla)
 async def setup_integration(hass):
     """Build the mock integration."""
     entry = MockConfigEntry(
@@ -224,7 +225,7 @@ async def test_locate(hass):
         (RuntimeError, False),
     ],
 )
-@patch("sharkiqpy.ayla_api.AylaApi", MockAyla)
+@patch("sharkiq.ayla_api.AylaApi", MockAyla)
 async def test_coordinator_updates(
     hass: HomeAssistant, side_effect: Exception | None, success: bool
 ) -> None:

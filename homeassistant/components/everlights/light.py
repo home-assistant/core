@@ -12,20 +12,20 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     PLATFORM_SCHEMA,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_EFFECT,
+    ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.const import CONF_HOSTS
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
-
-SUPPORT_EVERLIGHTS = SUPPORT_EFFECT | SUPPORT_BRIGHTNESS | SUPPORT_COLOR
 
 SCAN_INTERVAL = timedelta(minutes=1)
 
@@ -44,7 +44,12 @@ def color_int_to_rgb(value: int) -> tuple[int, int, int]:
     return (value >> 16, (value >> 8) & 0xFF, value & 0xFF)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the EverLights lights from configuration.yaml."""
     lights = []
 
@@ -68,6 +73,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 class EverLightsLight(LightEntity):
     """Representation of a Flux light."""
+
+    _attr_color_mode = ColorMode.HS
+    _attr_supported_color_modes = {ColorMode.HS}
+    _attr_supported_features = LightEntityFeature.EFFECT
 
     def __init__(self, api, channel, status, effects):
         """Initialize the light."""
@@ -116,11 +125,6 @@ class EverLightsLight(LightEntity):
     def effect(self):
         """Return the effect property."""
         return self._effect
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_EVERLIGHTS
 
     @property
     def effect_list(self):

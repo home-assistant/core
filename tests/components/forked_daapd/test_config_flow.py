@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant import data_entry_flow
+from homeassistant.components import zeroconf
 from homeassistant.components.forked_daapd.const import (
     CONF_LIBRESPOT_JAVA_PORT,
     CONF_MAX_PLAYLISTS,
@@ -57,7 +58,7 @@ async def test_show_form(hass):
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == SOURCE_USER
 
 
@@ -77,7 +78,7 @@ async def test_config_flow(hass, config_entry):
             DOMAIN, context={"source": SOURCE_USER}, data=config_data
         )
         await hass.async_block_till_done()
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["title"] == "My Music on myhost"
         assert result["data"][CONF_HOST] == config_data[CONF_HOST]
         assert result["data"][CONF_PORT] == config_data[CONF_PORT]
@@ -90,7 +91,7 @@ async def test_config_flow(hass, config_entry):
             data=config_entry.data,
         )
         await hass.async_block_till_done()
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
 
 
 async def test_zeroconf_updates_title(hass, config_entry):
@@ -98,16 +99,20 @@ async def test_zeroconf_updates_title(hass, config_entry):
     MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "different host"}).add_to_hass(hass)
     config_entry.add_to_hass(hass)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 2
-    discovery_info = {
-        "host": "192.168.1.1",
-        "port": 23,
-        "properties": {"mtd-version": "27.0", "Machine Name": "zeroconf_test"},
-    }
+    discovery_info = zeroconf.ZeroconfServiceInfo(
+        host="192.168.1.1",
+        addresses=["192.168.1.1"],
+        hostname="mock_hostname",
+        name="mock_name",
+        port=23,
+        properties={"mtd-version": "27.0", "Machine Name": "zeroconf_test"},
+        type="mock_type",
+    )
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
     )
     await hass.async_block_till_done()
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert config_entry.title == "zeroconf_test"
     assert len(hass.config_entries.async_entries(DOMAIN)) == 2
 
@@ -123,68 +128,92 @@ async def test_config_flow_no_websocket(hass, config_entry):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=config_entry.data
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
 
 
 async def test_config_flow_zeroconf_invalid(hass):
     """Test that an invalid zeroconf entry doesn't work."""
     # test with no discovery properties
-    discovery_info = {"host": "127.0.0.1", "port": 23}
+    discovery_info = zeroconf.ZeroconfServiceInfo(
+        host="127.0.0.1",
+        addresses=["127.0.0.1"],
+        hostname="mock_hostname",
+        name="mock_name",
+        port=23,
+        properties={},
+        type="mock_type",
+    )
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
     )  # doesn't create the entry, tries to show form but gets abort
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "not_forked_daapd"
     # test with forked-daapd version < 27
-    discovery_info = {
-        "host": "127.0.0.1",
-        "port": 23,
-        "properties": {"mtd-version": "26.3", "Machine Name": "forked-daapd"},
-    }
+    discovery_info = zeroconf.ZeroconfServiceInfo(
+        host="127.0.0.1",
+        addresses=["127.0.0.1"],
+        hostname="mock_hostname",
+        name="mock_name",
+        port=23,
+        properties={"mtd-version": "26.3", "Machine Name": "forked-daapd"},
+        type="mock_type",
+    )
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
     )  # doesn't create the entry, tries to show form but gets abort
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "not_forked_daapd"
     # test with verbose mtd-version from Firefly
-    discovery_info = {
-        "host": "127.0.0.1",
-        "port": 23,
-        "properties": {"mtd-version": "0.2.4.1", "Machine Name": "firefly"},
-    }
+    discovery_info = zeroconf.ZeroconfServiceInfo(
+        host="127.0.0.1",
+        addresses=["127.0.0.1"],
+        hostname="mock_hostname",
+        name="mock_name",
+        port=23,
+        properties={"mtd-version": "0.2.4.1", "Machine Name": "firefly"},
+        type="mock_type",
+    )
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
     )  # doesn't create the entry, tries to show form but gets abort
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "not_forked_daapd"
     # test with svn mtd-version from Firefly
-    discovery_info = {
-        "host": "127.0.0.1",
-        "port": 23,
-        "properties": {"mtd-version": "svn-1676", "Machine Name": "firefly"},
-    }
+    discovery_info = zeroconf.ZeroconfServiceInfo(
+        host="127.0.0.1",
+        addresses=["127.0.0.1"],
+        hostname="mock_hostname",
+        name="mock_name",
+        port=23,
+        properties={"mtd-version": "svn-1676", "Machine Name": "firefly"},
+        type="mock_type",
+    )
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
     )  # doesn't create the entry, tries to show form but gets abort
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "not_forked_daapd"
 
 
 async def test_config_flow_zeroconf_valid(hass):
     """Test that a valid zeroconf entry works."""
-    discovery_info = {
-        "host": "192.168.1.1",
-        "port": 23,
-        "properties": {
+    discovery_info = zeroconf.ZeroconfServiceInfo(
+        host="192.168.1.1",
+        addresses=["192.168.1.1"],
+        hostname="mock_hostname",
+        name="mock_name",
+        port=23,
+        properties={
             "mtd-version": "27.0",
             "Machine Name": "zeroconf_test",
             "Machine ID": "5E55EEFF",
         },
-    }
+        type="mock_type",
+    )
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
 
 
 async def test_options_flow(hass, config_entry):
@@ -200,7 +229,7 @@ async def test_options_flow(hass, config_entry):
         await hass.async_block_till_done()
 
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
 
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
@@ -211,4 +240,4 @@ async def test_options_flow(hass, config_entry):
                 CONF_MAX_PLAYLISTS: 8,
             },
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY

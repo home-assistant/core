@@ -6,12 +6,18 @@
             "unknown": "Erro inesperado"
         },
         "step": {
-            "user": {
+            "discovered_connection": {
                 "data": {
-                    "password": "Palavra-passe (segura apenas)",
-                    "protocol": "Protocolo",
-                    "username": "Nome de utilizador (apenas seguro)."
-                }
+                    "password": "Palavra-passe",
+                    "username": "Nome de Utilizador"
+                },
+                "title": "Ligar ao Controlo Elk-M1"
+            },
+            "manual_connection": {
+                "data": {
+                    "username": "Nome de Utilizador"
+                },
+                "title": "Ligar ao Controlo Elk-M1"
             }
         }
     }

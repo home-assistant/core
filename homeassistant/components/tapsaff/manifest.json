@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/tapsaff",
   "requirements": ["tapsaff==0.2.1"],
   "codeowners": ["@bazwilliams"],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["tapsaff"]
 }

@@ -1539,6 +1539,7 @@ async def test_trace_blueprint_automation(
             "input": {
                 "trigger_event": "blueprint_event",
                 "service_to_call": "test.automation",
+                "a_number": 5,
             },
         },
     }

@@ -1,16 +1,8 @@
 """Growatt Sensor definitions for the TLX type."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import (
-    STATE_CLASS_TOTAL,
-    STATE_CLASS_TOTAL_INCREASING,
-)
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import (
-    DEVICE_CLASS_CURRENT,
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_VOLTAGE,
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
@@ -27,7 +19,7 @@ TLX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         name="Energy today",
         api_key="eacToday",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
+        device_class=SensorDeviceClass.ENERGY,
         precision=1,
     ),
     GrowattSensorEntityDescription(
@@ -35,8 +27,8 @@ TLX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         name="Lifetime energy output",
         api_key="eacTotal",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_TOTAL,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL,
         precision=1,
     ),
     GrowattSensorEntityDescription(
@@ -44,8 +36,8 @@ TLX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         name="Lifetime total energy input 1",
         api_key="epv1Total",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_TOTAL,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL,
         precision=1,
     ),
     GrowattSensorEntityDescription(
@@ -53,8 +45,8 @@ TLX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         name="Energy Today Input 1",
         api_key="epv1Today",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         precision=1,
     ),
     GrowattSensorEntityDescription(
@@ -62,7 +54,7 @@ TLX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         name="Input 1 voltage",
         api_key="vpv1",
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        device_class=DEVICE_CLASS_VOLTAGE,
+        device_class=SensorDeviceClass.VOLTAGE,
         precision=1,
     ),
     GrowattSensorEntityDescription(
@@ -70,7 +62,7 @@ TLX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         name="Input 1 Amperage",
         api_key="ipv1",
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
-        device_class=DEVICE_CLASS_CURRENT,
+        device_class=SensorDeviceClass.CURRENT,
         precision=1,
     ),
     GrowattSensorEntityDescription(
@@ -78,7 +70,7 @@ TLX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         name="Input 1 Wattage",
         api_key="ppv1",
         native_unit_of_measurement=POWER_WATT,
-        device_class=DEVICE_CLASS_POWER,
+        device_class=SensorDeviceClass.POWER,
         precision=1,
     ),
     GrowattSensorEntityDescription(
@@ -86,8 +78,8 @@ TLX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         name="Lifetime total energy input 2",
         api_key="epv2Total",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_TOTAL,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL,
         precision=1,
     ),
     GrowattSensorEntityDescription(
@@ -95,8 +87,8 @@ TLX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         name="Energy Today Input 2",
         api_key="epv2Today",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         precision=1,
     ),
     GrowattSensorEntityDescription(
@@ -104,7 +96,7 @@ TLX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         name="Input 2 voltage",
         api_key="vpv2",
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        device_class=DEVICE_CLASS_VOLTAGE,
+        device_class=SensorDeviceClass.VOLTAGE,
         precision=1,
     ),
     GrowattSensorEntityDescription(
@@ -112,7 +104,7 @@ TLX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         name="Input 2 Amperage",
         api_key="ipv2",
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
-        device_class=DEVICE_CLASS_CURRENT,
+        device_class=SensorDeviceClass.CURRENT,
         precision=1,
     ),
     GrowattSensorEntityDescription(
@@ -120,7 +112,7 @@ TLX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         name="Input 2 Wattage",
         api_key="ppv2",
         native_unit_of_measurement=POWER_WATT,
-        device_class=DEVICE_CLASS_POWER,
+        device_class=SensorDeviceClass.POWER,
         precision=1,
     ),
     GrowattSensorEntityDescription(
@@ -128,7 +120,7 @@ TLX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         name="Internal wattage",
         api_key="ppv",
         native_unit_of_measurement=POWER_WATT,
-        device_class=DEVICE_CLASS_POWER,
+        device_class=SensorDeviceClass.POWER,
         precision=1,
     ),
     GrowattSensorEntityDescription(
@@ -136,7 +128,7 @@ TLX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         name="Reactive voltage",
         api_key="vacrs",
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        device_class=DEVICE_CLASS_VOLTAGE,
+        device_class=SensorDeviceClass.VOLTAGE,
         precision=1,
     ),
     GrowattSensorEntityDescription(
@@ -151,7 +143,7 @@ TLX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         name="Output power",
         api_key="pac",
         native_unit_of_measurement=POWER_WATT,
-        device_class=DEVICE_CLASS_POWER,
+        device_class=SensorDeviceClass.POWER,
         precision=1,
     ),
     GrowattSensorEntityDescription(
@@ -159,7 +151,7 @@ TLX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         name="Temperature 1",
         api_key="temp1",
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         precision=1,
     ),
     GrowattSensorEntityDescription(
@@ -167,7 +159,7 @@ TLX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         name="Temperature 2",
         api_key="temp2",
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         precision=1,
     ),
     GrowattSensorEntityDescription(
@@ -175,7 +167,7 @@ TLX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         name="Temperature 3",
         api_key="temp3",
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         precision=1,
     ),
     GrowattSensorEntityDescription(
@@ -183,7 +175,7 @@ TLX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         name="Temperature 4",
         api_key="temp4",
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         precision=1,
     ),
     GrowattSensorEntityDescription(
@@ -191,7 +183,7 @@ TLX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         name="Temperature 5",
         api_key="temp5",
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         precision=1,
     ),
 )

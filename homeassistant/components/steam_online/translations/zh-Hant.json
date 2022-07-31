@@ -1,0 +1,45 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u670d\u52d9\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "reauth_successful": "\u91cd\u65b0\u8a8d\u8b49\u6210\u529f"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "invalid_account": "\u5e33\u865f ID \u7121\u6548",
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+        },
+        "step": {
+            "reauth_confirm": {
+                "description": "Steam \u6574\u5408\u9700\u8981\u624b\u52d5\u91cd\u65b0\u8a8d\u8b49\n\n\u53ef\u4ee5\u65bc\u5f8c\u65b9\u7db2\u5740\u627e\u5230\u91d1\u9470\uff1a{api_key_url}",
+                "title": "\u91cd\u65b0\u8a8d\u8b49\u6574\u5408"
+            },
+            "user": {
+                "data": {
+                    "account": "Steam \u5e33\u865f ID",
+                    "api_key": "API \u91d1\u9470"
+                },
+                "description": "\u4f7f\u7528 {account_id_url} \u4ee5\u78ba\u8a8d\u60a8\u7684 Steam \u5e33\u865f ID"
+            }
+        }
+    },
+    "issues": {
+        "removed_yaml": {
+            "description": "\u4f7f\u7528 YAML \u8a2d\u5b9a Steam \u7684\u529f\u80fd\u5373\u5c07\u79fb\u9664\u3002\n\nHome Assistant \u5c07\u4e0d\u518d\u4f7f\u7528\u73fe\u6709\u7684 YAML \u8a2d\u5b9a\u3002\n\n\u7531 configuration.yaml \u6a94\u6848\u4e2d\u79fb\u9664 YAML \u8a2d\u5b9a\u4e26\u91cd\u555f Home Assistant \u4ee5\u4fee\u6b63\u6b64\u554f\u984c\u3002",
+            "title": "Steam YAML \u8a2d\u5b9a\u5373\u5c07\u79fb\u9664"
+        }
+    },
+    "options": {
+        "error": {
+            "unauthorized": "\u597d\u53cb\u5217\u8868\u53d7\u9650\uff1a\u8acb\u53c3\u8003\u6587\u4ef6\u8cc7\u6599\u4ee5\u4e86\u89e3\u5982\u4f55\u986f\u793a\u6240\u6709\u597d\u53cb\u3002"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "accounts": "\u6240\u8981\u76e3\u63a7\u7684\u5e33\u865f\u540d\u7a31"
+                }
+            }
+        }
+    }
+}

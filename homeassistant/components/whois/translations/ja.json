@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u30b5\u30fc\u30d3\u30b9\u306f\u3059\u3067\u306b\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u3059"
+        },
+        "error": {
+            "unexpected_response": "Whois\u30b5\u30fc\u30d0\u30fc\u304b\u3089\u306e\u4e88\u671f\u3057\u306a\u3044\u5fdc\u7b54",
+            "unknown_date_format": "Whois\u30b5\u30fc\u30d0\u30fc\u306e\u5fdc\u7b54\u3067\u4e0d\u660e\u306a\u65e5\u4ed8\u30d5\u30a9\u30fc\u30de\u30c3\u30c8",
+            "unknown_tld": "\u6307\u5b9a\u3055\u308c\u305fTLD\u306f\u4e0d\u660e\u3001\u3082\u3057\u304f\u306f\u3053\u306e\u7d71\u5408\u3067\u306f\u5229\u7528\u3067\u304d\u307e\u305b\u3093",
+            "whois_command_failed": "Whois\u30b3\u30de\u30f3\u30c9\u304c\u5931\u6557\u3057\u307e\u3057\u305f: whois\u60c5\u5831\u3092\u53d6\u5f97\u3067\u304d\u307e\u305b\u3093\u3067\u3057\u305f"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "domain": "\u30c9\u30e1\u30a4\u30f3\u540d"
+                }
+            }
+        }
+    }
+}

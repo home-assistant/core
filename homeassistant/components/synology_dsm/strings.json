@@ -3,7 +3,6 @@
     "flow_title": "{name} ({host})",
     "step": {
       "user": {
-        "title": "Synology DSM",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
@@ -20,7 +19,6 @@
         }
       },
       "link": {
-        "title": "Synology DSM",
         "description": "Do you want to setup {name} ({host})?",
         "data": {
           "ssl": "[%key:common::config_flow::data::ssl%]",
@@ -56,7 +54,8 @@
       "init": {
         "data": {
           "scan_interval": "Minutes between scans",
-          "timeout": "Timeout (seconds)"
+          "timeout": "Timeout (seconds)",
+          "snap_profile_type": "Quality level of camera snapshots (0:high 1:medium 2:low)"
         }
       }
     }

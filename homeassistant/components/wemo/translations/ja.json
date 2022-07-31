@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "\u30cd\u30c3\u30c8\u30ef\u30fc\u30af\u4e0a\u306b\u30c7\u30d0\u30a4\u30b9\u304c\u898b\u3064\u304b\u308a\u307e\u305b\u3093",
+            "single_instance_allowed": "\u3059\u3067\u306b\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u3059\u3002\u8a2d\u5b9a\u3067\u304d\u308b\u306e\u306f1\u3064\u3060\u3051\u3067\u3059\u3002"
+        },
+        "step": {
+            "confirm": {
+                "description": "Wemo\u3092\u8a2d\u5b9a\u3092\u3057\u307e\u3059\u304b\uff1f"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "long_press": "Wemo\u30dc\u30bf\u30f3\u304c\u30012\u79d2\u9593\u62bc\u3055\u308c\u307e\u3057\u305f"
+        }
+    }
+}

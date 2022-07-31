@@ -5,7 +5,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS, MAC_ADDRESS
+from homeassistant.components import dhcp
 from homeassistant.components.somfy_mylink.const import (
     CONF_REVERSED_TARGET_IDS,
     CONF_SYSTEM_ID,
@@ -175,7 +175,7 @@ async def test_options_not_loaded(hass):
     ):
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
         await hass.async_block_till_done()
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
 
 
 @pytest.mark.parametrize("reversed", [True, False])
@@ -204,7 +204,7 @@ async def test_options_with_targets(hass, reversed):
         await hass.async_block_till_done()
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
         await hass.async_block_till_done()
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "init"
 
         result2 = await hass.config_entries.options.async_configure(
@@ -212,19 +212,19 @@ async def test_options_with_targets(hass, reversed):
             user_input={"target_id": "a"},
         )
 
-        assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result2["type"] == data_entry_flow.FlowResultType.FORM
         result3 = await hass.config_entries.options.async_configure(
             result2["flow_id"],
             user_input={"reverse": reversed},
         )
 
-        assert result3["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result3["type"] == data_entry_flow.FlowResultType.FORM
 
         result4 = await hass.config_entries.options.async_configure(
             result3["flow_id"],
             user_input={"target_id": None},
         )
-        assert result4["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result4["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
         assert config_entry.options == {
             CONF_REVERSED_TARGET_IDS: {"a": reversed},
@@ -252,11 +252,11 @@ async def test_form_user_already_configured_from_dhcp(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data={
-                IP_ADDRESS: "1.1.1.1",
-                MAC_ADDRESS: "AA:BB:CC:DD:EE:FF",
-                HOSTNAME: "somfy_eeff",
-            },
+            data=dhcp.DhcpServiceInfo(
+                ip="1.1.1.1",
+                macaddress="AA:BB:CC:DD:EE:FF",
+                hostname="somfy_eeff",
+            ),
         )
 
         await hass.async_block_till_done()
@@ -276,11 +276,11 @@ async def test_already_configured_with_ignored(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
-        data={
-            IP_ADDRESS: "1.1.1.1",
-            MAC_ADDRESS: "AA:BB:CC:DD:EE:FF",
-            HOSTNAME: "somfy_eeff",
-        },
+        data=dhcp.DhcpServiceInfo(
+            ip="1.1.1.1",
+            macaddress="AA:BB:CC:DD:EE:FF",
+            hostname="somfy_eeff",
+        ),
     )
     assert result["type"] == "form"
 
@@ -291,11 +291,11 @@ async def test_dhcp_discovery(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
-        data={
-            IP_ADDRESS: "1.1.1.1",
-            MAC_ADDRESS: "AA:BB:CC:DD:EE:FF",
-            HOSTNAME: "somfy_eeff",
-        },
+        data=dhcp.DhcpServiceInfo(
+            ip="1.1.1.1",
+            macaddress="AA:BB:CC:DD:EE:FF",
+            hostname="somfy_eeff",
+        ),
     )
     assert result["type"] == "form"
     assert result["errors"] == {}

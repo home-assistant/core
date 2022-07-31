@@ -1,5 +1,6 @@
 """Common test objects."""
 import asyncio
+from datetime import timedelta
 import math
 from unittest.mock import AsyncMock, Mock
 
@@ -7,7 +8,10 @@ import zigpy.zcl
 import zigpy.zcl.foundation as zcl_f
 
 import homeassistant.components.zha.core.const as zha_const
-from homeassistant.util import slugify
+from homeassistant.helpers import entity_registry
+import homeassistant.util.dt as dt_util
+
+from tests.common import async_fire_time_changed
 
 
 def patch_cluster(cluster):
@@ -20,8 +24,10 @@ def patch_cluster(cluster):
             value = cluster.PLUGGED_ATTR_READS.get(attr_id)
             if value is None:
                 # try converting attr_id to attr_name and lookup the plugs again
-                attr_name = cluster.attributes.get(attr_id)
-                value = attr_name and cluster.PLUGGED_ATTR_READS.get(attr_name[0])
+                attr = cluster.attributes.get(attr_id)
+
+                if attr is not None:
+                    value = cluster.PLUGGED_ATTR_READS.get(attr.name)
             if value is not None:
                 result.append(
                     zcl_f.ReadAttributeRecord(
@@ -58,14 +64,23 @@ def patch_cluster(cluster):
 
 def update_attribute_cache(cluster):
     """Update attribute cache based on plugged attributes."""
-    if cluster.PLUGGED_ATTR_READS:
-        attrs = [
-            make_attribute(cluster.attridx.get(attr, attr), value)
-            for attr, value in cluster.PLUGGED_ATTR_READS.items()
-        ]
-        hdr = make_zcl_header(zcl_f.Command.Report_Attributes)
-        hdr.frame_control.disable_default_response = True
-        cluster.handle_message(hdr, [attrs])
+    if not cluster.PLUGGED_ATTR_READS:
+        return
+
+    attrs = []
+    for attrid, value in cluster.PLUGGED_ATTR_READS.items():
+        if isinstance(attrid, str):
+            attrid = cluster.attributes_by_name[attrid].id
+        else:
+            attrid = zigpy.types.uint16_t(attrid)
+        attrs.append(make_attribute(attrid, value))
+
+    hdr = make_zcl_header(zcl_f.Command.Report_Attributes)
+    hdr.frame_control.disable_default_response = True
+    msg = zcl_f.GENERAL_COMMANDS[zcl_f.GeneralCommand.Report_Attributes].schema(
+        attribute_reports=attrs
+    )
+    cluster.handle_message(hdr, msg)
 
 
 def get_zha_gateway(hass):
@@ -96,50 +111,63 @@ async def send_attributes_report(hass, cluster: zigpy.zcl.Cluster, attributes: d
     This is to simulate the normal device communication that happens when a
     device is paired to the zigbee network.
     """
-    attrs = [
-        make_attribute(cluster.attridx.get(attr, attr), value)
-        for attr, value in attributes.items()
-    ]
-    hdr = make_zcl_header(zcl_f.Command.Report_Attributes)
+    attrs = []
+
+    for attrid, value in attributes.items():
+        if isinstance(attrid, str):
+            attrid = cluster.attributes_by_name[attrid].id
+        else:
+            attrid = zigpy.types.uint16_t(attrid)
+
+        attrs.append(make_attribute(attrid, value))
+
+    msg = zcl_f.GENERAL_COMMANDS[zcl_f.GeneralCommand.Report_Attributes].schema(
+        attribute_reports=attrs
+    )
+
+    hdr = make_zcl_header(zcl_f.GeneralCommand.Report_Attributes)
     hdr.frame_control.disable_default_response = True
-    cluster.handle_message(hdr, [attrs])
+    cluster.handle_message(hdr, msg)
     await hass.async_block_till_done()
 
 
-async def find_entity_id(domain, zha_device, hass):
+async def find_entity_id(domain, zha_device, hass, qualifier=None):
     """Find the entity id under the testing.
 
     This is used to get the entity id in order to get the state from the state
     machine so that we can test state changes.
     """
-    entities = await find_entity_ids(domain, zha_device, hass)
+    entities = find_entity_ids(domain, zha_device, hass)
     if not entities:
         return None
-    return entities[0]
+    if qualifier:
+        for entity_id in entities:
+            if qualifier in entity_id:
+                return entity_id
+    else:
+        return entities[0]
 
 
-async def find_entity_ids(domain, zha_device, hass):
+def find_entity_ids(domain, zha_device, hass):
     """Find the entity ids under the testing.
 
     This is used to get the entity id in order to get the state from the state
     machine so that we can test state changes.
     """
-    ieeetail = "".join([f"{o:02x}" for o in zha_device.ieee[:4]])
-    head = f"{domain}.{slugify(f'{zha_device.name} {ieeetail}')}"
 
-    enitiy_ids = hass.states.async_entity_ids(domain)
-    await hass.async_block_till_done()
-
-    res = []
-    for entity_id in enitiy_ids:
-        if entity_id.startswith(head):
-            res.append(entity_id)
-    return res
+    registry = entity_registry.async_get(hass)
+    return [
+        entity.entity_id
+        for entity in entity_registry.async_entries_for_device(
+            registry, zha_device.device_id
+        )
+        if entity.domain == domain
+    ]
 
 
 def async_find_group_entity_id(hass, domain, group):
     """Find the group entity id under test."""
-    entity_id = f"{domain}.{group.name.lower().replace(' ','_')}_zha_group_0x{group.group_id:04x}"
+    entity_id = f"{domain}.fakemanufacturer_fakemodel_{group.name.lower().replace(' ','_')}_zha_group_0x{group.group_id:04x}"
 
     entity_ids = hass.states.async_entity_ids(domain)
 
@@ -207,4 +235,11 @@ async def async_wait_for_updates(hass):
     await hass.async_block_till_done()
     await asyncio.sleep(0)
     await asyncio.sleep(0)
+    await hass.async_block_till_done()
+
+
+async def async_shift_time(hass):
+    """Shift time to cause call later tasks to run."""
+    next_update = dt_util.utcnow() + timedelta(seconds=11)
+    async_fire_time_changed(hass, next_update)
     await hass.async_block_till_done()

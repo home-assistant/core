@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_token": "Ge\u00e7ersiz eri\u015fim anahtar\u0131",
+            "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu",
+            "unknown": "Beklenmeyen hata"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "not_allowing_new_tokens": "Nanoleaf yeni anahtarlara izin vermiyor, yukar\u0131daki talimatlar\u0131 izleyin.",
+            "unknown": "Beklenmeyen hata"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "link": {
+                "description": "Nanoleaf'inizdeki g\u00fc\u00e7 d\u00fc\u011fmesini d\u00fc\u011fme LED'leri yan\u0131p s\u00f6nmeye ba\u015flayana kadar 5 saniye bas\u0131l\u0131 tutun, ard\u0131ndan 30 saniye i\u00e7inde **G\u00d6NDER**'e t\u0131klay\u0131n.",
+                "title": "Ba\u011flant\u0131 Nanoleaf"
+            },
+            "user": {
+                "data": {
+                    "host": "Sunucu"
+                }
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "swipe_down": "A\u015fa\u011f\u0131 Kayd\u0131r",
+            "swipe_left": "Sola Kayd\u0131r",
+            "swipe_right": "Sa\u011fa Kayd\u0131r",
+            "swipe_up": "Yukar\u0131 Kayd\u0131r"
+        }
+    }
+}

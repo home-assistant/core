@@ -12,7 +12,6 @@ from homeassistant import config_entries, exceptions
 from homeassistant.components import zeroconf
 from homeassistant.const import CONF_HOST, CONF_TYPE
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import DOMAIN, PRINTER_TYPES
 from .utils import get_snmp_engine
@@ -43,7 +42,7 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize."""
-        self.brother: Brother = None
+        self.brother: Brother
         self.host: str | None = None
 
     async def async_step_user(
@@ -81,17 +80,16 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_zeroconf(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle zeroconf discovery."""
-        # Hostname is format: brother.local.
-        self.host = discovery_info[zeroconf.ATTR_HOSTNAME].rstrip(".")
+        self.host = discovery_info.host
 
         # Do not probe the device if the host is already configured
         self._async_abort_entries_match({CONF_HOST: self.host})
 
         snmp_engine = get_snmp_engine(self.hass)
-        model = discovery_info.get(zeroconf.ATTR_PROPERTIES, {}).get("product")
+        model = discovery_info.properties.get("product")
 
         try:
             self.brother = Brother(self.host, snmp_engine=snmp_engine, model=model)
@@ -103,7 +101,7 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Check if already configured
         await self.async_set_unique_id(self.brother.serial.lower())
-        self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured({CONF_HOST: self.host})
 
         self.context.update(
             {

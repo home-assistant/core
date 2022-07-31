@@ -1,4 +1,4 @@
-"""Standard conversastion implementation for Home Assistant."""
+"""Standard conversation implementation for Home Assistant."""
 from __future__ import annotations
 
 import re
@@ -112,7 +112,7 @@ class DefaultAgent(AbstractConversationAgent):
 
     async def async_process(
         self, text: str, context: core.Context, conversation_id: str | None = None
-    ) -> intent.IntentResponse:
+    ) -> intent.IntentResponse | None:
         """Process a sentence."""
         intents = self.hass.data[DOMAIN]
 
@@ -129,3 +129,5 @@ class DefaultAgent(AbstractConversationAgent):
                     text,
                     context,
                 )
+
+        return None

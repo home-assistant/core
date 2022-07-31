@@ -1,6 +1,10 @@
 """Provides device triggers for sensors."""
 import voluptuous as vol
 
+from homeassistant.components.automation import (
+    AutomationActionType,
+    AutomationTriggerInfo,
+)
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
@@ -14,46 +18,30 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_FOR,
     CONF_TYPE,
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_CO,
-    DEVICE_CLASS_CO2,
-    DEVICE_CLASS_CURRENT,
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_GAS,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_NITROGEN_DIOXIDE,
-    DEVICE_CLASS_NITROGEN_MONOXIDE,
-    DEVICE_CLASS_NITROUS_OXIDE,
-    DEVICE_CLASS_OZONE,
-    DEVICE_CLASS_PM1,
-    DEVICE_CLASS_PM10,
-    DEVICE_CLASS_PM25,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_POWER_FACTOR,
-    DEVICE_CLASS_PRESSURE,
-    DEVICE_CLASS_SIGNAL_STRENGTH,
-    DEVICE_CLASS_SULPHUR_DIOXIDE,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
-    DEVICE_CLASS_VOLTAGE,
 )
-from homeassistant.core import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity import get_device_class, get_unit_of_measurement
-from homeassistant.helpers.entity_registry import async_entries_for_device
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers.entity import (
+    get_capability,
+    get_device_class,
+    get_unit_of_measurement,
+)
+from homeassistant.helpers.typing import ConfigType
 
-from . import DOMAIN
+from . import ATTR_STATE_CLASS, DOMAIN, SensorDeviceClass
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
 DEVICE_CLASS_NONE = "none"
 
+CONF_APPARENT_POWER = "apparent_power"
 CONF_BATTERY_LEVEL = "battery_level"
 CONF_CO = "carbon_monoxide"
 CONF_CO2 = "carbon_dioxide"
 CONF_CURRENT = "current"
 CONF_ENERGY = "energy"
+CONF_FREQUENCY = "frequency"
 CONF_GAS = "gas"
 CONF_HUMIDITY = "humidity"
 CONF_ILLUMINANCE = "illuminance"
@@ -67,6 +55,7 @@ CONF_PM25 = "pm25"
 CONF_POWER = "power"
 CONF_POWER_FACTOR = "power_factor"
 CONF_PRESSURE = "pressure"
+CONF_REACTIVE_POWER = "reactive_power"
 CONF_SIGNAL_STRENGTH = "signal_strength"
 CONF_SULPHUR_DIOXIDE = "sulphur_dioxide"
 CONF_TEMPERATURE = "temperature"
@@ -75,31 +64,34 @@ CONF_VOLTAGE = "voltage"
 CONF_VALUE = "value"
 
 ENTITY_TRIGGERS = {
-    DEVICE_CLASS_BATTERY: [{CONF_TYPE: CONF_BATTERY_LEVEL}],
-    DEVICE_CLASS_CO: [{CONF_TYPE: CONF_CO}],
-    DEVICE_CLASS_CO2: [{CONF_TYPE: CONF_CO2}],
-    DEVICE_CLASS_CURRENT: [{CONF_TYPE: CONF_CURRENT}],
-    DEVICE_CLASS_ENERGY: [{CONF_TYPE: CONF_ENERGY}],
-    DEVICE_CLASS_GAS: [{CONF_TYPE: CONF_GAS}],
-    DEVICE_CLASS_HUMIDITY: [{CONF_TYPE: CONF_HUMIDITY}],
-    DEVICE_CLASS_ILLUMINANCE: [{CONF_TYPE: CONF_ILLUMINANCE}],
-    DEVICE_CLASS_NITROGEN_DIOXIDE: [{CONF_TYPE: CONF_NITROGEN_DIOXIDE}],
-    DEVICE_CLASS_NITROGEN_MONOXIDE: [{CONF_TYPE: CONF_NITROGEN_MONOXIDE}],
-    DEVICE_CLASS_NITROUS_OXIDE: [{CONF_TYPE: CONF_NITROUS_OXIDE}],
-    DEVICE_CLASS_OZONE: [{CONF_TYPE: CONF_OZONE}],
-    DEVICE_CLASS_PM1: [{CONF_TYPE: CONF_PM1}],
-    DEVICE_CLASS_PM10: [{CONF_TYPE: CONF_PM10}],
-    DEVICE_CLASS_PM25: [{CONF_TYPE: CONF_PM25}],
-    DEVICE_CLASS_POWER: [{CONF_TYPE: CONF_POWER}],
-    DEVICE_CLASS_POWER_FACTOR: [{CONF_TYPE: CONF_POWER_FACTOR}],
-    DEVICE_CLASS_PRESSURE: [{CONF_TYPE: CONF_PRESSURE}],
-    DEVICE_CLASS_SIGNAL_STRENGTH: [{CONF_TYPE: CONF_SIGNAL_STRENGTH}],
-    DEVICE_CLASS_SULPHUR_DIOXIDE: [{CONF_TYPE: CONF_SULPHUR_DIOXIDE}],
-    DEVICE_CLASS_TEMPERATURE: [{CONF_TYPE: CONF_TEMPERATURE}],
-    DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS: [
+    SensorDeviceClass.APPARENT_POWER: [{CONF_TYPE: CONF_APPARENT_POWER}],
+    SensorDeviceClass.BATTERY: [{CONF_TYPE: CONF_BATTERY_LEVEL}],
+    SensorDeviceClass.CO: [{CONF_TYPE: CONF_CO}],
+    SensorDeviceClass.CO2: [{CONF_TYPE: CONF_CO2}],
+    SensorDeviceClass.CURRENT: [{CONF_TYPE: CONF_CURRENT}],
+    SensorDeviceClass.ENERGY: [{CONF_TYPE: CONF_ENERGY}],
+    SensorDeviceClass.FREQUENCY: [{CONF_TYPE: CONF_FREQUENCY}],
+    SensorDeviceClass.GAS: [{CONF_TYPE: CONF_GAS}],
+    SensorDeviceClass.HUMIDITY: [{CONF_TYPE: CONF_HUMIDITY}],
+    SensorDeviceClass.ILLUMINANCE: [{CONF_TYPE: CONF_ILLUMINANCE}],
+    SensorDeviceClass.NITROGEN_DIOXIDE: [{CONF_TYPE: CONF_NITROGEN_DIOXIDE}],
+    SensorDeviceClass.NITROGEN_MONOXIDE: [{CONF_TYPE: CONF_NITROGEN_MONOXIDE}],
+    SensorDeviceClass.NITROUS_OXIDE: [{CONF_TYPE: CONF_NITROUS_OXIDE}],
+    SensorDeviceClass.OZONE: [{CONF_TYPE: CONF_OZONE}],
+    SensorDeviceClass.PM1: [{CONF_TYPE: CONF_PM1}],
+    SensorDeviceClass.PM10: [{CONF_TYPE: CONF_PM10}],
+    SensorDeviceClass.PM25: [{CONF_TYPE: CONF_PM25}],
+    SensorDeviceClass.POWER: [{CONF_TYPE: CONF_POWER}],
+    SensorDeviceClass.POWER_FACTOR: [{CONF_TYPE: CONF_POWER_FACTOR}],
+    SensorDeviceClass.PRESSURE: [{CONF_TYPE: CONF_PRESSURE}],
+    SensorDeviceClass.REACTIVE_POWER: [{CONF_TYPE: CONF_REACTIVE_POWER}],
+    SensorDeviceClass.SIGNAL_STRENGTH: [{CONF_TYPE: CONF_SIGNAL_STRENGTH}],
+    SensorDeviceClass.SULPHUR_DIOXIDE: [{CONF_TYPE: CONF_SULPHUR_DIOXIDE}],
+    SensorDeviceClass.TEMPERATURE: [{CONF_TYPE: CONF_TEMPERATURE}],
+    SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: [
         {CONF_TYPE: CONF_VOLATILE_ORGANIC_COMPOUNDS}
     ],
-    DEVICE_CLASS_VOLTAGE: [{CONF_TYPE: CONF_VOLTAGE}],
+    SensorDeviceClass.VOLTAGE: [{CONF_TYPE: CONF_VOLTAGE}],
     DEVICE_CLASS_NONE: [{CONF_TYPE: CONF_VALUE}],
 }
 
@@ -110,11 +102,13 @@ TRIGGER_SCHEMA = vol.All(
             vol.Required(CONF_ENTITY_ID): cv.entity_id,
             vol.Required(CONF_TYPE): vol.In(
                 [
+                    CONF_APPARENT_POWER,
                     CONF_BATTERY_LEVEL,
                     CONF_CO,
                     CONF_CO2,
                     CONF_CURRENT,
                     CONF_ENERGY,
+                    CONF_FREQUENCY,
                     CONF_GAS,
                     CONF_HUMIDITY,
                     CONF_ILLUMINANCE,
@@ -128,6 +122,7 @@ TRIGGER_SCHEMA = vol.All(
                     CONF_POWER,
                     CONF_POWER_FACTOR,
                     CONF_PRESSURE,
+                    CONF_REACTIVE_POWER,
                     CONF_SIGNAL_STRENGTH,
                     CONF_SULPHUR_DIOXIDE,
                     CONF_TEMPERATURE,
@@ -145,7 +140,12 @@ TRIGGER_SCHEMA = vol.All(
 )
 
 
-async def async_attach_trigger(hass, config, action, automation_info):
+async def async_attach_trigger(
+    hass: HomeAssistant,
+    config: ConfigType,
+    action: AutomationActionType,
+    automation_info: AutomationTriggerInfo,
+) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
     numeric_state_config = {
         numeric_state_trigger.CONF_PLATFORM: "numeric_state",
@@ -158,28 +158,33 @@ async def async_attach_trigger(hass, config, action, automation_info):
     if CONF_FOR in config:
         numeric_state_config[CONF_FOR] = config[CONF_FOR]
 
-    numeric_state_config = numeric_state_trigger.TRIGGER_SCHEMA(numeric_state_config)
+    numeric_state_config = await numeric_state_trigger.async_validate_trigger_config(
+        hass, numeric_state_config
+    )
     return await numeric_state_trigger.async_attach_trigger(
         hass, numeric_state_config, action, automation_info, platform_type="device"
     )
 
 
-async def async_get_triggers(hass, device_id):
+async def async_get_triggers(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, str]]:
     """List device triggers."""
-    triggers = []
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    triggers: list[dict[str, str]] = []
+    entity_registry = er.async_get(hass)
 
     entries = [
         entry
-        for entry in async_entries_for_device(entity_registry, device_id)
+        for entry in er.async_entries_for_device(entity_registry, device_id)
         if entry.domain == DOMAIN
     ]
 
     for entry in entries:
         device_class = get_device_class(hass, entry.entity_id) or DEVICE_CLASS_NONE
+        state_class = get_capability(hass, entry.entity_id, ATTR_STATE_CLASS)
         unit_of_measurement = get_unit_of_measurement(hass, entry.entity_id)
 
-        if not unit_of_measurement:
+        if not unit_of_measurement and not state_class:
             continue
 
         templates = ENTITY_TRIGGERS.get(
@@ -200,7 +205,9 @@ async def async_get_triggers(hass, device_id):
     return triggers
 
 
-async def async_get_trigger_capabilities(hass, config):
+async def async_get_trigger_capabilities(
+    hass: HomeAssistant, config: ConfigType
+) -> dict[str, vol.Schema]:
     """List trigger capabilities."""
     try:
         unit_of_measurement = get_unit_of_measurement(hass, config[CONF_ENTITY_ID])

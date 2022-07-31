@@ -1,9 +1,12 @@
 """Test Dynalite light."""
-
 from dynalite_devices_lib.light import DynaliteChannelLightDevice
 import pytest
 
-from homeassistant.components.light import SUPPORT_BRIGHTNESS
+from homeassistant.components.light import (
+    ATTR_COLOR_MODE,
+    ATTR_SUPPORTED_COLOR_MODES,
+    ColorMode,
+)
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_SUPPORTED_FEATURES,
@@ -32,7 +35,9 @@ async def test_light_setup(hass, mock_device):
     entity_state = hass.states.get("light.name")
     assert entity_state.attributes[ATTR_FRIENDLY_NAME] == mock_device.name
     assert entity_state.attributes["brightness"] == mock_device.brightness
-    assert entity_state.attributes[ATTR_SUPPORTED_FEATURES] == SUPPORT_BRIGHTNESS
+    assert entity_state.attributes[ATTR_COLOR_MODE] == ColorMode.BRIGHTNESS
+    assert entity_state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.BRIGHTNESS]
+    assert entity_state.attributes[ATTR_SUPPORTED_FEATURES] == 0
     await run_service_tests(
         hass,
         mock_device,

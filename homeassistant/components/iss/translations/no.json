@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "latitude_longitude_not_defined": "Bredde- og lengdegrad er ikke definert i Home Assistant.",
+            "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
+        },
+        "step": {
+            "user": {
+                "description": "Vil du konfigurere den internasjonale romstasjonen (ISS)?"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_on_map": "Vis p\u00e5 kart"
+                }
+            }
+        }
+    }
+}

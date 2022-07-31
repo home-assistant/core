@@ -23,10 +23,10 @@
         "step": {
             "init": {
                 "data": {
-                    "fallback": "Abilitare la modalit\u00e0 di fallback."
+                    "fallback": "Scegli la modalit\u00e0 di ripiego."
                 },
-                "description": "La modalit\u00e0 di fallback passer\u00e0 a Smart Schedule al prossimo cambio di programma dopo aver regolato manualmente una zona.",
-                "title": "Regolare le opzioni di Tado."
+                "description": "La modalit\u00e0 di ripiego ti consente di scegliere quando eseguire il ripiego alla pianificazione intelligente dalla sovrapposizione manuale delle zone. (NEXT_TIME_BLOCK:= Modifica alla successiva modifica della pianificazione intelligente; MANUAL:= Non modificare fino all'annullamento; TADO_DEFAULT:= Modifica in base alle tue impostazioni nell'applicazione Tado).",
+                "title": "Regola le opzioni di Tado."
             }
         }
     }

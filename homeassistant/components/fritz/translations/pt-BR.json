@@ -1,0 +1,56 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado",
+            "already_in_progress": "O fluxo de configura\u00e7\u00e3o j\u00e1 est\u00e1 em andamento",
+            "ignore_ip6_link_local": "O endere\u00e7o local IPv6 n\u00e3o \u00e9 suportado.",
+            "reauth_successful": "A reautentica\u00e7\u00e3o foi bem-sucedida"
+        },
+        "error": {
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado",
+            "already_in_progress": "O fluxo de configura\u00e7\u00e3o j\u00e1 est\u00e1 em andamento",
+            "cannot_connect": "Falha ao conectar",
+            "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida",
+            "upnp_not_configured": "Faltam configura\u00e7\u00f5es de UPnP no dispositivo."
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm": {
+                "data": {
+                    "password": "Senha",
+                    "username": "Usu\u00e1rio"
+                },
+                "description": "Descoberto FRITZ!Box: {name} \n\n Configure as Ferramentas do FRITZ!Box para controlar o seu {name}",
+                "title": "Configurar as Ferramentas do FRITZ!Box"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Senha",
+                    "username": "Usu\u00e1rio"
+                },
+                "description": "Atualize as credenciais do FRITZ!Box Tools para: {host} . \n\n O FRITZ!Box Tools n\u00e3o consegue iniciar sess\u00e3o no seu FRITZ!Box.",
+                "title": "Atualizando as Ferramentas do FRITZ!Box - credenciais"
+            },
+            "user": {
+                "data": {
+                    "host": "Nome do host",
+                    "password": "Senha",
+                    "port": "Porta",
+                    "username": "Usu\u00e1rio"
+                },
+                "description": "Configure as Ferramentas do FRITZ!Box para controlar o seu FRITZ!Box.\nM\u00ednimo necess\u00e1rio: nome de usu\u00e1rio, senha.",
+                "title": "Configurar as Ferramentas do FRITZ!Box"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "consider_home": "Segundos para considerar um dispositivo em 'casa'",
+                    "old_discovery": "Ativar m\u00e9todo de descoberta antigo"
+                }
+            }
+        }
+    }
+}

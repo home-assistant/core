@@ -12,8 +12,11 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "API Anahtar\u0131"
-                }
+                    "api_key": "API Anahtar\u0131",
+                    "name": "Bu kurulumun ad\u0131",
+                    "site_id": "SolarEdge site kimli\u011fi"
+                },
+                "title": "Bu kurulum i\u00e7in API parametrelerini tan\u0131mlay\u0131n"
             }
         }
     }

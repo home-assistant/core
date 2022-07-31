@@ -62,7 +62,8 @@
                     "port": "\ud3ec\ud2b8",
                     "username": "\uc0ac\uc6a9\uc790 \uc774\ub984"
                 },
-                "description": "MQTT \ube0c\ub85c\ucee4\uc640\uc758 \uc5f0\uacb0 \uc815\ubcf4\ub97c \uc785\ub825\ud574\uc8fc\uc138\uc694."
+                "description": "MQTT \ube0c\ub85c\ucee4\uc640\uc758 \uc5f0\uacb0 \uc815\ubcf4\ub97c \uc785\ub825\ud574\uc8fc\uc138\uc694.",
+                "title": "\ube0c\ub85c\ucee4 \uc635\uc158"
             },
             "options": {
                 "data": {
@@ -78,7 +79,8 @@
                     "will_retain": "Will \uba54\uc2dc\uc9c0 \ub9ac\ud14c\uc778",
                     "will_topic": "Will \uba54\uc2dc\uc9c0 \ud1a0\ud53d"
                 },
-                "description": "MQTT \uc635\uc158\uc744 \uc120\ud0dd\ud574\uc8fc\uc138\uc694."
+                "description": "MQTT \uc635\uc158\uc744 \uc120\ud0dd\ud574\uc8fc\uc138\uc694.",
+                "title": "MQTT \uc635\uc158"
             }
         }
     }

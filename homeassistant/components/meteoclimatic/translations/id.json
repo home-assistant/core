@@ -6,6 +6,16 @@
         },
         "error": {
             "not_found": "Tidak ada perangkat yang ditemukan di jaringan"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "code": "Kode stasiun"
+                },
+                "data_description": {
+                    "code": "Sepertinya ESCAT4300000043206B"
+                }
+            }
         }
     }
 }

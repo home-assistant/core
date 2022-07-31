@@ -1,0 +1,11 @@
+{
+    "device_automation": {
+        "trigger_type": {
+            "codelock": "k\u00f3dz\u00e1rol\u00e1si k\u00f3d \u00e9rkezett",
+            "fingerprint": "ujjlenyomatk\u00f3d \u00e9rkezett",
+            "send_keys": "kulcs/gomb \u00e9rkezett",
+            "transmitter": "t\u00e1vvez\u00e9rl\u0151 k\u00f3d \u00e9rkezett",
+            "transponder": "transzponder k\u00f3d \u00e9rkezett"
+        }
+    }
+}

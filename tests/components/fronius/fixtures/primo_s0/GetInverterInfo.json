@@ -1,0 +1,33 @@
+{
+  "Body": {
+    "Data": {
+      "1": {
+        "CustomName": "&#80;&#114;&#105;&#109;&#111;&#32;&#53;&#46;&#48;&#45;&#49;",
+        "DT": 76,
+        "ErrorCode": 0,
+        "PVPower": 5160,
+        "Show": 1,
+        "StatusCode": 7,
+        "UniqueID": "123456"
+      },
+      "2": {
+        "CustomName": "&#80;&#114;&#105;&#109;&#111;&#32;&#51;&#46;&#48;&#45;&#49;",
+        "DT": 81,
+        "ErrorCode": 0,
+        "PVPower": 3240,
+        "Show": 1,
+        "StatusCode": 7,
+        "UniqueID": "234567"
+      }
+    }
+  },
+  "Head": {
+    "RequestArguments": {},
+    "Status": {
+      "Code": 0,
+      "Reason": "",
+      "UserMessage": ""
+    },
+    "Timestamp": "2021-12-09T15:34:06-03:00"
+  }
+}

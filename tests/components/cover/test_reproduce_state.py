@@ -16,6 +16,7 @@ from homeassistant.const import (
     STATE_OPEN,
 )
 from homeassistant.core import State
+from homeassistant.helpers.state import async_reproduce_state
 
 from tests.common import async_mock_service
 
@@ -61,7 +62,8 @@ async def test_reproducing_states(hass, caplog):
     )
 
     # These calls should do nothing as entities already in desired state
-    await hass.helpers.state.async_reproduce_state(
+    await async_reproduce_state(
+        hass,
         [
             State("cover.entity_close", STATE_CLOSED),
             State(
@@ -93,7 +95,7 @@ async def test_reproducing_states(hass, caplog):
                 STATE_OPEN,
                 {ATTR_CURRENT_POSITION: 100, ATTR_CURRENT_TILT_POSITION: 100},
             ),
-        ]
+        ],
     )
 
     assert len(close_calls) == 0
@@ -104,9 +106,7 @@ async def test_reproducing_states(hass, caplog):
     assert len(position_tilt_calls) == 0
 
     # Test invalid state is handled
-    await hass.helpers.state.async_reproduce_state(
-        [State("cover.entity_close", "not_supported")]
-    )
+    await async_reproduce_state(hass, [State("cover.entity_close", "not_supported")])
 
     assert "not_supported" in caplog.text
     assert len(close_calls) == 0
@@ -117,7 +117,8 @@ async def test_reproducing_states(hass, caplog):
     assert len(position_tilt_calls) == 0
 
     # Make sure correct services are called
-    await hass.helpers.state.async_reproduce_state(
+    await async_reproduce_state(
+        hass,
         [
             State("cover.entity_close", STATE_OPEN),
             State(

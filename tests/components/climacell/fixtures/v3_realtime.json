@@ -37,11 +37,11 @@
     "units": "mph"
   },
   "precipitation_type": {
-      "value": "rain"
+    "value": "rain"
   },
   "cloud_cover": {
-      "value": 100,
-      "units": "%"
+    "value": 100,
+    "units": "%"
   },
   "fire_index": {
     "value": 9

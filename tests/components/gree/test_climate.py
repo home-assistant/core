@@ -6,6 +6,7 @@ from greeclimate.device import HorizontalSwing, VerticalSwing
 from greeclimate.exceptions import DeviceNotBoundError, DeviceTimeoutError
 import pytest
 
+from homeassistant.components.climate import ClimateEntityFeature
 from homeassistant.components.climate.const import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
@@ -17,12 +18,6 @@ from homeassistant.components.climate.const import (
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_COOL,
-    HVAC_MODE_DRY,
-    HVAC_MODE_FAN_ONLY,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
     PRESET_AWAY,
     PRESET_BOOST,
     PRESET_ECO,
@@ -37,17 +32,10 @@ from homeassistant.components.climate.const import (
     SWING_HORIZONTAL,
     SWING_OFF,
     SWING_VERTICAL,
+    HVACMode,
 )
-from homeassistant.components.gree.climate import (
-    FAN_MODES_REVERSE,
-    HVAC_MODES_REVERSE,
-    SUPPORTED_FEATURES,
-)
-from homeassistant.components.gree.const import (
-    DOMAIN as GREE_DOMAIN,
-    FAN_MEDIUM_HIGH,
-    FAN_MEDIUM_LOW,
-)
+from homeassistant.components.gree.climate import FAN_MODES_REVERSE, HVAC_MODES_REVERSE
+from homeassistant.components.gree.const import FAN_MEDIUM_HIGH, FAN_MEDIUM_LOW
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
@@ -59,12 +47,11 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from .common import build_device_mock
+from .common import async_setup_gree, build_device_mock
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import async_fire_time_changed
 
 ENTITY_ID = f"{DOMAIN}.fake_device_1"
 
@@ -73,13 +60,6 @@ ENTITY_ID = f"{DOMAIN}.fake_device_1"
 def mock_now():
     """Fixture for dtutil.now."""
     return dt_util.utcnow()
-
-
-async def async_setup_gree(hass):
-    """Set up the gree platform."""
-    MockConfigEntry(domain=GREE_DOMAIN).add_to_hass(hass)
-    await async_setup_component(hass, GREE_DOMAIN, {GREE_DOMAIN: {"climate": {}}})
-    await hass.async_block_till_done()
 
 
 async def test_discovery_called_once(hass, discovery, device):
@@ -358,7 +338,7 @@ async def test_send_power_on(hass, discovery, device, mock_now):
 
     state = hass.states.get(ENTITY_ID)
     assert state is not None
-    assert state.state == HVAC_MODE_OFF
+    assert state.state == HVACMode.OFF
 
 
 async def test_send_power_off_device_timeout(hass, discovery, device, mock_now):
@@ -376,7 +356,7 @@ async def test_send_power_off_device_timeout(hass, discovery, device, mock_now):
 
     state = hass.states.get(ENTITY_ID)
     assert state is not None
-    assert state.state == HVAC_MODE_OFF
+    assert state.state == HVACMode.OFF
 
 
 @pytest.mark.parametrize(
@@ -543,12 +523,12 @@ async def test_update_preset_mode(hass, discovery, device, mock_now, preset):
 @pytest.mark.parametrize(
     "hvac_mode",
     (
-        HVAC_MODE_OFF,
-        HVAC_MODE_AUTO,
-        HVAC_MODE_COOL,
-        HVAC_MODE_DRY,
-        HVAC_MODE_FAN_ONLY,
-        HVAC_MODE_HEAT,
+        HVACMode.OFF,
+        HVACMode.AUTO,
+        HVACMode.COOL,
+        HVACMode.DRY,
+        HVACMode.FAN_ONLY,
+        HVACMode.HEAT,
     ),
 )
 async def test_send_hvac_mode(hass, discovery, device, mock_now, hvac_mode):
@@ -569,7 +549,7 @@ async def test_send_hvac_mode(hass, discovery, device, mock_now, hvac_mode):
 
 @pytest.mark.parametrize(
     "hvac_mode",
-    (HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_DRY, HVAC_MODE_FAN_ONLY, HVAC_MODE_HEAT),
+    (HVACMode.AUTO, HVACMode.COOL, HVACMode.DRY, HVACMode.FAN_ONLY, HVACMode.HEAT),
 )
 async def test_send_hvac_mode_device_timeout(
     hass, discovery, device, mock_now, hvac_mode
@@ -594,17 +574,17 @@ async def test_send_hvac_mode_device_timeout(
 @pytest.mark.parametrize(
     "hvac_mode",
     (
-        HVAC_MODE_OFF,
-        HVAC_MODE_AUTO,
-        HVAC_MODE_COOL,
-        HVAC_MODE_DRY,
-        HVAC_MODE_FAN_ONLY,
-        HVAC_MODE_HEAT,
+        HVACMode.OFF,
+        HVACMode.AUTO,
+        HVACMode.COOL,
+        HVACMode.DRY,
+        HVACMode.FAN_ONLY,
+        HVACMode.HEAT,
     ),
 )
 async def test_update_hvac_mode(hass, discovery, device, mock_now, hvac_mode):
     """Test for updating hvac mode from the device."""
-    device().power = hvac_mode != HVAC_MODE_OFF
+    device().power = hvac_mode != HVACMode.OFF
     device().mode = HVAC_MODES_REVERSE.get(hvac_mode)
 
     await async_setup_gree(hass)
@@ -783,4 +763,9 @@ async def test_supported_features_with_turnon(hass, discovery, device):
     """Test for supported_features property."""
     await async_setup_gree(hass)
     state = hass.states.get(ENTITY_ID)
-    assert state.attributes[ATTR_SUPPORTED_FEATURES] == SUPPORTED_FEATURES
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.SWING_MODE
+    )

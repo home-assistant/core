@@ -2,10 +2,7 @@
   "data": {
     "id": "stop__9639579",
     "name": "7-й автобусный парк",
-    "coordinates": [
-      37.565280044,
-      55.851959656
-    ],
+    "coordinates": [37.565280044, 55.851959656],
     "currentTime": 1583421546364,
     "tzOffset": 10800,
     "type": "urban",
@@ -52,14 +49,8 @@
       ],
       "seoname": "moscow",
       "bounds": [
-        [
-          37.0402925,
-          55.31141404514547
-        ],
-        [
-          38.2047155,
-          56.190068045145466
-        ]
+        [37.0402925, 55.31141404514547],
+        [38.2047155, 56.190068045145466]
       ],
       "names": {
         "ablative": "",
@@ -100,35 +91,15 @@
         "official_languages": "ru",
         "widespread_languages": "ru",
         "suggest_list": [
-          213,
-          10716,
-          10747,
-          10758,
-          20728,
-          10740,
-          10738,
-          20523,
-          10735,
-          10734,
-          10743,
-          21622
+          213, 10716, 10747, 10758, 20728, 10740, 10738, 20523, 10735, 10734,
+          10743, 21622
         ],
         "is_eu": false,
-        "services_names": [
-          "bs",
-          "yaca",
-          "ad"
-        ],
+        "services_names": ["bs", "yaca", "ad"],
         "seoname": "moscow-and-moscow-oblast",
         "bounds": [
-          [
-            34.8496565,
-            54.439456064325434
-          ],
-          [
-            39.9104055,
-            57.14511506432543
-          ]
+          [34.8496565, 54.439456064325434],
+          [39.9104055, 57.14511506432543]
         ],
         "names": {
           "ablative": "",
@@ -168,36 +139,13 @@
           "tzname": "",
           "official_languages": "ru",
           "widespread_languages": "ru",
-          "suggest_list": [
-            213,
-            2,
-            65,
-            54,
-            47,
-            43,
-            66,
-            51,
-            56,
-            172,
-            39,
-            62
-          ],
+          "suggest_list": [213, 2, 65, 54, 47, 43, 66, 51, 56, 172, 39, 62],
           "is_eu": false,
-          "services_names": [
-            "bs",
-            "yaca",
-            "ad"
-          ],
+          "services_names": ["bs", "yaca", "ad"],
           "seoname": "russia",
           "bounds": [
-            [
-              13.683785499999999,
-              35.290400699917846
-            ],
-            [
-              -174.6729755,
-              75.99052769991785
-            ]
+            [13.683785499999999, 35.290400699917846],
+            [-174.6729755, 75.99052769991785]
           ],
           "names": {
             "ablative": "",
@@ -218,9 +166,7 @@
       {
         "lineId": "2036924633",
         "name": "215",
-        "Types": [
-          "bus"
-        ],
+        "Types": ["bus"],
         "type": "bus",
         "threads": [
           {
@@ -261,9 +207,7 @@
       {
         "lineId": "2036924720",
         "name": "692",
-        "Types": [
-          "bus"
-        ],
+        "Types": ["bus"],
         "type": "bus",
         "threads": [
           {
@@ -325,9 +269,7 @@
       {
         "lineId": "2036924957",
         "name": "т29",
-        "Types": [
-          "bus"
-        ],
+        "Types": ["bus"],
         "type": "bus",
         "threads": [
           {
@@ -403,9 +345,7 @@
       {
         "lineId": "2036924959",
         "name": "т3",
-        "Types": [
-          "bus"
-        ],
+        "Types": ["bus"],
         "type": "bus",
         "threads": [
           {
@@ -473,9 +413,7 @@
       {
         "lineId": "2036924968",
         "name": "82",
-        "Types": [
-          "bus"
-        ],
+        "Types": ["bus"],
         "type": "bus",
         "threads": [
           {
@@ -531,9 +469,7 @@
       {
         "lineId": "2036925396",
         "name": "м10",
-        "Types": [
-          "bus"
-        ],
+        "Types": ["bus"],
         "type": "bus",
         "threads": [
           {
@@ -617,9 +553,7 @@
       {
         "lineId": "2036925416",
         "name": "194",
-        "Types": [
-          "bus"
-        ],
+        "Types": ["bus"],
         "type": "bus",
         "threads": [
           {
@@ -675,9 +609,7 @@
       {
         "lineId": "2036925728",
         "name": "282",
-        "Types": [
-          "bus"
-        ],
+        "Types": ["bus"],
         "type": "bus",
         "threads": [
           {
@@ -751,9 +683,7 @@
       {
         "lineId": "2036926781",
         "name": "154",
-        "Types": [
-          "bus"
-        ],
+        "Types": ["bus"],
         "type": "bus",
         "threads": [
           {
@@ -815,9 +745,7 @@
       {
         "lineId": "2036926818",
         "name": "994",
-        "Types": [
-          "bus"
-        ],
+        "Types": ["bus"],
         "type": "bus",
         "threads": [
           {
@@ -867,9 +795,7 @@
       {
         "lineId": "2036926890",
         "name": "466",
-        "Types": [
-          "bus"
-        ],
+        "Types": ["bus"],
         "type": "bus",
         "threads": [
           {
@@ -935,9 +861,7 @@
       {
         "lineId": "213_114_bus_mosgortrans",
         "name": "114",
-        "Types": [
-          "bus"
-        ],
+        "Types": ["bus"],
         "type": "bus",
         "threads": [
           {
@@ -999,9 +923,7 @@
       {
         "lineId": "213_179_bus_mosgortrans",
         "name": "179",
-        "Types": [
-          "bus"
-        ],
+        "Types": ["bus"],
         "type": "bus",
         "threads": [
           {
@@ -1069,9 +991,7 @@
       {
         "lineId": "213_191m_minibus_default",
         "name": "591",
-        "Types": [
-          "bus"
-        ],
+        "Types": ["bus"],
         "type": "bus",
         "threads": [
           {
@@ -1137,9 +1057,7 @@
       {
         "lineId": "213_36_trolleybus_mosgortrans",
         "name": "т36",
-        "Types": [
-          "bus"
-        ],
+        "Types": ["bus"],
         "type": "bus",
         "threads": [
           {
@@ -1207,9 +1125,7 @@
       {
         "lineId": "213_47_trolleybus_mosgortrans",
         "name": "т47",
-        "Types": [
-          "bus"
-        ],
+        "Types": ["bus"],
         "type": "bus",
         "threads": [
           {
@@ -1285,9 +1201,7 @@
       {
         "lineId": "213_56_trolleybus_mosgortrans",
         "name": "т56",
-        "Types": [
-          "bus"
-        ],
+        "Types": ["bus"],
         "type": "bus",
         "threads": [
           {
@@ -1363,9 +1277,7 @@
       {
         "lineId": "213_677_bus_mosgortrans",
         "name": "677",
-        "Types": [
-          "bus"
-        ],
+        "Types": ["bus"],
         "type": "bus",
         "threads": [
           {
@@ -1427,9 +1339,7 @@
       {
         "lineId": "213_78_trolleybus_mosgortrans",
         "name": "т78",
-        "Types": [
-          "bus"
-        ],
+        "Types": ["bus"],
         "type": "bus",
         "threads": [
           {
@@ -1505,9 +1415,7 @@
       {
         "lineId": "677k_bus_default",
         "name": "677к",
-        "Types": [
-          "bus"
-        ],
+        "Types": ["bus"],
         "type": "bus",
         "threads": [
           {
@@ -1592,10 +1500,7 @@
         "type": "region",
         "url": "https://yandex.ru/maps/213/moscow/",
         "region": {
-          "center": [
-            37.622504,
-            55.753215
-          ],
+          "center": [37.622504, 55.753215],
           "zoom": 10
         }
       },
@@ -1618,23 +1523,11 @@
       "title": "7-й автобусный парк",
       "description": "Россия, Москва, Дмитровское шоссе",
       "address": "Россия, Москва, Дмитровское шоссе",
-      "coordinates": [
-        37.56528,
-        55.85196
-      ],
-      "displayCoordinates": [
-        37.56528,
-        55.85196
-      ],
+      "coordinates": [37.56528, 55.85196],
+      "displayCoordinates": [37.56528, 55.85196],
       "bounds": [
-        [
-          37.543123,
-          55.77889866
-        ],
-        [
-          37.587437,
-          55.92488366
-        ]
+        [37.543123, 55.77889866],
+        [37.587437, 55.92488366]
       ],
       "logId": "dHlwZT1iaXpmaW5kZXI7aWQ9MjM5MzY2OTUwNjU4",
       "uri": "ymapsbm1://transit/stop?id=stop__9639579",
@@ -1645,10 +1538,7 @@
           "name": "Верхние Лихоборы",
           "distance": "510 м",
           "distanceValue": 509.184,
-          "coordinates": [
-            37.56121218,
-            55.854501501
-          ],
+          "coordinates": [37.56121218, 55.854501501],
           "type": "metro",
           "color": "#99cc33"
         },
@@ -1657,10 +1547,7 @@
           "name": "Окружная",
           "distance": "640 м",
           "distanceValue": 641.333,
-          "coordinates": [
-            37.572849014,
-            55.848814359
-          ],
+          "coordinates": [37.572849014, 55.848814359],
           "type": "metro",
           "color": "#ffa8af"
         },
@@ -1669,10 +1556,7 @@
           "name": "Окружная",
           "distance": "1,3 км",
           "distanceValue": 1263.44,
-          "coordinates": [
-            37.575977155,
-            55.844377845
-          ],
+          "coordinates": [37.575977155, 55.844377845],
           "type": "metro",
           "color": "#99cc33"
         }
@@ -1683,10 +1567,7 @@
           "name": "7-й автобусный парк",
           "distance": "0 м",
           "distanceValue": 0.0383997,
-          "coordinates": [
-            37.565280044,
-            55.851959656
-          ],
+          "coordinates": [37.565280044, 55.851959656],
           "type": "common"
         },
         {
@@ -1694,10 +1575,7 @@
           "name": "Метро Верхние Лихоборы",
           "distance": "420 м",
           "distanceValue": 424.302,
-          "coordinates": [
-            37.563047501,
-            55.853727589
-          ],
+          "coordinates": [37.563047501, 55.853727589],
           "type": "common"
         },
         {
@@ -1705,10 +1583,7 @@
           "name": "Метро Верхние Лихоборы (северный вестибюль)",
           "distance": "630 м",
           "distanceValue": 629.689,
-          "coordinates": [
-            37.562346735,
-            55.857147019
-          ],
+          "coordinates": [37.562346735, 55.857147019],
           "type": "common"
         },
         {
@@ -1716,10 +1591,7 @@
           "name": "Окружная",
           "distance": "860 м",
           "distanceValue": 857.487,
-          "coordinates": [
-            37.574303,
-            55.847684
-          ],
+          "coordinates": [37.574303, 55.847684],
           "type": "common"
         },
         {
@@ -1727,25 +1599,16 @@
           "name": "Станция Окружная",
           "distance": "930 м",
           "distanceValue": 926.144,
-          "coordinates": [
-            37.576123886,
-            55.847913668
-          ],
+          "coordinates": [37.576123886, 55.847913668],
           "type": "common"
         }
       ],
       "panorama": {
         "id": "1297826777_672185801_23_1574243990",
-        "direction": [
-          32,
-          10
-        ],
+        "direction": [32, 10],
         "point": {
           "type": "Point",
-          "coordinates": [
-            37.565167718,
-            55.8518591059
-          ]
+          "coordinates": [37.565167718, 55.8518591059]
         },
         "preview": "https://avatars.mds.yandex.net/get-altay/1908863/2a00000169e52b1c1475fd4b51bae1f09966/%s",
         "staticPreview": "https://static-pano.maps.yandex.ru/v1/?panoid=1297826777_672185801_23_1574243990&size=500,240&azimuth=32&tilt=10&signature=fiN27DzM02pZ3x3eVIodfiQQ8tFX2_KGNZocjzsdfnA="
@@ -1778,12 +1641,8 @@
         "has_verified_owner": false,
         "geoproduct_poi_color": "#ABAEB3",
         "snippet_show_photo": "single_photo",
-        "snippet_show_subline": [
-          "no_subline"
-        ],
-        "unusual_hours": [
-          "2020-03-08"
-        ]
+        "snippet_show_subline": ["no_subline"],
+        "unusual_hours": ["2020-03-08"]
       },
       "seoname": "7_y_avtobusny_park",
       "geoId": 117015,
@@ -1795,21 +1654,11 @@
       ],
       "region": {
         "id": 213,
-        "hierarchy": [
-          225,
-          1,
-          213
-        ],
+        "hierarchy": [225, 1, 213],
         "seoname": "moscow",
         "bounds": [
-          [
-            37.0402925,
-            55.31141404514547
-          ],
-          [
-            38.2047155,
-            56.190068045145466
-          ]
+          [37.0402925, 55.31141404514547],
+          [38.2047155, 56.190068045145466]
         ],
         "names": {
           "ablative": "",
@@ -1838,10 +1687,7 @@
           "type": "region",
           "url": "https://yandex.ru/maps/213/moscow/",
           "region": {
-            "center": [
-              37.622504,
-              55.753215
-            ],
+            "center": [37.622504, 55.753215],
             "zoom": 10
           }
         },
@@ -1867,10 +1713,7 @@
         "id": "10049405",
         "seoname": "dmitrovskoye_shosse",
         "kind": "street",
-        "coordinates": [
-          37.547719,
-          55.87593
-        ],
+        "coordinates": [37.547719, 55.87593],
         "encodedCoordinates": "Z04YcwNnTkQOQFtvfXR2dHVgZA=="
       }
     }

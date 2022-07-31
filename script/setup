@@ -24,7 +24,7 @@ fi
 script/bootstrap
 
 pre-commit install
-python3 -m pip install -e . --constraint homeassistant/package_constraints.txt
+python3 -m pip install -e . --constraint homeassistant/package_constraints.txt --use-deprecated=legacy-resolver
 
 hass --script ensure_config -c config
 

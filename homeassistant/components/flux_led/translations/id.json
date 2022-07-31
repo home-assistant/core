@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "already_in_progress": "Alur konfigurasi sedang berlangsung",
+            "no_devices_found": "Tidak ada perangkat yang ditemukan di jaringan"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung"
+        },
+        "flow_title": "{model} {id} ({ipaddr})",
+        "step": {
+            "discovery_confirm": {
+                "description": "Ingin menyiapkan {model} {id} ({ipaddr})?"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Jika host dibiarkan kosong, proses penemuan akan digunakan untuk menemukan perangkat."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "custom_effect_colors": "Efek Khusus: Daftar berisi 1 hingga 16 warna [R,G,B]. Contoh: [255,0,255],[60,128,0]",
+                    "custom_effect_speed_pct": "Efek Khusus: Kecepatan dalam persen untuk efek perubahan warna.",
+                    "custom_effect_transition": "Efek Khusus: Jenis transisi antara warna.",
+                    "mode": "Mode kecerahan yang dipilih."
+                }
+            }
+        }
+    }
+}

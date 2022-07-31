@@ -1,0 +1,38 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto \u00e4r redan konfigurerat"
+        },
+        "error": {
+            "db_url_invalid": "Databasens URL \u00e4r ogiltig",
+            "query_invalid": "SQL fr\u00e5ga \u00e4r ogiltig"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "column": "Kolumn",
+                    "name": "Namn"
+                },
+                "data_description": {
+                    "name": "Namn som kommer att anv\u00e4ndas f\u00f6r konfigurationsinmatning och \u00e4ven f\u00f6r sensorn.",
+                    "value_template": "V\u00e4rdemall (valfritt)"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "db_url_invalid": "Databasens URL \u00e4r ogiltig"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "name": "Namn"
+                },
+                "data_description": {
+                    "name": "Namn som kommer att anv\u00e4ndas f\u00f6r Config Entry och \u00e4ven sensorn"
+                }
+            }
+        }
+    }
+}

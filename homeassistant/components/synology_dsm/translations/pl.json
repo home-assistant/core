@@ -28,16 +28,7 @@
                     "username": "Nazwa u\u017cytkownika",
                     "verify_ssl": "Weryfikacja certyfikatu SSL"
                 },
-                "description": "Czy chcesz skonfigurowa\u0107 {name} ({host})?",
-                "title": "Synology DSM"
-            },
-            "reauth": {
-                "data": {
-                    "password": "Has\u0142o",
-                    "username": "Nazwa u\u017cytkownika"
-                },
-                "description": "Pow\u00f3d: {details}",
-                "title": "Ponownie uwierzytelnij integracj\u0119 Synology DSM"
+                "description": "Czy chcesz skonfigurowa\u0107 {name} ({host})?"
             },
             "reauth_confirm": {
                 "data": {
@@ -54,8 +45,7 @@
                     "ssl": "Certyfikat SSL",
                     "username": "Nazwa u\u017cytkownika",
                     "verify_ssl": "Weryfikacja certyfikatu SSL"
-                },
-                "title": "Synology DSM"
+                }
             }
         }
     },
@@ -64,6 +54,7 @@
             "init": {
                 "data": {
                     "scan_interval": "Cz\u0119stotliwo\u015b\u0107 aktualizacji [min]",
+                    "snap_profile_type": "Poziom jako\u015bci zdj\u0119\u0107 z kamery (0:wysoka 1:\u015brednia 2:niska)",
                     "timeout": "Limit czasu (sekundy)"
                 }
             }

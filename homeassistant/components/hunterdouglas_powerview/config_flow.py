@@ -8,12 +8,13 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS
+from homeassistant.components import dhcp, zeroconf
 from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import async_get_device_info
-from .const import DEVICE_NAME, DEVICE_SERIAL_NUMBER, DOMAIN, HUB_EXCEPTIONS
+from .const import DOMAIN, HUB_EXCEPTIONS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,14 +35,14 @@ async def validate_input(hass: core.HomeAssistant, hub_address: str) -> dict[str
 
     try:
         async with async_timeout.timeout(10):
-            device_info = await async_get_device_info(pv_request)
+            device_info = await async_get_device_info(pv_request, hub_address)
     except HUB_EXCEPTIONS as err:
         raise CannotConnect from err
 
     # Return info that you want to store in the config entry.
     return {
-        "title": device_info[DEVICE_NAME],
-        "unique_id": device_info[DEVICE_SERIAL_NUMBER],
+        "title": device_info.name,
+        "unique_id": device_info.serial_number,
     }
 
 
@@ -85,25 +86,29 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return info, None
 
-    async def async_step_dhcp(self, discovery_info):
+    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle DHCP discovery."""
-        self.discovered_ip = discovery_info[IP_ADDRESS]
-        self.discovered_name = discovery_info[HOSTNAME]
+        self.discovered_ip = discovery_info.ip
+        self.discovered_name = discovery_info.hostname
         return await self.async_step_discovery_confirm()
 
-    async def async_step_zeroconf(self, discovery_info):
+    async def async_step_zeroconf(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
         """Handle zeroconf discovery."""
-        self.discovered_ip = discovery_info[CONF_HOST]
-        name = discovery_info[CONF_NAME]
+        self.discovered_ip = discovery_info.host
+        name = discovery_info.name
         if name.endswith(POWERVIEW_SUFFIX):
             name = name[: -len(POWERVIEW_SUFFIX)]
         self.discovered_name = name
         return await self.async_step_discovery_confirm()
 
-    async def async_step_homekit(self, discovery_info):
+    async def async_step_homekit(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
         """Handle HomeKit discovery."""
-        self.discovered_ip = discovery_info[CONF_HOST]
-        name = discovery_info[CONF_NAME]
+        self.discovered_ip = discovery_info.host
+        name = discovery_info.name
         if name.endswith(HAP_SUFFIX):
             name = name[: -len(HAP_SUFFIX)]
         self.discovered_name = name

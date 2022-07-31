@@ -13,8 +13,11 @@ from pycomfoconnect import (
     SENSOR_FAN_SPEED_MODE,
 )
 
-from homeassistant.components.fan import SUPPORT_SET_SPEED, FanEntity
+from homeassistant.components.fan import FanEntity, FanEntityFeature
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.percentage import (
     int_states_in_range,
     percentage_to_ranged_value,
@@ -35,7 +38,12 @@ CMD_MAPPING = {
 SPEED_RANGE = (1, 3)  # away is not included in speeds and instead mapped to off
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the ComfoConnect fan platform."""
     ccb = hass.data[DOMAIN]
 
@@ -45,11 +53,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class ComfoConnectFan(FanEntity):
     """Representation of the ComfoConnect fan platform."""
 
+    _attr_icon = "mdi:air-conditioner"
+    _attr_should_poll = False
+    _attr_supported_features = FanEntityFeature.SET_SPEED
     current_speed = None
 
     def __init__(self, ccb: ComfoConnectBridge) -> None:
         """Initialize the ComfoConnect fan."""
         self._ccb = ccb
+        self._attr_name = ccb.name
+        self._attr_unique_id = ccb.unique_id
 
     async def async_added_to_hass(self) -> None:
         """Register for sensor updates."""
@@ -65,38 +78,13 @@ class ComfoConnectFan(FanEntity):
             self._ccb.comfoconnect.register_sensor, SENSOR_FAN_SPEED_MODE
         )
 
-    def _handle_update(self, value):
+    def _handle_update(self, value: float) -> None:
         """Handle update callbacks."""
         _LOGGER.debug(
             "Handle update for fan speed (%d): %s", SENSOR_FAN_SPEED_MODE, value
         )
         self.current_speed = value
         self.schedule_update_ha_state()
-
-    @property
-    def should_poll(self) -> bool:
-        """Do not poll."""
-        return False
-
-    @property
-    def unique_id(self):
-        """Return a unique_id for this entity."""
-        return self._ccb.unique_id
-
-    @property
-    def name(self):
-        """Return the name of the fan."""
-        return self._ccb.name
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return "mdi:air-conditioner"
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return SUPPORT_SET_SPEED
 
     @property
     def percentage(self) -> int | None:
@@ -112,10 +100,9 @@ class ComfoConnectFan(FanEntity):
 
     def turn_on(
         self,
-        speed: str | None = None,
         percentage: int | None = None,
         preset_mode: str | None = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """Turn on the fan."""
         if percentage is None:

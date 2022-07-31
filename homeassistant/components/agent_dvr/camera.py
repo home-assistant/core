@@ -4,16 +4,16 @@ import logging
 
 from agent import AgentError
 
-from homeassistant.components.camera import SUPPORT_ON_OFF
-from homeassistant.components.mjpeg.camera import (
-    CONF_MJPEG_URL,
-    CONF_STILL_IMAGE_URL,
-    MjpegCamera,
-    filter_urllib3_logging,
-)
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
-from homeassistant.helpers import entity_platform
+from homeassistant.components.camera import CameraEntityFeature
+from homeassistant.components.mjpeg import MjpegCamera, filter_urllib3_logging
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    async_get_current_platform,
+)
 
 from .const import (
     ATTRIBUTION,
@@ -42,8 +42,10 @@ CAMERA_SERVICES = {
 
 
 async def async_setup_entry(
-    hass, config_entry, async_add_entities, discovery_info=None
-):
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Agent cameras."""
     filter_urllib3_logging()
     cameras = []
@@ -60,7 +62,7 @@ async def async_setup_entry(
 
     async_add_entities(cameras)
 
-    platform = entity_platform.async_get_current_platform()
+    platform = async_get_current_platform()
     for service, method in CAMERA_SERVICES.items():
         platform.async_register_entity_service(service, {}, method)
 
@@ -68,18 +70,19 @@ async def async_setup_entry(
 class AgentCamera(MjpegCamera):
     """Representation of an Agent Device Stream."""
 
+    _attr_supported_features = CameraEntityFeature.ON_OFF
+
     def __init__(self, device):
         """Initialize as a subclass of MjpegCamera."""
-        device_info = {
-            CONF_NAME: device.name,
-            CONF_MJPEG_URL: f"{device.client._server_url}{device.mjpeg_image_url}&size={device.mjpegStreamWidth}x{device.mjpegStreamHeight}",
-            CONF_STILL_IMAGE_URL: f"{device.client._server_url}{device.still_image_url}&size={device.mjpegStreamWidth}x{device.mjpegStreamHeight}",
-        }
         self.device = device
         self._removed = False
         self._attr_name = f"{device.client.name} {device.name}"
         self._attr_unique_id = f"{device._client.unique}_{device.typeID}_{device.id}"
-        super().__init__(device_info)
+        super().__init__(
+            name=device.name,
+            mjpeg_url=f"{device.client._server_url}{device.mjpeg_image_url}&size={device.mjpegStreamWidth}x{device.mjpegStreamHeight}",
+            still_image_url=f"{device.client._server_url}{device.still_image_url}&size={device.mjpegStreamWidth}x{device.mjpegStreamHeight}",
+        )
         self._attr_device_info = DeviceInfo(
             identifiers={(AGENT_DOMAIN, self.unique_id)},
             manufacturer="Agent",
@@ -139,11 +142,6 @@ class AgentCamera(MjpegCamera):
     def connected(self) -> bool:
         """Return True if entity is connected."""
         return self.device.connected
-
-    @property
-    def supported_features(self) -> int:
-        """Return supported features."""
-        return SUPPORT_ON_OFF
 
     @property
     def is_on(self) -> bool:

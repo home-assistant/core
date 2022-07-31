@@ -91,12 +91,12 @@ def make_segment_with_parts(
 ):
     """Create a playlist response for a segment including part segments."""
     response = []
+    if discontinuity:
+        response.append("#EXT-X-DISCONTINUITY")
     for i in range(num_parts):
         response.append(
             f'#EXT-X-PART:DURATION={TEST_PART_DURATION:.3f},URI="./segment/{segment}.{i}.m4s"{",INDEPENDENT=YES" if i%independent_period==0 else ""}'
         )
-    if discontinuity:
-        response.append("#EXT-X-DISCONTINUITY")
     response.extend(
         [
             "#EXT-X-PROGRAM-DATE-TIME:"
@@ -144,7 +144,7 @@ async def test_ll_hls_stream(hass, hls_stream, stream_worker_sync):
 
     # Request stream
     stream.add_provider(HLS_PROVIDER)
-    stream.start()
+    await stream.start()
 
     hls_client = await hls_stream(stream)
 
@@ -243,7 +243,7 @@ async def test_ll_hls_stream(hass, hls_stream, stream_worker_sync):
     stream_worker_sync.resume()
 
     # Stop stream, if it hasn't quit already
-    stream.stop()
+    await stream.stop()
 
     # Ensure playlist not accessible after stream ends
     fail_response = await hls_client.get()
@@ -316,7 +316,7 @@ async def test_ll_hls_playlist_view(hass, hls_stream, stream_worker_sync):
     )
 
     stream_worker_sync.resume()
-    stream.stop()
+    await stream.stop()
 
 
 async def test_ll_hls_msn(hass, hls_stream, stream_worker_sync, hls_sync):

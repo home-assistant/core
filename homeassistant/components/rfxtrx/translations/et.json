@@ -61,7 +61,7 @@
                     "debug": "Luba silumine",
                     "device": "Vali seadistatav seade",
                     "event_code": "Sisesta lisatava s\u00fcndmuse kood",
-                    "remove_device": "Vali eemaldatav seade"
+                    "protocols": "Protokollid"
                 },
                 "title": "Rfxtrx valikud"
             },
@@ -70,11 +70,9 @@
                     "command_off": "V\u00e4ljal\u00fclitamise k\u00e4su andmebittide v\u00e4\u00e4rtus",
                     "command_on": "Sissel\u00fclitamise k\u00e4su andmebittide v\u00e4\u00e4rtus",
                     "data_bit": "Andmebittide arv",
-                    "fire_event": "Luba seadme s\u00fcndmus",
                     "off_delay": "V\u00e4ljal\u00fclitamise viivitus",
                     "off_delay_enabled": "Luba v\u00e4ljal\u00fclitusviivitus",
                     "replace_device": "Vali asendav seade",
-                    "signal_repetitions": "Signaali korduste arv",
                     "venetian_blind_mode": "Ribikardinate juhtimine"
                 },
                 "title": "Seadista seadme valikud"

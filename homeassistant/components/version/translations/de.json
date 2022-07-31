@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "version_source": "Versionsquelle"
+                },
+                "description": "W\u00e4hle die Quelle aus, aus der du Versionen verfolgen m\u00f6chtest",
+                "title": "Installationstyp ausw\u00e4hlen"
+            },
+            "version_source": {
+                "data": {
+                    "beta": "Betaversionen einschlie\u00dfen",
+                    "board": "Welches Board soll getrackt werden",
+                    "channel": "Welcher Kanal soll getrackt werden",
+                    "image": "Welches Bild soll verfolgt werden"
+                },
+                "description": "Konfiguriere {version_source} Versionsverfolgung",
+                "title": "Konfigurieren"
+            }
+        }
+    }
+}

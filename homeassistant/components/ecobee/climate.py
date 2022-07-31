@@ -9,37 +9,29 @@ from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
-    CURRENT_HVAC_COOL,
-    CURRENT_HVAC_DRY,
-    CURRENT_HVAC_FAN,
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
     FAN_AUTO,
     FAN_ON,
-    HVAC_MODE_COOL,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_HEAT_COOL,
-    HVAC_MODE_OFF,
     PRESET_AWAY,
     PRESET_NONE,
-    SUPPORT_AUX_HEAT,
-    SUPPORT_FAN_MODE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_HUMIDITY,
-    SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_RANGE,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
     PRECISION_HALVES,
     PRECISION_TENTHS,
+    STATE_OFF,
     STATE_ON,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.temperature import convert
 
 from .const import _LOGGER, DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
@@ -77,29 +69,29 @@ HUMIDIFIER_MANUAL_MODE = "manual"
 # Order matters, because for reverse mapping we don't want to map HEAT to AUX
 ECOBEE_HVAC_TO_HASS = collections.OrderedDict(
     [
-        ("heat", HVAC_MODE_HEAT),
-        ("cool", HVAC_MODE_COOL),
-        ("auto", HVAC_MODE_HEAT_COOL),
-        ("off", HVAC_MODE_OFF),
-        ("auxHeatOnly", HVAC_MODE_HEAT),
+        ("heat", HVACMode.HEAT),
+        ("cool", HVACMode.COOL),
+        ("auto", HVACMode.HEAT_COOL),
+        ("off", HVACMode.OFF),
+        ("auxHeatOnly", HVACMode.HEAT),
     ]
 )
 
 ECOBEE_HVAC_ACTION_TO_HASS = {
     # Map to None if we do not know how to represent.
-    "heatPump": CURRENT_HVAC_HEAT,
-    "heatPump2": CURRENT_HVAC_HEAT,
-    "heatPump3": CURRENT_HVAC_HEAT,
-    "compCool1": CURRENT_HVAC_COOL,
-    "compCool2": CURRENT_HVAC_COOL,
-    "auxHeat1": CURRENT_HVAC_HEAT,
-    "auxHeat2": CURRENT_HVAC_HEAT,
-    "auxHeat3": CURRENT_HVAC_HEAT,
-    "fan": CURRENT_HVAC_FAN,
+    "heatPump": HVACAction.HEATING,
+    "heatPump2": HVACAction.HEATING,
+    "heatPump3": HVACAction.HEATING,
+    "compCool1": HVACAction.COOLING,
+    "compCool2": HVACAction.COOLING,
+    "auxHeat1": HVACAction.HEATING,
+    "auxHeat2": HVACAction.HEATING,
+    "auxHeat3": HVACAction.HEATING,
+    "fan": HVACAction.FAN,
     "humidifier": None,
-    "dehumidifier": CURRENT_HVAC_DRY,
-    "ventilator": CURRENT_HVAC_FAN,
-    "economizer": CURRENT_HVAC_FAN,
+    "dehumidifier": HVACAction.DRYING,
+    "ventilator": HVACAction.FAN,
+    "economizer": HVACAction.FAN,
     "compHotWater": None,
     "auxHotWater": None,
 }
@@ -166,15 +158,19 @@ SET_FAN_MIN_ON_TIME_SCHEMA = vol.Schema(
 
 
 SUPPORT_FLAGS = (
-    SUPPORT_TARGET_TEMPERATURE
-    | SUPPORT_PRESET_MODE
-    | SUPPORT_AUX_HEAT
-    | SUPPORT_TARGET_TEMPERATURE_RANGE
-    | SUPPORT_FAN_MODE
+    ClimateEntityFeature.TARGET_TEMPERATURE
+    | ClimateEntityFeature.PRESET_MODE
+    | ClimateEntityFeature.AUX_HEAT
+    | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+    | ClimateEntityFeature.FAN_MODE
 )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the ecobee thermostat."""
 
     data = hass.data[DOMAIN]
@@ -198,7 +194,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     platform = entity_platform.async_get_current_platform()
 
-    def create_vacation_service(service):
+    def create_vacation_service(service: ServiceCall) -> None:
         """Create a vacation on the target thermostat."""
         entity_id = service.data[ATTR_ENTITY_ID]
 
@@ -208,7 +204,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 thermostat.schedule_update_ha_state(True)
                 break
 
-    def delete_vacation_service(service):
+    def delete_vacation_service(service: ServiceCall) -> None:
         """Delete a vacation on the target thermostat."""
         entity_id = service.data[ATTR_ENTITY_ID]
         vacation_name = service.data[ATTR_VACATION_NAME]
@@ -219,7 +215,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 thermostat.schedule_update_ha_state(True)
                 break
 
-    def fan_min_on_time_set_service(service):
+    def fan_min_on_time_set_service(service: ServiceCall) -> None:
         """Set the minimum fan on time on the target thermostats."""
         entity_id = service.data.get(ATTR_ENTITY_ID)
         fan_min_on_time = service.data[ATTR_FAN_MIN_ON_TIME]
@@ -236,7 +232,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
             thermostat.schedule_update_ha_state(True)
 
-    def resume_program_set_service(service):
+    def resume_program_set_service(service: ServiceCall) -> None:
         """Resume the program on the target thermostats."""
         entity_id = service.data.get(ATTR_ENTITY_ID)
         resume_all = service.data.get(ATTR_RESUME_ALL)
@@ -313,19 +309,19 @@ class Thermostat(ClimateEntity):
         self.thermostat = thermostat
         self._name = self.thermostat["name"]
         self.vacation = None
-        self._last_active_hvac_mode = HVAC_MODE_HEAT_COOL
+        self._last_active_hvac_mode = HVACMode.HEAT_COOL
 
         self._operation_list = []
         if (
             self.thermostat["settings"]["heatStages"]
             or self.thermostat["settings"]["hasHeatPump"]
         ):
-            self._operation_list.append(HVAC_MODE_HEAT)
+            self._operation_list.append(HVACMode.HEAT)
         if self.thermostat["settings"]["coolStages"]:
-            self._operation_list.append(HVAC_MODE_COOL)
+            self._operation_list.append(HVACMode.COOL)
         if len(self._operation_list) == 2:
-            self._operation_list.insert(0, HVAC_MODE_HEAT_COOL)
-        self._operation_list.append(HVAC_MODE_OFF)
+            self._operation_list.insert(0, HVACMode.HEAT_COOL)
+        self._operation_list.append(HVACMode.OFF)
 
         self._preset_modes = {
             comfort["climateRef"]: comfort["name"]
@@ -342,7 +338,7 @@ class Thermostat(ClimateEntity):
         else:
             await self.data.update()
         self.thermostat = self.data.ecobee.get_thermostat(self.thermostat_index)
-        if self.hvac_mode != HVAC_MODE_OFF:
+        if self.hvac_mode != HVACMode.OFF:
             self._last_active_hvac_mode = self.hvac_mode
 
     @property
@@ -354,7 +350,7 @@ class Thermostat(ClimateEntity):
     def supported_features(self):
         """Return the list of supported features."""
         if self.has_humidifier_control:
-            return SUPPORT_FLAGS | SUPPORT_TARGET_HUMIDITY
+            return SUPPORT_FLAGS | ClimateEntityFeature.TARGET_HUMIDITY
         return SUPPORT_FLAGS
 
     @property
@@ -402,14 +398,14 @@ class Thermostat(ClimateEntity):
     @property
     def target_temperature_low(self) -> float | None:
         """Return the lower bound temperature we try to reach."""
-        if self.hvac_mode == HVAC_MODE_HEAT_COOL:
+        if self.hvac_mode == HVACMode.HEAT_COOL:
             return self.thermostat["runtime"]["desiredHeat"] / 10.0
         return None
 
     @property
     def target_temperature_high(self) -> float | None:
         """Return the upper bound temperature we try to reach."""
-        if self.hvac_mode == HVAC_MODE_HEAT_COOL:
+        if self.hvac_mode == HVACMode.HEAT_COOL:
             return self.thermostat["runtime"]["desiredCool"] / 10.0
         return None
 
@@ -446,11 +442,11 @@ class Thermostat(ClimateEntity):
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        if self.hvac_mode == HVAC_MODE_HEAT_COOL:
+        if self.hvac_mode == HVACMode.HEAT_COOL:
             return None
-        if self.hvac_mode == HVAC_MODE_HEAT:
+        if self.hvac_mode == HVACMode.HEAT:
             return self.thermostat["runtime"]["desiredHeat"] / 10.0
-        if self.hvac_mode == HVAC_MODE_COOL:
+        if self.hvac_mode == HVACMode.COOL:
             return self.thermostat["runtime"]["desiredCool"] / 10.0
         return None
 
@@ -459,7 +455,7 @@ class Thermostat(ClimateEntity):
         """Return the current fan status."""
         if "fan" in self.thermostat["equipmentStatus"]:
             return STATE_ON
-        return HVAC_MODE_OFF
+        return STATE_OFF
 
     @property
     def fan_mode(self):
@@ -514,13 +510,13 @@ class Thermostat(ClimateEntity):
         """Return current HVAC action.
 
         Ecobee returns a CSV string with different equipment that is active.
-        We are prioritizing any heating/cooling equipment, otherwase look at
+        We are prioritizing any heating/cooling equipment, otherwise look at
         drying/fanning. Idle if nothing going on.
 
         We are unable to map all actions to HA equivalents.
         """
         if self.thermostat["equipmentStatus"] == "":
-            return CURRENT_HVAC_IDLE
+            return HVACAction.IDLE
 
         actions = [
             ECOBEE_HVAC_ACTION_TO_HASS[status]
@@ -529,15 +525,15 @@ class Thermostat(ClimateEntity):
         ]
 
         for action in (
-            CURRENT_HVAC_HEAT,
-            CURRENT_HVAC_COOL,
-            CURRENT_HVAC_DRY,
-            CURRENT_HVAC_FAN,
+            HVACAction.HEATING,
+            HVACAction.COOLING,
+            HVACAction.DRYING,
+            HVACAction.FAN,
         ):
             if action in actions:
                 return action
 
-        return CURRENT_HVAC_IDLE
+        return HVACAction.IDLE
 
     @property
     def extra_state_attributes(self):
@@ -684,7 +680,7 @@ class Thermostat(ClimateEntity):
         heatCoolMinDelta property.
         https://www.ecobee.com/home/developer/api/examples/ex5.shtml
         """
-        if self.hvac_mode in (HVAC_MODE_HEAT, HVAC_MODE_COOL):
+        if self.hvac_mode in (HVACMode.HEAT, HVACMode.COOL):
             heat_temp = temp
             cool_temp = temp
         else:
@@ -699,7 +695,7 @@ class Thermostat(ClimateEntity):
         high_temp = kwargs.get(ATTR_TARGET_TEMP_HIGH)
         temp = kwargs.get(ATTR_TEMPERATURE)
 
-        if self.hvac_mode == HVAC_MODE_HEAT_COOL and (
+        if self.hvac_mode == HVACMode.HEAT_COOL and (
             low_temp is not None or high_temp is not None
         ):
             self.set_auto_temp_hold(low_temp, high_temp)

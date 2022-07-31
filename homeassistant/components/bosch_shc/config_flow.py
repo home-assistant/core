@@ -1,6 +1,8 @@
 """Config flow for Bosch Smart Home Controller integration."""
+from collections.abc import Mapping
 import logging
 from os import makedirs
+from typing import Any
 
 from boschshcpy import SHCRegisterClient, SHCSession
 from boschshcpy.exceptions import (
@@ -14,6 +16,7 @@ import voluptuous as vol
 from homeassistant import config_entries, core
 from homeassistant.components import zeroconf
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_TOKEN
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
     CONF_HOSTNAME,
@@ -82,7 +85,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     host = None
     hostname = None
 
-    async def async_step_reauth(self, user_input=None):
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""
         return await self.async_step_reauth_confirm()
 
@@ -181,28 +184,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="credentials", data_schema=schema, errors=errors
         )
 
-    async def async_step_zeroconf(self, discovery_info):
+    async def async_step_zeroconf(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
         """Handle zeroconf discovery."""
-        if not discovery_info.get(zeroconf.ATTR_NAME, "").startswith("Bosch SHC"):
+        if not discovery_info.name.startswith("Bosch SHC"):
             return self.async_abort(reason="not_bosch_shc")
 
         try:
-            hosts = (
-                discovery_info[zeroconf.ATTR_HOST]
-                if isinstance(discovery_info[zeroconf.ATTR_HOST], list)
-                else [discovery_info[zeroconf.ATTR_HOST]]
-            )
-            for host in hosts:
-                if host.startswith("169."):  # skip link local address
-                    continue
-                self.info = await self._get_info(host)
-                self.host = host
-            if self.host is None:
-                return self.async_abort(reason="cannot_connect")
+            self.info = await self._get_info(discovery_info.host)
         except SHCConnectionError:
             return self.async_abort(reason="cannot_connect")
+        self.host = discovery_info.host
 
-        local_name = discovery_info[zeroconf.ATTR_HOSTNAME][:-1]
+        local_name = discovery_info.hostname[:-1]
         node_name = local_name[: -len(".local")]
 
         await self.async_set_unique_id(self.info["unique_id"])

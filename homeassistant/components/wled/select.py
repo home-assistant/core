@@ -3,15 +3,15 @@ from __future__ import annotations
 
 from functools import partial
 
-from wled import Playlist, Preset
+from wled import Live, Playlist, Preset
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENTITY_CATEGORY_CONFIG
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import DEVICE_CLASS_WLED_LIVE_OVERRIDE, DOMAIN
 from .coordinator import WLEDDataUpdateCoordinator
 from .helpers import wled_exception_handler
 from .models import WLEDEntity
@@ -27,7 +27,13 @@ async def async_setup_entry(
     """Set up WLED select based on a config entry."""
     coordinator: WLEDDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    async_add_entities([WLEDPlaylistSelect(coordinator), WLEDPresetSelect(coordinator)])
+    async_add_entities(
+        [
+            WLEDLiveOverrideSelect(coordinator),
+            WLEDPlaylistSelect(coordinator),
+            WLEDPresetSelect(coordinator),
+        ]
+    )
 
     update_segments = partial(
         async_update_segments,
@@ -39,16 +45,42 @@ async def async_setup_entry(
     update_segments()
 
 
-class WLEDPresetSelect(WLEDEntity, SelectEntity):
-    """Defined a WLED Preset select."""
+class WLEDLiveOverrideSelect(WLEDEntity, SelectEntity):
+    """Defined a WLED Live Override select."""
 
-    _attr_icon = "mdi:playlist-play"
+    _attr_device_class = DEVICE_CLASS_WLED_LIVE_OVERRIDE
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_icon = "mdi:theater"
+    _attr_name = "Live override"
 
     def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
         """Initialize WLED ."""
         super().__init__(coordinator=coordinator)
 
-        self._attr_name = f"{coordinator.data.info.name} Preset"
+        self._attr_unique_id = f"{coordinator.data.info.mac_address}_live_override"
+        self._attr_options = [str(live.value) for live in Live]
+
+    @property
+    def current_option(self) -> str:
+        """Return the current selected live override."""
+        return str(self.coordinator.data.state.lor.value)
+
+    @wled_exception_handler
+    async def async_select_option(self, option: str) -> None:
+        """Set WLED state to the selected live override state."""
+        await self.coordinator.wled.live(live=Live(int(option)))
+
+
+class WLEDPresetSelect(WLEDEntity, SelectEntity):
+    """Defined a WLED Preset select."""
+
+    _attr_icon = "mdi:playlist-play"
+    _attr_name = "Preset"
+
+    def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
+        """Initialize WLED ."""
+        super().__init__(coordinator=coordinator)
+
         self._attr_unique_id = f"{coordinator.data.info.mac_address}_preset"
         self._attr_options = [preset.name for preset in self.coordinator.data.presets]
 
@@ -74,12 +106,12 @@ class WLEDPlaylistSelect(WLEDEntity, SelectEntity):
     """Define a WLED Playlist select."""
 
     _attr_icon = "mdi:play-speed"
+    _attr_name = "Playlist"
 
     def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
         """Initialize WLED playlist."""
         super().__init__(coordinator=coordinator)
 
-        self._attr_name = f"{coordinator.data.info.name} Playlist"
         self._attr_unique_id = f"{coordinator.data.info.mac_address}_playlist"
         self._attr_options = [
             playlist.name for playlist in self.coordinator.data.playlists
@@ -106,8 +138,9 @@ class WLEDPlaylistSelect(WLEDEntity, SelectEntity):
 class WLEDPaletteSelect(WLEDEntity, SelectEntity):
     """Defines a WLED Palette select."""
 
-    _attr_entity_category = ENTITY_CATEGORY_CONFIG
+    _attr_entity_category = EntityCategory.CONFIG
     _attr_icon = "mdi:palette-outline"
+    _attr_name = "Color palette"
     _segment: int
 
     def __init__(self, coordinator: WLEDDataUpdateCoordinator, segment: int) -> None:
@@ -116,11 +149,8 @@ class WLEDPaletteSelect(WLEDEntity, SelectEntity):
 
         # Segment 0 uses a simpler name, which is more natural for when using
         # a single segment / using WLED with one big LED strip.
-        self._attr_name = (
-            f"{coordinator.data.info.name} Segment {segment} Color Palette"
-        )
-        if segment == 0:
-            self._attr_name = f"{coordinator.data.info.name} Color Palette"
+        if segment != 0:
+            self._attr_name = f"Segment {segment} color palette"
 
         self._attr_unique_id = f"{coordinator.data.info.mac_address}_palette_{segment}"
         self._attr_options = [

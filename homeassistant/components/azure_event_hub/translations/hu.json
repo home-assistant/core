@@ -1,0 +1,49 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "A szolg\u00e1ltat\u00e1s m\u00e1r konfigur\u00e1lva van",
+            "cannot_connect": "A csatlakoz\u00e1s a configuration.yaml-ben szerepl\u0151 hiteles\u00edt\u0151 adatokkal nem siker\u00fclt, k\u00e9rem, t\u00e1vol\u00edtsa el ezeket, \u00e9s haszn\u00e1lja a kezel\u0151 fel\u00fcletet a konfigur\u00e1l\u00e1shoz.",
+            "single_instance_allowed": "M\u00e1r konfigur\u00e1lva van. Csak egy konfigur\u00e1ci\u00f3 lehets\u00e9ges.",
+            "unknown": "A csatlakoz\u00e1s a configuration.yaml-ben szerepl\u0151 hiteles\u00edt\u0151 adatokkal nem siker\u00fclt, k\u00e9rem, t\u00e1vol\u00edtsa el ezeket, \u00e9s haszn\u00e1lja a kezel\u0151 fel\u00fcletet a konfigur\u00e1l\u00e1shoz."
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "step": {
+            "conn_string": {
+                "data": {
+                    "event_hub_connection_string": "Event Hub csatlakoz\u00e1si karaktersor"
+                },
+                "description": "K\u00e9rem, adja meg a csatlakoz\u00e1si karaktersort ehhez: {event_hub_instance_name}",
+                "title": "Csatlakoz\u00e1si karaktersor t\u00edpus"
+            },
+            "sas": {
+                "data": {
+                    "event_hub_namespace": "Event Hub n\u00e9vt\u00e9r",
+                    "event_hub_sas_key": "Event Hub SAS kulcs",
+                    "event_hub_sas_policy": "Event Hub SAS h\u00e1zirend"
+                },
+                "description": "K\u00e9rem, adja meg a SAS hiteles\u00edt\u0151 adatait ehhez: {event_hub_instance_name}",
+                "title": "SAS hiteles\u00edt\u00e9s t\u00edpus"
+            },
+            "user": {
+                "data": {
+                    "event_hub_instance_name": "Event Hub p\u00e9ld\u00e1ny neve",
+                    "use_connection_string": "Csatlakoz\u00e1si karaktersor haszn\u00e1lata"
+                },
+                "title": "Azure Event Hub integr\u00e1ci\u00f3 be\u00e1ll\u00edt\u00e1sa"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "options": {
+                "data": {
+                    "send_interval": "A csom\u00f3pontnak (hubnak) k\u00fcld\u00f6tt t\u00e9telek k\u00f6z\u00f6tti id\u0151k\u00f6z."
+                },
+                "title": "Azure Event Hub be\u00e1ll\u00edt\u00e1sai."
+            }
+        }
+    }
+}

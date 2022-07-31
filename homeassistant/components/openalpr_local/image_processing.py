@@ -1,24 +1,34 @@
 """Component that will help set the OpenALPR local for ALPR processing."""
+from __future__ import annotations
+
 import asyncio
 import io
+import logging
 import re
 
 import voluptuous as vol
 
 from homeassistant.components.image_processing import (
     ATTR_CONFIDENCE,
-    ATTR_ENTITY_ID,
     CONF_CONFIDENCE,
-    CONF_ENTITY_ID,
-    CONF_NAME,
-    CONF_SOURCE,
     PLATFORM_SCHEMA,
     ImageProcessingEntity,
 )
-from homeassistant.const import CONF_REGION
-from homeassistant.core import callback, split_entity_id
+from homeassistant.components.repairs import IssueSeverity, create_issue
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_ENTITY_ID,
+    CONF_NAME,
+    CONF_REGION,
+    CONF_SOURCE,
+)
+from homeassistant.core import HomeAssistant, callback, split_entity_id
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.async_ import run_callback_threadsafe
+
+_LOGGER = logging.getLogger(__name__)
 
 RE_ALPR_PLATE = re.compile(r"^plate\d*:")
 RE_ALPR_RESULT = re.compile(r"- (\w*)\s*confidence: (\d*.\d*)")
@@ -56,8 +66,25 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the OpenALPR local platform."""
+    create_issue(
+        hass,
+        "openalpr_local",
+        "pending_removal",
+        breaks_in_ha_version="2022.10.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="pending_removal",
+    )
+    _LOGGER.warning(
+        "The OpenALPR Local is deprecated and will be removed in Home Assistant 2022.10"
+    )
     command = [config[CONF_ALPR_BIN], "-c", config[CONF_REGION], "-"]
     confidence = config[CONF_CONFIDENCE]
 

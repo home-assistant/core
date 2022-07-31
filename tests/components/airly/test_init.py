@@ -95,10 +95,10 @@ async def test_config_with_turned_off_station(hass, aioclient_mock):
 
 async def test_update_interval(hass, aioclient_mock):
     """Test correct update interval when the number of configured instances changes."""
-    REMAINING_RQUESTS = 15
+    REMAINING_REQUESTS = 15
     HEADERS = {
         "X-RateLimit-Limit-day": "100",
-        "X-RateLimit-Remaining-day": str(REMAINING_RQUESTS),
+        "X-RateLimit-Remaining-day": str(REMAINING_REQUESTS),
     }
 
     entry = MockConfigEntry(
@@ -127,7 +127,7 @@ async def test_update_interval(hass, aioclient_mock):
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert entry.state is ConfigEntryState.LOADED
 
-    update_interval = set_update_interval(instances, REMAINING_RQUESTS)
+    update_interval = set_update_interval(instances, REMAINING_REQUESTS)
     future = utcnow() + update_interval
     with patch("homeassistant.util.dt.utcnow") as mock_utcnow:
         mock_utcnow.return_value = future
@@ -164,7 +164,7 @@ async def test_update_interval(hass, aioclient_mock):
         assert len(hass.config_entries.async_entries(DOMAIN)) == 2
         assert entry.state is ConfigEntryState.LOADED
 
-        update_interval = set_update_interval(instances, REMAINING_RQUESTS)
+        update_interval = set_update_interval(instances, REMAINING_REQUESTS)
         future = utcnow() + update_interval
         mock_utcnow.return_value = future
         async_fire_time_changed(hass, future)

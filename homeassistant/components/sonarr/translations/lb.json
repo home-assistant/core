@@ -18,10 +18,6 @@
             "user": {
                 "data": {
                     "api_key": "API Schl\u00ebssel",
-                    "base_path": "Pad zur API",
-                    "host": "Host",
-                    "port": "Port",
-                    "ssl": "Benotzt ee SSL Zertifikat",
                     "verify_ssl": "SSL Zertifikat iwwerpr\u00e9iwen"
                 }
             }

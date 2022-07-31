@@ -3,10 +3,14 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 import math
+from typing import Any
 
 from pysmartthings import Capability
 
-from homeassistant.components.fan import SUPPORT_SET_SPEED, FanEntity
+from homeassistant.components.fan import FanEntity, FanEntityFeature
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
     int_states_in_range,
     percentage_to_ranged_value,
@@ -19,7 +23,11 @@ from .const import DATA_BROKERS, DOMAIN
 SPEED_RANGE = (1, 3)  # off is not included
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Add fans for a config entry."""
     broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
     async_add_entities(
@@ -37,13 +45,19 @@ def get_capabilities(capabilities: Sequence[str]) -> Sequence[str] | None:
     # Must have switch and fan_speed
     if all(capability in capabilities for capability in supported):
         return supported
+    return None
 
 
 class SmartThingsFan(SmartThingsEntity, FanEntity):
     """Define a SmartThings Fan."""
 
+    _attr_supported_features = FanEntityFeature.SET_SPEED
+
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
+        await self._async_set_percentage(percentage)
+
+    async def _async_set_percentage(self, percentage: int | None) -> None:
         if percentage is None:
             await self._device.switch_on(set_status=True)
         elif percentage == 0:
@@ -57,15 +71,14 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
 
     async def async_turn_on(
         self,
-        speed: str = None,
-        percentage: int = None,
-        preset_mode: str = None,
-        **kwargs,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
+        **kwargs: Any,
     ) -> None:
         """Turn the fan on."""
-        await self.async_set_percentage(percentage)
+        await self._async_set_percentage(percentage)
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
         await self._device.switch_off(set_status=True)
         # State is set optimistically in the command above, therefore update
@@ -86,8 +99,3 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
         return int_states_in_range(SPEED_RANGE)
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return SUPPORT_SET_SPEED

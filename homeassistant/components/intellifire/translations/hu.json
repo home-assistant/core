@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "not_intellifire_device": "Nem egy IntelliFire eszk\u00f6z.",
+            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt."
+        },
+        "error": {
+            "api_error": "A bejelentkez\u00e9s sikertelen",
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "iftapi_connect": "Hiba az iftapi.net-hez val\u00f3 csatlakoz\u00e1sban"
+        },
+        "flow_title": "{serial} ({host})",
+        "step": {
+            "api_config": {
+                "data": {
+                    "password": "Jelsz\u00f3",
+                    "username": "E-mail"
+                }
+            },
+            "dhcp_confirm": {
+                "description": "Szeretn\u00e9 be\u00e1ll\u00edtani: {host}\nGy\u00e1ri sz\u00e1m: {serial}?"
+            },
+            "manual_device_entry": {
+                "data": {
+                    "host": "IP C\u00edm"
+                },
+                "description": "Helyi konfigur\u00e1ci\u00f3"
+            },
+            "pick_device": {
+                "data": {
+                    "host": "C\u00edm"
+                },
+                "description": "A k\u00f6vetkez\u0151 IntelliFire eszk\u00f6z\u00f6k \u00e9szlelve. K\u00e9rem, v\u00e1lassza ki, melyiket szeretn\u00e9 konfigur\u00e1lni.",
+                "title": "Eszk\u00f6z v\u00e1laszt\u00e1sa"
+            }
+        }
+    }
+}

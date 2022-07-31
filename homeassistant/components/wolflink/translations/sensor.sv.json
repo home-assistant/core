@@ -3,6 +3,7 @@
         "wolflink__state": {
             "aktiviert": "Aktiverad",
             "aus": "Inaktiverad",
+            "sparen": "Ekonomi",
             "test": "Test"
         }
     }

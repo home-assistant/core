@@ -28,16 +28,7 @@
                     "username": "Benutzername",
                     "verify_ssl": "SSL-Zertifikat \u00fcberpr\u00fcfen"
                 },
-                "description": "M\u00f6chtest du {name} ({host}) einrichten?",
-                "title": "Synology DSM"
-            },
-            "reauth": {
-                "data": {
-                    "password": "Passwort",
-                    "username": "Benutzername"
-                },
-                "description": "Grund: {details}",
-                "title": "Synology DSM Integration erneut authentifizieren"
+                "description": "M\u00f6chtest du {name} ({host}) einrichten?"
             },
             "reauth_confirm": {
                 "data": {
@@ -54,8 +45,7 @@
                     "ssl": "Verwendet ein SSL-Zertifikat",
                     "username": "Benutzername",
                     "verify_ssl": "SSL-Zertifikat \u00fcberpr\u00fcfen"
-                },
-                "title": "Synology DSM"
+                }
             }
         }
     },
@@ -64,6 +54,7 @@
             "init": {
                 "data": {
                     "scan_interval": "Minuten zwischen den Scans",
+                    "snap_profile_type": "Qualit\u00e4tsstufe der Kamera-Schnappsch\u00fcsse (0:hoch 1:mittel 2:niedrig)",
                     "timeout": "Timeout (Sekunden)"
                 }
             }

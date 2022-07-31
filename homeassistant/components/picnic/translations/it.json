@@ -1,10 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
         },
         "error": {
             "cannot_connect": "Impossibile connettersi",
+            "different_account": "L'account deve essere lo stesso utilizzato per impostare l'integrazione",
             "invalid_auth": "Autenticazione non valida",
             "unknown": "Errore imprevisto"
         },
@@ -17,6 +19,5 @@
                 }
             }
         }
-    },
-    "title": "Picnic"
+    }
 }

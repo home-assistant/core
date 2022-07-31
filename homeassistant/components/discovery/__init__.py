@@ -12,10 +12,11 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_discover, async_load_platform
 from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_zeroconf
 import homeassistant.util.dt as dt_util
 
@@ -57,13 +58,10 @@ class ServiceDetails(NamedTuple):
 # These have no config flows
 SERVICE_HANDLERS = {
     SERVICE_ENIGMA2: ServiceDetails("media_player", "enigma2"),
-    SERVICE_SABNZBD: ServiceDetails("sabnzbd", None),
     "yamaha": ServiceDetails("media_player", "yamaha"),
     "frontier_silicon": ServiceDetails("media_player", "frontier_silicon"),
     "openhome": ServiceDetails("media_player", "openhome"),
-    "bose_soundtouch": ServiceDetails("media_player", "soundtouch"),
     "bluesound": ServiceDetails("media_player", "bluesound"),
-    "lg_smart_device": ServiceDetails("media_player", "lg_soundbar"),
 }
 
 OPTIONAL_SERVICE_HANDLERS: dict[str, tuple[str, str | None]] = {}
@@ -71,6 +69,7 @@ OPTIONAL_SERVICE_HANDLERS: dict[str, tuple[str, str | None]] = {}
 MIGRATED_SERVICE_HANDLERS = [
     SERVICE_APPLE_TV,
     "axis",
+    "bose_soundtouch",
     "deconz",
     SERVICE_DAIKIN,
     "denonavr",
@@ -96,7 +95,9 @@ MIGRATED_SERVICE_HANDLERS = [
     SERVICE_XIAOMI_GW,
     "volumio",
     SERVICE_YEELIGHT,
+    SERVICE_SABNZBD,
     "nanoleaf_aurora",
+    "lg_smart_device",
 ]
 
 DEFAULT_ENABLED = (
@@ -124,7 +125,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Start a discovery service."""
 
     logger = logging.getLogger(__name__)

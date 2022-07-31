@@ -73,14 +73,14 @@ async def test_reauth_success(hass, smarttub_api, account):
         data=mock_entry.data,
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_EMAIL: "test-email3", CONF_PASSWORD: "test-password3"}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert mock_entry.data[CONF_EMAIL] == "test-email3"
     assert mock_entry.data[CONF_PASSWORD] == "test-password3"
@@ -114,12 +114,12 @@ async def test_reauth_wrong_account(hass, smarttub_api, account):
         data=mock_entry2.data,
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_EMAIL: "test-email1", CONF_PASSWORD: "test-password1"}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"

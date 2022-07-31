@@ -1,8 +1,10 @@
 """Tests for Broadlink sensors."""
 from datetime import timedelta
 
-from homeassistant.components.broadlink.const import DOMAIN, SENSOR_DOMAIN
+from homeassistant.components.broadlink.const import DOMAIN
 from homeassistant.components.broadlink.updater import BroadlinkSP4UpdateManager
+from homeassistant.const import Platform
+from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.util import dt
 
@@ -33,7 +35,7 @@ async def test_a1_sensor_setup(hass):
         {(DOMAIN, mock_setup.entry.unique_id)}
     )
     entries = async_entries_for_device(entity_registry, device_entry.id)
-    sensors = [entry for entry in entries if entry.domain == SENSOR_DOMAIN]
+    sensors = [entry for entry in entries if entry.domain == Platform.SENSOR]
     assert len(sensors) == 5
 
     sensors_and_states = {
@@ -70,7 +72,7 @@ async def test_a1_sensor_update(hass):
         {(DOMAIN, mock_setup.entry.unique_id)}
     )
     entries = async_entries_for_device(entity_registry, device_entry.id)
-    sensors = [entry for entry in entries if entry.domain == SENSOR_DOMAIN]
+    sensors = [entry for entry in entries if entry.domain == Platform.SENSOR]
     assert len(sensors) == 5
 
     mock_setup.api.check_sensors_raw.return_value = {
@@ -80,9 +82,7 @@ async def test_a1_sensor_update(hass):
         "light": 3,
         "noise": 2,
     }
-    await hass.helpers.entity_component.async_update_entity(
-        next(iter(sensors)).entity_id
-    )
+    await async_update_entity(hass, next(iter(sensors)).entity_id)
     assert mock_setup.api.check_sensors_raw.call_count == 2
 
     sensors_and_states = {
@@ -114,7 +114,7 @@ async def test_rm_pro_sensor_setup(hass):
         {(DOMAIN, mock_setup.entry.unique_id)}
     )
     entries = async_entries_for_device(entity_registry, device_entry.id)
-    sensors = [entry for entry in entries if entry.domain == SENSOR_DOMAIN]
+    sensors = [entry for entry in entries if entry.domain == Platform.SENSOR]
     assert len(sensors) == 1
 
     sensors_and_states = {
@@ -139,13 +139,11 @@ async def test_rm_pro_sensor_update(hass):
         {(DOMAIN, mock_setup.entry.unique_id)}
     )
     entries = async_entries_for_device(entity_registry, device_entry.id)
-    sensors = [entry for entry in entries if entry.domain == SENSOR_DOMAIN]
+    sensors = [entry for entry in entries if entry.domain == Platform.SENSOR]
     assert len(sensors) == 1
 
     mock_setup.api.check_sensors.return_value = {"temperature": 25.8}
-    await hass.helpers.entity_component.async_update_entity(
-        next(iter(sensors)).entity_id
-    )
+    await async_update_entity(hass, next(iter(sensors)).entity_id)
     assert mock_setup.api.check_sensors.call_count == 2
 
     sensors_and_states = {
@@ -173,13 +171,11 @@ async def test_rm_pro_filter_crazy_temperature(hass):
         {(DOMAIN, mock_setup.entry.unique_id)}
     )
     entries = async_entries_for_device(entity_registry, device_entry.id)
-    sensors = [entry for entry in entries if entry.domain == SENSOR_DOMAIN]
+    sensors = [entry for entry in entries if entry.domain == Platform.SENSOR]
     assert len(sensors) == 1
 
     mock_setup.api.check_sensors.return_value = {"temperature": -7}
-    await hass.helpers.entity_component.async_update_entity(
-        next(iter(sensors)).entity_id
-    )
+    await async_update_entity(hass, next(iter(sensors)).entity_id)
     assert mock_setup.api.check_sensors.call_count == 2
 
     sensors_and_states = {
@@ -205,7 +201,7 @@ async def test_rm_mini3_no_sensor(hass):
         {(DOMAIN, mock_setup.entry.unique_id)}
     )
     entries = async_entries_for_device(entity_registry, device_entry.id)
-    sensors = [entry for entry in entries if entry.domain == SENSOR_DOMAIN]
+    sensors = [entry for entry in entries if entry.domain == Platform.SENSOR]
     assert len(sensors) == 0
 
 
@@ -225,7 +221,7 @@ async def test_rm4_pro_hts2_sensor_setup(hass):
         {(DOMAIN, mock_setup.entry.unique_id)}
     )
     entries = async_entries_for_device(entity_registry, device_entry.id)
-    sensors = [entry for entry in entries if entry.domain == SENSOR_DOMAIN]
+    sensors = [entry for entry in entries if entry.domain == Platform.SENSOR]
     assert len(sensors) == 2
 
     sensors_and_states = {
@@ -253,13 +249,11 @@ async def test_rm4_pro_hts2_sensor_update(hass):
         {(DOMAIN, mock_setup.entry.unique_id)}
     )
     entries = async_entries_for_device(entity_registry, device_entry.id)
-    sensors = [entry for entry in entries if entry.domain == SENSOR_DOMAIN]
+    sensors = [entry for entry in entries if entry.domain == Platform.SENSOR]
     assert len(sensors) == 2
 
     mock_setup.api.check_sensors.return_value = {"temperature": 16.8, "humidity": 34.0}
-    await hass.helpers.entity_component.async_update_entity(
-        next(iter(sensors)).entity_id
-    )
+    await async_update_entity(hass, next(iter(sensors)).entity_id)
     assert mock_setup.api.check_sensors.call_count == 2
 
     sensors_and_states = {
@@ -288,7 +282,7 @@ async def test_rm4_pro_no_sensor(hass):
         {(DOMAIN, mock_setup.entry.unique_id)}
     )
     entries = async_entries_for_device(entity_registry, device_entry.id)
-    sensors = {entry for entry in entries if entry.domain == SENSOR_DOMAIN}
+    sensors = {entry for entry in entries if entry.domain == Platform.SENSOR}
     assert len(sensors) == 0
 
 
@@ -318,7 +312,7 @@ async def test_scb1e_sensor_setup(hass):
         {(DOMAIN, mock_setup.entry.unique_id)}
     )
     entries = async_entries_for_device(entity_registry, device_entry.id)
-    sensors = [entry for entry in entries if entry.domain == SENSOR_DOMAIN]
+    sensors = [entry for entry in entries if entry.domain == Platform.SENSOR]
     assert len(sensors) == 5
 
     sensors_and_states = {
@@ -363,7 +357,7 @@ async def test_scb1e_sensor_update(hass):
         {(DOMAIN, mock_setup.entry.unique_id)}
     )
     entries = async_entries_for_device(entity_registry, device_entry.id)
-    sensors = [entry for entry in entries if entry.domain == SENSOR_DOMAIN]
+    sensors = [entry for entry in entries if entry.domain == Platform.SENSOR]
     assert len(sensors) == 5
 
     mock_setup.api.get_state.return_value = {

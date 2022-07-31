@@ -1,0 +1,26 @@
+{
+    "config": {
+        "error": {
+            "invalid_auth": "Neplatn\u00e9 overenie"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "N\u00e1zov"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_auth": "Neplatn\u00e9 overenie"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "name": "N\u00e1zov"
+                }
+            }
+        }
+    }
+}

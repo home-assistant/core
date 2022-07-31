@@ -1,0 +1,12 @@
+{
+  "command": 1,
+  "status": "ok",
+  "data": {
+    "codename": "gvc1",
+    "uid": "ABCDEF123456",
+    "uptime": 41,
+    "firmware": "0.20.9-beta+official.ef3",
+    "rf_modem_firmware": "4.0.0",
+    "available_heap": 34456
+  }
+}

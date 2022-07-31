@@ -67,7 +67,7 @@ class ActivityStream(AugustSubscriberMixin):
                 self._schedule_updates[house_id] = None
 
     def get_latest_device_activity(self, device_id, activity_types):
-        """Return latest activity that is one of the acitivty_types."""
+        """Return latest activity that is one of the activity_types."""
         if device_id not in self._latest_activities:
             return None
 

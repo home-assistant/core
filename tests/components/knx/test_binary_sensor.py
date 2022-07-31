@@ -4,17 +4,10 @@ from unittest.mock import patch
 
 from homeassistant.components.knx.const import CONF_STATE_ADDRESS, CONF_SYNC_STATE
 from homeassistant.components.knx.schema import BinarySensorSchema
-from homeassistant.const import (
-    CONF_ENTITY_CATEGORY,
-    CONF_NAME,
-    ENTITY_CATEGORY_DIAGNOSTIC,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers.entity_registry import (
-    async_get_registry as async_get_entity_registry,
-)
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.util import dt
 
 from .conftest import KNXTestKit
@@ -26,11 +19,11 @@ async def test_binary_sensor_entity_category(hass: HomeAssistant, knx: KNXTestKi
     """Test KNX binary sensor entity category."""
     await knx.setup_integration(
         {
-            BinarySensorSchema.PLATFORM_NAME: [
+            BinarySensorSchema.PLATFORM: [
                 {
                     CONF_NAME: "test_normal",
                     CONF_STATE_ADDRESS: "1/1/1",
-                    CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_DIAGNOSTIC,
+                    CONF_ENTITY_CATEGORY: EntityCategory.DIAGNOSTIC,
                 },
             ]
         }
@@ -40,16 +33,16 @@ async def test_binary_sensor_entity_category(hass: HomeAssistant, knx: KNXTestKi
     await knx.assert_read("1/1/1")
     await knx.receive_response("1/1/1", True)
 
-    registry = await async_get_entity_registry(hass)
+    registry = er.async_get(hass)
     entity = registry.async_get("binary_sensor.test_normal")
-    assert entity.entity_category == ENTITY_CATEGORY_DIAGNOSTIC
+    assert entity.entity_category is EntityCategory.DIAGNOSTIC
 
 
 async def test_binary_sensor(hass: HomeAssistant, knx: KNXTestKit):
     """Test KNX binary sensor and inverted binary_sensor."""
     await knx.setup_integration(
         {
-            BinarySensorSchema.PLATFORM_NAME: [
+            BinarySensorSchema.PLATFORM: [
                 {
                     CONF_NAME: "test_normal",
                     CONF_STATE_ADDRESS: "1/1/1",
@@ -104,7 +97,7 @@ async def test_binary_sensor_ignore_internal_state(
 
     await knx.setup_integration(
         {
-            BinarySensorSchema.PLATFORM_NAME: [
+            BinarySensorSchema.PLATFORM: [
                 {
                     CONF_NAME: "test_normal",
                     CONF_STATE_ADDRESS: "1/1/1",
@@ -156,7 +149,7 @@ async def test_binary_sensor_counter(hass: HomeAssistant, knx: KNXTestKit):
 
     await knx.setup_integration(
         {
-            BinarySensorSchema.PLATFORM_NAME: [
+            BinarySensorSchema.PLATFORM: [
                 {
                     CONF_NAME: "test",
                     CONF_STATE_ADDRESS: "2/2/2",
@@ -223,7 +216,7 @@ async def test_binary_sensor_reset(hass: HomeAssistant, knx: KNXTestKit):
 
     await knx.setup_integration(
         {
-            BinarySensorSchema.PLATFORM_NAME: [
+            BinarySensorSchema.PLATFORM: [
                 {
                     CONF_NAME: "test",
                     CONF_STATE_ADDRESS: "2/2/2",
@@ -259,7 +252,7 @@ async def test_binary_sensor_restore_and_respond(hass, knx):
     ):
         await knx.setup_integration(
             {
-                BinarySensorSchema.PLATFORM_NAME: [
+                BinarySensorSchema.PLATFORM: [
                     {
                         CONF_NAME: "test",
                         CONF_STATE_ADDRESS: _ADDRESS,
@@ -291,7 +284,7 @@ async def test_binary_sensor_restore_invert(hass, knx):
     ):
         await knx.setup_integration(
             {
-                BinarySensorSchema.PLATFORM_NAME: [
+                BinarySensorSchema.PLATFORM: [
                     {
                         CONF_NAME: "test",
                         CONF_STATE_ADDRESS: _ADDRESS,

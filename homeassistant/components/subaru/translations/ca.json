@@ -6,9 +6,12 @@
         },
         "error": {
             "bad_pin_format": "El PIN ha de tenir 4 d\u00edgits",
+            "bad_validation_code_format": "El codi de validaci\u00f3 ha de tenir 6 d\u00edgits",
             "cannot_connect": "Ha fallat la connexi\u00f3",
             "incorrect_pin": "PIN incorrecte",
-            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida"
+            "incorrect_validation_code": "Codi de validaci\u00f3 inv\u00e0lid",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "two_factor_request_failed": "La sol\u00b7licitud de codi 2FA ha fallat. Torna-ho a provar"
         },
         "step": {
             "pin": {
@@ -16,6 +19,20 @@
                     "pin": "PIN"
                 },
                 "description": "Introdueix el teu PIN de MySubaru\nNOTA: tots els vehicles associats a un compte han de tenir el mateix PIN",
+                "title": "Configuraci\u00f3 de Subaru Starlink"
+            },
+            "two_factor": {
+                "data": {
+                    "contact_method": "Selecciona un m\u00e8tode de contacte:"
+                },
+                "description": "Autenticaci\u00f3 de dos factors requerida",
+                "title": "Configuraci\u00f3 de Subaru Starlink"
+            },
+            "two_factor_validate": {
+                "data": {
+                    "validation_code": "Codi de validaci\u00f3"
+                },
+                "description": "Introdueix el codi de validaci\u00f3 rebut",
                 "title": "Configuraci\u00f3 de Subaru Starlink"
             },
             "user": {

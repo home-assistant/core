@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "ignore_ip6_link_local": "IPv6-l\u00e4nkens lokala adress st\u00f6ds inte."
+        },
+        "step": {
+            "confirm": {
+                "data": {
+                    "username": "Anv\u00e4ndarnamn"
+                }
+            },
+            "reauth_confirm": {
+                "data": {
+                    "username": "Anv\u00e4ndarnamn"
+                }
+            },
+            "user": {
+                "data": {
+                    "username": "Anv\u00e4ndarnamn"
+                }
+            }
+        }
+    }
+}

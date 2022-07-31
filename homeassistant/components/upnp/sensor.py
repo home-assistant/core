@@ -136,12 +136,14 @@ async def async_setup_entry(
         ]
     )
 
-    LOGGER.debug("Adding entities: %s", entities)
+    LOGGER.debug("Adding sensor entities: %s", entities)
     async_add_entities(entities)
 
 
 class UpnpSensor(UpnpEntity, SensorEntity):
     """Base class for UPnP/IGD sensors."""
+
+    entity_description: UpnpSensorEntityDescription
 
 
 class RawUpnpSensor(UpnpSensor):
@@ -158,8 +160,6 @@ class RawUpnpSensor(UpnpSensor):
 
 class DerivedUpnpSensor(UpnpSensor):
     """Representation of a UNIT Sent/Received per second sensor."""
-
-    entity_description: UpnpSensorEntityDescription
 
     def __init__(
         self,

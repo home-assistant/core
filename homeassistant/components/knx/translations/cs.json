@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Slu\u017eba je ji\u017e nastavena"
+        },
+        "step": {
+            "manual_tunnel": {
+                "data": {
+                    "port": "Port"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "tunnel": {
+                "data": {
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

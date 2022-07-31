@@ -4,10 +4,11 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Any
 
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import DEVICE_CLASS_BATTERY, PERCENTAGE
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 from . import DOMAIN, GeniusDevice, GeniusEntity
@@ -22,7 +23,10 @@ GH_LEVEL_MAPPING = {
 
 
 async def async_setup_platform(
-    hass: HomeAssistant, config: ConfigType, async_add_entities, discovery_info=None
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Genius Hub sensor entities."""
     if discovery_info is None:
@@ -30,14 +34,14 @@ async def async_setup_platform(
 
     broker = hass.data[DOMAIN]["broker"]
 
-    sensors = [
+    entities: list[GeniusBattery | GeniusIssue] = [
         GeniusBattery(broker, d, GH_STATE_ATTR)
         for d in broker.client.device_objs
         if GH_STATE_ATTR in d.data["state"]
     ]
-    issues = [GeniusIssue(broker, i) for i in list(GH_LEVEL_MAPPING)]
+    entities.extend([GeniusIssue(broker, i) for i in list(GH_LEVEL_MAPPING)])
 
-    async_add_entities(sensors + issues, update_before_add=True)
+    async_add_entities(entities, update_before_add=True)
 
 
 class GeniusBattery(GeniusDevice, SensorEntity):
@@ -49,7 +53,7 @@ class GeniusBattery(GeniusDevice, SensorEntity):
 
         self._state_attr = state_attr
 
-        self._name = f"{device.type} {device.id}"
+        self._attr_name = f"{device.type} {device.id}"
 
     @property
     def icon(self) -> str:
@@ -58,7 +62,10 @@ class GeniusBattery(GeniusDevice, SensorEntity):
             interval = timedelta(
                 seconds=self._device.data["_state"].get("wakeupInterval", 30 * 60)
             )
-            if self._last_comms < dt_util.utcnow() - interval * 3:
+            if (
+                not self._last_comms
+                or self._last_comms < dt_util.utcnow() - interval * 3
+            ):
                 return "mdi:battery-unknown"
 
         battery_level = self._device.data["state"][self._state_attr]
@@ -76,7 +83,7 @@ class GeniusBattery(GeniusDevice, SensorEntity):
     @property
     def device_class(self) -> str:
         """Return the device class of the sensor."""
-        return DEVICE_CLASS_BATTERY
+        return SensorDeviceClass.BATTERY
 
     @property
     def native_unit_of_measurement(self) -> str:
@@ -100,12 +107,12 @@ class GeniusIssue(GeniusEntity, SensorEntity):
         self._hub = broker.client
         self._unique_id = f"{broker.hub_uid}_{GH_LEVEL_MAPPING[level]}"
 
-        self._name = f"GeniusHub {GH_LEVEL_MAPPING[level]}"
+        self._attr_name = f"GeniusHub {GH_LEVEL_MAPPING[level]}"
         self._level = level
-        self._issues = []
+        self._issues: list = []
 
     @property
-    def native_value(self) -> str:
+    def native_value(self) -> int:
         """Return the number of issues."""
         return len(self._issues)
 

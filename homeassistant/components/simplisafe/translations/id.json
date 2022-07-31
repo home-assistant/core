@@ -2,33 +2,39 @@
     "config": {
         "abort": {
             "already_configured": "Akun SimpliSafe ini sudah digunakan.",
-            "reauth_successful": "Autentikasi ulang berhasil"
+            "email_2fa_timed_out": "Tenggang waktu habis ketika menunggu autentikasi dua faktor berbasis email.",
+            "reauth_successful": "Autentikasi ulang berhasil",
+            "wrong_account": "Kredensial pengguna yang diberikan tidak cocok dengan akun SimpliSafe ini."
         },
         "error": {
             "identifier_exists": "Akun sudah terdaftar",
             "invalid_auth": "Autentikasi tidak valid",
-            "still_awaiting_mfa": "Masih menunggu pengeklikan dari email MFA",
             "unknown": "Kesalahan yang tidak diharapkan"
         },
+        "progress": {
+            "email_2fa": "Periksa email Anda untuk tautan verifikasi dari Simplisafe."
+        },
         "step": {
-            "mfa": {
-                "description": "Periksa email Anda untuk mendapatkan tautan dari SimpliSafe. Setelah memverifikasi tautan, kembali ke sini untuk menyelesaikan instalasi integrasi.",
-                "title": "Autentikasi Multi-Faktor SimpliSafe"
-            },
             "reauth_confirm": {
                 "data": {
                     "password": "Kata Sandi"
                 },
-                "description": "Akses Anda telah kedaluwarsa atau dicabut. Masukkan kata sandi Anda untuk menautkan kembali akun Anda.",
+                "description": "Masukkan kembali kata sandi untuk {username}.",
                 "title": "Autentikasi Ulang Integrasi"
+            },
+            "sms_2fa": {
+                "data": {
+                    "code": "Kode"
+                },
+                "description": "Masukkan kode autentikasi dua faktor yang dikirimkan kepada Anda melalui SMS."
             },
             "user": {
                 "data": {
-                    "code": "Kode (digunakan di antarmuka Home Assistant)",
+                    "auth_code": "Kode Otorisasi",
                     "password": "Kata Sandi",
-                    "username": "Email"
+                    "username": "Nama Pengguna"
                 },
-                "title": "Isi informasi Anda."
+                "description": "SimpliSafe mengautentikasi pengguna melalui aplikasi webnya. Karena keterbatasan teknis, ada langkah manual di akhir proses ini; pastikan bahwa Anda membaca [dokumentasi] (http://home-assistant.io/integrations/simplisafe#getting-an-authorization-code) sebelum memulai.\n\nJika sudah siap, klik [di sini]({url}) untuk membuka aplikasi web SimpliSafe dan memasukkan kredensial Anda. Setelah proses selesai, kembali ke sini dan masukkan kode otorisasi dari URL aplikasi web SimpliSafe."
             }
         }
     },

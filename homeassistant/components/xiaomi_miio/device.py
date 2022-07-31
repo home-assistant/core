@@ -3,18 +3,24 @@ import datetime
 from enum import Enum
 from functools import partial
 import logging
+from typing import Any, TypeVar
 
 from construct.core import ChecksumError
 from miio import Device, DeviceException
 
-from homeassistant.const import ATTR_CONNECTIONS
+from homeassistant.const import ATTR_CONNECTIONS, CONF_MODEL
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo, Entity
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
-from .const import CONF_MAC, CONF_MODEL, DOMAIN, AuthException, SetupException
+from .const import CONF_MAC, DOMAIN, AuthException, SetupException
 
 _LOGGER = logging.getLogger(__name__)
+
+_T = TypeVar("_T", bound=DataUpdateCoordinator[Any])
 
 
 class ConnectXiaomiDevice:
@@ -101,10 +107,12 @@ class XiaomiMiioEntity(Entity):
         return device_info
 
 
-class XiaomiCoordinatedMiioEntity(CoordinatorEntity):
+class XiaomiCoordinatedMiioEntity(CoordinatorEntity[_T]):
     """Representation of a base a coordinated Xiaomi Miio Entity."""
 
-    def __init__(self, name, device, entry, unique_id, coordinator):
+    _attr_has_entity_name = True
+
+    def __init__(self, device, entry, unique_id, coordinator):
         """Initialize the coordinated Xiaomi Miio Device."""
         super().__init__(coordinator)
         self._device = device
@@ -113,17 +121,11 @@ class XiaomiCoordinatedMiioEntity(CoordinatorEntity):
         self._device_id = entry.unique_id
         self._device_name = entry.title
         self._unique_id = unique_id
-        self._name = name
 
     @property
     def unique_id(self):
         """Return an unique ID."""
         return self._unique_id
-
-    @property
-    def name(self):
-        """Return the name of this entity, if any."""
-        return self._name
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -178,9 +180,9 @@ class XiaomiCoordinatedMiioEntity(CoordinatorEntity):
         return int(timedelta.total_seconds())
 
     @staticmethod
-    def _parse_datetime_time(time: datetime.time) -> str:
+    def _parse_datetime_time(initial_time: datetime.time) -> str:
         time = datetime.datetime.now().replace(
-            hour=time.hour, minute=time.minute, second=0, microsecond=0
+            hour=initial_time.hour, minute=initial_time.minute, second=0, microsecond=0
         )
 
         if time < datetime.datetime.now():

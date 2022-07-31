@@ -1,0 +1,11 @@
+{
+    "device_automation": {
+        "action_type": {
+            "press": "Appuyez sur le bouton {entity_name}"
+        },
+        "trigger_type": {
+            "pressed": "Appui sur {entity_name}"
+        }
+    },
+    "title": "Bouton"
+}

@@ -2,12 +2,13 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any, Dict
+from typing import TYPE_CHECKING, Any, TypeVar
 
+import zigpy.endpoint
 import zigpy.zcl.clusters.closures
 
 from homeassistant.const import ATTR_DEVICE_ID
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from . import (  # noqa: F401
@@ -29,21 +30,25 @@ from .. import (
     device as zha_core_device,
     discovery as zha_disc,
     registries as zha_regs,
-    typing as zha_typing,
 )
 
-ChannelsDict = Dict[str, zha_typing.ChannelType]
+if TYPE_CHECKING:
+    from ...entity import ZhaEntity
+    from ..device import ZHADevice
+
+_ChannelsSelfT = TypeVar("_ChannelsSelfT", bound="Channels")
+_ChannelPoolSelfT = TypeVar("_ChannelPoolSelfT", bound="ChannelPool")
+_ChannelsDictType = dict[str, base.ZigbeeChannel]
 
 
 class Channels:
     """All discovered channels of a device."""
 
-    def __init__(self, zha_device: zha_typing.ZhaDeviceType) -> None:
+    def __init__(self, zha_device: ZHADevice) -> None:
         """Initialize instance."""
-        self._pools: list[zha_typing.ChannelPoolType] = []
-        self._power_config = None
-        self._identify = None
-        self._semaphore = asyncio.Semaphore(3)
+        self._pools: list[ChannelPool] = []
+        self._power_config: base.ZigbeeChannel | None = None
+        self._identify: base.ZigbeeChannel | None = None
         self._unique_id = str(zha_device.ieee)
         self._zdo_channel = base.ZDOChannel(zha_device.device.endpoints[0], zha_device)
         self._zha_device = zha_device
@@ -54,44 +59,39 @@ class Channels:
         return self._pools
 
     @property
-    def power_configuration_ch(self) -> zha_typing.ChannelType:
+    def power_configuration_ch(self) -> base.ZigbeeChannel | None:
         """Return power configuration channel."""
         return self._power_config
 
     @power_configuration_ch.setter
-    def power_configuration_ch(self, channel: zha_typing.ChannelType) -> None:
+    def power_configuration_ch(self, channel: base.ZigbeeChannel) -> None:
         """Power configuration channel setter."""
         if self._power_config is None:
             self._power_config = channel
 
     @property
-    def identify_ch(self) -> zha_typing.ChannelType:
+    def identify_ch(self) -> base.ZigbeeChannel | None:
         """Return power configuration channel."""
         return self._identify
 
     @identify_ch.setter
-    def identify_ch(self, channel: zha_typing.ChannelType) -> None:
+    def identify_ch(self, channel: base.ZigbeeChannel) -> None:
         """Power configuration channel setter."""
         if self._identify is None:
             self._identify = channel
 
     @property
-    def semaphore(self) -> asyncio.Semaphore:
-        """Return semaphore for concurrent tasks."""
-        return self._semaphore
-
-    @property
-    def zdo_channel(self) -> zha_typing.ZDOChannelType:
+    def zdo_channel(self) -> base.ZDOChannel:
         """Return ZDO channel."""
         return self._zdo_channel
 
     @property
-    def zha_device(self) -> zha_typing.ZhaDeviceType:
+    def zha_device(self) -> ZHADevice:
         """Return parent zha device."""
         return self._zha_device
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return the unique id for this channel."""
         return self._unique_id
 
@@ -104,7 +104,7 @@ class Channels:
         }
 
     @classmethod
-    def new(cls, zha_device: zha_typing.ZhaDeviceType) -> Channels:
+    def new(cls: type[_ChannelsSelfT], zha_device: ZHADevice) -> _ChannelsSelfT:
         """Create new instance."""
         channels = cls(zha_device)
         for ep_id in sorted(zha_device.device.endpoints):
@@ -142,9 +142,9 @@ class Channels:
     def async_new_entity(
         self,
         component: str,
-        entity_class: zha_typing.CALLABLE_T,
+        entity_class: type[ZhaEntity],
         unique_id: str,
-        channels: list[zha_typing.ChannelType],
+        channels: list[base.ZigbeeChannel],
     ):
         """Signal new entity addition."""
         if self.zha_device.status == zha_core_device.DeviceStatus.INITIALIZED:
@@ -163,7 +163,7 @@ class Channels:
     def zha_send_event(self, event_data: dict[str, str | int]) -> None:
         """Relay events to hass."""
         self.zha_device.hass.bus.async_fire(
-            "zha_event",
+            const.ZHA_EVENT,
             {
                 const.ATTR_DEVICE_IEEE: str(self.zha_device.ieee),
                 const.ATTR_UNIQUE_ID: self.unique_id,
@@ -178,30 +178,30 @@ class ChannelPool:
 
     def __init__(self, channels: Channels, ep_id: int) -> None:
         """Initialize instance."""
-        self._all_channels: ChannelsDict = {}
-        self._channels: Channels = channels
-        self._claimed_channels: ChannelsDict = {}
-        self._id: int = ep_id
-        self._client_channels: dict[str, zha_typing.ClientChannelType] = {}
-        self._unique_id: str = f"{channels.unique_id}-{ep_id}"
+        self._all_channels: _ChannelsDictType = {}
+        self._channels = channels
+        self._claimed_channels: _ChannelsDictType = {}
+        self._id = ep_id
+        self._client_channels: dict[str, base.ClientChannel] = {}
+        self._unique_id = f"{channels.unique_id}-{ep_id}"
 
     @property
-    def all_channels(self) -> ChannelsDict:
+    def all_channels(self) -> _ChannelsDictType:
         """All server channels of an endpoint."""
         return self._all_channels
 
     @property
-    def claimed_channels(self) -> ChannelsDict:
+    def claimed_channels(self) -> _ChannelsDictType:
         """Channels in use."""
         return self._claimed_channels
 
     @property
-    def client_channels(self) -> dict[str, zha_typing.ClientChannelType]:
+    def client_channels(self) -> dict[str, base.ClientChannel]:
         """Return a dict of client channels."""
         return self._client_channels
 
     @property
-    def endpoint(self) -> zha_typing.ZigpyEndpointType:
+    def endpoint(self) -> zigpy.endpoint.Endpoint:
         """Return endpoint of zigpy device."""
         return self._channels.zha_device.device.endpoints[self.id]
 
@@ -216,12 +216,12 @@ class ChannelPool:
         return self._channels.zha_device.nwk
 
     @property
-    def is_mains_powered(self) -> bool:
+    def is_mains_powered(self) -> bool | None:
         """Device is_mains_powered."""
         return self._channels.zha_device.is_mains_powered
 
     @property
-    def manufacturer(self) -> str | None:
+    def manufacturer(self) -> str:
         """Return device manufacturer."""
         return self._channels.zha_device.manufacturer
 
@@ -231,12 +231,12 @@ class ChannelPool:
         return self._channels.zha_device.manufacturer_code
 
     @property
-    def hass(self):
+    def hass(self) -> HomeAssistant:
         """Return hass."""
         return self._channels.zha_device.hass
 
     @property
-    def model(self) -> str | None:
+    def model(self) -> str:
         """Return device model."""
         return self._channels.zha_device.model
 
@@ -246,7 +246,7 @@ class ChannelPool:
         return self._channels.zha_device.skip_configuration
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return the unique id for this channel."""
         return self._unique_id
 
@@ -272,12 +272,15 @@ class ChannelPool:
         )
 
     @classmethod
-    def new(cls, channels: Channels, ep_id: int) -> ChannelPool:
+    def new(
+        cls: type[_ChannelPoolSelfT], channels: Channels, ep_id: int
+    ) -> _ChannelPoolSelfT:
         """Create new channels for an endpoint."""
         pool = cls(channels, ep_id)
         pool.add_all_channels()
         pool.add_client_channels()
-        zha_disc.PROBE.discover_entities(pool)
+        if not channels.zha_device.is_coordinator:
+            zha_disc.PROBE.discover_entities(pool)
         return pool
 
     @callback
@@ -329,17 +332,14 @@ class ChannelPool:
 
     async def _execute_channel_tasks(self, func_name: str, *args: Any) -> None:
         """Add a throttled channel task and swallow exceptions."""
-
-        async def _throttle(coro):
-            async with self._channels.semaphore:
-                return await coro
-
         channels = [*self.claimed_channels.values(), *self.client_channels.values()]
-        tasks = [_throttle(getattr(ch, func_name)(*args)) for ch in channels]
+        tasks = [getattr(ch, func_name)(*args) for ch in channels]
         results = await asyncio.gather(*tasks, return_exceptions=True)
         for channel, outcome in zip(channels, results):
             if isinstance(outcome, Exception):
-                channel.warning("'%s' stage failed: %s", func_name, str(outcome))
+                channel.warning(
+                    "'%s' stage failed: %s", func_name, str(outcome), exc_info=outcome
+                )
                 continue
             channel.debug("'%s' stage succeeded", func_name)
 
@@ -347,9 +347,9 @@ class ChannelPool:
     def async_new_entity(
         self,
         component: str,
-        entity_class: zha_typing.CALLABLE_T,
+        entity_class: type[ZhaEntity],
         unique_id: str,
-        channels: list[zha_typing.ChannelType],
+        channels: list[base.ZigbeeChannel],
     ):
         """Signal new entity addition."""
         self._channels.async_new_entity(component, entity_class, unique_id, channels)
@@ -360,19 +360,19 @@ class ChannelPool:
         self._channels.async_send_signal(signal, *args)
 
     @callback
-    def claim_channels(self, channels: list[zha_typing.ChannelType]) -> None:
+    def claim_channels(self, channels: list[base.ZigbeeChannel]) -> None:
         """Claim a channel."""
         self.claimed_channels.update({ch.id: ch for ch in channels})
 
     @callback
-    def unclaimed_channels(self) -> list[zha_typing.ChannelType]:
+    def unclaimed_channels(self) -> list[base.ZigbeeChannel]:
         """Return a list of available (unclaimed) channels."""
         claimed = set(self.claimed_channels)
         available = set(self.all_channels)
         return [self.all_channels[chan_id] for chan_id in (available - claimed)]
 
     @callback
-    def zha_send_event(self, event_data: dict[str, str | int]) -> None:
+    def zha_send_event(self, event_data: dict[str, Any]) -> None:
         """Relay events to hass."""
         self._channels.zha_send_event(
             {

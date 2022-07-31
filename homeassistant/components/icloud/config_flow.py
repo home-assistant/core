@@ -13,6 +13,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.helpers.storage import Store
 
 from .const import (
     CONF_GPS_ACCURACY_THRESHOLD,
@@ -113,7 +114,7 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 PyiCloudService,
                 self._username,
                 self._password,
-                self.hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY).path,
+                Store(self.hass, STORAGE_VERSION, STORAGE_KEY).path,
                 True,
                 None,
                 self._with_family,
@@ -162,7 +163,7 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initiated by the user."""
         errors = {}
 
-        icloud_dir = self.hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+        icloud_dir = Store(self.hass, STORAGE_VERSION, STORAGE_KEY)
 
         if not os.path.exists(icloud_dir.path):
             await self.hass.async_add_executor_job(os.makedirs, icloud_dir.path)
@@ -171,10 +172,6 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self._show_setup_form(user_input, errors)
 
         return await self._validate_and_create_entry(user_input, "user")
-
-    async def async_step_import(self, user_input):
-        """Import a config entry."""
-        return await self.async_step_user(user_input)
 
     async def async_step_reauth(self, user_input=None):
         """Update password for a config entry that can't authenticate."""
@@ -280,16 +277,14 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         PyiCloudService,
                         self._username,
                         self._password,
-                        self.hass.helpers.storage.Store(
-                            STORAGE_VERSION, STORAGE_KEY
-                        ).path,
+                        Store(self.hass, STORAGE_VERSION, STORAGE_KEY).path,
                         True,
                         None,
                         self._with_family,
                     )
                     return await self.async_step_verification_code(None, errors)
-                except PyiCloudFailedLoginException as error:
-                    _LOGGER.error("Error logging into iCloud service: %s", error)
+                except PyiCloudFailedLoginException as error_login:
+                    _LOGGER.error("Error logging into iCloud service: %s", error_login)
                     self.api = None
                     errors = {CONF_PASSWORD: "invalid_auth"}
                     return self._show_setup_form(user_input, errors, "user")

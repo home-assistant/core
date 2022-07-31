@@ -1,0 +1,13 @@
+{
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "timestep": "M\u00ednimo entre previs\u00f5es NowCast"
+                },
+                "description": "Se voc\u00ea optar por ativar a entidade de previs\u00e3o `nowcast`, poder\u00e1 configurar o n\u00famero de minutos entre cada previs\u00e3o. O n\u00famero de previs\u00f5es fornecidas depende do n\u00famero de minutos escolhidos entre as previs\u00f5es.",
+                "title": "Atualizar as op\u00e7\u00f5es do ClimaCell"
+            }
+        }
+    }
+}

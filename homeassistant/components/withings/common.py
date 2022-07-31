@@ -10,7 +10,7 @@ from enum import Enum, IntEnum
 from http import HTTPStatus
 import logging
 import re
-from typing import Any, Dict
+from typing import Any, Union
 
 from aiohttp.web import Response
 import requests
@@ -27,10 +27,12 @@ from withings_api.common import (
     query_measure_groups,
 )
 
+from homeassistant.components import webhook
+from homeassistant.components.application_credentials import AuthImplementation
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_WEBHOOK_ID,
     MASS_KILOGRAMS,
@@ -40,15 +42,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers import config_entry_oauth2_flow, entity_registry as er
 from homeassistant.helpers.config_entry_oauth2_flow import (
     AUTH_CALLBACK_PATH,
     AbstractOAuth2Implementation,
-    LocalOAuth2Implementation,
     OAuth2Session,
 )
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt
@@ -57,13 +57,14 @@ from . import const
 from .const import Measurement
 
 _LOGGER = logging.getLogger(const.LOG_NAMESPACE)
+_RETRY_COEFFICIENT = 0.5
 NOT_AUTHENTICATED_ERROR = re.compile(
     f"^{HTTPStatus.UNAUTHORIZED},.*",
     re.IGNORECASE,
 )
 DATA_UPDATED_SIGNAL = "withings_entity_state_updated"
 
-MeasurementData = Dict[Measurement, Any]
+MeasurementData = dict[Measurement, Any]
 
 
 class NotAuthenticatedError(HomeAssistantError):
@@ -484,7 +485,7 @@ class ConfigEntryWithingsApi(AbstractWithingsApi):
     ) -> None:
         """Initialize object."""
         self._hass = hass
-        self._config_entry = config_entry
+        self.config_entry = config_entry
         self._implementation = implementation
         self.session = OAuth2Session(hass, config_entry, implementation)
 
@@ -494,9 +495,9 @@ class ConfigEntryWithingsApi(AbstractWithingsApi):
         """Perform an async request."""
         asyncio.run_coroutine_threadsafe(
             self.session.async_ensure_token_valid(), self._hass.loop
-        )
+        ).result()
 
-        access_token = self._config_entry.data["token"]["access_token"]
+        access_token = self.config_entry.data["token"]["access_token"]
         response = requests.request(
             method,
             f"{self.URL}/{path}",
@@ -588,7 +589,7 @@ class DataManager:
             update_method=self.async_subscribe_webhook,
         )
         self.poll_data_update_coordinator = DataUpdateCoordinator[
-            Dict[MeasureType, Any]
+            Union[dict[MeasureType, Any], None]
         ](
             hass,
             _LOGGER,
@@ -641,14 +642,17 @@ class DataManager:
 
         Withings' API occasionally and incorrectly throws errors. Retrying the call tends to work.
         """
-        # pylint: disable=no-self-use
         exception = None
         for attempt in range(1, attempts + 1):
             _LOGGER.debug("Attempt %s of %s", attempt, attempts)
             try:
                 return await func()
             except Exception as exception1:  # pylint: disable=broad-except
-                await asyncio.sleep(0.1)
+                _LOGGER.debug(
+                    "Failed attempt %s of %s (%s)", attempt, attempts, exception1
+                )
+                # Make each backoff pause a little bit longer
+                await asyncio.sleep(_RETRY_COEFFICIENT * attempt)
                 exception = exception1
                 continue
 
@@ -735,32 +739,8 @@ class DataManager:
             if isinstance(
                 exception, (UnauthorizedException, AuthFailedException)
             ) or NOT_AUTHENTICATED_ERROR.match(str(exception)):
-                context = {
-                    const.PROFILE: self._profile,
-                    "userid": self._user_id,
-                    "source": SOURCE_REAUTH,
-                }
-
-                # Check if reauth flow already exists.
-                flow = next(
-                    iter(
-                        flow
-                        for flow in self._hass.config_entries.flow.async_progress_by_handler(
-                            const.DOMAIN
-                        )
-                        if flow.context == context
-                    ),
-                    None,
-                )
-                if flow:
-                    return
-
-                # Start a reauth flow.
-                await self._hass.config_entries.flow.async_init(
-                    const.DOMAIN,
-                    context=context,
-                )
-                return
+                self._api.config_entry.async_start_reauth(self._hass)
+                return None
 
             raise exception
 
@@ -914,9 +894,7 @@ async def async_get_entity_id(
     hass: HomeAssistant, attribute: WithingsAttribute, user_id: int
 ) -> str | None:
     """Get an entity id for a user's attribute."""
-    entity_registry: EntityRegistry = (
-        await hass.helpers.entity_registry.async_get_registry()
-    )
+    entity_registry = er.async_get(hass)
     unique_id = get_attribute_unique_id(attribute, user_id)
 
     entity_id = entity_registry.async_get_entity_id(
@@ -973,7 +951,7 @@ class BaseWithingsSensor(Entity):
         return self._unique_id
 
     @property
-    def icon(self) -> str:
+    def icon(self) -> str | None:
         """Icon to use in the frontend, if any."""
         return self._attribute.icon
 
@@ -1027,7 +1005,7 @@ async def async_get_data_manager(
     config_entry_data = hass.data[const.DOMAIN][config_entry.entry_id]
 
     if const.DATA_MANAGER not in config_entry_data:
-        profile = config_entry.data.get(const.PROFILE)
+        profile: str = config_entry.data[const.PROFILE]
 
         _LOGGER.debug("Creating withings data manager for profile: %s", profile)
         config_entry_data[const.DATA_MANAGER] = DataManager(
@@ -1043,7 +1021,9 @@ async def async_get_data_manager(
             config_entry.data["token"]["userid"],
             WebhookConfig(
                 id=config_entry.data[CONF_WEBHOOK_ID],
-                url=config_entry.data[const.CONF_WEBHOOK_URL],
+                url=webhook.async_generate_url(
+                    hass, config_entry.data[CONF_WEBHOOK_ID]
+                ),
                 enabled=config_entry.data[const.CONF_USE_WEBHOOK],
             ),
         )
@@ -1103,7 +1083,7 @@ def get_platform_attributes(platform: str) -> tuple[WithingsAttribute, ...]:
     )
 
 
-class WithingsLocalOAuth2Implementation(LocalOAuth2Implementation):
+class WithingsLocalOAuth2Implementation(AuthImplementation):
     """Oauth2 implementation that only uses the external url."""
 
     @property
@@ -1111,3 +1091,46 @@ class WithingsLocalOAuth2Implementation(LocalOAuth2Implementation):
         """Return the redirect uri."""
         url = get_url(self.hass, allow_internal=False, prefer_cloud=True)
         return f"{url}{AUTH_CALLBACK_PATH}"
+
+    async def _token_request(self, data: dict) -> dict:
+        """Make a token request and adapt Withings API reply."""
+        new_token = await super()._token_request(data)
+        # Withings API returns habitual token data under json key "body":
+        # {
+        #     "status": [{integer} Withings API response status],
+        #     "body": {
+        #         "access_token": [{string} Your new access_token],
+        #         "expires_in": [{integer} Access token expiry delay in seconds],
+        #         "token_type": [{string] HTTP Authorization Header format: Bearer],
+        #         "scope": [{string} Scopes the user accepted],
+        #         "refresh_token": [{string} Your new refresh_token],
+        #         "userid": [{string} The Withings ID of the user]
+        #     }
+        # }
+        # so we copy that to token root.
+        if body := new_token.pop("body", None):
+            new_token.update(body)
+        return new_token
+
+    async def async_resolve_external_data(self, external_data: Any) -> dict:
+        """Resolve the authorization code to tokens."""
+        return await self._token_request(
+            {
+                "action": "requesttoken",
+                "grant_type": "authorization_code",
+                "code": external_data["code"],
+                "redirect_uri": external_data["state"]["redirect_uri"],
+            }
+        )
+
+    async def _async_refresh_token(self, token: dict) -> dict:
+        """Refresh tokens."""
+        new_token = await self._token_request(
+            {
+                "action": "requesttoken",
+                "grant_type": "refresh_token",
+                "client_id": self.client_id,
+                "refresh_token": token["refresh_token"],
+            }
+        )
+        return {**token, **new_token}

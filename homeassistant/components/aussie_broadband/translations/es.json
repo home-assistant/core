@@ -1,0 +1,50 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "La cuenta ya est\u00e1 configurada",
+            "no_services_found": "No se han encontrado servicios para esta cuenta",
+            "reauth_successful": "Re-autenticaci\u00f3n realizada correctamente"
+        },
+        "error": {
+            "cannot_connect": "Fall\u00f3 la conexi\u00f3n",
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
+            "unknown": "Error inesperado"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Contrase\u00f1a"
+                },
+                "description": "Actualice la contrase\u00f1a para {username}",
+                "title": "Reautenticar Integraci\u00f3n"
+            },
+            "service": {
+                "data": {
+                    "services": "Servicios"
+                },
+                "title": "Seleccionar Servicios"
+            },
+            "user": {
+                "data": {
+                    "password": "Contrase\u00f1a",
+                    "username": "Usuario"
+                }
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "cannot_connect": "Fallo en la conexi\u00f3n",
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
+            "unknown": "Error inesperado"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "services": "Servicios"
+                },
+                "title": "Selecciona servicios"
+            }
+        }
+    }
+}

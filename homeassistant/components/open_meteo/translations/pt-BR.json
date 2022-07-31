@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "zone": "Zona"
+                },
+                "description": "Selecione o local a ser usado para previs\u00e3o do tempo"
+            }
+        }
+    }
+}

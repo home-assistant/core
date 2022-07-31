@@ -12,16 +12,17 @@
         },
         "flow_title": "OctoPrint-skriver: {host}",
         "progress": {
-            "get_api_key": "\u00c5pne OctoPrint UI og klikk \"Tillat\" p\u00e5 tilgangsforesp\u00f8rselen for \"Hjemmeassistent\"."
+            "get_api_key": "\u00c5pne OctoPrint UI og klikk \"Tillat\" p\u00e5 tilgangsforesp\u00f8rselen for \"Home Assistant\"."
         },
         "step": {
             "user": {
                 "data": {
                     "host": "Vert",
                     "path": "Bane til program",
-                    "port": "Portnummer",
+                    "port": "Port",
                     "ssl": "Bruk SSL",
-                    "username": "Brukernavn"
+                    "username": "Brukernavn",
+                    "verify_ssl": "Verifisere SSL-sertifikat"
                 }
             }
         }

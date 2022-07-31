@@ -1,6 +1,5 @@
 """Test ZHA Gateway."""
 import asyncio
-import time
 from unittest.mock import patch
 
 import pytest
@@ -8,11 +7,10 @@ import zigpy.profiles.zha as zha
 import zigpy.zcl.clusters.general as general
 import zigpy.zcl.clusters.lighting as lighting
 
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.zha.core.group import GroupMember
-from homeassistant.components.zha.core.store import TOMBSTONE_LIFETIME
+from homeassistant.const import Platform
 
-from .common import async_enable_traffic, async_find_group_entity_id, get_zha_gateway
+from .common import async_find_group_entity_id, get_zha_gateway
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 
 IEEE_GROUPABLE_DEVICE = "01:2d:6f:00:0a:90:69:e8"
@@ -32,6 +30,22 @@ def zigpy_dev_basic(zigpy_device_mock):
             }
         }
     )
+
+
+@pytest.fixture(autouse=True)
+def required_platform_only():
+    """Only setup the required and required base platforms to speed up tests."""
+    with patch(
+        "homeassistant.components.zha.PLATFORMS",
+        (
+            Platform.SENSOR,
+            Platform.LIGHT,
+            Platform.DEVICE_TRACKER,
+            Platform.NUMBER,
+            Platform.SELECT,
+        ),
+    ):
+        yield
 
 
 @pytest.fixture
@@ -144,7 +158,7 @@ async def test_gateway_group_methods(hass, device_light_1, device_light_2, coord
     for member in zha_group.members:
         assert member.device.ieee in member_ieee_addresses
 
-    entity_id = async_find_group_entity_id(hass, LIGHT_DOMAIN, zha_group)
+    entity_id = async_find_group_entity_id(hass, Platform.LIGHT, zha_group)
     assert hass.states.get(entity_id) is not None
 
     # test get group by name
@@ -158,7 +172,7 @@ async def test_gateway_group_methods(hass, device_light_1, device_light_2, coord
     assert zha_gateway.async_get_group_by_name(zha_group.name) is None
 
     # the group entity should be cleaned up
-    assert entity_id not in hass.states.async_entity_ids(LIGHT_DOMAIN)
+    assert entity_id not in hass.states.async_entity_ids(Platform.LIGHT)
 
     # test creating a group with 1 member
     zha_group = await zha_gateway.async_create_zigpy_group(
@@ -172,7 +186,7 @@ async def test_gateway_group_methods(hass, device_light_1, device_light_2, coord
         assert member.device.ieee in [device_light_1.ieee]
 
     # the group entity should not have been cleaned up
-    assert entity_id not in hass.states.async_entity_ids(LIGHT_DOMAIN)
+    assert entity_id not in hass.states.async_entity_ids(Platform.LIGHT)
 
     with patch("zigpy.zcl.Cluster.request", side_effect=asyncio.TimeoutError):
         await zha_group.members[0].async_remove_from_group()
@@ -197,62 +211,3 @@ async def test_gateway_create_group_with_id(hass, device_light_1, coordinator):
     assert len(zha_group.members) == 1
     assert zha_group.members[0].device is device_light_1
     assert zha_group.group_id == 0x1234
-
-
-async def test_updating_device_store(hass, zigpy_dev_basic, zha_dev_basic):
-    """Test saving data after a delay."""
-    zha_gateway = get_zha_gateway(hass)
-    assert zha_gateway is not None
-    await async_enable_traffic(hass, [zha_dev_basic])
-
-    assert zha_dev_basic.last_seen is not None
-    entry = zha_gateway.zha_storage.async_get_or_create_device(zha_dev_basic)
-    assert entry.last_seen == zha_dev_basic.last_seen
-
-    assert zha_dev_basic.last_seen is not None
-    last_seen = zha_dev_basic.last_seen
-
-    # test that we can't set None as last seen any more
-    zha_dev_basic.async_update_last_seen(None)
-    assert last_seen == zha_dev_basic.last_seen
-
-    # test that we won't put None in storage
-    zigpy_dev_basic.last_seen = None
-    assert zha_dev_basic.last_seen is None
-    await zha_gateway.async_update_device_storage()
-    await hass.async_block_till_done()
-    entry = zha_gateway.zha_storage.async_get_or_create_device(zha_dev_basic)
-    assert entry.last_seen == last_seen
-
-    # test that we can still set a good last_seen
-    last_seen = time.time()
-    zha_dev_basic.async_update_last_seen(last_seen)
-    assert last_seen == zha_dev_basic.last_seen
-
-    # test that we still put good values in storage
-    await zha_gateway.async_update_device_storage()
-    await hass.async_block_till_done()
-    entry = zha_gateway.zha_storage.async_get_or_create_device(zha_dev_basic)
-    assert entry.last_seen == last_seen
-
-
-async def test_cleaning_up_storage(hass, zigpy_dev_basic, zha_dev_basic, hass_storage):
-    """Test cleaning up zha storage and remove stale devices."""
-    zha_gateway = get_zha_gateway(hass)
-    assert zha_gateway is not None
-    await async_enable_traffic(hass, [zha_dev_basic])
-
-    assert zha_dev_basic.last_seen is not None
-    await zha_gateway.zha_storage.async_save()
-    await hass.async_block_till_done()
-
-    assert hass_storage["zha.storage"]["data"]["devices"]
-    device = hass_storage["zha.storage"]["data"]["devices"][0]
-    assert device["ieee"] == str(zha_dev_basic.ieee)
-
-    zha_dev_basic.device.last_seen = time.time() - TOMBSTONE_LIFETIME - 1
-    await zha_gateway.async_update_device_storage()
-    await hass.async_block_till_done()
-    await zha_gateway.zha_storage.async_save()
-    await hass.async_block_till_done()
-    assert not hass_storage["zha.storage"]["data"]["devices"]

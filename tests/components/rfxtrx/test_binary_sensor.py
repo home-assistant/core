@@ -3,6 +3,7 @@ import pytest
 
 from homeassistant.components.rfxtrx import DOMAIN
 from homeassistant.components.rfxtrx.const import ATTR_EVENT
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import State
 
 from tests.common import MockConfigEntry, mock_restore_cache
@@ -32,12 +33,12 @@ async def test_one(hass, rfxtrx):
 
     state = hass.states.get("binary_sensor.ac_213c7f2_48")
     assert state
-    assert state.state == "off"
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get("friendly_name") == "AC 213c7f2:48"
 
 
 async def test_one_pt2262(hass, rfxtrx):
-    """Test with 1 sensor."""
+    """Test with 1 PT2262 sensor."""
     entry_data = create_rfx_test_cfg(
         devices={
             "0913000022670e013970": {
@@ -57,7 +58,7 @@ async def test_one_pt2262(hass, rfxtrx):
 
     state = hass.states.get("binary_sensor.pt2262_22670e")
     assert state
-    assert state.state == "off"  # probably aught to be unknown
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get("friendly_name") == "PT2262 22670e"
 
     await rfxtrx.signal("0913000022670e013970")
@@ -84,12 +85,12 @@ async def test_pt2262_unconfigured(hass, rfxtrx):
 
     state = hass.states.get("binary_sensor.pt2262_22670e")
     assert state
-    assert state.state == "off"  # probably aught to be unknown
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get("friendly_name") == "PT2262 22670e"
 
     state = hass.states.get("binary_sensor.pt2262_226707")
     assert state
-    assert state.state == "off"  # probably aught to be unknown
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get("friendly_name") == "PT2262 226707"
 
 
@@ -133,17 +134,17 @@ async def test_several(hass, rfxtrx):
 
     state = hass.states.get("binary_sensor.ac_213c7f2_48")
     assert state
-    assert state.state == "off"
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get("friendly_name") == "AC 213c7f2:48"
 
     state = hass.states.get("binary_sensor.ac_118cdea_2")
     assert state
-    assert state.state == "off"
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get("friendly_name") == "AC 118cdea:2"
 
     state = hass.states.get("binary_sensor.ac_118cdea_3")
     assert state
-    assert state.state == "off"
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get("friendly_name") == "AC 118cdea:3"
 
     # "2: Group on"
@@ -214,7 +215,7 @@ async def test_off_delay(hass, rfxtrx, timestep):
 
     state = hass.states.get("binary_sensor.ac_118cdea_2")
     assert state
-    assert state.state == "off"
+    assert state.state == STATE_UNKNOWN
 
     await rfxtrx.signal("0b1100100118cdea02010f70")
     state = hass.states.get("binary_sensor.ac_118cdea_2")
@@ -317,5 +318,5 @@ async def test_pt2262_duplicate_id(hass, rfxtrx):
 
     state = hass.states.get("binary_sensor.pt2262_22670e")
     assert state
-    assert state.state == "off"  # probably aught to be unknown
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get("friendly_name") == "PT2262 22670e"

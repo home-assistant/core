@@ -4,7 +4,11 @@ from unittest.mock import Mock, patch
 from aiohttp import WSMsgType
 import voluptuous as vol
 
-from homeassistant.components.websocket_api import const, messages
+from homeassistant.components.websocket_api import (
+    async_register_command,
+    const,
+    messages,
+)
 
 
 async def test_invalid_message_format(websocket_client):
@@ -49,7 +53,8 @@ async def test_unknown_command(websocket_client):
 
 async def test_handler_failing(hass, websocket_client):
     """Test a command that raises."""
-    hass.components.websocket_api.async_register_command(
+    async_register_command(
+        hass,
         "bla",
         Mock(side_effect=TypeError),
         messages.BASE_COMMAND_MESSAGE_SCHEMA.extend({"type": "bla"}),
@@ -65,7 +70,8 @@ async def test_handler_failing(hass, websocket_client):
 
 async def test_invalid_vol(hass, websocket_client):
     """Test a command that raises invalid vol error."""
-    hass.components.websocket_api.async_register_command(
+    async_register_command(
+        hass,
         "bla",
         Mock(side_effect=TypeError),
         messages.BASE_COMMAND_MESSAGE_SCHEMA.extend(

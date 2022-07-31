@@ -20,4 +20,4 @@ set_speed:
         number:
           min: 0
           max: 1000000
-          unit_of_measurement: 'kB/s'
+          unit_of_measurement: "kB/s"

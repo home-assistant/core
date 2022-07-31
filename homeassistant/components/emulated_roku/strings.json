@@ -1,7 +1,9 @@
 {
   "title": "Emulated Roku",
   "config": {
-    "abort": { "already_configured": "[%key:common::config_flow::abort::already_configured_device%]" }, 
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
     "step": {
       "user": {
         "data": {

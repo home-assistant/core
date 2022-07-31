@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Account is already configured",
+            "no_locations": "No locations are available for this user, check TotalConnect settings",
             "reauth_successful": "Re-authentication was successful"
         },
         "error": {
@@ -11,7 +12,6 @@
         "step": {
             "locations": {
                 "data": {
-                    "location": "Location",
                     "usercode": "Usercode"
                 },
                 "description": "Enter the usercode for this user at location {location_id}",
@@ -25,8 +25,18 @@
                 "data": {
                     "password": "Password",
                     "username": "Username"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "auto_bypass_low_battery": "Auto bypass low battery"
                 },
-                "title": "Total Connect"
+                "description": "Automatically bypass zones the moment they report a low battery.",
+                "title": "TotalConnect Options"
             }
         }
     }

@@ -1,0 +1,73 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Akun sudah dikonfigurasi"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "attribute": "Atribut",
+                    "authentication": "Autentikasi",
+                    "device_class": "Kelas Perangkat",
+                    "headers": "Header",
+                    "index": "Indeks",
+                    "name": "Nama",
+                    "password": "Kata Sandi",
+                    "resource": "Sumber Daya",
+                    "select": "Pilihan",
+                    "state_class": "Kelas Status",
+                    "unit_of_measurement": "Satuan Pengukuran",
+                    "username": "Nama Pengguna",
+                    "value_template": "Nilai Templat",
+                    "verify_ssl": "Verifikasi sertifikat SSL"
+                },
+                "data_description": {
+                    "attribute": "Dapatkan nilai atribut pada tag yang dipilih",
+                    "authentication": "Jenis autentikasi HTTP. Salah satu dari basic atau digest",
+                    "device_class": "Jenis/kelas sensor untuk mengatur ikon di antarmuka",
+                    "headers": "Header yang digunakan untuk permintaan web",
+                    "index": "Menentukan elemen mana yang dikembalikan oleh selektor CSS untuk digunakan",
+                    "resource": "URL ke situs web yang mengandung nilai",
+                    "select": "Menentukan tag yang harus dicari. Periksa selektor CSS Beautifulsoup untuk melihat detailnya",
+                    "state_class": "Nilai state_class dari sensor",
+                    "value_template": "Mendefinisikan templat untuk mendapatkan status sensor",
+                    "verify_ssl": "Mengaktifkan/menonaktifkan verifikasi sertifikat SSL/TLS, misalnya jika sertifikat ditandatangani sendiri"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "attribute": "Atribut",
+                    "authentication": "Autentikasi",
+                    "device_class": "Kelas Perangkat",
+                    "headers": "Header",
+                    "index": "Indeks",
+                    "name": "Nama",
+                    "password": "Kata Sandi",
+                    "resource": "Sumber Daya",
+                    "select": "Pilihan",
+                    "state_class": "Kelas Status",
+                    "unit_of_measurement": "Satuan Pengukuran",
+                    "username": "Nama Pengguna",
+                    "value_template": "Nilai Templat",
+                    "verify_ssl": "Verifikasi sertifikat SSL"
+                },
+                "data_description": {
+                    "attribute": "Dapatkan nilai atribut pada tag yang dipilih",
+                    "authentication": "Jenis autentikasi HTTP. Salah satu dari basic atau digest",
+                    "device_class": "Jenis/kelas sensor untuk mengatur ikon di antarmuka",
+                    "headers": "Header yang digunakan untuk permintaan web",
+                    "index": "Menentukan elemen mana yang dikembalikan oleh selektor CSS untuk digunakan",
+                    "resource": "URL ke situs web yang mengandung nilai",
+                    "select": "Menentukan tag yang harus dicari. Periksa selektor CSS Beautifulsoup untuk melihat detailnya",
+                    "state_class": "Nilai state_class dari sensor",
+                    "value_template": "Mendefinisikan templat untuk mendapatkan status sensor",
+                    "verify_ssl": "Mengaktifkan/menonaktifkan verifikasi sertifikat SSL/TLS, misalnya jika sertifikat ditandatangani sendiri"
+                }
+            }
+        }
+    }
+}

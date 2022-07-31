@@ -13,7 +13,7 @@
             "cannot_connect": "\u00c9chec de connexion",
             "connection_upgrade": "Impossible de se connecter \u00e0 l'imprimante. Veuillez r\u00e9essayer avec l'option SSL / TLS coch\u00e9e."
         },
-        "flow_title": "Imprimante: {name}",
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {

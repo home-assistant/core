@@ -1,4 +1,6 @@
 """Sensor for the CityBikes data."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import logging
@@ -26,11 +28,14 @@ from homeassistant.const import (
     LENGTH_FEET,
     LENGTH_METERS,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import distance, location
 
 _LOGGER = logging.getLogger(__name__)
@@ -149,7 +154,12 @@ async def async_citybikes_request(hass, uri, schema):
     raise CityBikesRequestError
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the CityBikes platform."""
     if PLATFORM not in hass.data:
         hass.data[PLATFORM] = {MONITORED_NETWORKS: {}}

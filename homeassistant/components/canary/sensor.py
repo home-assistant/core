@@ -3,15 +3,11 @@ from __future__ import annotations
 
 from typing import Final
 
-from canary.api import Device, Location, SensorType
+from canary.model import Device, Location, SensorType
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_SIGNAL_STRENGTH,
-    DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     TEMP_CELSIUS,
@@ -38,17 +34,17 @@ CANARY_FLEX: Final = "Canary Flex"
 # Sensor types are defined like so:
 # sensor type name, unit_of_measurement, icon, device class, products supported
 SENSOR_TYPES: Final[list[SensorTypeItem]] = [
-    ("temperature", TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE, [CANARY_PRO]),
-    ("humidity", PERCENTAGE, None, DEVICE_CLASS_HUMIDITY, [CANARY_PRO]),
+    ("temperature", TEMP_CELSIUS, None, SensorDeviceClass.TEMPERATURE, [CANARY_PRO]),
+    ("humidity", PERCENTAGE, None, SensorDeviceClass.HUMIDITY, [CANARY_PRO]),
     ("air_quality", None, "mdi:weather-windy", None, [CANARY_PRO]),
     (
         "wifi",
         SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         None,
-        DEVICE_CLASS_SIGNAL_STRENGTH,
+        SensorDeviceClass.SIGNAL_STRENGTH,
         [CANARY_FLEX],
     ),
-    ("battery", PERCENTAGE, None, DEVICE_CLASS_BATTERY, [CANARY_FLEX]),
+    ("battery", PERCENTAGE, None, SensorDeviceClass.BATTERY, [CANARY_FLEX]),
 ]
 
 STATE_AIR_QUALITY_NORMAL: Final = "normal"
@@ -80,10 +76,8 @@ async def async_setup_entry(
     async_add_entities(sensors, True)
 
 
-class CanarySensor(CoordinatorEntity, SensorEntity):
+class CanarySensor(CoordinatorEntity[CanaryDataUpdateCoordinator], SensorEntity):
     """Representation of a Canary sensor."""
-
-    coordinator: CanaryDataUpdateCoordinator
 
     def __init__(
         self,

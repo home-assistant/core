@@ -3,9 +3,8 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 
 from . import (
@@ -24,7 +23,7 @@ pytestmark = pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicle
 @pytest.fixture(autouse=True)
 def override_platforms():
     """Override PLATFORMS."""
-    with patch("homeassistant.components.renault.PLATFORMS", [DEVICE_TRACKER_DOMAIN]):
+    with patch("homeassistant.components.renault.PLATFORMS", [Platform.DEVICE_TRACKER]):
         yield
 
 
@@ -43,7 +42,7 @@ async def test_device_trackers(
     mock_vehicle = MOCK_VEHICLES[vehicle_type]
     check_device_registry(device_registry, mock_vehicle["expected_device"])
 
-    expected_entities = mock_vehicle[DEVICE_TRACKER_DOMAIN]
+    expected_entities = mock_vehicle[Platform.DEVICE_TRACKER]
     assert len(entity_registry.entities) == len(expected_entities)
 
     check_entities(hass, entity_registry, expected_entities)
@@ -64,7 +63,7 @@ async def test_device_tracker_empty(
     mock_vehicle = MOCK_VEHICLES[vehicle_type]
     check_device_registry(device_registry, mock_vehicle["expected_device"])
 
-    expected_entities = mock_vehicle[DEVICE_TRACKER_DOMAIN]
+    expected_entities = mock_vehicle[Platform.DEVICE_TRACKER]
     assert len(entity_registry.entities) == len(expected_entities)
     check_entities_no_data(hass, entity_registry, expected_entities, STATE_UNKNOWN)
 
@@ -84,7 +83,7 @@ async def test_device_tracker_errors(
     mock_vehicle = MOCK_VEHICLES[vehicle_type]
     check_device_registry(device_registry, mock_vehicle["expected_device"])
 
-    expected_entities = mock_vehicle[DEVICE_TRACKER_DOMAIN]
+    expected_entities = mock_vehicle[Platform.DEVICE_TRACKER]
     assert len(entity_registry.entities) == len(expected_entities)
 
     check_entities_unavailable(hass, entity_registry, expected_entities)

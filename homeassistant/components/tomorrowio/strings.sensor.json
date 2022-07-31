@@ -1,0 +1,27 @@
+{
+  "state": {
+    "tomorrowio__pollen_index": {
+      "none": "None",
+      "very_low": "Very Low",
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "very_high": "Very High"
+    },
+    "tomorrowio__health_concern": {
+      "good": "Good",
+      "moderate": "Moderate",
+      "unhealthy_for_sensitive_groups": "Unhealthy for Sensitive Groups",
+      "unhealthy": "Unhealthy",
+      "very_unhealthy": "Very Unhealthy",
+      "hazardous": "Hazardous"
+    },
+    "tomorrowio__precipitation_type": {
+      "none": "None",
+      "rain": "Rain",
+      "snow": "Snow",
+      "freezing_rain": "Freezing Rain",
+      "ice_pellets": "Ice Pellets"
+    }
+  }
+}

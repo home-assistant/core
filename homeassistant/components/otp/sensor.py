@@ -1,4 +1,6 @@
 """Support for One-Time Password (OTP)."""
+from __future__ import annotations
+
 import time
 
 import pyotp
@@ -6,8 +8,10 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_NAME, CONF_TOKEN
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 DEFAULT_NAME = "OTP Sensor"
 
@@ -23,13 +27,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the OTP sensor."""
     name = config.get(CONF_NAME)
     token = config.get(CONF_TOKEN)
 
     async_add_entities([TOTPSensor(name, token)], True)
-    return True
 
 
 # Only TOTP supported at the moment, HOTP might be added later

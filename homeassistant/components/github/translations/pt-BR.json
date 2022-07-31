@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "O servi\u00e7o j\u00e1 est\u00e1 configurado",
+            "could_not_register": "N\u00e3o foi poss\u00edvel registrar a integra\u00e7\u00e3o com o GitHub"
+        },
+        "progress": {
+            "wait_for_device": "1. Abra {url}\n2. Cole a seguinte chave para autorizar a integra\u00e7\u00e3o:\n ```\n {code}\n ```\n"
+        },
+        "step": {
+            "repositories": {
+                "data": {
+                    "repositories": "Selecione os reposit\u00f3rios para rastrear."
+                },
+                "title": "Configurar reposit\u00f3rios"
+            }
+        }
+    }
+}

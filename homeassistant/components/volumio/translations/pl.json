@@ -11,7 +11,7 @@
         "step": {
             "discovery_confirm": {
                 "description": "Czy chcesz doda\u0107 Volumio (\"{name}\") do Home Assistanta?",
-                "title": "Wykryte Volumio"
+                "title": "Wykryto Volumio"
             },
             "user": {
                 "data": {

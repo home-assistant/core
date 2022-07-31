@@ -1,0 +1,49 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "no_selection": "Please select at least one city/county",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "_a_to_d": "City/county (A-D)",
+                    "_e_to_h": "City/county (E-H)",
+                    "_i_to_l": "City/county (I-L)",
+                    "_m_to_q": "City/county (M-Q)",
+                    "_r_to_u": "City/county (R-U)",
+                    "_v_to_z": "City/county (V-Z)",
+                    "corona_filter": "Remove Corona Warnings",
+                    "slots": "Maximum warnings per city/county"
+                },
+                "title": "Select city/county"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "no_selection": "Please select at least one city/county",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "_a_to_d": "City/county (A-D)",
+                    "_e_to_h": "City/county (E-H)",
+                    "_i_to_l": "City/county (I-L)",
+                    "_m_to_q": "City/county (M-Q)",
+                    "_r_to_u": "City/county (R-U)",
+                    "_v_to_z": "City/county (V-Z)",
+                    "corona_filter": "Remove Corona Warnings",
+                    "slots": "Maximum warnings per city/county"
+                },
+                "title": "Options"
+            }
+        }
+    }
+}

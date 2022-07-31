@@ -1,7 +1,7 @@
 """Provides device automations for Device Tracker."""
 from __future__ import annotations
 
-from typing import Any, Final
+from typing import Final
 
 import voluptuous as vol
 
@@ -24,7 +24,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry
 from homeassistant.helpers.typing import ConfigType
 
-from . import DOMAIN
+from .const import DOMAIN
 
 TRIGGER_TYPES: Final[set[str]] = {"enters", "leaves"}
 
@@ -39,9 +39,9 @@ TRIGGER_SCHEMA: Final = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 
 async def async_get_triggers(
     hass: HomeAssistant, device_id: str
-) -> list[dict[str, Any]]:
+) -> list[dict[str, str]]:
     """List device triggers for Device Tracker devices."""
-    registry = await entity_registry.async_get_registry(hass)
+    registry = entity_registry.async_get(hass)
     triggers = []
 
     # Get all the integrations entities for this device
@@ -89,7 +89,7 @@ async def async_attach_trigger(
         CONF_ZONE: config[CONF_ZONE],
         CONF_EVENT: event,
     }
-    zone_config = zone.TRIGGER_SCHEMA(zone_config)
+    zone_config = await zone.async_validate_trigger_config(hass, zone_config)
     return await zone.async_attach_trigger(
         hass, zone_config, action, automation_info, platform_type="device"
     )

@@ -1,0 +1,26 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "after_time": "Ora di accensione",
+                    "before_time": "Ora di spegnimento",
+                    "name": "Nome"
+                },
+                "description": "Crea un sensore binario che si accende o si spegne a seconda dell'ora.",
+                "title": "Aggiungi sensore delle ore del giorno"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "after_time": "Ora di accensione",
+                    "before_time": "Ora di spegnimento"
+                }
+            }
+        }
+    },
+    "title": "Sensore ore del giorno"
+}

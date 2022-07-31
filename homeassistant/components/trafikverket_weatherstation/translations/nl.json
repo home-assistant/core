@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is al geconfigureerd"
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_auth": "Ongeldige authenticatie",
+            "invalid_station": "Kon geen weerstation vinden met de opgegeven naam",
+            "more_stations": "Meerdere weerstations gevonden met de opgegeven naam"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API-sleutel",
+                    "station": "Station"
+                }
+            }
+        }
+    }
+}

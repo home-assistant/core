@@ -8,16 +8,9 @@
             "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
         },
         "step": {
-            "resources": {
-                "data": {
-                    "resources": "\u8cc7\u6e90"
-                },
-                "title": "\u9078\u64c7\u6240\u8981\u76e3\u8996\u7684\u8cc7\u6e90"
-            },
             "ups": {
                 "data": {
-                    "alias": "\u5225\u540d",
-                    "resources": "\u8cc7\u6e90"
+                    "alias": "\u5225\u540d"
                 },
                 "title": "\u9078\u64c7\u6240\u8981\u76e3\u8996\u7684 UPS"
             },
@@ -33,17 +26,11 @@
         }
     },
     "options": {
-        "error": {
-            "cannot_connect": "\u9023\u7dda\u5931\u6557",
-            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
-        },
         "step": {
             "init": {
                 "data": {
-                    "resources": "\u8cc7\u6e90",
                     "scan_interval": "\u6383\u63cf\u9593\u8ddd\uff08\u79d2\uff09"
-                },
-                "description": "\u9078\u64c7\u611f\u6e2c\u5668\u8cc7\u6e90\u3002"
+                }
             }
         }
     }

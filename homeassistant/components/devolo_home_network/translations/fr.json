@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
+            "home_control": "L'unit\u00e9 centrale devolo Home Control ne fonctionne pas avec cette int\u00e9gration."
+        },
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion",
+            "unknown": "Erreur inattendue"
+        },
+        "flow_title": "{product} ( {name} )",
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "Adresse IP"
+                },
+                "description": "Voulez-vous commencer la configuration\u00a0?"
+            },
+            "zeroconf_confirm": {
+                "description": "Voulez-vous ajouter l'appareil de r\u00e9seau domestique devolo portant le nom d'h\u00f4te `{host_name}` \u00e0 Home Assistant\u00a0?",
+                "title": "Appareil r\u00e9seau domestique devolo d\u00e9couvert"
+            }
+        }
+    }
+}

@@ -25,6 +25,7 @@ COMMUNITY_POST_INPUTS = {
                 "integration": "zha",
                 "manufacturer": "IKEA of Sweden",
                 "model": "TRADFRI remote control",
+                "multiple": False,
             }
         },
     },
@@ -197,7 +198,8 @@ async def test_fetch_blueprint_from_github_url(hass, aioclient_mock, url):
     assert imported_blueprint.blueprint.domain == "automation"
     assert imported_blueprint.blueprint.inputs == {
         "service_to_call": None,
-        "trigger_event": None,
+        "trigger_event": {"selector": {"text": {}}},
+        "a_number": {"selector": {"number": {"mode": "box", "step": 1.0}}},
     }
     assert imported_blueprint.suggested_filename == "balloob/motion_light"
     assert imported_blueprint.blueprint.metadata["source_url"] == url
@@ -218,10 +220,17 @@ async def test_fetch_blueprint_from_github_gist_url(hass, aioclient_mock):
         "motion_entity": {
             "name": "Motion Sensor",
             "selector": {
-                "entity": {"domain": "binary_sensor", "device_class": "motion"}
+                "entity": {
+                    "domain": "binary_sensor",
+                    "device_class": "motion",
+                    "multiple": False,
+                }
             },
         },
-        "light_entity": {"name": "Light", "selector": {"entity": {"domain": "light"}}},
+        "light_entity": {
+            "name": "Light",
+            "selector": {"entity": {"domain": "light", "multiple": False}},
+        },
     }
     assert imported_blueprint.suggested_filename == "balloob/motion_light"
     assert imported_blueprint.blueprint.metadata["source_url"] == url

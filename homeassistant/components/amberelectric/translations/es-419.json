@@ -1,0 +1,20 @@
+{
+    "config": {
+        "step": {
+            "site": {
+                "data": {
+                    "site_name": "Nombre del sitio",
+                    "site_nmi": "NMI del sitio"
+                },
+                "description": "Seleccione el NMI del sitio que le gustar\u00eda agregar"
+            },
+            "user": {
+                "data": {
+                    "api_token": "Token API",
+                    "site_id": "ID del sitio"
+                },
+                "description": "Vaya a {api_url} para generar una clave de API"
+            }
+        }
+    }
+}

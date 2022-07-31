@@ -1,29 +1,25 @@
 """Support for tracking MySensors devices."""
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import Any
+from typing import Any, cast
 
 from homeassistant.components import mysensors
-from homeassistant.components.device_tracker import DOMAIN
-from homeassistant.components.mysensors import DevId
-from homeassistant.components.mysensors.const import (
-    ATTR_GATEWAY_ID,
-    DiscoveryInfo,
-    GatewayId,
-)
+from homeassistant.components.device_tracker import AsyncSeeCallback
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
 
+from .const import ATTR_GATEWAY_ID, DevId, DiscoveryInfo, GatewayId
 from .helpers import on_unload
 
 
 async def async_setup_scanner(
     hass: HomeAssistant,
-    config: dict[str, Any],
-    async_see: Callable,
-    discovery_info: DiscoveryInfo | None = None,
+    config: ConfigType,
+    async_see: AsyncSeeCallback,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> bool:
     """Set up the MySensors device scanner."""
     if not discovery_info:
@@ -31,8 +27,8 @@ async def async_setup_scanner(
 
     new_devices = mysensors.setup_mysensors_platform(
         hass,
-        DOMAIN,
-        discovery_info,
+        Platform.DEVICE_TRACKER,
+        cast(DiscoveryInfo, discovery_info),
         MySensorsDeviceScanner,
         device_args=(hass, async_see),
     )
@@ -67,7 +63,12 @@ async def async_setup_scanner(
 class MySensorsDeviceScanner(mysensors.device.MySensorsDevice):
     """Represent a MySensors scanner."""
 
-    def __init__(self, hass: HomeAssistant, async_see: Callable, *args: Any) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        async_see: AsyncSeeCallback,
+        *args: Any,
+    ) -> None:
         """Set up instance."""
         super().__init__(*args)
         self.async_see = async_see

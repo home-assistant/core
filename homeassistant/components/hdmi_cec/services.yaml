@@ -72,9 +72,9 @@ volume:
       selector:
         select:
           options:
-            - 'off'
-            - 'on'
-            - 'toggle'
+            - "off"
+            - "on"
+            - "toggle"
     up:
       name: Up
       description: Increases volume x levels.

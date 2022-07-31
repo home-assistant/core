@@ -2,12 +2,15 @@
 
 from unittest.mock import patch
 
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import recorder
 
-from tests.common import async_init_recorder_component
+from tests.common import SetupRecorderInstanceT
 
 
-async def test_async_migration_in_progress(hass):
+async def test_async_migration_in_progress(
+    hass: HomeAssistant, async_setup_recorder_instance: SetupRecorderInstanceT
+):
     """Test async_migration_in_progress wraps the recorder."""
     with patch(
         "homeassistant.components.recorder.util.async_migration_in_progress",
@@ -22,7 +25,7 @@ async def test_async_migration_in_progress(hass):
     ):
         assert recorder.async_migration_in_progress(hass) is False
 
-    await async_init_recorder_component(hass)
+    await async_setup_recorder_instance(hass)
 
     # The recorder is now loaded
     with patch(

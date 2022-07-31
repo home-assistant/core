@@ -7,8 +7,9 @@ from miio import DeviceException
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
+from homeassistant.components import zeroconf
 from homeassistant.components.xiaomi_miio import const
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
+from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_NAME, CONF_TOKEN
 
 from . import TEST_MAC
 
@@ -168,7 +169,7 @@ async def test_config_flow_gateway_success(hass):
         const.CONF_CLOUD_COUNTRY: None,
         CONF_HOST: TEST_HOST,
         CONF_TOKEN: TEST_TOKEN,
-        const.CONF_MODEL: TEST_MODEL,
+        CONF_MODEL: TEST_MODEL,
         const.CONF_MAC: TEST_MAC,
     }
 
@@ -201,7 +202,7 @@ async def test_config_flow_gateway_cloud_success(hass):
         const.CONF_CLOUD_COUNTRY: TEST_CLOUD_COUNTRY,
         CONF_HOST: TEST_HOST,
         CONF_TOKEN: TEST_TOKEN,
-        const.CONF_MODEL: TEST_MODEL,
+        CONF_MODEL: TEST_MODEL,
         const.CONF_MAC: TEST_MAC,
     }
 
@@ -247,7 +248,7 @@ async def test_config_flow_gateway_cloud_multiple_success(hass):
         const.CONF_CLOUD_COUNTRY: TEST_CLOUD_COUNTRY,
         CONF_HOST: TEST_HOST2,
         CONF_TOKEN: TEST_TOKEN,
-        const.CONF_MODEL: TEST_MODEL,
+        CONF_MODEL: TEST_MODEL,
         const.CONF_MAC: TEST_MAC2,
     }
 
@@ -391,11 +392,15 @@ async def test_zeroconf_gateway_success(hass):
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data={
-            CONF_HOST: TEST_HOST,
-            ZEROCONF_NAME: TEST_ZEROCONF_NAME,
-            ZEROCONF_PROP: {ZEROCONF_MAC: TEST_MAC},
-        },
+        data=zeroconf.ZeroconfServiceInfo(
+            host=TEST_HOST,
+            addresses=[TEST_HOST],
+            hostname="mock_hostname",
+            name=TEST_ZEROCONF_NAME,
+            port=None,
+            properties={ZEROCONF_MAC: TEST_MAC},
+            type="mock_type",
+        ),
     )
 
     assert result["type"] == "form"
@@ -420,7 +425,7 @@ async def test_zeroconf_gateway_success(hass):
         const.CONF_CLOUD_COUNTRY: TEST_CLOUD_COUNTRY,
         CONF_HOST: TEST_HOST,
         CONF_TOKEN: TEST_TOKEN,
-        const.CONF_MODEL: TEST_MODEL,
+        CONF_MODEL: TEST_MODEL,
         const.CONF_MAC: TEST_MAC,
     }
 
@@ -430,11 +435,15 @@ async def test_zeroconf_unknown_device(hass):
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data={
-            CONF_HOST: TEST_HOST,
-            ZEROCONF_NAME: "not-a-xiaomi-miio-device",
-            ZEROCONF_PROP: {ZEROCONF_MAC: TEST_MAC},
-        },
+        data=zeroconf.ZeroconfServiceInfo(
+            host=TEST_HOST,
+            addresses=[TEST_HOST],
+            hostname="mock_hostname",
+            name="not-a-xiaomi-miio-device",
+            port=None,
+            properties={ZEROCONF_MAC: TEST_MAC},
+            type="mock_type",
+        ),
     )
 
     assert result["type"] == "abort"
@@ -444,7 +453,17 @@ async def test_zeroconf_unknown_device(hass):
 async def test_zeroconf_no_data(hass):
     """Test a failed zeroconf discovery because of no data."""
     result = await hass.config_entries.flow.async_init(
-        const.DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data={}
+        const.DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=zeroconf.ZeroconfServiceInfo(
+            host=None,
+            addresses=[],
+            hostname="mock_hostname",
+            name=None,
+            port=None,
+            properties={},
+            type="mock_type",
+        ),
     )
 
     assert result["type"] == "abort"
@@ -456,7 +475,15 @@ async def test_zeroconf_missing_data(hass):
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data={CONF_HOST: TEST_HOST, ZEROCONF_NAME: TEST_ZEROCONF_NAME},
+        data=zeroconf.ZeroconfServiceInfo(
+            host=TEST_HOST,
+            addresses=[TEST_HOST],
+            hostname="mock_hostname",
+            name=TEST_ZEROCONF_NAME,
+            port=None,
+            properties={},
+            type="mock_type",
+        ),
     )
 
     assert result["type"] == "abort"
@@ -554,7 +581,7 @@ async def test_import_flow_success(hass):
         const.CONF_CLOUD_COUNTRY: None,
         CONF_HOST: TEST_HOST,
         CONF_TOKEN: TEST_TOKEN,
-        const.CONF_MODEL: const.MODELS_SWITCH[0],
+        CONF_MODEL: const.MODELS_SWITCH[0],
         const.CONF_MAC: TEST_MAC,
     }
 
@@ -634,7 +661,7 @@ async def test_config_flow_step_device_manual_model_succes(hass):
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {const.CONF_MODEL: overwrite_model},
+            {CONF_MODEL: overwrite_model},
         )
 
     assert result["type"] == "create_entry"
@@ -646,7 +673,7 @@ async def test_config_flow_step_device_manual_model_succes(hass):
         const.CONF_CLOUD_COUNTRY: None,
         CONF_HOST: TEST_HOST,
         CONF_TOKEN: TEST_TOKEN,
-        const.CONF_MODEL: overwrite_model,
+        CONF_MODEL: overwrite_model,
         const.CONF_MAC: None,
     }
 
@@ -690,7 +717,7 @@ async def config_flow_device_success(hass, model_to_test):
         const.CONF_CLOUD_COUNTRY: None,
         CONF_HOST: TEST_HOST,
         CONF_TOKEN: TEST_TOKEN,
-        const.CONF_MODEL: model_to_test,
+        CONF_MODEL: model_to_test,
         const.CONF_MAC: TEST_MAC,
     }
 
@@ -736,7 +763,7 @@ async def config_flow_generic_roborock(hass):
         const.CONF_CLOUD_COUNTRY: None,
         CONF_HOST: TEST_HOST,
         CONF_TOKEN: TEST_TOKEN,
-        const.CONF_MODEL: DUMMY_MODEL,
+        CONF_MODEL: DUMMY_MODEL,
         const.CONF_MAC: TEST_MAC,
     }
 
@@ -746,11 +773,15 @@ async def zeroconf_device_success(hass, zeroconf_name_to_test, model_to_test):
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data={
-            CONF_HOST: TEST_HOST,
-            ZEROCONF_NAME: zeroconf_name_to_test,
-            ZEROCONF_PROP: {"poch": f"0:mac={TEST_MAC_DEVICE}\x00"},
-        },
+        data=zeroconf.ZeroconfServiceInfo(
+            host=TEST_HOST,
+            addresses=[TEST_HOST],
+            hostname="mock_hostname",
+            name=zeroconf_name_to_test,
+            port=None,
+            properties={"poch": f"0:mac={TEST_MAC_DEVICE}\x00"},
+            type="mock_type",
+        ),
     )
 
     assert result["type"] == "form"
@@ -786,7 +817,7 @@ async def zeroconf_device_success(hass, zeroconf_name_to_test, model_to_test):
         const.CONF_CLOUD_COUNTRY: None,
         CONF_HOST: TEST_HOST,
         CONF_TOKEN: TEST_TOKEN,
-        const.CONF_MODEL: model_to_test,
+        CONF_MODEL: model_to_test,
         const.CONF_MAC: TEST_MAC,
     }
 
@@ -829,7 +860,7 @@ async def test_options_flow(hass):
             const.CONF_FLOW_TYPE: const.CONF_GATEWAY,
             CONF_HOST: TEST_HOST,
             CONF_TOKEN: TEST_TOKEN,
-            const.CONF_MODEL: TEST_MODEL,
+            CONF_MODEL: TEST_MODEL,
             const.CONF_MAC: TEST_MAC,
         },
         title=TEST_NAME,
@@ -841,7 +872,7 @@ async def test_options_flow(hass):
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
@@ -851,7 +882,7 @@ async def test_options_flow(hass):
         },
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
         const.CONF_CLOUD_SUBDEVICES: True,
     }
@@ -869,7 +900,7 @@ async def test_options_flow_incomplete(hass):
             const.CONF_FLOW_TYPE: const.CONF_GATEWAY,
             CONF_HOST: TEST_HOST,
             CONF_TOKEN: TEST_TOKEN,
-            const.CONF_MODEL: TEST_MODEL,
+            CONF_MODEL: TEST_MODEL,
             const.CONF_MAC: TEST_MAC,
         },
         title=TEST_NAME,
@@ -881,7 +912,7 @@ async def test_options_flow_incomplete(hass):
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "init"
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -890,7 +921,7 @@ async def test_options_flow_incomplete(hass):
         },
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "init"
     assert result["errors"] == {"base": "cloud_credentials_incomplete"}
 
@@ -907,7 +938,7 @@ async def test_reauth(hass):
             const.CONF_FLOW_TYPE: const.CONF_GATEWAY,
             CONF_HOST: TEST_HOST,
             CONF_TOKEN: TEST_TOKEN,
-            const.CONF_MODEL: TEST_MODEL,
+            CONF_MODEL: TEST_MODEL,
             const.CONF_MAC: TEST_MAC,
         },
         title=TEST_NAME,
@@ -955,6 +986,6 @@ async def test_reauth(hass):
         const.CONF_CLOUD_COUNTRY: TEST_CLOUD_COUNTRY,
         CONF_HOST: TEST_HOST,
         CONF_TOKEN: TEST_TOKEN,
-        const.CONF_MODEL: TEST_MODEL,
+        CONF_MODEL: TEST_MODEL,
         const.CONF_MAC: TEST_MAC,
     }

@@ -14,7 +14,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Anfitri\u00f3n"
+                    "host": "Host"
                 },
                 "description": "Configura MusicCast para integrarse con Home Assistant."
             }

@@ -4,7 +4,7 @@ import json
 from unittest.mock import MagicMock, patch
 
 from homeassistant.components.nut.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_RESOURCES
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
@@ -18,7 +18,7 @@ def _get_mock_pynutclient(list_vars=None, list_ups=None):
 
 
 async def async_init_integration(
-    hass: HomeAssistant, ups_fixture: str, resources: list, add_options: bool = False
+    hass: HomeAssistant, ups_fixture: str
 ) -> MockConfigEntry:
     """Set up the nexia integration in Home Assistant."""
 
@@ -33,8 +33,7 @@ async def async_init_integration(
     ):
         entry = MockConfigEntry(
             domain=DOMAIN,
-            data={CONF_HOST: "mock", CONF_PORT: "mock", CONF_RESOURCES: resources},
-            options={CONF_RESOURCES: resources} if add_options else {},
+            data={CONF_HOST: "mock", CONF_PORT: "mock"},
         )
         entry.add_to_hass(hass)
 

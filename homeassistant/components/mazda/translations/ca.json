@@ -17,10 +17,8 @@
                     "password": "Contrasenya",
                     "region": "Regi\u00f3"
                 },
-                "description": "Introdueix el correu electr\u00f2nic i la contrasenya que utilitzes per iniciar sessi\u00f3 a l'aplicaci\u00f3 de m\u00f2bil MyMazda.",
-                "title": "Serveis connectats de Mazda - Afegeix un compte"
+                "description": "Introdueix el correu electr\u00f2nic i la contrasenya que utilitzes per iniciar sessi\u00f3 a l'aplicaci\u00f3 de m\u00f2bil MyMazda."
             }
         }
-    },
-    "title": "Serveis connectats de Mazda"
+    }
 }

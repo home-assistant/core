@@ -8,6 +8,7 @@ from freebox_api.exceptions import (
 )
 
 from homeassistant import data_entry_flow
+from homeassistant.components import zeroconf
 from homeassistant.components.freebox.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -17,13 +18,14 @@ from .const import MOCK_HOST, MOCK_PORT
 
 from tests.common import MockConfigEntry
 
-MOCK_ZEROCONF_DATA = {
-    "host": "192.168.0.254",
-    "port": 80,
-    "hostname": "Freebox-Server.local.",
-    "type": "_fbx-api._tcp.local.",
-    "name": "Freebox Server._fbx-api._tcp.local.",
-    "properties": {
+MOCK_ZEROCONF_DATA = zeroconf.ZeroconfServiceInfo(
+    host="192.168.0.254",
+    addresses=["192.168.0.254"],
+    port=80,
+    hostname="Freebox-Server.local.",
+    type="_fbx-api._tcp.local.",
+    name="Freebox Server._fbx-api._tcp.local.",
+    properties={
         "api_version": "8.0",
         "device_type": "FreeboxServer1,2",
         "api_base_url": "/api/",
@@ -34,7 +36,7 @@ MOCK_ZEROCONF_DATA = {
         "box_model_name": "Freebox Server (r2)",
         "api_domain": MOCK_HOST,
     },
-}
+)
 
 
 async def test_user(hass: HomeAssistant):
@@ -42,7 +44,7 @@ async def test_user(hass: HomeAssistant):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
     # test with all provided
@@ -51,7 +53,7 @@ async def test_user(hass: HomeAssistant):
         context={"source": SOURCE_USER},
         data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "link"
 
 
@@ -62,7 +64,7 @@ async def test_import(hass: HomeAssistant):
         context={"source": SOURCE_IMPORT},
         data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "link"
 
 
@@ -73,7 +75,7 @@ async def test_zeroconf(hass: HomeAssistant):
         context={"source": SOURCE_ZEROCONF},
         data=MOCK_ZEROCONF_DATA,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "link"
 
 
@@ -92,7 +94,7 @@ async def test_link(hass: HomeAssistant, router: Mock):
         )
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["result"].unique_id == MOCK_HOST
         assert result["title"] == MOCK_HOST
         assert result["data"][CONF_HOST] == MOCK_HOST
@@ -116,7 +118,7 @@ async def test_abort_if_already_setup(hass: HomeAssistant):
         context={"source": SOURCE_IMPORT},
         data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
     # Should fail, same MOCK_HOST (flow)
@@ -125,7 +127,7 @@ async def test_abort_if_already_setup(hass: HomeAssistant):
         context={"source": SOURCE_USER},
         data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -142,7 +144,7 @@ async def test_on_link_failed(hass: HomeAssistant):
         side_effect=AuthorizationError(),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["errors"] == {"base": "register_failed"}
 
     with patch(
@@ -150,7 +152,7 @@ async def test_on_link_failed(hass: HomeAssistant):
         side_effect=HttpRequestError(),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["errors"] == {"base": "cannot_connect"}
 
     with patch(
@@ -158,5 +160,5 @@ async def test_on_link_failed(hass: HomeAssistant):
         side_effect=InvalidTokenError(),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["errors"] == {"base": "unknown"}

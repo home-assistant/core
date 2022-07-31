@@ -1,0 +1,37 @@
+[
+  {
+    "smile_name": "P1",
+    "gateway_id": "e950c7d5e1ee407a858e2a8b5016c8b3",
+    "notifications": {}
+  },
+  {
+    "e950c7d5e1ee407a858e2a8b5016c8b3": {
+      "dev_class": "gateway",
+      "firmware": "3.3.9",
+      "hardware": "AME Smile 2.0 board",
+      "location": "cd3e822288064775a7c4afcdd70bdda2",
+      "mac_address": "012345670001",
+      "model": "P1",
+      "name": "P1",
+      "vendor": "Plugwise B.V.",
+      "sensors": {
+        "net_electricity_point": -2816,
+        "electricity_consumed_peak_point": 0,
+        "electricity_consumed_off_peak_point": 0,
+        "net_electricity_cumulative": 442.972,
+        "electricity_consumed_peak_cumulative": 442.932,
+        "electricity_consumed_off_peak_cumulative": 551.09,
+        "electricity_consumed_peak_interval": 0,
+        "electricity_consumed_off_peak_interval": 0,
+        "electricity_produced_peak_point": 2816,
+        "electricity_produced_off_peak_point": 0,
+        "electricity_produced_peak_cumulative": 396.559,
+        "electricity_produced_off_peak_cumulative": 154.491,
+        "electricity_produced_peak_interval": 0,
+        "electricity_produced_off_peak_interval": 0,
+        "gas_consumed_cumulative": 584.85,
+        "gas_consumed_interval": 0.0
+      }
+    }
+  }
+]

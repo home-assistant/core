@@ -1,4 +1,6 @@
 """Config flow for DoorBird integration."""
+from __future__ import annotations
+
 from http import HTTPStatus
 from ipaddress import ip_address
 import logging
@@ -12,8 +14,7 @@ from homeassistant.components import zeroconf
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.typing import DiscoveryInfoType
-from homeassistant.util.network import is_link_local
+from homeassistant.util.network import is_ipv4_address, is_link_local
 
 from .const import CONF_EVENTS, DOMAIN, DOORBIRD_OUI
 from .util import get_mac_address_from_doorstation_info
@@ -94,16 +95,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(step_id="user", data_schema=data, errors=errors)
 
     async def async_step_zeroconf(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Prepare configuration for a discovered doorbird device."""
-        macaddress = discovery_info[zeroconf.ATTR_PROPERTIES]["macaddress"]
-        host = discovery_info[zeroconf.ATTR_HOST]
+        macaddress = discovery_info.properties["macaddress"]
+        host = discovery_info.host
 
         if macaddress[:6] != DOORBIRD_OUI:
             return self.async_abort(reason="not_doorbird_device")
         if is_link_local(ip_address(host)):
             return self.async_abort(reason="link_local_address")
+        if not is_ipv4_address(host):
+            return self.async_abort(reason="not_ipv4_address")
 
         await self.async_set_unique_id(macaddress)
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
@@ -114,7 +117,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="not_doorbird_device")
 
         chop_ending = "._axis-video._tcp.local."
-        friendly_hostname = discovery_info[zeroconf.ATTR_NAME]
+        friendly_hostname = discovery_info.name
         if friendly_hostname.endswith(chop_ending):
             friendly_hostname = friendly_hostname[: -len(chop_ending)]
 
@@ -143,7 +146,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 

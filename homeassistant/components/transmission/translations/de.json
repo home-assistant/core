@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
@@ -9,6 +10,13 @@
             "name_exists": "Name existiert bereits"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Passwort"
+                },
+                "description": "Das Passwort f\u00fcr {username} ist ung\u00fcltig.",
+                "title": "Integration erneut authentifizieren"
+            },
             "user": {
                 "data": {
                     "host": "Host",

@@ -1,13 +1,8 @@
 """Growatt Sensor definitions for Totals."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import STATE_CLASS_TOTAL
-from homeassistant.const import (
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_POWER,
-    ENERGY_KILO_WATT_HOUR,
-    POWER_WATT,
-)
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
+from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_WATT
 
 from .sensor_entity_description import GrowattSensorEntityDescription
 
@@ -29,28 +24,28 @@ TOTAL_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         name="Energy Today",
         api_key="todayEnergy",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
+        device_class=SensorDeviceClass.ENERGY,
     ),
     GrowattSensorEntityDescription(
         key="total_output_power",
         name="Output Power",
         api_key="invTodayPpv",
         native_unit_of_measurement=POWER_WATT,
-        device_class=DEVICE_CLASS_POWER,
+        device_class=SensorDeviceClass.POWER,
     ),
     GrowattSensorEntityDescription(
         key="total_energy_output",
         name="Lifetime energy output",
         api_key="totalEnergy",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_TOTAL,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL,
     ),
     GrowattSensorEntityDescription(
         key="total_maximum_output",
         name="Maximum power",
         api_key="nominalPower",
         native_unit_of_measurement=POWER_WATT,
-        device_class=DEVICE_CLASS_POWER,
+        device_class=SensorDeviceClass.POWER,
     ),
 )

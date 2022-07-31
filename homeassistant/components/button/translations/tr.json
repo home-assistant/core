@@ -1,0 +1,11 @@
+{
+    "device_automation": {
+        "action_type": {
+            "press": "{entity_name} d\u00fc\u011fmesine bas\u0131n"
+        },
+        "trigger_type": {
+            "pressed": "{entity_name} tu\u015funa bas\u0131ld\u0131"
+        }
+    },
+    "title": "D\u00fc\u011fme"
+}

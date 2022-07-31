@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "A szolg\u00e1ltat\u00e1s m\u00e1r konfigur\u00e1lva van"
+        },
+        "error": {
+            "cannot_connect": "Nem siker\u00fclt csatlakozni. K\u00e9rem, ellen\u0151rizze a c\u00edmet \u00e9s a portot, \u00e9s pr\u00f3b\u00e1lja meg \u00fajra. Gy\u0151z\u0151dj\u00f6n meg arr\u00f3l is, hogy a leg\u00fajabb FiveM szervert futtatja.",
+            "invalid_game_name": "A j\u00e1t\u00e9k API-ja, amelyhez csatlakozni pr\u00f3b\u00e1l, nem FiveM.",
+            "unknown_error": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "C\u00edm",
+                    "name": "Elnevez\u00e9s",
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

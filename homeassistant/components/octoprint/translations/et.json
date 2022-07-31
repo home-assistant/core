@@ -21,7 +21,8 @@
                     "path": "Rakenduse tee",
                     "port": "Pordi number",
                     "ssl": "Kasuta SSL-i",
-                    "username": "Kasutajanimi"
+                    "username": "Kasutajanimi",
+                    "verify_ssl": "Kontrolli SSL serti"
                 }
             }
         }

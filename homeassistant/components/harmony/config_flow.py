@@ -1,6 +1,9 @@
 """Config flow for Logitech Harmony Hub integration."""
+from __future__ import annotations
+
 import asyncio
 import logging
+from typing import Any
 from urllib.parse import urlparse
 
 from aioharmony.hubconnector_websocket import HubConnector
@@ -16,6 +19,7 @@ from homeassistant.components.remote import (
 )
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN, HARMONY_DATA, PREVIOUS_ACTIVE_ACTIVITY, UNIQUE_ID
 from .util import (
@@ -54,7 +58,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the Harmony config flow."""
-        self.harmony_config = {}
+        self.harmony_config: dict[str, Any] = {}
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
@@ -81,12 +85,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_ssdp(self, discovery_info):
+    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Handle a discovered Harmony device."""
         _LOGGER.debug("SSDP discovery_info: %s", discovery_info)
 
-        parsed_url = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION])
-        friendly_name = discovery_info[ssdp.ATTR_UPNP_FRIENDLY_NAME]
+        parsed_url = urlparse(discovery_info.ssdp_location)
+        friendly_name = discovery_info.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME]
 
         self._async_abort_entries_match({CONF_HOST: parsed_url.hostname})
 
@@ -136,7 +140,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 

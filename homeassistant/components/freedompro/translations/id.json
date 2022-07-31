@@ -11,7 +11,9 @@
             "user": {
                 "data": {
                     "api_key": "Kunci API"
-                }
+                },
+                "description": "Masukkan kunci API yang diperoleh dari https://home.freedompro.eu.",
+                "title": "Kunci API Freedompro"
             }
         }
     }

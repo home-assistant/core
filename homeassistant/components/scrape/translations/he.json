@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "name": "\u05e9\u05dd",
+                    "verify_ssl": "\u05d0\u05d9\u05de\u05d5\u05ea \u05d0\u05d9\u05e9\u05d5\u05e8 SSL"
+                }
+            }
+        }
+    }
+}

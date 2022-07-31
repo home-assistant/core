@@ -20,7 +20,7 @@ from tests.common import MockConfigEntry
 async def test_pr3000rt2u(hass):
     """Test creation of PR3000RT2U sensors."""
 
-    await async_init_integration(hass, "PR3000RT2U", ["battery.charge"])
+    await async_init_integration(hass, "PR3000RT2U")
     registry = er.async_get(hass)
     entry = registry.async_get("sensor.ups1_battery_charge")
     assert entry
@@ -44,7 +44,7 @@ async def test_pr3000rt2u(hass):
 async def test_cp1350c(hass):
     """Test creation of CP1350C sensors."""
 
-    config_entry = await async_init_integration(hass, "CP1350C", ["battery.charge"])
+    config_entry = await async_init_integration(hass, "CP1350C")
 
     registry = er.async_get(hass)
     entry = registry.async_get("sensor.ups1_battery_charge")
@@ -69,7 +69,7 @@ async def test_cp1350c(hass):
 async def test_5e850i(hass):
     """Test creation of 5E850I sensors."""
 
-    config_entry = await async_init_integration(hass, "5E850I", ["battery.charge"])
+    config_entry = await async_init_integration(hass, "5E850I")
     registry = er.async_get(hass)
     entry = registry.async_get("sensor.ups1_battery_charge")
     assert entry
@@ -93,7 +93,7 @@ async def test_5e850i(hass):
 async def test_5e650i(hass):
     """Test creation of 5E650I sensors."""
 
-    config_entry = await async_init_integration(hass, "5E650I", ["battery.charge"])
+    config_entry = await async_init_integration(hass, "5E650I")
     registry = er.async_get(hass)
     entry = registry.async_get("sensor.ups1_battery_charge")
     assert entry
@@ -117,7 +117,7 @@ async def test_5e650i(hass):
 async def test_backupsses600m1(hass):
     """Test creation of BACKUPSES600M1 sensors."""
 
-    await async_init_integration(hass, "BACKUPSES600M1", ["battery.charge"])
+    await async_init_integration(hass, "BACKUPSES600M1")
     registry = er.async_get(hass)
     entry = registry.async_get("sensor.ups1_battery_charge")
     assert entry
@@ -144,9 +144,7 @@ async def test_backupsses600m1(hass):
 async def test_cp1500pfclcd(hass):
     """Test creation of CP1500PFCLCD sensors."""
 
-    config_entry = await async_init_integration(
-        hass, "CP1500PFCLCD", ["battery.charge"]
-    )
+    config_entry = await async_init_integration(hass, "CP1500PFCLCD")
     registry = er.async_get(hass)
     entry = registry.async_get("sensor.ups1_battery_charge")
     assert entry
@@ -170,7 +168,7 @@ async def test_cp1500pfclcd(hass):
 async def test_dl650elcd(hass):
     """Test creation of DL650ELCD sensors."""
 
-    config_entry = await async_init_integration(hass, "DL650ELCD", ["battery.charge"])
+    config_entry = await async_init_integration(hass, "DL650ELCD")
     registry = er.async_get(hass)
     entry = registry.async_get("sensor.ups1_battery_charge")
     assert entry
@@ -194,7 +192,7 @@ async def test_dl650elcd(hass):
 async def test_blazer_usb(hass):
     """Test creation of blazer_usb sensors."""
 
-    config_entry = await async_init_integration(hass, "blazer_usb", ["battery.charge"])
+    config_entry = await async_init_integration(hass, "blazer_usb")
     registry = er.async_get(hass)
     entry = registry.async_get("sensor.ups1_battery_charge")
     assert entry
@@ -219,11 +217,7 @@ async def test_state_sensors(hass):
     """Test creation of status display sensors."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={
-            CONF_HOST: "mock",
-            CONF_PORT: "mock",
-            CONF_RESOURCES: ["ups.status", "ups.status.display"],
-        },
+        data={CONF_HOST: "mock", CONF_PORT: "mock"},
     )
     entry.add_to_hass(hass)
 
@@ -248,11 +242,7 @@ async def test_unknown_state_sensors(hass):
     """Test creation of unknown status display sensors."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={
-            CONF_HOST: "mock",
-            CONF_PORT: "mock",
-            CONF_RESOURCES: ["ups.status", "ups.status.display"],
-        },
+        data={CONF_HOST: "mock", CONF_PORT: "mock"},
     )
     entry.add_to_hass(hass)
 
@@ -275,12 +265,34 @@ async def test_unknown_state_sensors(hass):
 
 async def test_stale_options(hass):
     """Test creation of sensors with stale options to remove."""
-
-    config_entry = await async_init_integration(
-        hass, "blazer_usb", ["battery.charge"], True
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "mock",
+            CONF_PORT: "mock",
+            CONF_RESOURCES: ["ups.load"],
+        },
+        options={CONF_RESOURCES: ["battery.charge"]},
     )
-    registry = er.async_get(hass)
-    entry = registry.async_get("sensor.ups1_battery_charge")
-    assert entry
-    assert entry.unique_id == f"{config_entry.entry_id}_battery.charge"
-    assert config_entry.options == {}
+    config_entry.add_to_hass(hass)
+
+    mock_pynut = _get_mock_pynutclient(
+        list_ups={"ups1": "UPS 1"}, list_vars={"battery.charge": "10"}
+    )
+
+    with patch(
+        "homeassistant.components.nut.PyNUTClient",
+        return_value=mock_pynut,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        registry = er.async_get(hass)
+        entry = registry.async_get("sensor.ups1_battery_charge")
+        assert entry
+        assert entry.unique_id == f"{config_entry.entry_id}_battery.charge"
+        assert config_entry.data[CONF_RESOURCES] == ["battery.charge"]
+        assert config_entry.options == {}
+
+        state = hass.states.get("sensor.ups1_battery_charge")
+        assert state.state == "10"

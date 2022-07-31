@@ -20,6 +20,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
     CONF_STRUCTURE,
+    CONF_UNIQUE_ID,
     STATE_ON,
 )
 from homeassistant.core import callback
@@ -82,6 +83,7 @@ class BasePlatform(Entity):
         self._cancel_timer: Callable[[], None] | None = None
         self._cancel_call: Callable[[], None] | None = None
 
+        self._attr_unique_id = entry.get(CONF_UNIQUE_ID)
         self._attr_name = entry[CONF_NAME]
         self._attr_should_poll = False
         self._attr_device_class = entry.get(CONF_DEVICE_CLASS)
@@ -310,7 +312,7 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
 
         self._lazy_errors = self._lazy_error_count
         self._attr_available = True
-        if self._verify_type == CALL_TYPE_COIL:
+        if self._verify_type in (CALL_TYPE_COIL, CALL_TYPE_DISCRETE):
             self._attr_is_on = bool(result.bits[0] & 1)
         else:
             value = int(result.registers[0])

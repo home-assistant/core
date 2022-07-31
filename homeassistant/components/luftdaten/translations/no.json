@@ -9,9 +9,8 @@
             "user": {
                 "data": {
                     "show_on_map": "Vis p\u00e5 kart",
-                    "station_id": "Luftdaten Sensor ID"
-                },
-                "title": ""
+                    "station_id": "Sensor ID"
+                }
             }
         }
     }

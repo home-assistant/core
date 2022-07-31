@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "A reautentica\u00e7\u00e3o foi bem-sucedida"
+        },
+        "error": {
+            "cannot_connect": "Falha ao conectar",
+            "invalid_api_key": "Chave de API inv\u00e1lida"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "Chave da API",
+                    "description": "Re-autentique com sua conta Ambee."
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "Chave da API",
+                    "latitude": "Latitude",
+                    "longitude": "Longitude",
+                    "name": "Nome"
+                },
+                "description": "Configure o Ambee para integrar com o Home Assistant."
+            }
+        }
+    },
+    "issues": {
+        "pending_removal": {
+            "description": "A integra\u00e7\u00e3o do Ambee est\u00e1 com remo\u00e7\u00e3o pendente do Home Assistant e n\u00e3o estar\u00e1 mais dispon\u00edvel a partir do Home Assistant 2022.10. \n\n A integra\u00e7\u00e3o est\u00e1 sendo removida, porque a Ambee removeu suas contas gratuitas (limitadas) e n\u00e3o oferece mais uma maneira de usu\u00e1rios regulares se inscreverem em um plano pago. \n\n Remova a entrada de integra\u00e7\u00e3o Ambee de sua inst\u00e2ncia para corrigir esse problema.",
+            "title": "A integra\u00e7\u00e3o Ambee est\u00e1 sendo removida"
+        }
+    }
+}

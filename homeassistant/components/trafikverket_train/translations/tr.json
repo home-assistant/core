@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Hesap zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "incorrect_api_key": "Se\u00e7ilen hesap i\u00e7in ge\u00e7ersiz API anahtar\u0131",
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
+            "invalid_station": "Belirtilen ada sahip bir istasyon bulunamad\u0131",
+            "invalid_time": "Ge\u00e7ersiz s\u00fcre sa\u011fland\u0131",
+            "more_stations": "Belirtilen ada sahip birden fazla istasyon bulundu"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API Anahtar\u0131"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "API Anahtar\u0131",
+                    "from": "\u0130stasyondan",
+                    "time": "Zaman (iste\u011fe ba\u011fl\u0131)",
+                    "to": "\u0130stasyona",
+                    "weekday": "G\u00fcn"
+                }
+            }
+        }
+    }
+}

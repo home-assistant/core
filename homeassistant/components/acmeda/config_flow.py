@@ -8,7 +8,7 @@ import aiopulse
 import async_timeout
 import voluptuous as vol
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_ID
 
 from .const import DOMAIN
@@ -53,7 +53,7 @@ class AcmedaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.discovered_hubs = {hub.id: hub for hub in hubs}
 
         return self.async_show_form(
-            step_id=data_entry_flow.STEP_ID_USER,
+            step_id="user",
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_ID): vol.In(

@@ -17,7 +17,7 @@ async def test_weather_sensor(hass, config_entry, netatmo_auth):
 
         await hass.async_block_till_done()
 
-    prefix = "sensor.netatmo_mystation_"
+    prefix = "sensor.mystation_"
 
     assert hass.states.get(f"{prefix}temperature").state == "24.6"
     assert hass.states.get(f"{prefix}humidity").state == "36"
@@ -34,13 +34,13 @@ async def test_public_weather_sensor(hass, config_entry, netatmo_auth):
 
     assert len(hass.states.async_all()) > 0
 
-    prefix = "sensor.netatmo_home_max_"
+    prefix = "sensor.home_max_"
 
     assert hass.states.get(f"{prefix}temperature").state == "27.4"
     assert hass.states.get(f"{prefix}humidity").state == "76"
     assert hass.states.get(f"{prefix}pressure").state == "1014.4"
 
-    prefix = "sensor.netatmo_home_avg_"
+    prefix = "sensor.home_avg_"
 
     assert hass.states.get(f"{prefix}temperature").state == "22.7"
     assert hass.states.get(f"{prefix}humidity").state == "63.2"
@@ -233,3 +233,17 @@ async def test_weather_sensor_enabling(
 
         assert len(hass.states.async_all()) > states_before
         assert hass.states.get(f"sensor.{name}").state == expected
+
+
+async def test_climate_battery_sensor(hass, config_entry, netatmo_auth):
+    """Test climate device battery sensor."""
+    with patch("time.time", return_value=TEST_TIME), selected_platforms(
+        ["sensor", "climate"]
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    prefix = "sensor.livingroom_"
+
+    assert hass.states.get(f"{prefix}battery_percent").state == "75"

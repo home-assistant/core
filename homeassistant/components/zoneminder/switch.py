@@ -1,4 +1,6 @@
 """Support for ZoneMinder switches."""
+from __future__ import annotations
+
 import logging
 
 import voluptuous as vol
@@ -6,7 +8,10 @@ from zoneminder.monitor import MonitorState
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import CONF_COMMAND_OFF, CONF_COMMAND_ON
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN as ZONEMINDER_DOMAIN
 
@@ -20,7 +25,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the ZoneMinder switch platform."""
 
     on_state = MonitorState(config.get(CONF_COMMAND_ON))

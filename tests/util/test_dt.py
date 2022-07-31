@@ -1,4 +1,6 @@
 """Test Home Assistant date util methods."""
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 
 import pytest
@@ -9,8 +11,11 @@ DEFAULT_TIME_ZONE = dt_util.DEFAULT_TIME_ZONE
 TEST_TIME_ZONE = "America/Los_Angeles"
 
 
+@pytest.fixture(autouse=True)
 def teardown():
     """Stop everything that was started."""
+    yield
+
     dt_util.set_default_time_zone(DEFAULT_TIME_ZONE)
 
 
@@ -103,6 +108,12 @@ def test_utc_from_timestamp():
     )
 
 
+def test_timestamp_to_utc():
+    """Test we can convert a utc datetime to a timestamp."""
+    utc_now = dt_util.utcnow()
+    assert dt_util.utc_to_timestamp(utc_now) == utc_now.timestamp()
+
+
 def test_as_timestamp():
     """Test as_timestamp method."""
     ts = 1462401234
@@ -131,6 +142,32 @@ def test_parse_datetime_converts_correctly():
 def test_parse_datetime_returns_none_for_incorrect_format():
     """Test parse_datetime returns None if incorrect format."""
     assert dt_util.parse_datetime("not a datetime string") is None
+
+
+@pytest.mark.parametrize(
+    "duration_string,expected_result",
+    [
+        ("PT10M", timedelta(minutes=10)),
+        ("PT0S", timedelta(0)),
+        ("P10DT11H11M01S", timedelta(days=10, hours=11, minutes=11, seconds=1)),
+        (
+            "4 1:20:30.111111",
+            timedelta(days=4, hours=1, minutes=20, seconds=30, microseconds=111111),
+        ),
+        ("4 1:2:30", timedelta(days=4, hours=1, minutes=2, seconds=30)),
+        ("3 days 04:05:06", timedelta(days=3, hours=4, minutes=5, seconds=6)),
+        ("P1YT10M", None),
+        ("P1MT10M", None),
+        ("1MT10M", None),
+        ("P1MT100M", None),
+        ("P1234", None),
+    ],
+)
+def test_parse_duration(
+    duration_string: str, expected_result: timedelta | None
+) -> None:
+    """Test that parse_duration returns the expected result."""
+    assert dt_util.parse_duration(duration_string) == expected_result
 
 
 def test_get_age():
@@ -632,3 +669,53 @@ def test_find_next_time_expression_time_leave_dst_chicago_past_the_fold_ahead_2_
     assert dt_util.as_utc(next_time) == datetime(
         2021, 11, 7, 8, 20, 1, tzinfo=dt_util.UTC
     )
+
+
+def test_find_next_time_expression_microseconds():
+    """Test finding next time expression with microsecond clock drift."""
+    hour_minute_second = (None, "5", "10")
+    test_time = datetime(2022, 5, 13, 0, 5, 9, tzinfo=dt_util.UTC)
+    matching_hours, matching_minutes, matching_seconds = _get_matches(
+        *hour_minute_second
+    )
+    next_time = dt_util.find_next_time_expression_time(
+        test_time, matching_seconds, matching_minutes, matching_hours
+    )
+    assert next_time == datetime(2022, 5, 13, 0, 5, 10, tzinfo=dt_util.UTC)
+    next_time_last_microsecond_plus_one = next_time.replace(
+        microsecond=999999
+    ) + timedelta(seconds=1)
+    time_after = dt_util.find_next_time_expression_time(
+        next_time_last_microsecond_plus_one,
+        matching_seconds,
+        matching_minutes,
+        matching_hours,
+    )
+    assert time_after == datetime(2022, 5, 13, 1, 5, 10, tzinfo=dt_util.UTC)
+
+
+def test_find_next_time_expression_tenth_second_pattern_does_not_drift_entering_dst():
+    """Test finding next time expression tenth second pattern does not drift entering dst."""
+    tz = dt_util.get_time_zone("America/Chicago")
+    dt_util.set_default_time_zone(tz)
+    tenth_second_pattern = (None, None, "10")
+    # Entering DST, clocks go forward
+    test_time = datetime(2021, 3, 15, 2, 30, 0, tzinfo=tz, fold=0)
+    matching_hours, matching_minutes, matching_seconds = _get_matches(
+        *tenth_second_pattern
+    )
+    next_time = dt_util.find_next_time_expression_time(
+        test_time, matching_seconds, matching_minutes, matching_hours
+    )
+    assert next_time == datetime(2021, 3, 15, 2, 30, 10, tzinfo=tz)
+    prev_target = next_time
+    for i in range(1000):
+        next_target = dt_util.find_next_time_expression_time(
+            prev_target.replace(microsecond=999999) + timedelta(seconds=1),
+            matching_seconds,
+            matching_minutes,
+            matching_hours,
+        )
+        assert (next_target - prev_target).total_seconds() == 60
+        assert next_target.second == 10
+        prev_target = next_target

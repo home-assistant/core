@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "already_in_progress": "Konfiguracja jest ju\u017c w toku",
+            "unknown": "Nieoczekiwany b\u0142\u0105d",
+            "unsupported": "Nieobs\u0142ugiwane urz\u0105dzenie"
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "unsupported": "Nieobs\u0142ugiwane urz\u0105dzenie"
+        },
+        "flow_title": "{model} ({name})",
+        "step": {
+            "discovery_confirm": {
+                "description": "Czy chcesz skonfigurowa\u0107 odtwarzacz {model} o nazwie {name}?"
+            },
+            "user": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP"
+                }
+            }
+        }
+    }
+}

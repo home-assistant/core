@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "alternative_integration": "El dispositivo es mejor compatible con otra integraci\u00f3n",
+            "discovery_error": "Error al descubrir un dispositivo DLNA coincidente",
+            "incomplete_config": "A la configuraci\u00f3n le falta una variable requerida",
+            "non_unique_id": "Varios dispositivos encontrados con la misma ID \u00fanica",
+            "not_dmr": "El dispositivo no es un renderizador de medios digitales compatible"
+        },
+        "error": {
+            "not_dmr": "El dispositivo no es un renderizador de medios digitales compatible"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "import_turn_on": {
+                "description": "Encienda el dispositivo y haga clic en Enviar para continuar con la migraci\u00f3n."
+            },
+            "manual": {
+                "description": "URL a un archivo XML de descripci\u00f3n de dispositivo"
+            }
+        }
+    }
+}

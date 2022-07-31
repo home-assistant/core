@@ -347,7 +347,6 @@ async def async_send_message(  # noqa: C901
             except NotConnectedError as ex:
                 _LOGGER.error("Connection error %s", ex)
 
-        # pylint: disable=no-self-use
         def get_random_filename(self, filename, extension=None):
             """Return a random filename, leaving the extension intact."""
             if extension is None:

@@ -5,10 +5,10 @@
             "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs",
             "no_bridges": "No s'han descobert enlla\u00e7os amb deCONZ",
             "no_hardware_available": "No hi ha cap maquinari r\u00e0dio connectat a deCONZ",
-            "not_deconz_bridge": "No \u00e9s un enlla\u00e7 deCONZ",
             "updated_instance": "S'ha actualitzat la inst\u00e0ncia de deCONZ amb una nova adre\u00e7a"
         },
         "error": {
+            "linking_not_possible": "No s'ha pogut enlla\u00e7ar amb la passarel\u00b7la",
             "no_key": "No s'ha pogut obtenir una clau API"
         },
         "flow_title": "{host}",
@@ -57,7 +57,7 @@
             "side_3": "cara 3",
             "side_4": "cara 4",
             "side_5": "cara 5",
-            "side_6": "cara 6",
+            "side_6": "Cara 6",
             "top_buttons": "Botons superiors",
             "turn_off": "Desactiva",
             "turn_on": "Activa"

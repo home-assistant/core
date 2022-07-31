@@ -2,13 +2,12 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY, CONF_MODE, CONF_NAME
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
@@ -20,14 +19,12 @@ from .const import (
     CONF_DEPARTURE_TIME,
     CONF_DESTINATION,
     CONF_LANGUAGE,
-    CONF_OPTIONS,
     CONF_ORIGIN,
     CONF_TIME,
     CONF_TIME_TYPE,
     CONF_TRAFFIC_MODEL,
     CONF_TRANSIT_MODE,
     CONF_TRANSIT_ROUTING_PREFERENCE,
-    CONF_TRAVEL_MODE,
     CONF_UNITS,
     DEFAULT_NAME,
     DEPARTURE_TIME,
@@ -42,47 +39,6 @@ from .const import (
 from .helpers import is_valid_config_entry
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def is_dupe_import(
-    hass: HomeAssistant, entry: config_entries.ConfigEntry, user_input: dict[str, Any]
-) -> bool:
-    """Return whether imported config already exists."""
-    # Check the main data keys
-    if any(
-        entry.data[key] != user_input[key]
-        for key in (CONF_API_KEY, CONF_DESTINATION, CONF_ORIGIN)
-    ):
-        return False
-
-    options = user_input.get(CONF_OPTIONS, {})
-
-    # We have to check for units differently because there is a default
-    units = options.get(CONF_UNITS) or hass.config.units.name
-    if entry.options[CONF_UNITS] != units:
-        return False
-
-    # We have to check for travel mode differently because of the default and because
-    # it can be provided in two different ways. We have to give mode preference over
-    # travel mode because that's the way that entry setup works.
-    mode = options.get(CONF_MODE) or user_input.get(CONF_TRAVEL_MODE) or "driving"
-    if entry.options[CONF_MODE] != mode:
-        return False
-
-    # We have to check for options that don't have defaults
-    for key in (
-        CONF_LANGUAGE,
-        CONF_AVOID,
-        CONF_ARRIVAL_TIME,
-        CONF_DEPARTURE_TIME,
-        CONF_TRAFFIC_MODEL,
-        CONF_TRANSIT_MODE,
-        CONF_TRANSIT_ROUTING_PREFERENCE,
-    ):
-        if options.get(key) != entry.options.get(key):
-            return False
-
-    return True
 
 
 class GoogleOptionsFlow(config_entries.OptionsFlow):
@@ -171,24 +127,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         user_input = user_input or {}
         if user_input:
-            # We need to prevent duplicate imports
-            if self.source == config_entries.SOURCE_IMPORT and any(
-                is_dupe_import(self.hass, entry, user_input)
-                for entry in self.hass.config_entries.async_entries(DOMAIN)
-                if entry.source == config_entries.SOURCE_IMPORT
-            ):
-                return self.async_abort(reason="already_configured")
-
-            if (
-                self.source == config_entries.SOURCE_IMPORT
-                or await self.hass.async_add_executor_job(
-                    is_valid_config_entry,
-                    self.hass,
-                    _LOGGER,
-                    user_input[CONF_API_KEY],
-                    user_input[CONF_ORIGIN],
-                    user_input[CONF_DESTINATION],
-                )
+            if await self.hass.async_add_executor_job(
+                is_valid_config_entry,
+                self.hass,
+                user_input[CONF_API_KEY],
+                user_input[CONF_ORIGIN],
+                user_input[CONF_DESTINATION],
             ):
                 return self.async_create_entry(
                     title=user_input.get(CONF_NAME, DEFAULT_NAME),
@@ -212,5 +156,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
-
-    async_step_import = async_step_user

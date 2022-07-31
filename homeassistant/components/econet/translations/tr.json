@@ -12,8 +12,8 @@
         "step": {
             "user": {
                 "data": {
-                    "email": "Email",
-                    "password": "\u015eifre"
+                    "email": "E-posta",
+                    "password": "Parola"
                 },
                 "title": "Rheem EcoNet Hesab\u0131n\u0131 Kur"
             }

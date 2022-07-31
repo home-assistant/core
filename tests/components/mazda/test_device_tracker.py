@@ -9,7 +9,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import entity_registry as er
 
-from tests.components.mazda import init_integration
+from . import init_integration
 
 
 async def test_device_tracker(hass):
@@ -20,7 +20,7 @@ async def test_device_tracker(hass):
 
     state = hass.states.get("device_tracker.my_mazda3_device_tracker")
     assert state
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Device Tracker"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Device tracker"
     assert state.attributes.get(ATTR_ICON) == "mdi:car"
     assert state.attributes.get(ATTR_LATITUDE) == 1.234567
     assert state.attributes.get(ATTR_LONGITUDE) == -2.345678

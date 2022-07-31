@@ -1,5 +1,6 @@
 """Fixtures for component testing."""
-from unittest.mock import patch
+from collections.abc import Generator
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -18,7 +19,16 @@ def patch_zeroconf_multiple_catcher():
 def prevent_io():
     """Fixture to prevent certain I/O from happening."""
     with patch(
-        "homeassistant.components.http.ban.async_load_ip_bans_config",
-        return_value=[],
+        "homeassistant.components.http.ban.load_yaml_config_file",
     ):
         yield
+
+
+@pytest.fixture
+def entity_registry_enabled_by_default() -> Generator[AsyncMock, None, None]:
+    """Test fixture that ensures all entities are enabled in the registry."""
+    with patch(
+        "homeassistant.helpers.entity.Entity.entity_registry_enabled_default",
+        return_value=True,
+    ) as mock_entity_registry_enabled_by_default:
+        yield mock_entity_registry_enabled_by_default

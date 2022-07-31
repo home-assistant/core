@@ -4,16 +4,21 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN, ClimateEntity
-from homeassistant.components.climate.const import (
-    HVAC_MODE_HEAT,
-    SUPPORT_TARGET_TEMPERATURE,
-)
+from homeassistant.components.climate.const import ClimateEntityFeature, HVACMode
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN, IncomfortChild
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up an InComfort/InTouch climate device."""
     if discovery_info is None:
         return
@@ -28,6 +33,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 class InComfortClimate(IncomfortChild, ClimateEntity):
     """Representation of an InComfort/InTouch climate device."""
+
+    _attr_hvac_mode = HVACMode.HEAT
+    _attr_hvac_modes = [HVACMode.HEAT]
+    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
 
     def __init__(self, client, heater, room) -> None:
         """Initialize the climate device."""
@@ -51,16 +60,6 @@ class InComfortClimate(IncomfortChild, ClimateEntity):
         return TEMP_CELSIUS
 
     @property
-    def hvac_mode(self) -> str:
-        """Return hvac operation ie. heat, cool mode."""
-        return HVAC_MODE_HEAT
-
-    @property
-    def hvac_modes(self) -> list[str]:
-        """Return the list of available hvac operation modes."""
-        return [HVAC_MODE_HEAT]
-
-    @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._room.room_temp
@@ -69,11 +68,6 @@ class InComfortClimate(IncomfortChild, ClimateEntity):
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self._room.setpoint
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_TARGET_TEMPERATURE
 
     @property
     def min_temp(self) -> float:
@@ -90,5 +84,5 @@ class InComfortClimate(IncomfortChild, ClimateEntity):
         temperature = kwargs.get(ATTR_TEMPERATURE)
         await self._room.set_override(temperature)
 
-    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""

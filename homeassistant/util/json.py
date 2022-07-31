@@ -5,12 +5,18 @@ from collections import deque
 from collections.abc import Callable
 import json
 import logging
-import os
-import tempfile
 from typing import Any
+
+import orjson
 
 from homeassistant.core import Event, State
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.json import (
+    JSONEncoder as DefaultHASSJSONEncoder,
+    json_encoder_default as default_hass_orjson_encoder,
+)
+
+from .file import write_utf8_file, write_utf8_file_atomic
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +36,7 @@ def load_json(filename: str, default: list | dict | None = None) -> list | dict:
     """
     try:
         with open(filename, encoding="utf-8") as fdesc:
-            return json.loads(fdesc.read())  # type: ignore
+            return orjson.loads(fdesc.read())  # type: ignore[no-any-return]
     except FileNotFoundError:
         # This is not a fatal error
         _LOGGER.debug("JSON file not found: %s", filename)
@@ -43,47 +49,49 @@ def load_json(filename: str, default: list | dict | None = None) -> list | dict:
     return {} if default is None else default
 
 
+def _orjson_default_encoder(data: Any) -> str:
+    """JSON encoder that uses orjson with hass defaults."""
+    return orjson.dumps(
+        data,
+        option=orjson.OPT_INDENT_2 | orjson.OPT_NON_STR_KEYS,
+        default=default_hass_orjson_encoder,
+    ).decode("utf-8")
+
+
 def save_json(
     filename: str,
     data: list | dict,
     private: bool = False,
     *,
     encoder: type[json.JSONEncoder] | None = None,
+    atomic_writes: bool = False,
 ) -> None:
     """Save JSON data to a file.
 
     Returns True on success.
     """
+    dump: Callable[[Any], Any]
     try:
-        json_data = json.dumps(data, indent=4, cls=encoder)
+        # For backwards compatibility, if they pass in the
+        # default json encoder we use _orjson_default_encoder
+        # which is the orjson equivalent to the default encoder.
+        if encoder and encoder is not DefaultHASSJSONEncoder:
+            # If they pass a custom encoder that is not the
+            # DefaultHASSJSONEncoder, we use the slow path of json.dumps
+            dump = json.dumps
+            json_data = json.dumps(data, indent=2, cls=encoder)
+        else:
+            dump = _orjson_default_encoder
+            json_data = _orjson_default_encoder(data)
     except TypeError as error:
-        msg = f"Failed to serialize to JSON: {filename}. Bad data at {format_unserializable_data(find_paths_unserializable_data(data))}"
+        msg = f"Failed to serialize to JSON: {filename}. Bad data at {format_unserializable_data(find_paths_unserializable_data(data, dump=dump))}"
         _LOGGER.error(msg)
         raise SerializationError(msg) from error
 
-    tmp_filename = ""
-    tmp_path = os.path.split(filename)[0]
-    try:
-        # Modern versions of Python tempfile create this file with mode 0o600
-        with tempfile.NamedTemporaryFile(
-            mode="w", encoding="utf-8", dir=tmp_path, delete=False
-        ) as fdesc:
-            fdesc.write(json_data)
-            tmp_filename = fdesc.name
-        if not private:
-            os.chmod(tmp_filename, 0o644)
-        os.replace(tmp_filename, filename)
-    except OSError as error:
-        _LOGGER.exception("Saving JSON file failed: %s", filename)
-        raise WriteError(error) from error
-    finally:
-        if os.path.exists(tmp_filename):
-            try:
-                os.remove(tmp_filename)
-            except OSError as err:
-                # If we are cleaning up then something else went wrong, so
-                # we should suppress likely follow-on errors in the cleanup
-                _LOGGER.error("JSON replacement cleanup failed: %s", err)
+    if atomic_writes:
+        write_utf8_file_atomic(filename, json_data, private)
+    else:
+        write_utf8_file(filename, json_data, private)
 
 
 def format_unserializable_data(data: dict[str, Any]) -> str:

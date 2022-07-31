@@ -1,6 +1,7 @@
 """Config flow for Ridwell integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any
 
 from aioridwell import async_get_client
@@ -9,10 +10,8 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client, config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, LOGGER
 
@@ -33,30 +32,18 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for WattTime."""
 
-    VERSION = 1
+    VERSION = 2
 
     def __init__(self) -> None:
         """Initialize."""
         self._password: str | None = None
-        self._reauthing: bool = False
         self._username: str | None = None
-
-    @callback
-    def _async_show_errors(
-        self, errors: dict, error_step_id: str, error_schema: vol.Schema
-    ) -> FlowResult:
-        """Show an error on the correct form."""
-        return self.async_show_form(
-            step_id=error_step_id,
-            data_schema=error_schema,
-            errors=errors,
-            description_placeholders={CONF_USERNAME: self._username},
-        )
 
     async def _async_validate(
         self, error_step_id: str, error_schema: vol.Schema
     ) -> FlowResult:
         """Validate input credentials and proceed accordingly."""
+        errors = {}
         session = aiohttp_client.async_get_clientsession(self.hass)
 
         if TYPE_CHECKING:
@@ -66,35 +53,37 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             await async_get_client(self._username, self._password, session=session)
         except InvalidCredentialsError:
-            return self._async_show_errors(
-                {"base": "invalid_auth"}, error_step_id, error_schema
-            )
+            errors["base"] = "invalid_auth"
         except RidwellError as err:
             LOGGER.error("Unknown Ridwell error: %s", err)
-            return self._async_show_errors(
-                {"base": "unknown"}, error_step_id, error_schema
+            errors["base"] = "unknown"
+
+        if errors:
+            return self.async_show_form(
+                step_id=error_step_id,
+                data_schema=error_schema,
+                errors=errors,
+                description_placeholders={CONF_USERNAME: self._username},
             )
 
-        if self._reauthing:
-            if existing_entry := await self.async_set_unique_id(self._username):
-                self.hass.config_entries.async_update_entry(
-                    existing_entry,
-                    data={**existing_entry.data, CONF_PASSWORD: self._password},
-                )
-                self.hass.async_create_task(
-                    self.hass.config_entries.async_reload(existing_entry.entry_id)
-                )
-                return self.async_abort(reason="reauth_successful")
+        if existing_entry := await self.async_set_unique_id(self._username):
+            self.hass.config_entries.async_update_entry(
+                existing_entry,
+                data={**existing_entry.data, CONF_PASSWORD: self._password},
+            )
+            self.hass.async_create_task(
+                self.hass.config_entries.async_reload(existing_entry.entry_id)
+            )
+            return self.async_abort(reason="reauth_successful")
 
         return self.async_create_entry(
             title=self._username,
             data={CONF_USERNAME: self._username, CONF_PASSWORD: self._password},
         )
 
-    async def async_step_reauth(self, config: ConfigType) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle configuration by re-auth."""
-        self._reauthing = True
-        self._username = config[CONF_USERNAME]
+        self._username = entry_data[CONF_USERNAME]
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(

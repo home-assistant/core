@@ -1,0 +1,9 @@
+{
+    "state": {
+        "homekit_controller__ecobee_mode": {
+            "away": "A fora",
+            "home": "A casa",
+            "sleep": "Dormint"
+        }
+    }
+}

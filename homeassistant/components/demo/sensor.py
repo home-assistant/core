@@ -1,19 +1,15 @@
 """Demo platform that has a couple of fake sensors."""
 from __future__ import annotations
 
-from typing import Any
-
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     CONCENTRATION_PARTS_PER_MILLION,
-    DEVICE_CLASS_CO,
-    DEVICE_CLASS_CO2,
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_TEMPERATURE,
     ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
     POWER_WATT,
@@ -22,7 +18,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, StateType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
 from . import DOMAIN
 
@@ -31,7 +27,7 @@ async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: dict[str, Any] | None = None,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Demo sensors."""
     async_add_entities(
@@ -40,8 +36,8 @@ async def async_setup_platform(
                 "sensor_1",
                 "Outside Temperature",
                 15.6,
-                DEVICE_CLASS_TEMPERATURE,
-                STATE_CLASS_MEASUREMENT,
+                SensorDeviceClass.TEMPERATURE,
+                SensorStateClass.MEASUREMENT,
                 TEMP_CELSIUS,
                 12,
             ),
@@ -49,8 +45,8 @@ async def async_setup_platform(
                 "sensor_2",
                 "Outside Humidity",
                 54,
-                DEVICE_CLASS_HUMIDITY,
-                STATE_CLASS_MEASUREMENT,
+                SensorDeviceClass.HUMIDITY,
+                SensorStateClass.MEASUREMENT,
                 PERCENTAGE,
                 None,
             ),
@@ -58,8 +54,8 @@ async def async_setup_platform(
                 "sensor_3",
                 "Carbon monoxide",
                 54,
-                DEVICE_CLASS_CO,
-                STATE_CLASS_MEASUREMENT,
+                SensorDeviceClass.CO,
+                SensorStateClass.MEASUREMENT,
                 CONCENTRATION_PARTS_PER_MILLION,
                 None,
             ),
@@ -67,8 +63,8 @@ async def async_setup_platform(
                 "sensor_4",
                 "Carbon dioxide",
                 54,
-                DEVICE_CLASS_CO2,
-                STATE_CLASS_MEASUREMENT,
+                SensorDeviceClass.CO2,
+                SensorStateClass.MEASUREMENT,
                 CONCENTRATION_PARTS_PER_MILLION,
                 14,
             ),
@@ -76,8 +72,8 @@ async def async_setup_platform(
                 "sensor_5",
                 "Power consumption",
                 100,
-                DEVICE_CLASS_POWER,
-                STATE_CLASS_MEASUREMENT,
+                SensorDeviceClass.POWER,
+                SensorStateClass.MEASUREMENT,
                 POWER_WATT,
                 None,
             ),
@@ -85,8 +81,8 @@ async def async_setup_platform(
                 "sensor_6",
                 "Today energy",
                 15,
-                DEVICE_CLASS_ENERGY,
-                STATE_CLASS_MEASUREMENT,
+                SensorDeviceClass.ENERGY,
+                SensorStateClass.MEASUREMENT,
                 ENERGY_KILO_WATT_HOUR,
                 None,
             ),
@@ -113,8 +109,8 @@ class DemoSensor(SensorEntity):
         unique_id: str,
         name: str,
         state: StateType,
-        device_class: str | None,
-        state_class: str | None,
+        device_class: SensorDeviceClass,
+        state_class: SensorStateClass | None,
         unit_of_measurement: str | None,
         battery: StateType,
     ) -> None:

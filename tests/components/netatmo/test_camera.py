@@ -32,8 +32,8 @@ async def test_setup_component_with_webhook(hass, config_entry, netatmo_auth):
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
     await hass.async_block_till_done()
 
-    camera_entity_indoor = "camera.netatmo_hall"
-    camera_entity_outdoor = "camera.netatmo_garden"
+    camera_entity_indoor = "camera.hall"
+    camera_entity_outdoor = "camera.garden"
     assert hass.states.get(camera_entity_indoor).state == "streaming"
     response = {
         "event_type": "off",
@@ -95,7 +95,7 @@ async def test_setup_component_with_webhook(hass, config_entry, netatmo_auth):
 
     with patch("pyatmo.camera.AsyncCameraData.async_set_state") as mock_set_state:
         await hass.services.async_call(
-            "camera", "turn_off", service_data={"entity_id": "camera.netatmo_hall"}
+            "camera", "turn_off", service_data={"entity_id": "camera.hall"}
         )
         await hass.async_block_till_done()
         mock_set_state.assert_called_once_with(
@@ -106,7 +106,7 @@ async def test_setup_component_with_webhook(hass, config_entry, netatmo_auth):
 
     with patch("pyatmo.camera.AsyncCameraData.async_set_state") as mock_set_state:
         await hass.services.async_call(
-            "camera", "turn_on", service_data={"entity_id": "camera.netatmo_hall"}
+            "camera", "turn_on", service_data={"entity_id": "camera.hall"}
         )
         await hass.async_block_till_done()
         mock_set_state.assert_called_once_with(
@@ -130,7 +130,7 @@ async def test_camera_image_local(hass, config_entry, requests_mock, netatmo_aut
 
     uri = "http://192.168.0.123/678460a0d47e5618699fb31169e2b47d"
     stream_uri = uri + "/live/files/high/index.m3u8"
-    camera_entity_indoor = "camera.netatmo_hall"
+    camera_entity_indoor = "camera.hall"
     cam = hass.states.get(camera_entity_indoor)
 
     assert cam is not None
@@ -161,7 +161,7 @@ async def test_camera_image_vpn(hass, config_entry, requests_mock, netatmo_auth)
         "6d278460699e56180d47ab47169efb31/MpEylTU2MDYzNjRVD-LJxUnIndumKzLboeAwMDqTTw,,"
     )
     stream_uri = uri + "/live/files/high/index.m3u8"
-    camera_entity_indoor = "camera.netatmo_garden"
+    camera_entity_indoor = "camera.garden"
     cam = hass.states.get(camera_entity_indoor)
 
     assert cam is not None
@@ -188,7 +188,7 @@ async def test_service_set_person_away(hass, config_entry, netatmo_auth):
     await hass.async_block_till_done()
 
     data = {
-        "entity_id": "camera.netatmo_hall",
+        "entity_id": "camera.hall",
         "person": "Richard Doe",
     }
 
@@ -205,7 +205,7 @@ async def test_service_set_person_away(hass, config_entry, netatmo_auth):
         )
 
     data = {
-        "entity_id": "camera.netatmo_hall",
+        "entity_id": "camera.hall",
     }
 
     with patch(
@@ -231,7 +231,7 @@ async def test_service_set_person_away_invalid_person(hass, config_entry, netatm
     await hass.async_block_till_done()
 
     data = {
-        "entity_id": "camera.netatmo_hall",
+        "entity_id": "camera.hall",
         "person": "Batman",
     }
 
@@ -259,7 +259,7 @@ async def test_service_set_persons_home_invalid_person(
     await hass.async_block_till_done()
 
     data = {
-        "entity_id": "camera.netatmo_hall",
+        "entity_id": "camera.hall",
         "persons": "Batman",
     }
 
@@ -285,7 +285,7 @@ async def test_service_set_persons_home(hass, config_entry, netatmo_auth):
     await hass.async_block_till_done()
 
     data = {
-        "entity_id": "camera.netatmo_hall",
+        "entity_id": "camera.hall",
         "persons": "John Doe",
     }
 
@@ -312,7 +312,7 @@ async def test_service_set_camera_light(hass, config_entry, netatmo_auth):
     await hass.async_block_till_done()
 
     data = {
-        "entity_id": "camera.netatmo_garden",
+        "entity_id": "camera.garden",
         "camera_light_mode": "on",
     }
 
@@ -345,7 +345,7 @@ async def test_camera_reconnect_webhook(hass, config_entry):
     ), patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
     ), patch(
-        "homeassistant.components.webhook.async_generate_url"
+        "homeassistant.components.netatmo.webhook_generate_url"
     ) as mock_webhook:
         mock_auth.return_value.async_post_request.side_effect = fake_post
         mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
@@ -364,7 +364,7 @@ async def test_camera_reconnect_webhook(hass, config_entry):
         await simulate_webhook(hass, webhook_id, response)
         await hass.async_block_till_done()
 
-        assert fake_post_hits == 5
+        assert fake_post_hits == 8
 
         calls = fake_post_hits
 
@@ -437,7 +437,7 @@ async def test_setup_component_no_devices(hass, config_entry):
     ), patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
     ), patch(
-        "homeassistant.components.webhook.async_generate_url"
+        "homeassistant.components.netatmo.webhook_generate_url"
     ):
         mock_auth.return_value.async_post_request.side_effect = fake_post_no_data
         mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
@@ -446,7 +446,7 @@ async def test_setup_component_no_devices(hass, config_entry):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-        assert fake_post_hits == 1
+        assert fake_post_hits == 4
 
 
 async def test_camera_image_raises_exception(hass, config_entry, requests_mock):
@@ -475,7 +475,7 @@ async def test_camera_image_raises_exception(hass, config_entry, requests_mock):
     ), patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
     ), patch(
-        "homeassistant.components.webhook.async_generate_url"
+        "homeassistant.components.netatmo.webhook_generate_url"
     ):
         mock_auth.return_value.async_post_request.side_effect = fake_post
         mock_auth.return_value.async_get_image.side_effect = fake_post
@@ -485,10 +485,10 @@ async def test_camera_image_raises_exception(hass, config_entry, requests_mock):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    camera_entity_indoor = "camera.netatmo_hall"
+    camera_entity_indoor = "camera.hall"
 
     with pytest.raises(Exception) as excinfo:
         await camera.async_get_image(hass, camera_entity_indoor)
 
     assert excinfo.value.args == ("Unable to get image",)
-    assert fake_post_hits == 6
+    assert fake_post_hits == 9

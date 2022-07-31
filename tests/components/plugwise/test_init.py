@@ -1,65 +1,152 @@
 """Tests for the Plugwise Climate integration."""
-
 import asyncio
+from unittest.mock import MagicMock
 
-from plugwise.exceptions import XMLDataMissingError
+import aiohttp
+from plugwise.exceptions import (
+    ConnectionFailedError,
+    PlugwiseException,
+    XMLDataMissingError,
+)
+import pytest
 
 from homeassistant.components.plugwise.const import DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from tests.common import AsyncMock, MockConfigEntry
-from tests.components.plugwise.common import async_init_integration
+from tests.common import MockConfigEntry
 
-
-async def test_smile_unauthorized(hass, mock_smile_unauth):
-    """Test failing unauthorization by Smile."""
-    entry = await async_init_integration(hass, mock_smile_unauth)
-    assert entry.state is ConfigEntryState.SETUP_ERROR
+HEATER_ID = "1cbf783bb11e4a7c8a6843dee3a86927"  # Opentherm device_id for migration
+PLUG_ID = "cd0ddb54ef694e11ac18ed1cbce5dbbd"  # VCR device_id for migration
 
 
-async def test_smile_error(hass, mock_smile_error):
-    """Test server error handling by Smile."""
-    entry = await async_init_integration(hass, mock_smile_error)
-    assert entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_smile_notconnect(hass, mock_smile_notconnect):
-    """Connection failure error handling by Smile."""
-    mock_smile_notconnect.connect.return_value = False
-    entry = await async_init_integration(hass, mock_smile_notconnect)
-    assert entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_smile_timeout(hass, mock_smile_notconnect):
-    """Timeout error handling by Smile."""
-    mock_smile_notconnect.connect.side_effect = asyncio.TimeoutError
-    entry = await async_init_integration(hass, mock_smile_notconnect)
-    assert entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_smile_adam_xmlerror(hass, mock_smile_adam):
-    """Detect malformed XML by Smile in Adam environment."""
-    mock_smile_adam.full_update_device.side_effect = XMLDataMissingError
-    entry = await async_init_integration(hass, mock_smile_adam)
-    assert entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_unload_entry(hass, mock_smile_adam):
-    """Test being able to unload an entry."""
-    entry = await async_init_integration(hass, mock_smile_adam)
-
-    mock_smile_adam.async_reset = AsyncMock(return_value=True)
-    await hass.config_entries.async_unload(entry.entry_id)
+async def test_load_unload_config_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smile_anna: MagicMock,
+) -> None:
+    """Test the Plugwise configuration entry loading/unloading."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    assert entry.state is ConfigEntryState.NOT_LOADED
-    assert not hass.data[DOMAIN]
 
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert len(mock_smile_anna.connect.mock_calls) == 1
 
-async def test_async_setup_entry_fail(hass):
-    """Test async_setup_entry."""
-    entry = MockConfigEntry(domain=DOMAIN, data={})
-
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    assert entry.state is ConfigEntryState.SETUP_ERROR
+
+    assert not hass.data.get(DOMAIN)
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        (ConnectionFailedError),
+        (PlugwiseException),
+        (XMLDataMissingError),
+        (asyncio.TimeoutError),
+        (aiohttp.ClientConnectionError),
+    ],
+)
+async def test_config_entry_not_ready(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smile_anna: MagicMock,
+    side_effect: Exception,
+) -> None:
+    """Test the Plugwise configuration entry not ready."""
+    mock_smile_anna.connect.side_effect = side_effect
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(mock_smile_anna.connect.mock_calls) == 1
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize(
+    "entitydata,old_unique_id,new_unique_id",
+    [
+        (
+            {
+                "domain": SENSOR_DOMAIN,
+                "platform": DOMAIN,
+                "unique_id": f"{HEATER_ID}-outdoor_temperature",
+                "suggested_object_id": f"{HEATER_ID}-outdoor_temperature",
+                "disabled_by": None,
+            },
+            f"{HEATER_ID}-outdoor_temperature",
+            f"{HEATER_ID}-outdoor_air_temperature",
+        ),
+    ],
+)
+async def test_migrate_unique_id_temperature(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smile_anna: MagicMock,
+    entitydata: dict,
+    old_unique_id: str,
+    new_unique_id: str,
+) -> None:
+    """Test migration of unique_id."""
+    mock_config_entry.add_to_hass(hass)
+
+    entity_registry = er.async_get(hass)
+    entity: er.RegistryEntry = entity_registry.async_get_or_create(
+        **entitydata,
+        config_entry=mock_config_entry,
+    )
+    assert entity.unique_id == old_unique_id
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_migrated = entity_registry.async_get(entity.entity_id)
+    assert entity_migrated
+    assert entity_migrated.unique_id == new_unique_id
+
+
+@pytest.mark.parametrize(
+    "entitydata,old_unique_id,new_unique_id",
+    [
+        (
+            {
+                "domain": SWITCH_DOMAIN,
+                "platform": DOMAIN,
+                "unique_id": f"{PLUG_ID}-plug",
+                "suggested_object_id": f"{PLUG_ID}-plug",
+                "disabled_by": None,
+            },
+            f"{PLUG_ID}-plug",
+            f"{PLUG_ID}-relay",
+        ),
+    ],
+)
+async def test_migrate_unique_id_relay(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smile_adam: MagicMock,
+    entitydata: dict,
+    old_unique_id: str,
+    new_unique_id: str,
+) -> None:
+    """Test migration of unique_id."""
+    mock_config_entry.add_to_hass(hass)
+
+    entity_registry = er.async_get(hass)
+    entity: er.RegistryEntry = entity_registry.async_get_or_create(
+        **entitydata,
+        config_entry=mock_config_entry,
+    )
+    assert entity.unique_id == old_unique_id
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_migrated = entity_registry.async_get(entity.entity_id)
+    assert entity_migrated
+    assert entity_migrated.unique_id == new_unique_id

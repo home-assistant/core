@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/raincloud",
   "requirements": ["raincloudy==0.0.7"],
   "codeowners": ["@vanstinator"],
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "loggers": ["raincloudy"]
 }

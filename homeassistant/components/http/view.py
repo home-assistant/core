@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable, Callable
 from http import HTTPStatus
-import json
 import logging
 from typing import Any
 
@@ -21,7 +20,7 @@ import voluptuous as vol
 from homeassistant import exceptions
 from homeassistant.const import CONTENT_TYPE_JSON
 from homeassistant.core import Context, is_callback
-from homeassistant.helpers.json import JSONEncoder
+from homeassistant.helpers.json import JSON_ENCODE_EXCEPTIONS, json_bytes
 
 from .const import KEY_AUTHENTICATED, KEY_HASS
 
@@ -53,8 +52,8 @@ class HomeAssistantView:
     ) -> web.Response:
         """Return a JSON response."""
         try:
-            msg = json.dumps(result, cls=JSONEncoder, allow_nan=False).encode("UTF-8")
-        except (ValueError, TypeError) as err:
+            msg = json_bytes(result)
+        except JSON_ENCODE_EXCEPTIONS as err:
             _LOGGER.error("Unable to serialize to JSON: %s\n%s", err, result)
             raise HTTPInternalServerError from err
         response = web.Response(
@@ -94,11 +93,15 @@ class HomeAssistantView:
             for url in urls:
                 routes.append(router.add_route(method, url, handler))
 
-        if not self.cors_allowed:
-            return
+        # Use `get` because CORS middleware is not be loaded in emulated_hue
+        if self.cors_allowed:
+            allow_cors = app.get("allow_all_cors")
+        else:
+            allow_cors = app.get("allow_configured_cors")
 
-        for route in routes:
-            app["allow_cors"](route)
+        if allow_cors:
+            for route in routes:
+                allow_cors(route)
 
 
 def request_handler_factory(

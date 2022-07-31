@@ -1,19 +1,17 @@
 {
   "config": {
+    "flow_title": "{short_mac} ({ip_address})",
     "step": {
       "user": {
-        "title": "Motion Blinds",
         "description": "Connect to your Motion Gateway, if the IP address is not set, auto-discovery is used",
         "data": {
           "host": "[%key:common::config_flow::data::ip%]"
         }
       },
       "connect": {
-        "title": "Motion Blinds",
         "description": "You will need the 16 character API Key, see https://www.home-assistant.io/integrations/motion_blinds/#retrieving-the-key for instructions",
         "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]",
-          "interface": "The network interface to use"
+          "api_key": "[%key:common::config_flow::data::api_key%]"
         }
       },
       "select": {
@@ -25,8 +23,7 @@
       }
     },
     "error": {
-      "discovery_error": "Failed to discover a Motion Gateway",
-      "invalid_interface": "Invalid network interface"
+      "discovery_error": "Failed to discover a Motion Gateway"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
@@ -37,8 +34,6 @@
   "options": {
     "step": {
       "init": {
-        "title": "Motion Blinds",
-        "description": "Specify optional settings",
         "data": {
           "wait_for_push": "Wait for multicast push on update"
         }
@@ -46,6 +41,3 @@
     }
   }
 }
-
-
-

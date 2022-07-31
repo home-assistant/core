@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "invalid_credentials": "Autentica\u00e7\u00e3o inv\u00e1lida",
+            "unknown": "Erro inesperado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Chave da API",
+                    "api_user": "ID de usu\u00e1rio da API do Habitica",
+                    "name": "Substitua o nome de usu\u00e1rio do Habitica. Ser\u00e1 usado para chamadas de servi\u00e7o",
+                    "url": "URL"
+                },
+                "description": "Conecte seu perfil do Habitica para permitir o monitoramento do perfil e das tarefas do seu usu\u00e1rio. Observe que api_id e api_key devem ser obtidos em https://habitica.com/user/settings/api"
+            }
+        }
+    }
+}

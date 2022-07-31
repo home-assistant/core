@@ -4,15 +4,13 @@ from datetime import timedelta
 from homeassistant.components.iotawatt.const import ATTR_LAST_UPDATE
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
-    DEVICE_CLASS_ENERGY,
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL,
+    SensorDeviceClass,
+    SensorStateClass,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
-    DEVICE_CLASS_POWER,
     ENERGY_WATT_HOUR,
     POWER_WATT,
 )
@@ -47,10 +45,10 @@ async def test_sensor_type_input(hass, mock_iotawatt):
     state = hass.states.get("sensor.my_sensor")
     assert state is not None
     assert state.state == "23"
-    assert state.attributes[ATTR_STATE_CLASS] == STATE_CLASS_MEASUREMENT
+    assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.MEASUREMENT
     assert state.attributes[ATTR_FRIENDLY_NAME] == "My Sensor"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == POWER_WATT
-    assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_POWER
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.POWER
     assert state.attributes["channel"] == "1"
     assert state.attributes["type"] == "Input"
 
@@ -74,10 +72,10 @@ async def test_sensor_type_output(hass, mock_iotawatt):
     state = hass.states.get("sensor.my_watthour_sensor")
     assert state is not None
     assert state.state == "243"
-    assert state.attributes[ATTR_STATE_CLASS] == STATE_CLASS_TOTAL
+    assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.TOTAL
     assert state.attributes[ATTR_FRIENDLY_NAME] == "My WattHour Sensor"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == ENERGY_WATT_HOUR
-    assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_ENERGY
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENERGY
     assert state.attributes["type"] == "Output"
 
     mock_iotawatt.getSensors.return_value["sensors"].pop("my_watthour_sensor_key")
@@ -102,7 +100,7 @@ async def test_sensor_type_accumulated_output(hass, mock_iotawatt):
                 "sensor.my_watthour_accumulated_output_sensor_wh_accumulated",
                 "100.0",
                 {
-                    "device_class": DEVICE_CLASS_ENERGY,
+                    "device_class": SensorDeviceClass.ENERGY,
                     "unit_of_measurement": ENERGY_WATT_HOUR,
                     "last_update": DUMMY_DATE,
                 },
@@ -125,9 +123,9 @@ async def test_sensor_type_accumulated_output(hass, mock_iotawatt):
         state.attributes[ATTR_FRIENDLY_NAME]
         == "My WattHour Accumulated Output Sensor.wh Accumulated"
     )
-    assert state.attributes[ATTR_STATE_CLASS] == STATE_CLASS_TOTAL
+    assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.TOTAL
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == ENERGY_WATT_HOUR
-    assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_ENERGY
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENERGY
     assert state.attributes["type"] == "Output"
     assert state.attributes[ATTR_LAST_UPDATE] is not None
     assert state.attributes[ATTR_LAST_UPDATE] != DUMMY_DATE
@@ -166,9 +164,9 @@ async def test_sensor_type_accumulated_output_error_restore(hass, mock_iotawatt)
         state.attributes[ATTR_FRIENDLY_NAME]
         == "My WattHour Accumulated Output Sensor.wh Accumulated"
     )
-    assert state.attributes[ATTR_STATE_CLASS] == STATE_CLASS_TOTAL
+    assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.TOTAL
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == ENERGY_WATT_HOUR
-    assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_ENERGY
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENERGY
     assert state.attributes["type"] == "Output"
     assert state.attributes[ATTR_LAST_UPDATE] is not None
     assert state.attributes[ATTR_LAST_UPDATE] != DUMMY_DATE
@@ -192,7 +190,7 @@ async def test_sensor_type_multiple_accumulated_output(hass, mock_iotawatt):
                 "sensor.my_watthour_accumulated_output_sensor_wh_accumulated",
                 "100.0",
                 {
-                    "device_class": DEVICE_CLASS_ENERGY,
+                    "device_class": SensorDeviceClass.ENERGY,
                     "unit_of_measurement": ENERGY_WATT_HOUR,
                     "last_update": DUMMY_DATE,
                 },
@@ -201,7 +199,7 @@ async def test_sensor_type_multiple_accumulated_output(hass, mock_iotawatt):
                 "sensor.my_watthour_accumulated_input_sensor_wh_accumulated",
                 "50.0",
                 {
-                    "device_class": DEVICE_CLASS_ENERGY,
+                    "device_class": SensorDeviceClass.ENERGY,
                     "unit_of_measurement": ENERGY_WATT_HOUR,
                     "last_update": DUMMY_DATE,
                 },
@@ -224,9 +222,9 @@ async def test_sensor_type_multiple_accumulated_output(hass, mock_iotawatt):
         state.attributes[ATTR_FRIENDLY_NAME]
         == "My WattHour Accumulated Output Sensor.wh Accumulated"
     )
-    assert state.attributes[ATTR_STATE_CLASS] == STATE_CLASS_TOTAL
+    assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.TOTAL
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == ENERGY_WATT_HOUR
-    assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_ENERGY
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENERGY
     assert state.attributes["type"] == "Output"
     assert state.attributes[ATTR_LAST_UPDATE] is not None
     assert state.attributes[ATTR_LAST_UPDATE] != DUMMY_DATE

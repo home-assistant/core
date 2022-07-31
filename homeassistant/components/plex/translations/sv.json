@@ -25,14 +25,10 @@
                 "description": "V\u00e4lj flera servrar tillg\u00e4ngliga, v\u00e4lj en:",
                 "title": "V\u00e4lj Plex-server"
             },
-            "user": {
-                "title": "Plex Media Server"
-            },
             "user_advanced": {
                 "data": {
                     "setup_method": "Inst\u00e4llningsmetod"
-                },
-                "title": "Plex Media Server"
+                }
             }
         }
     },
@@ -40,7 +36,9 @@
         "step": {
             "plex_mp_settings": {
                 "data": {
+                    "ignore_new_shared_users": "Ignorera nya hanterade/delade anv\u00e4ndare",
                     "ignore_plex_web_clients": "Ignorera Plex Web-klienter",
+                    "monitored_users": "\u00d6vervakade anv\u00e4ndare",
                     "use_episode_art": "Anv\u00e4nd avsnittsbild"
                 },
                 "description": "Alternativ f\u00f6r Plex-mediaspelare"

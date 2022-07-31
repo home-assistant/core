@@ -1,4 +1,6 @@
 """The tests for the Demo vacuum platform."""
+from datetime import timedelta
+
 import pytest
 
 from homeassistant.components import vacuum
@@ -35,8 +37,9 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt
 
-from tests.common import async_mock_service
+from tests.common import async_fire_time_changed, async_mock_service
 from tests.components.vacuum import common
 
 ENTITY_VACUUM_BASIC = f"{DOMAIN}.{DEMO_VACUUM_BASIC}".lower()
@@ -174,6 +177,11 @@ async def test_methods(hass):
     await common.async_return_to_base(hass, ENTITY_VACUUM_STATE)
     state = hass.states.get(ENTITY_VACUUM_STATE)
     assert state.state == STATE_RETURNING
+
+    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=31))
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY_VACUUM_STATE)
+    assert state.state == STATE_DOCKED
 
     await common.async_set_fan_speed(
         hass, FAN_SPEEDS[-1], entity_id=ENTITY_VACUUM_STATE

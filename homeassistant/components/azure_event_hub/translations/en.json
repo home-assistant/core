@@ -1,0 +1,49 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured",
+            "cannot_connect": "Connecting with the credentials from the configuration.yaml failed, please remove from yaml and use the config flow.",
+            "single_instance_allowed": "Already configured. Only a single configuration possible.",
+            "unknown": "Connecting with the credentials from the configuration.yaml failed with an unknown error, please remove from yaml and use the config flow."
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "conn_string": {
+                "data": {
+                    "event_hub_connection_string": "Event Hub Connection String"
+                },
+                "description": "Please enter the connection string for: {event_hub_instance_name}",
+                "title": "Connection String method"
+            },
+            "sas": {
+                "data": {
+                    "event_hub_namespace": "Event Hub Namespace",
+                    "event_hub_sas_key": "Event Hub SAS Key",
+                    "event_hub_sas_policy": "Event Hub SAS Policy"
+                },
+                "description": "Please enter the SAS (shared access signature) credentials for: {event_hub_instance_name}",
+                "title": "SAS Credentials method"
+            },
+            "user": {
+                "data": {
+                    "event_hub_instance_name": "Event Hub Instance Name",
+                    "use_connection_string": "Use Connection String"
+                },
+                "title": "Setup your Azure Event Hub integration"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "options": {
+                "data": {
+                    "send_interval": "Interval between sending batches to the hub."
+                },
+                "title": "Options for the Azure Event Hub."
+            }
+        }
+    }
+}

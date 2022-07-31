@@ -16,9 +16,9 @@ LEGACY_UUID_FILE = ".uuid"
 @singleton.singleton(DATA_KEY)
 async def async_get(hass: HomeAssistant) -> str:
     """Get unique ID for the hass instance."""
-    store = storage.Store(hass, DATA_VERSION, DATA_KEY, True)
+    store = storage.Store[dict[str, str]](hass, DATA_VERSION, DATA_KEY, True)
 
-    data: dict[str, str] | None = await storage.async_migrator(  # type: ignore
+    data: dict[str, str] | None = await storage.async_migrator(
         hass,
         hass.config.path(LEGACY_UUID_FILE),
         store,

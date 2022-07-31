@@ -1,0 +1,8 @@
+{
+    "issues": {
+        "pending_removal": {
+            "description": "Integrasi OpenALPR Local sedang menunggu penghapusan dari Home Assistant dan tidak akan lagi tersedia pada Home Assistant 2022.10.\n\nHapus konfigurasi YAML dari file configuration.yaml Anda dan mulai ulang Home Assistant untuk memperbaiki masalah ini.",
+            "title": "Integrasi OpenALPR dalam proses penghapusan"
+        }
+    }
+}

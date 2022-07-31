@@ -18,7 +18,7 @@ from homeassistant.components.icloud.const import (
     DEFAULT_WITH_FAMILY,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
@@ -162,7 +162,7 @@ async def test_user(hass: HomeAssistant, service: MagicMock):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=None
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
     # test with required
@@ -171,7 +171,7 @@ async def test_user(hass: HomeAssistant, service: MagicMock):
         context={"source": SOURCE_USER},
         data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == CONF_TRUSTED_DEVICE
 
 
@@ -187,7 +187,7 @@ async def test_user_with_cookie(hass: HomeAssistant, service_authenticated: Magi
             CONF_WITH_FAMILY: WITH_FAMILY,
         },
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == USERNAME
     assert result["title"] == USERNAME
     assert result["data"][CONF_USERNAME] == USERNAME
@@ -195,127 +195,6 @@ async def test_user_with_cookie(hass: HomeAssistant, service_authenticated: Magi
     assert result["data"][CONF_WITH_FAMILY] == WITH_FAMILY
     assert result["data"][CONF_MAX_INTERVAL] == DEFAULT_MAX_INTERVAL
     assert result["data"][CONF_GPS_ACCURACY_THRESHOLD] == DEFAULT_GPS_ACCURACY_THRESHOLD
-
-
-async def test_import(hass: HomeAssistant, service: MagicMock):
-    """Test import step."""
-    # import with required
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "trusted_device"
-
-    # import with all
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={
-            CONF_USERNAME: USERNAME_2,
-            CONF_PASSWORD: PASSWORD,
-            CONF_WITH_FAMILY: WITH_FAMILY,
-            CONF_MAX_INTERVAL: MAX_INTERVAL,
-            CONF_GPS_ACCURACY_THRESHOLD: GPS_ACCURACY_THRESHOLD,
-        },
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "trusted_device"
-
-
-async def test_import_with_cookie(
-    hass: HomeAssistant, service_authenticated: MagicMock
-):
-    """Test import step with presence of a cookie."""
-    # import with required
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["result"].unique_id == USERNAME
-    assert result["title"] == USERNAME
-    assert result["data"][CONF_USERNAME] == USERNAME
-    assert result["data"][CONF_PASSWORD] == PASSWORD
-    assert result["data"][CONF_WITH_FAMILY] == DEFAULT_WITH_FAMILY
-    assert result["data"][CONF_MAX_INTERVAL] == DEFAULT_MAX_INTERVAL
-    assert result["data"][CONF_GPS_ACCURACY_THRESHOLD] == DEFAULT_GPS_ACCURACY_THRESHOLD
-
-    # import with all
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={
-            CONF_USERNAME: USERNAME_2,
-            CONF_PASSWORD: PASSWORD,
-            CONF_WITH_FAMILY: WITH_FAMILY,
-            CONF_MAX_INTERVAL: MAX_INTERVAL,
-            CONF_GPS_ACCURACY_THRESHOLD: GPS_ACCURACY_THRESHOLD,
-        },
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["result"].unique_id == USERNAME_2
-    assert result["title"] == USERNAME_2
-    assert result["data"][CONF_USERNAME] == USERNAME_2
-    assert result["data"][CONF_PASSWORD] == PASSWORD
-    assert result["data"][CONF_WITH_FAMILY] == WITH_FAMILY
-    assert result["data"][CONF_MAX_INTERVAL] == MAX_INTERVAL
-    assert result["data"][CONF_GPS_ACCURACY_THRESHOLD] == GPS_ACCURACY_THRESHOLD
-
-
-async def test_two_accounts_setup(
-    hass: HomeAssistant, service_authenticated: MagicMock
-):
-    """Test to setup two accounts."""
-    MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
-        unique_id=USERNAME,
-    ).add_to_hass(hass)
-
-    # import with required
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={CONF_USERNAME: USERNAME_2, CONF_PASSWORD: PASSWORD},
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["result"].unique_id == USERNAME_2
-    assert result["title"] == USERNAME_2
-    assert result["data"][CONF_USERNAME] == USERNAME_2
-    assert result["data"][CONF_PASSWORD] == PASSWORD
-    assert result["data"][CONF_WITH_FAMILY] == DEFAULT_WITH_FAMILY
-    assert result["data"][CONF_MAX_INTERVAL] == DEFAULT_MAX_INTERVAL
-    assert result["data"][CONF_GPS_ACCURACY_THRESHOLD] == DEFAULT_GPS_ACCURACY_THRESHOLD
-
-
-async def test_already_setup(hass: HomeAssistant):
-    """Test we abort if the account is already setup."""
-    MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
-        unique_id=USERNAME,
-    ).add_to_hass(hass)
-
-    # Should fail, same USERNAME (import)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured"
-
-    # Should fail, same USERNAME (flow)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured"
 
 
 async def test_login_failed(hass: HomeAssistant):
@@ -329,7 +208,7 @@ async def test_login_failed(hass: HomeAssistant):
             context={"source": SOURCE_USER},
             data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["errors"] == {CONF_PASSWORD: "invalid_auth"}
 
 
@@ -342,7 +221,7 @@ async def test_no_device(
         context={"source": SOURCE_USER},
         data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "no_device"
 
 
@@ -355,7 +234,7 @@ async def test_trusted_device(hass: HomeAssistant, service: MagicMock):
     )
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == CONF_TRUSTED_DEVICE
 
 
@@ -370,7 +249,7 @@ async def test_trusted_device_success(hass: HomeAssistant, service: MagicMock):
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_TRUSTED_DEVICE: 0}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == CONF_VERIFICATION_CODE
 
 
@@ -387,7 +266,7 @@ async def test_send_verification_code_failed(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_TRUSTED_DEVICE: 0}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == CONF_TRUSTED_DEVICE
     assert result["errors"] == {CONF_TRUSTED_DEVICE: "send_verification_code"}
 
@@ -404,7 +283,7 @@ async def test_verification_code(hass: HomeAssistant, service: MagicMock):
     )
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == CONF_VERIFICATION_CODE
 
 
@@ -423,7 +302,7 @@ async def test_verification_code_success(hass: HomeAssistant, service: MagicMock
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_VERIFICATION_CODE: "0"}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == USERNAME
     assert result["title"] == USERNAME
     assert result["data"][CONF_USERNAME] == USERNAME
@@ -449,7 +328,7 @@ async def test_validate_verification_code_failed(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_VERIFICATION_CODE: "0"}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == CONF_TRUSTED_DEVICE
     assert result["errors"] == {"base": "validate_verification_code"}
 
@@ -468,7 +347,7 @@ async def test_2fa_code_success(hass: HomeAssistant, service_2fa: MagicMock):
         result["flow_id"], {CONF_VERIFICATION_CODE: "0"}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == USERNAME
     assert result["title"] == USERNAME
     assert result["data"][CONF_USERNAME] == USERNAME
@@ -492,7 +371,7 @@ async def test_validate_2fa_code_failed(
         result["flow_id"], {CONF_VERIFICATION_CODE: "0"}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == CONF_VERIFICATION_CODE
     assert result["errors"] == {"base": "validate_verification_code"}
 
@@ -510,13 +389,13 @@ async def test_password_update(hass: HomeAssistant, service_authenticated: Magic
         data={**MOCK_CONFIG, "unique_id": USERNAME},
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_PASSWORD: PASSWORD_2}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert config_entry.data[CONF_PASSWORD] == PASSWORD_2
 
@@ -534,7 +413,7 @@ async def test_password_update_wrong_password(hass: HomeAssistant):
         data={**MOCK_CONFIG, "unique_id": USERNAME},
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
 
     with patch(
         "homeassistant.components.icloud.config_flow.PyiCloudService.authenticate",
@@ -544,5 +423,5 @@ async def test_password_update_wrong_password(hass: HomeAssistant):
             result["flow_id"], {CONF_PASSWORD: PASSWORD_2}
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["errors"] == {CONF_PASSWORD: "invalid_auth"}

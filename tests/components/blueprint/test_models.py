@@ -118,18 +118,15 @@ def test_blueprint_validate():
         is None
     )
 
-    assert (
-        models.Blueprint(
-            {
-                "blueprint": {
-                    "name": "Hello",
-                    "domain": "automation",
-                    "homeassistant": {"min_version": "100000.0.0"},
-                },
-            }
-        ).validate()
-        == ["Requires at least Home Assistant 100000.0.0"]
-    )
+    assert models.Blueprint(
+        {
+            "blueprint": {
+                "name": "Hello",
+                "domain": "automation",
+                "homeassistant": {"min_version": "100000.0.0"},
+            },
+        }
+    ).validate() == ["Requires at least Home Assistant 100000.0.0"]
 
 
 def test_blueprint_inputs(blueprint_2):

@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "already_in_progress": "Alur konfigurasi sedang berlangsung",
+            "cannot_connect": "Gagal terhubung",
+            "no_devices_found": "Tidak ada perangkat yang ditemukan di jaringan"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "no_devices_found": "Tidak ada perangkat yang ditemukan di jaringan",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "device_name": {
+                "data": {
+                    "name": "Nama"
+                }
+            },
+            "discovery_confirm": {
+                "description": "Ingin menyiapkan {name} ({host})?"
+            },
+            "user": {
+                "data": {
+                    "ip_address": "Alamat IP"
+                }
+            }
+        }
+    }
+}

@@ -1,10 +1,14 @@
 """Support for switches using GC100."""
+from __future__ import annotations
+
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import DEVICE_DEFAULT_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import CONF_PORTS, DATA_GC100
 
@@ -15,17 +19,22 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the GC100 devices."""
     switches = []
-    ports = config.get(CONF_PORTS)
+    ports = config[CONF_PORTS]
     for port in ports:
         for port_addr, port_name in port.items():
             switches.append(GC100Switch(port_name, port_addr, hass.data[DATA_GC100]))
     add_entities(switches, True)
 
 
-class GC100Switch(ToggleEntity):
+class GC100Switch(SwitchEntity):
     """Represent a switch/relay from GC100."""
 
     def __init__(self, name, port_addr, gc100):

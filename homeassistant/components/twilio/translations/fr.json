@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "cloud_not_connected": "Non connect\u00e9 \u00e0 Home Assistant Cloud.",
             "single_instance_allowed": "D\u00e9j\u00e0 configur\u00e9. Une seule configuration possible.",
             "webhook_not_internet_accessible": "Votre installation de Home Assistant doit \u00eatre accessible depuis internet pour recevoir des messages webhook."
         },
@@ -9,7 +10,7 @@
         },
         "step": {
             "user": {
-                "description": "\u00cates-vous s\u00fbr de vouloir configurer Twilio?",
+                "description": "Voulez-vous commencer la configuration\u00a0?",
                 "title": "Configurer le Webhook Twilio"
             }
         }

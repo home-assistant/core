@@ -1,0 +1,63 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "invalid_unique_id": "Nie mo\u017cna okre\u015bli\u0107 prawid\u0142owego unikalnego identyfikatora urz\u0105dzenia"
+        },
+        "error": {
+            "adbkey_not_file": "Nie znaleziono pliku z kluczem ADB",
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_host": "Nieprawid\u0142owa nazwa hosta lub adres IP",
+            "key_and_server": "Podaj tylko klucz ADB lub serwer ADB",
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "adb_server_ip": "Adres IP serwera ADB (pozostaw puste, aby nie u\u017cywa\u0107)",
+                    "adb_server_port": "Port serwera ADB",
+                    "adbkey": "\u015acie\u017cka do pliku z kluczem ADB (pozostaw puste, aby wygenerowa\u0107 automatycznie)",
+                    "device_class": "Typ urz\u0105dzenia",
+                    "host": "Nazwa hosta lub adres IP",
+                    "port": "Port"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_det_rules": "Nieprawid\u0142owe regu\u0142y wykrywania stanu"
+        },
+        "step": {
+            "apps": {
+                "data": {
+                    "app_delete": "Zaznacz, aby usun\u0105\u0107 t\u0119 aplikacj\u0119",
+                    "app_id": "Identyfikator aplikacji",
+                    "app_name": "Nazwa aplikacji"
+                },
+                "description": "Skonfiguruj identyfikator aplikacji {app_id}",
+                "title": "Konfiguracja aplikacji Android TV"
+            },
+            "init": {
+                "data": {
+                    "apps": "Skonfiguruj list\u0119 aplikacji",
+                    "exclude_unnamed_apps": "Wyklucz aplikacje o nieznanej nazwie z listy \u017ar\u00f3de\u0142",
+                    "get_sources": "Pobierz uruchomione aplikacje jako list\u0119 \u017ar\u00f3de\u0142",
+                    "screencap": "U\u017cyj zrzutu ekranu do ok\u0142adki albumu",
+                    "state_detection_rules": "Skonfiguruj regu\u0142y wykrywania stanu",
+                    "turn_off_command": "Polecenie wy\u0142\u0105czania z pow\u0142oki ADB (pozostaw puste dla warto\u015bci domy\u015blnej)",
+                    "turn_on_command": "Polecenie w\u0142\u0105czenia z pow\u0142oki ADB (pozostaw puste dla warto\u015bci domy\u015blnej)"
+                }
+            },
+            "rules": {
+                "data": {
+                    "rule_delete": "Zaznacz, aby usun\u0105\u0107 t\u0119 regu\u0142\u0119",
+                    "rule_id": "Identyfikator aplikacji",
+                    "rule_values": "Lista regu\u0142 wykrywania stanu (zobacz dokumentacj\u0119)"
+                },
+                "description": "Skonfiguruj regu\u0142\u0119 wykrywania dla identyfikatora aplikacji {rule_id}",
+                "title": "Konfiguracja regu\u0142 wykrywania stanu Android TV"
+            }
+        }
+    }
+}

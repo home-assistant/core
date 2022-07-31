@@ -1,87 +1,71 @@
 """The tests for the filesize sensor."""
 import os
-from unittest.mock import patch
 
-import pytest
+from homeassistant.const import CONF_FILE_PATH, STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_component import async_update_entity
 
-from homeassistant import config as hass_config
-from homeassistant.components.filesize import DOMAIN
-from homeassistant.components.filesize.sensor import CONF_FILE_PATHS
-from homeassistant.const import SERVICE_RELOAD
-from homeassistant.setup import async_setup_component
+from . import TEST_FILE, TEST_FILE_NAME, async_create_file
 
-from tests.common import get_fixture_path
-
-TEST_DIR = os.path.join(os.path.dirname(__file__))
-TEST_FILE = os.path.join(TEST_DIR, "mock_file_test_filesize.txt")
+from tests.common import MockConfigEntry
 
 
-def create_file(path):
-    """Create a test file."""
-    with open(path, "w") as test_file:
-        test_file.write("test")
-
-
-@pytest.fixture(autouse=True)
-def remove_file():
-    """Remove test file."""
-    yield
-    if os.path.isfile(TEST_FILE):
-        os.remove(TEST_FILE)
-
-
-async def test_invalid_path(hass):
+async def test_invalid_path(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test that an invalid path is caught."""
-    config = {"sensor": {"platform": "filesize", CONF_FILE_PATHS: ["invalid_path"]}}
-    assert await async_setup_component(hass, "sensor", config)
-    await hass.async_block_till_done()
-    assert len(hass.states.async_entity_ids("sensor")) == 0
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry, unique_id=TEST_FILE, data={CONF_FILE_PATH: TEST_FILE}
+    )
+
+    state = hass.states.get("sensor." + TEST_FILE_NAME)
+    assert not state
 
 
-async def test_valid_path(hass):
+async def test_valid_path(
+    hass: HomeAssistant, tmpdir: str, mock_config_entry: MockConfigEntry
+) -> None:
     """Test for a valid path."""
-    create_file(TEST_FILE)
-    config = {"sensor": {"platform": "filesize", CONF_FILE_PATHS: [TEST_FILE]}}
-    hass.config.allowlist_external_dirs = {TEST_DIR}
-    assert await async_setup_component(hass, "sensor", config)
+    testfile = f"{tmpdir}/file.txt"
+    await async_create_file(hass, testfile)
+    hass.config.allowlist_external_dirs = {tmpdir}
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry, unique_id=testfile, data={CONF_FILE_PATH: testfile}
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    assert len(hass.states.async_entity_ids("sensor")) == 1
-    state = hass.states.get("sensor.mock_file_test_filesize_txt")
+
+    state = hass.states.get("sensor.file_txt_size")
+    assert state
     assert state.state == "0.0"
-    assert state.attributes.get("bytes") == 4
+
+    await hass.async_add_executor_job(os.remove, testfile)
 
 
-async def test_reload(hass, tmpdir):
-    """Verify we can reload filesize sensors."""
-    testfile = f"{tmpdir}/file"
-    await hass.async_add_executor_job(create_file, testfile)
-    with patch.object(hass.config, "is_allowed_path", return_value=True):
-        await async_setup_component(
-            hass,
-            "sensor",
-            {
-                "sensor": {
-                    "platform": "filesize",
-                    "file_paths": [testfile],
-                }
-            },
-        )
-        await hass.async_block_till_done()
+async def test_state_unavailable(
+    hass: HomeAssistant, tmpdir: str, mock_config_entry: MockConfigEntry
+) -> None:
+    """Verify we handle state unavailable."""
+    testfile = f"{tmpdir}/file.txt"
+    await async_create_file(hass, testfile)
+    hass.config.allowlist_external_dirs = {tmpdir}
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry, unique_id=testfile, data={CONF_FILE_PATH: testfile}
+    )
 
-    assert len(hass.states.async_all()) == 1
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.file")
+    state = hass.states.get("sensor.file_txt_size")
+    assert state
+    assert state.state == "0.0"
 
-    yaml_path = get_fixture_path("configuration.yaml", "filesize")
-    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path), patch.object(
-        hass.config, "is_allowed_path", return_value=True
-    ):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_RELOAD,
-            {},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
+    await hass.async_add_executor_job(os.remove, testfile)
+    await async_update_entity(hass, "sensor.file_txt_size")
 
-    assert hass.states.get("sensor.file") is None
+    state = hass.states.get("sensor.file_txt_size")
+    assert state.state == STATE_UNAVAILABLE

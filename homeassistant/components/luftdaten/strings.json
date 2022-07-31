@@ -2,9 +2,8 @@
   "config": {
     "step": {
       "user": {
-        "title": "Define Luftdaten",
         "data": {
-          "station_id": "Luftdaten Sensor ID",
+          "station_id": "Sensor ID",
           "show_on_map": "Show on map"
         }
       }

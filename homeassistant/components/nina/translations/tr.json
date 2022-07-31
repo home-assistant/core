@@ -1,0 +1,49 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Zaten yap\u0131land\u0131r\u0131lm\u0131\u015f. Yaln\u0131zca tek bir konfig\u00fcrasyon m\u00fcmk\u00fcnd\u00fcr."
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "no_selection": "L\u00fctfen en az bir \u015fehir/il\u00e7e se\u00e7in",
+            "unknown": "Beklenmeyen hata"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "_a_to_d": "\u015eehir/il\u00e7e (A-D)",
+                    "_e_to_h": "\u015eehir/il\u00e7e (E-H)",
+                    "_i_to_l": "\u015eehir/il\u00e7e (I-L)",
+                    "_m_to_q": "\u015eehir/il\u00e7e (M-Q)",
+                    "_r_to_u": "\u015eehir/il\u00e7e (R-U)",
+                    "_v_to_z": "\u015eehir/il\u00e7e (V-Z)",
+                    "corona_filter": "Korona Uyar\u0131lar\u0131n\u0131 Kald\u0131r",
+                    "slots": "\u015eehir/il\u00e7e ba\u015f\u0131na maksimum uyar\u0131 say\u0131s\u0131"
+                },
+                "title": "\u015eehir/il\u00e7e se\u00e7in"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "no_selection": "L\u00fctfen en az bir \u015fehir/il\u00e7e se\u00e7in",
+            "unknown": "Beklenmeyen hata"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "_a_to_d": "\u015eehir/il\u00e7e (A-D)",
+                    "_e_to_h": "\u015eehir/il\u00e7e (E-H)",
+                    "_i_to_l": "\u015eehir/il\u00e7e (I-L)",
+                    "_m_to_q": "\u015eehir/il\u00e7e (M-Q)",
+                    "_r_to_u": "\u015eehir/il\u00e7e (R-U)",
+                    "_v_to_z": "\u015eehir/il\u00e7e (V-Z)",
+                    "corona_filter": "Korona Uyar\u0131lar\u0131n\u0131 Kald\u0131r",
+                    "slots": "\u015eehir/il\u00e7e ba\u015f\u0131na maksimum uyar\u0131 say\u0131s\u0131"
+                },
+                "title": "Se\u00e7enekler"
+            }
+        }
+    }
+}

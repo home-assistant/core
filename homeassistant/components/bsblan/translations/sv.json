@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Det gick inte att ansluta."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "port": "Port",
+                    "username": "Anv\u00e4ndarnamn"
+                }
+            }
+        }
+    }
+}

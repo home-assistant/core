@@ -4,6 +4,8 @@
     "condition_type": {
       "is_bat_low": "{entity_name} battery is low",
       "is_not_bat_low": "{entity_name} battery is normal",
+      "is_co": "{entity_name} is detecting carbon monoxide",
+      "is_no_co": "{entity_name} is not detecting carbon monoxide",
       "is_cold": "{entity_name} is cold",
       "is_not_cold": "{entity_name} is not cold",
       "is_connected": "{entity_name} is connected",
@@ -54,6 +56,8 @@
     "trigger_type": {
       "bat_low": "{entity_name} battery low",
       "not_bat_low": "{entity_name} battery normal",
+      "co": "{entity_name} started detecting carbon monoxide",
+      "no_co": "{entity_name} stopped detecting carbon monoxide",
       "cold": "{entity_name} became cold",
       "not_cold": "{entity_name} became not cold",
       "connected": "{entity_name} connected",
@@ -90,8 +94,8 @@
       "no_smoke": "{entity_name} stopped detecting smoke",
       "sound": "{entity_name} started detecting sound",
       "no_sound": "{entity_name} stopped detecting sound",
-      "is_tampered": "{entity_name} started detecting tampering",
-      "is_not_tampered": "{entity_name} stopped detecting tampering",
+      "tampered": "{entity_name} started detecting tampering",
+      "not_tampered": "{entity_name} stopped detecting tampering",
       "update": "{entity_name} got an update available",
       "no_update": "{entity_name} became up-to-date",
       "vibration": "{entity_name} started detecting vibration",
@@ -110,6 +114,10 @@
     "battery_charging": {
       "off": "Not charging",
       "on": "Charging"
+    },
+    "carbon_monoxide": {
+      "off": "[%key:component::binary_sensor::state::gas::off%]",
+      "on": "[%key:component::binary_sensor::state::gas::on%]"
     },
     "cold": {
       "off": "[%key:component::binary_sensor::state::battery::off%]",
@@ -209,6 +217,7 @@
     }
   },
   "device_class": {
+    "co": "carbon_monoxide",
     "cold": "cold",
     "gas": "gas",
     "heat": "heat",

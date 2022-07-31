@@ -3,19 +3,14 @@
 from unittest.mock import patch
 
 import pytest
+from voluptuous.error import MultipleInvalid
 
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
-    ATTR_SPEED,
     DOMAIN as FAN_DOMAIN,
     SERVICE_SET_PERCENTAGE,
-    SERVICE_SET_SPEED,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    SPEED_HIGH,
-    SPEED_LOW,
-    SPEED_MEDIUM,
-    SPEED_OFF,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 
@@ -212,7 +207,7 @@ async def test_fans(hass, aioclient_mock, mock_deconz_websocket):
         {ATTR_ENTITY_ID: "fan.ceiling_fan", ATTR_PERCENTAGE: 0},
         blocking=True,
     )
-    assert aioclient_mock.mock_calls[8][2] == {"speed": 1}
+    assert aioclient_mock.mock_calls[8][2] == {"speed": 0}
 
     # Events with an unsupported speed does not get converted
 
@@ -273,7 +268,6 @@ async def test_fans_legacy_speed_modes(hass, aioclient_mock, mock_deconz_websock
 
     assert len(hass.states.async_all()) == 2  # Light and fan
     assert hass.states.get("fan.ceiling_fan").state == STATE_ON
-    assert hass.states.get("fan.ceiling_fan").attributes[ATTR_SPEED] == SPEED_HIGH
 
     # Test states
 
@@ -289,7 +283,6 @@ async def test_fans_legacy_speed_modes(hass, aioclient_mock, mock_deconz_websock
 
     assert hass.states.get("fan.ceiling_fan").state == STATE_ON
     assert hass.states.get("fan.ceiling_fan").attributes[ATTR_PERCENTAGE] == 25
-    assert hass.states.get("fan.ceiling_fan").attributes[ATTR_SPEED] == SPEED_LOW
 
     event_changed_light = {
         "t": "event",
@@ -303,7 +296,6 @@ async def test_fans_legacy_speed_modes(hass, aioclient_mock, mock_deconz_websock
 
     assert hass.states.get("fan.ceiling_fan").state == STATE_ON
     assert hass.states.get("fan.ceiling_fan").attributes[ATTR_PERCENTAGE] == 50
-    assert hass.states.get("fan.ceiling_fan").attributes[ATTR_SPEED] == SPEED_MEDIUM
 
     event_changed_light = {
         "t": "event",
@@ -317,7 +309,6 @@ async def test_fans_legacy_speed_modes(hass, aioclient_mock, mock_deconz_websock
 
     assert hass.states.get("fan.ceiling_fan").state == STATE_ON
     assert hass.states.get("fan.ceiling_fan").attributes[ATTR_PERCENTAGE] == 75
-    assert hass.states.get("fan.ceiling_fan").attributes[ATTR_SPEED] == SPEED_MEDIUM
 
     event_changed_light = {
         "t": "event",
@@ -331,7 +322,6 @@ async def test_fans_legacy_speed_modes(hass, aioclient_mock, mock_deconz_websock
 
     assert hass.states.get("fan.ceiling_fan").state == STATE_ON
     assert hass.states.get("fan.ceiling_fan").attributes[ATTR_PERCENTAGE] == 100
-    assert hass.states.get("fan.ceiling_fan").attributes[ATTR_SPEED] == SPEED_HIGH
 
     event_changed_light = {
         "t": "event",
@@ -345,7 +335,6 @@ async def test_fans_legacy_speed_modes(hass, aioclient_mock, mock_deconz_websock
 
     assert hass.states.get("fan.ceiling_fan").state == STATE_OFF
     assert hass.states.get("fan.ceiling_fan").attributes[ATTR_PERCENTAGE] == 0
-    assert hass.states.get("fan.ceiling_fan").attributes[ATTR_SPEED] == SPEED_OFF
 
     # Test service calls
 
@@ -367,99 +356,99 @@ async def test_fans_legacy_speed_modes(hass, aioclient_mock, mock_deconz_websock
     await hass.services.async_call(
         FAN_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "fan.ceiling_fan", ATTR_SPEED: SPEED_OFF},
+        {ATTR_ENTITY_ID: "fan.ceiling_fan", ATTR_PERCENTAGE: 0},
         blocking=True,
     )
-    assert aioclient_mock.mock_calls[2][2] == {"speed": 1}
+    assert aioclient_mock.mock_calls[2][2] == {"speed": 0}
 
     # Service turn on fan with bad speed
     # async_turn_on_compat use speed_to_percentage which will convert to SPEED_MEDIUM -> 2
 
-    await hass.services.async_call(
-        FAN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "fan.ceiling_fan", ATTR_SPEED: "bad"},
-        blocking=True,
-    )
-    assert aioclient_mock.mock_calls[3][2] == {"speed": 2}
+    with pytest.raises(MultipleInvalid):
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "fan.ceiling_fan", ATTR_PERCENTAGE: "bad"},
+            blocking=True,
+        )
 
     # Service turn on fan to low speed
 
     await hass.services.async_call(
         FAN_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "fan.ceiling_fan", ATTR_SPEED: SPEED_LOW},
+        {ATTR_ENTITY_ID: "fan.ceiling_fan", ATTR_PERCENTAGE: 25},
         blocking=True,
     )
-    assert aioclient_mock.mock_calls[4][2] == {"speed": 1}
+    assert aioclient_mock.mock_calls[3][2] == {"speed": 1}
 
     # Service turn on fan to medium speed
 
     await hass.services.async_call(
         FAN_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "fan.ceiling_fan", ATTR_SPEED: SPEED_MEDIUM},
+        {ATTR_ENTITY_ID: "fan.ceiling_fan", ATTR_PERCENTAGE: 50},
         blocking=True,
     )
-    assert aioclient_mock.mock_calls[5][2] == {"speed": 2}
+    assert aioclient_mock.mock_calls[4][2] == {"speed": 2}
 
     # Service turn on fan to high speed
 
     await hass.services.async_call(
         FAN_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "fan.ceiling_fan", ATTR_SPEED: SPEED_HIGH},
+        {ATTR_ENTITY_ID: "fan.ceiling_fan", ATTR_PERCENTAGE: 100},
         blocking=True,
     )
-    assert aioclient_mock.mock_calls[6][2] == {"speed": 4}
+    assert aioclient_mock.mock_calls[5][2] == {"speed": 4}
 
     # Service set fan speed to low
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_SPEED,
-        {ATTR_ENTITY_ID: "fan.ceiling_fan", ATTR_SPEED: SPEED_LOW},
+        SERVICE_SET_PERCENTAGE,
+        {ATTR_ENTITY_ID: "fan.ceiling_fan", ATTR_PERCENTAGE: 25},
         blocking=True,
     )
-    assert aioclient_mock.mock_calls[7][2] == {"speed": 1}
+    assert aioclient_mock.mock_calls[6][2] == {"speed": 1}
 
     # Service set fan speed to medium
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_SPEED,
-        {ATTR_ENTITY_ID: "fan.ceiling_fan", ATTR_SPEED: SPEED_MEDIUM},
+        SERVICE_SET_PERCENTAGE,
+        {ATTR_ENTITY_ID: "fan.ceiling_fan", ATTR_PERCENTAGE: 50},
         blocking=True,
     )
-    assert aioclient_mock.mock_calls[8][2] == {"speed": 2}
+    assert aioclient_mock.mock_calls[7][2] == {"speed": 2}
 
     # Service set fan speed to high
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_SPEED,
-        {ATTR_ENTITY_ID: "fan.ceiling_fan", ATTR_SPEED: SPEED_HIGH},
+        SERVICE_SET_PERCENTAGE,
+        {ATTR_ENTITY_ID: "fan.ceiling_fan", ATTR_PERCENTAGE: 100},
         blocking=True,
     )
-    assert aioclient_mock.mock_calls[9][2] == {"speed": 4}
+    assert aioclient_mock.mock_calls[8][2] == {"speed": 4}
 
     # Service set fan speed to off
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_SPEED,
-        {ATTR_ENTITY_ID: "fan.ceiling_fan", ATTR_SPEED: SPEED_OFF},
+        SERVICE_SET_PERCENTAGE,
+        {ATTR_ENTITY_ID: "fan.ceiling_fan", ATTR_PERCENTAGE: 0},
         blocking=True,
     )
-    assert aioclient_mock.mock_calls[10][2] == {"speed": 0}
+    assert aioclient_mock.mock_calls[9][2] == {"speed": 0}
 
     # Service set fan speed to unsupported value
 
-    with pytest.raises(ValueError):
+    with pytest.raises(MultipleInvalid):
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_SET_SPEED,
-            {ATTR_ENTITY_ID: "fan.ceiling_fan", ATTR_SPEED: "bad value"},
+            SERVICE_SET_PERCENTAGE,
+            {ATTR_ENTITY_ID: "fan.ceiling_fan", ATTR_PERCENTAGE: "bad value"},
             blocking=True,
         )
 
@@ -476,7 +465,7 @@ async def test_fans_legacy_speed_modes(hass, aioclient_mock, mock_deconz_websock
     await hass.async_block_till_done()
 
     assert hass.states.get("fan.ceiling_fan").state == STATE_ON
-    assert hass.states.get("fan.ceiling_fan").attributes[ATTR_SPEED] == SPEED_MEDIUM
+    assert hass.states.get("fan.ceiling_fan").attributes[ATTR_PERCENTAGE] == 75
 
     await hass.config_entries.async_unload(config_entry.entry_id)
 

@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "port": "Port",
+                    "username": "Username",
+                    "web_port": "Web port (for visiting service)"
+                },
+                "description": "To be able to use this integration, you have to enable the following option in deluge settings: Daemon > Allow remote controls"
+            }
+        }
+    }
+}

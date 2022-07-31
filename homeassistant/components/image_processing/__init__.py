@@ -13,12 +13,13 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SOURCE,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.async_ import run_callback_threadsafe
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
@@ -69,13 +70,13 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE.extend(PLATFORM_SCHEMA.schema)
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the image processing."""
     component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
 
     await component.async_setup(config)
 
-    async def async_scan_service(service):
+    async def async_scan_service(service: ServiceCall) -> None:
         """Service handler for scan."""
         image_entities = await component.async_extract_from_service(service)
 

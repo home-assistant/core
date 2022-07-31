@@ -5,7 +5,7 @@
             "reauth_successful": "La r\u00e9-authentification a r\u00e9ussi"
         },
         "error": {
-            "invalid_auth": "Authentification invalide",
+            "invalid_auth": "Authentification non valide",
             "reauth_failed": "Veuillez utiliser le m\u00eame utilisateur mydevolo que pr\u00e9c\u00e9demment."
         },
         "step": {
@@ -13,14 +13,14 @@
                 "data": {
                     "mydevolo_url": "URL mydevolo",
                     "password": "Mot de passe",
-                    "username": "Email / devolo ID"
+                    "username": "Courriel / ID devolo"
                 }
             },
             "zeroconf_confirm": {
                 "data": {
-                    "mydevolo_url": "mydevolo URL",
+                    "mydevolo_url": "URL mydevolo",
                     "password": "Mot de passe",
-                    "username": "Email / devolo ID"
+                    "username": "Courriel / ID devolo"
                 }
             }
         }

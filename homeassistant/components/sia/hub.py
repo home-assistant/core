@@ -27,7 +27,6 @@ from .utils import get_event_data_from_sia_event
 
 _LOGGER = logging.getLogger(__name__)
 
-
 DEFAULT_TIMEBAND = (80, 40)
 IGNORED_TIMEBAND = (3600, 1800)
 
@@ -142,4 +141,4 @@ class SIAHub:
             return
         hub.update_accounts()
         await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
-        hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+        await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)

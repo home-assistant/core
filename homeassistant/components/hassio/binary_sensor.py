@@ -4,8 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_RUNNING,
-    DEVICE_CLASS_UPDATE,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -31,15 +30,19 @@ class HassioBinarySensorEntityDescription(BinarySensorEntityDescription):
     target: str | None = None
 
 
-ENTITY_DESCRIPTIONS = (
+COMMON_ENTITY_DESCRIPTIONS = (
     HassioBinarySensorEntityDescription(
-        device_class=DEVICE_CLASS_UPDATE,
+        # Deprecated, scheduled to be removed in 2022.6
+        device_class=BinarySensorDeviceClass.UPDATE,
         entity_registry_enabled_default=False,
         key=ATTR_UPDATE_AVAILABLE,
-        name="Update Available",
+        name="Update available",
     ),
+)
+
+ADDON_ENTITY_DESCRIPTIONS = COMMON_ENTITY_DESCRIPTIONS + (
     HassioBinarySensorEntityDescription(
-        device_class=DEVICE_CLASS_RUNNING,
+        device_class=BinarySensorDeviceClass.RUNNING,
         entity_registry_enabled_default=False,
         key=ATTR_STATE,
         name="Running",
@@ -56,9 +59,9 @@ async def async_setup_entry(
     """Binary sensor set up for Hass.io config entry."""
     coordinator = hass.data[ADDONS_COORDINATOR]
 
-    entities = []
+    entities: list[HassioAddonBinarySensor | HassioOSBinarySensor] = []
 
-    for entity_description in ENTITY_DESCRIPTIONS:
+    for entity_description in ADDON_ENTITY_DESCRIPTIONS:
         for addon in coordinator.data[DATA_KEY_ADDONS].values():
             entities.append(
                 HassioAddonBinarySensor(
@@ -68,7 +71,8 @@ async def async_setup_entry(
                 )
             )
 
-        if coordinator.is_hass_os:
+    if coordinator.is_hass_os:
+        for entity_description in COMMON_ENTITY_DESCRIPTIONS:
             entities.append(
                 HassioOSBinarySensor(
                     coordinator=coordinator,

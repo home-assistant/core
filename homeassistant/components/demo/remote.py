@@ -9,7 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEVICE_DEFAULT_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 
 async def async_setup_entry(
@@ -25,7 +25,7 @@ def setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     add_entities_callback: AddEntitiesCallback,
-    discovery_info: dict[str, Any] | None = None,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the demo remotes."""
     add_entities_callback(
@@ -46,7 +46,7 @@ class DemoRemote(RemoteEntity):
         self._attr_name = name or DEVICE_DEFAULT_NAME
         self._attr_is_on = state
         self._attr_icon = icon
-        self._last_command_sent = None
+        self._last_command_sent: str | None = None
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:

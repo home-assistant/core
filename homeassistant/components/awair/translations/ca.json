@@ -6,7 +6,7 @@
             "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
         },
         "error": {
-            "invalid_access_token": "Token d'acc\u00e9s no v\u00e0lid",
+            "invalid_access_token": "Token d'acc\u00e9s inv\u00e0lid",
             "unknown": "Error inesperat"
         },
         "step": {
@@ -16,6 +16,13 @@
                     "email": "Correu electr\u00f2nic"
                 },
                 "description": "Torna a introduir el token d'acc\u00e9s de desenvolupador d'Awair."
+            },
+            "reauth_confirm": {
+                "data": {
+                    "access_token": "Token d'acc\u00e9s",
+                    "email": "Correu electr\u00f2nic"
+                },
+                "description": "Torna a introduir el 'token' d'acc\u00e9s de desenvolupador d'Awair."
             },
             "user": {
                 "data": {

@@ -5,6 +5,7 @@ import logging
 
 from aiohttp import web
 
+from homeassistant.components import frontend, panel_custom
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import ATTR_ICON
 from homeassistant.core import HomeAssistant
@@ -62,7 +63,7 @@ class HassIOAddonPanel(HomeAssistantView):
 
     async def delete(self, request, addon):
         """Handle remove add-on panel requests."""
-        self.hass.components.frontend.async_remove_panel(addon)
+        frontend.async_remove_panel(self.hass, addon)
         return web.Response()
 
     async def get_panels(self):
@@ -77,7 +78,8 @@ class HassIOAddonPanel(HomeAssistantView):
 
 async def _register_panel(hass, addon, data):
     """Init coroutine to register the panel."""
-    await hass.components.panel_custom.async_register_panel(
+    await panel_custom.async_register_panel(
+        hass,
         frontend_url_path=addon,
         webcomponent_name="hassio-main",
         sidebar_title=data[ATTR_TITLE],

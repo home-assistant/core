@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u5e33\u865f\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "reauth_successful": "\u91cd\u65b0\u8a8d\u8b49\u6210\u529f",
+            "reauth_wrong_account": "\u50c5\u80fd\u4f7f\u7528\u76f8\u540c\u7684 Overkiz. \u5e33\u865f\u8207\u96c6\u7dda\u5668\u91cd\u65b0\u8a8d\u8b49\u6b64\u5be6\u9ad4"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
+            "server_in_maintenance": "\u4f3a\u670d\u5668\u7dad\u8b77\u4e2d",
+            "too_many_attempts": "\u4f7f\u7528\u7121\u6548\u6b0a\u6756\u5617\u8a66\u6b21\u6578\u904e\u591a\uff0c\u66ab\u6642\u906d\u5230\u5c01\u9396",
+            "too_many_requests": "\u8acb\u6c42\u6b21\u6578\u904e\u591a\uff0c\u8acb\u7a0d\u5f8c\u91cd\u8a66\u3002",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+        },
+        "flow_title": "\u9598\u9053\u5668\uff1a{gateway_id}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\u4e3b\u6a5f\u7aef",
+                    "hub": "Hub",
+                    "password": "\u5bc6\u78bc",
+                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
+                },
+                "description": "Overkiz \u5e73\u53f0\u7531\u4f8b\u5982 Somfy (Connexoon / TaHoma)\u3001Hitachi (Hi Kumo)\u3001Rexel (Energeasy Connect) \u53ca Atlantic (Cozytouch) \u591a\u500b\u4f9b\u61c9\u5546\u6240\u5ee3\u6cdb\u4f7f\u7528\uff0c\u8f38\u5165\u61c9\u7528\u7a0b\u5f0f\u6191\u8b49\u4e26\u9078\u64c7 Hub\u3002"
+            }
+        }
+    }
+}

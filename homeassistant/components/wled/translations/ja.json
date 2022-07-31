@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u30c7\u30d0\u30a4\u30b9\u306f\u3059\u3067\u306b\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u3059",
+            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
+            "cct_unsupported": "\u3053\u306eWLED\u30c7\u30d0\u30a4\u30b9\u306fCCT\u30c1\u30e3\u30f3\u30cd\u30eb\u3092\u4f7f\u7528\u3057\u3066\u3044\u307e\u3059\u304c\u3001\u3053\u306e\u7d71\u5408\u3067\u306f\u30b5\u30dd\u30fc\u30c8\u3055\u308c\u3066\u3044\u307e\u305b\u3093"
+        },
+        "error": {
+            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u307e\u3057\u305f"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\u30db\u30b9\u30c8"
+                },
+                "description": "WLED\u3092\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7\u3057\u3066\u3001Home Assistant\u3068\u9023\u643a\u3059\u308b\u3088\u3046\u306b\u3057\u307e\u3059\u3002"
+            },
+            "zeroconf_confirm": {
+                "description": "Home Assistant\u306b\u3001`{name}` \u3068\u3044\u3046\u540d\u524d\u306eWLED\u3092\u8ffd\u52a0\u3057\u307e\u3059\u304b\uff1f",
+                "title": "\u767a\u898b\u3055\u308c\u305fWLED device"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "keep_master_light": "1\u3064\u306eLED\u30bb\u30b0\u30e1\u30f3\u30c8\u3067\u3082\u3001\u30de\u30b9\u30bf\u30fc\u30e9\u30a4\u30c8\u3092\u4fdd\u3064(keep)\u3002"
+                }
+            }
+        }
+    }
+}

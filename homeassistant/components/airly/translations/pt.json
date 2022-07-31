@@ -13,8 +13,7 @@
                     "latitude": "Latitude",
                     "longitude": "Longitude",
                     "name": "Nome"
-                },
-                "title": ""
+                }
             }
         }
     }

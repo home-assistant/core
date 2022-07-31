@@ -12,13 +12,10 @@ from aioesphomeapi import (
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.components import dhcp, zeroconf
 from homeassistant.components.esphome import CONF_NOISE_PSK, DOMAIN, DomainData
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -65,7 +62,7 @@ async def test_user_connection_works(hass, mock_client, mock_zeroconf):
         data=None,
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
 
     mock_client.device_info = AsyncMock(return_value=MockDeviceInfo(False, "test"))
@@ -76,7 +73,7 @@ async def test_user_connection_works(hass, mock_client, mock_zeroconf):
         data={CONF_HOST: "127.0.0.1", CONF_PORT: 80},
     )
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_HOST: "127.0.0.1",
         CONF_PORT: 80,
@@ -108,7 +105,7 @@ async def test_user_resolve_error(hass, mock_client, mock_zeroconf):
             data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
         )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "resolve_error"}
 
@@ -127,7 +124,7 @@ async def test_user_connection_error(hass, mock_client, mock_zeroconf):
         data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "connection_error"}
 
@@ -146,14 +143,14 @@ async def test_user_with_password(hass, mock_client, mock_zeroconf):
         data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "authenticate"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_PASSWORD: "password1"}
     )
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_HOST: "127.0.0.1",
         CONF_PORT: 6053,
@@ -173,7 +170,7 @@ async def test_user_invalid_password(hass, mock_client, mock_zeroconf):
         data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "authenticate"
 
     mock_client.connect.side_effect = InvalidAuthAPIError
@@ -182,7 +179,7 @@ async def test_user_invalid_password(hass, mock_client, mock_zeroconf):
         result["flow_id"], user_input={CONF_PASSWORD: "invalid"}
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "authenticate"
     assert result["errors"] == {"base": "invalid_auth"}
 
@@ -197,7 +194,7 @@ async def test_login_connection_error(hass, mock_client, mock_zeroconf):
         data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "authenticate"
 
     mock_client.connect.side_effect = APIConnectionError
@@ -206,7 +203,7 @@ async def test_login_connection_error(hass, mock_client, mock_zeroconf):
         result["flow_id"], user_input={CONF_PASSWORD: "valid"}
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "authenticate"
     assert result["errors"] == {"base": "connection_error"}
 
@@ -215,12 +212,15 @@ async def test_discovery_initiation(hass, mock_client, mock_zeroconf):
     """Test discovery importing works."""
     mock_client.device_info = AsyncMock(return_value=MockDeviceInfo(False, "test8266"))
 
-    service_info = {
-        "host": "192.168.43.183",
-        "port": 6053,
-        "hostname": "test8266.local.",
-        "properties": {},
-    }
+    service_info = zeroconf.ZeroconfServiceInfo(
+        host="192.168.43.183",
+        addresses=["192.168.43.183"],
+        hostname="test8266.local.",
+        name="mock_name",
+        port=6053,
+        properties={},
+        type="mock_type",
+    )
     flow = await hass.config_entries.flow.async_init(
         "esphome", context={"source": config_entries.SOURCE_ZEROCONF}, data=service_info
     )
@@ -229,7 +229,7 @@ async def test_discovery_initiation(hass, mock_client, mock_zeroconf):
         flow["flow_id"], user_input={}
     )
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "test8266"
     assert result["data"][CONF_HOST] == "192.168.43.183"
     assert result["data"][CONF_PORT] == 6053
@@ -247,17 +247,20 @@ async def test_discovery_already_configured_hostname(hass, mock_client):
 
     entry.add_to_hass(hass)
 
-    service_info = {
-        "host": "192.168.43.183",
-        "port": 6053,
-        "hostname": "test8266.local.",
-        "properties": {},
-    }
+    service_info = zeroconf.ZeroconfServiceInfo(
+        host="192.168.43.183",
+        addresses=["192.168.43.183"],
+        hostname="test8266.local.",
+        name="mock_name",
+        port=6053,
+        properties={},
+        type="mock_type",
+    )
     result = await hass.config_entries.flow.async_init(
         "esphome", context={"source": config_entries.SOURCE_ZEROCONF}, data=service_info
     )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
     assert entry.unique_id == "test8266"
@@ -272,17 +275,20 @@ async def test_discovery_already_configured_ip(hass, mock_client):
 
     entry.add_to_hass(hass)
 
-    service_info = {
-        "host": "192.168.43.183",
-        "port": 6053,
-        "hostname": "test8266.local.",
-        "properties": {"address": "192.168.43.183"},
-    }
+    service_info = zeroconf.ZeroconfServiceInfo(
+        host="192.168.43.183",
+        addresses=["192.168.43.183"],
+        hostname="test8266.local.",
+        name="mock_name",
+        port=6053,
+        properties={"address": "192.168.43.183"},
+        type="mock_type",
+    )
     result = await hass.config_entries.flow.async_init(
         "esphome", context={"source": config_entries.SOURCE_ZEROCONF}, data=service_info
     )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
     assert entry.unique_id == "test8266"
@@ -301,17 +307,20 @@ async def test_discovery_already_configured_name(hass, mock_client):
     domain_data = DomainData.get(hass)
     domain_data.set_entry_data(entry, mock_entry_data)
 
-    service_info = {
-        "host": "192.168.43.184",
-        "port": 6053,
-        "hostname": "test8266.local.",
-        "properties": {"address": "test8266.local"},
-    }
+    service_info = zeroconf.ZeroconfServiceInfo(
+        host="192.168.43.184",
+        addresses=["192.168.43.184"],
+        hostname="test8266.local.",
+        name="mock_name",
+        port=6053,
+        properties={"address": "test8266.local"},
+        type="mock_type",
+    )
     result = await hass.config_entries.flow.async_init(
         "esphome", context={"source": config_entries.SOURCE_ZEROCONF}, data=service_info
     )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
     assert entry.unique_id == "test8266"
@@ -320,25 +329,28 @@ async def test_discovery_already_configured_name(hass, mock_client):
 
 async def test_discovery_duplicate_data(hass, mock_client):
     """Test discovery aborts if same mDNS packet arrives."""
-    service_info = {
-        "host": "192.168.43.183",
-        "port": 6053,
-        "hostname": "test8266.local.",
-        "properties": {"address": "test8266.local"},
-    }
+    service_info = zeroconf.ZeroconfServiceInfo(
+        host="192.168.43.183",
+        addresses=["192.168.43.183"],
+        hostname="test8266.local.",
+        name="mock_name",
+        port=6053,
+        properties={"address": "test8266.local"},
+        type="mock_type",
+    )
 
     mock_client.device_info = AsyncMock(return_value=MockDeviceInfo(False, "test8266"))
 
     result = await hass.config_entries.flow.async_init(
         "esphome", data=service_info, context={"source": config_entries.SOURCE_ZEROCONF}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
 
     result = await hass.config_entries.flow.async_init(
         "esphome", data=service_info, context={"source": config_entries.SOURCE_ZEROCONF}
     )
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_in_progress"
 
 
@@ -351,17 +363,20 @@ async def test_discovery_updates_unique_id(hass, mock_client):
 
     entry.add_to_hass(hass)
 
-    service_info = {
-        "host": "192.168.43.183",
-        "port": 6053,
-        "hostname": "test8266.local.",
-        "properties": {"address": "test8266.local"},
-    }
+    service_info = zeroconf.ZeroconfServiceInfo(
+        host="192.168.43.183",
+        addresses=["192.168.43.183"],
+        hostname="test8266.local.",
+        name="mock_name",
+        port=6053,
+        properties={"address": "test8266.local"},
+        type="mock_type",
+    )
     result = await hass.config_entries.flow.async_init(
         "esphome", context={"source": config_entries.SOURCE_ZEROCONF}, data=service_info
     )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
     assert entry.unique_id == "test8266"
@@ -377,7 +392,7 @@ async def test_user_requires_psk(hass, mock_client, mock_zeroconf):
         data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "encryption_key"
     assert result["errors"] == {}
 
@@ -397,7 +412,7 @@ async def test_encryption_key_valid_psk(hass, mock_client, mock_zeroconf):
         data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "encryption_key"
 
     mock_client.device_info = AsyncMock(return_value=MockDeviceInfo(False, "test"))
@@ -405,7 +420,7 @@ async def test_encryption_key_valid_psk(hass, mock_client, mock_zeroconf):
         result["flow_id"], user_input={CONF_NOISE_PSK: VALID_NOISE_PSK}
     )
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_HOST: "127.0.0.1",
         CONF_PORT: 6053,
@@ -426,7 +441,7 @@ async def test_encryption_key_invalid_psk(hass, mock_client, mock_zeroconf):
         data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "encryption_key"
 
     mock_client.device_info.side_effect = InvalidEncryptionKeyAPIError
@@ -434,7 +449,7 @@ async def test_encryption_key_invalid_psk(hass, mock_client, mock_zeroconf):
         result["flow_id"], user_input={CONF_NOISE_PSK: INVALID_NOISE_PSK}
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "encryption_key"
     assert result["errors"] == {"base": "invalid_psk"}
     assert mock_client.noise_psk == INVALID_NOISE_PSK
@@ -456,7 +471,7 @@ async def test_reauth_initiation(hass, mock_client, mock_zeroconf):
             "unique_id": entry.unique_id,
         },
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
 
@@ -482,7 +497,7 @@ async def test_reauth_confirm_valid(hass, mock_client, mock_zeroconf):
         result["flow_id"], user_input={CONF_NOISE_PSK: VALID_NOISE_PSK}
     )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert entry.data[CONF_NOISE_PSK] == VALID_NOISE_PSK
 
@@ -509,7 +524,65 @@ async def test_reauth_confirm_invalid(hass, mock_client, mock_zeroconf):
         result["flow_id"], user_input={CONF_NOISE_PSK: INVALID_NOISE_PSK}
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"]
     assert result["errors"]["base"] == "invalid_psk"
+
+
+async def test_discovery_dhcp_updates_host(hass, mock_client):
+    """Test dhcp discovery updates host and aborts."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.43.183", CONF_PORT: 6053, CONF_PASSWORD: ""},
+    )
+    entry.add_to_hass(hass)
+
+    mock_entry_data = MagicMock()
+    mock_entry_data.device_info.name = "test8266"
+    domain_data = DomainData.get(hass)
+    domain_data.set_entry_data(entry, mock_entry_data)
+
+    service_info = dhcp.DhcpServiceInfo(
+        ip="192.168.43.184",
+        hostname="test8266",
+        macaddress="00:00:00:00:00:00",
+    )
+    result = await hass.config_entries.flow.async_init(
+        "esphome", context={"source": config_entries.SOURCE_DHCP}, data=service_info
+    )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    assert entry.unique_id == "test8266"
+    assert entry.data[CONF_HOST] == "192.168.43.184"
+
+
+async def test_discovery_dhcp_no_changes(hass, mock_client):
+    """Test dhcp discovery updates host and aborts."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.43.183", CONF_PORT: 6053, CONF_PASSWORD: ""},
+    )
+    entry.add_to_hass(hass)
+
+    mock_entry_data = MagicMock()
+    mock_entry_data.device_info.name = "test8266"
+    domain_data = DomainData.get(hass)
+    domain_data.set_entry_data(entry, mock_entry_data)
+
+    service_info = dhcp.DhcpServiceInfo(
+        ip="192.168.43.183",
+        hostname="test8266",
+        macaddress="00:00:00:00:00:00",
+    )
+    result = await hass.config_entries.flow.async_init(
+        "esphome", context={"source": config_entries.SOURCE_DHCP}, data=service_info
+    )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    assert entry.unique_id == "test8266"
+    assert entry.data[CONF_HOST] == "192.168.43.183"

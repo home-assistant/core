@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u30c7\u30d0\u30a4\u30b9\u306f\u3059\u3067\u306b\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u3059"
+        },
+        "error": {
+            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
+            "unknown": "\u4e88\u671f\u3057\u306a\u3044\u30a8\u30e9\u30fc"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\u30db\u30b9\u30c8",
+                    "name": "\u540d\u524d"
+                },
+                "description": "\u3053\u306e\u7d71\u5408\u306b\u306f\u3001AndroidTV\u30a2\u30d7\u30ea\u306e\u901a\u77e5\u304c\u5fc5\u8981\u3067\u3059\u3002 \n\nAndroid TV\u306e\u5834\u5408: https://play.google.com/store/apps/details?id=de.cyberdream.androidtv.notifications.google\nFire TV\u306e\u5834\u5408: https://www.amazon.com/Christian-Fees-Notifications-for-Fire/dp/B00OESCXEK\n\n\u30eb\u30fc\u30bf\u30fc\u306eDHCP\u4e88\u7d04((DHCP reservation)\u30eb\u30fc\u30bf\u30fc\u306e\u30e6\u30fc\u30b6\u30fc\u30de\u30cb\u30e5\u30a2\u30eb\u3092\u53c2\u7167))\u307e\u305f\u306f\u3001\u30c7\u30d0\u30a4\u30b9\u306b\u9759\u7684IP\u30a2\u30c9\u30ec\u30b9\u3092\u8a2d\u5b9a\u3059\u308b\u5fc5\u8981\u304c\u3042\u308a\u307e\u3059\u3002\u305d\u3046\u3067\u306a\u3044\u5834\u5408\u3001\u30c7\u30d0\u30a4\u30b9\u306f\u6700\u7d42\u7684\u306b\u4f7f\u7528\u3067\u304d\u306a\u304f\u306a\u308a\u307e\u3059\u3002"
+            }
+        }
+    }
+}

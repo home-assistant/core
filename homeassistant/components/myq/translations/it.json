@@ -15,14 +15,14 @@
                     "password": "Password"
                 },
                 "description": "La password per {username} non \u00e8 pi\u00f9 valida.",
-                "title": "Riautentica il tuo account MyQ"
+                "title": "Autentica nuovamente il tuo account MyQ"
             },
             "user": {
                 "data": {
                     "password": "Password",
                     "username": "Nome utente"
                 },
-                "title": "Connettersi al gateway MyQ"
+                "title": "Connettiti al gateway MyQ"
             }
         }
     }

@@ -1,9 +1,11 @@
 """The Nmap Tracker integration."""
 from typing import Final
 
+from homeassistant.const import Platform
+
 DOMAIN: Final = "nmap_tracker"
 
-PLATFORMS: Final = ["device_tracker"]
+PLATFORMS: Final = [Platform.DEVICE_TRACKER]
 
 NMAP_TRACKED_DEVICES: Final = "nmap_tracked_devices"
 

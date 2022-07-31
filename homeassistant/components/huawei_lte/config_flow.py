@@ -2,12 +2,12 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
 
-from huawei_lte_api.AuthorizedConnection import AuthorizedConnection
 from huawei_lte_api.Client import Client
-from huawei_lte_api.Connection import GetResponseType
+from huawei_lte_api.Connection import Connection
+from huawei_lte_api.Session import GetResponseType
 from huawei_lte_api.exceptions import (
     LoginErrorPasswordWrongException,
     LoginErrorUsernamePasswordOverrunException,
@@ -31,7 +31,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import (
     CONF_TRACK_WIRED_CLIENTS,
@@ -90,12 +89,6 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors or {},
         )
 
-    async def async_step_import(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle import initiated config flow."""
-        return await self.async_step_user(user_input)
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -115,19 +108,17 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input=user_input, errors=errors
             )
 
-        conn: AuthorizedConnection
-
         def logout() -> None:
             try:
-                conn.user.logout()
+                conn.user_session.user.logout()  # type: ignore[union-attr]
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.debug("Could not logout", exc_info=True)
 
-        def try_connect(user_input: dict[str, Any]) -> AuthorizedConnection:
+        def try_connect(user_input: dict[str, Any]) -> Connection:
             """Try connecting with given credentials."""
             username = user_input.get(CONF_USERNAME) or ""
             password = user_input.get(CONF_PASSWORD) or ""
-            conn = AuthorizedConnection(
+            conn = Connection(
                 user_input[CONF_URL],
                 username=username,
                 password=password,
@@ -184,14 +175,14 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         info, wlan_settings = await self.hass.async_add_executor_job(get_device_info)
         await self.hass.async_add_executor_job(logout)
 
+        user_input[CONF_MAC] = get_device_macs(info, wlan_settings)
+
         if not self.unique_id:
             if serial_number := info.get("SerialNumber"):
                 await self.async_set_unique_id(serial_number)
-                self._abort_if_unique_id_configured()
+                self._abort_if_unique_id_configured(updates=user_input)
             else:
                 await self._async_handle_discovery_without_unique_id()
-
-        user_input[CONF_MAC] = get_device_macs(info, wlan_settings)
 
         title = (
             self.context.get("title_placeholders", {}).get(CONF_NAME)
@@ -202,24 +193,29 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=title, data=user_input)
 
-    async def async_step_ssdp(self, discovery_info: DiscoveryInfoType) -> FlowResult:
+    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Handle SSDP initiated config flow."""
-        await self.async_set_unique_id(discovery_info[ssdp.ATTR_UPNP_UDN])
+        await self.async_set_unique_id(discovery_info.upnp[ssdp.ATTR_UPNP_UDN])
         self._abort_if_unique_id_configured()
 
         # Attempt to distinguish from other non-LTE Huawei router devices, at least
         # some ones we are interested in have "Mobile Wi-Fi" friendlyName.
-        if "mobile" not in discovery_info.get(ssdp.ATTR_UPNP_FRIENDLY_NAME, "").lower():
+        if (
+            "mobile"
+            not in discovery_info.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME, "").lower()
+        ):
             return self.async_abort(reason="not_huawei_lte")
 
+        if TYPE_CHECKING:
+            assert discovery_info.ssdp_location
         url = url_normalize(
-            discovery_info.get(
+            discovery_info.upnp.get(
                 ssdp.ATTR_UPNP_PRESENTATION_URL,
-                f"http://{urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION]).hostname}/",
+                f"http://{urlparse(discovery_info.ssdp_location).hostname}/",
             )
         )
 
-        if serial_number := discovery_info.get(ssdp.ATTR_UPNP_SERIAL):
+        if serial_number := discovery_info.upnp.get(ssdp.ATTR_UPNP_SERIAL):
             await self.async_set_unique_id(serial_number)
             self._abort_if_unique_id_configured()
         else:
@@ -228,7 +224,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         user_input = {CONF_URL: url}
 
         self.context["title_placeholders"] = {
-            CONF_NAME: discovery_info.get(ssdp.ATTR_UPNP_FRIENDLY_NAME)
+            CONF_NAME: discovery_info.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME)
         }
         return await self._async_show_user_form(user_input)
 

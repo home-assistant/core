@@ -46,10 +46,13 @@
             "title": "Opcions del panell de control d'alarma"
         },
         "zha_options": {
+            "always_prefer_xy_color_mode": "Utilitza preferentment el mode de color XY",
             "consider_unavailable_battery": "Considera els dispositius amb bateria com a no disponibles al cap de (segons)",
             "consider_unavailable_mains": "Considera els dispositius connectats a la xarxa el\u00e8ctrica com a no disponibles al cap de (segons)",
             "default_light_transition": "Temps de transici\u00f3 predeterminat (segons)",
             "enable_identify_on_join": "Activa l'efecte d'identificaci\u00f3 quan els dispositius s'uneixin a la xarxa",
+            "enhanced_light_transition": "Activa la transici\u00f3 millorada de color/temperatura de llum des de l'estat apagat",
+            "light_transitioning_flag": "Activa el control lliscant de brillantor millorat durant la transici\u00f3",
             "title": "Opcions globals"
         }
     },

@@ -8,13 +8,12 @@ import pyvera as veraApi
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
-    DOMAIN as PLATFORM_DOMAIN,
     ENTITY_ID_FORMAT,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.color as color_util
@@ -33,7 +32,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             VeraLight(device, controller_data)
-            for device in controller_data.devices.get(PLATFORM_DOMAIN)
+            for device in controller_data.devices[Platform.LIGHT]
         ],
         True,
     )
@@ -47,7 +46,7 @@ class VeraLight(VeraDevice[veraApi.VeraDimmer], LightEntity):
     ) -> None:
         """Initialize the light."""
         self._state = False
-        self._color = None
+        self._color: tuple[float, float] | None = None
         self._brightness = None
         VeraDevice.__init__(self, vera_device, controller_data)
         self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
@@ -63,11 +62,18 @@ class VeraLight(VeraDevice[veraApi.VeraDimmer], LightEntity):
         return self._color
 
     @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        if self._color:
-            return SUPPORT_BRIGHTNESS | SUPPORT_COLOR
-        return SUPPORT_BRIGHTNESS
+    def color_mode(self) -> ColorMode:
+        """Return the color mode of the light."""
+        if self.vera_device.is_dimmable:
+            if self._color:
+                return ColorMode.HS
+            return ColorMode.BRIGHTNESS
+        return ColorMode.ONOFF
+
+    @property
+    def supported_color_modes(self) -> set[ColorMode]:
+        """Flag supported color modes."""
+        return {self.color_mode}
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""

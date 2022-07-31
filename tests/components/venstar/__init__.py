@@ -60,3 +60,7 @@ class VenstarColorTouchMock:
     def update_alerts(self):
         """Mock update_alerts."""
         return True
+
+    def get_runtimes(self):
+        """Mock get runtimes."""
+        return {}

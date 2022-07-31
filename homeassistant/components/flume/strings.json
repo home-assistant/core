@@ -22,7 +22,7 @@
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
         }
-      }      
+      }
     },
     "abort": {
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",

@@ -1,4 +1,6 @@
 """Test the Waze Travel Time config flow."""
+import pytest
+
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.waze_travel_time.const import (
     CONF_AVOID_FERRIES,
@@ -16,28 +18,27 @@ from homeassistant.components.waze_travel_time.const import (
 )
 from homeassistant.const import CONF_NAME, CONF_REGION, CONF_UNIT_SYSTEM_IMPERIAL
 
+from .const import MOCK_CONFIG
+
 from tests.common import MockConfigEntry
 
 
-async def test_minimum_fields(hass, validate_config_entry, bypass_setup):
+@pytest.mark.usefixtures("validate_config_entry")
+async def test_minimum_fields(hass):
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {}
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {
-            CONF_ORIGIN: "location1",
-            CONF_DESTINATION: "location2",
-            CONF_REGION: "US",
-        },
+        MOCK_CONFIG,
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result2["title"] == DEFAULT_NAME
     assert result2["data"] == {
         CONF_NAME: DEFAULT_NAME,
@@ -47,16 +48,11 @@ async def test_minimum_fields(hass, validate_config_entry, bypass_setup):
     }
 
 
-async def test_options(hass, validate_config_entry, mock_update):
+async def test_options(hass):
     """Test options flow."""
-
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={
-            CONF_ORIGIN: "location1",
-            CONF_DESTINATION: "location2",
-            CONF_REGION: "US",
-        },
+        data=MOCK_CONFIG,
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -64,7 +60,7 @@ async def test_options(hass, validate_config_entry, mock_update):
 
     result = await hass.config_entries.options.async_init(entry.entry_id, data=None)
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
@@ -80,7 +76,7 @@ async def test_options(hass, validate_config_entry, mock_update):
             CONF_VEHICLE_TYPE: "taxi",
         },
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == ""
     assert result["data"] == {
         CONF_AVOID_FERRIES: True,
@@ -105,7 +101,8 @@ async def test_options(hass, validate_config_entry, mock_update):
     }
 
 
-async def test_import(hass, validate_config_entry, mock_update):
+@pytest.mark.usefixtures("validate_config_entry")
+async def test_import(hass):
     """Test import for config flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -125,7 +122,7 @@ async def test_import(hass, validate_config_entry, mock_update):
         },
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     await hass.async_block_till_done()
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert entry.data == {
@@ -145,178 +142,51 @@ async def test_import(hass, validate_config_entry, mock_update):
     }
 
 
-async def _setup_dupe_import(hass, mock_update):
-    """Set up dupe import."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={
-            CONF_ORIGIN: "location1",
-            CONF_DESTINATION: "location2",
-            CONF_REGION: "US",
-            CONF_AVOID_FERRIES: True,
-            CONF_AVOID_SUBSCRIPTION_ROADS: True,
-            CONF_AVOID_TOLL_ROADS: True,
-            CONF_EXCL_FILTER: "exclude",
-            CONF_INCL_FILTER: "include",
-            CONF_REALTIME: False,
-            CONF_UNITS: CONF_UNIT_SYSTEM_IMPERIAL,
-            CONF_VEHICLE_TYPE: "taxi",
-        },
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    await hass.async_block_till_done()
-
-
-async def test_dupe_import(hass, mock_update):
-    """Test duplicate import."""
-    await _setup_dupe_import(hass, mock_update)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={
-            CONF_ORIGIN: "location1",
-            CONF_DESTINATION: "location2",
-            CONF_REGION: "US",
-            CONF_AVOID_FERRIES: True,
-            CONF_AVOID_SUBSCRIPTION_ROADS: True,
-            CONF_AVOID_TOLL_ROADS: True,
-            CONF_EXCL_FILTER: "exclude",
-            CONF_INCL_FILTER: "include",
-            CONF_REALTIME: False,
-            CONF_UNITS: CONF_UNIT_SYSTEM_IMPERIAL,
-            CONF_VEHICLE_TYPE: "taxi",
-        },
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured"
-
-
-async def test_dupe_import_false_check_different_options_value(hass, mock_update):
-    """Test false duplicate import check when options value differs."""
-    await _setup_dupe_import(hass, mock_update)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={
-            CONF_ORIGIN: "location1",
-            CONF_DESTINATION: "location2",
-            CONF_REGION: "US",
-            CONF_AVOID_FERRIES: True,
-            CONF_AVOID_SUBSCRIPTION_ROADS: True,
-            CONF_AVOID_TOLL_ROADS: True,
-            CONF_EXCL_FILTER: "exclude",
-            CONF_INCL_FILTER: "include",
-            CONF_REALTIME: False,
-            CONF_UNITS: CONF_UNIT_SYSTEM_IMPERIAL,
-            CONF_VEHICLE_TYPE: "car",
-        },
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-
-
-async def test_dupe_import_false_check_default_option(hass, mock_update):
-    """Test false duplicate import check when option with a default is missing."""
-    await _setup_dupe_import(hass, mock_update)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={
-            CONF_ORIGIN: "location1",
-            CONF_DESTINATION: "location2",
-            CONF_REGION: "US",
-            CONF_AVOID_FERRIES: True,
-            CONF_AVOID_SUBSCRIPTION_ROADS: True,
-            CONF_AVOID_TOLL_ROADS: True,
-            CONF_EXCL_FILTER: "exclude",
-            CONF_INCL_FILTER: "include",
-            CONF_REALTIME: False,
-            CONF_VEHICLE_TYPE: "taxi",
-        },
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-
-
-async def test_dupe_import_false_check_no_default_option(hass, mock_update):
-    """Test false duplicate import check option when option with no default is miissing."""
-    await _setup_dupe_import(hass, mock_update)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={
-            CONF_ORIGIN: "location1",
-            CONF_DESTINATION: "location2",
-            CONF_REGION: "US",
-            CONF_AVOID_FERRIES: True,
-            CONF_AVOID_SUBSCRIPTION_ROADS: True,
-            CONF_AVOID_TOLL_ROADS: True,
-            CONF_EXCL_FILTER: "exclude",
-            CONF_REALTIME: False,
-            CONF_VEHICLE_TYPE: "taxi",
-        },
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-
-
-async def test_dupe(hass, validate_config_entry, bypass_setup):
+@pytest.mark.usefixtures("validate_config_entry")
+async def test_dupe(hass):
     """Test setting up the same entry data twice is OK."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {}
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {
-            CONF_ORIGIN: "location1",
-            CONF_DESTINATION: "location2",
-            CONF_REGION: "US",
-        },
+        MOCK_CONFIG,
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {}
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {
-            CONF_ORIGIN: "location1",
-            CONF_DESTINATION: "location2",
-            CONF_REGION: "US",
-        },
+        MOCK_CONFIG,
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
 
-async def test_invalid_config_entry(hass, invalidate_config_entry):
+@pytest.mark.usefixtures("invalidate_config_entry")
+async def test_invalid_config_entry(hass):
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {}
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {
-            CONF_ORIGIN: "location1",
-            CONF_DESTINATION: "location2",
-            CONF_REGION: "US",
-        },
+        MOCK_CONFIG,
     )
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
