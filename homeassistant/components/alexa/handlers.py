@@ -452,8 +452,8 @@ async def async_api_set_percentage(
     if entity.domain != fan.DOMAIN:
         raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
 
-    service = fan.SERVICE_SET_PERCENTAGE
     percentage = int(directive.payload["percentage"])
+    service = fan.SERVICE_SET_PERCENTAGE
     data = {
         ATTR_ENTITY_ID: entity.entity_id,
         fan.ATTR_PERCENTAGE: percentage,
