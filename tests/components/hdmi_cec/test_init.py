@@ -1,5 +1,5 @@
 """Tests for the HDMI-CEC component."""
-from unittest.mock import ANY, PropertyMock, patch
+from unittest.mock import ANY, PropertyMock, call, patch
 
 import pytest
 import voluptuous as vol
@@ -96,9 +96,9 @@ async def test_setup_cec_adapter(hass, mock_cec_adapter, mock_hdmi_network):
 
     mock_cec_adapter.assert_called_once_with(name="HA", activate_source=False)
     mock_hdmi_network.assert_called_once()
-    call = mock_hdmi_network.call_args
-    assert call.args == (mock_cec_adapter.return_value,)
-    assert call.kwargs["loop"] in (None, hass.loop)
+    call_args = mock_hdmi_network.call_args
+    assert call_args == call(mock_cec_adapter.return_value, loop=ANY)
+    assert call_args.kwargs["loop"] in (None, hass.loop)
 
     mock_hdmi_network_instance = mock_hdmi_network.return_value
 
@@ -127,9 +127,9 @@ async def test_setup_tcp_adapter(hass, mock_tcp_adapter, mock_hdmi_network):
 
     mock_tcp_adapter.assert_called_once_with(host, name="HA", activate_source=False)
     mock_hdmi_network.assert_called_once()
-    call = mock_hdmi_network.call_args
-    assert call.args == (mock_tcp_adapter.return_value,)
-    assert call.kwargs["loop"] in (None, hass.loop)
+    call_args = mock_hdmi_network.call_args
+    assert call_args == call(mock_tcp_adapter.return_value, loop=ANY)
+    assert call_args.kwargs["loop"] in (None, hass.loop)
 
     mock_hdmi_network_instance = mock_hdmi_network.return_value
 
