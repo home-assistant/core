@@ -1,11 +1,9 @@
 """Support for WLED sensors."""
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-
-from wled import Device as WLEDDevice
+from typing import TYPE_CHECKING
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -13,22 +11,29 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DATA_BYTES,
     ELECTRIC_CURRENT_MILLIAMPERE,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
 )
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
 from .const import DOMAIN
-from .coordinator import WLEDDataUpdateCoordinator
 from .models import WLEDEntity
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from wled import Device as WLEDDevice
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import StateType
+
+    from .coordinator import WLEDDataUpdateCoordinator
 
 
 @dataclass

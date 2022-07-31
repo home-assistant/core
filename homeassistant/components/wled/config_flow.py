@@ -1,7 +1,7 @@
 """Config flow to configure the WLED integration."""
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 from wled import WLED, Device, WLEDConnectionError
@@ -10,10 +10,12 @@ from homeassistant.components import onboarding, zeroconf
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_MAC
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_KEEP_MASTER_LIGHT, DEFAULT_KEEP_MASTER_LIGHT, DOMAIN
+
+if TYPE_CHECKING:
+    from homeassistant.data_entry_flow import FlowResult
 
 
 class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):

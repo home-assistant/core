@@ -2,13 +2,12 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 from wled import WLED, Device as WLEDDevice, WLEDConnectionClosed, WLEDError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -19,6 +18,12 @@ from .const import (
     LOGGER,
     SCAN_INTERVAL,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
 
 
 class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
