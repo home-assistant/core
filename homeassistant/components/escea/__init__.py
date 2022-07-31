@@ -10,10 +10,6 @@ from .discovery import async_start_discovery_service, async_stop_discovery_servi
 PLATFORMS = [CLIMATE_DOMAIN]
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up from YAML config - deprecated."""
-    return True
-
 
 async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEntry):
     """Set up from a config entry."""
