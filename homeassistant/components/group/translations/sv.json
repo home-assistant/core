@@ -9,6 +9,12 @@
                 },
                 "title": "Ny grupp"
             },
+            "cover": {
+                "title": "L\u00e4gg till grupp"
+            },
+            "fan": {
+                "title": "L\u00e4gg till grupp"
+            },
             "light": {
                 "title": "L\u00e4gg till grupp"
             },
@@ -16,6 +22,15 @@
                 "data": {
                     "entities": "Medlemmar",
                     "hide_members": "D\u00f6lj medlemmar",
+                    "name": "Namn"
+                },
+                "title": "L\u00e4gg till grupp"
+            },
+            "media_player": {
+                "title": "L\u00e4gg till grupp"
+            },
+            "switch": {
+                "data": {
                     "name": "Namn"
                 },
                 "title": "L\u00e4gg till grupp"
@@ -32,13 +47,20 @@
         "step": {
             "binary_sensor": {
                 "data": {
-                    "all": "Alla entiteter"
+                    "all": "Alla entiteter",
+                    "entities": "Medlemmar"
                 }
             },
             "lock": {
                 "data": {
                     "entities": "Medlemmar",
                     "hide_members": "D\u00f6lj medlemmar"
+                }
+            },
+            "switch": {
+                "data": {
+                    "all": "Alla entiteter",
+                    "entities": "Medlemmar"
                 }
             }
         }
