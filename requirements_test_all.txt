@@ -851,13 +851,11 @@ panasonic_viera==0.3.6
 # homeassistant.components.dunehd
 pdunehd==1.3.2
 
-<<<<<<< HEAD
 # homeassistant.components.escea
-pescea==1.0.10
-=======
+pescea==1.0.11
+
 # homeassistant.components.peco
 peco==0.0.29
->>>>>>> dev
 
 # homeassistant.components.aruba
 # homeassistant.components.cisco_ios

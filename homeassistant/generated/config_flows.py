@@ -5,7 +5,6 @@ To update, run python3 -m script.hassfest
 
 # fmt: off
 
-<<<<<<< HEAD
 FLOWS = [
     "abode",
     "accuweather",
@@ -341,7 +340,6 @@ FLOWS = [
     "zwave",
     "zwave_js"
 ]
-=======
 FLOWS = {
     "integration": [
         "abode",
@@ -783,4 +781,3 @@ FLOWS = {
         "utility_meter"
     ]
 }
->>>>>>> dev

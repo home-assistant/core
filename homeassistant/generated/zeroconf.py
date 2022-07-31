@@ -425,12 +425,9 @@ HOMEKIT = {
     "BSB002": "hue",
     "C105X": "roku",
     "C135X": "roku",
-<<<<<<< HEAD
     "Escea": "escea",
-=======
     "EB-*": "ecobee",
     "HHKBridge*": "hive",
->>>>>>> dev
     "Healty Home Coach": "netatmo",
     "Iota": "abode",
     "LIFX A19": "lifx",
