@@ -14,7 +14,7 @@ import os
 from random import SystemRandom
 from typing import Final, Optional, cast, final
 
-from aiohttp import web
+from aiohttp import hdrs, web
 import async_timeout
 import attr
 import voluptuous as vol
@@ -715,8 +715,11 @@ class CameraView(HomeAssistantView):
         )
 
         if not authenticated:
-            if request[KEY_AUTHENTICATED]:
+            # Attempt with invalid bearer token, raise unauthorized
+            # so ban middleware can handle it.
+            if hdrs.AUTHORIZATION in request.headers:
                 raise web.HTTPUnauthorized()
+            # Invalid sigAuth or camera access token
             raise web.HTTPForbidden()
 
         if not camera.is_on:
