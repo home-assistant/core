@@ -19,8 +19,8 @@ import voluptuous as vol
 from homeassistant.components.device_tracker import (
     CONF_SCAN_INTERVAL,
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
-    SOURCE_TYPE_GPS,
     AsyncSeeCallback,
+    SourceType,
 )
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.config_entries import ConfigEntry
@@ -407,9 +407,9 @@ class TraccarEntity(TrackerEntity, RestoreEntity):
         return {"name": self._name, "identifiers": {(DOMAIN, self._unique_id)}}
 
     @property
-    def source_type(self):
+    def source_type(self) -> SourceType:
         """Return the source type, eg gps or router, of the device."""
-        return SOURCE_TYPE_GPS
+        return SourceType.GPS
 
     async def async_added_to_hass(self):
         """Register state update callback."""

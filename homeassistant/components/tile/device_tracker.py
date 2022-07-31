@@ -7,7 +7,7 @@ from pytile.tile import Tile
 
 from homeassistant.components.device_tracker import AsyncSeeCallback
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
-from homeassistant.components.device_tracker.const import SOURCE_TYPE_GPS
+from homeassistant.components.device_tracker.const import SourceType
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
@@ -122,9 +122,9 @@ class TileDeviceTracker(CoordinatorEntity, TrackerEntity):
         return self._tile.longitude
 
     @property
-    def source_type(self) -> str:
+    def source_type(self) -> SourceType:
         """Return the source type, eg gps or router, of the device."""
-        return SOURCE_TYPE_GPS
+        return SourceType.GPS
 
     @callback
     def _handle_coordinator_update(self) -> None:
