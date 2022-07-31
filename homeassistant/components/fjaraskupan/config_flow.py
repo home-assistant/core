@@ -17,11 +17,9 @@ async def _async_has_devices(hass: HomeAssistant) -> bool:
 
     for service_info in service_infos:
         if device_filter(service_info.device, service_info.advertisement):
-            break
-    else:
-        return False
+            return True
 
-    return True
+    return False
 
 
 register_discovery_flow(DOMAIN, "Fjäråskupan", _async_has_devices)
