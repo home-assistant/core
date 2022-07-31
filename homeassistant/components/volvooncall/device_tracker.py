@@ -1,7 +1,7 @@
 """Support for tracking a Volvo."""
 from __future__ import annotations
 
-from homeassistant.components.device_tracker import SOURCE_TYPE_GPS, AsyncSeeCallback
+from homeassistant.components.device_tracker import AsyncSeeCallback, SourceType
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -31,7 +31,7 @@ async def async_setup_scanner(
         await async_see(
             dev_id=dev_id,
             host_name=host_name,
-            source_type=SOURCE_TYPE_GPS,
+            source_type=SourceType.GPS,
             gps=instrument.state,
             icon="mdi:car",
         )
