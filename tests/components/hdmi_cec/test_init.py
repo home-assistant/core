@@ -1,4 +1,5 @@
 """Tests for the HDMI-CEC component."""
+from datetime import timedelta
 from unittest.mock import ANY, PropertyMock, call, patch
 
 import pytest
@@ -22,8 +23,14 @@ from homeassistant.components.hdmi_cec import (
 )
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from homeassistant.setup import async_setup_component
+from homeassistant.util.dt import utcnow
 
-from tests.common import MockEntity, MockEntityPlatform, async_capture_events
+from tests.common import (
+    MockEntity,
+    MockEntityPlatform,
+    async_capture_events,
+    async_fire_time_changed,
+)
 from tests.components.hdmi_cec import assert_key_press_release
 
 
@@ -430,59 +437,45 @@ async def test_service_send_command(hass, create_hdmi_network, data, expected):
     assert str(command) == expected
 
 
-async def test_watchdog_down(hass, mock_hdmi_network, mock_cec_adapter):
+async def test_watchdog_down(hass, create_hdmi_network, mock_cec_adapter):
     """Test that the watchdog is initialized and works as expected when adapter is down."""
     adapter_initialized = PropertyMock(return_value=False)
     events = async_capture_events(hass, EVENT_HDMI_CEC_UNAVAILABLE)
 
-    with patch("homeassistant.components.hdmi_cec.event.async_call_later") as mock_call:
-        await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    mock_cec_adapter_instance = mock_cec_adapter.return_value
+    type(mock_cec_adapter_instance).initialized = adapter_initialized
 
-        mock_cec_adapter_instance = mock_cec_adapter.return_value
-        type(mock_cec_adapter_instance).initialized = adapter_initialized
+    mock_hdmi_network_instance = await create_hdmi_network()
 
-        mock_hdmi_network_instance = mock_hdmi_network.return_value
+    mock_hdmi_network_instance.set_initialized_callback.assert_called_once()
+    callback = mock_hdmi_network_instance.set_initialized_callback.call_args.args[0]
+    callback()
 
-        mock_hdmi_network_instance.set_initialized_callback.assert_called_once()
-        callback = mock_hdmi_network_instance.set_initialized_callback.call_args.args[0]
-        callback()
+    async_fire_time_changed(hass, utcnow() + timedelta(WATCHDOG_INTERVAL))
+    await hass.async_block_till_done()
 
-        mock_call.assert_called_once_with(hass, WATCHDOG_INTERVAL, ANY)
-        watchdog = mock_call.call_args.args[2]
-        watchdog()
-        await hass.async_block_till_done()
-
-        assert mock_call.call_count == 2
-        mock_call.assert_called_with(hass, WATCHDOG_INTERVAL, watchdog)
-        adapter_initialized.assert_called_once_with()
-        assert len(events) == 1
-        mock_cec_adapter_instance.init.assert_called_once_with()
+    adapter_initialized.assert_called_once_with()
+    assert len(events) == 1
+    mock_cec_adapter_instance.init.assert_called_once_with()
 
 
-async def test_watchdog_up(hass, mock_hdmi_network, mock_cec_adapter):
+async def test_watchdog_up(hass, create_hdmi_network, mock_cec_adapter):
     """Test that the watchdog is initialized and works as expected when adapter is up."""
     adapter_initialized = PropertyMock(return_value=True)
     events = async_capture_events(hass, EVENT_HDMI_CEC_UNAVAILABLE)
 
-    with patch("homeassistant.components.hdmi_cec.event.async_call_later") as mock_call:
-        await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    mock_cec_adapter_instance = mock_cec_adapter.return_value
+    type(mock_cec_adapter_instance).initialized = adapter_initialized
 
-        mock_cec_adapter_instance = mock_cec_adapter.return_value
-        type(mock_cec_adapter_instance).initialized = adapter_initialized
+    mock_hdmi_network_instance = await create_hdmi_network()
 
-        mock_hdmi_network_instance = mock_hdmi_network.return_value
+    mock_hdmi_network_instance.set_initialized_callback.assert_called_once()
+    callback = mock_hdmi_network_instance.set_initialized_callback.call_args.args[0]
+    callback()
 
-        mock_hdmi_network_instance.set_initialized_callback.assert_called_once()
-        callback = mock_hdmi_network_instance.set_initialized_callback.call_args.args[0]
-        callback()
+    async_fire_time_changed(hass, utcnow() + timedelta(WATCHDOG_INTERVAL))
+    await hass.async_block_till_done()
 
-        mock_call.assert_called_once_with(hass, WATCHDOG_INTERVAL, ANY)
-        watchdog = mock_call.call_args.args[2]
-        watchdog()
-        await hass.async_block_till_done()
-
-        assert mock_call.call_count == 2
-        mock_call.assert_called_with(hass, WATCHDOG_INTERVAL, watchdog)
-        adapter_initialized.assert_called_once_with()
-        assert len(events) == 0
-        mock_cec_adapter_instance.init.assert_not_called()
+    adapter_initialized.assert_called_once_with()
+    assert len(events) == 0
+    mock_cec_adapter_instance.init.assert_not_called()
