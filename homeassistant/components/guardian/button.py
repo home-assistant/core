@@ -15,6 +15,7 @@ from homeassistant.components.button import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -111,3 +112,5 @@ class GuardianButton(ValveControllerEntity, ButtonEntity):
             raise HomeAssistantError(
                 f'Error while pressing button "{self.entity_id}": {err}'
             ) from err
+
+        async_dispatcher_send(self.hass, self.coordinator.signal_reboot_requested)
