@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from unifiled import unifiled
 import voluptuous as vol
@@ -98,7 +99,7 @@ class UnifiLedLight(LightEntity):
         """Return true if light is on."""
         return self._state
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         self._api.setdevicebrightness(
             self._unique_id,
@@ -106,11 +107,11 @@ class UnifiLedLight(LightEntity):
         )
         self._api.setdeviceoutput(self._unique_id, 1)
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         self._api.setdeviceoutput(self._unique_id, 0)
 
-    def update(self):
+    def update(self) -> None:
         """Update the light states."""
         self._state = self._api.getlightstate(self._unique_id)
         self._brightness = self._api.convertfrom100to255(
