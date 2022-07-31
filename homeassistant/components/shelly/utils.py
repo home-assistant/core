@@ -271,7 +271,9 @@ def get_rpc_channel_name(device: RpcDevice, key: str) -> str:
         entity_name = device.config[key].get("name", device_name)
 
     if entity_name is None:
-        return f"{device_name} {key.replace(':', '_')}"
+        if [k for k in key if k.startswith(("input", "switch"))]:
+            return f"{device_name} {key.replace(':', '_')}"
+        return device_name
 
     return entity_name
 
@@ -340,6 +342,13 @@ def is_rpc_channel_type_light(config: dict[str, Any], channel: int) -> bool:
     """Return true if rpc channel consumption type is set to light."""
     con_types = config["sys"]["ui_data"].get("consumption_types")
     return con_types is not None and con_types[channel].lower().startswith("light")
+
+
+def is_rpc_device_externally_powered(
+    config: dict[str, Any], status: dict[str, Any], key: str
+) -> bool:
+    """Return true if device has external power instead of battery."""
+    return cast(bool, status[key]["external"]["present"])
 
 
 def get_rpc_input_triggers(device: RpcDevice) -> list[tuple[str, str]]:
