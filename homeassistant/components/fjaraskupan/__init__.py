@@ -6,15 +6,13 @@ from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
-from bleak.backends.device import BLEDevice
-from bleak.backends.scanner import AdvertisementData
 from fjaraskupan import Device, State
 
 from homeassistant.components.bluetooth import (
     BluetoothCallbackMatcher,
     BluetoothChange,
-    BluetoothServiceInfo,
     BluetoothScanningMode,
+    BluetoothServiceInfoBleak,
     async_address_present,
     async_register_callback,
 )
@@ -30,7 +28,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DISPATCH_DETECTION, DOMAIN
-
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -83,17 +80,9 @@ class Coordinator(DataUpdateCoordinator[State]):
         await self.device.update()
         return self.device.state
 
-    def detection_callback(self, service_info: BluetoothServiceInfo) -> None:
+    def detection_callback(self, service_info: BluetoothServiceInfoBleak) -> None:
         """Handle a new announcement of data."""
-        ble_device = BLEDevice(
-            service_info.address, service_info.name, service_info.rssi
-        )
-        advertisement_data = AdvertisementData(
-            local_name=service_info.name,
-            manufacturer_data=service_info.manufacturer_data,
-        )
-
-        self.device.detection_callback(ble_device, advertisement_data)
+        self.device.detection_callback(service_info.device, service_info.advertisement)
         self.async_set_updated_data(self.device.state)
 
 
@@ -111,7 +100,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = state
 
-    def detection_callback(service_info: BluetoothServiceInfo, change: BluetoothChange):
+    def detection_callback(
+        service_info: BluetoothServiceInfoBleak, change: BluetoothChange
+    ):
         if change != BluetoothChange.ADVERTISEMENT:
             return
         if data := state.coordinators.get(service_info.address):
@@ -120,7 +111,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         else:
             _LOGGER.debug("Detected: %s", service_info)
 
-            device = Device(service_info.address)
+            device = Device(service_info.device)
             device_info = DeviceInfo(
                 identifiers={(DOMAIN, service_info.address)},
                 manufacturer="Fjäråskupan",
@@ -143,7 +134,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 manufacturer_id=20296,
                 manufacturer_data_start=[79, 68, 70, 74, 65, 82],
             ),
-            BluetoothScanningMode.ACTIVE
+            BluetoothScanningMode.ACTIVE,
         )
     )
 
