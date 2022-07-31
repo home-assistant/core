@@ -28,7 +28,7 @@ from tests.components.hdmi_cec import assert_key_press_release
 
 
 @pytest.fixture
-def MockTcpAdapter():
+def mock_tcp_adapter():
     """Mock TcpAdapter."""
     with patch(
         "homeassistant.components.hdmi_cec.TcpAdapter", autospec=True
@@ -90,66 +90,66 @@ def test_parse_mapping_physical_address(mapping, expected):
 # Test Setup
 
 
-async def test_setup_cec_adapter(hass, MockCecAdapter, MockHDMINetwork):
+async def test_setup_cec_adapter(hass, mock_cec_adapter, mock_hdmi_network):
     """Test the general setup of this component."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
-    MockCecAdapter.assert_called_once_with(name="HA", activate_source=False)
-    MockHDMINetwork.assert_called_once()
-    call = MockHDMINetwork.call_args
-    assert call.args == (MockCecAdapter.return_value,)
+    mock_cec_adapter.assert_called_once_with(name="HA", activate_source=False)
+    mock_hdmi_network.assert_called_once()
+    call = mock_hdmi_network.call_args
+    assert call.args == (mock_cec_adapter.return_value,)
     assert call.kwargs["loop"] in (None, hass.loop)
 
-    mock_hdmi_network = MockHDMINetwork.return_value
+    mock_hdmi_network_instance = mock_hdmi_network.return_value
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
-    mock_hdmi_network.start.assert_called_once_with()
-    mock_hdmi_network.set_new_device_callback.assert_called_once()
+    mock_hdmi_network_instance.start.assert_called_once_with()
+    mock_hdmi_network_instance.set_new_device_callback.assert_called_once()
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
-    mock_hdmi_network.stop.assert_called_once_with()
+    mock_hdmi_network_instance.stop.assert_called_once_with()
 
 
 @pytest.mark.parametrize("osd_name", ["test", "test_a_long_name"])
-async def test_setup_set_osd_name(hass, osd_name, MockCecAdapter):
+async def test_setup_set_osd_name(hass, osd_name, mock_cec_adapter):
     """Test the setup of this component with the `osd_name` config setting."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {"osd_name": osd_name}})
 
-    MockCecAdapter.assert_called_once_with(name=osd_name[:12], activate_source=False)
+    mock_cec_adapter.assert_called_once_with(name=osd_name[:12], activate_source=False)
 
 
-async def test_setup_tcp_adapter(hass, MockTcpAdapter, MockHDMINetwork):
+async def test_setup_tcp_adapter(hass, mock_tcp_adapter, mock_hdmi_network):
     """Test the setup of this component with the TcpAdapter (`host` config setting)."""
     host = "0.0.0.0"
 
     await async_setup_component(hass, DOMAIN, {DOMAIN: {"host": host}})
 
-    MockTcpAdapter.assert_called_once_with(host, name="HA", activate_source=False)
-    MockHDMINetwork.assert_called_once()
-    call = MockHDMINetwork.call_args
-    assert call.args == (MockTcpAdapter.return_value,)
+    mock_tcp_adapter.assert_called_once_with(host, name="HA", activate_source=False)
+    mock_hdmi_network.assert_called_once()
+    call = mock_hdmi_network.call_args
+    assert call.args == (mock_tcp_adapter.return_value,)
     assert call.kwargs["loop"] in (None, hass.loop)
 
-    mock_hdmi_network = MockHDMINetwork.return_value
+    mock_hdmi_network_instance = mock_hdmi_network.return_value
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
-    mock_hdmi_network.start.assert_called_once_with()
-    mock_hdmi_network.set_new_device_callback.assert_called_once()
+    mock_hdmi_network_instance.start.assert_called_once_with()
+    mock_hdmi_network_instance.set_new_device_callback.assert_called_once()
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
-    mock_hdmi_network.stop.assert_called_once_with()
+    mock_hdmi_network_instance.stop.assert_called_once_with()
 
 
 # Test services
 
 
-async def test_service_power_on(hass, MockHDMINetwork):
+async def test_service_power_on(hass, mock_hdmi_network):
     """Test the power on service call."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
-    mock_hdmi_network = MockHDMINetwork.return_value
+    mock_hdmi_network_instance = mock_hdmi_network.return_value
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
@@ -161,14 +161,14 @@ async def test_service_power_on(hass, MockHDMINetwork):
         blocking=True,
     )
 
-    mock_hdmi_network.power_on.assert_called_once_with()
+    mock_hdmi_network_instance.power_on.assert_called_once_with()
 
 
-async def test_service_standby(hass, MockHDMINetwork):
+async def test_service_standby(hass, mock_hdmi_network):
     """Test the standby service call."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
-    mock_hdmi_network = MockHDMINetwork.return_value
+    mock_hdmi_network_instance = mock_hdmi_network.return_value
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
@@ -180,16 +180,16 @@ async def test_service_standby(hass, MockHDMINetwork):
         blocking=True,
     )
 
-    mock_hdmi_network.standby.assert_called_once_with()
+    mock_hdmi_network_instance.standby.assert_called_once_with()
 
 
-async def test_service_select_device_alias(hass, MockHDMINetwork):
+async def test_service_select_device_alias(hass, mock_hdmi_network):
     """Test the select device service call with a known alias."""
     await async_setup_component(
         hass, DOMAIN, {DOMAIN: {"devices": {"Chromecast": "1.0.0.0"}}}
     )
 
-    mock_hdmi_network = MockHDMINetwork.return_value
+    mock_hdmi_network_instance = mock_hdmi_network.return_value
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
@@ -201,8 +201,8 @@ async def test_service_select_device_alias(hass, MockHDMINetwork):
         blocking=True,
     )
 
-    mock_hdmi_network.active_source.assert_called_once()
-    physical_address = mock_hdmi_network.active_source.call_args.args[0]
+    mock_hdmi_network_instance.active_source.assert_called_once()
+    physical_address = mock_hdmi_network_instance.active_source.call_args.args[0]
     assert isinstance(physical_address, PhysicalAddress)
     assert str(physical_address) == "1.0.0.0"
 
@@ -216,7 +216,7 @@ class MockCecEntity(MockEntity):
         return {"physical_address": self._values["physical_address"]}
 
 
-async def test_service_select_device_entity(hass, MockHDMINetwork):
+async def test_service_select_device_entity(hass, mock_hdmi_network):
     """Test the select device service call with an existing entity."""
     platform = MockEntityPlatform(hass)
     await platform.async_add_entities(
@@ -225,7 +225,7 @@ async def test_service_select_device_entity(hass, MockHDMINetwork):
 
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
-    mock_hdmi_network = MockHDMINetwork.return_value
+    mock_hdmi_network_instance = mock_hdmi_network.return_value
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
@@ -237,17 +237,17 @@ async def test_service_select_device_entity(hass, MockHDMINetwork):
         blocking=True,
     )
 
-    mock_hdmi_network.active_source.assert_called_once()
-    physical_address = mock_hdmi_network.active_source.call_args.args[0]
+    mock_hdmi_network_instance.active_source.assert_called_once()
+    physical_address = mock_hdmi_network_instance.active_source.call_args.args[0]
     assert isinstance(physical_address, PhysicalAddress)
     assert str(physical_address) == "3.0.0.0"
 
 
-async def test_service_select_device_physical_address(hass, MockHDMINetwork):
+async def test_service_select_device_physical_address(hass, mock_hdmi_network):
     """Test the select device service call with a raw physical address."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
-    mock_hdmi_network = MockHDMINetwork.return_value
+    mock_hdmi_network_instance = mock_hdmi_network.return_value
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
@@ -259,17 +259,17 @@ async def test_service_select_device_physical_address(hass, MockHDMINetwork):
         blocking=True,
     )
 
-    mock_hdmi_network.active_source.assert_called_once()
-    physical_address = mock_hdmi_network.active_source.call_args.args[0]
+    mock_hdmi_network_instance.active_source.assert_called_once()
+    physical_address = mock_hdmi_network_instance.active_source.call_args.args[0]
     assert isinstance(physical_address, PhysicalAddress)
     assert str(physical_address) == "1.1.0.0"
 
 
-async def test_service_update_devices(hass, MockHDMINetwork):
+async def test_service_update_devices(hass, mock_hdmi_network):
     """Test the update devices service call."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
-    mock_hdmi_network = MockHDMINetwork.return_value
+    mock_hdmi_network_instance = mock_hdmi_network.return_value
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
@@ -281,7 +281,7 @@ async def test_service_update_devices(hass, MockHDMINetwork):
         blocking=True,
     )
 
-    mock_hdmi_network.scan.assert_called_once_with()
+    mock_hdmi_network_instance.scan.assert_called_once_with()
 
 
 @pytest.mark.parametrize(
@@ -302,12 +302,12 @@ async def test_service_update_devices(hass, MockHDMINetwork):
 )
 @pytest.mark.parametrize("direction,key", [("up", 65), ("down", 66)])
 async def test_service_volume_x_times(
-    hass, MockHDMINetwork, count, calls, direction, key
+    hass, mock_hdmi_network, count, calls, direction, key
 ):
     """Test the volume service call with steps."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
-    mock_hdmi_network = MockHDMINetwork.return_value
+    mock_hdmi_network_instance = mock_hdmi_network.return_value
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
@@ -319,17 +319,19 @@ async def test_service_volume_x_times(
         blocking=True,
     )
 
-    assert mock_hdmi_network.send_command.call_count == calls * 2
+    assert mock_hdmi_network_instance.send_command.call_count == calls * 2
     for i in range(calls):
-        assert_key_press_release(mock_hdmi_network.send_command, i, dst=5, key=key)
+        assert_key_press_release(
+            mock_hdmi_network_instance.send_command, i, dst=5, key=key
+        )
 
 
 @pytest.mark.parametrize("direction,key", [("up", 65), ("down", 66)])
-async def test_service_volume_press(hass, MockHDMINetwork, direction, key):
+async def test_service_volume_press(hass, mock_hdmi_network, direction, key):
     """Test the volume service call with press attribute."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
-    mock_hdmi_network = MockHDMINetwork.return_value
+    mock_hdmi_network_instance = mock_hdmi_network.return_value
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
@@ -341,19 +343,19 @@ async def test_service_volume_press(hass, MockHDMINetwork, direction, key):
         blocking=True,
     )
 
-    mock_hdmi_network.send_command.assert_called_once()
-    arg = mock_hdmi_network.send_command.call_args.args[0]
+    mock_hdmi_network_instance.send_command.assert_called_once()
+    arg = mock_hdmi_network_instance.send_command.call_args.args[0]
     assert isinstance(arg, KeyPressCommand)
     assert arg.key == key
     assert arg.dst == 5
 
 
 @pytest.mark.parametrize("direction,key", [("up", 65), ("down", 66)])
-async def test_service_volume_release(hass, MockHDMINetwork, direction, key):
+async def test_service_volume_release(hass, mock_hdmi_network, direction, key):
     """Test the volume service call with release attribute."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
-    mock_hdmi_network = MockHDMINetwork.return_value
+    mock_hdmi_network_instance = mock_hdmi_network.return_value
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
@@ -365,8 +367,8 @@ async def test_service_volume_release(hass, MockHDMINetwork, direction, key):
         blocking=True,
     )
 
-    mock_hdmi_network.send_command.assert_called_once()
-    arg = mock_hdmi_network.send_command.call_args.args[0]
+    mock_hdmi_network_instance.send_command.assert_called_once()
+    arg = mock_hdmi_network_instance.send_command.call_args.args[0]
     assert isinstance(arg, KeyReleaseCommand)
     assert arg.dst == 5
 
@@ -387,11 +389,11 @@ async def test_service_volume_release(hass, MockHDMINetwork, direction, key):
         ),
     ],
 )
-async def test_service_volume_mute(hass, MockHDMINetwork, attr, key):
+async def test_service_volume_mute(hass, mock_hdmi_network, attr, key):
     """Test the volume service call with mute."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
-    mock_hdmi_network = MockHDMINetwork.return_value
+    mock_hdmi_network_instance = mock_hdmi_network.return_value
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
@@ -403,8 +405,8 @@ async def test_service_volume_mute(hass, MockHDMINetwork, attr, key):
         blocking=True,
     )
 
-    assert mock_hdmi_network.send_command.call_count == 2
-    assert_key_press_release(mock_hdmi_network.send_command, key=key, dst=5)
+    assert mock_hdmi_network_instance.send_command.call_count == 2
+    assert_key_press_release(mock_hdmi_network_instance.send_command, key=key, dst=5)
 
 
 @pytest.mark.parametrize(
@@ -461,11 +463,11 @@ async def test_service_volume_mute(hass, MockHDMINetwork, attr, key):
         ),
     ],
 )
-async def test_service_send_command(hass, MockHDMINetwork, data, expected):
+async def test_service_send_command(hass, mock_hdmi_network, data, expected):
     """Test the send command service call."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
-    mock_hdmi_network = MockHDMINetwork.return_value
+    mock_hdmi_network_instance = mock_hdmi_network.return_value
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
@@ -477,13 +479,13 @@ async def test_service_send_command(hass, MockHDMINetwork, data, expected):
         blocking=True,
     )
 
-    mock_hdmi_network.send_command.assert_called_once()
-    command = mock_hdmi_network.send_command.call_args.args[0]
+    mock_hdmi_network_instance.send_command.assert_called_once()
+    command = mock_hdmi_network_instance.send_command.call_args.args[0]
     assert isinstance(command, CecCommand)
     assert str(command) == expected
 
 
-async def test_watchdog_down(hass, MockHDMINetwork, MockCecAdapter):
+async def test_watchdog_down(hass, mock_hdmi_network, mock_cec_adapter):
     """Test that the watchdog is initialized and works as expected when adapter is down."""
     adapter_initialized = PropertyMock(return_value=False)
     events = async_capture_events(hass, EVENT_HDMI_CEC_UNAVAILABLE)
@@ -491,13 +493,13 @@ async def test_watchdog_down(hass, MockHDMINetwork, MockCecAdapter):
     with patch("homeassistant.components.hdmi_cec.event.async_call_later") as mock_call:
         await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
-        mock_cec_adapter = MockCecAdapter.return_value
-        type(mock_cec_adapter).initialized = adapter_initialized
+        mock_cec_adapter_instance = mock_cec_adapter.return_value
+        type(mock_cec_adapter_instance).initialized = adapter_initialized
 
-        mock_hdmi_network = MockHDMINetwork.return_value
+        mock_hdmi_network_instance = mock_hdmi_network.return_value
 
-        mock_hdmi_network.set_initialized_callback.assert_called_once()
-        callback = mock_hdmi_network.set_initialized_callback.call_args.args[0]
+        mock_hdmi_network_instance.set_initialized_callback.assert_called_once()
+        callback = mock_hdmi_network_instance.set_initialized_callback.call_args.args[0]
         callback()
 
         mock_call.assert_called_once_with(hass, WATCHDOG_INTERVAL, ANY)
@@ -509,10 +511,10 @@ async def test_watchdog_down(hass, MockHDMINetwork, MockCecAdapter):
         mock_call.assert_called_with(hass, WATCHDOG_INTERVAL, watchdog)
         adapter_initialized.assert_called_once_with()
         assert len(events) == 1
-        mock_cec_adapter.init.assert_called_once_with()
+        mock_cec_adapter_instance.init.assert_called_once_with()
 
 
-async def test_watchdog_up(hass, MockHDMINetwork, MockCecAdapter):
+async def test_watchdog_up(hass, mock_hdmi_network, mock_cec_adapter):
     """Test that the watchdog is initialized and works as expected when adapter is up."""
     adapter_initialized = PropertyMock(return_value=True)
     events = async_capture_events(hass, EVENT_HDMI_CEC_UNAVAILABLE)
@@ -520,13 +522,13 @@ async def test_watchdog_up(hass, MockHDMINetwork, MockCecAdapter):
     with patch("homeassistant.components.hdmi_cec.event.async_call_later") as mock_call:
         await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
-        mock_cec_adapter = MockCecAdapter.return_value
-        type(mock_cec_adapter).initialized = adapter_initialized
+        mock_cec_adapter_instance = mock_cec_adapter.return_value
+        type(mock_cec_adapter_instance).initialized = adapter_initialized
 
-        mock_hdmi_network = MockHDMINetwork.return_value
+        mock_hdmi_network_instance = mock_hdmi_network.return_value
 
-        mock_hdmi_network.set_initialized_callback.assert_called_once()
-        callback = mock_hdmi_network.set_initialized_callback.call_args.args[0]
+        mock_hdmi_network_instance.set_initialized_callback.assert_called_once()
+        callback = mock_hdmi_network_instance.set_initialized_callback.call_args.args[0]
         callback()
 
         mock_call.assert_called_once_with(hass, WATCHDOG_INTERVAL, ANY)
@@ -538,4 +540,4 @@ async def test_watchdog_up(hass, MockHDMINetwork, MockCecAdapter):
         mock_call.assert_called_with(hass, WATCHDOG_INTERVAL, watchdog)
         adapter_initialized.assert_called_once_with()
         assert len(events) == 0
-        mock_cec_adapter.init.assert_not_called()
+        mock_cec_adapter_instance.init.assert_not_called()

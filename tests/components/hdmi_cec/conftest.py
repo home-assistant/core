@@ -9,7 +9,7 @@ from homeassistant.setup import async_setup_component
 
 
 @pytest.fixture(autouse=True)
-def MockCecAdapter():
+def mock_cec_adapter():
     """Mock CecAdapter.
 
     Always mocked as it imports the `cec` library which is part of `libcec`.
@@ -21,7 +21,7 @@ def MockCecAdapter():
 
 
 @pytest.fixture
-def MockHDMINetwork():
+def mock_hdmi_network():
     """Mock HDMINetwork."""
     with patch(
         "homeassistant.components.hdmi_cec.HDMINetwork", autospec=True
@@ -30,7 +30,7 @@ def MockHDMINetwork():
 
 
 @pytest.fixture
-def create_hdmi_network(hass, MockHDMINetwork):
+def create_hdmi_network(hass, mock_hdmi_network):
     """Create an initialized mock hdmi_network."""
 
     async def hdmi_network(config=None):
@@ -38,11 +38,11 @@ def create_hdmi_network(hass, MockHDMINetwork):
             config = {}
         await async_setup_component(hass, DOMAIN, {DOMAIN: config})
 
-        mock_hdmi_network = MockHDMINetwork.return_value
+        mock_hdmi_network_instance = mock_hdmi_network.return_value
 
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         await hass.async_block_till_done()
-        return mock_hdmi_network
+        return mock_hdmi_network_instance
 
     return hdmi_network
 
