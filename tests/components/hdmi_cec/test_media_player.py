@@ -59,7 +59,9 @@ from tests.components.hdmi_cec import MockHDMIDevice, assert_key_press_release
         pytest.param(
             True,
             marks=pytest.mark.xfail(
-                reason="State isn't updated because the function is missing the `schedule_update_ha_state` for a correct push entity. Would still update once the data comes back from the device."
+                reason="""State isn't updated because the function is missing the
+                `schedule_update_ha_state` for a correct push entity. Would still
+                update once the data comes back from the device."""
             ),
         ),
     ],
@@ -170,11 +172,17 @@ async def test_service_off(hass, create_hdmi_network, create_cec_entity, assert_
             (
                 MPEF.TURN_ON,
                 MPEF.TURN_OFF,
-                MPEF.PLAY,
                 MPEF.PAUSE,
                 MPEF.STOP,
                 MPEF.PREVIOUS_TRACK,
                 MPEF.NEXT_TRACK,
+            ),
+        ),
+        pytest.param(
+            TYPE_RECORDER,
+            (MPEF.PLAY,),
+            marks=pytest.mark.xfail(
+                reason="The feature is wrongly set to PLAY_MEDIA, but should be PLAY."
             ),
         ),
         (TYPE_UNKNOWN, (MPEF.TURN_ON, MPEF.TURN_OFF)),
@@ -183,7 +191,6 @@ async def test_service_off(hass, create_hdmi_network, create_cec_entity, assert_
             (
                 MPEF.TURN_ON,
                 MPEF.TURN_OFF,
-                MPEF.PLAY,
                 MPEF.PAUSE,
                 MPEF.STOP,
             ),
@@ -192,11 +199,17 @@ async def test_service_off(hass, create_hdmi_network, create_cec_entity, assert_
             ),
         ),
         pytest.param(
+            TYPE_TUNER,
+            (MPEF.PLAY,),
+            marks=pytest.mark.xfail(
+                reason="The feature is wrongly set to PLAY_MEDIA, but should be PLAY."
+            ),
+        ),
+        pytest.param(
             TYPE_PLAYBACK,
             (
                 MPEF.TURN_ON,
                 MPEF.TURN_OFF,
-                MPEF.PLAY,
                 MPEF.PAUSE,
                 MPEF.STOP,
                 MPEF.PREVIOUS_TRACK,
@@ -204,6 +217,13 @@ async def test_service_off(hass, create_hdmi_network, create_cec_entity, assert_
             ),
             marks=pytest.mark.xfail(
                 reason="Checking for the wrong attribute, should be checking `type_id`, is checking `type`."
+            ),
+        ),
+        pytest.param(
+            TYPE_PLAYBACK,
+            (MPEF.PLAY,),
+            marks=pytest.mark.xfail(
+                reason="The feature is wrongly set to PLAY_MEDIA, but should be PLAY."
             ),
         ),
         (
@@ -229,16 +249,8 @@ async def test_supported_features(
 
     state = hass.states.get("media_player.hdmi_3")
     supported_features = state.attributes["supported_features"]
-    xfail = False
     for feature in expected_features:
-        if feature == MPEF.PLAY:
-            xfail = True
-            continue
         assert supported_features & feature
-    if xfail:
-        pytest.xfail(
-            reason="The feature is wrongly set to PLAY_MEDIA, but should be PLAY."
-        )
 
 
 @pytest.mark.parametrize(
