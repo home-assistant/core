@@ -16,7 +16,7 @@ from homeassistant.components.device_tracker import (
 from homeassistant.components.device_tracker.const import (
     CONF_TRACK_NEW,
     SCAN_INTERVAL,
-    SOURCE_TYPE_BLUETOOTH_LE,
+    SourceType,
 )
 from homeassistant.components.device_tracker.legacy import (
     YAML_DEVICES,
@@ -106,7 +106,7 @@ async def async_setup_scanner(  # noqa: C901
         await async_see(
             mac=BLE_PREFIX + address,
             host_name=name,
-            source_type=SOURCE_TYPE_BLUETOOTH_LE,
+            source_type=SourceType.BLUETOOTH_LE,
             battery=battery,
         )
 
