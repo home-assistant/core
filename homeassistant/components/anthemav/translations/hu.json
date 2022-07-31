@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "cannot_receive_deviceinfo": "Nem siker\u00fclt lek\u00e9rni a MAC-c\u00edmet. Gy\u0151z\u0151dj\u00f6n meg arr\u00f3l, hogy a k\u00e9sz\u00fcl\u00e9k be van kapcsolva"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "C\u00edm",
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

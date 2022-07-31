@@ -25,7 +25,11 @@
                 "title": "Profil utilisateur"
             },
             "reauth": {
-                "description": "Le profile \" {profile} \" doit \u00eatre r\u00e9-authentifi\u00e9 afin de continuer \u00e0 recevoir les donn\u00e9es Withings.",
+                "description": "Le profile \u00ab\u00a0{profile}\u00a0\u00bb doit \u00eatre r\u00e9-authentifi\u00e9 afin de continuer \u00e0 recevoir les donn\u00e9es Withings.",
+                "title": "R\u00e9-authentifier l'int\u00e9gration"
+            },
+            "reauth_confirm": {
+                "description": "Le profile \u00ab\u00a0{profile}\u00a0\u00bb doit \u00eatre r\u00e9-authentifi\u00e9 afin de continuer \u00e0 recevoir les donn\u00e9es Withings.",
                 "title": "R\u00e9-authentifier l'int\u00e9gration"
             }
         }

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 
-from pyrisco import CannotConnectError, RiscoAPI, UnauthorizedError
+from pyrisco import CannotConnectError, RiscoCloud, UnauthorizedError
 import voluptuous as vol
 
 from homeassistant import config_entries, core
@@ -52,7 +52,7 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
-    risco = RiscoAPI(data[CONF_USERNAME], data[CONF_PASSWORD], data[CONF_PIN])
+    risco = RiscoCloud(data[CONF_USERNAME], data[CONF_PASSWORD], data[CONF_PIN])
 
     try:
         await risco.login(async_get_clientsession(hass))

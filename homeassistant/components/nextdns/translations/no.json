@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "unknown": "Totalt uventet feil"
+        },
+        "step": {
+            "profiles": {
+                "data": {
+                    "profile": "Profil"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "API-n\u00f8kkel"
+                }
+            }
+        }
+    }
+}

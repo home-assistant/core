@@ -73,6 +73,7 @@ from .test_common import (
     help_test_setting_blocked_attribute_via_mqtt_json_message,
     help_test_setup_manual_entity_from_yaml,
     help_test_unique_id,
+    help_test_unload_config_entry_with_platform,
     help_test_update_with_json_attrs_bad_JSON,
     help_test_update_with_json_attrs_not_dict,
 )
@@ -986,7 +987,7 @@ async def test_set_tilt_templated_and_attributes(
                 "set_position_topic": "set-position-topic",
                 "set_position_template": "{{position-1}}",
                 "tilt_command_template": "{"
-                '"enitity_id": "{{ entity_id }}",'
+                '"entity_id": "{{ entity_id }}",'
                 '"value": {{ value }},'
                 '"tilt_position": {{ tilt_position }}'
                 "}",
@@ -1008,7 +1009,7 @@ async def test_set_tilt_templated_and_attributes(
 
     mqtt_mock.async_publish.assert_called_once_with(
         "tilt-command-topic",
-        '{"enitity_id": "cover.test","value": 45,"tilt_position": 45}',
+        '{"entity_id": "cover.test","value": 45,"tilt_position": 45}',
         0,
         False,
     )
@@ -1022,7 +1023,7 @@ async def test_set_tilt_templated_and_attributes(
     )
     mqtt_mock.async_publish.assert_called_once_with(
         "tilt-command-topic",
-        '{"enitity_id": "cover.test","value": 100,"tilt_position": 100}',
+        '{"entity_id": "cover.test","value": 100,"tilt_position": 100}',
         0,
         False,
     )
@@ -1036,7 +1037,7 @@ async def test_set_tilt_templated_and_attributes(
     )
     mqtt_mock.async_publish.assert_called_once_with(
         "tilt-command-topic",
-        '{"enitity_id": "cover.test","value": 0,"tilt_position": 0}',
+        '{"entity_id": "cover.test","value": 0,"tilt_position": 0}',
         0,
         False,
     )
@@ -1050,7 +1051,7 @@ async def test_set_tilt_templated_and_attributes(
     )
     mqtt_mock.async_publish.assert_called_once_with(
         "tilt-command-topic",
-        '{"enitity_id": "cover.test","value": 100,"tilt_position": 100}',
+        '{"entity_id": "cover.test","value": 100,"tilt_position": 100}',
         0,
         False,
     )
@@ -3364,3 +3365,12 @@ async def test_setup_manual_entity_from_yaml(hass):
     del config["platform"]
     await help_test_setup_manual_entity_from_yaml(hass, platform, config)
     assert hass.states.get(f"{platform}.test") is not None
+
+
+async def test_unload_entry(hass, mqtt_mock_entry_with_yaml_config, tmp_path):
+    """Test unloading the config entry."""
+    domain = cover.DOMAIN
+    config = DEFAULT_CONFIG[domain]
+    await help_test_unload_config_entry_with_platform(
+        hass, mqtt_mock_entry_with_yaml_config, tmp_path, domain, config
+    )

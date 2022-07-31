@@ -31,6 +31,13 @@
             }
         }
     },
+    "config_panel": {
+        "zha_options": {
+            "always_prefer_xy_color_mode": "F\u00f6redrar alltid XY-f\u00e4rgl\u00e4ge",
+            "enhanced_light_transition": "Aktivera f\u00f6rb\u00e4ttrad ljusf\u00e4rg/temperatur\u00f6verg\u00e5ng fr\u00e5n ett avst\u00e4ngt l\u00e4ge",
+            "light_transitioning_flag": "Aktivera f\u00f6rb\u00e4ttrad ljusstyrka vid ljus\u00f6verg\u00e5ng"
+        }
+    },
     "device_automation": {
         "action_type": {
             "squawk": "Kraxa",

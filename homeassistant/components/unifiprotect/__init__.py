@@ -91,7 +91,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = data_service
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     async_setup_services(hass)
     hass.http.register_view(ThumbnailProxyView(hass))
     hass.http.register_view(VideoProxyView(hass))

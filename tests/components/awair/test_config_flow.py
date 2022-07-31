@@ -21,7 +21,7 @@ async def test_show_form(hass):
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == SOURCE_USER
 
 
@@ -95,7 +95,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
         context={"source": SOURCE_REAUTH, "unique_id": UNIQUE_ID},
         data={**CONFIG, CONF_ACCESS_TOKEN: "blah"},
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {}
 
@@ -105,7 +105,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
             user_input=CONFIG,
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
         assert result["errors"] == {CONF_ACCESS_TOKEN: "invalid_access_token"}
 
@@ -117,7 +117,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
             user_input=CONFIG,
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
         assert result["reason"] == "reauth_successful"
 
 
@@ -133,7 +133,7 @@ async def test_reauth_error(hass: HomeAssistant) -> None:
         context={"source": SOURCE_REAUTH, "unique_id": UNIQUE_ID},
         data={**CONFIG, CONF_ACCESS_TOKEN: "blah"},
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {}
 
@@ -143,7 +143,7 @@ async def test_reauth_error(hass: HomeAssistant) -> None:
             user_input=CONFIG,
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
         assert result["reason"] == "unknown"
 
 
@@ -160,7 +160,7 @@ async def test_create_entry(hass):
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["title"] == "foo@bar.com (32406)"
         assert result["data"][CONF_ACCESS_TOKEN] == CONFIG[CONF_ACCESS_TOKEN]
         assert result["result"].unique_id == UNIQUE_ID

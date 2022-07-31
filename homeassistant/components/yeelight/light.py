@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import math
+from typing import Any
 
 import voluptuous as vol
 import yeelight
@@ -442,7 +443,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
             self._async_cancel_pending_state_check()
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         self.async_on_remove(
             async_dispatcher_connect(
@@ -585,7 +586,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         """Return yeelight device."""
         return self._device
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update light properties."""
         await self.device.async_update(True)
 
@@ -774,7 +775,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
             power_mode=self._turn_on_power_mode,
         )
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the bulb on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         colortemp = kwargs.get(ATTR_COLOR_TEMP)
@@ -836,7 +837,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         """Turn off with a given transition duration wrapped with _async_cmd."""
         await self._bulb.async_turn_off(duration=duration, light_type=self.light_type)
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off."""
         if not self.is_on:
             return

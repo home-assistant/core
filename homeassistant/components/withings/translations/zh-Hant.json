@@ -27,6 +27,10 @@
             "reauth": {
                 "description": "\"{profile}\" \u8a2d\u5b9a\u6a94\u9700\u8981\u91cd\u65b0\u8a8d\u8b49\u4ee5\u4fdd\u6301\u63a5\u6536 Withings \u8cc7\u6599\u3002",
                 "title": "\u91cd\u65b0\u8a8d\u8b49\u6574\u5408"
+            },
+            "reauth_confirm": {
+                "description": "\"{profile}\" \u8a2d\u5b9a\u6a94\u9700\u8981\u91cd\u65b0\u8a8d\u8b49\u4ee5\u4fdd\u6301\u63a5\u6536 Withings \u8cc7\u6599\u3002",
+                "title": "\u91cd\u65b0\u8a8d\u8b49\u6574\u5408"
             }
         }
     }

@@ -75,6 +75,7 @@ SENSOR_TYPES = [
     ),
     SolarEdgeSensorEntityDescription(
         key="site_details",
+        json_key="status",
         name="Site details",
         entity_registry_enabled_default=False,
     ),

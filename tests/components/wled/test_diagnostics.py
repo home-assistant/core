@@ -26,7 +26,9 @@ async def test_diagnostics(
             "free_heap": 14600,
             "leds": {
                 "__type": "<class 'wled.models.Leds'>",
-                "repr": "Leds(cct=False, count=30, fps=None, max_power=850, max_segments=10, power=470, rgbw=False, wv=True)",
+                "repr": "Leds(cct=False, count=30, fps=None, light_capabilities=None, "
+                "max_power=850, max_segments=10, power=470, rgbw=False, wv=True, "
+                "segment_light_capabilities=None)",
             },
             "live_ip": "Unknown",
             "live_mode": "Unknown",

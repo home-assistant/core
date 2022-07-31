@@ -39,28 +39,6 @@ pair_sensor:
       example: 5410EC688BCF
       selector:
         text:
-reboot:
-  name: Reboot
-  description: Reboot the device.
-  fields:
-    device_id:
-      name: Valve Controller
-      description: The valve controller to reboot
-      required: true
-      selector:
-        device:
-          integration: guardian
-reset_valve_diagnostics:
-  name: Reset Valve Diagnostics
-  description: Fully (and irrecoverably) reset all valve diagnostics.
-  fields:
-    device_id:
-      name: Valve Controller
-      description: The valve controller whose diagnostics should be reset
-      required: true
-      selector:
-        device:
-          integration: guardian
 unpair_sensor:
   name: Unpair Sensor
   description: Remove a paired sensor from the valve controller.

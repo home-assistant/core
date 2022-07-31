@@ -54,15 +54,15 @@ def setup_platform(
 class DemoManager:
     """Device manager for demo geolocation events."""
 
-    def __init__(self, hass, add_entities):
+    def __init__(self, hass: HomeAssistant, add_entities: AddEntitiesCallback) -> None:
         """Initialise the demo geolocation event manager."""
         self._hass = hass
         self._add_entities = add_entities
-        self._managed_devices = []
+        self._managed_devices: list[DemoGeolocationEvent] = []
         self._update(count=NUMBER_OF_DEMO_DEVICES)
         self._init_regular_updates()
 
-    def _generate_random_event(self):
+    def _generate_random_event(self) -> DemoGeolocationEvent:
         """Generate a random event in vicinity of this HA instance."""
         home_latitude = self._hass.config.latitude
         home_longitude = self._hass.config.longitude
@@ -83,13 +83,13 @@ class DemoManager:
             event_name, radius_in_km, latitude, longitude, LENGTH_KILOMETERS
         )
 
-    def _init_regular_updates(self):
+    def _init_regular_updates(self) -> None:
         """Schedule regular updates based on configured time interval."""
         track_time_interval(
             self._hass, lambda now: self._update(), DEFAULT_UPDATE_INTERVAL
         )
 
-    def _update(self, count=1):
+    def _update(self, count: int = 1) -> None:
         """Remove events and add new random events."""
         # Remove devices.
         for _ in range(1, count + 1):
@@ -112,7 +112,14 @@ class DemoManager:
 class DemoGeolocationEvent(GeolocationEvent):
     """This represents a demo geolocation event."""
 
-    def __init__(self, name, distance, latitude, longitude, unit_of_measurement):
+    def __init__(
+        self,
+        name: str,
+        distance: float,
+        latitude: float,
+        longitude: float,
+        unit_of_measurement: str,
+    ) -> None:
         """Initialize entity with data provided."""
         self._name = name
         self._distance = distance
@@ -131,7 +138,7 @@ class DemoGeolocationEvent(GeolocationEvent):
         return self._name
 
     @property
-    def should_poll(self):
+    def should_poll(self) -> bool:
         """No polling needed for a demo geolocation event."""
         return False
 
@@ -151,6 +158,6 @@ class DemoGeolocationEvent(GeolocationEvent):
         return self._longitude
 
     @property
-    def unit_of_measurement(self):
+    def unit_of_measurement(self) -> str:
         """Return the unit of measurement."""
         return self._unit_of_measurement
