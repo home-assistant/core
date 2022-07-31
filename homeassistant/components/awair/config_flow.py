@@ -5,10 +5,11 @@ from collections.abc import Mapping
 from typing import Any
 
 from aiohttp.client_exceptions import ClientConnectorError
-from python_awair import Awair, AwairLocal
+from python_awair import Awair, AwairLocal, AwairLocalDevice
 from python_awair.exceptions import AuthError, AwairError
 import voluptuous as vol
 
+from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
 from homeassistant.data_entry_flow import FlowResult
@@ -21,6 +22,52 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow for Awair."""
 
     VERSION = 1
+
+    _device: AwairLocalDevice
+
+    async def async_step_zeroconf(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
+        """Handle zeroconf discovery."""
+        # LOGGER.error(discovery_info)
+
+        host = discovery_info.host
+        LOGGER.debug("Discovered device: %s", host)
+
+        self._device, _ = await self._check_local_connection(host)
+
+        if self._device is not None:
+            await self.async_set_unique_id(self._device.mac_address)
+            self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+            self.context.update(
+                {
+                    "title_placeholders": {
+                        "host": host,
+                        "model": self._device.model,
+                    }
+                }
+            )
+        else:
+            return self.async_abort(reason="unreachable")
+        return await self.async_step_discovery_confirm()
+
+    async def async_step_discovery_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Confirm discovery."""
+        if user_input is not None:
+            title = f"{self._device.model} ({self._device.device_addr})"
+            return self.async_create_entry(
+                title=title,
+                data={CONF_HOST: self._device.device_addr},
+            )
+
+        self._set_confirm_only()
+        placeholders = {"host": self._device.device_addr, "model": self._device.model}
+        return self.async_show_form(
+            step_id="discovery_confirm",
+            description_placeholders=placeholders,
+        )
 
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
@@ -53,7 +100,7 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(user.email)
                 self._abort_if_unique_id_configured()
 
-                title = f"{user.email} ({user.user_id})"
+                title = f"Awair Cloud {user.email} ({user.user_id})"
                 return self.async_create_entry(title=title, data=user_input)
 
             if error != "invalid_access_token":
@@ -73,13 +120,15 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            device, error = await self._check_local_connection(user_input[CONF_HOST])
+            self._device, error = await self._check_local_connection(
+                user_input[CONF_HOST]
+            )
 
-            if device is not None:
-                await self.async_set_unique_id(device.mac_address)
+            if self._device is not None:
+                await self.async_set_unique_id(self._device.mac_address)
                 self._abort_if_unique_id_configured()
 
-                title = f"Awair Local Sensor ({user_input[CONF_HOST]})"
+                title = f"{self._device.model} ({user_input[CONF_HOST]})"
                 return self.async_create_entry(title=title, data=user_input)
 
             if error is not None:

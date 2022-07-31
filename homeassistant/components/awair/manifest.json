@@ -6,5 +6,12 @@
   "codeowners": ["@ahayworth", "@danielsjf"],
   "config_flow": true,
   "iot_class": "cloud_polling",
-  "loggers": ["python_awair"]
+  "loggers": ["python_awair"],
+  "after_dependencies": ["zeroconf"],
+  "zeroconf": [
+    {
+      "type": "_http._tcp.local.",
+      "name": "awair*"
+    }
+  ]
 }
