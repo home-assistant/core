@@ -327,7 +327,9 @@ def get_rpc_key_ids(keys_dict: dict[str, Any], key: str) -> list[int]:
     return key_ids
 
 
-def is_rpc_momentary_input(config: dict[str, Any], key: str) -> bool:
+def is_rpc_momentary_input(
+    config: dict[str, Any], status: dict[str, Any], key: str
+) -> bool:
     """Return true if rpc input button settings is set to a momentary type."""
     return cast(bool, config[key]["type"] == "button")
 
@@ -359,7 +361,7 @@ def get_rpc_input_triggers(device: RpcDevice) -> list[tuple[str, str]]:
 
     for id_ in key_ids:
         key = f"input:{id_}"
-        if not is_rpc_momentary_input(device.config, key):
+        if not is_rpc_momentary_input(device.config, device.status, key):
             continue
 
         for trigger_type in RPC_INPUTS_EVENTS_TYPES:
