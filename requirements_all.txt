@@ -37,7 +37,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.15.2
+PySwitchbot==0.16.0
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -313,7 +313,7 @@ androidtv[async]==0.0.67
 anel_pwrctrl-homeassistant==0.0.1.dev2
 
 # homeassistant.components.anthemav
-anthemav==1.3.2
+anthemav==1.4.1
 
 # homeassistant.components.apcupsd
 apcaccess==0.0.13
@@ -609,7 +609,7 @@ emulated_roku==0.2.1
 enocean==0.50
 
 # homeassistant.components.entur_public_transport
-enturclient==0.2.3
+enturclient==0.2.4
 
 # homeassistant.components.environment_canada
 env_canada==0.5.22
@@ -763,7 +763,7 @@ googlemaps==2.5.1
 goslide-api==0.5.1
 
 # homeassistant.components.govee_ble
-govee-ble==0.12.4
+govee-ble==0.12.5
 
 # homeassistant.components.remote_rpi_gpio
 gpiozero==1.6.2

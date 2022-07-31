@@ -3,21 +3,49 @@
         "abort": {
             "no_devices_found": "Inga enheter hittades i n\u00e4tverket"
         },
+        "error": {
+            "malformed_url": "Ogiltig URL",
+            "relative_url": "Relativa URL:er \u00e4r inte till\u00e5tna",
+            "template_error": "Problem att rendera mall. Kolla i loggen f\u00f6r mer information."
+        },
         "step": {
+            "content_type": {
+                "data": {
+                    "content_type": "Inneh\u00e5llstyp"
+                },
+                "description": "Ange inneh\u00e5llstypen f\u00f6r str\u00f6mmen."
+            },
             "user": {
                 "data": {
                     "authentication": "Autentiseringen",
+                    "password": "L\u00f6senord",
+                    "rtsp_transport": "RTSP transportprotokoll",
                     "username": "Anv\u00e4ndarnamn"
                 }
             }
         }
     },
     "options": {
+        "error": {
+            "malformed_url": "Ogiltig URL",
+            "relative_url": "Relativa URL:er \u00e4r inte till\u00e5tet",
+            "template_error": "Problem att rendera mall. Kolla i loggen f\u00f6r mer information."
+        },
         "step": {
+            "content_type": {
+                "data": {
+                    "content_type": "Inneh\u00e5llstyp"
+                },
+                "description": "Ange tyen av inneh\u00e5ll f\u00f6r str\u00f6mmen"
+            },
             "init": {
                 "data": {
                     "authentication": "Autentiseringen",
+                    "use_wallclock_as_timestamps": "Anv\u00e4nd v\u00e4ggklocka som tidsst\u00e4mplar",
                     "username": "Anv\u00e4ndarnamn"
+                },
+                "data_description": {
+                    "use_wallclock_as_timestamps": "Det h\u00e4r alternativet kan korrigera segmenteringsproblem eller kraschproblem som uppst\u00e5r p\u00e5 grund av felaktig implementering av tidsst\u00e4mplar p\u00e5 vissa kameror."
                 }
             }
         }

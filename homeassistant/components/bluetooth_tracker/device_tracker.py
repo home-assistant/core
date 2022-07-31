@@ -19,7 +19,7 @@ from homeassistant.components.device_tracker.const import (
     CONF_TRACK_NEW,
     DEFAULT_TRACK_NEW,
     SCAN_INTERVAL,
-    SOURCE_TYPE_BLUETOOTH,
+    SourceType,
 )
 from homeassistant.components.device_tracker.legacy import (
     YAML_DEVICES,
@@ -93,7 +93,7 @@ async def see_device(
         mac=f"{BT_PREFIX}{mac}",
         host_name=device_name,
         attributes=attributes,
-        source_type=SOURCE_TYPE_BLUETOOTH,
+        source_type=SourceType.BLUETOOTH,
     )
 
 

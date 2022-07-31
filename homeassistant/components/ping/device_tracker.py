@@ -17,7 +17,7 @@ from homeassistant.components.device_tracker import (
 from homeassistant.components.device_tracker.const import (
     CONF_SCAN_INTERVAL,
     SCAN_INTERVAL,
-    SOURCE_TYPE_ROUTER,
+    SourceType,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -114,7 +114,7 @@ async def async_setup_scanner(
             )
             await asyncio.gather(
                 *(
-                    async_see(dev_id=host.dev_id, source_type=SOURCE_TYPE_ROUTER)
+                    async_see(dev_id=host.dev_id, source_type=SourceType.ROUTER)
                     for idx, host in enumerate(hosts)
                     if results[idx]
                 )
@@ -133,7 +133,7 @@ async def async_setup_scanner(
             _LOGGER.debug("Multiping responses: %s", responses)
             await asyncio.gather(
                 *(
-                    async_see(dev_id=dev_id, source_type=SOURCE_TYPE_ROUTER)
+                    async_see(dev_id=dev_id, source_type=SourceType.ROUTER)
                     for idx, dev_id in enumerate(ip_to_dev_id.values())
                     if responses[idx].is_alive
                 )
