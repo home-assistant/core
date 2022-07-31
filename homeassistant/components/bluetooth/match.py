@@ -47,6 +47,7 @@ class IntegrationMatchHistory:
     manufacturer_data: bool
     service_data: bool
     service_uuids: bool
+    domains: set[str]
 
 
 def seen_all_fields(
@@ -78,6 +79,14 @@ class IntegrationMatcher:
         """Clear the history."""
         self._matched = {}
 
+    def async_clear_domains(self, domains: set[str]) -> None:
+        """Clear the history matches for a set of domains."""
+        self._matched = {
+            key: value
+            for key, value in self._matched.items()
+            if not (domains & value.domains)
+        }
+
     def match_domains(self, device: BLEDevice, adv_data: AdvertisementData) -> set[str]:
         """Return the domains that are matched."""
         matched_domains: set[str] = set()
@@ -102,6 +111,7 @@ class IntegrationMatcher:
                 manufacturer_data=bool(adv_data.manufacturer_data),
                 service_data=bool(adv_data.service_data),
                 service_uuids=bool(adv_data.service_uuids),
+                domains=matched_domains,
             )
         return matched_domains
 

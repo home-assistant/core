@@ -212,6 +212,13 @@ def async_track_unavailable(
     return manager.async_track_unavailable(callback, address)
 
 
+@hass_callback
+def async_rediscover_domains(hass: HomeAssistant, domains: set[str]) -> None:
+    """Trigger discovery of devices which have already been seen on a domain."""
+    manager: BluetoothManager = hass.data[DOMAIN]
+    manager.async_rediscover_domains(domains)
+
+
 async def _async_has_bluetooth_adapter() -> bool:
     """Return if the device has a bluetooth adapter."""
     return bool(await async_get_bluetooth_adapters())
@@ -514,3 +521,8 @@ class BluetoothManager:
                 # change the bluetooth dongle.
                 _LOGGER.error("Error stopping scanner: %s", ex)
         uninstall_multiple_bleak_catcher()
+
+    @hass_callback
+    def async_rediscover_domains(self, domains: set[str]) -> None:
+        """Trigger discovery of devices which have already been seen on a domain."""
+        self._integration_matcher.async_clear_domains(domains)
