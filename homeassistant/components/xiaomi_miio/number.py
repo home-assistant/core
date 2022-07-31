@@ -24,6 +24,7 @@ from .const import (
     FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB,
     FEATURE_FLAGS_AIRPURIFIER_2S,
     FEATURE_FLAGS_AIRPURIFIER_3C,
+    FEATURE_FLAGS_AIRPURIFIER_4,
     FEATURE_FLAGS_AIRPURIFIER_MIIO,
     FEATURE_FLAGS_AIRPURIFIER_MIOT,
     FEATURE_FLAGS_AIRPURIFIER_PRO,
@@ -55,6 +56,8 @@ from .const import (
     MODEL_AIRHUMIDIFIER_CB1,
     MODEL_AIRPURIFIER_2S,
     MODEL_AIRPURIFIER_3C,
+    MODEL_AIRPURIFIER_4,
+    MODEL_AIRPURIFIER_4_PRO,
     MODEL_AIRPURIFIER_PRO,
     MODEL_AIRPURIFIER_PRO_V7,
     MODEL_AIRPURIFIER_V1,
@@ -104,10 +107,19 @@ class OscillationAngleValues:
     step: float | None = None
 
 
+@dataclass
+class FavoriteLevelValues:
+    """A class that describes favorite level values."""
+
+    max_value: float | None = None
+    min_value: float | None = None
+    step: float | None = None
+
+
 NUMBER_TYPES = {
     FEATURE_SET_MOTOR_SPEED: XiaomiMiioNumberDescription(
         key=ATTR_MOTOR_SPEED,
-        name="Motor Speed",
+        name="Motor speed",
         icon="mdi:fast-forward-outline",
         native_unit_of_measurement="rpm",
         native_min_value=200,
@@ -119,7 +131,7 @@ NUMBER_TYPES = {
     ),
     FEATURE_SET_FAVORITE_LEVEL: XiaomiMiioNumberDescription(
         key=ATTR_FAVORITE_LEVEL,
-        name="Favorite Level",
+        name="Favorite level",
         icon="mdi:star-cog",
         native_min_value=0,
         native_max_value=17,
@@ -129,7 +141,7 @@ NUMBER_TYPES = {
     ),
     FEATURE_SET_FAN_LEVEL: XiaomiMiioNumberDescription(
         key=ATTR_FAN_LEVEL,
-        name="Fan Level",
+        name="Fan level",
         icon="mdi:fan",
         native_min_value=1,
         native_max_value=3,
@@ -149,7 +161,7 @@ NUMBER_TYPES = {
     ),
     FEATURE_SET_OSCILLATION_ANGLE: XiaomiMiioNumberDescription(
         key=ATTR_OSCILLATION_ANGLE,
-        name="Oscillation Angle",
+        name="Oscillation angle",
         icon="mdi:angle-acute",
         native_unit_of_measurement=DEGREE,
         native_min_value=1,
@@ -160,7 +172,7 @@ NUMBER_TYPES = {
     ),
     FEATURE_SET_DELAY_OFF_COUNTDOWN: XiaomiMiioNumberDescription(
         key=ATTR_DELAY_OFF_COUNTDOWN,
-        name="Delay Off Countdown",
+        name="Delay off countdown",
         icon="mdi:fan-off",
         native_unit_of_measurement=TIME_MINUTES,
         native_min_value=0,
@@ -171,7 +183,7 @@ NUMBER_TYPES = {
     ),
     FEATURE_SET_LED_BRIGHTNESS: XiaomiMiioNumberDescription(
         key=ATTR_LED_BRIGHTNESS,
-        name="Led Brightness",
+        name="LED brightness",
         icon="mdi:brightness-6",
         native_min_value=0,
         native_max_value=100,
@@ -181,7 +193,7 @@ NUMBER_TYPES = {
     ),
     FEATURE_SET_LED_BRIGHTNESS_LEVEL: XiaomiMiioNumberDescription(
         key=ATTR_LED_BRIGHTNESS_LEVEL,
-        name="Led Brightness",
+        name="LED brightness",
         icon="mdi:brightness-6",
         native_min_value=0,
         native_max_value=8,
@@ -191,7 +203,7 @@ NUMBER_TYPES = {
     ),
     FEATURE_SET_FAVORITE_RPM: XiaomiMiioNumberDescription(
         key=ATTR_FAVORITE_RPM,
-        name="Favorite Motor Speed",
+        name="Favorite motor speed",
         icon="mdi:star-cog",
         native_unit_of_measurement="rpm",
         native_min_value=300,
@@ -215,6 +227,8 @@ MODEL_TO_FEATURES_MAP = {
     MODEL_AIRPURIFIER_PRO_V7: FEATURE_FLAGS_AIRPURIFIER_PRO_V7,
     MODEL_AIRPURIFIER_V1: FEATURE_FLAGS_AIRPURIFIER_V1,
     MODEL_AIRPURIFIER_V3: FEATURE_FLAGS_AIRPURIFIER_V3,
+    MODEL_AIRPURIFIER_4: FEATURE_FLAGS_AIRPURIFIER_4,
+    MODEL_AIRPURIFIER_4_PRO: FEATURE_FLAGS_AIRPURIFIER_4,
     MODEL_FAN_1C: FEATURE_FLAGS_FAN_1C,
     MODEL_FAN_P10: FEATURE_FLAGS_FAN_P10_P11,
     MODEL_FAN_P11: FEATURE_FLAGS_FAN_P10_P11,
@@ -235,6 +249,11 @@ OSCILLATION_ANGLE_VALUES = {
     MODEL_FAN_P9: OscillationAngleValues(max_value=150, min_value=30, step=30),
     MODEL_FAN_P10: OscillationAngleValues(max_value=140, min_value=30, step=30),
     MODEL_FAN_P11: OscillationAngleValues(max_value=140, min_value=30, step=30),
+}
+
+FAVORITE_LEVEL_VALUES = {
+    tuple(MODELS_PURIFIER_MIIO): FavoriteLevelValues(max_value=17, min_value=0, step=1),
+    tuple(MODELS_PURIFIER_MIOT): FavoriteLevelValues(max_value=14, min_value=0, step=1),
 }
 
 
@@ -280,10 +299,18 @@ async def async_setup_entry(
                     native_min_value=OSCILLATION_ANGLE_VALUES[model].min_value,
                     native_step=OSCILLATION_ANGLE_VALUES[model].step,
                 )
+            elif description.key == ATTR_FAVORITE_LEVEL:
+                for list_models, favorite_level_value in FAVORITE_LEVEL_VALUES.items():
+                    if model in list_models:
+                        description = dataclasses.replace(
+                            description,
+                            native_max_value=favorite_level_value.max_value,
+                            native_min_value=favorite_level_value.min_value,
+                            native_step=favorite_level_value.step,
+                        )
 
             entities.append(
                 XiaomiNumberEntity(
-                    f"{config_entry.title} {description.name}",
                     device,
                     config_entry,
                     f"{description.key}_{config_entry.unique_id}",
@@ -298,9 +325,9 @@ async def async_setup_entry(
 class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
     """Representation of a generic Xiaomi attribute selector."""
 
-    def __init__(self, name, device, entry, unique_id, coordinator, description):
+    def __init__(self, device, entry, unique_id, coordinator, description):
         """Initialize the generic Xiaomi attribute selector."""
-        super().__init__(name, device, entry, unique_id, coordinator)
+        super().__init__(device, entry, unique_id, coordinator)
 
         self._attr_native_value = self._extract_value_from_attribute(
             coordinator.data, description.key

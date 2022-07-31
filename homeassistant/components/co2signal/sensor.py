@@ -103,8 +103,8 @@ class CO2Sensor(CoordinatorEntity[CO2SignalCoordinator], SensorEntity):
     @property
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
-        if self.entity_description.unit_of_measurement:
-            return self.entity_description.unit_of_measurement
+        if self.entity_description.native_unit_of_measurement:
+            return self.entity_description.native_unit_of_measurement
         return cast(
             str, self.coordinator.data["units"].get(self.entity_description.key)
         )

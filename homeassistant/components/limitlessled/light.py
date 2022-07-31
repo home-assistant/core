@@ -240,7 +240,7 @@ class LimitlessLEDGroup(LightEntity, RestoreEntity):
         self._color = None
         self._effect = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Handle entity about to be added to hass event."""
         await super().async_added_to_hass()
         if last_state := await self.async_get_last_state():

@@ -16,26 +16,6 @@ from .model import Config, Integration
 # remove your component from this list to enable type checks.
 # Do your best to not add anything new here.
 IGNORED_MODULES: Final[list[str]] = [
-    "homeassistant.components.cloud.client",
-    "homeassistant.components.cloud.http_api",
-    "homeassistant.components.evohome",
-    "homeassistant.components.evohome.climate",
-    "homeassistant.components.lovelace",
-    "homeassistant.components.lovelace.dashboard",
-    "homeassistant.components.lovelace.resources",
-    "homeassistant.components.lovelace.websocket",
-    "homeassistant.components.minecraft_server",
-    "homeassistant.components.minecraft_server.helpers",
-    "homeassistant.components.minecraft_server.sensor",
-    "homeassistant.components.nzbget",
-    "homeassistant.components.nzbget.config_flow",
-    "homeassistant.components.nzbget.coordinator",
-    "homeassistant.components.nzbget.switch",
-    "homeassistant.components.onvif.base",
-    "homeassistant.components.onvif.binary_sensor",
-    "homeassistant.components.onvif.camera",
-    "homeassistant.components.onvif.device",
-    "homeassistant.components.onvif.sensor",
     "homeassistant.components.sonos",
     "homeassistant.components.sonos.alarms",
     "homeassistant.components.sonos.binary_sensor",
@@ -48,8 +28,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.sonos.sensor",
     "homeassistant.components.sonos.speaker",
     "homeassistant.components.sonos.statistics",
-    "homeassistant.components.template.number",
-    "homeassistant.components.template.sensor",
 ]
 
 # Component modules which should set no_implicit_reexport = true.

@@ -7,7 +7,7 @@ from typing import Any, TypedDict
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.storage import Store
 
-from .const import DOMAIN
+from .const import DOMAIN, ENTITY_MAP
 
 ENTITY_MAP_STORAGE_KEY = f"{DOMAIN}-entity-map"
 ENTITY_MAP_STORAGE_VERSION = 1
@@ -91,3 +91,13 @@ class EntityMapStorage:
     def _data_to_save(self) -> StorageLayout:
         """Return data of entity map to store in a file."""
         return StorageLayout(pairings=self.storage_data)
+
+
+async def async_get_entity_storage(hass: HomeAssistant) -> EntityMapStorage:
+    """Get entity storage."""
+    if ENTITY_MAP in hass.data:
+        map_storage: EntityMapStorage = hass.data[ENTITY_MAP]
+        return map_storage
+    map_storage = hass.data[ENTITY_MAP] = EntityMapStorage(hass)
+    await map_storage.async_initialize()
+    return map_storage

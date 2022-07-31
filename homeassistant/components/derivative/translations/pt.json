@@ -7,5 +7,14 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data_description": {
+                    "unit_prefix": "."
+                }
+            }
+        }
     }
 }

@@ -73,6 +73,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class DelugeEntity(CoordinatorEntity[DelugeDataUpdateCoordinator]):
     """Representation of a Deluge entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, coordinator: DelugeDataUpdateCoordinator) -> None:
         """Initialize a Deluge entity."""
         super().__init__(coordinator)
