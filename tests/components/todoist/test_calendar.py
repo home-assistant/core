@@ -81,3 +81,26 @@ async def test_calendar_entity_unique_id(todoist_api, hass, state):
     registry = entity_registry.async_get(hass)
     entity = registry.async_get("calendar.name")
     assert 12345 == entity.unique_id
+
+
+@patch("homeassistant.components.todoist.calendar.TodoistAPI")
+async def test_calendar_custom_project_unique_id(todoist_api, hass, state):
+    """Test unique id is None for any custom projects."""
+    api = Mock(state=state)
+    todoist_api.return_value = api
+    assert await setup.async_setup_component(
+        hass,
+        "calendar",
+        {
+            "calendar": {
+                "platform": DOMAIN,
+                CONF_TOKEN: "token",
+                "custom_projects": [{"name": "All projects"}],
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    registry = entity_registry.async_get(hass)
+    entity = registry.async_get("calendar.all_projects")
+    assert entity is None
