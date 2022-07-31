@@ -1,10 +1,11 @@
 """Support for AdGuard Home."""
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from adguardhome import AdGuardHome, AdGuardHomeConnectionError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -16,7 +17,6 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     Platform,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -31,6 +31,11 @@ from .const import (
     SERVICE_REFRESH,
     SERVICE_REMOVE_URL,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant, ServiceCall
+
 
 SERVICE_URL_SCHEMA = vol.Schema({vol.Required(CONF_URL): cv.url})
 SERVICE_ADD_URL_SCHEMA = vol.Schema(
