@@ -365,7 +365,6 @@ RPC_SENSORS: Final = {
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=True,
-        use_polling_wrapper=True,
     ),
     "rssi": RpcSensorDescription(
         key="wifi",
@@ -388,7 +387,7 @@ RPC_SENSORS: Final = {
         entity_category=EntityCategory.DIAGNOSTIC,
         use_polling_wrapper=True,
     ),
-    "humidity": RpcSensorDescription(
+    "humidity_0": RpcSensorDescription(
         key="humidity:0",
         sub_key="rh",
         name="Humidity",
@@ -396,7 +395,6 @@ RPC_SENSORS: Final = {
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=True,
-        use_polling_wrapper=True,
     ),
     "battery": RpcSensorDescription(
         key="devicepower:0",
@@ -409,7 +407,6 @@ RPC_SENSORS: Final = {
         removal_condition=is_rpc_device_externally_powered,
         entity_registry_enabled_default=True,
         entity_category=EntityCategory.DIAGNOSTIC,
-        use_polling_wrapper=True,
     ),
 }
 
