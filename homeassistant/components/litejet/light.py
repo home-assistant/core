@@ -1,5 +1,6 @@
 """Support for LiteJet lights."""
 import logging
+from typing import Any
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -53,12 +54,12 @@ class LiteJetLight(LightEntity):
         self._brightness = 0
         self._name = name
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when this Entity has been added to HA."""
         self._lj.on_load_activated(self._index, self._on_load_changed)
         self._lj.on_load_deactivated(self._index, self._on_load_changed)
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Entity being removed from hass."""
         self._lj.unsubscribe(self._on_load_changed)
 
@@ -97,7 +98,7 @@ class LiteJetLight(LightEntity):
         """Return the device state attributes."""
         return {ATTR_NUMBER: self._index}
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
 
         # If neither attribute is specified then the simple activate load
@@ -115,7 +116,7 @@ class LiteJetLight(LightEntity):
 
         self._lj.activate_load_at(self._index, brightness, int(transition))
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         if ATTR_TRANSITION in kwargs:
             self._lj.activate_load_at(self._index, 0, kwargs[ATTR_TRANSITION])
@@ -126,6 +127,6 @@ class LiteJetLight(LightEntity):
         # transition value programmed in the LiteJet system.
         self._lj.deactivate_load(self._index)
 
-    def update(self):
+    def update(self) -> None:
         """Retrieve the light's brightness from the LiteJet system."""
         self._brightness = int(self._lj.get_load_level(self._index) / 99 * 255)
