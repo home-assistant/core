@@ -219,6 +219,9 @@ aionotion==3.0.2
 # homeassistant.components.oncue
 aiooncue==0.3.4
 
+# homeassistant.components.openexchangerates
+aioopenexchangerates==0.3.0
+
 # homeassistant.components.acmeda
 aiopulse==0.4.3
 
