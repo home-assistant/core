@@ -75,6 +75,13 @@ async def test_eve_degree_setup(hass):
                     state="0.28999999165535",
                 ),
                 EntityTestInfo(
+                    entity_id="switch.eve_energy_50ff_lock_physical_controls",
+                    unique_id="homekit-AA00A0A00000-aid:1-sid:28-cid:36",
+                    friendly_name="Eve Energy 50FF Lock Physical Controls",
+                    entity_category=EntityCategory.CONFIG,
+                    state="off",
+                ),
+                EntityTestInfo(
                     entity_id="button.eve_energy_50ff_identify",
                     unique_id="homekit-AA00A0A00000-aid:1-sid:1-cid:3",
                     friendly_name="Eve Energy 50FF Identify",
