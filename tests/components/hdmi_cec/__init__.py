@@ -9,19 +9,17 @@ class MockHDMIDevice:
 
     def __init__(self, *, logical_address, **values):
         """Mock of a HDMIDevice."""
-        super().__setattr__(
-            "set_update_callback", Mock(side_effect=self._set_update_callback)
-        )
-        super().__setattr__("logical_address", logical_address)
-        super().__setattr__("name", f"hdmi_{logical_address:x}")
+        self.set_update_callback = Mock(side_effect=self._set_update_callback)
+        self.logical_address = logical_address
+        self.name = f"hdmi_{logical_address:x}"
         if "power_status" not in values:
             # Default to invalid state.
             values["power_status"] = -1
-        super().__setattr__("_values", values)
-        super().__setattr__("turn_on", Mock())
-        super().__setattr__("turn_off", Mock())
-        super().__setattr__("send_command", Mock())
-        super().__setattr__("async_send_command", AsyncMock())
+        self._values = values
+        self.turn_on = Mock()
+        self.turn_off = Mock()
+        self.send_command = Mock()
+        self.async_send_command = AsyncMock()
 
     def __getattr__(self, name):
         """Get attribute from `_values` if not explicitly set."""
@@ -29,13 +27,14 @@ class MockHDMIDevice:
 
     def __setattr__(self, name, value):
         """Set attributes in `_values` if not one of the known attributes."""
-        if name in ("logical_address", "name", "_values", "_update"):
-            raise AttributeError("can't set attribute")
-        self._values[name] = value
-        self._update()
+        if name in ("power_status", "status"):
+            self._values[name] = value
+            self._update()
+        else:
+            super().__setattr__(name, value)
 
     def _set_update_callback(self, update):
-        super().__setattr__("_update", update)
+        self._update = update
 
 
 def assert_key_press_release(fnc, count=0, *, dst, key):
