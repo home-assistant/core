@@ -2152,6 +2152,9 @@ screenlogicpy==0.5.4
 # homeassistant.components.scsgate
 scsgate==0.1.0
 
+# homeassistant.components.bluetooth
+sdbus==0.10.0
+
 # homeassistant.components.backup
 securetar==2022.2.0
 
