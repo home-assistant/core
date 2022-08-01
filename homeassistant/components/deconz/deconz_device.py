@@ -8,6 +8,7 @@ from pydeconz.models.group import Group as DeconzGroup
 from pydeconz.models.light import LightBase as DeconzLight
 from pydeconz.models.scene import Scene as PydeconzScene
 from pydeconz.models.sensor import SensorBase as DeconzSensor
+from pydeconz.models.sensor.ancillary_control import AncillaryControl
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
@@ -18,7 +19,12 @@ from .const import DOMAIN as DECONZ_DOMAIN
 from .gateway import DeconzGateway
 
 _DeviceTypeT = TypeVar(
-    "_DeviceTypeT", DeconzGroup, DeconzLight, DeconzSensor, PydeconzScene
+    "_DeviceTypeT",
+    DeconzGroup,
+    DeconzLight,
+    DeconzSensor,
+    PydeconzScene,
+    AncillaryControl,
 )
 
 
