@@ -59,7 +59,7 @@ async def async_setup_platform(
 
     if (api_key, base) not in coordinators:
         # Create one coordinator per base currency per API key.
-        update_interval = BASE_UPDATE_INTERVAL / (
+        update_interval = BASE_UPDATE_INTERVAL * (
             len(
                 {
                     coordinator_base
