@@ -1,5 +1,8 @@
 {
     "config": {
+        "error": {
+            "firmware_not_fully_provisioned": "Enheten \u00e4r inte helt etablerad. Kontakta Shellys support"
+        },
         "step": {
             "credentials": {
                 "data": {

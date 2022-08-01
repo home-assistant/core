@@ -7,7 +7,7 @@ from homeassistant.components.p1_monitor.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
+from homeassistant.data_entry_flow import FlowResultType
 
 
 async def test_full_user_flow(hass: HomeAssistant) -> None:
@@ -16,7 +16,7 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") == RESULT_TYPE_FORM
+    assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == SOURCE_USER
     assert "flow_id" in result
 
@@ -33,7 +33,7 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2.get("type") == RESULT_TYPE_CREATE_ENTRY
+    assert result2.get("type") == FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "Name"
     assert result2.get("data") == {
         CONF_HOST: "example.com",
@@ -58,5 +58,5 @@ async def test_api_error(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result.get("type") == RESULT_TYPE_FORM
+    assert result.get("type") == FlowResultType.FORM
     assert result.get("errors") == {"base": "cannot_connect"}

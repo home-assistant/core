@@ -8,8 +8,9 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, POWER_KILO_WATT
+from homeassistant.const import PERCENTAGE, POWER_WATT
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HiveEntity
@@ -23,12 +24,14 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="Battery",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="Power",
-        native_unit_of_measurement=POWER_KILO_WATT,
+        native_unit_of_measurement=POWER_WATT,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 

@@ -1,0 +1,8 @@
+{
+    "issues": {
+        "pending_removal": {
+            "description": "Die lokale OpenALPR-Integration wird derzeit aus dem Home Assistant entfernt und wird ab Home Assistant 2022.10 nicht mehr verf\u00fcgbar sein.\n\nEntferne die YAML-Konfiguration aus deiner configuration.yaml-Datei und starte Home Assistant neu, um dieses Problem zu beheben.",
+            "title": "Die lokale OpenALPR-Integration wird entfernt"
+        }
+    }
+}

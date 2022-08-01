@@ -424,11 +424,16 @@ class ZeroconfDiscovery:
                 # Since we prefer local control, if the integration that is being discovered
                 # is cloud AND the homekit device is UNPAIRED we still want to discovery it.
                 #
+                # Additionally if the integration is polling, HKC offers a local push
+                # experience for the user to control the device so we want to offer that
+                # as well.
+                #
                 # As soon as the device becomes paired, the config flow will be dismissed
                 # in the event the user does not want to pair with Home Assistant.
                 #
-                if not integration.iot_class or not integration.iot_class.startswith(
-                    "cloud"
+                if not integration.iot_class or (
+                    not integration.iot_class.startswith("cloud")
+                    and "polling" not in integration.iot_class
                 ):
                     return
 

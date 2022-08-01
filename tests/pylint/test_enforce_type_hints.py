@@ -40,53 +40,34 @@ def test_regex_get_module_platform(
 
 
 @pytest.mark.parametrize(
-    ("string", "expected_x", "expected_y", "expected_z", "expected_a"),
+    ("string", "expected_count", "expected_items"),
     [
-        ("list[dict[str, str]]", "list", "dict", "str", "str"),
-        ("list[dict[str, Any]]", "list", "dict", "str", "Any"),
+        ("Callable[..., None]", 2, ("Callable", "...", "None")),
+        ("Callable[..., Awaitable[None]]", 2, ("Callable", "...", "Awaitable[None]")),
+        ("tuple[int, int, int, int]", 4, ("tuple", "int", "int", "int", "int")),
+        (
+            "tuple[int, int, int, int, int]",
+            5,
+            ("tuple", "int", "int", "int", "int", "int"),
+        ),
+        ("Awaitable[None]", 1, ("Awaitable", "None")),
+        ("list[dict[str, str]]", 1, ("list", "dict[str, str]")),
+        ("list[dict[str, Any]]", 1, ("list", "dict[str, Any]")),
     ],
 )
-def test_regex_x_of_y_of_z_comma_a(
+def test_regex_x_of_y_i(
     hass_enforce_type_hints: ModuleType,
     string: str,
-    expected_x: str,
-    expected_y: str,
-    expected_z: str,
-    expected_a: str,
+    expected_count: int,
+    expected_items: tuple[str, ...],
 ) -> None:
-    """Test x_of_y_of_z_comma_a regexes."""
+    """Test x_of_y_i regexes."""
     matchers: dict[str, re.Pattern] = hass_enforce_type_hints._TYPE_HINT_MATCHERS
 
-    assert (match := matchers["x_of_y_of_z_comma_a"].match(string))
+    assert (match := matchers[f"x_of_y_{expected_count}"].match(string))
     assert match.group(0) == string
-    assert match.group(1) == expected_x
-    assert match.group(2) == expected_y
-    assert match.group(3) == expected_z
-    assert match.group(4) == expected_a
-
-
-@pytest.mark.parametrize(
-    ("string", "expected_x", "expected_y", "expected_z"),
-    [
-        ("Callable[..., None]", "Callable", "...", "None"),
-        ("Callable[..., Awaitable[None]]", "Callable", "...", "Awaitable[None]"),
-    ],
-)
-def test_regex_x_of_y_comma_z(
-    hass_enforce_type_hints: ModuleType,
-    string: str,
-    expected_x: str,
-    expected_y: str,
-    expected_z: str,
-) -> None:
-    """Test x_of_y_comma_z regexes."""
-    matchers: dict[str, re.Pattern] = hass_enforce_type_hints._TYPE_HINT_MATCHERS
-
-    assert (match := matchers["x_of_y_comma_z"].match(string))
-    assert match.group(0) == string
-    assert match.group(1) == expected_x
-    assert match.group(2) == expected_y
-    assert match.group(3) == expected_z
+    for index in range(expected_count):
+        assert match.group(index + 1) == expected_items[index]
 
 
 @pytest.mark.parametrize(
@@ -120,6 +101,9 @@ def test_ignore_no_annotations(
     hass_enforce_type_hints: ModuleType, type_hint_checker: BaseChecker, code: str
 ) -> None:
     """Ensure that _is_valid_type is not run if there are no annotations."""
+    # Set ignore option
+    type_hint_checker.config.ignore_missing_annotations = True
+
     func_node = astroid.extract_node(
         code,
         "homeassistant.components.pylint_test",
@@ -217,7 +201,7 @@ def test_invalid_discovery_info(
     async def async_setup_scanner( #@
         hass: HomeAssistant,
         config: ConfigType,
-        async_see: Callable[..., Awaitable[None]],
+        async_see: AsyncSeeCallback,
         discovery_info: dict[str, Any] | None = None, #@
     ) -> bool:
         pass
@@ -231,7 +215,7 @@ def test_invalid_discovery_info(
         pylint.testutils.MessageTest(
             msg_id="hass-argument-type",
             node=discovery_info_node,
-            args=(4, "DiscoveryInfoType | None"),
+            args=(4, "DiscoveryInfoType | None", "async_setup_scanner"),
             line=6,
             col_offset=4,
             end_line=6,
@@ -250,7 +234,7 @@ def test_valid_discovery_info(
     async def async_setup_scanner( #@
         hass: HomeAssistant,
         config: ConfigType,
-        async_see: Callable[..., Awaitable[None]],
+        async_see: AsyncSeeCallback,
         discovery_info: DiscoveryInfoType | None = None,
     ) -> bool:
         pass
@@ -284,7 +268,10 @@ def test_invalid_list_dict_str_any(
         pylint.testutils.MessageTest(
             msg_id="hass-return-type",
             node=func_node,
-            args=["list[dict[str, str]]", "list[dict[str, Any]]"],
+            args=(
+                ["list[dict[str, str]]", "list[dict[str, Any]]"],
+                "async_get_triggers",
+            ),
             line=2,
             col_offset=0,
             end_line=2,
@@ -341,7 +328,7 @@ def test_invalid_config_flow_step(
         pylint.testutils.MessageTest(
             msg_id="hass-argument-type",
             node=arg_node,
-            args=(2, "ZeroconfServiceInfo"),
+            args=(2, "ZeroconfServiceInfo", "async_step_zeroconf"),
             line=10,
             col_offset=8,
             end_line=10,
@@ -350,7 +337,7 @@ def test_invalid_config_flow_step(
         pylint.testutils.MessageTest(
             msg_id="hass-return-type",
             node=func_node,
-            args="FlowResult",
+            args=("FlowResult", "async_step_zeroconf"),
             line=8,
             col_offset=4,
             end_line=8,
@@ -415,7 +402,7 @@ def test_invalid_config_flow_async_get_options_flow(
         pylint.testutils.MessageTest(
             msg_id="hass-argument-type",
             node=arg_node,
-            args=(1, "ConfigEntry"),
+            args=(1, "ConfigEntry", "async_get_options_flow"),
             line=12,
             col_offset=8,
             end_line=12,
@@ -424,7 +411,7 @@ def test_invalid_config_flow_async_get_options_flow(
         pylint.testutils.MessageTest(
             msg_id="hass-return-type",
             node=func_node,
-            args="OptionsFlow",
+            args=("OptionsFlow", "async_get_options_flow"),
             line=11,
             col_offset=4,
             end_line=11,
@@ -507,7 +494,7 @@ def test_invalid_entity_properties(
         pylint.testutils.MessageTest(
             msg_id="hass-return-type",
             node=prop_node,
-            args=["str", None],
+            args=(["str", None], "changed_by"),
             line=9,
             col_offset=4,
             end_line=9,
@@ -516,7 +503,7 @@ def test_invalid_entity_properties(
         pylint.testutils.MessageTest(
             msg_id="hass-argument-type",
             node=func_node,
-            args=("kwargs", "Any"),
+            args=("kwargs", "Any", "async_lock"),
             line=14,
             col_offset=4,
             end_line=14,
@@ -525,7 +512,7 @@ def test_invalid_entity_properties(
         pylint.testutils.MessageTest(
             msg_id="hass-return-type",
             node=func_node,
-            args="None",
+            args=("None", "async_lock"),
             line=14,
             col_offset=4,
             end_line=14,
@@ -539,6 +526,9 @@ def test_ignore_invalid_entity_properties(
     linter: UnittestLinter, type_hint_checker: BaseChecker
 ) -> None:
     """Check invalid entity properties are ignored by default."""
+    # Set ignore option
+    type_hint_checker.config.ignore_missing_annotations = True
+
     class_node = astroid.extract_node(
         """
     class LockEntity():
@@ -600,7 +590,7 @@ def test_named_arguments(
         pylint.testutils.MessageTest(
             msg_id="hass-argument-type",
             node=percentage_node,
-            args=("percentage", "int | None"),
+            args=("percentage", "int | None", "async_turn_on"),
             line=10,
             col_offset=8,
             end_line=10,
@@ -609,7 +599,7 @@ def test_named_arguments(
         pylint.testutils.MessageTest(
             msg_id="hass-argument-type",
             node=preset_mode_node,
-            args=("preset_mode", "str | None"),
+            args=("preset_mode", "str | None", "async_turn_on"),
             line=12,
             col_offset=8,
             end_line=12,
@@ -618,7 +608,7 @@ def test_named_arguments(
         pylint.testutils.MessageTest(
             msg_id="hass-argument-type",
             node=func_node,
-            args=("kwargs", "Any"),
+            args=("kwargs", "Any", "async_turn_on"),
             line=8,
             col_offset=4,
             end_line=8,
@@ -627,7 +617,7 @@ def test_named_arguments(
         pylint.testutils.MessageTest(
             msg_id="hass-return-type",
             node=func_node,
-            args="None",
+            args=("None", "async_turn_on"),
             line=8,
             col_offset=4,
             end_line=8,
@@ -683,7 +673,7 @@ def test_invalid_mapping_return_type(
         pylint.testutils.MessageTest(
             msg_id="hass-return-type",
             node=property_node,
-            args=["Mapping[str, Any]", None],
+            args=(["Mapping[str, Any]", None], "capability_attributes"),
             line=15,
             col_offset=4,
             end_line=15,
@@ -736,4 +726,106 @@ def test_valid_mapping_return_type(
     type_hint_checker.visit_module(class_node.parent)
 
     with assert_no_messages(linter):
+        type_hint_checker.visit_classdef(class_node)
+
+
+def test_valid_long_tuple(
+    linter: UnittestLinter, type_hint_checker: BaseChecker
+) -> None:
+    """Check invalid entity properties are ignored by default."""
+    # Set ignore option
+    type_hint_checker.config.ignore_missing_annotations = False
+
+    class_node, _, _ = astroid.extract_node(
+        """
+    class Entity():
+        pass
+
+    class ToggleEntity(Entity):
+        pass
+
+    class LightEntity(ToggleEntity):
+        pass
+
+    class TestLight( #@
+        LightEntity
+    ):
+        @property
+        def rgbw_color( #@
+            self
+        ) -> tuple[int, int, int, int]:
+            pass
+
+        @property
+        def rgbww_color( #@
+            self
+        ) -> tuple[int, int, int, int, int]:
+            pass
+    """,
+        "homeassistant.components.pylint_test.light",
+    )
+    type_hint_checker.visit_module(class_node.parent)
+
+    with assert_no_messages(linter):
+        type_hint_checker.visit_classdef(class_node)
+
+
+def test_invalid_long_tuple(
+    linter: UnittestLinter, type_hint_checker: BaseChecker
+) -> None:
+    """Check invalid entity properties are ignored by default."""
+    # Set ignore option
+    type_hint_checker.config.ignore_missing_annotations = False
+
+    class_node, rgbw_node, rgbww_node = astroid.extract_node(
+        """
+    class Entity():
+        pass
+
+    class ToggleEntity(Entity):
+        pass
+
+    class LightEntity(ToggleEntity):
+        pass
+
+    class TestLight( #@
+        LightEntity
+    ):
+        @property
+        def rgbw_color( #@
+            self
+        ) -> tuple[int, int, int, int, int]:
+            pass
+
+        @property
+        def rgbww_color( #@
+            self
+        ) -> tuple[int, int, int, int, float]:
+            pass
+    """,
+        "homeassistant.components.pylint_test.light",
+    )
+    type_hint_checker.visit_module(class_node.parent)
+
+    with assert_adds_messages(
+        linter,
+        pylint.testutils.MessageTest(
+            msg_id="hass-return-type",
+            node=rgbw_node,
+            args=(["tuple[int, int, int, int]", None], "rgbw_color"),
+            line=15,
+            col_offset=4,
+            end_line=15,
+            end_col_offset=18,
+        ),
+        pylint.testutils.MessageTest(
+            msg_id="hass-return-type",
+            node=rgbww_node,
+            args=(["tuple[int, int, int, int, int]", None], "rgbww_color"),
+            line=21,
+            col_offset=4,
+            end_line=21,
+            end_col_offset=19,
+        ),
+    ):
         type_hint_checker.visit_classdef(class_node)

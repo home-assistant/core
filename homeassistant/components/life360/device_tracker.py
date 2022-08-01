@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any, cast
 
-from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
+from homeassistant.components.device_tracker import SourceType
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_BATTERY_CHARGING
@@ -78,13 +78,13 @@ async def async_setup_entry(
 
         new_entities = []
         for member_id, member in coordinator.data.members.items():
-            tracked_by_account = tracked_members.get(member_id)
-            if new_member := not tracked_by_account:
-                tracked_members[member_id] = entry.unique_id
-                LOGGER.debug("Member: %s", member.name)
+            tracked_by_entry = tracked_members.get(member_id)
+            if new_member := not tracked_by_entry:
+                tracked_members[member_id] = entry.entry_id
+                LOGGER.debug("Member: %s (%s)", member.name, entry.unique_id)
             if (
                 new_member
-                or tracked_by_account == entry.unique_id
+                or tracked_by_entry == entry.entry_id
                 and not new_members_only
             ):
                 new_entities.append(Life360DeviceTracker(coordinator, member_id))
@@ -192,9 +192,9 @@ class Life360DeviceTracker(CoordinatorEntity, TrackerEntity):
         return self._data.battery_level
 
     @property
-    def source_type(self) -> str:
+    def source_type(self) -> SourceType:
         """Return the source type, eg gps or router, of the device."""
-        return SOURCE_TYPE_GPS
+        return SourceType.GPS
 
     @property
     def location_accuracy(self) -> int:

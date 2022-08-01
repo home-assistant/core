@@ -17,5 +17,10 @@
                 "title": "Integratie herauthenticeren"
             }
         }
+    },
+    "issues": {
+        "removed_yaml": {
+            "title": "De Honeywell Lyric YAML-configuratie is verwijderd"
+        }
     }
 }

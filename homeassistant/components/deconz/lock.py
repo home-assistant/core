@@ -46,6 +46,7 @@ async def async_setup_entry(
     gateway.register_platform_add_device_callback(
         async_add_lock_from_sensor,
         gateway.api.sensors.door_lock,
+        always_ignore_clip_sensors=True,
     )
 
 

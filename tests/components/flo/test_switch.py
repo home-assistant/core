@@ -17,7 +17,7 @@ async def test_valve_switches(hass, config_entry, aioclient_mock_fixture):
 
     assert len(hass.data[FLO_DOMAIN][config_entry.entry_id]["devices"]) == 2
 
-    entity_id = "switch.shutoff_valve"
+    entity_id = "switch.smart_water_shutoff_shutoff_valve"
     assert hass.states.get(entity_id).state == STATE_ON
 
     await hass.services.async_call(

@@ -379,7 +379,7 @@ class AlexaPowerController(AlexaCapability):
             raise UnsupportedProperty(name)
 
         if self.entity.domain == climate.DOMAIN:
-            is_on = self.entity.state != climate.HVAC_MODE_OFF
+            is_on = self.entity.state != climate.HVACMode.OFF
         elif self.entity.domain == fan.DOMAIN:
             is_on = self.entity.state == fan.STATE_ON
         elif self.entity.domain == vacuum.DOMAIN:
@@ -903,6 +903,7 @@ class AlexaContactSensor(AlexaCapability):
         "en-CA",
         "en-IN",
         "en-US",
+        "en-GB",
         "es-ES",
         "it-IT",
         "ja-JP",
@@ -951,6 +952,7 @@ class AlexaMotionSensor(AlexaCapability):
         "en-CA",
         "en-IN",
         "en-US",
+        "en-GB",
         "es-ES",
         "it-IT",
         "ja-JP",
@@ -1046,6 +1048,8 @@ class AlexaThermostatController(AlexaCapability):
 
             if preset in API_THERMOSTAT_PRESETS:
                 mode = API_THERMOSTAT_PRESETS[preset]
+            elif self.entity.state == STATE_UNKNOWN:
+                return None
             else:
                 mode = API_THERMOSTAT_MODES.get(self.entity.state)
                 if mode is None:
