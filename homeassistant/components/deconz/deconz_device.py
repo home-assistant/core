@@ -18,8 +18,8 @@ from homeassistant.helpers.entity import DeviceInfo, Entity
 from .const import DOMAIN as DECONZ_DOMAIN
 from .gateway import DeconzGateway
 
-_DeviceTypeT = TypeVar(
-    "_DeviceTypeT",
+_DeviceT = TypeVar(
+    "_DeviceT",
     bound=Union[
         PydeconzGroup,
         PydeconzLightBase,
@@ -29,16 +29,16 @@ _DeviceTypeT = TypeVar(
 )
 
 
-class DeconzBase(Generic[_DeviceTypeT]):
+class DeconzBase(Generic[_DeviceT]):
     """Common base for deconz entities and events."""
 
     def __init__(
         self,
-        device: _DeviceTypeT,
+        device: _DeviceT,
         gateway: DeconzGateway,
     ) -> None:
         """Set up device and add update callback to get data from websocket."""
-        self._device: _DeviceTypeT = device
+        self._device: _DeviceT = device
         self.gateway = gateway
 
     @property
@@ -73,7 +73,7 @@ class DeconzBase(Generic[_DeviceTypeT]):
         )
 
 
-class DeconzDevice(DeconzBase[_DeviceTypeT], Entity):
+class DeconzDevice(DeconzBase[_DeviceT], Entity):
     """Representation of a deCONZ device."""
 
     _attr_should_poll = False
@@ -82,7 +82,7 @@ class DeconzDevice(DeconzBase[_DeviceTypeT], Entity):
 
     def __init__(
         self,
-        device: _DeviceTypeT,
+        device: _DeviceT,
         gateway: DeconzGateway,
     ) -> None:
         """Set up device and add update callback to get data from websocket."""

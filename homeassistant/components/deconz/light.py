@@ -47,7 +47,7 @@ DECONZ_TO_COLOR_MODE = {
     LightColorMode.XY: ColorMode.XY,
 }
 
-_LightDeviceTypeT = TypeVar("_LightDeviceTypeT", bound=Union[Group, Light])
+_LightDeviceT = TypeVar("_LightDeviceT", bound=Union[Group, Light])
 
 
 class SetStateAttributes(TypedDict, total=False):
@@ -121,12 +121,12 @@ async def async_setup_entry(
     )
 
 
-class DeconzBaseLight(DeconzDevice[_LightDeviceTypeT], LightEntity):
+class DeconzBaseLight(DeconzDevice[_LightDeviceT], LightEntity):
     """Representation of a deCONZ light."""
 
     TYPE = DOMAIN
 
-    def __init__(self, device: _LightDeviceTypeT, gateway: DeconzGateway) -> None:
+    def __init__(self, device: _LightDeviceT, gateway: DeconzGateway) -> None:
         """Set up light."""
         super().__init__(device, gateway)
 
