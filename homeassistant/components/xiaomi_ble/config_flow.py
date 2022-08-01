@@ -13,7 +13,7 @@ from xiaomi_ble.parser import EncryptionScheme
 from homeassistant.components import onboarding
 from homeassistant.components.bluetooth import (
     BluetoothScanningMode,
-    BluetoothServiceInfoBleak,
+    BluetoothServiceInfo,
     async_discovered_service_info,
     async_process_advertisements,
 )
@@ -32,11 +32,11 @@ class Discovery:
     """A discovered bluetooth device."""
 
     title: str
-    discovery_info: BluetoothServiceInfoBleak
+    discovery_info: BluetoothServiceInfo
     device: DeviceData
 
 
-def _title(discovery_info: BluetoothServiceInfoBleak, device: DeviceData) -> str:
+def _title(discovery_info: BluetoothServiceInfo, device: DeviceData) -> str:
     return device.title or device.get_device_name() or discovery_info.name
 
 
@@ -47,19 +47,19 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self._discovery_info: BluetoothServiceInfoBleak | None = None
+        self._discovery_info: BluetoothServiceInfo | None = None
         self._discovered_device: DeviceData | None = None
         self._discovered_devices: dict[str, Discovery] = {}
 
     async def _async_wait_for_full_advertisement(
-        self, discovery_info: BluetoothServiceInfoBleak, device: DeviceData
-    ) -> BluetoothServiceInfoBleak:
+        self, discovery_info: BluetoothServiceInfo, device: DeviceData
+    ) -> BluetoothServiceInfo:
         """Sometimes first advertisement we receive is blank or incomplete. Wait until we get a useful one."""
         if not device.pending:
             return discovery_info
 
         def _process_more_advertisements(
-            service_info: BluetoothServiceInfoBleak,
+            service_info: BluetoothServiceInfo,
         ) -> bool:
             device.update(service_info)
             return not device.pending
@@ -73,7 +73,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_bluetooth(
-        self, discovery_info: BluetoothServiceInfoBleak
+        self, discovery_info: BluetoothServiceInfo
     ) -> FlowResult:
         """Handle the bluetooth discovery step."""
         await self.async_set_unique_id(discovery_info.address)
@@ -109,6 +109,8 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Enter a legacy bindkey for a v2/v3 MiBeacon device."""
         assert self._discovery_info
+        assert self._discovered_device
+
         errors = {}
 
         if user_input is not None:
@@ -117,14 +119,14 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
             if len(bindkey) != 24:
                 errors["bindkey"] = "expected_24_characters"
             else:
-                device = DeviceData(bindkey=bytes.fromhex(bindkey))
+                self._discovered_device.bindkey = bytes.fromhex(bindkey)
 
                 # If we got this far we already know supported will
                 # return true so we don't bother checking that again
                 # We just want to retry the decryption
-                device.supported(self._discovery_info)
+                self._discovered_device.supported(self._discovery_info)
 
-                if device.bindkey_verified:
+                if self._discovered_device.bindkey_verified:
                     return self._async_get_or_create_entry(bindkey)
 
                 errors["bindkey"] = "decryption_failed"
@@ -141,6 +143,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Enter a bindkey for a v4/v5 MiBeacon device."""
         assert self._discovery_info
+        assert self._discovered_device
 
         errors = {}
 
@@ -150,14 +153,14 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
             if len(bindkey) != 32:
                 errors["bindkey"] = "expected_32_characters"
             else:
-                device = DeviceData(bindkey=bytes.fromhex(bindkey))
+                self._discovered_device.bindkey = bytes.fromhex(bindkey)
 
                 # If we got this far we already know supported will
                 # return true so we don't bother checking that again
                 # We just want to retry the decryption
-                device.supported(self._discovery_info)
+                self._discovered_device.supported(self._discovery_info)
 
-                if device.bindkey_verified:
+                if self._discovered_device.bindkey_verified:
                     return self._async_get_or_create_entry(bindkey)
 
                 errors["bindkey"] = "decryption_failed"
@@ -217,6 +220,8 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
                 # We can do a reauth
                 return await self.async_step_confirm_slow()
 
+            self._discovered_device = discovery.device
+
             if discovery.device.encryption_scheme == EncryptionScheme.MIBEACON_LEGACY:
                 return await self.async_step_get_encryption_key_legacy()
 
@@ -259,6 +264,10 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
         # Reusing the existing one means we don't have to wait for another 10
         # mins for the new advertisements
         device: DeviceData = self.hass.data[DOMAIN][entry.entry_id]
+        self._discovered_device = device
+
+        self._discovery_info = device.last_service_info
+
         if device.encryption_scheme == EncryptionScheme.MIBEACON_LEGACY:
             return await self.async_step_get_encryption_key_legacy()
 
