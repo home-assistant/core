@@ -26,6 +26,7 @@ import zigpy.zdo.types as zdo_types
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.exceptions import IntegrationError
 from homeassistant.helpers import device_registry as dr
 
 from .const import (
@@ -176,7 +177,7 @@ def async_get_zha_device(hass: HomeAssistant, device_id: str) -> ZHADevice:
     zha_gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     if not zha_gateway.initialized:
         _LOGGER.error("Attempting to get a ZHA device when ZHA is not initialized")
-        raise RuntimeError("ZHA is not initialized yet")
+        raise IntegrationError("ZHA is not initialized yet")
     try:
         ieee_address = list(list(registry_device.identifiers)[0])[1]
         ieee = zigpy.types.EUI64.convert(ieee_address)
