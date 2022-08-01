@@ -81,20 +81,21 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
         if not device.supported(discovery_info):
             return self.async_abort(reason="not_supported")
 
+        title = _title(discovery_info, device)
+        self.context["title_placeholders"] = {"name": title}
+
+        self._discovered_device = device
+
         # Wait until we have received enough information about this device to detect its encryption type
         try:
-            discovery_info = await self._async_wait_for_full_advertisement(
+            self._discovery_info = await self._async_wait_for_full_advertisement(
                 discovery_info, device
             )
         except asyncio.TimeoutError:
-            # If we don't see a valid packet within the timeout then this device is not supported.
-            return self.async_abort(reason="not_supported")
-
-        self._discovery_info = discovery_info
-        self._discovered_device = device
-
-        title = _title(discovery_info, device)
-        self.context["title_placeholders"] = {"name": title}
+            # This device might have a really long advertising interval
+            # So create a config entry for it, and if we discover it has encryption later
+            # We can do a reauth
+            return await self.async_step_confirm_slow()
 
         if device.encryption_scheme == EncryptionScheme.MIBEACON_LEGACY:
             return await self.async_step_get_encryption_key_legacy()
@@ -189,6 +190,22 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders=self.context["title_placeholders"],
         )
 
+    async def async_step_confirm_slow(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Ack that device is slow."""
+        if user_input is not None or not onboarding.async_is_onboarded(self.hass):
+            return self.async_create_entry(
+                title=self.context["title_placeholders"]["name"],
+                data={},
+            )
+
+        self._set_confirm_only()
+        return self.async_show_form(
+            step_id="confirm_slow",
+            description_placeholders=self.context["title_placeholders"],
+        )
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -198,21 +215,23 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(address, raise_on_progress=False)
             discovery = self._discovered_devices[address]
 
+            self.context["title_placeholders"] = {"name": discovery.title}
+
             # Wait until we have received enough information about this device to detect its encryption type
             try:
                 self._discovery_info = await self._async_wait_for_full_advertisement(
                     discovery.discovery_info, discovery.device
                 )
             except asyncio.TimeoutError:
-                # If we don't see a valid packet within the timeout then this device is not supported.
-                return self.async_abort(reason="not_supported")
+                # This device might have a really long advertising interval
+                # So create a config entry for it, and if we discover it has encryption later
+                # We can do a reauth
+                return await self.async_step_confirm_slow()
 
             if discovery.device.encryption_scheme == EncryptionScheme.MIBEACON_LEGACY:
-                self.context["title_placeholders"] = {"name": discovery.title}
                 return await self.async_step_get_encryption_key_legacy()
 
             if discovery.device.encryption_scheme == EncryptionScheme.MIBEACON_4_5:
-                self.context["title_placeholders"] = {"name": discovery.title}
                 return await self.async_step_get_encryption_key_4_5()
 
             return self.async_create_entry(title=discovery.title, data={})

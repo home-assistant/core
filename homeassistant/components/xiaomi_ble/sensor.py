@@ -166,15 +166,22 @@ def sensor_update_to_bluetooth_data_update(
 
 
 def process_service_info(
-    data: XiaomiBluetoothDeviceData,
+    hass: HomeAssistant,
     entry: config_entries.ConfigEntry,
+    data: XiaomiBluetoothDeviceData,
     service_info: BluetoothServiceInfoBleak,
 ) -> PassiveBluetoothDataUpdate:
     """Process a BluetoothServiceInfoBleak, running side effects and returning sensor data."""
     update = data.update(service_info)
 
-    if data.encryption_scheme != EncryptionScheme.NONE and not data.bindkey_verified:
-        return entry.async_start_reauth()
+    # If device isn't pending we know it has seen at least one broadcast with a payload
+    # If that payload was encrypted and the bindkey was not verified then we need to reauth
+    if (
+        not data.pending
+        and data.encryption_scheme != EncryptionScheme.NONE
+        and not data.bindkey_verified
+    ):
+        entry.async_start_reauth(hass)
 
     return sensor_update_to_bluetooth_data_update(update)
 
@@ -193,7 +200,7 @@ async def async_setup_entry(
         kwargs["bindkey"] = bytes.fromhex(bindkey)
     data = XiaomiBluetoothDeviceData(**kwargs)
     processor = PassiveBluetoothDataProcessor(
-        lambda service_info: process_service_info(data, entry, service_info)
+        lambda service_info: process_service_info(hass, entry, data, service_info)
     )
     entry.async_on_unload(
         processor.async_add_entities_listener(
