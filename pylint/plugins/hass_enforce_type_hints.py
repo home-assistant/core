@@ -8,10 +8,16 @@ from astroid import nodes
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
 
+from homeassistant.backports.enum import StrEnum
 from homeassistant.const import Platform
 
-DEVICE_CLASS = object()
-UNDEFINED = object()
+
+class SentinelValues(StrEnum):
+    """Sentinel values"""
+
+    DEVICE_CLASS = "***DEVICE_CLASS"
+    UNDEFINED = "***UNDEFINED"
+
 
 _PLATFORMS: set[str] = {platform.value for platform in Platform}
 
@@ -21,7 +27,7 @@ class TypeHintMatch:
     """Class for pattern matching."""
 
     function_name: str
-    return_type: list[str] | str | None | object
+    return_type: list[str | SentinelValues | None] | str | SentinelValues | None
     arg_types: dict[int, str] | None = None
     """arg_types is for positional arguments"""
     named_arg_types: dict[str, str] | None = None
@@ -361,7 +367,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 0: "HomeAssistant",
                 1: "ConfigEntry",
             },
-            return_type=UNDEFINED,
+            return_type=SentinelValues.UNDEFINED,
         ),
         TypeHintMatch(
             function_name="async_get_device_diagnostics",
@@ -370,7 +376,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 1: "ConfigEntry",
                 2: "DeviceEntry",
             },
-            return_type=UNDEFINED,
+            return_type=SentinelValues.UNDEFINED,
         ),
     ],
 }
@@ -499,7 +505,7 @@ _ENTITY_MATCH: list[TypeHintMatch] = [
     ),
     TypeHintMatch(
         function_name="device_class",
-        return_type=[DEVICE_CLASS, "str", None],
+        return_type=[SentinelValues.DEVICE_CLASS, "str", None],
     ),
     TypeHintMatch(
         function_name="unit_of_measurement",
@@ -1407,11 +1413,11 @@ def _is_valid_type(
     in_return: bool = False,
 ) -> bool:
     """Check the argument node against the expected type."""
-    if expected_type is UNDEFINED:
+    if expected_type is SentinelValues.UNDEFINED:
         return True
 
     # Special case for device_class
-    if expected_type == DEVICE_CLASS and in_return:
+    if expected_type is SentinelValues.DEVICE_CLASS and in_return:
         return (
             isinstance(node, nodes.Name)
             and node.name.endswith("DeviceClass")
