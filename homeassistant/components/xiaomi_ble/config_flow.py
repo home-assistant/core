@@ -21,7 +21,7 @@ from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import DOMAIN
+from .const import DEVICES_KEY, DOMAIN
 
 # How long to wait for additional advertisement packets if we don't have the right ones
 ADDITIONAL_DISCOVERY_TIMEOUT = 60
@@ -263,7 +263,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
         # Grab the device from self.hass.data
         # Reusing the existing one means we don't have to wait for another 10
         # mins for the new advertisements
-        device: DeviceData = self.hass.data[DOMAIN][entry.unique_id]
+        device: DeviceData = self.hass.data[DEVICES_KEY][entry.unique_id]
         self._discovered_device = device
 
         self._discovery_info = device.last_service_info

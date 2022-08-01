@@ -12,7 +12,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import DEVICES_KEY, DOMAIN
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Prepare to manage a bunch of Xiaomi BLE device."""
-    hass.data[DOMAIN] = {}
+    hass.data[DEVICES_KEY] = {}
     return True
 
 
