@@ -99,7 +99,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     client = Client(
         host=host,
         port=port,
-        loop=hass.loop,
         update_interval=scan_interval.total_seconds(),
         infer_arming_state=infer_arming_state,
     )

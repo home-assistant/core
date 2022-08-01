@@ -1,5 +1,6 @@
 """Support for VeSync bulbs and wall dimmers."""
 import logging
+from typing import Any
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -83,7 +84,7 @@ class VeSyncBaseLight(VeSyncDevice, LightEntity):
         # convert percent brightness to ha expected range
         return round((max(1, brightness_value) / 100) * 255)
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         attribute_adjustment_only = False
         # set white temperature

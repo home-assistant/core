@@ -8,8 +8,14 @@ import pytest
 from pytest import approx
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder.const import DATA_INSTANCE
-from homeassistant.components.recorder.statistics import async_add_external_statistics
+from homeassistant.components.recorder.statistics import (
+    async_add_external_statistics,
+    get_last_statistics,
+    get_metadata,
+    list_statistic_ids,
+    statistics_during_period,
+)
+from homeassistant.helpers import recorder as recorder_helper
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
@@ -269,6 +275,7 @@ async def test_recorder_info(hass, hass_ws_client, recorder_mock):
         "backlog": 0,
         "max_backlog": 40000,
         "migration_in_progress": False,
+        "migration_is_live": False,
         "recording": True,
         "thread_running": True,
     }
@@ -291,6 +298,7 @@ async def test_recorder_info_bad_recorder_config(hass, hass_ws_client):
     client = await hass_ws_client()
 
     with patch("homeassistant.components.recorder.migration.migrate_schema"):
+        recorder_helper.async_initialize_recorder(hass)
         assert not await async_setup_component(
             hass, recorder.DOMAIN, {recorder.DOMAIN: config}
         )
@@ -298,7 +306,7 @@ async def test_recorder_info_bad_recorder_config(hass, hass_ws_client):
     await hass.async_block_till_done()
 
     # Wait for recorder to shut down
-    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].join)
+    await hass.async_add_executor_job(recorder.get_instance(hass).join)
 
     await client.send_json({"id": 1, "type": "recorder/info"})
     response = await client.receive_json()
@@ -313,7 +321,7 @@ async def test_recorder_info_migration_queue_exhausted(hass, hass_ws_client):
 
     migration_done = threading.Event()
 
-    real_migration = recorder.migration.migrate_schema
+    real_migration = recorder.migration._apply_update
 
     def stalled_migration(*args):
         """Make migration stall."""
@@ -329,12 +337,16 @@ async def test_recorder_info_migration_queue_exhausted(hass, hass_ws_client):
     ), patch.object(
         recorder.core, "MAX_QUEUE_BACKLOG", 1
     ), patch(
-        "homeassistant.components.recorder.migration.migrate_schema",
+        "homeassistant.components.recorder.migration._apply_update",
         wraps=stalled_migration,
     ):
-        await async_setup_component(
-            hass, "recorder", {"recorder": {"db_url": "sqlite://"}}
+        recorder_helper.async_initialize_recorder(hass)
+        hass.create_task(
+            async_setup_component(
+                hass, "recorder", {"recorder": {"db_url": "sqlite://"}}
+            )
         )
+        await recorder_helper.async_wait_recorder(hass)
         hass.states.async_set("my.entity", "on", {})
         await hass.async_block_till_done()
 
@@ -547,3 +559,270 @@ async def test_get_statistics_metadata(
             "unit_of_measurement": unit,
         }
     ]
+
+
+@pytest.mark.parametrize(
+    "source, statistic_id",
+    (
+        ("test", "test:total_energy_import"),
+        ("recorder", "sensor.total_energy_import"),
+    ),
+)
+async def test_import_statistics(
+    hass, hass_ws_client, recorder_mock, caplog, source, statistic_id
+):
+    """Test importing statistics."""
+    client = await hass_ws_client()
+
+    assert "Compiling statistics for" not in caplog.text
+    assert "Statistics already compiled" not in caplog.text
+
+    zero = dt_util.utcnow()
+    period1 = zero.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
+    period2 = zero.replace(minute=0, second=0, microsecond=0) + timedelta(hours=2)
+
+    external_statistics1 = {
+        "start": period1.isoformat(),
+        "last_reset": None,
+        "state": 0,
+        "sum": 2,
+    }
+    external_statistics2 = {
+        "start": period2.isoformat(),
+        "last_reset": None,
+        "state": 1,
+        "sum": 3,
+    }
+
+    external_metadata = {
+        "has_mean": False,
+        "has_sum": True,
+        "name": "Total imported energy",
+        "source": source,
+        "statistic_id": statistic_id,
+        "unit_of_measurement": "kWh",
+    }
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "recorder/import_statistics",
+            "metadata": external_metadata,
+            "stats": [external_statistics1, external_statistics2],
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] is None
+
+    await async_wait_recording_done(hass)
+    stats = statistics_during_period(hass, zero, period="hour")
+    assert stats == {
+        statistic_id: [
+            {
+                "statistic_id": statistic_id,
+                "start": period1.isoformat(),
+                "end": (period1 + timedelta(hours=1)).isoformat(),
+                "max": None,
+                "mean": None,
+                "min": None,
+                "last_reset": None,
+                "state": approx(0.0),
+                "sum": approx(2.0),
+            },
+            {
+                "statistic_id": statistic_id,
+                "start": period2.isoformat(),
+                "end": (period2 + timedelta(hours=1)).isoformat(),
+                "max": None,
+                "mean": None,
+                "min": None,
+                "last_reset": None,
+                "state": approx(1.0),
+                "sum": approx(3.0),
+            },
+        ]
+    }
+    statistic_ids = list_statistic_ids(hass)  # TODO
+    assert statistic_ids == [
+        {
+            "has_mean": False,
+            "has_sum": True,
+            "statistic_id": statistic_id,
+            "name": "Total imported energy",
+            "source": source,
+            "unit_of_measurement": "kWh",
+        }
+    ]
+    metadata = get_metadata(hass, statistic_ids=(statistic_id,))
+    assert metadata == {
+        statistic_id: (
+            1,
+            {
+                "has_mean": False,
+                "has_sum": True,
+                "name": "Total imported energy",
+                "source": source,
+                "statistic_id": statistic_id,
+                "unit_of_measurement": "kWh",
+            },
+        )
+    }
+    last_stats = get_last_statistics(hass, 1, statistic_id, True)
+    assert last_stats == {
+        statistic_id: [
+            {
+                "statistic_id": statistic_id,
+                "start": period2.isoformat(),
+                "end": (period2 + timedelta(hours=1)).isoformat(),
+                "max": None,
+                "mean": None,
+                "min": None,
+                "last_reset": None,
+                "state": approx(1.0),
+                "sum": approx(3.0),
+            },
+        ]
+    }
+
+    # Update the previously inserted statistics
+    external_statistics = {
+        "start": period1.isoformat(),
+        "last_reset": None,
+        "state": 5,
+        "sum": 6,
+    }
+
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "recorder/import_statistics",
+            "metadata": external_metadata,
+            "stats": [external_statistics],
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] is None
+
+    await async_wait_recording_done(hass)
+    stats = statistics_during_period(hass, zero, period="hour")
+    assert stats == {
+        statistic_id: [
+            {
+                "statistic_id": statistic_id,
+                "start": period1.isoformat(),
+                "end": (period1 + timedelta(hours=1)).isoformat(),
+                "max": None,
+                "mean": None,
+                "min": None,
+                "last_reset": None,
+                "state": approx(5.0),
+                "sum": approx(6.0),
+            },
+            {
+                "statistic_id": statistic_id,
+                "start": period2.isoformat(),
+                "end": (period2 + timedelta(hours=1)).isoformat(),
+                "max": None,
+                "mean": None,
+                "min": None,
+                "last_reset": None,
+                "state": approx(1.0),
+                "sum": approx(3.0),
+            },
+        ]
+    }
+
+    # Update the previously inserted statistics
+    external_statistics = {
+        "start": period1.isoformat(),
+        "max": 1,
+        "mean": 2,
+        "min": 3,
+        "last_reset": None,
+        "state": 4,
+        "sum": 5,
+    }
+
+    await client.send_json(
+        {
+            "id": 3,
+            "type": "recorder/import_statistics",
+            "metadata": external_metadata,
+            "stats": [external_statistics],
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] is None
+
+    await async_wait_recording_done(hass)
+    stats = statistics_during_period(hass, zero, period="hour")
+    assert stats == {
+        statistic_id: [
+            {
+                "statistic_id": statistic_id,
+                "start": period1.isoformat(),
+                "end": (period1 + timedelta(hours=1)).isoformat(),
+                "max": approx(1.0),
+                "mean": approx(2.0),
+                "min": approx(3.0),
+                "last_reset": None,
+                "state": approx(4.0),
+                "sum": approx(5.0),
+            },
+            {
+                "statistic_id": statistic_id,
+                "start": period2.isoformat(),
+                "end": (period2 + timedelta(hours=1)).isoformat(),
+                "max": None,
+                "mean": None,
+                "min": None,
+                "last_reset": None,
+                "state": approx(1.0),
+                "sum": approx(3.0),
+            },
+        ]
+    }
+
+    await client.send_json(
+        {
+            "id": 4,
+            "type": "recorder/adjust_sum_statistics",
+            "statistic_id": statistic_id,
+            "start_time": period2.isoformat(),
+            "adjustment": 1000.0,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+
+    await async_wait_recording_done(hass)
+    stats = statistics_during_period(hass, zero, period="hour")
+    assert stats == {
+        statistic_id: [
+            {
+                "statistic_id": statistic_id,
+                "start": period1.isoformat(),
+                "end": (period1 + timedelta(hours=1)).isoformat(),
+                "max": approx(1.0),
+                "mean": approx(2.0),
+                "min": approx(3.0),
+                "last_reset": None,
+                "state": approx(4.0),
+                "sum": approx(5.0),
+            },
+            {
+                "statistic_id": statistic_id,
+                "start": period2.isoformat(),
+                "end": (period2 + timedelta(hours=1)).isoformat(),
+                "max": None,
+                "mean": None,
+                "min": None,
+                "last_reset": None,
+                "state": approx(1.0),
+                "sum": approx(1003.0),
+            },
+        ]
+    }

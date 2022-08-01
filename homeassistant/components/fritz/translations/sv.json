@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "ignore_ip6_link_local": "IPv6-l\u00e4nkens lokala adress st\u00f6ds inte."
+        },
         "step": {
             "confirm": {
                 "data": {

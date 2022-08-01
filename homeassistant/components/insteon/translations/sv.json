@@ -3,7 +3,11 @@
         "abort": {
             "not_insteon_device": "Uppt\u00e4ckt enhet \u00e4r inte en Insteon-enhet"
         },
+        "flow_title": "{name}",
         "step": {
+            "confirm_usb": {
+                "description": "Vill du konfigurera {name}?"
+            },
             "hubv2": {
                 "data": {
                     "username": "Anv\u00e4ndarnamn"

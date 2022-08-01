@@ -52,7 +52,7 @@ class ZWaveMeRGB(ZWaveMeEntity, LightEntity):
         """Turn the device on."""
         self.controller.zwave_api.send_command(self.device.id, "off")
 
-    def turn_on(self, **kwargs: Any):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         color = kwargs.get(ATTR_RGB_COLOR)
 
