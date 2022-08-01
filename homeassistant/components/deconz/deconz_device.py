@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Generic, TypeVar
+
 from pydeconz.models.group import Group as DeconzGroup
 from pydeconz.models.light import LightBase as DeconzLight
 from pydeconz.models.scene import Scene as PydeconzScene
@@ -15,17 +17,21 @@ from homeassistant.helpers.entity import DeviceInfo, Entity
 from .const import DOMAIN as DECONZ_DOMAIN
 from .gateway import DeconzGateway
 
+_DeviceTypeT = TypeVar(
+    "_DeviceTypeT", DeconzGroup, DeconzLight, DeconzSensor, PydeconzScene
+)
 
-class DeconzBase:
+
+class DeconzBase(Generic[_DeviceTypeT]):
     """Common base for deconz entities and events."""
 
     def __init__(
         self,
-        device: DeconzGroup | DeconzLight | DeconzSensor | PydeconzScene,
+        device: _DeviceTypeT,
         gateway: DeconzGateway,
     ) -> None:
         """Set up device and add update callback to get data from websocket."""
-        self._device = device
+        self._device: _DeviceTypeT = device
         self.gateway = gateway
 
     @property
@@ -60,7 +66,7 @@ class DeconzBase:
         )
 
 
-class DeconzDevice(DeconzBase, Entity):
+class DeconzDevice(DeconzBase[_DeviceTypeT], Entity):
     """Representation of a deCONZ device."""
 
     _attr_should_poll = False
@@ -69,11 +75,11 @@ class DeconzDevice(DeconzBase, Entity):
 
     def __init__(
         self,
-        device: DeconzGroup | DeconzLight | DeconzSensor | PydeconzScene,
+        device: _DeviceTypeT,
         gateway: DeconzGateway,
     ) -> None:
         """Set up device and add update callback to get data from websocket."""
-        super().__init__(device, gateway)
+        super().__init__(device, gateway)  # type: ignore[arg-type]
         self.gateway.entities[self.TYPE].add(self.unique_id)
 
         self._attr_name = self._device.name
@@ -117,12 +123,10 @@ class DeconzDevice(DeconzBase, Entity):
         return self.gateway.available and self._device.reachable
 
 
-class DeconzSceneMixin(DeconzDevice):
+class DeconzSceneMixin(DeconzDevice[PydeconzScene]):
     """Representation of a deCONZ scene."""
 
     _attr_has_entity_name = True
-
-    _device: PydeconzScene
 
     def __init__(
         self,
