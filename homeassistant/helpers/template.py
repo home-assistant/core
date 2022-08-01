@@ -1991,11 +1991,22 @@ class LoggingUndefined(jinja2.Undefined):
 class Ext:
     """Inner class for Jinja extension definition."""
 
+    # name of the global/filter/test
     name: str
+
+    # Function to call when used as a filter, or None
     filt: Callable[[str], bool] | None = None
+
+    # Function/value for when it's used as a global, or None
     glob: Callable | float | None = None
+
+    # Function to call when used as a test, or None
     test: Callable[[Any], bool] | None = None
+
+    # True if the function/filter/test is supported in a limited template
     support_limited: bool = True
+
+    # True if the function/filter/test requires a valid hass instance
     require_hass: bool = False
 
 
@@ -2027,6 +2038,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
             return pass_context(wrapper)
 
+        # Home Assistant Jinja extensions
         exts = [
             Ext("round", filt=forgiving_round),
             Ext("multiply", filt=multiply),
@@ -2223,8 +2235,13 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             return warn_unsupported
 
         # When hass is None, populate all functions & filters that can be used later to pass validation
-        def dummy_func(*args, **kwargs):
-            pass
+        def dummy_func(name):
+            def warn_dummy(*args, **kwargs):
+                raise TemplateError(
+                    f"Use of '{name}' is not supported without a valid hass instance"
+                )
+
+            return warn_dummy
 
         def assign_func(
             ext: Ext, filt: Callable, glob: Callable, test: Callable
@@ -2238,9 +2255,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
         for ext in exts:
             if not hass and ext.require_hass:
-                assign_func(ext, *[dummy_func] * 3)
+                assign_func(ext, *[dummy_func(ext.name)] * 3)
             elif limited and not ext.support_limited:
-                assign_func(ext, *[unsupported] * 3)
+                assign_func(ext, *[unsupported(ext.name)] * 3)
             else:
                 assign_func(ext, ext.filt, ext.glob, ext.test)
 
