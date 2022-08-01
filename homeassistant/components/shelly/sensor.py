@@ -401,10 +401,7 @@ RPC_SENSORS: Final = {
         sub_key="battery",
         name="Battery",
         native_unit_of_measurement=PERCENTAGE,
-        value=lambda status, _: round(status["percent"], 2),
-        extra_state_attributes=lambda status, shelly: {
-            "Voltage": cast(int, status["V"])
-        },
+        value=lambda status, _: status["percent"],
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         removal_condition=is_rpc_device_externally_powered,
