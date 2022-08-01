@@ -255,6 +255,9 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
         entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         assert entry is not None
 
+        # Grab the device from self.hass.data
+        # Reusing the existing one means we don't have to wait for another 10
+        # mins for the new advertisements
         device: DeviceData = self.hass.data[DOMAIN][entry.entry_id]
         if device.encryption_scheme == EncryptionScheme.MIBEACON_LEGACY:
             return await self.async_step_get_encryption_key_legacy()
