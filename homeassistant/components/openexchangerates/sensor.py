@@ -4,18 +4,13 @@ from __future__ import annotations
 from datetime import timedelta
 from http import HTTPStatus
 import logging
+from typing import Any
 
 import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    CONF_API_KEY,
-    CONF_BASE,
-    CONF_NAME,
-    CONF_QUOTE,
-)
+from homeassistant.const import CONF_API_KEY, CONF_BASE, CONF_NAME, CONF_QUOTE
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -49,10 +44,10 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Open Exchange Rates sensor."""
-    name = config.get(CONF_NAME)
-    api_key = config.get(CONF_API_KEY)
-    base = config.get(CONF_BASE)
-    quote = config.get(CONF_QUOTE)
+    name: str = config[CONF_NAME]
+    api_key: str = config[CONF_API_KEY]
+    base: str = config[CONF_BASE]
+    quote: str = config[CONF_QUOTE]
 
     parameters = {"base": base, "app_id": api_key}
 
@@ -70,50 +65,55 @@ def setup_platform(
 class OpenexchangeratesSensor(SensorEntity):
     """Representation of an Open Exchange Rates sensor."""
 
-    def __init__(self, rest, name, quote):
+    _attr_attribution = ATTRIBUTION
+
+    def __init__(self, rest: OpenexchangeratesData, name: str, quote: str) -> None:
         """Initialize the sensor."""
         self.rest = rest
         self._name = name
         self._quote = quote
-        self._state = None
+        self._state: float | None = None
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the sensor."""
         return self._name
 
     @property
-    def native_value(self):
+    def native_value(self) -> float | None:
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return other attributes of the sensor."""
         attr = self.rest.data
-        attr[ATTR_ATTRIBUTION] = ATTRIBUTION
 
         return attr
 
-    def update(self):
+    def update(self) -> None:
         """Update current conditions."""
         self.rest.update()
-        value = self.rest.data
-        self._state = round(value[str(self._quote)], 4)
+        if (value := self.rest.data) is None:
+            self._attr_available = False
+            return
+
+        self._attr_available = True
+        self._state = round(value[self._quote], 4)
 
 
 class OpenexchangeratesData:
     """Get data from Openexchangerates.org."""
 
-    def __init__(self, resource, parameters, quote):
+    def __init__(self, resource: str, parameters: dict[str, str], quote: str) -> None:
         """Initialize the data object."""
         self._resource = resource
         self._parameters = parameters
         self._quote = quote
-        self.data = None
+        self.data: dict[str, Any] | None = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from openexchangerates.org."""
         try:
             result = requests.get(self._resource, params=self._parameters, timeout=10)
@@ -121,4 +121,3 @@ class OpenexchangeratesData:
         except requests.exceptions.HTTPError:
             _LOGGER.error("Check the Openexchangerates API key")
             self.data = None
-            return False
