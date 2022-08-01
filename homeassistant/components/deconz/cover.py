@@ -49,7 +49,7 @@ async def async_setup_entry(
     )
 
 
-class DeconzCover(DeconzDevice[Cover], CoverEntity):  # type: ignore[type-var]
+class DeconzCover(DeconzDevice[Cover], CoverEntity):
     """Representation of a deCONZ cover."""
 
     TYPE = DOMAIN

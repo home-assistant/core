@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, TypeVar
+from typing import Any, TypeVar, Union
 
 from pydeconz.models.event import EventType
 from pydeconz.models.light.lock import Lock
@@ -16,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
 
-_LockDeviceTypeT = TypeVar("_LockDeviceTypeT", DoorLock, Lock)
+_LockDeviceTypeT = TypeVar("_LockDeviceTypeT", bound=Union[DoorLock, Lock])
 
 
 async def async_setup_entry(
@@ -52,7 +52,7 @@ async def async_setup_entry(
     )
 
 
-class DeconzLock(DeconzDevice[_LockDeviceTypeT], LockEntity):  # type: ignore[type-var]
+class DeconzLock(DeconzDevice[_LockDeviceTypeT], LockEntity):
     """Representation of a deCONZ lock."""
 
     TYPE = DOMAIN

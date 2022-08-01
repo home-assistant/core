@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Generic, TypeVar
+from typing import TYPE_CHECKING, Generic, TypeVar, Union
 
 from pydeconz.models.group import Group as PydeconzGroup
 from pydeconz.models.light import LightBase as PydeconzLightBase
@@ -18,7 +18,13 @@ from .const import DOMAIN as DECONZ_DOMAIN
 from .gateway import DeconzGateway
 
 _DeviceTypeT = TypeVar(
-    "_DeviceTypeT", PydeconzGroup, PydeconzLightBase, PydeconzScene, PydeconzSensorBase
+    "_DeviceTypeT",
+    bound=Union[
+        PydeconzGroup,
+        PydeconzLightBase,
+        PydeconzSensorBase,
+        PydeconzScene,
+    ],
 )
 
 
@@ -37,13 +43,19 @@ class DeconzBase(Generic[_DeviceTypeT]):
     @property
     def unique_id(self) -> str:
         """Return a unique identifier for this device."""
-        assert not isinstance(self._device, PydeconzScene)
+        if TYPE_CHECKING:
+            assert isinstance(
+                self._device, (PydeconzGroup, PydeconzLightBase, PydeconzSensorBase)
+            )
         return self._device.unique_id
 
     @property
     def serial(self) -> str | None:
         """Return a serial number for this device."""
-        assert not isinstance(self._device, PydeconzScene)
+        if TYPE_CHECKING:
+            assert isinstance(
+                self._device, (PydeconzGroup, PydeconzLightBase, PydeconzSensorBase)
+            )
         if not self._device.unique_id or self._device.unique_id.count(":") != 7:
             return None
         return self._device.unique_id.split("-", 1)[0]
@@ -51,7 +63,10 @@ class DeconzBase(Generic[_DeviceTypeT]):
     @property
     def device_info(self) -> DeviceInfo | None:
         """Return a device description for device registry."""
-        assert not isinstance(self._device, PydeconzScene)
+        if TYPE_CHECKING:
+            assert isinstance(
+                self._device, (PydeconzGroup, PydeconzLightBase, PydeconzSensorBase)
+            )
         if self.serial is None:
             return None
 
@@ -79,7 +94,7 @@ class DeconzDevice(DeconzBase[_DeviceTypeT], Entity):
         gateway: DeconzGateway,
     ) -> None:
         """Set up device and add update callback to get data from websocket."""
-        super().__init__(device, gateway)  # type: ignore[arg-type]
+        super().__init__(device, gateway)
         self.gateway.entities[self.TYPE].add(self.unique_id)
 
         self._attr_name = self._device.name
@@ -120,6 +135,10 @@ class DeconzDevice(DeconzBase[_DeviceTypeT], Entity):
         """Return True if device is available."""
         if isinstance(self._device, PydeconzScene):
             return self.gateway.available
+        if TYPE_CHECKING:
+            assert isinstance(
+                self._device, (PydeconzGroup, PydeconzLightBase, PydeconzSensorBase)
+            )
         return self.gateway.available and self._device.reachable
 
 

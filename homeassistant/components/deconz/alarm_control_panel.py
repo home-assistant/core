@@ -80,9 +80,7 @@ async def async_setup_entry(
     )
 
 
-class DeconzAlarmControlPanel(
-    DeconzDevice[AncillaryControl], AlarmControlPanelEntity  # type: ignore[type-var]
-):
+class DeconzAlarmControlPanel(DeconzDevice[AncillaryControl], AlarmControlPanelEntity):
     """Representation of a deCONZ alarm control panel."""
 
     TYPE = DOMAIN

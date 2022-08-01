@@ -1,7 +1,7 @@
 """Support for deCONZ lights."""
 from __future__ import annotations
 
-from typing import Any, TypedDict, TypeVar
+from typing import Any, TypedDict, TypeVar, Union
 
 from pydeconz.interfaces.groups import GroupHandler
 from pydeconz.interfaces.lights import LightHandler
@@ -47,7 +47,7 @@ DECONZ_TO_COLOR_MODE = {
     LightColorMode.XY: ColorMode.XY,
 }
 
-_LightDeviceTypeT = TypeVar("_LightDeviceTypeT", Group, Light)
+_LightDeviceTypeT = TypeVar("_LightDeviceTypeT", bound=Union[Group, Light])
 
 
 class SetStateAttributes(TypedDict, total=False):
@@ -121,16 +121,14 @@ async def async_setup_entry(
     )
 
 
-class DeconzBaseLight(
-    DeconzDevice[_LightDeviceTypeT], LightEntity  # type: ignore[type-var]
-):
+class DeconzBaseLight(DeconzDevice[_LightDeviceTypeT], LightEntity):
     """Representation of a deCONZ light."""
 
     TYPE = DOMAIN
 
     def __init__(self, device: _LightDeviceTypeT, gateway: DeconzGateway) -> None:
         """Set up light."""
-        super().__init__(device, gateway)  # type: ignore[arg-type]
+        super().__init__(device, gateway)
 
         self.api: GroupHandler | LightHandler
         if isinstance(self._device, Light):

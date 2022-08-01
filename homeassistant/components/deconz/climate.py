@@ -92,9 +92,7 @@ async def async_setup_entry(
     )
 
 
-class DeconzThermostat(
-    DeconzDevice[Thermostat], ClimateEntity  # type: ignore[type-var]
-):
+class DeconzThermostat(DeconzDevice[Thermostat], ClimateEntity):
     """Representation of a deCONZ thermostat."""
 
     TYPE = DOMAIN
