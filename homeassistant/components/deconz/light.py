@@ -133,7 +133,7 @@ class DeconzBaseLight(DeconzDevice[_LightDeviceTypeT], LightEntity):
         self.api: GroupHandler | LightHandler
         if isinstance(self._device, Light):
             self.api = self.gateway.api.lights.lights
-        else:  # it's a Group
+        elif isinstance(self._device, Group):
             self.api = self.gateway.api.groups
 
         self._attr_supported_color_modes: set[ColorMode] = set()
