@@ -3,6 +3,8 @@
 import asyncio
 from unittest.mock import patch
 
+from xiaomi_ble import XiaomiBluetoothDeviceData as DeviceData
+
 from homeassistant import config_entries
 from homeassistant.components.bluetooth import BluetoothChange
 from homeassistant.components.xiaomi_ble.const import DOMAIN
@@ -328,6 +330,24 @@ async def test_async_step_user_no_devices_found(hass):
     )
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
+
+
+async def test_async_step_user_no_devices_found_2(hass):
+    """
+    Test setup from service info cache with no devices found.
+
+    This variant tests with a non-Xiaomi device known to us.
+    """
+    with patch(
+        "homeassistant.components.xiaomi_ble.config_flow.async_discovered_service_info",
+        return_value=[NOT_SENSOR_PUSH_SERVICE_INFO],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+        )
+        assert result["type"] == FlowResultType.ABORT
+        assert result["reason"] == "no_devices_found"
 
 
 async def test_async_step_user_with_found_devices(hass):
@@ -781,7 +801,7 @@ async def test_async_step_user_takes_precedence_over_discovery(hass):
 
 
 async def test_async_step_reauth_legacy(hass):
-    """Test we can't start a flow if there is already a config entry."""
+    """Test reauth with a legacy key."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="F8:24:41:C5:98:8B",
@@ -830,7 +850,7 @@ async def test_async_step_reauth_legacy(hass):
 
 
 async def test_async_step_reauth_legacy_wrong_key(hass):
-    """Test we can't start a flow if there is already a config entry."""
+    """Test reauth with a bad legacy key, and that we can recover."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="F8:24:41:C5:98:8B",
@@ -887,7 +907,7 @@ async def test_async_step_reauth_legacy_wrong_key(hass):
 
 
 async def test_async_step_reauth_v4(hass):
-    """Test we can't start a flow if there is already a config entry."""
+    """Test reauth with a v4 key."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="54:EF:44:E3:9C:BC",
@@ -936,7 +956,7 @@ async def test_async_step_reauth_v4(hass):
 
 
 async def test_async_step_reauth_v4_wrong_key(hass):
-    """Test we can't start a flow if there is already a config entry."""
+    """Test reauth for v4 with a bad key, and that we can recover."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="54:EF:44:E3:9C:BC",
@@ -990,3 +1010,33 @@ async def test_async_step_reauth_v4_wrong_key(hass):
     )
     assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
+
+
+async def test_async_step_reauth_abort_early(hass):
+    """
+    Test we can abort the reauth if theres no encryption.
+
+    (This can't currently happen in practice).
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="54:EF:44:E3:9C:BC",
+    )
+    entry.add_to_hass(hass)
+
+    device = DeviceData()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": entry.entry_id,
+            "title_placeholders": {"name": entry.title},
+            "unique_id": entry.unique_id,
+            "device": device,
+        },
+        data=entry.data,
+    )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
