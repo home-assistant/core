@@ -10,6 +10,7 @@ from pydeconz.models.light import LightBase as DeconzLight
 from pydeconz.models.scene import Scene as PydeconzScene
 from pydeconz.models.sensor import SensorBase as DeconzSensor
 from pydeconz.models.sensor.ancillary_control import AncillaryControl
+from pydeconz.models.sensor.thermostat import Thermostat
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
@@ -27,6 +28,7 @@ _DeviceTypeT = TypeVar(
     PydeconzScene,
     AncillaryControl,
     SensorResources,
+    Thermostat,
 )
 
 
