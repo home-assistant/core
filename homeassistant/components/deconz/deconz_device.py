@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Generic, TypeVar, Union
+from typing import Generic, TypeVar, Union
 
 from pydeconz.models.group import Group as PydeconzGroup
 from pydeconz.models.light import LightBase as PydeconzLightBase
@@ -43,40 +43,31 @@ class DeconzBase(Generic[_DeviceTypeT]):
     @property
     def unique_id(self) -> str:
         """Return a unique identifier for this device."""
-        if TYPE_CHECKING:
-            assert isinstance(
-                self._device, (PydeconzGroup, PydeconzLightBase, PydeconzSensorBase)
-            )
-        return self._device.unique_id
+        assert not isinstance(self._device, PydeconzScene)
+        return self._device.unique_id  # type: ignore[union-attr]
 
     @property
     def serial(self) -> str | None:
         """Return a serial number for this device."""
-        if TYPE_CHECKING:
-            assert isinstance(
-                self._device, (PydeconzGroup, PydeconzLightBase, PydeconzSensorBase)
-            )
-        if not self._device.unique_id or self._device.unique_id.count(":") != 7:
+        assert not isinstance(self._device, PydeconzScene)
+        if not self._device.unique_id or self._device.unique_id.count(":") != 7:  # type: ignore[union-attr]
             return None
-        return self._device.unique_id.split("-", 1)[0]
+        return self._device.unique_id.split("-", 1)[0]  # type: ignore[union-attr]
 
     @property
     def device_info(self) -> DeviceInfo | None:
         """Return a device description for device registry."""
-        if TYPE_CHECKING:
-            assert isinstance(
-                self._device, (PydeconzGroup, PydeconzLightBase, PydeconzSensorBase)
-            )
+        assert not isinstance(self._device, PydeconzScene)
         if self.serial is None:
             return None
 
         return DeviceInfo(
             connections={(CONNECTION_ZIGBEE, self.serial)},
             identifiers={(DECONZ_DOMAIN, self.serial)},
-            manufacturer=self._device.manufacturer,
-            model=self._device.model_id,
+            manufacturer=self._device.manufacturer,  # type: ignore[union-attr]
+            model=self._device.model_id,  # type: ignore[union-attr]
             name=self._device.name,
-            sw_version=self._device.software_version,
+            sw_version=self._device.software_version,  # type: ignore[union-attr]
             via_device=(DECONZ_DOMAIN, self.gateway.api.config.bridge_id),
         )
 
@@ -135,11 +126,7 @@ class DeconzDevice(DeconzBase[_DeviceTypeT], Entity):
         """Return True if device is available."""
         if isinstance(self._device, PydeconzScene):
             return self.gateway.available
-        if TYPE_CHECKING:
-            assert isinstance(
-                self._device, (PydeconzGroup, PydeconzLightBase, PydeconzSensorBase)
-            )
-        return self.gateway.available and self._device.reachable
+        return self.gateway.available and self._device.reachable  # type: ignore[union-attr]
 
 
 class DeconzSceneMixin(DeconzDevice[PydeconzScene]):
