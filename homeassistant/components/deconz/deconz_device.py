@@ -5,11 +5,17 @@ from __future__ import annotations
 from typing import Generic, TypeVar
 
 from pydeconz.interfaces.sensors import SensorResources
-from pydeconz.models.group import Group as DeconzGroup
-from pydeconz.models.light import LightBase as DeconzLight
+from pydeconz.models.group import Group as PydeconzGroup
+from pydeconz.models.light import LightBase as PydeconzLightBase
+from pydeconz.models.light.cover import Cover
+from pydeconz.models.light.light import Light
+from pydeconz.models.light.lock import Lock
+from pydeconz.models.light.siren import Siren
 from pydeconz.models.scene import Scene as PydeconzScene
-from pydeconz.models.sensor import SensorBase as DeconzSensor
+from pydeconz.models.sensor import SensorBase as PydeconzSensorBase
 from pydeconz.models.sensor.ancillary_control import AncillaryControl
+from pydeconz.models.sensor.door_lock import DoorLock
+from pydeconz.models.sensor.presence import Presence
 from pydeconz.models.sensor.thermostat import Thermostat
 
 from homeassistant.core import callback
@@ -22,12 +28,18 @@ from .gateway import DeconzGateway
 
 _DeviceTypeT = TypeVar(
     "_DeviceTypeT",
-    DeconzGroup,
-    DeconzLight,
-    DeconzSensor,
+    PydeconzGroup,
+    PydeconzLightBase,
     PydeconzScene,
+    PydeconzSensorBase,
     AncillaryControl,
+    Cover,
+    DoorLock,
+    Light,
+    Lock,
+    Presence,
     SensorResources,
+    Siren,
     Thermostat,
 )
 
