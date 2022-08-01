@@ -81,7 +81,7 @@ async def async_setup_entry(
     )
 
 
-class DeconzNumber(DeconzDevice[Presence], NumberEntity):
+class DeconzNumber(DeconzDevice[Presence], NumberEntity):  # type:ignore[type-var]
     """Representation of a deCONZ number entity."""
 
     TYPE = DOMAIN

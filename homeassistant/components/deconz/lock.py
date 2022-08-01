@@ -52,7 +52,7 @@ async def async_setup_entry(
     )
 
 
-class DeconzLock(DeconzDevice[_LockDeviceTypeT], LockEntity):
+class DeconzLock(DeconzDevice[_LockDeviceTypeT], LockEntity):  # type:ignore[type-var]
     """Representation of a deCONZ lock."""
 
     TYPE = DOMAIN

@@ -233,7 +233,9 @@ async def async_setup_entry(
     )
 
 
-class DeconzBinarySensor(DeconzDevice[SensorResources], BinarySensorEntity):
+class DeconzBinarySensor(
+    DeconzDevice[SensorResources], BinarySensorEntity  # type:ignore[type-var]
+):
     """Representation of a deCONZ binary sensor."""
 
     TYPE = DOMAIN

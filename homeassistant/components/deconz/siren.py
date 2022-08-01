@@ -41,7 +41,7 @@ async def async_setup_entry(
     )
 
 
-class DeconzSiren(DeconzDevice[Siren], SirenEntity):
+class DeconzSiren(DeconzDevice[Siren], SirenEntity):  # type:ignore[type-var]
     """Representation of a deCONZ siren."""
 
     TYPE = DOMAIN
