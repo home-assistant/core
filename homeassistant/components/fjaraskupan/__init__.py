@@ -102,7 +102,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     def detection_callback(
         service_info: BluetoothServiceInfoBleak, change: BluetoothChange
-    ):
+    ) -> None:
         if change != BluetoothChange.ADVERTISEMENT:
             return
         if data := state.coordinators.get(service_info.address):
