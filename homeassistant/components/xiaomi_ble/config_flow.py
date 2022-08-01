@@ -263,7 +263,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
         # Grab the device from self.hass.data
         # Reusing the existing one means we don't have to wait for another 10
         # mins for the new advertisements
-        device: DeviceData = self.hass.data[DOMAIN][entry.entry_id]
+        device: DeviceData = self.hass.data[DOMAIN][entry.unique_id]
         self._discovered_device = device
 
         self._discovery_info = device.last_service_info
