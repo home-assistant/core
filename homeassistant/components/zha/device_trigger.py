@@ -39,7 +39,7 @@ async def async_validate_trigger_config(
         trigger = (config[CONF_TYPE], config[CONF_SUBTYPE])
         try:
             zha_device = async_get_zha_device(hass, config[CONF_DEVICE_ID])
-        except (KeyError, AttributeError) as err:
+        except (KeyError, AttributeError, RuntimeError) as err:
             raise InvalidDeviceAutomationConfig from err
         if (
             zha_device.device_automation_triggers is None
