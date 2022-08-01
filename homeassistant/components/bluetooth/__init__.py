@@ -8,12 +8,10 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
 import logging
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 import async_timeout
 from bleak import BleakError
-from bleak.backends.device import BLEDevice
-from bleak.backends.scanner import AdvertisementData
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -27,7 +25,6 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_bluetooth
 
 from . import models
@@ -41,6 +38,13 @@ from .match import (
 from .models import HaBleakScanner, HaBleakScannerWrapper
 from .usage import install_multiple_bleak_catcher, uninstall_multiple_bleak_catcher
 from .util import async_get_bluetooth_adapters
+
+if TYPE_CHECKING:
+    from bleak.backends.device import BLEDevice
+    from bleak.backends.scanner import AdvertisementData
+
+    from homeassistant.helpers.typing import ConfigType
+
 
 _LOGGER = logging.getLogger(__name__)
 
