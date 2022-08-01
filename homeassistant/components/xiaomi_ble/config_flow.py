@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
 import dataclasses
 from typing import Any
 
@@ -124,10 +125,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
                 device.supported(self._discovery_info)
 
                 if device.bindkey_verified:
-                    return self.async_create_entry(
-                        title=self.context["title_placeholders"]["name"],
-                        data={"bindkey": bindkey},
-                    )
+                    return self._async_get_or_create_entry(bindkey)
 
                 errors["bindkey"] = "decryption_failed"
 
@@ -160,10 +158,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
                 device.supported(self._discovery_info)
 
                 if device.bindkey_verified:
-                    return self.async_create_entry(
-                        title=self.context["title_placeholders"]["name"],
-                        data={"bindkey": bindkey},
-                    )
+                    return self._async_get_or_create_entry(bindkey)
 
                 errors["bindkey"] = "decryption_failed"
 
@@ -179,10 +174,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Confirm discovery."""
         if user_input is not None or not onboarding.async_is_onboarded(self.hass):
-            return self.async_create_entry(
-                title=self.context["title_placeholders"]["name"],
-                data={},
-            )
+            return self._async_get_or_create_entry()
 
         self._set_confirm_only()
         return self.async_show_form(
@@ -195,10 +187,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Ack that device is slow."""
         if user_input is not None or not onboarding.async_is_onboarded(self.hass):
-            return self.async_create_entry(
-                title=self.context["title_placeholders"]["name"],
-                data={},
-            )
+            return self._async_get_or_create_entry()
 
         self._set_confirm_only()
         return self.async_show_form(
@@ -234,7 +223,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
             if discovery.device.encryption_scheme == EncryptionScheme.MIBEACON_4_5:
                 return await self.async_step_get_encryption_key_4_5()
 
-            return self.async_create_entry(title=discovery.title, data={})
+            return self._async_get_or_create_entry()
 
         current_addresses = self._async_current_ids()
         for discovery_info in async_discovered_service_info(self.hass):
@@ -259,4 +248,43 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema({vol.Required(CONF_ADDRESS): vol.In(titles)}),
+        )
+
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+        """Handle a flow initialized by a reauth event."""
+        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        assert entry is not None
+
+        device: DeviceData = self.hass.data[DOMAIN][entry.entry_id]
+        if device.encryption_scheme == EncryptionScheme.MIBEACON_LEGACY:
+            return await self.async_step_get_encryption_key_legacy()
+
+        if device.encryption_scheme == EncryptionScheme.MIBEACON_4_5:
+            return await self.async_step_get_encryption_key_4_5()
+
+        # Otherwise there wasn't actually encryption so abort
+        return self.async_abort(reason="reauth_successful")
+
+    def _async_get_or_create_entry(self, bindkey=None):
+        data = {}
+
+        if bindkey:
+            data["bindkey"] = bindkey
+
+        if entry_id := self.context.get("entry_id"):
+            entry = self.hass.config_entries.async_get_entry(entry_id)
+            assert entry is not None
+
+            self.hass.config_entries.async_update_entry(entry, data=data)
+
+            # Reload the config entry to notify of updated config
+            self.hass.async_create_task(
+                self.hass.config_entries.async_reload(entry.entry_id)
+            )
+
+            return self.async_abort(reason="reauth_successful")
+
+        return self.async_create_entry(
+            title=self.context["title_placeholders"]["name"],
+            data=data,
         )
