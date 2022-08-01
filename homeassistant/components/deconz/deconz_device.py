@@ -127,10 +127,9 @@ class DeconzDevice(DeconzBase[_DeviceT], Entity):
         """Return True if device is available."""
         if isinstance(self._device, PydeconzScene):
             return self.gateway.available
-        assert isinstance(
-            self._device, (PydeconzGroup, PydeconzLightBase, PydeconzSensorBase)
+        return (
+            self.gateway.available and self._device.reachable  # type: ignore[union-attr]
         )
-        return self.gateway.available and self._device.reachable
 
 
 class DeconzSceneMixin(DeconzDevice[PydeconzScene]):
