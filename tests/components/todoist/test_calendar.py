@@ -104,3 +104,6 @@ async def test_calendar_custom_project_unique_id(todoist_api, hass, state):
     registry = entity_registry.async_get(hass)
     entity = registry.async_get("calendar.all_projects")
     assert entity is None
+
+    state = hass.states.get("calendar.all_projects")
+    assert "off" == state.state
