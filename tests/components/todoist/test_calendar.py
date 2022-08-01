@@ -106,4 +106,4 @@ async def test_calendar_custom_project_unique_id(todoist_api, hass, state):
     assert entity is None
 
     state = hass.states.get("calendar.all_projects")
-    assert "off" == state.state
+    assert state.state == "off"
