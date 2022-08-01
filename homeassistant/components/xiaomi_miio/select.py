@@ -124,7 +124,7 @@ MODEL_TO_ATTR_MAP: dict[str, list] = {
     MODEL_FAN_ZA4: [AttributeEnumMapping(ATTR_LED_BRIGHTNESS, FanLedBrightness)],
 }
 
-SELECTOR_TYPES = (
+SELECTOR_TYPES = [
     XiaomiMiioSelectDescription(
         key=ATTR_DISPLAY_ORIENTATION,
         attr_name=ATTR_DISPLAY_ORIENTATION,
@@ -163,7 +163,7 @@ SELECTOR_TYPES = (
         options=("low", "medium", "high"),
         entity_category=EntityCategory.CONFIG,
     ),
-)
+]
 
 
 async def async_setup_entry(
