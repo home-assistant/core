@@ -44,7 +44,7 @@ BINARY_SENSORS: tuple[TailscaleBinarySensorEntityDescription, ...] = (
     ),
     TailscaleBinarySensorEntityDescription(
         key="client_supports_hair_pinning",
-        name="Supports Hairpinning",
+        name="Supports hairpinning",
         icon="mdi:wan",
         entity_category=EntityCategory.DIAGNOSTIC,
         is_on_fn=lambda device: device.client_connectivity.client_supports.hair_pinning,

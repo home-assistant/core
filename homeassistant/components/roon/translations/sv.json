@@ -1,0 +1,13 @@
+{
+    "config": {
+        "step": {
+            "fallback": {
+                "data": {
+                    "host": "V\u00e4rdnamn",
+                    "port": "Port"
+                },
+                "description": "Kunde inte uppt\u00e4cka Roon-servern, ange ditt v\u00e4rdnamn och port."
+            }
+        }
+    }
+}

@@ -38,7 +38,7 @@ class XiaomiMiioButtonDescription(ButtonEntityDescription):
 BUTTON_TYPES = (
     XiaomiMiioButtonDescription(
         key=ATTR_RESET_DUST_FILTER,
-        name="Reset Dust Filter",
+        name="Reset dust filter",
         icon="mdi:air-filter",
         method_press="reset_dust_filter",
         method_press_error_message="Resetting the dust filter lifetime failed",
@@ -46,7 +46,7 @@ BUTTON_TYPES = (
     ),
     XiaomiMiioButtonDescription(
         key=ATTR_RESET_UPPER_FILTER,
-        name="Reset Upper Filter",
+        name="Reset upper filter",
         icon="mdi:air-filter",
         method_press="reset_upper_filter",
         method_press_error_message="Resetting the upper filter lifetime failed.",
@@ -86,7 +86,6 @@ async def async_setup_entry(
 
         entities.append(
             XiaomiGenericCoordinatedButton(
-                f"{config_entry.title} {description.name}",
                 device,
                 config_entry,
                 f"{description.key}_{unique_id}",
@@ -105,9 +104,9 @@ class XiaomiGenericCoordinatedButton(XiaomiCoordinatedMiioEntity, ButtonEntity):
 
     _attr_device_class = ButtonDeviceClass.RESTART
 
-    def __init__(self, name, device, entry, unique_id, coordinator, description):
+    def __init__(self, device, entry, unique_id, coordinator, description):
         """Initialize the plug switch."""
-        super().__init__(name, device, entry, unique_id, coordinator)
+        super().__init__(device, entry, unique_id, coordinator)
         self.entity_description = description
 
     async def async_press(self) -> None:

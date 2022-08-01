@@ -1,7 +1,6 @@
 """Commands part of Websocket API."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable
 import datetime as dt
 import json
@@ -32,7 +31,12 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.json import JSON_DUMP, ExtendedJSONEncoder
 from homeassistant.helpers.service import async_get_all_descriptions
-from homeassistant.loader import IntegrationNotFound, async_get_integration
+from homeassistant.loader import (
+    Integration,
+    IntegrationNotFound,
+    async_get_integration,
+    async_get_integrations,
+)
 from homeassistant.setup import DATA_SETUP_TIME, async_get_loaded_integrations
 from homeassistant.util.json import (
     find_paths_unserializable_data,
@@ -372,9 +376,13 @@ async def handle_manifest_list(
     wanted_integrations = msg.get("integrations")
     if wanted_integrations is None:
         wanted_integrations = async_get_loaded_integrations(hass)
-    integrations = await asyncio.gather(
-        *(async_get_integration(hass, domain) for domain in wanted_integrations)
-    )
+
+    ints_or_excs = await async_get_integrations(hass, wanted_integrations)
+    integrations: list[Integration] = []
+    for int_or_exc in ints_or_excs.values():
+        if isinstance(int_or_exc, Exception):
+            raise int_or_exc
+        integrations.append(int_or_exc)
     connection.send_result(
         msg["id"], [integration.manifest for integration in integrations]
     )
@@ -706,12 +714,12 @@ async def handle_supported_brands(
 ) -> None:
     """Handle supported brands command."""
     data = {}
-    for integration in await asyncio.gather(
-        *[
-            async_get_integration(hass, integration)
-            for integration in supported_brands.HAS_SUPPORTED_BRANDS
-        ]
-    ):
-        data[integration.domain] = integration.manifest["supported_brands"]
 
+    ints_or_excs = await async_get_integrations(
+        hass, supported_brands.HAS_SUPPORTED_BRANDS
+    )
+    for int_or_exc in ints_or_excs.values():
+        if isinstance(int_or_exc, Exception):
+            raise int_or_exc
+        data[int_or_exc.domain] = int_or_exc.manifest["supported_brands"]
     connection.send_result(msg["id"], data)

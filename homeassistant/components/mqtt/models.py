@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from ast import literal_eval
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable, Coroutine
 import datetime as dt
 from typing import Any, Union
 
@@ -42,7 +42,7 @@ class ReceiveMessage:
     timestamp: dt.datetime = attr.ib(default=None)
 
 
-AsyncMessageCallbackType = Callable[[ReceiveMessage], Awaitable[None]]
+AsyncMessageCallbackType = Callable[[ReceiveMessage], Coroutine[Any, Any, None]]
 MessageCallbackType = Callable[[ReceiveMessage], None]
 
 

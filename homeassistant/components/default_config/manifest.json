@@ -5,11 +5,13 @@
   "dependencies": [
     "application_credentials",
     "automation",
+    "bluetooth",
     "cloud",
     "counter",
     "dhcp",
     "energy",
     "frontend",
+    "homeassistant_alerts",
     "history",
     "input_boolean",
     "input_button",

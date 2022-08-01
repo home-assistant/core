@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import voluptuous as vol
 import yeelightsunflower
@@ -87,7 +88,7 @@ class SunflowerBulb(LightEntity):
         """Return the color property."""
         return color_util.color_RGB_to_hs(*self._rgb_color)
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on, optionally set colour/brightness."""
         # when no arguments, just turn light on (full brightness)
         if not kwargs:
@@ -104,11 +105,11 @@ class SunflowerBulb(LightEntity):
                 bright = int(kwargs[ATTR_BRIGHTNESS] / 255 * 100)
                 self._light.set_brightness(bright)
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         self._light.turn_off()
 
-    def update(self):
+    def update(self) -> None:
         """Fetch new state data for this light and update local values."""
         self._light.update()
         self._available = self._light.available

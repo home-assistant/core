@@ -152,7 +152,7 @@ class NumberEntityDescription(EntityDescription):
             else:
                 module = inspect.getmodule(self)
             if module and module.__file__ and "custom_components" in module.__file__:
-                report_issue = "report it to the custom component author."
+                report_issue = "report it to the custom integration author."
             else:
                 report_issue = (
                     "create a bug report at "
@@ -200,7 +200,7 @@ class NumberEntity(Entity):
     _attr_native_max_value: float
     _attr_native_min_value: float
     _attr_native_step: float
-    _attr_native_value: float
+    _attr_native_value: float | None = None
     _attr_native_unit_of_measurement: str | None
     _deprecated_number_entity_reported = False
     _number_option_unit_of_measurement: str | None = None
@@ -222,7 +222,7 @@ class NumberEntity(Entity):
         ):
             module = inspect.getmodule(cls)
             if module and module.__file__ and "custom_components" in module.__file__:
-                report_issue = "report it to the custom component author."
+                report_issue = "report it to the custom integration author."
             else:
                 report_issue = (
                     "create a bug report at "
