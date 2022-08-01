@@ -77,6 +77,10 @@ async def async_setup_platform(
             update_interval,
         )
 
+        LOGGER.debug(
+            "Coordinator update interval set to: %s", coordinator.update_interval
+        )
+
         # Set new interval on all coordinators for this API key.
         for (
             coordinator_api_key,
@@ -84,10 +88,6 @@ async def async_setup_platform(
         ), coordinator in coordinators.items():
             if coordinator_api_key == api_key:
                 coordinator.update_interval = update_interval
-
-        LOGGER.debug(
-            "Coordinator update interval set to: %s", coordinator.update_interval
-        )
 
     coordinator = coordinators[api_key, base]
     async with coordinator.setup_lock:
