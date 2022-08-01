@@ -16,7 +16,6 @@ class _Special(Enum):
     """Sentinel values"""
 
     UNDEFINED = 1
-    DEVICE_CLASS = 2
 
 
 _PLATFORMS: set[str] = {platform.value for platform in Platform}
@@ -466,6 +465,7 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
 }
 # Overriding properties and functions are normally checked by mypy, and will only
 # be checked by pylint when --ignore-missing-annotations is False
+
 _ENTITY_MATCH: list[TypeHintMatch] = [
     TypeHintMatch(
         function_name="should_poll",
@@ -505,7 +505,7 @@ _ENTITY_MATCH: list[TypeHintMatch] = [
     ),
     TypeHintMatch(
         function_name="device_class",
-        return_type=[_Special.DEVICE_CLASS, "str", None],
+        return_type=["str", None],
     ),
     TypeHintMatch(
         function_name="unit_of_measurement",
@@ -1416,15 +1416,6 @@ def _is_valid_type(
     if expected_type is _Special.UNDEFINED:
         return True
 
-    # Special case for device_class
-    if expected_type is _Special.DEVICE_CLASS and in_return:
-        return (
-            isinstance(node, nodes.Name)
-            and node.name.endswith("DeviceClass")
-            or isinstance(node, nodes.Attribute)
-            and node.attrname.endswith("DeviceClass")
-        )
-
     if isinstance(expected_type, list):
         for expected_type_item in expected_type:
             if _is_valid_type(expected_type_item, node, in_return):
@@ -1636,18 +1627,28 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
     def visit_classdef(self, node: nodes.ClassDef) -> None:
         """Called when a ClassDef node is visited."""
         ancestor: nodes.ClassDef
+        checked_class_methods: set[str] = set()
         for ancestor in node.ancestors():
             for class_matches in self._class_matchers:
                 if ancestor.name == class_matches.base_class:
-                    self._visit_class_functions(node, class_matches.matches)
+                    self._visit_class_functions(
+                        node, class_matches.matches, checked_class_methods
+                    )
 
     def _visit_class_functions(
-        self, node: nodes.ClassDef, matches: list[TypeHintMatch]
+        self,
+        node: nodes.ClassDef,
+        matches: list[TypeHintMatch],
+        checked_class_methods: set[str],
     ) -> None:
+        cached_methods: list[nodes.FunctionDef] = list(node.mymethods())
         for match in matches:
-            for function_node in node.mymethods():
+            for function_node in cached_methods:
+                if function_node.name in checked_class_methods:
+                    continue
                 if match.need_to_check_function(function_node):
                     self._check_function(function_node, match)
+                    checked_class_methods.add(function_node.name)
 
     def visit_functiondef(self, node: nodes.FunctionDef) -> None:
         """Called when a FunctionDef node is visited."""
