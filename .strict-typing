@@ -186,6 +186,7 @@ homeassistant.components.nut.*
 homeassistant.components.oncue.*
 homeassistant.components.onewire.*
 homeassistant.components.open_meteo.*
+homeassistant.components.openexchangerates.*
 homeassistant.components.openuv.*
 homeassistant.components.peco.*
 homeassistant.components.overkiz.*
