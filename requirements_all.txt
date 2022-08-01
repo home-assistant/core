@@ -5,7 +5,7 @@
 AEMET-OpenData==0.2.1
 
 # homeassistant.components.aladdin_connect
-AIOAladdinConnect==0.1.31
+AIOAladdinConnect==0.1.33
 
 # homeassistant.components.adax
 Adax-local==0.1.4
@@ -1731,7 +1731,7 @@ pyopnsense==0.2.0
 pyoppleio==1.0.5
 
 # homeassistant.components.opentherm_gw
-pyotgw==2.0.1
+pyotgw==2.0.2
 
 # homeassistant.auth.mfa_modules.notify
 # homeassistant.auth.mfa_modules.totp
