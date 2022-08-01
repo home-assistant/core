@@ -274,7 +274,7 @@ async def async_setup_entry(
 
 
 class DeconzSensor(
-    DeconzDevice[SensorResources], SensorEntity  # type:ignore[type-var]
+    DeconzDevice[SensorResources], SensorEntity  # type: ignore[type-var]
 ):
     """Representation of a deCONZ sensor."""
 

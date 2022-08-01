@@ -43,7 +43,7 @@ async def async_setup_entry(
     )
 
 
-class DeconzPowerPlug(DeconzDevice[Light], SwitchEntity):  # type:ignore[type-var]
+class DeconzPowerPlug(DeconzDevice[Light], SwitchEntity):  # type: ignore[type-var]
     """Representation of a deCONZ power plug."""
 
     TYPE = DOMAIN

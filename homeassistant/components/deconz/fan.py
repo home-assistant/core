@@ -49,7 +49,7 @@ async def async_setup_entry(
     )
 
 
-class DeconzFan(DeconzDevice[Light], FanEntity):  # type:ignore[type-var]
+class DeconzFan(DeconzDevice[Light], FanEntity):  # type: ignore[type-var]
     """Representation of a deCONZ fan."""
 
     TYPE = DOMAIN

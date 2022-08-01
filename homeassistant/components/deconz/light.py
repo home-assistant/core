@@ -122,7 +122,7 @@ async def async_setup_entry(
 
 
 class DeconzBaseLight(
-    DeconzDevice[_LightDeviceTypeT], LightEntity  # type:ignore[type-var]
+    DeconzDevice[_LightDeviceTypeT], LightEntity  # type: ignore[type-var]
 ):
     """Representation of a deCONZ light."""
 
