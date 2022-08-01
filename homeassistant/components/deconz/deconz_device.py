@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Generic, TypeVar, Union
+from typing import Generic, TypeVar, Union
 
+from pydeconz.models.deconz_device import DeconzDevice as PydeconzDevice
 from pydeconz.models.group import Group as PydeconzGroup
 from pydeconz.models.light import LightBase as PydeconzLightBase
 from pydeconz.models.scene import Scene as PydeconzScene
@@ -43,19 +44,13 @@ class DeconzBase(Generic[_DeviceTypeT]):
     @property
     def unique_id(self) -> str:
         """Return a unique identifier for this device."""
-        if TYPE_CHECKING:
-            assert isinstance(
-                self._device, (PydeconzGroup, PydeconzLightBase, PydeconzSensorBase)
-            )
+        assert isinstance(self._device, PydeconzDevice)
         return self._device.unique_id
 
     @property
     def serial(self) -> str | None:
         """Return a serial number for this device."""
-        if TYPE_CHECKING:
-            assert isinstance(
-                self._device, (PydeconzGroup, PydeconzLightBase, PydeconzSensorBase)
-            )
+        assert isinstance(self._device, PydeconzDevice)
         if not self._device.unique_id or self._device.unique_id.count(":") != 7:
             return None
         return self._device.unique_id.split("-", 1)[0]
@@ -63,10 +58,7 @@ class DeconzBase(Generic[_DeviceTypeT]):
     @property
     def device_info(self) -> DeviceInfo | None:
         """Return a device description for device registry."""
-        if TYPE_CHECKING:
-            assert isinstance(
-                self._device, (PydeconzGroup, PydeconzLightBase, PydeconzSensorBase)
-            )
+        assert isinstance(self._device, PydeconzDevice)
         if self.serial is None:
             return None
 
@@ -135,10 +127,9 @@ class DeconzDevice(DeconzBase[_DeviceTypeT], Entity):
         """Return True if device is available."""
         if isinstance(self._device, PydeconzScene):
             return self.gateway.available
-        if TYPE_CHECKING:
-            assert isinstance(
-                self._device, (PydeconzGroup, PydeconzLightBase, PydeconzSensorBase)
-            )
+        assert isinstance(
+            self._device, (PydeconzGroup, PydeconzLightBase, PydeconzSensorBase)
+        )
         return self.gateway.available and self._device.reachable
 
 
