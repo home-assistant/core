@@ -215,7 +215,7 @@ def test_invalid_discovery_info(
         pylint.testutils.MessageTest(
             msg_id="hass-argument-type",
             node=discovery_info_node,
-            args=(4, "DiscoveryInfoType | None"),
+            args=(4, "DiscoveryInfoType | None", "async_setup_scanner"),
             line=6,
             col_offset=4,
             end_line=6,
@@ -268,7 +268,10 @@ def test_invalid_list_dict_str_any(
         pylint.testutils.MessageTest(
             msg_id="hass-return-type",
             node=func_node,
-            args=["list[dict[str, str]]", "list[dict[str, Any]]"],
+            args=(
+                ["list[dict[str, str]]", "list[dict[str, Any]]"],
+                "async_get_triggers",
+            ),
             line=2,
             col_offset=0,
             end_line=2,
@@ -325,7 +328,7 @@ def test_invalid_config_flow_step(
         pylint.testutils.MessageTest(
             msg_id="hass-argument-type",
             node=arg_node,
-            args=(2, "ZeroconfServiceInfo"),
+            args=(2, "ZeroconfServiceInfo", "async_step_zeroconf"),
             line=10,
             col_offset=8,
             end_line=10,
@@ -334,7 +337,7 @@ def test_invalid_config_flow_step(
         pylint.testutils.MessageTest(
             msg_id="hass-return-type",
             node=func_node,
-            args="FlowResult",
+            args=("FlowResult", "async_step_zeroconf"),
             line=8,
             col_offset=4,
             end_line=8,
@@ -399,7 +402,7 @@ def test_invalid_config_flow_async_get_options_flow(
         pylint.testutils.MessageTest(
             msg_id="hass-argument-type",
             node=arg_node,
-            args=(1, "ConfigEntry"),
+            args=(1, "ConfigEntry", "async_get_options_flow"),
             line=12,
             col_offset=8,
             end_line=12,
@@ -408,7 +411,7 @@ def test_invalid_config_flow_async_get_options_flow(
         pylint.testutils.MessageTest(
             msg_id="hass-return-type",
             node=func_node,
-            args="OptionsFlow",
+            args=("OptionsFlow", "async_get_options_flow"),
             line=11,
             col_offset=4,
             end_line=11,
@@ -491,7 +494,7 @@ def test_invalid_entity_properties(
         pylint.testutils.MessageTest(
             msg_id="hass-return-type",
             node=prop_node,
-            args=["str", None],
+            args=(["str", None], "changed_by"),
             line=9,
             col_offset=4,
             end_line=9,
@@ -500,7 +503,7 @@ def test_invalid_entity_properties(
         pylint.testutils.MessageTest(
             msg_id="hass-argument-type",
             node=func_node,
-            args=("kwargs", "Any"),
+            args=("kwargs", "Any", "async_lock"),
             line=14,
             col_offset=4,
             end_line=14,
@@ -509,7 +512,7 @@ def test_invalid_entity_properties(
         pylint.testutils.MessageTest(
             msg_id="hass-return-type",
             node=func_node,
-            args="None",
+            args=("None", "async_lock"),
             line=14,
             col_offset=4,
             end_line=14,
@@ -587,7 +590,7 @@ def test_named_arguments(
         pylint.testutils.MessageTest(
             msg_id="hass-argument-type",
             node=percentage_node,
-            args=("percentage", "int | None"),
+            args=("percentage", "int | None", "async_turn_on"),
             line=10,
             col_offset=8,
             end_line=10,
@@ -596,7 +599,7 @@ def test_named_arguments(
         pylint.testutils.MessageTest(
             msg_id="hass-argument-type",
             node=preset_mode_node,
-            args=("preset_mode", "str | None"),
+            args=("preset_mode", "str | None", "async_turn_on"),
             line=12,
             col_offset=8,
             end_line=12,
@@ -605,7 +608,7 @@ def test_named_arguments(
         pylint.testutils.MessageTest(
             msg_id="hass-argument-type",
             node=func_node,
-            args=("kwargs", "Any"),
+            args=("kwargs", "Any", "async_turn_on"),
             line=8,
             col_offset=4,
             end_line=8,
@@ -614,7 +617,7 @@ def test_named_arguments(
         pylint.testutils.MessageTest(
             msg_id="hass-return-type",
             node=func_node,
-            args="None",
+            args=("None", "async_turn_on"),
             line=8,
             col_offset=4,
             end_line=8,
@@ -670,7 +673,7 @@ def test_invalid_mapping_return_type(
         pylint.testutils.MessageTest(
             msg_id="hass-return-type",
             node=property_node,
-            args=["Mapping[str, Any]", None],
+            args=(["Mapping[str, Any]", None], "capability_attributes"),
             line=15,
             col_offset=4,
             end_line=15,
@@ -809,7 +812,7 @@ def test_invalid_long_tuple(
         pylint.testutils.MessageTest(
             msg_id="hass-return-type",
             node=rgbw_node,
-            args=["tuple[int, int, int, int]", None],
+            args=(["tuple[int, int, int, int]", None], "rgbw_color"),
             line=15,
             col_offset=4,
             end_line=15,
@@ -818,7 +821,7 @@ def test_invalid_long_tuple(
         pylint.testutils.MessageTest(
             msg_id="hass-return-type",
             node=rgbww_node,
-            args=["tuple[int, int, int, int, int]", None],
+            args=(["tuple[int, int, int, int, int]", None], "rgbww_color"),
             line=21,
             col_offset=4,
             end_line=21,
