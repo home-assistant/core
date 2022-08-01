@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import Enum
 import re
 
 from astroid import nodes
@@ -10,8 +11,13 @@ from pylint.lint import PyLinter
 
 from homeassistant.const import Platform
 
-DEVICE_CLASS = object()
-UNDEFINED = object()
+
+class _Special(Enum):
+    """Sentinel values"""
+
+    UNDEFINED = 1
+    DEVICE_CLASS = 2
+
 
 _PLATFORMS: set[str] = {platform.value for platform in Platform}
 
@@ -21,7 +27,7 @@ class TypeHintMatch:
     """Class for pattern matching."""
 
     function_name: str
-    return_type: list[str] | str | None | object
+    return_type: list[str | _Special | None] | str | _Special | None
     arg_types: dict[int, str] | None = None
     """arg_types is for positional arguments"""
     named_arg_types: dict[str, str] | None = None
@@ -361,7 +367,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 0: "HomeAssistant",
                 1: "ConfigEntry",
             },
-            return_type=UNDEFINED,
+            return_type=_Special.UNDEFINED,
         ),
         TypeHintMatch(
             function_name="async_get_device_diagnostics",
@@ -370,7 +376,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 1: "ConfigEntry",
                 2: "DeviceEntry",
             },
-            return_type=UNDEFINED,
+            return_type=_Special.UNDEFINED,
         ),
     ],
 }
@@ -499,7 +505,7 @@ _ENTITY_MATCH: list[TypeHintMatch] = [
     ),
     TypeHintMatch(
         function_name="device_class",
-        return_type=[DEVICE_CLASS, "str", None],
+        return_type=[_Special.DEVICE_CLASS, "str", None],
     ),
     TypeHintMatch(
         function_name="unit_of_measurement",
@@ -1407,11 +1413,11 @@ def _is_valid_type(
     in_return: bool = False,
 ) -> bool:
     """Check the argument node against the expected type."""
-    if expected_type is UNDEFINED:
+    if expected_type is _Special.UNDEFINED:
         return True
 
     # Special case for device_class
-    if expected_type == DEVICE_CLASS and in_return:
+    if expected_type is _Special.DEVICE_CLASS and in_return:
         return (
             isinstance(node, nodes.Name)
             and node.name.endswith("DeviceClass")
@@ -1577,12 +1583,12 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
     priority = -1
     msgs = {
         "W7431": (
-            "Argument %s should be of type %s",
+            "Argument %s should be of type %s in %s",
             "hass-argument-type",
             "Used when method argument type is incorrect",
         ),
         "W7432": (
-            "Return type should be %s",
+            "Return type should be %s in %s",
             "hass-return-type",
             "Used when method return type is incorrect",
         ),
@@ -1669,7 +1675,7 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
                     self.add_message(
                         "hass-argument-type",
                         node=node.args.args[key],
-                        args=(key + 1, expected_type),
+                        args=(key + 1, expected_type, node.name),
                     )
 
         # Check that all keyword arguments are correctly annotated.
@@ -1680,7 +1686,7 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
                     self.add_message(
                         "hass-argument-type",
                         node=arg_node,
-                        args=(arg_name, expected_type),
+                        args=(arg_name, expected_type, node.name),
                     )
 
         # Check that kwargs is correctly annotated.
@@ -1690,13 +1696,15 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
             self.add_message(
                 "hass-argument-type",
                 node=node,
-                args=(node.args.kwarg, match.kwargs_type),
+                args=(node.args.kwarg, match.kwargs_type, node.name),
             )
 
         # Check the return type.
         if not _is_valid_return_type(match, node.returns):
             self.add_message(
-                "hass-return-type", node=node, args=match.return_type or "None"
+                "hass-return-type",
+                node=node,
+                args=(match.return_type or "None", node.name),
             )
 
 

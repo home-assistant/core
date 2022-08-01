@@ -13,7 +13,7 @@ from homeassistant.components.device_automation.exceptions import (
 from homeassistant.components.homeassistant.triggers import event as event_trigger
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, IntegrationError
 from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN
@@ -39,7 +39,7 @@ async def async_validate_trigger_config(
         trigger = (config[CONF_TYPE], config[CONF_SUBTYPE])
         try:
             zha_device = async_get_zha_device(hass, config[CONF_DEVICE_ID])
-        except (KeyError, AttributeError) as err:
+        except (KeyError, AttributeError, IntegrationError) as err:
             raise InvalidDeviceAutomationConfig from err
         if (
             zha_device.device_automation_triggers is None
