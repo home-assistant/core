@@ -45,7 +45,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DEVICES_KEY, DOMAIN
+from .const import DOMAIN
 
 SENSOR_DESCRIPTIONS = {
     (DeviceClass.TEMPERATURE, Units.TEMP_CELSIUS): SensorEntityDescription(
@@ -181,7 +181,25 @@ def process_service_info(
         and data.encryption_scheme != EncryptionScheme.NONE
         and not data.bindkey_verified
     ):
-        entry.async_start_reauth(hass)
+        flow_context = {
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": entry.entry_id,
+            "title_placeholders": {"name": entry.title},
+            "unique_id": entry.unique_id,
+            "device": data,
+        }
+
+        for flow in hass.config_entries.flow.async_progress_by_handler(DOMAIN):
+            if flow["context"] == flow_context:
+                break
+        else:
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN,
+                    context=flow_context,
+                    data=entry.data,
+                )
+            )
 
     return sensor_update_to_bluetooth_data_update(update)
 
@@ -199,11 +217,9 @@ async def async_setup_entry(
     if bindkey := entry.data.get("bindkey"):
         kwargs["bindkey"] = bytes.fromhex(bindkey)
     data = XiaomiBluetoothDeviceData(**kwargs)
-    hass.data[DEVICES_KEY][entry.unique_id] = data
     processor = PassiveBluetoothDataProcessor(
         lambda service_info: process_service_info(hass, entry, data, service_info)
     )
-    entry.async_on_unload(lambda: hass.data[DEVICES_KEY].pop(entry.unique_id))
     entry.async_on_unload(
         processor.async_add_entities_listener(
             XiaomiBluetoothSensorEntity, async_add_entities
