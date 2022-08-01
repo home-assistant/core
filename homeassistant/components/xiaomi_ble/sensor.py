@@ -11,8 +11,10 @@ from xiaomi_ble import (
     Units,
     XiaomiBluetoothDeviceData,
 )
+from xiaomi_ble.parser import EncryptionScheme
 
 from homeassistant import config_entries
+from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothDataProcessor,
     PassiveBluetoothDataUpdate,
@@ -163,6 +165,45 @@ def sensor_update_to_bluetooth_data_update(
     )
 
 
+def process_service_info(
+    hass: HomeAssistant,
+    entry: config_entries.ConfigEntry,
+    data: XiaomiBluetoothDeviceData,
+    service_info: BluetoothServiceInfoBleak,
+) -> PassiveBluetoothDataUpdate:
+    """Process a BluetoothServiceInfoBleak, running side effects and returning sensor data."""
+    update = data.update(service_info)
+
+    # If device isn't pending we know it has seen at least one broadcast with a payload
+    # If that payload was encrypted and the bindkey was not verified then we need to reauth
+    if (
+        not data.pending
+        and data.encryption_scheme != EncryptionScheme.NONE
+        and not data.bindkey_verified
+    ):
+        flow_context = {
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": entry.entry_id,
+            "title_placeholders": {"name": entry.title},
+            "unique_id": entry.unique_id,
+            "device": data,
+        }
+
+        for flow in hass.config_entries.flow.async_progress_by_handler(DOMAIN):
+            if flow["context"] == flow_context:
+                break
+        else:
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN,
+                    context=flow_context,
+                    data=entry.data,
+                )
+            )
+
+    return sensor_update_to_bluetooth_data_update(update)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: config_entries.ConfigEntry,
@@ -177,9 +218,7 @@ async def async_setup_entry(
         kwargs["bindkey"] = bytes.fromhex(bindkey)
     data = XiaomiBluetoothDeviceData(**kwargs)
     processor = PassiveBluetoothDataProcessor(
-        lambda service_info: sensor_update_to_bluetooth_data_update(
-            data.update(service_info)
-        )
+        lambda service_info: process_service_info(hass, entry, data, service_info)
     )
     entry.async_on_unload(
         processor.async_add_entities_listener(
