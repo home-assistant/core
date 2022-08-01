@@ -41,10 +41,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.typing import StateType
 import homeassistant.util.dt as dt_util
 
-from .const import ATTR_DARK, ATTR_ON
+from .const import ATTR_DARK, ATTR_ON, DOMAIN as DECONZ_DOMAIN
 from .deconz_device import DeconzDevice
 from .gateway import DeconzGateway, get_gateway_from_config_entry
 
@@ -232,6 +233,27 @@ COMMON_SENSOR_DESCRIPTIONS = [
 ]
 
 
+@callback
+def async_update_unique_id(
+    hass: HomeAssistant, unique_id: str, description: DeconzSensorDescription
+) -> None:
+    """Update unique ID to always have a suffix.
+
+    Introduced with release 2022.9.
+    """
+    ent_reg = er.async_get(hass)
+
+    new_unique_id = f"{unique_id}-{description.key}"
+    if ent_reg.async_get_entity_id(DOMAIN, DECONZ_DOMAIN, new_unique_id):
+        return
+
+    if description.suffix:
+        unique_id = f'{unique_id.split("-", 1)[0]}-{description.suffix.lower()}'
+
+    if entity_id := ent_reg.async_get_entity_id(DOMAIN, DECONZ_DOMAIN, unique_id):
+        ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -250,7 +272,7 @@ async def async_setup_entry(
         if sensor.battery is None and not sensor.type.startswith("CLIP"):
             DeconzBatteryTracker(sensor_id, gateway, async_add_entities)
 
-        known_entities = set(gateway.entities[DOMAIN])
+        # known_entities = set(gateway.entities[DOMAIN])
 
         for description in (
             ENTITY_DESCRIPTIONS.get(type(sensor), []) + COMMON_SENSOR_DESCRIPTIONS
@@ -261,9 +283,12 @@ async def async_setup_entry(
             ):
                 continue
 
+            async_update_unique_id(hass, sensor.unique_id, description)
+
             entity = DeconzSensor(sensor, gateway, description)
-            if entity.unique_id not in known_entities:
-                entities.append(entity)
+            entities.append(entity)
+            # if entity.unique_id not in known_entities:
+            #     entities.append(entity)
 
         async_add_entities(entities)
 
@@ -299,21 +324,22 @@ class DeconzSensor(DeconzDevice[SensorResources], SensorEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique identifier for this device."""
-        if (
-            self.entity_description.key == "battery"
-            and self._device.manufacturer == "Danfoss"
-            and self._device.model_id
-            in [
-                "0x8030",
-                "0x8031",
-                "0x8034",
-                "0x8035",
-            ]
-        ):
-            return f"{super().unique_id}-battery"
-        if self.entity_description.suffix:
-            return f"{self.serial}-{self.entity_description.suffix.lower()}"
-        return super().unique_id
+        return f"{super().unique_id}-{self.entity_description.key}"
+        # if (
+        #     self.entity_description.key == "battery"
+        #     and self._device.manufacturer == "Danfoss"
+        #     and self._device.model_id
+        #     in [
+        #         "0x8030",
+        #         "0x8031",
+        #         "0x8034",
+        #         "0x8035",
+        #     ]
+        # ):
+        #     return f"{super().unique_id}-battery"
+        # if self.entity_description.suffix:
+        #     return f"{self.serial}-{self.entity_description.suffix.lower()}"
+        # return super().unique_id
 
     @callback
     def async_update_callback(self) -> None:
