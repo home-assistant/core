@@ -49,11 +49,12 @@ def _migrate_to_new_unique_id(hass: HomeAssistant, dev_id, channel) -> None:
                 old_unique_id,
                 new_unique_id,
             )
-        LOGGER.debug(
-            "Migrating unique_id from [%s] to [%s]",
-            old_unique_id,
-            new_unique_id,
-        )
+        else:
+            LOGGER.debug(
+                "Migrating unique_id from [%s] to [%s]",
+                old_unique_id,
+                new_unique_id,
+            )
 
 
 async def async_setup_platform(
