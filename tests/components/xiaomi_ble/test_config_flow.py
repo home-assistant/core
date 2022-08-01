@@ -1014,7 +1014,7 @@ async def test_async_step_reauth_v4_wrong_key(hass):
 
 async def test_async_step_reauth_abort_early(hass):
     """
-    Test we can abort the reauth if theres no encryption.
+    Test we can abort the reauth if there is no encryption.
 
     (This can't currently happen in practice).
     """
