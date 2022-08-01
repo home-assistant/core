@@ -18,7 +18,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import (
     ARP,
-    ATTR_FIRMWARE,
+    ATTR_DEVICE_TRACKER,
     ATTR_MODEL,
     ATTR_SERIAL_NUMBER,
     CAPSMAN,
@@ -28,6 +28,7 @@ from .const import (
     DEFAULT_DETECTION_TIME,
     DHCP,
     DOMAIN,
+    FIRMWARE,
     IDENTITY,
     INFO,
     IS_CAPSMAN,
@@ -59,7 +60,8 @@ class MikrotikData:
         self.support_wireless: bool = False
         self.hostname: str = ""
         self.model: str = ""
-        self.firmware: str = ""
+        self.current_firmware_version: str = ""
+        self.latest_firmware_version: str = ""
         self.serial_number: str = ""
 
     @staticmethod
@@ -89,14 +91,26 @@ class MikrotikData:
             return str(data[0].get(param))
         return ""
 
+    def update_firmware_details(self, now=None) -> None:
+        """Return hub firmware version."""
+        if data := self.command(f"{MIKROTIK_SERVICES[FIRMWARE]}/check-for-updates"):
+            self.current_firmware_version = str(data[-1]["installed-version"])
+            self.latest_firmware_version = str(data[-1]["latest-version"])
+
+    def install_latest_firmware_version(self) -> None:
+        """Install hub latest firmware version."""
+        if data := self.command(f"{MIKROTIK_SERVICES[FIRMWARE]}/install"):
+            self.current_firmware_version = str(data[-1]["installed-version"])
+            self.latest_firmware_version = str(data[-1]["latest-version"])
+
     def get_hub_details(self) -> None:
         """Get Hub info."""
         self.hostname = self.get_info(NAME)
         self.model = self.get_info(ATTR_MODEL)
-        self.firmware = self.get_info(ATTR_FIRMWARE)
         self.serial_number = self.get_info(ATTR_SERIAL_NUMBER)
         self.support_capsman = bool(self.command(MIKROTIK_SERVICES[IS_CAPSMAN]))
         self.support_wireless = bool(self.command(MIKROTIK_SERVICES[IS_WIRELESS]))
+        self.update_firmware_details()
 
     def get_list_from_interface(self, interface: str) -> dict[str, dict[str, Any]]:
         """Get devices from interface."""
@@ -129,9 +143,6 @@ class MikrotikData:
             if self.arp_enabled:
                 _LOGGER.debug("Using arp-ping to check devices")
                 arp_devices = self.get_list_from_interface(ARP)
-
-            # get new hub firmware version if updated
-            self.firmware = self.get_info(ATTR_FIRMWARE)
 
         except CannotConnect as err:
             raise UpdateFailed from err
@@ -250,11 +261,6 @@ class MikrotikDataUpdateCoordinator(DataUpdateCoordinator[None]):
     def model(self) -> str:
         """Return the model of the hub."""
         return self._mk_data.model
-
-    @property
-    def firmware(self) -> str:
-        """Return the firmware of the hub."""
-        return self._mk_data.firmware
 
     @property
     def serial_num(self) -> str:

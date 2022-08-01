@@ -1,9 +1,12 @@
 """The Mikrotik component."""
+from datetime import timedelta
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.event import async_track_time_interval
 
 from .const import ATTR_MANUFACTURER, DOMAIN
 from .errors import CannotConnect, LoginError
@@ -26,6 +29,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     coordinator = MikrotikDataUpdateCoordinator(hass, config_entry, api)
     await hass.async_add_executor_job(coordinator.api.get_hub_details)
     await coordinator.async_config_entry_first_refresh()
+    config_entry.async_on_unload(
+        async_track_time_interval(
+            hass, coordinator.api.update_firmware_details, timedelta(hours=1)
+        )
+    )
 
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = coordinator
 
@@ -38,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         manufacturer=ATTR_MANUFACTURER,
         model=coordinator.model,
         name=coordinator.hostname,
-        sw_version=coordinator.firmware,
+        sw_version=coordinator.api.current_firmware_version,
     )
 
     return True

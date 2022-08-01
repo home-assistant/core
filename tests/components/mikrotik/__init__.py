@@ -140,6 +140,12 @@ ARP_DATA = [
     },
 ]
 
+MOCK_UPDATE_INFO = {
+    "installed-version": "1.0",
+    "latest-version": "2.0",
+    "status": "New version is available",
+}
+
 
 async def setup_mikrotik_entry(hass: HomeAssistant, **kwargs: Any) -> None:
     """Set up Mikrotik integration successfully."""
@@ -156,7 +162,12 @@ async def setup_mikrotik_entry(hass: HomeAssistant, **kwargs: Any) -> None:
             return wireless_data
         if cmd == mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.ARP]:
             return ARP_DATA
-        return {}
+        if (
+            cmd
+            == f"{mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.FIRMWARE]}/check-for-updates"
+        ):
+            return [MOCK_UPDATE_INFO]
+        return []
 
     options: dict[str, Any] = {}
     if "force_dhcp" in kwargs:

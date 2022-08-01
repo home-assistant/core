@@ -8,7 +8,6 @@ DEFAULT_DETECTION_TIME: Final = 300
 
 ATTR_MANUFACTURER: Final = "Mikrotik"
 ATTR_SERIAL_NUMBER: Final = "serial-number"
-ATTR_FIRMWARE: Final = "current-firmware"
 ATTR_MODEL: Final = "model"
 
 CONF_ARP_PING: Final = "arp_ping"
@@ -26,6 +25,7 @@ DHCP: Final = "dhcp"
 WIRELESS: Final = "wireless"
 IS_WIRELESS: Final = "is_wireless"
 IS_CAPSMAN: Final = "is_capsman"
+FIRMWARE: Final = "firmware"
 
 MIKROTIK_SERVICES: Final = {
     ARP: "/ip/arp/getall",
@@ -36,8 +36,8 @@ MIKROTIK_SERVICES: Final = {
     WIRELESS: "/interface/wireless/registration-table/getall",
     IS_WIRELESS: "/interface/wireless/print",
     IS_CAPSMAN: "/caps-man/interface/print",
+    FIRMWARE: "/system/package/update",
 }
-
 
 ATTR_DEVICE_TRACKER: Final = [
     "comment",
