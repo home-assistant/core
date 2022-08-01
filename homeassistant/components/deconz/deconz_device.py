@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Generic, TypeVar
 
+from pydeconz.interfaces.sensors import SensorResources
 from pydeconz.models.group import Group as DeconzGroup
 from pydeconz.models.light import LightBase as DeconzLight
 from pydeconz.models.scene import Scene as PydeconzScene
@@ -25,6 +26,7 @@ _DeviceTypeT = TypeVar(
     DeconzSensor,
     PydeconzScene,
     AncillaryControl,
+    SensorResources,
 )
 
 
