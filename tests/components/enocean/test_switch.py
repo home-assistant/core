@@ -10,7 +10,7 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, assert_setup_component
 
-SWITCH_CONFIG_ENTRY = {
+SWITCH_CONFIG = {
     "switch": [
         {
             "platform": ENOCEAN_DOMAIN,
@@ -25,10 +25,10 @@ SWITCH_CONFIG_ENTRY = {
 async def test_unique_id_migration(hass: HomeAssistant) -> None:
     """Test EnOcean switch ID migration."""
 
-    entity_name = SWITCH_CONFIG_ENTRY["switch"][0]["name"]
-    switch_name = f"{SWITCH_DOMAIN}.{entity_name}"
-    dev_id = SWITCH_CONFIG_ENTRY["switch"][0]["id"]
-    channel = SWITCH_CONFIG_ENTRY["switch"][0]["channel"]
+    entity_name = SWITCH_CONFIG["switch"][0]["name"]
+    switch_entity_id = f"{SWITCH_DOMAIN}.{entity_name}"
+    dev_id = SWITCH_CONFIG["switch"][0]["id"]
+    channel = SWITCH_CONFIG["switch"][0]["channel"]
 
     ent_reg = er.async_get(hass)
 
@@ -48,7 +48,7 @@ async def test_unique_id_migration(hass: HomeAssistant) -> None:
         original_name=entity_name,
     )
 
-    assert entity_entry.entity_id == switch_name
+    assert entity_entry.entity_id == switch_entity_id
     assert entity_entry.unique_id == old_unique_id
 
     # Now add the sensor to check, whether the old unique_id is migrated
@@ -57,14 +57,14 @@ async def test_unique_id_migration(hass: HomeAssistant) -> None:
         assert await async_setup_component(
             hass,
             SWITCH_DOMAIN,
-            SWITCH_CONFIG_ENTRY,
+            SWITCH_CONFIG,
         )
 
     await hass.async_block_till_done()
 
     # Check that new entry has a new unique_id
-    entity_entry = ent_reg.async_get(switch_name)
-    new_unique_id = f"{combine_hex(dev_id)}{channel}"
+    entity_entry = ent_reg.async_get(switch_entity_id)
+    new_unique_id = f"{combine_hex(dev_id)}-{channel}"
 
     assert entity_entry.unique_id == new_unique_id
     assert (

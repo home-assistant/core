@@ -29,7 +29,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def generate_unique_id(dev_id: list[int], channel: int) -> str:
     """Generate a valid unique id."""
-    return f"{combine_hex(dev_id)}{channel}"
+    return f"{combine_hex(dev_id)}-{channel}"
 
 
 def _migrate_to_new_unique_id(hass: HomeAssistant, dev_id, channel) -> None:
