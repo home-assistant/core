@@ -189,7 +189,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Ack that device is slow."""
-        if user_input is not None or not onboarding.async_is_onboarded(self.hass):
+        if user_input is not None:
             return self._async_get_or_create_entry()
 
         self._set_confirm_only()
