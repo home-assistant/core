@@ -21,6 +21,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RainMachineData, RainMachineEntity
 from .const import DATA_PROVISION_SETTINGS, DOMAIN
+from .model import RainMachineEntityDescription
 
 
 @dataclass
@@ -32,7 +33,9 @@ class RainMachineButtonDescriptionMixin:
 
 @dataclass
 class RainMachineButtonDescription(
-    ButtonEntityDescription, RainMachineButtonDescriptionMixin
+    ButtonEntityDescription,
+    RainMachineEntityDescription,
+    RainMachineButtonDescriptionMixin,
 ):
     """Describe a RainMachine button description."""
 
@@ -49,6 +52,7 @@ BUTTON_DESCRIPTIONS = (
     RainMachineButtonDescription(
         key=BUTTON_KIND_REBOOT,
         name="Reboot",
+        api_category=DATA_PROVISION_SETTINGS,
         push_action=_async_reboot,
     ),
 )
@@ -62,14 +66,7 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            RainMachineButton(
-                entry,
-                # Buttons don't actually need a coordinator; we give them one so they
-                # can properly inherit from RainMachineEntity:
-                data.coordinators[DATA_PROVISION_SETTINGS],
-                data.controller,
-                description,
-            )
+            RainMachineButton(entry, data, description)
             for description in BUTTON_DESCRIPTIONS
         ]
     )
@@ -86,7 +83,7 @@ class RainMachineButton(RainMachineEntity, ButtonEntity):
     async def async_press(self) -> None:
         """Send out a restart command."""
         try:
-            await self.entity_description.push_action(self._controller)
+            await self.entity_description.push_action(self._data.controller)
         except RainMachineError as err:
             raise HomeAssistantError(
                 f'Error while pressing button "{self.entity_id}": {err}'
