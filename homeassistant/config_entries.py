@@ -641,7 +641,10 @@ class ConfigEntry:
 
     @callback
     def async_start_reauth(
-        self, hass: HomeAssistant, context: dict[str, Any] | None = None
+        self,
+        hass: HomeAssistant,
+        context: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
     ) -> None:
         """Start a reauth flow."""
         flow_context = {
@@ -662,7 +665,7 @@ class ConfigEntry:
             hass.config_entries.flow.async_init(
                 self.domain,
                 context=flow_context,
-                data=self.data,
+                data=self.data | (data or {}),
             )
         )
 
