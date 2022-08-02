@@ -3286,7 +3286,9 @@ async def test_reauth(hass):
     await entry.async_setup(hass)
     await hass.async_block_till_done()
 
-    entry.async_start_reauth(hass, {"extra_context": "some_extra_context"})
+    entry.async_start_reauth(
+        hass, context={"extra_context": "some_extra_context"}, data={"extra_data": 1234}
+    )
     await hass.async_block_till_done()
 
     flows = hass.config_entries.flow.async_progress()
