@@ -56,3 +56,7 @@ class YALEXSBLEEntity(Entity):
         """Register callbacks."""
         self.async_on_remove(self._device.register_callback(self._async_state_changed))
         return await super().async_added_to_hass()
+
+    async def async_update(self) -> None:
+        """Request a manual update."""
+        await self._device.update()
