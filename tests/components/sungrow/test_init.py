@@ -53,7 +53,12 @@ async def test_device_data(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
         await hass.data[DOMAIN][entry.entry_id].async_refresh()
 
-    mock_client.assert_called_once()
+        assert (
+            hass.data[DOMAIN][entry.entry_id].data["4990 ~ 4999 - Serial number"]
+            == inverter_data["4990 ~ 4999 - Serial number"]
+        )
+
+        mock_client.assert_called_once()
 
 
 async def test_device_data_not_available(hass: HomeAssistant) -> None:
@@ -67,13 +72,28 @@ async def test_device_data_not_available(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
         await hass.data[DOMAIN][entry.entry_id].async_refresh()
 
-    mock_client.assert_called_once()
+        assert hass.data[DOMAIN][entry.entry_id].data is None
+
+        mock_client.assert_called_once()
 
 
 async def test_data_update(hass: HomeAssistant) -> None:
     """Test the update call."""
-    with patch("homeassistant.components.sungrow.Client", return_value=MockClient):
+    with patch(
+        "homeassistant.components.sungrow.Client", return_value=MockClient
+    ) as mock_client:
         entry = create_entry(hass)
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
+
+        assert hass.data[DOMAIN][entry.entry_id].data is None
+
         await hass.data[DOMAIN][entry.entry_id].async_refresh()
+
+        assert hass.data[DOMAIN][entry.entry_id].last_update_success is True
+        assert (
+            hass.data[DOMAIN][entry.entry_id].data["4990 ~ 4999 - Serial number"]
+            == inverter_data["4990 ~ 4999 - Serial number"]
+        )
+
+        mock_client.assert_called_once()
