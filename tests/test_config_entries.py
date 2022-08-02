@@ -3286,10 +3286,14 @@ async def test_reauth(hass):
     await entry.async_setup(hass)
     await hass.async_block_till_done()
 
-    entry.async_start_reauth(
-        hass, context={"extra_context": "some_extra_context"}, data={"extra_data": 1234}
-    )
-    await hass.async_block_till_done()
+    flow = hass.config_entries.flow
+    with patch.object(flow, "async_init", wraps=flow.async_init) as mock_init:
+        entry.async_start_reauth(
+            hass,
+            context={"extra_context": "some_extra_context"},
+            data={"extra_data": 1234},
+        )
+        await hass.async_block_till_done()
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -3297,6 +3301,8 @@ async def test_reauth(hass):
     assert flows[0]["context"]["source"] == config_entries.SOURCE_REAUTH
     assert flows[0]["context"]["title_placeholders"] == {"name": "test_title"}
     assert flows[0]["context"]["extra_context"] == "some_extra_context"
+
+    assert mock_init.call_args.kwargs["data"]["extra_data"] == 1234
 
     # Check we can't start duplicate flows
     entry.async_start_reauth(hass, {"extra_context": "some_extra_context"})
