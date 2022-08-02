@@ -19,7 +19,8 @@
             "user": {
                 "data": {
                     "password": "L\u00f6senord",
-                    "username": "Email"
+                    "username": "Email",
+                    "with_family": "Med familj"
                 },
                 "description": "Ange dina autentiseringsuppgifter",
                 "title": "iCloud-autentiseringsuppgifter"

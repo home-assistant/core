@@ -11,7 +11,7 @@
             "one": "\u00dcres",
             "other": "\u00dcres"
         },
-        "flow_title": "{name}",
+        "flow_title": "{name} ({address})",
         "step": {
             "user": {
                 "data": {

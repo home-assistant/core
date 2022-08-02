@@ -33,6 +33,13 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    "wifi_rssi": SensorEntityDescription(
+        key="wifi_rssi",
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
     "battery": SensorEntityDescription(
         key="battery",
         native_unit_of_measurement=PERCENTAGE,

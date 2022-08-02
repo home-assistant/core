@@ -9,6 +9,9 @@
             "unknown": "Ok\u00e4nt fel: f\u00f6rs\u00f6k igen senare"
         },
         "step": {
+            "link": {
+                "title": "L\u00e4nka Freebox-router"
+            },
             "user": {
                 "data": {
                     "host": "V\u00e4rd",
