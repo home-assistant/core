@@ -21,7 +21,9 @@ from .models import YaleXSBLEData
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.LOCK, Platform.SENSOR]
 
-STARTUP_TIMEOUT = 29
+# We have 55s to find the lock, connect, and get status
+# before we give up and raise ConfigEntryNotReady.
+STARTUP_TIMEOUT = 55
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
