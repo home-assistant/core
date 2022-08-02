@@ -15,9 +15,15 @@
                 "description": "Om du inte bara vill \u00f6vervaka stat och distrikt, v\u00e4lj dess specifika gemenskap"
             },
             "district": {
+                "data": {
+                    "region": "Region"
+                },
                 "description": "Om du inte bara vill \u00f6vervaka staten, v\u00e4lj dess specifika distrikt"
             },
             "user": {
+                "data": {
+                    "region": "Region"
+                },
                 "description": "V\u00e4lj tillst\u00e5nd att \u00f6vervaka"
             }
         }
