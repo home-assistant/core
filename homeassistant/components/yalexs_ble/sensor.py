@@ -7,6 +7,7 @@ from homeassistant import config_entries
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -28,10 +29,11 @@ class YaleXSBLEDoorSensor(YALEXSBLEEntity, SensorEntity):
     """Yale XS BLE sensor."""
 
     _attr_device_class = SensorDeviceClass.SIGNAL_STRENGTH
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_entity_registry_enabled_default = False
-    _attr_native_unit_of_measurement = SIGNAL_STRENGTH_DECIBELS_MILLIWATT
     _attr_has_entity_name = True
     _attr_name = "Signal strength"
+    _attr_native_unit_of_measurement = SIGNAL_STRENGTH_DECIBELS_MILLIWATT
 
     @callback
     def _async_update_state(
