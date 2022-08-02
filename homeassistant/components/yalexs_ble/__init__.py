@@ -18,7 +18,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from .const import CONF_KEY, CONF_SLOT, DISCOVERY_TIMEOUT, DOMAIN
 from .models import YaleXSBLEData
 
-PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.LOCK]
+PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.LOCK, Platform.SENSOR]
 
 STARTUP_TIMEOUT = 29
 
