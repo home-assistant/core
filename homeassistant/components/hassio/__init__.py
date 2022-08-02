@@ -237,7 +237,7 @@ async def async_get_addon_store_info(hass: HomeAssistant, slug: str) -> dict:
     """
     hassio: HassIO = hass.data[DOMAIN]
     command = f"/store/addons/{slug}"
-    return await hassio.send_command(command)
+    return await hassio.send_command(command, method="get")
 
 
 @bind_hass
