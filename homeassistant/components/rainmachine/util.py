@@ -121,7 +121,7 @@ class RainMachineDataUpdateCoordinator(DataUpdateCoordinator[dict]):
 
         @callback
         def async_check_reboot_complete() -> None:
-            """Check whether reboot has been completed."""
+            """Check whether an active reboot has been completed."""
             if self._rebooting and self.last_update_success:
                 async_dispatcher_send(self.hass, self.signal_reboot_completed)
 
