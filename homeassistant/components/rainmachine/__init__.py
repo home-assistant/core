@@ -231,19 +231,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     controller_init_tasks = []
     coordinators = {}
-    for api_category in (
-        DATA_PROGRAMS,
-        DATA_PROVISION_SETTINGS,
-        DATA_RESTRICTIONS_CURRENT,
-        DATA_RESTRICTIONS_UNIVERSAL,
-        DATA_ZONES,
-    ):
+    for api_category, update_interval in COORDINATOR_UPDATE_INTERVAL_MAP.items():
         coordinator = coordinators[api_category] = RainMachineDataUpdateCoordinator(
             hass,
             entry=entry,
             name=f'{controller.name} ("{api_category}")',
             api_category=api_category,
-            update_interval=COORDINATOR_UPDATE_INTERVAL_MAP[api_category],
+            update_interval=update_interval,
             update_method=partial(async_update, api_category),
         )
         controller_init_tasks.append(async_init_coordinator(coordinator))
