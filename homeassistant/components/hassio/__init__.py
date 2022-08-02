@@ -230,6 +230,7 @@ async def async_get_addon_info(hass: HomeAssistant, slug: str) -> dict:
     return await hassio.get_addon_info(slug)
 
 
+@api_data
 async def async_get_addon_store_info(hass: HomeAssistant, slug: str) -> dict:
     """Return add-on store info.
 
