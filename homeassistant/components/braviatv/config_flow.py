@@ -18,6 +18,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 import homeassistant.helpers.config_validation as cv
 
+from . import BraviaTVCoordinator
 from .const import (
     ATTR_CID,
     ATTR_MAC,
@@ -144,9 +145,9 @@ class BraviaTVOptionsFlowHandler(config_entries.OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Manage the options."""
-        coordinator = self.hass.data[DOMAIN][self.config_entry.entry_id]
-
-        assert coordinator is not None
+        coordinator: BraviaTVCoordinator = self.hass.data[DOMAIN][
+            self.config_entry.entry_id
+        ]
 
         sources = coordinator.source_map.values()
         self.source_list = [item.get("title", "") for item in sources]
