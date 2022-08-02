@@ -37,7 +37,6 @@ class YALEXSBLEEntity(Entity):
     def _async_update_state(self, new_state: LockState, lock_info: LockInfo) -> None:
         """Update the state."""
         self._attr_available = True
-        self.async_write_ha_state()
 
     @callback
     def _async_state_changed(self, new_state: LockState, lock_info: LockInfo) -> None:
