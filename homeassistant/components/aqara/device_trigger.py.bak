@@ -1,0 +1,148 @@
+"""Provides device triggers for Aqara."""
+from __future__ import annotations
+
+from typing import Any
+from attr import has
+
+import voluptuous as vol
+
+from homeassistant.components.automation import (
+    AutomationActionType,
+    AutomationTriggerInfo,
+)
+from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
+from homeassistant.components.homeassistant.triggers import state as state_trigger
+from homeassistant.const import (
+    CONF_DEVICE_ID,
+    CONF_DOMAIN,
+    CONF_PLATFORM,
+    CONF_TYPE,
+    CONF_EVENT,
+
+)
+
+from homeassistant.components.homeassistant.triggers import event as event_trigger
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.helpers import config_validation as cv, device_registry as dr, entity_registry
+from homeassistant.helpers.typing import ConfigType
+
+from . import DOMAIN
+
+
+
+CONF_SUBTYPE = "subtype"
+
+
+CONF_FLIP_90 = "remote_flip_90_degrees"
+CONF_FLIP_180 = "remote_flip_180_degrees"
+CONF_MOVE_ANY = "remote_moved_any_side"
+CONF_DOUBLE_TAP_ANY = "remote_double_tap_any_side"
+CONF_TURN_CW = "remote_turned_clockwise"
+CONF_TURN_CCW = "remote_turned_counter_clockwise"
+CONF_ROTATE_FROM_SIDE_1 = "remote_rotate_from_side_1"
+CONF_ROTATE_FROM_SIDE_2 = "remote_rotate_from_side_2"
+CONF_ROTATE_FROM_SIDE_3 = "remote_rotate_from_side_3"
+CONF_ROTATE_FROM_SIDE_4 = "remote_rotate_from_side_4"
+CONF_ROTATE_FROM_SIDE_5 = "remote_rotate_from_side_5"
+CONF_ROTATE_FROM_SIDE_6 = "remote_rotate_from_side_6"
+
+CONF_TURN_ON = "turn_on"
+CONF_TURN_OFF = "turn_off"
+CONF_DIM_UP = "dim_up"
+CONF_DIM_DOWN = "dim_down"
+CONF_LEFT = "left"
+CONF_RIGHT = "right"
+CONF_OPEN = "open"
+CONF_CLOSE = "close"
+CONF_BOTH_BUTTONS = "both_buttons"
+CONF_TOP_BUTTONS = "top_buttons"
+CONF_BOTTOM_BUTTONS = "bottom_buttons"
+CONF_BUTTON_1 = "button_1"
+CONF_BUTTON_2 = "button_2"
+CONF_BUTTON_3 = "button_3"
+CONF_BUTTON_4 = "button_4"
+CONF_BUTTON_5 = "button_5"
+CONF_BUTTON_6 = "button_6"
+CONF_BUTTON_7 = "button_7"
+CONF_BUTTON_8 = "button_8"
+CONF_SIDE_1 = "side_1"
+CONF_SIDE_2 = "魔方第二面side_2"
+CONF_SIDE_3 = "side_3"
+CONF_SIDE_4 = "side_4"
+CONF_SIDE_5 = "side_5"
+CONF_SIDE_6 = "side_6"
+CONF_FLIP_90 = "remote_flip_90_degrees"
+
+AQARA_CUBE_MODEL = "lumi.sensor_cube"
+AQARA_CUBE_MODEL_ALT1 = "lumi.sensor_cube.aqgl01"
+AQARA_CUBE = {
+    CONF_SIDE_2: 'resourceId',
+    CONF_FLIP_90: 'resourceId',
+    CONF_FLIP_180: 'resourceId',
+    CONF_MOVE_ANY: 'resourceId',
+}
+
+
+# TODO specify your supported trigger types.
+TRIGGER_TYPES = {CONF_SIDE_2,CONF_SIDE_2}
+
+TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
+    {
+        vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
+    }
+)
+
+
+REMOTES = {
+
+    AQARA_CUBE_MODEL: AQARA_CUBE,
+    AQARA_CUBE_MODEL_ALT1: AQARA_CUBE,
+    
+}
+
+async def async_get_triggers(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, Any]]:
+    """List device triggers for Aqara devices."""
+
+
+    device_registry = dr.async_get(hass)
+    device = device_registry.devices[device_id]
+    if device.model not in ('lumi.sensor_cube.aqgl01','lumi.sensor_cube.es1','lumi.sensor_cube.v1','lumi.remote.jcn001','lumi.remote.cagl01'):
+        return
+
+    triggers = []
+
+    for trigger_type in AQARA_CUBE.keys():
+            triggers.append(
+              {
+                CONF_PLATFORM: "device",
+                CONF_DEVICE_ID: device_id,
+                CONF_DOMAIN: DOMAIN,
+                CONF_TYPE: trigger_type,
+              }
+            )
+
+    return triggers
+
+
+async def async_attach_trigger(
+    hass: HomeAssistant,
+    config: ConfigType,
+    action: AutomationActionType,
+    automation_info: AutomationTriggerInfo,
+) -> CALLBACK_TYPE:
+    """Attach a trigger."""
+    event_config = event_trigger.TRIGGER_SCHEMA(
+        {
+            event_trigger.CONF_PLATFORM: "event",
+            event_trigger.CONF_EVENT_TYPE: "aqara_event",
+            event_trigger.CONF_EVENT_DATA: {
+                CONF_DEVICE_ID: config[CONF_DEVICE_ID],
+                CONF_TYPE: config[CONF_TYPE],
+            },
+        }
+    )
+    return await event_trigger.async_attach_trigger(
+        hass, event_config, action, automation_info, platform_type="device"
+    )
