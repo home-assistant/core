@@ -105,7 +105,7 @@ class SwitchBotSensor(SwitchbotEntity, SensorEntity):
         super().__init__(coordinator, unique_id, address, name=switchbot_name)
         self._sensor = sensor
         self._attr_unique_id = f"{unique_id}-{sensor}"
-        self._attr_name = f"{switchbot_name} {sensor.title()}"
+        self._attr_name = f"{switchbot_name} {sensor.replace('_', ' ').title()}"
         self.entity_description = SENSOR_TYPES[sensor]
 
     @property
