@@ -31,6 +31,7 @@
             "options_1": {
                 "data": {
                     "bool": "Valfritt boolesk",
+                    "constant": "Konstant",
                     "int": "Numerisk inmatning"
                 }
             },

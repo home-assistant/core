@@ -5,7 +5,8 @@
     "config": {
         "abort": {
             "already_configured": "Konto har redan konfigurerats",
-            "authorize_url_timeout": "Timeout vid generering av en autentisieringsadress."
+            "authorize_url_timeout": "Timeout vid generering av en autentisieringsadress.",
+            "reauth_successful": "\u00c5terautentisering lyckades"
         },
         "error": {
             "internal_error": "Internt fel vid validering av kod",
@@ -52,13 +53,19 @@
                 },
                 "description": "F\u00f6r att l\u00e4nka ditt Nest-konto, [autentisiera ditt konto]({url}). \n\nEfter autentisiering, klipp och klistra in den angivna pin-koden nedan.",
                 "title": "L\u00e4nka Nest-konto"
+            },
+            "reauth_confirm": {
+                "description": "Nest-integreringen m\u00e5ste autentisera ditt konto igen",
+                "title": "\u00c5terautenticera integration"
             }
         }
     },
     "device_automation": {
         "trigger_type": {
             "camera_motion": "R\u00f6relse uppt\u00e4ckt",
-            "camera_person": "Person detekterad"
+            "camera_person": "Person detekterad",
+            "camera_sound": "Ljud uppt\u00e4ckt",
+            "doorbell_chime": "D\u00f6rrklockan tryckt"
         }
     }
 }
