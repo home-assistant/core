@@ -1033,9 +1033,8 @@ async def test_async_step_reauth_abort_early(hass):
             "entry_id": entry.entry_id,
             "title_placeholders": {"name": entry.title},
             "unique_id": entry.unique_id,
-            "device": device,
         },
-        data=entry.data,
+        data=entry.data | {"device": device},
     )
 
     assert result["type"] == FlowResultType.ABORT

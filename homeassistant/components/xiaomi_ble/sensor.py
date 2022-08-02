@@ -181,7 +181,7 @@ def process_service_info(
         and data.encryption_scheme != EncryptionScheme.NONE
         and not data.bindkey_verified
     ):
-        entry.async_start_reauth(hass, context={"device": data})
+        entry.async_start_reauth(hass, data={"device": data})
 
     return sensor_update_to_bluetooth_data_update(update)
 
