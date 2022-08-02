@@ -19,8 +19,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import RainMachineEntity
-from .const import DATA_CONTROLLER, DATA_COORDINATOR, DATA_PROVISION_SETTINGS, DOMAIN
+from . import RainMachineData, RainMachineEntity
+from .const import DATA_PROVISION_SETTINGS, DOMAIN
 
 
 @dataclass
@@ -58,16 +58,16 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up RainMachine buttons based on a config entry."""
+    data: RainMachineData = hass.data[DOMAIN][entry.entry_id]
+
     async_add_entities(
         [
             RainMachineButton(
                 entry,
-                # We don't actually need this coordinator; we pass it because the
-                # RainMachineEntity class requires one.
-                hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR][
-                    DATA_PROVISION_SETTINGS
-                ],
-                hass.data[DOMAIN][entry.entry_id][DATA_CONTROLLER],
+                # Buttons don't actually need a coordinator; we give them one so they
+                # can properly inherit from RainMachineEntity:
+                data.coordinators[DATA_PROVISION_SETTINGS],
+                data.controller,
                 description,
             )
             for description in BUTTON_DESCRIPTIONS
@@ -92,4 +92,4 @@ class RainMachineButton(RainMachineEntity, ButtonEntity):
                 f'Error while pressing button "{self.entity_id}": {err}'
             ) from err
 
-        async_dispatcher_send(self.hass, self._signal_reboot_requested)
+        async_dispatcher_send(self.hass, self.coordinator.signal_reboot_requested)
