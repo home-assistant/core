@@ -435,12 +435,13 @@ class MQTT:
             """Return False if there are unprocessed ACKs."""
             return not bool(self._pending_operations)
 
-        # wait for ACK-s to be processesed (unsubscribe only)
+        # wait for ACK-s to be processesed
         async with self._pending_operations_condition:
             await self._pending_operations_condition.wait_for(no_more_acks)
 
         # stop the MQTT loop
-        await self.hass.async_add_executor_job(stop)
+        async with self._paho_lock:
+            await self.hass.async_add_executor_job(stop)
 
     async def async_subscribe(
         self,
@@ -501,7 +502,8 @@ class MQTT:
         async with self._paho_lock:
             mid = await self.hass.async_add_executor_job(_client_unsubscribe, topic)
             await self._register_mid(mid)
-            self.hass.async_create_task(self._wait_for_mid(mid))
+
+        self.hass.async_create_task(self._wait_for_mid(mid))
 
     async def _async_perform_subscriptions(
         self, subscriptions: Iterable[tuple[str, int]]
@@ -660,6 +662,8 @@ class MQTT:
         async with self._pending_operations_condition:
             if mid not in self._pending_operations:
                 self._pending_operations[mid] = asyncio.Event()
+                # Late ACK registrations might come while unloading the integration.
+                self._pending_operations_condition.notify_all()
 
     def _mqtt_on_disconnect(self, _mqttc, _userdata, result_code: int) -> None:
         """Disconnected callback."""
