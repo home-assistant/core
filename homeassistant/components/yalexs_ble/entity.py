@@ -39,7 +39,13 @@ class YALEXSBLEEntity(Entity):
         self._attr_available = True
         self.async_write_ha_state()
 
+    @callback
+    def _async_state_changed(self, new_state: LockState, lock_info: LockInfo) -> None:
+        """Handle state changed."""
+        self._async_update_state(new_state, lock_info)
+        self.async_write_ha_state()
+
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
-        self.async_on_remove(self._device.register_callback(self._async_update_state))
+        self.async_on_remove(self._device.register_callback(self._async_state_changed))
         return await super().async_added_to_hass()
