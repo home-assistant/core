@@ -33,7 +33,7 @@ async def async_setup_entry(
     assert unique_id is not None
     async_add_entities(
         [
-            SwitchBotBotEntity(
+            SwitchBotSwitch(
                 coordinator,
                 unique_id,
                 entry.data[CONF_ADDRESS],
@@ -44,8 +44,8 @@ async def async_setup_entry(
     )
 
 
-class SwitchBotBotEntity(SwitchbotEntity, SwitchEntity, RestoreEntity):
-    """Representation of a Switchbot."""
+class SwitchBotSwitch(SwitchbotEntity, SwitchEntity, RestoreEntity):
+    """Representation of a Switchbot switch."""
 
     _attr_device_class = SwitchDeviceClass.SWITCH
 
