@@ -213,10 +213,10 @@ def async_track_unavailable(
 
 
 @hass_callback
-def async_rediscover_domains(hass: HomeAssistant, domains: set[str]) -> None:
-    """Trigger discovery of devices which have already been seen on a domain."""
+def async_rediscover_address(hass: HomeAssistant, address: str) -> None:
+    """Trigger discovery of devices which have already been seen."""
     manager: BluetoothManager = hass.data[DOMAIN]
-    manager.async_rediscover_domains(domains)
+    manager.async_rediscover_address(address)
 
 
 async def _async_has_bluetooth_adapter() -> bool:
@@ -523,6 +523,6 @@ class BluetoothManager:
         uninstall_multiple_bleak_catcher()
 
     @hass_callback
-    def async_rediscover_domains(self, domains: set[str]) -> None:
-        """Trigger discovery of devices which have already been seen on a domain."""
-        self._integration_matcher.async_clear_domains(domains)
+    def async_rediscover_address(self, address: str) -> None:
+        """Trigger discovery of devices which have already been seen."""
+        self._integration_matcher.async_clear_address(address)

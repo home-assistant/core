@@ -15,7 +15,7 @@ from homeassistant.components.bluetooth import (
     BluetoothScanningMode,
     BluetoothServiceInfo,
     async_process_advertisements,
-    async_rediscover_domains,
+    async_rediscover_address,
     async_track_unavailable,
     models,
 )
@@ -590,7 +590,7 @@ async def test_rediscovery(hass, mock_bleak_scanner_start, enable_bluetooth):
         assert len(mock_config_flow.mock_calls) == 1
         assert mock_config_flow.mock_calls[0][1][0] == "switchbot"
 
-        async_rediscover_domains(hass, {"switchbot"})
+        async_rediscover_address(hass, "44:44:33:11:23:45")
 
         _get_underlying_scanner()._callback(switchbot_device, switchbot_adv)
         await hass.async_block_till_done()
