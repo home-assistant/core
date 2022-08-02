@@ -36,7 +36,7 @@ async def async_validate_trigger_config(
     config = TRIGGER_SCHEMA(config)
 
     if ZHA_DOMAIN in hass.config.components:
-        hass.data[DATA_ZHA][ZHA_DEVICES_LOADED_EVENT].wait()
+        await hass.data[DATA_ZHA][ZHA_DEVICES_LOADED_EVENT].wait()
         trigger = (config[CONF_TYPE], config[CONF_SUBTYPE])
         try:
             zha_device = async_get_zha_device(hass, config[CONF_DEVICE_ID])
