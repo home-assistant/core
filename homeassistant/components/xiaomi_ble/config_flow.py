@@ -260,7 +260,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
         entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         assert entry is not None
 
-        device: DeviceData = self.context["device"]
+        device: DeviceData = entry_data["device"]
         self._discovered_device = device
 
         self._discovery_info = device.last_service_info
