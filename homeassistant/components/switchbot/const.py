@@ -17,7 +17,7 @@ SUPPORTED_MODEL_TYPES = {
     "WoSensorTH": ATTR_HYGROMETER,
     "WoContact": ATTR_CONTACT,
     "WoPlug": ATTR_PLUG,
-    "WoMotion": ATTR_MOTION,
+    "WoPresence": ATTR_MOTION,
 }
 
 # Config Defaults

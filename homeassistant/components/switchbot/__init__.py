@@ -39,7 +39,6 @@ PLATFORMS_BY_TYPE = {
     ATTR_MOTION: [Platform.BINARY_SENSOR, Platform.SENSOR],
 }
 CLASS_BY_DEVICE = {
-    #    ATTR_PLUG: switchbot.SwitchbotPlugMini,
     ATTR_CURTAIN: switchbot.SwitchbotCurtain,
     ATTR_BOT: switchbot.Switchbot,
     ATTR_PLUG: switchbot.SwitchbotPlugMini,
