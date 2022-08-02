@@ -29,7 +29,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.entity import DeviceInfo, EntityDescription
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -48,6 +48,7 @@ from .const import (
     DOMAIN,
     LOGGER,
 )
+from .model import RainMachineEntityDescription
 
 DEFAULT_SSL = True
 
@@ -409,28 +410,27 @@ class RainMachineEntity(CoordinatorEntity):
     def __init__(
         self,
         entry: ConfigEntry,
-        coordinator: DataUpdateCoordinator,
-        controller: Controller,
-        description: EntityDescription,
+        data: RainMachineData,
+        description: RainMachineEntityDescription,
     ) -> None:
         """Initialize."""
-        super().__init__(coordinator)
+        super().__init__(data.coordinators[description.api_category])
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, controller.mac)},
+            identifiers={(DOMAIN, data.controller.mac)},
             configuration_url=f"https://{entry.data[CONF_IP_ADDRESS]}:{entry.data[CONF_PORT]}",
-            connections={(dr.CONNECTION_NETWORK_MAC, controller.mac)},
-            name=str(controller.name).capitalize(),
+            connections={(dr.CONNECTION_NETWORK_MAC, data.controller.mac)},
+            name=str(data.controller.name).capitalize(),
             manufacturer="RainMachine",
             model=(
-                f"Version {controller.hardware_version} "
-                f"(API: {controller.api_version})"
+                f"Version {data.controller.hardware_version} "
+                f"(API: {data.controller.api_version})"
             ),
-            sw_version=controller.software_version,
+            sw_version=data.controller.software_version,
         )
         self._attr_extra_state_attributes = {}
-        self._attr_unique_id = f"{controller.mac}_{description.key}"
-        self._controller = controller
+        self._attr_unique_id = f"{data.controller.mac}_{description.key}"
+        self._data = data
         self.entity_description = description
 
     @callback

@@ -17,7 +17,10 @@ from .const import (
     DATA_RESTRICTIONS_UNIVERSAL,
     DOMAIN,
 )
-from .model import RainMachineDescriptionMixinApiCategory
+from .model import (
+    RainMachineEntityDescription,
+    RainMachineEntityDescriptionMixinDataKey,
+)
 from .util import key_exists
 
 TYPE_FLOW_SENSOR = "flow_sensor"
@@ -33,7 +36,9 @@ TYPE_WEEKDAY = "weekday"
 
 @dataclass
 class RainMachineBinarySensorDescription(
-    BinarySensorEntityDescription, RainMachineDescriptionMixinApiCategory
+    BinarySensorEntityDescription,
+    RainMachineEntityDescription,
+    RainMachineEntityDescriptionMixinDataKey,
 ):
     """Describe a RainMachine binary sensor."""
 
@@ -132,9 +137,7 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            api_category_sensor_map[description.api_category](
-                entry, coordinator, data.controller, description
-            )
+            api_category_sensor_map[description.api_category](entry, data, description)
             for description in BINARY_SENSOR_DESCRIPTIONS
             if (
                 (coordinator := data.coordinators[description.api_category]) is not None
@@ -147,6 +150,8 @@ async def async_setup_entry(
 
 class CurrentRestrictionsBinarySensor(RainMachineEntity, BinarySensorEntity):
     """Define a binary sensor that handles current restrictions data."""
+
+    entity_description: RainMachineBinarySensorDescription
 
     @callback
     def update_from_latest_data(self) -> None:
@@ -168,6 +173,8 @@ class CurrentRestrictionsBinarySensor(RainMachineEntity, BinarySensorEntity):
 class ProvisionSettingsBinarySensor(RainMachineEntity, BinarySensorEntity):
     """Define a binary sensor that handles provisioning data."""
 
+    entity_description: RainMachineBinarySensorDescription
+
     @callback
     def update_from_latest_data(self) -> None:
         """Update the state."""
@@ -177,6 +184,8 @@ class ProvisionSettingsBinarySensor(RainMachineEntity, BinarySensorEntity):
 
 class UniversalRestrictionsBinarySensor(RainMachineEntity, BinarySensorEntity):
     """Define a binary sensor that handles universal restrictions data."""
+
+    entity_description: RainMachineBinarySensorDescription
 
     @callback
     def update_from_latest_data(self) -> None:
