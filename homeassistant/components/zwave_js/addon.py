@@ -148,7 +148,6 @@ class AddonManager:
             )
 
         addon_info = await async_get_addon_info(self._hass, ADDON_SLUG)
-        LOGGER.debug("Add-on info: %s", addon_info)
         addon_state = self.async_get_addon_state(addon_info)
         return AddonInfo(
             options=addon_info["options"],
