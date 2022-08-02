@@ -1,8 +1,9 @@
 """Rabbit Air Update Coordinator."""
 import asyncio
+from collections.abc import Coroutine
 from datetime import timedelta
 import logging
-from typing import cast
+from typing import Any, cast
 
 from rabbitair import Client, State
 
@@ -13,7 +14,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 _LOGGER = logging.getLogger(__name__)
 
 
-class RabbitAirDebouncer(Debouncer):
+class RabbitAirDebouncer(Debouncer[Coroutine[Any, Any, None]]):
     """Class to rate limit calls to a specific command."""
 
     def __init__(
