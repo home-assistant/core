@@ -5,7 +5,7 @@
 AEMET-OpenData==0.2.1
 
 # homeassistant.components.aladdin_connect
-AIOAladdinConnect==0.1.33
+AIOAladdinConnect==0.1.39
 
 # homeassistant.components.adax
 Adax-local==0.1.4
@@ -218,6 +218,9 @@ aionotion==3.0.2
 
 # homeassistant.components.oncue
 aiooncue==0.3.4
+
+# homeassistant.components.openexchangerates
+aioopenexchangerates==0.3.0
 
 # homeassistant.components.acmeda
 aiopulse==0.4.3
@@ -842,7 +845,7 @@ hole==0.7.0
 holidays==0.14.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220728.0
+home-assistant-frontend==20220802.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.1
@@ -1398,7 +1401,7 @@ pyatmo==6.2.4
 pyatome==0.1.1
 
 # homeassistant.components.apple_tv
-pyatv==0.10.2
+pyatv==0.10.3
 
 # homeassistant.components.aussie_broadband
 pyaussiebb==0.0.15
