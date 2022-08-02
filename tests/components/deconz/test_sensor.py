@@ -816,6 +816,37 @@ async def test_dont_add_sensor_if_state_is_none(
     assert len(hass.states.async_all()) == 0
 
 
+async def test_air_quality_sensor_without_ppb(hass, aioclient_mock):
+    """Test sensor with scaled data is not created if state is None."""
+    data = {
+        "sensors": {
+            "1": {
+                "config": {
+                    "on": True,
+                    "reachable": True,
+                },
+                "ep": 2,
+                "etag": "c2d2e42396f7c78e11e46c66e2ec0200",
+                "lastseen": "2020-11-20T22:48Z",
+                "manufacturername": "BOSCH",
+                "modelid": "AIR",
+                "name": "BOSCH Air quality sensor",
+                "state": {
+                    "airquality": "poor",
+                    "lastupdated": "2020-11-20T22:48:00.209",
+                },
+                "swversion": "20200402",
+                "type": "ZHAAirQuality",
+                "uniqueid": "00:00:00:00:00:00:00:00-02-fdef",
+            }
+        }
+    }
+    with patch.dict(DECONZ_WEB_REQUEST, data):
+        await setup_deconz_integration(hass, aioclient_mock)
+
+    assert len(hass.states.async_all()) == 1
+
+
 async def test_add_battery_later(hass, aioclient_mock, mock_deconz_websocket):
     """Test that a sensor without an initial battery state creates a battery sensor once state exist."""
     data = {

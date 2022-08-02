@@ -29,16 +29,16 @@ class JuiceNetNumberEntityDescription(
 ):
     """An entity description for a JuiceNetNumber."""
 
-    max_value_key: str | None = None
+    native_max_value_key: str | None = None
 
 
 NUMBER_TYPES: tuple[JuiceNetNumberEntityDescription, ...] = (
     JuiceNetNumberEntityDescription(
         name="Amperage Limit",
         key="current_charging_amperage_limit",
-        min_value=6,
-        max_value_key="max_charging_amperage",
-        step=1,
+        native_min_value=6,
+        native_max_value_key="max_charging_amperage",
+        native_step=1,
         setter_key="set_charging_amperage_limit",
     ),
 )
@@ -80,19 +80,19 @@ class JuiceNetNumber(JuiceNetDevice, NumberEntity):
         self._attr_name = f"{self.device.name} {description.name}"
 
     @property
-    def value(self) -> float | None:
+    def native_value(self) -> float | None:
         """Return the value of the entity."""
         return getattr(self.device, self.entity_description.key, None)
 
     @property
-    def max_value(self) -> float:
+    def native_max_value(self) -> float:
         """Return the maximum value."""
-        if self.entity_description.max_value_key is not None:
-            return getattr(self.device, self.entity_description.max_value_key)
-        if self.entity_description.max_value is not None:
-            return self.entity_description.max_value
+        if self.entity_description.native_max_value_key is not None:
+            return getattr(self.device, self.entity_description.native_max_value_key)
+        if self.entity_description.native_max_value is not None:
+            return self.entity_description.native_max_value
         return DEFAULT_MAX_VALUE
 
-    async def async_set_value(self, value: float) -> None:
+    async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         await getattr(self.device, self.entity_description.setter_key)(value)

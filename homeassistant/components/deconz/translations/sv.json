@@ -25,12 +25,18 @@
                     "host": "V\u00e4rd",
                     "port": "Port"
                 }
+            },
+            "user": {
+                "data": {
+                    "host": "V\u00e4lj uppt\u00e4ckt deCONZ-gateway"
+                }
             }
         }
     },
     "device_automation": {
         "trigger_subtype": {
             "both_buttons": "B\u00e5da knapparna",
+            "bottom_buttons": "Bottenknappar",
             "button_1": "F\u00f6rsta knappen",
             "button_2": "Andra knappen",
             "button_3": "Tredje knappen",
@@ -51,6 +57,7 @@
             "side_4": "Sida 4",
             "side_5": "Sida 5",
             "side_6": "Sida 6",
+            "top_buttons": "Toppknappar",
             "turn_off": "St\u00e4ng av",
             "turn_on": "Starta"
         },
@@ -62,6 +69,7 @@
             "remote_button_quadruple_press": "\"{subtype}\"-knappen klickades \nfyrfaldigt",
             "remote_button_quintuple_press": "\"{subtype}\"-knappen klickades \nfemfaldigt",
             "remote_button_rotated": "Knappen roterade \"{subtype}\"",
+            "remote_button_rotated_fast": "Knappen roterades snabbt \" {subtype} \"",
             "remote_button_rotation_stopped": "Knapprotationen \"{subtype}\" stoppades",
             "remote_button_short_press": "\"{subtype}\"-knappen trycktes in",
             "remote_button_short_release": "\"{subtype}\"-knappen sl\u00e4ppt",

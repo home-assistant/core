@@ -71,34 +71,34 @@ class ZwaveNumberEntity(ZWaveBaseEntity, NumberEntity):
         )
 
     @property
-    def min_value(self) -> float:
+    def native_min_value(self) -> float:
         """Return the minimum value."""
         if self.info.primary_value.metadata.min is None:
             return 0
         return float(self.info.primary_value.metadata.min)
 
     @property
-    def max_value(self) -> float:
+    def native_max_value(self) -> float:
         """Return the maximum value."""
         if self.info.primary_value.metadata.max is None:
             return 255
         return float(self.info.primary_value.metadata.max)
 
     @property
-    def value(self) -> float | None:
+    def native_value(self) -> float | None:
         """Return the entity value."""
         if self.info.primary_value.value is None:
             return None
         return float(self.info.primary_value.value)
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of this entity, if any."""
         if self.info.primary_value.metadata.unit is None:
             return None
         return str(self.info.primary_value.metadata.unit)
 
-    async def async_set_value(self, value: float) -> None:
+    async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         if (target_value := self._target_value) is None:
             raise HomeAssistantError("Missing target value on device.")
@@ -121,19 +121,19 @@ class ZwaveVolumeNumberEntity(ZWaveBaseEntity, NumberEntity):
             self.correction_factor = 1
 
         # Entity class attributes
-        self._attr_min_value = 0
-        self._attr_max_value = 1
-        self._attr_step = 0.01
+        self._attr_native_min_value = 0
+        self._attr_native_max_value = 1
+        self._attr_native_step = 0.01
         self._attr_name = self.generate_name(include_value_name=True)
 
     @property
-    def value(self) -> float | None:
+    def native_value(self) -> float | None:
         """Return the entity value."""
         if self.info.primary_value.value is None:
             return None
         return float(self.info.primary_value.value) / self.correction_factor
 
-    async def async_set_value(self, value: float) -> None:
+    async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         await self.info.node.async_set_value(
             self.info.primary_value, round(value * self.correction_factor)

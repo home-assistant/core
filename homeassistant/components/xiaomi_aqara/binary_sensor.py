@@ -34,7 +34,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Perform the setup for Xiaomi devices."""
-    entities = []
+    entities: list[XiaomiBinarySensor] = []
     gateway = hass.data[DOMAIN][GATEWAYS_KEY][config_entry.entry_id]
     for entity in gateway.devices["binary_sensor"]:
         model = entity["model"]

@@ -1,7 +1,6 @@
 """Support for Z-Wave lights."""
 from __future__ import annotations
 
-import logging
 from typing import Any, cast
 
 from zwave_js_server.client import Client as ZwaveClient
@@ -48,8 +47,6 @@ from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
 
 PARALLEL_UPDATES = 0
-
-LOGGER = logging.getLogger(__name__)
 
 MULTI_COLOR_MAP = {
     ColorComponent.WARM_WHITE: COLOR_SWITCH_COMBINED_WARM_WHITE,

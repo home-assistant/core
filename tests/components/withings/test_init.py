@@ -20,12 +20,7 @@ from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.setup import async_setup_component
 
-from .common import (
-    ComponentFactory,
-    async_get_flow_for_user_id,
-    get_data_manager_by_user_id,
-    new_profile_config,
-)
+from .common import ComponentFactory, get_data_manager_by_user_id, new_profile_config
 
 from tests.common import MockConfigEntry
 
@@ -122,6 +117,7 @@ async def test_async_setup_no_config(hass: HomeAssistant) -> None:
         [Exception("401, this is the message")],
     ],
 )
+@patch("homeassistant.components.withings.common._RETRY_COEFFICIENT", 0)
 async def test_auth_failure(
     hass: HomeAssistant,
     component_factory: ComponentFactory,
@@ -138,20 +134,18 @@ async def test_auth_failure(
     )
 
     await component_factory.configure_component(profile_configs=(person0,))
-    assert not async_get_flow_for_user_id(hass, person0.user_id)
+    assert not hass.config_entries.flow.async_progress()
 
     await component_factory.setup_profile(person0.user_id)
     data_manager = get_data_manager_by_user_id(hass, person0.user_id)
     await data_manager.poll_data_update_coordinator.async_refresh()
 
-    flows = async_get_flow_for_user_id(hass, person0.user_id)
+    flows = hass.config_entries.flow.async_progress()
     assert flows
     assert len(flows) == 1
 
     flow = flows[0]
     assert flow["handler"] == const.DOMAIN
-    assert flow["context"]["profile"] == person0.profile
-    assert flow["context"]["userid"] == person0.user_id
 
     result = await hass.config_entries.flow.async_configure(
         flow["flow_id"], user_input={}

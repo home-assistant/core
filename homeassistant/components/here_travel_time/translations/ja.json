@@ -39,6 +39,13 @@
                 },
                 "title": "\u539f\u70b9(Origin)\u3092\u9078\u629e"
             },
+            "origin_menu": {
+                "menu_options": {
+                    "origin_coordinates": "\u5730\u56f3\u4e0a\u306e\u5834\u6240\u3092\u4f7f\u7528\u3059\u308b",
+                    "origin_entity": "\u30a8\u30f3\u30c6\u30a3\u30c6\u30a3\u3092\u4f7f\u7528\u3059\u308b"
+                },
+                "title": "\u539f\u70b9(Origin)\u3092\u9078\u629e"
+            },
             "user": {
                 "data": {
                     "api_key": "API\u30ad\u30fc",

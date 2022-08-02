@@ -98,19 +98,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await coordinator.async_config_entry_first_refresh()
 
-    _LOGGER.debug("Data: %s", coordinator.data)
-
     try:
         # Wait for initial data
         async with async_timeout.timeout(30):
-            while coordinator.data is None or all(
-                getattr(coordinator.data, module) is None for module in MODULES
-            ):
+            while not coordinator.is_ready():
                 _LOGGER.debug(
-                    "Waiting for initial data from %s (%s): %s",
+                    "Waiting for initial data from %s (%s)",
                     entry.title,
                     entry.data[CONF_HOST],
-                    coordinator.data,
                 )
                 await asyncio.sleep(1)
     except asyncio.TimeoutError as exception:
@@ -118,10 +113,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             f"Timed out waiting for {entry.title} ({entry.data[CONF_HOST]})."
         ) from exception
 
+    _LOGGER.debug(
+        "Initial coordinator data for %s (%s):\n%s",
+        entry.title,
+        entry.data[CONF_HOST],
+        coordinator.data.json(),
+    )
+
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     if hass.services.has_service(DOMAIN, SERVICE_OPEN_URL):
         return True

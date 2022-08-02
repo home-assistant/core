@@ -13,6 +13,7 @@ from homeassistant.components.humidifier import (
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_MODE,
 )
+from homeassistant.components.mqtt import CONFIG_SCHEMA
 from homeassistant.components.mqtt.humidifier import (
     CONF_MODE_COMMAND_TOPIC,
     CONF_MODE_STATE_TOPIC,
@@ -29,6 +30,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
+    Platform,
 )
 from homeassistant.setup import async_setup_component
 
@@ -58,6 +60,7 @@ from .test_common import (
     help_test_setting_blocked_attribute_via_mqtt_json_message,
     help_test_setup_manual_entity_from_yaml,
     help_test_unique_id,
+    help_test_unload_config_entry_with_platform,
     help_test_update_with_json_attrs_bad_JSON,
     help_test_update_with_json_attrs_not_dict,
 )
@@ -73,6 +76,13 @@ DEFAULT_CONFIG = {
         "target_humidity_command_topic": "humidity-command-topic",
     }
 }
+
+
+@pytest.fixture(autouse=True)
+def humidifer_platform_only():
+    """Only setup the humidifer platform to speed up tests."""
+    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.HUMIDIFIER]):
+        yield
 
 
 async def async_turn_on(
@@ -1267,13 +1277,32 @@ async def test_reloadable_late(hass, mqtt_client_mock, caplog, tmp_path):
     await help_test_reloadable_late(hass, caplog, tmp_path, domain, config)
 
 
-async def test_setup_manual_entity_from_yaml(hass, caplog, tmp_path):
+async def test_setup_manual_entity_from_yaml(hass):
     """Test setup manual configured MQTT entity."""
     platform = humidifier.DOMAIN
     config = copy.deepcopy(DEFAULT_CONFIG[platform])
     config["name"] = "test"
     del config["platform"]
-    await help_test_setup_manual_entity_from_yaml(
-        hass, caplog, tmp_path, platform, config
-    )
+    await help_test_setup_manual_entity_from_yaml(hass, platform, config)
     assert hass.states.get(f"{platform}.test") is not None
+
+
+async def test_config_schema_validation(hass):
+    """Test invalid platform options in the config schema do pass the config validation."""
+    platform = humidifier.DOMAIN
+    config = copy.deepcopy(DEFAULT_CONFIG[platform])
+    config["name"] = "test"
+    del config["platform"]
+    CONFIG_SCHEMA({DOMAIN: {platform: config}})
+    CONFIG_SCHEMA({DOMAIN: {platform: [config]}})
+    with pytest.raises(MultipleInvalid):
+        CONFIG_SCHEMA({"mqtt": {"humidifier": [{"bla": "bla"}]}})
+
+
+async def test_unload_config_entry(hass, mqtt_mock_entry_with_yaml_config, tmp_path):
+    """Test unloading the config entry."""
+    domain = humidifier.DOMAIN
+    config = DEFAULT_CONFIG[domain]
+    await help_test_unload_config_entry_with_platform(
+        hass, mqtt_mock_entry_with_yaml_config, tmp_path, domain, config
+    )

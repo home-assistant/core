@@ -91,12 +91,12 @@ def make_segment_with_parts(
 ):
     """Create a playlist response for a segment including part segments."""
     response = []
+    if discontinuity:
+        response.append("#EXT-X-DISCONTINUITY")
     for i in range(num_parts):
         response.append(
             f'#EXT-X-PART:DURATION={TEST_PART_DURATION:.3f},URI="./segment/{segment}.{i}.m4s"{",INDEPENDENT=YES" if i%independent_period==0 else ""}'
         )
-    if discontinuity:
-        response.append("#EXT-X-DISCONTINUITY")
     response.extend(
         [
             "#EXT-X-PROGRAM-DATE-TIME:"

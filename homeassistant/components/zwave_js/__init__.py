@@ -43,12 +43,14 @@ from .const import (
     ATTR_COMMAND_CLASS,
     ATTR_COMMAND_CLASS_NAME,
     ATTR_DATA_TYPE,
+    ATTR_DATA_TYPE_LABEL,
     ATTR_DIRECTION,
     ATTR_ENDPOINT,
     ATTR_EVENT,
     ATTR_EVENT_DATA,
     ATTR_EVENT_LABEL,
     ATTR_EVENT_TYPE,
+    ATTR_EVENT_TYPE_LABEL,
     ATTR_HOME_ID,
     ATTR_LABEL,
     ATTR_NODE_ID,
@@ -104,8 +106,6 @@ from .services import ZWaveServices
 CONNECT_TIMEOUT = 10
 DATA_CLIENT_LISTEN_TASK = "client_listen_task"
 DATA_START_PLATFORM_TASK = "start_platform_task"
-DATA_CONNECT_FAILED_LOGGED = "connect_failed_logged"
-DATA_INVALID_SERVER_VERSION_LOGGED = "invalid_server_version_logged"
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -170,28 +170,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await async_ensure_addon_running(hass, entry)
 
     client = ZwaveClient(entry.data[CONF_URL], async_get_clientsession(hass))
-    entry_hass_data: dict = hass.data[DOMAIN].setdefault(entry.entry_id, {})
 
     # connect and throw error if connection failed
     try:
         async with timeout(CONNECT_TIMEOUT):
             await client.connect()
     except InvalidServerVersion as err:
-        if not entry_hass_data.get(DATA_INVALID_SERVER_VERSION_LOGGED):
-            LOGGER.error("Invalid server version: %s", err)
-            entry_hass_data[DATA_INVALID_SERVER_VERSION_LOGGED] = True
         if use_addon:
             async_ensure_addon_updated(hass)
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady(f"Invalid server version: {err}") from err
     except (asyncio.TimeoutError, BaseZwaveJSServerError) as err:
-        if not entry_hass_data.get(DATA_CONNECT_FAILED_LOGGED):
-            LOGGER.error("Failed to connect: %s", err)
-            entry_hass_data[DATA_CONNECT_FAILED_LOGGED] = True
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady(f"Failed to connect: {err}") from err
     else:
         LOGGER.info("Connected to Zwave JS Server")
-        entry_hass_data[DATA_CONNECT_FAILED_LOGGED] = False
-        entry_hass_data[DATA_INVALID_SERVER_VERSION_LOGGED] = False
 
     dev_reg = device_registry.async_get(hass)
     ent_reg = entity_registry.async_get(hass)
@@ -202,7 +193,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async_register_api(hass)
 
     platform_task = hass.async_create_task(start_platforms(hass, entry, client))
-    entry_hass_data[DATA_START_PLATFORM_TASK] = platform_task
+    hass.data[DOMAIN].setdefault(entry.entry_id, {})[
+        DATA_START_PLATFORM_TASK
+    ] = platform_task
 
     return True
 
@@ -485,7 +478,9 @@ async def setup_driver(  # noqa: C901
                 {
                     ATTR_COMMAND_CLASS_NAME: "Entry Control",
                     ATTR_EVENT_TYPE: notification.event_type,
+                    ATTR_EVENT_TYPE_LABEL: notification.event_type_label,
                     ATTR_DATA_TYPE: notification.data_type,
+                    ATTR_DATA_TYPE_LABEL: notification.data_type_label,
                     ATTR_EVENT_DATA: notification.event_data,
                 }
             )
@@ -514,6 +509,7 @@ async def setup_driver(  # noqa: C901
                 {
                     ATTR_COMMAND_CLASS_NAME: "Multilevel Switch",
                     ATTR_EVENT_TYPE: notification.event_type,
+                    ATTR_EVENT_TYPE_LABEL: notification.event_type_label,
                     ATTR_DIRECTION: notification.direction,
                 }
             )
@@ -635,9 +631,7 @@ async def disconnect_client(hass: HomeAssistant, entry: ConfigEntry) -> None:
     platform_task: asyncio.Task = data[DATA_START_PLATFORM_TASK]
     listen_task.cancel()
     platform_task.cancel()
-    platform_setup_tasks = (
-        hass.data[DOMAIN].get(entry.entry_id, {}).get(DATA_PLATFORM_SETUP, {}).values()
-    )
+    platform_setup_tasks = data.get(DATA_PLATFORM_SETUP, {}).values()
     for task in platform_setup_tasks:
         task.cancel()
 
@@ -711,8 +705,7 @@ async def async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) ->
     try:
         addon_info = await addon_manager.async_get_addon_info()
     except AddonError as err:
-        LOGGER.error(err)
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady(err) from err
 
     usb_path: str = entry.data[CONF_USB_PATH]
     # s0_legacy_key was saved as network_key before s2 was added.

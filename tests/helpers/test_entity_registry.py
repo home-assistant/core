@@ -80,6 +80,7 @@ def test_get_or_create_updates_data(registry):
         disabled_by=er.RegistryEntryDisabler.HASS,
         entity_category=EntityCategory.CONFIG,
         hidden_by=er.RegistryEntryHider.INTEGRATION,
+        has_entity_name=True,
         original_device_class="mock-device-class",
         original_icon="initial-original_icon",
         original_name="initial-original_name",
@@ -101,6 +102,7 @@ def test_get_or_create_updates_data(registry):
         hidden_by=er.RegistryEntryHider.INTEGRATION,
         icon=None,
         id=orig_entry.id,
+        has_entity_name=True,
         name=None,
         original_device_class="mock-device-class",
         original_icon="initial-original_icon",
@@ -122,6 +124,7 @@ def test_get_or_create_updates_data(registry):
         disabled_by=er.RegistryEntryDisabler.USER,
         entity_category=None,
         hidden_by=er.RegistryEntryHider.USER,
+        has_entity_name=False,
         original_device_class="new-mock-device-class",
         original_icon="updated-original_icon",
         original_name="updated-original_name",
@@ -143,6 +146,7 @@ def test_get_or_create_updates_data(registry):
         hidden_by=er.RegistryEntryHider.INTEGRATION,  # Should not be updated
         icon=None,
         id=orig_entry.id,
+        has_entity_name=False,
         name=None,
         original_device_class="new-mock-device-class",
         original_icon="updated-original_icon",
@@ -196,6 +200,7 @@ async def test_loading_saving_data(hass, registry):
         disabled_by=er.RegistryEntryDisabler.HASS,
         entity_category=EntityCategory.CONFIG,
         hidden_by=er.RegistryEntryHider.INTEGRATION,
+        has_entity_name=True,
         original_device_class="mock-device-class",
         original_icon="hass:original-icon",
         original_name="Original Name",
@@ -237,6 +242,7 @@ async def test_loading_saving_data(hass, registry):
     assert new_entry2.entity_category == "config"
     assert new_entry2.icon == "hass:user-icon"
     assert new_entry2.hidden_by == er.RegistryEntryHider.INTEGRATION
+    assert new_entry2.has_entity_name is True
     assert new_entry2.name == "User Name"
     assert new_entry2.options == {"light": {"minimum_brightness": 20}}
     assert new_entry2.original_device_class == "mock-device-class"

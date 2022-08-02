@@ -23,8 +23,15 @@
                 },
                 "data_description": {
                     "attribute": "Haal de waarde op van een attribuut op de geselecteerde tag",
+                    "authentication": "Type van de HTTP-authenticatie. Ofwel basic of digest",
+                    "device_class": "Het type/klasse van de sensor om het pictogram in de frontend in te stellen",
+                    "headers": "Headers om te gebruiken voor het webverzoek",
+                    "index": "Definieert welke van de door de CSS-selector geretourneerde elementen moeten worden gebruikt",
                     "resource": "De URL naar de website die de waarde bevat",
-                    "state_class": "De state_class van de sensor"
+                    "select": "Definieert naar welke tag moet worden gezocht. Controleer Beautifulsoup CSS-selectors voor details",
+                    "state_class": "De state_class van de sensor",
+                    "value_template": "Definieert een sjabloon om de status van de sensor te krijgen",
+                    "verify_ssl": "Activeert/de-activeert verificatie van SSL/TLS certificaat, als voorbeeld of het is zelf-getekend"
                 }
             }
         }
@@ -50,8 +57,15 @@
                 },
                 "data_description": {
                     "attribute": "Haal de waarde op van een attribuut op de geselecteerde tag",
+                    "authentication": "Type van de HTTP-authenticatie. Ofwel basic of digest",
+                    "device_class": "Het type/klasse van de sensor om het pictogram in de frontend in te stellen",
+                    "headers": "Headers om te gebruiken voor het webverzoek",
+                    "index": "Definieert welke van de door de CSS-selector geretourneerde elementen moeten worden gebruikt",
                     "resource": "De URL naar de website die de waarde bevat",
-                    "state_class": "De state_class van de sensor"
+                    "select": "Definieert naar welke tag moet worden gezocht. Controleer Beautifulsoup CSS-selectors voor details",
+                    "state_class": "De state_class van de sensor",
+                    "value_template": "Definieert een sjabloon om de status van de sensor te krijgen",
+                    "verify_ssl": "Activeert/de-activeert verificatie van SSL/TLS certificaat, als voorbeeld of het is zelf-getekend"
                 }
             }
         }

@@ -11,7 +11,7 @@
         "step": {
             "reauth_confirm": {
                 "data": {
-                    "api_key": "Chave API"
+                    "api_key": "Chave da API"
                 }
             },
             "select_station": {

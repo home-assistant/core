@@ -41,7 +41,7 @@ async def async_setup_entry(
     )
 
 
-class DeconzSiren(DeconzDevice, SirenEntity):
+class DeconzSiren(DeconzDevice[Siren], SirenEntity):
     """Representation of a deCONZ siren."""
 
     TYPE = DOMAIN
@@ -50,7 +50,6 @@ class DeconzSiren(DeconzDevice, SirenEntity):
         | SirenEntityFeature.TURN_OFF
         | SirenEntityFeature.DURATION
     )
-    _device: Siren
 
     @property
     def is_on(self) -> bool:
@@ -59,11 +58,17 @@ class DeconzSiren(DeconzDevice, SirenEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on siren."""
-        data = {}
         if (duration := kwargs.get(ATTR_DURATION)) is not None:
-            data["duration"] = duration * 10
-        await self._device.turn_on(**data)
+            duration *= 10
+        await self.gateway.api.lights.sirens.set_state(
+            id=self._device.resource_id,
+            on=True,
+            duration=duration,
+        )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off siren."""
-        await self._device.turn_off()
+        await self.gateway.api.lights.sirens.set_state(
+            id=self._device.resource_id,
+            on=False,
+        )

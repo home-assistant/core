@@ -265,14 +265,16 @@ async def _async_setup_component(
         await asyncio.sleep(0)
         await hass.config_entries.flow.async_wait_init_flow_finish(domain)
 
+        # Add to components before the async_setup
+        # call to avoid a deadlock when forwarding platforms
+        hass.config.components.add(domain)
+
         await asyncio.gather(
             *(
                 entry.async_setup(hass, integration=integration)
                 for entry in hass.config_entries.async_entries(domain)
             )
         )
-
-        hass.config.components.add(domain)
 
     # Cleanup
     if domain in hass.data[DATA_SETUP]:

@@ -7,7 +7,7 @@ from xknx import XKNX
 from xknx.devices import NumericValue
 
 from homeassistant import config_entries
-from homeassistant.components.number import NumberEntity
+from homeassistant.components.number import RestoreNumber
 from homeassistant.const import (
     CONF_ENTITY_CATEGORY,
     CONF_MODE,
@@ -19,7 +19,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -57,7 +56,7 @@ def _create_numeric_value(xknx: XKNX, config: ConfigType) -> NumericValue:
     )
 
 
-class KNXNumber(KnxEntity, NumberEntity, RestoreEntity):
+class KNXNumber(KnxEntity, RestoreNumber):
     """Representation of a KNX number."""
 
     _device: NumericValue
@@ -65,39 +64,41 @@ class KNXNumber(KnxEntity, NumberEntity, RestoreEntity):
     def __init__(self, xknx: XKNX, config: ConfigType) -> None:
         """Initialize a KNX number."""
         super().__init__(_create_numeric_value(xknx, config))
-        self._attr_max_value = config.get(
+        self._attr_native_max_value = config.get(
             NumberSchema.CONF_MAX,
             self._device.sensor_value.dpt_class.value_max,
         )
-        self._attr_min_value = config.get(
+        self._attr_native_min_value = config.get(
             NumberSchema.CONF_MIN,
             self._device.sensor_value.dpt_class.value_min,
         )
         self._attr_mode = config[CONF_MODE]
-        self._attr_step = config.get(
+        self._attr_native_step = config.get(
             NumberSchema.CONF_STEP,
             self._device.sensor_value.dpt_class.resolution,
         )
         self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
         self._attr_unique_id = str(self._device.sensor_value.group_address)
-        self._attr_unit_of_measurement = self._device.unit_of_measurement()
-        self._device.sensor_value.value = max(0, self._attr_min_value)
+        self._attr_native_unit_of_measurement = self._device.unit_of_measurement()
+        self._device.sensor_value.value = max(0, self._attr_native_min_value)
 
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
         await super().async_added_to_hass()
-        if not self._device.sensor_value.readable and (
-            last_state := await self.async_get_last_state()
+        if (
+            not self._device.sensor_value.readable
+            and (last_state := await self.async_get_last_state())
+            and (last_number_data := await self.async_get_last_number_data())
         ):
             if last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
-                self._device.sensor_value.value = float(last_state.state)
+                self._device.sensor_value.value = last_number_data.native_value
 
     @property
-    def value(self) -> float:
+    def native_value(self) -> float:
         """Return the entity value to represent the entity state."""
         # self._device.sensor_value.value is set in __init__ so it is never None
         return cast(float, self._device.resolve_state())
 
-    async def async_set_value(self, value: float) -> None:
+    async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         await self._device.set(value)

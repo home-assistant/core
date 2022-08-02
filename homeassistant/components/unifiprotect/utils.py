@@ -7,12 +7,18 @@ from enum import Enum
 import socket
 from typing import Any
 
-from pyunifiprotect import ProtectApiClient
-from pyunifiprotect.data.base import ProtectAdoptableDeviceModel, ProtectDeviceModel
+from pyunifiprotect.data import (
+    Bootstrap,
+    Light,
+    LightModeEnableType,
+    LightModeType,
+    ProtectAdoptableDeviceModel,
+)
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 
-from .const import ModelType
+from .const import DOMAIN, ModelType
 
 
 def get_nested_attr(obj: Any, attr: str) -> Any:
@@ -59,33 +65,44 @@ async def _async_resolve(hass: HomeAssistant, host: str) -> str | None:
     return None
 
 
+@callback
 def async_get_devices_by_type(
-    api: ProtectApiClient, device_type: ModelType
-) -> dict[str, ProtectDeviceModel]:
-    """Get devices by type."""
-    devices: dict[str, ProtectDeviceModel] = getattr(
-        api.bootstrap, f"{device_type.value}s"
-    )
-    return devices
-
-
-def async_get_adoptable_devices_by_type(
-    api: ProtectApiClient, device_type: ModelType
+    bootstrap: Bootstrap, device_type: ModelType
 ) -> dict[str, ProtectAdoptableDeviceModel]:
-    """Get adoptable devices by type."""
+    """Get devices by type."""
+
     devices: dict[str, ProtectAdoptableDeviceModel] = getattr(
-        api.bootstrap, f"{device_type.value}s"
+        bootstrap, f"{device_type.value}s"
     )
     return devices
 
 
 @callback
 def async_get_devices(
-    api: ProtectApiClient, model_type: Iterable[ModelType]
-) -> Generator[ProtectDeviceModel, None, None]:
+    bootstrap: Bootstrap, model_type: Iterable[ModelType]
+) -> Generator[ProtectAdoptableDeviceModel, None, None]:
     """Return all device by type."""
     return (
         device
         for device_type in model_type
-        for device in async_get_devices_by_type(api, device_type).values()
+        for device in async_get_devices_by_type(bootstrap, device_type).values()
     )
+
+
+@callback
+def async_get_light_motion_current(obj: Light) -> str:
+    """Get light motion mode for Flood Light."""
+
+    if (
+        obj.light_mode_settings.mode == LightModeType.MOTION
+        and obj.light_mode_settings.enable_at == LightModeEnableType.DARK
+    ):
+        return f"{LightModeType.MOTION.value}Dark"
+    return obj.light_mode_settings.mode.value
+
+
+@callback
+def async_dispatch_id(entry: ConfigEntry, dispatch: str) -> str:
+    """Generate entry specific dispatch ID."""
+
+    return f"{DOMAIN}.{entry.entry_id}.{dispatch}"

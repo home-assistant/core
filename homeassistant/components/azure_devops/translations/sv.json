@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto har redan konfigurerats",
+            "reauth_successful": "\u00c5terautentisering lyckades"
+        },
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta.",
+            "invalid_auth": "Ogiltig autentisering",
+            "project_error": "Kunde inte h\u00e4mta projektinformation"
+        },
+        "flow_title": "{project_url}",
+        "step": {
+            "reauth": {
+                "data": {
+                    "personal_access_token": "Personlig \u00e5tkomsttoken (PAT)"
+                },
+                "description": "Autentisering misslyckades f\u00f6r {project_url} . Ange dina nuvarande uppgifter.",
+                "title": "\u00c5terautentisering"
+            },
+            "user": {
+                "data": {
+                    "organization": "Organisation",
+                    "personal_access_token": "Personlig \u00e5tkomsttoken (PAT)",
+                    "project": "Projekt"
+                },
+                "description": "Konfigurera en Azure DevOps-instans f\u00f6r att komma \u00e5t ditt projekt. En personlig \u00e5tkomsttoken kr\u00e4vs endast f\u00f6r ett privat projekt.",
+                "title": "L\u00e4gg till Azure DevOps Project"
+            }
+        }
+    }
+}

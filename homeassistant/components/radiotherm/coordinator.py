@@ -4,6 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 from socket import timeout
+from urllib.error import URLError
 
 from radiotherm.validate import RadiothermTstatError
 
@@ -37,6 +38,9 @@ class RadioThermUpdateCoordinator(DataUpdateCoordinator[RadioThermUpdate]):
             return await async_get_data(self.hass, self.init_data.tstat)
         except RadiothermTstatError as ex:
             msg = f"{self._description} was busy (invalid value returned): {ex}"
+            raise UpdateFailed(msg) from ex
+        except (OSError, URLError) as ex:
+            msg = f"{self._description} connection error: {ex}"
             raise UpdateFailed(msg) from ex
         except timeout as ex:
             msg = f"{self._description}) timed out waiting for a response: {ex}"

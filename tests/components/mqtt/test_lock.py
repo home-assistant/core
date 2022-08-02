@@ -18,6 +18,7 @@ from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
+    Platform,
 )
 from homeassistant.setup import async_setup_component
 
@@ -47,6 +48,7 @@ from .test_common import (
     help_test_setting_blocked_attribute_via_mqtt_json_message,
     help_test_setup_manual_entity_from_yaml,
     help_test_unique_id,
+    help_test_unload_config_entry_with_platform,
     help_test_update_with_json_attrs_bad_JSON,
     help_test_update_with_json_attrs_not_dict,
 )
@@ -56,6 +58,13 @@ from tests.common import async_fire_mqtt_message
 DEFAULT_CONFIG = {
     LOCK_DOMAIN: {"platform": "mqtt", "name": "test", "command_topic": "test-topic"}
 }
+
+
+@pytest.fixture(autouse=True)
+def lock_platform_only():
+    """Only setup the lock platform to speed up tests."""
+    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LOCK]):
+        yield
 
 
 async def test_controlling_state_via_topic(hass, mqtt_mock_entry_with_yaml_config):
@@ -738,7 +747,14 @@ async def test_setup_manual_entity_from_yaml(hass, caplog, tmp_path):
     config = copy.deepcopy(DEFAULT_CONFIG[platform])
     config["name"] = "test"
     del config["platform"]
-    await help_test_setup_manual_entity_from_yaml(
-        hass, caplog, tmp_path, platform, config
-    )
+    await help_test_setup_manual_entity_from_yaml(hass, platform, config)
     assert hass.states.get(f"{platform}.test") is not None
+
+
+async def test_unload_entry(hass, mqtt_mock_entry_with_yaml_config, tmp_path):
+    """Test unloading the config entry."""
+    domain = LOCK_DOMAIN
+    config = DEFAULT_CONFIG[domain]
+    await help_test_unload_config_entry_with_platform(
+        hass, mqtt_mock_entry_with_yaml_config, tmp_path, domain, config
+    )

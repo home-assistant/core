@@ -17,7 +17,7 @@ from homeassistant.setup import async_setup_component
 
 from .common import TEST_PASSWORD, TEST_USER_ID
 
-SWITCH_ENTITY_ID = "switch.shutoff_valve"
+SWITCH_ENTITY_ID = "switch.smart_water_shutoff_shutoff_valve"
 
 
 async def test_services(hass, config_entry, aioclient_mock_fixture, aioclient_mock):

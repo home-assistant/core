@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Redan konfigurerad. Endast en konfiguration m\u00f6jlig."
+        },
         "step": {
             "setup_network": {
                 "data": {
@@ -26,6 +29,16 @@
                 },
                 "title": "V\u00e4lj anslutningstyp"
             }
+        }
+    },
+    "device_automation": {
+        "action_type": {
+            "send_command": "Skicka kommando: {subtype}",
+            "send_status": "Skicka statusuppdatering: {subtype}"
+        },
+        "trigger_type": {
+            "command": "Mottaget kommando: {subtype}",
+            "status": "Mottagen status: {subtype}"
         }
     },
     "options": {

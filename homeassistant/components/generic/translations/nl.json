@@ -15,6 +15,7 @@
             "stream_no_video": "Stream heeft geen video",
             "stream_not_permitted": "Operatie niet toegestaan bij poging om verbinding te maken met stream. Verkeerd RTSP transport protocol?",
             "stream_unauthorised": "Autorisatie mislukt bij poging om verbinding te maken met stream",
+            "template_error": "Fout bij het weergeven van sjabloon. Bekijk het logboek voor meer informatie.",
             "timeout": "Time-out tijdens het laden van URL",
             "unable_still_load": "Kan geen geldige afbeelding laden van stilstaande afbeelding URL (b.v. ongeldige host, URL of authenticatie fout).  Bekijk het log voor meer informatie.",
             "unknown": "Onverwachte fout"
@@ -57,6 +58,7 @@
             "stream_no_video": "Stream heeft geen video",
             "stream_not_permitted": "Operatie niet toegestaan bij poging om verbinding te maken met stream. Verkeerd RTSP transport protocol?",
             "stream_unauthorised": "Autorisatie mislukt bij poging om verbinding te maken met stream",
+            "template_error": "Fout bij het weergeven van sjabloon. Bekijk het logboek voor meer informatie.",
             "timeout": "Time-out tijdens het laden van URL",
             "unable_still_load": "Kan geen geldige afbeelding laden van stilstaande afbeelding URL (b.v. ongeldige host, URL of authenticatie fout).  Bekijk het log voor meer informatie.",
             "unknown": "Onverwachte fout"

@@ -233,6 +233,11 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         """Extra data that needs to be appended to the authorize url."""
         return {}
 
+    async def async_generate_authorize_url(self) -> str:
+        """Generate a url for the user to authorize."""
+        url = await self.flow_impl.async_generate_authorize_url(self.flow_id)
+        return str(URL(url).update_query(self.extra_authorize_data))
+
     async def async_step_pick_implementation(
         self, user_input: dict | None = None
     ) -> FlowResult:
@@ -278,7 +283,7 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
 
         try:
             async with async_timeout.timeout(10):
-                url = await self.flow_impl.async_generate_authorize_url(self.flow_id)
+                url = await self.async_generate_authorize_url()
         except asyncio.TimeoutError:
             return self.async_abort(reason="authorize_url_timeout")
         except NoURLAvailableError:
@@ -288,8 +293,6 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
                     "docs_url": "https://www.home-assistant.io/more-info/no-url-available"
                 },
             )
-
-        url = str(URL(url).update_query(self.extra_authorize_data))
 
         return self.async_external_step(step_id="auth", url=url)
 

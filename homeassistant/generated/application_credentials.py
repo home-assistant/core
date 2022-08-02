@@ -11,6 +11,7 @@ APPLICATION_CREDENTIALS = [
     "home_connect",
     "lyric",
     "neato",
+    "nest",
     "netatmo",
     "senz",
     "spotify",

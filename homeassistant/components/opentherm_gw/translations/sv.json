@@ -18,7 +18,10 @@
         "step": {
             "init": {
                 "data": {
-                    "floor_temperature": "Golvetemperatur"
+                    "floor_temperature": "Golvetemperatur",
+                    "read_precision": "L\u00e4sprecision",
+                    "set_precision": "St\u00e4ll in Precision",
+                    "temporary_override_mode": "Tempor\u00e4rt l\u00e4ge f\u00f6r \u00e5sidos\u00e4ttande av inst\u00e4llningsv\u00e4rde"
                 }
             }
         }

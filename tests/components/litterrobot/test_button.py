@@ -14,7 +14,6 @@ from .conftest import setup_integration
 BUTTON_ENTITY = "button.test_reset_waste_drawer"
 
 
-@freeze_time("2021-11-15 17:37:00", tz_offset=-7)
 async def test_button(hass: HomeAssistant, mock_account: MagicMock) -> None:
     """Test the creation and values of the Litter-Robot button."""
     await setup_integration(hass, mock_account, BUTTON_DOMAIN)
@@ -29,12 +28,13 @@ async def test_button(hass: HomeAssistant, mock_account: MagicMock) -> None:
     assert entry
     assert entry.entity_category is EntityCategory.CONFIG
 
-    await hass.services.async_call(
-        BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: BUTTON_ENTITY},
-        blocking=True,
-    )
+    with freeze_time("2021-11-15 17:37:00", tz_offset=-7):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: BUTTON_ENTITY},
+            blocking=True,
+        )
     await hass.async_block_till_done()
     assert mock_account.robots[0].reset_waste_drawer.call_count == 1
     mock_account.robots[0].reset_waste_drawer.assert_called_with()

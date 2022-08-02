@@ -9,6 +9,7 @@ import pytest
 
 from homeassistant.components import camera
 from homeassistant.components.mqtt.camera import MQTT_CAMERA_ATTRIBUTES_BLOCKED
+from homeassistant.const import Platform
 from homeassistant.setup import async_setup_component
 
 from .test_common import (
@@ -35,6 +36,7 @@ from .test_common import (
     help_test_setting_blocked_attribute_via_mqtt_json_message,
     help_test_setup_manual_entity_from_yaml,
     help_test_unique_id,
+    help_test_unload_config_entry_with_platform,
     help_test_update_with_json_attrs_bad_JSON,
     help_test_update_with_json_attrs_not_dict,
 )
@@ -44,6 +46,13 @@ from tests.common import async_fire_mqtt_message
 DEFAULT_CONFIG = {
     camera.DOMAIN: {"platform": "mqtt", "name": "test", "topic": "test_topic"}
 }
+
+
+@pytest.fixture(autouse=True)
+def camera_platform_only():
+    """Only setup the camera platform to speed up tests."""
+    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.CAMERA]):
+        yield
 
 
 async def test_run_camera_setup(
@@ -330,13 +339,20 @@ async def test_reloadable_late(hass, mqtt_client_mock, caplog, tmp_path):
     await help_test_reloadable_late(hass, caplog, tmp_path, domain, config)
 
 
-async def test_setup_manual_entity_from_yaml(hass, caplog, tmp_path):
+async def test_setup_manual_entity_from_yaml(hass):
     """Test setup manual configured MQTT entity."""
     platform = camera.DOMAIN
     config = copy.deepcopy(DEFAULT_CONFIG[platform])
     config["name"] = "test"
     del config["platform"]
-    await help_test_setup_manual_entity_from_yaml(
-        hass, caplog, tmp_path, platform, config
-    )
+    await help_test_setup_manual_entity_from_yaml(hass, platform, config)
     assert hass.states.get(f"{platform}.test") is not None
+
+
+async def test_unload_entry(hass, mqtt_mock_entry_with_yaml_config, tmp_path):
+    """Test unloading the config entry."""
+    domain = camera.DOMAIN
+    config = DEFAULT_CONFIG[domain]
+    await help_test_unload_config_entry_with_platform(
+        hass, mqtt_mock_entry_with_yaml_config, tmp_path, domain, config
+    )

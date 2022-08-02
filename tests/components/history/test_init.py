@@ -753,7 +753,7 @@ async def test_fetch_period_api_with_entity_glob_include_and_exclude(
         {
             "history": {
                 "exclude": {
-                    "entity_globs": ["light.many*"],
+                    "entity_globs": ["light.many*", "binary_sensor.*"],
                 },
                 "include": {
                     "entity_globs": ["light.m*"],
@@ -769,6 +769,7 @@ async def test_fetch_period_api_with_entity_glob_include_and_exclude(
     hass.states.async_set("light.many_state_changes", "on")
     hass.states.async_set("switch.match", "on")
     hass.states.async_set("media_player.test", "on")
+    hass.states.async_set("binary_sensor.exclude", "on")
 
     await async_wait_recording_done(hass)
 
@@ -778,10 +779,11 @@ async def test_fetch_period_api_with_entity_glob_include_and_exclude(
     )
     assert response.status == HTTPStatus.OK
     response_json = await response.json()
-    assert len(response_json) == 3
-    assert response_json[0][0]["entity_id"] == "light.match"
-    assert response_json[1][0]["entity_id"] == "media_player.test"
-    assert response_json[2][0]["entity_id"] == "switch.match"
+    assert len(response_json) == 4
+    assert response_json[0][0]["entity_id"] == "light.many_state_changes"
+    assert response_json[1][0]["entity_id"] == "light.match"
+    assert response_json[2][0]["entity_id"] == "media_player.test"
+    assert response_json[3][0]["entity_id"] == "switch.match"
 
 
 async def test_entity_ids_limit_via_api(hass, hass_client, recorder_mock):
@@ -994,7 +996,7 @@ async def test_statistics_during_period_in_the_past(
     assert response["success"]
     assert response["result"] == {}
 
-    past = now - timedelta(days=3)
+    past = now - timedelta(days=3, hours=1)
     await client.send_json(
         {
             "id": 3,

@@ -17,6 +17,13 @@
                 },
                 "description": "Skriv inn tilgangstokenet for Awair-utviklere p\u00e5 nytt."
             },
+            "reauth_confirm": {
+                "data": {
+                    "access_token": "Tilgangstoken",
+                    "email": "E-post"
+                },
+                "description": "Skriv inn Awair-utviklertilgangstokenet ditt p\u00e5 nytt."
+            },
             "user": {
                 "data": {
                     "access_token": "Tilgangstoken",

@@ -127,8 +127,6 @@ async def test_setup_susbcriber_failure(
 ):
     """Test configuration error."""
     with patch(
-        "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation"
-    ), patch(
         "homeassistant.components.nest.api.GoogleNestSubscriber.start_async",
         side_effect=SubscriberException(),
     ):

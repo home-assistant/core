@@ -9,7 +9,7 @@ from homeassistant.components import dhcp
 from homeassistant.components.wiz.config_flow import CONF_DEVICE
 from homeassistant.components.wiz.const import DOMAIN
 from homeassistant.const import CONF_HOST
-from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_FORM
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
     FAKE_DIMMABLE_BULB,
@@ -85,7 +85,7 @@ async def test_user_flow_enters_dns_name(hass):
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "no_ip"}
 
     with _patch_wizlight(), patch(
@@ -179,7 +179,7 @@ async def test_discovered_by_dhcp_connection_fails(hass, source, data):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
 
@@ -256,7 +256,7 @@ async def test_discovered_by_dhcp_or_integration_discovery(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
 
     with _patch_wizlight(
@@ -306,7 +306,7 @@ async def test_discovered_by_dhcp_or_integration_discovery_updates_host(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_HOST] == FAKE_IP
 
@@ -335,7 +335,7 @@ async def test_discovered_by_dhcp_or_integration_discovery_avoid_waiting_for_ret
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.state is config_entries.ConfigEntryState.LOADED
 
@@ -458,7 +458,7 @@ async def test_setup_via_discovery_exception_finds_nothing(hass):
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_ABORT
+    assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "no_devices_found"
 
 
@@ -476,7 +476,7 @@ async def test_discovery_with_firmware_update(hass):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
 
     # In between discovery and when the user clicks to set it up the firmware
@@ -502,6 +502,37 @@ async def test_discovery_with_firmware_update(hass):
     assert result2["type"] == "create_entry"
     assert result2["title"] == "WiZ RGBWW Tunable ABCABC"
     assert result2["data"] == {
+        CONF_HOST: "1.1.1.1",
+    }
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    "source, data",
+    [
+        (config_entries.SOURCE_DHCP, DHCP_DISCOVERY),
+        (config_entries.SOURCE_INTEGRATION_DISCOVERY, INTEGRATION_DISCOVERY),
+    ],
+)
+async def test_discovered_during_onboarding(hass, source, data):
+    """Test dhcp or discovery during onboarding creates the config entry."""
+    with _patch_wizlight(), patch(
+        "homeassistant.components.wiz.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry, patch(
+        "homeassistant.components.wiz.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": source}, data=data
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == "WiZ Dimmable White ABCABC"
+    assert result["data"] == {
         CONF_HOST: "1.1.1.1",
     }
     assert len(mock_setup.mock_calls) == 1

@@ -1,5 +1,5 @@
 """The tests for the MQTT automation."""
-from unittest.mock import ANY
+from unittest.mock import ANY, patch
 
 import pytest
 
@@ -15,6 +15,13 @@ from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa:
 def calls(hass):
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
+
+
+@pytest.fixture(autouse=True)
+def no_platforms():
+    """Skip platform setup to speed up tests."""
+    with patch("homeassistant.components.mqtt.PLATFORMS", []):
+        yield
 
 
 @pytest.fixture(autouse=True)

@@ -28,6 +28,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
+    Platform,
 )
 from homeassistant.setup import async_setup_component
 
@@ -57,6 +58,7 @@ from .test_common import (
     help_test_setting_blocked_attribute_via_mqtt_json_message,
     help_test_setup_manual_entity_from_yaml,
     help_test_unique_id,
+    help_test_unload_config_entry_with_platform,
     help_test_update_with_json_attrs_bad_JSON,
     help_test_update_with_json_attrs_not_dict,
 )
@@ -72,6 +74,13 @@ DEFAULT_CONFIG = {
         "command_topic": "command-topic",
     }
 }
+
+
+@pytest.fixture(autouse=True)
+def fan_platform_only():
+    """Only setup the fan platform to speed up tests."""
+    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.FAN]):
+        yield
 
 
 async def test_fail_setup_if_no_command_topic(
@@ -1894,13 +1903,20 @@ async def test_reloadable_late(hass, mqtt_client_mock, caplog, tmp_path):
     await help_test_reloadable_late(hass, caplog, tmp_path, domain, config)
 
 
-async def test_setup_manual_entity_from_yaml(hass, caplog, tmp_path):
+async def test_setup_manual_entity_from_yaml(hass):
     """Test setup manual configured MQTT entity."""
     platform = fan.DOMAIN
     config = copy.deepcopy(DEFAULT_CONFIG[platform])
     config["name"] = "test"
     del config["platform"]
-    await help_test_setup_manual_entity_from_yaml(
-        hass, caplog, tmp_path, platform, config
-    )
+    await help_test_setup_manual_entity_from_yaml(hass, platform, config)
     assert hass.states.get(f"{platform}.test") is not None
+
+
+async def test_unload_entry(hass, mqtt_mock_entry_with_yaml_config, tmp_path):
+    """Test unloading the config entry."""
+    domain = fan.DOMAIN
+    config = DEFAULT_CONFIG[domain]
+    await help_test_unload_config_entry_with_platform(
+        hass, mqtt_mock_entry_with_yaml_config, tmp_path, domain, config
+    )

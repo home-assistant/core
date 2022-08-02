@@ -46,10 +46,13 @@
             "title": "\u8b66\u6212\u63a7\u5236\u9762\u677f\u9078\u9805"
         },
         "zha_options": {
+            "always_prefer_xy_color_mode": "\u504f\u597d XY \u8272\u5f69\u6a21\u5f0f",
             "consider_unavailable_battery": "\u5c07\u96fb\u6c60\u4f9b\u96fb\u88dd\u7f6e\u8996\u70ba\u4e0d\u53ef\u7528\uff08\u79d2\u6578\uff09",
             "consider_unavailable_mains": "\u5c07\u4e3b\u4f9b\u96fb\u88dd\u7f6e\u8996\u70ba\u4e0d\u53ef\u7528\uff08\u79d2\u6578\uff09",
             "default_light_transition": "\u9810\u8a2d\u71c8\u5149\u8f49\u63db\u6642\u9593\uff08\u79d2\uff09",
             "enable_identify_on_join": "\u7576\u88dd\u7f6e\u52a0\u5165\u7db2\u8def\u6642\u3001\u958b\u555f\u8b58\u5225\u6548\u679c",
+            "enhanced_light_transition": "\u958b\u555f\u7531\u95dc\u9589\u72c0\u614b\u589e\u5f37\u5149\u8272/\u8272\u6eab\u8f49\u63db",
+            "light_transitioning_flag": "\u958b\u555f\u71c8\u5149\u8f49\u63db\u589e\u5f37\u4eae\u5ea6\u8abf\u6574\u5217",
             "title": "Global \u9078\u9805"
         }
     },
