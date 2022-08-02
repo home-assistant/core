@@ -19,6 +19,7 @@ from homeassistant.helpers import device_registry as dr
 
 from .const import (
     ATTR_BOT,
+    ATTR_BULB,
     ATTR_CONTACT,
     ATTR_CURTAIN,
     ATTR_HYGROMETER,
@@ -31,6 +32,7 @@ from .const import (
 from .coordinator import SwitchbotDataUpdateCoordinator
 
 PLATFORMS_BY_TYPE = {
+    ATTR_BULB: [Platform.SENSOR],
     ATTR_BOT: [Platform.SWITCH, Platform.SENSOR],
     ATTR_PLUG: [Platform.SWITCH, Platform.SENSOR],
     ATTR_CURTAIN: [Platform.COVER, Platform.BINARY_SENSOR, Platform.SENSOR],

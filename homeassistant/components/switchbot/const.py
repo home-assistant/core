@@ -4,6 +4,7 @@ MANUFACTURER = "switchbot"
 
 # Config Attributes
 ATTR_BOT = "bot"
+ATTR_BULB = "bulb"
 ATTR_CURTAIN = "curtain"
 ATTR_HYGROMETER = "hygrometer"
 ATTR_CONTACT = "contact"
@@ -18,6 +19,7 @@ SUPPORTED_MODEL_TYPES = {
     "WoContact": ATTR_CONTACT,
     "WoPlug": ATTR_PLUG,
     "WoPresence": ATTR_MOTION,
+    "WoBulb": ATTR_BULB,
 }
 
 # Config Defaults
