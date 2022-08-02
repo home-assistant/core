@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
+    CONF_TIMEOUT,
     STATE_OFF,
     STATE_ON,
 )
@@ -36,6 +37,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
         vol.Optional(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     }
 )
 
@@ -52,6 +54,7 @@ def setup_platform(
     name = config.get(CONF_NAME)
     encoding = config.get(CONF_ENCODING)
     password = config.get(CONF_PASSWORD)
+    timeout = config.get(CONF_TIMEOUT)
 
     if "pjlink" not in hass.data:
         hass.data["pjlink"] = {}
@@ -61,7 +64,7 @@ def setup_platform(
     if device_label in hass_data:
         return
 
-    device = PjLinkDevice(host, port, name, encoding, password)
+    device = PjLinkDevice(host, port, name, encoding, password, timeout)
     hass_data[device_label] = device
     add_entities([device], True)
 
@@ -81,7 +84,7 @@ class PjLinkDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.SELECT_SOURCE
     )
 
-    def __init__(self, host, port, name, encoding, password):
+    def __init__(self, host, port, name, encoding, password, timeout):
         """Iinitialize the PJLink device."""
         self._host = host
         self._port = port
@@ -91,6 +94,7 @@ class PjLinkDevice(MediaPlayerEntity):
         self._muted = False
         self._pwstate = STATE_OFF
         self._current_source = None
+        self._timeout = timeout
         with self.projector() as projector:
             if not self._name:
                 self._name = projector.get_name()
@@ -102,7 +106,7 @@ class PjLinkDevice(MediaPlayerEntity):
         """Create PJLink Projector instance."""
 
         projector = Projector.from_address(
-            self._host, self._port, self._encoding, DEFAULT_TIMEOUT
+            self._host, self._port, self._encoding, self._timeout
         )
         projector.authenticate(self._password)
         return projector
