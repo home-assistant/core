@@ -98,10 +98,11 @@ class AladdinConnectSensor(SensorEntity):
         device: DoorDevice,
         description: AccSensorEntityDescription,
     ) -> None:
-        """Initialize a sensor for an Abode device."""
+        """Initialize a sensor for an Aladdin Connect device."""
         self._device_id = device["device_id"]
         self._number = device["door_number"]
         self._name = device["name"]
+        self._model = device["model"]
         self._acc = acc
         self.entity_description = description
         self._attr_unique_id = f"{self._device_id}-{self._number}-{description.key}"
@@ -114,6 +115,7 @@ class AladdinConnectSensor(SensorEntity):
             identifiers={(DOMAIN, self._device_id)},
             name=self._name,
             manufacturer="Overhead Door",
+            model=f"Model: {self._model}",
         )
 
     @property
