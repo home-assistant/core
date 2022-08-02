@@ -46,7 +46,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 UNAVAILABLE_TRACK_SECONDS: Final = 60 * 5
-START_TIMEOUT = 15
+START_TIMEOUT = 9
 
 SOURCE_LOCAL: Final = "local"
 
