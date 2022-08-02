@@ -192,7 +192,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry, unique_id=entry.data[CONF_PROJECT_ID]
         )
 
-    async_delete_issue(hass, DOMAIN, "deprecated_app_auth")
+    async_delete_issue(hass, DOMAIN, "removed_app_auth")
 
     subscriber = await api.new_subscriber(hass, entry)
     if not subscriber:
@@ -270,7 +270,6 @@ async def async_import_config(hass: HomeAssistant, entry: ConfigEntry) -> None:
             severity=IssueSeverity.CRITICAL,
             translation_key="removed_app_auth",
             translation_placeholders={
-                "integrations_url": "/config/integrations/",
                 "more_info_url": "https://www.home-assistant.io/more-info/nest-auth-deprecation",
                 "documentation_url": "https://www.home-assistant.io/integrations/nest/",
             },
