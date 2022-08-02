@@ -56,6 +56,15 @@ SENSORS: tuple[AccSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=AladdinConnectClient.get_rssi_status,
     ),
+    AccSensorEntityDescription(
+        key="ble_strength",
+        name="BLE Strength",
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        entity_registry_enabled_default=False,
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=AladdinConnectClient.get_ble_strength,
+    ),
 )
 
 
