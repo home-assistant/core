@@ -345,16 +345,21 @@ class BluetoothManager:
                 await self.scanner.start()  # type: ignore[no-untyped-call]
         except InvalidMessageError as ex:
             self._cancel_device_detected()
+            _LOGGER.debug("Invalid DBus message received: %s", ex, exc_info=True)
             raise ConfigEntryNotReady(
-                f"Invalid DBus message received: {ex}; try restarting DBus"
+                f"Invalid DBus message received: {ex}; try restarting `dbus`"
             ) from ex
         except BrokenPipeError as ex:
             self._cancel_device_detected()
+            _LOGGER.debug("DBus connection broken: %s", ex, exc_info=True)
             raise ConfigEntryNotReady(
-                f"DBus connection broken: {ex}; try restarting DBus"
+                f"DBus connection broken: {ex}; try restarting `bluetooth` and `dbus`"
             ) from ex
         except FileNotFoundError as ex:
             self._cancel_device_detected()
+            _LOGGER.debug(
+                "FileNotFoundError while starting bluetooth: %s", ex, exc_info=True
+            )
             if is_docker_env():
                 raise ConfigEntryNotReady(
                     f"DBus service not found; docker config may be missing `-v /run/dbus:/run/dbus:ro`: {ex}"
@@ -369,6 +374,7 @@ class BluetoothManager:
             ) from ex
         except BleakError as ex:
             self._cancel_device_detected()
+            _LOGGER.debug("BleakError while starting bluetooth: %s", ex, exc_info=True)
             raise ConfigEntryNotReady(f"Failed to start Bluetooth: {ex}") from ex
         self.async_setup_unavailable_tracking()
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
