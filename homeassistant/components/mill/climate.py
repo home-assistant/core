@@ -121,7 +121,6 @@ class MillHeater(CoordinatorEntity, ClimateEntity):
             )
         else:
             self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
-            self._attr_target_temperature_step = PRECISION_HALVES
 
         self._update_attr(heater)
 
