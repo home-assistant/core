@@ -139,7 +139,7 @@ class AddonManager:
         """Return and cache Z-Wave JS add-on info."""
         addon_store_info = await async_get_addon_store_info(self._hass, ADDON_SLUG)
         LOGGER.debug("Add-on store info: %s", addon_store_info)
-        if addon_store_info["installed"] is None:
+        if not addon_store_info["installed"]:
             return AddonInfo(
                 options={},
                 state=AddonState.NOT_INSTALLED,
