@@ -7,6 +7,11 @@
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
+      },
+      "rules": {
+        "data": {},
+        "title": "Select rules",
+        "description": "Choose firewall rules you want to manage from HA"
       }
     },
     "error": {
