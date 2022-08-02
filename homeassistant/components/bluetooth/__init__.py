@@ -346,21 +346,21 @@ class BluetoothManager:
         except InvalidMessageError as ex:
             self._cancel_device_detected()
             raise ConfigEntryNotReady(
-                f"Invalid D-bus message received: {ex}; try restarting D-bus"
+                f"Invalid DBus message received: {ex}; try restarting DBus"
             ) from ex
         except BrokenPipeError as ex:
             self._cancel_device_detected()
             raise ConfigEntryNotReady(
-                f"D-bus connection broken: {ex}; try restarting D-bus"
+                f"DBus connection broken: {ex}; try restarting DBus"
             ) from ex
         except FileNotFoundError as ex:
             self._cancel_device_detected()
             if is_docker_env():
                 raise ConfigEntryNotReady(
-                    f"D-bus service not found; docker config may be missing `-v /run/dbus:/run/dbus:ro`: {ex}"
+                    f"DBus service not found; docker config may be missing `-v /run/dbus:/run/dbus:ro`: {ex}"
                 ) from ex
             raise ConfigEntryNotReady(
-                f"D-bus service not found; make sure the D-bus socket is available to Home Assistant: {ex}"
+                f"DBus service not found; make sure the DBus socket is available to Home Assistant: {ex}"
             ) from ex
         except asyncio.TimeoutError as ex:
             self._cancel_device_detected()
