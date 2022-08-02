@@ -12,6 +12,11 @@
         "step": {
             "discovery_confirm": {
                 "description": "Vill du st\u00e4lla in {name} - {model} ( {ip_address} )?"
+            },
+            "user": {
+                "data": {
+                    "ip_address": "IP-adress"
+                }
             }
         }
     }

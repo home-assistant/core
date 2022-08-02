@@ -41,7 +41,9 @@
                     "user_password": "Anv\u00e4ndarl\u00f6senord"
                 },
                 "data_description": {
-                    "device_authentication": "Detta st\u00e4lls in i 'IP'-panelen i gr\u00e4nssnittet i ETS."
+                    "device_authentication": "Detta st\u00e4lls in i 'IP'-panelen i gr\u00e4nssnittet i ETS.",
+                    "user_id": "Detta \u00e4r ofta tunnelnummer +1. S\u00e5 'Tunnel 2' skulle ha anv\u00e4ndar-ID '3'.",
+                    "user_password": "L\u00f6senord f\u00f6r den specifika tunnelanslutningen som anges i panelen \"Egenskaper\" i tunneln i ETS."
                 },
                 "description": "Ange din s\u00e4kra IP-information."
             },

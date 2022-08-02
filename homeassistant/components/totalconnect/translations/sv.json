@@ -3,6 +3,9 @@
         "abort": {
             "already_configured": "Kontot har redan konfigurerats"
         },
+        "error": {
+            "invalid_auth": "Ogiltig autentisering"
+        },
         "step": {
             "user": {
                 "data": {

@@ -8,7 +8,9 @@
                 "data": {
                     "latitude": "Latitud",
                     "longitude": "Longitud"
-                }
+                },
+                "description": "\u00d6vervaka anv\u00e4ndarbaserade och CDC-rapporter f\u00f6r ett par koordinater.",
+                "title": "Konfigurera influensa i n\u00e4rheten av dig"
             }
         }
     }

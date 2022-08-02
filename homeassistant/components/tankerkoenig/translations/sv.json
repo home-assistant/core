@@ -38,8 +38,10 @@
             "init": {
                 "data": {
                     "scan_interval": "Uppdateringsintervall",
+                    "show_on_map": "Visa stationer p\u00e5 kartan",
                     "stations": "Stationer"
-                }
+                },
+                "title": "Tankerkoenig inst\u00e4llningar"
             }
         }
     }
