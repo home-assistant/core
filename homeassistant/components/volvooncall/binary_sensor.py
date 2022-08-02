@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import DEVICE_CLASSES, BinarySensorEntity
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -44,8 +44,3 @@ class VolvoSensor(VolvoEntity, BinarySensorEntity):
         if self.instrument.attr == "is_locked":
             return not self.instrument.is_on
         return self.instrument.is_on
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self.async_write_ha_state()

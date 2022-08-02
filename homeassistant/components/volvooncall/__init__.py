@@ -212,7 +212,6 @@ class VolvoData:
     async def update(self):
         """Update status from the online service."""
         if not await self.connection.update(journal=True):
-            _LOGGER.warning("Could not query server")
             return False
 
         for vehicle in self.connection.vehicles:

@@ -33,14 +33,15 @@ class VolvoSensor(VolvoEntity, SensorEntity):
         slug_attr: str,
     ) -> None:
         """Initialize the sensor."""
-        VolvoEntity.__init__(self, vin, component, attribute, slug_attr, coordinator)
+        super().__init__(vin, component, attribute, slug_attr, coordinator)
+        self._update_value_and_unit()
 
+    def _update_value_and_unit(self) -> None:
         self._attr_native_value = self.instrument.state
         self._attr_native_unit_of_measurement = self.instrument.unit
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._attr_native_value = self.instrument.state
-        self._attr_native_unit_of_measurement = self.instrument.unit
+        self._update_value_and_unit()
         self.async_write_ha_state()

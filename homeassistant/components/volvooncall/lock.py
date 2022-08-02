@@ -7,7 +7,7 @@ from typing import Any
 from volvooncall.dashboard import Lock
 
 from homeassistant.components.lock import LockEntity
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -42,13 +42,11 @@ class VolvoLock(VolvoEntity, LockEntity):
     ) -> None:
         """Initialize the lock."""
         super().__init__(vin, component, attribute, slug_attr, coordinator)
-        self._attr_is_locked = self.instrument.is_locked
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._attr_is_locked = self.instrument.is_locked
-        self.async_write_ha_state()
+    @property
+    def is_locked(self) -> bool | None:
+        """Determine if car is locked."""
+        return self.instrument.is_locked
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the car."""
