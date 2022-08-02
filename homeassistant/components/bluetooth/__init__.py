@@ -352,6 +352,10 @@ class BluetoothManager:
         except BrokenPipeError as ex:
             self._cancel_device_detected()
             _LOGGER.debug("DBus connection broken: %s", ex, exc_info=True)
+            if is_docker_env():
+                raise ConfigEntryNotReady(
+                    f"DBus connection broken: {ex}; try restarting `bluetooth`, `dbus`, and finally the docker container"
+                ) from ex
             raise ConfigEntryNotReady(
                 f"DBus connection broken: {ex}; try restarting `bluetooth` and `dbus`"
             ) from ex
