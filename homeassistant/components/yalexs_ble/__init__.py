@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 
+import async_timeout
 from yalexs_ble import PushLock
 
 from homeassistant.components import bluetooth
@@ -51,8 +52,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     )
 
+    entry.async_on_unload(await push_lock.start())
+
     try:
-        await asyncio.wait_for(startup_event.wait(), timeout=DISCOVERY_TIMEOUT)
+        async with async_timeout.timeout(DISCOVERY_TIMEOUT):
+            await startup_event.wait()
     except asyncio.TimeoutError as ex:
         raise ConfigEntryNotReady(
             f"Could not communicate with {local_name}, "
@@ -63,9 +67,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.title, local_name, push_lock
     )
 
-    # Platforms need to subscribe first
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    entry.async_on_unload(await push_lock.start())
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     return True
 
