@@ -128,12 +128,8 @@ class MillHeater(CoordinatorEntity, ClimateEntity):
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
-        if self._generation == 3:
-            temperature = float(temperature)
-        else:
-            temperature = int(temperature)
         await self.coordinator.mill_data_connection.set_heater_temp(
-            self._id, temperature
+            self._id, int(temperature)
         )
         await self.coordinator.async_request_refresh()
 
