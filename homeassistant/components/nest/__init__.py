@@ -267,7 +267,7 @@ async def async_import_config(hass: HomeAssistant, entry: ConfigEntry) -> None:
             DOMAIN,
             "removed_app_auth",
             is_fixable=False,
-            severity=IssueSeverity.WARNING,
+            severity=IssueSeverity.ERROR,
             translation_key="removed_app_auth",
             translation_placeholders={
                 "more_info_url": "https://www.home-assistant.io/more-info/nest-auth-deprecation",
