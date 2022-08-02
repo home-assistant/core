@@ -47,7 +47,6 @@ class IntegrationMatchHistory:
     manufacturer_data: bool
     service_data: bool
     service_uuids: bool
-    domains: set[str]
 
 
 def seen_all_fields(
@@ -107,7 +106,6 @@ class IntegrationMatcher:
                 manufacturer_data=bool(adv_data.manufacturer_data),
                 service_data=bool(adv_data.service_data),
                 service_uuids=bool(adv_data.service_uuids),
-                domains=matched_domains,
             )
         return matched_domains
 
