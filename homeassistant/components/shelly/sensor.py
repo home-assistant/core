@@ -46,7 +46,12 @@ from .entity import (
     async_setup_entry_rest,
     async_setup_entry_rpc,
 )
-from .utils import get_device_entry_gen, get_device_uptime, temperature_unit
+from .utils import (
+    get_device_entry_gen,
+    get_device_uptime,
+    is_rpc_device_externally_powered,
+    temperature_unit,
+)
 
 
 @dataclass
@@ -352,6 +357,15 @@ RPC_SENSORS: Final = {
         entity_category=EntityCategory.DIAGNOSTIC,
         use_polling_wrapper=True,
     ),
+    "temperature_0": RpcSensorDescription(
+        key="temperature:0",
+        sub_key="tC",
+        name="Temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=True,
+    ),
     "rssi": RpcSensorDescription(
         key="wifi",
         sub_key="rssi",
@@ -372,6 +386,27 @@ RPC_SENSORS: Final = {
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
         use_polling_wrapper=True,
+    ),
+    "humidity_0": RpcSensorDescription(
+        key="humidity:0",
+        sub_key="rh",
+        name="Humidity",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=True,
+    ),
+    "battery": RpcSensorDescription(
+        key="devicepower:0",
+        sub_key="battery",
+        name="Battery",
+        native_unit_of_measurement=PERCENTAGE,
+        value=lambda status, _: status["percent"],
+        device_class=SensorDeviceClass.BATTERY,
+        state_class=SensorStateClass.MEASUREMENT,
+        removal_condition=is_rpc_device_externally_powered,
+        entity_registry_enabled_default=True,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 }
 

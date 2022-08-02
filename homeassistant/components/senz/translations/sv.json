@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kontot \u00e4r redan konfigurerat",
+            "already_in_progress": "Konfiguration \u00e4r redan ig\u00e5ng",
+            "authorize_url_timeout": "Timout under skapandet av autentiseringsURL:en",
+            "missing_configuration": "Komponenten \u00e4r inte konfigurerad",
+            "no_url_available": "Ingen URL tillg\u00e4nglig. F\u00f6r mer information om detta felet [kolla i hj\u00e4lpsektionen]({docs_url})",
+            "oauth_error": "Mottog felaktig token."
+        },
+        "create_entry": {
+            "default": "Autentiseringen lyckades"
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "V\u00e4j autentiseringsmetod"
+            }
+        }
+    },
+    "issues": {
+        "removed_yaml": {
+            "description": "Konfigurering av nVent RAYCHEM SENZ med YAML har tagits bort. \n\n Din befintliga YAML-konfiguration anv\u00e4nds inte av Home Assistant. \n\n Ta bort YAML-konfigurationen fr\u00e5n filen configuration.yaml och starta om Home Assistant f\u00f6r att \u00e5tg\u00e4rda problemet.",
+            "title": "nVent RAYCHEM SENZ YAML-konfigurationen har tagits bort"
+        }
+    }
+}

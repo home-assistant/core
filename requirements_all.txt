@@ -5,7 +5,7 @@
 AEMET-OpenData==0.2.1
 
 # homeassistant.components.aladdin_connect
-AIOAladdinConnect==0.1.31
+AIOAladdinConnect==0.1.33
 
 # homeassistant.components.adax
 Adax-local==0.1.4
@@ -37,7 +37,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.15.2
+PySwitchbot==0.17.1
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -313,7 +313,7 @@ androidtv[async]==0.0.67
 anel_pwrctrl-homeassistant==0.0.1.dev2
 
 # homeassistant.components.anthemav
-anthemav==1.3.2
+anthemav==1.4.1
 
 # homeassistant.components.apcupsd
 apcaccess==0.0.13
@@ -405,7 +405,7 @@ bimmer_connected==0.10.1
 bizkaibus==0.1.1
 
 # homeassistant.components.bluetooth
-bleak==0.14.3
+bleak==0.15.0
 
 # homeassistant.components.blebox
 blebox_uniapi==2.0.2
@@ -606,7 +606,7 @@ emulated_roku==0.2.1
 enocean==0.50
 
 # homeassistant.components.entur_public_transport
-enturclient==0.2.3
+enturclient==0.2.4
 
 # homeassistant.components.environment_canada
 env_canada==0.5.22
@@ -760,7 +760,7 @@ googlemaps==2.5.1
 goslide-api==0.5.1
 
 # homeassistant.components.govee_ble
-govee-ble==0.12.3
+govee-ble==0.12.5
 
 # homeassistant.components.remote_rpi_gpio
 gpiozero==1.6.2
@@ -839,7 +839,7 @@ hole==0.7.0
 holidays==0.14.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220727.0
+home-assistant-frontend==20220728.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.1
@@ -1028,7 +1028,7 @@ meater-python==0.0.8
 messagebird==1.2.0
 
 # homeassistant.components.meteoalarm
-meteoalertapi==0.2.0
+meteoalertapi==0.3.0
 
 # homeassistant.components.meteo_france
 meteofrance-api==1.0.2
@@ -1572,7 +1572,7 @@ pyialarm==2.2.0
 pyicloud==1.0.0
 
 # homeassistant.components.insteon
-pyinsteon==1.1.3
+pyinsteon==1.2.0
 
 # homeassistant.components.intesishome
 pyintesishome==1.8.0
@@ -1728,7 +1728,7 @@ pyopnsense==0.2.0
 pyoppleio==1.0.5
 
 # homeassistant.components.opentherm_gw
-pyotgw==2.0.1
+pyotgw==2.0.2
 
 # homeassistant.auth.mfa_modules.notify
 # homeassistant.auth.mfa_modules.totp
@@ -2126,7 +2126,7 @@ rtsp-to-webrtc==0.5.1
 russound==0.1.9
 
 # homeassistant.components.russound_rio
-russound_rio==0.1.7
+russound_rio==0.1.8
 
 # homeassistant.components.yamaha
 rxv==0.7.0
@@ -2473,10 +2473,10 @@ xbox-webapi==2.0.11
 xboxapi==2.0.1
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==0.6.1
+xiaomi-ble==0.6.4
 
 # homeassistant.components.knx
-xknx==0.22.0
+xknx==0.22.1
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz

@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
             "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
-            "decryption_failed": "La chiave di collegamento fornita non funziona, i dati del sensore non possono essere decifrati. Controllare e riprovare.",
+            "decryption_failed": "La chiave di collegamento fornita non funziona, i dati del sensore non possono essere decifrati. Controlla e riprova.",
             "expected_24_characters": "Prevista una chiave di collegamento esadecimale di 24 caratteri.",
             "expected_32_characters": "Prevista una chiave di collegamento esadecimale di 32 caratteri.",
             "no_devices_found": "Nessun dispositivo trovato sulla rete"

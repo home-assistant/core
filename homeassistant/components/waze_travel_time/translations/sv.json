@@ -7,6 +7,7 @@
             "user": {
                 "data": {
                     "destination": "Destination",
+                    "name": "Namn",
                     "origin": "Ursprung",
                     "region": "Region"
                 }
