@@ -1,7 +1,7 @@
 """The yalexs_ble integration entities."""
 from __future__ import annotations
 
-from yalexs_ble import LockState
+from yalexs_ble import LockInfo, LockState
 
 from homeassistant.core import callback
 from homeassistant.helpers.entity import DeviceInfo, Entity
@@ -18,19 +18,23 @@ class YALEXSBLEEntity(Entity):
     def __init__(self, data: YaleXSBLEData) -> None:
         """Initialize the entity."""
         self._data = data
-        self._device = data.lock
+        self._device = device = data.lock
         self._attr_available = False
         self._attr_unique_id = data.local_name
+        lock_info = device.lock_info
+        assert lock_info is not None
         self._attr_device_info = DeviceInfo(
             name=data.title,
-            manufacturer="Yale",
-            identifiers={(DOMAIN, data.local_name)},
+            manufacturer=lock_info.manufacturer,
+            model=lock_info.model,
+            identifiers={(DOMAIN, data.local_name), (DOMAIN, lock_info.serial)},
+            sw_version=lock_info.firmware,
         )
-        if self._device.lock_state:
-            self._async_update_state(self._device.lock_state)
+        if device.lock_state:
+            self._async_update_state(device.lock_state, lock_info)
 
     @callback
-    def _async_update_state(self, new_state: LockState) -> None:
+    def _async_update_state(self, new_state: LockState, lock_info: LockInfo) -> None:
         """Update the state."""
         self._attr_available = True
         self.async_write_ha_state()
