@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
-from datetime import timedelta
 from functools import partial
 from typing import Any
 
@@ -36,6 +35,7 @@ from homeassistant.util.network import is_ip_address
 from .config_flow import get_client_controller
 from .const import (
     CONF_ZONE_RUN_TIME,
+    COORDINATOR_UPDATE_INTERVAL_MAP,
     DATA_PROGRAMS,
     DATA_PROVISION_SETTINGS,
     DATA_RESTRICTIONS_CURRENT,
@@ -52,14 +52,6 @@ DEFAULT_SSL = True
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR, Platform.SWITCH]
-
-UPDATE_INTERVALS = {
-    DATA_PROVISION_SETTINGS: timedelta(minutes=1),
-    DATA_PROGRAMS: timedelta(seconds=30),
-    DATA_RESTRICTIONS_CURRENT: timedelta(minutes=1),
-    DATA_RESTRICTIONS_UNIVERSAL: timedelta(minutes=1),
-    DATA_ZONES: timedelta(seconds=15),
-}
 
 CONF_CONDITION = "condition"
 CONF_DEWPOINT = "dewpoint"
@@ -250,7 +242,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass,
             entry=entry,
             name=f'{controller.name} ("{api_category}")',
-            update_interval=UPDATE_INTERVALS[api_category],
+            api_category=api_category,
+            update_interval=COORDINATOR_UPDATE_INTERVAL_MAP[api_category],
             update_method=partial(async_update, api_category),
         )
         controller_init_tasks.append(async_init_coordinator(coordinator))
