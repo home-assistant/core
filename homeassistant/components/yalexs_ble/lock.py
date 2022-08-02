@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from yalexs_ble import LockInfo, LockState, LockStatus
+from yalexs_ble import ConnectionInfo, LockInfo, LockState, LockStatus
 
 from homeassistant.components.lock import LockEntity
 from homeassistant.config_entries import ConfigEntry
@@ -32,7 +32,9 @@ class YaleXSBLELock(YALEXSBLEEntity, LockEntity):
     _attr_name = "Lock"
 
     @callback
-    def _async_update_state(self, new_state: LockState, lock_info: LockInfo) -> None:
+    def _async_update_state(
+        self, new_state: LockState, lock_info: LockInfo, connection_info: ConnectionInfo
+    ) -> None:
         """Update the state."""
         self._attr_is_locked = False
         self._attr_is_locking = False
@@ -50,7 +52,7 @@ class YaleXSBLELock(YALEXSBLEEntity, LockEntity):
             LockStatus.UNKNOWN_06,
         ):
             self._attr_is_jammed = True
-        super()._async_update_state(new_state, lock_info)
+        super()._async_update_state(new_state, lock_info, connection_info)
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
