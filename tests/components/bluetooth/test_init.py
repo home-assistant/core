@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 
 from bleak import BleakError
 from bleak.backends.scanner import AdvertisementData, BLEDevice
+from dbus_next import InvalidMessageError
 import pytest
 
 from homeassistant.components import bluetooth
@@ -1409,3 +1410,112 @@ async def test_changing_the_adapter_at_runtime(hass):
 
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         await hass.async_block_till_done()
+
+
+async def test_dbus_socket_missing_in_container(hass, caplog):
+    """Test we handle dbus being missing in the container."""
+
+    with patch(
+        "homeassistant.components.bluetooth.is_docker_env", return_value=True
+    ), patch("homeassistant.components.bluetooth.HaBleakScanner.async_setup"), patch(
+        "homeassistant.components.bluetooth.HaBleakScanner.start",
+        side_effect=FileNotFoundError,
+    ):
+        assert await async_setup_component(
+            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
+        )
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    assert "/run/dbus" in caplog.text
+    assert "docker" in caplog.text
+
+
+async def test_dbus_socket_missing(hass, caplog):
+    """Test we handle dbus being missing."""
+
+    with patch(
+        "homeassistant.components.bluetooth.is_docker_env", return_value=False
+    ), patch("homeassistant.components.bluetooth.HaBleakScanner.async_setup"), patch(
+        "homeassistant.components.bluetooth.HaBleakScanner.start",
+        side_effect=FileNotFoundError,
+    ):
+        assert await async_setup_component(
+            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
+        )
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    assert "DBus" in caplog.text
+    assert "docker" not in caplog.text
+
+
+async def test_dbus_broken_pipe_in_container(hass, caplog):
+    """Test we handle dbus broken pipe in the container."""
+
+    with patch(
+        "homeassistant.components.bluetooth.is_docker_env", return_value=True
+    ), patch("homeassistant.components.bluetooth.HaBleakScanner.async_setup"), patch(
+        "homeassistant.components.bluetooth.HaBleakScanner.start",
+        side_effect=BrokenPipeError,
+    ):
+        assert await async_setup_component(
+            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
+        )
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    assert "dbus" in caplog.text
+    assert "restarting" in caplog.text
+    assert "container" in caplog.text
+
+
+async def test_dbus_broken_pipe(hass, caplog):
+    """Test we handle dbus broken pipe."""
+
+    with patch(
+        "homeassistant.components.bluetooth.is_docker_env", return_value=False
+    ), patch("homeassistant.components.bluetooth.HaBleakScanner.async_setup"), patch(
+        "homeassistant.components.bluetooth.HaBleakScanner.start",
+        side_effect=BrokenPipeError,
+    ):
+        assert await async_setup_component(
+            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
+        )
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    assert "DBus" in caplog.text
+    assert "restarting" in caplog.text
+    assert "container" not in caplog.text
+
+
+async def test_invalid_dbus_message(hass, caplog):
+    """Test we handle invalid dbus message."""
+
+    with patch("homeassistant.components.bluetooth.HaBleakScanner.async_setup"), patch(
+        "homeassistant.components.bluetooth.HaBleakScanner.start",
+        side_effect=InvalidMessageError,
+    ):
+        assert await async_setup_component(
+            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
+        )
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    assert "dbus" in caplog.text
