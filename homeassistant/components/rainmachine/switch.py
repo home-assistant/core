@@ -30,9 +30,9 @@ from .const import (
     DATA_ZONES,
     DEFAULT_ZONE_RUN,
     DOMAIN,
-    RUN_STATE_MAP,
 )
 from .model import RainMachineDescriptionMixinUid
+from .util import RUN_STATE_MAP
 
 ATTR_AREA = "area"
 ATTR_CS_ON = "cs_on"

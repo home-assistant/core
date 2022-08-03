@@ -31,14 +31,12 @@ from .const import (
     DATA_RESTRICTIONS_UNIVERSAL,
     DATA_ZONES,
     DOMAIN,
-    RUN_STATE_MAP,
-    RunStates,
 )
 from .model import (
     RainMachineDescriptionMixinApiCategory,
     RainMachineDescriptionMixinUid,
 )
-from .util import key_exists
+from .util import RUN_STATE_MAP, RunStates, key_exists
 
 DEFAULT_ZONE_COMPLETION_TIME_WOBBLE_TOLERANCE = timedelta(seconds=5)
 
