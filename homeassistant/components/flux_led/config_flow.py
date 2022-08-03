@@ -107,7 +107,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(mac)
         for entry in self._async_current_entries(include_ignore=True):
             if not (
-                entry.data[CONF_HOST] == device[ATTR_IPADDR]
+                entry.data.get(CONF_HOST) == device[ATTR_IPADDR]
                 or (
                     entry.unique_id
                     and ":" in entry.unique_id

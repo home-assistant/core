@@ -708,7 +708,7 @@ async def test_discovered_can_be_ignored(hass, source, data):
     """Test we abort if the mac was already ignored."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: IP_ADDRESS},
+        data={},
         unique_id=MAC_ADDRESS,
         source=config_entries.SOURCE_IGNORE,
     )
