@@ -42,8 +42,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ) -> None:
         """Update from a ble callback."""
         push_lock.update_advertisement(service_info.device, service_info.advertisement)
-        if push_lock.lock_state and not startup_event.is_set():
-            startup_event.set()
 
     entry.async_on_unload(
         bluetooth.async_register_callback(
@@ -54,6 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     )
 
+    cancel_first_update = push_lock.register_callback(lambda *_: startup_event.set())
     entry.async_on_unload(await push_lock.start())
 
     try:
@@ -64,6 +63,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             f"{push_lock.last_error}; "
             f"Try moving the Bluetooth adapter closer to {local_name}."
         ) from ex
+    finally:
+        cancel_first_update()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = YaleXSBLEData(
         entry.title, local_name, push_lock
