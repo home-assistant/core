@@ -322,6 +322,7 @@ async def test_sensor_unavailable(hass, utcnow):
 
 
 def test_thread_node_caps_to_str():
+    """Test all values of this enum get a translatable string."""
     assert (
         thread_node_capability_to_str(ThreadNodeCapabilities.BORDER_ROUTER_CAPABLE)
         == "border_router_capable"
