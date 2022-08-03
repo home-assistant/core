@@ -136,10 +136,7 @@ class MqttCamera(MqttEntity, Camera):
         @log_messages(self.hass, self.entity_id)
         def message_received(msg):
             """Handle new MQTT messages."""
-            if (
-                msg.topic == self._config[CONF_TOPIC]
-                and CONF_IMAGE_ENCODING in self._config
-            ):
+            if CONF_IMAGE_ENCODING in self._config:
                 self._last_image = b64decode(msg.payload)
             else:
                 self._last_image = msg.payload
