@@ -1,5 +1,4 @@
 """The tests for the androidtv platform."""
-import base64
 import logging
 from unittest.mock import Mock, patch
 
@@ -52,7 +51,6 @@ from homeassistant.components.media_player import (
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
 )
-from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_COMMAND,
@@ -851,10 +849,10 @@ async def test_androidtv_volume_set(hass):
         patch_set_volume_level.assert_called_with(0.5)
 
 
-async def test_get_image(hass, hass_ws_client):
+async def test_get_image_http(hass, hass_client_no_auth):
     """Test taking a screen capture.
 
-    This is based on `test_get_image` in tests/components/media_player/test_init.py.
+    This is based on `test_get_image_http` in tests/components/media_player/test_init.py.
     """
     patch_key, entity_id, config_entry = _setup(CONFIG_ANDROIDTV_DEFAULT)
     config_entry.add_to_hass(hass)
@@ -868,44 +866,36 @@ async def test_get_image(hass, hass_ws_client):
     with patchers.patch_shell("11")[patch_key]:
         await async_update_entity(hass, entity_id)
 
-    client = await hass_ws_client(hass)
+    media_player_name = "media_player." + slugify(
+        CONFIG_ANDROIDTV_DEFAULT[TEST_ENTITY_NAME]
+    )
+    state = hass.states.get(media_player_name)
+    assert "entity_picture_local" not in state.attributes
+
+    client = await hass_client_no_auth()
 
     with patch(
         "androidtv.basetv.basetv_async.BaseTVAsync.adb_screencap", return_value=b"image"
     ):
-        await client.send_json(
-            {"id": 5, "type": "media_player_thumbnail", "entity_id": entity_id}
-        )
+        resp = await client.get(state.attributes["entity_picture"])
+        content = await resp.read()
 
-        msg = await client.receive_json()
-
-    assert msg["id"] == 5
-    assert msg["type"] == TYPE_RESULT
-    assert msg["success"]
-    assert msg["result"]["content_type"] == "image/png"
-    assert msg["result"]["content"] == base64.b64encode(b"image").decode("utf-8")
+    assert content == b"image"
 
     with patch(
         "androidtv.basetv.basetv_async.BaseTVAsync.adb_screencap",
         side_effect=ConnectionResetError,
     ):
-        await client.send_json(
-            {"id": 6, "type": "media_player_thumbnail", "entity_id": entity_id}
-        )
+        resp = await client.get(state.attributes["entity_picture"])
 
-        msg = await client.receive_json()
-
-        # The device is unavailable, but getting the media image did not cause an exception
-        state = hass.states.get(entity_id)
-        assert state is not None
-        assert state.state == STATE_UNAVAILABLE
+    # The device is unavailable, but getting the media image did not cause an exception
+    state = hass.states.get(media_player_name)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
 
 
-async def test_get_image_disabled(hass, hass_ws_client):
-    """Test taking a screen capture with screencap option disabled.
-
-    This is based on `test_get_image` in tests/components/media_player/test_init.py.
-    """
+async def test_get_image_disabled(hass):
+    """Test that the screencap option can disable entity_picture."""
     patch_key, entity_id, config_entry = _setup(CONFIG_ANDROIDTV_DEFAULT)
     config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
@@ -921,17 +911,12 @@ async def test_get_image_disabled(hass, hass_ws_client):
     with patchers.patch_shell("11")[patch_key]:
         await async_update_entity(hass, entity_id)
 
-    client = await hass_ws_client(hass)
-
-    with patch(
-        "androidtv.basetv.basetv_async.BaseTVAsync.adb_screencap", return_value=b"image"
-    ) as screen_cap:
-        await client.send_json(
-            {"id": 5, "type": "media_player_thumbnail", "entity_id": entity_id}
-        )
-
-        await client.receive_json()
-        assert not screen_cap.called
+    media_player_name = "media_player." + slugify(
+        CONFIG_ANDROIDTV_DEFAULT[TEST_ENTITY_NAME]
+    )
+    state = hass.states.get(media_player_name)
+    assert "entity_picture_local" not in state.attributes
+    assert "entity_picture" not in state.attributes
 
 
 async def _test_service(

@@ -14,6 +14,8 @@ from homeassistant.components.notify import (
     BaseNotificationService,
 )
 from homeassistant.components.notify.const import ATTR_DATA
+from homeassistant.components.repairs.issue_handler import async_create_issue
+from homeassistant.components.repairs.models import IssueSeverity
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_EVENT, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
@@ -42,6 +44,15 @@ async def async_get_service(
 ) -> SimplePushNotificationService | None:
     """Get the Simplepush notification service."""
     if discovery_info is None:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_yaml",
+            breaks_in_ha_version="2022.9.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+        )
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN, context={"source": SOURCE_IMPORT}, data=config

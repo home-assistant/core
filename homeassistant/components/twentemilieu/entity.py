@@ -22,6 +22,8 @@ class TwenteMilieuEntity(
 ):
     """Defines a Twente Milieu entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: DataUpdateCoordinator[dict[WasteType, list[date]]],

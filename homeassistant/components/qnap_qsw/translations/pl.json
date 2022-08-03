@@ -9,6 +9,12 @@
             "invalid_auth": "Niepoprawne uwierzytelnienie"
         },
         "step": {
+            "discovered_connection": {
+                "data": {
+                    "password": "Has\u0142o",
+                    "username": "Nazwa u\u017cytkownika"
+                }
+            },
             "user": {
                 "data": {
                     "password": "Has\u0142o",

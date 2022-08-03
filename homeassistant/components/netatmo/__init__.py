@@ -153,7 +153,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await data_handler.async_setup()
     hass.data[DOMAIN][entry.entry_id][DATA_HANDLER] = data_handler
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     async def unregister_webhook(
         call_or_event_or_dt: ServiceCall | Event | datetime | None,

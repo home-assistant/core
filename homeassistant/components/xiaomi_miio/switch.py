@@ -201,12 +201,20 @@ MODEL_TO_FEATURES_MAP = {
 
 
 @dataclass
-class XiaomiMiioSwitchDescription(SwitchEntityDescription):
+class XiaomiMiioSwitchRequiredKeyMixin:
     """A class that describes switch entities."""
 
-    feature: int | None = None
-    method_on: str | None = None
-    method_off: str | None = None
+    feature: int
+    method_on: str
+    method_off: str
+
+
+@dataclass
+class XiaomiMiioSwitchDescription(
+    SwitchEntityDescription, XiaomiMiioSwitchRequiredKeyMixin
+):
+    """A class that describes switch entities."""
+
     available_with_device_off: bool = True
 
 
@@ -223,7 +231,7 @@ SWITCH_TYPES = (
     XiaomiMiioSwitchDescription(
         key=ATTR_CHILD_LOCK,
         feature=FEATURE_SET_CHILD_LOCK,
-        name="Child Lock",
+        name="Child lock",
         icon="mdi:lock",
         method_on="async_set_child_lock_on",
         method_off="async_set_child_lock_off",
@@ -241,7 +249,7 @@ SWITCH_TYPES = (
     XiaomiMiioSwitchDescription(
         key=ATTR_DRY,
         feature=FEATURE_SET_DRY,
-        name="Dry Mode",
+        name="Dry mode",
         icon="mdi:hair-dryer",
         method_on="async_set_dry_on",
         method_off="async_set_dry_off",
@@ -250,7 +258,7 @@ SWITCH_TYPES = (
     XiaomiMiioSwitchDescription(
         key=ATTR_CLEAN,
         feature=FEATURE_SET_CLEAN,
-        name="Clean Mode",
+        name="Clean mode",
         icon="mdi:shimmer",
         method_on="async_set_clean_on",
         method_off="async_set_clean_off",
@@ -260,7 +268,7 @@ SWITCH_TYPES = (
     XiaomiMiioSwitchDescription(
         key=ATTR_LED,
         feature=FEATURE_SET_LED,
-        name="Led",
+        name="LED",
         icon="mdi:led-outline",
         method_on="async_set_led_on",
         method_off="async_set_led_off",
@@ -269,7 +277,7 @@ SWITCH_TYPES = (
     XiaomiMiioSwitchDescription(
         key=ATTR_LEARN_MODE,
         feature=FEATURE_SET_LEARN_MODE,
-        name="Learn Mode",
+        name="Learn mode",
         icon="mdi:school-outline",
         method_on="async_set_learn_mode_on",
         method_off="async_set_learn_mode_off",
@@ -278,7 +286,7 @@ SWITCH_TYPES = (
     XiaomiMiioSwitchDescription(
         key=ATTR_AUTO_DETECT,
         feature=FEATURE_SET_AUTO_DETECT,
-        name="Auto Detect",
+        name="Auto detect",
         method_on="async_set_auto_detect_on",
         method_off="async_set_auto_detect_off",
         entity_category=EntityCategory.CONFIG,
@@ -295,7 +303,7 @@ SWITCH_TYPES = (
     XiaomiMiioSwitchDescription(
         key=ATTR_PTC,
         feature=FEATURE_SET_PTC,
-        name="Auxiliary Heat",
+        name="Auxiliary heat",
         icon="mdi:radiator",
         method_on="async_set_ptc_on",
         method_off="async_set_ptc_off",
@@ -345,7 +353,6 @@ async def async_setup_coordinated_entry(hass, config_entry, async_add_entities):
         if description.feature & device_features:
             entities.append(
                 XiaomiGenericCoordinatedSwitch(
-                    f"{config_entry.title} {description.name}",
                     device,
                     config_entry,
                     f"{description.key}_{unique_id}",
@@ -443,7 +450,7 @@ async def async_setup_other_entry(hass, config_entry, async_add_entities):
 
         async def async_service_handler(service: ServiceCall) -> None:
             """Map services to methods on XiaomiPlugGenericSwitch."""
-            method = SERVICE_TO_METHOD.get(service.service)
+            method = SERVICE_TO_METHOD[service.service]
             params = {
                 key: value
                 for key, value in service.data.items()
@@ -480,9 +487,11 @@ async def async_setup_other_entry(hass, config_entry, async_add_entities):
 class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
     """Representation of a Xiaomi Plug Generic."""
 
-    def __init__(self, name, device, entry, unique_id, coordinator, description):
+    entity_description: XiaomiMiioSwitchDescription
+
+    def __init__(self, device, entry, unique_id, coordinator, description):
         """Initialize the plug switch."""
-        super().__init__(name, device, entry, unique_id, coordinator)
+        super().__init__(device, entry, unique_id, coordinator)
 
         self._attr_is_on = self._extract_value_from_attribute(
             self.coordinator.data, description.key

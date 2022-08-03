@@ -6,6 +6,7 @@ from datetime import timedelta
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HiveEntity, refresh_system
@@ -19,7 +20,10 @@ SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
     SwitchEntityDescription(
         key="activeplug",
     ),
-    SwitchEntityDescription(key="Heating_Heat_On_Demand"),
+    SwitchEntityDescription(
+        key="Heating_Heat_On_Demand",
+        entity_category=EntityCategory.CONFIG,
+    ),
 )
 
 
