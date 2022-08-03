@@ -65,8 +65,8 @@ async def async_setup_entry(
     data: RainMachineData = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-            RainMachineButton(entry, data, description)
-            for description in BUTTON_DESCRIPTIONS
+        RainMachineButton(entry, data, description)
+        for description in BUTTON_DESCRIPTIONS
     )
 
 
