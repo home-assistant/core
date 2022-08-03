@@ -10,6 +10,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -23,11 +24,13 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-CONF_ENCODING = "encoding"
-
-DEFAULT_PORT = 4352
-DEFAULT_ENCODING = "utf-8"
-DEFAULT_TIMEOUT = 10
+from .const import (
+    CONF_ENCODING,
+    DEFAULT_ENCODING,
+    DEFAULT_PORT,
+    DEFAULT_TIMEOUT,
+    DOMAIN,
+)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -52,6 +55,7 @@ def setup_platform(
     name = config.get(CONF_NAME)
     encoding = config.get(CONF_ENCODING)
     password = config.get(CONF_PASSWORD)
+    unique_id = f"{DOMAIN}-{host}"  # How can we get the entity ID here instead?
 
     if "pjlink" not in hass.data:
         hass.data["pjlink"] = {}
@@ -61,14 +65,33 @@ def setup_platform(
     if device_label in hass_data:
         return
 
-    device = PjLinkDevice(host, port, name, encoding, password)
+    device = PjLinkDevice(host, port, name, encoding, password, unique_id)
     hass_data[device_label] = device
     add_entities([device], True)
+
+
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Set up platform."""
+    setup_platform(hass, config, async_add_entities)
 
 
 def format_input_source(input_source_name, input_source_number):
     """Format input source for display in UI."""
     return f"{input_source_name} {input_source_number}"
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the config entry."""
+    await async_setup_platform(hass, {}, async_add_entities)
 
 
 class PjLinkDevice(MediaPlayerEntity):
@@ -81,13 +104,14 @@ class PjLinkDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.SELECT_SOURCE
     )
 
-    def __init__(self, host, port, name, encoding, password):
+    def __init__(self, host, port, name, encoding, password, unique_id: str):
         """Iinitialize the PJLink device."""
         self._host = host
         self._port = port
         self._name = name
         self._password = password
         self._encoding = encoding
+        self._unique_id = unique_id
         self._muted = False
         self._pwstate = STATE_OFF
         self._current_source = None
@@ -160,6 +184,11 @@ class PjLinkDevice(MediaPlayerEntity):
     def source_list(self):
         """Return all available input sources."""
         return self._source_list
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique identifier for this device."""
+        return self._unique_id
 
     def turn_off(self):
         """Turn projector off."""
