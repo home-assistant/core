@@ -42,10 +42,10 @@ class HomeKitSensorEntityDescription(SensorEntityDescription):
     """Describes Homekit sensor."""
 
     probe: Callable[[Characteristic], bool] | None = None
-    format: Callable[[Characteristic], str] | None = None
+    format: Callable[[Characteristic], str | None] | None = None
 
 
-def thread_node_capability_to_str(char: Characteristic) -> str:
+def thread_node_capability_to_str(char: Characteristic) -> str | None:
     """
     Return the thread device type as a string.
 
