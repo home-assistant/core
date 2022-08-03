@@ -121,7 +121,9 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Create the controller."""
         self.controller = await async_get_controller(self.hass)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow start."""
         errors = {}
 
@@ -167,7 +169,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             ),
         )
 
-    async def async_step_unignore(self, user_input):
+    async def async_step_unignore(self, user_input) -> FlowResult:
         """Rediscover a previously ignored discover."""
         unique_id = user_input["unique_id"]
         await self.async_set_unique_id(unique_id)
@@ -410,7 +412,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self._async_step_pair_show_form()
 
-    async def async_step_pair(self, pair_info=None):
+    async def async_step_pair(self, pair_info=None) -> FlowResult:
         """Pair with a new HomeKit accessory."""
         # If async_step_pair is called with no pairing code then we do the M1
         # phase of pairing. If this is successful the device enters pairing
@@ -507,21 +509,27 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self._async_step_pair_show_form(errors)
 
-    async def async_step_busy_error(self, user_input=None):
+    async def async_step_busy_error(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Retry pairing after the accessory is busy."""
         if user_input is not None:
             return await self.async_step_pair()
 
         return self.async_show_form(step_id="busy_error")
 
-    async def async_step_max_tries_error(self, user_input=None):
+    async def async_step_max_tries_error(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Retry pairing after the accessory has reached max tries."""
         if user_input is not None:
             return await self.async_step_pair()
 
         return self.async_show_form(step_id="max_tries_error")
 
-    async def async_step_protocol_error(self, user_input=None):
+    async def async_step_protocol_error(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Retry pairing after the accessory has a protocol error."""
         if user_input is not None:
             return await self.async_step_pair()

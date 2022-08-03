@@ -89,9 +89,8 @@ async def test_temperature_sensor_not_added_twice(hass, utcnow):
     )
 
     for state in hass.states.async_all():
-        if state.entity_id.startswith("button"):
-            continue
-        assert state.entity_id == helper.entity_id
+        if state.entity_id.startswith("sensor"):
+            assert state.entity_id == helper.entity_id
 
 
 async def test_humidity_sensor_read_state(hass, utcnow):
