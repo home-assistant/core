@@ -7,7 +7,13 @@ from typing import Any
 
 from bleak_retry_connector import BleakError, BLEDevice
 import voluptuous as vol
-from yalexs_ble import AuthError, PushLock, local_name_to_serial, serial_to_local_name
+from yalexs_ble import (
+    AuthError,
+    DisconnectedError,
+    PushLock,
+    local_name_to_serial,
+    serial_to_local_name,
+)
 from yalexs_ble.const import YALE_MFR_ID
 
 from homeassistant import config_entries
@@ -166,10 +172,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_key_format"
             except InvalidKeyIndex:
                 errors["base"] = "invalid_key_index"
+            except (DisconnectedError, AuthError, ValueError):
+                errors["key"] = "invalid_auth"
             except BleakError:
                 errors["base"] = "cannot_connect"
-            except (AuthError, ValueError):
-                errors["key"] = "invalid_auth"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected error")
                 errors["base"] = "unknown"
