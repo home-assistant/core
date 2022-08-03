@@ -125,7 +125,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow start."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             key = user_input["device"]
@@ -143,6 +143,8 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if self.controller is None:
             await self._async_setup_controller()
+
+        assert self.controller
 
         self.devices = {}
 
@@ -177,13 +179,15 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if self.controller is None:
             await self._async_setup_controller()
 
+        assert self.controller
+
         try:
             discovery = await self.controller.async_find(unique_id)
         except aiohomekit.AccessoryNotFoundError:
             return self.async_abort(reason="accessory_not_found_error")
 
         self.name = discovery.description.name
-        self.model = discovery.description.model
+        self.model = getattr(discovery.description, "model", BLE_DEFAULT_NAME)
         self.category = discovery.description.category
         self.hkid = discovery.description.id
 
@@ -430,10 +434,15 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # callable. We call the callable with the pin that the user has typed
         # in.
 
+        # Should never call this step without setting self.hkid
+        assert self.hkid
+
         errors = {}
 
         if self.controller is None:
             await self._async_setup_controller()
+
+        assert self.controller
 
         if pair_info and self.finish_pairing:
             self.context["pairing"] = True
