@@ -56,11 +56,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async_create_issue(
         hass,
         DOMAIN,
-        "happening",
+        "deprecated_yaml",
         breaks_in_ha_version="2022.9.0",
         is_fixable=False,
         severity=IssueSeverity.WARNING,
-        translation_key="happening",
+        translation_key="deprecated_yaml",
     )
     for parameter, value in config[DOMAIN].items():
         if parameter == CONF_USERNAME:
