@@ -144,7 +144,7 @@ class AddonManager:
                 options={},
                 state=AddonState.NOT_INSTALLED,
                 update_available=False,
-                version=addon_store_info["version"],
+                version=None,
             )
 
         addon_info = await async_get_addon_info(self._hass, ADDON_SLUG)
