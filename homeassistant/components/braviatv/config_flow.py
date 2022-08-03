@@ -65,6 +65,8 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not system_info:
             raise ModelNotSupported()
 
+        await self.client.set_wol_mode(True)
+
         await self.async_set_unique_id(system_info[ATTR_CID].lower())
         self._abort_if_unique_id_configured()
 
@@ -86,7 +88,8 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             if host_valid(user_input[CONF_HOST]):
                 session = async_create_clientsession(
-                    self.hass, cookie_jar=aiohttp.CookieJar(unsafe=True)
+                    self.hass,
+                    cookie_jar=aiohttp.CookieJar(unsafe=True, quote_cookie=False),
                 )
                 self.host = user_input[CONF_HOST]
                 self.client = BraviaTV(host=self.host, session=session)

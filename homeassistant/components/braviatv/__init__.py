@@ -9,7 +9,10 @@ from typing import Final
 import aiohttp
 from pybravia import BraviaTV
 
-from homeassistant.components.media_player.const import MEDIA_TYPE_CHANNEL
+from homeassistant.components.media_player.const import (
+    MEDIA_TYPE_APP,
+    MEDIA_TYPE_CHANNEL,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PIN, Platform
 from homeassistant.core import HomeAssistant
@@ -33,7 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     ignored_sources = config_entry.options.get(CONF_IGNORED_SOURCES, [])
 
     session = async_create_clientsession(
-        hass, cookie_jar=aiohttp.CookieJar(unsafe=True)
+        hass, cookie_jar=aiohttp.CookieJar(unsafe=True, quote_cookie=False)
     )
     client = BraviaTV(host, mac, session=session)
     coordinator = BraviaTVCoordinator(hass, client, pin, ignored_sources)
@@ -193,7 +196,8 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
             self.media_content_id = None
             self.media_content_type = None
         if not playing_info:
-            self.media_title = "App"
+            self.media_title = "Smart TV"
+            self.media_content_type = MEDIA_TYPE_APP
 
     async def async_turn_on(self) -> None:
         """Turn the device on."""
