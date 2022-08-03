@@ -9,6 +9,12 @@
         "step": {
             "bluetooth_confirm": {
                 "description": "Vil du konfigurere {name}?"
+            },
+            "user": {
+                "data": {
+                    "address": "Enhet"
+                },
+                "description": "Velg en enhet du vil konfigurere"
             }
         }
     }
