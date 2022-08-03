@@ -54,27 +54,6 @@ VALID_TRIGGER_INDEX = vol.All(
     vol.Coerce(int), vol.Range(min=1, max=RANGE_TRIGGER_INDEX)
 )
 
-# Service schemas
-SERVICE_SCHEMA_WATERING_TIME = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Required(ATTR_WATERING_TIME): VALID_WATERING_TIME,
-    }
-)
-SERVICE_SCHEMA_PAUSE_TIME = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Required(ATTR_PAUSE_TIME): VALID_PAUSE_TIME,
-    }
-)
-SERVICE_SCHEMA_TRIGGER = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Required(ATTR_TRIGGER_INDEX): VALID_TRIGGER_INDEX,
-        vol.Required(ATTR_TRIGGER): VALID_TRIGGER,
-    }
-)
-
 # Descriptions of the valve switch entities
 DESC_WATERING = "watering"
 DESC_PAUSE = "pause"
@@ -112,46 +91,48 @@ async def async_setup_entry(
 
     # Handle services for a discovered WiLight device.
     async def set_watering_time(entity, service: Any) -> None:
-        entity_id = service.data[ATTR_ENTITY_ID]
-
-        if (entity.entity_id == entity_id) & isinstance(entity, WiLightValveSwitch):
-            watering_time = service.data[ATTR_WATERING_TIME]
-            await entity.async_set_watering_time(watering_time=watering_time)
+        if not isinstance(entity, WiLightValveSwitch):
+            raise ValueError("Entity is not an instance of WiLightValveSwitch")
+        watering_time = service.data[ATTR_WATERING_TIME]
+        await entity.async_set_watering_time(watering_time=watering_time)
 
     async def set_trigger(entity, service: Any) -> None:
-        entity_id = service.data[ATTR_ENTITY_ID]
-
-        if (entity.entity_id == entity_id) & isinstance(entity, WiLightValveSwitch):
-            trigger_index = service.data[ATTR_TRIGGER_INDEX]
-            trigger = service.data[ATTR_TRIGGER]
-            await entity.async_set_trigger(trigger_index=trigger_index, trigger=trigger)
+        if not isinstance(entity, WiLightValveSwitch):
+            raise ValueError("Entity is not an instance of WiLightValveSwitch")
+        trigger_index = service.data[ATTR_TRIGGER_INDEX]
+        trigger = service.data[ATTR_TRIGGER]
+        await entity.async_set_trigger(trigger_index=trigger_index, trigger=trigger)
 
     async def set_pause_time(entity, service: Any) -> None:
-        entity_id = service.data[ATTR_ENTITY_ID]
-
-        if (entity.entity_id == entity_id) & isinstance(
-            entity, WiLightValvePauseSwitch
-        ):
-            pause_time = service.data[ATTR_PAUSE_TIME]
-            await entity.async_set_pause_time(pause_time=pause_time)
+        if not isinstance(entity, WiLightValvePauseSwitch):
+            raise ValueError("Entity is not an instance of WiLightValvePauseSwitch")
+        pause_time = service.data[ATTR_PAUSE_TIME]
+        await entity.async_set_pause_time(pause_time=pause_time)
 
     platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
         SERVICE_SET_WATERING_TIME,
-        SERVICE_SCHEMA_WATERING_TIME,
+        {
+            vol.Required(ATTR_WATERING_TIME): VALID_WATERING_TIME,
+        },
         set_watering_time,
     )
 
     platform.async_register_entity_service(
         SERVICE_SET_TRIGGER,
-        SERVICE_SCHEMA_TRIGGER,
+        {
+            vol.Required(ATTR_TRIGGER_INDEX): VALID_TRIGGER_INDEX,
+            vol.Required(ATTR_TRIGGER): VALID_TRIGGER,
+        },
         set_trigger,
     )
 
     platform.async_register_entity_service(
         SERVICE_SET_PAUSE_TIME,
-        SERVICE_SCHEMA_PAUSE_TIME,
+        {
+            vol.Required(ATTR_PAUSE_TIME): VALID_PAUSE_TIME,
+        },
         set_pause_time,
     )
 
