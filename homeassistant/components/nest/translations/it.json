@@ -96,5 +96,13 @@
             "camera_sound": "Suono rilevato",
             "doorbell_chime": "Campanello premuto"
         }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "title": "La configurazione YAML di Nest sar\u00e0 rimossa"
+        },
+        "removed_app_auth": {
+            "title": "Le credenziali di autenticazione Nest devono essere aggiornate"
+        }
     }
 }
