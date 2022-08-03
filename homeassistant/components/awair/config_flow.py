@@ -29,7 +29,6 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle zeroconf discovery."""
-        # LOGGER.error(discovery_info)
 
         host = discovery_info.host
         LOGGER.debug("Discovered device: %s", host)
@@ -80,11 +79,7 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
             if CONF_HOST in user_input:
                 return await self.async_step_local(user_input)
 
-        return self.async_show_menu(
-            step_id="user",
-            menu_options=["local", "cloud"],
-            description_placeholders={"cloud": "Cloud API", "local": "Local API"},
-        )
+        return self.async_show_menu(step_id="user", menu_options=["local", "cloud"])
 
     async def async_step_cloud(self, user_input: Mapping[str, Any]) -> FlowResult:
         """Handle collecting and verifying Awair Cloud API credentials."""

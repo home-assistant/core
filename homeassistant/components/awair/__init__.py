@@ -6,6 +6,7 @@ from typing import Any
 
 from async_timeout import timeout
 from python_awair import Awair, AwairLocal
+from python_awair.devices import AwairBaseDevice
 from python_awair.exceptions import AuthError
 
 from homeassistant.config_entries import ConfigEntry
@@ -69,7 +70,7 @@ class AwairDataUpdateCoordinator(DataUpdateCoordinator):
 
         super().__init__(hass, LOGGER, name=DOMAIN, update_interval=update_interval)
 
-    async def _fetch_air_data(self, device):
+    async def _fetch_air_data(self, device: AwairBaseDevice):
         """Fetch latest air quality data."""
         LOGGER.debug("Fetching data for %s", device.uuid)
         air_data = await device.air_data_latest()
