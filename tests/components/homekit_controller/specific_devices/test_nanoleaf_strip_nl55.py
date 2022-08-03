@@ -50,6 +50,13 @@ async def test_nanoleaf_nl55_setup(hass):
                     entity_category=EntityCategory.DIAGNOSTIC,
                     state="unknown",
                 ),
+                EntityTestInfo(
+                    entity_id="sensor.nanoleaf_strip_3b32_thread_node_capabilities",
+                    friendly_name="Nanoleaf Strip 3B32 Thread Node Capabilities",
+                    unique_id="homekit-AAAA011111111111-aid:1-sid:31-cid:115",
+                    entity_category=EntityCategory.DIAGNOSTIC,
+                    state="border_router_capable",
+                ),
             ],
         ),
     )
