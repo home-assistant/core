@@ -1,27 +1,21 @@
 set_watering_time:
   description: Set watering time
+  target:
   fields:
-    entity_id:
-      description: Name of a irrigation valve to set watering time
-      example: "switch.wl000000000090_1_watering"
     watering_time:
       description: Duration for this irrigation to be turned on
       example: 30
 set_pause_time:
   description: Set pause time
+  target:
   fields:
-    entity_id:
-      description: Name of a pause irrigation switch to set pause time
-      example: "switch.wl000000000090_2_pause"
     pause_time:
       description: Duration for this irrigation to be paused
       example: 24
 set_trigger:
   description: Set trigger
+  target:
   fields:
-    entity_id:
-      description: Name of a irrigation valve to set trigger
-      example: "switch.wl000000000090_1_watering"
     trigger_index:
       description: Index of Trigger from 1 to 4
       example: "1"
