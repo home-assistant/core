@@ -37,7 +37,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.17.1
+PySwitchbot==0.17.3
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -168,7 +168,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==1.2.2
+aiohomekit==1.2.3
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -378,7 +378,7 @@ axis==44
 azure-eventhub==5.7.0
 
 # homeassistant.components.azure_service_bus
-azure-servicebus==0.50.3
+azure-servicebus==7.8.0
 
 # homeassistant.components.baidu
 baidu-aip==1.6.6
@@ -1359,7 +1359,7 @@ pyRFXtrx==0.30.0
 pySwitchmate==0.5.1
 
 # homeassistant.components.tibber
-pyTibber==0.22.3
+pyTibber==0.24.0
 
 # homeassistant.components.dlink
 pyW215==0.7.0
@@ -1398,7 +1398,7 @@ pyatmo==6.2.4
 pyatome==0.1.1
 
 # homeassistant.components.apple_tv
-pyatv==0.10.2
+pyatv==0.10.3
 
 # homeassistant.components.aussie_broadband
 pyaussiebb==0.0.15
@@ -1461,7 +1461,7 @@ pydaikin==2.7.0
 pydanfossair==0.1.0
 
 # homeassistant.components.deconz
-pydeconz==100
+pydeconz==101
 
 # homeassistant.components.delijn
 pydelijn==1.0.0
