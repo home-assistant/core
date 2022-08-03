@@ -856,6 +856,9 @@ async def test_process_advertisements_bail_on_good_advertisement(
         )
 
         _get_underlying_scanner()._callback(device, adv)
+        _get_underlying_scanner()._callback(device, adv)
+        _get_underlying_scanner()._callback(device, adv)
+
         await asyncio.sleep(0)
 
     result = await handle
