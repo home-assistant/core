@@ -1,14 +1,17 @@
 """Config flow to configure homekit_controller."""
 from __future__ import annotations
 
-from collections.abc import Awaitable
 import logging
 import re
 from typing import TYPE_CHECKING, Any, cast
 
 import aiohomekit
 from aiohomekit import Controller, const as aiohomekit_const
-from aiohomekit.controller.abstract import AbstractDiscovery, AbstractPairing
+from aiohomekit.controller.abstract import (
+    AbstractDiscovery,
+    AbstractPairing,
+    FinishPairing,
+)
 from aiohomekit.exceptions import AuthenticationError
 from aiohomekit.model.categories import Categories
 from aiohomekit.model.status_flags import StatusFlags
@@ -115,7 +118,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.category: Categories | None = None
         self.devices: dict[str, AbstractDiscovery] = {}
         self.controller: Controller | None = None
-        self.finish_pairing: Awaitable[AbstractPairing] | None = None
+        self.finish_pairing: FinishPairing | None = None
 
     async def _async_setup_controller(self):
         """Create the controller."""
