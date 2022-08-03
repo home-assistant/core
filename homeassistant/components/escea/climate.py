@@ -1,8 +1,9 @@
 """Support for the Escea Fireplace."""
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
+from collections.abc import Coroutine
 import logging
+from typing import Any
 
 from pescea import Controller
 
@@ -11,15 +12,15 @@ from homeassistant.components.climate.const import (
     FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
-    SUPPORT_FAN_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
+    ClimateEntityFeature,
+    HVACMode,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     DATA_DISCOVERY_SERVICE,
@@ -28,6 +29,7 @@ from .const import (
     DISPATCH_CONTROLLER_RECONNECTED,
     DISPATCH_CONTROLLER_UPDATE,
     ESCEA,
+    ESCEA_MANUFACTURER,
     ICON,
 )
 
@@ -42,16 +44,16 @@ _HA_FAN_TO_ESCEA = {v: k for k, v in _ESCEA_FAN_TO_HA.items()}
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config: ConfigType, async_add_entities: Callable
-):
+    hass: HomeAssistant, config: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Initialize an Escea Controller."""
     disco = hass.data[DATA_DISCOVERY_SERVICE]
 
     @callback
-    def init_controller(ctrl: Controller):
+    def init_controller(ctrl: Controller) -> None:
         """Register the controller device."""
 
-        _LOGGER.info("Controller UID=%s discovered", ctrl.device_uid)
+        _LOGGER.debug("Controller UID=%s discovered", ctrl.device_uid)
 
         device = ControllerDevice(ctrl)
         async_add_entities([device])
@@ -61,23 +63,22 @@ async def async_setup_entry(
         init_controller(controller)
 
     # connect to register any further components
-    config.async_on_unload(async_dispatcher_connect(hass, DISPATCH_CONTROLLER_DISCOVERED, init_controller))
-
-    return True
+    config.async_on_unload(
+        async_dispatcher_connect(hass, DISPATCH_CONTROLLER_DISCOVERED, init_controller)
+    )
 
 
 class ControllerDevice(ClimateEntity):
     """Representation of Escea Controller."""
 
     _attr_fan_modes = list(_HA_FAN_TO_ESCEA)
-    _attr_hvac_modes = [
-        HVAC_MODE_HEAT,
-        HVAC_MODE_OFF,
-    ]
+    _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
     _attr_icon = ICON
     _attr_precision = PRECISION_WHOLE
     _attr_should_poll = False
-    _attr_supported_features = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+    )
     _attr_target_temperature_step = PRECISION_WHOLE
     _attr_temperature_unit = TEMP_CELSIUS
 
@@ -91,9 +92,18 @@ class ControllerDevice(ClimateEntity):
         self._attr_unique_id = controller.device_uid
         self._attr_name = f"Escea Fireplace {self._attr_unique_id}"
 
+        # temporary assignment to get past mypy checker
+        unique_id: str = controller.device_uid
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(ESCEA, unique_id)},
+            manufacturer=ESCEA_MANUFACTURER,
+            name=self.name,
+        )
+
         self._attr_available = True
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call on adding to hass.
 
         Registers for connect/disconnect/update events
@@ -145,9 +155,9 @@ class ControllerDevice(ClimateEntity):
             return
 
         if available:
-            _LOGGER.info("Reconnected controller %s ", self._controller.device_uid)
+            _LOGGER.debug("Reconnected controller %s ", self._controller.device_uid)
         else:
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Controller %s disconnected due to exception: %s",
                 self._controller.device_uid,
                 ex,
@@ -157,18 +167,9 @@ class ControllerDevice(ClimateEntity):
         self.async_write_ha_state()
 
     @property
-    def device_info(self):
-        """Return the device info for the Escea system."""
-        return {
-            "identifiers": {(ESCEA, self.unique_id)},
-            "name": self.name,
-            "manufacturer": "Escea",
-        }
-
-    @property
-    def hvac_mode(self) -> str:
+    def hvac_mode(self) -> HVACMode:
         """Return current operation ie. heat, cool, idle."""
-        return HVAC_MODE_HEAT if self._controller.is_on else HVAC_MODE_OFF
+        return HVACMode.HEAT if self._controller.is_on else HVACMode.OFF
 
     @property
     def current_temperature(self) -> float | None:
@@ -185,7 +186,7 @@ class ControllerDevice(ClimateEntity):
         """Return the fan setting."""
         return _ESCEA_FAN_TO_HA[self._controller.fan]
 
-    async def wrap_and_catch(self, coro: Coroutine):
+    async def wrap_and_catch(self, coro: Coroutine) -> None:
         """Catch any connection errors and set unavailable."""
         try:
             await coro
@@ -194,7 +195,7 @@ class ControllerDevice(ClimateEntity):
         else:
             self.set_available(True)
 
-    async def async_set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temp = kwargs.get(ATTR_TEMPERATURE)
         if temp is not None:
@@ -204,9 +205,9 @@ class ControllerDevice(ClimateEntity):
         """Set new target fan mode."""
         await self.wrap_and_catch(self._controller.set_fan(_HA_FAN_TO_ESCEA[fan_mode]))
 
-    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
-        await self.wrap_and_catch(self._controller.set_on(hvac_mode == HVAC_MODE_HEAT))
+        await self.wrap_and_catch(self._controller.set_on(hvac_mode == HVACMode.HEAT))
 
     async def async_turn_on(self) -> None:
         """Turn the entity on."""

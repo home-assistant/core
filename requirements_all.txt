@@ -1228,7 +1228,7 @@ peco==0.0.29
 pencompy==0.0.3
 
 # homeassistant.components.escea
-pescea==1.0.11
+pescea==1.0.12
 
 # homeassistant.components.aruba
 # homeassistant.components.cisco_ios

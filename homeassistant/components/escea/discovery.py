@@ -1,7 +1,6 @@
 """Internal discovery service for  Escea Fireplace."""
 from pescea import Controller, Listener, discovery_service
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -17,11 +16,11 @@ from .const import (
 class DiscoveryService(Listener):
     """Discovery data and interfacing with pescea library."""
 
-    def __init__(self, hass):
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialise discovery service."""
         super().__init__()
-        self.hass = hass
-        self.pi_disco = None
+        self.hass: HomeAssistant = hass
+        self.pi_disco: DiscoveryService
 
     # Listener interface
     def controller_discovered(self, ctrl: Controller) -> None:
@@ -41,7 +40,7 @@ class DiscoveryService(Listener):
         async_dispatcher_send(self.hass, DISPATCH_CONTROLLER_UPDATE, ctrl)
 
 
-async def async_start_discovery_service(hass: HomeAssistant):
+async def async_start_discovery_service(hass: HomeAssistant) -> DiscoveryService:
     """Set up the pescea internal discovery."""
     disco = hass.data.get(DATA_DISCOVERY_SERVICE)
     if disco:
@@ -52,21 +51,13 @@ async def async_start_discovery_service(hass: HomeAssistant):
     disco = DiscoveryService(hass)
     hass.data[DATA_DISCOVERY_SERVICE] = disco
 
-    # Start the pescea discovery service, disco is the listener
-    loop = hass.loop
-
-    disco.pi_disco = discovery_service(disco, loop=loop)
+    disco.pi_disco = discovery_service(disco)
     await disco.pi_disco.start_discovery()
-
-    async def shutdown_event(event):
-        await async_stop_discovery_service(hass)
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown_event)
 
     return disco
 
 
-async def async_stop_discovery_service(hass: HomeAssistant):
+async def async_stop_discovery_service(hass: HomeAssistant) -> None:
     """Stop the discovery service."""
     disco = hass.data.get(DATA_DISCOVERY_SERVICE)
     if not disco:
