@@ -33,7 +33,7 @@ async def async_setup_entry(
     assert unique_id is not None
     async_add_entities(
         [
-            SwitchBotBotEntity(
+            SwitchBotSwitch(
                 coordinator,
                 unique_id,
                 entry.data[CONF_ADDRESS],
@@ -44,8 +44,8 @@ async def async_setup_entry(
     )
 
 
-class SwitchBotBotEntity(SwitchbotEntity, SwitchEntity, RestoreEntity):
-    """Representation of a Switchbot."""
+class SwitchBotSwitch(SwitchbotEntity, SwitchEntity, RestoreEntity):
+    """Representation of a Switchbot switch."""
 
     _attr_device_class = SwitchDeviceClass.SWITCH
 
@@ -69,7 +69,7 @@ class SwitchBotBotEntity(SwitchbotEntity, SwitchEntity, RestoreEntity):
         if not (last_state := await self.async_get_last_state()):
             return
         self._attr_is_on = last_state.state == STATE_ON
-        self._last_run_success = last_state.attributes["last_run_success"]
+        self._last_run_success = last_state.attributes.get("last_run_success")
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""

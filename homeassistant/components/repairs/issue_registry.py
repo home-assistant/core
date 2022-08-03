@@ -13,6 +13,7 @@ import homeassistant.util.dt as dt_util
 from .models import IssueSeverity
 
 DATA_REGISTRY = "issue_registry"
+EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED = "repairs_issue_registry_updated"
 STORAGE_KEY = "repairs.issue_registry"
 STORAGE_VERSION = 1
 SAVE_DELAY = 10
@@ -29,6 +30,8 @@ class IssueEntry:
     domain: str
     is_fixable: bool | None
     issue_id: str
+    # Used if an integration creates issues for other integrations (ie alerts)
+    issue_domain: str | None
     learn_more_url: str | None
     severity: IssueSeverity | None
     translation_key: str | None
@@ -57,6 +60,7 @@ class IssueRegistry:
         domain: str,
         issue_id: str,
         *,
+        issue_domain: str | None = None,
         breaks_in_ha_version: str | None = None,
         is_fixable: bool,
         learn_more_url: str | None = None,
@@ -74,6 +78,7 @@ class IssueRegistry:
                 dismissed_version=None,
                 domain=domain,
                 is_fixable=is_fixable,
+                issue_domain=issue_domain,
                 issue_id=issue_id,
                 learn_more_url=learn_more_url,
                 severity=severity,
@@ -82,16 +87,25 @@ class IssueRegistry:
             )
             self.issues[(domain, issue_id)] = issue
             self.async_schedule_save()
+            self.hass.bus.async_fire(
+                EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED,
+                {"action": "create", "domain": domain, "issue_id": issue_id},
+            )
         else:
             issue = self.issues[(domain, issue_id)] = dataclasses.replace(
                 issue,
                 active=True,
                 breaks_in_ha_version=breaks_in_ha_version,
                 is_fixable=is_fixable,
+                issue_domain=issue_domain,
                 learn_more_url=learn_more_url,
                 severity=severity,
                 translation_key=translation_key,
                 translation_placeholders=translation_placeholders,
+            )
+            self.hass.bus.async_fire(
+                EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED,
+                {"action": "update", "domain": domain, "issue_id": issue_id},
             )
 
         return issue
@@ -103,6 +117,10 @@ class IssueRegistry:
             return
 
         self.async_schedule_save()
+        self.hass.bus.async_fire(
+            EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED,
+            {"action": "remove", "domain": domain, "issue_id": issue_id},
+        )
 
     @callback
     def async_ignore(self, domain: str, issue_id: str, ignore: bool) -> IssueEntry:
@@ -118,6 +136,10 @@ class IssueRegistry:
         )
 
         self.async_schedule_save()
+        self.hass.bus.async_fire(
+            EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED,
+            {"action": "update", "domain": domain, "issue_id": issue_id},
+        )
 
         return issue
 
@@ -138,6 +160,7 @@ class IssueRegistry:
                     domain=issue["domain"],
                     is_fixable=None,
                     issue_id=issue["issue_id"],
+                    issue_domain=None,
                     learn_more_url=None,
                     severity=None,
                     translation_key=None,

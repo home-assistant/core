@@ -1,21 +1,23 @@
 """Passive update processors for the Bluetooth integration."""
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
 import dataclasses
 import logging
-from typing import Any, Generic, TypeVar
-
-from home_assistant_bluetooth import BluetoothServiceInfo
+from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 from homeassistant.const import ATTR_IDENTIFIERS, ATTR_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BluetoothChange
 from .const import DOMAIN
 from .update_coordinator import BasePassiveBluetoothCoordinator
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Mapping
+
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import BluetoothChange, BluetoothScanningMode, BluetoothServiceInfoBleak
 
 
 @dataclasses.dataclass(frozen=True)
@@ -62,9 +64,10 @@ class PassiveBluetoothProcessorCoordinator(BasePassiveBluetoothCoordinator):
         hass: HomeAssistant,
         logger: logging.Logger,
         address: str,
+        mode: BluetoothScanningMode,
     ) -> None:
         """Initialize the coordinator."""
-        super().__init__(hass, logger, address)
+        super().__init__(hass, logger, address, mode)
         self._processors: list[PassiveBluetoothDataProcessor] = []
 
     @callback
@@ -78,20 +81,9 @@ class PassiveBluetoothProcessorCoordinator(BasePassiveBluetoothCoordinator):
         def remove_processor() -> None:
             """Remove a processor."""
             self._processors.remove(processor)
-            self._async_handle_processors_changed()
 
         self._processors.append(processor)
-        self._async_handle_processors_changed()
         return remove_processor
-
-    @callback
-    def _async_handle_processors_changed(self) -> None:
-        """Handle processors changed."""
-        running = bool(self._cancel_bluetooth_advertisements)
-        if running and not self._processors:
-            self._async_stop()
-        elif not running and self._processors:
-            self._async_start()
 
     @callback
     def _async_handle_unavailable(self, address: str) -> None:
@@ -103,7 +95,7 @@ class PassiveBluetoothProcessorCoordinator(BasePassiveBluetoothCoordinator):
     @callback
     def _async_handle_bluetooth_event(
         self,
-        service_info: BluetoothServiceInfo,
+        service_info: BluetoothServiceInfoBleak,
         change: BluetoothChange,
     ) -> None:
         """Handle a Bluetooth event."""
@@ -133,7 +125,7 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
     The processor will call the update_method every time the bluetooth device
     receives a new advertisement data from the coordinator with the following signature:
 
-    update_method(service_info: BluetoothServiceInfo) -> PassiveBluetoothDataUpdate
+    update_method(service_info: BluetoothServiceInfoBleak) -> PassiveBluetoothDataUpdate
 
     As the size of each advertisement is limited, the update_method should
     return a PassiveBluetoothDataUpdate object that contains only data that
@@ -146,7 +138,9 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
 
     def __init__(
         self,
-        update_method: Callable[[BluetoothServiceInfo], PassiveBluetoothDataUpdate[_T]],
+        update_method: Callable[
+            [BluetoothServiceInfoBleak], PassiveBluetoothDataUpdate[_T]
+        ],
     ) -> None:
         """Initialize the coordinator."""
         self.coordinator: PassiveBluetoothProcessorCoordinator
@@ -252,7 +246,7 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
     @callback
     def async_handle_bluetooth_event(
         self,
-        service_info: BluetoothServiceInfo,
+        service_info: BluetoothServiceInfoBleak,
         change: BluetoothChange,
     ) -> None:
         """Handle a Bluetooth event."""

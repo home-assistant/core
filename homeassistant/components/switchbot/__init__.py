@@ -19,8 +19,11 @@ from homeassistant.helpers import device_registry as dr
 
 from .const import (
     ATTR_BOT,
+    ATTR_CONTACT,
     ATTR_CURTAIN,
     ATTR_HYGROMETER,
+    ATTR_MOTION,
+    ATTR_PLUG,
     CONF_RETRY_COUNT,
     DEFAULT_RETRY_COUNT,
     DOMAIN,
@@ -29,12 +32,16 @@ from .coordinator import SwitchbotDataUpdateCoordinator
 
 PLATFORMS_BY_TYPE = {
     ATTR_BOT: [Platform.SWITCH, Platform.SENSOR],
+    ATTR_PLUG: [Platform.SWITCH, Platform.SENSOR],
     ATTR_CURTAIN: [Platform.COVER, Platform.BINARY_SENSOR, Platform.SENSOR],
     ATTR_HYGROMETER: [Platform.SENSOR],
+    ATTR_CONTACT: [Platform.BINARY_SENSOR, Platform.SENSOR],
+    ATTR_MOTION: [Platform.BINARY_SENSOR, Platform.SENSOR],
 }
 CLASS_BY_DEVICE = {
     ATTR_CURTAIN: switchbot.SwitchbotCurtain,
     ATTR_BOT: switchbot.Switchbot,
+    ATTR_PLUG: switchbot.SwitchbotPlugMini,
 }
 
 _LOGGER = logging.getLogger(__name__)

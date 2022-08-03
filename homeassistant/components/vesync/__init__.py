@@ -21,7 +21,7 @@ from .const import (
     VS_SWITCHES,
 )
 
-PLATFORMS = [Platform.SWITCH, Platform.FAN, Platform.LIGHT, Platform.SENSOR]
+PLATFORMS = [Platform.FAN, Platform.LIGHT, Platform.SENSOR, Platform.SWITCH]
 
 _LOGGER = logging.getLogger(__name__)
 

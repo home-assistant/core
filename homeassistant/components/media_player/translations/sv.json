@@ -9,7 +9,9 @@
             "is_playing": "{entity_name} spelar"
         },
         "trigger_type": {
-            "buffering": "{entity_name} b\u00f6rjar buffra"
+            "buffering": "{entity_name} b\u00f6rjar buffra",
+            "turned_off": "{entity_name} st\u00e4ngdes av",
+            "turned_on": "{entity_name} slogs p\u00e5"
         }
     },
     "state": {

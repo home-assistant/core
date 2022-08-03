@@ -850,7 +850,7 @@ omit =
     homeassistant/components/open_meteo/weather.py
     homeassistant/components/opencv/*
     homeassistant/components/openevse/sensor.py
-    homeassistant/components/openexchangerates/sensor.py
+    homeassistant/components/openexchangerates/*
     homeassistant/components/opengarage/__init__.py
     homeassistant/components/opengarage/binary_sensor.py
     homeassistant/components/opengarage/cover.py
@@ -927,7 +927,6 @@ omit =
     homeassistant/components/plex/cast.py
     homeassistant/components/plex/media_player.py
     homeassistant/components/plex/view.py
-    homeassistant/components/plugwise/select.py
     homeassistant/components/plum_lightpad/light.py
     homeassistant/components/pocketcasts/sensor.py
     homeassistant/components/point/__init__.py

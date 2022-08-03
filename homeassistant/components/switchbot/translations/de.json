@@ -7,7 +7,7 @@
             "switchbot_unsupported_type": "Nicht unterst\u00fctzter Switchbot-Typ.",
             "unknown": "Unerwarteter Fehler"
         },
-        "flow_title": "{name}",
+        "flow_title": "{name} ({address})",
         "step": {
             "user": {
                 "data": {

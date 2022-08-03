@@ -21,10 +21,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.dt import as_utc
 
 from . import VacuumCoordinatorData
-from ...helpers.update_coordinator import DataUpdateCoordinator
 from .const import (
     CONF_DEVICE,
     CONF_FLOW_TYPE,

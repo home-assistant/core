@@ -1,16 +1,20 @@
 """The bluetooth integration matchers."""
 from __future__ import annotations
 
-from collections.abc import Mapping
 from dataclasses import dataclass
 import fnmatch
-from typing import Final, TypedDict
+from typing import TYPE_CHECKING, Final, TypedDict
 
-from bleak.backends.device import BLEDevice
-from bleak.backends.scanner import AdvertisementData
 from lru import LRU  # pylint: disable=no-name-in-module
 
 from homeassistant.loader import BluetoothMatcher, BluetoothMatcherOptional
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from bleak.backends.device import BLEDevice
+    from bleak.backends.scanner import AdvertisementData
+
 
 MAX_REMEMBER_ADDRESSES: Final = 2048
 
@@ -69,6 +73,10 @@ class IntegrationMatcher:
         self._matched: Mapping[str, IntegrationMatchHistory] = LRU(
             MAX_REMEMBER_ADDRESSES
         )
+
+    def async_clear_history(self) -> None:
+        """Clear the history."""
+        self._matched = {}
 
     def match_domains(self, device: BLEDevice, adv_data: AdvertisementData) -> set[str]:
         """Return the domains that are matched."""

@@ -1,5 +1,9 @@
 {
     "config": {
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta.",
+            "unauthorized": "Parning nekad, kontrollera enheten f\u00f6r autentiseringsbeg\u00e4ran"
+        },
         "step": {
             "user": {
                 "data": {

@@ -17,6 +17,7 @@
                 "title": "V\u00e4lj autentiseringsmetod"
             },
             "reauth_confirm": {
+                "description": "Yolink-integrationen m\u00e5ste autentisera ditt konto igen",
                 "title": "\u00c5terautenticera integration"
             }
         }
