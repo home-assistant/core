@@ -3,7 +3,7 @@
   "name": "Aqara",
   "documentation": "https://opendoc.aqara.cn",
   "dependencies": ["ffmpeg"],
-  "codeowners": ["@liweifeng2022"],
+  "codeowners": ["@chenliuyang1989", "@liweifeng2022"],
   "requirements": ["aqara-iot-py-sdk==1.0.2"],
   "iot_class": "cloud_push"
 }
