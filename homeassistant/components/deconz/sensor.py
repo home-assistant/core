@@ -263,32 +263,46 @@ async def async_setup_entry(
     gateway = get_gateway_from_config_entry(hass, config_entry)
     gateway.entities[DOMAIN] = set()
 
+    known_device_entities: dict[str, set[str]] = {
+        description.key: set() for description in COMMON_SENSOR_DESCRIPTIONS
+    }
+
     @callback
     def async_add_sensor(_: EventType, sensor_id: str) -> None:
         """Add sensor from deCONZ."""
         sensor = gateway.api.sensors[sensor_id]
         entities: list[DeconzSensor] = []
 
-        if sensor.battery is None and not sensor.type.startswith("CLIP"):
-            DeconzBatteryTracker(sensor_id, gateway, async_add_entities)
-
-        # known_entities = set(gateway.entities[DOMAIN])
-
         for description in (
             ENTITY_DESCRIPTIONS.get(type(sensor), []) + COMMON_SENSOR_DESCRIPTIONS
         ):
+            no_sensor_data = False
             if (
                 not hasattr(sensor, description.key)
                 or description.value_fn(sensor) is None
             ):
+                no_sensor_data = True
+
+            if description in COMMON_SENSOR_DESCRIPTIONS:
+                if (
+                    sensor.type.startswith("CLIP")
+                    or (no_sensor_data and description.key != "battery")
+                    or (
+                        (unique_id := sensor.unique_id.rsplit("-", 1)[0])
+                        in known_device_entities[description.key]
+                    )
+                ):
+                    continue
+                known_device_entities[description.key].add(unique_id)
+                if no_sensor_data and description.key == "battery":
+                    DeconzBatteryTracker(sensor_id, gateway, async_add_entities)
+                    continue
+
+            if no_sensor_data:
                 continue
 
             async_update_unique_id(hass, sensor.unique_id, description)
-
-            entity = DeconzSensor(sensor, gateway, description)
-            entities.append(entity)
-            # if entity.unique_id not in known_entities:
-            #     entities.append(entity)
+            entities.append(DeconzSensor(sensor, gateway, description))
 
         async_add_entities(entities)
 
@@ -324,22 +338,7 @@ class DeconzSensor(DeconzDevice[SensorResources], SensorEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique identifier for this device."""
-        return f"{super().unique_id}-{self.entity_description.key}"
-        # if (
-        #     self.entity_description.key == "battery"
-        #     and self._device.manufacturer == "Danfoss"
-        #     and self._device.model_id
-        #     in [
-        #         "0x8030",
-        #         "0x8031",
-        #         "0x8034",
-        #         "0x8035",
-        #     ]
-        # ):
-        #     return f"{super().unique_id}-battery"
-        # if self.entity_description.suffix:
-        #     return f"{self.serial}-{self.entity_description.suffix.lower()}"
-        # return super().unique_id
+        return f"{self._device.unique_id}-{self.entity_description.key}"
 
     @callback
     def async_update_callback(self) -> None:
@@ -416,9 +415,6 @@ class DeconzBatteryTracker:
         """Update the device's state."""
         if "battery" in self.sensor.changed_keys:
             self.unsubscribe()
-            known_entities = set(self.gateway.entities[DOMAIN])
-            entity = DeconzSensor(
-                self.sensor, self.gateway, COMMON_SENSOR_DESCRIPTIONS[0]
-            )
-            if entity.unique_id not in known_entities:
-                self.async_add_entities([entity])
+            desc = COMMON_SENSOR_DESCRIPTIONS[0]
+            async_update_unique_id(self.gateway.hass, self.sensor.unique_id, desc)
+            self.async_add_entities([DeconzSensor(self.sensor, self.gateway, desc)])

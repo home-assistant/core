@@ -530,7 +530,7 @@ TEST_DATA = [
             "next_state": "2020-12-14T10:12:14+00:00",
         },
     ),
-    (  # Secondary temperature sensor
+    (  # Internal temperature sensor
         {
             "config": {
                 "battery": 100,
@@ -557,7 +557,7 @@ TEST_DATA = [
             "entity_count": 3,
             "device_count": 3,
             "entity_id": "sensor.alarm_10_temperature",
-            "unique_id": "00:15:8d:00:02:b5:d1:80-01-0500-secondary_temperature",
+            "unique_id": "00:15:8d:00:02:b5:d1:80-01-0500-internal_temperature",
             "old_unique_id": "00:15:8d:00:02:b5:d1:80-temperature",
             "state": "26.0",
             "entity_category": None,
@@ -874,7 +874,11 @@ async def test_air_quality_sensor_without_ppb(hass, aioclient_mock):
 
 
 async def test_add_battery_later(hass, aioclient_mock, mock_deconz_websocket):
-    """Test that a sensor without an initial battery state creates a battery sensor once state exist."""
+    """Test that a battery sensor can be created later on.
+
+    Without an initial battery state a battery sensor
+    can be created once a value is reported.
+    """
     data = {
         "sensors": {
             "1": {
@@ -882,15 +886,33 @@ async def test_add_battery_later(hass, aioclient_mock, mock_deconz_websocket):
                 "type": "ZHASwitch",
                 "state": {"buttonevent": 1000},
                 "config": {},
-                "uniqueid": "00:00:00:00:00:00:00:00-00",
-            }
+                "uniqueid": "00:00:00:00:00:00:00:00-00-0000",
+            },
+            "2": {
+                "name": "Switch 2",
+                "type": "ZHASwitch",
+                "state": {"buttonevent": 1000},
+                "config": {},
+                "uniqueid": "00:00:00:00:00:00:00:00-00-0001",
+            },
         }
     }
     with patch.dict(DECONZ_WEB_REQUEST, data):
         await setup_deconz_integration(hass, aioclient_mock)
 
     assert len(hass.states.async_all()) == 0
-    assert not hass.states.get("sensor.switch_1_battery")
+
+    event_changed_sensor = {
+        "t": "event",
+        "e": "changed",
+        "r": "sensors",
+        "id": "2",
+        "config": {"battery": 50},
+    }
+    await mock_deconz_websocket(data=event_changed_sensor)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 0
 
     event_changed_sensor = {
         "t": "event",
