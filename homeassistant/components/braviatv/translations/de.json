@@ -14,7 +14,7 @@
                 "data": {
                     "pin": "PIN-Code"
                 },
-                "description": "Gib den auf dem Sony Bravia-Fernseher angezeigten PIN-Code ein. \n\nWenn der PIN-Code nicht angezeigt wird, musst du die Registrierung von Home Assistant auf deinem Fernseher aufheben, gehe daf\u00fcr zu: Einstellungen -> Netzwerk -> Remote - Ger\u00e4teeinstellungen -> Registrierung des entfernten Ger\u00e4ts aufheben.",
+                "description": "Gib den auf dem Sony Bravia-Fernseher angezeigten PIN-Code ein. \n\nWenn der PIN-Code nicht angezeigt wird, musst du die Registrierung von Home Assistant auf deinem Fernseher aufheben, gehe daf\u00fcr zu: Einstellungen \u2192 Netzwerk \u2192 Remote - Ger\u00e4teeinstellungen \u2192 Registrierung des entfernten Ger\u00e4ts aufheben.",
                 "title": "Autorisiere Sony Bravia TV"
             },
             "user": {

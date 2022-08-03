@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
+            "decryption_failed": "La chiave di collegamento fornita non funziona, i dati del sensore non possono essere decifrati. Controllare e riprovare.",
+            "expected_24_characters": "Prevista una chiave di collegamento esadecimale di 24 caratteri.",
+            "expected_32_characters": "Prevista una chiave di collegamento esadecimale di 32 caratteri.",
+            "no_devices_found": "Nessun dispositivo trovato sulla rete"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "bluetooth_confirm": {
+                "description": "Vuoi configurare {name}?"
+            },
+            "get_encryption_key_4_5": {
+                "data": {
+                    "bindkey": "Chiave di collegamento"
+                },
+                "description": "I dati trasmessi dal sensore sono criptati. Per decifrarli \u00e8 necessaria una chiave di collegamento esadecimale di 32 caratteri."
+            },
+            "get_encryption_key_legacy": {
+                "data": {
+                    "bindkey": "Chiave di collegamento"
+                },
+                "description": "I dati trasmessi dal sensore sono criptati. Per decifrarli \u00e8 necessaria una chiave di collegamento esadecimale di 24 caratteri."
+            },
+            "user": {
+                "data": {
+                    "address": "Dispositivo"
+                },
+                "description": "Seleziona un dispositivo da configurare"
+            }
+        }
+    }
+}

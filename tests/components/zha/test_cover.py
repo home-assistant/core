@@ -345,7 +345,7 @@ async def test_restore_state(hass, zha_device_restored, zigpy_shade_device):
         hass,
         (
             State(
-                "cover.fakemanufacturer_fakemodel_e769900a_level_on_off_shade",
+                "cover.fakemanufacturer_fakemodel_shade",
                 STATE_OPEN,
                 {ATTR_CURRENT_POSITION: 50},
             ),

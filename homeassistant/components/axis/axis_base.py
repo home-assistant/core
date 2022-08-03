@@ -10,6 +10,8 @@ from .const import DOMAIN as AXIS_DOMAIN
 class AxisEntityBase(Entity):
     """Base common to all Axis entities."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, device):
         """Initialize the Axis event."""
         self.device = device
@@ -47,7 +49,7 @@ class AxisEventBase(AxisEntityBase):
         super().__init__(device)
         self.event = event
 
-        self._attr_name = f"{device.name} {event.TYPE} {event.id}"
+        self._attr_name = f"{event.TYPE} {event.id}"
         self._attr_unique_id = f"{device.unique_id}-{event.topic}-{event.id}"
 
         self._attr_device_class = event.CLASS

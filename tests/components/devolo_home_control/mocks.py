@@ -8,6 +8,9 @@ from devolo_home_control_api.homecontrol import HomeControl
 from devolo_home_control_api.properties.binary_sensor_property import (
     BinarySensorProperty,
 )
+from devolo_home_control_api.properties.binary_switch_property import (
+    BinarySwitchProperty,
+)
 from devolo_home_control_api.properties.multi_level_sensor_property import (
     MultiLevelSensorProperty,
 )
@@ -29,6 +32,15 @@ class BinarySensorPropertyMock(BinarySensorProperty):
         self.sensor_type = "door"
         self.sub_type = ""
         self.state = False
+
+
+class BinarySwitchPropertyMock(BinarySwitchProperty):
+    """devolo Home Control binary sensor mock."""
+
+    def __init__(self, **kwargs: Any) -> None:
+        """Initialize the mock."""
+        self._logger = MagicMock()
+        self.element_uid = "Test"
 
 
 class MultiLevelSensorPropertyMock(MultiLevelSensorProperty):
@@ -134,6 +146,22 @@ class CoverMock(DeviceMock):
         }
 
 
+class LightMock(DeviceMock):
+    """devolo Home Control light device mock."""
+
+    def __init__(self) -> None:
+        """Initialize the mock."""
+        super().__init__()
+        self.binary_switch_property = {}
+        self.multi_level_switch_property = {
+            "devolo.Dimmer:Test": MultiLevelSwitchPropertyMock()
+        }
+        self.multi_level_switch_property["devolo.Dimmer:Test"].switch_type = "dimmer"
+        self.multi_level_switch_property[
+            "devolo.Dimmer:Test"
+        ].element_uid = "devolo.Dimmer:Test"
+
+
 class RemoteControlMock(DeviceMock):
     """devolo Home Control remote control device mock."""
 
@@ -214,6 +242,19 @@ class HomeControlMockCover(HomeControlMock):
         super().__init__()
         self.devices = {
             "Test": CoverMock(),
+        }
+        self.publisher = Publisher(self.devices.keys())
+        self.publisher.unregister = MagicMock()
+
+
+class HomeControlMockLight(HomeControlMock):
+    """devolo Home Control gateway mock with light devices."""
+
+    def __init__(self, **kwargs: Any) -> None:
+        """Initialize the mock."""
+        super().__init__()
+        self.devices = {
+            "Test": LightMock(),
         }
         self.publisher = Publisher(self.devices.keys())
         self.publisher.unregister = MagicMock()

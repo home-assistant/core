@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "device_key": "Cihaz\u0131n\u0131z\u0131n cihaz anahtar\u0131",
+                    "event": "Olaylar i\u00e7in olay.",
+                    "name": "Ad",
+                    "password": "Cihaz\u0131n\u0131z taraf\u0131ndan kullan\u0131lan \u015fifreleme parolas\u0131",
+                    "salt": "Cihaz\u0131n\u0131z taraf\u0131ndan kullan\u0131lan tuz."
+                }
+            }
+        }
+    }
+}

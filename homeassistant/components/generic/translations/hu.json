@@ -7,7 +7,9 @@
         "error": {
             "already_exists": "M\u00e1r l\u00e9tezik egy kamera ezekkel az URL-be\u00e1ll\u00edt\u00e1sokkal.",
             "invalid_still_image": "Az URL nem adott vissza \u00e9rv\u00e9nyes \u00e1ll\u00f3k\u00e9pet",
+            "malformed_url": "Hib\u00e1s URL",
             "no_still_image_or_stream_url": "Legal\u00e1bb egy \u00e1ll\u00f3k\u00e9pet vagy stream URL-c\u00edmet kell megadnia.",
+            "relative_url": "A relat\u00edv URL-ek nem enged\u00e9lyezettek",
             "stream_file_not_found": "F\u00e1jl nem tal\u00e1lhat\u00f3 a streamhez val\u00f3 csatlakoz\u00e1s sor\u00e1n (telep\u00edtve van az ffmpeg?)",
             "stream_http_not_found": "HTTP 404 Not found - hiba az adatfolyamhoz val\u00f3 csatlakoz\u00e1s k\u00f6zben",
             "stream_io_error": "Bemeneti/kimeneti hiba t\u00f6rt\u00e9nt az adatfolyamhoz val\u00f3 kapcsol\u00f3d\u00e1s k\u00f6zben. Rossz RTSP sz\u00e1ll\u00edt\u00e1si protokoll?",
@@ -50,7 +52,9 @@
         "error": {
             "already_exists": "M\u00e1r l\u00e9tezik egy kamera ezekkel az URL-be\u00e1ll\u00edt\u00e1sokkal.",
             "invalid_still_image": "Az URL nem adott vissza \u00e9rv\u00e9nyes \u00e1ll\u00f3k\u00e9pet",
+            "malformed_url": "Hib\u00e1s URL",
             "no_still_image_or_stream_url": "Legal\u00e1bb egy \u00e1ll\u00f3k\u00e9pet vagy stream URL-c\u00edmet kell megadnia.",
+            "relative_url": "A relat\u00edv URL-ek nem enged\u00e9lyezettek",
             "stream_file_not_found": "F\u00e1jl nem tal\u00e1lhat\u00f3 a streamhez val\u00f3 csatlakoz\u00e1s sor\u00e1n (telep\u00edtve van az ffmpeg?)",
             "stream_http_not_found": "HTTP 404 Not found - hiba az adatfolyamhoz val\u00f3 csatlakoz\u00e1s k\u00f6zben",
             "stream_io_error": "Bemeneti/kimeneti hiba t\u00f6rt\u00e9nt az adatfolyamhoz val\u00f3 kapcsol\u00f3d\u00e1s k\u00f6zben. Rossz RTSP sz\u00e1ll\u00edt\u00e1si protokoll?",

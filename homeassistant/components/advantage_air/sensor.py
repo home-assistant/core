@@ -16,7 +16,7 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ADVANTAGE_AIR_STATE_OPEN, DOMAIN as ADVANTAGE_AIR_DOMAIN
-from .entity import AdvantageAirEntity
+from .entity import AdvantageAirAcEntity, AdvantageAirZoneEntity
 
 ADVANTAGE_AIR_SET_COUNTDOWN_VALUE = "minutes"
 ADVANTAGE_AIR_SET_COUNTDOWN_UNIT = "min"
@@ -56,7 +56,7 @@ async def async_setup_entry(
     )
 
 
-class AdvantageAirTimeTo(AdvantageAirEntity, SensorEntity):
+class AdvantageAirTimeTo(AdvantageAirAcEntity, SensorEntity):
     """Representation of Advantage Air timer control."""
 
     _attr_native_unit_of_measurement = ADVANTAGE_AIR_SET_COUNTDOWN_UNIT
@@ -67,10 +67,8 @@ class AdvantageAirTimeTo(AdvantageAirEntity, SensorEntity):
         super().__init__(instance, ac_key)
         self.action = action
         self._time_key = f"countDownTo{action}"
-        self._attr_name = f'{self._ac["name"]} Time To {action}'
-        self._attr_unique_id = (
-            f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-timeto{action}'
-        )
+        self._attr_name = f"Time to {action}"
+        self._attr_unique_id += f"-timeto{action}"
 
     @property
     def native_value(self):
@@ -90,7 +88,7 @@ class AdvantageAirTimeTo(AdvantageAirEntity, SensorEntity):
         await self.async_change({self.ac_key: {"info": {self._time_key: value}}})
 
 
-class AdvantageAirZoneVent(AdvantageAirEntity, SensorEntity):
+class AdvantageAirZoneVent(AdvantageAirZoneEntity, SensorEntity):
     """Representation of Advantage Air Zone Vent Sensor."""
 
     _attr_native_unit_of_measurement = PERCENTAGE
@@ -100,10 +98,8 @@ class AdvantageAirZoneVent(AdvantageAirEntity, SensorEntity):
     def __init__(self, instance, ac_key, zone_key):
         """Initialize an Advantage Air Zone Vent Sensor."""
         super().__init__(instance, ac_key, zone_key=zone_key)
-        self._attr_name = f'{self._zone["name"]} Vent'
-        self._attr_unique_id = (
-            f'{self.coordinator.data["system"]["rid"]}-{ac_key}-{zone_key}-vent'
-        )
+        self._attr_name = f'{self._zone["name"]} vent'
+        self._attr_unique_id += "-vent"
 
     @property
     def native_value(self):
@@ -120,7 +116,7 @@ class AdvantageAirZoneVent(AdvantageAirEntity, SensorEntity):
         return "mdi:fan-off"
 
 
-class AdvantageAirZoneSignal(AdvantageAirEntity, SensorEntity):
+class AdvantageAirZoneSignal(AdvantageAirZoneEntity, SensorEntity):
     """Representation of Advantage Air Zone wireless signal sensor."""
 
     _attr_native_unit_of_measurement = PERCENTAGE
@@ -130,10 +126,8 @@ class AdvantageAirZoneSignal(AdvantageAirEntity, SensorEntity):
     def __init__(self, instance, ac_key, zone_key):
         """Initialize an Advantage Air Zone wireless signal sensor."""
         super().__init__(instance, ac_key, zone_key)
-        self._attr_name = f'{self._zone["name"]} Signal'
-        self._attr_unique_id = (
-            f'{self.coordinator.data["system"]["rid"]}-{ac_key}-{zone_key}-signal'
-        )
+        self._attr_name = f'{self._zone["name"]} signal'
+        self._attr_unique_id += "-signal"
 
     @property
     def native_value(self):
@@ -154,7 +148,7 @@ class AdvantageAirZoneSignal(AdvantageAirEntity, SensorEntity):
         return "mdi:wifi-strength-outline"
 
 
-class AdvantageAirZoneTemp(AdvantageAirEntity, SensorEntity):
+class AdvantageAirZoneTemp(AdvantageAirZoneEntity, SensorEntity):
     """Representation of Advantage Air Zone temperature sensor."""
 
     _attr_native_unit_of_measurement = TEMP_CELSIUS
@@ -166,10 +160,8 @@ class AdvantageAirZoneTemp(AdvantageAirEntity, SensorEntity):
     def __init__(self, instance, ac_key, zone_key):
         """Initialize an Advantage Air Zone Temp Sensor."""
         super().__init__(instance, ac_key, zone_key)
-        self._attr_name = f'{self._zone["name"]} Temperature'
-        self._attr_unique_id = (
-            f'{self.coordinator.data["system"]["rid"]}-{ac_key}-{zone_key}-temp'
-        )
+        self._attr_name = f'{self._zone["name"]} temperature'
+        self._attr_unique_id += "-temp"
 
     @property
     def native_value(self):

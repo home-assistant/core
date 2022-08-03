@@ -1,6 +1,10 @@
 """Support for UK Met Office weather service."""
 from __future__ import annotations
 
+from typing import Any
+
+from datapoint.Element import Element
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -17,7 +21,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from . import get_device_info
 from .const import (
@@ -34,6 +41,7 @@ from .const import (
     VISIBILITY_CLASSES,
     VISIBILITY_DISTANCE_CLASSES,
 )
+from .data import MetOfficeData
 
 ATTR_LAST_UPDATE = "last_update"
 ATTR_SENSOR_ID = "sensor_id"
@@ -170,21 +178,24 @@ async def async_setup_entry(
     )
 
 
-class MetOfficeCurrentSensor(CoordinatorEntity, SensorEntity):
+class MetOfficeCurrentSensor(
+    CoordinatorEntity[DataUpdateCoordinator[MetOfficeData]], SensorEntity
+):
     """Implementation of a Met Office current weather condition sensor."""
 
     def __init__(
         self,
-        coordinator,
-        hass_data,
-        use_3hourly,
+        coordinator: DataUpdateCoordinator[MetOfficeData],
+        hass_data: dict[str, Any],
+        use_3hourly: bool,
         description: SensorEntityDescription,
-    ):
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
 
         self.entity_description = description
         mode_label = MODE_3HOURLY_LABEL if use_3hourly else MODE_DAILY_LABEL
+
         self._attr_device_info = get_device_info(
             coordinates=hass_data[METOFFICE_COORDINATES], name=hass_data[METOFFICE_NAME]
         )
@@ -192,11 +203,12 @@ class MetOfficeCurrentSensor(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = f"{description.name}_{hass_data[METOFFICE_COORDINATES]}"
         if not use_3hourly:
             self._attr_unique_id = f"{self._attr_unique_id}_{MODE_DAILY}"
-
-        self.use_3hourly = use_3hourly
+        self._attr_entity_registry_enabled_default = (
+            self.entity_description.entity_registry_enabled_default and use_3hourly
+        )
 
     @property
-    def native_value(self):
+    def native_value(self) -> Any | None:
         """Return the state of the sensor."""
         value = None
 
@@ -224,13 +236,13 @@ class MetOfficeCurrentSensor(CoordinatorEntity, SensorEntity):
         elif hasattr(self.coordinator.data.now, self.entity_description.key):
             value = getattr(self.coordinator.data.now, self.entity_description.key)
 
-            if hasattr(value, "value"):
+            if isinstance(value, Element):
                 value = value.value
 
         return value
 
     @property
-    def icon(self):
+    def icon(self) -> str | None:
         """Return the icon for the entity card."""
         value = self.entity_description.icon
         if self.entity_description.key == "weather":
@@ -244,7 +256,7 @@ class MetOfficeCurrentSensor(CoordinatorEntity, SensorEntity):
         return value
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the device."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,
@@ -253,10 +265,3 @@ class MetOfficeCurrentSensor(CoordinatorEntity, SensorEntity):
             ATTR_SITE_ID: self.coordinator.data.site.id,
             ATTR_SITE_NAME: self.coordinator.data.site.name,
         }
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return (
-            self.entity_description.entity_registry_enabled_default and self.use_3hourly
-        )

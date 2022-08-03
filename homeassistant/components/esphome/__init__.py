@@ -58,7 +58,7 @@ from .entry_data import RuntimeEntryData
 DOMAIN = "esphome"
 CONF_NOISE_PSK = "noise_psk"
 _LOGGER = logging.getLogger(__name__)
-_T = TypeVar("_T")
+_DomainDataSelfT = TypeVar("_DomainDataSelfT", bound="DomainData")
 
 STORAGE_VERSION = 1
 
@@ -101,11 +101,11 @@ class DomainData:
         )
 
     @classmethod
-    def get(cls: type[_T], hass: HomeAssistant) -> _T:
+    def get(cls: type[_DomainDataSelfT], hass: HomeAssistant) -> _DomainDataSelfT:
         """Get the global DomainData instance stored in hass.data."""
         # Don't use setdefault - this is a hot code path
         if DOMAIN in hass.data:
-            return cast(_T, hass.data[DOMAIN])
+            return cast(_DomainDataSelfT, hass.data[DOMAIN])
         ret = hass.data[DOMAIN] = cls()
         return ret
 
@@ -321,20 +321,17 @@ async def async_setup_entry(  # noqa: C901
         on_connect_error=on_connect_error,
     )
 
-    async def complete_setup() -> None:
-        """Complete the config entry setup."""
-        infos, services = await entry_data.async_load_from_store()
-        await entry_data.async_update_static_infos(hass, entry, infos)
-        await _setup_services(hass, entry_data, services)
+    infos, services = await entry_data.async_load_from_store()
+    await entry_data.async_update_static_infos(hass, entry, infos)
+    await _setup_services(hass, entry_data, services)
 
-        if entry_data.device_info is not None and entry_data.device_info.name:
-            cli.expected_name = entry_data.device_info.name
-            reconnect_logic.name = entry_data.device_info.name
+    if entry_data.device_info is not None and entry_data.device_info.name:
+        cli.expected_name = entry_data.device_info.name
+        reconnect_logic.name = entry_data.device_info.name
 
-        await reconnect_logic.start()
-        entry_data.cleanup_callbacks.append(reconnect_logic.stop_callback)
+    await reconnect_logic.start()
+    entry_data.cleanup_callbacks.append(reconnect_logic.stop_callback)
 
-    hass.async_create_task(complete_setup())
     return True
 
 
@@ -565,13 +562,11 @@ async def platform_async_setup_entry(
         """Update entities of this platform when entities are listed."""
         old_infos = entry_data.info[component_key]
         new_infos: dict[int, EntityInfo] = {}
-        add_entities = []
+        add_entities: list[_EntityT] = []
         for info in infos:
             if not isinstance(info, info_type):
                 # Filter out infos that don't belong to this platform.
                 continue
-            # cast back to upper type, otherwise mypy gets confused
-            info = cast(EntityInfo, info)
 
             if info.key in old_infos:
                 # Update existing entity

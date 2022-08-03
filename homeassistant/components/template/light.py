@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -197,17 +198,17 @@ class LightTemplate(TemplateEntity, LightEntity):
         self._supports_transition = False
 
     @property
-    def brightness(self):
+    def brightness(self) -> int | None:
         """Return the brightness of the light."""
         return self._brightness
 
     @property
-    def color_temp(self):
+    def color_temp(self) -> int | None:
         """Return the CT color value in mireds."""
         return self._temperature
 
     @property
-    def max_mireds(self):
+    def max_mireds(self) -> int:
         """Return the max mireds value in mireds."""
         if self._max_mireds is not None:
             return self._max_mireds
@@ -215,7 +216,7 @@ class LightTemplate(TemplateEntity, LightEntity):
         return super().max_mireds
 
     @property
-    def min_mireds(self):
+    def min_mireds(self) -> int:
         """Return the min mireds value in mireds."""
         if self._min_mireds is not None:
             return self._min_mireds
@@ -223,27 +224,27 @@ class LightTemplate(TemplateEntity, LightEntity):
         return super().min_mireds
 
     @property
-    def white_value(self):
+    def white_value(self) -> int | None:
         """Return the white value."""
         return self._white_value
 
     @property
-    def hs_color(self):
+    def hs_color(self) -> tuple[float, float] | None:
         """Return the hue and saturation color value [float, float]."""
         return self._color
 
     @property
-    def effect(self):
+    def effect(self) -> str | None:
         """Return the effect."""
         return self._effect
 
     @property
-    def effect_list(self):
+    def effect_list(self) -> list[str] | None:
         """Return the effect list."""
         return self._effect_list
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Flag supported features."""
         supported_features = 0
         if self._level_script is not None:
@@ -261,11 +262,11 @@ class LightTemplate(TemplateEntity, LightEntity):
         return supported_features
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return true if device is on."""
         return self._state
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         if self._template:
             self.add_template_attribute(
@@ -345,7 +346,7 @@ class LightTemplate(TemplateEntity, LightEntity):
             )
         await super().async_added_to_hass()
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         optimistic_set = False
         # set optimistic states
@@ -448,7 +449,7 @@ class LightTemplate(TemplateEntity, LightEntity):
         if optimistic_set:
             self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         if ATTR_TRANSITION in kwargs and self._supports_transition is True:
             await self.async_run_script(

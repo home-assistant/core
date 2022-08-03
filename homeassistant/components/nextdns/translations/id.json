@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Profil NextDNS ini sudah dikonfigurasi."
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "invalid_api_key": "Kunci API tidak valid",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "step": {
+            "profiles": {
+                "data": {
+                    "profile": "Profil"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "Kunci API"
+                }
+            }
+        }
+    }
+}

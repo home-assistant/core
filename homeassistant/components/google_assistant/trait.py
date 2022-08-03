@@ -176,6 +176,8 @@ def _next_selected(items: list[str], selected: str | None) -> str | None:
 
     If selected is missing in items, None is returned
     """
+    if selected is None:
+        return None
     try:
         index = items.index(selected)
     except ValueError:
@@ -188,7 +190,7 @@ def _next_selected(items: list[str], selected: str | None) -> str | None:
 class _Trait:
     """Represents a Trait inside Google Assistant skill."""
 
-    commands = []
+    commands: list[str] = []
 
     @staticmethod
     def might_2fa(domain, features, device_class):
@@ -1701,7 +1703,7 @@ class InputSelectorTrait(_Trait):
     name = TRAIT_INPUTSELECTOR
     commands = [COMMAND_INPUT, COMMAND_NEXT_INPUT, COMMAND_PREVIOUS_INPUT]
 
-    SYNONYMS = {}
+    SYNONYMS: dict[str, list[str]] = {}
 
     @staticmethod
     def supported(domain, features, device_class, _):
@@ -2197,7 +2199,7 @@ class MediaStateTrait(_Trait):
     """
 
     name = TRAIT_MEDIA_STATE
-    commands = []
+    commands: list[str] = []
 
     activity_lookup = {
         STATE_OFF: "INACTIVE",
@@ -2314,7 +2316,7 @@ class SensorStateTrait(_Trait):
     }
 
     name = TRAIT_SENSOR_STATE
-    commands = []
+    commands: list[str] = []
 
     @classmethod
     def supported(cls, domain, features, device_class, _):
