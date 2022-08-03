@@ -10,6 +10,7 @@ from aioguardian import Client
 from aioguardian.errors import GuardianError
 import voluptuous as vol
 
+from homeassistant.components.repairs import IssueSeverity, async_create_issue
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     ATTR_DEVICE_ID,
@@ -267,31 +268,47 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             filename=call.data[CONF_FILENAME],
         )
 
-    for service_name, schema, method in (
-        (SERVICE_NAME_DISABLE_AP, SERVICE_BASE_SCHEMA, async_disable_ap),
-        (SERVICE_NAME_ENABLE_AP, SERVICE_BASE_SCHEMA, async_enable_ap),
+    for service_name, schema, method, deprecated in (
+        (SERVICE_NAME_DISABLE_AP, SERVICE_BASE_SCHEMA, async_disable_ap, False),
+        (SERVICE_NAME_ENABLE_AP, SERVICE_BASE_SCHEMA, async_enable_ap, False),
         (
             SERVICE_NAME_PAIR_SENSOR,
             SERVICE_PAIR_UNPAIR_SENSOR_SCHEMA,
             async_pair_sensor,
+            False,
         ),
-        (SERVICE_NAME_REBOOT, SERVICE_BASE_SCHEMA, async_reboot),
+        (SERVICE_NAME_REBOOT, SERVICE_BASE_SCHEMA, async_reboot, True),
         (
             SERVICE_NAME_RESET_VALVE_DIAGNOSTICS,
             SERVICE_BASE_SCHEMA,
             async_reset_valve_diagnostics,
+            True,
         ),
         (
             SERVICE_NAME_UNPAIR_SENSOR,
             SERVICE_PAIR_UNPAIR_SENSOR_SCHEMA,
             async_unpair_sensor,
+            False,
         ),
         (
             SERVICE_NAME_UPGRADE_FIRMWARE,
             SERVICE_UPGRADE_FIRMWARE_SCHEMA,
             async_upgrade_firmware,
+            False,
         ),
     ):
+        if deprecated:
+            issue_key = f"deprecated_service_{service_name}"
+            async_create_issue(
+                hass,
+                DOMAIN,
+                issue_key,
+                breaks_in_ha_version="2022.9.0",
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key=issue_key,
+            )
+
         if hass.services.has_service(DOMAIN, service_name):
             continue
         hass.services.async_register(DOMAIN, service_name, method, schema=schema)

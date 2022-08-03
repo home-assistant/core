@@ -17,5 +17,15 @@
                 "description": "Configure a local Elexa Guardian device."
             }
         }
+    },
+    "issues": {
+        "deprecated_service_reboot": {
+            "description": "Please update your automations to use the newly-created button that reboots the valve controller.",
+            "title": "The guardian.reboot service is deprecated"
+        },
+        "deprecated_service_reset_valve_diagnostics": {
+            "description": "Please update your automations to use the newly-created button that resets valve diagnostics.",
+            "title": "The guardian.reset_valve_diagnostics service is deprecated"
+        }
     }
 }
