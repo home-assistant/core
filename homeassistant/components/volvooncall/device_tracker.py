@@ -27,6 +27,9 @@ async def async_setup_scanner(
     volvo_data = coordinator.volvo_data
     instrument = volvo_data.instrument(vin, component, attr, slug_attr)
 
+    if instrument is None:
+        return False
+
     async def see_vehicle():
         """Handle the reporting of the vehicle position."""
         host_name = instrument.vehicle_name

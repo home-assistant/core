@@ -5,6 +5,7 @@ import logging
 import async_timeout
 import voluptuous as vol
 from volvooncall import Connection
+from volvooncall.dashboard import Instrument
 
 from homeassistant.const import (
     CONF_NAME,
@@ -150,14 +151,14 @@ class VolvoData:
     ) -> None:
         """Initialize the component state."""
         self.hass = hass
-        self.vehicles: set = set()
-        self.instruments: set = set()
-        self.config = config[DOMAIN]
+        self.vehicles: set[str] = set()
+        self.instruments: set[Instrument] = set()
+        self.config = config
         self.connection = connection
 
     def instrument(self, vin, component, attr, slug_attr):
         """Return corresponding instrument."""
-        return next(
+        ret = next(
             (
                 instrument
                 for instrument in self.instruments
@@ -168,6 +169,15 @@ class VolvoData:
             ),
             None,
         )
+
+        if ret is None:
+            _LOGGER.warning(
+                "Unknown instrument requested: %s.%s, which means there is an issue with the volvooncall component or the underlying volvooncall package",
+                component,
+                slug_attr,
+            )
+
+        return ret
 
     def vehicle_name(self, vehicle):
         """Provide a friendly name for a vehicle."""
@@ -182,8 +192,8 @@ class VolvoData:
         self.vehicles.add(vehicle.vin)
 
         dashboard = vehicle.dashboard(
-            mutable=self.config[CONF_MUTABLE],
-            scandinavian_miles=self.config[CONF_SCANDINAVIAN_MILES],
+            mutable=self.config[DOMAIN][CONF_MUTABLE],
+            scandinavian_miles=self.config[DOMAIN][CONF_SCANDINAVIAN_MILES],
         )
 
         for instrument in (

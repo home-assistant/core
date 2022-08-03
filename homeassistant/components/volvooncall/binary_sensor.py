@@ -1,7 +1,10 @@
 """Support for VOC."""
 from __future__ import annotations
 
-from homeassistant.components.binary_sensor import DEVICE_CLASSES, BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -35,7 +38,9 @@ class VolvoSensor(VolvoEntity, BinarySensorEntity):
         """Initialize the sensor."""
         super().__init__(vin, component, attribute, slug_attr, coordinator)
 
-        if self.instrument.device_class in DEVICE_CLASSES:
+        if self.instrument.device_class in {
+            item.value for item in BinarySensorDeviceClass
+        }:
             self._attr_device_class = self.instrument.device_class
 
     @property

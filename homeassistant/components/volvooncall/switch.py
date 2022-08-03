@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -33,15 +33,12 @@ class VolvoSwitch(VolvoEntity, SwitchEntity):
         slug_attr: str,
     ) -> None:
         """Initialize the switch."""
-        VolvoEntity.__init__(self, vin, component, attribute, slug_attr, coordinator)
+        super().__init__(vin, component, attribute, slug_attr, coordinator)
 
-        self._attr_is_on = self.instrument.state
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._attr_is_on = self.instrument.state
-        self.async_write_ha_state()
+    @property
+    def is_on(self):
+        """Determine if switch is on."""
+        return self.instrument.state
 
     async def async_turn_on(self, **kwargs):
         """Turn the switch on."""
