@@ -1,11 +1,14 @@
 """Config flow for Aladdin Connect cover integration."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Mapping
 import logging
 from typing import Any
 
-from aladdin_connect import AladdinConnectClient
+from AIOAladdinConnect import AladdinConnectClient
+from aiohttp import ClientError
+from aiohttp.client_exceptions import ClientConnectionError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -13,8 +16,9 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
+from .const import CLIENT_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,8 +37,13 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    acc = AladdinConnectClient(data[CONF_USERNAME], data[CONF_PASSWORD])
-    login = await hass.async_add_executor_job(acc.login)
+    acc = AladdinConnectClient(
+        data[CONF_USERNAME],
+        data[CONF_PASSWORD],
+        async_get_clientsession(hass),
+        CLIENT_ID,
+    )
+    login = await acc.login()
     if not login:
         raise InvalidAuth
 
@@ -45,7 +54,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     entry: config_entries.ConfigEntry | None
 
-    async def async_step_reauth(self, data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle re-authentication with Aladdin Connect."""
 
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
@@ -67,8 +76,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 await validate_input(self.hass, data)
+
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
+
+            except (ClientConnectionError, asyncio.TimeoutError, ClientError):
+                errors["base"] = "cannot_connect"
+
             else:
 
                 self.hass.config_entries.async_update_entry(
@@ -102,6 +116,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await validate_input(self.hass, user_input)
         except InvalidAuth:
             errors["base"] = "invalid_auth"
+
+        except (ClientConnectionError, asyncio.TimeoutError, ClientError):
+            errors["base"] = "cannot_connect"
 
         else:
             await self.async_set_unique_id(

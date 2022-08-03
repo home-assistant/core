@@ -23,5 +23,22 @@
                 "title": "Selecteer stad/provincie"
             }
         }
+    },
+    "options": {
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "_i_to_l": "Stad/provincie (I-L)",
+                    "_m_to_q": "Stad/provincie (M-Q)",
+                    "_r_to_u": "Stad/provincie (R-U)",
+                    "_v_to_z": "Stad/provincie (V-Z)"
+                },
+                "title": "Opties"
+            }
+        }
     }
 }

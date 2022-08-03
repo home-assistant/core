@@ -1,9 +1,8 @@
 """The Risco integration."""
-import asyncio
 from datetime import timedelta
 import logging
 
-from pyrisco import CannotConnectError, OperationError, RiscoAPI, UnauthorizedError
+from pyrisco import CannotConnectError, OperationError, RiscoCloud, UnauthorizedError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -31,7 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Risco from a config entry."""
     data = entry.data
-    risco = RiscoAPI(data[CONF_USERNAME], data[CONF_PASSWORD], data[CONF_PIN])
+    risco = RiscoCloud(data[CONF_USERNAME], data[CONF_PASSWORD], data[CONF_PIN])
     try:
         await risco.login(async_get_clientsession(hass))
     except CannotConnectError as error:
@@ -56,16 +55,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         EVENTS_COORDINATOR: events_coordinator,
     }
 
-    async def start_platforms():
-        await asyncio.gather(
-            *(
-                hass.config_entries.async_forward_entry_setup(entry, platform)
-                for platform in PLATFORMS
-            )
-        )
-        await events_coordinator.async_refresh()
-
-    hass.async_create_task(start_platforms())
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    await events_coordinator.async_refresh()
 
     return True
 

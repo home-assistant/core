@@ -1,6 +1,5 @@
 """The tests for the camera component."""
 import asyncio
-import base64
 from http import HTTPStatus
 import io
 from unittest.mock import AsyncMock, Mock, PropertyMock, mock_open, patch
@@ -233,24 +232,6 @@ async def test_snapshot_service(hass, mock_camera):
 
         assert len(mock_write.mock_calls) == 1
         assert mock_write.mock_calls[0][1][0] == b"Test"
-
-
-async def test_websocket_camera_thumbnail(hass, hass_ws_client, mock_camera):
-    """Test camera_thumbnail websocket command."""
-    await async_setup_component(hass, "camera", {})
-
-    client = await hass_ws_client(hass)
-    await client.send_json(
-        {"id": 5, "type": "camera_thumbnail", "entity_id": "camera.demo_camera"}
-    )
-
-    msg = await client.receive_json()
-
-    assert msg["id"] == 5
-    assert msg["type"] == TYPE_RESULT
-    assert msg["success"]
-    assert msg["result"]["content_type"] == "image/jpg"
-    assert msg["result"]["content"] == base64.b64encode(b"Test").decode("utf-8")
 
 
 async def test_websocket_stream_no_source(

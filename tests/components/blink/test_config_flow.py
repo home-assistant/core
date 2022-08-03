@@ -246,9 +246,11 @@ async def test_form_unknown_error(hass):
 async def test_reauth_shows_user_step(hass):
     """Test reauth shows the user form."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_REAUTH}
+        DOMAIN,
+        context={"source": config_entries.SOURCE_REAUTH},
+        data={"username": "blink@example.com", "password": "invalid_password"},
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
@@ -278,7 +280,7 @@ async def test_options_flow(hass):
         config_entry.entry_id, context={"show_advanced_options": False}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "simple_options"
 
     result = await hass.config_entries.options.async_configure(
@@ -286,6 +288,6 @@ async def test_options_flow(hass):
         user_input={"scan_interval": 5},
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"] == {"scan_interval": 5}
     assert mock_blink.refresh_rate == 5

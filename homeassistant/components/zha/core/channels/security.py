@@ -92,7 +92,7 @@ class IasAce(ZigbeeChannel):
         )
         self.command_map[command_id](*args)
 
-    def arm(self, arm_mode: int, code: str, zone_id: int):
+    def arm(self, arm_mode: int, code: str | None, zone_id: int) -> None:
         """Handle the IAS ACE arm command."""
         mode = AceCluster.ArmMode(arm_mode)
 
@@ -199,26 +199,17 @@ class IasAce(ZigbeeChannel):
 
     def _emergency(self) -> None:
         """Handle the IAS ACE emergency command."""
-        self._set_alarm(
-            AceCluster.AlarmStatus.Emergency,
-            IAS_ACE_EMERGENCY,
-        )
+        self._set_alarm(AceCluster.AlarmStatus.Emergency)
 
     def _fire(self) -> None:
         """Handle the IAS ACE fire command."""
-        self._set_alarm(
-            AceCluster.AlarmStatus.Fire,
-            IAS_ACE_FIRE,
-        )
+        self._set_alarm(AceCluster.AlarmStatus.Fire)
 
     def _panic(self) -> None:
         """Handle the IAS ACE panic command."""
-        self._set_alarm(
-            AceCluster.AlarmStatus.Emergency_Panic,
-            IAS_ACE_PANIC,
-        )
+        self._set_alarm(AceCluster.AlarmStatus.Emergency_Panic)
 
-    def _set_alarm(self, status: AceCluster.PanelStatus, event: str) -> None:
+    def _set_alarm(self, status: AceCluster.AlarmStatus) -> None:
         """Set the specified alarm status."""
         self.alarm_status = status
         self.armed_state = AceCluster.PanelStatus.In_Alarm

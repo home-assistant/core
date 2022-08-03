@@ -190,9 +190,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
         return await self.async_step_coordinates()
 
-    async def async_step_reauth(self, config: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle configuration by re-auth."""
-        self._data = {**config}
+        self._data = {**entry_data}
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(

@@ -40,6 +40,7 @@ from .discovery import async_start_discovery
 from .migrate import async_migrate_data
 from .services import async_cleanup_services, async_setup_services
 from .utils import _async_unifi_mac_from_hass, async_get_devices
+from .views import ThumbnailProxyView, VideoProxyView
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,6 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         subscribed_models=DEVICES_FOR_SUBSCRIBE,
         override_connection_host=entry.options.get(CONF_OVERRIDE_CHOST, False),
         ignore_stats=not entry.options.get(CONF_ALL_UPDATES, False),
+        ignore_unadopted=False,
     )
     _LOGGER.debug("Connect to UniFi Protect")
     data_service = ProtectData(hass, protect, SCAN_INTERVAL, entry)
@@ -89,8 +91,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = data_service
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     async_setup_services(hass)
+    hass.http.register_view(ThumbnailProxyView(hass))
+    hass.http.register_view(VideoProxyView(hass))
 
     entry.async_on_unload(entry.add_update_listener(_async_options_updated))
     entry.async_on_unload(
@@ -127,7 +131,9 @@ async def async_remove_config_entry_device(
     }
     api = async_ufp_instance_for_config_entry_ids(hass, {config_entry.entry_id})
     assert api is not None
-    return api.bootstrap.nvr.mac not in unifi_macs and not any(
-        device.mac in unifi_macs
-        for device in async_get_devices(api.bootstrap, DEVICES_THAT_ADOPT)
-    )
+    if api.bootstrap.nvr.mac in unifi_macs:
+        return False
+    for device in async_get_devices(api.bootstrap, DEVICES_THAT_ADOPT):
+        if device.is_adopted_by_us and device.mac in unifi_macs:
+            return False
+    return True

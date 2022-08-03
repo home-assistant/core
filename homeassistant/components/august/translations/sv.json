@@ -24,6 +24,7 @@
                 "data": {
                     "code": "Verifieringskod"
                 },
+                "description": "Kontrollera din {login_method} ( {username} ) och ange verifieringskoden nedan",
                 "title": "Tv\u00e5faktorsautentisering"
             }
         }

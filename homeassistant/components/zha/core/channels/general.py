@@ -365,7 +365,7 @@ class OnOffChannel(ZigbeeChannel):
             should_accept = args[0]
             on_time = args[1]
             # 0 is always accept 1 is only accept when already on
-            if should_accept == 0 or (should_accept == 1 and self._state):
+            if should_accept == 0 or (should_accept == 1 and bool(self.on_off)):
                 if self._off_listener is not None:
                     self._off_listener()
                     self._off_listener = None
@@ -408,9 +408,9 @@ class OnOffConfiguration(ZigbeeChannel):
     """OnOff Configuration channel."""
 
 
-@registries.CLIENT_CHANNELS_REGISTRY.register(general.Ota.cluster_id)
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.Ota.cluster_id)
-class Ota(ZigbeeChannel):
+@registries.CLIENT_CHANNELS_REGISTRY.register(general.Ota.cluster_id)
+class Ota(ClientChannel):
     """OTA Channel."""
 
     BIND: bool = False
@@ -427,6 +427,7 @@ class Ota(ZigbeeChannel):
 
         signal_id = self._ch_pool.unique_id.split("-")[0]
         if cmd_name == "query_next_image":
+            assert args
             self.async_send_signal(SIGNAL_UPDATE_DEVICE.format(signal_id), args[3])
 
 

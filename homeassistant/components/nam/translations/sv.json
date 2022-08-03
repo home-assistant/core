@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "device_unsupported": "Enheten st\u00f6ds ej"
+            "device_unsupported": "Enheten st\u00f6ds ej",
+            "reauth_unsuccessful": "\u00c5terautentiseringen misslyckades. Ta bort integrationen och konfigurera den igen."
         },
         "error": {
             "cannot_connect": "Det gick inte att ansluta ",

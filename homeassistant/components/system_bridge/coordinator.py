@@ -93,7 +93,7 @@ class SystemBridgeDataUpdateCoordinator(
         if not self.websocket_client.connected:
             await self._setup_websocket()
 
-        await self.websocket_client.get_data(modules)
+        self.hass.async_create_task(self.websocket_client.get_data(modules))
 
     async def async_handle_module(
         self,
@@ -107,9 +107,7 @@ class SystemBridgeDataUpdateCoordinator(
 
     async def _listen_for_data(self) -> None:
         """Listen for events from the WebSocket."""
-
         try:
-            await self.websocket_client.register_data_listener(MODULES)
             await self.websocket_client.listen(callback=self.async_handle_module)
         except AuthenticationException as exception:
             self.last_update_success = False
@@ -175,6 +173,9 @@ class SystemBridgeDataUpdateCoordinator(
             self.async_update_listeners()
 
         self.hass.async_create_task(self._listen_for_data())
+
+        await self.websocket_client.register_data_listener(MODULES)
+
         self.last_update_success = True
         self.async_update_listeners()
 

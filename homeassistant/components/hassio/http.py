@@ -11,6 +11,7 @@ import aiohttp
 from aiohttp import web
 from aiohttp.client import ClientTimeout
 from aiohttp.hdrs import (
+    AUTHORIZATION,
     CACHE_CONTROL,
     CONTENT_ENCODING,
     CONTENT_LENGTH,
@@ -18,11 +19,12 @@ from aiohttp.hdrs import (
     TRANSFER_ENCODING,
 )
 from aiohttp.web_exceptions import HTTPBadGateway
+from multidict import istr
 
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
 from homeassistant.components.onboarding import async_is_onboarded
 
-from .const import X_HASS_IS_ADMIN, X_HASS_USER_ID, X_HASSIO
+from .const import X_HASS_IS_ADMIN, X_HASS_USER_ID
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -89,7 +91,7 @@ class HassIOView(HomeAssistantView):
         if path == "backups/new/upload":
             # We need to reuse the full content type that includes the boundary
             headers[
-                "Content-Type"
+                CONTENT_TYPE
             ] = request._stored_content_type  # pylint: disable=protected-access
 
         try:
@@ -123,17 +125,17 @@ class HassIOView(HomeAssistantView):
         raise HTTPBadGateway()
 
 
-def _init_header(request: web.Request) -> dict[str, str]:
+def _init_header(request: web.Request) -> dict[istr, str]:
     """Create initial header."""
     headers = {
-        X_HASSIO: os.environ.get("SUPERVISOR_TOKEN", ""),
+        AUTHORIZATION: f"Bearer {os.environ.get('SUPERVISOR_TOKEN', '')}",
         CONTENT_TYPE: request.content_type,
     }
 
     # Add user data
     if request.get("hass_user") is not None:
-        headers[X_HASS_USER_ID] = request["hass_user"].id
-        headers[X_HASS_IS_ADMIN] = str(int(request["hass_user"].is_admin))
+        headers[istr(X_HASS_USER_ID)] = request["hass_user"].id
+        headers[istr(X_HASS_IS_ADMIN)] = str(int(request["hass_user"].is_admin))
 
     return headers
 

@@ -1,7 +1,6 @@
 """Representation of Z-Wave switches."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from zwave_js_server.client import Client as ZwaveClient
@@ -22,8 +21,6 @@ from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
 
 PARALLEL_UPDATES = 0
-
-LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(

@@ -38,6 +38,8 @@ class PhilipsTVScreenSwitch(
 ):
     """A Philips TV screen state switch."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: PhilipsTVDataUpdateCoordinator,
@@ -46,7 +48,7 @@ class PhilipsTVScreenSwitch(
 
         super().__init__(coordinator)
 
-        self._attr_name = f"{coordinator.system['name']} Screen State"
+        self._attr_name = "Screen state"
         self._attr_icon = "mdi:television-shimmer"
         self._attr_unique_id = f"{coordinator.unique_id}_screenstate"
         self._attr_device_info = DeviceInfo(

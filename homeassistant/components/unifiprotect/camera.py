@@ -4,10 +4,10 @@ from __future__ import annotations
 from collections.abc import Generator
 import logging
 
-from pyunifiprotect.api import ProtectApiClient
 from pyunifiprotect.data import (
     Camera as UFPCamera,
     CameraChannel,
+    ProtectAdoptableDeviceModel,
     ProtectModelWithId,
     StateType,
 )
@@ -15,6 +15,7 @@ from pyunifiprotect.data import (
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -23,23 +24,39 @@ from .const import (
     ATTR_FPS,
     ATTR_HEIGHT,
     ATTR_WIDTH,
+    DISPATCH_ADOPT,
+    DISPATCH_CHANNELS,
     DOMAIN,
 )
 from .data import ProtectData
 from .entity import ProtectDeviceEntity
+from .utils import async_dispatch_id as _ufpd
 
 _LOGGER = logging.getLogger(__name__)
 
 
 def get_camera_channels(
-    protect: ProtectApiClient,
+    data: ProtectData,
+    ufp_device: UFPCamera | None = None,
 ) -> Generator[tuple[UFPCamera, CameraChannel, bool], None, None]:
     """Get all the camera channels."""
-    for camera in protect.bootstrap.cameras.values():
+
+    devices = (
+        data.api.bootstrap.cameras.values() if ufp_device is None else [ufp_device]
+    )
+    for camera in devices:
+        if not camera.is_adopted_by_us:
+            continue
+
         if not camera.channels:
-            _LOGGER.warning(
-                "Camera does not have any channels: %s (id: %s)", camera.name, camera.id
-            )
+            if ufp_device is None:
+                # only warn on startup
+                _LOGGER.warning(
+                    "Camera does not have any channels: %s (id: %s)",
+                    camera.display_name,
+                    camera.id,
+                )
+            data.async_add_pending_camera_id(camera.id)
             continue
 
         is_default = True
@@ -55,17 +72,12 @@ def get_camera_channels(
             yield camera, camera.channels[0], True
 
 
-async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Discover cameras on a UniFi Protect NVR."""
-    data: ProtectData = hass.data[DOMAIN][entry.entry_id]
+def _async_camera_entities(
+    data: ProtectData, ufp_device: UFPCamera | None = None
+) -> list[ProtectDeviceEntity]:
     disable_stream = data.disable_stream
-
-    entities = []
-    for camera, channel, is_default in get_camera_channels(data.api):
+    entities: list[ProtectDeviceEntity] = []
+    for camera, channel, is_default in get_camera_channels(data, ufp_device):
         # do not enable streaming for package camera
         # 2 FPS causes a lot of buferring
         entities.append(
@@ -90,6 +102,32 @@ async def async_setup_entry(
                     disable_stream,
                 )
             )
+    return entities
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Discover cameras on a UniFi Protect NVR."""
+    data: ProtectData = hass.data[DOMAIN][entry.entry_id]
+
+    async def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
+        if not isinstance(device, UFPCamera):
+            return
+
+        entities = _async_camera_entities(data, ufp_device=device)
+        async_add_entities(entities)
+
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
+    )
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_CHANNELS), _add_new_device)
+    )
+
+    entities = _async_camera_entities(data)
     async_add_entities(entities)
 
 
@@ -116,10 +154,10 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
 
         if self._secure:
             self._attr_unique_id = f"{self.device.mac}_{self.channel.id}"
-            self._attr_name = f"{self.device.name} {self.channel.name}"
+            self._attr_name = f"{self.device.display_name} {self.channel.name}"
         else:
             self._attr_unique_id = f"{self.device.mac}_{self.channel.id}_insecure"
-            self._attr_name = f"{self.device.name} {self.channel.name} Insecure"
+            self._attr_name = f"{self.device.display_name} {self.channel.name} Insecure"
         # only the default (first) channel is enabled by default
         self._attr_entity_registry_enabled_default = is_default and secure
 

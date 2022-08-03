@@ -4,6 +4,7 @@
     },
     "config": {
         "abort": {
+            "already_configured": "El compte ja est\u00e0 configurat",
             "authorize_url_timeout": "Temps d'espera esgotat durant la generaci\u00f3 de l'URL d'autoritzaci\u00f3.",
             "invalid_access_token": "Token d'acc\u00e9s inv\u00e0lid",
             "missing_configuration": "El component no est\u00e0 configurat. Mira'n la documentaci\u00f3.",
@@ -94,6 +95,14 @@
             "camera_person": "Persona detectada",
             "camera_sound": "So detectat",
             "doorbell_chime": "Timbre premut"
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "title": "La configuraci\u00f3 YAML de Nest est\u00e0 sent eliminada"
+        },
+        "removed_app_auth": {
+            "title": "Les credencials d'autenticaci\u00f3 de Nest s'han d'actualitzar"
         }
     }
 }

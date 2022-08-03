@@ -4,6 +4,7 @@
     },
     "config": {
         "abort": {
+            "already_configured": "A fi\u00f3k m\u00e1r konfigur\u00e1lva van",
             "authorize_url_timeout": "Id\u0151t\u00fall\u00e9p\u00e9s az \u00e9rv\u00e9nyes\u00edt\u00e9si url gener\u00e1l\u00e1sa sor\u00e1n.",
             "invalid_access_token": "\u00c9rv\u00e9nytelen hozz\u00e1f\u00e9r\u00e9si token",
             "missing_configuration": "A komponens nincs konfigur\u00e1lva. K\u00e9rem, k\u00f6vesse a dokument\u00e1ci\u00f3t.",
@@ -94,6 +95,16 @@
             "camera_person": "Szem\u00e9ly \u00e9szlelve",
             "camera_sound": "Hang \u00e9szlelve",
             "doorbell_chime": "Cseng\u0151 megnyomva"
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Nest konfigur\u00e1l\u00e1sa a configuration.yaml f\u00e1jl \u00e1ltal a 2022.10-es Home Assistantban elt\u00e1vol\u00edt\u00e1sra ker\u00fcl.\n\nA megl\u00e9v\u0151 OAuth alkalmaz\u00e1s hiteles\u00edt\u0151 adatai \u00e9s hozz\u00e1f\u00e9r\u00e9si be\u00e1ll\u00edt\u00e1sai automatikusan import\u00e1l\u00e1sra ker\u00fclnek a felhaszn\u00e1l\u00f3i fel\u00fcletre. A probl\u00e9ma megold\u00e1s\u00e1hoz t\u00e1vol\u00edtsa el a YAML konfigur\u00e1ci\u00f3t a configuration.yaml f\u00e1jlb\u00f3l, \u00e9s ind\u00edtsa \u00fajra a Home Assistantot.",
+            "title": "A Nest YAML konfigur\u00e1ci\u00f3ja elt\u00e1vol\u00edt\u00e1sra ker\u00fcl"
+        },
+        "removed_app_auth": {
+            "description": "A biztons\u00e1g meger\u0151s\u00edt\u00e9se \u00e9s az adathal\u00e1sz kock\u00e1zat cs\u00f6kkent\u00e9se \u00e9rdek\u00e9ben a Google megsz\u00fcntette a Home Assistant \u00e1ltal haszn\u00e1lt hiteles\u00edt\u00e9si m\u00f3dszert.\n\n**Ez az \u00d6n r\u00e9sz\u00e9r\u0151l int\u00e9zked\u00e9st ig\u00e9nyel a megold\u00e1shoz** ([b\u0151vebb inform\u00e1ci\u00f3]({more_info_url}))\n\n1. L\u00e1togasson el az integr\u00e1ci\u00f3k oldalra\n2. Kattintson az \u00dajrakonfigur\u00e1l\u00e1s gombra a Nest integr\u00e1ci\u00f3ban.\n3. A rendszer v\u00e9gigvezeti \u00d6nt a webes hiteles\u00edt\u00e9sre val\u00f3 friss\u00edt\u00e9s l\u00e9p\u00e9sein.\n\nA hibaelh\u00e1r\u00edt\u00e1ssal kapcsolatos inform\u00e1ci\u00f3k a Nest [integr\u00e1ci\u00f3s utas\u00edt\u00e1sok]({documentation_url}) dokumentumban tal\u00e1lhat\u00f3k.",
+            "title": "A Nest hiteles\u00edt\u0151 adatait friss\u00edteni sz\u00fcks\u00e9ges"
         }
     }
 }

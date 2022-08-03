@@ -1,6 +1,7 @@
 {
     "device_automation": {
         "action_type": {
+            "toggle": "V\u00e4xla {entity_name}",
             "turn_off": "St\u00e4ng av {entity_name}",
             "turn_on": "Sl\u00e5 p\u00e5 {entity_name}"
         },

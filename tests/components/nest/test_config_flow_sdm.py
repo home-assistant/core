@@ -76,8 +76,8 @@ class OAuthFixture:
         assert result.get("type") == "form"
         assert result.get("step_id") == "device_project"
 
-        result = await self.async_configure(result, {"project_id": PROJECT_ID})
-        await self.async_oauth_web_flow(result)
+        result = await self.async_configure(result, {"project_id": project_id})
+        await self.async_oauth_web_flow(result, project_id=project_id)
 
     async def async_oauth_web_flow(self, result: dict, project_id=PROJECT_ID) -> None:
         """Invoke the oauth flow for Web Auth with fake responses."""
@@ -404,7 +404,7 @@ async def test_web_reauth(hass, oauth, setup_platform, config_entry):
     entry = await oauth.async_finish_setup(result)
     # Verify existing tokens are replaced
     entry.data["token"].pop("expires_at")
-    assert entry.unique_id == DOMAIN
+    assert entry.unique_id == PROJECT_ID
     assert entry.data["token"] == {
         "refresh_token": "mock-refresh-token",
         "access_token": "mock-access-token",
@@ -415,25 +415,51 @@ async def test_web_reauth(hass, oauth, setup_platform, config_entry):
     assert entry.data.get("subscriber_id") == orig_subscriber_id  # Not updated
 
 
-async def test_single_config_entry(hass, setup_platform):
-    """Test that only a single config entry is allowed."""
+async def test_multiple_config_entries(hass, oauth, setup_platform):
+    """Verify config flow can be started when existing config entry exists."""
     await setup_platform()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "abort"
-    assert result["reason"] == "single_instance_allowed"
+    await oauth.async_app_creds_flow(result, project_id="project-id-2")
+    entry = await oauth.async_finish_setup(result)
+    assert entry.title == "Mock Title"
+    assert "token" in entry.data
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 2
 
 
-async def test_unexpected_existing_config_entries(
+async def test_duplicate_config_entries(hass, oauth, setup_platform):
+    """Verify that config entries must be for unique projects."""
+    await setup_platform()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result.get("type") == "form"
+    assert result.get("step_id") == "cloud_project"
+
+    result = await oauth.async_configure(result, {"cloud_project_id": CLOUD_PROJECT_ID})
+    assert result.get("type") == "form"
+    assert result.get("step_id") == "device_project"
+
+    result = await oauth.async_configure(result, {"project_id": PROJECT_ID})
+    assert result.get("type") == "abort"
+    assert result.get("reason") == "already_configured"
+
+
+async def test_reauth_multiple_config_entries(
     hass, oauth, setup_platform, config_entry
 ):
     """Test Nest reauthentication with multiple existing config entries."""
-    # Note that this case will not happen in the future since only a single
-    # instance is now allowed, but this may have been allowed in the past.
-    # On reauth, only one entry is kept and the others are deleted.
-
     await setup_platform()
 
     old_entry = MockConfigEntry(
@@ -461,7 +487,7 @@ async def test_unexpected_existing_config_entries(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 2
     entry = entries[0]
-    assert entry.unique_id == DOMAIN
+    assert entry.unique_id == PROJECT_ID
     entry.data["token"].pop("expires_at")
     assert entry.data["token"] == {
         "refresh_token": "mock-refresh-token",
@@ -477,18 +503,6 @@ async def test_unexpected_existing_config_entries(
     entry.data["token"].pop("expires_at")
     assert entry.data.get("token", {}).get("access_token") == "some-token"
     assert entry.data.get("extra_data")
-
-
-async def test_reauth_missing_config_entry(hass, setup_platform):
-    """Test the reauth flow invoked missing existing data."""
-    await setup_platform()
-
-    # Invoke the reauth flow with no existing data
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=None
-    )
-    assert result["type"] == "abort"
-    assert result["reason"] == "missing_configuration"
 
 
 @pytest.mark.parametrize(
@@ -540,7 +554,7 @@ async def test_app_auth_yaml_reauth(hass, oauth, setup_platform, config_entry):
     # Verify existing tokens are replaced
     entry = await oauth.async_finish_setup(result, {"code": "1234"})
     entry.data["token"].pop("expires_at")
-    assert entry.unique_id == DOMAIN
+    assert entry.unique_id == PROJECT_ID
     assert entry.data["token"] == {
         "refresh_token": "mock-refresh-token",
         "access_token": "mock-access-token",
@@ -570,7 +584,7 @@ async def test_web_auth_yaml_reauth(hass, oauth, setup_platform, config_entry):
     # Verify existing tokens are replaced
     entry = await oauth.async_finish_setup(result, {"code": "1234"})
     entry.data["token"].pop("expires_at")
-    assert entry.unique_id == DOMAIN
+    assert entry.unique_id == PROJECT_ID
     assert entry.data["token"] == {
         "refresh_token": "mock-refresh-token",
         "access_token": "mock-access-token",
@@ -599,7 +613,7 @@ async def test_pubsub_subscription_strip_whitespace(
     assert entry.title == "Import from configuration.yaml"
     assert "token" in entry.data
     entry.data["token"].pop("expires_at")
-    assert entry.unique_id == DOMAIN
+    assert entry.unique_id == PROJECT_ID
     assert entry.data["token"] == {
         "refresh_token": "mock-refresh-token",
         "access_token": "mock-access-token",
@@ -643,7 +657,7 @@ async def test_pubsub_subscriber_config_entry_reauth(
     # Entering an updated access token refreshs the config entry.
     entry = await oauth.async_finish_setup(result, {"code": "1234"})
     entry.data["token"].pop("expires_at")
-    assert entry.unique_id == DOMAIN
+    assert entry.unique_id == PROJECT_ID
     assert entry.data["token"] == {
         "refresh_token": "mock-refresh-token",
         "access_token": "mock-access-token",

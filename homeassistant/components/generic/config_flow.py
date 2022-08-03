@@ -150,6 +150,12 @@ async def async_test_still(
     except TemplateError as err:
         _LOGGER.warning("Problem rendering template %s: %s", url, err)
         return {CONF_STILL_IMAGE_URL: "template_error"}, None
+    try:
+        yarl_url = yarl.URL(url)
+    except ValueError:
+        return {CONF_STILL_IMAGE_URL: "malformed_url"}, None
+    if not yarl_url.is_absolute():
+        return {CONF_STILL_IMAGE_URL: "relative_url"}, None
     verify_ssl = info[CONF_VERIFY_SSL]
     auth = generate_auth(info)
     try:
@@ -221,6 +227,19 @@ async def async_test_stream(
         stream_options[CONF_RTSP_TRANSPORT] = rtsp_transport
     if info.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS):
         stream_options[CONF_USE_WALLCLOCK_AS_TIMESTAMPS] = True
+
+    try:
+        url = yarl.URL(stream_source)
+    except ValueError:
+        return {CONF_STREAM_SOURCE: "malformed_url"}
+    if not url.is_absolute():
+        return {CONF_STREAM_SOURCE: "relative_url"}
+    if not url.user and not url.password:
+        username = info.get(CONF_USERNAME)
+        password = info.get(CONF_PASSWORD)
+        if username and password:
+            url = url.with_user(username).with_password(password)
+            stream_source = str(url)
     try:
         stream = create_stream(hass, stream_source, stream_options, "test_stream")
         hls_provider = stream.add_provider(HLS_PROVIDER)

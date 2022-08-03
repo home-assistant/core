@@ -1,0 +1,15 @@
+{
+    "config": {
+        "error": {
+            "unknown_error": "Erro inesperado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Nome",
+                    "port": "Porta"
+                }
+            }
+        }
+    }
+}

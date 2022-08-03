@@ -9,10 +9,11 @@ from sqlalchemy import text
 from sqlalchemy.engine.result import ChunkedIteratorResult
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.sql.elements import TextClause
+from sqlalchemy.sql.lambdas import StatementLambdaElement
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder import history, util
-from homeassistant.components.recorder.const import DATA_INSTANCE, SQLITE_URL_PREFIX
+from homeassistant.components.recorder.const import SQLITE_URL_PREFIX
 from homeassistant.components.recorder.db_schema import RecorderRuns
 from homeassistant.components.recorder.models import UnsupportedDialect
 from homeassistant.components.recorder.util import (
@@ -34,7 +35,7 @@ def test_session_scope_not_setup(hass_recorder):
     """Try to create a session scope when not setup."""
     hass = hass_recorder()
     with patch.object(
-        hass.data[DATA_INSTANCE], "get_session", return_value=None
+        util.get_instance(hass), "get_session", return_value=None
     ), pytest.raises(RuntimeError):
         with util.session_scope(hass=hass):
             pass
@@ -546,7 +547,7 @@ def test_basic_sanity_check(hass_recorder):
     """Test the basic sanity checks with a missing table."""
     hass = hass_recorder()
 
-    cursor = hass.data[DATA_INSTANCE].engine.raw_connection().cursor()
+    cursor = util.get_instance(hass).engine.raw_connection().cursor()
 
     assert util.basic_sanity_check(cursor) is True
 
@@ -559,7 +560,7 @@ def test_basic_sanity_check(hass_recorder):
 def test_combined_checks(hass_recorder, caplog):
     """Run Checks on the open database."""
     hass = hass_recorder()
-    instance = recorder.get_instance(hass)
+    instance = util.get_instance(hass)
     instance.db_retry_wait = 0
 
     cursor = instance.engine.raw_connection().cursor()
@@ -638,8 +639,8 @@ def test_end_incomplete_runs(hass_recorder, caplog):
 def test_periodic_db_cleanups(hass_recorder):
     """Test periodic db cleanups."""
     hass = hass_recorder()
-    with patch.object(hass.data[DATA_INSTANCE].engine, "connect") as connect_mock:
-        util.periodic_db_cleanups(hass.data[DATA_INSTANCE])
+    with patch.object(util.get_instance(hass).engine, "connect") as connect_mock:
+        util.periodic_db_cleanups(util.get_instance(hass))
 
     text_obj = connect_mock.return_value.__enter__.return_value.execute.mock_calls[0][
         1
@@ -662,10 +663,8 @@ async def test_write_lock_db(
     config = {
         recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db?timeout=0.1")
     }
-    await async_setup_recorder_instance(hass, config)
+    instance = await async_setup_recorder_instance(hass, config)
     await hass.async_block_till_done()
-
-    instance = hass.data[DATA_INSTANCE]
 
     def _drop_table():
         with instance.engine.connect() as connection:
@@ -712,8 +711,8 @@ def test_build_mysqldb_conv():
 
 
 @patch("homeassistant.components.recorder.util.QUERY_RETRY_WAIT", 0)
-def test_execute_stmt(hass_recorder):
-    """Test executing with execute_stmt."""
+def test_execute_stmt_lambda_element(hass_recorder):
+    """Test executing with execute_stmt_lambda_element."""
     hass = hass_recorder()
     instance = recorder.get_instance(hass)
     hass.states.set("sensor.on", "on")
@@ -724,15 +723,13 @@ def test_execute_stmt(hass_recorder):
     one_week_from_now = now + timedelta(days=7)
 
     class MockExecutor:
-
-        _calls = 0
-
         def __init__(self, stmt):
-            """Init the mock."""
+            assert isinstance(stmt, StatementLambdaElement)
+            self.calls = 0
 
         def all(self):
-            MockExecutor._calls += 1
-            if MockExecutor._calls == 2:
+            self.calls += 1
+            if self.calls == 2:
                 return ["mock_row"]
             raise SQLAlchemyError
 
@@ -741,24 +738,24 @@ def test_execute_stmt(hass_recorder):
         stmt = history._get_single_entity_states_stmt(
             instance.schema_version, dt_util.utcnow(), "sensor.on", False
         )
-        rows = util.execute_stmt(session, stmt)
+        rows = util.execute_stmt_lambda_element(session, stmt)
         assert isinstance(rows, list)
         assert rows[0].state == new_state.state
         assert rows[0].entity_id == new_state.entity_id
 
         # Time window >= 2 days, we get a ChunkedIteratorResult
-        rows = util.execute_stmt(session, stmt, now, one_week_from_now)
+        rows = util.execute_stmt_lambda_element(session, stmt, now, one_week_from_now)
         assert isinstance(rows, ChunkedIteratorResult)
         row = next(rows)
         assert row.state == new_state.state
         assert row.entity_id == new_state.entity_id
 
         # Time window < 2 days, we get a list
-        rows = util.execute_stmt(session, stmt, now, tomorrow)
+        rows = util.execute_stmt_lambda_element(session, stmt, now, tomorrow)
         assert isinstance(rows, list)
         assert rows[0].state == new_state.state
         assert rows[0].entity_id == new_state.entity_id
 
         with patch.object(session, "execute", MockExecutor):
-            rows = util.execute_stmt(session, stmt, now, tomorrow)
+            rows = util.execute_stmt_lambda_element(session, stmt, now, tomorrow)
             assert rows == ["mock_row"]

@@ -3,6 +3,7 @@
         "step": {
             "user": {
                 "data": {
+                    "client_id": "API-nyckel",
                     "username": "E-postadress"
                 }
             }

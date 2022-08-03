@@ -6,6 +6,8 @@ import logging
 from typing import TYPE_CHECKING, Any, NamedTuple
 
 import voluptuous as vol
+import zigpy.backups
+from zigpy.backups import NetworkBackup
 from zigpy.config.validators import cv_boolean
 from zigpy.types.named import EUI64
 from zigpy.zcl.clusters.security import IasAce
@@ -43,6 +45,7 @@ from .core.const import (
     CLUSTER_COMMANDS_SERVER,
     CLUSTER_TYPE_IN,
     CLUSTER_TYPE_OUT,
+    CONF_RADIO_TYPE,
     CUSTOM_CONFIGURATION,
     DATA_ZHA,
     DATA_ZHA_GATEWAY,
@@ -229,6 +232,15 @@ def _cv_cluster_binding(value: dict[str, Any]) -> ClusterBinding:
     )
 
 
+def _cv_zigpy_network_backup(value: dict[str, Any]) -> zigpy.backups.NetworkBackup:
+    """Transform a zigpy network backup."""
+
+    try:
+        return zigpy.backups.NetworkBackup.from_dict(value)
+    except ValueError as err:
+        raise vol.Invalid(str(err)) from err
+
+
 GROUP_MEMBER_SCHEMA = vol.All(
     vol.Schema(
         {
@@ -302,7 +314,7 @@ async def websocket_permit_devices(
         )
     else:
         await zha_gateway.application_controller.permit(time_s=duration, node=ieee)
-    connection.send_result(msg["id"])
+    connection.send_result(msg[ID])
 
 
 @websocket_api.require_admin
@@ -346,7 +358,7 @@ async def websocket_get_groupable_devices(
     groupable_devices = []
 
     for device in devices:
-        entity_refs = zha_gateway.device_registry.get(device.ieee)
+        entity_refs = zha_gateway.device_registry[device.ieee]
         for ep_id in device.async_get_groupable_endpoints():
             groupable_devices.append(
                 {
@@ -456,6 +468,7 @@ async def websocket_add_group(
     group_id: int | None = msg.get(GROUP_ID)
     members: list[GroupMember] | None = msg.get(ATTR_MEMBERS)
     group = await zha_gateway.async_create_zigpy_group(group_name, members, group_id)
+    assert group
     connection.send_result(msg[ID], group.group_info)
 
 
@@ -559,7 +572,7 @@ async def websocket_reconfigure_node(
     """Reconfigure a ZHA nodes entities by its ieee address."""
     zha_gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     ieee: EUI64 = msg[ATTR_IEEE]
-    device: ZHADevice = zha_gateway.get_device(ieee)
+    device: ZHADevice | None = zha_gateway.get_device(ieee)
 
     async def forward_messages(data):
         """Forward events to websocket."""
@@ -577,6 +590,7 @@ async def websocket_reconfigure_node(
     connection.subscriptions[msg["id"]] = async_cleanup
 
     _LOGGER.debug("Reconfiguring node with ieee_address: %s", ieee)
+    assert device
     hass.async_create_task(device.async_configure())
 
 
@@ -905,6 +919,7 @@ async def websocket_bind_group(
     group_id: int = msg[GROUP_ID]
     bindings: list[ClusterBinding] = msg[BINDINGS]
     source_device = zha_gateway.get_device(source_ieee)
+    assert source_device
     await source_device.async_bind_to_group(group_id, bindings)
 
 
@@ -927,6 +942,7 @@ async def websocket_unbind_group(
     group_id: int = msg[GROUP_ID]
     bindings: list[ClusterBinding] = msg[BINDINGS]
     source_device = zha_gateway.get_device(source_ieee)
+    assert source_device
     await source_device.async_unbind_from_group(group_id, bindings)
 
 
@@ -941,6 +957,8 @@ async def async_binding_operation(
     source_device = zha_gateway.get_device(source_ieee)
     target_device = zha_gateway.get_device(target_ieee)
 
+    assert source_device
+    assert target_device
     clusters_to_bind = await get_matched_clusters(source_device, target_device)
 
     zdo = source_device.device.zdo
@@ -983,7 +1001,7 @@ async def websocket_get_configuration(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Get ZHA configuration."""
-    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    zha_gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     import voluptuous_serialize  # pylint: disable=import-outside-toplevel
 
     def custom_serializer(schema: Any) -> Any:
@@ -997,7 +1015,7 @@ async def websocket_get_configuration(
 
         return cv.custom_serializer(schema)
 
-    data = {"schemas": {}, "data": {}}
+    data: dict[str, dict[str, Any]] = {"schemas": {}, "data": {}}
     for section, schema in ZHA_CONFIG_SCHEMAS.items():
         if section == ZHA_ALARM_OPTIONS and not async_cluster_exists(
             hass, IasAce.cluster_id
@@ -1039,6 +1057,99 @@ async def websocket_update_zha_configuration(
     )
     status = await hass.config_entries.async_reload(zha_gateway.config_entry.entry_id)
     connection.send_result(msg[ID], status)
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({vol.Required(TYPE): "zha/network/settings"})
+@websocket_api.async_response
+async def websocket_get_network_settings(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Get ZHA network settings."""
+    zha_gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    application_controller = zha_gateway.application_controller
+
+    # Serialize the current network settings
+    backup = NetworkBackup(
+        node_info=application_controller.state.node_info,
+        network_info=application_controller.state.network_info,
+    )
+
+    connection.send_result(
+        msg[ID],
+        {
+            "radio_type": zha_gateway.config_entry.data[CONF_RADIO_TYPE],
+            "settings": backup.as_dict(),
+        },
+    )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({vol.Required(TYPE): "zha/network/backups/list"})
+@websocket_api.async_response
+async def websocket_list_network_backups(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Get ZHA network settings."""
+    zha_gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    application_controller = zha_gateway.application_controller
+
+    # Serialize known backups
+    connection.send_result(
+        msg[ID], [backup.as_dict() for backup in application_controller.backups]
+    )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({vol.Required(TYPE): "zha/network/backups/create"})
+@websocket_api.async_response
+async def websocket_create_network_backup(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Create a ZHA network backup."""
+    zha_gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    application_controller = zha_gateway.application_controller
+
+    # This can take 5-30s
+    backup = await application_controller.backups.create_backup(load_devices=True)
+    connection.send_result(
+        msg[ID],
+        {
+            "backup": backup.as_dict(),
+            "is_complete": backup.is_complete(),
+        },
+    )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zha/network/backups/restore",
+        vol.Required("backup"): _cv_zigpy_network_backup,
+        vol.Optional("ezsp_force_write_eui64", default=False): cv.boolean,
+    }
+)
+@websocket_api.async_response
+async def websocket_restore_network_backup(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Restore a ZHA network backup."""
+    zha_gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    application_controller = zha_gateway.application_controller
+    backup = msg["backup"]
+
+    if msg["ezsp_force_write_eui64"]:
+        backup.network_info.stack_specific.setdefault("ezsp", {})[
+            "i_understand_i_can_update_eui64_only_once_and_i_still_want_to_do_it"
+        ] = True
+
+    # This can take 30-40s
+    try:
+        await application_controller.backups.restore_backup(backup)
+    except ValueError as err:
+        connection.send_error(msg[ID], websocket_api.const.ERR_INVALID_FORMAT, str(err))
+    else:
+        connection.send_result(msg[ID])
 
 
 @callback
@@ -1084,11 +1195,8 @@ def async_load_api(hass: HomeAssistant) -> None:
         """Remove a node from the network."""
         zha_gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
         ieee: EUI64 = service.data[ATTR_IEEE]
-        zha_device: ZHADevice = zha_gateway.get_device(ieee)
-        if zha_device is not None and (
-            zha_device.is_coordinator
-            and zha_device.ieee == zha_gateway.application_controller.ieee
-        ):
+        zha_device: ZHADevice | None = zha_gateway.get_device(ieee)
+        if zha_device is not None and zha_device.is_active_coordinator:
             _LOGGER.info("Removing the coordinator (%s) is not allowed", ieee)
             return
         _LOGGER.info("Removing node %s", ieee)
@@ -1353,6 +1461,10 @@ def async_load_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_update_topology)
     websocket_api.async_register_command(hass, websocket_get_configuration)
     websocket_api.async_register_command(hass, websocket_update_zha_configuration)
+    websocket_api.async_register_command(hass, websocket_get_network_settings)
+    websocket_api.async_register_command(hass, websocket_list_network_backups)
+    websocket_api.async_register_command(hass, websocket_create_network_backup)
+    websocket_api.async_register_command(hass, websocket_restore_network_backup)
 
 
 @callback

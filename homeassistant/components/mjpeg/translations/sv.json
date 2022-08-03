@@ -9,6 +9,9 @@
         }
     },
     "options": {
+        "error": {
+            "invalid_auth": "Ogiltig autentisering"
+        },
         "step": {
             "init": {
                 "data": {

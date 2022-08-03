@@ -137,7 +137,7 @@ class ZigbeeChannel(LogMixin):
                 self.value_attribute = attr
         self._status = ChannelStatus.CREATED
         self._cluster.add_listener(self)
-        self.data_cache = {}
+        self.data_cache: dict[str, Enum] = {}
 
     @property
     def id(self) -> str:
@@ -278,7 +278,7 @@ class ZigbeeChannel(LogMixin):
         )
 
     def _configure_reporting_status(
-        self, attrs: dict[int | str, tuple], res: list | tuple
+        self, attrs: dict[int | str, tuple[int, int, float | int]], res: list | tuple
     ) -> None:
         """Parse configure reporting result."""
         if isinstance(res, (Exception, ConfigureReportingResponseRecord)):
@@ -304,10 +304,10 @@ class ZigbeeChannel(LogMixin):
             for r in res
             if r.status != Status.SUCCESS
         ]
-        attrs = {self.cluster.attributes.get(r, [r])[0] for r in attrs}
+        attributes = {self.cluster.attributes.get(r, [r])[0] for r in attrs}
         self.debug(
             "Successfully configured reporting for '%s' on '%s' cluster",
-            attrs - set(failed),
+            attributes - set(failed),
             self.name,
         )
         self.debug(
@@ -393,6 +393,7 @@ class ZigbeeChannel(LogMixin):
     def zha_send_event(self, command: str, arg: list | dict | CommandSchema) -> None:
         """Relay events to hass."""
 
+        args: list | dict
         if isinstance(arg, CommandSchema):
             args = [a for a in arg if a is not None]
             params = arg.as_dict()

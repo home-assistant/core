@@ -40,6 +40,8 @@ CONF_ROOM_HINT = "room"
 CONF_SECURE_DEVICES_PIN = "secure_devices_pin"
 CONF_SERVICE_ACCOUNT = "service_account"
 
+DATA_CONFIG = "config"
+
 DEFAULT_EXPOSE_BY_DEFAULT = True
 DEFAULT_EXPOSED_DOMAINS = [
     "alarm_control_panel",

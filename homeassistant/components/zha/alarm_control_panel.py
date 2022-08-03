@@ -81,6 +81,7 @@ async def async_setup_entry(
 class ZHAAlarmControlPanel(ZhaEntity, AlarmControlPanelEntity):
     """Entity for ZHA alarm control devices."""
 
+    _attr_code_format = CodeFormat.TEXT
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
@@ -103,7 +104,7 @@ class ZHAAlarmControlPanel(ZhaEntity, AlarmControlPanelEntity):
             cfg_entry, ZHA_ALARM_OPTIONS, CONF_ALARM_FAILED_TRIES, 3
         )
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
         self.async_accept_signal(
@@ -119,45 +120,35 @@ class ZHAAlarmControlPanel(ZhaEntity, AlarmControlPanelEntity):
         self.async_write_ha_state()
 
     @property
-    def code_format(self):
-        """Regex for code format or None if no code is required."""
-        return CodeFormat.TEXT
-
-    @property
-    def changed_by(self):
-        """Last change triggered by."""
-        return None
-
-    @property
-    def code_arm_required(self):
+    def code_arm_required(self) -> bool:
         """Whether the code is required for arm actions."""
         return self._channel.code_required_arm_actions
 
-    async def async_alarm_disarm(self, code=None):
+    async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         self._channel.arm(IasAce.ArmMode.Disarm, code, 0)
         self.async_write_ha_state()
 
-    async def async_alarm_arm_home(self, code=None):
+    async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         self._channel.arm(IasAce.ArmMode.Arm_Day_Home_Only, code, 0)
         self.async_write_ha_state()
 
-    async def async_alarm_arm_away(self, code=None):
+    async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         self._channel.arm(IasAce.ArmMode.Arm_All_Zones, code, 0)
         self.async_write_ha_state()
 
-    async def async_alarm_arm_night(self, code=None):
+    async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
         self._channel.arm(IasAce.ArmMode.Arm_Night_Sleep_Only, code, 0)
         self.async_write_ha_state()
 
-    async def async_alarm_trigger(self, code=None):
+    async def async_alarm_trigger(self, code: str | None = None) -> None:
         """Send alarm trigger command."""
         self.async_write_ha_state()
 
     @property
-    def state(self):
+    def state(self) -> str | None:
         """Return the state of the entity."""
         return IAS_ACE_STATE_MAP.get(self._channel.armed_state)

@@ -1,7 +1,5 @@
 """The powerview integration base entity."""
 
-from typing import Any
-
 from aiopvapi.resources.shade import ATTR_TYPE, BaseShade
 
 from homeassistant.const import ATTR_MODEL, ATTR_SW_VERSION
@@ -12,20 +10,15 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import (
     ATTR_BATTERY_KIND,
     BATTERY_KIND_HARDWIRED,
-    DEVICE_FIRMWARE,
-    DEVICE_MAC_ADDRESS,
-    DEVICE_MODEL,
-    DEVICE_NAME,
-    DEVICE_SERIAL_NUMBER,
     DOMAIN,
     FIRMWARE,
     FIRMWARE_BUILD,
     FIRMWARE_REVISION,
     FIRMWARE_SUB_REVISION,
     MANUFACTURER,
-    PV_HUB_ADDRESS,
 )
 from .coordinator import PowerviewShadeUpdateCoordinator
+from .model import PowerviewDeviceInfo
 from .shade_data import PowerviewShadeData, PowerviewShadePositions
 
 
@@ -35,7 +28,7 @@ class HDEntity(CoordinatorEntity[PowerviewShadeUpdateCoordinator]):
     def __init__(
         self,
         coordinator: PowerviewShadeUpdateCoordinator,
-        device_info: dict[str, Any],
+        device_info: PowerviewDeviceInfo,
         room_name: str,
         unique_id: str,
     ) -> None:
@@ -43,7 +36,6 @@ class HDEntity(CoordinatorEntity[PowerviewShadeUpdateCoordinator]):
         super().__init__(coordinator)
         self._room_name = room_name
         self._attr_unique_id = unique_id
-        self._hub_address = device_info[PV_HUB_ADDRESS]
         self._device_info = device_info
 
     @property
@@ -54,19 +46,17 @@ class HDEntity(CoordinatorEntity[PowerviewShadeUpdateCoordinator]):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device_info of the device."""
-        firmware = self._device_info[DEVICE_FIRMWARE]
+        firmware = self._device_info.firmware
         sw_version = f"{firmware[FIRMWARE_REVISION]}.{firmware[FIRMWARE_SUB_REVISION]}.{firmware[FIRMWARE_BUILD]}"
         return DeviceInfo(
-            connections={
-                (dr.CONNECTION_NETWORK_MAC, self._device_info[DEVICE_MAC_ADDRESS])
-            },
-            identifiers={(DOMAIN, self._device_info[DEVICE_SERIAL_NUMBER])},
+            connections={(dr.CONNECTION_NETWORK_MAC, self._device_info.mac_address)},
+            identifiers={(DOMAIN, self._device_info.serial_number)},
             manufacturer=MANUFACTURER,
-            model=self._device_info[DEVICE_MODEL],
-            name=self._device_info[DEVICE_NAME],
+            model=self._device_info.model,
+            name=self._device_info.name,
             suggested_area=self._room_name,
             sw_version=sw_version,
-            configuration_url=f"http://{self._hub_address}/api/shades",
+            configuration_url=f"http://{self._device_info.hub_address}/api/shades",
         )
 
 
@@ -76,7 +66,7 @@ class ShadeEntity(HDEntity):
     def __init__(
         self,
         coordinator: PowerviewShadeUpdateCoordinator,
-        device_info: dict[str, Any],
+        device_info: PowerviewDeviceInfo,
         room_name: str,
         shade: BaseShade,
         shade_name: str,
@@ -104,8 +94,8 @@ class ShadeEntity(HDEntity):
             suggested_area=self._room_name,
             manufacturer=MANUFACTURER,
             model=str(self._shade.raw_data[ATTR_TYPE]),
-            via_device=(DOMAIN, self._device_info[DEVICE_SERIAL_NUMBER]),
-            configuration_url=f"http://{self._hub_address}/api/shades/{self._shade.id}",
+            via_device=(DOMAIN, self._device_info.serial_number),
+            configuration_url=f"http://{self._device_info.hub_address}/api/shades/{self._shade.id}",
         )
 
         for shade in self._shade.shade_types:

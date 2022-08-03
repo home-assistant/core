@@ -5,6 +5,11 @@
                 "data": {
                     "username": "Anv\u00e4ndarnamn"
                 }
+            },
+            "user": {
+                "data": {
+                    "host": "V\u00e4rd"
+                }
             }
         }
     }

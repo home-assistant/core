@@ -7,7 +7,9 @@
         "error": {
             "already_exists": "A camera with these URL settings already exists.",
             "invalid_still_image": "URL did not return a valid still image",
+            "malformed_url": "Malformed URL",
             "no_still_image_or_stream_url": "You must specify at least a still image or stream URL",
+            "relative_url": "Relative URLs are not allowed",
             "stream_file_not_found": "File not found while trying to connect to stream (is ffmpeg installed?)",
             "stream_http_not_found": "HTTP 404 Not found while trying to connect to stream",
             "stream_io_error": "Input/Output error while trying to connect to stream. Wrong RTSP transport protocol?",
@@ -50,7 +52,9 @@
         "error": {
             "already_exists": "A camera with these URL settings already exists.",
             "invalid_still_image": "URL did not return a valid still image",
+            "malformed_url": "Malformed URL",
             "no_still_image_or_stream_url": "You must specify at least a still image or stream URL",
+            "relative_url": "Relative URLs are not allowed",
             "stream_file_not_found": "File not found while trying to connect to stream (is ffmpeg installed?)",
             "stream_http_not_found": "HTTP 404 Not found while trying to connect to stream",
             "stream_io_error": "Input/Output error while trying to connect to stream. Wrong RTSP transport protocol?",

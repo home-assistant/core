@@ -1,6 +1,7 @@
 """Support for MQTT lights."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import functools
 
 import voluptuous as vol
@@ -13,8 +14,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from ..mixins import (
+    async_discover_yaml_entities,
     async_setup_entry_helper,
-    async_setup_platform_discovery,
     async_setup_platform_helper,
     warn_for_legacy_schema,
 )
@@ -111,9 +112,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up MQTT lights configured under the light platform key (deprecated)."""
     # load and initialize platform config from configuration.yaml
-    config_entry.async_on_unload(
-        await async_setup_platform_discovery(hass, light.DOMAIN)
-    )
+    await async_discover_yaml_entities(hass, light.DOMAIN)
     # setup for discovery
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
@@ -122,10 +121,14 @@ async def async_setup_entry(
 
 
 async def _async_setup_entity(
-    hass, async_add_entities, config, config_entry=None, discovery_data=None
-):
+    hass: HomeAssistant,
+    async_add_entities: AddEntitiesCallback,
+    config: ConfigType,
+    config_entry: ConfigEntry | None = None,
+    discovery_data: dict | None = None,
+) -> None:
     """Set up a MQTT Light."""
-    setup_entity = {
+    setup_entity: dict[str, Callable] = {
         "basic": async_setup_entity_basic,
         "json": async_setup_entity_json,
         "template": async_setup_entity_template,

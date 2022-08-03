@@ -43,11 +43,10 @@ async def async_setup_entry(
     )
 
 
-class DeconzPowerPlug(DeconzDevice, SwitchEntity):
+class DeconzPowerPlug(DeconzDevice[Light], SwitchEntity):
     """Representation of a deCONZ power plug."""
 
     TYPE = DOMAIN
-    _device: Light
 
     @property
     def is_on(self) -> bool:
@@ -56,8 +55,14 @@ class DeconzPowerPlug(DeconzDevice, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
-        await self._device.set_state(on=True)
+        await self.gateway.api.lights.lights.set_state(
+            id=self._device.resource_id,
+            on=True,
+        )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off switch."""
-        await self._device.set_state(on=False)
+        await self.gateway.api.lights.lights.set_state(
+            id=self._device.resource_id,
+            on=False,
+        )

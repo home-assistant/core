@@ -38,23 +38,18 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
 from .const import (
-    COORDINATOR,
-    DEVICE_INFO,
-    DEVICE_MODEL,
     DOMAIN,
     LEGACY_DEVICE_MODEL,
     POS_KIND_PRIMARY,
     POS_KIND_SECONDARY,
     POS_KIND_VANE,
-    PV_API,
-    PV_ROOM_DATA,
-    PV_SHADE_DATA,
     ROOM_ID_IN_SHADE,
     ROOM_NAME_UNICODE,
     STATE_ATTRIBUTE_ROOM_NAME,
 )
 from .coordinator import PowerviewShadeUpdateCoordinator
 from .entity import ShadeEntity
+from .model import PowerviewDeviceInfo, PowerviewEntryData
 from .shade_data import PowerviewShadeMove
 
 _LOGGER = logging.getLogger(__name__)
@@ -83,18 +78,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up the hunter douglas shades."""
 
-    pv_data = hass.data[DOMAIN][entry.entry_id]
-    room_data: dict[str | int, Any] = pv_data[PV_ROOM_DATA]
-    shade_data = pv_data[PV_SHADE_DATA]
-    pv_request = pv_data[PV_API]
-    coordinator: PowerviewShadeUpdateCoordinator = pv_data[COORDINATOR]
-    device_info: dict[str, Any] = pv_data[DEVICE_INFO]
+    pv_entry: PowerviewEntryData = hass.data[DOMAIN][entry.entry_id]
+    coordinator: PowerviewShadeUpdateCoordinator = pv_entry.coordinator
 
     entities: list[ShadeEntity] = []
-    for raw_shade in shade_data.values():
+    for raw_shade in pv_entry.shade_data.values():
         # The shade may be out of sync with the hub
         # so we force a refresh when we add it if possible
-        shade: BaseShade = PvShade(raw_shade, pv_request)
+        shade: BaseShade = PvShade(raw_shade, pv_entry.api)
         name_before_refresh = shade.name
         with suppress(asyncio.TimeoutError):
             async with async_timeout.timeout(1):
@@ -108,10 +99,10 @@ async def async_setup_entry(
             continue
         coordinator.data.update_shade_positions(shade.raw_data)
         room_id = shade.raw_data.get(ROOM_ID_IN_SHADE)
-        room_name = room_data.get(room_id, {}).get(ROOM_NAME_UNICODE, "")
+        room_name = pv_entry.room_data.get(room_id, {}).get(ROOM_NAME_UNICODE, "")
         entities.extend(
             create_powerview_shade_entity(
-                coordinator, device_info, room_name, shade, name_before_refresh
+                coordinator, pv_entry.device_info, room_name, shade, name_before_refresh
             )
         )
     async_add_entities(entities)
@@ -119,7 +110,7 @@ async def async_setup_entry(
 
 def create_powerview_shade_entity(
     coordinator: PowerviewShadeUpdateCoordinator,
-    device_info: dict[str, Any],
+    device_info: PowerviewDeviceInfo,
     room_name: str,
     shade: BaseShade,
     name_before_refresh: str,
@@ -161,7 +152,7 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
     def __init__(
         self,
         coordinator: PowerviewShadeUpdateCoordinator,
-        device_info: dict[str, Any],
+        device_info: PowerviewDeviceInfo,
         room_name: str,
         shade: BaseShade,
         name: str,
@@ -171,7 +162,7 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         self._shade: BaseShade = shade
         self._attr_name = self._shade_name
         self._scheduled_transition_update: CALLBACK_TYPE | None = None
-        if self._device_info[DEVICE_MODEL] != LEGACY_DEVICE_MODEL:
+        if self._device_info.model != LEGACY_DEVICE_MODEL:
             self._attr_supported_features |= CoverEntityFeature.STOP
         self._forced_resync = None
 
@@ -201,7 +192,7 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         return {STATE_ATTRIBUTE_ROOM_NAME: self._room_name}
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool:
         """Return if the cover is closed."""
         return self.positions.primary <= CLOSED_POSITION
 
@@ -387,7 +378,7 @@ class PowerViewShade(PowerViewShadeBase):
     def __init__(
         self,
         coordinator: PowerviewShadeUpdateCoordinator,
-        device_info: dict[str, Any],
+        device_info: PowerviewDeviceInfo,
         room_name: str,
         shade: BaseShade,
         name: str,
@@ -418,7 +409,7 @@ class PowerViewShadeTDBUBottom(PowerViewShadeTDBU):
     def __init__(
         self,
         coordinator: PowerviewShadeUpdateCoordinator,
-        device_info: dict[str, Any],
+        device_info: PowerviewDeviceInfo,
         room_name: str,
         shade: BaseShade,
         name: str,
@@ -455,7 +446,7 @@ class PowerViewShadeTDBUTop(PowerViewShadeTDBU):
     def __init__(
         self,
         coordinator: PowerviewShadeUpdateCoordinator,
-        device_info: dict[str, Any],
+        device_info: PowerviewDeviceInfo,
         room_name: str,
         shade: BaseShade,
         name: str,
@@ -464,17 +455,18 @@ class PowerViewShadeTDBUTop(PowerViewShadeTDBU):
         super().__init__(coordinator, device_info, room_name, shade, name)
         self._attr_unique_id = f"{self._shade.id}_top"
         self._attr_name = f"{self._shade_name} Top"
-        # these shades share a class in parent API
-        # override open position for top shade
-        self._shade.open_position = {
-            ATTR_POSITION1: MIN_POSITION,
-            ATTR_POSITION2: MAX_POSITION,
-            ATTR_POSKIND1: POS_KIND_PRIMARY,
-            ATTR_POSKIND2: POS_KIND_SECONDARY,
-        }
 
     @property
-    def is_closed(self):
+    def should_poll(self) -> bool:
+        """Certain shades create multiple entities.
+
+        Do not poll shade multiple times. One shade will return data
+        for both and multiple polling will cause timeouts.
+        """
+        return False
+
+    @property
+    def is_closed(self) -> bool:
         """Return if the cover is closed."""
         # top shade needs to check other motor
         return self.positions.secondary <= CLOSED_POSITION
@@ -484,6 +476,21 @@ class PowerViewShadeTDBUTop(PowerViewShadeTDBU):
         """Return the current position of cover."""
         # these need to be inverted to report state correctly in HA
         return hd_position_to_hass(self.positions.secondary, MAX_POSITION)
+
+    @property
+    def open_position(self) -> PowerviewShadeMove:
+        """Return the open position and required additional positions."""
+        # these shades share a class in parent API
+        # override open position for top shade
+        return PowerviewShadeMove(
+            {
+                ATTR_POSITION1: MIN_POSITION,
+                ATTR_POSITION2: MAX_POSITION,
+                ATTR_POSKIND1: POS_KIND_PRIMARY,
+                ATTR_POSKIND2: POS_KIND_SECONDARY,
+            },
+            {},
+        )
 
     @callback
     def _clamp_cover_limit(self, target_hass_position: int) -> int:
@@ -514,7 +521,7 @@ class PowerViewShadeWithTilt(PowerViewShade):
     def __init__(
         self,
         coordinator: PowerviewShadeUpdateCoordinator,
-        device_info: dict[str, Any],
+        device_info: PowerviewDeviceInfo,
         room_name: str,
         shade: BaseShade,
         name: str,
@@ -526,7 +533,7 @@ class PowerViewShadeWithTilt(PowerViewShade):
             | CoverEntityFeature.CLOSE_TILT
             | CoverEntityFeature.SET_TILT_POSITION
         )
-        if self._device_info[DEVICE_MODEL] != LEGACY_DEVICE_MODEL:
+        if self._device_info.model != LEGACY_DEVICE_MODEL:
             self._attr_supported_features |= CoverEntityFeature.STOP_TILT
 
     @property

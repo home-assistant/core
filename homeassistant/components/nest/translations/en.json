@@ -4,6 +4,7 @@
     },
     "config": {
         "abort": {
+            "already_configured": "Account is already configured",
             "authorize_url_timeout": "Timeout generating authorize URL.",
             "invalid_access_token": "Invalid access token",
             "missing_configuration": "The component is not configured. Please follow the documentation.",
@@ -94,6 +95,16 @@
             "camera_person": "Person detected",
             "camera_sound": "Sound detected",
             "doorbell_chime": "Doorbell pressed"
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Configuring Nest in configuration.yaml is being removed in Home Assistant 2022.10.\n\nYour existing OAuth Application Credentials and access settings have been imported into the UI automatically. Remove the YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue.",
+            "title": "The Nest YAML configuration is being removed"
+        },
+        "removed_app_auth": {
+            "description": "To improve security and reduce phishing risk Google has deprecated the authentication method used by Home Assistant.\n\n**This requires action by you to resolve** ([more info]({more_info_url}))\n\n1.  Visit the integrations page\n1. Click Reconfigure on the Nest integration.\n1. Home Assistant will walk you through the steps to upgrade to Web Authentication.\n\nSee the Nest [integration instructions]({documentation_url}) for troubleshooting information.",
+            "title": "Nest Authentication Credentials must be updated"
         }
     }
 }

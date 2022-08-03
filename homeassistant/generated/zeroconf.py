@@ -167,6 +167,11 @@ ZEROCONF = {
             "name": "*z.wave-me*"
         }
     ],
+    "_hap._udp.local.": [
+        {
+            "domain": "homekit_controller"
+        }
+    ],
     "_homekit._tcp.local.": [
         {
             "domain": "homekit"
@@ -347,6 +352,11 @@ ZEROCONF = {
             "domain": "sonos"
         }
     ],
+    "_soundtouch._tcp.local.": [
+        {
+            "domain": "soundtouch"
+        }
+    ],
     "_spotify-connect._tcp.local.": [
         {
             "domain": "spotify"
@@ -406,6 +416,7 @@ ZEROCONF = {
 
 HOMEKIT = {
     "3810X": "roku",
+    "3820X": "roku",
     "4660X": "roku",
     "7820X": "roku",
     "819LMB": "myq",
