@@ -2,7 +2,7 @@
   "domain": "deutsche_bahn",
   "name": "Deutsche Bahn",
   "documentation": "https://www.home-assistant.io/integrations/deutsche_bahn",
-  "requirements": ["schiene==0.23"],
+  "requirements": ["schiene==0.24"],
   "codeowners": [],
   "iot_class": "cloud_polling",
   "loggers": ["schiene"]

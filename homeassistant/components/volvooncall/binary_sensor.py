@@ -1,12 +1,19 @@
 """Support for VOC."""
 from __future__ import annotations
 
-from homeassistant.components.binary_sensor import DEVICE_CLASSES, BinarySensorEntity
+from contextlib import suppress
+
+import voluptuous as vol
+
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASSES_SCHEMA,
+    BinarySensorEntity,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DATA_KEY, VolvoEntity
+from . import DATA_KEY, VolvoEntity, VolvoUpdateCoordinator
 
 
 async def async_setup_platform(
@@ -24,16 +31,25 @@ async def async_setup_platform(
 class VolvoSensor(VolvoEntity, BinarySensorEntity):
     """Representation of a Volvo sensor."""
 
+    def __init__(
+        self,
+        coordinator: VolvoUpdateCoordinator,
+        vin: str,
+        component: str,
+        attribute: str,
+        slug_attr: str,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(vin, component, attribute, slug_attr, coordinator)
+
+        with suppress(vol.Invalid):
+            self._attr_device_class = DEVICE_CLASSES_SCHEMA(
+                self.instrument.device_class
+            )
+
     @property
-    def is_on(self):
-        """Return True if the binary sensor is on, but invert for the 'Door lock'."""
+    def is_on(self) -> bool | None:
+        """Fetch from update coordinator."""
         if self.instrument.attr == "is_locked":
             return not self.instrument.is_on
         return self.instrument.is_on
-
-    @property
-    def device_class(self):
-        """Return the class of this sensor, from DEVICE_CLASSES."""
-        if self.instrument.device_class in DEVICE_CLASSES:
-            return self.instrument.device_class
-        return None
