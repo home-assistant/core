@@ -378,7 +378,7 @@ axis==44
 azure-eventhub==5.7.0
 
 # homeassistant.components.azure_service_bus
-azure-servicebus==0.50.3
+azure-servicebus==7.8.0
 
 # homeassistant.components.baidu
 baidu-aip==1.6.6
@@ -408,7 +408,7 @@ bimmer_connected==0.10.1
 bizkaibus==0.1.1
 
 # homeassistant.components.bluetooth
-bleak==0.15.0
+bleak==0.15.1
 
 # homeassistant.components.blebox
 blebox_uniapi==2.0.2
@@ -1362,7 +1362,7 @@ pyRFXtrx==0.30.0
 pySwitchmate==0.5.1
 
 # homeassistant.components.tibber
-pyTibber==0.22.3
+pyTibber==0.24.0
 
 # homeassistant.components.dlink
 pyW215==0.7.0
