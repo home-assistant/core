@@ -120,46 +120,50 @@ class Life360DeviceTracker(CoordinatorEntity, TrackerEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        # Get a shortcut to this member's data. Can't guarantee it's the same dict every
-        # update, or that there is even data for this member every update, so need to
-        # update shortcut each time.
+        # Do not update state if there was an error (e.g., communication or login.)
+        # Keep previous state until data is able to be retrieved successfully.
+        if not self.available:
+            return
+
+        # Get a shortcut to this Member's data. This needs to be updated each time since
+        # coordinator provides a new Life360Member object each time, and it's possible
+        # that there is no data for this Member on some updates.
         self._data = self.coordinator.data.members.get(self.unique_id)
+        assert self._data is None or self._data is not self._prev_data
 
-        if self.available:
-            # If nothing important has changed, then skip the update altogether.
-            if self._data == self._prev_data:
-                return
+        # If there is no data for this Member, or nothing important has changed, then
+        # skip the update altogether.
+        if not self._data or self._data == self._prev_data:
+            return
 
-            # Check if we should effectively throw out new location data.
-            last_seen = self._data.last_seen
-            prev_seen = self._prev_data.last_seen
-            max_gps_acc = self._options.get(CONF_MAX_GPS_ACCURACY)
-            bad_last_seen = last_seen < prev_seen
-            bad_accuracy = (
-                max_gps_acc is not None and self.location_accuracy > max_gps_acc
-            )
-            if bad_last_seen or bad_accuracy:
-                if bad_last_seen:
-                    LOGGER.warning(
-                        "%s: Ignoring location update because "
-                        "last_seen (%s) < previous last_seen (%s)",
-                        self.entity_id,
-                        last_seen,
-                        prev_seen,
-                    )
-                if bad_accuracy:
-                    LOGGER.warning(
-                        "%s: Ignoring location update because "
-                        "expected GPS accuracy (%0.1f) is not met: %i",
-                        self.entity_id,
-                        max_gps_acc,
-                        self.location_accuracy,
-                    )
-                # Overwrite new location related data with previous values.
-                for attr in _LOC_ATTRS:
-                    setattr(self._data, attr, getattr(self._prev_data, attr))
+        # Check if we should effectively throw out new location data.
+        last_seen = self._data.last_seen
+        prev_seen = self._prev_data.last_seen
+        max_gps_acc = self._options.get(CONF_MAX_GPS_ACCURACY)
+        bad_last_seen = last_seen < prev_seen
+        bad_accuracy = max_gps_acc is not None and self.location_accuracy > max_gps_acc
+        if bad_last_seen or bad_accuracy:
+            if bad_last_seen:
+                LOGGER.warning(
+                    "%s: Ignoring location update because "
+                    "last_seen (%s) < previous last_seen (%s)",
+                    self.entity_id,
+                    last_seen,
+                    prev_seen,
+                )
+            if bad_accuracy:
+                LOGGER.warning(
+                    "%s: Ignoring location update because "
+                    "expected GPS accuracy (%0.1f) is not met: %i",
+                    self.entity_id,
+                    max_gps_acc,
+                    self.location_accuracy,
+                )
+            # Overwrite new location related data with previous values.
+            for attr in _LOC_ATTRS:
+                setattr(self._data, attr, getattr(self._prev_data, attr))
 
-            self._prev_data = self._data
+        self._prev_data = self._data
 
         super()._handle_coordinator_update()
 
@@ -169,19 +173,10 @@ class Life360DeviceTracker(CoordinatorEntity, TrackerEntity):
         return False
 
     @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        # Guard against member not being in last update for some reason.
-        return super().available and self._data is not None
-
-    @property
     def entity_picture(self) -> str | None:
         """Return the entity picture to use in the frontend, if any."""
-        if self.available:
-            self._attr_entity_picture = self._data.entity_picture
+        self._attr_entity_picture = self._data.entity_picture
         return super().entity_picture
-
-    # All of the following will only be called if self.available is True.
 
     @property
     def battery_level(self) -> int | None:
