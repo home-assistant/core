@@ -4,13 +4,18 @@ from __future__ import annotations
 from dataclasses import asdict
 import logging
 
-from homeassistant.components.sensor import ATTR_STATE_CLASS, RestoreSensor
+from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
+    RestoreSensor,
+    SensorDeviceClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from . import DOMAIN
 from .const import GJ_TO_MWH, HEAT_METER_SENSOR_TYPES
@@ -66,7 +71,7 @@ class HeatMeterSensor(CoordinatorEntity, RestoreSensor):
                 description.native_unit_of_measurement
             )
         self._attr_device_info = device
-        self._attr_should_poll = bool(self.key == "heat_usage_mwh")
+        self._attr_should_poll = bool(self.key in ("heat_usage", "heat_previous_year"))
 
     async def async_added_to_hass(self):
         """Call when entity about to be added to hass."""
@@ -78,11 +83,21 @@ class HeatMeterSensor(CoordinatorEntity, RestoreSensor):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if self.key in asdict(self.coordinator.data):
-            self._attr_native_value = asdict(self.coordinator.data)[self.key]
+            if self.device_class == SensorDeviceClass.TIMESTAMP:
+                self._attr_native_value = dt_util.as_utc(
+                    asdict(self.coordinator.data)[self.key]
+                )
+            else:
+                self._attr_native_value = asdict(self.coordinator.data)[self.key]
 
-        if self.key == "heat_usage_mwh":
+        if self.key == "heat_usage":
             self._attr_native_value = convert_gj_to_mwh(
                 self.coordinator.data.heat_usage_gj
+            )
+
+        if self.key == "heat_previous_year":
+            self._attr_native_value = convert_gj_to_mwh(
+                self.coordinator.data.heat_previous_year_gj
             )
 
         self.async_write_ha_state()

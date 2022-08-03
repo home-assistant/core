@@ -14,16 +14,9 @@ GJ_TO_MWH = 0.277778  # conversion factor
 
 HEAT_METER_SENSOR_TYPES = (
     SensorEntityDescription(
-        key="heat_usage_gj",
+        key="heat_usage",
         icon="mdi:fire",
-        name="Heat usage GJ",
-        native_unit_of_measurement="GJ",
-        state_class=SensorStateClass.TOTAL,
-    ),
-    SensorEntityDescription(
-        key="heat_usage_mwh",
-        icon="mdi:fire",
-        name="Heat usage MWh",
+        name="Heat usage",
         native_unit_of_measurement=ENERGY_MEGA_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
@@ -31,21 +24,21 @@ HEAT_METER_SENSOR_TYPES = (
     SensorEntityDescription(
         key="volume_usage_m3",
         icon="mdi:fire",
-        name="Volume usage m3",
+        name="Volume usage",
         native_unit_of_measurement=VOLUME_CUBIC_METERS,
         state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
-        key="heat_previous_year_gj",
+        key="heat_previous_year",
         icon="mdi:fire",
-        name="Heat usage previous year GJ",
-        native_unit_of_measurement="GJ",
+        name="Heat usage previous year",
+        native_unit_of_measurement=ENERGY_MEGA_WATT_HOUR,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="volume_previous_year_m3",
         icon="mdi:fire",
-        name="Volume usage previous year m3",
+        name="Volume usage previous year",
         native_unit_of_measurement=VOLUME_CUBIC_METERS,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -73,7 +66,7 @@ HEAT_METER_SENSOR_TYPES = (
     ),
     SensorEntityDescription(
         key="power_max_kw",
-        name="Power max kW",
+        name="Power max",
         native_unit_of_measurement="kW",
         icon="mdi:power-plug-outline",
         device_class=SensorDeviceClass.POWER,
@@ -81,7 +74,7 @@ HEAT_METER_SENSOR_TYPES = (
     ),
     SensorEntityDescription(
         key="power_max_previous_year_kw",
-        name="Power max previous year kW",
+        name="Power max previous year",
         native_unit_of_measurement="kW",
         icon="mdi:power-plug-outline",
         device_class=SensorDeviceClass.POWER,
@@ -89,21 +82,21 @@ HEAT_METER_SENSOR_TYPES = (
     ),
     SensorEntityDescription(
         key="flowrate_max_m3ph",
-        name="Flowrate max m3ph",
+        name="Flowrate max",
         native_unit_of_measurement="m3ph",
         icon="mdi:water-outline",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="flowrate_max_previous_year_m3ph",
-        name="Flowrate max previous year m3ph",
+        name="Flowrate max previous year",
         native_unit_of_measurement="m3ph",
         icon="mdi:water-outline",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="return_temperature_max_c",
-        name="Return temperature max C",
+        name="Return temperature max",
         native_unit_of_measurement=TEMP_CELSIUS,
         icon="mdi:thermometer",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -111,7 +104,7 @@ HEAT_METER_SENSOR_TYPES = (
     ),
     SensorEntityDescription(
         key="return_temperature_max_previous_year_c",
-        name="Return temperature max previous year C",
+        name="Return temperature max previous year",
         native_unit_of_measurement=TEMP_CELSIUS,
         icon="mdi:thermometer",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -127,7 +120,7 @@ HEAT_METER_SENSOR_TYPES = (
     ),
     SensorEntityDescription(
         key="flow_temperature_max_previous_year_c",
-        name="Flow temperature max previous year c",
+        name="Flow temperature max previous year",
         native_unit_of_measurement=TEMP_CELSIUS,
         icon="mdi:thermometer",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -178,7 +171,7 @@ HEAT_METER_SENSOR_TYPES = (
     ),
     SensorEntityDescription(
         key="measuring_range_m3ph",
-        name="Measuring range m3ph",
+        name="Measuring range",
         native_unit_of_measurement="m3ph",
         icon="mdi:water-outline",
         entity_category=EntityCategory.DIAGNOSTIC,

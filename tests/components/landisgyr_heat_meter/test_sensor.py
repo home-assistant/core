@@ -26,6 +26,7 @@ from homeassistant.core import CoreState, State
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, mock_restore_cache_with_extra_data
 
@@ -34,10 +35,11 @@ from tests.common import MockConfigEntry, mock_restore_cache_with_extra_data
 class MockHeatMeterResponse:
     """Mock for HeatMeterResponse."""
 
-    heat_usage_gj: dict
-    volume_usage_m3: dict
-    device_number: dict
-    meter_date_time: dict
+    heat_usage_gj: int
+    volume_usage_m3: int
+    heat_previous_year_gj: int
+    device_number: str
+    meter_date_time: datetime.datetime
 
 
 @patch("homeassistant.components.landisgyr_heat_meter.HeatMeterService")
@@ -55,8 +57,9 @@ async def test_create_sensors(mock_heat_meter, hass):
     mock_heat_meter_response = MockHeatMeterResponse(
         heat_usage_gj=123,
         volume_usage_m3=456,
+        heat_previous_year_gj=111,
         device_number="devicenr_789",
-        meter_date_time=datetime.datetime(2022, 5, 19, 19, 41, 17),
+        meter_date_time=dt_util.as_utc(datetime.datetime(2022, 5, 19, 19, 41, 17)),
     )
 
     mock_heat_meter().read.return_value = mock_heat_meter_response
@@ -67,29 +70,23 @@ async def test_create_sensors(mock_heat_meter, hass):
     await hass.services.async_call(
         HA_DOMAIN,
         SERVICE_UPDATE_ENTITY,
-        {ATTR_ENTITY_ID: "sensor.heat_meter_heat_usage_gj"},
+        {ATTR_ENTITY_ID: "sensor.heat_meter_heat_usage"},
         blocking=True,
     )
     await hass.async_block_till_done()
 
     # check if 25 attributes have been created
-    assert len(hass.states.async_all()) == 26
+    assert len(hass.states.async_all()) == 25
     entity_reg = entity_registry.async_get(hass)
 
-    state = hass.states.get("sensor.heat_meter_heat_usage_gj")
-    assert state
-    assert state.state == "123"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "GJ"
-    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL
-
-    state = hass.states.get("sensor.heat_meter_heat_usage_mwh")
+    state = hass.states.get("sensor.heat_meter_heat_usage")
     assert state
     assert state.state == "34.167"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_MEGA_WATT_HOUR
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
 
-    state = hass.states.get("sensor.heat_meter_volume_usage_m3")
+    state = hass.states.get("sensor.heat_meter_volume_usage")
     assert state
     assert state.state == "456"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == VOLUME_CUBIC_METERS
@@ -121,24 +118,24 @@ async def test_restore_state(mock_heat_meter, hass):
         [
             (
                 State(
-                    "sensor.heat_meter_heat_usage_gj",
-                    "123",
+                    "sensor.heat_meter_heat_usage",
+                    "34167",
                     attributes={
                         ATTR_LAST_RESET: last_reset,
-                        ATTR_UNIT_OF_MEASUREMENT: "GJ",
+                        ATTR_UNIT_OF_MEASUREMENT: ENERGY_MEGA_WATT_HOUR,
                         ATTR_STATE_CLASS: SensorStateClass.TOTAL,
                     },
                 ),
                 {
-                    "native_value": 123,
-                    "native_unit_of_measurement": "GJ",
+                    "native_value": 34167,
+                    "native_unit_of_measurement": ENERGY_MEGA_WATT_HOUR,
                     "icon": "mdi:fire",
                     "last_reset": last_reset,
                 },
             ),
             (
                 State(
-                    "sensor.heat_meter_volume_usage_m3",
+                    "sensor.heat_meter_volume_usage",
                     "456",
                     attributes={
                         ATTR_LAST_RESET: last_reset,
@@ -184,13 +181,13 @@ async def test_restore_state(mock_heat_meter, hass):
     await hass.async_block_till_done()
 
     # restore from cache
-    state = hass.states.get("sensor.heat_meter_heat_usage_gj")
+    state = hass.states.get("sensor.heat_meter_heat_usage")
     assert state
-    assert state.state == "123"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "GJ"
+    assert state.state == "34167"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_MEGA_WATT_HOUR
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL
 
-    state = hass.states.get("sensor.heat_meter_volume_usage_m3")
+    state = hass.states.get("sensor.heat_meter_volume_usage")
     assert state
     assert state.state == "456"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == VOLUME_CUBIC_METERS
