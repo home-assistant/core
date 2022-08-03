@@ -97,7 +97,7 @@ async def async_setup_entry(
 
     async def set_trigger(entity, service: Any) -> None:
         if not isinstance(entity, WiLightValveSwitch):
-            raise ValueError("Entity is not an instance of WiLightValveSwitch")
+            raise ValueError("Entity is not a WiLight valve switch")
         trigger_index = service.data[ATTR_TRIGGER_INDEX]
         trigger = service.data[ATTR_TRIGGER]
         await entity.async_set_trigger(trigger_index=trigger_index, trigger=trigger)
