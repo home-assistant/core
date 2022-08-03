@@ -136,7 +136,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.data[DATA_KEY] = VolvoUpdateCoordinator(hass, volvo_data)
 
-    _LOGGER.debug("Logging in to service")
     return await volvo_data.update()
 
 
