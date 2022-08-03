@@ -42,7 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ) -> None:
         """Update from a ble callback."""
         push_lock.update_advertisement(service_info.device, service_info.advertisement)
-        if push_lock.lock_info and not startup_event.is_set():
+        if push_lock.lock_state and not startup_event.is_set():
             startup_event.set()
 
     entry.async_on_unload(
