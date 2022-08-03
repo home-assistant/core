@@ -45,7 +45,7 @@ class HomeKitSensorEntityDescription(SensorEntityDescription):
     format: Callable[[Characteristic], str] | None = None
 
 
-def thread_node_capability_to_str(char: Characteristic) -> str :
+def thread_node_capability_to_str(char: Characteristic) -> str:
     """
     Return the thread device type as a string.
 
