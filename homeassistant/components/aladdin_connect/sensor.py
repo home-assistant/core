@@ -107,6 +107,8 @@ class AladdinConnectSensor(SensorEntity):
         self.entity_description = description
         self._attr_unique_id = f"{self._device_id}-{self._number}-{description.key}"
         self._attr_has_entity_name = True
+        if self._model == "01" and description.key != "rssi":
+            description.entity_registry_enabled_default = True
 
     @property
     def device_info(self) -> DeviceInfo | None:
