@@ -7,7 +7,7 @@ import logging
 from typing import Final
 
 import aiohttp
-from pybravia import BraviaTV
+from pybravia import BraviaTV, BraviaTVError
 
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_APP,
@@ -18,7 +18,7 @@ from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PIN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CLIENTID_PREFIX, CONF_IGNORED_SOURCES, DOMAIN, NICKNAME
 
@@ -135,9 +135,13 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
             self.connected = False
         else:
             if not self.connected:
-                self.connected = await self.client.connect(
-                    pin=self.pin, clientid=CLIENTID_PREFIX, nickname=NICKNAME
-                )
+                try:
+                    self.connected = await self.client.connect(
+                        pin=self.pin, clientid=CLIENTID_PREFIX, nickname=NICKNAME
+                    )
+                except BraviaTVError as err:
+                    self.is_on = False
+                    raise UpdateFailed("Error communicating with device") from err
 
         self.is_on = self.connected and power_status == "active"
 

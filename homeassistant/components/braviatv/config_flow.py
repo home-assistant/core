@@ -7,7 +7,7 @@ import re
 from typing import Any
 
 import aiohttp
-from pybravia import BraviaTV
+from pybravia import BraviaTV, BraviaTVError
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
@@ -55,11 +55,12 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize Bravia TV device."""
         assert self.client is not None
 
-        connected = await self.client.connect(
-            pin=pin, clientid=CLIENTID_PREFIX, nickname=NICKNAME
-        )
-        if not connected:
-            raise CannotConnect()
+        try:
+            await self.client.connect(
+                pin=pin, clientid=CLIENTID_PREFIX, nickname=NICKNAME
+            )
+        except BraviaTVError as err:
+            raise CannotConnect() from err
 
         system_info = await self.client.get_system_info()
         if not system_info:

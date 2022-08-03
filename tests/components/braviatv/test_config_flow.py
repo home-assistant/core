@@ -1,6 +1,8 @@
 """Define tests for the Bravia TV config flow."""
 from unittest.mock import patch
 
+from pybravia import BraviaTVConnectionError
+
 from homeassistant import data_entry_flow
 from homeassistant.components.braviatv.const import CONF_IGNORED_SOURCES, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -51,7 +53,7 @@ async def test_user_invalid_host(hass):
 
 async def test_authorize_cannot_connect(hass):
     """Test that errors are shown when cannot connect to host at the authorize step."""
-    with patch("pybravia.BraviaTV.connect", return_value=False), patch(
+    with patch("pybravia.BraviaTV.connect", side_effect=BraviaTVConnectionError), patch(
         "pybravia.BraviaTV.pair", return_value=True
     ):
         result = await hass.config_entries.flow.async_init(
