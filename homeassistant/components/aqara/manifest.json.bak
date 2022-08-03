@@ -1,0 +1,12 @@
+{
+  "domain": "aqara",
+  "name": "Aqara",
+  "documentation": "https://opendoc.aqara.cn",
+  "requirements": ["aqara-iot-py-sdk==0.1.10"],
+  "dependencies": ["ffmpeg"],
+  "codeowners": ["@wumao","@eric"],
+  "config_flow": true,
+  "iot_class": "cloud_push",
+  "dhcp": [
+  ]
+}
