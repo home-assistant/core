@@ -104,7 +104,7 @@ async def async_setup_entry(
 
     async def set_pause_time(entity, service: Any) -> None:
         if not isinstance(entity, WiLightValvePauseSwitch):
-            raise ValueError("Entity is not an instance of WiLightValvePauseSwitch")
+            raise ValueError("Entity is not a WiLight valve pause switch")
         pause_time = service.data[ATTR_PAUSE_TIME]
         await entity.async_set_pause_time(pause_time=pause_time)
 
