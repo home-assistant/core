@@ -1,8 +1,12 @@
 """Basic checks for HomeKit sensor."""
 from aiohomekit.model.characteristics import CharacteristicsTypes
+from aiohomekit.model.characteristics.const import ThreadNodeCapabilities
 from aiohomekit.model.services import ServicesTypes
 from aiohomekit.protocol.statuscodes import HapStatusCode
 
+from homeassistant.components.homekit_controller.sensor import (
+    thread_node_capability_to_str,
+)
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 
 from tests.components.homekit_controller.common import Helper, setup_test_component
@@ -315,3 +319,18 @@ async def test_sensor_unavailable(hass, utcnow):
     # Energy sensor has non-responsive characteristics so should be unavailable
     state = await energy_helper.poll_and_get_state()
     assert state.state == "unavailable"
+
+
+def test_thread_node_caps_to_str():
+    assert (
+        thread_node_capability_to_str(ThreadNodeCapabilities.BORDER_ROUTER_CAPABLE)
+        == "border_router_capable"
+    )
+    assert (
+        thread_node_capability_to_str(ThreadNodeCapabilities.ROUTER_ELIGIBLE)
+        == "router_eligible"
+    )
+    assert thread_node_capability_to_str(ThreadNodeCapabilities.FULL) == "full"
+    assert thread_node_capability_to_str(ThreadNodeCapabilities.MINIMAL) == "minimal"
+    assert thread_node_capability_to_str(ThreadNodeCapabilities.SLEEPY) == "sleepy"
+    assert thread_node_capability_to_str(ThreadNodeCapabilities(128)) == "none"
