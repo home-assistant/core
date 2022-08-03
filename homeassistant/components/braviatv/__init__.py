@@ -275,6 +275,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                 else:
                     await self.client.set_play_content(uri)
                 break
+        await self.async_request_refresh()
 
     async def async_send_command(self, command: Iterable[str], repeats: int) -> None:
         """Send command to device."""
