@@ -47,22 +47,21 @@ PLATFORMS = [
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the SkyBell component."""
-    if DOMAIN in config:
-        async_create_issue(
-            hass,
-            DOMAIN,
-            "removed_yaml",
-            breaks_in_ha_version="2022.9.0",
-            is_fixable=False,
-            severity=IssueSeverity.WARNING,
-            translation_key="removed_yaml",
-        )
-
-    hass.data.setdefault(DOMAIN, {})
-
-    entry_config = {}
     if DOMAIN not in config:
         return True
+
+    hass.data.setdefault(DOMAIN, {})
+    entry_config = {}
+
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "removed_yaml",
+        breaks_in_ha_version="2022.9.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="removed_yaml",
+    )
     for parameter, value in config[DOMAIN].items():
         if parameter == CONF_USERNAME:
             entry_config[CONF_EMAIL] = value
