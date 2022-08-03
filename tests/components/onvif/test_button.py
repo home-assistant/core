@@ -38,3 +38,33 @@ async def test_reboot_button_press(hass):
     await hass.async_block_till_done()
 
     devicemgmt.SystemReboot.assert_called_once()
+
+
+async def test_set_dateandtime_button(hass):
+    """Test states of the SetDateAndTime button."""
+    await setup_onvif_integration(hass)
+
+    state = hass.states.get("button.testcamera_set_system_date_and_time")
+    assert state
+    assert state.state == STATE_UNKNOWN
+
+    registry = er.async_get(hass)
+    entry = registry.async_get("button.testcamera_set_system_date_and_time")
+    assert entry
+    assert entry.unique_id == f"{MAC}_setsystemdatetime"
+
+
+async def test_set_dateandtime_button_press(hass):
+    """Test SetDateAndTime button press."""
+    _, camera, device = await setup_onvif_integration(hass)
+    device.async_manually_set_date_and_time = AsyncMock(return_value=True)
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        "press",
+        {ATTR_ENTITY_ID: "button.testcamera_set_system_date_and_time"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    device.async_manually_set_date_and_time.assert_called_once()

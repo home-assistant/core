@@ -148,17 +148,16 @@ class BaseClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return additional state attributes."""
-        wind_gust = self.wind_gust
-        wind_gust = round(
-            speed_convert(self.wind_gust, SPEED_MILES_PER_HOUR, self._wind_speed_unit),
-            4,
-        )
         cloud_cover = self.cloud_cover
-        return {
+        attrs = {
             ATTR_CLOUD_COVER: cloud_cover,
-            ATTR_WIND_GUST: wind_gust,
             ATTR_PRECIPITATION_TYPE: self.precipitation_type,
         }
+        if (wind_gust := self.wind_gust) is not None:
+            attrs[ATTR_WIND_GUST] = round(
+                speed_convert(wind_gust, SPEED_MILES_PER_HOUR, self._wind_speed_unit), 4
+            )
+        return attrs
 
     @property
     @abstractmethod

@@ -95,7 +95,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _LOGGER.debug("Scanning for GDM clients")
         gdm.scan(scan_for_clients=True)
 
-    hass.data[PLEX_DOMAIN][GDM_DEBOUNCER] = Debouncer(
+    hass.data[PLEX_DOMAIN][GDM_DEBOUNCER] = Debouncer[None](
         hass,
         _LOGGER,
         cooldown=10,
@@ -215,7 +215,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     hass.data[PLEX_DOMAIN][WEBSOCKETS][server_id] = websocket
 
-    def start_websocket_session(platform, _):
+    def start_websocket_session(platform):
         hass.data[PLEX_DOMAIN][PLATFORMS_COMPLETED][server_id].add(platform)
         if hass.data[PLEX_DOMAIN][PLATFORMS_COMPLETED][server_id] == PLATFORMS:
             hass.loop.create_task(websocket.listen())
@@ -228,11 +228,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     hass.data[PLEX_DOMAIN][DISPATCHERS][server_id].append(unsub)
 
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
     for platform in PLATFORMS:
-        task = hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
-        task.add_done_callback(partial(start_websocket_session, platform))
+        start_websocket_session(platform)
 
     async_cleanup_plex_devices(hass, entry)
 

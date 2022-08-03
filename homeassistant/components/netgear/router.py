@@ -250,7 +250,7 @@ class NetgearRouter:
         async with self._api_lock:
             await self.hass.async_add_executor_job(self._api.reboot)
 
-    async def async_check_new_firmware(self) -> None:
+    async def async_check_new_firmware(self) -> dict[str, Any] | None:
         """Check for new firmware of the router."""
         async with self._api_lock:
             return await self.hass.async_add_executor_job(self._api.check_new_firmware)

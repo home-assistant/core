@@ -126,6 +126,8 @@ class SmhiWeather(WeatherEntity):
     _attr_native_wind_speed_unit = SPEED_METERS_PER_SECOND
     _attr_native_pressure_unit = PRESSURE_HPA
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         name: str,
@@ -134,8 +136,6 @@ class SmhiWeather(WeatherEntity):
         session: aiohttp.ClientSession,
     ) -> None:
         """Initialize the SMHI weather entity."""
-
-        self._attr_name = name
         self._attr_unique_id = f"{latitude}, {longitude}"
         self._forecasts: list[SmhiForecast] | None = None
         self._fail_count = 0

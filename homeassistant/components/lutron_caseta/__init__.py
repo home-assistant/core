@@ -143,8 +143,6 @@ async def async_setup_entry(
     ca_certs = hass.config.path(config_entry.data[CONF_CA_CERTS])
     bridge = None
 
-    await _async_migrate_unique_ids(hass, config_entry)
-
     try:
         bridge = Smartbridge.create_tls(
             hostname=host, keyfile=keyfile, certfile=certfile, ca_certs=ca_certs
@@ -167,6 +165,7 @@ async def async_setup_entry(
             raise ConfigEntryNotReady(f"Cannot connect to {host}")
 
     _LOGGER.debug("Connected to Lutron Caseta bridge via LEAP at %s", host)
+    await _async_migrate_unique_ids(hass, config_entry)
 
     devices = bridge.get_devices()
     bridge_device = devices[BRIDGE_DEVICE_ID]
@@ -188,7 +187,7 @@ async def async_setup_entry(
         bridge, bridge_device, button_devices
     )
 
-    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     return True
 
@@ -252,6 +251,18 @@ def _area_and_name_from_name(device_name: str) -> tuple[str, str]:
 
 
 @callback
+def async_get_lip_button(device_type: str, leap_button: int) -> int | None:
+    """Get the LIP button for a given LEAP button."""
+    if (
+        lip_buttons_name_to_num := DEVICE_TYPE_SUBTYPE_MAP_TO_LIP.get(device_type)
+    ) is None or (
+        leap_button_num_to_name := LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP.get(device_type)
+    ) is None:
+        return None
+    return lip_buttons_name_to_num[leap_button_num_to_name[leap_button]]
+
+
+@callback
 def _async_subscribe_pico_remote_events(
     hass: HomeAssistant,
     bridge_device: Smartbridge,
@@ -272,21 +283,8 @@ def _async_subscribe_pico_remote_events(
 
         type_ = device["type"]
         area, name = _area_and_name_from_name(device["name"])
-        button_number = device["button_number"]
-        # The original implementation used LIP instead of LEAP
-        # so we need to convert the button number to maintain compat
-        sub_type_to_lip_button = DEVICE_TYPE_SUBTYPE_MAP_TO_LIP[type_]
-        leap_button_to_sub_type = LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP[type_]
-        if (sub_type := leap_button_to_sub_type.get(button_number)) is None:
-            _LOGGER.error(
-                "Unknown LEAP button number %s is not in %s for %s (%s)",
-                button_number,
-                leap_button_to_sub_type,
-                name,
-                type_,
-            )
-            return
-        lip_button_number = sub_type_to_lip_button[sub_type]
+        leap_button_number = device["button_number"]
+        lip_button_number = async_get_lip_button(type_, leap_button_number)
         hass_device = dev_reg.async_get_device({(DOMAIN, device["serial"])})
 
         hass.bus.async_fire(
@@ -295,7 +293,7 @@ def _async_subscribe_pico_remote_events(
                 ATTR_SERIAL: device["serial"],
                 ATTR_TYPE: type_,
                 ATTR_BUTTON_NUMBER: lip_button_number,
-                ATTR_LEAP_BUTTON_NUMBER: button_number,
+                ATTR_LEAP_BUTTON_NUMBER: leap_button_number,
                 ATTR_DEVICE_NAME: name,
                 ATTR_DEVICE_ID: hass_device.id,
                 ATTR_AREA_NAME: area,

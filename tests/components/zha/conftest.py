@@ -15,7 +15,6 @@ from zigpy.state import State
 import zigpy.types
 import zigpy.zdo.types as zdo_t
 
-from homeassistant.components.zha import DOMAIN
 import homeassistant.components.zha.core.const as zha_const
 import homeassistant.components.zha.core.device as zha_core_device
 from homeassistant.setup import async_setup_component
@@ -71,11 +70,14 @@ async def config_entry_fixture(hass):
         },
         options={
             zha_const.CUSTOM_CONFIGURATION: {
+                zha_const.ZHA_OPTIONS: {
+                    zha_const.CONF_ENABLE_ENHANCED_LIGHT_TRANSITION: True,
+                },
                 zha_const.ZHA_ALARM_OPTIONS: {
                     zha_const.CONF_ALARM_ARM_REQUIRES_CODE: False,
                     zha_const.CONF_ALARM_MASTER_CODE: "4321",
                     zha_const.CONF_ALARM_FAILED_TRIES: 2,
-                }
+                },
             }
         },
     )
@@ -188,26 +190,14 @@ def zha_device_joined(hass, setup_zha):
 
 
 @pytest.fixture
-def zha_device_restored(hass, zigpy_app_controller, setup_zha, hass_storage):
+def zha_device_restored(hass, zigpy_app_controller, setup_zha):
     """Return a restored ZHA device."""
 
     async def _zha_device(zigpy_dev, last_seen=None):
         zigpy_app_controller.devices[zigpy_dev.ieee] = zigpy_dev
 
         if last_seen is not None:
-            hass_storage[f"{DOMAIN}.storage"] = {
-                "key": f"{DOMAIN}.storage",
-                "version": 1,
-                "data": {
-                    "devices": [
-                        {
-                            "ieee": str(zigpy_dev.ieee),
-                            "last_seen": last_seen,
-                            "name": f"{zigpy_dev.manufacturer} {zigpy_dev.model}",
-                        }
-                    ],
-                },
-            }
+            zigpy_dev.last_seen = last_seen
 
         await setup_zha()
         zha_gateway = hass.data[zha_const.DATA_ZHA][zha_const.DATA_ZHA_GATEWAY]

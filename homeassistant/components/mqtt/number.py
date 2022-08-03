@@ -12,6 +12,7 @@ from homeassistant.components.number import (
     DEFAULT_MIN_VALUE,
     DEFAULT_STEP,
     DEVICE_CLASSES_SCHEMA,
+    NumberDeviceClass,
     RestoreNumber,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -144,8 +145,12 @@ async def async_setup_entry(
 
 
 async def _async_setup_entity(
-    hass, async_add_entities, config, config_entry=None, discovery_data=None
-):
+    hass: HomeAssistant,
+    async_add_entities: AddEntitiesCallback,
+    config: ConfigType,
+    config_entry: ConfigEntry | None = None,
+    discovery_data: dict | None = None,
+) -> None:
     """Set up the MQTT number."""
     async_add_entities([MqttNumber(hass, config, config_entry, discovery_data)])
 
@@ -292,11 +297,11 @@ class MqttNumber(MqttEntity, RestoreNumber):
         )
 
     @property
-    def assumed_state(self):
+    def assumed_state(self) -> bool:
         """Return true if we do optimistic updates."""
         return self._optimistic
 
     @property
-    def device_class(self) -> str | None:
+    def device_class(self) -> NumberDeviceClass | None:
         """Return the device class of the sensor."""
         return self._config.get(CONF_DEVICE_CLASS)

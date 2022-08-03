@@ -61,7 +61,6 @@ SERVICE_HANDLERS = {
     "yamaha": ServiceDetails("media_player", "yamaha"),
     "frontier_silicon": ServiceDetails("media_player", "frontier_silicon"),
     "openhome": ServiceDetails("media_player", "openhome"),
-    "bose_soundtouch": ServiceDetails("media_player", "soundtouch"),
     "bluesound": ServiceDetails("media_player", "bluesound"),
 }
 
@@ -70,6 +69,7 @@ OPTIONAL_SERVICE_HANDLERS: dict[str, tuple[str, str | None]] = {}
 MIGRATED_SERVICE_HANDLERS = [
     SERVICE_APPLE_TV,
     "axis",
+    "bose_soundtouch",
     "deconz",
     SERVICE_DAIKIN,
     "denonavr",

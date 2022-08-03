@@ -1,6 +1,7 @@
 """Support for MQTT lights."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import functools
 
 import voluptuous as vol
@@ -120,10 +121,14 @@ async def async_setup_entry(
 
 
 async def _async_setup_entity(
-    hass, async_add_entities, config, config_entry=None, discovery_data=None
-):
+    hass: HomeAssistant,
+    async_add_entities: AddEntitiesCallback,
+    config: ConfigType,
+    config_entry: ConfigEntry | None = None,
+    discovery_data: dict | None = None,
+) -> None:
     """Set up a MQTT Light."""
-    setup_entity = {
+    setup_entity: dict[str, Callable] = {
         "basic": async_setup_entity_basic,
         "json": async_setup_entity_json,
         "template": async_setup_entity_template,

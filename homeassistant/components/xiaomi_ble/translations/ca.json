@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs",
+            "decryption_failed": "La clau d'enlla\u00e7 proporcionada no ha funcionat, les dades del sensor no s'han pogut desxifrar. Comprova-la i torna-ho a provar.",
+            "expected_24_characters": "S'espera una clau d'enlla\u00e7 de 24 car\u00e0cters hexadecimals.",
+            "expected_32_characters": "S'espera una clau d'enlla\u00e7 de 32 car\u00e0cters hexadecimals.",
+            "no_devices_found": "No s'han trobat dispositius a la xarxa"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "bluetooth_confirm": {
+                "description": "Vols configurar {name}?"
+            },
+            "get_encryption_key_4_5": {
+                "data": {
+                    "bindkey": "Bindkey"
+                },
+                "description": "Les dades del sensor emeses estan xifrades. Per desxifrar-les necessites una clau d'enlla\u00e7 de 32 car\u00e0cters hexadecimals."
+            },
+            "get_encryption_key_legacy": {
+                "data": {
+                    "bindkey": "Bindkey"
+                },
+                "description": "Les dades del sensor emeses estan xifrades. Per desxifrar-les necessites una clau d'enlla\u00e7 de 24 car\u00e0cters hexadecimals."
+            },
+            "user": {
+                "data": {
+                    "address": "Dispositiu"
+                },
+                "description": "Tria un dispositiu a configurar"
+            }
+        }
+    }
+}

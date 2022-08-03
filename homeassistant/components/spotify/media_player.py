@@ -107,10 +107,11 @@ def spotify_exception_handler(func):
 class SpotifyMediaPlayer(MediaPlayerEntity):
     """Representation of a Spotify controller."""
 
+    _attr_entity_registry_enabled_default = False
+    _attr_has_entity_name = True
     _attr_icon = "mdi:spotify"
     _attr_media_content_type = MEDIA_TYPE_MUSIC
     _attr_media_image_remotely_accessible = False
-    _attr_entity_registry_enabled_default = False
 
     def __init__(
         self,
@@ -122,7 +123,6 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         self._id = user_id
         self.data = data
 
-        self._attr_name = f"Spotify {name}"
         self._attr_unique_id = user_id
 
         if self.data.current_user["product"] == "premium":

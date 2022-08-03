@@ -15,17 +15,14 @@ from homeassistant.components.light import (
     ColorMode,
 )
 from homeassistant.components.zha.core.group import GroupMember
-from homeassistant.components.zha.light import (
-    CAPABILITIES_COLOR_TEMP,
-    CAPABILITIES_COLOR_XY,
-    FLASH_EFFECTS,
-)
+from homeassistant.components.zha.light import FLASH_EFFECTS
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 import homeassistant.util.dt as dt_util
 
 from .common import (
     async_enable_traffic,
     async_find_group_entity_id,
+    async_shift_time,
     async_test_rejoin,
     find_entity_id,
     get_zha_gateway,
@@ -148,7 +145,8 @@ async def device_light_1(hass, zigpy_device_mock, zha_device_joined):
     )
     color_cluster = zigpy_device.endpoints[1].light_color
     color_cluster.PLUGGED_ATTR_READS = {
-        "color_capabilities": CAPABILITIES_COLOR_TEMP | CAPABILITIES_COLOR_XY
+        "color_capabilities": lighting.Color.ColorCapabilities.Color_temperature
+        | lighting.Color.ColorCapabilities.XY_attributes
     }
     zha_device = await zha_device_joined(zigpy_device)
     zha_device.available = True
@@ -180,7 +178,8 @@ async def device_light_2(hass, zigpy_device_mock, zha_device_joined):
     )
     color_cluster = zigpy_device.endpoints[1].light_color
     color_cluster.PLUGGED_ATTR_READS = {
-        "color_capabilities": CAPABILITIES_COLOR_TEMP | CAPABILITIES_COLOR_XY
+        "color_capabilities": lighting.Color.ColorCapabilities.Color_temperature
+        | lighting.Color.ColorCapabilities.XY_attributes
     }
     zha_device = await zha_device_joined(zigpy_device)
     zha_device.available = True
@@ -239,7 +238,8 @@ async def eWeLink_light(hass, zigpy_device_mock, zha_device_joined):
     )
     color_cluster = zigpy_device.endpoints[1].light_color
     color_cluster.PLUGGED_ATTR_READS = {
-        "color_capabilities": CAPABILITIES_COLOR_TEMP | CAPABILITIES_COLOR_XY
+        "color_capabilities": lighting.Color.ColorCapabilities.Color_temperature
+        | lighting.Color.ColorCapabilities.XY_attributes
     }
     zha_device = await zha_device_joined(zigpy_device)
     zha_device.available = True
@@ -302,7 +302,7 @@ async def test_light_refresh(hass, zigpy_device_mock, zha_device_joined_restored
 )
 @pytest.mark.parametrize(
     "device, reporting",
-    [(LIGHT_ON_OFF, (1, 0, 0)), (LIGHT_LEVEL, (1, 1, 0)), (LIGHT_COLOR, (1, 1, 3))],
+    [(LIGHT_ON_OFF, (1, 0, 0)), (LIGHT_LEVEL, (1, 1, 0)), (LIGHT_COLOR, (1, 1, 6))],
 )
 async def test_light(
     hass, zigpy_device_mock, zha_device_joined_restored, device, reporting
@@ -347,6 +347,7 @@ async def test_light(
         await async_test_level_on_off_from_hass(
             hass, cluster_on_off, cluster_level, entity_id
         )
+        await async_shift_time(hass)
 
         # test getting a brightness change from the network
         await async_test_on_from_light(hass, cluster_on_off, entity_id)
@@ -561,7 +562,7 @@ async def test_transitions(
 
     dev1_cluster_level.request.reset_mock()
 
-    # test non 0 length transition and color temp while turning light on (color_provided_while_off)
+    # test non 0 length transition and color temp while turning light on (new_color_provided_while_off)
     await hass.services.async_call(
         LIGHT_DOMAIN,
         "turn_on",
@@ -597,7 +598,7 @@ async def test_transitions(
         10,
         dev1_cluster_color.commands_by_name["move_to_color_temp"].schema,
         235,  # color temp mireds
-        0,  # transition time (ZCL time in 10ths of a second) - no transition when color_provided_while_off
+        0,  # transition time (ZCL time in 10ths of a second) - no transition when new_color_provided_while_off
         expect_reply=True,
         manufacturer=None,
         tries=1,
@@ -646,7 +647,7 @@ async def test_transitions(
     dev1_cluster_color.request.reset_mock()
     dev1_cluster_level.request.reset_mock()
 
-    # test no transition provided and color temp while turning light on (color_provided_while_off)
+    # test no transition provided and color temp while turning light on (new_color_provided_while_off)
     await hass.services.async_call(
         LIGHT_DOMAIN,
         "turn_on",
@@ -681,7 +682,7 @@ async def test_transitions(
         10,
         dev1_cluster_color.commands_by_name["move_to_color_temp"].schema,
         236,  # color temp mireds
-        0,  # transition time (ZCL time in 10ths of a second) - no transition when color_provided_while_off
+        0,  # transition time (ZCL time in 10ths of a second) - no transition when new_color_provided_while_off
         expect_reply=True,
         manufacturer=None,
         tries=1,
@@ -762,7 +763,7 @@ async def test_transitions(
         10,
         dev1_cluster_color.commands_by_name["move_to_color_temp"].schema,
         236,  # color temp mireds
-        0,  # transition time (ZCL time in 10ths of a second) - no transition when color_provided_while_off
+        0,  # transition time (ZCL time in 10ths of a second) - no transition when new_color_provided_while_off
         expect_reply=True,
         manufacturer=None,
         tries=1,
@@ -855,7 +856,7 @@ async def test_transitions(
 
     dev2_cluster_on_off.request.reset_mock()
 
-    # test non 0 length transition and color temp while turning light on and sengled (color_provided_while_off)
+    # test non 0 length transition and color temp while turning light on and sengled (new_color_provided_while_off)
     await hass.services.async_call(
         LIGHT_DOMAIN,
         "turn_on",
@@ -891,7 +892,7 @@ async def test_transitions(
         10,
         dev2_cluster_color.commands_by_name["move_to_color_temp"].schema,
         235,  # color temp mireds
-        1,  # transition time (ZCL time in 10ths of a second) - sengled transition == 1 when color_provided_while_off
+        1,  # transition time (ZCL time in 10ths of a second) - sengled transition == 1 when new_color_provided_while_off
         expect_reply=True,
         manufacturer=None,
         tries=1,
@@ -938,7 +939,7 @@ async def test_transitions(
 
     dev2_cluster_on_off.request.reset_mock()
 
-    # test non 0 length transition and color temp while turning group light on (color_provided_while_off)
+    # test non 0 length transition and color temp while turning group light on (new_color_provided_while_off)
     await hass.services.async_call(
         LIGHT_DOMAIN,
         "turn_on",
@@ -961,13 +962,13 @@ async def test_transitions(
     assert group_level_channel.request.call_count == 1
     assert group_level_channel.request.await_count == 1
 
-    # groups are omitted from the 3 call dance for color_provided_while_off
+    # groups are omitted from the 3 call dance for new_color_provided_while_off
     assert group_color_channel.request.call_args == call(
         False,
         10,
         dev2_cluster_color.commands_by_name["move_to_color_temp"].schema,
         235,  # color temp mireds
-        10.0,  # transition time (ZCL time in 10ths of a second) - sengled transition == 1 when color_provided_while_off
+        10.0,  # transition time (ZCL time in 10ths of a second) - sengled transition == 1 when new_color_provided_while_off
         expect_reply=True,
         manufacturer=None,
         tries=1,
@@ -1075,7 +1076,7 @@ async def test_transitions(
 
     dev2_cluster_level.request.reset_mock()
 
-    # test eWeLink color temp while turning light on from off (color_provided_while_off)
+    # test eWeLink color temp while turning light on from off (new_color_provided_while_off)
     await hass.services.async_call(
         LIGHT_DOMAIN,
         "turn_on",
@@ -1185,12 +1186,14 @@ async def async_test_off_from_hass(hass, cluster, entity_id):
 
 
 async def async_test_level_on_off_from_hass(
-    hass, on_off_cluster, level_cluster, entity_id
+    hass, on_off_cluster, level_cluster, entity_id, expected_default_transition: int = 0
 ):
     """Test on off functionality from hass."""
 
     on_off_cluster.request.reset_mock()
     level_cluster.request.reset_mock()
+    await async_shift_time(hass)
+
     # turn on via UI
     await hass.services.async_call(
         LIGHT_DOMAIN, "turn_on", {"entity_id": entity_id}, blocking=True
@@ -1210,6 +1213,8 @@ async def async_test_level_on_off_from_hass(
     )
     on_off_cluster.request.reset_mock()
     level_cluster.request.reset_mock()
+
+    await async_shift_time(hass)
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -1260,7 +1265,7 @@ async def async_test_level_on_off_from_hass(
         4,
         level_cluster.commands_by_name["move_to_level_with_on_off"].schema,
         10,
-        0,
+        expected_default_transition,
         expect_reply=True,
         manufacturer=None,
         tries=1,
@@ -1400,7 +1405,7 @@ async def test_zha_group_light_entity(
     assert group_state.state == STATE_OFF
     assert group_state.attributes["supported_color_modes"] == [
         ColorMode.COLOR_TEMP,
-        ColorMode.HS,
+        ColorMode.XY,
     ]
     # Light which is off has no color mode
     assert "color_mode" not in group_state.attributes
@@ -1408,18 +1413,28 @@ async def test_zha_group_light_entity(
     # test turning the lights on and off from the HA
     await async_test_on_off_from_hass(hass, group_cluster_on_off, group_entity_id)
 
+    await async_shift_time(hass)
+
     # test short flashing the lights from the HA
     await async_test_flash_from_hass(
         hass, group_cluster_identify, group_entity_id, FLASH_SHORT
     )
+
+    await async_shift_time(hass)
 
     # test turning the lights on and off from the light
     await async_test_on_off_from_light(hass, dev1_cluster_on_off, group_entity_id)
 
     # test turning the lights on and off from the HA
     await async_test_level_on_off_from_hass(
-        hass, group_cluster_on_off, group_cluster_level, group_entity_id
+        hass,
+        group_cluster_on_off,
+        group_cluster_level,
+        group_entity_id,
+        expected_default_transition=1,  # a Sengled light is in that group and needs a minimum 0.1s transition
     )
+
+    await async_shift_time(hass)
 
     # test getting a brightness change from the network
     await async_test_on_from_light(hass, dev1_cluster_on_off, group_entity_id)
@@ -1431,14 +1446,16 @@ async def test_zha_group_light_entity(
     assert group_state.state == STATE_ON
     assert group_state.attributes["supported_color_modes"] == [
         ColorMode.COLOR_TEMP,
-        ColorMode.HS,
+        ColorMode.XY,
     ]
-    assert group_state.attributes["color_mode"] == ColorMode.HS
+    assert group_state.attributes["color_mode"] == ColorMode.XY
 
     # test long flashing the lights from the HA
     await async_test_flash_from_hass(
         hass, group_cluster_identify, group_entity_id, FLASH_LONG
     )
+
+    await async_shift_time(hass)
 
     assert len(zha_group.members) == 2
     # test some of the group logic to make sure we key off states correctly

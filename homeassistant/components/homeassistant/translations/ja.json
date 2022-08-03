@@ -2,6 +2,7 @@
     "system_health": {
         "info": {
             "arch": "CPU\u30a2\u30fc\u30ad\u30c6\u30af\u30c1\u30e3",
+            "config_dir": "\u30b3\u30f3\u30d5\u30a3\u30ae\u30e5\u30ec\u30fc\u30b7\u30e7\u30f3\u30c7\u30a3\u30ec\u30af\u30c8\u30ea",
             "dev": "\u30c7\u30a3\u30d9\u30ed\u30c3\u30d7\u30e1\u30f3\u30c8",
             "docker": "Docker",
             "hassio": "Supervisor",

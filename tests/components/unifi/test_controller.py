@@ -30,7 +30,7 @@ from homeassistant.components.unifi.const import (
 from homeassistant.components.unifi.controller import (
     PLATFORMS,
     RETRY_TIMER,
-    get_controller,
+    get_unifi_controller,
 )
 from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
 from homeassistant.const import (
@@ -271,7 +271,7 @@ async def test_controller_mac(hass, aioclient_mock):
 async def test_controller_not_accessible(hass):
     """Retry to login gets scheduled when connection fails."""
     with patch(
-        "homeassistant.components.unifi.controller.get_controller",
+        "homeassistant.components.unifi.controller.get_unifi_controller",
         side_effect=CannotConnect,
     ):
         await setup_unifi_integration(hass)
@@ -281,7 +281,7 @@ async def test_controller_not_accessible(hass):
 async def test_controller_trigger_reauth_flow(hass):
     """Failed authentication trigger a reauthentication flow."""
     with patch(
-        "homeassistant.components.unifi.controller.get_controller",
+        "homeassistant.components.unifi.get_unifi_controller",
         side_effect=AuthenticationRequired,
     ), patch.object(hass.config_entries.flow, "async_init") as mock_flow_init:
         await setup_unifi_integration(hass)
@@ -292,7 +292,7 @@ async def test_controller_trigger_reauth_flow(hass):
 async def test_controller_unknown_error(hass):
     """Unknown errors are handled."""
     with patch(
-        "homeassistant.components.unifi.controller.get_controller",
+        "homeassistant.components.unifi.controller.get_unifi_controller",
         side_effect=Exception,
     ):
         await setup_unifi_integration(hass)
@@ -379,7 +379,21 @@ async def test_wireless_client_event_calls_update_wireless_devices(
     hass, aioclient_mock, mock_unifi_websocket
 ):
     """Call update_wireless_devices method when receiving wireless client event."""
-    await setup_unifi_integration(hass, aioclient_mock)
+    client_1_dict = {
+        "essid": "ssid",
+        "disabled": False,
+        "hostname": "client_1",
+        "ip": "10.0.0.4",
+        "is_wired": False,
+        "last_seen": dt_util.as_timestamp(dt_util.utcnow()),
+        "mac": "00:00:00:00:00:01",
+    }
+    await setup_unifi_integration(
+        hass,
+        aioclient_mock,
+        clients_response=[client_1_dict],
+        known_wireless_clients=(client_1_dict["mac"],),
+    )
 
     with patch(
         "homeassistant.components.unifi.controller.UniFiController.update_wireless_clients",
@@ -391,6 +405,7 @@ async def test_wireless_client_event_calls_update_wireless_devices(
                 "data": [
                     {
                         "datetime": "2020-01-20T19:37:04Z",
+                        "user": "00:00:00:00:00:01",
                         "key": aiounifi.events.WIRELESS_CLIENT_CONNECTED,
                         "msg": "User[11:22:33:44:55:66] has connected to WLAN",
                         "time": 1579549024893,
@@ -455,22 +470,22 @@ async def test_reconnect_mechanism_exceptions(
         mock_reconnect.assert_called_once()
 
 
-async def test_get_controller(hass):
+async def test_get_unifi_controller(hass):
     """Successful call."""
     with patch("aiounifi.Controller.check_unifi_os", return_value=True), patch(
         "aiounifi.Controller.login", return_value=True
     ):
-        assert await get_controller(hass, **CONTROLLER_DATA)
+        assert await get_unifi_controller(hass, CONTROLLER_DATA)
 
 
-async def test_get_controller_verify_ssl_false(hass):
+async def test_get_unifi_controller_verify_ssl_false(hass):
     """Successful call with verify ssl set to false."""
     controller_data = dict(CONTROLLER_DATA)
     controller_data[CONF_VERIFY_SSL] = False
     with patch("aiounifi.Controller.check_unifi_os", return_value=True), patch(
         "aiounifi.Controller.login", return_value=True
     ):
-        assert await get_controller(hass, **controller_data)
+        assert await get_unifi_controller(hass, controller_data)
 
 
 @pytest.mark.parametrize(
@@ -486,9 +501,11 @@ async def test_get_controller_verify_ssl_false(hass):
         (aiounifi.AiounifiException, AuthenticationRequired),
     ],
 )
-async def test_get_controller_fails_to_connect(hass, side_effect, raised_exception):
-    """Check that get_controller can handle controller being unavailable."""
+async def test_get_unifi_controller_fails_to_connect(
+    hass, side_effect, raised_exception
+):
+    """Check that get_unifi_controller can handle controller being unavailable."""
     with patch("aiounifi.Controller.check_unifi_os", return_value=True), patch(
         "aiounifi.Controller.login", side_effect=side_effect
     ), pytest.raises(raised_exception):
-        await get_controller(hass, **CONTROLLER_DATA)
+        await get_unifi_controller(hass, CONTROLLER_DATA)

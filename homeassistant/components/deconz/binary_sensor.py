@@ -24,7 +24,6 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.helpers.entity_registry as er
@@ -215,9 +214,6 @@ async def async_setup_entry(
         """Add sensor from deCONZ."""
         sensor = gateway.api.sensors[sensor_id]
 
-        if not gateway.option_allow_clip_sensor and sensor.type.startswith("CLIP"):
-            return
-
         for description in (
             ENTITY_DESCRIPTIONS.get(type(sensor), []) + BINARY_SENSOR_DESCRIPTIONS
         ):
@@ -234,21 +230,6 @@ async def async_setup_entry(
     gateway.register_platform_add_device_callback(
         async_add_sensor,
         gateway.api.sensors,
-    )
-
-    @callback
-    def async_reload_clip_sensors() -> None:
-        """Load clip sensor sensors from deCONZ."""
-        for sensor_id, sensor in gateway.api.sensors.items():
-            if sensor.type.startswith("CLIP"):
-                async_add_sensor(EventType.ADDED, sensor_id)
-
-    config_entry.async_on_unload(
-        async_dispatcher_connect(
-            hass,
-            gateway.signal_reload_clip_sensors,
-            async_reload_clip_sensors,
-        )
     )
 
 

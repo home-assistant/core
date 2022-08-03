@@ -74,6 +74,7 @@ from .const import (
     KEY_SMS_SMS_COUNT,
     KEY_WLAN_HOST_LIST,
     KEY_WLAN_WIFI_FEATURE_SWITCH,
+    KEY_WLAN_WIFI_GUEST_NETWORK_SWITCH,
     NOTIFY_SUPPRESS_TIMEOUT,
     SERVICE_CLEAR_TRAFFIC_STATISTICS,
     SERVICE_REBOOT,
@@ -275,6 +276,18 @@ class Router:
         self._get_data(
             KEY_WLAN_WIFI_FEATURE_SWITCH, self.client.wlan.wifi_feature_switch
         )
+        self._get_data(
+            KEY_WLAN_WIFI_GUEST_NETWORK_SWITCH,
+            lambda: next(
+                filter(
+                    lambda ssid: ssid.get("wifiisguestnetwork") == "1",
+                    self.client.wlan.multi_basic_settings()
+                    .get("Ssids", {})
+                    .get("Ssid", []),
+                ),
+                {},
+            ),
+        )
 
         dispatcher_send(self.hass, UPDATE_SIGNAL, self.config_entry.unique_id)
 
@@ -421,7 +434,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     # Forward config entry setup to platforms
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # Notify doesn't support config entry setup yet, load with discovery for now
     await discovery.async_load_platform(
@@ -573,10 +586,7 @@ class HuaweiLteBaseEntity(Entity):
 
     _available: bool = field(default=True, init=False)
     _unsub_handlers: list[Callable] = field(default_factory=list, init=False)
-
-    @property
-    def _entity_name(self) -> str:
-        raise NotImplementedError
+    _attr_has_entity_name: bool = field(default=True, init=False)
 
     @property
     def _device_unique_id(self) -> str:
@@ -587,11 +597,6 @@ class HuaweiLteBaseEntity(Entity):
     def unique_id(self) -> str:
         """Return unique ID for entity."""
         return f"{self.router.config_entry.unique_id}-{self._device_unique_id}"
-
-    @property
-    def name(self) -> str:
-        """Return entity name."""
-        return f"Huawei {self.router.device_name} {self._entity_name}"
 
     @property
     def available(self) -> bool:
