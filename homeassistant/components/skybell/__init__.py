@@ -8,6 +8,7 @@ from aioskybell import Skybell
 from aioskybell.exceptions import SkybellAuthenticationException, SkybellException
 import voluptuous as vol
 
+from homeassistant.components.repairs import IssueSeverity, async_create_issue
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
@@ -46,6 +47,17 @@ PLATFORMS = [
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the SkyBell component."""
+    if DOMAIN in config:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "removed_yaml",
+            breaks_in_ha_version="2022.9.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="removed_yaml",
+        )
+
     hass.data.setdefault(DOMAIN, {})
 
     entry_config = {}
