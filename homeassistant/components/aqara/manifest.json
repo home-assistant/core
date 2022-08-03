@@ -2,12 +2,8 @@
   "domain": "aqara",
   "name": "Aqara",
   "documentation": "https://opendoc.aqara.cn",
-  "requirements": ["aqara-iot-py-sdk==1.0.2"],
   "dependencies": ["ffmpeg"],
-  "codeowners": ["@wumao","@eric"],
-  "config_flow": true,
-  "iot_class": "cloud_push",
-  "version":"1.0.0",
-  "dhcp": [
-  ]
+  "codeowners": ["@liweifeng2022"],
+  "requirements": ["aqara-iot-py-sdk==1.0.2"],
+  "iot_class": "cloud_push"
 }
