@@ -8,18 +8,20 @@
         "error": {
             "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication",
+            "invalid_key_format": "The offline key must be a 32-byte hex string.",
+            "invalid_key_index": "The offline key slot must be an integer between 0 and 255.",
             "unknown": "Unexpected error"
         },
         "flow_title": "{name} ({local_name}) {address}",
         "step": {
             "integration_discovery_confirm": {
-                "description": "Do you want to setup {name} ({local_name}) over Bluetooth with {address}?"
+                "description": "Do you want to setup {name} ({local_name}) over Bluetooth with address {address}?"
             },
             "user": {
                 "data": {
-                    "key": "Offline Key",
+                    "key": "Offline Key (32-byte hex string)",
                     "local_name": "Bluetooth local name",
-                    "slot": "Offline Key Slot (Key Index)"
+                    "slot": "Offline Key Slot (Integer between 0 and 255)"
                 },
                 "description": "Check the documentation at {docs_url} for how to find the offline key."
             }
