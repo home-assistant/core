@@ -42,10 +42,10 @@ class HomeKitSensorEntityDescription(SensorEntityDescription):
     """Describes Homekit sensor."""
 
     probe: Callable[[Characteristic], bool] | None = None
-    format: Callable[[Characteristic], str | None] | None = None
+    format: Callable[[Characteristic], str] | None = None
 
 
-def thread_node_capability_to_str(char: Characteristic) -> str | None:
+def thread_node_capability_to_str(char: Characteristic) -> str :
     """
     Return the thread device type as a string.
 
@@ -79,8 +79,8 @@ def thread_node_capability_to_str(char: Characteristic) -> str | None:
         # normally disabled, wakes on occasion to poll for messages from its parent
         return "sleepy"
 
-    # Device has the characteristic but its not a known device type
-    return None
+    # Device has no known thread capabilities
+    return "none"
 
 
 SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
