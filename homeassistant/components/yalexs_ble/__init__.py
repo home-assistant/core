@@ -52,7 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     )
 
-    cancel_first_update = push_lock.register_callback(lambda *args: startup_event.set())
+    cancel_first_update = push_lock.register_callback(lambda *_: startup_event.set())
     entry.async_on_unload(await push_lock.start())
 
     try:
