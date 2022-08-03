@@ -5,7 +5,6 @@ from collections.abc import Awaitable, Callable
 from datetime import timedelta
 from typing import Any
 
-
 from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
