@@ -10,7 +10,8 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
+
+# from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -85,13 +86,14 @@ def format_input_source(input_source_name, input_source_number):
     return f"{input_source_name} {input_source_number}"
 
 
-async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up the config entry."""
-    await async_setup_platform(hass, {}, async_add_entities)
+# async def async_setup_entry(
+#     hass: HomeAssistant,
+#     entry: ConfigEntry,
+#     async_add_entities: AddEntitiesCallback,
+# ) -> None:
+#     """Set up the config entry."""
+#     # await async_setup_platform(hass, entry, async_add_entities)
+#     return True
 
 
 class PjLinkDevice(MediaPlayerEntity):

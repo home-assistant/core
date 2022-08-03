@@ -8,24 +8,12 @@ import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import zeroconf
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_TIMEOUT,
-)
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 
-from .const import (
-    CONF_ENCODING,
-    DEFAULT_ENCODING,
-    DEFAULT_PORT,
-    DEFAULT_TIMEOUT,
-    DOMAIN,
-)
+from .const import CONF_ENCODING, DEFAULT_ENCODING, DEFAULT_PORT, DOMAIN
 
 TITLE = "PJLink"
 
@@ -38,7 +26,7 @@ class PJLinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.host: str | None = None
         self.port: int | None = None
 
-    # TODO: See if we can identify PJLink devices with dhcp or something else
+    # Can we can identify PJLink devices with dhcp or something else?
     # During authentication the library checks that we are talking to a PJLink device
     # https://github.com/benoitlouy/pypjlink/blob/1932aaf7c18113e6281927f4ee2d30c6b8593639/pypjlink/projector.py#L80-L85
 
@@ -60,9 +48,6 @@ class PJLinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                             CONF_ENCODING, default=DEFAULT_ENCODING
                         ): cv.string,
                         vol.Optional(CONF_PASSWORD): cv.string,
-                        vol.Optional(
-                            CONF_TIMEOUT, default=DEFAULT_TIMEOUT
-                        ): cv.positive_int,
                     }
                 ),
             )
@@ -74,12 +59,17 @@ class PJLinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         host = user_input[CONF_HOST]
         port = user_input[CONF_PORT]
         name = user_input[CONF_NAME]
+        password = user_input[CONF_PASSWORD]
         # await self.async_set_unique_id(serial_number, raise_on_progress=False)
         # self._abort_if_unique_id_configured()
-        # TODO: finish this setup
         return self.async_create_entry(
-            title=host,
-            data={CONF_HOST: host, CONF_PORT: port, CONF_NAME: name},
+            title=TITLE,
+            data={
+                CONF_HOST: host,
+                CONF_PORT: port,
+                CONF_NAME: name,
+                CONF_PASSWORD: password,
+            },
         )
 
     # avahi/zeroconf
@@ -119,8 +109,16 @@ class PJLinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 },
             )
 
-        # TODO: finish this setup
+        host = user_input[CONF_HOST]
+        port = user_input[CONF_PORT]
+        name = user_input[CONF_NAME]
+        password = user_input[CONF_PASSWORD]
         return self.async_create_entry(
             title=TITLE,
-            data={CONF_HOST: self.host},
+            data={
+                CONF_HOST: host,
+                CONF_PORT: port,
+                CONF_NAME: name,
+                CONF_PASSWORD: password,
+            },
         )
