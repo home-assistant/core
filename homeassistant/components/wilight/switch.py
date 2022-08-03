@@ -91,7 +91,7 @@ async def async_setup_entry(
     # Handle services for a discovered WiLight device.
     async def set_watering_time(entity, service: Any) -> None:
         if not isinstance(entity, WiLightValveSwitch):
-            raise ValueError("Entity is not an instance of WiLightValveSwitch")
+            raise ValueError("Entity is not a WiLight valve switch")
         watering_time = service.data[ATTR_WATERING_TIME]
         await entity.async_set_watering_time(watering_time=watering_time)
 
