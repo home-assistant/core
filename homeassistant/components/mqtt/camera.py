@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from base64 import b64decode
 import functools
+import logging
 
 import voluptuous as vol
 
@@ -17,7 +18,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import subscription
 from .config import MQTT_BASE_SCHEMA
-from .const import CONF_ENCODING, CONF_QOS, CONF_TOPIC
+from .const import CONF_ENCODING, CONF_QOS, CONF_TOPIC, DEFAULT_ENCODING
 from .debug_info import log_messages
 from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
@@ -29,6 +30,9 @@ from .mixins import (
 )
 from .util import valid_subscribe_topic
 
+_LOGGER = logging.getLogger(__name__)
+
+CONF_IMAGE_ENCODING = "image_encoding"
 DEFAULT_NAME = "MQTT Camera"
 
 MQTT_CAMERA_ATTRIBUTES_BLOCKED = frozenset(
@@ -44,6 +48,7 @@ PLATFORM_SCHEMA_MODERN = MQTT_BASE_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Required(CONF_TOPIC): valid_subscribe_topic,
+        vol.Optional(CONF_IMAGE_ENCODING): cv.matches_regex(r"^(b64)( \d*)?$"),
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
@@ -108,6 +113,13 @@ class MqttCamera(MqttEntity, Camera):
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the MQTT Camera."""
         self._last_image = None
+        # Using CONF_ENCODING to set b64 encoding for images is deprecated as of Home Assistant 2022.9, use CONF_IMAGE_ENCODING instead
+        if config[CONF_ENCODING] == "b64":
+            config[CONF_IMAGE_ENCODING] = "b64"
+            config[CONF_ENCODING] = DEFAULT_ENCODING
+            _LOGGER.warning(
+                "Using the `encoding` parameter to set image encoding has been deprecated, use `image_encoding` instead"
+            )
 
         Camera.__init__(self)
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
@@ -124,7 +136,10 @@ class MqttCamera(MqttEntity, Camera):
         @log_messages(self.hass, self.entity_id)
         def message_received(msg):
             """Handle new MQTT messages."""
-            if self._config[CONF_ENCODING] == "b64":
+            if (
+                msg.topic == self._config[CONF_TOPIC]
+                and CONF_IMAGE_ENCODING in self._config
+            ):
                 self._last_image = b64decode(msg.payload)
             else:
                 self._last_image = msg.payload
