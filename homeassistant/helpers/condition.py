@@ -622,7 +622,7 @@ def sun(
         wanted_time_after = cast(datetime, sunset) + after_offset
         condition_trace_update_result(wanted_time_after=wanted_time_after)
         return utcnow < wanted_time_before or utcnow > wanted_time_after
-    
+
     if before == SUN_EVENT_SUNRISE:
         wanted_time_before = cast(datetime, sunrise) + before_offset
         condition_trace_update_result(wanted_time_before=wanted_time_before)
