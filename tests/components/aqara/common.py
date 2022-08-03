@@ -10,6 +10,7 @@ from tests.common import MockConfigEntry
 
 # pytest ./tests/components/<your_component>/ --cov=homeassistant.components.<your_component> --cov-report term-missing -vv
 
+
 async def setup_platform(hass, platform):
     """Set up the aqara platform."""
     mock_entry = MockConfigEntry(

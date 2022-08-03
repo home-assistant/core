@@ -61,7 +61,10 @@ async def test_turn_on(hass: HomeAssistant) -> None:
 
         with patch("aqara_iot.AqaraDeviceManager.send_commands") as mock_light_on:
             assert await hass.services.async_call(
-                LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: DEVICE_ID}, blocking=True
+                LIGHT_DOMAIN,
+                SERVICE_TURN_ON,
+                {ATTR_ENTITY_ID: DEVICE_ID},
+                blocking=True,
             )
             await hass.async_block_till_done()
             mock_light_on.assert_called_once()
@@ -75,7 +78,10 @@ async def test_turn_off(hass: HomeAssistant) -> None:
 
         with patch("aqara_iot.AqaraDeviceManager.send_commands") as mock_light_off:
             assert await hass.services.async_call(
-                LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: DEVICE_ID}, blocking=True
+                LIGHT_DOMAIN,
+                SERVICE_TURN_OFF,
+                {ATTR_ENTITY_ID: DEVICE_ID},
+                blocking=True,
             )
             await hass.async_block_till_done()
             mock_light_off.assert_called_once()

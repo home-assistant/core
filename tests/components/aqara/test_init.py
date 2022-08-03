@@ -3,6 +3,7 @@ from http import HTTPStatus
 from unittest.mock import patch
 import aqara_iot.openmq
 from .common import mock_start
+
 # from aqara.exceptions import aqaraAuthenticationException, AbodeException
 
 from homeassistant import data_entry_flow

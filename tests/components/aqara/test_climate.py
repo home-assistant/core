@@ -61,10 +61,14 @@ async def test_switch_on(hass: HomeAssistant) -> None:
 
         with patch("aqara_iot.AqaraDeviceManager.send_commands") as mock_command:
             assert await hass.services.async_call(
-                CLIMATE_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: DEVICE_ID}, blocking=True
+                CLIMATE_DOMAIN,
+                SERVICE_TURN_ON,
+                {ATTR_ENTITY_ID: DEVICE_ID},
+                blocking=True,
             )
             await hass.async_block_till_done()
             mock_command.assert_called_once()
+
 
 async def test_switch_off(hass: HomeAssistant) -> None:
     """Test the climate can be turned off."""
@@ -74,7 +78,10 @@ async def test_switch_off(hass: HomeAssistant) -> None:
 
         with patch("aqara_iot.AqaraDeviceManager.send_commands") as mock_command:
             assert await hass.services.async_call(
-                CLIMATE_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: DEVICE_ID}, blocking=True
+                CLIMATE_DOMAIN,
+                SERVICE_TURN_OFF,
+                {ATTR_ENTITY_ID: DEVICE_ID},
+                blocking=True,
             )
             await hass.async_block_till_done()
             mock_command.assert_called_once()

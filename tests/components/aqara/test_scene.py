@@ -47,7 +47,10 @@ async def test_activate_scene(hass: HomeAssistant) -> None:
 
         with patch("aqara_iot.AqaraHomeManager.trigger_scene") as mock_command:
             assert await hass.services.async_call(
-                SCENE_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: DEVICE_ID}, blocking=True
+                SCENE_DOMAIN,
+                SERVICE_TURN_ON,
+                {ATTR_ENTITY_ID: DEVICE_ID},
+                blocking=True,
             )
             await hass.async_block_till_done()
             mock_command.assert_called_once()

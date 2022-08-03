@@ -51,4 +51,3 @@ async def test_press(hass: HomeAssistant) -> None:
             )
             await hass.async_block_till_done()
             mock_command.assert_called_once()
-
