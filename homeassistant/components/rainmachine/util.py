@@ -14,7 +14,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import COORDINATOR_UPDATE_INTERVAL_MAP, LOGGER
+from .const import LOGGER
 
 SIGNAL_REBOOT_COMPLETED = "rainmachine_reboot_completed_{0}"
 SIGNAL_REBOOT_REQUESTED = "rainmachine_reboot_requested_{0}"
@@ -48,11 +48,6 @@ def key_exists(data: dict[str, Any], search_key: str) -> bool:
 class RainMachineDataUpdateCoordinator(DataUpdateCoordinator[dict]):
     """Define an extended DataUpdateCoordinator."""
 
-    _api_category_with_shortest_interval = min(
-        COORDINATOR_UPDATE_INTERVAL_MAP,
-        key=COORDINATOR_UPDATE_INTERVAL_MAP.get,  # type: ignore[arg-type]
-    )
-
     config_entry: ConfigEntry
 
     def __init__(
@@ -74,15 +69,6 @@ class RainMachineDataUpdateCoordinator(DataUpdateCoordinator[dict]):
             update_method=update_method,
         )
 
-        # RainMachine coordinators have different update intervals based on how
-        # frequently their data is needed. We label the one with the shortest interval
-        # as the "reboot watcher" (i.e., the coordinator who is responsible for
-        # notifying others when a reboot has been completed):
-        if api_category == self._api_category_with_shortest_interval:
-            self._reboot_watcher = True
-        else:
-            self._reboot_watcher = False
-
         self._rebooting = False
         self._signal_handler_unsubs: list[Callable[..., None]] = []
         self.config_entry = entry
@@ -99,6 +85,7 @@ class RainMachineDataUpdateCoordinator(DataUpdateCoordinator[dict]):
         @callback
         def async_reboot_completed() -> None:
             """Respond to a reboot completed notification."""
+            LOGGER.debug("%s responding to reboot complete", self.name)
             self._rebooting = False
             self.last_update_success = True
             self.async_update_listeners()
@@ -106,6 +93,7 @@ class RainMachineDataUpdateCoordinator(DataUpdateCoordinator[dict]):
         @callback
         def async_reboot_requested() -> None:
             """Respond to a reboot request."""
+            LOGGER.debug("%s responding to reboot request", self.name)
             self._rebooting = True
             self.last_update_success = False
             self.async_update_listeners()
@@ -122,10 +110,10 @@ class RainMachineDataUpdateCoordinator(DataUpdateCoordinator[dict]):
         def async_check_reboot_complete() -> None:
             """Check whether an active reboot has been completed."""
             if self._rebooting and self.last_update_success:
+                LOGGER.debug("%s discovered reboot complete", self.name)
                 async_dispatcher_send(self.hass, self.signal_reboot_completed)
 
-        if self._reboot_watcher:
-            self.async_add_listener(async_check_reboot_complete)
+        self.async_add_listener(async_check_reboot_complete)
 
         @callback
         def async_teardown() -> None:

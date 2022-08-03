@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
+from datetime import timedelta
 from functools import partial
 from typing import Any
 
@@ -35,7 +36,6 @@ from homeassistant.util.network import is_ip_address
 from .config_flow import get_client_controller
 from .const import (
     CONF_ZONE_RUN_TIME,
-    COORDINATOR_UPDATE_INTERVAL_MAP,
     DATA_PROGRAMS,
     DATA_PROVISION_SETTINGS,
     DATA_RESTRICTIONS_CURRENT,
@@ -122,6 +122,14 @@ SERVICE_RESTRICT_WATERING_SCHEMA = SERVICE_SCHEMA.extend(
         vol.Required(CONF_DURATION): cv.time_period,
     }
 )
+
+COORDINATOR_UPDATE_INTERVAL_MAP = {
+    DATA_PROVISION_SETTINGS: timedelta(minutes=1),
+    DATA_PROGRAMS: timedelta(seconds=30),
+    DATA_RESTRICTIONS_CURRENT: timedelta(minutes=1),
+    DATA_RESTRICTIONS_UNIVERSAL: timedelta(minutes=1),
+    DATA_ZONES: timedelta(seconds=15),
+}
 
 
 @dataclass
