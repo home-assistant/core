@@ -223,10 +223,22 @@ HARDWARE_INTEGRATIONS = {
 async def async_get_addon_info(hass: HomeAssistant, slug: str) -> dict:
     """Return add-on info.
 
+    The add-on must be installed.
     The caller of the function should handle HassioAPIError.
     """
     hassio = hass.data[DOMAIN]
     return await hassio.get_addon_info(slug)
+
+
+@api_data
+async def async_get_addon_store_info(hass: HomeAssistant, slug: str) -> dict:
+    """Return add-on store info.
+
+    The caller of the function should handle HassioAPIError.
+    """
+    hassio: HassIO = hass.data[DOMAIN]
+    command = f"/store/addons/{slug}"
+    return await hassio.send_command(command, method="get")
 
 
 @bind_hass

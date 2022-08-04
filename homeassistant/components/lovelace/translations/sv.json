@@ -1,7 +1,8 @@
 {
     "system_health": {
         "info": {
-            "dashboards": "Kontrollpaneler"
+            "dashboards": "Kontrollpaneler",
+            "views": "Vyer"
         }
     }
 }

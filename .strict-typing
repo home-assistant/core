@@ -129,6 +129,7 @@ homeassistant.components.homekit.util
 homeassistant.components.homekit_controller
 homeassistant.components.homekit_controller.alarm_control_panel
 homeassistant.components.homekit_controller.button
+homeassistant.components.homekit_controller.config_flow
 homeassistant.components.homekit_controller.const
 homeassistant.components.homekit_controller.lock
 homeassistant.components.homekit_controller.select
@@ -186,6 +187,7 @@ homeassistant.components.nut.*
 homeassistant.components.oncue.*
 homeassistant.components.onewire.*
 homeassistant.components.open_meteo.*
+homeassistant.components.openexchangerates.*
 homeassistant.components.openuv.*
 homeassistant.components.peco.*
 homeassistant.components.overkiz.*

@@ -147,6 +147,8 @@ class VeSyncTunableWhiteLightHA(VeSyncBaseLight, LightEntity):
     """Representation of a VeSync Tunable White Light device."""
 
     _attr_color_mode = ColorMode.COLOR_TEMP
+    _attr_max_mireds = 370  # 1,000,000 divided by 2700 Kelvin = 370 Mireds
+    _attr_min_mireds = 154  # 1,000,000 divided by 6500 Kelvin = 154 Mireds
     _attr_supported_color_modes = {ColorMode.COLOR_TEMP}
 
     @property
@@ -176,16 +178,6 @@ class VeSyncTunableWhiteLightHA(VeSyncBaseLight, LightEntity):
         )
         # ensure value between minimum and maximum Mireds
         return max(self.min_mireds, min(color_temp_value, self.max_mireds))
-
-    @property
-    def min_mireds(self) -> int:
-        """Set device coldest white temperature."""
-        return 154  # 154 Mireds ( 1,000,000 divided by 6500 Kelvin = 154 Mireds)
-
-    @property
-    def max_mireds(self) -> int:
-        """Set device warmest white temperature."""
-        return 370  # 370 Mireds  ( 1,000,000 divided by 2700 Kelvin = 370 Mireds)
 
 
 class VeSyncMulticolorLightHA(VeSyncTunableWhiteLightHA, LightEntity):

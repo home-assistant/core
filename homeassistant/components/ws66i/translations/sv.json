@@ -9,6 +9,9 @@
         },
         "step": {
             "user": {
+                "data": {
+                    "ip_address": "IP-adress"
+                },
                 "title": "Anslut till enheten"
             }
         }

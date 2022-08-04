@@ -1,7 +1,17 @@
 {
     "config": {
         "abort": {
-            "no_matching_entries": "Inga matchande poster hittades, anv\u00e4nd ett annat konto eller ta bort integration med f\u00f6r\u00e5ldrad student.."
+            "all_student_already_configured": "Alla studenter har redan lagts till.",
+            "already_configured": "Studenten har redan lagts till.",
+            "no_matching_entries": "Inga matchande poster hittades, anv\u00e4nd ett annat konto eller ta bort integration med f\u00f6r\u00e5ldrad student..",
+            "reauth_successful": "Reautentisering lyckades"
+        },
+        "error": {
+            "expired_token": "Token som har upph\u00f6rt att g\u00e4lla \u2013 generera en ny token",
+            "invalid_pin": "Ogiltig pin",
+            "invalid_symbol": "Ogiltig symbol",
+            "invalid_token": "Ogiltig token",
+            "unknown": "Ett ok\u00e4nt fel har intr\u00e4ffat"
         },
         "step": {
             "add_next_config_entry": {
