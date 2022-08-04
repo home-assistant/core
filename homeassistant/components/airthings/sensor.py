@@ -69,6 +69,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
     ),
     "voc": SensorEntityDescription(
         key="voc",
+        device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
         name="VOC",
     ),
