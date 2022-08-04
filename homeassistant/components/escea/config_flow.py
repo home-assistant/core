@@ -32,7 +32,7 @@ async def _async_has_devices(hass: HomeAssistant) -> bool:
         hass, DISPATCH_CONTROLLER_DISCOVERED, dispatch_discovered
     )
 
-    disco = await async_start_discovery_service(hass)
+    discovery_service = await async_start_discovery_service(hass)
 
     with suppress(asyncio.TimeoutError):
         async with timeout(TIMEOUT_DISCOVERY):
@@ -40,12 +40,12 @@ async def _async_has_devices(hass: HomeAssistant) -> bool:
 
     remove_handler()
 
-    if not disco.pi_disco.controllers:  # type: ignore[union-attr]
+    if not discovery_service.controllers:
         await async_stop_discovery_service(hass)
         _LOGGER.debug("No controllers found")
         return False
 
-    _LOGGER.debug("Controllers %s", disco.pi_disco.controllers)  # type: ignore[union-attr]
+    _LOGGER.debug("Controllers %s", discovery_service.controllers)
     return True
 
 
