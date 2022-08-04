@@ -1,6 +1,10 @@
 """Support for VOC."""
 from __future__ import annotations
 
+from contextlib import suppress
+
+import voluptuous as vol
+
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
     BinarySensorEntity,
@@ -38,7 +42,10 @@ class VolvoSensor(VolvoEntity, BinarySensorEntity):
         """Initialize the sensor."""
         super().__init__(vin, component, attribute, slug_attr, coordinator)
 
-        self._attr_device_class = DEVICE_CLASSES_SCHEMA(self.instrument.device_class)
+        with suppress(vol.Invalid):
+            self._attr_device_class = DEVICE_CLASSES_SCHEMA(
+                self.instrument.device_class
+            )
 
     @property
     def is_on(self) -> bool | None:
