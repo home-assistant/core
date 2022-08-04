@@ -20,5 +20,11 @@
       "device_not_supported": "This device is not supported",
       "unknown_error": "[%key:common::config_flow::error::unknown%]"
     }
+  },
+  "issues": {
+    "api_disabled": {
+      "title": "Local access to {device_name} is disabled",
+      "description": "Local access to this device is disabled in the HomeWizard Energy App\n\nHome Assistant uses the local API to get data from {device_name}, but the API is disabled at this moment.\n\nPress 'Learn more' to see how to re-enable the API in the HomeWizard Energy app."
+    }
   }
 }
