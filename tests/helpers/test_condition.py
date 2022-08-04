@@ -2836,7 +2836,7 @@ async def test_if_action_after_and_before_during(hass, hass_ws_client, calls):
         },
     )
 
-    
+
 async def test_if_action_before_or_after_during(hass, hass_ws_client, calls):
     """
     Test if action was before sunrise or after sunset.
@@ -2941,7 +2941,7 @@ async def test_if_action_before_or_after_during(hass, hass_ws_client, calls):
             "wanted_time_before": "2015-09-16T13:33:18.342542+00:00",
         },
     )
-    
+
     # now = midnight - 1s local  -> 'before sunrise' | 'after sunset' true
     now = datetime(2015, 9, 17, 6, 59, 59, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.utcnow", return_value=now):
@@ -2957,6 +2957,7 @@ async def test_if_action_before_or_after_during(hass, hass_ws_client, calls):
             "wanted_time_before": "2015-09-16T13:33:18.342542+00:00",
         },
     )
+
 
 async def test_if_action_before_sunrise_no_offset_kotzebue(hass, hass_ws_client, calls):
     """
