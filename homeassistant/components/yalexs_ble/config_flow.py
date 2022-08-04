@@ -169,11 +169,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 await validate_lock(local_name, discovery_info.device, key, slot)
             except InvalidKeyFormat:
-                errors["base"] = "invalid_key_format"
+                errors[CONF_KEY] = "invalid_key_format"
             except InvalidKeyIndex:
-                errors["base"] = "invalid_key_index"
+                errors[CONF_SLOT] = "invalid_key_index"
             except (DisconnectedError, AuthError, ValueError):
-                errors["key"] = "invalid_auth"
+                errors[CONF_KEY] = "invalid_auth"
             except BleakError:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
