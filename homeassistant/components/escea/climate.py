@@ -56,7 +56,7 @@ async def async_setup_entry(
         _LOGGER.debug("Controller UID=%s discovered", ctrl.device_uid)
 
         entity = ControllerEntity(ctrl)
-        async_add_entities([device])
+        async_add_entities([entity])
 
     # create any components not yet created
     for controller in discovery_service.controllers.values():
