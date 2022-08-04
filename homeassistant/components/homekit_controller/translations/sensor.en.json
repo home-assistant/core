@@ -7,6 +7,15 @@
             "none": "None",
             "router_eligible": "Router Eligible End Device",
             "sleepy": "Sleepy End Device"
+        },
+        "homekit_controller__thread_status": {
+            "border_router": "Border Router Capable",
+            "child": "Minimal End Device",
+            "detached": "None",
+            "disabled": "Disabled",
+            "joining": "Sleepy End Device",
+            "leader": "Router Eligible End Device",
+            "router": "Full End Device"
         }
     }
 }
