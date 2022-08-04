@@ -7,7 +7,7 @@ from apyosoenergyapi import OSOEnergy
 from apyosoenergyapi.helper.osoenergy_exceptions import OSOEnergyReauthRequired
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
@@ -30,7 +30,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     osoenergy = OSOEnergy(subscription_key, websession)
 
     osoenergy_config = dict(entry.data)
-    osoenergy_config["options"] = {CONF_SCAN_INTERVAL: 60}
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = osoenergy
