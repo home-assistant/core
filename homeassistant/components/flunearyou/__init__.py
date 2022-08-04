@@ -32,7 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         DOMAIN,
         "integration_removal",
         is_fixable=True,
-        severity=IssueSeverity.CRITICAL,
+        severity=IssueSeverity.ERROR,
         translation_key="integration_removal",
     )
 
