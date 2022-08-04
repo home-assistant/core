@@ -695,3 +695,30 @@ async def test_options(hass: HomeAssistant):
     assert result2["data"] == user_input
     assert result2["data"] == config_entry.options
     assert hass.states.get("light.bulb_rgbcw_ddeeff") is not None
+
+
+@pytest.mark.parametrize(
+    "source, data",
+    [
+        (config_entries.SOURCE_DHCP, DHCP_DISCOVERY),
+        (config_entries.SOURCE_INTEGRATION_DISCOVERY, FLUX_DISCOVERY),
+    ],
+)
+async def test_discovered_can_be_ignored(hass, source, data):
+    """Test we abort if the mac was already ignored."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        unique_id=MAC_ADDRESS,
+        source=config_entries.SOURCE_IGNORE,
+    )
+    config_entry.add_to_hass(hass)
+
+    with _patch_discovery(), _patch_wifibulb():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": source}, data=data
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
