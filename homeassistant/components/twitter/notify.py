@@ -81,7 +81,7 @@ class TwitterNotificationService(BaseNotificationService):
             if not self.hass.config.is_allowed_path(media):
                 _LOGGER.warning("'%s' is not a whitelisted directory", media)
                 return
-        
+
         if targets:
             for target in targets:
                 callback = partial(self.send_message_callback, message, target)
