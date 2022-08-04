@@ -189,7 +189,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Ack that device is slow."""
-        if user_input is not None or not onboarding.async_is_onboarded(self.hass):
+        if user_input is not None:
             return self._async_get_or_create_entry()
 
         self._set_confirm_only()
@@ -260,7 +260,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
         entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         assert entry is not None
 
-        device: DeviceData = self.context["device"]
+        device: DeviceData = entry_data["device"]
         self._discovered_device = device
 
         self._discovery_info = device.last_service_info

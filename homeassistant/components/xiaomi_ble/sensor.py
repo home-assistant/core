@@ -181,25 +181,7 @@ def process_service_info(
         and data.encryption_scheme != EncryptionScheme.NONE
         and not data.bindkey_verified
     ):
-        flow_context = {
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-            "title_placeholders": {"name": entry.title},
-            "unique_id": entry.unique_id,
-            "device": data,
-        }
-
-        for flow in hass.config_entries.flow.async_progress_by_handler(DOMAIN):
-            if flow["context"] == flow_context:
-                break
-        else:
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context=flow_context,
-                    data=entry.data,
-                )
-            )
+        entry.async_start_reauth(hass, data={"device": data})
 
     return sensor_update_to_bluetooth_data_update(update)
 
