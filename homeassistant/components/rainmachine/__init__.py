@@ -30,11 +30,7 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity, UpdateFailed
 from homeassistant.util.network import is_ip_address
 
 from .config_flow import get_client_controller
@@ -49,20 +45,13 @@ from .const import (
     LOGGER,
 )
 from .model import RainMachineEntityDescription
+from .util import RainMachineDataUpdateCoordinator
 
 DEFAULT_SSL = True
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
-
-UPDATE_INTERVALS = {
-    DATA_PROVISION_SETTINGS: timedelta(minutes=1),
-    DATA_PROGRAMS: timedelta(seconds=30),
-    DATA_RESTRICTIONS_CURRENT: timedelta(minutes=1),
-    DATA_RESTRICTIONS_UNIVERSAL: timedelta(minutes=1),
-    DATA_ZONES: timedelta(seconds=15),
-}
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR, Platform.SWITCH]
 
 CONF_CONDITION = "condition"
 CONF_DEWPOINT = "dewpoint"
@@ -134,13 +123,21 @@ SERVICE_RESTRICT_WATERING_SCHEMA = SERVICE_SCHEMA.extend(
     }
 )
 
+COORDINATOR_UPDATE_INTERVAL_MAP = {
+    DATA_PROVISION_SETTINGS: timedelta(minutes=1),
+    DATA_PROGRAMS: timedelta(seconds=30),
+    DATA_RESTRICTIONS_CURRENT: timedelta(minutes=1),
+    DATA_RESTRICTIONS_UNIVERSAL: timedelta(minutes=1),
+    DATA_ZONES: timedelta(seconds=15),
+}
+
 
 @dataclass
 class RainMachineData:
     """Define an object to be stored in `hass.data`."""
 
     controller: Controller
-    coordinators: dict[str, DataUpdateCoordinator]
+    coordinators: dict[str, RainMachineDataUpdateCoordinator]
 
 
 @callback
@@ -233,24 +230,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         return data
 
+    async def async_init_coordinator(
+        coordinator: RainMachineDataUpdateCoordinator,
+    ) -> None:
+        """Initialize a RainMachineDataUpdateCoordinator."""
+        await coordinator.async_initialize()
+        await coordinator.async_config_entry_first_refresh()
+
     controller_init_tasks = []
     coordinators = {}
-
-    for api_category in (
-        DATA_PROGRAMS,
-        DATA_PROVISION_SETTINGS,
-        DATA_RESTRICTIONS_CURRENT,
-        DATA_RESTRICTIONS_UNIVERSAL,
-        DATA_ZONES,
-    ):
-        coordinator = coordinators[api_category] = DataUpdateCoordinator(
+    for api_category, update_interval in COORDINATOR_UPDATE_INTERVAL_MAP.items():
+        coordinator = coordinators[api_category] = RainMachineDataUpdateCoordinator(
             hass,
-            LOGGER,
+            entry=entry,
             name=f'{controller.name} ("{api_category}")',
-            update_interval=UPDATE_INTERVALS[api_category],
+            api_category=api_category,
+            update_interval=update_interval,
             update_method=partial(async_update, api_category),
         )
-        controller_init_tasks.append(coordinator.async_refresh())
+        controller_init_tasks.append(async_init_coordinator(coordinator))
 
     await asyncio.gather(*controller_init_tasks)
 
@@ -439,12 +437,6 @@ class RainMachineEntity(CoordinatorEntity):
         self.update_from_latest_data()
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-        await super().async_added_to_hass()
-        self.update_from_latest_data()
-
     @callback
     def update_from_latest_data(self) -> None:
         """Update the state."""
-        raise NotImplementedError
