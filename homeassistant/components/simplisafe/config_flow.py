@@ -82,8 +82,22 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         errors = {}
-        session = aiohttp_client.async_get_clientsession(self.hass)
 
+        # SimpliSafe authorization codes are 45 characters in length; check for that:
+        if len(user_input[CONF_AUTH_CODE]) != 45:
+            errors = {CONF_AUTH_CODE: "invalid_auth_code_length"}
+        elif user_input[CONF_AUTH_CODE].startswith("="):
+            errors = {CONF_AUTH_CODE: "invalid_auth_code_start"}
+
+        if errors:
+            return self.async_show_form(
+                step_id="user",
+                data_schema=STEP_USER_SCHEMA,
+                errors=errors,
+                description_placeholders={CONF_URL: self._oauth_values.auth_url},
+            )
+
+        session = aiohttp_client.async_get_clientsession(self.hass)
         try:
             simplisafe = await API.async_from_auth(
                 user_input[CONF_AUTH_CODE],
@@ -91,7 +105,7 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 session=session,
             )
         except InvalidCredentialsError:
-            errors = {"base": "invalid_auth"}
+            errors = {CONF_AUTH_CODE: "invalid_auth"}
         except SimplipyError as err:
             LOGGER.error("Unknown error while logging into SimpliSafe: %s", err)
             errors = {"base": "unknown"}
