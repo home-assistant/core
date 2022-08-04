@@ -44,19 +44,19 @@ class DiscoveryServiceListener(Listener):
 
 async def async_start_discovery_service(hass: HomeAssistant) -> DiscoveryService:
     """Set up the pescea internal discovery."""
-    disco = hass.data.get(DATA_DISCOVERY_SERVICE)
-    if disco:
+    discovery_service = hass.data.get(DATA_DISCOVERY_SERVICE)
+    if discovery_service:
         # Already started
-        return disco
+        return discovery_service
 
     # discovery local services
-    disco = DiscoveryService(hass)
-    hass.data[DATA_DISCOVERY_SERVICE] = disco
+    listener = DiscoveryServiceListener(hass)
+    discovery_service = pescea_discovery_service(listener)
+    hass.data[DATA_DISCOVERY_SERVICE] = discovery_service
 
-    disco.pi_disco = discovery_service(disco)
-    await disco.pi_disco.start_discovery()
+    await discovery_service.start_discovery()
 
-    return disco
+    return discovery_service
 
 
 async def async_stop_discovery_service(hass: HomeAssistant) -> None:
