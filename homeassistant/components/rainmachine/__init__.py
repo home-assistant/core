@@ -53,17 +53,13 @@ DEFAULT_SSL = True
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR, Platform.SWITCH, Platform.UPDATE]
-
-UPDATE_INTERVALS = {
-    DATA_API_VERSIONS: timedelta(minutes=1),
-    DATA_MACHINE_FIRMWARE_UPDATE_STATUS: timedelta(seconds=15),
-    DATA_PROGRAMS: timedelta(seconds=30),
-    DATA_PROVISION_SETTINGS: timedelta(minutes=1),
-    DATA_RESTRICTIONS_CURRENT: timedelta(minutes=1),
-    DATA_RESTRICTIONS_UNIVERSAL: timedelta(minutes=1),
-    DATA_ZONES: timedelta(seconds=15),
-}
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.UPDATE,
+]
 
 CONF_CONDITION = "condition"
 CONF_DEWPOINT = "dewpoint"
@@ -136,8 +132,10 @@ SERVICE_RESTRICT_WATERING_SCHEMA = SERVICE_SCHEMA.extend(
 )
 
 COORDINATOR_UPDATE_INTERVAL_MAP = {
-    DATA_PROVISION_SETTINGS: timedelta(minutes=1),
+    DATA_API_VERSIONS: timedelta(minutes=1),
+    DATA_MACHINE_FIRMWARE_UPDATE_STATUS: timedelta(seconds=15),
     DATA_PROGRAMS: timedelta(seconds=30),
+    DATA_PROVISION_SETTINGS: timedelta(minutes=1),
     DATA_RESTRICTIONS_CURRENT: timedelta(minutes=1),
     DATA_RESTRICTIONS_UNIVERSAL: timedelta(minutes=1),
     DATA_ZONES: timedelta(seconds=15),
