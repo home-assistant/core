@@ -1,75 +1,79 @@
 """Support for Android IP Webcam sensors."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import StateType
 
-from . import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_SENSORS,
-    DATA_IP_WEBCAM,
-    ICON_MAP,
-    KEY_MAP,
-    AndroidIPCamEntity,
-)
+from . import AndroidIPCamBaseEntity, AndroidIPCamDataUpdateCoordinator
+from .const import DOMAIN, SENSOR_TYPES
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the IP Webcam Sensor."""
-    if discovery_info is None:
-        return
+    """Set up the IP Webcam sensors from config entry."""
 
-    host = discovery_info[CONF_HOST]
-    name = discovery_info[CONF_NAME]
-    sensors = discovery_info[CONF_SENSORS]
-    ipcam = hass.data[DATA_IP_WEBCAM][host]
+    coordinator: AndroidIPCamDataUpdateCoordinator = hass.data[DOMAIN][
+        config_entry.entry_id
+    ]
+    sensor_types = [
+        sensor
+        for sensor in SENSOR_TYPES
+        if sensor.key
+        in coordinator.ipcam.enabled_sensors
+        + ["audio_connections", "video_connections"]
+    ]
+    async_add_entities(
+        [IPWebcamSensor(coordinator, description) for description in sensor_types]
+    )
 
-    all_sensors = []
 
-    for sensor in sensors:
-        all_sensors.append(IPWebcamSensor(name, host, ipcam, sensor))
-
-    async_add_entities(all_sensors, True)
-
-
-class IPWebcamSensor(AndroidIPCamEntity, SensorEntity):
+class IPWebcamSensor(AndroidIPCamBaseEntity, SensorEntity):
     """Representation of a IP Webcam sensor."""
 
-    def __init__(self, name, host, ipcam, sensor):
-        """Initialize the sensor."""
-        super().__init__(host, ipcam)
+    _attr_has_entity_name = True
 
-        self._sensor = sensor
-        self._mapped_name = KEY_MAP.get(self._sensor, self._sensor)
-        self._attr_name = f"{name} {self._mapped_name}"
+    def __init__(
+        self,
+        coordinator: AndroidIPCamDataUpdateCoordinator,
+        description: SensorEntityDescription,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}-{description.key}"
         self._attr_native_value = None
         self._attr_native_unit_of_measurement = None
-
-    async def async_update(self):
-        """Retrieve latest state."""
-        if self._sensor in ("audio_connections", "video_connections"):
-            if not self._ipcam.status_data:
-                return
-            self._attr_native_value = self._ipcam.status_data.get(self._sensor)
-            self._attr_native_unit_of_measurement = "Connections"
-        else:
-            (
-                self._attr_native_value,
-                self._attr_native_unit_of_measurement,
-            ) = self._ipcam.export_sensor(self._sensor)
+        self.entity_description = description
 
     @property
-    def icon(self):
+    def native_value(self) -> StateType:
+        """Return sensor native value."""
+        if self.entity_description.key in ("audio_connections", "video_connections"):
+            return self._ipcam.status_data.get(self.entity_description.key)
+
+        value, _ = self._ipcam.export_sensor(self.entity_description.key)
+        return value
+
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        """Return sensor native unit of measurement."""
+        _, unit = self._ipcam.export_sensor(self.entity_description.key)
+        return unit
+
+    @property
+    def icon(self) -> str | None:
         """Return the icon for the sensor."""
-        if self._sensor == "battery_level" and self._attr_native_value is not None:
-            return icon_for_battery_level(int(self._attr_native_value))
-        return ICON_MAP.get(self._sensor, "mdi:eye")
+        if self.entity_description.key == "battery_level":
+            battery_level = (
+                int(self.native_value)
+                if self.native_value is not None
+                else self.native_value
+            )
+            return icon_for_battery_level(battery_level)
+        return self.entity_description.icon

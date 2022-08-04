@@ -1,88 +1,78 @@
 """Support for Android IP Webcam settings."""
 from __future__ import annotations
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_SWITCHES,
-    DATA_IP_WEBCAM,
-    ICON_MAP,
-    KEY_MAP,
-    AndroidIPCamEntity,
-)
+from . import AndroidIPCamBaseEntity, AndroidIPCamDataUpdateCoordinator
+from .const import DOMAIN, SWITCH_TYPES
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the IP Webcam switch platform."""
-    if discovery_info is None:
-        return
+    """Set up the IP Webcam switches from config entry."""
 
-    host = discovery_info[CONF_HOST]
-    name = discovery_info[CONF_NAME]
-    switches = discovery_info[CONF_SWITCHES]
-    ipcam = hass.data[DATA_IP_WEBCAM][host]
+    coordinator: AndroidIPCamDataUpdateCoordinator = hass.data[DOMAIN][
+        config_entry.entry_id
+    ]
+    switch_types = [
+        switch
+        for switch in SWITCH_TYPES
+        if switch.key in coordinator.ipcam.enabled_settings
+    ]
+    async_add_entities(
+        [
+            IPWebcamSettingSwitch(coordinator, description)
+            for description in switch_types
+        ]
+    )
 
-    all_switches = []
 
-    for setting in switches:
-        all_switches.append(IPWebcamSettingsSwitch(name, host, ipcam, setting))
+class IPWebcamSettingSwitch(AndroidIPCamBaseEntity, SwitchEntity):
+    """Representation of a IP Webcam setting."""
 
-    async_add_entities(all_switches, True)
+    _attr_has_entity_name = True
 
+    def __init__(
+        self,
+        coordinator: AndroidIPCamDataUpdateCoordinator,
+        description: SwitchEntityDescription,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}-{description.key}"
+        self.entity_description = description
 
-class IPWebcamSettingsSwitch(AndroidIPCamEntity, SwitchEntity):
-    """An abstract class for an IP Webcam setting."""
-
-    def __init__(self, name, host, ipcam, setting):
-        """Initialize the settings switch."""
-        super().__init__(host, ipcam)
-
-        self._setting = setting
-        self._mapped_name = KEY_MAP.get(self._setting, self._setting)
-        self._attr_name = f"{name} {self._mapped_name}"
-        self._attr_is_on = False
-
-    async def async_update(self):
-        """Get the updated status of the switch."""
-        self._attr_is_on = bool(self._ipcam.current_settings.get(self._setting))
+    @property
+    def is_on(self) -> bool:
+        """Return if settings is on or off."""
+        return bool(self._ipcam.current_settings.get(self.entity_description.key))
 
     async def async_turn_on(self, **kwargs):
         """Turn device on."""
-        if self._setting == "torch":
+        if self.entity_description.key == "torch":
             await self._ipcam.torch(activate=True)
-        elif self._setting == "focus":
+        elif self.entity_description.key == "focus":
             await self._ipcam.focus(activate=True)
-        elif self._setting == "video_recording":
+        elif self.entity_description.key == "video_recording":
             await self._ipcam.record(record=True)
         else:
-            await self._ipcam.change_setting(self._setting, True)
-        self._attr_is_on = True
-        self.async_write_ha_state()
+            await self._ipcam.change_setting(self.entity_description.key, True)
+        await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs):
         """Turn device off."""
-        if self._setting == "torch":
+        if self.entity_description.key == "torch":
             await self._ipcam.torch(activate=False)
-        elif self._setting == "focus":
+        elif self.entity_description.key == "focus":
             await self._ipcam.focus(activate=False)
-        elif self._setting == "video_recording":
+        elif self.entity_description.key == "video_recording":
             await self._ipcam.record(record=False)
         else:
-            await self._ipcam.change_setting(self._setting, False)
-        self._attr_is_on = False
-        self.async_write_ha_state()
-
-    @property
-    def icon(self):
-        """Return the icon for the switch."""
-        return ICON_MAP.get(self._setting, "mdi:flash")
+            await self._ipcam.change_setting(self.entity_description.key, False)
+        await self.coordinator.async_request_refresh()
