@@ -129,12 +129,15 @@ async def _async_setup_entity(
         async_create_issue(
             hass,
             "mqtt",
-            "replaced",
+            "encoding_b64",
             breaks_in_ha_version="2022.11.0",
-            is_fixable=True,
+            is_fixable=False,
             severity=IssueSeverity.WARNING,
-            translation_key="replaced",
-            learn_more_url="https://www.home-assistant.io/integrations/mqtt.camera/",
+            translation_key="encoding_b64",
+            learn_more_url="https://www.home-assistant.io/integrations/camera.mqtt/",
+        )
+        _LOGGER.warning(
+            "Using the `encoding` parameter to set image encoding has been deprecated, use `image_encoding` instead"
         )
 
     async_add_entities([MqttCamera(hass, config, config_entry, discovery_data)])

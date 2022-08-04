@@ -1,4 +1,10 @@
 {
+  "issues": {
+    "encoding_b64": {
+      "title": "Configuration issue for MQTT camera",
+      "description": "The `encoding` option was configured to set the image encoding to Base64. This is deprecated, use the `image_encoding` option instead."
+    }
+  },
   "config": {
     "step": {
       "broker": {
