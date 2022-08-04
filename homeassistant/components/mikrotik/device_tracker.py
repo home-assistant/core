@@ -116,7 +116,7 @@ class MikrotikDataUpdateCoordinatorTracker(
         return self.device.mac
 
     @property
-    def ip_address(self) -> str:
+    def ip_address(self) -> str | None:
         """Return the mac address of the client."""
         return self.device.ip_address
 
