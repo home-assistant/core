@@ -63,6 +63,7 @@ async def async_setup_platform(
         "deprecated_yaml",
         breaks_in_ha_version="2022.10.0",
         is_fixable=False,
+        is_persistent=False,
         severity=IssueSeverity.WARNING,
         translation_key="deprecated_yaml",
     )
