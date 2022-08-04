@@ -11,10 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_BATTERY_CHARGING
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     ATTR_ADDRESS,
@@ -31,6 +28,7 @@ from .const import (
     LOGGER,
     SHOW_DRIVING,
 )
+from .coordinator import Life360DataUpdateCoordinator, Life360Member
 
 _LOC_ATTRS = (
     "address",
@@ -95,22 +93,26 @@ async def async_setup_entry(
     entry.async_on_unload(coordinator.async_add_listener(process_data))
 
 
-class Life360DeviceTracker(CoordinatorEntity, TrackerEntity):
+class Life360DeviceTracker(
+    CoordinatorEntity[Life360DataUpdateCoordinator], TrackerEntity
+):
     """Life360 Device Tracker."""
 
     _attr_attribution = ATTRIBUTION
+    _attr_unique_id: str
 
-    def __init__(self, coordinator: DataUpdateCoordinator, member_id: str) -> None:
+    def __init__(
+        self, coordinator: Life360DataUpdateCoordinator, member_id: str
+    ) -> None:
         """Initialize Life360 Entity."""
         super().__init__(coordinator)
         self._attr_unique_id = member_id
 
-        self._data = coordinator.data.members[self.unique_id]
+        self._data: Life360Member | None = coordinator.data.members[member_id]
+        self._prev_data = self._data
 
         self._attr_name = self._data.name
         self._attr_entity_picture = self._data.entity_picture
-
-        self._prev_data = self._data
 
     @property
     def _options(self) -> Mapping[str, Any]:
@@ -120,16 +122,15 @@ class Life360DeviceTracker(CoordinatorEntity, TrackerEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        # Get a shortcut to this member's data. Can't guarantee it's the same dict every
-        # update, or that there is even data for this member every update, so need to
-        # update shortcut each time.
-        self._data = self.coordinator.data.members.get(self.unique_id)
-
+        # Get a shortcut to this Member's data. This needs to be updated each time since
+        # coordinator provides a new Life360Member object each time, and it's possible
+        # that there is no data for this Member on some updates.
         if self.available:
-            # If nothing important has changed, then skip the update altogether.
-            if self._data == self._prev_data:
-                return
+            self._data = self.coordinator.data.members.get(self._attr_unique_id)
+        else:
+            self._data = None
 
+        if self._data:
             # Check if we should effectively throw out new location data.
             last_seen = self._data.last_seen
             prev_seen = self._prev_data.last_seen
@@ -169,19 +170,11 @@ class Life360DeviceTracker(CoordinatorEntity, TrackerEntity):
         return False
 
     @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        # Guard against member not being in last update for some reason.
-        return super().available and self._data is not None
-
-    @property
     def entity_picture(self) -> str | None:
         """Return the entity picture to use in the frontend, if any."""
-        if self.available:
+        if self._data:
             self._attr_entity_picture = self._data.entity_picture
         return super().entity_picture
-
-    # All of the following will only be called if self.available is True.
 
     @property
     def battery_level(self) -> int | None:
@@ -189,6 +182,8 @@ class Life360DeviceTracker(CoordinatorEntity, TrackerEntity):
 
         Percentage from 0-100.
         """
+        if not self._data:
+            return None
         return self._data.battery_level
 
     @property
@@ -202,11 +197,15 @@ class Life360DeviceTracker(CoordinatorEntity, TrackerEntity):
 
         Value in meters.
         """
+        if not self._data:
+            return 0
         return self._data.gps_accuracy
 
     @property
     def driving(self) -> bool:
         """Return if driving."""
+        if not self._data:
+            return False
         if (driving_speed := self._options.get(CONF_DRIVING_SPEED)) is not None:
             if self._data.speed >= driving_speed:
                 return True
@@ -222,23 +221,38 @@ class Life360DeviceTracker(CoordinatorEntity, TrackerEntity):
     @property
     def latitude(self) -> float | None:
         """Return latitude value of the device."""
+        if not self._data:
+            return None
         return self._data.latitude
 
     @property
     def longitude(self) -> float | None:
         """Return longitude value of the device."""
+        if not self._data:
+            return None
         return self._data.longitude
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return entity specific state attributes."""
-        attrs = {}
-        attrs[ATTR_ADDRESS] = self._data.address
-        attrs[ATTR_AT_LOC_SINCE] = self._data.at_loc_since
-        attrs[ATTR_BATTERY_CHARGING] = self._data.battery_charging
-        attrs[ATTR_DRIVING] = self.driving
-        attrs[ATTR_LAST_SEEN] = self._data.last_seen
-        attrs[ATTR_PLACE] = self._data.place
-        attrs[ATTR_SPEED] = self._data.speed
-        attrs[ATTR_WIFI_ON] = self._data.wifi_on
-        return attrs
+        if not self._data:
+            return {
+                ATTR_ADDRESS: None,
+                ATTR_AT_LOC_SINCE: None,
+                ATTR_BATTERY_CHARGING: None,
+                ATTR_DRIVING: None,
+                ATTR_LAST_SEEN: None,
+                ATTR_PLACE: None,
+                ATTR_SPEED: None,
+                ATTR_WIFI_ON: None,
+            }
+        return {
+            ATTR_ADDRESS: self._data.address,
+            ATTR_AT_LOC_SINCE: self._data.at_loc_since,
+            ATTR_BATTERY_CHARGING: self._data.battery_charging,
+            ATTR_DRIVING: self.driving,
+            ATTR_LAST_SEEN: self._data.last_seen,
+            ATTR_PLACE: self._data.place,
+            ATTR_SPEED: self._data.speed,
+            ATTR_WIFI_ON: self._data.wifi_on,
+        }
