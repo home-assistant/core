@@ -1,36 +1,27 @@
 """Support for openexchangerates.org exchange rates service."""
 from __future__ import annotations
 
-from datetime import timedelta
-from http import HTTPStatus
-import logging
+from dataclasses import dataclass, field
 
-import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    CONF_API_KEY,
-    CONF_BASE,
-    CONF_NAME,
-    CONF_QUOTE,
-)
+from homeassistant.const import CONF_API_KEY, CONF_BASE, CONF_NAME, CONF_QUOTE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import Throttle
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-_LOGGER = logging.getLogger(__name__)
-_RESOURCE = "https://openexchangerates.org/api/latest.json"
+from .const import BASE_UPDATE_INTERVAL, DOMAIN, LOGGER
+from .coordinator import OpenexchangeratesCoordinator
 
 ATTRIBUTION = "Data provided by openexchangerates.org"
 
 DEFAULT_BASE = "USD"
 DEFAULT_NAME = "Exchange Rate Sensor"
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(hours=2)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -42,83 +33,96 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+@dataclass
+class DomainData:
+    """Data structure to hold data for this domain."""
+
+    coordinators: dict[tuple[str, str], OpenexchangeratesCoordinator] = field(
+        default_factory=dict, init=False
+    )
+
+
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Open Exchange Rates sensor."""
-    name = config.get(CONF_NAME)
-    api_key = config.get(CONF_API_KEY)
-    base = config.get(CONF_BASE)
-    quote = config.get(CONF_QUOTE)
+    name: str = config[CONF_NAME]
+    api_key: str = config[CONF_API_KEY]
+    base: str = config[CONF_BASE]
+    quote: str = config[CONF_QUOTE]
 
-    parameters = {"base": base, "app_id": api_key}
+    integration_data: DomainData = hass.data.setdefault(DOMAIN, DomainData())
+    coordinators = integration_data.coordinators
 
-    rest = OpenexchangeratesData(_RESOURCE, parameters, quote)
-    response = requests.get(_RESOURCE, params=parameters, timeout=10)
+    if (api_key, base) not in coordinators:
+        # Create one coordinator per base currency per API key.
+        update_interval = BASE_UPDATE_INTERVAL * (
+            len(
+                {
+                    coordinator_base
+                    for coordinator_api_key, coordinator_base in coordinators
+                    if coordinator_api_key == api_key
+                }
+            )
+            + 1
+        )
+        coordinator = coordinators[api_key, base] = OpenexchangeratesCoordinator(
+            hass,
+            async_get_clientsession(hass),
+            api_key,
+            base,
+            update_interval,
+        )
 
-    if response.status_code != HTTPStatus.OK:
-        _LOGGER.error("Check your OpenExchangeRates API key")
-        return
+        LOGGER.debug(
+            "Coordinator update interval set to: %s", coordinator.update_interval
+        )
 
-    rest.update()
-    add_entities([OpenexchangeratesSensor(rest, name, quote)], True)
+        # Set new interval on all coordinators for this API key.
+        for (
+            coordinator_api_key,
+            _,
+        ), coordinator in coordinators.items():
+            if coordinator_api_key == api_key:
+                coordinator.update_interval = update_interval
+
+    coordinator = coordinators[api_key, base]
+    async with coordinator.setup_lock:
+        # We need to make sure that the coordinator data is ready.
+        if not coordinator.data:
+            await coordinator.async_refresh()
+
+    if not coordinator.last_update_success:
+        raise PlatformNotReady
+
+    async_add_entities([OpenexchangeratesSensor(coordinator, name, quote)])
 
 
-class OpenexchangeratesSensor(SensorEntity):
+class OpenexchangeratesSensor(
+    CoordinatorEntity[OpenexchangeratesCoordinator], SensorEntity
+):
     """Representation of an Open Exchange Rates sensor."""
 
-    def __init__(self, rest, name, quote):
+    _attr_attribution = ATTRIBUTION
+
+    def __init__(
+        self, coordinator: OpenexchangeratesCoordinator, name: str, quote: str
+    ) -> None:
         """Initialize the sensor."""
-        self.rest = rest
-        self._name = name
+        super().__init__(coordinator)
+        self._attr_name = name
         self._quote = quote
-        self._state = None
+        self._attr_native_unit_of_measurement = quote
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def native_value(self):
+    def native_value(self) -> float:
         """Return the state of the sensor."""
-        return self._state
+        return round(self.coordinator.data.rates[self._quote], 4)
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, float]:
         """Return other attributes of the sensor."""
-        attr = self.rest.data
-        attr[ATTR_ATTRIBUTION] = ATTRIBUTION
-
-        return attr
-
-    def update(self):
-        """Update current conditions."""
-        self.rest.update()
-        value = self.rest.data
-        self._state = round(value[str(self._quote)], 4)
-
-
-class OpenexchangeratesData:
-    """Get data from Openexchangerates.org."""
-
-    def __init__(self, resource, parameters, quote):
-        """Initialize the data object."""
-        self._resource = resource
-        self._parameters = parameters
-        self._quote = quote
-        self.data = None
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
-        """Get the latest data from openexchangerates.org."""
-        try:
-            result = requests.get(self._resource, params=self._parameters, timeout=10)
-            self.data = result.json()["rates"]
-        except requests.exceptions.HTTPError:
-            _LOGGER.error("Check the Openexchangerates API key")
-            self.data = None
-            return False
+        return self.coordinator.data.rates

@@ -1,5 +1,10 @@
 {
     "config": {
+        "error": {
+            "already_configured": "Konto har redan konfigurerats",
+            "cannot_connect": "Det gick inte att ansluta.",
+            "invalid_auth": "Ogiltig autentisering"
+        },
         "step": {
             "reauth": {
                 "data": {

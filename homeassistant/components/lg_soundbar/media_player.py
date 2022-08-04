@@ -47,7 +47,6 @@ class LGDevice(MediaPlayerEntity):
         self._port = port
         self._attr_unique_id = unique_id
 
-        self._name = None
         self._volume = 0
         self._volume_min = 0
         self._volume_max = 0
@@ -94,8 +93,6 @@ class LGDevice(MediaPlayerEntity):
         elif response["msg"] == "SPK_LIST_VIEW_INFO":
             if "i_vol" in data:
                 self._volume = data["i_vol"]
-            if "s_user_name" in data:
-                self._name = data["s_user_name"]
             if "i_vol_min" in data:
                 self._volume_min = data["i_vol_min"]
             if "i_vol_max" in data:

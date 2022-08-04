@@ -252,7 +252,13 @@ async def test_if_entry_control_notification_fires(
             "event": "notification",
             "nodeId": node.node_id,
             "ccId": 111,
-            "args": {"eventType": 5, "dataType": 2, "eventData": "555"},
+            "args": {
+                "eventType": 5,
+                "eventTypeLabel": "label 1",
+                "dataType": 2,
+                "dataTypeLabel": "label 2",
+                "eventData": "555",
+            },
         },
     )
     node.receive_event(event)

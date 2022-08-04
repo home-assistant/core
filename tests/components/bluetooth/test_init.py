@@ -1,9 +1,11 @@
 """Tests for the Bluetooth integration."""
+import asyncio
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
 from bleak import BleakError
 from bleak.backends.scanner import AdvertisementData, BLEDevice
+from dbus_next import InvalidMessageError
 import pytest
 
 from homeassistant.components import bluetooth
@@ -11,7 +13,9 @@ from homeassistant.components.bluetooth import (
     SOURCE_LOCAL,
     UNAVAILABLE_TRACK_SECONDS,
     BluetoothChange,
+    BluetoothScanningMode,
     BluetoothServiceInfo,
+    async_process_advertisements,
     async_track_unavailable,
     models,
 )
@@ -21,7 +25,7 @@ from homeassistant.components.bluetooth.const import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -93,6 +97,33 @@ async def test_setup_and_stop_broken_bluetooth(hass, caplog):
     await hass.async_block_till_done()
     assert "Failed to start Bluetooth" in caplog.text
     assert len(bluetooth.async_discovered_service_info(hass)) == 0
+
+
+async def test_setup_and_stop_broken_bluetooth_hanging(hass, caplog):
+    """Test we fail gracefully when bluetooth/dbus is hanging."""
+    mock_bt = []
+
+    async def _mock_hang():
+        await asyncio.sleep(1)
+
+    with patch.object(bluetooth, "START_TIMEOUT", 0), patch(
+        "homeassistant.components.bluetooth.HaBleakScanner.async_setup"
+    ), patch(
+        "homeassistant.components.bluetooth.HaBleakScanner.start",
+        side_effect=_mock_hang,
+    ), patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
+    ):
+        assert await async_setup_component(
+            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
+        )
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    assert "Timed out starting Bluetooth" in caplog.text
 
 
 async def test_setup_and_retry_adapter_not_yet_available(hass, caplog):
@@ -646,6 +677,7 @@ async def test_register_callbacks(hass, mock_bleak_scanner_start, enable_bluetoo
             hass,
             _fake_subscriber,
             {"service_uuids": {"cba20d00-224d-11e6-9fb8-0002a5d5c51b"}},
+            BluetoothScanningMode.ACTIVE,
         )
 
         assert len(mock_bleak_scanner_start.mock_calls) == 1
@@ -731,6 +763,7 @@ async def test_register_callback_by_address(
             hass,
             _fake_subscriber,
             {"address": "44:44:33:11:23:45"},
+            BluetoothScanningMode.ACTIVE,
         )
 
         assert len(mock_bleak_scanner_start.mock_calls) == 1
@@ -770,6 +803,7 @@ async def test_register_callback_by_address(
             hass,
             _fake_subscriber,
             {"address": "44:44:33:11:23:45"},
+            BluetoothScanningMode.ACTIVE,
         )
         cancel()
 
@@ -779,6 +813,7 @@ async def test_register_callback_by_address(
             hass,
             _fake_subscriber,
             {"address": "44:44:33:11:23:45"},
+            BluetoothScanningMode.ACTIVE,
         )
         cancel()
 
@@ -789,6 +824,105 @@ async def test_register_callback_by_address(
         assert service_info.name == "wohand"
         assert service_info.manufacturer == "Nordic Semiconductor ASA"
         assert service_info.manufacturer_id == 89
+
+
+async def test_process_advertisements_bail_on_good_advertisement(
+    hass: HomeAssistant, mock_bleak_scanner_start, enable_bluetooth
+):
+    """Test as soon as we see a 'good' advertisement we return it."""
+    done = asyncio.Future()
+
+    def _callback(service_info: BluetoothServiceInfo) -> bool:
+        done.set_result(None)
+        return len(service_info.service_data) > 0
+
+    handle = hass.async_create_task(
+        async_process_advertisements(
+            hass,
+            _callback,
+            {"address": "aa:44:33:11:23:45"},
+            BluetoothScanningMode.ACTIVE,
+            5,
+        )
+    )
+
+    while not done.done():
+        device = BLEDevice("aa:44:33:11:23:45", "wohand")
+        adv = AdvertisementData(
+            local_name="wohand",
+            service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51a"],
+            manufacturer_data={89: b"\xd8.\xad\xcd\r\x85"},
+            service_data={"00000d00-0000-1000-8000-00805f9b34fa": b"H\x10c"},
+        )
+
+        _get_underlying_scanner()._callback(device, adv)
+        _get_underlying_scanner()._callback(device, adv)
+        _get_underlying_scanner()._callback(device, adv)
+
+        await asyncio.sleep(0)
+
+    result = await handle
+    assert result.name == "wohand"
+
+
+async def test_process_advertisements_ignore_bad_advertisement(
+    hass: HomeAssistant, mock_bleak_scanner_start, enable_bluetooth
+):
+    """Check that we ignore bad advertisements."""
+    done = asyncio.Event()
+    return_value = asyncio.Event()
+
+    device = BLEDevice("aa:44:33:11:23:45", "wohand")
+    adv = AdvertisementData(
+        local_name="wohand",
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51a"],
+        manufacturer_data={89: b"\xd8.\xad\xcd\r\x85"},
+        service_data={"00000d00-0000-1000-8000-00805f9b34fa": b""},
+    )
+
+    def _callback(service_info: BluetoothServiceInfo) -> bool:
+        done.set()
+        return return_value.is_set()
+
+    handle = hass.async_create_task(
+        async_process_advertisements(
+            hass,
+            _callback,
+            {"address": "aa:44:33:11:23:45"},
+            BluetoothScanningMode.ACTIVE,
+            5,
+        )
+    )
+
+    # The goal of this loop is to make sure that async_process_advertisements sees at least one
+    # callback that returns False
+    while not done.is_set():
+        _get_underlying_scanner()._callback(device, adv)
+        await asyncio.sleep(0)
+
+    # Set the return value and mutate the advertisement
+    # Check that scan ends and correct advertisement data is returned
+    return_value.set()
+    adv.service_data["00000d00-0000-1000-8000-00805f9b34fa"] = b"H\x10c"
+    _get_underlying_scanner()._callback(device, adv)
+    await asyncio.sleep(0)
+
+    result = await handle
+    assert result.service_data["00000d00-0000-1000-8000-00805f9b34fa"] == b"H\x10c"
+
+
+async def test_process_advertisements_timeout(
+    hass, mock_bleak_scanner_start, enable_bluetooth
+):
+    """Test we timeout if no advertisements at all."""
+
+    def _callback(service_info: BluetoothServiceInfo) -> bool:
+        return False
+
+    with pytest.raises(asyncio.TimeoutError):
+        await async_process_advertisements(
+            hass, _callback, {}, BluetoothScanningMode.ACTIVE, 0
+        )
 
 
 async def test_wrapped_instance_with_filter(
@@ -1279,3 +1413,112 @@ async def test_changing_the_adapter_at_runtime(hass):
 
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         await hass.async_block_till_done()
+
+
+async def test_dbus_socket_missing_in_container(hass, caplog):
+    """Test we handle dbus being missing in the container."""
+
+    with patch(
+        "homeassistant.components.bluetooth.is_docker_env", return_value=True
+    ), patch("homeassistant.components.bluetooth.HaBleakScanner.async_setup"), patch(
+        "homeassistant.components.bluetooth.HaBleakScanner.start",
+        side_effect=FileNotFoundError,
+    ):
+        assert await async_setup_component(
+            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
+        )
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    assert "/run/dbus" in caplog.text
+    assert "docker" in caplog.text
+
+
+async def test_dbus_socket_missing(hass, caplog):
+    """Test we handle dbus being missing."""
+
+    with patch(
+        "homeassistant.components.bluetooth.is_docker_env", return_value=False
+    ), patch("homeassistant.components.bluetooth.HaBleakScanner.async_setup"), patch(
+        "homeassistant.components.bluetooth.HaBleakScanner.start",
+        side_effect=FileNotFoundError,
+    ):
+        assert await async_setup_component(
+            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
+        )
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    assert "DBus" in caplog.text
+    assert "docker" not in caplog.text
+
+
+async def test_dbus_broken_pipe_in_container(hass, caplog):
+    """Test we handle dbus broken pipe in the container."""
+
+    with patch(
+        "homeassistant.components.bluetooth.is_docker_env", return_value=True
+    ), patch("homeassistant.components.bluetooth.HaBleakScanner.async_setup"), patch(
+        "homeassistant.components.bluetooth.HaBleakScanner.start",
+        side_effect=BrokenPipeError,
+    ):
+        assert await async_setup_component(
+            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
+        )
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    assert "dbus" in caplog.text
+    assert "restarting" in caplog.text
+    assert "container" in caplog.text
+
+
+async def test_dbus_broken_pipe(hass, caplog):
+    """Test we handle dbus broken pipe."""
+
+    with patch(
+        "homeassistant.components.bluetooth.is_docker_env", return_value=False
+    ), patch("homeassistant.components.bluetooth.HaBleakScanner.async_setup"), patch(
+        "homeassistant.components.bluetooth.HaBleakScanner.start",
+        side_effect=BrokenPipeError,
+    ):
+        assert await async_setup_component(
+            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
+        )
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    assert "DBus" in caplog.text
+    assert "restarting" in caplog.text
+    assert "container" not in caplog.text
+
+
+async def test_invalid_dbus_message(hass, caplog):
+    """Test we handle invalid dbus message."""
+
+    with patch("homeassistant.components.bluetooth.HaBleakScanner.async_setup"), patch(
+        "homeassistant.components.bluetooth.HaBleakScanner.start",
+        side_effect=InvalidMessageError,
+    ):
+        assert await async_setup_component(
+            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
+        )
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    assert "dbus" in caplog.text

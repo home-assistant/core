@@ -16,6 +16,7 @@ from homeassistant.components.bluetooth import (
     DOMAIN,
     UNAVAILABLE_TRACK_SECONDS,
     BluetoothChange,
+    BluetoothScanningMode,
 )
 from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothDataProcessor,
@@ -90,12 +91,12 @@ async def test_basic_usage(hass, mock_bleak_scanner_start):
         return GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE
 
     coordinator = PassiveBluetoothProcessorCoordinator(
-        hass, _LOGGER, "aa:bb:cc:dd:ee:ff"
+        hass, _LOGGER, "aa:bb:cc:dd:ee:ff", BluetoothScanningMode.ACTIVE
     )
     assert coordinator.available is False  # no data yet
     saved_callback = None
 
-    def _async_register_callback(_hass, _callback, _matcher):
+    def _async_register_callback(_hass, _callback, _matcher, _mode):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None
@@ -192,12 +193,12 @@ async def test_unavailable_after_no_data(hass, mock_bleak_scanner_start):
         return GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE
 
     coordinator = PassiveBluetoothProcessorCoordinator(
-        hass, _LOGGER, "aa:bb:cc:dd:ee:ff"
+        hass, _LOGGER, "aa:bb:cc:dd:ee:ff", BluetoothScanningMode.ACTIVE
     )
     assert coordinator.available is False  # no data yet
     saved_callback = None
 
-    def _async_register_callback(_hass, _callback, _matcher):
+    def _async_register_callback(_hass, _callback, _matcher, _mode):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None
@@ -277,12 +278,12 @@ async def test_no_updates_once_stopping(hass, mock_bleak_scanner_start):
         return GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE
 
     coordinator = PassiveBluetoothProcessorCoordinator(
-        hass, _LOGGER, "aa:bb:cc:dd:ee:ff"
+        hass, _LOGGER, "aa:bb:cc:dd:ee:ff", BluetoothScanningMode.ACTIVE
     )
     assert coordinator.available is False  # no data yet
     saved_callback = None
 
-    def _async_register_callback(_hass, _callback, _matcher):
+    def _async_register_callback(_hass, _callback, _matcher, _mode):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None
@@ -336,12 +337,12 @@ async def test_exception_from_update_method(hass, caplog, mock_bleak_scanner_sta
         return GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE
 
     coordinator = PassiveBluetoothProcessorCoordinator(
-        hass, _LOGGER, "aa:bb:cc:dd:ee:ff"
+        hass, _LOGGER, "aa:bb:cc:dd:ee:ff", BluetoothScanningMode.ACTIVE
     )
     assert coordinator.available is False  # no data yet
     saved_callback = None
 
-    def _async_register_callback(_hass, _callback, _matcher):
+    def _async_register_callback(_hass, _callback, _matcher, _mode):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None
@@ -389,12 +390,12 @@ async def test_bad_data_from_update_method(hass, mock_bleak_scanner_start):
         return GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE
 
     coordinator = PassiveBluetoothProcessorCoordinator(
-        hass, _LOGGER, "aa:bb:cc:dd:ee:ff"
+        hass, _LOGGER, "aa:bb:cc:dd:ee:ff", BluetoothScanningMode.ACTIVE
     )
     assert coordinator.available is False  # no data yet
     saved_callback = None
 
-    def _async_register_callback(_hass, _callback, _matcher):
+    def _async_register_callback(_hass, _callback, _matcher, _mode):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None
@@ -731,12 +732,12 @@ async def test_integration_with_entity(hass, mock_bleak_scanner_start):
         return GOVEE_B5178_REMOTE_PASSIVE_BLUETOOTH_DATA_UPDATE
 
     coordinator = PassiveBluetoothProcessorCoordinator(
-        hass, _LOGGER, "aa:bb:cc:dd:ee:ff"
+        hass, _LOGGER, "aa:bb:cc:dd:ee:ff", BluetoothScanningMode.ACTIVE
     )
     assert coordinator.available is False  # no data yet
     saved_callback = None
 
-    def _async_register_callback(_hass, _callback, _matcher):
+    def _async_register_callback(_hass, _callback, _matcher, _mode):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None
@@ -841,12 +842,12 @@ async def test_integration_with_entity_without_a_device(hass, mock_bleak_scanner
         return NO_DEVICES_PASSIVE_BLUETOOTH_DATA_UPDATE
 
     coordinator = PassiveBluetoothProcessorCoordinator(
-        hass, _LOGGER, "aa:bb:cc:dd:ee:ff"
+        hass, _LOGGER, "aa:bb:cc:dd:ee:ff", BluetoothScanningMode.ACTIVE
     )
     assert coordinator.available is False  # no data yet
     saved_callback = None
 
-    def _async_register_callback(_hass, _callback, _matcher):
+    def _async_register_callback(_hass, _callback, _matcher, _mode):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None
@@ -905,12 +906,12 @@ async def test_passive_bluetooth_entity_with_entity_platform(
         return NO_DEVICES_PASSIVE_BLUETOOTH_DATA_UPDATE
 
     coordinator = PassiveBluetoothProcessorCoordinator(
-        hass, _LOGGER, "aa:bb:cc:dd:ee:ff"
+        hass, _LOGGER, "aa:bb:cc:dd:ee:ff", BluetoothScanningMode.ACTIVE
     )
     assert coordinator.available is False  # no data yet
     saved_callback = None
 
-    def _async_register_callback(_hass, _callback, _matcher):
+    def _async_register_callback(_hass, _callback, _matcher, _mode):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None
@@ -992,12 +993,12 @@ async def test_integration_multiple_entity_platforms(hass, mock_bleak_scanner_st
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
     coordinator = PassiveBluetoothProcessorCoordinator(
-        hass, _LOGGER, "aa:bb:cc:dd:ee:ff"
+        hass, _LOGGER, "aa:bb:cc:dd:ee:ff", BluetoothScanningMode.ACTIVE
     )
     assert coordinator.available is False  # no data yet
     saved_callback = None
 
-    def _async_register_callback(_hass, _callback, _matcher):
+    def _async_register_callback(_hass, _callback, _matcher, _mode):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None
