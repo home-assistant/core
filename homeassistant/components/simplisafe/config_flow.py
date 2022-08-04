@@ -81,17 +81,34 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 description_placeholders={CONF_URL: self._oauth_values.auth_url},
             )
 
+        auth_code = user_input[CONF_AUTH_CODE]
+
+        if auth_code.startswith("="):
+            # Sometimes, users may include the "=" from the URL query param; in that
+            # case, strip it off and proceed:
+            LOGGER.debug('Stripping "=" from the start of the authorization code')
+            auth_code = auth_code[1:]
+
+        if len(auth_code) != 45:
+            # SimpliSafe authorization codes are 45 characters in length; if the user
+            # provides something different, stop them here:
+            return self.async_show_form(
+                step_id="user",
+                data_schema=STEP_USER_SCHEMA,
+                errors={CONF_AUTH_CODE: "invalid_auth_code_length"},
+                description_placeholders={CONF_URL: self._oauth_values.auth_url},
+            )
+
         errors = {}
         session = aiohttp_client.async_get_clientsession(self.hass)
-
         try:
             simplisafe = await API.async_from_auth(
-                user_input[CONF_AUTH_CODE],
+                auth_code,
                 self._oauth_values.code_verifier,
                 session=session,
             )
         except InvalidCredentialsError:
-            errors = {"base": "invalid_auth"}
+            errors = {CONF_AUTH_CODE: "invalid_auth"}
         except SimplipyError as err:
             LOGGER.error("Unknown error while logging into SimpliSafe: %s", err)
             errors = {"base": "unknown"}
