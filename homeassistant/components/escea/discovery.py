@@ -15,7 +15,7 @@ from .const import (
 )
 
 
-class DiscoveryService(Listener):
+class DiscoveryServiceListener(Listener):
     """Discovery data and interfacing with pescea library."""
 
     def __init__(self, hass: HomeAssistant) -> None:
