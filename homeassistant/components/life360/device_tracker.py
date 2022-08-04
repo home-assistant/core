@@ -120,16 +120,16 @@ class Life360DeviceTracker(CoordinatorEntity, TrackerEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        # Get a shortcut to this member's data. Can't guarantee it's the same dict every
-        # update, or that there is even data for this member every update, so need to
-        # update shortcut each time.
-        self._data = self.coordinator.data.members.get(self.unique_id)
-
+        # Get a shortcut to this Member's data. This needs to be updated each time since
+        # coordinator provides a new Life360Member object each time, and it's possible
+        # that there is no data for this Member on some updates.
         if self.available:
-            # If nothing important has changed, then skip the update altogether.
-            if self._data == self._prev_data:
-                return
+            self._data = self.coordinator.data.members.get(self.unique_id)
+            assert self._data is None or self._data is not self._prev_data
+        else:
+            self._data = None
 
+        if self._data:
             # Check if we should effectively throw out new location data.
             last_seen = self._data.last_seen
             prev_seen = self._prev_data.last_seen
@@ -167,12 +167,6 @@ class Life360DeviceTracker(CoordinatorEntity, TrackerEntity):
     def force_update(self) -> bool:
         """Return True if state updates should be forced."""
         return False
-
-    @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        # Guard against member not being in last update for some reason.
-        return super().available and self._data is not None
 
     @property
     def entity_picture(self) -> str | None:
