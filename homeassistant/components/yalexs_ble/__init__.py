@@ -19,7 +19,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from .const import CONF_KEY, CONF_SLOT, DISCOVERY_TIMEOUT, DOMAIN
 from .models import YaleXSBLEData
 
-PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.LOCK, Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.LOCK]
 
 # We have 55s to find the lock, connect, and get status
 # before we give up and raise ConfigEntryNotReady.
