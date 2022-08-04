@@ -85,6 +85,11 @@ class EntityMapStorage:
 
         _LOGGER.debug("Deleting entity map for %s", homekit_id)
         self.storage_data.pop(homekit_id)
+
+        # If the lowercased version was accidentally cached, delete it too
+        lower_homekit_id = homekit_id.lower()
+        if lower_homekit_id in self.storage_data:
+            self.storage_data.pop(lower_homekit_id)
         self._async_schedule_save()
 
     @callback
