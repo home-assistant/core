@@ -34,9 +34,14 @@ class EnOceanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle an EnOcean config flow start."""
+
+        # user_input is none when the form is called the for the first time
+
         if self._async_current_entries():
+            # THINK: show menu to offer the option to teach-in a new device
             return self.async_abort(reason="single_instance_allowed")
 
+        # no config entry was available, so try to detect a dongle
         return await self.async_step_detect()
 
     async def async_step_detect(self, user_input=None):

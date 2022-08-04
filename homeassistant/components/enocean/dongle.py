@@ -1,4 +1,4 @@
-"""Representation of an EnOcean dongle."""
+"""This shall be the representation of an EnOcean dongle."""
 import glob
 import logging
 from os.path import basename, normpath
@@ -34,6 +34,7 @@ class EnOceanDongle:
 
     async def async_setup(self):
         """Finish the setup of the bridge and supported platforms."""
+        # THINK: shall we check if the port to the communicator is open?
         self._communicator.start()
         self.dispatcher_disconnect_handle = async_dispatcher_connect(
             self.hass, SIGNAL_SEND_MESSAGE, self._send_message_callback
@@ -48,6 +49,15 @@ class EnOceanDongle:
     def _send_message_callback(self, command):
         """Send a command through the EnOcean dongle."""
         self._communicator.send(command)
+
+    def send_message(self, command):
+        """Send a command through the EnOcean dongle (public)."""
+        self._communicator.send(command)
+
+    @property
+    def communicator(self):
+        """Set the communicator."""
+        return self._communicator
 
     def callback(self, packet):
         """Handle EnOcean device's callback.
