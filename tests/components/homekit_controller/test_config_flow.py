@@ -14,6 +14,7 @@ from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.components.homekit_controller import config_flow
 from homeassistant.components.homekit_controller.const import KNOWN_DEVICES
+from homeassistant.components.homekit_controller.storage import async_get_entity_storage
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
     RESULT_TYPE_FORM,
@@ -1071,6 +1072,8 @@ async def test_bluetooth_valid_device_discovery_paired(hass, controller):
 async def test_bluetooth_valid_device_discovery_unpaired(hass, controller):
     """Test bluetooth discovery with a homekit device and discovery works."""
     setup_mock_accessory(controller)
+    storage = await async_get_entity_storage(hass)
+
     with patch(
         "homeassistant.components.homekit_controller.config_flow.aiohomekit_const.BLE_TRANSPORT_SUPPORTED",
         True,
@@ -1083,6 +1086,7 @@ async def test_bluetooth_valid_device_discovery_unpaired(hass, controller):
 
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "pair"
+    assert storage.get_map("00:00:00:00:00:00") is None
 
     assert get_flow_context(hass, result) == {
         "source": config_entries.SOURCE_BLUETOOTH,
@@ -1098,3 +1102,5 @@ async def test_bluetooth_valid_device_discovery_unpaired(hass, controller):
     assert result3["type"] == FlowResultType.CREATE_ENTRY
     assert result3["title"] == "Koogeek-LS1-20833F"
     assert result3["data"] == {}
+
+    assert storage.get_map("00:00:00:00:00:00") is not None
