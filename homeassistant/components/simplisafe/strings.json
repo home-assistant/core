@@ -12,7 +12,6 @@
       "identifier_exists": "Account already registered",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_auth_code_length": "SimpliSafe authorization codes are 45 characters in length",
-      "invalid_auth_code_start": "SimpliSafe authorization codes do not start with \"=\"",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {

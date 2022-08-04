@@ -31,15 +31,8 @@ async def test_duplicate_error(config_entry, hass, setup_simplisafe):
         assert result["reason"] == "already_configured"
 
 
-@pytest.mark.parametrize(
-    "auth_code,error",
-    [
-        ("12345", "invalid_auth_code_length"),
-        ("=code1234512345123451234512345123451234512345", "invalid_auth_code_start"),
-    ],
-)
-async def test_invalid_auth_code_format(auth_code, error, hass):
-    """Test that invalid auth code formats show the correct error."""
+async def test_invalid_auth_code_length(hass):
+    """Test that an invalid auth code length show the correct error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -47,10 +40,10 @@ async def test_invalid_auth_code_format(auth_code, error, hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_AUTH_CODE: auth_code}
+        result["flow_id"], user_input={CONF_AUTH_CODE: "too_short_code"}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] == {CONF_AUTH_CODE: error}
+    assert result["errors"] == {CONF_AUTH_CODE: "invalid_auth_code_length"}
 
 
 async def test_invalid_credentials(hass):
@@ -135,8 +128,9 @@ async def test_step_reauth_wrong_account(config_entry, hass, setup_simplisafe):
         assert result["reason"] == "wrong_account"
 
 
-async def test_step_user(hass, setup_simplisafe):
-    """Test the user step."""
+@pytest.mark.parametrize("auth_code", [VALID_AUTH_CODE, f"={VALID_AUTH_CODE}"])
+async def test_step_user(auth_code, hass, setup_simplisafe):
+    """Test successfully completion of the user step."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -146,7 +140,7 @@ async def test_step_user(hass, setup_simplisafe):
         "homeassistant.components.simplisafe.async_setup_entry", return_value=True
     ), patch("homeassistant.config_entries.ConfigEntries.async_reload"):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_AUTH_CODE: VALID_AUTH_CODE}
+            result["flow_id"], user_input={CONF_AUTH_CODE: auth_code}
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
