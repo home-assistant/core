@@ -5,7 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
-from aiohomekit.model.characteristics.const import ThreadNodeCapabilities
+from aiohomekit.model.characteristics.const import ThreadNodeCapabilities, ThreadStatus
 from aiohomekit.model.services import Service, ServicesTypes
 
 from homeassistant.components.sensor import (
@@ -81,6 +81,54 @@ def thread_node_capability_to_str(char: Characteristic) -> str:
 
     # Device has no known thread capabilities
     return "none"
+
+
+def thread_status_to_str(char: Characteristic) -> str:
+    """
+    Return the thread status as a string.
+
+    The underlying value is a bitmask, but we want to turn that to
+    a human readable string. So we check the flags in order. E.g. BORDER_ROUTER implies
+    ROUTER, so its more important to show that value.
+    """
+
+    val = ThreadStatus(char.value)
+
+    if val & ThreadStatus.BORDER_ROUTER:
+        # Device has joined the Thread network and is participating
+        # in routing between mesh nodes.
+        # It's also the border router - bridging the thread network
+        # to WiFI/Ethernet/etc
+        return "border_router"
+
+    if val & ThreadStatus.LEADER:
+        # Device has joined the Thread network and is participating
+        # in routing between mesh nodes.
+        # It's also the leader. There's only one leader and it manages
+        # which nodes are routers.
+        return "leader"
+
+    if val & ThreadStatus.ROUTER:
+        # Device has joined the Thread network and is participating
+        # in routing between mesh nodes.
+        return "router"
+
+    if val & ThreadStatus.CHILD:
+        # Device has joined the Thread network as a child
+        # It's not participating in routing between mesh nodes
+        return "child"
+
+    if val & ThreadStatus.JOINING:
+        # Device is currently joining its Thread network
+        return "joining"
+
+    if val & ThreadStatus.DETACHED:
+        # Device is currently unable to reach its Thread network
+        return "detached"
+
+    # Must be ThreadStatus.DISABLED
+    # Device is not currently connected to Thread and will not try to.
+    return "disabled"
 
 
 SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
@@ -242,6 +290,13 @@ SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
         device_class="homekit_controller__thread_node_capabilities",
         entity_category=EntityCategory.DIAGNOSTIC,
         format=thread_node_capability_to_str,
+    ),
+    CharacteristicsTypes.THREAD_STATUS: HomeKitSensorEntityDescription(
+        key=CharacteristicsTypes.THREAD_STATUS,
+        name="Thread Status",
+        device_class="homekit_controller__thread_status",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        format=thread_status_to_str,
     ),
 }
 
