@@ -1,4 +1,5 @@
 """Define tests for the SimpliSafe config flow."""
+import logging
 from unittest.mock import patch
 
 import pytest
@@ -128,9 +129,23 @@ async def test_step_reauth_wrong_account(config_entry, hass, setup_simplisafe):
         assert result["reason"] == "wrong_account"
 
 
-@pytest.mark.parametrize("auth_code", [VALID_AUTH_CODE, f"={VALID_AUTH_CODE}"])
-async def test_step_user(auth_code, hass, setup_simplisafe):
+@pytest.mark.parametrize(
+    "auth_code,log_statement",
+    [
+        (
+            VALID_AUTH_CODE,
+            None,
+        ),
+        (
+            f"={VALID_AUTH_CODE}",
+            'Stripping "=" from the start of the authorization code',
+        ),
+    ],
+)
+async def test_step_user(auth_code, caplog, hass, log_statement, setup_simplisafe):
     """Test successfully completion of the user step."""
+    caplog.set_level = logging.DEBUG
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -143,6 +158,9 @@ async def test_step_user(auth_code, hass, setup_simplisafe):
             result["flow_id"], user_input={CONF_AUTH_CODE: auth_code}
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+    if log_statement:
+        assert any(m for m in caplog.messages if log_statement in m)
 
     assert len(hass.config_entries.async_entries()) == 1
     [config_entry] = hass.config_entries.async_entries(DOMAIN)
