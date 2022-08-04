@@ -1,3 +1,3 @@
-"""Constants for the pylontech_rs485 integration."""
+"""Constants for the pylontech_us integration."""
 
 DOMAIN = "pylontech_us"
