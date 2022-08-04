@@ -1,4 +1,6 @@
 """Internal discovery service for  Escea Fireplace."""
+from __future__ import annotations
+
 from pescea import Controller, Listener, discovery_service
 
 from homeassistant.core import HomeAssistant
