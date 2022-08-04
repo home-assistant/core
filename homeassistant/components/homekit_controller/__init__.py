@@ -285,11 +285,6 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
     controller = await async_get_controller(hass)
 
-    # Delete it from aiohomekit's memory cache
-    # as well to ensure we don't try to reuse it
-    # if they repair the accessory
-    controller.async_delete_cached_map(hkid)
-
     # Remove the pairing on the device, making the device discoverable again.
     # Don't reuse any objects in hass.data as they are already unloaded
     controller.load_pairing(hkid, dict(entry.data))
