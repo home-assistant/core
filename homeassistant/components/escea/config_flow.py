@@ -1,7 +1,5 @@
 """Config flow for escea."""
-
 import asyncio
-from collections.abc import Callable
 from contextlib import suppress
 import logging
 
@@ -25,7 +23,6 @@ _LOGGER = logging.getLogger(__name__)
 async def _async_has_devices(hass: HomeAssistant) -> bool:
 
     controller_ready = asyncio.Event()
-    remove_handler: Callable[[], None]
 
     @callback
     def dispatch_discovered(_):
@@ -41,15 +38,14 @@ async def _async_has_devices(hass: HomeAssistant) -> bool:
         async with timeout(TIMEOUT_DISCOVERY):
             await controller_ready.wait()
 
-    if remove_handler is not None:
-        remove_handler()
+    remove_handler()
 
-    if not disco.pi_disco.controllers:
+    if not disco.pi_disco.controllers:  # type: ignore[union-attr]
         await async_stop_discovery_service(hass)
         _LOGGER.debug("No controllers found")
         return False
 
-    _LOGGER.debug("Controllers %s", disco.pi_disco.controllers)
+    _LOGGER.debug("Controllers %s", disco.pi_disco.controllers)  # type: ignore[union-attr]
     return True
 
 
