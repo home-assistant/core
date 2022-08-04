@@ -83,10 +83,10 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors = {}
 
-        if len(user_input[CONF_AUTH_CODE]) != 45:
+        if len(auth_code := user_input[CONF_AUTH_CODE]) != 45:
             # SimpliSafe authorization codes are 45 characters in length:
             errors = {CONF_AUTH_CODE: "invalid_auth_code_length"}
-        elif user_input[CONF_AUTH_CODE].startswith("="):
+        elif auth_code.startswith("="):
             # Ensure the user isn't including the "=" from the URL query param:
             errors = {CONF_AUTH_CODE: "invalid_auth_code_start"}
 
@@ -101,7 +101,7 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         session = aiohttp_client.async_get_clientsession(self.hass)
         try:
             simplisafe = await API.async_from_auth(
-                user_input[CONF_AUTH_CODE],
+                auth_code,
                 self._oauth_values.code_verifier,
                 session=session,
             )
