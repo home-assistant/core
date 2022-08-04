@@ -49,7 +49,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Initialize an Escea Controller."""
-    disco = hass.data[DATA_DISCOVERY_SERVICE]
+    discovery_service = hass.data[DATA_DISCOVERY_SERVICE]
 
     @callback
     def init_controller(ctrl: Controller) -> None:
