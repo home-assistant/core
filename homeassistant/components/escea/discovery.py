@@ -19,7 +19,7 @@ class DiscoveryService(Listener):
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialise discovery service."""
         super().__init__()
-        self.hass: HomeAssistant = hass
+        self.hass = hass
         self.pi_disco: DiscoveryService
 
     # Listener interface
