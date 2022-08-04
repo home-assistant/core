@@ -597,7 +597,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         entity_storage = await async_get_entity_storage(self.hass)
         assert self.unique_id is not None
         entity_storage.async_create_or_update_map(
-            self.unique_id,
+            pairing.id,
             accessories_state.config_num,
             accessories_state.accessories.serialize(),
         )

@@ -16,5 +16,18 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
     }
+  },
+  "issues": {
+    "integration_removal": {
+      "title": "Flu Near You is no longer available",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Remove Flu Near You",
+            "description": "The external data source powering the Flu Near You integration is no longer available; thus, the integration no longer works.\n\nPress SUBMIT to remove Flu Near You from your Home Assistant instance."
+          }
+        }
+      }
+    }
   }
 }
