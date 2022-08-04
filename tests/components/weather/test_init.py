@@ -492,8 +492,11 @@ async def test_none_forecast(
     state = hass.states.get(entity0.entity_id)
     forecast = state.attributes[ATTR_FORECAST][0]
 
+    assert forecast.get(ATTR_FORECAST_TEMP) is None
+    assert forecast.get(ATTR_FORECAST_TEMP_LOW) is None
     assert forecast.get(ATTR_FORECAST_PRESSURE) is None
     assert forecast.get(ATTR_FORECAST_WIND_SPEED) is None
+    assert forecast.get(ATTR_FORECAST_WIND_BEARING) is None
     assert forecast.get(ATTR_FORECAST_PRECIPITATION) is None
 
 
@@ -504,6 +507,7 @@ async def test_custom_units(hass: HomeAssistant, enable_custom_integrations) -> 
     pressure_value = 110
     pressure_unit = PRESSURE_HPA
     temperature_value = 20
+    temperature_low_value = 15
     temperature_unit = TEMP_CELSIUS
     visibility_value = 11
     visibility_unit = LENGTH_KILOMETERS
@@ -540,6 +544,14 @@ async def test_custom_units(hass: HomeAssistant, enable_custom_integrations) -> 
             native_visibility_unit=visibility_unit,
             native_precipitation=precipitation_value,
             native_precipitation_unit=precipitation_unit,
+            forecast=[platform.Forecast(
+                condition=ATTR_CONDITION_SUNNY,
+                native_temperature=temperature_value,
+                native_templow=temperature_low_value,
+                native_wind_speed=wind_speed_value,
+                native_pressure=pressure_value,
+                native_precipitation=precipitation_value,
+            )],
             unique_id="very_unique",
         )
     )
@@ -559,6 +571,9 @@ async def test_custom_units(hass: HomeAssistant, enable_custom_integrations) -> 
     )
     expected_temperature = convert_temperature(
         temperature_value, temperature_unit, TEMP_FAHRENHEIT
+    )
+    expected_temperature_low = convert_temperature(
+        temperature_low_value, temperature_unit, TEMP_FAHRENHEIT
     )
     expected_pressure = round(
         convert_pressure(pressure_value, pressure_unit, PRESSURE_INHG),
@@ -582,6 +597,13 @@ async def test_custom_units(hass: HomeAssistant, enable_custom_integrations) -> 
     assert float(state.attributes[ATTR_WEATHER_PRESSURE]) == approx(expected_pressure)
     assert float(state.attributes[ATTR_WEATHER_VISIBILITY]) == approx(
         expected_visibility
+    )
+
+    assert float(forecast[ATTR_FORECAST_TEMP]) == approx(
+        expected_temperature, rel=1e-2
+    )
+    assert float(forecast[ATTR_FORECAST_TEMP_LOW]) == approx(
+        expected_temperature_low, rel=1e-2
     )
     assert float(forecast[ATTR_FORECAST_PRECIPITATION]) == approx(
         expected_precipitation, rel=1e-2
