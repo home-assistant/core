@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any, TypedDict
 
 from homeassistant.core import HomeAssistant, callback
@@ -12,6 +13,7 @@ from .const import DOMAIN, ENTITY_MAP
 ENTITY_MAP_STORAGE_KEY = f"{DOMAIN}-entity-map"
 ENTITY_MAP_STORAGE_VERSION = 1
 ENTITY_MAP_SAVE_DELAY = 10
+_LOGGER = logging.getLogger(__name__)
 
 
 class Pairing(TypedDict):
@@ -77,6 +79,7 @@ class EntityMapStorage:
     def async_delete_map(self, homekit_id: str) -> None:
         """Delete pairing cache."""
         if homekit_id not in self.storage_data:
+            _LOGGER.debug("Tried to delete non-existent pairing %s", homekit_id)
             return
 
         self.storage_data.pop(homekit_id)
