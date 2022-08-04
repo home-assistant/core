@@ -169,18 +169,24 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 await validate_lock(local_name, discovery_info.device, key, slot)
             except InvalidKeyFormat:
-                errors["base"] = "invalid_key_format"
+                errors[CONF_KEY] = "invalid_key_format"
             except InvalidKeyIndex:
-                errors["base"] = "invalid_key_index"
+                errors[CONF_SLOT] = "invalid_key_index"
             except (DisconnectedError, AuthError, ValueError):
-                errors["key"] = "invalid_auth"
+                errors[CONF_KEY] = "invalid_auth"
             except BleakError:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected error")
                 errors["base"] = "unknown"
             else:
-                return self.async_create_entry(title=local_name, data=user_input)
+                return self.async_create_entry(
+                    title=local_name,
+                    data={
+                        CONF_KEY: key,
+                        CONF_SLOT: slot,
+                    },
+                )
 
         if discovery := self._discovery_info:
             self._discovered_devices[discovery.name] = discovery
