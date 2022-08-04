@@ -11,8 +11,8 @@ from yalexs_ble import (
     AuthError,
     DisconnectedError,
     PushLock,
+    ValidatedLockConfig,
     local_name_to_serial,
-    serial_to_local_name,
 )
 from yalexs_ble.const import YALE_MFR_ID
 
@@ -48,10 +48,7 @@ async def validate_lock(
         raise InvalidKeyFormat from ex
     if not isinstance(slot, int) or slot < 0 or slot > 255:
         raise InvalidKeyIndex
-    push_lock = PushLock(local_name)
-    push_lock.set_ble_device(device)
-    push_lock.set_lock_key(key, slot)
-    await push_lock.validate()
+    await PushLock(local_name, device, key, slot).validate()
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -63,9 +60,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._discovery_info: BluetoothServiceInfoBleak | None = None
         self._discovered_devices: dict[str, BluetoothServiceInfoBleak] = {}
-        self._discovered_key: str | None = None
-        self._discovered_slot: int | None = None
-        self._discovered_name: str | None = None
+        self._lock_cfg: ValidatedLockConfig | None = None
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
@@ -85,41 +80,42 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: DiscoveryInfoType
     ) -> FlowResult:
         """Handle a discovered integration."""
-        name = discovery_info["name"]
-        serial = discovery_info["serial"]
-        discovered_key = discovery_info["key"]
-        discovered_slot = discovery_info["slot"]
-        local_name = serial_to_local_name(serial)
+        lock_cfg = ValidatedLockConfig(
+            discovery_info["name"],
+            discovery_info["serial"],
+            discovery_info["key"],
+            discovery_info["slot"],
+        )
         # We do not want to raise on progress as integration_discovery takes
         # precedence over other discovery flows since we already have the keys.
-        await self.async_set_unique_id(local_name, raise_on_progress=False)
+        await self.async_set_unique_id(lock_cfg.local_name, raise_on_progress=False)
         self._abort_if_unique_id_configured(
-            updates={CONF_KEY: discovered_key, CONF_SLOT: discovered_slot}
+            updates={CONF_KEY: lock_cfg.key, CONF_SLOT: lock_cfg.slot}
         )
         for progress in self._async_in_progress(include_uninitialized=True):
             # Integration discovery should abort other discovery types
             # since it already has the keys and slots, and the other
             # discovery types do not.
             context = progress["context"]
-            if context.get("unique_id") == local_name and not context.get("active"):
+            if context.get("unique_id") == lock_cfg.local_name and not context.get(
+                "active"
+            ):
                 self.hass.config_entries.flow.async_abort(progress["flow_id"])
 
         try:
             self._discovery_info = await bluetooth.async_process_advertisements(
                 self.hass,
                 lambda service_info: True,
-                BluetoothCallbackMatcher({LOCAL_NAME: local_name}),
+                BluetoothCallbackMatcher({LOCAL_NAME: lock_cfg.local_name}),
                 bluetooth.BluetoothScanningMode.ACTIVE,
                 DISCOVERY_TIMEOUT,
             )
         except asyncio.TimeoutError:
             return self.async_abort(reason="no_devices_found")
-        self._discovered_name = name
-        self._discovered_key = discovered_key
-        self._discovered_slot = discovered_slot
+        self._lock_cfg = lock_cfg
         self.context["title_placeholders"] = {
-            "name": name,
-            "local_name": local_name,
+            "name": lock_cfg.name,
+            "local_name": lock_cfg.local_name,
             "address": self._discovery_info.address,
         }
         return await self.async_step_integration_discovery_confirm()
@@ -129,16 +125,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle a confirmation of discovered integration."""
         assert self._discovery_info is not None
-        assert self._discovered_key is not None
-        assert self._discovered_slot is not None
-        assert self._discovered_name is not None
-        assert self.unique_id is not None
+        assert self._lock_cfg is not None
         if user_input is not None:
             return self.async_create_entry(
-                title=self._discovered_name,
+                title=self._lock_cfg.name,
                 data={
-                    CONF_KEY: self._discovered_key,
-                    CONF_SLOT: self._discovered_slot,
+                    CONF_KEY: self._lock_cfg.key,
+                    CONF_SLOT: self._lock_cfg.slot,
                 },
             )
 
@@ -146,7 +139,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="integration_discovery_confirm",
             description_placeholders={
-                "name": self._discovered_name,
+                "name": self._lock_cfg.name,
                 "local_name": self.unique_id,
                 "address": self._discovery_info.address,
             },
