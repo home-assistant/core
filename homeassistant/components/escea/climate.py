@@ -44,7 +44,9 @@ _HA_FAN_TO_ESCEA = {v: k for k, v in _ESCEA_FAN_TO_HA.items()}
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Initialize an Escea Controller."""
     disco = hass.data[DATA_DISCOVERY_SERVICE]
