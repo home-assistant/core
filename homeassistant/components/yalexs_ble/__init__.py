@@ -30,8 +30,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Yale Access Bluetooth from a config entry."""
     local_name = entry.unique_id
     assert local_name is not None
-    push_lock = PushLock(local_name)
-    push_lock.set_lock_key(entry.data[CONF_KEY], entry.data[CONF_SLOT])
+    push_lock = PushLock(local_name, None, entry.data[CONF_KEY], entry.data[CONF_SLOT])
     push_lock.set_name(f"{entry.title} ({local_name})")
     startup_event = asyncio.Event()
 
