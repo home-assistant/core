@@ -27,7 +27,6 @@ class DiscoveryServiceListener(Listener):
         """Initialise discovery service."""
         super().__init__()
         self.hass = hass
-        self.pi_disco: DiscoveryService | None = None
 
     # Listener interface
     def controller_discovered(self, ctrl: Controller) -> None:
