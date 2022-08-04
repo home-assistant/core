@@ -56,6 +56,7 @@ homeassistant.components.ambee.*
 homeassistant.components.ambient_station.*
 homeassistant.components.amcrest.*
 homeassistant.components.ampio.*
+homeassistant.components.anthemav.*
 homeassistant.components.aseko_pool_live.*
 homeassistant.components.asuswrt.*
 homeassistant.components.automation.*
@@ -185,6 +186,7 @@ homeassistant.components.nut.*
 homeassistant.components.oncue.*
 homeassistant.components.onewire.*
 homeassistant.components.open_meteo.*
+homeassistant.components.openexchangerates.*
 homeassistant.components.openuv.*
 homeassistant.components.peco.*
 homeassistant.components.overkiz.*

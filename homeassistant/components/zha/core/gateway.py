@@ -142,6 +142,7 @@ class ZHAGateway:
         self._log_relay_handler = LogRelayHandler(hass, self)
         self.config_entry = config_entry
         self._unsubs: list[Callable[[], None]] = []
+        self.initialized: bool = False
 
     async def async_initialize(self) -> None:
         """Initialize controller and connect radio."""
@@ -183,6 +184,7 @@ class ZHAGateway:
         self._hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID] = str(self.coordinator_ieee)
         self.async_load_devices()
         self.async_load_groups()
+        self.initialized = True
 
     @callback
     def async_load_devices(self) -> None:
@@ -217,7 +219,7 @@ class ZHAGateway:
     async def async_initialize_devices_and_entities(self) -> None:
         """Initialize devices and load entities."""
 
-        _LOGGER.debug("Loading all devices")
+        _LOGGER.debug("Initializing all devices from Zigpy cache")
         await asyncio.gather(
             *(dev.async_initialize(from_cache=True) for dev in self.devices.values())
         )

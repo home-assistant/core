@@ -24,6 +24,11 @@
             }
         }
     },
+    "issues": {
+        "removed_yaml": {
+            "title": "De Steam YAML-configuratie wordt verwijderd"
+        }
+    },
     "options": {
         "error": {
             "unauthorized": "Vriendenlijst beperkt: raadpleeg de documentatie over hoe je alle andere vrienden kunt zien"

@@ -10,8 +10,8 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA as PLATFORM_SCHEMA_BASE,
-    SOURCE_TYPE_GPS,
     SeeCallback,
+    SourceType,
 )
 from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
@@ -129,7 +129,7 @@ class GoogleMapsScanner:
                 dev_id=dev_id,
                 gps=(person.latitude, person.longitude),
                 picture=person.picture_url,
-                source_type=SOURCE_TYPE_GPS,
+                source_type=SourceType.GPS,
                 gps_accuracy=person.accuracy,
                 attributes=attrs,
             )

@@ -3,7 +3,8 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "API-nyckel"
+                    "api_key": "API-nyckel",
+                    "location": "Plats"
                 }
             }
         }

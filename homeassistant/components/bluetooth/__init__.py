@@ -8,12 +8,11 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
 import logging
-from typing import Final, Union
+from typing import TYPE_CHECKING, Final
 
 import async_timeout
 from bleak import BleakError
-from bleak.backends.device import BLEDevice
-from bleak.backends.scanner import AdvertisementData
+from dbus_next import InvalidMessageError
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -27,8 +26,8 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_bluetooth
+from homeassistant.util.package import is_docker_env
 
 from . import models
 from .const import CONF_ADAPTER, DEFAULT_ADAPTERS, DOMAIN
@@ -42,11 +41,18 @@ from .models import HaBleakScanner, HaBleakScannerWrapper
 from .usage import install_multiple_bleak_catcher, uninstall_multiple_bleak_catcher
 from .util import async_get_bluetooth_adapters
 
+if TYPE_CHECKING:
+    from bleak.backends.device import BLEDevice
+    from bleak.backends.scanner import AdvertisementData
+
+    from homeassistant.helpers.typing import ConfigType
+
+
 _LOGGER = logging.getLogger(__name__)
 
 
 UNAVAILABLE_TRACK_SECONDS: Final = 60 * 5
-START_TIMEOUT = 15
+START_TIMEOUT = 9
 
 SOURCE_LOCAL: Final = "local"
 
@@ -96,12 +102,8 @@ SCANNING_MODE_TO_BLEAK = {
 
 
 BluetoothChange = Enum("BluetoothChange", "ADVERTISEMENT")
-BluetoothCallback = Callable[
-    [Union[BluetoothServiceInfoBleak, BluetoothServiceInfo], BluetoothChange], None
-]
-ProcessAdvertisementCallback = Callable[
-    [Union[BluetoothServiceInfoBleak, BluetoothServiceInfo]], bool
-]
+BluetoothCallback = Callable[[BluetoothServiceInfoBleak, BluetoothChange], None]
+ProcessAdvertisementCallback = Callable[[BluetoothServiceInfoBleak], bool]
 
 
 @hass_callback
@@ -157,8 +159,14 @@ def async_register_callback(
     hass: HomeAssistant,
     callback: BluetoothCallback,
     match_dict: BluetoothCallbackMatcher | None,
+    mode: BluetoothScanningMode,
 ) -> Callable[[], None]:
     """Register to receive a callback on bluetooth change.
+
+    mode is currently not used as we only support active scanning.
+    Passive scanning will be available in the future. The flag
+    is required to be present to avoid a future breaking change
+    when we support passive scanning.
 
     Returns a callback that can be used to cancel the registration.
     """
@@ -170,19 +178,20 @@ async def async_process_advertisements(
     hass: HomeAssistant,
     callback: ProcessAdvertisementCallback,
     match_dict: BluetoothCallbackMatcher,
+    mode: BluetoothScanningMode,
     timeout: int,
-) -> BluetoothServiceInfo:
+) -> BluetoothServiceInfoBleak:
     """Process advertisements until callback returns true or timeout expires."""
-    done: Future[BluetoothServiceInfo] = Future()
+    done: Future[BluetoothServiceInfoBleak] = Future()
 
     @hass_callback
     def _async_discovered_device(
-        service_info: BluetoothServiceInfo, change: BluetoothChange
+        service_info: BluetoothServiceInfoBleak, change: BluetoothChange
     ) -> None:
         if callback(service_info):
             done.set_result(service_info)
 
-    unload = async_register_callback(hass, _async_discovered_device, match_dict)
+    unload = async_register_callback(hass, _async_discovered_device, match_dict, mode)
 
     try:
         async with async_timeout.timeout(timeout):
@@ -333,14 +342,43 @@ class BluetoothManager:
         )
         try:
             async with async_timeout.timeout(START_TIMEOUT):
-                await self.scanner.start()
+                await self.scanner.start()  # type: ignore[no-untyped-call]
+        except InvalidMessageError as ex:
+            self._cancel_device_detected()
+            _LOGGER.debug("Invalid DBus message received: %s", ex, exc_info=True)
+            raise ConfigEntryNotReady(
+                f"Invalid DBus message received: {ex}; try restarting `dbus`"
+            ) from ex
+        except BrokenPipeError as ex:
+            self._cancel_device_detected()
+            _LOGGER.debug("DBus connection broken: %s", ex, exc_info=True)
+            if is_docker_env():
+                raise ConfigEntryNotReady(
+                    f"DBus connection broken: {ex}; try restarting `bluetooth`, `dbus`, and finally the docker container"
+                ) from ex
+            raise ConfigEntryNotReady(
+                f"DBus connection broken: {ex}; try restarting `bluetooth` and `dbus`"
+            ) from ex
+        except FileNotFoundError as ex:
+            self._cancel_device_detected()
+            _LOGGER.debug(
+                "FileNotFoundError while starting bluetooth: %s", ex, exc_info=True
+            )
+            if is_docker_env():
+                raise ConfigEntryNotReady(
+                    f"DBus service not found; docker config may be missing `-v /run/dbus:/run/dbus:ro`: {ex}"
+                ) from ex
+            raise ConfigEntryNotReady(
+                f"DBus service not found; make sure the DBus socket is available to Home Assistant: {ex}"
+            ) from ex
         except asyncio.TimeoutError as ex:
             self._cancel_device_detected()
             raise ConfigEntryNotReady(
                 f"Timed out starting Bluetooth after {START_TIMEOUT} seconds"
             ) from ex
-        except (FileNotFoundError, BleakError) as ex:
+        except BleakError as ex:
             self._cancel_device_detected()
+            _LOGGER.debug("BleakError while starting bluetooth: %s", ex, exc_info=True)
             raise ConfigEntryNotReady(f"Failed to start Bluetooth: {ex}") from ex
         self.async_setup_unavailable_tracking()
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
@@ -500,7 +538,7 @@ class BluetoothManager:
             self._cancel_unavailable_tracking = None
         if self.scanner:
             try:
-                await self.scanner.stop()
+                await self.scanner.stop()  # type: ignore[no-untyped-call]
             except BleakError as ex:
                 # This is not fatal, and they may want to reload
                 # the config entry to restart the scanner if they
