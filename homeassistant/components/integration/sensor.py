@@ -223,6 +223,7 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
                 == SensorDeviceClass.POWER
             ):
                 self._attr_device_class = SensorDeviceClass.ENERGY
+                self._attr_icon = None
                 update_state = True
 
             if update_state:

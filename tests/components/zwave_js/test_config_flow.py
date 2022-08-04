@@ -422,7 +422,7 @@ async def test_abort_discovery_with_existing_entry(
 
 
 async def test_abort_hassio_discovery_with_existing_flow(
-    hass, supervisor, addon_options
+    hass, supervisor, addon_installed, addon_options
 ):
     """Test hassio discovery flow is aborted when another discovery has happened."""
     result = await hass.config_entries.flow.async_init(
@@ -701,15 +701,13 @@ async def test_discovery_addon_not_running(
 async def test_discovery_addon_not_installed(
     hass,
     supervisor,
-    addon_installed,
+    addon_not_installed,
     install_addon,
     addon_options,
     set_addon_options,
     start_addon,
 ):
     """Test discovery with add-on not installed."""
-    addon_installed.return_value["version"] = None
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
@@ -1443,7 +1441,7 @@ async def test_addon_installed_already_configured(
 async def test_addon_not_installed(
     hass,
     supervisor,
-    addon_installed,
+    addon_not_installed,
     install_addon,
     addon_options,
     set_addon_options,
@@ -1451,8 +1449,6 @@ async def test_addon_not_installed(
     get_addon_discovery_info,
 ):
     """Test add-on not installed."""
-    addon_installed.return_value["version"] = None
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -1533,9 +1529,10 @@ async def test_addon_not_installed(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_install_addon_failure(hass, supervisor, addon_installed, install_addon):
+async def test_install_addon_failure(
+    hass, supervisor, addon_not_installed, install_addon
+):
     """Test add-on install failure."""
-    addon_installed.return_value["version"] = None
     install_addon.side_effect = HassioAPIError()
 
     result = await hass.config_entries.flow.async_init(
@@ -2292,7 +2289,7 @@ async def test_options_addon_not_installed(
     hass,
     client,
     supervisor,
-    addon_installed,
+    addon_not_installed,
     install_addon,
     integration,
     addon_options,
@@ -2306,7 +2303,6 @@ async def test_options_addon_not_installed(
     disconnect_calls,
 ):
     """Test options flow and add-on not installed on Supervisor."""
-    addon_installed.return_value["version"] = None
     addon_options.update(old_addon_options)
     entry = integration
     entry.unique_id = "1234"

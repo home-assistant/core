@@ -91,8 +91,10 @@ class Life360Data:
     members: dict[str, Life360Member] = field(init=False, default_factory=dict)
 
 
-class Life360DataUpdateCoordinator(DataUpdateCoordinator):
+class Life360DataUpdateCoordinator(DataUpdateCoordinator[Life360Data]):
     """Life360 data update coordinator."""
+
+    config_entry: ConfigEntry
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize data update coordinator."""
