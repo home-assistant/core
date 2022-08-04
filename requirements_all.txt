@@ -1550,6 +1550,9 @@ pygtfs==0.1.6
 # homeassistant.components.hvv_departures
 pygti==0.9.3
 
+# homeassistant.components.hafas
+pyhafas==0.3.0
+
 # homeassistant.components.version
 pyhaversion==22.4.1
 
@@ -2147,7 +2150,7 @@ satel_integra==0.3.7
 scapy==2.4.5
 
 # homeassistant.components.deutsche_bahn
-schiene==0.23
+schiene==0.24
 
 # homeassistant.components.screenlogic
 screenlogicpy==0.5.4
