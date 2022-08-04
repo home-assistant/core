@@ -175,7 +175,8 @@ async def test_load_issues(hass: HomeAssistant) -> None:
 async def test_loading_issues_from_storage(hass: HomeAssistant, hass_storage) -> None:
     """Test loading stored issues on start."""
     hass_storage[issue_registry.STORAGE_KEY] = {
-        "version": issue_registry.STORAGE_VERSION,
+        "version": issue_registry.STORAGE_VERSION_MAJOR,
+        "minor_version": issue_registry.STORAGE_VERSION_MINOR,
         "data": {
             "issues": [
                 {
@@ -214,3 +215,32 @@ async def test_loading_issues_from_storage(hass: HomeAssistant, hass_storage) ->
 
     registry: issue_registry.IssueRegistry = hass.data[issue_registry.DATA_REGISTRY]
     assert len(registry.issues) == 3
+
+
+async def test_migration_1_1(hass: HomeAssistant, hass_storage) -> None:
+    """Test migration from version 1.1."""
+    hass_storage[issue_registry.STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 1,
+        "data": {
+            "issues": [
+                {
+                    "created": "2022-07-19T09:41:13.746514+00:00",
+                    "dismissed_version": "2022.7.0.dev0",
+                    "domain": "test",
+                    "issue_id": "issue_1",
+                },
+                {
+                    "created": "2022-07-19T19:41:13.746514+00:00",
+                    "dismissed_version": None,
+                    "domain": "test",
+                    "issue_id": "issue_2",
+                },
+            ]
+        },
+    }
+
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    registry: issue_registry.IssueRegistry = hass.data[issue_registry.DATA_REGISTRY]
+    assert len(registry.issues) == 2

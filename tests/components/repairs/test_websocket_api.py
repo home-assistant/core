@@ -380,7 +380,7 @@ async def test_list_issues(hass: HomeAssistant, hass_storage, hass_ws_client) ->
 
     # Add an inactive issue, this should not be exposed in the list
     hass_storage[issue_registry.STORAGE_KEY] = {
-        "version": issue_registry.STORAGE_VERSION,
+        "version": issue_registry.STORAGE_VERSION_MAJOR,
         "data": {
             "issues": [
                 {

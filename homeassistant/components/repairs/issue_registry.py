@@ -15,7 +15,8 @@ from .models import IssueSeverity
 DATA_REGISTRY = "issue_registry"
 EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED = "repairs_issue_registry_updated"
 STORAGE_KEY = "repairs.issue_registry"
-STORAGE_VERSION = 1
+STORAGE_VERSION_MAJOR = 1
+STORAGE_VERSION_MINOR = 2
 SAVE_DELAY = 10
 
 
@@ -63,6 +64,20 @@ class IssueEntry:
         }
 
 
+class IssueRegistryStore(Store[dict[str, list[dict[str, Any]]]]):
+    """Store entity registry data."""
+
+    async def _async_migrate_func(
+        self, old_major_version: int, old_minor_version: int, old_data: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Migrate to the new version."""
+        if old_major_version == 1 and old_minor_version < 2:
+            # Version 1.2 adds is_persistent
+            for issue in old_data["issues"]:
+                issue["is_persistent"] = False
+        return old_data
+
+
 class IssueRegistry:
     """Class to hold a registry of issues."""
 
@@ -70,8 +85,12 @@ class IssueRegistry:
         """Initialize the issue registry."""
         self.hass = hass
         self.issues: dict[tuple[str, str], IssueEntry] = {}
-        self._store = Store[dict[str, list[dict[str, Any]]]](
-            hass, STORAGE_VERSION, STORAGE_KEY, atomic_writes=True
+        self._store = IssueRegistryStore(
+            hass,
+            STORAGE_VERSION_MAJOR,
+            STORAGE_KEY,
+            atomic_writes=True,
+            minor_version=STORAGE_VERSION_MINOR,
         )
 
     @callback
