@@ -68,7 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except asyncio.TimeoutError as ex:
         raise ConfigEntryNotReady(
             f"{push_lock.last_error}; "
-            f"Try moving the Bluetooth adapter closer to {local_name}."
+            f"Try moving the Bluetooth adapter closer to {local_name}"
         ) from ex
     finally:
         cancel_first_update()
