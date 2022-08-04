@@ -28,7 +28,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         "pending_removal",
         breaks_in_ha_version="2022.10.0",
         is_fixable=False,
-        is_persistent=False,
         severity=IssueSeverity.WARNING,
         translation_key="pending_removal",
     )

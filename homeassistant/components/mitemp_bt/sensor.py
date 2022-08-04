@@ -23,7 +23,6 @@ async def async_setup_platform(
         "replaced",
         breaks_in_ha_version="2022.8.0",
         is_fixable=False,
-        is_persistent=False,
         severity=IssueSeverity.ERROR,
         translation_key="replaced",
         learn_more_url="https://www.home-assistant.io/integrations/xiaomi_ble/",
