@@ -5,7 +5,8 @@
   "requirements": [
     "pyprof2calltree==1.4.5",
     "guppy3==3.1.2",
-    "objgraph==3.5.0"
+    "objgraph==3.5.0",
+    "py-spy==0.3.12"
   ],
   "codeowners": ["@bdraco"],
   "quality_scale": "internal",

@@ -927,6 +927,9 @@ py-melissa-climate==2.1.4
 # homeassistant.components.nightscout
 py-nightscout==1.2.2
 
+# homeassistant.components.profiler
+py-spy==0.3.12
+
 # homeassistant.components.synology_dsm
 py-synologydsm-api==1.0.8
 

@@ -1330,6 +1330,9 @@ py-nightscout==1.2.2
 # homeassistant.components.schluter
 py-schluter==0.1.7
 
+# homeassistant.components.profiler
+py-spy==0.3.12
+
 # homeassistant.components.synology_dsm
 py-synologydsm-api==1.0.8
 
