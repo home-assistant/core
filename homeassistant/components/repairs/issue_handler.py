@@ -5,6 +5,7 @@ import functools as ft
 from typing import Any
 
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
+import voluptuous as vol
 
 from homeassistant import data_entry_flow
 from homeassistant.core import HomeAssistant, callback
@@ -19,6 +20,26 @@ from .issue_registry import async_get as async_get_issue_registry
 from .models import IssueSeverity, RepairsFlow, RepairsProtocol
 
 
+class ConfirmRepairFlow(RepairsFlow):
+    """Handler for an issue fixing flow without any side effects."""
+
+    async def async_step_init(
+        self, user_input: dict[str, str] | None = None
+    ) -> data_entry_flow.FlowResult:
+        """Handle the first step of a fix flow."""
+
+        return await (self.async_step_confirm())
+
+    async def async_step_confirm(
+        self, user_input: dict[str, str] | None = None
+    ) -> data_entry_flow.FlowResult:
+        """Handle the confirm step of a fix flow."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data={})
+
+        return self.async_show_form(step_id="confirm", data_schema=vol.Schema({}))
+
+
 class RepairsFlowManager(data_entry_flow.FlowManager):
     """Manage repairs flows."""
 
@@ -30,14 +51,6 @@ class RepairsFlowManager(data_entry_flow.FlowManager):
         data: dict[str, Any] | None = None,
     ) -> RepairsFlow:
         """Create a flow. platform is a repairs module."""
-        if "platforms" not in self.hass.data[DOMAIN]:
-            await async_process_repairs_platforms(self.hass)
-
-        platforms: dict[str, RepairsProtocol] = self.hass.data[DOMAIN]["platforms"]
-        if handler_key not in platforms:
-            raise data_entry_flow.UnknownHandler
-        platform = platforms[handler_key]
-
         assert data and "issue_id" in data
         issue_id = data["issue_id"]
 
@@ -45,6 +58,14 @@ class RepairsFlowManager(data_entry_flow.FlowManager):
         issue = issue_registry.async_get_issue(handler_key, issue_id)
         if issue is None or not issue.is_fixable:
             raise data_entry_flow.UnknownStep
+
+        if "platforms" not in self.hass.data[DOMAIN]:
+            await async_process_repairs_platforms(self.hass)
+
+        platforms: dict[str, RepairsProtocol] = self.hass.data[DOMAIN]["platforms"]
+        if handler_key not in platforms:
+            return ConfirmRepairFlow()
+        platform = platforms[handler_key]
 
         return await platform.async_create_fix_flow(self.hass, issue_id)
 
