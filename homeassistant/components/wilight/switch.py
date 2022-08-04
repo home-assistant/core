@@ -9,7 +9,6 @@ import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -93,24 +92,21 @@ async def async_setup_entry(
     async def set_watering_time(entity, service: Any) -> None:
         if not isinstance(entity, WiLightValveSwitch):
             raise ValueError("Entity is not a WiLight valve switch")
-        if entity.entity_id in service.data[ATTR_ENTITY_ID]:
-            watering_time = service.data[ATTR_WATERING_TIME]
-            await entity.async_set_watering_time(watering_time=watering_time)
+        watering_time = service.data[ATTR_WATERING_TIME]
+        await entity.async_set_watering_time(watering_time=watering_time)
 
     async def set_trigger(entity, service: Any) -> None:
         if not isinstance(entity, WiLightValveSwitch):
             raise ValueError("Entity is not a WiLight valve switch")
-        if entity.entity_id in service.data[ATTR_ENTITY_ID]:
-            trigger_index = service.data[ATTR_TRIGGER_INDEX]
-            trigger = service.data[ATTR_TRIGGER]
-            await entity.async_set_trigger(trigger_index=trigger_index, trigger=trigger)
+        trigger_index = service.data[ATTR_TRIGGER_INDEX]
+        trigger = service.data[ATTR_TRIGGER]
+        await entity.async_set_trigger(trigger_index=trigger_index, trigger=trigger)
 
     async def set_pause_time(entity, service: Any) -> None:
         if not isinstance(entity, WiLightValvePauseSwitch):
             raise ValueError("Entity is not a WiLight valve pause switch")
-        if entity.entity_id in service.data[ATTR_ENTITY_ID]:
-            pause_time = service.data[ATTR_PAUSE_TIME]
-            await entity.async_set_pause_time(pause_time=pause_time)
+        pause_time = service.data[ATTR_PAUSE_TIME]
+        await entity.async_set_pause_time(pause_time=pause_time)
 
     platform = entity_platform.async_get_current_platform()
 
@@ -299,7 +295,7 @@ class WiLightValvePauseSwitch(WiLightDevice, SwitchEntity):
         return pause_time
 
     @property
-    def state_attributes(self) -> dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         attr: dict[str, Any] = {}
 
