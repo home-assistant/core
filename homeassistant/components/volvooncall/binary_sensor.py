@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import (
-    BinarySensorDeviceClass,
+    DEVICE_CLASSES_SCHEMA,
     BinarySensorEntity,
 )
 from homeassistant.core import HomeAssistant
@@ -38,10 +38,7 @@ class VolvoSensor(VolvoEntity, BinarySensorEntity):
         """Initialize the sensor."""
         super().__init__(vin, component, attribute, slug_attr, coordinator)
 
-        if self.instrument.device_class in {
-            item.value for item in BinarySensorDeviceClass
-        }:
-            self._attr_device_class = self.instrument.device_class
+        self._attr_device_class = DEVICE_CLASSES_SCHEMA(self.instrument.device_class)
 
     @property
     def is_on(self) -> bool | None:

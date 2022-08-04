@@ -157,26 +157,14 @@ class VolvoData:
 
     def instrument(self, vin, component, attr, slug_attr):
         """Return corresponding instrument."""
-        ret = next(
-            (
-                instrument
-                for instrument in self.instruments
-                if instrument.vehicle.vin == vin
-                and instrument.component == component
-                and instrument.attr == attr
-                and instrument.slug_attr == slug_attr
-            ),
-            None,
+        return next(
+            instrument
+            for instrument in self.instruments
+            if instrument.vehicle.vin == vin
+            and instrument.component == component
+            and instrument.attr == attr
+            and instrument.slug_attr == slug_attr
         )
-
-        if ret is None:
-            _LOGGER.warning(
-                "Unknown instrument requested: %s.%s, which means there is an issue with the volvooncall component or the underlying volvooncall package",
-                component,
-                slug_attr,
-            )
-
-        return ret
 
     def vehicle_name(self, vehicle):
         """Provide a friendly name for a vehicle."""
