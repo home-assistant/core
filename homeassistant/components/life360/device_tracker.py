@@ -125,7 +125,6 @@ class Life360DeviceTracker(CoordinatorEntity, TrackerEntity):
         # that there is no data for this Member on some updates.
         if self.available:
             self._data = self.coordinator.data.members.get(self.unique_id)
-            assert self._data is None or self._data is not self._prev_data
         else:
             self._data = None
 
