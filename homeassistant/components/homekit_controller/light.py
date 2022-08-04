@@ -107,9 +107,9 @@ class HomeKitLight(HomeKitEntity, LightEntity):
         return ColorMode.ONOFF
 
     @property
-    def supported_color_modes(self) -> set[ColorMode | str] | None:
+    def supported_color_modes(self) -> set[ColorMode]:
         """Flag supported color modes."""
-        color_modes: set[ColorMode | str] = set()
+        color_modes: set[ColorMode] = set()
 
         if self.service.has(CharacteristicsTypes.HUE) or self.service.has(
             CharacteristicsTypes.SATURATION

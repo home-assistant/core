@@ -79,18 +79,17 @@ class EntityMapStorage:
     @callback
     def async_delete_map(self, homekit_id: str) -> None:
         """Delete pairing cache."""
-        if homekit_id not in self.storage_data:
-            _LOGGER.debug("Tried to delete non-existent entity map %s", homekit_id)
-            return
-
-        _LOGGER.debug("Deleting entity map for %s", homekit_id)
-        self.storage_data.pop(homekit_id)
-
-        # If the lowercased version was accidentally cached, delete it too
-        lower_homekit_id = homekit_id.lower()
-        if lower_homekit_id in self.storage_data:
-            self.storage_data.pop(lower_homekit_id)
-        self._async_schedule_save()
+        removed_one = False
+        # Previously there was a bug where a lowercase homekit_id was stored
+        # in the storage. We need to account for that.
+        for hkid in (homekit_id, homekit_id.lower()):
+            if hkid not in self.storage_data:
+                continue
+            _LOGGER.debug("Deleting entity map for %s", hkid)
+            self.storage_data.pop(hkid)
+            removed_one = True
+        if removed_one:
+            self._async_schedule_save()
 
     @callback
     def _async_schedule_save(self) -> None:
