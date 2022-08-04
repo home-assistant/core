@@ -1,11 +1,12 @@
 """Basic checks for HomeKit sensor."""
 from aiohomekit.model.characteristics import CharacteristicsTypes
-from aiohomekit.model.characteristics.const import ThreadNodeCapabilities
+from aiohomekit.model.characteristics.const import ThreadNodeCapabilities, ThreadStatus
 from aiohomekit.model.services import ServicesTypes
 from aiohomekit.protocol.statuscodes import HapStatusCode
 
 from homeassistant.components.homekit_controller.sensor import (
     thread_node_capability_to_str,
+    thread_status_to_str,
 )
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 
@@ -92,10 +93,12 @@ async def test_temperature_sensor_not_added_twice(hass, utcnow):
         hass, create_temperature_sensor_service, suffix="temperature"
     )
 
+    created_sensors = set()
     for state in hass.states.async_all():
-        if state.entity_id.startswith("button"):
-            continue
-        assert state.entity_id == helper.entity_id
+        if state.attributes.get("device_class") == SensorDeviceClass.TEMPERATURE:
+            created_sensors.add(state.entity_id)
+
+    assert created_sensors == {helper.entity_id}
 
 
 async def test_humidity_sensor_read_state(hass, utcnow):
@@ -335,3 +338,14 @@ def test_thread_node_caps_to_str():
     assert thread_node_capability_to_str(ThreadNodeCapabilities.MINIMAL) == "minimal"
     assert thread_node_capability_to_str(ThreadNodeCapabilities.SLEEPY) == "sleepy"
     assert thread_node_capability_to_str(ThreadNodeCapabilities(128)) == "none"
+
+
+def test_thread_status_to_str():
+    """Test all values of this enum get a translatable string."""
+    assert thread_status_to_str(ThreadStatus.BORDER_ROUTER) == "border_router"
+    assert thread_status_to_str(ThreadStatus.LEADER) == "leader"
+    assert thread_status_to_str(ThreadStatus.ROUTER) == "router"
+    assert thread_status_to_str(ThreadStatus.CHILD) == "child"
+    assert thread_status_to_str(ThreadStatus.JOINING) == "joining"
+    assert thread_status_to_str(ThreadStatus.DETACHED) == "detached"
+    assert thread_status_to_str(ThreadStatus.DISABLED) == "disabled"
