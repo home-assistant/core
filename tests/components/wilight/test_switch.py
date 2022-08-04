@@ -250,3 +250,14 @@ async def test_switch_services(
     state = hass.states.get("switch.wl000000000099_1_watering")
     assert state
     assert state.attributes.get(ATTR_TRIGGER_4) == "00008300"
+
+    # Set watering time using WiLight Pause Switch to raise
+    await hass.services.async_call(
+        WILIGHT_DOMAIN,
+        SERVICE_SET_WATERING_TIME,
+        {ATTR_WATERING_TIME: 30, ATTR_ENTITY_ID: "switch.wl000000000099_2_pause"},
+        blocking=True,
+    )
+
+    await hass.async_block_till_done()
+    assert pytest.raises
