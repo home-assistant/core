@@ -180,7 +180,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected error")
                 errors["base"] = "unknown"
             else:
-                return self.async_create_entry(title=local_name, data=user_input)
+                return self.async_create_entry(
+                    title=local_name,
+                    data={
+                        CONF_KEY: key,
+                        CONF_SLOT: slot,
+                    },
+                )
 
         if discovery := self._discovery_info:
             self._discovered_devices[discovery.name] = discovery
