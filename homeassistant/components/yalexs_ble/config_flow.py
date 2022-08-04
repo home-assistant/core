@@ -5,9 +5,15 @@ import asyncio
 import logging
 from typing import Any
 
-from bleak_retry_connector import BleakError
+from bleak_retry_connector import BleakError, BLEDevice
 import voluptuous as vol
-from yalexs_ble import AuthError, PushLock, local_name_to_serial, serial_to_local_name
+from yalexs_ble import (
+    AuthError,
+    DisconnectedError,
+    PushLock,
+    local_name_to_serial,
+    serial_to_local_name,
+)
 from yalexs_ble.const import YALE_MFR_ID
 
 from homeassistant import config_entries
@@ -21,12 +27,31 @@ from homeassistant.components.bluetooth.match import (
     BluetoothCallbackMatcher,
 )
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant.loader import async_get_integration
 
 from .const import CONF_KEY, CONF_LOCAL_NAME, CONF_SLOT, DISCOVERY_TIMEOUT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def validate_lock(
+    local_name: str, device: BLEDevice, key: str, slot: int
+) -> None:
+    """Validate a lock."""
+    if len(key) != 32:
+        raise InvalidKeyFormat
+    try:
+        bytes.fromhex(key)
+    except ValueError as ex:
+        raise InvalidKeyFormat from ex
+    if not isinstance(slot, int) or slot < 0 or slot > 255:
+        raise InvalidKeyIndex
+    push_lock = PushLock(local_name)
+    push_lock.set_ble_device(device)
+    push_lock.set_lock_key(key, slot)
+    await push_lock.validate()
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -141,15 +166,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             slot = user_input[CONF_SLOT]
             await self.async_set_unique_id(local_name, raise_on_progress=False)
             self._abort_if_unique_id_configured()
-            push_lock = PushLock(local_name)
-            push_lock.set_ble_device(discovery_info.device)
-            push_lock.set_lock_key(key, slot)
             try:
-                await push_lock.update()
+                await validate_lock(local_name, discovery_info.device, key, slot)
+            except InvalidKeyFormat:
+                errors["base"] = "invalid_key_format"
+            except InvalidKeyIndex:
+                errors["base"] = "invalid_key_index"
+            except (DisconnectedError, AuthError, ValueError):
+                errors["key"] = "invalid_auth"
             except BleakError:
                 errors["base"] = "cannot_connect"
-            except (AuthError, ValueError):
-                errors["key"] = "invalid_auth"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected error")
                 errors["base"] = "unknown"
@@ -191,3 +217,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders={"docs_url": integration.documentation},
         )
+
+
+class InvalidKeyFormat(HomeAssistantError):
+    """Invalid key format."""
+
+
+class InvalidKeyIndex(HomeAssistantError):
+    """Invalid key index."""

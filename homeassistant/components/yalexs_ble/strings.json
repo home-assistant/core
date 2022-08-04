@@ -6,8 +6,8 @@
         "description": "Check the documentation at {docs_url} for how to find the offline key.",
         "data": {
           "local_name": "Bluetooth local name",
-          "key": "Offline Key",
-          "slot": "Offline Key Slot (Key Index)"
+          "key": "Offline Key (32-byte hex string)",
+          "slot": "Offline Key Slot (Integer between 0 and 255)"
         }
       },
       "integration_discovery_confirm": {
@@ -17,7 +17,9 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "invalid_key_format": "The offline key must be a 32-byte hex string.",
+      "invalid_key_index": "The offline key slot must be an integer between 0 and 255."
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
