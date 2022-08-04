@@ -59,7 +59,7 @@ async def async_setup_entry(
         async_add_entities([device])
 
     # create any components not yet created
-    for controller in disco.pi_disco.controllers.values():
+    for controller in discovery_service.controllers.values():
         init_controller(controller)
 
     # connect to register any further components
