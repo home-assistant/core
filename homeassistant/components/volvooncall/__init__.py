@@ -92,26 +92,31 @@ RESOURCES = [
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(
-                    CONF_SCAN_INTERVAL, default=DEFAULT_UPDATE_INTERVAL
-                ): vol.All(
-                    cv.time_period, vol.Clamp(min=DEFAULT_UPDATE_INTERVAL)
-                ),  # ignored, using DataUpdateCoordinator instead
-                vol.Optional(CONF_NAME, default={}): cv.schema_with_slug_keys(
-                    cv.string
-                ),  # ignored, users can modify names of entities in the UI
-                vol.Optional(CONF_RESOURCES): vol.All(
-                    cv.ensure_list, [vol.In(RESOURCES)]
-                ),  # ignored, users can disable entities in the UI
-                vol.Optional(CONF_REGION): cv.string,
-                vol.Optional(CONF_SERVICE_URL): cv.string,
-                vol.Optional(CONF_MUTABLE, default=True): cv.boolean,
-                vol.Optional(CONF_SCANDINAVIAN_MILES, default=False): cv.boolean,
-            }
+        DOMAIN: vol.All(
+            cv.deprecated(CONF_SCAN_INTERVAL),
+            cv.deprecated(CONF_NAME),
+            cv.deprecated(CONF_RESOURCES),
+            vol.Schema(
+                {
+                    vol.Required(CONF_USERNAME): cv.string,
+                    vol.Required(CONF_PASSWORD): cv.string,
+                    vol.Optional(
+                        CONF_SCAN_INTERVAL, default=DEFAULT_UPDATE_INTERVAL
+                    ): vol.All(
+                        cv.time_period, vol.Clamp(min=DEFAULT_UPDATE_INTERVAL)
+                    ),  # ignored, using DataUpdateCoordinator instead
+                    vol.Optional(CONF_NAME, default={}): cv.schema_with_slug_keys(
+                        cv.string
+                    ),  # ignored, users can modify names of entities in the UI
+                    vol.Optional(CONF_RESOURCES): vol.All(
+                        cv.ensure_list, [vol.In(RESOURCES)]
+                    ),  # ignored, users can disable entities in the UI
+                    vol.Optional(CONF_REGION): cv.string,
+                    vol.Optional(CONF_SERVICE_URL): cv.string,
+                    vol.Optional(CONF_MUTABLE, default=True): cv.boolean,
+                    vol.Optional(CONF_SCANDINAVIAN_MILES, default=False): cv.boolean,
+                }
+            ),
         )
     },
     extra=vol.ALLOW_EXTRA,
