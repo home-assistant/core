@@ -39,7 +39,7 @@ from .const import (
 )
 from .coordinator import Life360DataUpdateCoordinator, MissingLocReason
 
-PLATFORMS = [Platform.DEVICE_TRACKER]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.DEVICE_TRACKER]
 
 CONF_ACCOUNTS = "accounts"
 
