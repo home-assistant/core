@@ -1,4 +1,4 @@
-"""The pylontech_rs485 integration."""
+"""The pylontech_us integration."""
 from __future__ import annotations
 
 from datetime import timedelta
