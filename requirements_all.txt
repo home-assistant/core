@@ -5,7 +5,7 @@
 AEMET-OpenData==0.2.1
 
 # homeassistant.components.aladdin_connect
-AIOAladdinConnect==0.1.39
+AIOAladdinConnect==0.1.41
 
 # homeassistant.components.adax
 Adax-local==0.1.4
@@ -168,7 +168,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==1.2.3
+aiohomekit==1.2.5
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -405,7 +405,7 @@ bimmer_connected==0.10.1
 bizkaibus==0.1.1
 
 # homeassistant.components.bluetooth
-bleak==0.15.0
+bleak==0.15.1
 
 # homeassistant.components.blebox
 blebox_uniapi==2.0.2
@@ -1103,7 +1103,7 @@ nextcloudmonitor==1.1.0
 nextcord==2.0.0a8
 
 # homeassistant.components.nextdns
-nextdns==1.0.1
+nextdns==1.0.2
 
 # homeassistant.components.niko_home_control
 niko-home-control==0.2.1
@@ -1784,7 +1784,7 @@ pyrecswitch==1.0.2
 pyrepetierng==0.1.0
 
 # homeassistant.components.risco
-pyrisco==0.5.0
+pyrisco==0.5.2
 
 # homeassistant.components.rituals_perfume_genie
 pyrituals==0.0.6
