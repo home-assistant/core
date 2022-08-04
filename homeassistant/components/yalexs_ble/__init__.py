@@ -43,6 +43,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Update from a ble callback."""
         push_lock.update_advertisement(service_info.device, service_info.advertisement)
 
+    cancel_first_update = push_lock.register_callback(lambda *_: startup_event.set())
+    entry.async_on_unload(await push_lock.start())
+
+    # We may already have the advertisement, so check for it.
+    for service_info in bluetooth.async_discovered_service_info(hass):
+        if service_info.device.name == local_name:
+            push_lock.update_advertisement(
+                service_info.device, service_info.advertisement
+            )
+            break
+
     entry.async_on_unload(
         bluetooth.async_register_callback(
             hass,
@@ -51,9 +62,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             bluetooth.BluetoothScanningMode.PASSIVE,
         )
     )
-
-    cancel_first_update = push_lock.register_callback(lambda *_: startup_event.set())
-    entry.async_on_unload(await push_lock.start())
 
     try:
         async with async_timeout.timeout(DISCOVERY_TIMEOUT):
