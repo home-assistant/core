@@ -2499,7 +2499,7 @@ xs1-api-client==3.0.0
 yalesmartalarmclient==0.3.8
 
 # homeassistant.components.yalexs_ble
-yalexs-ble==0.17.1
+yalexs-ble==0.18.1
 
 # homeassistant.components.august
 yalexs==1.2.0
