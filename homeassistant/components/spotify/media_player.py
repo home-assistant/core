@@ -40,7 +40,7 @@ from .util import fetch_image_url
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(minutes=1)
+SCAN_INTERVAL = timedelta(seconds=30)
 
 SUPPORT_SPOTIFY = (
     MediaPlayerEntityFeature.BROWSE_MEDIA
