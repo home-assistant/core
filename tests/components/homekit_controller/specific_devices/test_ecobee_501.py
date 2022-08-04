@@ -2,6 +2,7 @@
 
 
 from homeassistant.components.climate.const import (
+    SUPPORT_FAN_MODE,
     SUPPORT_TARGET_HUMIDITY,
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
@@ -43,9 +44,11 @@ async def test_ecobee501_setup(hass):
                         SUPPORT_TARGET_TEMPERATURE
                         | SUPPORT_TARGET_TEMPERATURE_RANGE
                         | SUPPORT_TARGET_HUMIDITY
+                        | SUPPORT_FAN_MODE
                     ),
                     capabilities={
                         "hvac_modes": ["off", "heat", "cool", "heat_cool"],
+                        "fan_modes": ["on", "auto"],
                         "min_temp": 7.2,
                         "max_temp": 33.3,
                         "min_humidity": 20,

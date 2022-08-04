@@ -25,7 +25,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -41,6 +41,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class TailscaleEntity(CoordinatorEntity):
     """Defines a Tailscale base entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         *,
@@ -52,8 +54,6 @@ class TailscaleEntity(CoordinatorEntity):
         super().__init__(coordinator=coordinator)
         self.entity_description = description
         self.device_id = device.device_id
-        self.friendly_name = device.name.split(".")[0]
-        self._attr_name = f"{self.friendly_name} {description.name}"
         self._attr_unique_id = f"{device.device_id}_{description.key}"
 
     @property
@@ -71,6 +71,6 @@ class TailscaleEntity(CoordinatorEntity):
             identifiers={(DOMAIN, device.device_id)},
             manufacturer="Tailscale Inc.",
             model=device.os,
-            name=self.friendly_name,
+            name=device.name.split(".")[0],
             sw_version=device.client_version,
         )

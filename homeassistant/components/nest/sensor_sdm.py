@@ -53,6 +53,7 @@ class SensorBase(SensorEntity):
 
     _attr_should_poll = False
     _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_has_entity_name = True
 
     def __init__(self, device: Device) -> None:
         """Initialize the sensor."""
@@ -73,11 +74,7 @@ class TemperatureSensor(SensorBase):
 
     _attr_device_class = SensorDeviceClass.TEMPERATURE
     _attr_native_unit_of_measurement = TEMP_CELSIUS
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return f"{self._device_info.device_name} Temperature"
+    _attr_name = "Temperature"
 
     @property
     def native_value(self) -> float:
@@ -94,11 +91,7 @@ class HumiditySensor(SensorBase):
 
     _attr_device_class = SensorDeviceClass.HUMIDITY
     _attr_native_unit_of_measurement = PERCENTAGE
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return f"{self._device_info.device_name} Humidity"
+    _attr_name = "Humidity"
 
     @property
     def native_value(self) -> int:

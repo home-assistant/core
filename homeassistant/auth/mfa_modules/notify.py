@@ -7,7 +7,7 @@ from __future__ import annotations
 import asyncio
 from collections import OrderedDict
 import logging
-from typing import Any
+from typing import Any, cast
 
 import attr
 import voluptuous as vol
@@ -100,7 +100,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
         """Initialize the user data store."""
         super().__init__(hass, config)
         self._user_settings: _UsersDict | None = None
-        self._user_store = Store(
+        self._user_store = Store[dict[str, dict[str, Any]]](
             hass, STORAGE_VERSION, STORAGE_KEY, private=True, atomic_writes=True
         )
         self._include = config.get(CONF_INCLUDE, [])
@@ -119,10 +119,8 @@ class NotifyAuthModule(MultiFactorAuthModule):
             if self._user_settings is not None:
                 return
 
-            if (data := await self._user_store.async_load()) is None or not isinstance(
-                data, dict
-            ):
-                data = {STORAGE_USERS: {}}
+            if (data := await self._user_store.async_load()) is None:
+                data = cast(dict[str, dict[str, Any]], {STORAGE_USERS: {}})
 
             self._user_settings = {
                 user_id: NotifySetting(**setting)
@@ -322,6 +320,7 @@ class NotifySetupFlow(SetupFlow):
         errors: dict[str, str] = {}
 
         hass = self._auth_module.hass
+        assert self._secret and self._count
         if user_input:
             verified = await hass.async_add_executor_job(
                 _verify_otp, self._secret, user_input["code"], self._count
@@ -336,7 +335,6 @@ class NotifySetupFlow(SetupFlow):
             errors["base"] = "invalid_code"
 
         # generate code every time, no retry logic
-        assert self._secret and self._count
         code = await hass.async_add_executor_job(
             _generate_otp, self._secret, self._count
         )

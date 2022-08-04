@@ -143,8 +143,6 @@ async def async_setup_entry(
     ca_certs = hass.config.path(config_entry.data[CONF_CA_CERTS])
     bridge = None
 
-    await _async_migrate_unique_ids(hass, config_entry)
-
     try:
         bridge = Smartbridge.create_tls(
             hostname=host, keyfile=keyfile, certfile=certfile, ca_certs=ca_certs
@@ -167,6 +165,7 @@ async def async_setup_entry(
             raise ConfigEntryNotReady(f"Cannot connect to {host}")
 
     _LOGGER.debug("Connected to Lutron Caseta bridge via LEAP at %s", host)
+    await _async_migrate_unique_ids(hass, config_entry)
 
     devices = bridge.get_devices()
     bridge_device = devices[BRIDGE_DEVICE_ID]
@@ -188,7 +187,7 @@ async def async_setup_entry(
         bridge, bridge_device, button_devices
     )
 
-    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     return True
 

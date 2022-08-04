@@ -2,11 +2,10 @@
 from __future__ import annotations
 
 import logging
-from typing import Literal
 
 from bimmer_connected.vehicle import MyBMWVehicle
 
-from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
+from homeassistant.components.device_tracker import SourceType
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -80,6 +79,6 @@ class BMWDeviceTracker(BMWBaseEntity, TrackerEntity):
         )
 
     @property
-    def source_type(self) -> Literal["gps"]:
+    def source_type(self) -> SourceType:
         """Return the source type, eg gps or router, of the device."""
-        return SOURCE_TYPE_GPS
+        return SourceType.GPS

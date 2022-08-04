@@ -137,7 +137,6 @@ def test_install_target(mock_sys, mock_popen, mock_env_copy, mock_venv):
         "--quiet",
         TEST_NEW_REQ,
         "--user",
-        "--prefix=",
     ]
 
     assert package.install_package(TEST_NEW_REQ, False, target=target)
@@ -156,7 +155,7 @@ def test_install_target_venv(mock_sys, mock_popen, mock_env_copy, mock_venv):
 
 
 def test_install_error(caplog, mock_sys, mock_popen, mock_venv):
-    """Test an install with a target."""
+    """Test an install that errors out."""
     caplog.set_level(logging.WARNING)
     mock_popen.return_value.returncode = 1
     assert not package.install_package(TEST_NEW_REQ)

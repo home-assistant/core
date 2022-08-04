@@ -6,7 +6,8 @@
         },
         "error": {
             "invalid_auth": "Ugyldig godkjenning",
-            "unknown": "Uventet feil"
+            "unknown": "Uventet feil",
+            "unknown_mfa": "Ukjent feil oppstod under MFA-oppsett"
         },
         "step": {
             "installation": {
@@ -15,11 +16,23 @@
                 },
                 "description": "Home Assistant fant flere Verisure-installasjoner i Mine sider-kontoen din. Velg installasjonen du vil legge til i Home Assistant."
             },
+            "mfa": {
+                "data": {
+                    "code": "Bekreftelseskode",
+                    "description": "Kontoen din har 2-trinns bekreftelse aktivert. Vennligst skriv inn bekreftelseskoden Verisure sender til deg."
+                }
+            },
             "reauth_confirm": {
                 "data": {
                     "description": "Autentiser p\u00e5 nytt med Verisure Mine sider-kontoen din.",
                     "email": "E-post",
                     "password": "Passord"
+                }
+            },
+            "reauth_mfa": {
+                "data": {
+                    "code": "Bekreftelseskode",
+                    "description": "Kontoen din har 2-trinns bekreftelse aktivert. Vennligst skriv inn bekreftelseskoden Verisure sender til deg."
                 }
             },
             "user": {

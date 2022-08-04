@@ -102,6 +102,11 @@ class MeteoFranceWeather(CoordinatorEntity, WeatherEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
+        assert (
+            self.platform
+            and self.platform.config_entry
+            and self.platform.config_entry.unique_id
+        )
         return DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, self.platform.config_entry.unique_id)},

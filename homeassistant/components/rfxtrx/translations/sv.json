@@ -31,6 +31,16 @@
             }
         }
     },
+    "device_automation": {
+        "action_type": {
+            "send_command": "Skicka kommando: {subtype}",
+            "send_status": "Skicka statusuppdatering: {subtype}"
+        },
+        "trigger_type": {
+            "command": "Mottaget kommando: {subtype}",
+            "status": "Mottagen status: {subtype}"
+        }
+    },
     "options": {
         "error": {
             "already_configured_device": "Enheten \u00e4r redan konfigurerad",

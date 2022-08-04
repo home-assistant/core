@@ -341,7 +341,7 @@ async def test_update_error(
     assert state.name == TEST_ENTITY_NAME
     assert state.state == "on"
 
-    # Advance time to avoid throttling
+    # Advance time to next data update interval
     now += datetime.timedelta(minutes=30)
 
     aioclient_mock.clear_requests()
@@ -351,12 +351,12 @@ async def test_update_error(
         async_fire_time_changed(hass, now)
         await hass.async_block_till_done()
 
-    # No change
+    # Entity is marked uanvailable due to API failure
     state = hass.states.get(TEST_ENTITY)
     assert state.name == TEST_ENTITY_NAME
-    assert state.state == "on"
+    assert state.state == "unavailable"
 
-    # Advance time beyond update/throttle point
+    # Advance time past next coordinator update
     now += datetime.timedelta(minutes=30)
 
     aioclient_mock.clear_requests()
@@ -380,7 +380,7 @@ async def test_update_error(
         async_fire_time_changed(hass, now)
         await hass.async_block_till_done()
 
-    # State updated
+    # State updated with new API response
     state = hass.states.get(TEST_ENTITY)
     assert state.name == TEST_ENTITY_NAME
     assert state.state == "off"
@@ -423,10 +423,11 @@ async def test_http_event_api_failure(
     mock_events_list({}, exc=ClientError())
 
     response = await client.get(upcoming_event_url())
-    assert response.status == HTTPStatus.OK
-    # A failure to talk to the server results in an empty list of events
-    events = await response.json()
-    assert events == []
+    assert response.status == HTTPStatus.INTERNAL_SERVER_ERROR
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state.name == TEST_ENTITY_NAME
+    assert state.state == "unavailable"
 
 
 @pytest.mark.freeze_time("2022-03-27 12:05:00+00:00")
@@ -616,7 +617,7 @@ async def test_future_event_update_behavior(
 
     # Advance time until event has started
     now += datetime.timedelta(minutes=60)
-    now_utc += datetime.timedelta(minutes=30)
+    now_utc += datetime.timedelta(minutes=60)
     with patch("homeassistant.util.dt.utcnow", return_value=now_utc), patch(
         "homeassistant.util.dt.now", return_value=now
     ):

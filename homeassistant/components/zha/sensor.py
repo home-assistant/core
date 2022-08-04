@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import functools
 import numbers
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from homeassistant.components.climate.const import HVACAction
 from homeassistant.components.sensor import (
@@ -69,6 +69,13 @@ if TYPE_CHECKING:
     from .core.channels.base import ZigbeeChannel
     from .core.device import ZHADevice
 
+_SensorSelfT = TypeVar("_SensorSelfT", bound="Sensor")
+_BatterySelfT = TypeVar("_BatterySelfT", bound="Battery")
+_ThermostatHVACActionSelfT = TypeVar(
+    "_ThermostatHVACActionSelfT", bound="ThermostatHVACAction"
+)
+_RSSISensorSelfT = TypeVar("_RSSISensorSelfT", bound="RSSISensor")
+
 PARALLEL_UPDATES = 5
 
 BATTERY_SIZES = {
@@ -126,7 +133,7 @@ class Sensor(ZhaEntity, SensorEntity):
         unique_id: str,
         zha_device: ZHADevice,
         channels: list[ZigbeeChannel],
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """Init this sensor."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
@@ -134,12 +141,12 @@ class Sensor(ZhaEntity, SensorEntity):
 
     @classmethod
     def create_entity(
-        cls,
+        cls: type[_SensorSelfT],
         unique_id: str,
         zha_device: ZHADevice,
         channels: list[ZigbeeChannel],
-        **kwargs,
-    ) -> ZhaEntity | None:
+        **kwargs: Any,
+    ) -> _SensorSelfT | None:
         """Entity Factory.
 
         Return entity if it is a supported configuration, otherwise return None
@@ -214,12 +221,12 @@ class Battery(Sensor):
 
     @classmethod
     def create_entity(
-        cls,
+        cls: type[_BatterySelfT],
         unique_id: str,
         zha_device: ZHADevice,
         channels: list[ZigbeeChannel],
-        **kwargs,
-    ) -> ZhaEntity | None:
+        **kwargs: Any,
+    ) -> _BatterySelfT | None:
         """Entity Factory.
 
         Unlike any other entity, PowerConfiguration cluster may not support
@@ -472,25 +479,8 @@ class SmartEnergyMetering(Sensor):
 
 @MULTI_MATCH(
     channel_names=CHANNEL_SMARTENERGY_METERING,
-    models={"TS011F"},
     stop_on_match_group=CHANNEL_SMARTENERGY_METERING,
 )
-class PolledSmartEnergyMetering(SmartEnergyMetering):
-    """Polled metering sensor."""
-
-    @property
-    def should_poll(self) -> bool:
-        """Poll the entity for current state."""
-        return True
-
-    async def async_update(self) -> None:
-        """Retrieve latest state."""
-        if not self.available:
-            return
-        await self._channel.async_force_update()
-
-
-@MULTI_MATCH(channel_names=CHANNEL_SMARTENERGY_METERING)
 class SmartEnergySummation(SmartEnergyMetering, id_suffix="summation_delivered"):
     """Smart Energy Metering summation sensor."""
 
@@ -521,6 +511,26 @@ class SmartEnergySummation(SmartEnergyMetering, id_suffix="summation_delivered")
 
         cooked = float(self._channel.multiplier * value) / self._channel.divisor
         return round(cooked, 3)
+
+
+@MULTI_MATCH(
+    channel_names=CHANNEL_SMARTENERGY_METERING,
+    models={"TS011F"},
+    stop_on_match_group=CHANNEL_SMARTENERGY_METERING,
+)
+class PolledSmartEnergySummation(SmartEnergySummation):
+    """Polled Smart Energy Metering summation sensor."""
+
+    @property
+    def should_poll(self) -> bool:
+        """Poll the entity for current state."""
+        return True
+
+    async def async_update(self) -> None:
+        """Retrieve latest state."""
+        if not self.available:
+            return
+        await self._channel.async_force_update()
 
 
 @MULTI_MATCH(channel_names=CHANNEL_PRESSURE)
@@ -638,12 +648,12 @@ class ThermostatHVACAction(Sensor, id_suffix="hvac_action"):
 
     @classmethod
     def create_entity(
-        cls,
+        cls: type[_ThermostatHVACActionSelfT],
         unique_id: str,
         zha_device: ZHADevice,
         channels: list[ZigbeeChannel],
-        **kwargs,
-    ) -> ZhaEntity | None:
+        **kwargs: Any,
+    ) -> _ThermostatHVACActionSelfT | None:
         """Entity Factory.
 
         Return entity if it is a supported configuration, otherwise return None
@@ -764,12 +774,12 @@ class RSSISensor(Sensor, id_suffix="rssi"):
 
     @classmethod
     def create_entity(
-        cls,
+        cls: type[_RSSISensorSelfT],
         unique_id: str,
         zha_device: ZHADevice,
         channels: list[ZigbeeChannel],
-        **kwargs,
-    ) -> ZhaEntity | None:
+        **kwargs: Any,
+    ) -> _RSSISensorSelfT | None:
         """Entity Factory.
 
         Return entity if it is a supported configuration, otherwise return None
@@ -810,7 +820,7 @@ class TimeLeft(Sensor, id_suffix="time_left"):
     _unit = TIME_MINUTES
 
 
-@MULTI_MATCH(channel_names="ikea_airpurifier", models={"STARKVIND Air purifier"})
+@MULTI_MATCH(channel_names="ikea_airpurifier")
 class IkeaDeviceRunTime(Sensor, id_suffix="device_run_time"):
     """Sensor that displays device run time (in minutes)."""
 
@@ -820,7 +830,7 @@ class IkeaDeviceRunTime(Sensor, id_suffix="device_run_time"):
     _unit = TIME_MINUTES
 
 
-@MULTI_MATCH(channel_names="ikea_airpurifier", models={"STARKVIND Air purifier"})
+@MULTI_MATCH(channel_names="ikea_airpurifier")
 class IkeaFilterRunTime(Sensor, id_suffix="filter_run_time"):
     """Sensor that displays run time of the current filter (in minutes)."""
 

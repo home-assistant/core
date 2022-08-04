@@ -34,7 +34,7 @@ async def test_device_registry_insert(hass):
     with patch(
         "homeassistant.components.opentherm_gw.OpenThermGatewayDevice.cleanup",
         return_value=None,
-    ), patch("pyotgw.pyotgw.connect", return_value=MINIMAL_STATUS):
+    ), patch("pyotgw.OpenThermGateway.connect", return_value=MINIMAL_STATUS):
         await setup.async_setup_component(hass, DOMAIN, {})
 
     await hass.async_block_till_done()
@@ -62,7 +62,7 @@ async def test_device_registry_update(hass):
     with patch(
         "homeassistant.components.opentherm_gw.OpenThermGatewayDevice.cleanup",
         return_value=None,
-    ), patch("pyotgw.pyotgw.connect", return_value=MINIMAL_STATUS_UPD):
+    ), patch("pyotgw.OpenThermGateway.connect", return_value=MINIMAL_STATUS_UPD):
         await setup.async_setup_component(hass, DOMAIN, {})
 
     await hass.async_block_till_done()

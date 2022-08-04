@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import Enum
 import re
 
 from astroid import nodes
@@ -10,8 +11,12 @@ from pylint.lint import PyLinter
 
 from homeassistant.const import Platform
 
-DEVICE_CLASS = object()
-UNDEFINED = object()
+
+class _Special(Enum):
+    """Sentinel values"""
+
+    UNDEFINED = 1
+
 
 _PLATFORMS: set[str] = {platform.value for platform in Platform}
 
@@ -21,7 +26,7 @@ class TypeHintMatch:
     """Class for pattern matching."""
 
     function_name: str
-    return_type: list[str] | str | None | object
+    return_type: list[str | _Special | None] | str | _Special | None
     arg_types: dict[int, str] | None = None
     """arg_types is for positional arguments"""
     named_arg_types: dict[str, str] | None = None
@@ -53,13 +58,18 @@ class ClassTypeHintMatch:
 _TYPE_HINT_MATCHERS: dict[str, re.Pattern[str]] = {
     # a_or_b matches items such as "DiscoveryInfoType | None"
     "a_or_b": re.compile(r"^(\w+) \| (\w+)$"),
-    # x_of_y matches items such as "Awaitable[None]"
-    "x_of_y": re.compile(r"^(\w+)\[(.*?]*)\]$"),
-    # x_of_y_comma_z matches items such as "Callable[..., Awaitable[None]]"
-    "x_of_y_comma_z": re.compile(r"^(\w+)\[(.*?]*), (.*?]*)\]$"),
-    # x_of_y_of_z_comma_a matches items such as "list[dict[str, Any]]"
-    "x_of_y_of_z_comma_a": re.compile(r"^(\w+)\[(\w+)\[(.*?]*), (.*?]*)\]\]$"),
 }
+_INNER_MATCH = r"((?:\w+)|(?:\.{3})|(?:\w+\[.+\]))"
+_INNER_MATCH_POSSIBILITIES = [i + 1 for i in range(5)]
+_TYPE_HINT_MATCHERS.update(
+    {
+        f"x_of_y_{i}": re.compile(
+            rf"^(\w+)\[{_INNER_MATCH}" + f", {_INNER_MATCH}" * (i - 1) + r"\]$"
+        )
+        for i in _INNER_MATCH_POSSIBILITIES
+    }
+)
+
 
 _MODULE_REGEX: re.Pattern[str] = re.compile(r"^homeassistant\.components\.\w+(\.\w+)?$")
 
@@ -288,7 +298,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             arg_types={
                 0: "HomeAssistant",
                 1: "ConfigType",
-                2: "Callable[..., None]",
+                2: "SeeCallback",
                 3: "DiscoveryInfoType | None",
             },
             return_type="bool",
@@ -298,7 +308,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             arg_types={
                 0: "HomeAssistant",
                 1: "ConfigType",
-                2: "Callable[..., Awaitable[None]]",
+                2: "AsyncSeeCallback",
                 3: "DiscoveryInfoType | None",
             },
             return_type="bool",
@@ -356,7 +366,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 0: "HomeAssistant",
                 1: "ConfigEntry",
             },
-            return_type=UNDEFINED,
+            return_type=_Special.UNDEFINED,
         ),
         TypeHintMatch(
             function_name="async_get_device_diagnostics",
@@ -365,7 +375,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 1: "ConfigEntry",
                 2: "DeviceEntry",
             },
-            return_type=UNDEFINED,
+            return_type=_Special.UNDEFINED,
         ),
     ],
 }
@@ -455,6 +465,7 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
 }
 # Overriding properties and functions are normally checked by mypy, and will only
 # be checked by pylint when --ignore-missing-annotations is False
+
 _ENTITY_MATCH: list[TypeHintMatch] = [
     TypeHintMatch(
         function_name="should_poll",
@@ -494,7 +505,7 @@ _ENTITY_MATCH: list[TypeHintMatch] = [
     ),
     TypeHintMatch(
         function_name="device_class",
-        return_type=[DEVICE_CLASS, "str", None],
+        return_type=["str", None],
     ),
     TypeHintMatch(
         function_name="unit_of_measurement",
@@ -1402,17 +1413,8 @@ def _is_valid_type(
     in_return: bool = False,
 ) -> bool:
     """Check the argument node against the expected type."""
-    if expected_type is UNDEFINED:
+    if expected_type is _Special.UNDEFINED:
         return True
-
-    # Special case for device_class
-    if expected_type == DEVICE_CLASS and in_return:
-        return (
-            isinstance(node, nodes.Name)
-            and node.name.endswith("DeviceClass")
-            or isinstance(node, nodes.Attribute)
-            and node.attrname.endswith("DeviceClass")
-        )
 
     if isinstance(expected_type, list):
         for expected_type_item in expected_type:
@@ -1438,25 +1440,26 @@ def _is_valid_type(
             and _is_valid_type(match.group(2), node.right)
         )
 
-    # Special case for xxx[yyy[zzz, aaa]]`
-    if match := _TYPE_HINT_MATCHERS["x_of_y_of_z_comma_a"].match(expected_type):
-        return (
-            isinstance(node, nodes.Subscript)
-            and _is_valid_type(match.group(1), node.value)
-            and isinstance(subnode := node.slice, nodes.Subscript)
-            and _is_valid_type(match.group(2), subnode.value)
-            and isinstance(subnode.slice, nodes.Tuple)
-            and _is_valid_type(match.group(3), subnode.slice.elts[0])
-            and _is_valid_type(match.group(4), subnode.slice.elts[1])
+    # Special case for `xxx[aaa, bbb, ccc, ...]
+    if (
+        isinstance(node, nodes.Subscript)
+        and isinstance(node.slice, nodes.Tuple)
+        and (
+            match := _TYPE_HINT_MATCHERS[f"x_of_y_{len(node.slice.elts)}"].match(
+                expected_type
+            )
         )
-
-    # Special case for xxx[yyy, zzz]`
-    if match := _TYPE_HINT_MATCHERS["x_of_y_comma_z"].match(expected_type):
-        # Handle special case of Mapping[xxx, Any]
-        if in_return and match.group(1) == "Mapping" and match.group(3) == "Any":
+    ):
+        # This special case is separate because we want Mapping[str, Any]
+        # to also match dict[str, int] and similar
+        if (
+            len(node.slice.elts) == 2
+            and in_return
+            and match.group(1) == "Mapping"
+            and match.group(3) == "Any"
+        ):
             return (
-                isinstance(node, nodes.Subscript)
-                and isinstance(node.value, nodes.Name)
+                isinstance(node.value, nodes.Name)
                 # We accept dict when Mapping is needed
                 and node.value.name in ("Mapping", "dict")
                 and isinstance(node.slice, nodes.Tuple)
@@ -1464,16 +1467,19 @@ def _is_valid_type(
                 # Ignore second item
                 # and _is_valid_type(match.group(3), node.slice.elts[1])
             )
+
+        # This is the default case
         return (
-            isinstance(node, nodes.Subscript)
-            and _is_valid_type(match.group(1), node.value)
+            _is_valid_type(match.group(1), node.value)
             and isinstance(node.slice, nodes.Tuple)
-            and _is_valid_type(match.group(2), node.slice.elts[0])
-            and _is_valid_type(match.group(3), node.slice.elts[1])
+            and all(
+                _is_valid_type(match.group(n + 2), node.slice.elts[n])
+                for n in range(len(node.slice.elts))
+            )
         )
 
-    # Special case for xxx[yyy]`
-    if match := _TYPE_HINT_MATCHERS["x_of_y"].match(expected_type):
+    # Special case for xxx[yyy]
+    if match := _TYPE_HINT_MATCHERS["x_of_y_1"].match(expected_type):
         return (
             isinstance(node, nodes.Subscript)
             and _is_valid_type(match.group(1), node.value)
@@ -1568,12 +1574,12 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
     priority = -1
     msgs = {
         "W7431": (
-            "Argument %s should be of type %s",
+            "Argument %s should be of type %s in %s",
             "hass-argument-type",
             "Used when method argument type is incorrect",
         ),
         "W7432": (
-            "Return type should be %s",
+            "Return type should be %s in %s",
             "hass-return-type",
             "Used when method return type is incorrect",
         ),
@@ -1621,18 +1627,28 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
     def visit_classdef(self, node: nodes.ClassDef) -> None:
         """Called when a ClassDef node is visited."""
         ancestor: nodes.ClassDef
+        checked_class_methods: set[str] = set()
         for ancestor in node.ancestors():
             for class_matches in self._class_matchers:
                 if ancestor.name == class_matches.base_class:
-                    self._visit_class_functions(node, class_matches.matches)
+                    self._visit_class_functions(
+                        node, class_matches.matches, checked_class_methods
+                    )
 
     def _visit_class_functions(
-        self, node: nodes.ClassDef, matches: list[TypeHintMatch]
+        self,
+        node: nodes.ClassDef,
+        matches: list[TypeHintMatch],
+        checked_class_methods: set[str],
     ) -> None:
+        cached_methods: list[nodes.FunctionDef] = list(node.mymethods())
         for match in matches:
-            for function_node in node.mymethods():
+            for function_node in cached_methods:
+                if function_node.name in checked_class_methods:
+                    continue
                 if match.need_to_check_function(function_node):
                     self._check_function(function_node, match)
+                    checked_class_methods.add(function_node.name)
 
     def visit_functiondef(self, node: nodes.FunctionDef) -> None:
         """Called when a FunctionDef node is visited."""
@@ -1660,7 +1676,7 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
                     self.add_message(
                         "hass-argument-type",
                         node=node.args.args[key],
-                        args=(key + 1, expected_type),
+                        args=(key + 1, expected_type, node.name),
                     )
 
         # Check that all keyword arguments are correctly annotated.
@@ -1671,7 +1687,7 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
                     self.add_message(
                         "hass-argument-type",
                         node=arg_node,
-                        args=(arg_name, expected_type),
+                        args=(arg_name, expected_type, node.name),
                     )
 
         # Check that kwargs is correctly annotated.
@@ -1681,13 +1697,15 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
             self.add_message(
                 "hass-argument-type",
                 node=node,
-                args=(node.args.kwarg, match.kwargs_type),
+                args=(node.args.kwarg, match.kwargs_type, node.name),
             )
 
         # Check the return type.
         if not _is_valid_return_type(match, node.returns):
             self.add_message(
-                "hass-return-type", node=node, args=match.return_type or "None"
+                "hass-return-type",
+                node=node,
+                args=(match.return_type or "None", node.name),
             )
 
 

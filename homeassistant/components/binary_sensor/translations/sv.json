@@ -104,6 +104,9 @@
             "off": "Normal",
             "on": "L\u00e5g"
         },
+        "battery_charging": {
+            "off": "Laddar inte"
+        },
         "cold": {
             "off": "Normal",
             "on": "Kallt"

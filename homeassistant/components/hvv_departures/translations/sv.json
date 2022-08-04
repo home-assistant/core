@@ -1,7 +1,12 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad"
+        },
         "error": {
-            "cannot_connect": "Det gick inte att ansluta."
+            "cannot_connect": "Det gick inte att ansluta.",
+            "invalid_auth": "Ogiltig autentisering",
+            "no_results": "Inga resultat. F\u00f6rs\u00f6k med en annan station/adress"
         },
         "step": {
             "user": {

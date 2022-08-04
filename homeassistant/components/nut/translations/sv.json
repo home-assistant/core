@@ -20,7 +20,8 @@
                     "password": "L\u00f6senord",
                     "port": "Port",
                     "username": "Anv\u00e4ndarnamn"
-                }
+                },
+                "title": "Anslut till NUT-servern"
             }
         }
     },

@@ -8,11 +8,7 @@ from homeassistant.components.luftdaten.const import CONF_SENSOR_ID
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_SHOW_ON_MAP
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -27,7 +23,7 @@ async def test_duplicate_error(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") == RESULT_TYPE_FORM
+    assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == SOURCE_USER
     assert "flow_id" in result
 
@@ -36,7 +32,7 @@ async def test_duplicate_error(
         user_input={CONF_SENSOR_ID: 12345},
     )
 
-    assert result2.get("type") == RESULT_TYPE_ABORT
+    assert result2.get("type") == FlowResultType.ABORT
     assert result2.get("reason") == "already_configured"
 
 
@@ -48,7 +44,7 @@ async def test_communication_error(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") == RESULT_TYPE_FORM
+    assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == SOURCE_USER
     assert "flow_id" in result
 
@@ -58,7 +54,7 @@ async def test_communication_error(
         user_input={CONF_SENSOR_ID: 12345},
     )
 
-    assert result2.get("type") == RESULT_TYPE_FORM
+    assert result2.get("type") == FlowResultType.FORM
     assert result2.get("step_id") == SOURCE_USER
     assert result2.get("errors") == {CONF_SENSOR_ID: "cannot_connect"}
     assert "flow_id" in result2
@@ -69,7 +65,7 @@ async def test_communication_error(
         user_input={CONF_SENSOR_ID: 12345},
     )
 
-    assert result3.get("type") == RESULT_TYPE_CREATE_ENTRY
+    assert result3.get("type") == FlowResultType.CREATE_ENTRY
     assert result3.get("title") == "12345"
     assert result3.get("data") == {
         CONF_SENSOR_ID: 12345,
@@ -85,7 +81,7 @@ async def test_invalid_sensor(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") == RESULT_TYPE_FORM
+    assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == SOURCE_USER
     assert "flow_id" in result
 
@@ -95,7 +91,7 @@ async def test_invalid_sensor(
         user_input={CONF_SENSOR_ID: 11111},
     )
 
-    assert result2.get("type") == RESULT_TYPE_FORM
+    assert result2.get("type") == FlowResultType.FORM
     assert result2.get("step_id") == SOURCE_USER
     assert result2.get("errors") == {CONF_SENSOR_ID: "invalid_sensor"}
     assert "flow_id" in result2
@@ -106,7 +102,7 @@ async def test_invalid_sensor(
         user_input={CONF_SENSOR_ID: 12345},
     )
 
-    assert result3.get("type") == RESULT_TYPE_CREATE_ENTRY
+    assert result3.get("type") == FlowResultType.CREATE_ENTRY
     assert result3.get("title") == "12345"
     assert result3.get("data") == {
         CONF_SENSOR_ID: 12345,
@@ -124,7 +120,7 @@ async def test_step_user(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") == RESULT_TYPE_FORM
+    assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == SOURCE_USER
     assert "flow_id" in result
 
@@ -136,7 +132,7 @@ async def test_step_user(
         },
     )
 
-    assert result2.get("type") == RESULT_TYPE_CREATE_ENTRY
+    assert result2.get("type") == FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "12345"
     assert result2.get("data") == {
         CONF_SENSOR_ID: 12345,

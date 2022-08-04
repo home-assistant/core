@@ -13,5 +13,10 @@
                 "title": "Kies een authenticatie methode"
             }
         }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "title": "De Xbox YAML-configuratie wordt verwijderd"
+        }
     }
 }

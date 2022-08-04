@@ -21,7 +21,7 @@ from .const import (
     VS_SWITCHES,
 )
 
-PLATFORMS = [Platform.SWITCH, Platform.FAN, Platform.LIGHT, Platform.SENSOR]
+PLATFORMS = [Platform.FAN, Platform.LIGHT, Platform.SENSOR, Platform.SWITCH]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,22 +54,25 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     fans = hass.data[DOMAIN][VS_FANS] = []
     lights = hass.data[DOMAIN][VS_LIGHTS] = []
     sensors = hass.data[DOMAIN][VS_SENSORS] = []
+    platforms = []
 
     if device_dict[VS_SWITCHES]:
         switches.extend(device_dict[VS_SWITCHES])
-        hass.async_create_task(forward_setup(config_entry, Platform.SWITCH))
+        platforms.append(Platform.SWITCH)
 
     if device_dict[VS_FANS]:
         fans.extend(device_dict[VS_FANS])
-        hass.async_create_task(forward_setup(config_entry, Platform.FAN))
+        platforms.append(Platform.FAN)
 
     if device_dict[VS_LIGHTS]:
         lights.extend(device_dict[VS_LIGHTS])
-        hass.async_create_task(forward_setup(config_entry, Platform.LIGHT))
+        platforms.append(Platform.LIGHT)
 
     if device_dict[VS_SENSORS]:
         sensors.extend(device_dict[VS_SENSORS])
-        hass.async_create_task(forward_setup(config_entry, Platform.SENSOR))
+        platforms.append(Platform.SENSOR)
+
+    await hass.config_entries.async_forward_entry_setups(config_entry, platforms)
 
     async def async_new_device_discovery(service: ServiceCall) -> None:
         """Discover if new devices should be added."""

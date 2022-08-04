@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import functools
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, TypeVar
 
 import zigpy.exceptions
 from zigpy.zcl.foundation import Status
@@ -32,6 +32,10 @@ if TYPE_CHECKING:
     from .core.device import ZHADevice
 
 _LOGGER = logging.getLogger(__name__)
+
+_ZHANumberConfigurationEntitySelfT = TypeVar(
+    "_ZHANumberConfigurationEntitySelfT", bound="ZHANumberConfigurationEntity"
+)
 
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.NUMBER)
 CONFIG_DIAGNOSTIC_MATCH = functools.partial(
@@ -368,12 +372,12 @@ class ZHANumberConfigurationEntity(ZhaEntity, NumberEntity):
 
     @classmethod
     def create_entity(
-        cls,
+        cls: type[_ZHANumberConfigurationEntitySelfT],
         unique_id: str,
         zha_device: ZHADevice,
         channels: list[ZigbeeChannel],
-        **kwargs,
-    ) -> ZhaEntity | None:
+        **kwargs: Any,
+    ) -> _ZHANumberConfigurationEntitySelfT | None:
         """Entity Factory.
 
         Return entity if it is a supported configuration, otherwise return None
@@ -397,7 +401,7 @@ class ZHANumberConfigurationEntity(ZhaEntity, NumberEntity):
         unique_id: str,
         zha_device: ZHADevice,
         channels: list[ZigbeeChannel],
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """Init this number configuration entity."""
         self._channel: ZigbeeChannel = channels[0]
@@ -521,13 +525,11 @@ class TimerDurationMinutes(ZHANumberConfigurationEntity, id_suffix="timer_durati
     _attr_icon: str = ICONS[14]
     _attr_native_min_value: float = 0x00
     _attr_native_max_value: float = 0x257
-    _attr_unit_of_measurement: str | None = UNITS[72]
+    _attr_native_unit_of_measurement: str | None = UNITS[72]
     _zcl_attribute: str = "timer_duration"
 
 
-@CONFIG_DIAGNOSTIC_MATCH(
-    channel_names="ikea_airpurifier", models={"STARKVIND Air purifier"}
-)
+@CONFIG_DIAGNOSTIC_MATCH(channel_names="ikea_airpurifier")
 class FilterLifeTime(ZHANumberConfigurationEntity, id_suffix="filter_life_time"):
     """Representation of a ZHA timer duration configuration entity."""
 
@@ -535,5 +537,5 @@ class FilterLifeTime(ZHANumberConfigurationEntity, id_suffix="filter_life_time")
     _attr_icon: str = ICONS[14]
     _attr_native_min_value: float = 0x00
     _attr_native_max_value: float = 0xFFFFFFFF
-    _attr_unit_of_measurement: str | None = UNITS[72]
+    _attr_native_unit_of_measurement: str | None = UNITS[72]
     _zcl_attribute: str = "filter_life_time"

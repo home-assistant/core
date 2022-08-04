@@ -98,7 +98,7 @@ SENSOR_TYPES: tuple[RenaultSelectEntityDescription, ...] = (
         data_key="chargeMode",
         device_class=DEVICE_CLASS_CHARGE_MODE,
         icon_lambda=_get_charge_mode_icon,
-        name="Charge Mode",
+        name="Charge mode",
         options=["always", "always_charging", "schedule_mode"],
     ),
 )

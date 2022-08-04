@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 import logging
+from typing import TypeVar
 
 from aiohttp.client_exceptions import ClientConnectorError
 from async_timeout import timeout
@@ -16,11 +17,12 @@ from nextdns import (
     ApiError,
     InvalidApiKeyError,
     NextDns,
+    Settings,
 )
 from nextdns.model import NextDnsData
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -33,14 +35,18 @@ from .const import (
     ATTR_ENCRYPTION,
     ATTR_IP_VERSIONS,
     ATTR_PROTOCOLS,
+    ATTR_SETTINGS,
     ATTR_STATUS,
     CONF_PROFILE_ID,
     DOMAIN,
     UPDATE_INTERVAL_ANALYTICS,
+    UPDATE_INTERVAL_SETTINGS,
 )
 
+TCoordinatorData = TypeVar("TCoordinatorData", bound=NextDnsData)
 
-class NextDnsUpdateCoordinator(DataUpdateCoordinator):
+
+class NextDnsUpdateCoordinator(DataUpdateCoordinator[TCoordinatorData]):
     """Class to manage fetching NextDNS data API."""
 
     def __init__(
@@ -64,79 +70,76 @@ class NextDnsUpdateCoordinator(DataUpdateCoordinator):
 
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=update_interval)
 
-    async def _async_update_data(self) -> NextDnsData:
+    async def _async_update_data(self) -> TCoordinatorData:
+        """Update data via internal method."""
+        try:
+            async with timeout(10):
+                return await self._async_update_data_internal()
+        except (ApiError, ClientConnectorError, InvalidApiKeyError) as err:
+            raise UpdateFailed(err) from err
+
+    async def _async_update_data_internal(self) -> TCoordinatorData:
         """Update data via library."""
         raise NotImplementedError("Update method not implemented")
 
 
-class NextDnsStatusUpdateCoordinator(NextDnsUpdateCoordinator):
+class NextDnsStatusUpdateCoordinator(NextDnsUpdateCoordinator[AnalyticsStatus]):
     """Class to manage fetching NextDNS analytics status data from API."""
 
-    async def _async_update_data(self) -> AnalyticsStatus:
+    async def _async_update_data_internal(self) -> AnalyticsStatus:
         """Update data via library."""
-        try:
-            async with timeout(10):
-                return await self.nextdns.get_analytics_status(self.profile_id)
-        except (ApiError, ClientConnectorError, InvalidApiKeyError) as err:
-            raise UpdateFailed(err) from err
+        return await self.nextdns.get_analytics_status(self.profile_id)
 
 
-class NextDnsDnssecUpdateCoordinator(NextDnsUpdateCoordinator):
+class NextDnsDnssecUpdateCoordinator(NextDnsUpdateCoordinator[AnalyticsDnssec]):
     """Class to manage fetching NextDNS analytics Dnssec data from API."""
 
-    async def _async_update_data(self) -> AnalyticsDnssec:
+    async def _async_update_data_internal(self) -> AnalyticsDnssec:
         """Update data via library."""
-        try:
-            async with timeout(10):
-                return await self.nextdns.get_analytics_dnssec(self.profile_id)
-        except (ApiError, ClientConnectorError, InvalidApiKeyError) as err:
-            raise UpdateFailed(err) from err
+        return await self.nextdns.get_analytics_dnssec(self.profile_id)
 
 
-class NextDnsEncryptionUpdateCoordinator(NextDnsUpdateCoordinator):
+class NextDnsEncryptionUpdateCoordinator(NextDnsUpdateCoordinator[AnalyticsEncryption]):
     """Class to manage fetching NextDNS analytics encryption data from API."""
 
-    async def _async_update_data(self) -> AnalyticsEncryption:
+    async def _async_update_data_internal(self) -> AnalyticsEncryption:
         """Update data via library."""
-        try:
-            async with timeout(10):
-                return await self.nextdns.get_analytics_encryption(self.profile_id)
-        except (ApiError, ClientConnectorError, InvalidApiKeyError) as err:
-            raise UpdateFailed(err) from err
+        return await self.nextdns.get_analytics_encryption(self.profile_id)
 
 
-class NextDnsIpVersionsUpdateCoordinator(NextDnsUpdateCoordinator):
+class NextDnsIpVersionsUpdateCoordinator(NextDnsUpdateCoordinator[AnalyticsIpVersions]):
     """Class to manage fetching NextDNS analytics IP versions data from API."""
 
-    async def _async_update_data(self) -> AnalyticsIpVersions:
+    async def _async_update_data_internal(self) -> AnalyticsIpVersions:
         """Update data via library."""
-        try:
-            async with timeout(10):
-                return await self.nextdns.get_analytics_ip_versions(self.profile_id)
-        except (ApiError, ClientConnectorError, InvalidApiKeyError) as err:
-            raise UpdateFailed(err) from err
+        return await self.nextdns.get_analytics_ip_versions(self.profile_id)
 
 
-class NextDnsProtocolsUpdateCoordinator(NextDnsUpdateCoordinator):
+class NextDnsProtocolsUpdateCoordinator(NextDnsUpdateCoordinator[AnalyticsProtocols]):
     """Class to manage fetching NextDNS analytics protocols data from API."""
 
-    async def _async_update_data(self) -> AnalyticsProtocols:
+    async def _async_update_data_internal(self) -> AnalyticsProtocols:
         """Update data via library."""
-        try:
-            async with timeout(10):
-                return await self.nextdns.get_analytics_protocols(self.profile_id)
-        except (ApiError, ClientConnectorError, InvalidApiKeyError) as err:
-            raise UpdateFailed(err) from err
+        return await self.nextdns.get_analytics_protocols(self.profile_id)
+
+
+class NextDnsSettingsUpdateCoordinator(NextDnsUpdateCoordinator[Settings]):
+    """Class to manage fetching NextDNS connection data from API."""
+
+    async def _async_update_data_internal(self) -> Settings:
+        """Update data via library."""
+        return await self.nextdns.get_settings(self.profile_id)
 
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.BUTTON, Platform.SENSOR, Platform.SWITCH]
 COORDINATORS = [
     (ATTR_DNSSEC, NextDnsDnssecUpdateCoordinator, UPDATE_INTERVAL_ANALYTICS),
     (ATTR_ENCRYPTION, NextDnsEncryptionUpdateCoordinator, UPDATE_INTERVAL_ANALYTICS),
     (ATTR_IP_VERSIONS, NextDnsIpVersionsUpdateCoordinator, UPDATE_INTERVAL_ANALYTICS),
     (ATTR_PROTOCOLS, NextDnsProtocolsUpdateCoordinator, UPDATE_INTERVAL_ANALYTICS),
+    (ATTR_SETTINGS, NextDnsSettingsUpdateCoordinator, UPDATE_INTERVAL_SETTINGS),
     (ATTR_STATUS, NextDnsStatusUpdateCoordinator, UPDATE_INTERVAL_ANALYTICS),
 ]
 
@@ -153,8 +156,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except (ApiError, ClientConnectorError, asyncio.TimeoutError) as err:
         raise ConfigEntryNotReady from err
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN].setdefault(entry.entry_id, {})
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {}
 
     tasks = []
 
@@ -165,7 +167,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass, nextdns, profile_id, update_interval
         )
         tasks.append(
-            hass.data[DOMAIN][entry.entry_id][coordinator_name].async_refresh()
+            hass.data[DOMAIN][entry.entry_id][
+                coordinator_name
+            ].async_config_entry_first_refresh()
         )
 
     await asyncio.gather(*tasks)

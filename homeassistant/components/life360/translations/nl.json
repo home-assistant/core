@@ -32,5 +32,12 @@
                 "title": "Life360-accountgegevens"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Accountinstellingen"
+            }
+        }
     }
 }
