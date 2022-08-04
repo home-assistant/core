@@ -77,7 +77,7 @@ async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
     """Set up UniFi Protect media source."""
 
     data_sources: dict[str, ProtectData] = {}
-    for data in hass.data[DOMAIN].values():
+    for data in hass.data.get(DOMAIN, {}).values():
         if isinstance(data, ProtectData):
             data_sources[data.api.bootstrap.nvr.id] = data
 
@@ -158,7 +158,7 @@ class ProtectMediaSource(MediaSource):
         thumbnail_only = parts[1] == "eventthumb"
         try:
             data = self.data_sources[parts[0]]
-        except IndexError as err:
+        except (KeyError, IndexError) as err:
             return _bad_identifier_media(item.identifier, err)
 
         event = data.api.bootstrap.events.get(parts[2])
@@ -173,7 +173,9 @@ class ProtectMediaSource(MediaSource):
 
         nvr = data.api.bootstrap.nvr
         if thumbnail_only:
-            PlayMedia(async_generate_thumbnail_url(event.id, nvr.id), "image/jpeg")
+            return PlayMedia(
+                async_generate_thumbnail_url(event.id, nvr.id), "image/jpeg"
+            )
         return PlayMedia(async_generate_event_video_url(event), "video/mp4")
 
     async def async_browse_media(self, item: MediaSourceItem) -> BrowseMediaSource:
