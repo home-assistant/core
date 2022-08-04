@@ -107,7 +107,6 @@ def spotify_exception_handler(func):
 class SpotifyMediaPlayer(MediaPlayerEntity):
     """Representation of a Spotify controller."""
 
-    _attr_entity_registry_enabled_default = False
     _attr_has_entity_name = True
     _attr_icon = "mdi:spotify"
     _attr_media_content_type = MEDIA_TYPE_MUSIC
