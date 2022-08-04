@@ -6,11 +6,7 @@ import logging
 from homewizard_energy import HomeWizardEnergy
 from homewizard_energy.errors import DisabledError, RequestError
 
-from homeassistant.components.repairs import (
-    IssueSeverity,
-    async_create_issue,
-    async_delete_issue,
-)
+from homeassistant.components.repairs import IssueSeverity, async_create_issue
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -51,7 +47,7 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
                 self.hass,
                 DOMAIN,
                 "api_disabled",
-                is_fixable=False,
+                is_fixable=True,
                 learn_more_url="https://www.home-assistant.io/integrations/homewizard/#enable-the-api",
                 severity=IssueSeverity.ERROR,
                 translation_key="api_disabled",
@@ -60,7 +56,5 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
                 },
             )
             raise UpdateFailed("API disabled, API must be enabled in the app") from ex
-
-        async_delete_issue(self.hass, DOMAIN, "api_disabled")
 
         return data
