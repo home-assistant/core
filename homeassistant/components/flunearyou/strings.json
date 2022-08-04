@@ -24,7 +24,7 @@
         "step": {
           "confirm": {
             "title": "Remove Flu Near You",
-            "description": "The data source that powered the Flu Near You integration is no longer available. Press SUBMIT to remove all configured instances of the integration from Home Assistant."
+            "description": "The external data source powering the Flu Near You integration is no longer available; thus, the integration no longer works.\n\nPress SUBMIT to remove Flu Near You from your Home Assistant instance."
           }
         }
       }
