@@ -68,7 +68,7 @@ async def async_setup_entry(
     )
 
 
-class ControllerDevice(ClimateEntity):
+class ControllerEntity(ClimateEntity):
     """Representation of Escea Controller."""
 
     _attr_fan_modes = list(_HA_FAN_TO_ESCEA)
