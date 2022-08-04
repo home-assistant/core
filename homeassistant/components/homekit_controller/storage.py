@@ -70,6 +70,7 @@ class EntityMapStorage:
         self, homekit_id: str, config_num: int, accessories: list[Any]
     ) -> Pairing:
         """Create a new pairing cache."""
+        _LOGGER.debug("Creating or updating pairing cache for %s", homekit_id)
         data = Pairing(config_num=config_num, accessories=accessories)
         self.storage_data[homekit_id] = data
         self._async_schedule_save()
@@ -82,6 +83,7 @@ class EntityMapStorage:
             _LOGGER.debug("Tried to delete non-existent pairing %s", homekit_id)
             return
 
+        _LOGGER.debug("Deleting pairing cache for %s", homekit_id)
         self.storage_data.pop(homekit_id)
         self._async_schedule_save()
 
