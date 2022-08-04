@@ -3,16 +3,17 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from re import sub
 
 from lacrosse_view import Sensor
 
 from homeassistant.components.sensor import (
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
@@ -27,7 +28,7 @@ from .const import DOMAIN, LOGGER
 class LaCrosseSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[..., float]
+    value_fn: Callable[[Sensor, str], float]
 
 
 @dataclass
@@ -35,6 +36,11 @@ class LaCrosseSensorEntityDescription(
     SensorEntityDescription, LaCrosseSensorEntityDescriptionMixin
 ):
     """Description for LaCrosse View sensor."""
+
+
+def get_value(sensor: Sensor, field: str) -> float:
+    """Get the value of a sensor field."""
+    return float(sensor.data[field]["values"][-1]["s"])
 
 
 PARALLEL_UPDATES = 0
@@ -52,6 +58,46 @@ UNIT_LIST = {
     "kilometers_per_hour": "km/h",
     "inches": "in",
 }
+SENSOR_DESCRIPTIONS = {
+    "Temperature": LaCrosseSensorEntityDescription(
+        key="",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        name="Temperature",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=get_value,
+        native_unit_of_measurement="°C",
+    ),
+    "Humidity": LaCrosseSensorEntityDescription(
+        key="",
+        device_class=SensorDeviceClass.HUMIDITY,
+        name="Humidity",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=get_value,
+        native_unit_of_measurement="%",
+    ),
+    "HeatIndex": LaCrosseSensorEntityDescription(
+        key="",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        name="Heat Index",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=get_value,
+        native_unit_of_measurement="°F",
+    ),
+    "WindSpeed": LaCrosseSensorEntityDescription(
+        key="",
+        name="Wind Speed",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=get_value,
+        native_unit_of_measurement="km/h",
+    ),
+    "Rain": LaCrosseSensorEntityDescription(
+        key="",
+        name="Rain",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=get_value,
+        native_unit_of_measurement="in",
+    ),
+}
 
 
 async def async_setup_entry(
@@ -67,33 +113,17 @@ async def async_setup_entry(
 
     sensor_list = []
     for i, sensor in enumerate(sensors):
-        if not sensor.permissions.get("read"):
-            LOGGER.warning(
-                "No permission to read sensor %s, are you sure you're signed into the right account?",
-                sensor.name,
-            )
-            continue
         for field in sensor.sensor_field_names:
+            description = SENSOR_DESCRIPTIONS.get(field, None)
+            if description is None:
+                message = f"Unsupported sensor field: {field}\nPlease create an issue on GitHub. https://github.com/home-assistant/core/issues/new?assignees=&labels=&template=bug_report.yml&integration_name=LaCrosse%20View&integration_link=https://www.home-assistant.io/integrations/lacrosse_view/&additional_information=Field:%20{field}%0ASensor%20Model:%20{sensor.model}&title=LaCrosse%20View%20Unsupported%20sensor%20field:%20{field}"
+                LOGGER.warning(message)
+                return
+            description.key = str(i)
             sensor_list.append(
                 LaCrosseViewSensor(
                     coordinator=coordinator,
-                    description=LaCrosseSensorEntityDescription(
-                        key=str(i),
-                        device_class="temperature" if field == "Temperature" else None,
-                        # The regex is to convert CamelCase to Human Case
-                        # e.g. "RelativeHumidity" -> "Relative Humidity"
-                        name=f"{sensor.name} {sub(r'(?<!^)(?=[A-Z])', ' ', field)}"
-                        if field
-                        != sensor.name  # If the name is the same as the field, don't include it.
-                        else sub(r"(?<!^)(?=[A-Z])", " ", field),
-                        state_class=SensorStateClass.MEASUREMENT,
-                        value_fn=lambda sensor=sensor, field=field: float(
-                            sensor.data[field]["values"][-1]["s"]
-                        ),
-                        native_unit_of_measurement=UNIT_LIST.get(
-                            sensor.data[field]["unit"], None
-                        ),
-                    ),
+                    description=description,
                     field=field,
                 )
             )
@@ -107,6 +137,8 @@ class LaCrosseViewSensor(
     """LaCrosse View sensor."""
 
     entity_description: LaCrosseSensorEntityDescription
+    _sensor: Sensor
+    _field: str
 
     def __init__(
         self,
@@ -116,12 +148,18 @@ class LaCrosseViewSensor(
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
+
         sensor = self.coordinator.data[int(description.key)]
+
+        if not sensor.permissions.get("read"):
+            LOGGER.warning(
+                "No permission to read sensor %s, are you sure you're signed into the right account?",
+                sensor.name,
+            )
 
         self.entity_description = description
         self._attr_unique_id = f"{sensor.location.id}-{description.key}-{field}"
         self._attr_name = f"{sensor.location.name} {description.name}"
-        self._attr_icon = ICON_LIST.get(field, "mdi:thermometer")
         self._attr_device_info = {
             "identifiers": {(DOMAIN, sensor.sensor_id)},
             "name": sensor.name.split(" ")[0],
@@ -129,8 +167,12 @@ class LaCrosseViewSensor(
             "model": sensor.model,
             "via_device": (DOMAIN, sensor.location.id),
         }
+        self._sensor = sensor
+        self._field = field
 
     @property
-    def native_value(self) -> float:
+    def native_value(self) -> float | str:
         """Return the sensor value."""
-        return self.entity_description.value_fn()
+        if not self._sensor.permissions.get("read"):
+            return STATE_UNAVAILABLE
+        return self.entity_description.value_fn(self._sensor, self._field)

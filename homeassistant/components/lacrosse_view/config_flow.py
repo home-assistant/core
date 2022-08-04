@@ -1,7 +1,7 @@
 """Config flow for LaCrosse View integration."""
 from __future__ import annotations
 
-import logging
+from collections.abc import Mapping
 from typing import Any
 
 from lacrosse_view import LaCrosse, Location, LoginError
@@ -13,9 +13,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN, LOGGER
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -47,8 +45,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for LaCrosse View."""
 
     VERSION = 1
-    data: dict[str, str] = {}
-    locations: list[Location] = []
+
+    def __init__(self) -> None:
+        """Initialize the config flow."""
+        self.data: dict[str, str] = {}
+        self.locations: list[Location] = []
+        self.reauth = False
+        self.location_id = ""
+        self.location_name = ""
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -68,11 +72,25 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except NoLocations:
             errors["base"] = "no_locations"
         except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
+            LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
             self.data = user_input
             self.locations = info
+
+            existing_entry = await self.async_set_unique_id(self.location_id)
+
+            # Check if we are reauthenticating
+            if self.reauth and existing_entry:
+                data = {
+                    "id": self.location_id,
+                    "name": self.location_name,
+                    "username": self.data["username"],
+                    "password": self.data["password"],
+                }
+                self.hass.config_entries.async_update_entry(existing_entry, data=data)
+                await self.hass.config_entries.async_reload(existing_entry.entry_id)
+                return self.async_abort(reason="reauth_successful")
             return await self.async_step_location()
 
         return self.async_show_form(
@@ -98,11 +116,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         location_id = user_input["location"]
 
-        for location in self.locations:
-            if location.id == location_id:
-                location_name = location.name
+        location_name = next(
+            location.name for location in self.locations if location.id == location_id
+        )
 
         await self.async_set_unique_id(location_id)
+
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
@@ -115,9 +134,25 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+        """Reauth in case of a password change or other error."""
+        self.location_id = entry_data["id"]
+        self.location_name = entry_data["name"]
+        return await self.async_step_reauth_confirm()
 
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Inform the user of the reauthentication."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                data_schema=vol.Schema({}),
+            )
+
+        self.reauth = True
+
+        return await self.async_step_user()
 
 
 class InvalidAuth(HomeAssistantError):
