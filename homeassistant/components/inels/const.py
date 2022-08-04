@@ -16,7 +16,14 @@ DESCRIPTION = ""
 INELS_VERSION = 1
 LOGGER = logging.getLogger(__package__)
 
-ICONS = {Platform.SWITCH: "mdi:power-plug"}
+ICON_TEMPERATURE = "mdi:thermometer"
+ICON_BATTERY = "mdi:battery-50"
+ICON_SWITCH = "mdi:power-socket-eu"
+
+ICONS = {
+    Platform.SWITCH: ICON_SWITCH,
+    Platform.SENSOR: ICON_TEMPERATURE,
+}
 
 MANUAL_SETUP = "manual"
 

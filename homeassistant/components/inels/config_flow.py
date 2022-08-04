@@ -5,6 +5,7 @@ from collections import OrderedDict
 from typing import Any
 
 from inelsmqtt import InelsMqtt
+from inelsmqtt.const import MQTT_TRANSPORT
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -15,7 +16,6 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
-    CONF_PROTOCOL,
     CONF_USERNAME,
 )
 from homeassistant.core import callback
@@ -64,6 +64,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input[CONF_PORT],
                 user_input.get(CONF_USERNAME),
                 user_input.get(CONF_PASSWORD),
+                user_input.get(MQTT_TRANSPORT),
             )
 
             if test_connect:
@@ -75,6 +76,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_PORT: user_input[CONF_PORT],
                         CONF_USERNAME: user_input.get(CONF_USERNAME),
                         CONF_PASSWORD: user_input.get(CONF_PASSWORD),
+                        MQTT_TRANSPORT: user_input.get(MQTT_TRANSPORT),
                         CONF_DISCOVERY: DEFAULT_DISCOVERY,
                     },
                 )
@@ -95,6 +97,9 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         ] = vol.Coerce(int)
         fields[vol.Optional(CONF_USERNAME, default=user_input.get(CONF_USERNAME))] = str
         fields[vol.Optional(CONF_PASSWORD, default=user_input.get(CONF_PASSWORD))] = str
+        fields[vol.Required(MQTT_TRANSPORT, default="tcp")] = vol.In(
+            ["tcp", "websockets"]
+        )
 
         return self.async_show_form(
             step_id="setup", data_schema=vol.Schema(fields), errors=errors
@@ -123,6 +128,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 data[CONF_PORT],
                 data.get(CONF_USERNAME),
                 data.get(CONF_PASSWORD),
+                data.get(MQTT_TRANSPORT),
             )
 
             if test_connect:
@@ -133,6 +139,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_PORT: data[CONF_PORT],
                         CONF_USERNAME: data.get(CONF_USERNAME),
                         CONF_PASSWORD: data.get(CONF_PASSWORD),
+                        MQTT_TRANSPORT: data.get(MQTT_TRANSPORT),
                         CONF_DISCOVERY: DEFAULT_DISCOVERY,
                     },
                 )
@@ -174,6 +181,7 @@ class InelsOptionsFlowHandler(config_entries.OptionsFlow):
                 user_input[CONF_PORT],
                 user_input.get(CONF_USERNAME),
                 user_input.get(CONF_PASSWORD),
+                user_input.get(MQTT_TRANSPORT),
             )
 
             if test_connect:
@@ -188,6 +196,7 @@ class InelsOptionsFlowHandler(config_entries.OptionsFlow):
                         CONF_PORT: user_input[CONF_PORT],
                         CONF_USERNAME: user_input.get(CONF_USERNAME),
                         CONF_PASSWORD: user_input.get(CONF_PASSWORD),
+                        MQTT_TRANSPORT: user_input.get(MQTT_TRANSPORT),
                         CONF_DISCOVERY: DEFAULT_DISCOVERY,
                     },
                 )
@@ -199,6 +208,7 @@ class InelsOptionsFlowHandler(config_entries.OptionsFlow):
         current_port = current_config.get(CONF_PORT)
         current_user = current_config.get(CONF_USERNAME)
         current_pass = current_config.get(CONF_PASSWORD)
+        current_transport = current_config.get(MQTT_TRANSPORT)
         fields[vol.Required(CONF_HOST, default=current_broker)] = str
         fields[vol.Required(CONF_PORT, default=current_port)] = vol.Coerce(int)
         fields[
@@ -213,6 +223,9 @@ class InelsOptionsFlowHandler(config_entries.OptionsFlow):
                 description={"suggested_value": current_pass},
             )
         ] = str
+        fields[vol.Required(MQTT_TRANSPORT, default=current_transport)] = vol.In(
+            ["tcp", "websockets"]
+        )
 
         return self.async_show_form(
             step_id="setup",
@@ -222,14 +235,14 @@ class InelsOptionsFlowHandler(config_entries.OptionsFlow):
         )
 
 
-def try_connection(hass, host, port, username, password, protocol=5):
+def try_connection(hass, host, port, username, password, transfer="tcp"):
     """Test if we can connect to an MQTT broker."""
     entry_config = {
         CONF_HOST: host,
         CONF_PORT: port,
         CONF_USERNAME: username,
         CONF_PASSWORD: password,
-        CONF_PROTOCOL: protocol,
+        MQTT_TRANSPORT: transfer,
     }
     client = InelsMqtt(entry_config)
     ret = client.test_connection()

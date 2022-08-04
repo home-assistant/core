@@ -3,8 +3,8 @@
   "name": "iNELS",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/inels",
-  "requirements": ["inels-mqtt==0.0.19"],
-  "dependencies": [],
+  "requirements": ["inels-mqtt==0.0.25"],
+  "dependencies": ["mqtt"],
   "mqtt": ["inels/#"],
   "codeowners": ["@Nejezchleb", "@jhoralek"],
   "iot_class": "local_polling"

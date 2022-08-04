@@ -7,7 +7,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, ICONS
+from .const import DOMAIN
 from .coordinator import InelsDeviceUpdateCoordinator
 
 
@@ -39,11 +39,6 @@ class InelsBaseEntity(CoordinatorEntity[InelsDeviceUpdateCoordinator]):
         """Handle updted data from the coordinator."""
         self._refresh()
         super()._handle_coordinator_update()
-
-    @property
-    def icon(self) -> str | None:
-        """Icon of the entity."""
-        return ICONS.get(self._device.device_type)
 
     @property
     def should_poll(self) -> bool:

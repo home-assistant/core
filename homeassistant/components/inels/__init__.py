@@ -8,8 +8,8 @@ from inelsmqtt.devices import Device
 from inelsmqtt.discovery import InelsDiscovery
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP, Platform
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.const import CONF_HOST, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import (
@@ -22,7 +22,7 @@ from .const import (
 )
 from .coordinator import InelsDeviceUpdateCoordinator
 
-PLATFORMS: list[Platform] = [Platform.SWITCH]
+PLATFORMS: list[Platform] = [Platform.SWITCH, Platform.SENSOR]
 
 
 async def _async_config_entry_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -54,13 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     inels_data[BROKER] = mqtt
 
-    async def on_hass_stop(event: Event) -> None:
-        """Close connection when hass stops."""
-        await hass.async_add_executor_job(inels_data[BROKER].disconnect)
-
-    entry.async_on_unload(
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
-    )
+    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
     if await hass.async_add_executor_job(inels_data[BROKER].test_connection) is False:
         return False
@@ -84,6 +78,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
+
+
+async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Reload all devices."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

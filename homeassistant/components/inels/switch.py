@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .base_class import InelsBaseEntity
-from .const import COORDINATOR_LIST, DOMAIN
+from .const import COORDINATOR_LIST, DOMAIN, ICON_SWITCH
 from .coordinator import InelsDeviceUpdateCoordinator
 
 
@@ -49,6 +49,11 @@ class InelsSwitch(InelsBaseEntity, SwitchEntity):
     def is_on(self) -> bool:
         """Return true if switch is on."""
         return self._device_control.state
+
+    @property
+    def icon(self) -> str | None:
+        """Switch icon."""
+        return ICON_SWITCH
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the switch to turn off."""
