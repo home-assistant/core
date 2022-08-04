@@ -46,7 +46,9 @@ class DiscoveryServiceListener(Listener):
         async_dispatcher_send(self.hass, DISPATCH_CONTROLLER_UPDATE, ctrl)
 
 
-async def async_start_discovery_service(hass: HomeAssistant) -> DiscoveryService:
+async def async_start_discovery_service(
+    hass: HomeAssistant
+) -> AbstractDiscoveryService:
     """Set up the pescea internal discovery."""
     discovery_service = hass.data.get(DATA_DISCOVERY_SERVICE)
     if discovery_service:
