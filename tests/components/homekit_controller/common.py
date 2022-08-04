@@ -224,7 +224,7 @@ async def device_config_changed(hass, accessories):
         host="127.0.0.1",
         addresses=["127.0.0.1"],
         hostname="mock_hostname",
-        name="TestDevice",
+        name="TestDevice._hap._tcp.local.",
         port=8080,
         properties={
             "md": "TestDevice",

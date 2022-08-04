@@ -8,6 +8,7 @@ from typing import Any
 import aiohomekit
 from aiohomekit.exceptions import AuthenticationError
 from aiohomekit.model import Accessories, CharacteristicsTypes, ServicesTypes
+from aiohomekit.utils import domain_supported, domain_to_name
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -203,8 +204,12 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         hkid = properties[zeroconf.ATTR_PROPERTIES_ID]
         normalized_hkid = normalize_hkid(hkid)
 
+        # If this aiohomekit doesn't support this particular device, ignore it.
+        if not domain_supported(discovery_info.name):
+            return self.async_abort(reason="ignored_model")
+
         model = properties["md"]
-        name = discovery_info.name.replace("._hap._tcp.local.", "")
+        name = domain_to_name(discovery_info.name)
         status_flags = int(properties["sf"])
         paired = not status_flags & 0x01
 

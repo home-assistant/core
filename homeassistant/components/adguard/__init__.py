@@ -132,6 +132,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class AdGuardHomeEntity(Entity):
     """Defines a base AdGuard Home entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         adguard: AdGuardHome,

@@ -67,7 +67,7 @@ class AdvantageAirTimeTo(AdvantageAirEntity, SensorEntity):
         super().__init__(instance, ac_key)
         self.action = action
         self._time_key = f"countDownTo{action}"
-        self._attr_name = f'{self._ac["name"]} Time To {action}'
+        self._attr_name = f'{self._ac["name"]} time to {action}'
         self._attr_unique_id = (
             f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-timeto{action}'
         )
@@ -100,7 +100,7 @@ class AdvantageAirZoneVent(AdvantageAirEntity, SensorEntity):
     def __init__(self, instance, ac_key, zone_key):
         """Initialize an Advantage Air Zone Vent Sensor."""
         super().__init__(instance, ac_key, zone_key=zone_key)
-        self._attr_name = f'{self._zone["name"]} Vent'
+        self._attr_name = f'{self._zone["name"]} vent'
         self._attr_unique_id = (
             f'{self.coordinator.data["system"]["rid"]}-{ac_key}-{zone_key}-vent'
         )
@@ -130,7 +130,7 @@ class AdvantageAirZoneSignal(AdvantageAirEntity, SensorEntity):
     def __init__(self, instance, ac_key, zone_key):
         """Initialize an Advantage Air Zone wireless signal sensor."""
         super().__init__(instance, ac_key, zone_key)
-        self._attr_name = f'{self._zone["name"]} Signal'
+        self._attr_name = f'{self._zone["name"]} signal'
         self._attr_unique_id = (
             f'{self.coordinator.data["system"]["rid"]}-{ac_key}-{zone_key}-signal'
         )
@@ -166,7 +166,7 @@ class AdvantageAirZoneTemp(AdvantageAirEntity, SensorEntity):
     def __init__(self, instance, ac_key, zone_key):
         """Initialize an Advantage Air Zone Temp Sensor."""
         super().__init__(instance, ac_key, zone_key)
-        self._attr_name = f'{self._zone["name"]} Temperature'
+        self._attr_name = f'{self._zone["name"]} temperature'
         self._attr_unique_id = (
             f'{self.coordinator.data["system"]["rid"]}-{ac_key}-{zone_key}-temp'
         )

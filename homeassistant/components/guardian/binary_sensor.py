@@ -32,18 +32,18 @@ SENSOR_KIND_MOVED = "moved"
 
 SENSOR_DESCRIPTION_AP_ENABLED = BinarySensorEntityDescription(
     key=SENSOR_KIND_AP_INFO,
-    name="Onboard AP Enabled",
+    name="Onboard AP enabled",
     device_class=BinarySensorDeviceClass.CONNECTIVITY,
     entity_category=EntityCategory.DIAGNOSTIC,
 )
 SENSOR_DESCRIPTION_LEAK_DETECTED = BinarySensorEntityDescription(
     key=SENSOR_KIND_LEAK_DETECTED,
-    name="Leak Detected",
+    name="Leak detected",
     device_class=BinarySensorDeviceClass.MOISTURE,
 )
 SENSOR_DESCRIPTION_MOVED = BinarySensorEntityDescription(
     key=SENSOR_KIND_MOVED,
-    name="Recently Moved",
+    name="Recently moved",
     device_class=BinarySensorDeviceClass.MOVING,
     entity_category=EntityCategory.DIAGNOSTIC,
 )

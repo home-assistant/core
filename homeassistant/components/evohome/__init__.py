@@ -20,7 +20,6 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
-    TEMP_CELSIUS,
     Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -519,13 +518,14 @@ class EvoDevice(Entity):
     DHW controller.
     """
 
+    _attr_should_poll = False
+
     def __init__(self, evo_broker, evo_device) -> None:
         """Initialize the evohome entity."""
         self._evo_device = evo_device
         self._evo_broker = evo_broker
         self._evo_tcs = evo_broker.tcs
 
-        self._unique_id = self._name = self._icon = self._precision = None
         self._device_state_attrs = {}
 
     async def async_refresh(self, payload: dict | None = None) -> None:
@@ -533,7 +533,7 @@ class EvoDevice(Entity):
         if payload is None:
             self.async_schedule_update_ha_state(force_refresh=True)
             return
-        if payload["unique_id"] != self._unique_id:
+        if payload["unique_id"] != self._attr_unique_id:
             return
         if payload["service"] in (SVC_SET_ZONE_OVERRIDE, SVC_RESET_ZONE_OVERRIDE):
             await self.async_zone_svc_request(payload["service"], payload["data"])
@@ -549,21 +549,6 @@ class EvoDevice(Entity):
         raise NotImplementedError
 
     @property
-    def should_poll(self) -> bool:
-        """Evohome entities should not be polled."""
-        return False
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return a unique ID."""
-        return self._unique_id
-
-    @property
-    def name(self) -> str:
-        """Return the name of the evohome entity."""
-        return self._name
-
-    @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the evohome-specific state attributes."""
         status = self._device_state_attrs
@@ -576,24 +561,9 @@ class EvoDevice(Entity):
 
         return {"status": convert_dict(status)}
 
-    @property
-    def icon(self) -> str:
-        """Return the icon to use in the frontend UI."""
-        return self._icon
-
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         async_dispatcher_connect(self.hass, DOMAIN, self.async_refresh)
-
-    @property
-    def precision(self) -> float:
-        """Return the temperature precision to use in the frontend UI."""
-        return self._precision
-
-    @property
-    def temperature_unit(self) -> str:
-        """Return the temperature unit to use in the frontend UI."""
-        return TEMP_CELSIUS
 
 
 class EvoChild(EvoDevice):
