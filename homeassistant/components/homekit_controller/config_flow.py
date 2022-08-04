@@ -20,7 +20,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers import device_registry as dr
 
@@ -81,7 +81,9 @@ def formatted_category(category: Categories) -> str:
 
 
 @callback
-def find_existing_host(hass, serial: str) -> config_entries.ConfigEntry | None:
+def find_existing_host(
+    hass: HomeAssistant, serial: str
+) -> config_entries.ConfigEntry | None:
     """Return a set of the configured hosts."""
     for entry in hass.config_entries.async_entries(DOMAIN):
         if entry.data.get("AccessoryPairingID") == serial:
@@ -120,7 +122,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.controller: Controller | None = None
         self.finish_pairing: FinishPairing | None = None
 
-    async def _async_setup_controller(self):
+    async def _async_setup_controller(self) -> None:
         """Create the controller."""
         self.controller = await async_get_controller(self.hass)
 
@@ -174,7 +176,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             ),
         )
 
-    async def async_step_unignore(self, user_input) -> FlowResult:
+    async def async_step_unignore(self, user_input: dict[str, Any]) -> FlowResult:
         """Rediscover a previously ignored discover."""
         unique_id = user_input["unique_id"]
         await self.async_set_unique_id(unique_id)
@@ -196,7 +198,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self._async_step_pair_show_form()
 
-    async def _hkid_is_homekit(self, hkid):
+    async def _hkid_is_homekit(self, hkid: str) -> bool:
         """Determine if the device is a homekit bridge or accessory."""
         dev_reg = dr.async_get(self.hass)
         device = dev_reg.async_get_device(
@@ -419,7 +421,9 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self._async_step_pair_show_form()
 
-    async def async_step_pair(self, pair_info=None) -> FlowResult:
+    async def async_step_pair(
+        self, pair_info: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Pair with a new HomeKit accessory."""
         # If async_step_pair is called with no pairing code then we do the M1
         # phase of pairing. If this is successful the device enters pairing
@@ -549,7 +553,11 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(step_id="protocol_error")
 
     @callback
-    def _async_step_pair_show_form(self, errors=None):
+    def _async_step_pair_show_form(
+        self, errors: dict[str, str] | None = None
+    ) -> FlowResult:
+        assert self.category
+
         placeholders = self.context["title_placeholders"] = {
             "name": self.name,
             "category": formatted_category(self.category),
