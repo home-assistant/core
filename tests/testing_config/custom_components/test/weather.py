@@ -11,12 +11,17 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_NATIVE_TEMP,
     ATTR_FORECAST_NATIVE_TEMP_LOW,
     ATTR_FORECAST_NATIVE_WIND_SPEED,
+    ATTR_FORECAST_NATIVE_APPARENT_TEMP,
+    ATTR_FORECAST_NATIVE_DEWPOINT,
     ATTR_FORECAST_PRECIPITATION,
     ATTR_FORECAST_PRESSURE,
     ATTR_FORECAST_TEMP,
     ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_WIND_BEARING,
     ATTR_FORECAST_WIND_SPEED,
+    ATTR_FORECAST_APPARENT_TEMP,
+    ATTR_FORECAST_DEWPOINT,
+    ATTR_FORECAST_HUMIDITY,
     Forecast,
     WeatherEntity,
 )
@@ -220,5 +225,8 @@ class MockWeatherMockForecastCompat(MockWeatherCompat):
                 ATTR_FORECAST_WIND_SPEED: self.wind_speed,
                 ATTR_FORECAST_WIND_BEARING: self.wind_bearing,
                 ATTR_FORECAST_PRECIPITATION: self._values.get(ATTR_FORECAST_PRECIPITATION),
+                ATTR_FORECAST_APPARENT_TEMP: self._values.get(ATTR_FORECAST_APPARENT_TEMP),
+                ATTR_FORECAST_DEWPOINT: self._values.get(ATTR_FORECAST_DEWPOINT),
+                ATTR_FORECAST_HUMIDITY: self._values.get(ATTR_FORECAST_HUMIDITY),
             }
         ]
