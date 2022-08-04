@@ -34,7 +34,7 @@ from .util import valid_subscribe_topic
 _LOGGER = logging.getLogger(__name__)
 
 CONF_IMAGE_ENCODING = "image_encoding"
-CONF_REPAIR_IMAGE_ENCODING = "repair_image_encoding"
+REPAIR_IMAGE_ENCODING = "repair_image_encoding"
 
 DEFAULT_NAME = "MQTT Camera"
 
@@ -54,7 +54,7 @@ def repair_legacy_encoding(config: ConfigType) -> ConfigType:
     if config[CONF_ENCODING] == "b64":
         config[CONF_IMAGE_ENCODING] = "b64"
         config[CONF_ENCODING] = DEFAULT_ENCODING
-        config[CONF_REPAIR_IMAGE_ENCODING] = True
+        config[REPAIR_IMAGE_ENCODING] = True
         _LOGGER.warning(
             "Using the `encoding` parameter to set image encoding has been deprecated, use `image_encoding` instead"
         )
@@ -125,7 +125,8 @@ async def _async_setup_entity(
 ) -> None:
     """Set up the MQTT Camera."""
     # Using CONF_ENCODING to set b64 encoding for images is deprecated as of Home Assistant 2022.9, use CONF_IMAGE_ENCODING instead
-    if CONF_REPAIR_IMAGE_ENCODING in config:
+    if REPAIR_IMAGE_ENCODING in config:
+        del config[REPAIR_IMAGE_ENCODING]
         async_create_issue(
             hass,
             "mqtt",
