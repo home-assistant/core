@@ -83,10 +83,11 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors = {}
 
-        # SimpliSafe authorization codes are 45 characters in length; check for that:
         if len(user_input[CONF_AUTH_CODE]) != 45:
+            # SimpliSafe authorization codes are 45 characters in length:
             errors = {CONF_AUTH_CODE: "invalid_auth_code_length"}
         elif user_input[CONF_AUTH_CODE].startswith("="):
+            # Ensure the user isn't including the "=" from the URL query param:
             errors = {CONF_AUTH_CODE: "invalid_auth_code_start"}
 
         if errors:
