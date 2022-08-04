@@ -62,7 +62,7 @@ async def async_start_discovery_service(hass: HomeAssistant) -> DiscoveryService
 async def async_stop_discovery_service(hass: HomeAssistant) -> None:
     """Stop the discovery service."""
     disco = hass.data.get(DATA_DISCOVERY_SERVICE)
-    if not disco:
+    if not disco or not disco.pi_disco:
         return
 
     await disco.pi_disco.close()
