@@ -1,0 +1,15 @@
+{
+  "domain": "xiaomi_ble",
+  "name": "Xiaomi BLE",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/xiaomi_ble",
+  "bluetooth": [
+    {
+      "service_data_uuid": "0000fe95-0000-1000-8000-00805f9b34fb"
+    }
+  ],
+  "requirements": ["xiaomi-ble==0.6.4"],
+  "dependencies": ["bluetooth"],
+  "codeowners": ["@Jc2k", "@Ernst79"],
+  "iot_class": "local_push"
+}

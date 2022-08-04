@@ -14,5 +14,11 @@
                 }
             }
         }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "on": "Ligado",
+            "raise_3": "Aumentar 3"
+        }
     }
 }

@@ -28,6 +28,7 @@ async def test_config_entry(hass: HomeAssistant, hass_client: ClientSession, utc
             "version": 1,
             "data": {"AccessoryPairingID": "00:00:00:00:00:00"},
         },
+        "config-num": 0,
         "entity-map": [
             {
                 "aid": 1,
@@ -299,6 +300,7 @@ async def test_device(hass: HomeAssistant, hass_client: ClientSession, utcnow):
             "version": 1,
             "data": {"AccessoryPairingID": "00:00:00:00:00:00"},
         },
+        "config-num": 0,
         "entity-map": [
             {
                 "aid": 1,

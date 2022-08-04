@@ -8,6 +8,7 @@ from datetime import timedelta
 from enum import Enum
 import itertools
 import logging
+import re
 import time
 import traceback
 from typing import TYPE_CHECKING, Any, NamedTuple, Union
@@ -20,6 +21,7 @@ import zigpy.endpoint
 import zigpy.group
 from zigpy.types.named import EUI64
 
+from homeassistant import __path__ as HOMEASSISTANT_PATH
 from homeassistant.components.system_log import LogEntry, _figure_out_source
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -140,6 +142,7 @@ class ZHAGateway:
         self._log_relay_handler = LogRelayHandler(hass, self)
         self.config_entry = config_entry
         self._unsubs: list[Callable[[], None]] = []
+        self.initialized: bool = False
 
     async def async_initialize(self) -> None:
         """Initialize controller and connect radio."""
@@ -181,6 +184,7 @@ class ZHAGateway:
         self._hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID] = str(self.coordinator_ieee)
         self.async_load_devices()
         self.async_load_groups()
+        self.initialized = True
 
     @callback
     def async_load_devices(self) -> None:
@@ -215,7 +219,7 @@ class ZHAGateway:
     async def async_initialize_devices_and_entities(self) -> None:
         """Initialize devices and load entities."""
 
-        _LOGGER.debug("Loading all devices")
+        _LOGGER.debug("Initializing all devices from Zigpy cache")
         await asyncio.gather(
             *(dev.async_initialize(from_cache=True) for dev in self.devices.values())
         )
@@ -732,7 +736,15 @@ class LogRelayHandler(logging.Handler):
         if record.levelno >= logging.WARN and not record.exc_info:
             stack = [f for f, _, _, _ in traceback.extract_stack()]
 
-        entry = LogEntry(record, stack, _figure_out_source(record, stack, self.hass))
+        hass_path: str = HOMEASSISTANT_PATH[0]
+        config_dir = self.hass.config.config_dir
+        assert config_dir is not None
+        paths_re = re.compile(
+            r"(?:{})/(.*)".format(
+                "|".join([re.escape(x) for x in (hass_path, config_dir)])
+            )
+        )
+        entry = LogEntry(record, stack, _figure_out_source(record, stack, paths_re))
         async_dispatcher_send(
             self.hass,
             ZHA_GW_MSG,

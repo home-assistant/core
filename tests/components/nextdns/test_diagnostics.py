@@ -1,11 +1,18 @@
 """Test NextDNS diagnostics."""
+from collections.abc import Awaitable, Callable
+
+from aiohttp import ClientSession
+
 from homeassistant.components.diagnostics import REDACTED
+from homeassistant.core import HomeAssistant
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.components.nextdns import init_integration
 
 
-async def test_entry_diagnostics(hass, hass_client):
+async def test_entry_diagnostics(
+    hass: HomeAssistant, hass_client: Callable[..., Awaitable[ClientSession]]
+) -> None:
     """Test config entry diagnostics."""
     entry = await init_integration(hass)
 
@@ -41,11 +48,13 @@ async def test_entry_diagnostics(hass, hass_client):
     }
     assert result["protocols_coordinator_data"] == {
         "doh_queries": 20,
+        "doh3_queries": 0,
         "doq_queries": 10,
         "dot_queries": 30,
         "tcp_queries": 0,
         "udp_queries": 40,
         "doh_queries_ratio": 20.0,
+        "doh3_queries_ratio": 0.0,
         "doq_queries_ratio": 10.0,
         "dot_queries_ratio": 30.0,
         "tcp_queries_ratio": 0.0,

@@ -119,6 +119,7 @@ class FilesizeEntity(CoordinatorEntity[FileSizeCoordinator], SensorEntity):
     """Filesize sensor."""
 
     entity_description: SensorEntityDescription
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -130,7 +131,7 @@ class FilesizeEntity(CoordinatorEntity[FileSizeCoordinator], SensorEntity):
         """Initialize the Filesize sensor."""
         super().__init__(coordinator)
         base_name = path.split("/")[-1]
-        self._attr_name = f"{base_name} {description.name}"
+        self._attr_name = description.name
         self._attr_unique_id = (
             entry_id if description.key == "file" else f"{entry_id}-{description.key}"
         )

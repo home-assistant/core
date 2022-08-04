@@ -1,4 +1,25 @@
 {
+    "issues": {
+        "out_of_blinker_fluid": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Vajuta OK kui Blinkeri vedelik on uuesti t\u00e4idetud",
+                        "title": "Blinkeri vedelikku on vaja uuesti t\u00e4ita"
+                    }
+                }
+            },
+            "title": "Blinkeri vedelik on otsas ja seda tuleb uuesti t\u00e4ita"
+        },
+        "transmogrifier_deprecated": {
+            "description": "Transmogrifier komponent on n\u00fc\u00fcd aegunud, kuna uues API-s puudub kohalik kontroll",
+            "title": "Transmogrifieri komponent on aegunud"
+        },
+        "unfixable_problem": {
+            "description": "See teema ei anna kunagi alla.",
+            "title": "See ei ole lahendatav probleem"
+        }
+    },
     "options": {
         "step": {
             "options_1": {

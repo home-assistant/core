@@ -3,8 +3,6 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
-from dataclasses import dataclass
-import datetime as dt
 import logging
 from typing import Any, cast
 
@@ -23,7 +21,6 @@ from homeassistant.const import (
     SERVICE_RELOAD,
 )
 from homeassistant.core import HassJob, HomeAssistant, ServiceCall, callback
-from homeassistant.data_entry_flow import BaseServiceInfo
 from homeassistant.exceptions import TemplateError, Unauthorized
 from homeassistant.helpers import config_validation as cv, event, template
 from homeassistant.helpers.device_registry import DeviceEntry
@@ -110,6 +107,16 @@ CONNECTION_SUCCESS = "connection_success"
 CONNECTION_FAILED = "connection_failed"
 CONNECTION_FAILED_RECOVERABLE = "connection_failed_recoverable"
 
+CONFIG_ENTRY_CONFIG_KEYS = [
+    CONF_BIRTH_MESSAGE,
+    CONF_BROKER,
+    CONF_DISCOVERY,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    CONF_WILL_MESSAGE,
+]
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
@@ -143,18 +150,6 @@ MQTT_PUBLISH_SCHEMA = vol.All(
     ),
     cv.has_at_least_one_key(ATTR_TOPIC, ATTR_TOPIC_TEMPLATE),
 )
-
-
-@dataclass
-class MqttServiceInfo(BaseServiceInfo):
-    """Prepared info from mqtt entries."""
-
-    topic: str
-    payload: ReceivePayloadType
-    qos: int
-    retain: bool
-    subscribed_topic: str
-    timestamp: dt.datetime
 
 
 async def _async_setup_discovery(
@@ -198,6 +193,23 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass.data[DATA_MQTT_RELOAD_NEEDED] = True
 
     return True
+
+
+def _filter_entry_config(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Remove unknown keys from config entry data.
+
+    Extra keys may have been added when importing MQTT yaml configuration.
+    """
+    filtered_data = {
+        k: entry.data[k] for k in CONFIG_ENTRY_CONFIG_KEYS if k in entry.data
+    }
+    if entry.data.keys() != filtered_data.keys():
+        _LOGGER.warning(
+            "The following unsupported configuration options were removed from the "
+            "MQTT config entry: %s. Add them to configuration.yaml if they are needed",
+            entry.data.keys() - filtered_data.keys(),
+        )
+        hass.config_entries.async_update_entry(entry, data=filtered_data)
 
 
 def _merge_basic_config(
@@ -258,6 +270,10 @@ async def async_fetch_config(hass: HomeAssistant, entry: ConfigEntry) -> dict | 
         mqtt_config = CONFIG_SCHEMA_BASE(hass_config.get(DOMAIN, {}))
         hass.data[DATA_MQTT_CONFIG] = mqtt_config
 
+    # Remove unknown keys from config entry data
+    _filter_entry_config(hass, entry)
+
+    # Merge basic configuration, and add missing defaults for basic options
     _merge_basic_config(hass, entry, hass.data.get(DATA_MQTT_CONFIG, {}))
     # Bail out if broker setting is missing
     if CONF_BROKER not in entry.data:

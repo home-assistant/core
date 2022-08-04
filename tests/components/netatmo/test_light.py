@@ -27,7 +27,7 @@ async def test_light_setup_and_services(hass, config_entry, netatmo_auth):
     await simulate_webhook(hass, webhook_id, FAKE_WEBHOOK_ACTIVATION)
     await hass.async_block_till_done()
 
-    light_entity = "light.netatmo_garden"
+    light_entity = "light.garden"
     assert hass.states.get(light_entity).state == "unavailable"
 
     # Trigger light mode change

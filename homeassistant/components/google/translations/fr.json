@@ -11,7 +11,8 @@
             "invalid_access_token": "Jeton d'acc\u00e8s non valide",
             "missing_configuration": "Le composant n'est pas configur\u00e9. Veuillez suivre la documentation.",
             "oauth_error": "Des donn\u00e9es de jeton non valides ont \u00e9t\u00e9 re\u00e7ues.",
-            "reauth_successful": "La r\u00e9-authentification a r\u00e9ussi"
+            "reauth_successful": "La r\u00e9-authentification a r\u00e9ussi",
+            "timeout_connect": "D\u00e9lai d'attente pour \u00e9tablir la connexion expir\u00e9"
         },
         "create_entry": {
             "default": "Authentification r\u00e9ussie"

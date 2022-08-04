@@ -1,13 +1,19 @@
 """bluetooth usage utility to handle multiple instances."""
+
 from __future__ import annotations
 
 import bleak
 
-from . import models
-from .models import HaBleakScanner, HaBleakScannerWrapper
+from .models import HaBleakScannerWrapper
+
+ORIGINAL_BLEAK_SCANNER = bleak.BleakScanner
 
 
-def install_multiple_bleak_catcher(hass_bleak_scanner: HaBleakScanner) -> None:
+def install_multiple_bleak_catcher() -> None:
     """Wrap the bleak classes to return the shared instance if multiple instances are detected."""
-    models.HA_BLEAK_SCANNER = hass_bleak_scanner
-    bleak.BleakScanner = HaBleakScannerWrapper
+    bleak.BleakScanner = HaBleakScannerWrapper  # type: ignore[misc, assignment]
+
+
+def uninstall_multiple_bleak_catcher() -> None:
+    """Unwrap the bleak classes."""
+    bleak.BleakScanner = ORIGINAL_BLEAK_SCANNER  # type: ignore[misc]

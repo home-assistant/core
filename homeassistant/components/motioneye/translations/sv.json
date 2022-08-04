@@ -7,5 +7,15 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "webhook_set": "Konfigurera motionEye webhooks f\u00f6r att rapportera h\u00e4ndelser till Home Assistant",
+                    "webhook_set_overwrite": "Skriv \u00f6ver ok\u00e4nda webhooks"
+                }
+            }
+        }
     }
 }

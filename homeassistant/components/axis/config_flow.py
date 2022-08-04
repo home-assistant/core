@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from ipaddress import ip_address
+from types import MappingProxyType
 from typing import Any
 from urllib.parse import urlsplit
 
@@ -32,7 +33,7 @@ from .const import (
     DEFAULT_VIDEO_SOURCE,
     DOMAIN as AXIS_DOMAIN,
 )
-from .device import AxisNetworkDevice, get_device
+from .device import AxisNetworkDevice, get_axis_device
 from .errors import AuthenticationRequired, CannotConnect
 
 AXIS_OUI = {"00:40:8c", "ac:cc:8e", "b8:a4:4f"}
@@ -66,13 +67,7 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
 
         if user_input is not None:
             try:
-                device = await get_device(
-                    self.hass,
-                    host=user_input[CONF_HOST],
-                    port=user_input[CONF_PORT],
-                    username=user_input[CONF_USERNAME],
-                    password=user_input[CONF_PASSWORD],
-                )
+                device = await get_axis_device(self.hass, MappingProxyType(user_input))
 
                 serial = device.vapix.serial_number
                 await self.async_set_unique_id(format_mac(serial))

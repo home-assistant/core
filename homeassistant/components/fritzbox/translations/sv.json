@@ -1,5 +1,13 @@
 {
     "config": {
+        "abort": {
+            "ignore_ip6_link_local": "IPv6-l\u00e4nkens lokala adress st\u00f6ds inte.",
+            "no_devices_found": "Inga enheter hittades i n\u00e4tverket",
+            "reauth_successful": "\u00c5terautentisering lyckades"
+        },
+        "error": {
+            "invalid_auth": "Ogiltig autentisering"
+        },
         "step": {
             "confirm": {
                 "data": {
@@ -10,8 +18,10 @@
             },
             "reauth_confirm": {
                 "data": {
+                    "password": "L\u00f6senord",
                     "username": "Anv\u00e4ndarnamn"
-                }
+                },
+                "description": "Uppdatera din inloggningsinformation f\u00f6r {name} ."
             },
             "user": {
                 "data": {
