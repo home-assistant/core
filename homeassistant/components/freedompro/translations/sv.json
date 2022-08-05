@@ -12,6 +12,7 @@
                 "data": {
                     "api_key": "API-nyckel"
                 },
+                "description": "Ange API-nyckeln fr\u00e5n https://home.freedompro.eu",
                 "title": "Freedompro API-nyckel"
             }
         }

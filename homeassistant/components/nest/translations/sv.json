@@ -6,14 +6,20 @@
         "abort": {
             "already_configured": "Konto har redan konfigurerats",
             "authorize_url_timeout": "Timeout vid generering av en autentisieringsadress.",
-            "reauth_successful": "\u00c5terautentisering lyckades"
+            "missing_configuration": "Komponenten har inte konfigurerats. F\u00f6lj dokumentationen.",
+            "reauth_successful": "\u00c5terautentisering lyckades",
+            "single_instance_allowed": "Redan konfigurerad. Endast en konfiguration m\u00f6jlig."
         },
         "error": {
             "internal_error": "Internt fel vid validering av kod",
+            "invalid_pin": "Ogiltig Pin-kod",
             "timeout": "Timeout vid valididering av kod",
             "unknown": "Ok\u00e4nt fel vid validering av kod"
         },
         "step": {
+            "auth": {
+                "title": "L\u00e4nka Google-konto"
+            },
             "auth_upgrade": {
                 "description": "App Auth har fasats ut av Google f\u00f6r att f\u00f6rb\u00e4ttra s\u00e4kerheten, och du m\u00e5ste vidta \u00e5tg\u00e4rder genom att skapa nya applikationsuppgifter. \n\n \u00d6ppna [dokumentationen]( {more_info_url} ) f\u00f6r att f\u00f6lja med eftersom n\u00e4sta steg guidar dig genom stegen du beh\u00f6ver ta f\u00f6r att \u00e5terst\u00e4lla \u00e5tkomsten till dina Nest-enheter.",
                 "title": "Nest: Utfasning av appautentisering"

@@ -9,6 +9,7 @@
         "error": {
             "identifier_exists": "Akun sudah terdaftar",
             "invalid_auth": "Autentikasi tidak valid",
+            "invalid_auth_code_length": "Panjang kode otorisasi SimpliSafe adalah 45 karakter",
             "unknown": "Kesalahan yang tidak diharapkan"
         },
         "progress": {
