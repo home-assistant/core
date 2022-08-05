@@ -47,7 +47,7 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
             async_create_issue(
                 self.hass,
                 DOMAIN,
-                "api_disabled",
+                f"api_disabled_{self.config_entry.entry_id if self.config_entry is not None else ''}",
                 data={CONF_IP_ADDRESS: self.api.host, CONF_DEVICE_NAME: self.name},
                 is_fixable=True,
                 learn_more_url="https://www.home-assistant.io/integrations/homewizard/#enable-the-api",
