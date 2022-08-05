@@ -3,14 +3,24 @@ from __future__ import annotations
 
 from typing import Optional, Union
 
-from xiaomi_ble import DeviceClass, DeviceKey, SensorDeviceInfo, SensorUpdate, Units
+from xiaomi_ble import (
+    DeviceClass,
+    DeviceKey,
+    SensorDeviceInfo,
+    SensorUpdate,
+    Units,
+    XiaomiBluetoothDeviceData,
+)
+from xiaomi_ble.parser import EncryptionScheme
 
 from homeassistant import config_entries
-from homeassistant.components.bluetooth.passive_update_coordinator import (
-    PassiveBluetoothCoordinatorEntity,
+from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
+from homeassistant.components.bluetooth.passive_update_processor import (
+    PassiveBluetoothDataProcessor,
     PassiveBluetoothDataUpdate,
-    PassiveBluetoothDataUpdateCoordinator,
     PassiveBluetoothEntityKey,
+    PassiveBluetoothProcessorCoordinator,
+    PassiveBluetoothProcessorEntity,
 )
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -22,7 +32,9 @@ from homeassistant.const import (
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_NAME,
+    CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
     CONDUCTIVITY,
+    ELECTRIC_POTENTIAL_VOLT,
     LIGHT_LUX,
     PERCENTAGE,
     PRESSURE_MBAR,
@@ -66,6 +78,12 @@ SENSOR_DESCRIPTIONS = {
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    (DeviceClass.VOLTAGE, Units.ELECTRIC_POTENTIAL_VOLT): SensorEntityDescription(
+        key=str(Units.ELECTRIC_POTENTIAL_VOLT),
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
     (
         DeviceClass.SIGNAL_STRENGTH,
         Units.SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
@@ -88,6 +106,12 @@ SENSOR_DESCRIPTIONS = {
         key=str(Units.CONDUCTIVITY),
         device_class=None,
         native_unit_of_measurement=CONDUCTIVITY,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # Used for e.g. formaldehyde
+    (None, Units.CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER): SensorEntityDescription(
+        key=str(Units.CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER),
+        native_unit_of_measurement=CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 }
@@ -141,25 +165,54 @@ def sensor_update_to_bluetooth_data_update(
     )
 
 
+def process_service_info(
+    hass: HomeAssistant,
+    entry: config_entries.ConfigEntry,
+    data: XiaomiBluetoothDeviceData,
+    service_info: BluetoothServiceInfoBleak,
+) -> PassiveBluetoothDataUpdate:
+    """Process a BluetoothServiceInfoBleak, running side effects and returning sensor data."""
+    update = data.update(service_info)
+
+    # If device isn't pending we know it has seen at least one broadcast with a payload
+    # If that payload was encrypted and the bindkey was not verified then we need to reauth
+    if (
+        not data.pending
+        and data.encryption_scheme != EncryptionScheme.NONE
+        and not data.bindkey_verified
+    ):
+        entry.async_start_reauth(hass, data={"device": data})
+
+    return sensor_update_to_bluetooth_data_update(update)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: config_entries.ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Xiaomi BLE sensors."""
-    coordinator: PassiveBluetoothDataUpdateCoordinator = hass.data[DOMAIN][
+    coordinator: PassiveBluetoothProcessorCoordinator = hass.data[DOMAIN][
         entry.entry_id
     ]
+    kwargs = {}
+    if bindkey := entry.data.get("bindkey"):
+        kwargs["bindkey"] = bytes.fromhex(bindkey)
+    data = XiaomiBluetoothDeviceData(**kwargs)
+    processor = PassiveBluetoothDataProcessor(
+        lambda service_info: process_service_info(hass, entry, data, service_info)
+    )
     entry.async_on_unload(
-        coordinator.async_add_entities_listener(
+        processor.async_add_entities_listener(
             XiaomiBluetoothSensorEntity, async_add_entities
         )
     )
+    entry.async_on_unload(coordinator.async_register_processor(processor))
 
 
 class XiaomiBluetoothSensorEntity(
-    PassiveBluetoothCoordinatorEntity[
-        PassiveBluetoothDataUpdateCoordinator[Optional[Union[float, int]]]
+    PassiveBluetoothProcessorEntity[
+        PassiveBluetoothDataProcessor[Optional[Union[float, int]]]
     ],
     SensorEntity,
 ):
@@ -168,4 +221,4 @@ class XiaomiBluetoothSensorEntity(
     @property
     def native_value(self) -> int | float | None:
         """Return the native value."""
-        return self.coordinator.entity_data.get(self.entity_key)
+        return self.processor.entity_data.get(self.entity_key)

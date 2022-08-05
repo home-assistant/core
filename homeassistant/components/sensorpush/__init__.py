@@ -3,19 +3,15 @@ from __future__ import annotations
 
 import logging
 
-from sensorpush_ble import SensorPushBluetoothDeviceData
-
-from homeassistant.components.bluetooth.passive_update_coordinator import (
-    PassiveBluetoothDataUpdate,
-    PassiveBluetoothDataUpdateCoordinator,
+from homeassistant.components.bluetooth import BluetoothScanningMode
+from homeassistant.components.bluetooth.passive_update_processor import (
+    PassiveBluetoothProcessorCoordinator,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
+from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
-from .sensor import sensor_update_to_bluetooth_data_update
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
@@ -26,25 +22,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up SensorPush BLE device from a config entry."""
     address = entry.unique_id
     assert address is not None
-
-    data = SensorPushBluetoothDeviceData()
-
-    @callback
-    def _async_update_data(
-        service_info: BluetoothServiceInfo,
-    ) -> PassiveBluetoothDataUpdate:
-        """Update data from SensorPush Bluetooth."""
-        return sensor_update_to_bluetooth_data_update(data.update(service_info))
-
-    hass.data.setdefault(DOMAIN, {})[
+    coordinator = hass.data.setdefault(DOMAIN, {})[
         entry.entry_id
-    ] = PassiveBluetoothDataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        update_method=_async_update_data,
-        address=address,
+    ] = PassiveBluetoothProcessorCoordinator(
+        hass, _LOGGER, address=address, mode=BluetoothScanningMode.PASSIVE
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    entry.async_on_unload(
+        coordinator.async_start()
+    )  # only start after all platforms have had a chance to subscribe
     return True
 
 

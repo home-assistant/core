@@ -13,7 +13,8 @@
                 "data": {
                     "email": "E-postadress",
                     "password": "L\u00f6senord"
-                }
+                },
+                "title": "Anslut till din Sense Energy Monitor"
             }
         }
     }

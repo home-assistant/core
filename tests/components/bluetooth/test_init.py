@@ -1,9 +1,11 @@
 """Tests for the Bluetooth integration."""
+import asyncio
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
 from bleak import BleakError
 from bleak.backends.scanner import AdvertisementData, BLEDevice
+from dbus_next import InvalidMessageError
 import pytest
 
 from homeassistant.components import bluetooth
@@ -11,12 +13,19 @@ from homeassistant.components.bluetooth import (
     SOURCE_LOCAL,
     UNAVAILABLE_TRACK_SECONDS,
     BluetoothChange,
+    BluetoothScanningMode,
     BluetoothServiceInfo,
+    async_process_advertisements,
     async_track_unavailable,
     models,
 )
+from homeassistant.components.bluetooth.const import (
+    CONF_ADAPTER,
+    UNIX_DEFAULT_BLUETOOTH_ADAPTER,
+)
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -70,10 +79,7 @@ async def test_setup_and_stop_no_bluetooth(hass, caplog):
 
 async def test_setup_and_stop_broken_bluetooth(hass, caplog):
     """Test we fail gracefully when bluetooth/dbus is broken."""
-    mock_bt = [
-        {"domain": "switchbot", "service_uuid": "cba20d00-224d-11e6-9fb8-0002a5d5c51b"}
-    ]
-
+    mock_bt = []
     with patch("homeassistant.components.bluetooth.HaBleakScanner.async_setup"), patch(
         "homeassistant.components.bluetooth.HaBleakScanner.start",
         side_effect=BleakError,
@@ -91,6 +97,69 @@ async def test_setup_and_stop_broken_bluetooth(hass, caplog):
     await hass.async_block_till_done()
     assert "Failed to start Bluetooth" in caplog.text
     assert len(bluetooth.async_discovered_service_info(hass)) == 0
+
+
+async def test_setup_and_stop_broken_bluetooth_hanging(hass, caplog):
+    """Test we fail gracefully when bluetooth/dbus is hanging."""
+    mock_bt = []
+
+    async def _mock_hang():
+        await asyncio.sleep(1)
+
+    with patch.object(bluetooth, "START_TIMEOUT", 0), patch(
+        "homeassistant.components.bluetooth.HaBleakScanner.async_setup"
+    ), patch(
+        "homeassistant.components.bluetooth.HaBleakScanner.start",
+        side_effect=_mock_hang,
+    ), patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
+    ):
+        assert await async_setup_component(
+            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
+        )
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    assert "Timed out starting Bluetooth" in caplog.text
+
+
+async def test_setup_and_retry_adapter_not_yet_available(hass, caplog):
+    """Test we retry if the adapter is not yet available."""
+    mock_bt = []
+    with patch("homeassistant.components.bluetooth.HaBleakScanner.async_setup"), patch(
+        "homeassistant.components.bluetooth.HaBleakScanner.start",
+        side_effect=BleakError,
+    ), patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
+    ):
+        assert await async_setup_component(
+            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
+        )
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    entry = hass.config_entries.async_entries(bluetooth.DOMAIN)[0]
+
+    assert "Failed to start Bluetooth" in caplog.text
+    assert len(bluetooth.async_discovered_service_info(hass)) == 0
+    assert entry.state == ConfigEntryState.SETUP_RETRY
+
+    with patch(
+        "homeassistant.components.bluetooth.HaBleakScanner.start",
+    ):
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
+        await hass.async_block_till_done()
+    assert entry.state == ConfigEntryState.LOADED
+
+    with patch(
+        "homeassistant.components.bluetooth.HaBleakScanner.stop",
+    ):
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        await hass.async_block_till_done()
 
 
 async def test_calling_async_discovered_devices_no_bluetooth(hass, caplog):
@@ -188,7 +257,7 @@ async def test_discovery_match_by_local_name(hass, mock_bleak_scanner_start):
         assert mock_config_flow.mock_calls[0][1][0] == "switchbot"
 
 
-async def test_discovery_match_by_manufacturer_id_and_first_byte(
+async def test_discovery_match_by_manufacturer_id_and_manufacturer_data_start(
     hass, mock_bleak_scanner_start
 ):
     """Test bluetooth discovery match by manufacturer_id and manufacturer_data_start."""
@@ -214,20 +283,33 @@ async def test_discovery_match_by_manufacturer_id_and_first_byte(
         assert len(mock_bleak_scanner_start.mock_calls) == 1
 
         hkc_device = BLEDevice("44:44:33:11:23:45", "lock")
+        hkc_adv_no_mfr_data = AdvertisementData(
+            local_name="lock",
+            service_uuids=[],
+            manufacturer_data={},
+        )
         hkc_adv = AdvertisementData(
             local_name="lock",
             service_uuids=[],
             manufacturer_data={76: b"\x06\x02\x03\x99"},
         )
 
+        # 1st discovery with no manufacturer data
+        # should not trigger config flow
+        _get_underlying_scanner()._callback(hkc_device, hkc_adv_no_mfr_data)
+        await hass.async_block_till_done()
+        assert len(mock_config_flow.mock_calls) == 0
+        mock_config_flow.reset_mock()
+
+        # 2nd discovery with manufacturer data
+        # should trigger a config flow
         _get_underlying_scanner()._callback(hkc_device, hkc_adv)
         await hass.async_block_till_done()
-
         assert len(mock_config_flow.mock_calls) == 1
         assert mock_config_flow.mock_calls[0][1][0] == "homekit_controller"
         mock_config_flow.reset_mock()
 
-        # 2nd discovery should not generate another flow
+        # 3rd discovery should not generate another flow
         _get_underlying_scanner()._callback(hkc_device, hkc_adv)
         await hass.async_block_till_done()
 
@@ -251,6 +333,230 @@ async def test_discovery_match_by_manufacturer_id_and_first_byte(
         _get_underlying_scanner()._callback(not_apple_device, not_apple_adv)
         await hass.async_block_till_done()
 
+        assert len(mock_config_flow.mock_calls) == 0
+
+
+async def test_discovery_match_by_service_data_uuid_then_others(
+    hass, mock_bleak_scanner_start
+):
+    """Test bluetooth discovery match by service_data_uuid and then other fields."""
+    mock_bt = [
+        {
+            "domain": "my_domain",
+            "service_data_uuid": "0000fd3d-0000-1000-8000-00805f9b34fb",
+        },
+        {
+            "domain": "my_domain",
+            "service_uuid": "0000fd3d-0000-1000-8000-00805f9b34fc",
+        },
+        {
+            "domain": "other_domain",
+            "manufacturer_id": 323,
+        },
+    ]
+    with patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
+    ):
+        assert await async_setup_component(
+            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
+        )
+        await hass.async_block_till_done()
+
+    with patch.object(hass.config_entries.flow, "async_init") as mock_config_flow:
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        assert len(mock_bleak_scanner_start.mock_calls) == 1
+
+        device = BLEDevice("44:44:33:11:23:45", "lock")
+        adv_without_service_data_uuid = AdvertisementData(
+            local_name="lock",
+            service_uuids=[],
+            manufacturer_data={},
+        )
+        adv_with_mfr_data = AdvertisementData(
+            local_name="lock",
+            service_uuids=[],
+            manufacturer_data={323: b"\x01\x02\x03"},
+            service_data={},
+        )
+        adv_with_service_data_uuid = AdvertisementData(
+            local_name="lock",
+            service_uuids=[],
+            manufacturer_data={},
+            service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"\x01\x02\x03"},
+        )
+        adv_with_service_data_uuid_and_mfr_data = AdvertisementData(
+            local_name="lock",
+            service_uuids=[],
+            manufacturer_data={323: b"\x01\x02\x03"},
+            service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"\x01\x02\x03"},
+        )
+        adv_with_service_data_uuid_and_mfr_data_and_service_uuid = AdvertisementData(
+            local_name="lock",
+            manufacturer_data={323: b"\x01\x02\x03"},
+            service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"\x01\x02\x03"},
+            service_uuids=["0000fd3d-0000-1000-8000-00805f9b34fd"],
+        )
+        adv_with_service_uuid = AdvertisementData(
+            local_name="lock",
+            manufacturer_data={},
+            service_data={},
+            service_uuids=["0000fd3d-0000-1000-8000-00805f9b34fd"],
+        )
+        # 1st discovery should not generate a flow because the
+        # service_data_uuid is not in the advertisement
+        _get_underlying_scanner()._callback(device, adv_without_service_data_uuid)
+        await hass.async_block_till_done()
+        assert len(mock_config_flow.mock_calls) == 0
+        mock_config_flow.reset_mock()
+
+        # 2nd discovery should not generate a flow because the
+        # service_data_uuid is not in the advertisement
+        _get_underlying_scanner()._callback(device, adv_without_service_data_uuid)
+        await hass.async_block_till_done()
+        assert len(mock_config_flow.mock_calls) == 0
+        mock_config_flow.reset_mock()
+
+        # 3rd discovery should generate a flow because the
+        # manufacturer_data is in the advertisement
+        _get_underlying_scanner()._callback(device, adv_with_mfr_data)
+        await hass.async_block_till_done()
+        assert len(mock_config_flow.mock_calls) == 1
+        assert mock_config_flow.mock_calls[0][1][0] == "other_domain"
+        mock_config_flow.reset_mock()
+
+        # 4th discovery should generate a flow because the
+        # service_data_uuid is in the advertisement and
+        # we never saw a service_data_uuid before
+        _get_underlying_scanner()._callback(device, adv_with_service_data_uuid)
+        await hass.async_block_till_done()
+        assert len(mock_config_flow.mock_calls) == 1
+        assert mock_config_flow.mock_calls[0][1][0] == "my_domain"
+        mock_config_flow.reset_mock()
+
+        # 5th discovery should not generate a flow because the
+        # we already saw an advertisement with the service_data_uuid
+        _get_underlying_scanner()._callback(device, adv_with_service_data_uuid)
+        await hass.async_block_till_done()
+        assert len(mock_config_flow.mock_calls) == 0
+
+        # 6th discovery should not generate a flow because the
+        # manufacturer_data is in the advertisement
+        # and we saw manufacturer_data before
+        _get_underlying_scanner()._callback(
+            device, adv_with_service_data_uuid_and_mfr_data
+        )
+        await hass.async_block_till_done()
+        assert len(mock_config_flow.mock_calls) == 0
+        mock_config_flow.reset_mock()
+
+        # 7th discovery should generate a flow because the
+        # service_uuids is in the advertisement
+        # and we never saw service_uuids before
+        _get_underlying_scanner()._callback(
+            device, adv_with_service_data_uuid_and_mfr_data_and_service_uuid
+        )
+        await hass.async_block_till_done()
+        assert len(mock_config_flow.mock_calls) == 2
+        assert {
+            mock_config_flow.mock_calls[0][1][0],
+            mock_config_flow.mock_calls[1][1][0],
+        } == {"my_domain", "other_domain"}
+        mock_config_flow.reset_mock()
+
+        # 8th discovery should not generate a flow
+        # since all fields have been seen at this point
+        _get_underlying_scanner()._callback(
+            device, adv_with_service_data_uuid_and_mfr_data_and_service_uuid
+        )
+        await hass.async_block_till_done()
+        assert len(mock_config_flow.mock_calls) == 0
+        mock_config_flow.reset_mock()
+
+        # 9th discovery should not generate a flow
+        # since all fields have been seen at this point
+        _get_underlying_scanner()._callback(device, adv_with_service_uuid)
+        await hass.async_block_till_done()
+        assert len(mock_config_flow.mock_calls) == 0
+
+        # 10th discovery should not generate a flow
+        # since all fields have been seen at this point
+        _get_underlying_scanner()._callback(device, adv_with_service_data_uuid)
+        await hass.async_block_till_done()
+        assert len(mock_config_flow.mock_calls) == 0
+
+        # 11th discovery should not generate a flow
+        # since all fields have been seen at this point
+        _get_underlying_scanner()._callback(device, adv_without_service_data_uuid)
+        await hass.async_block_till_done()
+        assert len(mock_config_flow.mock_calls) == 0
+
+
+async def test_discovery_match_first_by_service_uuid_and_then_manufacturer_id(
+    hass, mock_bleak_scanner_start
+):
+    """Test bluetooth discovery matches twice for service_uuid and then manufacturer_id."""
+    mock_bt = [
+        {
+            "domain": "my_domain",
+            "manufacturer_id": 76,
+        },
+        {
+            "domain": "my_domain",
+            "service_uuid": "0000fd3d-0000-1000-8000-00805f9b34fc",
+        },
+    ]
+    with patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
+    ):
+        assert await async_setup_component(
+            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
+        )
+        await hass.async_block_till_done()
+
+    with patch.object(hass.config_entries.flow, "async_init") as mock_config_flow:
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        assert len(mock_bleak_scanner_start.mock_calls) == 1
+
+        device = BLEDevice("44:44:33:11:23:45", "lock")
+        adv_service_uuids = AdvertisementData(
+            local_name="lock",
+            service_uuids=["0000fd3d-0000-1000-8000-00805f9b34fc"],
+            manufacturer_data={},
+        )
+        adv_manufacturer_data = AdvertisementData(
+            local_name="lock",
+            service_uuids=[],
+            manufacturer_data={76: b"\x06\x02\x03\x99"},
+        )
+
+        # 1st discovery with matches service_uuid
+        # should trigger config flow
+        _get_underlying_scanner()._callback(device, adv_service_uuids)
+        await hass.async_block_till_done()
+        assert len(mock_config_flow.mock_calls) == 1
+        assert mock_config_flow.mock_calls[0][1][0] == "my_domain"
+        mock_config_flow.reset_mock()
+
+        # 2nd discovery with manufacturer data
+        # should trigger a config flow
+        _get_underlying_scanner()._callback(device, adv_manufacturer_data)
+        await hass.async_block_till_done()
+        assert len(mock_config_flow.mock_calls) == 1
+        assert mock_config_flow.mock_calls[0][1][0] == "my_domain"
+        mock_config_flow.reset_mock()
+
+        # 3rd discovery should not generate another flow
+        _get_underlying_scanner()._callback(device, adv_service_uuids)
+        await hass.async_block_till_done()
+        assert len(mock_config_flow.mock_calls) == 0
+
+        # 4th discovery should not generate another flow
+        _get_underlying_scanner()._callback(device, adv_manufacturer_data)
+        await hass.async_block_till_done()
         assert len(mock_config_flow.mock_calls) == 0
 
 
@@ -371,6 +677,7 @@ async def test_register_callbacks(hass, mock_bleak_scanner_start, enable_bluetoo
             hass,
             _fake_subscriber,
             {"service_uuids": {"cba20d00-224d-11e6-9fb8-0002a5d5c51b"}},
+            BluetoothScanningMode.ACTIVE,
         )
 
         assert len(mock_bleak_scanner_start.mock_calls) == 1
@@ -456,6 +763,7 @@ async def test_register_callback_by_address(
             hass,
             _fake_subscriber,
             {"address": "44:44:33:11:23:45"},
+            BluetoothScanningMode.ACTIVE,
         )
 
         assert len(mock_bleak_scanner_start.mock_calls) == 1
@@ -495,6 +803,7 @@ async def test_register_callback_by_address(
             hass,
             _fake_subscriber,
             {"address": "44:44:33:11:23:45"},
+            BluetoothScanningMode.ACTIVE,
         )
         cancel()
 
@@ -504,6 +813,7 @@ async def test_register_callback_by_address(
             hass,
             _fake_subscriber,
             {"address": "44:44:33:11:23:45"},
+            BluetoothScanningMode.ACTIVE,
         )
         cancel()
 
@@ -514,6 +824,105 @@ async def test_register_callback_by_address(
         assert service_info.name == "wohand"
         assert service_info.manufacturer == "Nordic Semiconductor ASA"
         assert service_info.manufacturer_id == 89
+
+
+async def test_process_advertisements_bail_on_good_advertisement(
+    hass: HomeAssistant, mock_bleak_scanner_start, enable_bluetooth
+):
+    """Test as soon as we see a 'good' advertisement we return it."""
+    done = asyncio.Future()
+
+    def _callback(service_info: BluetoothServiceInfo) -> bool:
+        done.set_result(None)
+        return len(service_info.service_data) > 0
+
+    handle = hass.async_create_task(
+        async_process_advertisements(
+            hass,
+            _callback,
+            {"address": "aa:44:33:11:23:45"},
+            BluetoothScanningMode.ACTIVE,
+            5,
+        )
+    )
+
+    while not done.done():
+        device = BLEDevice("aa:44:33:11:23:45", "wohand")
+        adv = AdvertisementData(
+            local_name="wohand",
+            service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51a"],
+            manufacturer_data={89: b"\xd8.\xad\xcd\r\x85"},
+            service_data={"00000d00-0000-1000-8000-00805f9b34fa": b"H\x10c"},
+        )
+
+        _get_underlying_scanner()._callback(device, adv)
+        _get_underlying_scanner()._callback(device, adv)
+        _get_underlying_scanner()._callback(device, adv)
+
+        await asyncio.sleep(0)
+
+    result = await handle
+    assert result.name == "wohand"
+
+
+async def test_process_advertisements_ignore_bad_advertisement(
+    hass: HomeAssistant, mock_bleak_scanner_start, enable_bluetooth
+):
+    """Check that we ignore bad advertisements."""
+    done = asyncio.Event()
+    return_value = asyncio.Event()
+
+    device = BLEDevice("aa:44:33:11:23:45", "wohand")
+    adv = AdvertisementData(
+        local_name="wohand",
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51a"],
+        manufacturer_data={89: b"\xd8.\xad\xcd\r\x85"},
+        service_data={"00000d00-0000-1000-8000-00805f9b34fa": b""},
+    )
+
+    def _callback(service_info: BluetoothServiceInfo) -> bool:
+        done.set()
+        return return_value.is_set()
+
+    handle = hass.async_create_task(
+        async_process_advertisements(
+            hass,
+            _callback,
+            {"address": "aa:44:33:11:23:45"},
+            BluetoothScanningMode.ACTIVE,
+            5,
+        )
+    )
+
+    # The goal of this loop is to make sure that async_process_advertisements sees at least one
+    # callback that returns False
+    while not done.is_set():
+        _get_underlying_scanner()._callback(device, adv)
+        await asyncio.sleep(0)
+
+    # Set the return value and mutate the advertisement
+    # Check that scan ends and correct advertisement data is returned
+    return_value.set()
+    adv.service_data["00000d00-0000-1000-8000-00805f9b34fa"] = b"H\x10c"
+    _get_underlying_scanner()._callback(device, adv)
+    await asyncio.sleep(0)
+
+    result = await handle
+    assert result.service_data["00000d00-0000-1000-8000-00805f9b34fa"] == b"H\x10c"
+
+
+async def test_process_advertisements_timeout(
+    hass, mock_bleak_scanner_start, enable_bluetooth
+):
+    """Test we timeout if no advertisements at all."""
+
+    def _callback(service_info: BluetoothServiceInfo) -> bool:
+        return False
+
+    with pytest.raises(asyncio.TimeoutError):
+        await async_process_advertisements(
+            hass, _callback, {}, BluetoothScanningMode.ACTIVE, 0
+        )
 
 
 async def test_wrapped_instance_with_filter(
@@ -889,9 +1298,22 @@ async def test_can_unsetup_bluetooth(hass, mock_bleak_scanner_start, enable_blue
 async def test_auto_detect_bluetooth_adapters_linux(hass):
     """Test we auto detect bluetooth adapters on linux."""
     with patch(
-        "bluetooth_adapters.get_bluetooth_adapters", return_value={"hci0"}
+        "bluetooth_adapters.get_bluetooth_adapters", return_value=["hci0"]
     ), patch(
-        "homeassistant.components.bluetooth.platform.system", return_value="Linux"
+        "homeassistant.components.bluetooth.util.platform.system", return_value="Linux"
+    ):
+        assert await async_setup_component(hass, bluetooth.DOMAIN, {})
+        await hass.async_block_till_done()
+    assert not hass.config_entries.async_entries(bluetooth.DOMAIN)
+    assert len(hass.config_entries.flow.async_progress(bluetooth.DOMAIN)) == 1
+
+
+async def test_auto_detect_bluetooth_adapters_linux_multiple(hass):
+    """Test we auto detect bluetooth adapters on linux with multiple adapters."""
+    with patch(
+        "bluetooth_adapters.get_bluetooth_adapters", return_value=["hci1", "hci0"]
+    ), patch(
+        "homeassistant.components.bluetooth.util.platform.system", return_value="Linux"
     ):
         assert await async_setup_component(hass, bluetooth.DOMAIN, {})
         await hass.async_block_till_done()
@@ -902,7 +1324,7 @@ async def test_auto_detect_bluetooth_adapters_linux(hass):
 async def test_auto_detect_bluetooth_adapters_linux_none_found(hass):
     """Test we auto detect bluetooth adapters on linux with no adapters found."""
     with patch("bluetooth_adapters.get_bluetooth_adapters", return_value=set()), patch(
-        "homeassistant.components.bluetooth.platform.system", return_value="Linux"
+        "homeassistant.components.bluetooth.util.platform.system", return_value="Linux"
     ):
         assert await async_setup_component(hass, bluetooth.DOMAIN, {})
         await hass.async_block_till_done()
@@ -913,7 +1335,7 @@ async def test_auto_detect_bluetooth_adapters_linux_none_found(hass):
 async def test_auto_detect_bluetooth_adapters_macos(hass):
     """Test we auto detect bluetooth adapters on macos."""
     with patch(
-        "homeassistant.components.bluetooth.platform.system", return_value="Darwin"
+        "homeassistant.components.bluetooth.util.platform.system", return_value="Darwin"
     ):
         assert await async_setup_component(hass, bluetooth.DOMAIN, {})
         await hass.async_block_till_done()
@@ -924,7 +1346,8 @@ async def test_auto_detect_bluetooth_adapters_macos(hass):
 async def test_no_auto_detect_bluetooth_adapters_windows(hass):
     """Test we auto detect bluetooth adapters on windows."""
     with patch(
-        "homeassistant.components.bluetooth.platform.system", return_value="Windows"
+        "homeassistant.components.bluetooth.util.platform.system",
+        return_value="Windows",
     ):
         assert await async_setup_component(hass, bluetooth.DOMAIN, {})
         await hass.async_block_till_done()
@@ -942,3 +1365,160 @@ async def test_getting_the_scanner_returns_the_wrapped_instance(hass, enable_blu
     """Test getting the scanner returns the wrapped instance."""
     scanner = bluetooth.async_get_scanner(hass)
     assert isinstance(scanner, models.HaBleakScannerWrapper)
+
+
+async def test_config_entry_can_be_reloaded_when_stop_raises(
+    hass, caplog, enable_bluetooth
+):
+    """Test we can reload if stopping the scanner raises."""
+    entry = hass.config_entries.async_entries(bluetooth.DOMAIN)[0]
+    assert entry.state == ConfigEntryState.LOADED
+
+    with patch(
+        "homeassistant.components.bluetooth.HaBleakScanner.stop", side_effect=BleakError
+    ):
+        await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state == ConfigEntryState.LOADED
+    assert "Error stopping scanner" in caplog.text
+
+
+async def test_changing_the_adapter_at_runtime(hass):
+    """Test we can change the adapter at runtime."""
+    entry = MockConfigEntry(
+        domain=bluetooth.DOMAIN,
+        data={},
+        options={CONF_ADAPTER: UNIX_DEFAULT_BLUETOOTH_ADAPTER},
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.bluetooth.HaBleakScanner.async_setup"
+    ) as mock_setup, patch(
+        "homeassistant.components.bluetooth.HaBleakScanner.start"
+    ), patch(
+        "homeassistant.components.bluetooth.HaBleakScanner.stop"
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert "adapter" not in mock_setup.mock_calls[0][2]
+
+        entry.options = {CONF_ADAPTER: "hci1"}
+
+        await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+        assert mock_setup.mock_calls[1][2]["adapter"] == "hci1"
+
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        await hass.async_block_till_done()
+
+
+async def test_dbus_socket_missing_in_container(hass, caplog):
+    """Test we handle dbus being missing in the container."""
+
+    with patch(
+        "homeassistant.components.bluetooth.is_docker_env", return_value=True
+    ), patch("homeassistant.components.bluetooth.HaBleakScanner.async_setup"), patch(
+        "homeassistant.components.bluetooth.HaBleakScanner.start",
+        side_effect=FileNotFoundError,
+    ):
+        assert await async_setup_component(
+            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
+        )
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    assert "/run/dbus" in caplog.text
+    assert "docker" in caplog.text
+
+
+async def test_dbus_socket_missing(hass, caplog):
+    """Test we handle dbus being missing."""
+
+    with patch(
+        "homeassistant.components.bluetooth.is_docker_env", return_value=False
+    ), patch("homeassistant.components.bluetooth.HaBleakScanner.async_setup"), patch(
+        "homeassistant.components.bluetooth.HaBleakScanner.start",
+        side_effect=FileNotFoundError,
+    ):
+        assert await async_setup_component(
+            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
+        )
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    assert "DBus" in caplog.text
+    assert "docker" not in caplog.text
+
+
+async def test_dbus_broken_pipe_in_container(hass, caplog):
+    """Test we handle dbus broken pipe in the container."""
+
+    with patch(
+        "homeassistant.components.bluetooth.is_docker_env", return_value=True
+    ), patch("homeassistant.components.bluetooth.HaBleakScanner.async_setup"), patch(
+        "homeassistant.components.bluetooth.HaBleakScanner.start",
+        side_effect=BrokenPipeError,
+    ):
+        assert await async_setup_component(
+            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
+        )
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    assert "dbus" in caplog.text
+    assert "restarting" in caplog.text
+    assert "container" in caplog.text
+
+
+async def test_dbus_broken_pipe(hass, caplog):
+    """Test we handle dbus broken pipe."""
+
+    with patch(
+        "homeassistant.components.bluetooth.is_docker_env", return_value=False
+    ), patch("homeassistant.components.bluetooth.HaBleakScanner.async_setup"), patch(
+        "homeassistant.components.bluetooth.HaBleakScanner.start",
+        side_effect=BrokenPipeError,
+    ):
+        assert await async_setup_component(
+            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
+        )
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    assert "DBus" in caplog.text
+    assert "restarting" in caplog.text
+    assert "container" not in caplog.text
+
+
+async def test_invalid_dbus_message(hass, caplog):
+    """Test we handle invalid dbus message."""
+
+    with patch("homeassistant.components.bluetooth.HaBleakScanner.async_setup"), patch(
+        "homeassistant.components.bluetooth.HaBleakScanner.start",
+        side_effect=InvalidMessageError,
+    ):
+        assert await async_setup_component(
+            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
+        )
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    assert "dbus" in caplog.text

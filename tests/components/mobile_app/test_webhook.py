@@ -840,7 +840,7 @@ async def test_webhook_handle_scan_tag(hass, create_registrations, webhook_clien
 
     @callback
     def store_event(event):
-        """Helepr to store events."""
+        """Help store events."""
         events.append(event)
 
     hass.bus.async_listen("tag_scanned", store_event)

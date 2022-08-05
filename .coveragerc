@@ -388,6 +388,7 @@ omit =
     homeassistant/components/flume/__init__.py
     homeassistant/components/flume/sensor.py
     homeassistant/components/flunearyou/__init__.py
+    homeassistant/components/flunearyou/repairs.py
     homeassistant/components/flunearyou/sensor.py
     homeassistant/components/folder/sensor.py
     homeassistant/components/folder_watcher/*
@@ -850,7 +851,7 @@ omit =
     homeassistant/components/open_meteo/weather.py
     homeassistant/components/opencv/*
     homeassistant/components/openevse/sensor.py
-    homeassistant/components/openexchangerates/sensor.py
+    homeassistant/components/openexchangerates/*
     homeassistant/components/opengarage/__init__.py
     homeassistant/components/opengarage/binary_sensor.py
     homeassistant/components/opengarage/cover.py
@@ -927,7 +928,6 @@ omit =
     homeassistant/components/plex/cast.py
     homeassistant/components/plex/media_player.py
     homeassistant/components/plex/view.py
-    homeassistant/components/plugwise/select.py
     homeassistant/components/plum_lightpad/light.py
     homeassistant/components/pocketcasts/sensor.py
     homeassistant/components/point/__init__.py
@@ -976,6 +976,7 @@ omit =
     homeassistant/components/raincloud/*
     homeassistant/components/rainmachine/__init__.py
     homeassistant/components/rainmachine/binary_sensor.py
+    homeassistant/components/rainmachine/button.py
     homeassistant/components/rainmachine/model.py
     homeassistant/components/rainmachine/sensor.py
     homeassistant/components/rainmachine/switch.py

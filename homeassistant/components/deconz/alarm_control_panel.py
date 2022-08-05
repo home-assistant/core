@@ -80,11 +80,10 @@ async def async_setup_entry(
     )
 
 
-class DeconzAlarmControlPanel(DeconzDevice, AlarmControlPanelEntity):
+class DeconzAlarmControlPanel(DeconzDevice[AncillaryControl], AlarmControlPanelEntity):
     """Representation of a deCONZ alarm control panel."""
 
     TYPE = DOMAIN
-    _device: AncillaryControl
 
     _attr_code_format = CodeFormat.NUMBER
     _attr_supported_features = (

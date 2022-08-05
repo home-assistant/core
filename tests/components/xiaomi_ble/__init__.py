@@ -37,6 +37,42 @@ MMC_T201_1_SERVICE_INFO = BluetoothServiceInfo(
     source="local",
 )
 
+JTYJGD03MI_SERVICE_INFO = BluetoothServiceInfo(
+    name="JTYJGD03MI",
+    address="54:EF:44:E3:9C:BC",
+    rssi=-56,
+    manufacturer_data={},
+    service_data={
+        "0000fe95-0000-1000-8000-00805f9b34fb": b'XY\x97\td\xbc\x9c\xe3D\xefT" `\x88\xfd\x00\x00\x00\x00:\x14\x8f\xb3'
+    },
+    service_uuids=["0000fe95-0000-1000-8000-00805f9b34fb"],
+    source="local",
+)
+
+YLKG07YL_SERVICE_INFO = BluetoothServiceInfo(
+    name="YLKG07YL",
+    address="F8:24:41:C5:98:8B",
+    rssi=-56,
+    manufacturer_data={},
+    service_data={
+        "0000fe95-0000-1000-8000-00805f9b34fb": b"X0\xb6\x03\xd2\x8b\x98\xc5A$\xf8\xc3I\x14vu~\x00\x00\x00\x99",
+    },
+    service_uuids=["0000fe95-0000-1000-8000-00805f9b34fb"],
+    source="local",
+)
+
+MISSING_PAYLOAD_ENCRYPTED = BluetoothServiceInfo(
+    name="LYWSD02MMC",
+    address="A4:C1:38:56:53:84",
+    rssi=-56,
+    manufacturer_data={},
+    service_data={
+        "0000fe95-0000-1000-8000-00805f9b34fb": b"0X[\x05\x02\x84\x53\x568\xc1\xa4\x08",
+    },
+    service_uuids=["0000fe95-0000-1000-8000-00805f9b34fb"],
+    source="local",
+)
+
 
 def make_advertisement(address: str, payload: bytes) -> BluetoothServiceInfo:
     """Make a dummy advertisement."""

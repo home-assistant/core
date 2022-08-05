@@ -8,6 +8,50 @@ from __future__ import annotations
 
 BLUETOOTH: list[dict[str, str | int | list[int]]] = [
     {
+        "domain": "fjaraskupan",
+        "manufacturer_id": 20296,
+        "manufacturer_data_start": [
+            79,
+            68,
+            70,
+            74,
+            65,
+            82
+        ]
+    },
+    {
+        "domain": "govee_ble",
+        "local_name": "Govee*"
+    },
+    {
+        "domain": "govee_ble",
+        "local_name": "GVH5*"
+    },
+    {
+        "domain": "govee_ble",
+        "local_name": "B5178*"
+    },
+    {
+        "domain": "govee_ble",
+        "manufacturer_id": 26589,
+        "service_uuid": "00008351-0000-1000-8000-00805f9b34fb"
+    },
+    {
+        "domain": "govee_ble",
+        "manufacturer_id": 18994,
+        "service_uuid": "00008551-0000-1000-8000-00805f9b34fb"
+    },
+    {
+        "domain": "govee_ble",
+        "manufacturer_id": 14474,
+        "service_uuid": "00008151-0000-1000-8000-00805f9b34fb"
+    },
+    {
+        "domain": "govee_ble",
+        "manufacturer_id": 10032,
+        "service_uuid": "00008251-0000-1000-8000-00805f9b34fb"
+    },
+    {
         "domain": "homekit_controller",
         "manufacturer_id": 76,
         "manufacturer_data_start": [
@@ -31,8 +75,16 @@ BLUETOOTH: list[dict[str, str | int | list[int]]] = [
         "local_name": "tps"
     },
     {
+        "domain": "moat",
+        "local_name": "Moat_S*"
+    },
+    {
         "domain": "sensorpush",
         "local_name": "SensorPush*"
+    },
+    {
+        "domain": "switchbot",
+        "service_data_uuid": "0000fd3d-0000-1000-8000-00805f9b34fb"
     },
     {
         "domain": "switchbot",
@@ -40,6 +92,6 @@ BLUETOOTH: list[dict[str, str | int | list[int]]] = [
     },
     {
         "domain": "xiaomi_ble",
-        "service_uuid": "0000fe95-0000-1000-8000-00805f9b34fb"
+        "service_data_uuid": "0000fe95-0000-1000-8000-00805f9b34fb"
     }
 ]

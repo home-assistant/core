@@ -85,6 +85,7 @@ async def test_create_update_issue(hass: HomeAssistant, hass_ws_client) -> None:
                 created="2022-07-19T07:53:05+00:00",
                 dismissed_version=None,
                 ignored=False,
+                issue_domain=None,
             )
             for issue in issues
         ]
@@ -97,6 +98,7 @@ async def test_create_update_issue(hass: HomeAssistant, hass_ws_client) -> None:
         issues[0]["issue_id"],
         breaks_in_ha_version=issues[0]["breaks_in_ha_version"],
         is_fixable=issues[0]["is_fixable"],
+        issue_domain="my_issue_domain",
         learn_more_url="blablabla",
         severity=issues[0]["severity"],
         translation_key=issues[0]["translation_key"],
@@ -113,6 +115,7 @@ async def test_create_update_issue(hass: HomeAssistant, hass_ws_client) -> None:
         dismissed_version=None,
         ignored=False,
         learn_more_url="blablabla",
+        issue_domain="my_issue_domain",
     )
 
 
@@ -206,6 +209,7 @@ async def test_ignore_issue(hass: HomeAssistant, hass_ws_client) -> None:
                 created="2022-07-19T07:53:05+00:00",
                 dismissed_version=None,
                 ignored=False,
+                issue_domain=None,
             )
             for issue in issues
         ]
@@ -226,6 +230,7 @@ async def test_ignore_issue(hass: HomeAssistant, hass_ws_client) -> None:
                 created="2022-07-19T07:53:05+00:00",
                 dismissed_version=None,
                 ignored=False,
+                issue_domain=None,
             )
             for issue in issues
         ]
@@ -245,6 +250,7 @@ async def test_ignore_issue(hass: HomeAssistant, hass_ws_client) -> None:
                 created="2022-07-19T07:53:05+00:00",
                 dismissed_version=ha_version,
                 ignored=True,
+                issue_domain=None,
             )
             for issue in issues
         ]
@@ -264,6 +270,7 @@ async def test_ignore_issue(hass: HomeAssistant, hass_ws_client) -> None:
                 created="2022-07-19T07:53:05+00:00",
                 dismissed_version=ha_version,
                 ignored=True,
+                issue_domain=None,
             )
             for issue in issues
         ]
@@ -292,6 +299,7 @@ async def test_ignore_issue(hass: HomeAssistant, hass_ws_client) -> None:
         dismissed_version=ha_version,
         ignored=True,
         learn_more_url="blablabla",
+        issue_domain=None,
     )
 
     # Unignore the same issue
@@ -309,6 +317,7 @@ async def test_ignore_issue(hass: HomeAssistant, hass_ws_client) -> None:
                 dismissed_version=None,
                 ignored=False,
                 learn_more_url="blablabla",
+                issue_domain=None,
             )
             for issue in issues
         ]
@@ -359,6 +368,7 @@ async def test_delete_issue(hass: HomeAssistant, hass_ws_client, freezer) -> Non
                 created="2022-07-19T07:53:05+00:00",
                 dismissed_version=None,
                 ignored=False,
+                issue_domain=None,
             )
             for issue in issues
         ]
@@ -378,6 +388,7 @@ async def test_delete_issue(hass: HomeAssistant, hass_ws_client, freezer) -> Non
                 created="2022-07-19T07:53:05+00:00",
                 dismissed_version=None,
                 ignored=False,
+                issue_domain=None,
             )
             for issue in issues
         ]
@@ -428,6 +439,7 @@ async def test_delete_issue(hass: HomeAssistant, hass_ws_client, freezer) -> Non
                 created="2022-07-19T08:53:05+00:00",
                 dismissed_version=None,
                 ignored=False,
+                issue_domain=None,
             )
             for issue in issues
         ]
@@ -501,6 +513,7 @@ async def test_sync_methods(
                 "ignored": False,
                 "is_fixable": True,
                 "issue_id": "sync_issue",
+                "issue_domain": None,
                 "learn_more_url": "https://theuselessweb.com",
                 "severity": "error",
                 "translation_key": "abc_123",

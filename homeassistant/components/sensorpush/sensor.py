@@ -3,14 +3,22 @@ from __future__ import annotations
 
 from typing import Optional, Union
 
-from sensorpush_ble import DeviceClass, DeviceKey, SensorDeviceInfo, SensorUpdate, Units
+from sensorpush_ble import (
+    DeviceClass,
+    DeviceKey,
+    SensorDeviceInfo,
+    SensorPushBluetoothDeviceData,
+    SensorUpdate,
+    Units,
+)
 
 from homeassistant import config_entries
-from homeassistant.components.bluetooth.passive_update_coordinator import (
-    PassiveBluetoothCoordinatorEntity,
+from homeassistant.components.bluetooth.passive_update_processor import (
+    PassiveBluetoothDataProcessor,
     PassiveBluetoothDataUpdate,
-    PassiveBluetoothDataUpdateCoordinator,
     PassiveBluetoothEntityKey,
+    PassiveBluetoothProcessorCoordinator,
+    PassiveBluetoothProcessorEntity,
 )
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -119,19 +127,26 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the SensorPush BLE sensors."""
-    coordinator: PassiveBluetoothDataUpdateCoordinator = hass.data[DOMAIN][
+    coordinator: PassiveBluetoothProcessorCoordinator = hass.data[DOMAIN][
         entry.entry_id
     ]
+    data = SensorPushBluetoothDeviceData()
+    processor = PassiveBluetoothDataProcessor(
+        lambda service_info: sensor_update_to_bluetooth_data_update(
+            data.update(service_info)
+        )
+    )
     entry.async_on_unload(
-        coordinator.async_add_entities_listener(
+        processor.async_add_entities_listener(
             SensorPushBluetoothSensorEntity, async_add_entities
         )
     )
+    entry.async_on_unload(coordinator.async_register_processor(processor))
 
 
 class SensorPushBluetoothSensorEntity(
-    PassiveBluetoothCoordinatorEntity[
-        PassiveBluetoothDataUpdateCoordinator[Optional[Union[float, int]]]
+    PassiveBluetoothProcessorEntity[
+        PassiveBluetoothDataProcessor[Optional[Union[float, int]]]
     ],
     SensorEntity,
 ):
@@ -140,4 +155,4 @@ class SensorPushBluetoothSensorEntity(
     @property
     def native_value(self) -> int | float | None:
         """Return the native value."""
-        return self.coordinator.entity_data.get(self.entity_key)
+        return self.processor.entity_data.get(self.entity_key)

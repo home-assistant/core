@@ -22,13 +22,13 @@ async def test_sensors(hass):
 
     saved_callback = None
 
-    def _async_register_callback(_hass, _callback, _matcher):
+    def _async_register_callback(_hass, _callback, _matcher, _mode):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None
 
     with patch(
-        "homeassistant.components.bluetooth.passive_update_coordinator.async_register_callback",
+        "homeassistant.components.bluetooth.update_coordinator.async_register_callback",
         _async_register_callback,
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
