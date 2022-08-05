@@ -1,7 +1,11 @@
 {
     "config": {
+        "abort": {
+            "port_name_in_use": "Ett tillbeh\u00f6r eller brygga med samma namn eller port \u00e4r redan konfigurerat."
+        },
         "step": {
             "pairing": {
+                "description": "F\u00f6r att slutf\u00f6ra ihopparningen f\u00f6lj instruktionerna i \"Meddelanden\" under \"HomeKit-parning\".",
                 "title": "Para HomeKit"
             },
             "user": {

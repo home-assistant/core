@@ -26,5 +26,14 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "timeout": "Timeout f\u00f6r beg\u00e4ran (sekunder)"
+                }
+            }
+        }
     }
 }
