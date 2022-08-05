@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
+
+from pylitejet import LiteJet
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -11,19 +13,15 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CONF_DEFAULT_TRANSITION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_NUMBER = "number"
-
-if TYPE_CHECKING:
-    from pylitejet import LiteJet
-
-    from homeassistant.config_entries import ConfigEntry
-    from homeassistant.core import HomeAssistant
-    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 
 async def async_setup_entry(
