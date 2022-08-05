@@ -975,6 +975,21 @@ class TemperatureSettingTrait(_Trait):
                 response["thermostatTemperatureSetpoint"] = round(
                     temp_util.convert(target_temp, unit, TEMP_CELSIUS), 1
                 )
+            elif supported & climate.SUPPORT_TARGET_TEMPERATURE_RANGE:
+                if operation == climate.HVACMode.HEAT:
+                    response["thermostatTemperatureSetpoint"] = round(
+                        temp_util.convert(
+                            attrs[climate.ATTR_TARGET_TEMP_LOW], unit, TEMP_CELSIUS
+                        ),
+                        1,
+                    )
+                elif operation == climate.HVACMode.COOL:
+                    response["thermostatTemperatureSetpoint"] = round(
+                        temp_util.convert(
+                            attrs[climate.ATTR_TARGET_TEMP_HIGH], unit, TEMP_CELSIUS
+                        ),
+                        1,
+                    )
 
         return response
 
@@ -982,8 +997,9 @@ class TemperatureSettingTrait(_Trait):
         """Execute a temperature point or mode command."""
         # All sent in temperatures are always in Celsius
         unit = self.hass.config.units.temperature_unit
-        min_temp = self.state.attributes[climate.ATTR_MIN_TEMP]
-        max_temp = self.state.attributes[climate.ATTR_MAX_TEMP]
+        attrs = self.state.attributes
+        min_temp = attrs[climate.ATTR_MIN_TEMP]
+        max_temp = attrs[climate.ATTR_MAX_TEMP]
 
         if command == COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT:
             temp = temp_util.convert(
@@ -998,13 +1014,33 @@ class TemperatureSettingTrait(_Trait):
                     f"Temperature should be between {min_temp} and {max_temp}",
                 )
 
-            await self.hass.services.async_call(
-                climate.DOMAIN,
-                climate.SERVICE_SET_TEMPERATURE,
-                {ATTR_ENTITY_ID: self.state.entity_id, ATTR_TEMPERATURE: temp},
-                blocking=not self.config.should_report_state,
-                context=data.context,
-            )
+            supported = attrs.get(ATTR_SUPPORTED_FEATURES)
+            if not (supported & climate.SUPPORT_TARGET_TEMPERATURE_RANGE):
+                await self.hass.services.async_call(
+                    climate.DOMAIN,
+                    climate.SERVICE_SET_TEMPERATURE,
+                    {ATTR_ENTITY_ID: self.state.entity_id, ATTR_TEMPERATURE: temp},
+                    blocking=not self.config.should_report_state,
+                    context=data.context,
+                )
+            else:
+                operation = self.state.state
+                svc_data = {
+                    ATTR_ENTITY_ID: self.state.entity_id,
+                    climate.ATTR_TARGET_TEMP_HIGH: attrs[climate.ATTR_TARGET_TEMP_HIGH],
+                    climate.ATTR_TARGET_TEMP_LOW: attrs[climate.ATTR_TARGET_TEMP_LOW],
+                }
+                if operation == climate.HVACMode.HEAT:
+                    svc_data[climate.ATTR_TARGET_TEMP_LOW] = temp
+                elif operation == climate.HVACMode.COOL:
+                    svc_data[climate.ATTR_TARGET_TEMP_HIGH] = temp
+                await self.hass.services.async_call(
+                    climate.DOMAIN,
+                    climate.SERVICE_SET_TEMPERATURE,
+                    svc_data,
+                    blocking=not self.config.should_report_state,
+                    context=data.context,
+                )
 
         elif command == COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE:
             temp_high = temp_util.convert(
@@ -1037,7 +1073,7 @@ class TemperatureSettingTrait(_Trait):
                     ),
                 )
 
-            supported = self.state.attributes.get(ATTR_SUPPORTED_FEATURES)
+            supported = attrs.get(ATTR_SUPPORTED_FEATURES)
             svc_data = {ATTR_ENTITY_ID: self.state.entity_id}
 
             if supported & climate.SUPPORT_TARGET_TEMPERATURE_RANGE:
@@ -1056,7 +1092,7 @@ class TemperatureSettingTrait(_Trait):
 
         elif command == COMMAND_THERMOSTAT_SET_MODE:
             target_mode = params["thermostatMode"]
-            supported = self.state.attributes.get(ATTR_SUPPORTED_FEATURES)
+            supported = attrs.get(ATTR_SUPPORTED_FEATURES)
 
             if target_mode == "on":
                 await self.hass.services.async_call(
