@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "not_pjlink_device": "This device seems to not support PJLink."
+        },
+        "flow_title": "PJLink: {name}",
+        "step": {
+            "confirm": {
+                "description": "Do you want to start set up?"
+            },
+            "user": {
+                "data": {
+                    "encoding": "Encoding",
+                    "host": "Host",
+                    "name": "Name",
+                    "password": "Password",
+                    "port": "Port"
+                },
+                "description": "Set up a PJLink projector to integrate with Home Assistant."
+            }
+        }
+    }
+}

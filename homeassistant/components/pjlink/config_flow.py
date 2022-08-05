@@ -13,7 +13,7 @@ from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 
-from .const import CONF_ENCODING, DEFAULT_ENCODING, DEFAULT_PORT, DOMAIN
+from .const import _LOGGER, CONF_ENCODING, DEFAULT_ENCODING, DEFAULT_PORT, DOMAIN
 
 TITLE = "PJLink"
 
@@ -26,6 +26,28 @@ class PJLinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.host: str | None = None
         self.port: int | None = None
 
+    def _show_setup_form(self, step_id):
+        return self.async_show_form(
+            step_id=step_id,
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_HOST): cv.string,
+                    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                    vol.Optional(CONF_NAME): cv.string,
+                    vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
+                    vol.Optional(CONF_PASSWORD): cv.string,
+                }
+            ),
+            # description_placeholders={
+            #     CONF_NAME: self.unique_id,
+            #     CONF_HOST: self.host,
+            #     CONF_PORT: str(self.port),
+            #     CONF_ENCODING: DEFAULT_ENCODING,
+            #     CONF_PASSWORD: None,
+            # },
+            # errors=errors,
+        )
+
     # Can we can identify PJLink devices with dhcp or something else?
     # During authentication the library checks that we are talking to a PJLink device
     # https://github.com/benoitlouy/pypjlink/blob/1932aaf7c18113e6281927f4ee2d30c6b8593639/pypjlink/projector.py#L80-L85
@@ -37,39 +59,26 @@ class PJLinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Request user input, unless we are preparing discovery flow
         if user_input is None:
-            return self.async_show_form(
-                step_id="user",
-                data_schema=vol.Schema(
-                    {
-                        vol.Required(CONF_HOST): cv.string,
-                        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-                        vol.Optional(CONF_NAME): cv.string,
-                        vol.Optional(
-                            CONF_ENCODING, default=DEFAULT_ENCODING
-                        ): cv.string,
-                        vol.Optional(CONF_PASSWORD): cv.string,
-                    }
-                ),
-            )
+            return self._show_setup_form(step_id="user")
 
         # Process user input
         # How to generate a unique ID?
         # The PJLink API does not expose MAC address or serial number, only name, manufacturer, and model
         # Can we get the MAC address from the IP address?
-        host = user_input[CONF_HOST]
-        port = user_input[CONF_PORT]
-        name = user_input[CONF_NAME]
-        password = user_input[CONF_PASSWORD]
-        # await self.async_set_unique_id(serial_number, raise_on_progress=False)
-        # self._abort_if_unique_id_configured()
+
+        # host = user_input[CONF_HOST]
+        # port = user_input[CONF_PORT]
+        # name = user_input[CONF_NAME]
+        # password = user_input[CONF_PASSWORD]
+        await self.async_set_unique_id(
+            f"{DOMAIN}-{user_input[CONF_HOST]}", raise_on_progress=True
+        )
+        _LOGGER.warning("PJLink Unique ID generated: %s")
+        self._abort_if_unique_id_configured()
+        # return await self.async_step_confirm()
         return self.async_create_entry(
             title=TITLE,
-            data={
-                CONF_HOST: host,
-                CONF_PORT: port,
-                CONF_NAME: name,
-                CONF_PASSWORD: password,
-            },
+            data={**user_input, "unique_id": self.unique_id},
         )
 
     # avahi/zeroconf

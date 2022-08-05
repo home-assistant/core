@@ -10,6 +10,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
 
 # from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -26,6 +27,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
+    _LOGGER,
     CONF_ENCODING,
     DEFAULT_ENCODING,
     DEFAULT_PORT,
@@ -56,7 +58,7 @@ def setup_platform(
     name = config.get(CONF_NAME)
     encoding = config.get(CONF_ENCODING)
     password = config.get(CONF_PASSWORD)
-    unique_id = f"{DOMAIN}-{host}"  # How can we get the entity ID here instead?
+    # unique_id = f"{DOMAIN}-{host}"  # How can we get the entity ID here instead?
 
     if "pjlink" not in hass.data:
         hass.data["pjlink"] = {}
@@ -66,7 +68,7 @@ def setup_platform(
     if device_label in hass_data:
         return
 
-    device = PjLinkDevice(host, port, name, encoding, password, unique_id)
+    device = PjLinkDevice(host, port, name, encoding, password, config.get("unique_id"))
     hass_data[device_label] = device
     add_entities([device], True)
 
@@ -86,14 +88,47 @@ def format_input_source(input_source_name, input_source_number):
     return f"{input_source_name} {input_source_number}"
 
 
-# async def async_setup_entry(
-#     hass: HomeAssistant,
-#     entry: ConfigEntry,
-#     async_add_entities: AddEntitiesCallback,
-# ) -> None:
-#     """Set up the config entry."""
-#     # await async_setup_platform(hass, entry, async_add_entities)
-#     return True
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the config entry."""
+    _LOGGER.warning("==> Running async_setup_entry from pjlink.media_player")
+    _LOGGER.warning("===== entry_id: %s ", config_entry.entry_id)
+    _LOGGER.warning("===== unique_id: %s ", config_entry.unique_id)
+    _LOGGER.warning("===== entry: %s ", dir(config_entry))
+    _LOGGER.warning("===== entry.data: %s ", dir(config_entry.data))
+
+    if config_entry.unique_id is None:
+        hass.config_entries.async_update_entry(
+            config_entry, data={**config_entry.data, "unique_id": config_entry.entry_id}
+        )
+        _LOGGER.warning("===== setting unique_id: %s ", config_entry.unique_id)
+
+    encoding = None
+    if CONF_ENCODING in config_entry.data:
+        encoding = config_entry.data[CONF_ENCODING]
+    name = None
+    if CONF_NAME in config_entry.data:
+        name = config_entry.data[CONF_NAME]
+    password = None
+    if CONF_PASSWORD in config_entry.data:
+        password = config_entry.data[CONF_PASSWORD]
+    port = None
+    if CONF_PORT in config_entry.data:
+        port = config_entry.data[CONF_PORT]
+
+    device = PjLinkDevice(
+        host=config_entry.data[CONF_HOST],
+        port=port,
+        name=name,
+        encoding=encoding,
+        password=password,
+        unique_id=config_entry.unique_id,
+    )
+    # hass_data[device_label] = device
+    async_add_entities([device], True)
 
 
 class PjLinkDevice(MediaPlayerEntity):
@@ -106,7 +141,7 @@ class PjLinkDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.SELECT_SOURCE
     )
 
-    def __init__(self, host, port, name, encoding, password, unique_id: str):
+    def __init__(self, host, port, name, encoding, password, unique_id):
         """Iinitialize the PJLink device."""
         self._host = host
         self._port = port
@@ -118,6 +153,8 @@ class PjLinkDevice(MediaPlayerEntity):
         self._pwstate = STATE_OFF
         self._current_source = None
         with self.projector() as projector:
+            self._manufacturer = projector.get_manufacturer()
+            self._model = projector.get_product_name()
             if not self._name:
                 self._name = projector.get_name()
             inputs = projector.get_inputs()
@@ -163,9 +200,30 @@ class PjLinkDevice(MediaPlayerEntity):
                     raise
 
     @property
+    def device_info(self):
+        """Device info to create a device."""
+        return {
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "name": self.name,
+            "manufacturer": self.manufacturer,
+            "model": self.model,
+            "via_device": (DOMAIN, self.unique_id),
+        }
+
+    @property
     def name(self):
         """Return the name of the device."""
         return self._name
+
+    @property
+    def manufacturer(self):
+        """Return the manufacturer of the device."""
+        return self._manufacturer
+
+    @property
+    def model(self):
+        """Return the model of the device."""
+        return self._model
 
     @property
     def state(self):
