@@ -27,13 +27,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Switchbot based on a config entry."""
     coordinator: SwitchbotDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(
-        [
-            SwitchBotSwitch(
-                coordinator,
-            )
-        ]
-    )
+    async_add_entities([SwitchBotSwitch(coordinator)])
 
 
 class SwitchBotSwitch(SwitchbotEntity, SwitchEntity, RestoreEntity):
