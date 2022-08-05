@@ -7,10 +7,11 @@
             "switchbot_unsupported_type": "Switchbot-type st\u00f8ttes ikke.",
             "unknown": "Uventet feil"
         },
-        "flow_title": "{name}",
+        "flow_title": "{name} ( {address} )",
         "step": {
             "user": {
                 "data": {
+                    "address": "Enhetsadresse",
                     "mac": "Enhetens MAC -adresse",
                     "name": "Navn",
                     "password": "Passord"

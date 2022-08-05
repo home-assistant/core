@@ -1,0 +1,32 @@
+{
+    "config": {
+        "flow_title": "{mac} ({ip})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "V\u00e4rd",
+                    "port": "Port",
+                    "system_id": "System-ID"
+                },
+                "description": "System-ID kan erh\u00e5llas i MyLink-appen under Integration genom att v\u00e4lja vilken tj\u00e4nst som helst som inte kommer fr\u00e5n molnet."
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "cannot_connect": "Det gick inte att ansluta."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "target_id": "Konfigurera alternativ f\u00f6r ett skydd."
+                },
+                "title": "Konfigurera MyLink-alternativ"
+            },
+            "target_config": {
+                "description": "Konfigurera alternativ f\u00f6r ` {target_name} `",
+                "title": "Konfigurera MyLink Cover"
+            }
+        }
+    }
+}

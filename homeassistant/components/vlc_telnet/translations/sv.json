@@ -1,6 +1,14 @@
 {
     "config": {
+        "abort": {
+            "cannot_connect": "Det gick inte att ansluta.",
+            "invalid_auth": "Ogiltig autentisering",
+            "unknown": "Ov\u00e4ntat fel"
+        },
         "step": {
+            "hassio_confirm": {
+                "description": "Vill du ansluta till till\u00e4gget {addon} ?"
+            },
             "user": {
                 "data": {
                     "host": "V\u00e4rd"

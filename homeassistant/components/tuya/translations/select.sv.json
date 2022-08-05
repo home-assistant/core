@@ -3,11 +3,22 @@
         "tuya__humidifier_spray_mode": {
             "humidity": "Luftfuktighet"
         },
+        "tuya__led_type": {
+            "halogen": "Halogen",
+            "incandescent": "Gl\u00f6dlampa",
+            "led": "LED"
+        },
         "tuya__light_mode": {
-            "none": "Av"
+            "none": "Av",
+            "pos": "Ange omkopplarens plats",
+            "relay": "Indikera p\u00e5/av-l\u00e4ge"
         },
         "tuya__relay_status": {
+            "last": "Kom ih\u00e5g senaste tillst\u00e5ndet",
+            "memory": "Kom ih\u00e5g senaste tillst\u00e5ndet",
+            "off": "Av",
             "on": "P\u00e5",
+            "power_off": "Av",
             "power_on": "P\u00e5"
         },
         "tuya__vacuum_mode": {

@@ -768,6 +768,7 @@ build.json @home-assistant/supervisor
 /tests/components/open_meteo/ @frenck
 /homeassistant/components/openerz/ @misialq
 /tests/components/openerz/ @misialq
+/homeassistant/components/openexchangerates/ @MartinHjelmare
 /homeassistant/components/opengarage/ @danielhiversen
 /tests/components/opengarage/ @danielhiversen
 /homeassistant/components/openhome/ @bazwilliams
@@ -1048,8 +1049,8 @@ build.json @home-assistant/supervisor
 /tests/components/switch/ @home-assistant/core
 /homeassistant/components/switch_as_x/ @home-assistant/core
 /tests/components/switch_as_x/ @home-assistant/core
-/homeassistant/components/switchbot/ @bdraco @danielhiversen @RenierM26 @murtas
-/tests/components/switchbot/ @bdraco @danielhiversen @RenierM26 @murtas
+/homeassistant/components/switchbot/ @bdraco @danielhiversen @RenierM26 @murtas @Eloston
+/tests/components/switchbot/ @bdraco @danielhiversen @RenierM26 @murtas @Eloston
 /homeassistant/components/switcher_kis/ @tomerfi @thecode
 /tests/components/switcher_kis/ @tomerfi @thecode
 /homeassistant/components/switchmate/ @danielhiversen @qiz-li
@@ -1177,7 +1178,7 @@ build.json @home-assistant/supervisor
 /tests/components/vlc_telnet/ @rodripf @MartinHjelmare
 /homeassistant/components/volumio/ @OnFreund
 /tests/components/volumio/ @OnFreund
-/homeassistant/components/volvooncall/ @molobrakos @decompil3d
+/homeassistant/components/volvooncall/ @molobrakos
 /homeassistant/components/vulcan/ @Antoni-Czaplicki
 /tests/components/vulcan/ @Antoni-Czaplicki
 /homeassistant/components/wake_on_lan/ @ntilley905

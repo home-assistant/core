@@ -1,9 +1,23 @@
 {
     "config": {
+        "error": {
+            "unknown": "Ov\u00e4ntat fel"
+        },
         "step": {
             "user": {
                 "data": {
+                    "password": "L\u00f6senord",
                     "username": "Anv\u00e4ndarnamn"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "ph_offset": "pH-f\u00f6rskjutning (positiv eller negativ)",
+                    "polling_interval": "Pollingintervall (i sekunder)"
                 }
             }
         }

@@ -1,8 +1,12 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Tj\u00e4nsten \u00e4r redan konfigurerad",
             "authorize_url_timeout": "Timeout n\u00e4r genererar auktorisera url.",
             "unknown": "Ok\u00e4nt fel intr\u00e4ffade"
+        },
+        "error": {
+            "invalid_auth": "Ogiltig autentisering"
         },
         "step": {
             "auth": {

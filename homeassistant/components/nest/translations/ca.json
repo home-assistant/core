@@ -96,5 +96,13 @@
             "camera_sound": "So detectat",
             "doorbell_chime": "Timbre premut"
         }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "title": "La configuraci\u00f3 YAML de Nest est\u00e0 sent eliminada"
+        },
+        "removed_app_auth": {
+            "title": "Les credencials d'autenticaci\u00f3 de Nest s'han d'actualitzar"
+        }
     }
 }
