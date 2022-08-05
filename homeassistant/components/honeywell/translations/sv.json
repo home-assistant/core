@@ -1,10 +1,15 @@
 {
     "config": {
+        "error": {
+            "invalid_auth": "Ogiltig autentisering"
+        },
         "step": {
             "user": {
                 "data": {
+                    "password": "L\u00f6senord",
                     "username": "Anv\u00e4ndarnamn"
-                }
+                },
+                "description": "Ange de autentiseringsuppgifter som anv\u00e4nds f\u00f6r att logga in p\u00e5 mytotalconnectcomfort.com."
             }
         }
     }

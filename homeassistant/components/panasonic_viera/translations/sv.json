@@ -11,13 +11,17 @@
             "pairing": {
                 "data": {
                     "pin": "Pin-kod"
-                }
+                },
+                "description": "Ange Pin-kod som visas p\u00e5 din TV",
+                "title": "Ihopkoppling"
             },
             "user": {
                 "data": {
                     "host": "IP-adress",
                     "name": "Namn"
-                }
+                },
+                "description": "Ange din Panasonic Viera TV:s IP-adress",
+                "title": "St\u00e4ll in din TV"
             }
         }
     }
