@@ -383,13 +383,13 @@ class DeconzBatteryTracker:
         self.sensor = gateway.api.sensors[sensor_id]
         self.gateway = gateway
         self.async_add_entities = async_add_entities
-        self.unsub = self.sensor.subscribe(self.async_update_callback)
+        self.unsubscribe = self.sensor.subscribe(self.async_update_callback)
 
     @callback
     def async_update_callback(self) -> None:
         """Update the device's state."""
         if "battery" in self.sensor.changed_keys:
-            self.unsub()
+            self.unsubscribe()
             known_entities = set(self.gateway.entities[DOMAIN])
             entity = DeconzSensor(
                 self.sensor, self.gateway, COMMON_SENSOR_DESCRIPTIONS[0]
