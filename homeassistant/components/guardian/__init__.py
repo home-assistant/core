@@ -243,6 +243,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             call,
             "switch.turn_off",
             f"switch.guardian_valve_controller_{entry.data[CONF_UID]}_onboard_ap",
+            "2022.11.0",
         )
         await data.client.wifi.disable_ap()
 
@@ -254,6 +255,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             call,
             "switch.turn_on",
             f"switch.guardian_valve_controller_{entry.data[CONF_UID]}_onboard_ap",
+            "2022.11.0",
         )
         await data.client.wifi.enable_ap()
 
