@@ -229,7 +229,7 @@ class ProtectMediaSource(MediaSource):
 
         try:
             data = self.data_sources[parts[0]]
-        except IndexError as err:
+        except (KeyError, IndexError) as err:
             return _bad_identifier(item.identifier, err)
 
         # {nvr_id}
@@ -693,6 +693,10 @@ class ProtectMediaSource(MediaSource):
         entity_id: str | None = None
         entity_registry = await self.get_registry()
         for channel in camera.channels:
+            # do not use the package camera
+            if channel.id == 3:
+                continue
+
             base_id = f"{camera.mac}_{channel.id}"
             entity_id = entity_registry.async_get_entity_id(
                 Platform.CAMERA, DOMAIN, base_id
@@ -809,12 +813,11 @@ class ProtectMediaSource(MediaSource):
         """Return all media source for all UniFi Protect NVRs."""
 
         consoles: list[BrowseMediaSource] = []
+        print(len(self.data_sources.values()))
         for data_source in self.data_sources.values():
             if not data_source.api.bootstrap.has_media:
                 continue
             console_source = await self._build_console(data_source)
-            if console_source.children is None or len(console_source.children) == 0:
-                continue
             consoles.append(console_source)
 
         if len(consoles) == 1:
