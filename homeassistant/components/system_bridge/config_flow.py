@@ -60,10 +60,7 @@ async def _validate_input(
             hass.async_create_task(websocket_client.listen())
             response = await websocket_client.get_data(GetData(modules=["system"]))
             _LOGGER.info("Got response: %s", response.json())
-            try:
-                system = System(**response.data)
-            except ValueError as err:
-                raise CannotConnect from err
+            system: System = response.data
     except AuthenticationException as exception:
         _LOGGER.warning(
             "Authentication error when connecting to %s: %s", data[CONF_HOST], exception
@@ -79,6 +76,8 @@ async def _validate_input(
         raise CannotConnect from exception
     except asyncio.TimeoutError as exception:
         _LOGGER.warning("Timed out connecting to %s: %s", data[CONF_HOST], exception)
+        raise CannotConnect from exception
+    except ValueError as exception:
         raise CannotConnect from exception
 
     _LOGGER.debug("Got System data: %s", system.json())
