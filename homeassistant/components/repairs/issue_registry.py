@@ -27,6 +27,7 @@ class IssueEntry:
     active: bool
     breaks_in_ha_version: str | None
     created: datetime
+    data: dict[str, str | int | float | None] | None
     dismissed_version: str | None
     domain: str
     is_fixable: bool | None
@@ -53,6 +54,7 @@ class IssueEntry:
         return {
             **result,
             "breaks_in_ha_version": self.breaks_in_ha_version,
+            "data": self.data,
             "is_fixable": self.is_fixable,
             "is_persistent": True,
             "issue_domain": self.issue_domain,
@@ -106,6 +108,7 @@ class IssueRegistry:
         *,
         issue_domain: str | None = None,
         breaks_in_ha_version: str | None = None,
+        data: dict[str, str | int | float | None] | None = None,
         is_fixable: bool,
         is_persistent: bool,
         learn_more_url: str | None = None,
@@ -120,6 +123,7 @@ class IssueRegistry:
                 active=True,
                 breaks_in_ha_version=breaks_in_ha_version,
                 created=dt_util.utcnow(),
+                data=data,
                 dismissed_version=None,
                 domain=domain,
                 is_fixable=is_fixable,
@@ -142,6 +146,7 @@ class IssueRegistry:
                 issue,
                 active=True,
                 breaks_in_ha_version=breaks_in_ha_version,
+                data=data,
                 is_fixable=is_fixable,
                 is_persistent=is_persistent,
                 issue_domain=issue_domain,
@@ -204,6 +209,7 @@ class IssueRegistry:
                         active=True,
                         breaks_in_ha_version=issue["breaks_in_ha_version"],
                         created=created,
+                        data=issue["data"],
                         dismissed_version=issue["dismissed_version"],
                         domain=issue["domain"],
                         is_fixable=issue["is_fixable"],
@@ -220,6 +226,7 @@ class IssueRegistry:
                         active=False,
                         breaks_in_ha_version=None,
                         created=created,
+                        data=None,
                         dismissed_version=issue["dismissed_version"],
                         domain=issue["domain"],
                         is_fixable=None,
