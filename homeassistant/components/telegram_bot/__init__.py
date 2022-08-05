@@ -62,6 +62,8 @@ ATTR_FILE = "file"
 ATTR_FROM_FIRST = "from_first"
 ATTR_FROM_LAST = "from_last"
 ATTR_KEYBOARD = "keyboard"
+ATTR_RESIZE_KEYBOARD = "resize_keyboard"
+ATTR_ONE_TIME_KEYBOARD = "one_time_keyboard"
 ATTR_KEYBOARD_INLINE = "inline_keyboard"
 ATTR_MESSAGEID = "message_id"
 ATTR_MSG = "message"
@@ -157,6 +159,8 @@ BASE_SERVICE_SCHEMA = vol.Schema(
         vol.Optional(ATTR_PARSER): cv.string,
         vol.Optional(ATTR_DISABLE_NOTIF): cv.boolean,
         vol.Optional(ATTR_DISABLE_WEB_PREV): cv.boolean,
+        vol.Optional(ATTR_RESIZE_KEYBOARD): cv.boolean,
+        vol.Optional(ATTR_ONE_TIME_KEYBOARD): cv.boolean,
         vol.Optional(ATTR_KEYBOARD): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(ATTR_KEYBOARD_INLINE): cv.ensure_list,
         vol.Optional(ATTR_TIMEOUT): cv.positive_int,
@@ -579,9 +583,13 @@ class TelegramNotificationService:
             if ATTR_KEYBOARD in data:
                 keys = data.get(ATTR_KEYBOARD)
                 keys = keys if isinstance(keys, list) else [keys]
+                is_resize_keyboard = data[ATTR_RESIZE_KEYBOARD] if ATTR_RESIZE_KEYBOARD in data else False
+                is_one_time_keyboard = data[ATTR_ONE_TIME_KEYBOARD] if ATTR_ONE_TIME_KEYBOARD in data else False
                 if keys:
                     params[ATTR_REPLYMARKUP] = ReplyKeyboardMarkup(
-                        [[key.strip() for key in row.split(",")] for row in keys]
+                        [[key.strip() for key in row.split(",")] for row in keys],
+                        resize_keyboard = is_resize_keyboard,
+                        one_time_keyboard = is_one_time_keyboard
                     )
                 else:
                     params[ATTR_REPLYMARKUP] = ReplyKeyboardRemove(True)
