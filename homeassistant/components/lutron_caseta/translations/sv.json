@@ -1,6 +1,29 @@
 {
+    "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad",
+            "cannot_connect": "Det gick inte att ansluta.",
+            "not_lutron_device": "Uppt\u00e4ckt enhet \u00e4r inte en Lutron-enhet"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "link": {
+                "description": "F\u00f6r att para med {name} ( {host} ), efter att ha skickat in detta formul\u00e4r, tryck p\u00e5 den svarta knappen p\u00e5 baksidan av bryggan.",
+                "title": "Para ihop med bryggan"
+            },
+            "user": {
+                "data": {
+                    "host": "V\u00e4rd"
+                },
+                "description": "Ange enhetens IP-adress.",
+                "title": "Automatisk anslutning till bryggan"
+            }
+        }
+    },
     "device_automation": {
         "trigger_subtype": {
+            "button_1": "F\u00f6rsta knappen",
+            "button_2": "Andra knappen",
             "close_1": "St\u00e4ng 1",
             "close_2": "St\u00e4ng 2",
             "close_3": "St\u00e4ng 3",

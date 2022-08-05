@@ -13,6 +13,7 @@
                 "data": {
                     "pin": "PIN-kod"
                 },
+                "description": "Ange PIN-koden som visas p\u00e5 din TV",
                 "title": "Para ihop"
             },
             "user": {

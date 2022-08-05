@@ -1,6 +1,20 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad"
+        },
+        "error": {
+            "invalid_auth": "Ogiltig autentisering",
+            "unknown": "Ov\u00e4ntat fel",
+            "unknown_coordinates": "Inga data f\u00f6r latitud/longitud"
+        },
         "step": {
+            "coordinates": {
+                "data": {
+                    "latitude": "Latitud",
+                    "longitude": "Longitud"
+                }
+            },
             "location": {
                 "data": {
                     "location_type": "Plats"
@@ -13,6 +27,16 @@
                     "username": "Anv\u00e4ndarnamn"
                 },
                 "description": "Ange ditt anv\u00e4ndarnamn och l\u00f6senord:"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_on_map": "Visa \u00f6vervakad plats p\u00e5 kartan"
+                },
+                "title": "Konfigurera WattTime"
             }
         }
     }

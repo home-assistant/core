@@ -16,6 +16,7 @@ from homeassistant.components.bluetooth import (
     BluetoothScanningMode,
     BluetoothServiceInfo,
     async_process_advertisements,
+    async_rediscover_address,
     async_track_unavailable,
     models,
 )
@@ -558,6 +559,45 @@ async def test_discovery_match_first_by_service_uuid_and_then_manufacturer_id(
         _get_underlying_scanner()._callback(device, adv_manufacturer_data)
         await hass.async_block_till_done()
         assert len(mock_config_flow.mock_calls) == 0
+
+
+async def test_rediscovery(hass, mock_bleak_scanner_start, enable_bluetooth):
+    """Test bluetooth discovery can be re-enabled for a given domain."""
+    mock_bt = [
+        {"domain": "switchbot", "service_uuid": "cba20d00-224d-11e6-9fb8-0002a5d5c51b"}
+    ]
+    with patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
+    ), patch.object(hass.config_entries.flow, "async_init") as mock_config_flow:
+        assert await async_setup_component(
+            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
+        )
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        assert len(mock_bleak_scanner_start.mock_calls) == 1
+
+        switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
+        switchbot_adv = AdvertisementData(
+            local_name="wohand", service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]
+        )
+
+        _get_underlying_scanner()._callback(switchbot_device, switchbot_adv)
+        await hass.async_block_till_done()
+
+        _get_underlying_scanner()._callback(switchbot_device, switchbot_adv)
+        await hass.async_block_till_done()
+
+        assert len(mock_config_flow.mock_calls) == 1
+        assert mock_config_flow.mock_calls[0][1][0] == "switchbot"
+
+        async_rediscover_address(hass, "44:44:33:11:23:45")
+
+        _get_underlying_scanner()._callback(switchbot_device, switchbot_adv)
+        await hass.async_block_till_done()
+
+        assert len(mock_config_flow.mock_calls) == 2
+        assert mock_config_flow.mock_calls[1][1][0] == "switchbot"
 
 
 async def test_async_discovered_device_api(hass, mock_bleak_scanner_start):
