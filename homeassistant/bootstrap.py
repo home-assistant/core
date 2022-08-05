@@ -187,6 +187,8 @@ async def async_setup_hass(
     if runtime_config.open_ui:
         hass.add_job(open_hass_ui, hass)
 
+    core._cv_hass.set(hass)  # pylint: disable=protected-access
+
     return hass
 
 

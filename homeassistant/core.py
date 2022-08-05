@@ -15,6 +15,7 @@ from collections.abc import (
     Iterable,
     Mapping,
 )
+from contextvars import ContextVar
 import datetime
 import enum
 import functools
@@ -138,6 +139,8 @@ MAX_EXPECTED_ENTITY_IDS = 16384
 
 _LOGGER = logging.getLogger(__name__)
 
+_cv_hass: ContextVar[HomeAssistant] = ContextVar("current_entry")
+
 
 @functools.lru_cache(MAX_EXPECTED_ENTITY_IDS)
 def split_entity_id(entity_id: str) -> tuple[str, str]:
@@ -173,6 +176,12 @@ def callback(func: _CallableT) -> _CallableT:
 def is_callback(func: Callable[..., Any]) -> bool:
     """Check if function is safe to be called in the event loop."""
     return getattr(func, "_hass_callback", False) is True
+
+
+@callback
+def async_get_hass() -> HomeAssistant:
+    """Return the HomeAssistant instance."""
+    return _cv_hass.get()
 
 
 @enum.unique
