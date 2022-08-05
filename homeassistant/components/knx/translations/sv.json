@@ -18,10 +18,15 @@
                 }
             },
             "routing": {
+                "data": {
+                    "multicast_group": "Multicast-grupp",
+                    "multicast_port": "Multicast-port"
+                },
                 "data_description": {
                     "individual_address": "KNX-adress som ska anv\u00e4ndas av Home Assistant, t.ex. `0.0.4`",
                     "local_ip": "L\u00e4mna tomt f\u00f6r att anv\u00e4nda automatisk uppt\u00e4ckt."
-                }
+                },
+                "description": "Konfigurera routningsalternativen."
             },
             "secure_knxkeys": {
                 "data": {
@@ -53,12 +58,32 @@
                     "secure_knxkeys": "Anv\u00e4nd en fil `.knxkeys` som inneh\u00e5ller s\u00e4kra IP-nycklar.",
                     "secure_manual": "Konfigurera s\u00e4kra IP nycklar manuellt"
                 }
+            },
+            "tunnel": {
+                "data": {
+                    "gateway": "KNX-tunnelanslutning"
+                },
+                "description": "V\u00e4lj en gateway fr\u00e5n listan."
+            },
+            "type": {
+                "data": {
+                    "connection_type": "KNX anslutningstyp"
+                },
+                "description": "Ange vilken anslutningstyp vi ska anv\u00e4nda f\u00f6r din KNX-anslutning.\n AUTOMATISK - Integrationen tar hand om anslutningen till din KNX Bus genom att utf\u00f6ra en gateway-skanning.\n TUNNELING - Integrationen kommer att ansluta till din KNX-buss via tunnling.\n ROUTING - Integrationen kommer att ansluta till din KNX-buss via routing."
             }
         }
     },
     "options": {
         "step": {
             "init": {
+                "data": {
+                    "connection_type": "KNX anslutningstyp",
+                    "individual_address": "Enskild standardadress",
+                    "multicast_group": "Multicast-grupp",
+                    "multicast_port": "Multicast-port",
+                    "rate_limit": "Hastighetsgr\u00e4ns",
+                    "state_updater": "Tillst\u00e5ndsuppdaterare"
+                },
                 "data_description": {
                     "individual_address": "KNX-adress som ska anv\u00e4ndas av Home Assistant, t.ex. `0.0.4`",
                     "local_ip": "Anv\u00e4nd `0.0.0.0.0` f\u00f6r automatisk identifiering.",
@@ -70,6 +95,8 @@
             },
             "tunnel": {
                 "data": {
+                    "host": "V\u00e4rd",
+                    "port": "Port",
                     "tunneling_type": "KNX tunneltyp"
                 },
                 "data_description": {

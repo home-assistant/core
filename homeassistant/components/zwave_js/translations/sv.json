@@ -12,6 +12,14 @@
         },
         "flow_title": "{name}",
         "step": {
+            "configure_addon": {
+                "data": {
+                    "s0_legacy_key": "S0-nyckel (\u00e4ldre)",
+                    "s2_access_control_key": "S2-\u00e5tkomstkontrollnyckel",
+                    "s2_authenticated_key": "S2 Autentiserad nyckel",
+                    "s2_unauthenticated_key": "S2 oautentiserad nyckel"
+                }
+            },
             "usb_confirm": {
                 "description": "Vill du konfigurera {name} med Z-Wave JS till\u00e4gget?"
             },
@@ -22,6 +30,10 @@
     },
     "device_automation": {
         "action_type": {
+            "clear_lock_usercode": "Rensa anv\u00e4ndarkoden p\u00e5 {entity_name}",
+            "ping": "Pinga enhet",
+            "refresh_value": "Uppdatera v\u00e4rdet/v\u00e4rdena f\u00f6r {entity_name}",
+            "reset_meter": "\u00c5terst\u00e4ll m\u00e4tare p\u00e5 {subtype}",
             "set_config_parameter": "Ange v\u00e4rde f\u00f6r konfigurationsparametern {subtype}",
             "set_lock_usercode": "Ange en anv\u00e4ndarkod p\u00e5 {entity_name}",
             "set_value": "St\u00e4ll in v\u00e4rdet f\u00f6r ett Z-Wave-v\u00e4rde"
@@ -32,7 +44,14 @@
             "value": "Nuvarande v\u00e4rde f\u00f6r ett Z-Wave v\u00e4rde"
         },
         "trigger_type": {
-            "zwave_js.value_updated.config_parameter": "V\u00e4rde\u00e4ndring p\u00e5 konfigurationsparameter {subtype}"
+            "event.notification.entry_control": "Skickat ett meddelande om kontroll av intr\u00e4de",
+            "event.notification.notification": "Skickade ett meddelande",
+            "event.value_notification.basic": "Grundl\u00e4ggande CC-h\u00e4ndelse p\u00e5 {subtype}",
+            "event.value_notification.central_scene": "Central scen\u00e5tg\u00e4rd p\u00e5 {subtype}",
+            "event.value_notification.scene_activation": "Scenaktivering p\u00e5 {subtype}",
+            "state.node_status": "Nodstatus \u00e4ndrad",
+            "zwave_js.value_updated.config_parameter": "V\u00e4rde\u00e4ndring p\u00e5 konfigurationsparameter {subtype}",
+            "zwave_js.value_updated.value": "V\u00e4rdef\u00f6r\u00e4ndring p\u00e5 ett Z-Wave JS-v\u00e4rde"
         }
     },
     "options": {
@@ -56,6 +75,10 @@
                 "data": {
                     "emulate_hardware": "Emulera h\u00e5rdvara",
                     "log_level": "Loggniv\u00e5",
+                    "s0_legacy_key": "S0-nyckel (\u00e4ldre)",
+                    "s2_access_control_key": "S2-\u00e5tkomstkontrollnyckel",
+                    "s2_authenticated_key": "S2 Autentiserad nyckel",
+                    "s2_unauthenticated_key": "S2 oautentiserad nyckel",
                     "usb_path": "USB-enhetens s\u00f6kv\u00e4g"
                 }
             },

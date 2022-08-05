@@ -1,0 +1,19 @@
+{
+    "state": {
+        "homekit_controller__thread_node_capabilities": {
+            "full": "Dispositiu final complet",
+            "minimal": "Dispositiu final redu\u00eft",
+            "none": "Cap",
+            "router_eligible": "Dispositiu final apte per ser encaminador (router)",
+            "sleepy": "Dispositiu final dorment"
+        },
+        "homekit_controller__thread_status": {
+            "child": "Fill",
+            "detached": "Desconnectat",
+            "disabled": "Desactivat",
+            "joining": "Unint-se",
+            "leader": "L\u00edder",
+            "router": "Encaminador (router)"
+        }
+    }
+}

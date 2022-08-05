@@ -1,9 +1,23 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Tj\u00e4nsten \u00e4r redan konfigurerad",
+            "reauth_successful": "\u00c5terautentisering lyckades"
+        },
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta.",
+            "invalid_auth": "Ogiltig autentisering",
+            "invalid_url": "Ogiltig URL",
+            "unknown": "Ov\u00e4ntat fel"
+        },
         "step": {
             "user": {
                 "data": {
-                    "admin_username": "Admin Anv\u00e4ndarnamn"
+                    "admin_password": "Admin L\u00f6senord",
+                    "admin_username": "Admin Anv\u00e4ndarnamn",
+                    "surveillance_password": "\u00d6vervakning L\u00f6senord",
+                    "surveillance_username": "\u00d6vervakning [%key:common::config_flow::data::anv\u00e4ndarnamn%]",
+                    "url": "URL"
                 }
             }
         }

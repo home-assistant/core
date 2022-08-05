@@ -1,7 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Redan konfigurerad. Endast en konfiguration m\u00f6jlig."
+            "already_configured": "Redan konfigurerad. Endast en konfiguration m\u00f6jlig.",
+            "cannot_connect": "Det gick inte att ansluta."
+        },
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta."
         },
         "step": {
             "setup_network": {
