@@ -3,6 +3,7 @@
 import logging
 
 import switchbot
+from switchbot import SwitchbotModel
 
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
@@ -17,33 +18,22 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
-from .const import (
-    ATTR_BOT,
-    ATTR_BULB,
-    ATTR_CONTACT,
-    ATTR_CURTAIN,
-    ATTR_HYGROMETER,
-    ATTR_MOTION,
-    ATTR_PLUG,
-    CONF_RETRY_COUNT,
-    DEFAULT_RETRY_COUNT,
-    DOMAIN,
-)
+from .const import CONF_RETRY_COUNT, DEFAULT_RETRY_COUNT, DOMAIN
 from .coordinator import SwitchbotDataUpdateCoordinator
 
 PLATFORMS_BY_TYPE = {
-    ATTR_BULB: [Platform.SENSOR],
-    ATTR_BOT: [Platform.SWITCH, Platform.SENSOR],
-    ATTR_PLUG: [Platform.SWITCH, Platform.SENSOR],
-    ATTR_CURTAIN: [Platform.COVER, Platform.BINARY_SENSOR, Platform.SENSOR],
-    ATTR_HYGROMETER: [Platform.SENSOR],
-    ATTR_CONTACT: [Platform.BINARY_SENSOR, Platform.SENSOR],
-    ATTR_MOTION: [Platform.BINARY_SENSOR, Platform.SENSOR],
+    SwitchbotModel.COLOR_BULB: [Platform.SENSOR],
+    SwitchbotModel.BOT: [Platform.SWITCH, Platform.SENSOR],
+    SwitchbotModel.PLUG_MINI: [Platform.SWITCH, Platform.SENSOR],
+    SwitchbotModel.CURTAIN: [Platform.COVER, Platform.BINARY_SENSOR, Platform.SENSOR],
+    SwitchbotModel.METER: [Platform.SENSOR],
+    SwitchbotModel.CONTACT_SENSOR: [Platform.BINARY_SENSOR, Platform.SENSOR],
+    SwitchbotModel.MOTION_SENSOR: [Platform.BINARY_SENSOR, Platform.SENSOR],
 }
 CLASS_BY_DEVICE = {
-    ATTR_CURTAIN: switchbot.SwitchbotCurtain,
-    ATTR_BOT: switchbot.Switchbot,
-    ATTR_PLUG: switchbot.SwitchbotPlugMini,
+    SwitchbotModel.CURTAIN: switchbot.SwitchbotCurtain,
+    SwitchbotModel.BOT: switchbot.Switchbot,
+    SwitchbotModel.PLUG_MINI: switchbot.SwitchbotPlugMini,
 }
 
 _LOGGER = logging.getLogger(__name__)

@@ -1,26 +1,23 @@
 """Constants for the switchbot integration."""
+from switchbot import SwitchbotModel
+
 DOMAIN = "switchbot"
 MANUFACTURER = "switchbot"
 
 # Config Attributes
-ATTR_BOT = "bot"
-ATTR_BULB = "bulb"
-ATTR_CURTAIN = "curtain"
-ATTR_HYGROMETER = "hygrometer"
-ATTR_CONTACT = "contact"
-ATTR_PLUG = "plug"
-ATTR_MOTION = "motion"
+
 DEFAULT_NAME = "Switchbot"
 
 SUPPORTED_MODEL_TYPES = {
-    "WoHand": ATTR_BOT,
-    "WoCurtain": ATTR_CURTAIN,
-    "WoSensorTH": ATTR_HYGROMETER,
-    "WoContact": ATTR_CONTACT,
-    "WoPlug": ATTR_PLUG,
-    "WoPresence": ATTR_MOTION,
-    "WoBulb": ATTR_BULB,
+    SwitchbotModel.BOT,
+    SwitchbotModel.CURTAIN,
+    SwitchbotModel.METER,
+    SwitchbotModel.CONTACT_SENSOR,
+    SwitchbotModel.PLUG_MINI,
+    SwitchbotModel.MOTION_SENSOR,
+    SwitchbotModel.COLOR_BULB,
 }
+
 
 # Config Defaults
 DEFAULT_RETRY_COUNT = 3
