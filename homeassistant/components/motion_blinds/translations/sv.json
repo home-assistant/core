@@ -20,5 +20,14 @@
                 "description": "K\u00f6r installationen igen om du vill ansluta ytterligare Motion Gateways"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "wait_for_push": "V\u00e4nta p\u00e5 multicast push vid uppdatering"
+                }
+            }
+        }
     }
 }

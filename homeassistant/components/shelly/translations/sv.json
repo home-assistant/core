@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "unsupported_firmware": "Enheten anv\u00e4nder en firmwareversion som inte st\u00f6ds."
+        },
         "error": {
             "firmware_not_fully_provisioned": "Enheten \u00e4r inte helt etablerad. Kontakta Shellys support",
             "invalid_auth": "Ogiltig autentisering"
@@ -10,7 +13,22 @@
                     "password": "L\u00f6senord",
                     "username": "Anv\u00e4ndarnamn"
                 }
+            },
+            "user": {
+                "description": "F\u00f6re installationen m\u00e5ste batteridrivna enheter v\u00e4ckas, du kan nu v\u00e4cka enheten med en knapp p\u00e5 den."
             }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button4": "Fj\u00e4rde knappen"
+        },
+        "trigger_type": {
+            "btn_down": "\"{subtype}\" knappen nedtryckt",
+            "btn_up": "\"{subtype}\" knappen uppsl\u00e4ppt",
+            "double_push": "{subtype} dubbeltryck",
+            "long_push": "{subtype} l\u00e5ngtryck",
+            "single_push": "{subtyp} enkeltryck"
         }
     }
 }

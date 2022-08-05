@@ -1,8 +1,12 @@
 {
     "config": {
+        "error": {
+            "invalid_auth": "Ogiltig autentisering"
+        },
         "step": {
             "user": {
                 "data": {
+                    "title": "St\u00e4ll in Syncthing-integration",
                     "token": "Token",
                     "url": "URL",
                     "verify_ssl": "Verifiera SSL-certifikat"

@@ -17,7 +17,8 @@
                 "data": {
                     "pin": "PIN-kod"
                 },
-                "description": "Ange din MySubaru PIN-kod\n OBS: Alla fordon p\u00e5 kontot m\u00e5ste ha samma PIN-kod"
+                "description": "Ange din MySubaru PIN-kod\n OBS: Alla fordon p\u00e5 kontot m\u00e5ste ha samma PIN-kod",
+                "title": "Subaru Starlink-konfiguration"
             },
             "two_factor": {
                 "description": "Tv\u00e5faktorautentisering kr\u00e4vs",
@@ -31,8 +32,23 @@
             },
             "user": {
                 "data": {
+                    "country": "V\u00e4lj land",
+                    "password": "L\u00f6senord",
                     "username": "Anv\u00e4ndarnamn"
-                }
+                },
+                "description": "V\u00e4nligen ange dina MySubaru-uppgifter\n OBS: Initial installation kan ta upp till 30 sekunder",
+                "title": "Subaru Starlink-konfiguration"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "update_enabled": "Aktivera fordonsavl\u00e4sning"
+                },
+                "description": "N\u00e4r den \u00e4r aktiverad skickar fordonsavl\u00e4sning ett fj\u00e4rrkommando till ditt fordon varannan timme f\u00f6r att f\u00e5 nya sensordata. Utan fordonsavl\u00e4sning tas nya sensordata endast emot n\u00e4r fordonet automatiskt skickar data (normalt efter motoravst\u00e4ngning).",
+                "title": "Subaru Starlink-alternativ"
             }
         }
     }

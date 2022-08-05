@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "site_id": "Plats-ID"
+                },
+                "description": "G\u00e5 till {api_url} f\u00f6r att skapa en API-nyckel"
+            }
+        }
+    }
+}
