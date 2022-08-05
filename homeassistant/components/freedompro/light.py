@@ -1,4 +1,4 @@
-⁸"""Support for Freedompro light."""
+"""Support for Freedompro light."""
 from __future__ import annotations
 
 import json
