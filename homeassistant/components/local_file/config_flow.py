@@ -34,8 +34,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
         self._async_abort_entries_match({CONF_NAME: user_input[CONF_NAME]})
-        if os.access(user_input[CONF_FILE_PATH], os.R_OK):
-            print(user_input)
+        if await self.hass.async_add_executor_job(
+            os.access, user_input[CONF_FILE_PATH], os.R_OK
+        ):
             return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
 
         return self.async_show_form(
@@ -46,5 +47,4 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_config: dict[str, str]) -> FlowResult:
         """Import a config entry from configuration.yaml."""
-        print(import_config)
         return await self.async_step_user(import_config)

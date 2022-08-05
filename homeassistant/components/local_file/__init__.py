@@ -16,7 +16,9 @@ PLATFORMS: list[Platform] = [Platform.CAMERA]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Local File from a config entry."""
 
-    if not os.access(entry.data[CONF_FILE_PATH], os.R_OK):
+    if not await hass.async_add_executor_job(
+        os.access, entry.data[CONF_FILE_PATH], os.R_OK
+    ):
         raise ConfigEntryNotReady
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = dict(entry.data)
