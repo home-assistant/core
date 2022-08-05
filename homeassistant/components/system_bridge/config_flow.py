@@ -60,6 +60,8 @@ async def _validate_input(
             hass.async_create_task(websocket_client.listen())
             response = await websocket_client.get_data(GetData(modules=["system"]))
             _LOGGER.info("Got response: %s", response.json())
+            if response.data is None or not isinstance(response.data, System):
+                raise CannotConnect("No data received")
             system: System = response.data
     except AuthenticationException as exception:
         _LOGGER.warning(

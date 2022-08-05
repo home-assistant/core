@@ -2,7 +2,7 @@
 import asyncio
 from unittest.mock import patch
 
-from systembridgeconnector.const import TYPE_DATA_UPDATE
+from systembridgeconnector.const import MODEL_SYSTEM, TYPE_DATA_UPDATE
 from systembridgeconnector.exceptions import (
     AuthenticationException,
     ConnectionClosedException,
@@ -68,6 +68,7 @@ FIXTURE_ZEROCONF_BAD = zeroconf.ZeroconfServiceInfo(
 
 
 FIXTURE_SYSTEM = System(
+    id=FIXTURE_UUID,
     boot_time=1,
     fqdn="",
     hostname="1.1.1.1",
@@ -99,14 +100,18 @@ FIXTURE_SYSTEM = System(
 FIXTURE_DATA_RESPONSE = Response(
     id="1234",
     type=TYPE_DATA_UPDATE,
+    subtype=None,
     message="Data received",
-    data=FIXTURE_SYSTEM.dict(),
+    module=MODEL_SYSTEM,
+    data=FIXTURE_SYSTEM,
 )
 
 FIXTURE_DATA_RESPONSE_BAD = Response(
     id="1234",
     type=TYPE_DATA_UPDATE,
+    subtype=None,
     message="Data received",
+    module=MODEL_SYSTEM,
     data={},
 )
 
