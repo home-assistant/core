@@ -1,5 +1,8 @@
-"""Constants for the Local File Camera component."""
-DOMAIN = "local_file"
-SERVICE_UPDATE_FILE_PATH = "update_file_path"
-DATA_LOCAL_FILE = "local_file_cameras"
-DEFAULT_NAME = "Local File"
+"""Constants for the Local File integration."""
+
+from typing import Final
+
+DOMAIN: Final = "local_file"
+DEFAULT_NAME: Final = "Local File"
+
+SERVICE_UPDATE_FILE_PATH: Final = "update_file_path"

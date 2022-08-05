@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "not_valid": "Path is not valid"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "file_path": "Image file path",
+                    "name": "Name"
+                }
+            }
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Configuring Local File using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the Local File YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue.",
+            "title": "The Local File YAML configuration is being removed"
+        }
+    }
+}

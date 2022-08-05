@@ -8,13 +8,17 @@ import os
 import voluptuous as vol
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
+from homeassistant.components.repairs.issue_handler import async_create_issue
+from homeassistant.components.repairs.models import IssueSeverity
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, CONF_FILE_PATH, CONF_NAME
-from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import config_validation as cv
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DATA_LOCAL_FILE, DEFAULT_NAME, DOMAIN, SERVICE_UPDATE_FILE_PATH
+from .const import DEFAULT_NAME, DOMAIN, SERVICE_UPDATE_FILE_PATH
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,62 +29,65 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-CAMERA_SERVICE_UPDATE_FILE_PATH = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids,
-        vol.Required(CONF_FILE_PATH): cv.string,
-    }
-)
 
-
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Camera that works with local files."""
-    if DATA_LOCAL_FILE not in hass.data:
-        hass.data[DATA_LOCAL_FILE] = []
-
-    file_path = config[CONF_FILE_PATH]
-    camera = LocalFile(config[CONF_NAME], file_path)
-    hass.data[DATA_LOCAL_FILE].append(camera)
-
-    def update_file_path_service(call: ServiceCall) -> None:
-        """Update the file path."""
-        file_path = call.data[CONF_FILE_PATH]
-        entity_ids = call.data[ATTR_ENTITY_ID]
-        cameras = hass.data[DATA_LOCAL_FILE]
-
-        for camera in cameras:
-            if camera.entity_id in entity_ids:
-                camera.update_file_path(file_path)
-
-    hass.services.register(
+    async_create_issue(
+        hass,
         DOMAIN,
-        SERVICE_UPDATE_FILE_PATH,
-        update_file_path_service,
-        schema=CAMERA_SERVICE_UPDATE_FILE_PATH,
+        "deprecated_yaml",
+        breaks_in_ha_version="2022.11.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+    )
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
     )
 
-    add_entities([camera])
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up Local File camera."""
+    data = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities(
+        [LocalFile(data[CONF_NAME], data[CONF_FILE_PATH], entry.entry_id)]
+    )
+
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_UPDATE_FILE_PATH,
+        {
+            vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids,
+            vol.Required(CONF_FILE_PATH): cv.string,
+        },
+        "async_update_file_path_service",
+    )
 
 
 class LocalFile(Camera):
     """Representation of a local file camera."""
 
-    def __init__(self, name, file_path):
+    def __init__(self, name: str, file_path: str, entry_id: str) -> None:
         """Initialize Local File Camera component."""
         super().__init__()
 
-        self._name = name
-        self.check_file_path_access(file_path)
+        self._attr_name = name
         self._file_path = file_path
         # Set content type of local file
         content, _ = mimetypes.guess_type(file_path)
         if content is not None:
             self.content_type = content
+        self._attr_unique_id = entry_id
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, entry_id)}, name=name)
 
     def camera_image(
         self, width: int | None = None, height: int | None = None
@@ -92,30 +99,27 @@ class LocalFile(Camera):
         except FileNotFoundError:
             _LOGGER.warning(
                 "Could not read camera %s image from file: %s",
-                self._name,
+                self._attr_name,
                 self._file_path,
             )
         return None
 
-    def check_file_path_access(self, file_path):
-        """Check that filepath given is readable."""
-        if not os.access(file_path, os.R_OK):
-            _LOGGER.warning(
-                "Could not read camera %s image from file: %s", self._name, file_path
-            )
-
-    def update_file_path(self, file_path):
+    async def async_update_file_path_service(self, file_path: str) -> None:
         """Update the file_path."""
-        self.check_file_path_access(file_path)
+        if not os.access(file_path, os.R_OK):
+            _LOGGER.error(
+                "Could not read camera %s image from file: %s",
+                self._attr_name,
+                file_path,
+            )
+            return
         self._file_path = file_path
-        self.schedule_update_ha_state()
+        content, _ = mimetypes.guess_type(file_path)
+        if content is not None:
+            self.content_type = content
+        self.async_schedule_update_ha_state()
 
     @property
-    def name(self):
-        """Return the name of this camera."""
-        return self._name
-
-    @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, str]:
         """Return the camera state attributes."""
-        return {"file_path": self._file_path}
+        return {CONF_FILE_PATH: self._file_path}

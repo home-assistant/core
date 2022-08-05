@@ -1,75 +1,67 @@
 """The tests for local file camera component."""
+from collections.abc import Awaitable, Callable
 from http import HTTPStatus
-from unittest import mock
+from unittest.mock import mock_open, patch
+
+from aiohttp import ClientSession
+import pytest
 
 from homeassistant.components.local_file.const import DOMAIN, SERVICE_UPDATE_FILE_PATH
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import mock_registry
+from . import MOCK_CONFIG
+
+from tests.common import MockConfigEntry
 
 
-async def test_loading_file(hass, hass_client):
+async def test_loading_file(hass: HomeAssistant, hass_client) -> None:
     """Test that it loads image from disk."""
-    mock_registry(hass)
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
+    entry.add_to_hass(hass)
 
-    with mock.patch("os.path.isfile", mock.Mock(return_value=True)), mock.patch(
-        "os.access", mock.Mock(return_value=True)
-    ), mock.patch(
-        "homeassistant.components.local_file.camera.mimetypes.guess_type",
-        mock.Mock(return_value=(None, None)),
-    ):
-        await async_setup_component(
-            hass,
-            "camera",
-            {
-                "camera": {
-                    "name": "config_test",
-                    "platform": "local_file",
-                    "file_path": "mock.file",
-                }
-            },
-        )
+    with patch("os.access", return_value=True):
+        await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     client = await hass_client()
 
-    m_open = mock.mock_open(read_data=b"hello")
-    with mock.patch(
-        "homeassistant.components.local_file.camera.open", m_open, create=True
-    ):
-        resp = await client.get("/api/camera_proxy/camera.config_test")
+    m_open = mock_open(read_data=b"hello")
+    with patch("homeassistant.components.local_file.camera.open", m_open, create=True):
+        resp = await client.get("/api/camera_proxy/camera.local_file")
 
     assert resp.status == HTTPStatus.OK
     body = await resp.text()
     assert body == "hello"
 
 
-async def test_file_not_readable(hass, caplog):
-    """Test a warning is shown setup when file is not readable."""
-    mock_registry(hass)
+async def test_file_not_readable(
+    hass: HomeAssistant,
+    hass_client: Callable[..., Awaitable[ClientSession]],
+    caplog: pytest.LogCaptureFixture,
+):
+    """Test when fetching file fails."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
+    entry.add_to_hass(hass)
 
-    with mock.patch("os.path.isfile", mock.Mock(return_value=True)), mock.patch(
-        "os.access", mock.Mock(return_value=False)
+    with patch("os.access", return_value=True), patch(
+        "homeassistant.components.local_file.camera.mimetypes.guess_type",
+        return_value=(None, None),
     ):
-        await async_setup_component(
-            hass,
-            "camera",
-            {
-                "camera": {
-                    "name": "config_test",
-                    "platform": "local_file",
-                    "file_path": "mock.file",
-                }
-            },
-        )
+        await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
+    client = await hass_client()
+
+    await client.get("/api/camera_proxy/camera.local_file")
     assert "Could not read" in caplog.text
-    assert "config_test" in caplog.text
-    assert "mock.file" in caplog.text
+    assert "Local File" in caplog.text
+    assert "file.jpg" in caplog.text
 
 
-async def test_camera_content_type(hass, hass_client):
+async def test_camera_content_type(
+    hass: HomeAssistant, hass_client: Callable[..., Awaitable[ClientSession]]
+) -> None:
     """Test local_file camera content_type."""
     cam_config_jpg = {
         "name": "test_jpg",
@@ -92,20 +84,26 @@ async def test_camera_content_type(hass, hass_client):
         "file_path": "/path/to/image",
     }
 
-    await async_setup_component(
-        hass,
-        "camera",
-        {"camera": [cam_config_jpg, cam_config_png, cam_config_svg, cam_config_noext]},
-    )
-    await hass.async_block_till_done()
+    with patch("os.access", return_value=True):
+        await async_setup_component(
+            hass,
+            "camera",
+            {
+                "camera": [
+                    cam_config_jpg,
+                    cam_config_png,
+                    cam_config_svg,
+                    cam_config_noext,
+                ]
+            },
+        )
+        await hass.async_block_till_done()
 
     client = await hass_client()
 
     image = "hello"
-    m_open = mock.mock_open(read_data=image.encode())
-    with mock.patch(
-        "homeassistant.components.local_file.camera.open", m_open, create=True
-    ):
+    m_open = mock_open(read_data=image.encode())
+    with patch("homeassistant.components.local_file.camera.open", m_open, create=True):
         resp_1 = await client.get("/api/camera_proxy/camera.test_jpg")
         resp_2 = await client.get("/api/camera_proxy/camera.test_png")
         resp_3 = await client.get("/api/camera_proxy/camera.test_svg")
@@ -133,41 +131,33 @@ async def test_camera_content_type(hass, hass_client):
     assert body == image
 
 
-async def test_update_file_path(hass):
+async def test_update_file_path(hass: HomeAssistant) -> None:
     """Test update_file_path service."""
-    # Setup platform
 
-    mock_registry(hass)
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
+    entry.add_to_hass(hass)
 
-    with mock.patch("os.path.isfile", mock.Mock(return_value=True)), mock.patch(
-        "os.access", mock.Mock(return_value=True)
-    ), mock.patch(
-        "homeassistant.components.local_file.camera.mimetypes.guess_type",
-        mock.Mock(return_value=(None, None)),
-    ):
-
-        camera_1 = {"platform": "local_file", "file_path": "mock/path.jpg"}
-        camera_2 = {
-            "platform": "local_file",
-            "name": "local_file_camera_2",
-            "file_path": "mock/path_2.jpg",
-        }
-        await async_setup_component(hass, "camera", {"camera": [camera_1, camera_2]})
+    with patch("os.access", return_value=True):
+        await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        # Fetch state and check motion detection attribute
-        state = hass.states.get("camera.local_file")
-        assert state.attributes.get("friendly_name") == "Local File"
-        assert state.attributes.get("file_path") == "mock/path.jpg"
+        if state := hass.states.get("camera.local_file"):
+            assert state.attributes.get("friendly_name") == "Local File"
+            assert state.attributes.get("file_path") == "/test/file.jpg"
 
         service_data = {"entity_id": "camera.local_file", "file_path": "new/path.jpg"}
 
         await hass.services.async_call(DOMAIN, SERVICE_UPDATE_FILE_PATH, service_data)
         await hass.async_block_till_done()
 
-        state = hass.states.get("camera.local_file")
-        assert state.attributes.get("file_path") == "new/path.jpg"
+        if state := hass.states.get("camera.local_file"):
+            assert state.attributes.get("file_path") == "new/path.jpg"
 
-        # Check that local_file_camera_2 file_path is still as configured
-        state = hass.states.get("camera.local_file_camera_2")
-        assert state.attributes.get("file_path") == "mock/path_2.jpg"
+    # file path is not updated if file doesn't exist
+    service_data = {"entity_id": "camera.local_file", "file_path": "invalid/path.jpg"}
+
+    await hass.services.async_call(DOMAIN, SERVICE_UPDATE_FILE_PATH, service_data)
+    await hass.async_block_till_done()
+
+    if state := hass.states.get("camera.local_file"):
+        assert state.attributes.get("file_path") == "new/path.jpg"

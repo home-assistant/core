@@ -8,6 +8,7 @@ update_file_path:
       required: true
       selector:
         entity:
+          integration: local_file
           domain: camera
     file_path:
       name: file path

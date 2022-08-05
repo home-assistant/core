@@ -229,6 +229,7 @@ FLOWS = {
         "litterrobot",
         "livisi",
         "local_calendar",
+        "local_file",
         "local_ip",
         "locative",
         "logi_circle",
