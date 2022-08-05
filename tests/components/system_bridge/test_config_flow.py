@@ -115,6 +115,15 @@ FIXTURE_DATA_RESPONSE_BAD = Response(
     data={},
 )
 
+FIXTURE_DATA_RESPONSE_BAD = Response(
+    id="1234",
+    type=TYPE_DATA_UPDATE,
+    subtype=None,
+    message="Data received",
+    module=MODEL_SYSTEM,
+    data={},
+)
+
 
 async def test_show_user_form(hass: HomeAssistant) -> None:
     """Test that the setup form is served."""
@@ -263,6 +272,33 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
 
 async def test_form_uuid_error(hass: HomeAssistant) -> None:
     """Test we handle error from bad uuid."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["errors"] is None
+
+    with patch(
+        "homeassistant.components.system_bridge.config_flow.WebSocketClient.connect"
+    ), patch(
+        "systembridgeconnector.websocket_client.WebSocketClient.get_data",
+        side_effect=ValueError,
+    ), patch(
+        "systembridgeconnector.websocket_client.WebSocketClient.listen",
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_USER_INPUT
+        )
+    await hass.async_block_till_done()
+
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["step_id"] == "user"
+    assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_value_error(hass: HomeAssistant) -> None:
+    """Test we handle error from bad value."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
