@@ -38,15 +38,22 @@ LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Philips TV from a config entry."""
 
+    system: SystemType | None = entry.data.get(CONF_SYSTEM)
     tvapi = PhilipsTV(
         entry.data[CONF_HOST],
         entry.data[CONF_API_VERSION],
         username=entry.data.get(CONF_USERNAME),
         password=entry.data.get(CONF_PASSWORD),
+        system=system,
     )
     coordinator = PhilipsTVDataUpdateCoordinator(hass, tvapi, entry.options)
 
     await coordinator.async_refresh()
+
+    if (actual_system := tvapi.system) and actual_system != system:
+        data = {**entry.data, CONF_SYSTEM: actual_system}
+        hass.config_entries.async_update_entry(entry, data=data)
+
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
