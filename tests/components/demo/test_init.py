@@ -129,6 +129,20 @@ async def test_issues_created(hass, hass_client, hass_ws_client):
                 "translation_key": "unfixable_problem",
                 "translation_placeholders": None,
             },
+            {
+                "breaks_in_ha_version": None,
+                "created": ANY,
+                "dismissed_version": None,
+                "domain": "demo",
+                "ignored": False,
+                "is_fixable": True,
+                "issue_domain": None,
+                "issue_id": "bad_psu",
+                "learn_more_url": "https://www.youtube.com/watch?v=b9rntRxLlbU",
+                "severity": "critical",
+                "translation_key": "bad_psu",
+                "translation_placeholders": None,
+            },
         ]
     }
 
@@ -164,7 +178,7 @@ async def test_issues_created(hass, hass_client, hass_ws_client):
         "description_placeholders": None,
         "flow_id": flow_id,
         "handler": "demo",
-        "title": "Fixed issue",
+        "title": "",
         "type": "create_entry",
         "version": 1,
     }
@@ -201,6 +215,20 @@ async def test_issues_created(hass, hass_client, hass_ws_client):
                 "learn_more_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
                 "severity": "warning",
                 "translation_key": "unfixable_problem",
+                "translation_placeholders": None,
+            },
+            {
+                "breaks_in_ha_version": None,
+                "created": ANY,
+                "dismissed_version": None,
+                "domain": "demo",
+                "ignored": False,
+                "is_fixable": True,
+                "issue_domain": None,
+                "issue_id": "bad_psu",
+                "learn_more_url": "https://www.youtube.com/watch?v=b9rntRxLlbU",
+                "severity": "critical",
+                "translation_key": "bad_psu",
                 "translation_placeholders": None,
             },
         ]

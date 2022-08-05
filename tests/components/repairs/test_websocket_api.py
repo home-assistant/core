@@ -21,21 +21,24 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import mock_platform
 
+DEFAULT_ISSUES = [
+    {
+        "breaks_in_ha_version": "2022.9",
+        "domain": "fake_integration",
+        "issue_id": "issue_1",
+        "is_fixable": True,
+        "learn_more_url": "https://theuselessweb.com",
+        "severity": "error",
+        "translation_key": "abc_123",
+        "translation_placeholders": {"abc": "123"},
+    }
+]
 
-async def create_issues(hass, ws_client):
+
+async def create_issues(hass, ws_client, issues=None):
     """Create issues."""
-    issues = [
-        {
-            "breaks_in_ha_version": "2022.9",
-            "domain": "fake_integration",
-            "issue_id": "issue_1",
-            "is_fixable": True,
-            "learn_more_url": "https://theuselessweb.com",
-            "severity": "error",
-            "translation_key": "abc_123",
-            "translation_placeholders": {"abc": "123"},
-        },
-    ]
+    if issues is None:
+        issues = DEFAULT_ISSUES
 
     for issue in issues:
         async_create_issue(
@@ -79,23 +82,22 @@ class MockFixFlow(RepairsFlow):
     ) -> data_entry_flow.FlowResult:
         """Handle the first step of a fix flow."""
 
-        return await (self.async_step_confirm())
+        return await (self.async_step_custom_step())
 
-    async def async_step_confirm(
+    async def async_step_custom_step(
         self, user_input: dict[str, str] | None = None
     ) -> data_entry_flow.FlowResult:
-        """Handle the confirm step of a fix flow."""
+        """Handle a custom_step step of a fix flow."""
         if user_input is not None:
-            return self.async_create_entry(title=None, data=None)
+            return self.async_create_entry(title="", data={})
 
-        return self.async_show_form(step_id="confirm", data_schema=vol.Schema({}))
+        return self.async_show_form(step_id="custom_step", data_schema=vol.Schema({}))
 
 
 @pytest.fixture(autouse=True)
 async def mock_repairs_integration(hass):
     """Mock a repairs integration."""
     hass.config.components.add("fake_integration")
-    hass.config.components.add("integration_without_diagnostics")
 
     def async_create_fix_flow(hass, issue_id):
         return MockFixFlow()
@@ -107,7 +109,7 @@ async def mock_repairs_integration(hass):
     )
     mock_platform(
         hass,
-        "integration_without_diagnostics.repairs",
+        "integration_without_repairs.repairs",
         Mock(spec=[]),
     )
 
@@ -237,7 +239,16 @@ async def test_fix_non_existing_issue(
     }
 
 
-async def test_fix_issue(hass: HomeAssistant, hass_client, hass_ws_client) -> None:
+@pytest.mark.parametrize(
+    "domain, step",
+    (
+        ("fake_integration", "custom_step"),
+        ("fake_integration_default_handler", "confirm"),
+    ),
+)
+async def test_fix_issue(
+    hass: HomeAssistant, hass_client, hass_ws_client, domain, step
+) -> None:
     """Test we can fix an issue."""
     assert await async_setup_component(hass, "http", {})
     assert await async_setup_component(hass, DOMAIN, {})
@@ -245,12 +256,11 @@ async def test_fix_issue(hass: HomeAssistant, hass_client, hass_ws_client) -> No
     ws_client = await hass_ws_client(hass)
     client = await hass_client()
 
-    await create_issues(hass, ws_client)
+    issues = [{**DEFAULT_ISSUES[0], "domain": domain}]
+    await create_issues(hass, ws_client, issues=issues)
 
     url = "/api/repairs/issues/fix"
-    resp = await client.post(
-        url, json={"handler": "fake_integration", "issue_id": "issue_1"}
-    )
+    resp = await client.post(url, json={"handler": domain, "issue_id": "issue_1"})
 
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
@@ -261,9 +271,9 @@ async def test_fix_issue(hass: HomeAssistant, hass_client, hass_ws_client) -> No
         "description_placeholders": None,
         "errors": None,
         "flow_id": ANY,
-        "handler": "fake_integration",
+        "handler": domain,
         "last_step": None,
-        "step_id": "confirm",
+        "step_id": step,
         "type": "form",
     }
 
@@ -286,8 +296,8 @@ async def test_fix_issue(hass: HomeAssistant, hass_client, hass_ws_client) -> No
         "description": None,
         "description_placeholders": None,
         "flow_id": flow_id,
-        "handler": "fake_integration",
-        "title": None,
+        "handler": domain,
+        "title": "",
         "type": "create_entry",
         "version": 1,
     }
