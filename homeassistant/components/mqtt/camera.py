@@ -46,7 +46,8 @@ MQTT_CAMERA_ATTRIBUTES_BLOCKED = frozenset(
 )
 
 
-# Using CONF_ENCODING to set b64 encoding for images is deprecated as of Home Assistant 2022.9, use CONF_IMAGE_ENCODING instead
+# Using CONF_ENCODING to set b64 encoding for images is deprecated as of Home Assistant 2022.9
+# use CONF_IMAGE_ENCODING instead, support for the work-a-round will be removed with Home Assistant 2022.11
 def repair_legacy_encoding(config: ConfigType) -> ConfigType:
     """Check incorrect deprecated config of image encoding."""
     if config[CONF_ENCODING] == "b64":
