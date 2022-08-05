@@ -20,10 +20,7 @@ class SwitchbotEntity(PassiveBluetoothCoordinatorEntity):
 
     coordinator: SwitchbotDataUpdateCoordinator
 
-    def __init__(
-        self,
-        coordinator: SwitchbotDataUpdateCoordinator,
-    ) -> None:
+    def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
         self._device = coordinator.device
