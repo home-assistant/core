@@ -221,8 +221,8 @@ SENSOR_DESCRIPTIONS = [
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DeconzSensorDescription(
-        key="secondary_temperature",
-        value_fn=lambda device: device.secondary_temperature,
+        key="internal_temperature",
+        value_fn=lambda device: device.internal_temperature,
         suffix="Temperature",
         update_key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -341,8 +341,8 @@ class DeconzSensor(DeconzDevice[SensorResources], SensorEntity):
         if self._device.on is not None:
             attr[ATTR_ON] = self._device.on
 
-        if self._device.secondary_temperature is not None:
-            attr[ATTR_TEMPERATURE] = self._device.secondary_temperature
+        if self._device.internal_temperature is not None:
+            attr[ATTR_TEMPERATURE] = self._device.internal_temperature
 
         if isinstance(self._device, Consumption):
             attr[ATTR_POWER] = self._device.power
