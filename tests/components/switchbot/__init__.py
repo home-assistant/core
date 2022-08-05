@@ -71,6 +71,25 @@ WOHAND_SERVICE_INFO = BluetoothServiceInfoBleak(
     device=BLEDevice("aa:bb:cc:dd:ee:ff", "WoHand"),
 )
 
+
+WOHAND_ENCRYPTED_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="WoHand",
+    manufacturer_data={89: b"\xd8.\xad\xcd\r\x85"},
+    service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"\xc8\x10\xcf"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="798A8547-2A3D-C609-55FF-73FA824B923B",
+    rssi=-60,
+    source="local",
+    advertisement=AdvertisementData(
+        local_name="WoHand",
+        manufacturer_data={89: b"\xd8.\xad\xcd\r\x85"},
+        service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"\xc8\x10\xcf"},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=BLEDevice("798A8547-2A3D-C609-55FF-73FA824B923B", "WoHand"),
+)
+
+
 WOHAND_SERVICE_ALT_ADDRESS_INFO = BluetoothServiceInfoBleak(
     name="WoHand",
     manufacturer_data={89: b"\xfd`0U\x92W"},

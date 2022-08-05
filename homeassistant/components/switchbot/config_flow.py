@@ -88,7 +88,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
             data={
                 **user_input,
                 CONF_ADDRESS: discovery.address,
-                CONF_SENSOR_TYPE: SUPPORTED_MODEL_TYPES[model_name],
+                CONF_SENSOR_TYPE: str(SUPPORTED_MODEL_TYPES[model_name]),
             },
         )
 

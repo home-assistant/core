@@ -11,6 +11,7 @@ from . import (
     NOT_SWITCHBOT_INFO,
     USER_INPUT,
     WOCURTAIN_SERVICE_INFO,
+    WOHAND_ENCRYPTED_SERVICE_INFO,
     WOHAND_SERVICE_ALT_ADDRESS_INFO,
     WOHAND_SERVICE_INFO,
     WOSENSORTH_SERVICE_INFO,
@@ -170,7 +171,7 @@ async def test_user_setup_wocurtain(hass):
 
 
 async def test_user_setup_wocurtain_or_bot(hass):
-    """Test the user initiated form with password and valid mac."""
+    """Test the user initiated form with valid address."""
 
     with patch(
         "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
@@ -195,6 +196,78 @@ async def test_user_setup_wocurtain_or_bot(hass):
     assert result["data"] == {
         CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
         CONF_SENSOR_TYPE: "curtain",
+    }
+
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_user_setup_wocurtain_or_bot_with_password(hass):
+    """Test the user initiated form and valid address and a bot with a password."""
+
+    with patch(
+        "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
+        return_value=[WOCURTAIN_SERVICE_INFO, WOHAND_ENCRYPTED_SERVICE_INFO],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_ADDRESS: "798A8547-2A3D-C609-55FF-73FA824B923B"},
+    )
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["step_id"] == "password"
+    assert result2["errors"] is None
+
+    with patch_async_setup_entry() as mock_setup_entry:
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {CONF_PASSWORD: "abc123"},
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["title"] == "Bot 923B"
+    assert result3["data"] == {
+        CONF_ADDRESS: "798A8547-2A3D-C609-55FF-73FA824B923B",
+        CONF_PASSWORD: "abc123",
+        CONF_SENSOR_TYPE: "bot",
+    }
+
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_user_setup_single_bot_with_password(hass):
+    """Test the user initiated form for a bot with a password."""
+
+    with patch(
+        "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
+        return_value=[WOHAND_ENCRYPTED_SERVICE_INFO],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "password"
+    assert result["errors"] is None
+
+    with patch_async_setup_entry() as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_PASSWORD: "abc123"},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "Bot 923B"
+    assert result2["data"] == {
+        CONF_ADDRESS: "798A8547-2A3D-C609-55FF-73FA824B923B",
+        CONF_PASSWORD: "abc123",
+        CONF_SENSOR_TYPE: "bot",
     }
 
     assert len(mock_setup_entry.mock_calls) == 1
