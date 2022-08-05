@@ -20,6 +20,7 @@ CONF_PATH = "path"
 CONF_PRODUCT_NAME = "product_name"
 CONF_PRODUCT_TYPE = "product_type"
 CONF_SERIAL = "serial"
+CONF_DEVICE_NAME = "device_name"
 
 UPDATE_INTERVAL = timedelta(seconds=5)
 

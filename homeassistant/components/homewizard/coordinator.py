@@ -7,11 +7,12 @@ from homewizard_energy import HomeWizardEnergy
 from homewizard_energy.errors import DisabledError, RequestError
 
 from homeassistant.components.repairs import IssueSeverity, async_create_issue
+from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, UPDATE_INTERVAL, DeviceResponseEntry
+from .const import CONF_DEVICE_NAME, DOMAIN, UPDATE_INTERVAL, DeviceResponseEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,6 +48,7 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
                 self.hass,
                 DOMAIN,
                 "api_disabled",
+                data={CONF_IP_ADDRESS: self.api.host, CONF_DEVICE_NAME: self.name},
                 is_fixable=True,
                 learn_more_url="https://www.home-assistant.io/integrations/homewizard/#enable-the-api",
                 severity=IssueSeverity.ERROR,
