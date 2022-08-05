@@ -62,9 +62,14 @@ class OVOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=USER_SCHEMA, errors=errors
         )
 
-    async def async_step_reauth(
-        self,
-        user_input: Mapping[str, Any],
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+        """Handle reauthorization request from OVO Energy."""
+        self.username = entry_data.get(CONF_USERNAME)
+
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle configuration by re-auth."""
         errors = {}
