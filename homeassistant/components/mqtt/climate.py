@@ -99,6 +99,8 @@ CONF_PRESET_MODE_COMMAND_TOPIC = "preset_mode_command_topic"
 CONF_PRESET_MODE_VALUE_TEMPLATE = "preset_mode_value_template"
 CONF_PRESET_MODE_COMMAND_TEMPLATE = "preset_mode_command_template"
 CONF_PRESET_MODES_LIST = "preset_modes"
+# Support CONF_SEND_IF_OFF is removed with release 2022.9
+CONF_SEND_IF_OFF = "send_if_off"
 CONF_SWING_MODE_COMMAND_TEMPLATE = "swing_mode_command_template"
 CONF_SWING_MODE_COMMAND_TOPIC = "swing_mode_command_topic"
 CONF_SWING_MODE_LIST = "swing_modes"
@@ -330,6 +332,8 @@ PLATFORM_SCHEMA_MODERN = vol.All(
 # Configuring MQTT Climate under the climate platform key is deprecated in HA Core 2022.6
 PLATFORM_SCHEMA = vol.All(
     cv.PLATFORM_SCHEMA.extend(_PLATFORM_SCHEMA_BASE.schema),
+    # Support CONF_SEND_IF_OFF is removed with release 2022.9
+    cv.removed(CONF_SEND_IF_OFF),
     # AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.9
     cv.deprecated(CONF_AWAY_MODE_COMMAND_TOPIC),
     cv.deprecated(CONF_AWAY_MODE_STATE_TEMPLATE),
@@ -347,6 +351,8 @@ _DISCOVERY_SCHEMA_BASE = _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA
 
 DISCOVERY_SCHEMA = vol.All(
     _DISCOVERY_SCHEMA_BASE,
+    # Support CONF_SEND_IF_OFF is removed with release 2022.9
+    cv.removed(CONF_SEND_IF_OFF),
     # AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.9
     cv.deprecated(CONF_AWAY_MODE_COMMAND_TOPIC),
     cv.deprecated(CONF_AWAY_MODE_STATE_TEMPLATE),
