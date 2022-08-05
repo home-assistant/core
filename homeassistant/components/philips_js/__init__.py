@@ -50,8 +50,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await coordinator.async_refresh()
 
-    if tvapi.system and tvapi.system != system:
-        data = {**entry.data, CONF_SYSTEM: tvapi.system}
+    if (actual_system := tvapi.system) and actual_system != system:
+        data = {**entry.data, CONF_SYSTEM: actual_system}
         hass.config_entries.async_update_entry(entry, data=data)
 
     hass.data.setdefault(DOMAIN, {})
