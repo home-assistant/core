@@ -37,6 +37,17 @@ DEFAULT_ISSUES = [
 
 async def create_issues(hass, ws_client, issues=None):
     """Create issues."""
+
+    def api_issue(issue):
+        excluded_keys = ("data",)
+        return dict(
+            {key: issue[key] for key in issue if key not in excluded_keys},
+            created=ANY,
+            dismissed_version=None,
+            ignored=False,
+            issue_domain=None,
+        )
+
     if issues is None:
         issues = DEFAULT_ISSUES
 
@@ -46,6 +57,7 @@ async def create_issues(hass, ws_client, issues=None):
             issue["domain"],
             issue["issue_id"],
             breaks_in_ha_version=issue["breaks_in_ha_version"],
+            data=issue.get("data"),
             is_fixable=issue["is_fixable"],
             is_persistent=False,
             learn_more_url=issue["learn_more_url"],
@@ -58,20 +70,15 @@ async def create_issues(hass, ws_client, issues=None):
     msg = await ws_client.receive_json()
 
     assert msg["success"]
-    assert msg["result"] == {
-        "issues": [
-            dict(
-                issue,
-                created=ANY,
-                dismissed_version=None,
-                ignored=False,
-                issue_domain=None,
-            )
-            for issue in issues
-        ]
-    }
+    assert msg["result"] == {"issues": [api_issue(issue) for issue in issues]}
 
     return issues
+
+
+EXPECTED_DATA = {
+    "issue_1": None,
+    "issue_2": {"blah": "bleh"},
+}
 
 
 class MockFixFlow(RepairsFlow):
@@ -81,6 +88,9 @@ class MockFixFlow(RepairsFlow):
         self, user_input: dict[str, str] | None = None
     ) -> data_entry_flow.FlowResult:
         """Handle the first step of a fix flow."""
+
+        assert self.issue_id in EXPECTED_DATA
+        assert self.data == EXPECTED_DATA[self.issue_id]
 
         return await (self.async_step_custom_step())
 
@@ -100,6 +110,9 @@ async def mock_repairs_integration(hass):
     hass.config.components.add("fake_integration")
 
     def async_create_fix_flow(hass, issue_id, data):
+        assert issue_id in EXPECTED_DATA
+        assert data == EXPECTED_DATA[issue_id]
+
         return MockFixFlow()
 
     mock_platform(
@@ -256,11 +269,18 @@ async def test_fix_issue(
     ws_client = await hass_ws_client(hass)
     client = await hass_client()
 
-    issues = [{**DEFAULT_ISSUES[0], "domain": domain}]
+    issues = [
+        {
+            **DEFAULT_ISSUES[0],
+            "data": {"blah": "bleh"},
+            "domain": domain,
+            "issue_id": "issue_2",
+        }
+    ]
     await create_issues(hass, ws_client, issues=issues)
 
     url = "/api/repairs/issues/fix"
-    resp = await client.post(url, json={"handler": domain, "issue_id": "issue_1"})
+    resp = await client.post(url, json={"handler": domain, "issue_id": "issue_2"})
 
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
