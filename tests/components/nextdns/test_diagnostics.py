@@ -1,11 +1,13 @@
 """Test NextDNS diagnostics."""
 from collections.abc import Awaitable, Callable
+import json
 
 from aiohttp import ClientSession
 
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.core import HomeAssistant
 
+from tests.common import load_fixture
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.components.nextdns import init_integration
 
@@ -14,6 +16,8 @@ async def test_entry_diagnostics(
     hass: HomeAssistant, hass_client: Callable[..., Awaitable[ClientSession]]
 ) -> None:
     """Test config entry diagnostics."""
+    settings = json.loads(load_fixture("settings.json", "nextdns"))
+
     entry = await init_integration(hass)
 
     result = await get_diagnostics_for_config_entry(hass, hass_client, entry)
@@ -60,73 +64,7 @@ async def test_entry_diagnostics(
         "tcp_queries_ratio": 0.0,
         "udp_queries_ratio": 40.0,
     }
-    assert result["settings_coordinator_data"] == {
-        "block_page": False,
-        "cache_boost": True,
-        "cname_flattening": True,
-        "anonymized_ecs": True,
-        "logs": True,
-        "web3": True,
-        "allow_affiliate": True,
-        "block_disguised_trackers": True,
-        "ai_threat_detection": True,
-        "block_csam": True,
-        "block_ddns": True,
-        "block_nrd": True,
-        "block_parked_domains": True,
-        "cryptojacking_protection": True,
-        "dga_protection": True,
-        "dns_rebinding_protection": True,
-        "google_safe_browsing": False,
-        "idn_homograph_attacks_protection": True,
-        "threat_intelligence_feeds": True,
-        "typosquatting_protection": True,
-        "block_bypass_methods": True,
-        "safesearch": False,
-        "youtube_restricted_mode": True,
-        "block_9gag": True,
-        "block_amazon": True,
-        "block_blizzard": True,
-        "block_dailymotion": True,
-        "block_discord": True,
-        "block_disneyplus": True,
-        "block_ebay": True,
-        "block_facebook": True,
-        "block_fortnite": True,
-        "block_hulu": True,
-        "block_imgur": True,
-        "block_instagram": True,
-        "block_leagueoflegends": True,
-        "block_messenger": True,
-        "block_minecraft": True,
-        "block_netflix": True,
-        "block_pinterest": True,
-        "block_primevideo": True,
-        "block_reddit": True,
-        "block_roblox": True,
-        "block_signal": True,
-        "block_skype": True,
-        "block_snapchat": True,
-        "block_spotify": True,
-        "block_steam": True,
-        "block_telegram": True,
-        "block_tiktok": True,
-        "block_tinder": True,
-        "block_tumblr": True,
-        "block_twitch": True,
-        "block_twitter": True,
-        "block_vimeo": True,
-        "block_vk": True,
-        "block_whatsapp": True,
-        "block_xboxlive": True,
-        "block_youtube": True,
-        "block_zoom": True,
-        "block_dating": True,
-        "block_gambling": True,
-        "block_piracy": True,
-        "block_porn": True,
-        "block_social_networks": True,
-    }
+    assert result["settings_coordinator_data"] == settings
     assert result["status_coordinator_data"] == {
         "all_queries": 100,
         "allowed_queries": 30,
