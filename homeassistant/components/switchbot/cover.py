@@ -80,9 +80,12 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         if not last_state or ATTR_CURRENT_POSITION not in last_state.attributes:
             return
 
-        self._attr_current_cover_position = last_state.attributes[ATTR_CURRENT_POSITION]
-        self._last_run_success = last_state.attributes["last_run_success"]
-        self._attr_is_closed = last_state.attributes[ATTR_CURRENT_POSITION] <= 20
+        self._attr_current_cover_position = last_state.attributes.get(
+            ATTR_CURRENT_POSITION
+        )
+        self._last_run_success = last_state.attributes.get("last_run_success")
+        if self._attr_current_cover_position is not None:
+            self._attr_is_closed = self._attr_current_cover_position <= 20
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the curtain."""

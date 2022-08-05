@@ -44,6 +44,7 @@ async def create_issues(hass, ws_client):
             issue["issue_id"],
             breaks_in_ha_version=issue["breaks_in_ha_version"],
             is_fixable=issue["is_fixable"],
+            is_persistent=False,
             learn_more_url=issue["learn_more_url"],
             severity=issue["severity"],
             translation_key=issue["translation_key"],
@@ -61,6 +62,7 @@ async def create_issues(hass, ws_client):
                 created=ANY,
                 dismissed_version=None,
                 ignored=False,
+                issue_domain=None,
             )
             for issue in issues
         ]
@@ -154,6 +156,7 @@ async def test_dismiss_issue(hass: HomeAssistant, hass_ws_client) -> None:
                 created=ANY,
                 dismissed_version=ha_version,
                 ignored=True,
+                issue_domain=None,
             )
             for issue in issues
         ]
@@ -183,6 +186,7 @@ async def test_dismiss_issue(hass: HomeAssistant, hass_ws_client) -> None:
                 created=ANY,
                 dismissed_version=None,
                 ignored=False,
+                issue_domain=None,
             )
             for issue in issues
         ]
@@ -226,6 +230,7 @@ async def test_fix_non_existing_issue(
                 created=ANY,
                 dismissed_version=None,
                 ignored=False,
+                issue_domain=None,
             )
             for issue in issues
         ]
@@ -375,14 +380,16 @@ async def test_list_issues(hass: HomeAssistant, hass_storage, hass_ws_client) ->
 
     # Add an inactive issue, this should not be exposed in the list
     hass_storage[issue_registry.STORAGE_KEY] = {
-        "version": issue_registry.STORAGE_VERSION,
+        "version": issue_registry.STORAGE_VERSION_MAJOR,
         "data": {
             "issues": [
                 {
                     "created": "2022-07-19T09:41:13.746514+00:00",
                     "dismissed_version": None,
                     "domain": "test",
+                    "is_persistent": False,
                     "issue_id": "issue_3_inactive",
+                    "issue_domain": None,
                 },
             ]
         },
@@ -404,6 +411,7 @@ async def test_list_issues(hass: HomeAssistant, hass_storage, hass_ws_client) ->
             "domain": "test",
             "is_fixable": True,
             "issue_id": "issue_1",
+            "issue_domain": None,
             "learn_more_url": "https://theuselessweb.com",
             "severity": "error",
             "translation_key": "abc_123",
@@ -414,6 +422,7 @@ async def test_list_issues(hass: HomeAssistant, hass_storage, hass_ws_client) ->
             "domain": "test",
             "is_fixable": False,
             "issue_id": "issue_2",
+            "issue_domain": None,
             "learn_more_url": "https://theuselessweb.com/abc",
             "severity": "other",
             "translation_key": "even_worse",
@@ -428,6 +437,7 @@ async def test_list_issues(hass: HomeAssistant, hass_storage, hass_ws_client) ->
             issue["issue_id"],
             breaks_in_ha_version=issue["breaks_in_ha_version"],
             is_fixable=issue["is_fixable"],
+            is_persistent=False,
             learn_more_url=issue["learn_more_url"],
             severity=issue["severity"],
             translation_key=issue["translation_key"],

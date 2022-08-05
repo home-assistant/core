@@ -1,17 +1,19 @@
 """Config flow to configure the Bluetooth integration."""
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
 from homeassistant.components import onboarding
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import CONF_ADAPTER, DEFAULT_NAME, DOMAIN
 from .util import async_get_bluetooth_adapters
+
+if TYPE_CHECKING:
+    from homeassistant.data_entry_flow import FlowResult
 
 
 class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):

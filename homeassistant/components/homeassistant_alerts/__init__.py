@@ -14,6 +14,7 @@ from homeassistant.components.repairs.models import IssueSeverity
 from homeassistant.const import __version__
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.yaml import parse_yaml
@@ -75,7 +76,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 DOMAIN,
                 issue_id,
                 is_fixable=False,
-                learn_more_url=alert.alert_url,
+                issue_domain=alert.integration,
                 severity=IssueSeverity.WARNING,
                 translation_key="alert",
                 translation_placeholders={
@@ -100,7 +101,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     coordinator = AlertUpdateCoordinator(hass)
     coordinator.async_add_listener(async_schedule_update_alerts)
-    await coordinator.async_refresh()
+
+    async def initial_refresh(hass: HomeAssistant) -> None:
+        await coordinator.async_refresh()
+
+    async_at_start(hass, initial_refresh)
 
     return True
 
@@ -112,7 +117,6 @@ class IntegrationAlert:
     integration: str
     filename: str
     date_updated: str | None
-    alert_url: str | None
 
     @property
     def issue_id(self) -> str:
@@ -147,7 +151,7 @@ class AlertUpdateCoordinator(DataUpdateCoordinator[dict[str, IntegrationAlert]])
         result = {}
 
         for alert in alerts:
-            if "alert_url" not in alert or "integrations" not in alert:
+            if "integrations" not in alert:
                 continue
 
             if "homeassistant" in alert:
@@ -177,7 +181,6 @@ class AlertUpdateCoordinator(DataUpdateCoordinator[dict[str, IntegrationAlert]])
                     integration=integration["package"],
                     filename=alert["filename"],
                     date_updated=alert.get("date_updated"),
-                    alert_url=alert["alert_url"],
                 )
 
                 result[integration_alert.issue_id] = integration_alert

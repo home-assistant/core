@@ -3,17 +3,19 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any
 
-from bleak.backends.device import BLEDevice
 import switchbot
-from switchbot import parse_advertisement_data
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.passive_update_coordinator import (
     PassiveBluetoothDataUpdateCoordinator,
 )
 from homeassistant.core import HomeAssistant, callback
+
+if TYPE_CHECKING:
+    from bleak.backends.device import BLEDevice
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +39,9 @@ class SwitchbotDataUpdateCoordinator(PassiveBluetoothDataUpdateCoordinator):
         device: switchbot.SwitchbotDevice,
     ) -> None:
         """Initialize global switchbot data updater."""
-        super().__init__(hass, logger, ble_device.address)
+        super().__init__(
+            hass, logger, ble_device.address, bluetooth.BluetoothScanningMode.ACTIVE
+        )
         self.ble_device = ble_device
         self.device = device
         self.data: dict[str, Any] = {}
@@ -46,14 +50,13 @@ class SwitchbotDataUpdateCoordinator(PassiveBluetoothDataUpdateCoordinator):
     @callback
     def _async_handle_bluetooth_event(
         self,
-        service_info: bluetooth.BluetoothServiceInfo,
+        service_info: bluetooth.BluetoothServiceInfoBleak,
         change: bluetooth.BluetoothChange,
     ) -> None:
         """Handle a Bluetooth event."""
         super()._async_handle_bluetooth_event(service_info, change)
-        discovery_info_bleak = cast(bluetooth.BluetoothServiceInfoBleak, service_info)
-        if adv := parse_advertisement_data(
-            discovery_info_bleak.device, discovery_info_bleak.advertisement
+        if adv := switchbot.parse_advertisement_data(
+            service_info.device, service_info.advertisement
         ):
             self.data = flatten_sensors_data(adv.data)
             if "modelName" in self.data:
