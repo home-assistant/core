@@ -35,10 +35,7 @@ class SwitchBotSwitch(SwitchbotEntity, SwitchEntity, RestoreEntity):
 
     _attr_device_class = SwitchDeviceClass.SWITCH
 
-    def __init__(
-        self,
-        coordinator: SwitchbotDataUpdateCoordinator,
-    ) -> None:
+    def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
         """Initialize the Switchbot."""
         super().__init__(coordinator)
         self._attr_is_on = False
