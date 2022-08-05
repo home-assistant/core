@@ -73,7 +73,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         data = parsed.data
         self.context["title_placeholders"] = {
             "name": data["modelFriendlyName"],
-            "address": discovery_info.address,
+            "address": short_address(discovery_info.address),
         }
         return await self.async_step_confirm()
 
@@ -178,7 +178,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_ADDRESS): vol.In(
                         {
-                            address: f"{parsed.data['modelFriendlyName']} ({address})"
+                            address: name_from_discovery(parsed)
                             for address, parsed in self._discovered_advs.items()
                         }
                     ),
