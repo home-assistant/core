@@ -31,6 +31,7 @@ FLOWS = {
         "androidtv",
         "anthemav",
         "apple_tv",
+        "aqara",
         "arcam_fmj",
         "aseko_pool_live",
         "asuswrt",
