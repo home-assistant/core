@@ -64,10 +64,14 @@ class RepairsFlowManager(data_entry_flow.FlowManager):
 
         platforms: dict[str, RepairsProtocol] = self.hass.data[DOMAIN]["platforms"]
         if handler_key not in platforms:
-            return ConfirmRepairFlow()
-        platform = platforms[handler_key]
+            flow: RepairsFlow = ConfirmRepairFlow()
+        else:
+            platform = platforms[handler_key]
+            flow = await platform.async_create_fix_flow(self.hass, issue_id, issue.data)
 
-        return await platform.async_create_fix_flow(self.hass, issue_id)
+        flow.issue_id = issue_id
+        flow.data = issue.data
+        return flow
 
     async def async_finish_flow(
         self, flow: data_entry_flow.FlowHandler, result: data_entry_flow.FlowResult
@@ -109,6 +113,7 @@ def async_create_issue(
     *,
     issue_domain: str | None = None,
     breaks_in_ha_version: str | None = None,
+    data: dict[str, str | int | float | None] | None = None,
     is_fixable: bool,
     is_persistent: bool = False,
     learn_more_url: str | None = None,
@@ -131,6 +136,7 @@ def async_create_issue(
         issue_id,
         issue_domain=issue_domain,
         breaks_in_ha_version=breaks_in_ha_version,
+        data=data,
         is_fixable=is_fixable,
         is_persistent=is_persistent,
         learn_more_url=learn_more_url,
@@ -146,6 +152,7 @@ def create_issue(
     issue_id: str,
     *,
     breaks_in_ha_version: str | None = None,
+    data: dict[str, str | int | float | None] | None = None,
     is_fixable: bool,
     is_persistent: bool = False,
     learn_more_url: str | None = None,
@@ -162,6 +169,7 @@ def create_issue(
             domain,
             issue_id,
             breaks_in_ha_version=breaks_in_ha_version,
+            data=data,
             is_fixable=is_fixable,
             is_persistent=is_persistent,
             learn_more_url=learn_more_url,
