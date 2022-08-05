@@ -5,6 +5,8 @@ try:
 except ImportError:
     av = None
 
+import sys
+
 from homeassistant.components.hassio import is_hassio
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
@@ -17,6 +19,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize default configuration."""
     if not is_hassio(hass):
         await async_setup_component(hass, "backup", config)
+
+    if sys.platform.startswith(("linux", "win32", "darwin")):
+        await async_setup_component(hass, "bluetooth", config)
 
     if av is None:
         return True
