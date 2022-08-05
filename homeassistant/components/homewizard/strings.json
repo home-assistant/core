@@ -28,11 +28,11 @@
         "step": {
           "confirm": {
             "title": "API needs to be enabled",
-            "description": "Local access to this device is disabled in the HomeWizard Energy App\n\nHome Assistant uses the local API to get data from {device_name} at {ip_address}, but the API is disabled at this moment.\n\n1. Open the HomeWizard Energy App\n2. todo"
+            "description": "Local access to this device is disabled in the HomeWizard Energy App\n\nHome Assistant uses the local API to get data from {device_name} at {ip_address}, but the API is disabled at this moment.\n\n1. Open the HomeWizard Energy App\n2. Press the \"gear\" icon in the top right\n3. Press 'meters'\n4. Select {device_name}\n5. Turn on 'Local API'"
           }
         },
         "abort": {
-          "api_disabled": "The is not enabled. Enable API in the HomeWizard Energy App under settings"
+          "api_disabled": "The is not enabled. Make sure you have enabled the API for the correct device"
         }
       }
     }
