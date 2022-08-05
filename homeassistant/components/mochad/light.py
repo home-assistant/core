@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from pymochad import MochadCtrl, controller, device
+from pymochad import controller, device
 from pymochad.exceptions import MochadException
 import voluptuous as vol
 
@@ -20,7 +20,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import CONF_COMM_TYPE, DOMAIN, REQ_LOCK
+from . import CONF_COMM_TYPE, DOMAIN, REQ_LOCK, MochadCtrl
 
 
 _LOGGER = logging.getLogger(__name__)
