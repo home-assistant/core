@@ -171,6 +171,8 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self._async_discover_devices()
         if len(self._discovered_advs) == 1:
+            # If there is only one device we can ask for a password
+            # or simply confirm it
             device_adv = list(self._discovered_advs.values())[0]
             await self._async_set_device(device_adv)
             if device_adv.data["isEncrypted"]:
