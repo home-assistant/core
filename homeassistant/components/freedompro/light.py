@@ -1,4 +1,4 @@
-"""Support for Freedompro light."""
+⁸"""Support for Freedompro light."""
 from __future__ import annotations
 
 import json
@@ -20,7 +20,8 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, FreedomproDataUpdateCoordinator
+from . import FreedomproDataUpdateCoordinator
+from .const import DOMAIN
 
 
 async def async_setup_entry(
