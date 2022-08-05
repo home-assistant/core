@@ -85,6 +85,8 @@ ATTR_WEATHER_OZONE = "ozone"
 ATTR_WEATHER_PRESSURE = "pressure"
 ATTR_WEATHER_PRESSURE_UNIT = "pressure_unit"
 ATTR_WEATHER_TEMPERATURE = "temperature"
+ATTR_WEATHER_APPARENT_TEMP: Final = "native_apparent_temp"
+ATTR_WEATHER_DEWPOINT: Final = "native_dewpoint"
 ATTR_WEATHER_TEMPERATURE_UNIT = "temperature_unit"
 ATTR_WEATHER_VISIBILITY = "visibility"
 ATTR_WEATHER_VISIBILITY_UNIT = "visibility_unit"
@@ -252,6 +254,8 @@ class WeatherEntity(Entity):
     _attr_native_pressure_unit: str | None = None
     _attr_native_temperature: float | None = None
     _attr_native_temperature_unit: str | None = None
+    _attr_native_apparent_temp: float | None = None
+    _attr_native_dewpoint: float | None = None
     _attr_native_visibility: float | None = None
     _attr_native_visibility_unit: str | None = None
     _attr_native_precipitation_unit: str | None = None
@@ -337,6 +341,16 @@ class WeatherEntity(Entity):
             return temperature
 
         return self._attr_native_temperature
+
+    @property
+    def native_apparent_temp(self) -> float | None:
+        """Return the apparent temperature in native units."""
+        return self._attr_native_apparent_temp
+
+    @property
+    def native_dewpoint(self) -> float | None:
+        """Return the dewpoint in native units."""
+        return self._attr_native_dewpoint
 
     @property
     def native_temperature_unit(self) -> str | None:
@@ -645,6 +659,34 @@ class WeatherEntity(Entity):
                 )
             except (TypeError, ValueError):
                 data[ATTR_WEATHER_TEMPERATURE] = temperature
+
+        if (apparent_temp := self.native_apparent_temp) is not None:
+            from_unit = self.native_temperature_unit or self._default_temperature_unit
+            to_unit = self._temperature_unit
+            try:
+                apparent_temp_f = float(apparent_temp)
+                value_apparent_temp = UNIT_CONVERSIONS[ATTR_WEATHER_TEMPERATURE_UNIT](
+                    apparent_temp_f, from_unit, to_unit
+                )
+                data[ATTR_WEATHER_APPARENT_TEMP] = round_temperature(
+                    value_apparent_temp, precision
+                )
+            except (TypeError, ValueError):
+                data[ATTR_WEATHER_APPARENT_TEMP] = apparent_temp
+
+        if (dewpoint := self.native_dewpoint) is not None:
+            from_unit = self.native_temperature_unit or self._default_temperature_unit
+            to_unit = self._temperature_unit
+            try:
+                dewpoint_f = float(dewpoint)
+                value_dewpoint = UNIT_CONVERSIONS[ATTR_WEATHER_TEMPERATURE_UNIT](
+                    dewpoint_f, from_unit, to_unit
+                )
+                data[ATTR_WEATHER_DEWPOINT] = round_temperature(
+                    value_dewpoint, precision
+                )
+            except (TypeError, ValueError):
+                data[ATTR_WEATHER_DEWPOINT] = value_dewpoint
 
         data[ATTR_WEATHER_TEMPERATURE_UNIT] = self._temperature_unit
 

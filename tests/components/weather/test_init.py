@@ -13,6 +13,8 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_WIND_BEARING,
     ATTR_FORECAST_WIND_SPEED,
+    ATTR_WEATHER_APPARENT_TEMP,
+    ATTR_WEATHER_DEWPOINT,
     ATTR_WEATHER_OZONE,
     ATTR_WEATHER_PRECIPITATION_UNIT,
     ATTR_WEATHER_PRESSURE,
@@ -508,6 +510,8 @@ async def test_custom_units(hass: HomeAssistant, enable_custom_integrations) -> 
     pressure_unit = PRESSURE_HPA
     temperature_value = 20
     temperature_low_value = 15
+    apparent_temp_value = 25
+    dewpoint_value = 10
     temperature_unit = TEMP_CELSIUS
     visibility_value = 11
     visibility_unit = LENGTH_KILOMETERS
@@ -535,6 +539,8 @@ async def test_custom_units(hass: HomeAssistant, enable_custom_integrations) -> 
             name="Test",
             condition=ATTR_CONDITION_SUNNY,
             native_temperature=temperature_value,
+            native_apparent_temp=apparent_temp_value,
+            native_dewpoint=dewpoint_value,
             native_temperature_unit=temperature_unit,
             native_wind_speed=wind_speed_value,
             native_wind_speed_unit=wind_speed_unit,
@@ -575,6 +581,12 @@ async def test_custom_units(hass: HomeAssistant, enable_custom_integrations) -> 
     expected_temperature_low = convert_temperature(
         temperature_low_value, temperature_unit, TEMP_FAHRENHEIT
     )
+    expected_apparent_temp = convert_temperature(
+        apparent_temp_value, temperature_unit, TEMP_FAHRENHEIT
+    )
+    expected_dewpoint = convert_temperature(
+        dewpoint_value, temperature_unit, TEMP_FAHRENHEIT
+    )
     expected_pressure = round(
         convert_pressure(pressure_value, pressure_unit, PRESSURE_INHG),
         ROUNDING_PRECISION,
@@ -593,6 +605,12 @@ async def test_custom_units(hass: HomeAssistant, enable_custom_integrations) -> 
     )
     assert float(state.attributes[ATTR_WEATHER_TEMPERATURE]) == approx(
         expected_temperature, rel=0.1
+    )
+    assert float(state.attributes[ATTR_WEATHER_APPARENT_TEMP]) == approx(
+        expected_apparent_temp, rel=0.1
+    )
+    assert float(state.attributes[ATTR_WEATHER_DEWPOINT]) == approx(
+        expected_dewpoint, rel=0.1
     )
     assert float(state.attributes[ATTR_WEATHER_PRESSURE]) == approx(expected_pressure)
     assert float(state.attributes[ATTR_WEATHER_VISIBILITY]) == approx(

@@ -48,6 +48,16 @@ class MockWeather(MockEntity, WeatherEntity):
         return self._handle("native_temperature")
 
     @property
+    def native_apparent_temp(self) -> float | None:
+        """Return the apparent temperature in native units."""
+        return self._handle("native_apparent_temp")
+
+    @property
+    def native_dewpoint(self) -> float | None:
+        """Return the dewpoint in native units."""
+        return self._handle("native_dewpoint")
+
+    @property
     def native_temperature_unit(self) -> str | None:
         """Return the unit of measurement for temperature."""
         return self._handle("native_temperature_unit")
