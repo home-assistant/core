@@ -20,6 +20,7 @@
                     "name": "Namn",
                     "port": "Port",
                     "ssl": "Anv\u00e4nd ett SSL certifikat",
+                    "statistics_only": "Endast statistik",
                     "verify_ssl": "Verifiera SSL-certifikat"
                 }
             }

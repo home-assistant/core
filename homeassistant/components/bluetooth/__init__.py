@@ -188,7 +188,7 @@ async def async_process_advertisements(
     def _async_discovered_device(
         service_info: BluetoothServiceInfoBleak, change: BluetoothChange
     ) -> None:
-        if callback(service_info):
+        if not done.done() and callback(service_info):
             done.set_result(service_info)
 
     unload = async_register_callback(hass, _async_discovered_device, match_dict, mode)

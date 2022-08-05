@@ -2,10 +2,12 @@
     "config": {
         "abort": {
             "device_unsupported": "Enheten st\u00f6ds ej",
+            "reauth_successful": "\u00c5terautentisering lyckades",
             "reauth_unsuccessful": "\u00c5terautentiseringen misslyckades. Ta bort integrationen och konfigurera den igen."
         },
         "error": {
             "cannot_connect": "Det gick inte att ansluta ",
+            "invalid_auth": "Ogiltig autentisering",
             "unknown": "Ov\u00e4ntat fel"
         },
         "step": {

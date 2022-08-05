@@ -31,7 +31,7 @@ from homeassistant.helpers.typing import ConfigType
 from .config_flow import normalize_hkid
 from .connection import HKDevice, valid_serial_number
 from .const import ENTITY_MAP, KNOWN_DEVICES, TRIGGERS
-from .storage import async_get_entity_storage
+from .storage import EntityMapStorage, async_get_entity_storage
 from .utils import async_get_controller, folded_name
 
 _LOGGER = logging.getLogger(__name__)
@@ -269,7 +269,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hkid = entry.data["AccessoryPairingID"]
 
     if hkid in hass.data[KNOWN_DEVICES]:
-        connection = hass.data[KNOWN_DEVICES][hkid]
+        connection: HKDevice = hass.data[KNOWN_DEVICES][hkid]
         await connection.async_unload()
 
     return True
@@ -280,7 +280,8 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     hkid = entry.data["AccessoryPairingID"]
 
     # Remove cached type data from .storage/homekit_controller-entity-map
-    hass.data[ENTITY_MAP].async_delete_map(hkid)
+    entity_map_storage: EntityMapStorage = hass.data[ENTITY_MAP]
+    entity_map_storage.async_delete_map(hkid)
 
     controller = await async_get_controller(hass)
 

@@ -28,7 +28,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     Platform,
 )
-from homeassistant.core import Event, HomeAssistant, State, callback
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, State, callback
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -390,7 +390,7 @@ class BaseLight(LogMixin, light.LightEntity):
         self.debug("turned on: %s", t_log)
         self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         transition = kwargs.get(light.ATTR_TRANSITION)
         supports_level = brightness_supported(self._attr_supported_color_modes)
@@ -567,7 +567,7 @@ class Light(BaseLight, ZhaEntity):
         if self._color_channel:
             self._attr_min_mireds: int = self._color_channel.min_mireds
             self._attr_max_mireds: int = self._color_channel.max_mireds
-        self._cancel_refresh_handle = None
+        self._cancel_refresh_handle: CALLBACK_TYPE | None = None
         effect_list = []
 
         self._zha_config_always_prefer_xy_color_mode = async_get_zha_config_value(
@@ -675,7 +675,7 @@ class Light(BaseLight, ZhaEntity):
             self._off_brightness = None
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
         self.async_accept_signal(
@@ -755,7 +755,7 @@ class Light(BaseLight, ZhaEntity):
         if "effect" in last_state.attributes:
             self._attr_effect = last_state.attributes["effect"]
 
-    async def async_get_state(self):
+    async def async_get_state(self) -> None:
         """Attempt to retrieve the state from the light."""
         if not self._attr_available:
             return
@@ -843,7 +843,7 @@ class Light(BaseLight, ZhaEntity):
                 else:
                     self._attr_effect = None
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update to the latest state."""
         if self._transitioning:
             self.debug("skipping async_update while transitioning")
@@ -906,7 +906,12 @@ class LightGroup(BaseLight, ZhaGroupEntity):
     """Representation of a light group."""
 
     def __init__(
-        self, entity_ids: list[str], unique_id: str, group_id: int, zha_device, **kwargs
+        self,
+        entity_ids: list[str],
+        unique_id: str,
+        group_id: int,
+        zha_device: ZHADevice,
+        **kwargs: Any,
     ) -> None:
         """Initialize a light group."""
         super().__init__(entity_ids, unique_id, group_id, zha_device, **kwargs)
@@ -919,7 +924,7 @@ class LightGroup(BaseLight, ZhaGroupEntity):
         self._level_channel = group.endpoint[LevelControl.cluster_id]
         self._color_channel = group.endpoint[Color.cluster_id]
         self._identify_channel = group.endpoint[Identify.cluster_id]
-        self._debounced_member_refresh = None
+        self._debounced_member_refresh: Debouncer | None = None
         self._zha_config_transition = async_get_zha_config_value(
             zha_device.gateway.config_entry,
             ZHA_OPTIONS,
@@ -947,7 +952,7 @@ class LightGroup(BaseLight, ZhaGroupEntity):
         """Return entity availability."""
         return self._attr_available
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
         if self._debounced_member_refresh is None:
@@ -960,22 +965,24 @@ class LightGroup(BaseLight, ZhaGroupEntity):
             )
             self._debounced_member_refresh = force_refresh_debouncer
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await super().async_turn_on(**kwargs)
         if self._transitioning:
             return
-        await self._debounced_member_refresh.async_call()
+        if self._debounced_member_refresh:
+            await self._debounced_member_refresh.async_call()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await super().async_turn_off(**kwargs)
         if self._transitioning:
             return
-        await self._debounced_member_refresh.async_call()
+        if self._debounced_member_refresh:
+            await self._debounced_member_refresh.async_call()
 
     @callback
-    def async_state_changed_listener(self, event: Event):
+    def async_state_changed_listener(self, event: Event) -> None:
         """Handle child updates."""
         if self._transitioning:
             self.debug("skipping group entity state update during transition")
@@ -1073,7 +1080,7 @@ class LightGroup(BaseLight, ZhaGroupEntity):
         # so that we don't break in the future when a new feature is added.
         self._attr_supported_features &= SUPPORT_GROUP_LIGHT
 
-    async def _force_member_updates(self):
+    async def _force_member_updates(self) -> None:
         """Force the update of member entities to ensure the states are correct for bulbs that don't report their state."""
         async_dispatcher_send(
             self.hass,

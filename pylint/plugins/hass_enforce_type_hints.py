@@ -1135,6 +1135,79 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             ],
         ),
     ],
+    "device_tracker": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="BaseTrackerEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="battery_level",
+                    return_type=["int", None],
+                ),
+                TypeHintMatch(
+                    function_name="source_type",
+                    return_type=["SourceType", "str"],
+                ),
+            ],
+        ),
+        ClassTypeHintMatch(
+            base_class="TrackerEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="force_update",
+                    return_type="bool",
+                ),
+                TypeHintMatch(
+                    function_name="location_accuracy",
+                    return_type="int",
+                ),
+                TypeHintMatch(
+                    function_name="location_name",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="latitude",
+                    return_type=["float", None],
+                ),
+                TypeHintMatch(
+                    function_name="longitude",
+                    return_type=["float", None],
+                ),
+                TypeHintMatch(
+                    function_name="state",
+                    return_type=["str", None],
+                ),
+            ],
+        ),
+        ClassTypeHintMatch(
+            base_class="ScannerEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="ip_address",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="mac_address",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="hostname",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="state",
+                    return_type="str",
+                ),
+                TypeHintMatch(
+                    function_name="is_connected",
+                    return_type="bool",
+                ),
+            ],
+        ),
+    ],
     "fan": [
         ClassTypeHintMatch(
             base_class="Entity",

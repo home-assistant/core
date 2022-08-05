@@ -13,6 +13,8 @@
             },
             "zeroconf_confirm": {
                 "data": {
+                    "mydevolo_url": "mydevolo URL",
+                    "password": "L\u00f6senord",
                     "username": "E-postadress / devolo-id"
                 }
             }
