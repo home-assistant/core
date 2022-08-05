@@ -22,7 +22,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import CONF_COMM_TYPE, DOMAIN, REQ_LOCK, MochadCtrl
 
-
 _LOGGER = logging.getLogger(__name__)
 CONF_BRIGHTNESS_LEVELS = "brightness_levels"
 
