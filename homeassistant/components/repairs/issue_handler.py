@@ -67,7 +67,7 @@ class RepairsFlowManager(data_entry_flow.FlowManager):
             return ConfirmRepairFlow()
         platform = platforms[handler_key]
 
-        return await platform.async_create_fix_flow(self.hass, issue_id)
+        return await platform.async_create_fix_flow(self.hass, issue_id, issue.data)
 
     async def async_finish_flow(
         self, flow: data_entry_flow.FlowHandler, result: data_entry_flow.FlowResult

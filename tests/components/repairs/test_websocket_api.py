@@ -99,7 +99,7 @@ async def mock_repairs_integration(hass):
     """Mock a repairs integration."""
     hass.config.components.add("fake_integration")
 
-    def async_create_fix_flow(hass, issue_id):
+    def async_create_fix_flow(hass, issue_id, data):
         return MockFixFlow()
 
     mock_platform(
