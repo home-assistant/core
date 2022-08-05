@@ -209,7 +209,7 @@ ENTITY_DESCRIPTIONS = {
 }
 
 
-SENSOR_DESCRIPTIONS = [
+COMMON_SENSOR_DESCRIPTIONS = [
     DeconzSensorDescription(
         key="battery",
         value_fn=lambda device: device.battery,
@@ -253,7 +253,7 @@ async def async_setup_entry(
         known_entities = set(gateway.entities[DOMAIN])
 
         for description in (
-            ENTITY_DESCRIPTIONS.get(type(sensor), []) + SENSOR_DESCRIPTIONS
+            ENTITY_DESCRIPTIONS.get(type(sensor), []) + COMMON_SENSOR_DESCRIPTIONS
         ):
             if (
                 not hasattr(sensor, description.key)
@@ -391,6 +391,8 @@ class DeconzBatteryTracker:
         if "battery" in self.sensor.changed_keys:
             self.unsub()
             known_entities = set(self.gateway.entities[DOMAIN])
-            entity = DeconzSensor(self.sensor, self.gateway, SENSOR_DESCRIPTIONS[0])
+            entity = DeconzSensor(
+                self.sensor, self.gateway, COMMON_SENSOR_DESCRIPTIONS[0]
+            )
             if entity.unique_id not in known_entities:
                 self.async_add_entities([entity])
