@@ -22,8 +22,8 @@
     },
     "issues": {
         "deprecated_service": {
-            "description": "This service is deprecated. Use the `{alternate_service}` service and pass it a target entity ID of `{alternate_target}` instead.",
-            "title": "The {deprecated_service} service is deprecated"
+            "description": "Update any automations or scripts that use this service to instead use the `{alternate_service}` service with a target entity ID of `{alternate_target}`. Then, click SUBMIT below to mark this issue as resolved.",
+            "title": "The {deprecated_service} service is being removed"
         }
     },
     "options": {
