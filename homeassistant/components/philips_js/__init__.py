@@ -38,7 +38,7 @@ LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Philips TV from a config entry."""
 
-    system: SystemType = entry.data.get(CONF_SYSTEM)
+    system: SystemType | None = entry.data.get(CONF_SYSTEM)
     tvapi = PhilipsTV(
         entry.data[CONF_HOST],
         entry.data[CONF_API_VERSION],
