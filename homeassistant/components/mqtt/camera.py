@@ -63,7 +63,7 @@ PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Required(CONF_TOPIC): valid_subscribe_topic,
-        vol.Optional(CONF_IMAGE_ENCODING): cv.matches_regex(r"^(b64)( \d*)?$"),
+        vol.Optional(CONF_IMAGE_ENCODING): "b64",
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
