@@ -25,7 +25,7 @@ from homeassistant.util.temperature import convert as convert_temperature
 
 from .const import DOMAIN
 from .coordinator import SensiboDataUpdateCoordinator
-from .entity import SensiboDeviceBaseEntity, api_call_decorator
+from .entity import SensiboDeviceBaseEntity, async_handle_api_call
 
 SERVICE_ASSUME_STATE = "assume_state"
 SERVICE_ENABLE_TIMER = "enable_timer"
@@ -248,7 +248,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
             return
 
         new_temp = _find_valid_target_temp(temperature, self.device_data.temp_list)
-        await self.api_call(
+        await self.async_send_api_call(
             device_data=self.device_data,
             key=AC_STATE_TO_DATA["targetTemperature"],
             value=new_temp,
@@ -261,7 +261,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         if "fanLevel" not in self.device_data.active_features:
             raise HomeAssistantError("Current mode doesn't support setting Fanlevel")
 
-        await self.api_call(
+        await self.async_send_api_call(
             device_data=self.device_data,
             key=AC_STATE_TO_DATA["fanLevel"],
             value=fan_mode,
@@ -272,7 +272,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
         if hvac_mode == HVACMode.OFF:
-            await self.api_call(
+            await self.async_send_api_call(
                 device_data=self.device_data,
                 key=AC_STATE_TO_DATA["on"],
                 value=False,
@@ -283,7 +283,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
 
         # Turn on if not currently on.
         if not self.device_data.device_on:
-            await self.api_call(
+            await self.async_send_api_call(
                 device_data=self.device_data,
                 key=AC_STATE_TO_DATA["on"],
                 value=True,
@@ -291,7 +291,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
                 assumed_state=False,
             )
 
-        await self.api_call(
+        await self.async_send_api_call(
             device_data=self.device_data,
             key=AC_STATE_TO_DATA["mode"],
             value=HA_TO_SENSIBO[hvac_mode],
@@ -304,7 +304,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         if "swing" not in self.device_data.active_features:
             raise HomeAssistantError("Current mode doesn't support setting Swing")
 
-        await self.api_call(
+        await self.async_send_api_call(
             device_data=self.device_data,
             key=AC_STATE_TO_DATA["swing"],
             value=swing_mode,
@@ -314,7 +314,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
 
     async def async_turn_on(self) -> None:
         """Turn Sensibo unit on."""
-        await self.api_call(
+        await self.async_send_api_call(
             device_data=self.device_data,
             key=AC_STATE_TO_DATA["on"],
             value=True,
@@ -324,7 +324,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
 
     async def async_turn_off(self) -> None:
         """Turn Sensibo unit on."""
-        await self.api_call(
+        await self.async_send_api_call(
             device_data=self.device_data,
             key=AC_STATE_TO_DATA["on"],
             value=False,
@@ -334,7 +334,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
 
     async def async_assume_state(self, state: str) -> None:
         """Sync state with api."""
-        await self.api_call(
+        await self.async_send_api_call(
             device_data=self.device_data,
             key=AC_STATE_TO_DATA["on"],
             value=state != HVACMode.OFF,
@@ -349,7 +349,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
             "minutesFromNow": minutes,
             "acState": {**self.device_data.ac_states, "on": new_state},
         }
-        await self.api_call_custom_services(
+        await self.api_call_custom_service_timer(
             device_data=self.device_data,
             key="timer_on",
             value=True,
@@ -381,7 +381,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         if outdoor_integration is not None:
             params["primeIntegration"] = outdoor_integration
 
-        await self.api_call_custom_services(
+        await self.api_call_custom_service_pure_boost(
             device_data=self.device_data,
             key="pure_boost_enabled",
             value=True,
@@ -389,8 +389,8 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
             data=params,
         )
 
-    @api_call_decorator
-    async def api_call(
+    @async_handle_api_call
+    async def async_send_api_call(
         self,
         device_data: SensiboDevice,
         key: Any,
@@ -408,8 +408,8 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         )
         return bool(result.get("result", {}).get("status") == "Success")
 
-    @api_call_decorator
-    async def api_call_custom_services(
+    @async_handle_api_call
+    async def api_call_custom_service_timer(
         self,
         device_data: SensiboDevice,
         key: Any,
@@ -419,8 +419,19 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
     ) -> bool:
         """Make service call to api."""
         result = {}
-        if command == "set_timer":
-            result = await self._client.async_set_timer(self._device_id, data)
-        if command == "set_pure_boost":
-            result = await self._client.async_set_pureboost(self._device_id, data)
+        result = await self._client.async_set_timer(self._device_id, data)
+        return bool(result.get("status") == "success")
+
+    @async_handle_api_call
+    async def api_call_custom_service_pure_boost(
+        self,
+        device_data: SensiboDevice,
+        key: Any,
+        value: Any,
+        command: str,
+        data: dict,
+    ) -> bool:
+        """Make service call to api."""
+        result = {}
+        result = await self._client.async_set_pureboost(self._device_id, data)
         return bool(result.get("status") == "success")

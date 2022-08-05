@@ -15,7 +15,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import SensiboDataUpdateCoordinator
-from .entity import SensiboDeviceBaseEntity, api_call_decorator
+from .entity import SensiboDeviceBaseEntity, async_handle_api_call
 
 PARALLEL_UPDATES = 0
 
@@ -107,14 +107,16 @@ class SensiboSelect(SensiboDeviceBaseEntity, SelectEntity):
                 f"Current mode {self.device_data.hvac_mode} doesn't support setting {self.entity_description.name}"
             )
 
-        await self.api_call(
+        await self.async_send_api_call(
             device_data=self.device_data,
             key=self.entity_description.data_key,
             value=option,
         )
 
-    @api_call_decorator
-    async def api_call(self, device_data: SensiboDevice, key: Any, value: Any) -> bool:
+    @async_handle_api_call
+    async def async_send_api_call(
+        self, device_data: SensiboDevice, key: Any, value: Any
+    ) -> bool:
         """Make service call to api."""
         data = {
             "name": self.entity_description.key,

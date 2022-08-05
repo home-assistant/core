@@ -14,7 +14,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import SensiboDataUpdateCoordinator
-from .entity import SensiboDeviceBaseEntity, api_call_decorator
+from .entity import SensiboDeviceBaseEntity, async_handle_api_call
 
 PARALLEL_UPDATES = 0
 
@@ -49,14 +49,10 @@ async def async_setup_entry(
 
     coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    entities: list[SensiboDeviceButton] = []
-
-    entities.extend(
+    async_add_entities(
         SensiboDeviceButton(coordinator, device_id, DEVICE_BUTTON_TYPES)
         for device_id, device_data in coordinator.data.parsed.items()
     )
-
-    async_add_entities(entities)
 
 
 class SensiboDeviceButton(SensiboDeviceBaseEntity, ButtonEntity):
@@ -80,14 +76,16 @@ class SensiboDeviceButton(SensiboDeviceBaseEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Press the button."""
-        await self.api_call(
+        await self.async_send_api_call(
             device_data=self.device_data,
             key=self.entity_description.data_key,
             value=False,
         )
 
-    @api_call_decorator
-    async def api_call(self, device_data: SensiboDevice, key: Any, value: Any) -> bool:
+    @async_handle_api_call
+    async def async_send_api_call(
+        self, device_data: SensiboDevice, key: Any, value: Any
+    ) -> bool:
         """Make service call to api."""
         result = await self._client.async_reset_filter(
             self._device_id,

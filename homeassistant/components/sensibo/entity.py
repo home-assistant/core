@@ -1,11 +1,12 @@
 """Base entity for Sensibo integration."""
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import TYPE_CHECKING, Any
+from collections.abc import Callable, Coroutine
+from typing import TYPE_CHECKING, Any, TypeVar
 
 import async_timeout
 from pysensibo.model import MotionSensor, SensiboDevice
+from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
@@ -15,8 +16,13 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN, LOGGER, SENSIBO_ERRORS, TIMEOUT
 from .coordinator import SensiboDataUpdateCoordinator
 
+_T = TypeVar("_T", bound="SensiboDeviceBaseEntity")
+_P = ParamSpec("_P")
 
-def api_call_decorator(function: Callable) -> Callable:
+
+def async_handle_api_call(
+    function: Callable[Concatenate[_T, _P], Coroutine[Any, Any, Any]]
+) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, Any]]:
     """Decorate api calls."""
 
     async def wrap_api_call(*args: Any, **kwargs: Any) -> None:
@@ -28,9 +34,7 @@ def api_call_decorator(function: Callable) -> Callable:
         except SENSIBO_ERRORS as err:
             raise HomeAssistantError from err
 
-        LOGGER.debug("Result: %s", res)
-        LOGGER.debug("Entity: %s", args[0])
-        LOGGER.debug("Arguments: %s", kwargs)
+        LOGGER.debug("Result %s for entity %s with aurgements %s", res, args[0], kwargs)
         entity: SensiboDeviceBaseEntity = args[0]
         if not res:
             raise HomeAssistantError(f"Could not execute service for {entity.name}")

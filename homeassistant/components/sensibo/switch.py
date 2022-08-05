@@ -18,7 +18,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import SensiboDataUpdateCoordinator
-from .entity import SensiboDeviceBaseEntity, api_call_decorator
+from .entity import SensiboDeviceBaseEntity, async_handle_api_call
 
 PARALLEL_UPDATES = 0
 
@@ -68,6 +68,8 @@ PURE_SWITCH_TYPES: tuple[SensiboDeviceSwitchEntityDescription, ...] = (
     ),
 )
 
+DESCRIPTION_BY_MODELS = {"pure": PURE_SWITCH_TYPES}
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -76,22 +78,13 @@ async def async_setup_entry(
 
     coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    entities: list[SensiboDeviceSwitch] = []
-
-    entities.extend(
+    async_add_entities(
         SensiboDeviceSwitch(coordinator, device_id, description)
-        for description in DEVICE_SWITCH_TYPES
         for device_id, device_data in coordinator.data.parsed.items()
-        if device_data.model != "pure"
+        for description in DESCRIPTION_BY_MODELS.get(
+            device_data.model, DEVICE_SWITCH_TYPES
+        )
     )
-    entities.extend(
-        SensiboDeviceSwitch(coordinator, device_id, description)
-        for description in PURE_SWITCH_TYPES
-        for device_id, device_data in coordinator.data.parsed.items()
-        if device_data.model == "pure"
-    )
-
-    async_add_entities(entities)
 
 
 class SensiboDeviceSwitch(SensiboDeviceBaseEntity, SwitchEntity):
@@ -121,13 +114,13 @@ class SensiboDeviceSwitch(SensiboDeviceBaseEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         if self.entity_description.key == "timer_on_switch":
-            await self.turn_on_timer(
+            await self.async_turn_on_timer(
                 device_data=self.device_data,
                 key=self.entity_description.data_key,
                 value=True,
             )
         if self.entity_description.key == "pure_boost_switch":
-            await self.turn_on_off_pure_boost(
+            await self.async_turn_on_off_pure_boost(
                 device_data=self.device_data,
                 key=self.entity_description.data_key,
                 value=True,
@@ -136,13 +129,13 @@ class SensiboDeviceSwitch(SensiboDeviceBaseEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         if self.entity_description.key == "timer_on_switch":
-            await self.turn_off_timer(
+            await self.async_turn_off_timer(
                 device_data=self.device_data,
                 key=self.entity_description.data_key,
                 value=True,
             )
         if self.entity_description.key == "pure_boost_switch":
-            await self.turn_on_off_pure_boost(
+            await self.async_turn_on_off_pure_boost(
                 device_data=self.device_data,
                 key=self.entity_description.data_key,
                 value=True,
@@ -155,8 +148,8 @@ class SensiboDeviceSwitch(SensiboDeviceBaseEntity, SwitchEntity):
             return self.entity_description.extra_fn(self.device_data)
         return None
 
-    @api_call_decorator
-    async def turn_on_timer(
+    @async_handle_api_call
+    async def async_turn_on_timer(
         self, device_data: SensiboDevice, key: Any, value: Any
     ) -> bool:
         """Make service call to api for setting timer."""
@@ -169,8 +162,8 @@ class SensiboDeviceSwitch(SensiboDeviceBaseEntity, SwitchEntity):
         result = await self._client.async_set_timer(self._device_id, data)
         return bool(result.get("status") == "success")
 
-    @api_call_decorator
-    async def turn_off_timer(
+    @async_handle_api_call
+    async def async_turn_off_timer(
         self, device_data: SensiboDevice, key: Any, value: Any
     ) -> bool:
         """Make service call to api for deleting timer."""
@@ -178,8 +171,8 @@ class SensiboDeviceSwitch(SensiboDeviceBaseEntity, SwitchEntity):
         result = await self._client.async_del_timer(self._device_id)
         return bool(result.get("status") == "success")
 
-    @api_call_decorator
-    async def turn_on_off_pure_boost(
+    @async_handle_api_call
+    async def async_turn_on_off_pure_boost(
         self, device_data: SensiboDevice, key: Any, value: Any
     ) -> bool:
         """Make service call to api for setting Pure Boost."""
