@@ -5,7 +5,7 @@ from pescea import (
     AbstractDiscoveryService,
     Controller,
     Listener,
-    discovery_service as pescea_discovery_service
+    discovery_service as pescea_discovery_service,
 )
 
 from homeassistant.core import HomeAssistant
@@ -47,7 +47,7 @@ class DiscoveryServiceListener(Listener):
 
 
 async def async_start_discovery_service(
-    hass: HomeAssistant
+    hass: HomeAssistant,
 ) -> AbstractDiscoveryService:
     """Set up the pescea internal discovery."""
     discovery_service = hass.data.get(DATA_DISCOVERY_SERVICE)

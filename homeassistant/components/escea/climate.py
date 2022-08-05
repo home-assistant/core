@@ -29,6 +29,7 @@ from .const import (
     DISPATCH_CONTROLLER_RECONNECTED,
     DISPATCH_CONTROLLER_UPDATE,
     ESCEA,
+    ESCEA_FIREPLACE,
     ESCEA_MANUFACTURER,
     ICON,
 )
@@ -74,6 +75,7 @@ class ControllerEntity(ClimateEntity):
     """Representation of Escea Controller."""
 
     _attr_fan_modes = list(_HA_FAN_TO_ESCEA)
+    _attr_has_entity_name = True
     _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
     _attr_icon = ICON
     _attr_precision = PRECISION_WHOLE
@@ -92,7 +94,6 @@ class ControllerEntity(ClimateEntity):
         self._attr_max_temp = controller.max_temp
 
         self._attr_unique_id = controller.device_uid
-        self._attr_name = f"Escea Fireplace {self._attr_unique_id}"
 
         # temporary assignment to get past mypy checker
         unique_id: str = controller.device_uid
@@ -100,7 +101,7 @@ class ControllerEntity(ClimateEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(ESCEA, unique_id)},
             manufacturer=ESCEA_MANUFACTURER,
-            name=self.name,
+            name=ESCEA_FIREPLACE,
         )
 
         self._attr_available = True
