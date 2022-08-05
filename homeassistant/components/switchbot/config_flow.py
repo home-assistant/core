@@ -73,6 +73,8 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
             "name": data["modelFriendlyName"],
             "address": short_address(discovery_info.address),
         }
+        if self._discovered_adv.data["isEncrypted"]:
+            return await self.async_step_password()
         return await self.async_step_confirm()
 
     async def _async_create_entry_from_discovery(
@@ -95,9 +97,6 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_confirm(self, user_input: dict[str, Any] = None) -> FlowResult:
         """Confirm a single device."""
         assert self._discovered_adv is not None
-        if self._discovered_adv.data["isEncrypted"]:
-            return await self.async_step_password()
-
         if user_input is not None:
             return await self._async_create_entry_from_discovery(user_input)
 

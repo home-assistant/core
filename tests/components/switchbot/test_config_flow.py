@@ -51,6 +51,34 @@ async def test_bluetooth_discovery(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_bluetooth_discovery_requires_password(hass):
+    """Test discovery via bluetooth with a valid device that needs a password."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_BLUETOOTH},
+        data=WOHAND_ENCRYPTED_SERVICE_INFO,
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "password"
+
+    with patch_async_setup_entry() as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_PASSWORD: "abc123"},
+        )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Bot 923B"
+    assert result["data"] == {
+        CONF_ADDRESS: "798A8547-2A3D-C609-55FF-73FA824B923B",
+        CONF_SENSOR_TYPE: "bot",
+        CONF_PASSWORD: "abc123",
+    }
+
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
 async def test_bluetooth_discovery_already_setup(hass):
     """Test discovery via bluetooth with a valid device when already setup."""
     entry = MockConfigEntry(
