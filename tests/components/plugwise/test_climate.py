@@ -1,7 +1,7 @@
 """Tests for the Plugwise Climate integration."""
 from unittest.mock import MagicMock
 
-from plugwise.exceptions import PlugwiseException
+from plugwise.exceptions import PlugwiseError
 import pytest
 
 from homeassistant.components.climate.const import HVACMode
@@ -84,9 +84,9 @@ async def test_adam_climate_adjust_negative_testing(
     hass: HomeAssistant, mock_smile_adam: MagicMock, init_integration: MockConfigEntry
 ) -> None:
     """Test exceptions of climate entities."""
-    mock_smile_adam.set_preset.side_effect = PlugwiseException
-    mock_smile_adam.set_schedule_state.side_effect = PlugwiseException
-    mock_smile_adam.set_temperature.side_effect = PlugwiseException
+    mock_smile_adam.set_preset.side_effect = PlugwiseError
+    mock_smile_adam.set_schedule_state.side_effect = PlugwiseError
+    mock_smile_adam.set_temperature.side_effect = PlugwiseError
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
@@ -121,6 +121,23 @@ async def test_adam_climate_entity_climate_changes(
         "c50f167537524366a5af7aa3942feb1e", {"setpoint": 25.0}
     )
 
+    await hass.services.async_call(
+        "climate",
+        "set_temperature",
+        {
+            "entity_id": "climate.zone_lisa_wk",
+            "hvac_mode": "heat",
+            "temperature": 25,
+        },
+        blocking=True,
+    )
+
+    assert mock_smile_adam.set_temperature.call_count == 2
+    assert mock_smile_adam.set_schedule_state.call_count == 1
+    mock_smile_adam.set_temperature.assert_called_with(
+        "c50f167537524366a5af7aa3942feb1e", {"setpoint": 25.0}
+    )
+
     with pytest.raises(ValueError):
         await hass.services.async_call(
             "climate",
@@ -148,7 +165,7 @@ async def test_adam_climate_entity_climate_changes(
         blocking=True,
     )
 
-    assert mock_smile_adam.set_temperature.call_count == 2
+    assert mock_smile_adam.set_temperature.call_count == 3
     mock_smile_adam.set_temperature.assert_called_with(
         "82fa13f017d240daa0d0ea1775420f24", {"setpoint": 25.0}
     )

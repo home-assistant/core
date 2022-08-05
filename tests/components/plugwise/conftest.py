@@ -78,8 +78,6 @@ def mock_smile_adam() -> Generator[None, MagicMock, None]:
     ) as smile_mock:
         smile = smile_mock.return_value
 
-        smile.elga_cooling_enabled = False
-        smile.lortherm_cooling_enabled = False
         smile.gateway_id = "fe799307f1624099878210aa0b9f1475"
         smile.heater_id = "90986d591dcd426cae3ec3e8111ff730"
         smile.smile_version = "3.0.15"
@@ -105,8 +103,6 @@ def mock_smile_adam_2() -> Generator[None, MagicMock, None]:
     ) as smile_mock:
         smile = smile_mock.return_value
 
-        smile.elga_cooling_enabled = False
-        smile.lortherm_cooling_enabled = False
         smile.gateway_id = "da224107914542988a88561b4452b0f6"
         smile.heater_id = "056ee145a816487eaa69243c3280f8bf"
         smile.smile_version = "3.6.4"
@@ -132,8 +128,6 @@ def mock_smile_adam_3() -> Generator[None, MagicMock, None]:
     ) as smile_mock:
         smile = smile_mock.return_value
 
-        smile.elga_cooling_enabled = False
-        smile.lortherm_cooling_enabled = False
         smile.gateway_id = "da224107914542988a88561b4452b0f6"
         smile.heater_id = "056ee145a816487eaa69243c3280f8bf"
         smile.smile_version = "3.6.4"
@@ -158,8 +152,6 @@ def mock_smile_anna() -> Generator[None, MagicMock, None]:
     ) as smile_mock:
         smile = smile_mock.return_value
 
-        smile.elga_cooling_enabled = True
-        smile.lortherm_cooling_enabled = False
         smile.gateway_id = "015ae9ea3f964e668e490fa39da3870b"
         smile.heater_id = "1cbf783bb11e4a7c8a6843dee3a86927"
         smile.smile_version = "4.0.15"
@@ -184,8 +176,6 @@ def mock_smile_anna_2() -> Generator[None, MagicMock, None]:
     ) as smile_mock:
         smile = smile_mock.return_value
 
-        smile.elga_cooling_enabled = True
-        smile.lortherm_cooling_enabled = False
         smile.gateway_id = "015ae9ea3f964e668e490fa39da3870b"
         smile.heater_id = "1cbf783bb11e4a7c8a6843dee3a86927"
         smile.smile_version = "4.0.15"
@@ -210,8 +200,6 @@ def mock_smile_anna_3() -> Generator[None, MagicMock, None]:
     ) as smile_mock:
         smile = smile_mock.return_value
 
-        smile.elga_cooling_enabled = True
-        smile.lortherm_cooling_enabled = False
         smile.gateway_id = "015ae9ea3f964e668e490fa39da3870b"
         smile.heater_id = "1cbf783bb11e4a7c8a6843dee3a86927"
         smile.smile_version = "4.0.15"
