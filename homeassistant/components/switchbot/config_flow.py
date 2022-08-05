@@ -31,7 +31,7 @@ def short_address(address: str) -> str:
     results = address.replace("-", ":").split(":")
     if len(results[-1]) == 2:
         return f"{results[-2].upper()}{results[-1].upper()}"
-    return results[-1].upper()
+    return results[-1].upper()[-4]
 
 
 def name_from_discovery(discovery: SwitchBotAdvertisement) -> str:
