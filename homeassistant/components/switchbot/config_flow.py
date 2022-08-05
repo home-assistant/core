@@ -84,10 +84,15 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self._discovered_adv is not None
         discovery = self._discovered_adv
         name = name_from_discovery(discovery)
-        user_input[CONF_SENSOR_TYPE] = SUPPORTED_MODEL_TYPES[
-            discovery.data["modelName"]
-        ]
-        return self.async_create_entry(title=name, data=user_input)
+        model_name = discovery.data["modelName"]
+        return self.async_create_entry(
+            title=name,
+            data={
+                **user_input,
+                CONF_ADDRESS: discovery.address,
+                CONF_SENSOR_TYPE: SUPPORTED_MODEL_TYPES[model_name],
+            },
+        )
 
     async def async_step_confirm(self, user_input: dict[str, Any] = None) -> FlowResult:
         """Confirm a single device."""
