@@ -24,6 +24,7 @@
                 "title": "Enheten paras redan med en annan styrenhet"
             },
             "max_tries_error": {
+                "description": "Enheten har f\u00e5tt mer \u00e4n 100 misslyckade autentiseringsf\u00f6rs\u00f6k. Testa att starta om enheten och forts\u00e4tt sedan att \u00e5teruppta ihopkopplingen.",
                 "title": "Maximalt antal autentiseringsf\u00f6rs\u00f6k har \u00f6verskridits"
             },
             "pair": {

@@ -7,6 +7,15 @@
       "minimal": "Minimal End Device",
       "sleepy": "Sleepy End Device",
       "none": "None"
+    },
+    "homekit_controller__thread_status": {
+      "border_router": "Border Router",
+      "leader": "Leader",
+      "router": "Router",
+      "child": "Child",
+      "joining": "Joining",
+      "detached": "Detached",
+      "disabled": "Disabled"
     }
   }
 }
