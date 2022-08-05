@@ -261,4 +261,4 @@ async def test_switch_services(
         )
 
         await hass.async_block_till_done()
-    assert str(exc_info.value) == 'Entity is not a WiLight valve switch'
+    assert str(exc_info.value) == "Entity is not a WiLight valve switch"
