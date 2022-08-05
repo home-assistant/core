@@ -5,9 +5,20 @@ from ipaddress import IPv4Address
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from pyunifiprotect.data import Bootstrap, Camera, Event, EventType, Permission
+from pyunifiprotect.data import (
+    Bootstrap,
+    Camera,
+    Event,
+    EventType,
+    Permission,
+    SmartDetectObjectType,
+)
 from pyunifiprotect.exceptions import NvrError
 
+from homeassistant.components.media_player.const import (
+    MEDIA_CLASS_IMAGE,
+    MEDIA_CLASS_VIDEO,
+)
 from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.components.media_source import MediaSourceItem
 from homeassistant.components.unifiprotect.const import DOMAIN
@@ -387,7 +398,7 @@ async def test_browse_media_camera_offline(
     assert browse.children[1].thumbnail is None
 
 
-async def test_browse_media_event(
+async def test_browse_media_event_type(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
 ):
     """Test browsing event type selector level media."""
@@ -444,3 +455,329 @@ async def test_browse_media_time(
         browse.children[3].identifier
         == f"{base_id}:browse:{fixed_now.year}:{fixed_now.month}"
     )
+
+
+async def test_browse_media_recent(
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, fixed_now: datetime
+):
+    """Test browsing event selector level media for recent days."""
+
+    ufp.api.get_bootstrap = AsyncMock(return_value=ufp.api.bootstrap)
+    await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
+
+    event = Event(
+        id="test_event_id",
+        type=EventType.MOTION,
+        start=fixed_now - timedelta(seconds=20),
+        end=fixed_now,
+        score=100,
+        smart_detect_types=[],
+        smart_detect_event_ids=[],
+        camera_id=doorbell.id,
+    )
+    event._api = ufp.api
+    ufp.api.get_events_raw = AsyncMock(return_value=[event.unifi_dict()])
+
+    base_id = f"test_id:{doorbell.id}:motion:recent:1"
+    source = await async_get_media_source(hass)
+    media_item = MediaSourceItem(hass, DOMAIN, base_id, None)
+
+    browse = await source.async_browse_media(media_item)
+
+    assert (
+        browse.title
+        == f"UnifiProtect > {doorbell.name} > Motion Events > Last 24 Hours (1)"
+    )
+    assert browse.identifier == base_id
+    assert len(browse.children) == 1
+    assert browse.children[0].identifier == "test_id:event:test_event_id"
+
+
+async def test_browse_media_recent_truncated(
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, fixed_now: datetime
+):
+    """Test browsing event selector level media for recent days."""
+
+    ufp.entry.options = {"max_media": 1}
+
+    ufp.api.get_bootstrap = AsyncMock(return_value=ufp.api.bootstrap)
+    await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
+
+    event = Event(
+        id="test_event_id",
+        type=EventType.MOTION,
+        start=fixed_now - timedelta(seconds=20),
+        end=fixed_now,
+        score=100,
+        smart_detect_types=[],
+        smart_detect_event_ids=[],
+        camera_id=doorbell.id,
+    )
+    event._api = ufp.api
+    ufp.api.get_events_raw = AsyncMock(return_value=[event.unifi_dict()])
+
+    base_id = f"test_id:{doorbell.id}:motion:recent:1"
+    source = await async_get_media_source(hass)
+    media_item = MediaSourceItem(hass, DOMAIN, base_id, None)
+
+    browse = await source.async_browse_media(media_item)
+
+    assert (
+        browse.title
+        == f"UnifiProtect > {doorbell.name} > Motion Events > Last 24 Hours (1 TRUNCATED)"
+    )
+    assert browse.identifier == base_id
+    assert len(browse.children) == 1
+    assert browse.children[0].identifier == "test_id:event:test_event_id"
+
+
+async def test_browse_media_event(
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, fixed_now: datetime
+):
+    """Test browsing specific event."""
+
+    ufp.api.get_bootstrap = AsyncMock(return_value=ufp.api.bootstrap)
+    await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
+
+    event = Event(
+        id="test_event_id",
+        type=EventType.RING,
+        start=fixed_now - timedelta(seconds=20),
+        end=fixed_now,
+        score=100,
+        smart_detect_types=[],
+        smart_detect_event_ids=[],
+        camera_id=doorbell.id,
+    )
+    event._api = ufp.api
+    ufp.api.get_event = AsyncMock(return_value=event)
+
+    source = await async_get_media_source(hass)
+    media_item = MediaSourceItem(hass, DOMAIN, "test_id:event:test_event_id", None)
+
+    browse = await source.async_browse_media(media_item)
+
+    assert browse.identifier == "test_id:event:test_event_id"
+    assert browse.children is None
+    assert browse.media_class == MEDIA_CLASS_VIDEO
+
+
+async def test_browse_media_eventthumb(
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, fixed_now: datetime
+):
+    """Test browsing specific event."""
+
+    ufp.api.get_bootstrap = AsyncMock(return_value=ufp.api.bootstrap)
+    await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
+
+    event = Event(
+        id="test_event_id",
+        type=EventType.SMART_DETECT,
+        start=fixed_now - timedelta(seconds=20),
+        end=fixed_now,
+        score=100,
+        smart_detect_types=[SmartDetectObjectType.PERSON],
+        smart_detect_event_ids=[],
+        camera_id=doorbell.id,
+    )
+    event._api = ufp.api
+    ufp.api.get_event = AsyncMock(return_value=event)
+
+    source = await async_get_media_source(hass)
+    media_item = MediaSourceItem(hass, DOMAIN, "test_id:eventthumb:test_event_id", None)
+
+    browse = await source.async_browse_media(media_item)
+
+    assert browse.identifier == "test_id:eventthumb:test_event_id"
+    assert browse.children is None
+    assert browse.media_class == MEDIA_CLASS_IMAGE
+
+
+async def test_browse_media_day(
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, fixed_now: datetime
+):
+    """Test browsing day selector level media."""
+
+    last_month = fixed_now.replace(day=1) - timedelta(days=1)
+    ufp.api.bootstrap._recording_start = last_month
+
+    ufp.api.get_bootstrap = AsyncMock(return_value=ufp.api.bootstrap)
+    await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
+
+    base_id = f"test_id:{doorbell.id}:all:browse:{fixed_now.year}:{fixed_now.month}"
+    source = await async_get_media_source(hass)
+    media_item = MediaSourceItem(hass, DOMAIN, base_id, None)
+
+    browse = await source.async_browse_media(media_item)
+
+    assert (
+        browse.title
+        == f"UnifiProtect > {doorbell.name} > All Events > {fixed_now.strftime('%B %Y')}"
+    )
+    assert browse.identifier == base_id
+    assert len(browse.children) in (29, 30, 31, 32)
+    assert browse.children[0].title == "Whole Month"
+    assert browse.children[0].identifier == f"{base_id}:all"
+
+
+async def test_browse_media_browse_day(
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, fixed_now: datetime
+):
+    """Test events for a specific day."""
+
+    last_month = fixed_now.replace(day=1) - timedelta(days=1)
+    ufp.api.bootstrap._recording_start = last_month
+
+    ufp.api.get_bootstrap = AsyncMock(return_value=ufp.api.bootstrap)
+    await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
+
+    event = Event(
+        id="test_event_id",
+        type=EventType.MOTION,
+        start=fixed_now - timedelta(seconds=20),
+        end=fixed_now,
+        score=100,
+        smart_detect_types=[],
+        smart_detect_event_ids=[],
+        camera_id=doorbell.id,
+    )
+    event._api = ufp.api
+    ufp.api.get_events_raw = AsyncMock(return_value=[event.unifi_dict()])
+
+    base_id = (
+        f"test_id:{doorbell.id}:motion:browse:{fixed_now.year}:{fixed_now.month}:1"
+    )
+    source = await async_get_media_source(hass)
+    media_item = MediaSourceItem(hass, DOMAIN, base_id, None)
+
+    browse = await source.async_browse_media(media_item)
+
+    start = fixed_now.replace(day=1)
+    assert (
+        browse.title
+        == f"UnifiProtect > {doorbell.name} > Motion Events > {fixed_now.strftime('%B %Y')} > {start.strftime('%x')} (1)"
+    )
+    assert browse.identifier == base_id
+    assert len(browse.children) == 1
+    assert browse.children[0].identifier == "test_id:event:test_event_id"
+
+
+async def test_browse_media_browse_whole_month(
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, fixed_now: datetime
+):
+    """Test events for a specific day."""
+
+    fixed_now = fixed_now.replace(month=11)
+    last_month = fixed_now.replace(day=1) - timedelta(days=1)
+    ufp.api.bootstrap._recording_start = last_month
+
+    ufp.api.get_bootstrap = AsyncMock(return_value=ufp.api.bootstrap)
+    await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
+
+    event = Event(
+        id="test_event_id",
+        type=EventType.MOTION,
+        start=fixed_now - timedelta(seconds=20),
+        end=fixed_now,
+        score=100,
+        smart_detect_types=[],
+        smart_detect_event_ids=[],
+        camera_id=doorbell.id,
+    )
+    event._api = ufp.api
+    ufp.api.get_events_raw = AsyncMock(return_value=[event.unifi_dict()])
+
+    base_id = f"test_id:{doorbell.id}:all:browse:{fixed_now.year}:{fixed_now.month}:all"
+    source = await async_get_media_source(hass)
+    media_item = MediaSourceItem(hass, DOMAIN, base_id, None)
+
+    browse = await source.async_browse_media(media_item)
+
+    assert (
+        browse.title
+        == f"UnifiProtect > {doorbell.name} > All Events > {fixed_now.strftime('%B %Y')} > Whole Month (1)"
+    )
+    assert browse.identifier == base_id
+    assert len(browse.children) == 1
+    assert browse.children[0].identifier == "test_id:event:test_event_id"
+
+
+async def test_browse_media_browse_whole_month_december(
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, fixed_now: datetime
+):
+    """Test events for a specific day."""
+
+    fixed_now = fixed_now.replace(month=12)
+    last_month = fixed_now.replace(day=1) - timedelta(days=1)
+    ufp.api.bootstrap._recording_start = last_month
+
+    ufp.api.get_bootstrap = AsyncMock(return_value=ufp.api.bootstrap)
+    await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
+
+    event1 = Event(
+        id="test_event_id",
+        type=EventType.SMART_DETECT,
+        start=fixed_now - timedelta(seconds=3663),
+        end=fixed_now,
+        score=100,
+        smart_detect_types=[SmartDetectObjectType.PERSON],
+        smart_detect_event_ids=[],
+        camera_id=doorbell.id,
+    )
+    event1._api = ufp.api
+    event2 = Event(
+        id="test_event_id2",
+        type=EventType.MOTION,
+        start=fixed_now - timedelta(seconds=20),
+        end=fixed_now,
+        score=100,
+        smart_detect_types=[],
+        smart_detect_event_ids=["test_event_id"],
+        camera_id=doorbell.id,
+    )
+    event2._api = ufp.api
+    event3 = Event(
+        id="test_event_id3",
+        type=EventType.MOTION,
+        start=fixed_now - timedelta(seconds=20),
+        end=fixed_now,
+        score=100,
+        smart_detect_types=[],
+        smart_detect_event_ids=[],
+        camera_id="other_camera",
+    )
+    event3._api = ufp.api
+    event4 = Event(
+        id="test_event_id4",
+        type=EventType.MOTION,
+        start=fixed_now - timedelta(seconds=20),
+        end=None,
+        score=100,
+        smart_detect_types=[],
+        smart_detect_event_ids=[],
+        camera_id=doorbell.id,
+    )
+    event4._api = ufp.api
+
+    ufp.api.get_events_raw = AsyncMock(
+        return_value=[
+            event1.unifi_dict(),
+            event2.unifi_dict(),
+            event3.unifi_dict(),
+            event4.unifi_dict(),
+        ]
+    )
+
+    base_id = f"test_id:{doorbell.id}:all:browse:{fixed_now.year}:{fixed_now.month}:all"
+    source = await async_get_media_source(hass)
+    media_item = MediaSourceItem(hass, DOMAIN, base_id, None)
+
+    browse = await source.async_browse_media(media_item)
+
+    assert (
+        browse.title
+        == f"UnifiProtect > {doorbell.name} > All Events > {fixed_now.strftime('%B %Y')} > Whole Month (1)"
+    )
+    assert browse.identifier == base_id
+    assert len(browse.children) == 1
+    assert browse.children[0].identifier == "test_id:event:test_event_id"
