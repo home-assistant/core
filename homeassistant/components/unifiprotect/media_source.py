@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 from datetime import date, datetime, timedelta
-from enum import Enum
 from typing import Any, cast
 
 from pyunifiprotect.data import Camera, Event, EventType, SmartDetectObjectType
@@ -32,45 +31,12 @@ from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .data import ProtectData
+from .models import SimpleEventType
 from .views import async_generate_event_video_url, async_generate_thumbnail_url
 
 VIDEO_FORMAT = "video/mp4"
 THUMBNAIL_WIDTH = 185
 THUMBNAIL_HEIGHT = 185
-
-
-class SimpleEventType(str, Enum):
-    """Enum to Camera Video events."""
-
-    ALL = "All Events"
-    RING = "Ring Events"
-    MOTION = "Motion Events"
-    SMART = "Smart Detections"
-
-    @classmethod
-    def get_from_name(cls, name: str) -> SimpleEventType:
-        """Get SimpleEventType from name."""
-
-        if name.lower() == "smart_detect":
-            return SimpleEventType.SMART
-
-        types: list[SimpleEventType] = list(cls)
-        for event_type in types:
-            if event_type.name.lower() == name.lower():
-                return event_type
-        raise ValueError("Invalid event_type")
-
-    @classmethod
-    def get_event_type(cls, event_type: SimpleEventType) -> EventType | None:
-        """Get UniFi Protect event type from SimpleEventType."""
-
-        if event_type == SimpleEventType.ALL:
-            return None
-        if event_type == SimpleEventType.RING:
-            return EventType.RING
-        if event_type == SimpleEventType.MOTION:
-            return EventType.MOTION
-        return EventType.SMART_DETECT
 
 
 async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
@@ -449,7 +415,7 @@ class ProtectMediaSource(MediaSource):
             # smart detect events have a paired motion event
             if (
                 event.get("type") == EventType.MOTION.value
-                and len(event.get("smartDetectTypes", [])) > 0
+                and len(event.get("smartDetectEvents", [])) > 0
             ):
                 continue
 
