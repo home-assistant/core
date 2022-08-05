@@ -164,6 +164,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         device_adv: SwitchBotAdvertisement | None = None
         if user_input is not None:
             device_adv = self._discovered_advs[user_input[CONF_ADDRESS]]
+            await self._async_set_device(device_adv)
             if device_adv.data["isEncrypted"]:
                 return await self.async_step_password()
             return await self._async_create_entry_from_discovery(user_input)
@@ -171,6 +172,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         self._async_discover_devices()
         if len(self._discovered_advs) == 1:
             device_adv = list(self._discovered_advs.values())[0]
+            await self._async_set_device(device_adv)
             if device_adv.data["isEncrypted"]:
                 return await self.async_step_password()
             return await self.async_step_confirm()
