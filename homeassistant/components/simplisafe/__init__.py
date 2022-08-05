@@ -275,7 +275,7 @@ def _async_log_deprecated_service_call(
         DOMAIN,
         f"deprecated_service_{deprecated_service}",
         breaks_in_ha_version=breaks_in_ha_version,
-        is_fixable=False,
+        is_fixable=True,
         is_persistent=True,
         severity=IssueSeverity.WARNING,
         translation_key="deprecated_service",
