@@ -48,7 +48,6 @@ VALID_WATERING_TIME = vol.All(
     vol.Coerce(int), vol.Range(min=1, max=RANGE_WATERING_TIME)
 )
 VALID_PAUSE_TIME = vol.All(vol.Coerce(int), vol.Range(min=1, max=RANGE_PAUSE_TIME))
-VALID_TRIGGER = wl_trigger
 VALID_TRIGGER_INDEX = vol.All(
     vol.Coerce(int), vol.Range(min=1, max=RANGE_TRIGGER_INDEX)
 )
@@ -122,7 +121,7 @@ async def async_setup_entry(
         SERVICE_SET_TRIGGER,
         {
             vol.Required(ATTR_TRIGGER_INDEX): VALID_TRIGGER_INDEX,
-            vol.Required(ATTR_TRIGGER): VALID_TRIGGER,
+            vol.Required(ATTR_TRIGGER): wl_trigger,
         },
         set_trigger,
     )
