@@ -64,10 +64,14 @@ class RepairsFlowManager(data_entry_flow.FlowManager):
 
         platforms: dict[str, RepairsProtocol] = self.hass.data[DOMAIN]["platforms"]
         if handler_key not in platforms:
-            return ConfirmRepairFlow()
-        platform = platforms[handler_key]
+            flow: RepairsFlow = ConfirmRepairFlow()
+        else:
+            platform = platforms[handler_key]
+            flow = await platform.async_create_fix_flow(self.hass, issue_id, issue.data)
 
-        return await platform.async_create_fix_flow(self.hass, issue_id, issue.data)
+        flow.issue_id = issue_id
+        flow.data = issue.data
+        return flow
 
     async def async_finish_flow(
         self, flow: data_entry_flow.FlowHandler, result: data_entry_flow.FlowResult

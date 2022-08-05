@@ -19,6 +19,9 @@ class IssueSeverity(StrEnum):
 class RepairsFlow(data_entry_flow.FlowHandler):
     """Handle a flow for fixing an issue."""
 
+    issue_id: str
+    data: dict[str, str | int | float | None] | None
+
 
 class RepairsProtocol(Protocol):
     """Define the format of repairs platforms."""
