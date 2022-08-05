@@ -8,6 +8,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.setup import async_setup_component
 
 
+@patch("homeassistant.components.requests.async_setup")
 async def test_hassio_discovery_startup(hass, aioclient_mock, hassio_client):
     """Test startup and discovery after event."""
     aioclient_mock.get(

@@ -130,11 +130,11 @@ async def _async_setup_entity(
         async_create_issue(
             hass,
             "mqtt",
-            "encoding_b64",
+            "2208_01_camera_encoding_b64",
             breaks_in_ha_version="2022.11.0",
             is_fixable=False,
             severity=IssueSeverity.WARNING,
-            translation_key="encoding_b64",
+            translation_key="2208_01_camera_encoding_b64",
             learn_more_url="https://www.home-assistant.io/integrations/camera.mqtt/",
         )
         _LOGGER.warning(
