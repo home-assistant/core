@@ -83,7 +83,7 @@ async def async_attach_trigger(
         _LOGGER.warning(
             "Deprecation warning: "
             "Webhook '%s' does not provide a value for local_only. "
-            "The default value will be 'true' in the 2022.8.0 release",
+            "The default value will be 'true' in the 2023.1.0 release",
             webhook_id,
         )
     allowed_methods = config.get(CONF_ALLOWED_METHODS, DEFAULT_METHODS)
