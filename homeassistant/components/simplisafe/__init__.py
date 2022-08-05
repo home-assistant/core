@@ -45,6 +45,7 @@ from simplipy.websocket import (
 )
 import voluptuous as vol
 
+from homeassistant.components.repairs import IssueSeverity, async_create_issue
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     ATTR_CODE,
@@ -264,14 +265,34 @@ def _async_log_deprecated_service_call(
     call: ServiceCall,
     alternate_service: str,
     alternate_target: str,
+    breaks_in_ha_version: str,
 ) -> None:
     """Log a warning about a deprecated service call."""
+    deprecated_service = f"{call.domain}.{call.service}"
+
+    async_create_issue(
+        hass,
+        DOMAIN,
+        f"deprecated_service_{deprecated_service}",
+        breaks_in_ha_version=breaks_in_ha_version,
+        is_fixable=False,
+        is_persistent=True,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_service",
+        translation_placeholders={
+            "alternate_service": alternate_service,
+            "alternate_target": alternate_target,
+            "deprecated_service": deprecated_service,
+        },
+    )
+
     LOGGER.warning(
         (
-            'The "%s" service is deprecated and will be removed in a future version; '
-            'use the "%s" service and pass it a target entity ID of "%s"'
+            'The "%s" service is deprecated and will be removed in %s; use the "%s" '
+            'service and pass it a target entity ID of "%s"'
         ),
-        f"{call.domain}.{call.service}",
+        deprecated_service,
+        breaks_in_ha_version,
         alternate_service,
         alternate_target,
     )
@@ -372,6 +393,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             call,
             "button.press",
             "button.alarm_control_panel_clear_notifications",
+            "2022.11.0",
         )
         await system.async_clear_notifications()
 

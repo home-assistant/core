@@ -29,5 +29,11 @@
         }
       }
     }
+  },
+  "issues": {
+    "deprecated_service": {
+      "title": "The {deprecated_service} service is deprecated",
+      "description": "This service is deprecated. Use the `{alternate_service}` service and pass it a target entity ID of `{alternate_target}` instead."
+    }
   }
 }
