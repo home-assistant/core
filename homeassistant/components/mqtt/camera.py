@@ -9,7 +9,6 @@ import voluptuous as vol
 
 from homeassistant.components import camera
 from homeassistant.components.camera import Camera
-from homeassistant.components.repairs import IssueSeverity, async_create_issue
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
@@ -34,7 +33,6 @@ from .util import valid_subscribe_topic
 _LOGGER = logging.getLogger(__name__)
 
 CONF_IMAGE_ENCODING = "image_encoding"
-REPAIR_IMAGE_ENCODING = "repair_image_encoding"
 
 DEFAULT_NAME = "MQTT Camera"
 
@@ -54,7 +52,6 @@ def repair_legacy_encoding(config: ConfigType) -> ConfigType:
     if config[CONF_ENCODING] == "b64":
         config[CONF_IMAGE_ENCODING] = "b64"
         config[CONF_ENCODING] = DEFAULT_ENCODING
-        config[REPAIR_IMAGE_ENCODING] = True
         _LOGGER.warning(
             "Using the `encoding` parameter to set image encoding has been deprecated, use `image_encoding` instead"
         )
@@ -124,23 +121,6 @@ async def _async_setup_entity(
     discovery_data: dict | None = None,
 ) -> None:
     """Set up the MQTT Camera."""
-    # Using CONF_ENCODING to set b64 encoding for images is deprecated as of Home Assistant 2022.9, use CONF_IMAGE_ENCODING instead
-    if REPAIR_IMAGE_ENCODING in config:
-        del config[REPAIR_IMAGE_ENCODING]
-        async_create_issue(
-            hass,
-            "mqtt",
-            "2208_01_camera_encoding_b64",
-            breaks_in_ha_version="2022.11.0",
-            is_fixable=False,
-            severity=IssueSeverity.WARNING,
-            translation_key="2208_01_camera_encoding_b64",
-            learn_more_url="https://www.home-assistant.io/integrations/camera.mqtt/",
-        )
-        _LOGGER.warning(
-            "Using the `encoding` parameter to set image encoding has been deprecated, use `image_encoding` instead"
-        )
-
     async_add_entities([MqttCamera(hass, config, config_entry, discovery_data)])
 
 
