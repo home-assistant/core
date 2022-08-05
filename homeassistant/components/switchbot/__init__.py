@@ -45,6 +45,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Switchbot from a config entry."""
+    assert entry.unique_id is not None
     hass.data.setdefault(DOMAIN, {})
     if CONF_ADDRESS not in entry.data and CONF_MAC in entry.data:
         # Bleak uses addresses not mac addresses which are are actually
@@ -77,7 +78,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         retry_count=entry.options[CONF_RETRY_COUNT],
     )
     coordinator = hass.data[DOMAIN][entry.entry_id] = SwitchbotDataUpdateCoordinator(
-        hass, _LOGGER, ble_device, device, entry.data.get(CONF_NAME, entry.title)
+        hass,
+        _LOGGER,
+        ble_device,
+        device,
+        entry.unique_id,
+        entry.data.get(CONF_NAME, entry.title),
     )
     entry.async_on_unload(coordinator.async_start())
     if not await coordinator.async_wait_ready():

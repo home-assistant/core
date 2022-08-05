@@ -72,7 +72,7 @@ class SwitchBotBinarySensor(SwitchbotEntity, BinarySensorEntity):
         """Initialize the Switchbot sensor."""
         super().__init__(coordinator)
         self._sensor = binary_sensor
-        self._attr_unique_id = f"{self._address}-{binary_sensor}"
+        self._attr_unique_id = f"{coordinator.base_unique_id}-{binary_sensor}"
         self.entity_description = BINARY_SENSOR_TYPES[binary_sensor]
         self._attr_name = self.entity_description.name
 

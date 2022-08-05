@@ -37,6 +37,7 @@ class SwitchbotDataUpdateCoordinator(PassiveBluetoothDataUpdateCoordinator):
         logger: logging.Logger,
         ble_device: BLEDevice,
         device: switchbot.SwitchbotDevice,
+        base_unique_id: str,
         device_name: str,
     ) -> None:
         """Initialize global switchbot data updater."""
@@ -47,6 +48,7 @@ class SwitchbotDataUpdateCoordinator(PassiveBluetoothDataUpdateCoordinator):
         self.device = device
         self.data: dict[str, Any] = {}
         self.device_name = device_name
+        self.base_unique_id = base_unique_id
         self._ready_event = asyncio.Event()
 
     @callback
