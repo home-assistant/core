@@ -45,6 +45,7 @@ FLOWS = {
         "apcupsd",
         "apple_tv",
         "aranet",
+        "aqara",
         "arcam_fmj",
         "aseko_pool_live",
         "asuswrt",

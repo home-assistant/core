@@ -328,6 +328,9 @@ aprslib==0.7.0
 # homeassistant.components.aranet
 aranet4==2.1.3
 
+# homeassistant.components.aqara
+aqara-iot-py-sdk==1.0.7
+
 # homeassistant.components.arcam_fmj
 arcam-fmj==1.3.0
 
