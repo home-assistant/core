@@ -29,7 +29,7 @@ class SwitchbotEntity(PassiveBluetoothCoordinatorEntity):
         self._device = coordinator.device
         self._last_run_success: bool | None = None
         self._address = coordinator.ble_device.address
-        self._attr_unique_id = self._address
+        self._attr_unique_id = coordinator.base_unique_id
         self._attr_name = coordinator.device_name
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_BLUETOOTH, self._address)},
