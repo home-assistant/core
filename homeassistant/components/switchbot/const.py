@@ -1,6 +1,8 @@
 """Constants for the switchbot integration."""
 from switchbot import SwitchbotModel
 
+from homeassistant.backports.enum import StrEnum
+
 DOMAIN = "switchbot"
 MANUFACTURER = "switchbot"
 
@@ -8,14 +10,27 @@ MANUFACTURER = "switchbot"
 
 DEFAULT_NAME = "Switchbot"
 
+
+class SupportedModels(StrEnum):
+    """Supported Switchbot models."""
+
+    BOT = "bot"
+    BULB = "bulb"
+    CURTAIN = "curtain"
+    HYGROMETER = "hygrometer"
+    CONTACT = "contact"
+    PLUG = "plug"
+    MOTION = "motion"
+
+
 SUPPORTED_MODEL_TYPES = {
-    SwitchbotModel.BOT,
-    SwitchbotModel.CURTAIN,
-    SwitchbotModel.METER,
-    SwitchbotModel.CONTACT_SENSOR,
-    SwitchbotModel.PLUG_MINI,
-    SwitchbotModel.MOTION_SENSOR,
-    SwitchbotModel.COLOR_BULB,
+    SwitchbotModel.BOT: SupportedModels.BOT,
+    SwitchbotModel.CURTAIN: SupportedModels.CURTAIN,
+    SwitchbotModel.METER: SupportedModels.HYGROMETER,
+    SwitchbotModel.CONTACT_SENSOR: SupportedModels.CONTACT,
+    SwitchbotModel.PLUG_MINI: SupportedModels.PLUG,
+    SwitchbotModel.MOTION_SENSOR: SupportedModels.MOTION,
+    SwitchbotModel.COLOR_BULB: SupportedModels.BULB,
 }
 
 

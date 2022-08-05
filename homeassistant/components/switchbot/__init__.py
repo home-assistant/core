@@ -3,13 +3,13 @@
 import logging
 
 import switchbot
-from switchbot import SwitchbotModel
 
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_MAC,
+    CONF_NAME,
     CONF_PASSWORD,
     CONF_SENSOR_TYPE,
     Platform,
@@ -18,22 +18,26 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
-from .const import CONF_RETRY_COUNT, DEFAULT_RETRY_COUNT, DOMAIN
+from .const import CONF_RETRY_COUNT, DEFAULT_RETRY_COUNT, DOMAIN, SupportedModels
 from .coordinator import SwitchbotDataUpdateCoordinator
 
 PLATFORMS_BY_TYPE = {
-    SwitchbotModel.COLOR_BULB: [Platform.SENSOR],
-    SwitchbotModel.BOT: [Platform.SWITCH, Platform.SENSOR],
-    SwitchbotModel.PLUG_MINI: [Platform.SWITCH, Platform.SENSOR],
-    SwitchbotModel.CURTAIN: [Platform.COVER, Platform.BINARY_SENSOR, Platform.SENSOR],
-    SwitchbotModel.METER: [Platform.SENSOR],
-    SwitchbotModel.CONTACT_SENSOR: [Platform.BINARY_SENSOR, Platform.SENSOR],
-    SwitchbotModel.MOTION_SENSOR: [Platform.BINARY_SENSOR, Platform.SENSOR],
+    SupportedModels.BULB.value: [Platform.SENSOR],
+    SupportedModels.BOT.value: [Platform.SWITCH, Platform.SENSOR],
+    SupportedModels.PLUG.value: [Platform.SWITCH, Platform.SENSOR],
+    SupportedModels.CURTAIN.value: [
+        Platform.COVER,
+        Platform.BINARY_SENSOR,
+        Platform.SENSOR,
+    ],
+    SupportedModels.HYGROMETER.value: [Platform.SENSOR],
+    SupportedModels.CONTACT.value: [Platform.BINARY_SENSOR, Platform.SENSOR],
+    SupportedModels.MOTION.value: [Platform.BINARY_SENSOR, Platform.SENSOR],
 }
 CLASS_BY_DEVICE = {
-    SwitchbotModel.CURTAIN: switchbot.SwitchbotCurtain,
-    SwitchbotModel.BOT: switchbot.Switchbot,
-    SwitchbotModel.PLUG_MINI: switchbot.SwitchbotPlugMini,
+    SupportedModels.CURTAIN.value: switchbot.SwitchbotCurtain,
+    SupportedModels.BOT.value: switchbot.Switchbot,
+    SupportedModels.PLUG.value: switchbot.SwitchbotPlugMini,
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -73,7 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         retry_count=entry.options[CONF_RETRY_COUNT],
     )
     coordinator = hass.data[DOMAIN][entry.entry_id] = SwitchbotDataUpdateCoordinator(
-        hass, _LOGGER, ble_device, device
+        hass, _LOGGER, ble_device, device, entry.data.get(CONF_NAME, entry.title)
     )
     entry.async_on_unload(coordinator.async_start())
     if not await coordinator.async_wait_ready():
