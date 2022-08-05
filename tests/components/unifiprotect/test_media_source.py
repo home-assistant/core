@@ -1,10 +1,11 @@
 """Tests for unifiprotect.media_source."""
 
 from datetime import datetime, timedelta
-from unittest.mock import AsyncMock
+from ipaddress import IPv4Address
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from pyunifiprotect.data import Camera, Event, EventType
+from pyunifiprotect.data import Bootstrap, Camera, Event, EventType, Permission
 from pyunifiprotect.exceptions import NvrError
 
 from homeassistant.components.media_player.errors import BrowseError
@@ -15,9 +16,12 @@ from homeassistant.components.unifiprotect.media_source import (
     async_get_media_source,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import MockUFPFixture
 from .utils import init_entry
+
+from tests.common import MockConfigEntry
 
 
 async def test_get_media_source(hass: HomeAssistant) -> None:
@@ -112,4 +116,331 @@ async def test_resolve_media_event(
     assert play_media.mime_type == "video/mp4"
     assert play_media.url.startswith(
         f"/api/unifiprotect/video/test_id/{event.camera_id}/{start}/{end}"
+    )
+
+
+@pytest.mark.parametrize(
+    "identifier",
+    [
+        "bad_id:event:test_id",
+        "test_id:all:bad_event",
+        "test_id:all:all:recent:not_a_num",
+        "test_id:all:all:browse:not_a_num",
+        "test_id:all:all:browse:2022:not_a_num",
+        "test_id:all:all:browse:2022:1:not_a_num",
+        "test_id:all:all:browse:2022:1:50",
+        "test_id:all:all:invalid",
+        "test_id:event:bad_event_id",
+        "test_id:bad_camera_id",
+    ],
+)
+async def test_browse_media_bad_identifier(
+    hass: HomeAssistant, ufp: MockUFPFixture, identifier: str
+):
+    """Test browsing media with bad identifiers."""
+
+    ufp.api.get_bootstrap = AsyncMock(return_value=ufp.api.bootstrap)
+    ufp.api.get_event = AsyncMock(side_effect=NvrError)
+    await init_entry(hass, ufp, [], regenerate_ids=False)
+
+    source = await async_get_media_source(hass)
+    media_item = MediaSourceItem(hass, DOMAIN, identifier, None)
+    with pytest.raises(BrowseError):
+        await source.async_browse_media(media_item)
+
+
+async def test_browse_media_event_ongoing(
+    hass: HomeAssistant, ufp: MockUFPFixture, fixed_now: datetime, doorbell: Camera
+):
+    """Test browsing event that is still ongoing."""
+
+    ufp.api.get_bootstrap = AsyncMock(return_value=ufp.api.bootstrap)
+    await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
+
+    event = Event(
+        id="test_event_id",
+        type=EventType.MOTION,
+        start=fixed_now - timedelta(seconds=20),
+        end=None,
+        score=100,
+        smart_detect_types=[],
+        smart_detect_event_ids=[],
+        camera_id=doorbell.id,
+    )
+    event._api = ufp.api
+    ufp.api.get_event = AsyncMock(return_value=event)
+
+    source = await async_get_media_source(hass)
+    media_item = MediaSourceItem(hass, DOMAIN, f"test_id:event:{event.id}", None)
+    with pytest.raises(BrowseError):
+        await source.async_browse_media(media_item)
+
+
+async def test_browse_media_root_multiple_consoles(
+    hass: HomeAssistant, ufp: MockUFPFixture, bootstrap: Bootstrap
+):
+    """Test browsing root level media with multiple consoles."""
+
+    ufp.api.bootstrap._has_media = True
+
+    await hass.config_entries.async_setup(ufp.entry.entry_id)
+    await hass.async_block_till_done()
+
+    bootstrap2 = bootstrap.copy()
+    bootstrap2._has_media = True
+    bootstrap2.nvr = bootstrap.nvr.copy()
+    bootstrap2.nvr.id = "test_id2"
+    bootstrap2.nvr.mac = "A2E00C826924"
+    bootstrap2.nvr.name = "UnifiProtect2"
+
+    api2 = Mock()
+    bootstrap2.nvr._api = api2
+    bootstrap2._api = api2
+
+    api2.bootstrap = bootstrap2
+    api2._bootstrap = bootstrap2
+    api2.api_path = "/api"
+    api2.base_url = "https://127.0.0.2"
+    api2.connection_host = IPv4Address("127.0.0.2")
+    api2.get_nvr = AsyncMock(return_value=bootstrap2.nvr)
+    api2.update = AsyncMock(return_value=bootstrap2)
+    api2.async_disconnect_ws = AsyncMock()
+
+    with patch("homeassistant.components.unifiprotect.ProtectApiClient") as mock_api:
+        mock_config = MockConfigEntry(
+            domain=DOMAIN,
+            data={
+                "host": "1.1.1.2",
+                "username": "test-username",
+                "password": "test-password",
+                "id": "UnifiProtect2",
+                "port": 443,
+                "verify_ssl": False,
+            },
+            version=2,
+        )
+        mock_config.add_to_hass(hass)
+
+        mock_api.return_value = api2
+
+        await hass.config_entries.async_setup(mock_config.entry_id)
+        await hass.async_block_till_done()
+
+    source = await async_get_media_source(hass)
+    media_item = MediaSourceItem(hass, DOMAIN, None, None)
+
+    browse = await source.async_browse_media(media_item)
+
+    assert browse.title == "UniFi Protect"
+    assert len(browse.children) == 2
+    assert browse.children[0].title.startswith("UnifiProtect")
+    assert browse.children[0].identifier.startswith("test_id")
+    assert browse.children[1].title.startswith("UnifiProtect")
+    assert browse.children[0].identifier.startswith("test_id")
+
+
+async def test_browse_media_root_multiple_consoles_only_one_media(
+    hass: HomeAssistant, ufp: MockUFPFixture, bootstrap: Bootstrap
+):
+    """Test browsing root level media with multiple consoles."""
+
+    ufp.api.bootstrap._has_media = True
+
+    await hass.config_entries.async_setup(ufp.entry.entry_id)
+    await hass.async_block_till_done()
+
+    bootstrap2 = bootstrap.copy()
+    bootstrap2._has_media = False
+    bootstrap2.nvr = bootstrap.nvr.copy()
+    bootstrap2.nvr.id = "test_id2"
+    bootstrap2.nvr.mac = "A2E00C826924"
+    bootstrap2.nvr.name = "UnifiProtect2"
+
+    api2 = Mock()
+    bootstrap2.nvr._api = api2
+    bootstrap2._api = api2
+
+    api2.bootstrap = bootstrap2
+    api2._bootstrap = bootstrap2
+    api2.api_path = "/api"
+    api2.base_url = "https://127.0.0.2"
+    api2.connection_host = IPv4Address("127.0.0.2")
+    api2.get_nvr = AsyncMock(return_value=bootstrap2.nvr)
+    api2.update = AsyncMock(return_value=bootstrap2)
+    api2.async_disconnect_ws = AsyncMock()
+
+    with patch("homeassistant.components.unifiprotect.ProtectApiClient") as mock_api:
+        mock_config = MockConfigEntry(
+            domain=DOMAIN,
+            data={
+                "host": "1.1.1.2",
+                "username": "test-username",
+                "password": "test-password",
+                "id": "UnifiProtect2",
+                "port": 443,
+                "verify_ssl": False,
+            },
+            version=2,
+        )
+        mock_config.add_to_hass(hass)
+
+        mock_api.return_value = api2
+
+        await hass.config_entries.async_setup(mock_config.entry_id)
+        await hass.async_block_till_done()
+
+    source = await async_get_media_source(hass)
+    media_item = MediaSourceItem(hass, DOMAIN, None, None)
+
+    browse = await source.async_browse_media(media_item)
+
+    assert browse.title == "UnifiProtect"
+    assert browse.identifier == "test_id"
+    assert len(browse.children) == 1
+    assert browse.children[0].title == "All Cameras"
+    assert browse.children[0].identifier == "test_id:all"
+
+
+async def test_browse_media_root_single_console(
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
+):
+    """Test browsing root level media with a single console."""
+
+    ufp.api.get_bootstrap = AsyncMock(return_value=ufp.api.bootstrap)
+    await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
+
+    source = await async_get_media_source(hass)
+    media_item = MediaSourceItem(hass, DOMAIN, None, None)
+
+    browse = await source.async_browse_media(media_item)
+
+    assert browse.title == "UnifiProtect"
+    assert browse.identifier == "test_id"
+    assert len(browse.children) == 2
+    assert browse.children[0].title == "All Cameras"
+    assert browse.children[0].identifier == "test_id:all"
+    assert browse.children[1].title == doorbell.name
+    assert browse.children[1].identifier == f"test_id:{doorbell.id}"
+    assert browse.children[1].thumbnail is not None
+
+
+async def test_browse_media_camera(
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, camera: Camera
+):
+    """Test browsing camera selector level media."""
+
+    ufp.api.get_bootstrap = AsyncMock(return_value=ufp.api.bootstrap)
+    await init_entry(hass, ufp, [doorbell, camera])
+
+    ufp.api.bootstrap.auth_user.all_permissions = [
+        Permission.unifi_dict_to_dict(
+            {"rawPermission": "camera:create,read,write,delete,deletemedia:*"}
+        ),
+        Permission.unifi_dict_to_dict(
+            {"rawPermission": f"camera:readmedia:{doorbell.id}"}
+        ),
+    ]
+
+    entity_registry = er.async_get(hass)
+    entity_registry.async_update_entity(
+        "camera.test_camera_high", disabled_by=er.RegistryEntryDisabler("user")
+    )
+    await hass.async_block_till_done()
+
+    source = await async_get_media_source(hass)
+    media_item = MediaSourceItem(hass, DOMAIN, "test_id", None)
+
+    browse = await source.async_browse_media(media_item)
+
+    assert browse.title == "UnifiProtect"
+    assert browse.identifier == "test_id"
+    assert len(browse.children) == 2
+    assert browse.children[0].title == "All Cameras"
+    assert browse.children[0].identifier == "test_id:all"
+    assert browse.children[1].title == doorbell.name
+    assert browse.children[1].identifier == f"test_id:{doorbell.id}"
+    assert browse.children[1].thumbnail is None
+
+
+async def test_browse_media_camera_offline(
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
+):
+    """Test browsing camera selector level media when camera is offline."""
+
+    doorbell.is_connected = False
+
+    ufp.api.get_bootstrap = AsyncMock(return_value=ufp.api.bootstrap)
+    await init_entry(hass, ufp, [doorbell])
+
+    source = await async_get_media_source(hass)
+    media_item = MediaSourceItem(hass, DOMAIN, "test_id", None)
+
+    browse = await source.async_browse_media(media_item)
+
+    assert browse.title == "UnifiProtect"
+    assert browse.identifier == "test_id"
+    assert len(browse.children) == 2
+    assert browse.children[0].title == "All Cameras"
+    assert browse.children[0].identifier == "test_id:all"
+    assert browse.children[1].title == doorbell.name
+    assert browse.children[1].identifier == f"test_id:{doorbell.id}"
+    assert browse.children[1].thumbnail is None
+
+
+async def test_browse_media_event(
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
+):
+    """Test browsing event type selector level media."""
+
+    ufp.api.get_bootstrap = AsyncMock(return_value=ufp.api.bootstrap)
+    await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
+
+    source = await async_get_media_source(hass)
+    media_item = MediaSourceItem(hass, DOMAIN, "test_id:all", None)
+
+    browse = await source.async_browse_media(media_item)
+
+    assert browse.title == "UnifiProtect > All Cameras"
+    assert browse.identifier == "test_id:all"
+    assert len(browse.children) == 4
+    assert browse.children[0].title == "All Events"
+    assert browse.children[0].identifier == "test_id:all:all"
+    assert browse.children[1].title == "Ring Events"
+    assert browse.children[1].identifier == "test_id:all:ring"
+    assert browse.children[2].title == "Motion Events"
+    assert browse.children[2].identifier == "test_id:all:motion"
+    assert browse.children[3].title == "Smart Detections"
+    assert browse.children[3].identifier == "test_id:all:smart"
+
+
+async def test_browse_media_time(
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, fixed_now: datetime
+):
+    """Test browsing time selector level media."""
+
+    last_month = fixed_now.replace(day=1) - timedelta(days=1)
+    ufp.api.bootstrap._recording_start = last_month
+
+    ufp.api.get_bootstrap = AsyncMock(return_value=ufp.api.bootstrap)
+    await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
+
+    base_id = f"test_id:{doorbell.id}:all"
+    source = await async_get_media_source(hass)
+    media_item = MediaSourceItem(hass, DOMAIN, base_id, None)
+
+    browse = await source.async_browse_media(media_item)
+
+    assert browse.title == f"UnifiProtect > {doorbell.name} > All Events"
+    assert browse.identifier == base_id
+    assert len(browse.children) == 4
+    assert browse.children[0].title == "Last 24 Hours"
+    assert browse.children[0].identifier == f"{base_id}:recent:1"
+    assert browse.children[1].title == "Last 7 Days"
+    assert browse.children[1].identifier == f"{base_id}:recent:7"
+    assert browse.children[2].title == "Last 30 Days"
+    assert browse.children[2].identifier == f"{base_id}:recent:30"
+    assert browse.children[3].title == f"{fixed_now.strftime('%B %Y')}"
+    assert (
+        browse.children[3].identifier
+        == f"{base_id}:browse:{fixed_now.year}:{fixed_now.month}"
     )
