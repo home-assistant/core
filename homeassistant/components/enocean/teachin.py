@@ -23,11 +23,7 @@ class TeachInHandler(ABC):
 
     @abstractmethod
     def handle_teach_in_request(
-        self,
-        hass: HomeAssistant,
-        packet: Packet,
-        communicator: Communicator,
-        service_call: ServiceCall,
+        self, hass: HomeAssistant, packet: Packet, communicator: Communicator
     ):
         """Abstract method for handling incoming teach-in requests."""
         pass
@@ -37,11 +33,7 @@ class UteTeachInHandler(TeachInHandler):
     """Implementation to handle UTE teach-in requests."""
 
     def handle_teach_in_request(
-        self,
-        hass: HomeAssistant,
-        packet: Packet,
-        communicator: Communicator,
-        service_call: ServiceCall,
+        self, hass: HomeAssistant, packet: Packet, communicator: Communicator
     ):
         """Handle the UTE-type teach-in request."""
         self.logger.info(
@@ -60,18 +52,14 @@ class FourBsTeachInHandler(TeachInHandler):
     """Implementation to handle 4BS teach-in requests."""
 
     def handle_teach_in_request(
-        self,
-        hass: HomeAssistant,
-        packet: Packet,
-        communicator: Communicator,
-        service_call: ServiceCall,
+        self, hass: HomeAssistant, packet: Packet, communicator: Communicator
     ):
         """Handle the 4BS-type teach-in request."""
         rorg = packet.rorg
         func = packet.rorg_func
         rorg_type = packet.rorg_type
         teach_in_response_packet: RadioPacket = Packet.create(
-            PACKET.RADIO_ERP1,
+            PACKET.RADIO,
             # respond with 4BS teach-in-response
             rorg=rorg,  # RORG.BS4
             rorg_func=func,

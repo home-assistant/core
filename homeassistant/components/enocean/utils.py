@@ -1,6 +1,7 @@
 """Hold utility functions."""
 
 import logging
+from typing import Union
 
 from enocean.communicators import Communicator
 import enocean.utils as lib_utils
@@ -11,7 +12,7 @@ from homeassistant.core import HomeAssistant
 LOGGER = logging.getLogger(__name__)
 
 
-def get_communicator_reference(hass: HomeAssistant) -> object:
+def get_communicator_reference(hass: HomeAssistant) -> Union[object, Communicator]:
     """Get a reference to the communicator (dongle/pihat)."""
     enocean_data = hass.data.get(ec.DATA_ENOCEAN, {})
     dongle: ec.EnOceanDongle = enocean_data[ec.ENOCEAN_DONGLE]

@@ -111,7 +111,7 @@ def determine_rorg_type(packet):
     if packet.data[0] == RORG.UTE:
         return RORG.UTE
 
-    if packet.packet_type == PACKET.RADIO_ERP1 and packet.rorg == RORG.BS4:
+    if packet.packet_type == PACKET.RADIO and packet.rorg == RORG.BS4:
         return RORG.BS4
 
     return result
@@ -150,8 +150,6 @@ def handle_teach_in(hass: HomeAssistant, service_call: ServiceCall) -> None:
         with communicator.receive.mutex:
             communicator.receive.queue.clear()
 
-        successful_teachin = False
-
         teachin_start_time_seconds = time.time()
 
         base_id_from_service_call = get_base_id_from_service_call(service_call)
@@ -165,8 +163,6 @@ def handle_teach_in(hass: HomeAssistant, service_call: ServiceCall) -> None:
         successful_teachin, to_be_taught_device_id = react_to_teachin_requests(
             communicator,
             hass,
-            service_call,
-            successful_teachin,
             teachin_for_seconds,
             teachin_start_time_seconds,
             base_id_to_use,
@@ -226,8 +222,6 @@ def create_result_messages(successful_teachin, to_be_taught_device_id):
 def react_to_teachin_requests(
     communicator,
     hass,
-    service_call,
-    successful_teachin,
     teachin_for_seconds,
     teachin_start_time_seconds,
     base_id,
@@ -236,6 +230,10 @@ def react_to_teachin_requests(
 
     Loop to empty the receive-queue.
     """
+
+    successful_teachin = False
+    to_be_taught_device_id = None
+
     while time.time() < teachin_start_time_seconds + teachin_for_seconds:
 
         # handle packet --> learn device
@@ -258,9 +256,7 @@ def react_to_teachin_requests(
                 (
                     successful_sent,
                     to_be_taught_device_id,
-                ) = handler.handle_teach_in_request(
-                    hass, packet, communicator, service_call
-                )
+                ) = handler.handle_teach_in_request(hass, packet, communicator)
                 return successful_sent, to_be_taught_device_id
 
             # if packet.packet_type == PACKET.RADIO_ERP1 and packet.rorg == RORG.BS4:
@@ -276,9 +272,7 @@ def react_to_teachin_requests(
                     (
                         successful_sent,
                         to_be_taught_device_id,
-                    ) = handler.handle_teach_in_request(
-                        hass, packet, communicator, service_call
-                    )
+                    ) = handler.handle_teach_in_request(hass, packet, communicator)
 
                     if successful_sent:
                         # the package was put to the transmit queue
