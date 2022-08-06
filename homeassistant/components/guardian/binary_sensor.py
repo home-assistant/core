@@ -10,7 +10,6 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -25,10 +24,9 @@ from .const import (
     API_SYSTEM_ONBOARD_SENSOR_STATUS,
     CONF_UID,
     DOMAIN,
-    LOGGER,
     SIGNAL_PAIRED_SENSOR_COORDINATOR_ADDED,
 )
-from .util import GuardianDataUpdateCoordinator
+from .util import GuardianDataUpdateCoordinator, async_clean_up_old_entities
 
 SENSOR_KIND_LEAK_DETECTED = "leak_detected"
 SENSOR_KIND_MOVED = "moved"
@@ -64,26 +62,16 @@ VALVE_CONTROLLER_DESCRIPTIONS = (
     ),
 )
 
+ENTITY_UNIQUE_ID_SUFFIXES_TO_REMOVE = ("ap_enabled",)
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Guardian switches based on a config entry."""
+    async_clean_up_old_entities(hass, entry, ENTITY_UNIQUE_ID_SUFFIXES_TO_REMOVE)
+
     data: GuardianData = hass.data[DOMAIN][entry.entry_id]
-
-    ent_reg = entity_registry.async_get(hass)
-
-    # Older versions of the integration had onboard AP status as a binary sensor
-    # (instead of the config switch that is used now); if that entity exists, clean it
-    # up:
-    for entity_entry in [
-        e
-        for e in ent_reg.entities.values()
-        if e.config_entry_id == entry.entry_id
-        and e.entity_id.endswith("onboard_ap_enabled")
-    ]:
-        LOGGER.debug('Removing deprecated binary sensor: "%s"', entity_entry.entity_id)
-        ent_reg.async_remove(entity_entry.entity_id)
 
     @callback
     def add_new_paired_sensor(uid: str) -> None:

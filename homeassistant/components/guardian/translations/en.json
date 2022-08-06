@@ -29,6 +29,17 @@
                 }
             },
             "title": "The {deprecated_service} service is being removed"
+        },
+        "removed_old_entity": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "This entity is no longer provided by the Guardian integration and has been removed from Home Assistant. Click SUBMIT below to mark this issue as resolved.",
+                        "title": "The {removed_entity_id} entity is being removed"
+                    }
+                }
+            },
+            "title": "The {removed_entity_id} entity is being removed"
         }
     }
 }
