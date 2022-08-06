@@ -52,7 +52,7 @@ class MockLocation:
 
         return Observation(0.0, 71.0, 1000.0, 0.0, 18.0, "NW", 3.94)
 
-    async def forecast(self, api):
+    async def forecast(self, api, period):
         """Mock Forecast."""
         Forecast = namedtuple(
             "Forecast",
@@ -72,41 +72,52 @@ class MockLocation:
             ],
         )
 
-        return [
-            Forecast(
-                None,
-                "2020-01-15T00:00:00",
-                24,
-                None,
-                16.2,
-                10.6,
-                "100.0",
-                13.4,
-                "2020-01-15T07:51:00",
-                9,
-                "S",
-                "10",
-            ),
-            Forecast(
-                "7.7",
-                now().utcnow().strftime("%Y-%m-%dT%H:%M:%S"),
-                1,
-                "86.9",
-                None,
-                None,
-                "80.0",
-                10.6,
-                "2020-01-15T07:51:00",
-                10,
-                "S",
-                "32.7",
-            ),
-        ]
+        WeatherType = namedtuple("WeatherType", ["id", "en", "pt"])
+
+        if period == 24:
+            return [
+                Forecast(
+                    None,
+                    "2020-01-15T00:00:00",
+                    24,
+                    None,
+                    16.2,
+                    10.6,
+                    "100.0",
+                    13.4,
+                    "2020-01-15T07:51:00",
+                    WeatherType(9, "Rain/showers", "Chuva/aguaceiros"),
+                    "S",
+                    "10",
+                ),
+            ]
+        if period == 1:
+            return [
+                Forecast(
+                    "7.7",
+                    now().utcnow().strftime("%Y-%m-%dT%H:%M:%S"),
+                    1,
+                    "86.9",
+                    12.0,
+                    None,
+                    80.0,
+                    10.6,
+                    "2020-01-15T07:51:00",
+                    WeatherType(10, "Light rain", "Chuva fraca ou chuvisco"),
+                    "S",
+                    "32.7",
+                ),
+            ]
 
     @property
     def name(self):
         """Mock location."""
         return "HomeTown"
+
+    @property
+    def station(self):
+        """Mock station."""
+        return "HomeTown Station"
 
     @property
     def station_latitude(self):
@@ -220,7 +231,7 @@ async def test_hourly_forecast(hass):
 
     forecast = state.attributes.get(ATTR_FORECAST)[0]
     assert forecast.get(ATTR_FORECAST_CONDITION) == "rainy"
-    assert forecast.get(ATTR_FORECAST_TEMP) == 7.7
+    assert forecast.get(ATTR_FORECAST_TEMP) == 12.0
     assert forecast.get(ATTR_FORECAST_PRECIPITATION_PROBABILITY) == 80.0
     assert forecast.get(ATTR_FORECAST_WIND_SPEED) == 32.7
     assert forecast.get(ATTR_FORECAST_WIND_BEARING) == "S"
