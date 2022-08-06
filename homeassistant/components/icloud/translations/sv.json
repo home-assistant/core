@@ -6,6 +6,7 @@
             "reauth_successful": "\u00c5terautentisering lyckades"
         },
         "error": {
+            "invalid_auth": "Ogiltig autentisering",
             "send_verification_code": "Det gick inte att skicka verifieringskod",
             "validate_verification_code": "Det gick inte att verifiera verifieringskoden, v\u00e4lj en betrodd enhet och starta verifieringen igen"
         },

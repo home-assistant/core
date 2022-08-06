@@ -128,7 +128,7 @@ aioasuswrt==1.4.0
 aioazuredevops==1.3.5
 
 # homeassistant.components.baf
-aiobafi6==0.7.0
+aiobafi6==0.7.2
 
 # homeassistant.components.aws
 aiobotocore==2.1.0
@@ -1461,7 +1461,7 @@ pydaikin==2.7.0
 pydanfossair==0.1.0
 
 # homeassistant.components.deconz
-pydeconz==102
+pydeconz==103
 
 # homeassistant.components.delijn
 pydelijn==1.0.0

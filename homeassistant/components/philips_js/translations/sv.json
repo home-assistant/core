@@ -6,6 +6,7 @@
         "error": {
             "cannot_connect": "Det gick inte att ansluta.",
             "invalid_pin": "Ogiltig PIN-kod",
+            "pairing_failure": "Det g\u00e5r inte att para ihop: {error_id}",
             "unknown": "Ov\u00e4ntat fel"
         },
         "step": {
@@ -27,6 +28,15 @@
     "device_automation": {
         "trigger_type": {
             "turn_on": "Enheten uppmanas att sl\u00e5s p\u00e5"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "allow_notify": "Till\u00e5t anv\u00e4ndning av dataaviseringstj\u00e4nst."
+                }
+            }
         }
     }
 }

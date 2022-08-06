@@ -1,7 +1,9 @@
 {
     "config": {
         "abort": {
-            "access_token": "Ok\u00e4nt fel vid generering av \u00e5tkomsttoken."
+            "access_token": "Ok\u00e4nt fel vid generering av \u00e5tkomsttoken.",
+            "already_configured": "Konto har redan konfigurerats",
+            "missing_configuration": "Komponenten har inte konfigurerats. F\u00f6lj dokumentationen."
         },
         "create_entry": {
             "default": "Lyckad autentisering med Ambiclimate"
