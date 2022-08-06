@@ -18,7 +18,8 @@ from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_O
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import KNOWN_DEVICES, HomeKitEntity
+from . import KNOWN_DEVICES
+from .entity import HomeKitEntity
 
 STATE_STOPPED = "stopped"
 
