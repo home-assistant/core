@@ -9,6 +9,7 @@
         "error": {
             "identifier_exists": "Compte ja est\u00e0 registrat",
             "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "invalid_auth_code_length": "Els codis d'autoritzaci\u00f3 de SimpliSafe tenen una longitud de 45 car\u00e0cters",
             "unknown": "Error inesperat"
         },
         "progress": {

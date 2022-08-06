@@ -1,6 +1,7 @@
 {
     "config": {
         "error": {
+            "invalid_auth": "Ogiltig autentisering",
             "login_error": "Inloggningsfel ( {code} ): {msg}"
         },
         "step": {

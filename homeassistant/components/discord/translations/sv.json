@@ -13,12 +13,14 @@
             "reauth_confirm": {
                 "data": {
                     "api_token": "API  Token"
-                }
+                },
+                "description": "Se dokumentationen om hur du skaffar din Discord-botnyckel. \n\n {url}"
             },
             "user": {
                 "data": {
                     "api_token": "API  Token"
-                }
+                },
+                "description": "Se dokumentationen om hur du skaffar din Discord-botnyckel. \n\n {url}"
             }
         }
     }

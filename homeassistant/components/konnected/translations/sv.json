@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "Enheten \u00e4r redan konfigurerad",
             "already_in_progress": "Konfigurationsfl\u00f6de f\u00f6r enhet p\u00e5g\u00e5r redan.",
+            "cannot_connect": "Det gick inte att ansluta.",
             "not_konn_panel": "Inte en erk\u00e4nd Konnected.io-enhet",
             "unknown": "Ett ok\u00e4nt fel har intr\u00e4ffat"
         },
