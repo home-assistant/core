@@ -2,7 +2,6 @@
 from collections import namedtuple
 from unittest.mock import patch
 
-from homeassistant.components import weather
 from homeassistant.components.weather import (
     ATTR_FORECAST,
     ATTR_FORECAST_CONDITION,
@@ -19,7 +18,6 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_SPEED,
     DOMAIN as WEATHER_DOMAIN,
 )
-from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import now
 
 from tests.common import MockConfigEntry
@@ -29,6 +27,13 @@ TEST_CONFIG = {
     "latitude": "40.00",
     "longitude": "-8.00",
     "mode": "daily",
+}
+
+TEST_CONFIG_HOURLY = {
+    "name": "HomeTown",
+    "latitude": "40.00",
+    "longitude": "-8.00",
+    "mode": "hourly",
 }
 
 
@@ -146,11 +151,8 @@ async def test_setup_configuration(hass):
         "homeassistant.components.ipma.weather.async_get_location",
         return_value=MockLocation(),
     ):
-        assert await async_setup_component(
-            hass,
-            weather.DOMAIN,
-            {"weather": {"name": "HomeTown", "platform": "ipma", "mode": "hourly"}},
-        )
+        entry = MockConfigEntry(domain="ipma", data=TEST_CONFIG)
+        await hass.config_entries.async_forward_entry_setup(entry, WEATHER_DOMAIN)
         await hass.async_block_till_done()
 
     state = hass.states.get("weather.hometown")
@@ -193,11 +195,8 @@ async def test_daily_forecast(hass):
         "homeassistant.components.ipma.weather.async_get_location",
         return_value=MockLocation(),
     ):
-        assert await async_setup_component(
-            hass,
-            weather.DOMAIN,
-            {"weather": {"name": "HomeTown", "platform": "ipma", "mode": "daily"}},
-        )
+        entry = MockConfigEntry(domain="ipma", data=TEST_CONFIG)
+        await hass.config_entries.async_forward_entry_setup(entry, WEATHER_DOMAIN)
         await hass.async_block_till_done()
 
     state = hass.states.get("weather.hometown")
@@ -219,11 +218,8 @@ async def test_hourly_forecast(hass):
         "homeassistant.components.ipma.weather.async_get_location",
         return_value=MockLocation(),
     ):
-        assert await async_setup_component(
-            hass,
-            weather.DOMAIN,
-            {"weather": {"name": "HomeTown", "platform": "ipma", "mode": "hourly"}},
-        )
+        entry = MockConfigEntry(domain="ipma", data=TEST_CONFIG_HOURLY)
+        await hass.config_entries.async_forward_entry_setup(entry, WEATHER_DOMAIN)
         await hass.async_block_till_done()
 
     state = hass.states.get("weather.hometown")
