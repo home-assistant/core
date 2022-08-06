@@ -24,6 +24,7 @@ from .const import (
     ATTR_START,
     CONF_FILTER_CORONA,
     CONF_REGIONS,
+    CONST_WARNING_ACTIVE,
     DOMAIN,
     SCAN_INTERVAL,
 )
@@ -108,6 +109,7 @@ class NINADataUpdateCoordinator(DataUpdateCoordinator):
                     ATTR_SENT: raw_warn.sent or "",
                     ATTR_START: raw_warn.start or "",
                     ATTR_EXPIRES: raw_warn.expires or "",
+                    CONST_WARNING_ACTIVE: raw_warn.isValid(),
                 }
                 warnings_for_regions.append(warn_obj)
 

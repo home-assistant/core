@@ -24,6 +24,8 @@ ATTR_SENT: str = "sent"
 ATTR_START: str = "start"
 ATTR_EXPIRES: str = "expires"
 
+CONST_WARNING_ACTIVE: str = "active"
+
 CONST_LIST_A_TO_D: list[str] = ["A", "Ä", "B", "C", "D"]
 CONST_LIST_E_TO_H: list[str] = ["E", "F", "G", "H"]
 CONST_LIST_I_TO_L: list[str] = ["I", "J", "K", "L"]

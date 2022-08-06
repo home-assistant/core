@@ -24,6 +24,7 @@ from .const import (
     ATTR_START,
     CONF_MESSAGE_SLOTS,
     CONF_REGIONS,
+    CONST_WARNING_ACTIVE,
     DOMAIN,
 )
 
@@ -72,7 +73,12 @@ class NINAMessage(CoordinatorEntity[NINADataUpdateCoordinator], BinarySensorEnti
     @property
     def is_on(self) -> bool:
         """Return the state of the sensor."""
-        return len(self.coordinator.data[self._region]) > self._warning_index
+        if not len(self.coordinator.data[self._region]) > self._warning_index:
+            return False
+
+        data: dict[str, Any] = self.coordinator.data[self._region][self._warning_index]
+
+        return data[CONST_WARNING_ACTIVE]
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
