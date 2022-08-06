@@ -1682,7 +1682,7 @@ xmltodict==0.13.0
 yalesmartalarmclient==0.3.8
 
 # homeassistant.components.august
-yalexs==1.1.25
+yalexs==1.2.1
 
 # homeassistant.components.yeelight
 yeelight==0.7.10
