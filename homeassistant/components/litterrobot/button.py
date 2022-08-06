@@ -1,6 +1,8 @@
 """Support for Litter-Robot button."""
 from __future__ import annotations
 
+from pylitterbot import LitterRobot3
+
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -27,6 +29,7 @@ async def async_setup_entry(
                 robot=robot, entity_type=TYPE_RESET_WASTE_DRAWER, hub=hub
             )
             for robot in hub.litter_robots()
+            if isinstance(robot, LitterRobot3)
         ]
     )
 
