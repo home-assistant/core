@@ -110,11 +110,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         assert self._discovered_mac is not None
 
         errors = {}
-        data_schema = vol.Schema(
-            {
-                vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
-            }
-        )
+        base_schema = {vol.Required(CONF_PORT, default=DEFAULT_PORT): int}
 
         if user_input is not None:
             airzone = AirzoneLocalApi(
@@ -129,11 +125,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 mac = await airzone.validate()
             except InvalidSystem:
-                data_schema = data_schema.extend(
-                    {
-                        vol.Required(CONF_ID, default=1): int,
-                    }
-                )
+                base_schema[vol.Required(CONF_ID, default=1)] = int
                 errors[CONF_ID] = "invalid_system_id"
             except AirzoneError:
                 errors["base"] = "cannot_connect"
@@ -156,6 +148,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="discovered_connection",
-            data_schema=data_schema,
+            data_schema=vol.Schema(base_schema),
             errors=errors,
         )
