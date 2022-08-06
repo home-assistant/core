@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad",
+            "no_valid_uuid_set": "Ingen giltig UUID-upps\u00e4ttning"
+        },
+        "error": {
+            "no_valid_uuid_set": "Ingen giltig UUID-upps\u00e4ttning"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "token": "API  Token",
+                    "url": "URL"
+                },
+                "description": "Mata in IP-adress med port och \u00e5tkomsttoken f\u00f6r Z-Way-servern. F\u00f6r att f\u00e5 token, g\u00e5 till Z-Way-anv\u00e4ndargr\u00e4nssnittet Smart Home UI > Meny > Inst\u00e4llningar > Anv\u00e4ndare > Administrat\u00f6r > API-token. \n\n Exempel p\u00e5 anslutning till Z-Way i det lokala n\u00e4tverket:\n URL: {local_url}\n Token: {local_token} \n\n Exempel p\u00e5 anslutning till Z-Way via fj\u00e4rr\u00e5tkomst find.z-wave.me:\n URL: {find_url}\n Token: {find_token} \n\n Exempel p\u00e5 anslutning till Z-Way med en statisk offentlig IP-adress:\n URL: {remote_url}\n Token: {local_token} \n\n N\u00e4r du ansluter via find.z-wave.me m\u00e5ste du anv\u00e4nda en token med ett globalt scope (logga in p\u00e5 Z-Way via find.z-wave.me f\u00f6r detta)."
+            }
+        }
+    }
+}

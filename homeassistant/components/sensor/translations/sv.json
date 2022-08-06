@@ -1,6 +1,7 @@
 {
     "device_automation": {
         "condition_type": {
+            "is_apparent_power": "Nuvarande {entity_name} skenbar effekt",
             "is_battery_level": "Nuvarande {entity_name} batteriniv\u00e5",
             "is_carbon_dioxide": "Nuvarande {entity_name} koncentration av koldioxid",
             "is_carbon_monoxide": "Nuvarande {entity_name} koncentration av kolmonoxid",
@@ -29,15 +30,19 @@
             "is_voltage": "Nuvarande {entity_name} sp\u00e4nning"
         },
         "trigger_type": {
+            "apparent_power": "{entity_name} uppenbara effektf\u00f6r\u00e4ndringar",
             "battery_level": "{entity_name} batteriniv\u00e5 \u00e4ndras",
             "carbon_dioxide": "{entity_name} f\u00f6r\u00e4ndringar av koldioxidkoncentrationen",
             "carbon_monoxide": "{entity_name} f\u00f6r\u00e4ndringar av kolmonoxidkoncentrationen",
+            "current": "{entity_name} aktuella \u00e4ndringar",
             "energy": "Energif\u00f6r\u00e4ndringar",
             "frequency": "{entity_name} frekvens\u00e4ndringar",
             "gas": "{entity_name} gasf\u00f6r\u00e4ndringar",
             "humidity": "{entity_name} fuktighet \u00e4ndras",
             "illuminance": "{entity_name} belysning \u00e4ndras",
             "nitrogen_dioxide": "{entity_name} kv\u00e4vedioxidkoncentrationen f\u00f6r\u00e4ndras.",
+            "nitrogen_monoxide": "{entity_name} koncentrationen av kv\u00e4vemonoxid \u00e4ndras",
+            "nitrous_oxide": "{entity_name} f\u00f6r\u00e4ndringar i koncentrationen av lustgas",
             "ozone": "{entity_name} ozonkoncentrationen f\u00f6r\u00e4ndras",
             "pm1": "{entity_name} PM1-koncentrationsf\u00f6r\u00e4ndringar",
             "pm10": "{entity_name} PM10-koncentrations\u00e4ndringar",
