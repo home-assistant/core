@@ -1,8 +1,9 @@
 """Models for Recorder."""
 from __future__ import annotations
 
+import asyncio
+from dataclasses import dataclass, field
 from datetime import datetime
-import json
 import logging
 from typing import Any, TypedDict, overload
 
@@ -15,6 +16,7 @@ from homeassistant.components.websocket_api.const import (
     COMPRESSED_STATE_STATE,
 )
 from homeassistant.core import Context, State
+from homeassistant.helpers.json import json_loads
 import homeassistant.util.dt as dt_util
 
 # pylint: disable=invalid-name
@@ -28,6 +30,14 @@ EMPTY_JSON_OBJECT = "{}"
 
 class UnsupportedDialect(Exception):
     """The dialect or its version is not supported."""
+
+
+@dataclass
+class RecorderData:
+    """Recorder data stored in hass.data."""
+
+    recorder_platforms: dict[str, Any] = field(default_factory=dict)
+    db_connected: asyncio.Future = field(default_factory=asyncio.Future)
 
 
 class StatisticResult(TypedDict):
@@ -253,7 +263,7 @@ def decode_attributes_from_row(
     if not source or source == EMPTY_JSON_OBJECT:
         return {}
     try:
-        attr_cache[source] = attributes = json.loads(source)
+        attr_cache[source] = attributes = json_loads(source)
     except ValueError:
         _LOGGER.exception("Error converting row to state attributes: %s", source)
         attr_cache[source] = attributes = {}

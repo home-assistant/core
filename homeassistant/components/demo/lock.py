@@ -111,7 +111,7 @@ class DemoLock(LockEntity):
         self.async_write_ha_state()
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Flag supported features."""
         if self._openable:
             return LockEntityFeature.OPEN

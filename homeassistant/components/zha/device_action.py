@@ -1,6 +1,8 @@
 """Provides device actions for ZHA devices."""
 from __future__ import annotations
 
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_TYPE
@@ -82,9 +84,9 @@ async def async_get_actions(
 
 async def _execute_service_based_action(
     hass: HomeAssistant,
-    config: ACTION_SCHEMA,
+    config: dict[str, Any],
     variables: TemplateVarsType,
-    context: Context,
+    context: Context | None,
 ) -> None:
     action_type = config[CONF_TYPE]
     service_name = SERVICE_NAMES[action_type]

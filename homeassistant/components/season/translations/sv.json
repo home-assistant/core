@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Tj\u00e4nsten \u00e4r redan konfigurerad"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "type": "Typ av s\u00e4songsdefinition"
+                }
+            }
+        }
+    }
+}

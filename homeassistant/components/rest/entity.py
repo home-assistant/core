@@ -10,7 +10,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .data import RestData
 
 
-class BaseRestEntity(Entity):
+class RestEntity(Entity):
     """A class for entities using DataUpdateCoordinator or rest data directly."""
 
     def __init__(
@@ -72,24 +72,3 @@ class BaseRestEntity(Entity):
     @abstractmethod
     def _update_from_rest_data(self):
         """Update state from the rest data."""
-
-
-class RestEntity(BaseRestEntity):
-    """A class for entities using DataUpdateCoordinator or rest data directly."""
-
-    def __init__(
-        self,
-        coordinator: DataUpdateCoordinator[Any],
-        rest: RestData,
-        name,
-        resource_template,
-        force_update,
-    ) -> None:
-        """Create the entity that may have a coordinator."""
-        self._name = name
-        super().__init__(coordinator, rest, resource_template, force_update)
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name

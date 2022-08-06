@@ -4,6 +4,7 @@
     },
     "config": {
         "abort": {
+            "already_configured": "\u5e33\u865f\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
             "authorize_url_timeout": "\u7522\u751f\u8a8d\u8b49 URL \u6642\u903e\u6642\u3002",
             "invalid_access_token": "\u5b58\u53d6\u6b0a\u6756\u7121\u6548",
             "missing_configuration": "\u5143\u4ef6\u5c1a\u672a\u8a2d\u7f6e\uff0c\u8acb\u53c3\u95b1\u6587\u4ef6\u8aaa\u660e\u3002",
@@ -94,6 +95,16 @@
             "camera_person": "\u5075\u6e2c\u5230\u4eba\u54e1",
             "camera_sound": "\u5075\u6e2c\u5230\u8072\u97f3",
             "doorbell_chime": "\u9580\u9234\u6309\u4e0b"
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "\u4f7f\u7528 YAML \u8a2d\u5b9a\u7684 Nest \u5373\u5c07\u65bc Home Assistant 2022.10 \u7248\u4e2d\u9032\u884c\u79fb\u9664\u3002\n\n\u65e2\u6709\u7684 OAuth \u61c9\u7528\u6191\u8b49\u8207\u5b58\u53d6\u6b0a\u9650\u5c07\u81ea\u52d5\u532f\u5165\u81f3 UI \u5167\u3002\u8acb\u65bc configuration.yaml \u6a94\u6848\u4e2d\u79fb\u9664 YAML \u8a2d\u5b9a\u4e26\u91cd\u65b0\u555f\u52d5 Home Assistant \u4ee5\u4fee\u6b63\u6b64\u554f\u984c\u3002",
+            "title": "Nest YAML \u8a2d\u5b9a\u5373\u5c07\u79fb\u9664"
+        },
+        "removed_app_auth": {
+            "description": "\u70ba\u4e86\u6539\u5584\u8cc7\u5b89\u8207\u964d\u4f4e\u7db2\u8def\u91e3\u9b5a\u98a8\u96aa\u3001Google \u5df2\u7d93\u68c4\u7528 Home Assistant \u6240\u4f7f\u7528\u7684\u8a8d\u8b49\u6a21\u5f0f\u3002\n\n**\u5c07\u9700\u8981\u60a8\u9032\u884c\u6392\u9664** ([\u66f4\u591a\u8cc7\u8a0a]({more_info_url}))\n\n1.  \u700f\u89bd\u6574\u5408\u9801\u9762\n1. \u65bc Nest \u6574\u5408\u9ede\u9078\u91cd\u65b0\u8a2d\u5b9a\n1. Home Assistant \u5c07\u6703\u5f15\u5c0e\u9032\u884c\u66f4\u65b0\u81f3 Web \u8a8d\u8b49\u6b65\u9a5f\u3002\n\n\u8acb\u53c3\u95b1 Nest [\u6574\u5408\u6307\u5f15]({documentation_url}) \u4ee5\u7372\u5f97\u554f\u984c\u6392\u9664\u8cc7\u8a0a\u3002",
+            "title": "Nest \u8a8d\u8b49\u6191\u8b49\u9700\u8981\u66f4\u65b0"
         }
     }
 }

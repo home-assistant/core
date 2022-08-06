@@ -1,4 +1,6 @@
 """Support for Agent DVR Alarm Control Panels."""
+from __future__ import annotations
+
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
@@ -58,7 +60,7 @@ class AgentBaseStation(AlarmControlPanelEntity):
             sw_version=client.version,
         )
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update the state of the device."""
         await self._client.update()
         self._attr_available = self._client.is_available
@@ -76,24 +78,24 @@ class AgentBaseStation(AlarmControlPanelEntity):
         else:
             self._attr_state = STATE_ALARM_DISARMED
 
-    async def async_alarm_disarm(self, code=None):
+    async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         await self._client.disarm()
         self._attr_state = STATE_ALARM_DISARMED
 
-    async def async_alarm_arm_away(self, code=None):
+    async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command. Uses custom mode."""
         await self._client.arm()
         await self._client.set_active_profile(CONF_AWAY_MODE_NAME)
         self._attr_state = STATE_ALARM_ARMED_AWAY
 
-    async def async_alarm_arm_home(self, code=None):
+    async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command. Uses custom mode."""
         await self._client.arm()
         await self._client.set_active_profile(CONF_HOME_MODE_NAME)
         self._attr_state = STATE_ALARM_ARMED_HOME
 
-    async def async_alarm_arm_night(self, code=None):
+    async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command. Uses custom mode."""
         await self._client.arm()
         await self._client.set_active_profile(CONF_NIGHT_MODE_NAME)

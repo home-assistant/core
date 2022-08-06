@@ -6,7 +6,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components import zeroconf
+from homeassistant.components import onboarding, zeroconf
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
@@ -102,7 +102,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         data = self._get_data()
 
-        if user_input is not None:
+        if user_input is not None or not onboarding.async_is_onboarded(self.hass):
             return self.async_create_entry(title="Google Cast", data=data)
 
         return self.async_show_form(step_id="confirm")

@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Le compte est d\u00e9j\u00e0 configur\u00e9",
             "authorize_url_timeout": "D\u00e9lai de g\u00e9n\u00e9ration de l'URL d'authentification expir\u00e9.",
             "invalid_access_token": "Jeton d'acc\u00e8s non valide",
             "missing_configuration": "Le composant n'est pas configur\u00e9. Veuillez suivre la documentation.",
@@ -86,6 +87,11 @@
             "camera_person": "Personne d\u00e9tect\u00e9e",
             "camera_sound": "Son d\u00e9tect\u00e9",
             "doorbell_chime": "Sonnette enfonc\u00e9e"
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "title": "La configuration YAML pour Nest est en cours de suppression"
         }
     }
 }

@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "\u00c5terautentisering lyckades"
+        },
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta.",
+            "invalid_api_key": "Ogiltig API-nyckel"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API-nyckel",
+                    "description": "Autentisera p\u00e5 nytt med ditt Ambee-konto."
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "API-nyckel",
+                    "latitude": "Latitud",
+                    "longitude": "Longitud",
+                    "name": "Namn"
+                },
+                "description": "Konfigurera Ambee f\u00f6r att integrera med Home Assistant."
+            }
+        }
+    },
+    "issues": {
+        "pending_removal": {
+            "description": "Ambee-integrationen v\u00e4ntar p\u00e5 borttagning fr\u00e5n Home Assistant och kommer inte l\u00e4ngre att vara tillg\u00e4nglig fr\u00e5n och med Home Assistant 2022.10. \n\n Integrationen tas bort eftersom Ambee tog bort sina gratis (begr\u00e4nsade) konton och inte l\u00e4ngre ger vanliga anv\u00e4ndare m\u00f6jlighet att registrera sig f\u00f6r en betalplan. \n\n Ta bort Ambee-integreringsposten fr\u00e5n din instans f\u00f6r att \u00e5tg\u00e4rda problemet.",
+            "title": "Ambee-integrationen tas bort"
+        }
+    }
+}

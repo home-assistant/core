@@ -2153,7 +2153,7 @@ async def test_include_exclude_events_with_glob_filters(
     client = await hass_client()
     entries = await _async_fetch_logbook(client)
 
-    assert len(entries) == 6
+    assert len(entries) == 7
     _assert_entry(
         entries[0], name="Home Assistant", message="started", domain=ha.DOMAIN
     )
@@ -2162,6 +2162,7 @@ async def test_include_exclude_events_with_glob_filters(
     _assert_entry(entries[3], name="bla", entity_id=entity_id, state="20")
     _assert_entry(entries[4], name="blu", entity_id=entity_id2, state="20")
     _assert_entry(entries[5], name="included", entity_id=entity_id4, state="30")
+    _assert_entry(entries[6], name="included", entity_id=entity_id5, state="30")
 
 
 async def test_empty_config(hass, hass_client, recorder_mock):

@@ -11,6 +11,7 @@
         "step": {
             "user": {
                 "data": {
+                    "address": "\u30c7\u30d0\u30a4\u30b9\u30a2\u30c9\u30ec\u30b9",
                     "mac": "\u30c7\u30d0\u30a4\u30b9\u306eMAC\u30a2\u30c9\u30ec\u30b9",
                     "name": "\u540d\u524d",
                     "password": "\u30d1\u30b9\u30ef\u30fc\u30c9"

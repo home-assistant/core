@@ -157,5 +157,5 @@ class SleepIQNumberEntity(SleepIQBedEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Set the number value."""
         await self.entity_description.set_value_fn(self.device, int(value))
-        self._attr_value = value
+        self._attr_native_value = value
         self.async_write_ha_state()

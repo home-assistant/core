@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 from aiohttp.client_exceptions import ClientResponseError
-from bond_async import Action, BPUPSubscriptions, DeviceType
+from bond_async import Action, DeviceType
 import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity
@@ -14,15 +14,9 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    ATTR_POWER_STATE,
-    BPUP_SUBS,
-    DOMAIN,
-    HUB,
-    SERVICE_SET_POWER_TRACKED_STATE,
-)
+from .const import ATTR_POWER_STATE, DOMAIN, SERVICE_SET_POWER_TRACKED_STATE
 from .entity import BondEntity
-from .utils import BondHub
+from .models import BondData
 
 
 async def async_setup_entry(
@@ -31,9 +25,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Bond generic devices."""
-    data = hass.data[DOMAIN][entry.entry_id]
-    hub: BondHub = data[HUB]
-    bpup_subs: BPUPSubscriptions = data[BPUP_SUBS]
+    data: BondData = hass.data[DOMAIN][entry.entry_id]
+    hub = data.hub
+    bpup_subs = data.bpup_subs
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_SET_POWER_TRACKED_STATE,

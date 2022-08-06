@@ -92,9 +92,9 @@ class TemplateLock(TemplateEntity, LockEntity):
         self._optimistic = config.get(CONF_OPTIMISTIC)
 
     @property
-    def assumed_state(self):
+    def assumed_state(self) -> bool:
         """Return true if we do optimistic updates."""
-        return self._optimistic
+        return bool(self._optimistic)
 
     @property
     def is_locked(self) -> bool:
@@ -133,7 +133,7 @@ class TemplateLock(TemplateEntity, LockEntity):
 
         self._state = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.add_template_attribute(
             "_state", self._state_template, None, self._update_state

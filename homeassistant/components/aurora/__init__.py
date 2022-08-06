@@ -66,7 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         AURORA_API: api,
     }
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -121,7 +121,7 @@ class AuroraDataUpdateCoordinator(DataUpdateCoordinator):
 class AuroraEntity(CoordinatorEntity[AuroraDataUpdateCoordinator]):
     """Implementation of the base Aurora Entity."""
 
-    _attr_extra_state_attributes = {"attribution": ATTRIBUTION}
+    _attr_attribution = ATTRIBUTION
 
     def __init__(
         self,

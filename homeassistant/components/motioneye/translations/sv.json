@@ -1,0 +1,40 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Tj\u00e4nsten \u00e4r redan konfigurerad",
+            "reauth_successful": "\u00c5terautentisering lyckades"
+        },
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta.",
+            "invalid_auth": "Ogiltig autentisering",
+            "invalid_url": "Ogiltig URL",
+            "unknown": "Ov\u00e4ntat fel"
+        },
+        "step": {
+            "hassio_confirm": {
+                "description": "Vill du konfigurera Home Assistant f\u00f6r att ansluta till motionEye-tj\u00e4nsten som tillhandah\u00e5lls av till\u00e4gget: {addon} ?",
+                "title": "motionEye via Home Assistant-till\u00e4gget"
+            },
+            "user": {
+                "data": {
+                    "admin_password": "Admin L\u00f6senord",
+                    "admin_username": "Admin Anv\u00e4ndarnamn",
+                    "surveillance_password": "\u00d6vervakning L\u00f6senord",
+                    "surveillance_username": "\u00d6vervakning [%key:common::config_flow::data::anv\u00e4ndarnamn%]",
+                    "url": "URL"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "stream_url_template": "Mall f\u00f6r webbadress f\u00f6r str\u00f6m",
+                    "webhook_set": "Konfigurera motionEye webhooks f\u00f6r att rapportera h\u00e4ndelser till Home Assistant",
+                    "webhook_set_overwrite": "Skriv \u00f6ver ok\u00e4nda webhooks"
+                }
+            }
+        }
+    }
+}

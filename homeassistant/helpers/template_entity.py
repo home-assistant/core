@@ -43,16 +43,16 @@ CONF_PICTURE = "picture"
 TEMPLATE_ENTITY_BASE_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_ICON): cv.template,
+        vol.Optional(CONF_NAME): cv.template,
         vol.Optional(CONF_PICTURE): cv.template,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
 TEMPLATE_SENSOR_BASE_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_NAME): cv.template,
         vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     }
 ).extend(TEMPLATE_ENTITY_BASE_SCHEMA.schema)

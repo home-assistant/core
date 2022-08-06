@@ -10,6 +10,11 @@
             "invalid_access_token": "Token de acesso inv\u00e1lido"
         },
         "step": {
+            "auth": {
+                "data": {
+                    "create_token": "Criar novo token automaticamente"
+                }
+            },
             "user": {
                 "data": {
                     "host": "Servidor",

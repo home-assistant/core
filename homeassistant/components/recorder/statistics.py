@@ -14,12 +14,13 @@ import re
 from statistics import mean
 from typing import TYPE_CHECKING, Any, Literal, overload
 
-from sqlalchemy import bindparam, func, select
+from sqlalchemy import bindparam, func, lambda_stmt, select
 from sqlalchemy.engine.row import Row
 from sqlalchemy.exc import SQLAlchemyError, StatementError
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.expression import literal_column, true
-from sqlalchemy.sql.selectable import Select, Subquery
+from sqlalchemy.sql.lambdas import StatementLambdaElement
+from sqlalchemy.sql.selectable import Subquery
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -28,7 +29,7 @@ from homeassistant.const import (
     VOLUME_CUBIC_FEET,
     VOLUME_CUBIC_METERS,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.json import JSONEncoder
@@ -40,7 +41,7 @@ import homeassistant.util.temperature as temperature_util
 from homeassistant.util.unit_system import UnitSystem
 import homeassistant.util.volume as volume_util
 
-from .const import DATA_INSTANCE, DOMAIN, MAX_ROWS_TO_PURGE, SupportedDialect
+from .const import DOMAIN, MAX_ROWS_TO_PURGE, SupportedDialect
 from .db_schema import Statistics, StatisticsMeta, StatisticsRuns, StatisticsShortTerm
 from .models import (
     StatisticData,
@@ -49,7 +50,13 @@ from .models import (
     process_timestamp,
     process_timestamp_to_utc_isoformat,
 )
-from .util import execute, execute_stmt, retryable_database_job, session_scope
+from .util import (
+    execute,
+    execute_stmt_lambda_element,
+    get_instance,
+    retryable_database_job,
+    session_scope,
+)
 
 if TYPE_CHECKING:
     from . import Recorder
@@ -203,7 +210,7 @@ def async_setup(hass: HomeAssistant) -> None:
 
     @callback
     def _async_entity_id_changed(event: Event) -> None:
-        hass.data[DATA_INSTANCE].async_update_statistics_metadata(
+        get_instance(hass).async_update_statistics_metadata(
             event.data["old_entity_id"], new_statistic_id=event.data["entity_id"]
         )
 
@@ -474,10 +481,10 @@ def delete_statistics_meta_duplicates(session: Session) -> None:
 
 def _compile_hourly_statistics_summary_mean_stmt(
     start_time: datetime, end_time: datetime
-) -> Select:
+) -> StatementLambdaElement:
     """Generate the summary mean statement for hourly statistics."""
-    return (
-        select(*QUERY_STATISTICS_SUMMARY_MEAN)
+    return lambda_stmt(
+        lambda: select(*QUERY_STATISTICS_SUMMARY_MEAN)
         .filter(StatisticsShortTerm.start >= start_time)
         .filter(StatisticsShortTerm.start < end_time)
         .group_by(StatisticsShortTerm.metadata_id)
@@ -500,7 +507,7 @@ def compile_hourly_statistics(
     # Compute last hour's average, min, max
     summary: dict[str, StatisticData] = {}
     stmt = _compile_hourly_statistics_summary_mean_stmt(start_time, end_time)
-    stats = execute_stmt(session, stmt)
+    stats = execute_stmt_lambda_element(session, stmt)
 
     if stats:
         for stat in stats:
@@ -569,7 +576,7 @@ def compile_statistics(instance: Recorder, start: datetime) -> bool:
     platform_stats: list[StatisticResult] = []
     current_metadata: dict[str, tuple[int, StatisticMetaData]] = {}
     # Collect statistics from all platforms implementing support
-    for domain, platform in instance.hass.data[DOMAIN].items():
+    for domain, platform in instance.hass.data[DOMAIN].recorder_platforms.items():
         if not hasattr(platform, "compile_statistics"):
             continue
         compiled: PlatformCompiledStatistics = platform.compile_statistics(
@@ -682,17 +689,17 @@ def _generate_get_metadata_stmt(
     statistic_ids: list[str] | tuple[str] | None = None,
     statistic_type: Literal["mean"] | Literal["sum"] | None = None,
     statistic_source: str | None = None,
-) -> Select:
+) -> StatementLambdaElement:
     """Generate a statement to fetch metadata."""
-    stmt = select(*QUERY_STATISTIC_META)
+    stmt = lambda_stmt(lambda: select(*QUERY_STATISTIC_META))
     if statistic_ids is not None:
-        stmt = stmt.where(StatisticsMeta.statistic_id.in_(statistic_ids))
+        stmt += lambda q: q.where(StatisticsMeta.statistic_id.in_(statistic_ids))
     if statistic_source is not None:
-        stmt = stmt.where(StatisticsMeta.source == statistic_source)
+        stmt += lambda q: q.where(StatisticsMeta.source == statistic_source)
     if statistic_type == "mean":
-        stmt = stmt.where(StatisticsMeta.has_mean == true())
+        stmt += lambda q: q.where(StatisticsMeta.has_mean == true())
     elif statistic_type == "sum":
-        stmt = stmt.where(StatisticsMeta.has_sum == true())
+        stmt += lambda q: q.where(StatisticsMeta.has_sum == true())
     return stmt
 
 
@@ -714,7 +721,7 @@ def get_metadata_with_session(
 
     # Fetch metatadata from the database
     stmt = _generate_get_metadata_stmt(statistic_ids, statistic_type, statistic_source)
-    result = execute_stmt(session, stmt)
+    result = execute_stmt_lambda_element(session, stmt)
     if not result:
         return {}
 
@@ -844,7 +851,7 @@ def list_statistic_ids(
         }
 
     # Query all integrations with a registered recorder platform
-    for platform in hass.data[DOMAIN].values():
+    for platform in hass.data[DOMAIN].recorder_platforms.values():
         if not hasattr(platform, "list_statistic_ids"):
             continue
         platform_statistic_ids = platform.list_statistic_ids(
@@ -976,30 +983,44 @@ def _statistics_during_period_stmt(
     start_time: datetime,
     end_time: datetime | None,
     metadata_ids: list[int] | None,
-) -> Select:
-    """Prepare a database query for statistics during a given period."""
-    stmt = select(*QUERY_STATISTICS).filter(Statistics.start >= start_time)
+) -> StatementLambdaElement:
+    """Prepare a database query for statistics during a given period.
+
+    This prepares a lambda_stmt query, so we don't insert the parameters yet.
+    """
+    stmt = lambda_stmt(
+        lambda: select(*QUERY_STATISTICS).filter(Statistics.start >= start_time)
+    )
     if end_time is not None:
-        stmt = stmt.filter(Statistics.start < end_time)
+        stmt += lambda q: q.filter(Statistics.start < end_time)
     if metadata_ids:
-        stmt = stmt.filter(Statistics.metadata_id.in_(metadata_ids))
-    return stmt.order_by(Statistics.metadata_id, Statistics.start)
+        stmt += lambda q: q.filter(Statistics.metadata_id.in_(metadata_ids))
+    stmt += lambda q: q.order_by(Statistics.metadata_id, Statistics.start)
+    return stmt
 
 
 def _statistics_during_period_stmt_short_term(
     start_time: datetime,
     end_time: datetime | None,
     metadata_ids: list[int] | None,
-) -> Select:
-    """Prepare a database query for short term statistics during a given period."""
-    stmt = select(*QUERY_STATISTICS_SHORT_TERM).filter(
-        StatisticsShortTerm.start >= start_time
+) -> StatementLambdaElement:
+    """Prepare a database query for short term statistics during a given period.
+
+    This prepares a lambda_stmt query, so we don't insert the parameters yet.
+    """
+    stmt = lambda_stmt(
+        lambda: select(*QUERY_STATISTICS_SHORT_TERM).filter(
+            StatisticsShortTerm.start >= start_time
+        )
     )
     if end_time is not None:
-        stmt = stmt.filter(StatisticsShortTerm.start < end_time)
+        stmt += lambda q: q.filter(StatisticsShortTerm.start < end_time)
     if metadata_ids:
-        stmt = stmt.filter(StatisticsShortTerm.metadata_id.in_(metadata_ids))
-    return stmt.order_by(StatisticsShortTerm.metadata_id, StatisticsShortTerm.start)
+        stmt += lambda q: q.filter(StatisticsShortTerm.metadata_id.in_(metadata_ids))
+    stmt += lambda q: q.order_by(
+        StatisticsShortTerm.metadata_id, StatisticsShortTerm.start
+    )
+    return stmt
 
 
 def statistics_during_period(
@@ -1034,7 +1055,7 @@ def statistics_during_period(
         else:
             table = Statistics
             stmt = _statistics_during_period_stmt(start_time, end_time, metadata_ids)
-        stats = execute_stmt(session, stmt)
+        stats = execute_stmt_lambda_element(session, stmt)
 
         if not stats:
             return {}
@@ -1065,10 +1086,10 @@ def statistics_during_period(
 def _get_last_statistics_stmt(
     metadata_id: int,
     number_of_stats: int,
-) -> Select:
+) -> StatementLambdaElement:
     """Generate a statement for number_of_stats statistics for a given statistic_id."""
-    return (
-        select(*QUERY_STATISTICS)
+    return lambda_stmt(
+        lambda: select(*QUERY_STATISTICS)
         .filter_by(metadata_id=metadata_id)
         .order_by(Statistics.metadata_id, Statistics.start.desc())
         .limit(number_of_stats)
@@ -1078,10 +1099,10 @@ def _get_last_statistics_stmt(
 def _get_last_statistics_short_term_stmt(
     metadata_id: int,
     number_of_stats: int,
-) -> Select:
+) -> StatementLambdaElement:
     """Generate a statement for number_of_stats short term statistics for a given statistic_id."""
-    return (
-        select(*QUERY_STATISTICS_SHORT_TERM)
+    return lambda_stmt(
+        lambda: select(*QUERY_STATISTICS_SHORT_TERM)
         .filter_by(metadata_id=metadata_id)
         .order_by(StatisticsShortTerm.metadata_id, StatisticsShortTerm.start.desc())
         .limit(number_of_stats)
@@ -1107,7 +1128,7 @@ def _get_last_statistics(
             stmt = _get_last_statistics_stmt(metadata_id, number_of_stats)
         else:
             stmt = _get_last_statistics_short_term_stmt(metadata_id, number_of_stats)
-        stats = execute_stmt(session, stmt)
+        stats = execute_stmt_lambda_element(session, stmt)
 
         if not stats:
             return {}
@@ -1157,11 +1178,11 @@ def _generate_most_recent_statistic_row(metadata_ids: list[int]) -> Subquery:
 
 def _latest_short_term_statistics_stmt(
     metadata_ids: list[int],
-) -> Select:
+) -> StatementLambdaElement:
     """Create the statement for finding the latest short term stat rows."""
-    stmt = select(*QUERY_STATISTICS_SHORT_TERM)
+    stmt = lambda_stmt(lambda: select(*QUERY_STATISTICS_SHORT_TERM))
     most_recent_statistic_row = _generate_most_recent_statistic_row(metadata_ids)
-    return stmt.join(
+    stmt += lambda s: s.join(
         most_recent_statistic_row,
         (
             StatisticsShortTerm.metadata_id  # pylint: disable=comparison-with-callable
@@ -1169,6 +1190,7 @@ def _latest_short_term_statistics_stmt(
         )
         & (StatisticsShortTerm.start == most_recent_statistic_row.c.start_max),
     )
+    return stmt
 
 
 def get_latest_short_term_statistics(
@@ -1191,7 +1213,7 @@ def get_latest_short_term_statistics(
             if statistic_id in metadata
         ]
         stmt = _latest_short_term_statistics_stmt(metadata_ids)
-        stats = execute_stmt(session, stmt)
+        stats = execute_stmt_lambda_element(session, stmt)
         if not stats:
             return {}
 
@@ -1317,7 +1339,7 @@ def _sorted_statistics_to_dict(
 def validate_statistics(hass: HomeAssistant) -> dict[str, list[ValidationIssue]]:
     """Validate statistics."""
     platform_validation: dict[str, list[ValidationIssue]] = {}
-    for platform in hass.data[DOMAIN].values():
+    for platform in hass.data[DOMAIN].recorder_platforms.values():
         if not hasattr(platform, "validate_statistics"):
             continue
         platform_validation.update(platform.validate_statistics(hass))
@@ -1340,6 +1362,54 @@ def _statistics_exists(
 
 
 @callback
+def _async_import_statistics(
+    hass: HomeAssistant,
+    metadata: StatisticMetaData,
+    statistics: Iterable[StatisticData],
+) -> None:
+    """Validate timestamps and insert an import_statistics job in the recorder's queue."""
+    for statistic in statistics:
+        start = statistic["start"]
+        if start.tzinfo is None or start.tzinfo.utcoffset(start) is None:
+            raise HomeAssistantError("Naive timestamp")
+        if start.minute != 0 or start.second != 0 or start.microsecond != 0:
+            raise HomeAssistantError("Invalid timestamp")
+        statistic["start"] = dt_util.as_utc(start)
+
+        if "last_reset" in statistic and statistic["last_reset"] is not None:
+            last_reset = statistic["last_reset"]
+            if (
+                last_reset.tzinfo is None
+                or last_reset.tzinfo.utcoffset(last_reset) is None
+            ):
+                raise HomeAssistantError("Naive timestamp")
+            statistic["last_reset"] = dt_util.as_utc(last_reset)
+
+    # Insert job in recorder's queue
+    get_instance(hass).async_import_statistics(metadata, statistics)
+
+
+@callback
+def async_import_statistics(
+    hass: HomeAssistant,
+    metadata: StatisticMetaData,
+    statistics: Iterable[StatisticData],
+) -> None:
+    """Import hourly statistics from an internal source.
+
+    This inserts an import_statistics job in the recorder's queue.
+    """
+    if not valid_entity_id(metadata["statistic_id"]):
+        raise HomeAssistantError("Invalid statistic_id")
+
+    # The source must not be empty and must be aligned with the statistic_id
+    if not metadata["source"] or metadata["source"] != DOMAIN:
+        raise HomeAssistantError("Invalid source")
+
+    _async_import_statistics(hass, metadata, statistics)
+
+
+@callback
 def async_add_external_statistics(
     hass: HomeAssistant,
     metadata: StatisticMetaData,
@@ -1347,7 +1417,7 @@ def async_add_external_statistics(
 ) -> None:
     """Add hourly statistics from an external source.
 
-    This inserts an add_external_statistics job in the recorder's queue.
+    This inserts an import_statistics job in the recorder's queue.
     """
     # The statistic_id has same limitations as an entity_id, but with a ':' as separator
     if not valid_statistic_id(metadata["statistic_id"]):
@@ -1358,16 +1428,7 @@ def async_add_external_statistics(
     if not metadata["source"] or metadata["source"] != domain:
         raise HomeAssistantError("Invalid source")
 
-    for statistic in statistics:
-        start = statistic["start"]
-        if start.tzinfo is None or start.tzinfo.utcoffset(start) is None:
-            raise HomeAssistantError("Naive timestamp")
-        if start.minute != 0 or start.second != 0 or start.microsecond != 0:
-            raise HomeAssistantError("Invalid timestamp")
-        statistic["start"] = dt_util.as_utc(start)
-
-    # Insert job in recorder's queue
-    hass.data[DATA_INSTANCE].async_external_statistics(metadata, statistics)
+    _async_import_statistics(hass, metadata, statistics)
 
 
 def _filter_unique_constraint_integrity_error(
@@ -1411,12 +1472,12 @@ def _filter_unique_constraint_integrity_error(
 
 
 @retryable_database_job("statistics")
-def add_external_statistics(
+def import_statistics(
     instance: Recorder,
     metadata: StatisticMetaData,
     statistics: Iterable[StatisticData],
 ) -> bool:
-    """Process an add_external_statistics job."""
+    """Process an import_statistics job."""
 
     with session_scope(
         session=instance.get_session(),

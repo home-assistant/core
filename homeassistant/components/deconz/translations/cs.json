@@ -68,6 +68,7 @@
             "remote_button_long_release": "Uvoln\u011bno tla\u010d\u00edtko \"{subtype}\" po dlouh\u00e9m stisku",
             "remote_button_quadruple_press": "Tla\u010d\u00edtko \"{subtype}\" stisknuto \u010dty\u0159ikr\u00e1t",
             "remote_button_quintuple_press": "Tla\u010d\u00edtko \"{subtype}\" stisknuto p\u011btkr\u00e1t",
+            "remote_button_rotated": "Tla\u010d\u00edtko \"{subtype}\" se oto\u010dilo",
             "remote_button_rotation_stopped": "Oto\u010den\u00ed tla\u010d\u00edtka \"{subtype}\" bylo zastaveno",
             "remote_button_short_press": "Tla\u010d\u00edtko \"{subtype}\" stisknuto",
             "remote_button_short_release": "Uvoln\u011bno tla\u010d\u00edtko \"{subtype}\"",

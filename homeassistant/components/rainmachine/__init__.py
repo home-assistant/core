@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 from datetime import timedelta
 from functools import partial
-from typing import Any, cast
+from typing import Any
 
 from regenmaschine import Client
 from regenmaschine.controller import Controller
@@ -28,19 +29,13 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.entity import DeviceInfo, EntityDescription
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.update_coordinator import CoordinatorEntity, UpdateFailed
 from homeassistant.util.network import is_ip_address
 
 from .config_flow import get_client_controller
 from .const import (
     CONF_ZONE_RUN_TIME,
-    DATA_CONTROLLER,
-    DATA_COORDINATOR,
     DATA_PROGRAMS,
     DATA_PROVISION_SETTINGS,
     DATA_RESTRICTIONS_CURRENT,
@@ -49,20 +44,14 @@ from .const import (
     DOMAIN,
     LOGGER,
 )
+from .model import RainMachineEntityDescription
+from .util import RainMachineDataUpdateCoordinator
 
 DEFAULT_SSL = True
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
-
-UPDATE_INTERVALS = {
-    DATA_PROVISION_SETTINGS: timedelta(minutes=1),
-    DATA_PROGRAMS: timedelta(seconds=30),
-    DATA_RESTRICTIONS_CURRENT: timedelta(minutes=1),
-    DATA_RESTRICTIONS_UNIVERSAL: timedelta(minutes=1),
-    DATA_ZONES: timedelta(seconds=15),
-}
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR, Platform.SWITCH]
 
 CONF_CONDITION = "condition"
 CONF_DEWPOINT = "dewpoint"
@@ -134,6 +123,22 @@ SERVICE_RESTRICT_WATERING_SCHEMA = SERVICE_SCHEMA.extend(
     }
 )
 
+COORDINATOR_UPDATE_INTERVAL_MAP = {
+    DATA_PROVISION_SETTINGS: timedelta(minutes=1),
+    DATA_PROGRAMS: timedelta(seconds=30),
+    DATA_RESTRICTIONS_CURRENT: timedelta(minutes=1),
+    DATA_RESTRICTIONS_UNIVERSAL: timedelta(minutes=1),
+    DATA_ZONES: timedelta(seconds=15),
+}
+
+
+@dataclass
+class RainMachineData:
+    """Define an object to be stored in `hass.data`."""
+
+    controller: Controller
+    coordinators: dict[str, RainMachineDataUpdateCoordinator]
+
 
 @callback
 def async_get_controller_for_service_call(
@@ -146,9 +151,8 @@ def async_get_controller_for_service_call(
     if device_entry := device_registry.async_get(device_id):
         for entry in hass.config_entries.async_entries(DOMAIN):
             if entry.entry_id in device_entry.config_entries:
-                return cast(
-                    Controller, hass.data[DOMAIN][entry.entry_id][DATA_CONTROLLER]
-                )
+                data: RainMachineData = hass.data[DOMAIN][entry.entry_id]
+                return data.controller
 
     raise ValueError(f"No controller for device ID: {device_id}")
 
@@ -161,14 +165,12 @@ async def async_update_programs_and_zones(
     Program and zone updates always go together because of how linked they are:
     programs affect zones and certain combinations of zones affect programs.
     """
+    data: RainMachineData = hass.data[DOMAIN][entry.entry_id]
+
     await asyncio.gather(
         *[
-            hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR][
-                DATA_PROGRAMS
-            ].async_refresh(),
-            hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR][
-                DATA_ZONES
-            ].async_refresh(),
+            data.coordinators[DATA_PROGRAMS].async_refresh(),
+            data.coordinators[DATA_ZONES].async_refresh(),
         ]
     )
 
@@ -183,7 +185,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry.data[CONF_IP_ADDRESS],
             entry.data[CONF_PASSWORD],
             port=entry.data[CONF_PORT],
-            ssl=entry.data.get(CONF_SSL, DEFAULT_SSL),
+            use_ssl=entry.data.get(CONF_SSL, DEFAULT_SSL),
         )
     except RainMachineError as err:
         raise ConfigEntryNotReady from err
@@ -228,34 +230,34 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         return data
 
+    async def async_init_coordinator(
+        coordinator: RainMachineDataUpdateCoordinator,
+    ) -> None:
+        """Initialize a RainMachineDataUpdateCoordinator."""
+        await coordinator.async_initialize()
+        await coordinator.async_config_entry_first_refresh()
+
     controller_init_tasks = []
     coordinators = {}
-
-    for api_category in (
-        DATA_PROGRAMS,
-        DATA_PROVISION_SETTINGS,
-        DATA_RESTRICTIONS_CURRENT,
-        DATA_RESTRICTIONS_UNIVERSAL,
-        DATA_ZONES,
-    ):
-        coordinator = coordinators[api_category] = DataUpdateCoordinator(
+    for api_category, update_interval in COORDINATOR_UPDATE_INTERVAL_MAP.items():
+        coordinator = coordinators[api_category] = RainMachineDataUpdateCoordinator(
             hass,
-            LOGGER,
+            entry=entry,
             name=f'{controller.name} ("{api_category}")',
-            update_interval=UPDATE_INTERVALS[api_category],
+            api_category=api_category,
+            update_interval=update_interval,
             update_method=partial(async_update, api_category),
         )
-        controller_init_tasks.append(coordinator.async_refresh())
+        controller_init_tasks.append(async_init_coordinator(coordinator))
 
     await asyncio.gather(*controller_init_tasks)
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {
-        DATA_CONTROLLER: controller,
-        DATA_COORDINATOR: coordinators,
-    }
+    hass.data[DOMAIN][entry.entry_id] = RainMachineData(
+        controller=controller, coordinators=coordinators
+    )
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
@@ -401,32 +403,32 @@ async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 class RainMachineEntity(CoordinatorEntity):
     """Define a generic RainMachine entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         entry: ConfigEntry,
-        coordinator: DataUpdateCoordinator,
-        controller: Controller,
-        description: EntityDescription,
+        data: RainMachineData,
+        description: RainMachineEntityDescription,
     ) -> None:
         """Initialize."""
-        super().__init__(coordinator)
+        super().__init__(data.coordinators[description.api_category])
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, controller.mac)},
+            identifiers={(DOMAIN, data.controller.mac)},
             configuration_url=f"https://{entry.data[CONF_IP_ADDRESS]}:{entry.data[CONF_PORT]}",
-            connections={(dr.CONNECTION_NETWORK_MAC, controller.mac)},
-            name=str(controller.name),
+            connections={(dr.CONNECTION_NETWORK_MAC, data.controller.mac)},
+            name=str(data.controller.name).capitalize(),
             manufacturer="RainMachine",
             model=(
-                f"Version {controller.hardware_version} "
-                f"(API: {controller.api_version})"
+                f"Version {data.controller.hardware_version} "
+                f"(API: {data.controller.api_version})"
             ),
-            sw_version=controller.software_version,
+            sw_version=data.controller.software_version,
         )
         self._attr_extra_state_attributes = {}
-        self._attr_name = f"{controller.name} {description.name}"
-        self._attr_unique_id = f"{controller.mac}_{description.key}"
-        self._controller = controller
+        self._attr_unique_id = f"{data.controller.mac}_{description.key}"
+        self._data = data
         self.entity_description = description
 
     @callback
@@ -435,12 +437,6 @@ class RainMachineEntity(CoordinatorEntity):
         self.update_from_latest_data()
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-        await super().async_added_to_hass()
-        self.update_from_latest_data()
-
     @callback
     def update_from_latest_data(self) -> None:
         """Update the state."""
-        raise NotImplementedError

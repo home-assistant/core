@@ -1,5 +1,12 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Redan konfigurerad. Endast en konfiguration m\u00f6jlig.",
+            "cannot_connect": "Det gick inte att ansluta."
+        },
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta."
+        },
         "step": {
             "setup_network": {
                 "data": {
@@ -28,6 +35,16 @@
             }
         }
     },
+    "device_automation": {
+        "action_type": {
+            "send_command": "Skicka kommando: {subtype}",
+            "send_status": "Skicka statusuppdatering: {subtype}"
+        },
+        "trigger_type": {
+            "command": "Mottaget kommando: {subtype}",
+            "status": "Mottagen status: {subtype}"
+        }
+    },
     "options": {
         "error": {
             "already_configured_device": "Enheten \u00e4r redan konfigurerad",
@@ -43,7 +60,8 @@
                     "automatic_add": "Aktivera automatisk till\u00e4gg av enheter",
                     "debug": "Aktivera fels\u00f6kning",
                     "device": "V\u00e4lj enhet att konfigurera",
-                    "event_code": "Ange h\u00e4ndelsekod att l\u00e4gga till"
+                    "event_code": "Ange h\u00e4ndelsekod att l\u00e4gga till",
+                    "protocols": "Protokoll"
                 },
                 "title": "Rfxtrx-alternativ"
             },
@@ -54,7 +72,8 @@
                     "data_bit": "Antal databitar",
                     "off_delay": "Avst\u00e4ngningsf\u00f6rdr\u00f6jning",
                     "off_delay_enabled": "Aktivera avst\u00e4ngningsf\u00f6rdr\u00f6jning",
-                    "replace_device": "V\u00e4lj enhet att ers\u00e4tta"
+                    "replace_device": "V\u00e4lj enhet att ers\u00e4tta",
+                    "venetian_blind_mode": "L\u00e4ge f\u00f6r persienner"
                 },
                 "title": "Konfigurera enhetsalternativ"
             }

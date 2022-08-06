@@ -39,14 +39,8 @@ def _condition_based_services(
 
 def _check_control_messages(vehicle: MyBMWVehicle) -> dict[str, Any]:
     extra_attributes: dict[str, Any] = {}
-    if vehicle.check_control_messages.has_check_control_messages:
-        cbs_list = [
-            message.description_short
-            for message in vehicle.check_control_messages.messages
-        ]
-        extra_attributes["check_control_messages"] = cbs_list
-    else:
-        extra_attributes["check_control_messages"] = "OK"
+    for message in vehicle.check_control_messages.messages:
+        extra_attributes.update({message.description_short: message.state.value})
     return extra_attributes
 
 

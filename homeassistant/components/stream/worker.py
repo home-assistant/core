@@ -5,11 +5,12 @@ from collections import defaultdict, deque
 from collections.abc import Callable, Generator, Iterator, Mapping
 import contextlib
 import datetime
-from io import BytesIO
+from io import SEEK_END, BytesIO
 import logging
 from threading import Event
 from typing import Any, cast
 
+import attr
 import av
 
 from homeassistant.core import HomeAssistant
@@ -24,8 +25,16 @@ from .const import (
     SEGMENT_CONTAINER_FORMAT,
     SOURCE_TIMEOUT,
 )
-from .core import KeyFrameConverter, Part, Segment, StreamOutput, StreamSettings
+from .core import (
+    STREAM_SETTINGS_NON_LL_HLS,
+    KeyFrameConverter,
+    Part,
+    Segment,
+    StreamOutput,
+    StreamSettings,
+)
 from .diagnostics import Diagnostics
+from .fmp4utils import read_init
 from .hls import HlsStreamOutput
 
 _LOGGER = logging.getLogger(__name__)
@@ -108,6 +117,7 @@ class StreamMuxer:
         hass: HomeAssistant,
         video_stream: av.video.VideoStream,
         audio_stream: av.audio.stream.AudioStream | None,
+        audio_bsf: av.BitStreamFilter | None,
         stream_state: StreamState,
         stream_settings: StreamSettings,
     ) -> None:
@@ -118,6 +128,8 @@ class StreamMuxer:
         self._av_output: av.container.OutputContainer = None
         self._input_video_stream: av.video.VideoStream = video_stream
         self._input_audio_stream: av.audio.stream.AudioStream | None = audio_stream
+        self._audio_bsf = audio_bsf
+        self._audio_bsf_context: av.BitStreamFilterContext = None
         self._output_video_stream: av.video.VideoStream = None
         self._output_audio_stream: av.audio.stream.AudioStream | None = None
         self._segment: Segment | None = None
@@ -149,7 +161,7 @@ class StreamMuxer:
                 **{
                     # Removed skip_sidx - see https://github.com/home-assistant/core/pull/39970
                     # "cmaf" flag replaces several of the movflags used, but too recent to use for now
-                    "movflags": "frag_custom+empty_moov+default_base_moof+frag_discont+negative_cts_offsets+skip_trailer",
+                    "movflags": "frag_custom+empty_moov+default_base_moof+frag_discont+negative_cts_offsets+skip_trailer+delay_moov",
                     # Sometimes the first segment begins with negative timestamps, and this setting just
                     # adjusts the timestamps in the output from that segment to start from 0. Helps from
                     # having to make some adjustments in test_durations
@@ -162,7 +174,7 @@ class StreamMuxer:
                 # Fragment durations may exceed the 15% allowed variance but it seems ok
                 **(
                     {
-                        "movflags": "empty_moov+default_base_moof+frag_discont+negative_cts_offsets+skip_trailer",
+                        "movflags": "empty_moov+default_base_moof+frag_discont+negative_cts_offsets+skip_trailer+delay_moov",
                         # Create a fragment every TARGET_PART_DURATION. The data from each fragment is stored in
                         # a "Part" that can be combined with the data from all the other "Part"s, plus an init
                         # section, to reconstitute the data in a "Segment".
@@ -192,7 +204,12 @@ class StreamMuxer:
         # Check if audio is requested
         output_astream = None
         if input_astream:
-            output_astream = container.add_stream(template=input_astream)
+            if self._audio_bsf:
+                self._audio_bsf_context = self._audio_bsf.create()
+                self._audio_bsf_context.set_input_stream(input_astream)
+            output_astream = container.add_stream(
+                template=self._audio_bsf_context or input_astream
+            )
         return container, output_vstream, output_astream
 
     def reset(self, video_dts: int) -> None:
@@ -234,8 +251,28 @@ class StreamMuxer:
             self._part_has_keyframe |= packet.is_keyframe
 
         elif packet.stream == self._input_audio_stream:
+            if self._audio_bsf_context:
+                self._audio_bsf_context.send(packet)
+                while packet := self._audio_bsf_context.recv():
+                    packet.stream = self._output_audio_stream
+                    self._av_output.mux(packet)
+                return
             packet.stream = self._output_audio_stream
             self._av_output.mux(packet)
+
+    def create_segment(self) -> None:
+        """Create a segment when the moov is ready."""
+        self._segment = Segment(
+            sequence=self._stream_state.sequence,
+            stream_id=self._stream_state.stream_id,
+            init=read_init(self._memory_file),
+            # Fetch the latest StreamOutputs, which may have changed since the
+            # worker started.
+            stream_outputs=self._stream_state.outputs,
+            start_time=self._start_time,
+        )
+        self._memory_file_pos = self._memory_file.tell()
+        self._memory_file.seek(0, SEEK_END)
 
     def check_flush_part(self, packet: av.Packet) -> None:
         """Check for and mark a part segment boundary and record its duration."""
@@ -244,16 +281,10 @@ class StreamMuxer:
         if self._segment is None:
             # We have our first non-zero byte position. This means the init has just
             # been written. Create a Segment and put it to the queue of each output.
-            self._segment = Segment(
-                sequence=self._stream_state.sequence,
-                stream_id=self._stream_state.stream_id,
-                init=self._memory_file.getvalue(),
-                # Fetch the latest StreamOutputs, which may have changed since the
-                # worker started.
-                stream_outputs=self._stream_state.outputs,
-                start_time=self._start_time,
-            )
-            self._memory_file_pos = self._memory_file.tell()
+            self.create_segment()
+            # When using delay_moov, the moov is not written until a moof is also ready
+            # Flush the moof
+            self.flush(packet, last_part=False)
         else:  # These are the ends of the part segments
             self.flush(packet, last_part=False)
 
@@ -287,6 +318,10 @@ class StreamMuxer:
             # Closing the av_output will write the remaining buffered data to the
             # memory_file as a new moof/mdat.
             self._av_output.close()
+            # With delay_moov, this may be the first time the file pointer has
+            # moved, so the segment may not yet have been created
+            if not self._segment:
+                self.create_segment()
         elif not self._part_has_keyframe:
             # Parts which are not the last part or an independent part should
             # not have durations below 0.85 of the part target duration.
@@ -295,6 +330,9 @@ class StreamMuxer:
                 self._part_start_dts
                 + 0.85 * self._stream_settings.part_target_duration / packet.time_base,
             )
+        # Undo dts adjustments if we don't have ll_hls
+        if not self._stream_settings.ll_hls:
+            adjusted_dts = packet.dts
         assert self._segment
         self._memory_file.seek(self._memory_file_pos)
         self._hass.loop.call_soon_threadsafe(
@@ -354,12 +392,6 @@ class PeekIterator(Iterator):
     def __next__(self) -> av.Packet:
         """Return and consume the next item available."""
         return self._next()
-
-    def replace_underlying_iterator(self, new_iterator: Iterator) -> None:
-        """Replace the underlying iterator while preserving the buffer."""
-        self._iterator = new_iterator
-        if not self._buffer:
-            self._next = self._iterator.__next__
 
     def _pop_buffer(self) -> av.Packet:
         """Consume items from the buffer until exhausted."""
@@ -422,10 +454,12 @@ def is_keyframe(packet: av.Packet) -> Any:
     return packet.is_keyframe
 
 
-def unsupported_audio(packets: Iterator[av.Packet], audio_stream: Any) -> bool:
-    """Detect ADTS AAC, which is not supported by pyav."""
+def get_audio_bitstream_filter(
+    packets: Iterator[av.Packet], audio_stream: Any
+) -> av.BitStreamFilterContext | None:
+    """Return the aac_adtstoasc bitstream filter if ADTS AAC is detected."""
     if not audio_stream:
-        return False
+        return None
     for count, packet in enumerate(packets):
         if count >= PACKETS_TO_WAIT_FOR_AUDIO:
             # Some streams declare an audio stream and never send any packets
@@ -436,10 +470,12 @@ def unsupported_audio(packets: Iterator[av.Packet], audio_stream: Any) -> bool:
             if audio_stream.codec.name == "aac" and packet.size > 2:
                 with memoryview(packet) as packet_view:
                     if packet_view[0] == 0xFF and packet_view[1] & 0xF0 == 0xF0:
-                        _LOGGER.warning("ADTS AAC detected - disabling audio stream")
-                        return True
+                        _LOGGER.debug(
+                            "ADTS AAC detected. Adding aac_adtstoaac bitstream filter"
+                        )
+                        return av.BitStreamFilter("aac_adtstoasc")
             break
-    return False
+    return None
 
 
 def stream_worker(
@@ -473,16 +509,17 @@ def stream_worker(
         audio_stream = None
     if audio_stream and audio_stream.name not in AUDIO_CODECS:
         audio_stream = None
-    # These formats need aac_adtstoasc bitstream filter, but auto_bsf not
-    # compatible with empty_moov and manual bitstream filters not in PyAV
-    if container.format.name in {"hls", "mpegts"}:
-        audio_stream = None
     # Some audio streams do not have a profile and throw errors when remuxing
     if audio_stream and audio_stream.profile is None:
         audio_stream = None
     # Disable ll-hls for hls inputs
     if container.format.name == "hls":
-        stream_settings.ll_hls = False
+        for field in attr.fields(StreamSettings):
+            setattr(
+                stream_settings,
+                field.name,
+                getattr(STREAM_SETTINGS_NON_LL_HLS, field.name),
+            )
     stream_state.diagnostics.set_value("container_format", container.format.name)
     stream_state.diagnostics.set_value("video_codec", video_stream.name)
     if audio_stream:
@@ -504,12 +541,8 @@ def stream_worker(
     # Use a peeking iterator to peek into the start of the stream, ensuring
     # everything looks good, then go back to the start when muxing below.
     try:
-        if audio_stream and unsupported_audio(container_packets.peek(), audio_stream):
-            audio_stream = None
-            container_packets.replace_underlying_iterator(
-                filter(dts_validator.is_valid, container.demux(video_stream))
-            )
-
+        # Get the required bitstream filter
+        audio_bsf = get_audio_bitstream_filter(container_packets.peek(), audio_stream)
         # Advance to the first keyframe for muxing, then rewind so the muxing
         # loop below can consume.
         first_keyframe = next(
@@ -539,7 +572,12 @@ def stream_worker(
         ) from ex
 
     muxer = StreamMuxer(
-        stream_state.hass, video_stream, audio_stream, stream_state, stream_settings
+        stream_state.hass,
+        video_stream,
+        audio_stream,
+        audio_bsf,
+        stream_state,
+        stream_settings,
     )
     muxer.reset(start_dts)
 

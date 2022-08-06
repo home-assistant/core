@@ -10,7 +10,6 @@ import logging
 import os
 from typing import Union
 
-from aiohttp.hdrs import USER_AGENT
 import requests
 import voluptuous as vol
 
@@ -21,7 +20,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     AREA_SQUARE_METERS,
-    ATTR_ATTRIBUTION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_MONITORED_CONDITIONS,
@@ -244,6 +242,7 @@ def setup_platform(
 class ZamgSensor(SensorEntity):
     """Implementation of a ZAMG sensor."""
 
+    _attr_attribution = ATTRIBUTION
     entity_description: ZamgSensorEntityDescription
 
     def __init__(self, probe, name, description: ZamgSensorEntityDescription):
@@ -261,7 +260,6 @@ class ZamgSensor(SensorEntity):
     def extra_state_attributes(self):
         """Return the state attributes."""
         return {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_STATION: self.probe.get_data("station_name"),
             ATTR_UPDATED: self.probe.last_update.isoformat(),
         }
@@ -275,7 +273,7 @@ class ZamgData:
     """The class for handling the data retrieval."""
 
     API_URL = "http://www.zamg.ac.at/ogd/"
-    API_HEADERS = {USER_AGENT: f"home-assistant.zamg/ {__version__}"}
+    API_HEADERS = {"User-Agent": f"home-assistant.zamg/ {__version__}"}
 
     def __init__(self, station_id):
         """Initialize the probe."""

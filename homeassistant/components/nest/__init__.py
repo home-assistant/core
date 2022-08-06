@@ -29,6 +29,11 @@ from homeassistant.components.application_credentials import (
 from homeassistant.components.camera import Image, img_util
 from homeassistant.components.http.const import KEY_HASS_USER
 from homeassistant.components.http.view import HomeAssistantView
+from homeassistant.components.repairs import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_BINARY_SENSORS,
@@ -77,9 +82,6 @@ from .media_source import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_NEST_UNAVAILABLE = "nest_unavailable"
-
-NEST_SETUP_NOTIFICATION = "nest_setup"
 
 SENSOR_SCHEMA = vol.Schema(
     {vol.Optional(CONF_MONITORED_CONDITIONS): vol.All(cv.ensure_list)}
@@ -179,13 +181,18 @@ class SignalUpdateCallback:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Nest from a config entry with dispatch between old/new flows."""
-
     config_mode = config_flow.get_config_mode(hass)
-    if config_mode == config_flow.ConfigMode.LEGACY:
+    if DATA_SDM not in entry.data or config_mode == config_flow.ConfigMode.LEGACY:
         return await async_setup_legacy_entry(hass, entry)
 
     if config_mode == config_flow.ConfigMode.SDM:
         await async_import_config(hass, entry)
+    elif entry.unique_id != entry.data[CONF_PROJECT_ID]:
+        hass.config_entries.async_update_entry(
+            entry, unique_id=entry.data[CONF_PROJECT_ID]
+        )
+
+    async_delete_issue(hass, DOMAIN, "removed_app_auth")
 
     subscriber = await api.new_subscriber(hass, entry)
     if not subscriber:
@@ -205,33 +212,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await subscriber.start_async()
     except AuthException as err:
-        _LOGGER.debug("Subscriber authentication error: %s", err)
-        raise ConfigEntryAuthFailed from err
+        raise ConfigEntryAuthFailed(
+            f"Subscriber authentication error: {str(err)}"
+        ) from err
     except ConfigurationException as err:
         _LOGGER.error("Configuration error: %s", err)
         subscriber.stop_async()
         return False
     except SubscriberException as err:
-        if DATA_NEST_UNAVAILABLE not in hass.data[DOMAIN]:
-            _LOGGER.error("Subscriber error: %s", err)
-            hass.data[DOMAIN][DATA_NEST_UNAVAILABLE] = True
         subscriber.stop_async()
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady(f"Subscriber error: {str(err)}") from err
 
     try:
         device_manager = await subscriber.async_get_device_manager()
     except ApiException as err:
-        if DATA_NEST_UNAVAILABLE not in hass.data[DOMAIN]:
-            _LOGGER.error("Device manager error: %s", err)
-            hass.data[DOMAIN][DATA_NEST_UNAVAILABLE] = True
         subscriber.stop_async()
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady(f"Device manager error: {str(err)}") from err
 
-    hass.data[DOMAIN].pop(DATA_NEST_UNAVAILABLE, None)
-    hass.data[DOMAIN][DATA_SUBSCRIBER] = subscriber
-    hass.data[DOMAIN][DATA_DEVICE_MANAGER] = device_manager
+    hass.data[DOMAIN][entry.entry_id] = {
+        DATA_SUBSCRIBER: subscriber,
+        DATA_DEVICE_MANAGER: device_manager,
+    }
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -252,11 +255,25 @@ async def async_import_config(hass: HomeAssistant, entry: ConfigEntry) -> None:
                 CONF_SUBSCRIBER_ID_IMPORTED: True,  # Don't delete user managed subscriber
             }
         )
-    hass.config_entries.async_update_entry(entry, data=new_data)
+    hass.config_entries.async_update_entry(
+        entry, data=new_data, unique_id=new_data[CONF_PROJECT_ID]
+    )
 
     if entry.data["auth_implementation"] == INSTALLED_AUTH_DOMAIN:
         # App Auth credentials have been deprecated and must be re-created
         # by the user in the config flow
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "removed_app_auth",
+            is_fixable=False,
+            severity=IssueSeverity.ERROR,
+            translation_key="removed_app_auth",
+            translation_placeholders={
+                "more_info_url": "https://www.home-assistant.io/more-info/nest-auth-deprecation",
+                "documentation_url": "https://www.home-assistant.io/integrations/nest/",
+            },
+        )
         raise ConfigEntryAuthFailed(
             "Google has deprecated App Auth credentials, and the integration "
             "must be reconfigured in the UI to restore access to Nest Devices."
@@ -273,12 +290,14 @@ async def async_import_config(hass: HomeAssistant, entry: ConfigEntry) -> None:
             WEB_AUTH_DOMAIN,
         )
 
-    _LOGGER.warning(
-        "Configuration of Nest integration in YAML is deprecated and "
-        "will be removed in a future release; Your existing configuration "
-        "(including OAuth Application Credentials) has been imported into "
-        "the UI automatically and can be safely removed from your "
-        "configuration.yaml file"
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2022.10.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
     )
 
 
@@ -288,13 +307,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # Legacy API
         return True
     _LOGGER.debug("Stopping nest subscriber")
-    subscriber = hass.data[DOMAIN][DATA_SUBSCRIBER]
+    subscriber = hass.data[DOMAIN][entry.entry_id][DATA_SUBSCRIBER]
     subscriber.stop_async()
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        hass.data[DOMAIN].pop(DATA_SUBSCRIBER)
-        hass.data[DOMAIN].pop(DATA_DEVICE_MANAGER)
-        hass.data[DOMAIN].pop(DATA_NEST_UNAVAILABLE, None)
+        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
 

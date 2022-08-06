@@ -23,7 +23,7 @@
                 },
                 "data_description": {
                     "attribute": "Ottieni il valore di un attributo sull'etichetta selezionata",
-                    "authentication": "Tipo di autenticazione HTTP. Base o digest",
+                    "authentication": "Tipo di autenticazione HTTP. basic o digest",
                     "device_class": "Il tipo/classe del sensore per impostare l'icona nel frontend",
                     "headers": "Intestazioni da utilizzare per la richiesta web",
                     "index": "Definisce quale degli elementi restituiti dal selettore CSS utilizzare",
@@ -57,7 +57,7 @@
                 },
                 "data_description": {
                     "attribute": "Ottieni il valore di un attributo sull'etichetta selezionata",
-                    "authentication": "Tipo di autenticazione HTTP. Base o digest",
+                    "authentication": "Tipo di autenticazione HTTP. basic o digest",
                     "device_class": "Il tipo/classe del sensore per impostare l'icona nel frontend",
                     "headers": "Intestazioni da utilizzare per la richiesta web",
                     "index": "Definisce quale degli elementi restituiti dal selettore CSS utilizzare",

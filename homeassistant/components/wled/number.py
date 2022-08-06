@@ -71,11 +71,8 @@ class WLEDNumber(WLEDEntity, NumberEntity):
 
         # Segment 0 uses a simpler name, which is more natural for when using
         # a single segment / using WLED with one big LED strip.
-        self._attr_name = (
-            f"{coordinator.data.info.name} Segment {segment} {description.name}"
-        )
-        if segment == 0:
-            self._attr_name = f"{coordinator.data.info.name} {description.name}"
+        if segment != 0:
+            self._attr_name = f"Segment {segment} {description.name}"
 
         self._attr_unique_id = (
             f"{coordinator.data.info.mac_address}_{description.key}_{segment}"

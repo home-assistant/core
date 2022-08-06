@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Hizmet zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+            "already_configured": "Hizmet zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "anna_with_adam": "Anna ve Adam tespit edildi. Anna'n\u0131z\u0131n yerine Adam'\u0131n\u0131z\u0131 ekleyin"
         },
         "error": {
             "cannot_connect": "Ba\u011flanma hatas\u0131",
@@ -15,10 +16,12 @@
                 "data": {
                     "flow_type": "Ba\u011flant\u0131 t\u00fcr\u00fc",
                     "host": "IP Adresi",
-                    "port": "Port"
+                    "password": "Smile Kimli\u011fi",
+                    "port": "Port",
+                    "username": "Smile Kullan\u0131c\u0131 Ad\u0131"
                 },
-                "description": "\u00dcr\u00fcn:",
-                "title": "Plugwise tipi"
+                "description": "L\u00fctfen girin",
+                "title": "Smile'a Ba\u011flan\u0131n"
             },
             "user_gateway": {
                 "data": {

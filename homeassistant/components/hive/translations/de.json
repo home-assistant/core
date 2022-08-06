@@ -20,6 +20,13 @@
                 "description": "Gib deinen Hive-Authentifizierungscode ein. \n \nBitte gib den Code 0000 ein, um einen anderen Code anzufordern.",
                 "title": "Hive Zwei-Faktor-Authentifizierung."
             },
+            "configuration": {
+                "data": {
+                    "device_name": "Ger\u00e4tename"
+                },
+                "description": "Gib deine Hive-Konfiguration ein",
+                "title": "Hive-Konfiguration."
+            },
             "reauth": {
                 "data": {
                     "password": "Passwort",
@@ -34,7 +41,7 @@
                     "scan_interval": "Scanintervall (Sekunden)",
                     "username": "Benutzername"
                 },
-                "description": "Gebe deine Anmeldeinformationen und -konfiguration f\u00fcr Hive ein",
+                "description": "Gib deine Hive-Anmeldeinformationen ein.",
                 "title": "Hive Anmeldung"
             }
         }

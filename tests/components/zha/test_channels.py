@@ -20,6 +20,13 @@ from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
 from tests.common import async_capture_events
 
 
+@pytest.fixture(autouse=True)
+def disable_platform_only():
+    """Disable platforms to speed up tests."""
+    with patch("homeassistant.components.zha.PLATFORMS", []):
+        yield
+
+
 @pytest.fixture
 def ieee():
     """IEEE fixture."""
@@ -144,7 +151,18 @@ async def poll_control_device(zha_device_restored, zigpy_device_mock):
             },
         ),
         (0x0202, 1, {"fan_mode"}),
-        (0x0300, 1, {"current_x", "current_y", "color_temperature"}),
+        (
+            0x0300,
+            1,
+            {
+                "current_x",
+                "current_y",
+                "color_temperature",
+                "current_hue",
+                "enhanced_current_hue",
+                "current_saturation",
+            },
+        ),
         (0x0400, 1, {"measured_value"}),
         (0x0401, 1, {"level_status"}),
         (0x0402, 1, {"measured_value"}),

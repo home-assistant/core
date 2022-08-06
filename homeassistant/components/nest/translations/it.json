@@ -4,6 +4,7 @@
     },
     "config": {
         "abort": {
+            "already_configured": "L'account \u00e8 gi\u00e0 configurato",
             "authorize_url_timeout": "Tempo scaduto nel generare l'URL di autorizzazione.",
             "invalid_access_token": "Token di accesso non valido",
             "missing_configuration": "Il componente non \u00e8 configurato. Segui la documentazione.",
@@ -33,7 +34,7 @@
                 "title": "Connetti l'account Google"
             },
             "auth_upgrade": {
-                "description": "App Auth \u00e8 stato ritirato da Google per migliorare la sicurezza e devi agire creando nuove credenziali per l'applicazione. \n\nApri la [documentazione]({more_info_url}) per seguire i passaggi successivi che ti guideranno attraverso i passaggi necessari per ripristinare l'accesso ai tuoi dispositivi Nest.",
+                "description": "App Auth \u00e8 stato ritirato da Google per migliorare la sicurezza ed \u00e8 necessario intervenire creando nuove credenziali per l'applicazione. \n\nApri la [documentazione]({more_info_url}) per seguire i passaggi successivi che ti guideranno attraverso gli stadi necessari per ripristinare l'accesso ai tuoi dispositivi Nest.",
                 "title": "Nest: ritiro dell'autenticazione dell'app"
             },
             "cloud_project": {
@@ -44,18 +45,18 @@
                 "title": "Nest: inserisci l'ID del progetto Cloud"
             },
             "create_cloud_project": {
-                "description": "L'integrazione Nest ti consente di integrare i tuoi termostati, videocamere e campanelli Nest utilizzando l'API Smart Device Management. L'API SDM **richiede una tariffa di configurazione una tantum di US $ 5**. Consulta la documentazione per [maggiori informazioni]({more_info_url}). \n\n 1. Vai a [Google Cloud Console]( {cloud_console_url} ).\n 2. Se questo \u00e8 il tuo primo progetto, fai clic su **Crea progetto** e poi su **Nuovo progetto**.\n 3. Assegna un nome al tuo progetto cloud, quindi fai clic su **Crea**.\n 4. Salva l'ID del progetto cloud, ad es. *example-project-12345*, poich\u00e9 ti servir\u00e0 in seguito\n 5. Vai a Libreria API per [API Smart Device Management]({sdm_api_url}) e fai clic su **Abilita**.\n 6. Vai a Libreria API per [Cloud Pub/Sub API]({pubsub_api_url}) e fai clic su **Abilita**. \n\n Procedi quando il tuo progetto cloud \u00e8 impostato.",
+                "description": "L'integrazione Nest ti consente di integrare i tuoi termostati, videocamere e campanelli Nest utilizzando l'API Smart Device Management. L'API SDM **richiede una tariffa di configurazione una tantum di   5 $ USD**. Consulta la documentazione per [maggiori informazioni]({more_info_url}). \n\n 1. Vai su [Google Cloud Console]({cloud_console_url}).\n 2. Se questo \u00e8 il tuo primo progetto, fai clic su **Crea progetto** e poi su **Nuovo progetto**.\n 3. Assegna un nome al tuo progetto cloud, quindi fai clic su **Crea**.\n 4. Salva l'ID del progetto cloud, ad es. *example-project-12345*, poich\u00e9 ti servir\u00e0 in seguito.\n 5. Vai su Libreria API per [API Smart Device Management]({sdm_api_url}) e fai clic su **Abilita**.\n 6. Vai su Libreria API per [Cloud Pub/Sub API]({pubsub_api_url}) e fai clic su **Abilita**. \n\nProcedi quando il tuo progetto cloud \u00e8 impostato.",
                 "title": "Nest: crea e configura un progetto cloud"
             },
             "device_project": {
                 "data": {
                     "project_id": "ID progetto di accesso al dispositivo"
                 },
-                "description": "Crea un progetto di accesso al dispositivo Nest la cui configurazione **richiede una commissione di $ 5 USD**.\n 1. Vai alla [Console di accesso al dispositivo]({device_access_console_url}) e attraverso il flusso di pagamento.\n 2. Clicca su **Crea progetto**\n 3. Assegna un nome al progetto di accesso al dispositivo e fai clic su **Avanti**.\n 4. Inserisci il tuo ID cliente OAuth\n 5. Abilita gli eventi facendo clic su **Abilita** e **Crea progetto**. \n\n Inserisci il tuo ID progetto di accesso al dispositivo di seguito ([maggiori informazioni]({more_info_url})).\n",
+                "description": "Crea un progetto di accesso al dispositivo Nest la cui configurazione **richiede una commissione di  5 $ USD**.\n 1. Vai alla [Console di accesso al dispositivo]({device_access_console_url}) e attraverso il flusso di pagamento.\n 2. Clicca su **Crea progetto**\n 3. Assegna un nome al progetto di accesso al dispositivo e fai clic su **Avanti**.\n 4. Inserisci il tuo ID Client OAuth\n 5. Abilita gli eventi facendo clic su **Abilita** e **Crea progetto**. \n\nInserisci il tuo ID progetto di accesso al dispositivo di seguito ([maggiori informazioni]({more_info_url})).\n",
                 "title": "Nest: crea un progetto di accesso al dispositivo"
             },
             "device_project_upgrade": {
-                "description": "Aggiorna il progetto di accesso al dispositivo Nest con il nuovo ID client OAuth ([ulteriori informazioni]({more_info_url}))\n1. Vai a [Console di accesso al dispositivo]({device_access_console_url}).\n2. Fai clic sull'icona del cestino accanto a *OAuth Client ID*.\n3. Fai clic sul menu di overflow '...' e *Aggiungi ID client*.\n4. Immettere il nuovo ID client OAuth e fare clic su **Aggiungi**.\n\nIl tuo ID client OAuth \u00e8: '{client_id}'",
+                "description": "Aggiorna il progetto di accesso al dispositivo Nest con il nuovo ID client OAuth ([ulteriori informazioni]({more_info_url}))\n1. Vai a [Console di accesso al dispositivo]({device_access_console_url}).\n2. Fai clic sull'icona del cestino accanto a *ID Client OAuth*.\n3. Fai clic sul menu a comparsa '...' e *Aggiungi ID Client*.\n4. Immettere il nuovo ID Client OAuth e fare clic su **Aggiungi**.\n\nIl tuo ID Client OAuth \u00e8: `{client_id}`",
                 "title": "Nest: aggiorna il progetto di accesso al dispositivo"
             },
             "init": {
@@ -94,6 +95,16 @@
             "camera_person": "Persona rilevata",
             "camera_sound": "Suono rilevato",
             "doorbell_chime": "Campanello premuto"
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "La configurazione di Nest in configuration.yaml sar\u00e0 rimossa in Home Assistant 2022.10. \n\nLe credenziali dell'applicazione OAuth esistenti e le impostazioni di accesso sono state importate automaticamente nell'interfaccia utente. Rimuovi la configurazione YAML dal file configuration.yaml e riavvia Home Assistant per risolvere questo problema.",
+            "title": "La configurazione YAML di Nest sar\u00e0 rimossa"
+        },
+        "removed_app_auth": {
+            "description": "Per migliorare la sicurezza e ridurre il rischio di phishing, Google ha deprecato il metodo di autenticazione utilizzato da Home Assistant. \n\n **Ci\u00f2 richiede un'azione da parte tua per risolverlo** ([maggiori informazioni]({more_info_url})) \n\n 1. Visita la pagina delle integrazioni\n 1. Fare clic su Riconfigura sull'integrazione Nest.\n 1. Home Assistant ti guider\u00e0 attraverso i passaggi per l'aggiornamento all'autenticazione Web. \n\n Consulta le [istruzioni per l'integrazione]({documentation_url}) di Nest per informazioni sulla risoluzione dei problemi.",
+            "title": "Le credenziali di autenticazione Nest devono essere aggiornate"
         }
     }
 }

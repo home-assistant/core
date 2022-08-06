@@ -1,0 +1,43 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad",
+            "already_in_progress": "Konfigurationsfl\u00f6det p\u00e5g\u00e5r redan",
+            "connection_error": "Det gick inte att ansluta."
+        },
+        "error": {
+            "discovery_error": "Det gick inte att uppt\u00e4cka en Motion Gateway"
+        },
+        "flow_title": "{short_mac} ({ip_address})",
+        "step": {
+            "connect": {
+                "data": {
+                    "api_key": "API-nyckel"
+                },
+                "description": "Du beh\u00f6ver en API-nyckel p\u00e5 16 tecken, se https://www.home-assistant.io/integrations/motion_blinds/#retrieving-the-key f\u00f6r instruktioner"
+            },
+            "select": {
+                "data": {
+                    "select_ip": "IP-adress"
+                },
+                "description": "K\u00f6r installationen igen om du vill ansluta ytterligare Motion Gateways",
+                "title": "V\u00e4lj den Motion Gateway som du vill ansluta"
+            },
+            "user": {
+                "data": {
+                    "host": "IP-adress"
+                },
+                "description": "Anslut till din Motion Gateway, om IP-adressen inte \u00e4r inst\u00e4lld anv\u00e4nds automatisk uppt\u00e4ckt"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "wait_for_push": "V\u00e4nta p\u00e5 multicast push vid uppdatering"
+                }
+            }
+        }
+    }
+}

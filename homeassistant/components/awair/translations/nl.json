@@ -17,6 +17,12 @@
                 },
                 "description": "Voer uw Awair-ontwikkelaarstoegangstoken opnieuw in."
             },
+            "reauth_confirm": {
+                "data": {
+                    "access_token": "Toegangstoken",
+                    "email": "E-mail"
+                }
+            },
             "user": {
                 "data": {
                     "access_token": "Toegangstoken",

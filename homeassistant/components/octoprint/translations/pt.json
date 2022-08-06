@@ -1,0 +1,10 @@
+{
+    "config": {
+        "abort": {
+            "unknown": "Erro inesperado"
+        },
+        "error": {
+            "unknown": "Erro inesperado"
+        }
+    }
+}

@@ -14,10 +14,10 @@ from homeassistant.components import websocket_api
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.websocket_api import messages
 from homeassistant.components.websocket_api.connection import ActiveConnection
-from homeassistant.components.websocket_api.const import JSON_DUMP
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers.entityfilter import EntityFilter
 from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.json import JSON_DUMP
 import homeassistant.util.dt as dt_util
 
 from .const import LOGBOOK_ENTITIES_FILTER
@@ -301,7 +301,7 @@ async def ws_event_stream(
     entity_ids = msg.get("entity_ids")
     if entity_ids:
         entity_ids = async_filter_entities(hass, entity_ids)
-        if not entity_ids:
+        if not entity_ids and not device_ids:
             _async_send_empty_response(connection, msg_id, start_time, end_time)
             return
 

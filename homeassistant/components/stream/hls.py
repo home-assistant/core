@@ -60,6 +60,11 @@ class HlsStreamOutput(StreamOutput):
         """Return provider name."""
         return HLS_PROVIDER
 
+    def cleanup(self) -> None:
+        """Handle cleanup."""
+        super().cleanup()
+        self._segments.clear()
+
     @property
     def target_duration(self) -> float:
         """Return the target duration."""

@@ -91,8 +91,8 @@ def test_excludes_only_with_glob_case_3():
     assert testfilter("cover.garage_door")
 
 
-def test_with_include_domain_case4a():
-    """Test case 4a - include and exclude specified, with included domain."""
+def test_with_include_domain_case4():
+    """Test case 4 - include and exclude specified, with included domain."""
     incl_dom = {"light", "sensor"}
     incl_ent = {"binary_sensor.working"}
     excl_dom = {}
@@ -108,8 +108,30 @@ def test_with_include_domain_case4a():
     assert testfilter("sun.sun") is False
 
 
-def test_with_include_glob_case4a():
-    """Test case 4a - include and exclude specified, with included glob."""
+def test_with_include_domain_exclude_glob_case4():
+    """Test case 4 - include and exclude specified, with included domain but excluded by glob."""
+    incl_dom = {"light", "sensor"}
+    incl_ent = {"binary_sensor.working"}
+    incl_glob = {}
+    excl_dom = {}
+    excl_ent = {"light.ignoreme", "sensor.notworking"}
+    excl_glob = {"sensor.busted"}
+    testfilter = generate_filter(
+        incl_dom, incl_ent, excl_dom, excl_ent, incl_glob, excl_glob
+    )
+
+    assert testfilter("sensor.test")
+    assert testfilter("sensor.busted") is False
+    assert testfilter("sensor.notworking") is False
+    assert testfilter("light.test")
+    assert testfilter("light.ignoreme") is False
+    assert testfilter("binary_sensor.working")
+    assert testfilter("binary_sensor.another") is False
+    assert testfilter("sun.sun") is False
+
+
+def test_with_include_glob_case4():
+    """Test case 4 - include and exclude specified, with included glob."""
     incl_dom = {}
     incl_glob = {"light.*", "sensor.*"}
     incl_ent = {"binary_sensor.working"}
@@ -129,8 +151,8 @@ def test_with_include_glob_case4a():
     assert testfilter("sun.sun") is False
 
 
-def test_with_include_domain_glob_filtering_case4a():
-    """Test case 4a - include and exclude specified, both have domains and globs."""
+def test_with_include_domain_glob_filtering_case4():
+    """Test case 4 - include and exclude specified, both have domains and globs."""
     incl_dom = {"light"}
     incl_glob = {"*working"}
     incl_ent = {}
@@ -142,17 +164,64 @@ def test_with_include_domain_glob_filtering_case4a():
     )
 
     assert testfilter("sensor.working")
-    assert testfilter("sensor.notworking") is False
+    assert testfilter("sensor.notworking") is True  # include is stronger
     assert testfilter("light.test")
-    assert testfilter("light.notworking") is False
+    assert testfilter("light.notworking") is True  # include is stronger
     assert testfilter("light.ignoreme") is False
-    assert testfilter("binary_sensor.not_working") is False
+    assert testfilter("binary_sensor.not_working") is True  # include is stronger
     assert testfilter("binary_sensor.another") is False
     assert testfilter("sun.sun") is False
 
 
-def test_exclude_domain_case4b():
-    """Test case 4b - include and exclude specified, with excluded domain."""
+def test_with_include_domain_glob_filtering_case4a_include_strong():
+    """Test case 4 - include and exclude specified, both have domains and globs, and a specifically included entity."""
+    incl_dom = {"light"}
+    incl_glob = {"*working"}
+    incl_ent = {"binary_sensor.specificly_included"}
+    excl_dom = {"binary_sensor"}
+    excl_glob = {"*notworking"}
+    excl_ent = {"light.ignoreme"}
+    testfilter = generate_filter(
+        incl_dom, incl_ent, excl_dom, excl_ent, incl_glob, excl_glob
+    )
+
+    assert testfilter("sensor.working")
+    assert testfilter("sensor.notworking") is True  # iclude is stronger
+    assert testfilter("light.test")
+    assert testfilter("light.notworking") is True  # iclude is stronger
+    assert testfilter("light.ignoreme") is False
+    assert testfilter("binary_sensor.not_working") is True  # iclude is stronger
+    assert testfilter("binary_sensor.another") is False
+    assert testfilter("binary_sensor.specificly_included") is True
+    assert testfilter("sun.sun") is False
+
+
+def test_with_include_glob_filtering_case4a_include_strong():
+    """Test case 4 - include and exclude specified, both have globs, and a specifically included entity."""
+    incl_dom = {}
+    incl_glob = {"*working"}
+    incl_ent = {"binary_sensor.specificly_included"}
+    excl_dom = {}
+    excl_glob = {"*broken", "*notworking", "binary_sensor.*"}
+    excl_ent = {"light.ignoreme"}
+    testfilter = generate_filter(
+        incl_dom, incl_ent, excl_dom, excl_ent, incl_glob, excl_glob
+    )
+
+    assert testfilter("sensor.working") is True
+    assert testfilter("sensor.notworking") is True  # include is stronger
+    assert testfilter("sensor.broken") is False
+    assert testfilter("light.test") is False
+    assert testfilter("light.notworking") is True  # include is stronger
+    assert testfilter("light.ignoreme") is False
+    assert testfilter("binary_sensor.not_working") is True  # include is stronger
+    assert testfilter("binary_sensor.another") is False
+    assert testfilter("binary_sensor.specificly_included") is True
+    assert testfilter("sun.sun") is False
+
+
+def test_exclude_domain_case5():
+    """Test case 5 - include and exclude specified, with excluded domain."""
     incl_dom = {}
     incl_ent = {"binary_sensor.working"}
     excl_dom = {"binary_sensor"}
@@ -168,8 +237,8 @@ def test_exclude_domain_case4b():
     assert testfilter("sun.sun") is True
 
 
-def test_exclude_glob_case4b():
-    """Test case 4b - include and exclude specified, with excluded glob."""
+def test_exclude_glob_case5():
+    """Test case 5 - include and exclude specified, with excluded glob."""
     incl_dom = {}
     incl_glob = {}
     incl_ent = {"binary_sensor.working"}
@@ -189,8 +258,29 @@ def test_exclude_glob_case4b():
     assert testfilter("sun.sun") is True
 
 
-def test_no_domain_case4c():
-    """Test case 4c - include and exclude specified, with no domains."""
+def test_exclude_glob_case5_include_strong():
+    """Test case 5 - include and exclude specified, with excluded glob, and a specifically included entity."""
+    incl_dom = {}
+    incl_glob = {}
+    incl_ent = {"binary_sensor.working"}
+    excl_dom = {"binary_sensor"}
+    excl_glob = {"binary_sensor.*"}
+    excl_ent = {"light.ignoreme", "sensor.notworking"}
+    testfilter = generate_filter(
+        incl_dom, incl_ent, excl_dom, excl_ent, incl_glob, excl_glob
+    )
+
+    assert testfilter("sensor.test")
+    assert testfilter("sensor.notworking") is False
+    assert testfilter("light.test")
+    assert testfilter("light.ignoreme") is False
+    assert testfilter("binary_sensor.working")
+    assert testfilter("binary_sensor.another") is False
+    assert testfilter("sun.sun") is True
+
+
+def test_no_domain_case6():
+    """Test case 6 - include and exclude specified, with no domains."""
     incl_dom = {}
     incl_ent = {"binary_sensor.working"}
     excl_dom = {}
