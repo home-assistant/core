@@ -6,6 +6,7 @@ import logging
 
 import async_timeout
 from pyipma.api import IPMA_API
+from pyipma.forecast import Forecast
 from pyipma.location import Location
 import voluptuous as vol
 
@@ -166,7 +167,7 @@ class IPMAWeather(WeatherEntity):
         self._period = 1 if config.get(CONF_MODE) == "hourly" else 24
         self._location = location
         self._observation = None
-        self._forecast = None
+        self._forecast: list[Forecast] = []
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):
