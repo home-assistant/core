@@ -1474,6 +1474,7 @@ omit =
     homeassistant/components/yalexs_ble/__init__.py
     homeassistant/components/yalexs_ble/entity.py
     homeassistant/components/yalexs_ble/lock.py
+    homeassistant/components/yalexs_ble/util.py
     homeassistant/components/yale_smart_alarm/__init__.py
     homeassistant/components/yale_smart_alarm/alarm_control_panel.py
     homeassistant/components/yale_smart_alarm/binary_sensor.py

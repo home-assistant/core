@@ -90,14 +90,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # precedence over other discovery flows since we already have the keys.
         await self.async_set_unique_id(lock_cfg.address, raise_on_progress=False)
         new_data = {CONF_KEY: lock_cfg.key, CONF_SLOT: lock_cfg.slot}
-        self._abort_if_unique_id_configured(updates=new_data, reload_on_update=False)
-        if has_unique_local_name := local_name_is_unique(lock_cfg.name):
-            for entry in self._async_current_entries():
-                if entry.data.get(CONF_LOCAL_NAME) == lock_cfg.local_name:
-                    self.hass.config_entries.async_update_entry(
-                        entry, data={**entry.data, **new_data}
+        self._abort_if_unique_id_configured(updates=new_data)
+        for entry in self._async_current_entries():
+            if entry.data.get(CONF_LOCAL_NAME) == lock_cfg.local_name:
+                if self.hass.config_entries.async_update_entry(
+                    entry, data={**entry.data, **new_data}
+                ):
+                    self.hass.async_create_task(
+                        self.hass.config_entries.async_reload(entry.entry_id)
                     )
-                    raise AbortFlow(reason="already_configured")
+                raise AbortFlow(reason="already_configured")
         for progress in self._async_in_progress(include_uninitialized=True):
             # Integration discovery should abort other discovery types
             # since it already has the keys and slots, and the other
@@ -105,10 +107,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             context = progress["context"]
             if (
                 not context.get("active")
-                and (
-                    has_unique_local_name
-                    and context.get("local_name") == lock_cfg.local_name
-                )
+                and context.get("local_name") == lock_cfg.local_name
                 or context.get("unique_id") == lock_cfg.address
             ):
                 self.hass.config_entries.flow.async_abort(progress["flow_id"])
@@ -166,8 +165,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             self.context["active"] = True
-            local_name = user_input[CONF_LOCAL_NAME]
-            discovery_info = self._discovered_devices[local_name]
+            address = user_input[CONF_ADDRESS]
+            discovery_info = self._discovered_devices[address]
+            local_name = discovery_info.name
             key = user_input[CONF_KEY]
             slot = user_input[CONF_SLOT]
             await self.async_set_unique_id(
@@ -199,26 +199,32 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
 
         if discovery := self._discovery_info:
-            self._discovered_devices[discovery.name] = discovery
+            self._discovered_devices[discovery.address] = discovery
         else:
-            current_local_names = self._async_current_ids()
+            current_addresses = self._async_current_ids()
+            current_unique_names = {
+                entry.data.get(CONF_LOCAL_NAME)
+                for entry in self._async_current_entries()
+                if local_name_is_unique(entry.data.get(CONF_LOCAL_NAME))
+            }
             for discovery in async_discovered_service_info(self.hass):
                 if (
-                    discovery.name in current_local_names
-                    or discovery.name in self._discovered_devices
+                    discovery.address in current_addresses
+                    or discovery.name in current_unique_names
+                    or discovery.address in self._discovered_devices
                     or YALE_MFR_ID not in discovery.manufacturer_data
                 ):
                     continue
-                self._discovered_devices[discovery.name] = discovery
+                self._discovered_devices[discovery.address] = discovery
 
         if not self._discovered_devices:
             return self.async_abort(reason="no_unconfigured_devices")
 
         data_schema = vol.Schema(
             {
-                vol.Required(CONF_LOCAL_NAME): vol.In(
+                vol.Required(CONF_ADDRESS): vol.In(
                     {
-                        local_name: f"{local_name} ({service_info.address})"
+                        service_info.address: f"{local_name} ({service_info.address})"
                         for local_name, service_info in self._discovered_devices.items()
                     }
                 ),
