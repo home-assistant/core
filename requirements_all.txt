@@ -220,7 +220,7 @@ aionotion==3.0.2
 aiooncue==0.3.4
 
 # homeassistant.components.openexchangerates
-aioopenexchangerates==0.3.0
+aioopenexchangerates==0.4.0
 
 # homeassistant.components.acmeda
 aiopulse==0.4.3
