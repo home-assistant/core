@@ -25,6 +25,12 @@
             "link": {
                 "description": "Tryck p\u00e5 knappen p\u00e5 bryggan f\u00f6r att registrera Philips Hue med Home Assistant. \n\n![Placering av knapp p\u00e5 brygga](/static/images/config_philips_hue.jpg)",
                 "title": "L\u00e4nka hub"
+            },
+            "manual": {
+                "data": {
+                    "host": "V\u00e4rd"
+                },
+                "title": "Manuellt konfigurera en Hue-brygga"
             }
         }
     },
@@ -63,7 +69,9 @@
             "init": {
                 "data": {
                     "allow_hue_groups": "Till\u00e5t Hue-grupper",
-                    "allow_hue_scenes": "Till\u00e5t Hue-scener"
+                    "allow_hue_scenes": "Till\u00e5t Hue-scener",
+                    "allow_unreachable": "Till\u00e5t o\u00e5tkomliga gl\u00f6dlampor att rapportera sitt tillst\u00e5nd korrekt",
+                    "ignore_availability": "Ignorera anslutningsstatus f\u00f6r de givna enheterna"
                 }
             }
         }

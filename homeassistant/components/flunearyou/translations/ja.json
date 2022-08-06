@@ -16,5 +16,17 @@
                 "title": "\u8fd1\u304f\u306eFlu\u3092\u8a2d\u5b9a"
             }
         }
+    },
+    "issues": {
+        "integration_removal": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "title": "\u8fd1\u304f\u306eFlu Near You\u3092\u524a\u9664"
+                    }
+                }
+            },
+            "title": "Flu Near You\u306f\u3001\u5229\u7528\u3067\u304d\u306a\u304f\u306a\u308a\u307e\u3057\u305f"
+        }
     }
 }

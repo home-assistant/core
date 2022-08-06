@@ -1,11 +1,14 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Enheten \u00e4r redan konfigurerad"
+            "already_configured": "Enheten \u00e4r redan konfigurerad",
+            "already_in_progress": "Konfigurationsfl\u00f6det p\u00e5g\u00e5r redan",
+            "connection_error": "Det gick inte att ansluta."
         },
         "error": {
             "discovery_error": "Det gick inte att uppt\u00e4cka en Motion Gateway"
         },
+        "flow_title": "{short_mac} ({ip_address})",
         "step": {
             "connect": {
                 "data": {
@@ -17,7 +20,14 @@
                 "data": {
                     "select_ip": "IP-adress"
                 },
-                "description": "K\u00f6r installationen igen om du vill ansluta ytterligare Motion Gateways"
+                "description": "K\u00f6r installationen igen om du vill ansluta ytterligare Motion Gateways",
+                "title": "V\u00e4lj den Motion Gateway som du vill ansluta"
+            },
+            "user": {
+                "data": {
+                    "host": "IP-adress"
+                },
+                "description": "Anslut till din Motion Gateway, om IP-adressen inte \u00e4r inst\u00e4lld anv\u00e4nds automatisk uppt\u00e4ckt"
             }
         }
     },
