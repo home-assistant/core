@@ -65,8 +65,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the bluetooth discovery step."""
         await self.async_set_unique_id(discovery_info.address)
-        self.context["local_name"] = discovery_info.name
         self._abort_if_unique_id_configured()
+        self.context["local_name"] = discovery_info.name
         self._discovery_info = discovery_info
         self.context["title_placeholders"] = {
             "name": discovery_info.name,
