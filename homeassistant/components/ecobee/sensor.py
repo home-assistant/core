@@ -10,7 +10,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, TEMP_FAHRENHEIT
+from homeassistant.const import PERCENTAGE, TEMP_FAHRENHEIT, CONCENTRATION_PARTS_PER_MILLION, CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -19,22 +19,49 @@ from .const import DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
-        key="temperature",
-        name="Temperature",
-        native_unit_of_measurement=TEMP_FAHRENHEIT,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
+        key = "temperature",
+        name = "Temperature",
+        native_unit_of_measurement = TEMP_FAHRENHEIT,
+        device_class = SensorDeviceClass.TEMPERATURE,
+        state_class = SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
-        key="humidity",
-        name="Humidity",
-        native_unit_of_measurement=PERCENTAGE,
-        device_class=SensorDeviceClass.HUMIDITY,
-        state_class=SensorStateClass.MEASUREMENT,
+        key = "humidity",
+        name = "Humidity",
+        native_unit_of_measurement = PERCENTAGE,
+        device_class = SensorDeviceClass.HUMIDITY,
+        state_class = SensorStateClass.MEASUREMENT,
     ),
+    SensorEntityDescription(
+        key = "co2PPM",
+        name = "CO2",
+        native_unit_of_measurement = CONCENTRATION_PARTS_PER_MILLION,
+        device_class = SensorDeviceClass.CO2,
+        state_class = SensorStateClass.MEASUREMENT,
+     ),
+    SensorEntityDescription(
+        key = "vocPPM",
+        name = "VOC",
+        device_class = SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
+        native_unit_of_measurement = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class = SensorStateClass.MEASUREMENT,
+     ),
+    SensorEntityDescription(
+        key = "airQuality",
+        name = "Air Quality Index",
+        device_class = SensorDeviceClass.AQI,
+        native_unit_of_measurement = None,
+        state_class = SensorStateClass.MEASUREMENT
+     )
 )
 
-
+runtimeKeys = {
+   "temperature" : 'actualTemperature',
+   "humidity" : 'actualHumidity',
+   "co2PPM" : 'actualCO2',
+   "vocPPM" : 'actualVOC',
+   "airQuality" : 'actualAQScore'
+}
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -66,7 +93,7 @@ class EcobeeSensor(SensorEntity):
         self.sensor_name = sensor_name
         self.index = sensor_index
         self._state = None
-
+        self.thermostat = self.data.ecobee.get_thermostat(self.index)
         self._attr_name = f"{sensor_name} {description.name}"
 
     @property
@@ -76,8 +103,7 @@ class EcobeeSensor(SensorEntity):
             if sensor["name"] == self.sensor_name:
                 if "code" in sensor:
                     return f"{sensor['code']}-{self.device_class}"
-                thermostat = self.data.ecobee.get_thermostat(self.index)
-                return f"{thermostat['identifier']}-{sensor['id']}-{self.device_class}"
+                return f"{self.thermostat['identifier']}-{sensor['id']}-{self.device_class}"
 
     @property
     def device_info(self) -> DeviceInfo | None:
@@ -91,11 +117,10 @@ class EcobeeSensor(SensorEntity):
                 identifier = sensor["code"]
                 model = "ecobee Room Sensor"
             else:
-                thermostat = self.data.ecobee.get_thermostat(self.index)
-                identifier = thermostat["identifier"]
+                identifier = self.thermostat["identifier"]
                 try:
                     model = (
-                        f"{ECOBEE_MODEL_TO_NAME[thermostat['modelNumber']]} Thermostat"
+                        f"{ECOBEE_MODEL_TO_NAME[self.thermostat['modelNumber']]} Thermostat"
                     )
                 except KeyError:
                     # Ecobee model is not in our list
@@ -114,8 +139,7 @@ class EcobeeSensor(SensorEntity):
     @property
     def available(self):
         """Return true if device is available."""
-        thermostat = self.data.ecobee.get_thermostat(self.index)
-        return thermostat["runtime"]["connected"]
+        return self.thermostat["runtime"]["connected"]
 
     @property
     def native_value(self):
@@ -141,5 +165,6 @@ class EcobeeSensor(SensorEntity):
             for item in sensor["capability"]:
                 if item["type"] != self.entity_description.key:
                     continue
-                self._state = item["value"]
+                thermostat = self.data.ecobee.get_thermostat(self.index)
+                self._state=thermostat["runtime"][runtimeKeys[self.entity_description.key]]
                 break
