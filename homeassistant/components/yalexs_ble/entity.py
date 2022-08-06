@@ -22,21 +22,19 @@ class YALEXSBLEEntity(Entity):
         self._data = data
         self._device = device = data.lock
         self._attr_available = False
-        self._attr_unique_id = data.local_name
         lock_state = device.lock_state
         lock_info = device.lock_info
         connection_info = device.connection_info
-        assert device.ble_device is not None
         assert lock_state is not None
         assert connection_info is not None
         assert lock_info is not None
-        self._address = device.ble_device.address
+        self._attr_unique_id = device.address
         self._attr_device_info = DeviceInfo(
             name=data.title,
             manufacturer=lock_info.manufacturer,
             model=lock_info.model,
-            connections={(dr.CONNECTION_BLUETOOTH, self._address)},
-            identifiers={(DOMAIN, data.local_name), (DOMAIN, lock_info.serial)},
+            connections={(dr.CONNECTION_BLUETOOTH, device.address)},
+            identifiers={(DOMAIN, lock_info.serial)},
             sw_version=lock_info.firmware,
         )
         if device.lock_state:
@@ -67,7 +65,7 @@ class YALEXSBLEEntity(Entity):
         """Register callbacks."""
         self.async_on_remove(
             bluetooth.async_track_unavailable(
-                self.hass, self._async_device_unavailable, self._address
+                self.hass, self._async_device_unavailable, self._device.address
             )
         )
         self.async_on_remove(self._device.register_callback(self._async_state_changed))

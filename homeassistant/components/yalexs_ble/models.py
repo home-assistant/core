@@ -11,5 +11,4 @@ class YaleXSBLEData:
     """Data for the yale xs ble integration."""
 
     title: str
-    local_name: str
     lock: PushLock

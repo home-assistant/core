@@ -4,20 +4,17 @@ from __future__ import annotations
 import asyncio
 
 import async_timeout
-from yalexs_ble import PushLock
+from yalexs_ble import PushLock, local_name_is_unique
 
 from homeassistant.components import bluetooth
-from homeassistant.components.bluetooth.match import (
-    LOCAL_NAME,
-    BluetoothCallbackMatcher,
-)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import CONF_KEY, CONF_SLOT, DISCOVERY_TIMEOUT, DOMAIN
+from .const import CONF_KEY, CONF_LOCAL_NAME, CONF_SLOT, DISCOVERY_TIMEOUT, DOMAIN
 from .models import YaleXSBLEData
+from .util import bluetooth_callback_matcher
 
 PLATFORMS: list[Platform] = [Platform.LOCK]
 
@@ -28,10 +25,14 @@ STARTUP_TIMEOUT = 55
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Yale Access Bluetooth from a config entry."""
-    local_name = entry.unique_id
-    assert local_name is not None
-    push_lock = PushLock(local_name, None, entry.data[CONF_KEY], entry.data[CONF_SLOT])
-    push_lock.set_name(f"{entry.title} ({local_name})")
+    local_name = entry.data[CONF_LOCAL_NAME]
+    address = entry.data[CONF_ADDRESS]
+    key = entry.data[CONF_KEY]
+    slot = entry.data[CONF_SLOT]
+    has_unique_local_name = local_name_is_unique(local_name)
+    push_lock = PushLock(local_name, address, None, key, slot)
+    id_ = local_name if has_unique_local_name else address
+    push_lock.set_name(f"{entry.title} ({id_})")
     startup_event = asyncio.Event()
 
     @callback
@@ -47,7 +48,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # We may already have the advertisement, so check for it.
     for service_info in bluetooth.async_discovered_service_info(hass):
-        if service_info.device.name == local_name:
+        if (
+            has_unique_local_name and service_info.device.name == local_name
+        ) or service_info.device.address == address:
             push_lock.update_advertisement(
                 service_info.device, service_info.advertisement
             )
@@ -57,7 +60,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         bluetooth.async_register_callback(
             hass,
             _async_update_ble,
-            BluetoothCallbackMatcher({LOCAL_NAME: local_name}),
+            bluetooth_callback_matcher(local_name, push_lock.address),
             bluetooth.BluetoothScanningMode.PASSIVE,
         )
     )
@@ -74,7 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         cancel_first_update()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = YaleXSBLEData(
-        entry.title, local_name, push_lock
+        entry.title, push_lock
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -84,9 +87,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
-    data: YaleXSBLEData = hass.data[DOMAIN][entry.entry_id]
-    if entry.title != data.title:
-        await hass.config_entries.async_reload(entry.entry_id)
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
