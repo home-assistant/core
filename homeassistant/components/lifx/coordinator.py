@@ -322,6 +322,8 @@ class LIFXSensorUpdateCoordinator(LIFXUpdateCoordinator):
         return SIGNAL_STRENGTH_DECIBELS
 
     async def _async_update_data(self) -> None:
+        """Update sensor data for enabled sensors."""
+
         async def _async_update_uptime() -> None:
             """Fetch the current uptime value."""
             try:
