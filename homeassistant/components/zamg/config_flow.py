@@ -20,7 +20,9 @@ class ZamgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     _client: ZamgData | None = None
 
-    async def async_step_user(self, user_input: dict[str, Any] | None = None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initiated by the user."""
         errors: dict[str, Any] = {}
 
