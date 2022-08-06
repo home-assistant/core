@@ -16,18 +16,21 @@ from homeassistant.helpers.integration_platform import (
 from homeassistant.util.async_ import run_callback_threadsafe
 
 from .const import DOMAIN
-from .issue_registry import async_get as async_get_issue_registry
+from .issue_registry import IssueEntry, async_get as async_get_issue_registry
 from .models import IssueSeverity, RepairsFlow, RepairsProtocol
 
 
 class ConfirmRepairFlow(RepairsFlow):
     """Handler for an issue fixing flow without any side effects."""
 
+    def __init__(self, issue: IssueEntry | None) -> None:
+        """Initialize."""
+        self._issue = issue
+
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
     ) -> data_entry_flow.FlowResult:
         """Handle the first step of a fix flow."""
-
         return await (self.async_step_confirm())
 
     async def async_step_confirm(
@@ -37,7 +40,10 @@ class ConfirmRepairFlow(RepairsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data={})
 
-        return self.async_show_form(step_id="confirm", data_schema=vol.Schema({}))
+        kwargs = {"step_id": "confirm", "data_schema": vol.Schema({})}
+        if self._issue:
+            kwargs["description_placeholders"] = self._issue.translation_placeholders
+        return self.async_show_form(**kwargs)
 
 
 class RepairsFlowManager(data_entry_flow.FlowManager):
@@ -64,7 +70,7 @@ class RepairsFlowManager(data_entry_flow.FlowManager):
 
         platforms: dict[str, RepairsProtocol] = self.hass.data[DOMAIN]["platforms"]
         if handler_key not in platforms:
-            flow: RepairsFlow = ConfirmRepairFlow()
+            flow: RepairsFlow = ConfirmRepairFlow(issue)
         else:
             platform = platforms[handler_key]
             flow = await platform.async_create_fix_flow(self.hass, issue_id, issue.data)
