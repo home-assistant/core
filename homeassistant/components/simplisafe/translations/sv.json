@@ -8,6 +8,8 @@
         },
         "error": {
             "identifier_exists": "Kontot \u00e4r redan registrerat",
+            "invalid_auth": "Ogiltig autentisering",
+            "invalid_auth_code_length": "SimpliSafe auktoriseringskoder \u00e4r 45 tecken l\u00e5nga",
             "unknown": "Ov\u00e4ntat fel"
         },
         "progress": {

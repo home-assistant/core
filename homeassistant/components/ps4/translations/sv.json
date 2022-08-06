@@ -23,12 +23,18 @@
                     "ip_address": "IP-adress",
                     "name": "Namn",
                     "region": "Region"
+                },
+                "data_description": {
+                    "code": "Navigera till \"Inst\u00e4llningar\" p\u00e5 din PlayStation 4-konsol. Navigera sedan till \"Mobile App Connection Settings\" och v\u00e4lj \"Add Device\" f\u00f6r att f\u00e5 fram PIN-koden."
                 }
             },
             "mode": {
                 "data": {
                     "ip_address": "IP-adress (l\u00e4mna tom om du anv\u00e4nder automatisk uppt\u00e4ckt).",
                     "mode": "Konfigureringsl\u00e4ge"
+                },
+                "data_description": {
+                    "ip_address": "L\u00e4mna tomt om du v\u00e4ljer automatisk uppt\u00e4ckt."
                 }
             }
         }

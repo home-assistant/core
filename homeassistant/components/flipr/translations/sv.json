@@ -22,7 +22,8 @@
                     "email": "E-post",
                     "password": "L\u00f6senord"
                 },
-                "description": "Anslut med ditt Flipr-konto."
+                "description": "Anslut med ditt Flipr-konto.",
+                "title": "Anslut till Flipr"
             }
         }
     }

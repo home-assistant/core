@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Enheten \u00e4r redan konfigurerad"
+            "already_configured": "Enheten \u00e4r redan konfigurerad",
+            "reauth_successful": "\u00c5terautentisering lyckades"
         },
         "error": {
             "invalid_auth": "Ogiltig autentisering",
@@ -13,13 +14,21 @@
                 "data": {
                     "latitude": "Latitud",
                     "longitude": "Longitud"
-                }
+                },
+                "description": "Ange latitud och longitud f\u00f6r att \u00f6vervaka:"
             },
             "location": {
                 "data": {
                     "location_type": "Plats"
                 },
                 "description": "V\u00e4lj en plats att \u00f6vervaka:"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "L\u00f6senord"
+                },
+                "description": "Ange l\u00f6senordet f\u00f6r {anv\u00e4ndarnamn} p\u00e5 nytt:",
+                "title": "\u00c5terautenticera integration"
             },
             "user": {
                 "data": {
