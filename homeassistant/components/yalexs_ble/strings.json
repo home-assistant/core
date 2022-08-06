@@ -5,7 +5,7 @@
       "user": {
         "description": "Check the documentation at {docs_url} for how to find the offline key.",
         "data": {
-          "local_name": "Bluetooth local name",
+          "address": "Bluetooth address",
           "key": "Offline Key (32-byte hex string)",
           "slot": "Offline Key Slot (Integer between 0 and 255)"
         }
