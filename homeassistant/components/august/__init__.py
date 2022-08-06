@@ -165,6 +165,7 @@ class AugustData(AugustSubscriberMixin):
             assert isinstance(lock_detail, LockDetail)
             discovery_info = {
                 "name": lock_detail.device_name,
+                "address": lock_detail.mac_address,
                 "serial": lock_detail.serial_number,
                 "key": lock_detail.offline_key,
                 "slot": lock_detail.offline_slot,
