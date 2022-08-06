@@ -357,6 +357,7 @@ class BluetoothManager:
         # We have to start it right away as some integrations might
         # need it straight away.
         _LOGGER.debug("Starting bluetooth scanner")
+        self.scanner.set_scanning_filter(Transport="le")  # type: ignore[no-untyped-call]
         self.scanner.register_detection_callback(self.scanner.async_callback_dispatcher)
         self._cancel_device_detected = self.scanner.async_register_callback(
             self._device_detected, {}
