@@ -224,8 +224,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(CONF_ADDRESS): vol.In(
                     {
-                        service_info.address: f"{local_name} ({service_info.address})"
-                        for local_name, service_info in self._discovered_devices.items()
+                        service_info.address: f"{service_info.name} ({service_info.address})"
+                        for service_info in self._discovered_devices.values()
                     }
                 ),
                 vol.Required(CONF_KEY): str,
