@@ -27,6 +27,9 @@
             "init": {
                 "data": {
                     "events": "Kommaseparerad lista \u00f6ver h\u00e4ndelser."
+                },
+                "data_description": {
+                    "events": "L\u00e4gg till ett kommaseparerat h\u00e4ndelsenamn f\u00f6r varje h\u00e4ndelse du vill sp\u00e5ra. N\u00e4r du har angett dem h\u00e4r, anv\u00e4nd DoorBird-appen f\u00f6r att tilldela dem till en specifik h\u00e4ndelse. \n\n Exempel: n\u00e5gon_tryckte p\u00e5_knappen, r\u00f6relse"
                 }
             }
         }
