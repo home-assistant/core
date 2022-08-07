@@ -104,6 +104,8 @@ class IcloudAccount:
         self._retried_fetch = False
         self._config_entry = config_entry
 
+        self.listeners = []
+
     def setup(self) -> None:
         """Set up an iCloud account."""
         try:
