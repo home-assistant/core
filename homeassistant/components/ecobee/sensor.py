@@ -19,48 +19,48 @@ from .const import DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
-        key = "temperature",
-        name = "Temperature",
-        native_unit_of_measurement = TEMP_FAHRENHEIT,
-        device_class = SensorDeviceClass.TEMPERATURE,
-        state_class = SensorStateClass.MEASUREMENT,
+        key="temperature",
+        name="Temperature",
+        native_unit_of_measurement=TEMP_FAHRENHEIT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
-        key = "humidity",
-        name = "Humidity",
-        native_unit_of_measurement = PERCENTAGE,
-        device_class = SensorDeviceClass.HUMIDITY,
-        state_class = SensorStateClass.MEASUREMENT,
+        key="humidity",
+        name="Humidity",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
-        key = "co2PPM",
-        name = "CO2",
-        native_unit_of_measurement = CONCENTRATION_PARTS_PER_MILLION,
-        device_class = SensorDeviceClass.CO2,
-        state_class = SensorStateClass.MEASUREMENT,
+        key="co2PPM",
+        name="CO2",
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        device_class=SensorDeviceClass.CO2,
+        state_class=SensorStateClass.MEASUREMENT,
      ),
     SensorEntityDescription(
-        key = "vocPPM",
-        name = "VOC",
-        device_class = SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
-        native_unit_of_measurement = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        state_class = SensorStateClass.MEASUREMENT,
+        key="vocPPM",
+        name="VOC",
+        device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
      ),
     SensorEntityDescription(
-        key = "airQuality",
-        name = "Air Quality Index",
-        device_class = SensorDeviceClass.AQI,
-        native_unit_of_measurement = None,
-        state_class = SensorStateClass.MEASUREMENT
+        key="airQuality",
+        name="Air Quality Index",
+        device_class=SensorDeviceClass.AQI,
+        native_unit_of_measurement=None,
+        state_class=SensorStateClass.MEASUREMENT
      )
 )
 
 runtimeKeys = {
-   "temperature" : 'actualTemperature',
-   "humidity" : 'actualHumidity',
-   "co2PPM" : 'actualCO2',
-   "vocPPM" : 'actualVOC',
-   "airQuality" : 'actualAQScore'
+   "temperature": 'actualTemperature',
+   "humidity": 'actualHumidity',
+   "co2PPM": 'actualCO2',
+   "vocPPM": 'actualVOC',
+   "airQuality": 'actualAQScore'
 }
 
 async def async_setup_entry(
