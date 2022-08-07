@@ -3,7 +3,10 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.bluetooth import BluetoothScanningMode, BluetoothServiceInfoBleak
+from homeassistant.components.bluetooth import (
+    BluetoothScanningMode,
+    BluetoothServiceInfoBleak,
+)
 from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothProcessorCoordinator,
 )

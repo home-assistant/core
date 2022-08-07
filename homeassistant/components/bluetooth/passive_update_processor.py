@@ -73,7 +73,9 @@ class PassiveBluetoothProcessorCoordinator(
         logger: logging.Logger,
         address: str,
         mode: BluetoothScanningMode,
-        update_method: Callable[[BluetoothServiceInfoBleak], _T] = _default_update_method,
+        update_method: Callable[
+            [BluetoothServiceInfoBleak], _T
+        ] = _default_update_method,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(hass, logger, address, mode)
