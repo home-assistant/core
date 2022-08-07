@@ -52,12 +52,6 @@ class PassiveBluetoothDataUpdate(Generic[_T]):
     )
 
 
-def _default_update_method(
-    service_info: BluetoothServiceInfoBleak,
-) -> BluetoothServiceInfoBleak:
-    return service_info
-
-
 class PassiveBluetoothProcessorCoordinator(
     Generic[_T], BasePassiveBluetoothCoordinator
 ):
@@ -73,12 +67,12 @@ class PassiveBluetoothProcessorCoordinator(
         logger: logging.Logger,
         address: str,
         mode: BluetoothScanningMode,
-        update_method: Callable[[BluetoothServiceInfoBleak], _T] | None = None,
+        update_method: Callable[[BluetoothServiceInfoBleak], _T],
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(hass, logger, address, mode)
         self._processors: list[PassiveBluetoothDataProcessor] = []
-        self._update_method = update_method or _default_update_method
+        self._update_method = update_method
 
     @callback
     def async_register_processor(
