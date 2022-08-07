@@ -87,14 +87,16 @@ class RainMachineUpdateEntity(RainMachineEntity, UpdateEntity):
         else:
             self._attr_installed_version = None
 
-        if self.coordinator.data["update"]:
-            data = self.coordinator.data
-            self._attr_in_progress = UPDATE_STATE_MAP[data["updateStatus"]] in (
-                UpdateStates.DOWNLOADING,
-                UpdateStates.UPGRADING,
-                UpdateStates.REBOOT,
-            )
-            self._attr_latest_version = data["packageDetails"]["newVersion"]
-        else:
+        data = self.coordinator.data
+
+        if not data["update"]:
             self._attr_in_progress = False
             self._attr_latest_version = self._attr_installed_version
+            return
+
+        self._attr_in_progress = UPDATE_STATE_MAP[data["updateStatus"]] in (
+            UpdateStates.DOWNLOADING,
+            UpdateStates.UPGRADING,
+            UpdateStates.REBOOT,
+        )
+        self._attr_latest_version = data["packageDetails"]["newVersion"]
