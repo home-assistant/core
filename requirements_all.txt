@@ -37,7 +37,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.17.3
+PySwitchbot==0.18.4
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -113,7 +113,7 @@ aio_geojson_usgs_earthquakes==0.1
 aio_georss_gdacs==0.7
 
 # homeassistant.components.airzone
-aioairzone==0.4.6
+aioairzone==0.4.8
 
 # homeassistant.components.ambient_station
 aioambient==2021.11.0
@@ -128,7 +128,7 @@ aioasuswrt==1.4.0
 aioazuredevops==1.3.5
 
 # homeassistant.components.baf
-aiobafi6==0.7.0
+aiobafi6==0.7.2
 
 # homeassistant.components.aws
 aiobotocore==2.1.0
@@ -187,10 +187,7 @@ aiokafka==0.7.2
 aiokef==0.2.16
 
 # homeassistant.components.lifx
-aiolifx-connection==1.0.0
-
-# homeassistant.components.lifx
-aiolifx==0.8.1
+aiolifx==0.8.2
 
 # homeassistant.components.lifx
 aiolifx_effects==0.2.2
@@ -220,7 +217,7 @@ aionotion==3.0.2
 aiooncue==0.3.4
 
 # homeassistant.components.openexchangerates
-aioopenexchangerates==0.3.0
+aioopenexchangerates==0.4.0
 
 # homeassistant.components.acmeda
 aiopulse==0.4.3
@@ -399,7 +396,7 @@ beautifulsoup4==4.11.1
 # beewi_smartclim==0.0.10
 
 # homeassistant.components.zha
-bellows==0.31.2
+bellows==0.31.3
 
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.10.1
@@ -763,7 +760,7 @@ googlemaps==2.5.1
 goslide-api==0.5.1
 
 # homeassistant.components.govee_ble
-govee-ble==0.12.6
+govee-ble==0.12.7
 
 # homeassistant.components.remote_rpi_gpio
 gpiozero==1.6.2
@@ -772,7 +769,7 @@ gpiozero==1.6.2
 gps3==0.33.3
 
 # homeassistant.components.gree
-greeclimate==1.2.0
+greeclimate==1.3.0
 
 # homeassistant.components.greeneye_monitor
 greeneye_monitor==3.0.3
@@ -1262,7 +1259,7 @@ pillow==9.2.0
 pizzapi==0.0.3
 
 # homeassistant.components.plex
-plexapi==4.11.2
+plexapi==4.12.1
 
 # homeassistant.components.plex
 plexauth==0.0.6
@@ -1464,7 +1461,7 @@ pydaikin==2.7.0
 pydanfossair==0.1.0
 
 # homeassistant.components.deconz
-pydeconz==101
+pydeconz==103
 
 # homeassistant.components.delijn
 pydelijn==1.0.0
@@ -1821,6 +1818,7 @@ pyserial-asyncio==0.6
 # homeassistant.components.crownstone
 # homeassistant.components.usb
 # homeassistant.components.zha
+# homeassistant.components.zwave_js
 pyserial==3.5
 
 # homeassistant.components.sesame
@@ -2045,7 +2043,7 @@ pywebpush==1.9.2
 pywemo==0.9.1
 
 # homeassistant.components.wilight
-pywilight==0.0.70
+pywilight==0.0.74
 
 # homeassistant.components.wiz
 pywizlight==0.5.14
@@ -2499,7 +2497,7 @@ xs1-api-client==3.0.0
 yalesmartalarmclient==0.3.8
 
 # homeassistant.components.august
-yalexs==1.1.25
+yalexs==1.2.1
 
 # homeassistant.components.yeelight
 yeelight==0.7.10
@@ -2520,7 +2518,7 @@ youtube_dl==2021.12.17
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.38.7
+zeroconf==0.39.0
 
 # homeassistant.components.zha
 zha-quirks==0.0.78
@@ -2538,13 +2536,13 @@ zigpy-deconz==0.18.0
 zigpy-xbee==0.15.0
 
 # homeassistant.components.zha
-zigpy-zigate==0.9.0
+zigpy-zigate==0.9.1
 
 # homeassistant.components.zha
 zigpy-znp==0.8.1
 
 # homeassistant.components.zha
-zigpy==0.48.0
+zigpy==0.49.0
 
 # homeassistant.components.zoneminder
 zm-py==0.5.2

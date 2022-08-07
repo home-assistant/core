@@ -105,10 +105,5 @@ USB = [
         "vid": "10C4",
         "pid": "8A2A",
         "description": "*z-wave*"
-    },
-    {
-        "domain": "zwave_js",
-        "vid": "10C4",
-        "pid": "EA60"
     }
 ]

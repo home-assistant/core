@@ -32,8 +32,10 @@
             },
             "reauth_confirm": {
                 "data": {
+                    "password": "L\u00f6senord",
                     "username": "Anv\u00e4ndarnamn"
-                }
+                },
+                "title": "Synology DSM \u00c5terautenticera integration"
             },
             "user": {
                 "data": {

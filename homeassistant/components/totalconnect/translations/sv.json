@@ -11,6 +11,9 @@
         },
         "step": {
             "locations": {
+                "data": {
+                    "usercode": "Anv\u00e4ndarkod"
+                },
                 "description": "Ange anv\u00e4ndarkoden f\u00f6r denna anv\u00e4ndare p\u00e5 plats {location_id}",
                 "title": "Anv\u00e4ndarkoder f\u00f6r plats"
             },
