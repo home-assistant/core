@@ -10,6 +10,8 @@ import pytest
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
+    SCANNER_WATCHDOG_INTERVAL,
+    SCANNER_WATCHDOG_TIMEOUT,
     SOURCE_LOCAL,
     UNAVAILABLE_TRACK_SECONDS,
     BluetoothChange,
@@ -1522,3 +1524,57 @@ async def test_invalid_dbus_message(hass, caplog):
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
     assert "dbus" in caplog.text
+
+
+async def test_recovery_from_dbus_restart(
+    hass, mock_bleak_scanner_start, enable_bluetooth
+):
+    """Test we can recover when DBus gets restarted out from under us."""
+    assert await async_setup_component(hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}})
+    await hass.async_block_till_done()
+    assert len(mock_bleak_scanner_start.mock_calls) == 1
+
+    start_time_monotonic = 1000
+    scanner = _get_underlying_scanner()
+    mock_discovered = [MagicMock()]
+    type(scanner).discovered_devices = mock_discovered
+
+    # Ensure we don't restart the scanner if we don't need to
+    with patch(
+        "homeassistant.components.bluetooth.MONOTONIC_TIME",
+        return_value=start_time_monotonic + 10,
+    ):
+        async_fire_time_changed(hass, dt_util.utcnow() + SCANNER_WATCHDOG_INTERVAL)
+        await hass.async_block_till_done()
+
+    assert len(mock_bleak_scanner_start.mock_calls) == 1
+
+    # Fire a callback to reset the timer
+    with patch(
+        "homeassistant.components.bluetooth.MONOTONIC_TIME",
+        return_value=start_time_monotonic,
+    ):
+        scanner._callback(
+            BLEDevice("44:44:33:11:23:42", "any_name"),
+            AdvertisementData(local_name="any_name"),
+        )
+
+    # Ensure we don't restart the scanner if we don't need to
+    with patch(
+        "homeassistant.components.bluetooth.MONOTONIC_TIME",
+        return_value=start_time_monotonic + 20,
+    ):
+        async_fire_time_changed(hass, dt_util.utcnow() + SCANNER_WATCHDOG_INTERVAL)
+        await hass.async_block_till_done()
+
+    assert len(mock_bleak_scanner_start.mock_calls) == 1
+
+    # We hit the timer, so we restart the scanner
+    with patch(
+        "homeassistant.components.bluetooth.MONOTONIC_TIME",
+        return_value=start_time_monotonic + SCANNER_WATCHDOG_TIMEOUT,
+    ):
+        async_fire_time_changed(hass, dt_util.utcnow() + SCANNER_WATCHDOG_INTERVAL)
+        await hass.async_block_till_done()
+
+    assert len(mock_bleak_scanner_start.mock_calls) == 2
