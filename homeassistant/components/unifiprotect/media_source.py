@@ -49,7 +49,7 @@ class SimpleEventType(str, Enum):
 
 
 class IdentifierType(str, Enum):
-    """UniFi Protect identifer type."""
+    """UniFi Protect identifier type."""
 
     EVENT = "event"
     EVENT_THUMB = "eventthumb"
@@ -57,7 +57,7 @@ class IdentifierType(str, Enum):
 
 
 class IdentifierTimeType(str, Enum):
-    """UniFi Protect identifer subtype."""
+    """UniFi Protect identifier subtype."""
 
     RECENT = "recent"
     RANGE = "range"
