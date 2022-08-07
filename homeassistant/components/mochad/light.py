@@ -61,7 +61,6 @@ class MochadLight(LightEntity):
     _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
-    brightness: int
 
     def __init__(
         self, hass: HomeAssistant, ctrl: controller.PyMochad, dev: dict[str, Any]
