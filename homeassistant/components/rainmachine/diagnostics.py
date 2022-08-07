@@ -1,10 +1,9 @@
 """Diagnostics support for RainMachine."""
 from __future__ import annotations
 
-import asyncio
 from typing import Any
 
-from regenmaschine.errors import RequestError
+from regenmaschine.errors import RainMachineError
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
@@ -17,7 +16,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from . import RainMachineData
-from .const import DOMAIN
+from .const import DOMAIN, LOGGER
 
 CONF_STATION_ID = "stationID"
 CONF_STATION_NAME = "stationName"
@@ -42,13 +41,11 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     data: RainMachineData = hass.data[DOMAIN][entry.entry_id]
 
-    controller_tasks = {
-        "versions": data.controller.api.versions(),
-        "current_diagnostics": data.controller.diagnostics.current(),
-    }
-    controller_results = await asyncio.gather(
-        *controller_tasks.values(), return_exceptions=True
-    )
+    try:
+        controller_diagnostics = await data.controller.diagnostics.current()
+    except RainMachineError:
+        LOGGER.warning("Unable to download controller-specific diagnostics")
+        controller_diagnostics = None
 
     return {
         "entry": {
@@ -64,10 +61,6 @@ async def async_get_config_entry_diagnostics(
                 },
                 TO_REDACT,
             ),
-            "controller": {
-                category: result
-                for category, result in zip(controller_tasks, controller_results)
-                if not isinstance(result, RequestError)
-            },
+            "controller_diagnostics": controller_diagnostics,
         },
     }
