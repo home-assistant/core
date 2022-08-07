@@ -1,7 +1,7 @@
 """Tests for the lifx integration sensor platform."""
 
 from homeassistant.components import lifx
-from homeassistant.components.lifx import DOMAIN, LIFXData
+from homeassistant.components.lifx import DOMAIN, LIFXCoordination
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_HOST,
@@ -171,8 +171,8 @@ async def test_failing_sensors(hass: HomeAssistant) -> None:
         await hass.config_entries.async_reload(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    lifx_data: LIFXData = hass.data[DOMAIN][config_entry.entry_id]
-    coordinator = lifx_data.coordinator_sensor
+    lifx_coordination: LIFXCoordination = hass.data[DOMAIN][config_entry.entry_id]
+    sensor_coordinator = lifx_coordination.sensor_coordinator
 
     bulb.get_hostinfo = MockFailingLifxCommand(bulb)
     bulb.get_wifiinfo = MockFailingLifxCommand(bulb)
@@ -183,7 +183,7 @@ async def test_failing_sensors(hass: HomeAssistant) -> None:
 
         [
             setattr(
-                coordinator,
+                sensor_coordinator,
                 f"update_{sensor.unique_id.removeprefix('aa:bb:cc:dd:ee:cc_')}",
                 False,
             )
@@ -191,6 +191,6 @@ async def test_failing_sensors(hass: HomeAssistant) -> None:
             if sensor.entity_id != entity.entity_id
         ]
         failing_sensor = entity.unique_id.removeprefix("aa:bb:cc:dd:ee:cc_")
-        setattr(coordinator, f"update_{failing_sensor}", True)
-        await coordinator.async_refresh()
-        assert not coordinator.last_update_success
+        setattr(sensor_coordinator, f"update_{failing_sensor}", True)
+        await sensor_coordinator.async_refresh()
+        assert not sensor_coordinator.last_update_success

@@ -9,9 +9,9 @@ from .coordinator import LIFXLightUpdateCoordinator, LIFXSensorUpdateCoordinator
 
 
 @dataclass
-class LIFXData:
-    """Data for the lifx integration."""
+class LIFXCoordination:
+    """Coordination model for the lifx integration."""
 
     connection: LIFXConnection
-    coordinator_light: LIFXLightUpdateCoordinator
-    coordinator_sensor: LIFXSensorUpdateCoordinator
+    light_coordinator: LIFXLightUpdateCoordinator
+    sensor_coordinator: LIFXSensorUpdateCoordinator

@@ -12,8 +12,9 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, IDENTIFY, RESTART
-from .coordinator import LIFXUpdateCoordinator
+from .coordinator import LIFXLightUpdateCoordinator
 from .entity import LIFXEntity
+from .models import LIFXCoordination
 
 RESTART_BUTTON_DESCRIPTION = ButtonEntityDescription(
     key=RESTART,
@@ -35,8 +36,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up LIFX from a config entry."""
-    domain_data = hass.data[DOMAIN]
-    coordinator: LIFXUpdateCoordinator = domain_data[entry.entry_id]
+    lifx_coordination: LIFXCoordination = hass.data[DOMAIN][entry.entry_id]
+    coordinator: LIFXLightUpdateCoordinator = lifx_coordination.light_coordinator
     async_add_entities(
         cls(coordinator) for cls in (LIFXRestartButton, LIFXIdentifyButton)
     )

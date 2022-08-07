@@ -27,10 +27,11 @@ from homeassistant.helpers.event import async_call_later, async_track_time_inter
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DATA_LIFX_MANAGER, DOMAIN, TARGET_ANY
-from .coordinator import LIFXUpdateCoordinator
+from .coordinator import LIFXUpdateCoordinator, LIFXLightUpdateCoordinator, LIFXSensorUpdateCoordinator
 from .discovery import async_discover_devices, async_trigger_discovery
 from .manager import LIFXManager
 from .migration import async_migrate_entities_devices, async_migrate_legacy_entries
+from .models import LIFXCoordination
 from .util import async_entry_is_legacy, async_get_legacy_entry
 
 _LOGGER = logging.getLogger(__name__)
@@ -201,7 +202,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator.async_setup()
     await coordinator.async_config_entry_first_refresh()
 
-    domain_data[entry.entry_id] = coordinator
+    light_coordinator = LIFXLightUpdateCoordinator(hass, entry, connection)
+    light_coordinator.async_setup()
+    await light_coordinator.async_config_entry_first_refresh()
+
+    # Get initial values for enabled sensors
+    sensor_coordinator = LIFXSensorUpdateCoordinator(hass, entry, connection)
+    await sensor_coordinator.async_config_entry_first_refresh()
+
+    lifx_coordination = LIFXCoordination(
+        connection=connection,
+        light_coordinator=light_coordinator,
+        sensor_coordinator=sensor_coordinator,
+    )
+
+    domain_data[entry.entry_id] = lifx_coordination
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
@@ -212,8 +227,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return True
     domain_data = hass.data[DOMAIN]
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        coordinator: LIFXUpdateCoordinator = domain_data.pop(entry.entry_id)
-        coordinator.connection.async_stop()
+        lifx_coordination: LIFXCoordination = domain_data.pop(entry.entry_id)
+        lifx_coordination.connection.async_stop()
     # Only the DATA_LIFX_MANAGER left, remove it.
     if len(domain_data) == 1:
         manager: LIFXManager = domain_data.pop(DATA_LIFX_MANAGER)

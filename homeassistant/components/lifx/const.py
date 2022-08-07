@@ -35,3 +35,4 @@ HEV_CYCLE_LAST_RESULT = "last_hev_cycle_result"
 DATA_LIFX_MANAGER = "lifx_manager"
 
 ATTR_RSSI = "rssi"
+ATTR_UPTIME = "uptime"

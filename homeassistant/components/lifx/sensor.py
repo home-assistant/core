@@ -15,23 +15,24 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TIME_MINUTES
+from homeassistant.const import TIME_MINUTES, TIME_SECONDS
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     ATTR_RSSI,
+    ATTR_UPTIME,
     DOMAIN,
     HEV_CYCLE_DURATION,
     HEV_CYCLE_LAST_POWER,
     HEV_CYCLE_LAST_RESULT,
     HEV_CYCLE_REMAINING,
 )
-from .coordinator import LIFXUpdateCoordinator
+from .coordinator import LIFXSensorUpdateCoordinator
+from .entity import LIFXEntity
+from .models import LIFXCoordination
 from .util import lifx_features
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,6 +46,16 @@ RSSI_SENSOR = SensorEntityDescription(
     state_class=SensorStateClass.MEASUREMENT,
     device_class=SensorDeviceClass.SIGNAL_STRENGTH,
     entity_registry_enabled_default=False,
+)
+
+UPTIME_SENSOR = SensorEntityDescription(
+    key=ATTR_UPTIME,
+    name="Uptime",
+    entity_category=EntityCategory.DIAGNOSTIC,
+    state_class=SensorStateClass.MEASUREMENT,
+    device_class=SensorDeviceClass.DURATION,
+    entity_registry_enabled_default=False,
+    native_unit_of_measurement=TIME_SECONDS,
 )
 
 HEV_SENSORS = [
@@ -80,16 +91,18 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up LIFX from a config entry."""
-    domain_data = hass.data[DOMAIN]
-    coordinator: LIFXUpdateCoordinator = domain_data[entry.entry_id]
-    sensors: list[LifxSensorEntity] = [
-        LifxRssiSensorEntity(coordinator=coordinator, description=RSSI_SENSOR)
+    lifx_coordination: LIFXCoordination = hass.data[DOMAIN][entry.entry_id]
+    coordinator: LIFXSensorUpdateCoordinator = lifx_coordination.sensor_coordinator
+
+    sensors: list[LIFXSensorEntity] = [
+        LIFXRssiSensorEntity(coordinator, RSSI_SENSOR),
+        LIFXUptimeSensorEntity(coordinator, UPTIME_SENSOR),
     ]
 
     if lifx_features(coordinator.device)["hev"]:
         for sensor_description in HEV_SENSORS:
             sensors.append(
-                LifxHevSensorEntity(
+                LIFXHevSensorEntity(
                     coordinator=coordinator, description=sensor_description
                 )
             )
@@ -97,32 +110,23 @@ async def async_setup_entry(
     async_add_entities(sensors, update_before_add=True)
 
 
-class LifxSensorEntity(CoordinatorEntity[LIFXUpdateCoordinator], SensorEntity):
+class LIFXSensorEntity(LIFXEntity, SensorEntity):
     """LIFX sensor entity base class."""
 
     _attr_has_entity_name: bool = True
+    coordinator: LIFXSensorUpdateCoordinator
     entity_description: SensorEntityDescription
 
     def __init__(
         self,
-        coordinator: LIFXUpdateCoordinator,
+        coordinator: LIFXSensorUpdateCoordinator,
         description: SensorEntityDescription,
     ) -> None:
         """Initialise the sensor."""
         super().__init__(coordinator)
-        self.coordinator = coordinator
 
         self.entity_description = description
-        self._attr_unique_id = (
-            f"{self.coordinator.serial_number}_{self.entity_description.key}"
-        )
-
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._attr_unique_id)},
-            connections={(dr.CONNECTION_NETWORK_MAC, self.coordinator.mac_address)},
-            manufacturer="LIFX",
-            name=self.coordinator.label,
-        )
+        self._attr_unique_id = f"{coordinator.serial_number}_{description.key}"
         self._async_update_attrs()
 
     @property
@@ -142,54 +146,91 @@ class LifxSensorEntity(CoordinatorEntity[LIFXUpdateCoordinator], SensorEntity):
         """Handle coordinator updates."""
 
 
-class LifxRssiSensorEntity(LifxSensorEntity):
+class LIFXRssiSensorEntity(LIFXSensorEntity):
     """LIFX RSSI Sensor."""
 
     def __init__(
         self,
-        coordinator: LIFXUpdateCoordinator,
+        coordinator: LIFXSensorUpdateCoordinator,
         description: SensorEntityDescription,
     ) -> None:
         """Initialise a LIFX RSSI sensor."""
-        super().__init__(coordinator=coordinator, description=description)
-        self._attr_name = description.name
-
-    @property
-    def native_unit_of_measurement(self) -> str:
-        """Get the RSSI unit of measurement."""
-        return str(self.coordinator.get_rssi_unit_of_measurement())
+        super().__init__(coordinator, description)
+        self.entity_description = description
+        self._attr_native_unit_of_measurement = (
+            coordinator.get_rssi_unit_of_measurement()
+        )
 
     @callback
     def _async_update_attrs(self) -> None:
         """Handle attribute updates."""
+        _LOGGER.debug(
+            "Updated RSSI sensor value for %s to %s",
+            self.coordinator.label,
+            self.coordinator.rssi,
+        )
         self._attr_native_value = self.coordinator.rssi
 
     @callback
     async def async_added_to_hass(self) -> None:
         """Enable fetch of RSSI data."""
-        self.coordinator.fetch_rssi = True
+        _LOGGER.debug("Enabling RSSI sensor updates for %s", self.coordinator.label)
+        self.coordinator.update_rssi = True
+        await self.coordinator.async_request_refresh()
         await super().async_added_to_hass()
 
     @callback
     async def async_will_remove_from_hass(self) -> None:
         """Disable fetching RSSI data."""
-        self.coordinator.fetch_rssi = False
+        _LOGGER.debug("Disabling RSSI sensor updates for %s", self.coordinator.label)
+        self.coordinator.update_rssi = False
         await super().async_will_remove_from_hass()
 
 
-class LifxHevSensorEntity(LifxSensorEntity):
-    """LIFX HEV Sensor."""
+class LIFXUptimeSensorEntity(LIFXSensorEntity):
+    """Uptime sensor entity."""
 
     def __init__(
         self,
-        coordinator: LIFXUpdateCoordinator,
+        coordinator: LIFXSensorUpdateCoordinator,
+        description: SensorEntityDescription,
+    ) -> None:
+        """Initialise a LIFX Uptime sensor."""
+        self.entity_description = description
+        super().__init__(coordinator, description)
+
+    @callback
+    def _async_update_attrs(self) -> None:
+        """Update the uptime sensor attributes."""
+        self._attr_native_value = self.coordinator.uptime
+
+    @callback
+    async def async_added_to_hass(self) -> None:
+        """Enable updates for uptime sensor."""
+        self.coordinator.update_uptime = True
+        await self.coordinator.async_request_refresh()
+        await super().async_added_to_hass()
+
+    @callback
+    async def async_will_remove_from_hass(self) -> None:
+        """Disable updates for uptime sensor."""
+        self.coordinator.update_uptime = False
+        await super().async_will_remove_from_hass()
+
+
+class LIFXHevSensorEntity(LIFXSensorEntity):
+    """HEV Sensor entity."""
+
+    def __init__(
+        self,
+        coordinator: LIFXSensorUpdateCoordinator,
         description: SensorEntityDescription,
     ) -> None:
         """Initialise a LIFX HEV sensor."""
-        super().__init__(coordinator=coordinator, description=description)
+        super().__init__(coordinator, description)
         self._attr_name = description.name
         self.coordinator.update_method = cast(
-            Callable, f"self.coordinator._async_fetch_{self.entity_description.key}"
+            Callable, f"self.coordinator._async_fetch_{description.key}"
         )
 
     @callback
@@ -202,11 +243,12 @@ class LifxHevSensorEntity(LifxSensorEntity):
     @callback
     async def async_added_to_hass(self) -> None:
         """Enable fetch of HEV data."""
-        setattr(self.coordinator, f"fetch_{self.entity_description.key}", True)
+        setattr(self.coordinator, f"update_{self.entity_description.key}", True)
+        await self.coordinator.async_request_refresh()
         await super().async_added_to_hass()
 
     @callback
     async def async_will_remove_from_hass(self) -> None:
         """Disable fetching HEV data."""
-        setattr(self.coordinator, f"fetch_{self.entity_description.key}", False)
+        setattr(self.coordinator, f"update_{self.entity_description.key}", False)
         await super().async_will_remove_from_hass()
