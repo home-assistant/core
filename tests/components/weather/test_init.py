@@ -509,6 +509,7 @@ async def test_none_forecast(
     assert forecast.get(ATTR_FORECAST_DEWPOINT) is None
     assert forecast.get(ATTR_FORECAST_HUMIDITY) is None
 
+
 async def test_forecast(
     hass: HomeAssistant,
     enable_custom_integrations,
@@ -518,9 +519,7 @@ async def test_forecast(
 
     entity0 = await create_entity(
         hass,
-        forecast=[Forecast(
-            humidity=humidity_value
-        )],
+        forecast=[Forecast(humidity=humidity_value)],
     )
 
     state = hass.states.get(entity0.entity_id)
@@ -576,16 +575,18 @@ async def test_custom_units(hass: HomeAssistant, enable_custom_integrations) -> 
             native_visibility_unit=visibility_unit,
             native_precipitation=precipitation_value,
             native_precipitation_unit=precipitation_unit,
-            forecast=[platform.Forecast(
-                condition=ATTR_CONDITION_SUNNY,
-                native_temperature=temperature_value,
-                native_templow=temperature_low_value,
-                native_wind_speed=wind_speed_value,
-                native_pressure=pressure_value,
-                native_precipitation=precipitation_value,
-                native_apparent_temp=apparent_temp_value,
-                native_dewpoint=dewpoint_value,
-            )],
+            forecast=[
+                platform.Forecast(
+                    condition=ATTR_CONDITION_SUNNY,
+                    native_temperature=temperature_value,
+                    native_templow=temperature_low_value,
+                    native_wind_speed=wind_speed_value,
+                    native_pressure=pressure_value,
+                    native_precipitation=precipitation_value,
+                    native_apparent_temp=apparent_temp_value,
+                    native_dewpoint=dewpoint_value,
+                )
+            ],
             unique_id="very_unique",
         )
     )
@@ -645,18 +646,14 @@ async def test_custom_units(hass: HomeAssistant, enable_custom_integrations) -> 
         expected_visibility
     )
 
-    assert float(forecast[ATTR_FORECAST_TEMP]) == approx(
-        expected_temperature, rel=1e-2
-    )
+    assert float(forecast[ATTR_FORECAST_TEMP]) == approx(expected_temperature, rel=1e-2)
     assert float(forecast[ATTR_FORECAST_TEMP_LOW]) == approx(
         expected_temperature_low, rel=1e-2
     )
     assert float(forecast[ATTR_FORECAST_APPARENT_TEMP]) == approx(
         expected_apparent_temp, rel=0.1
     )
-    assert float(forecast[ATTR_FORECAST_DEWPOINT]) == approx(
-        expected_dewpoint, rel=0.1
-    )
+    assert float(forecast[ATTR_FORECAST_DEWPOINT]) == approx(expected_dewpoint, rel=0.1)
     assert float(forecast[ATTR_FORECAST_PRECIPITATION]) == approx(
         expected_precipitation, rel=1e-2
     )

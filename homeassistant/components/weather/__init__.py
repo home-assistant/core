@@ -869,7 +869,9 @@ class WeatherEntity(Entity):
                         )
 
                 if (
-                    forecast_apparent_temp := forecast_entry.pop(ATTR_FORECAST_NATIVE_APPARENT_TEMP, None)
+                    forecast_apparent_temp := forecast_entry.pop(
+                        ATTR_FORECAST_NATIVE_APPARENT_TEMP, None
+                    )
                 ) is not None:
                     with suppress(TypeError, ValueError):
                         forecast_apparent_temp_f = float(forecast_apparent_temp)
@@ -886,7 +888,9 @@ class WeatherEntity(Entity):
                         )
 
                 if (
-                    forecast_dewpoint := forecast_entry.pop(ATTR_FORECAST_NATIVE_DEWPOINT, None)
+                    forecast_dewpoint := forecast_entry.pop(
+                        ATTR_FORECAST_NATIVE_DEWPOINT, None
+                    )
                 ) is not None:
                     with suppress(TypeError, ValueError):
                         forecast_dewpoint_f = float(forecast_dewpoint)
@@ -902,9 +906,12 @@ class WeatherEntity(Entity):
                             value_forecast_dewpoint, precision
                         )
 
-                if (forecast_humidity := forecast_entry.pop(ATTR_FORECAST_HUMIDITY, None)) is not None:
+                if (
+                    forecast_humidity := forecast_entry.pop(
+                        ATTR_FORECAST_HUMIDITY, None
+                    )
+                ) is not None:
                     forecast_entry[ATTR_FORECAST_HUMIDITY] = round(forecast_humidity)
-
 
                 forecast.append(forecast_entry)
 
