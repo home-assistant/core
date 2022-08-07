@@ -9,7 +9,7 @@ from pydeconz.interfaces.sensors import SensorResources
 from pydeconz.models.event import EventType
 from pydeconz.models.sensor.air_quality import AirQuality
 from pydeconz.models.sensor.consumption import Consumption
-from pydeconz.models.sensor.daylight import Daylight
+from pydeconz.models.sensor.daylight import DAYLIGHT_STATUS, Daylight
 from pydeconz.models.sensor.generic_status import GenericStatus
 from pydeconz.models.sensor.humidity import Humidity
 from pydeconz.models.sensor.light_level import LightLevel
@@ -52,11 +52,12 @@ from .gateway import DeconzGateway, get_gateway_from_config_entry
 PROVIDES_EXTRA_ATTRIBUTES = (
     "battery",
     "consumption",
-    "status",
+    "daylight_status",
     "humidity",
     "light_level",
     "power",
     "pressure",
+    "status",
     "temperature",
 )
 
@@ -120,8 +121,8 @@ ENTITY_DESCRIPTIONS = {
     ],
     Daylight: [
         DeconzSensorDescription(
-            key="status",
-            value_fn=lambda device: device.status
+            key="daylight_status",
+            value_fn=lambda device: DAYLIGHT_STATUS[device.daylight_status]
             if isinstance(device, Daylight)
             else None,
             update_key="status",
