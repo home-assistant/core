@@ -927,6 +927,9 @@ ibm-watson==5.2.2
 # homeassistant.components.watson_iot
 ibmiotf==0.3.4
 
+# homeassistant.components.local_calendar
+ical==4.1.1
+
 # homeassistant.components.ping
 icmplib==3.0
 

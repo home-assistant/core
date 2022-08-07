@@ -88,6 +88,10 @@ class CalendarEvent:
     description: str | None = None
     location: str | None = None
 
+    uid: str | None = None
+    recurrence_id: str | None = None
+    rrule: str | None = None
+
     @property
     def start_datetime_local(self) -> datetime.datetime:
         """Return event start time as a local datetime."""
