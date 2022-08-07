@@ -121,10 +121,12 @@ async def test_button_identify(hass: HomeAssistant) -> None:
     }
 
     bulb.set_power.reset_mock()
+    bulb.set_waveform_optional.reset_mock()
     bulb.power_level = 65535
 
     await hass.services.async_call(
         BUTTON_DOMAIN, "press", {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
 
+    assert len(bulb.set_waveform_optional.calls) == 1
     assert len(bulb.set_power.calls) == 0
