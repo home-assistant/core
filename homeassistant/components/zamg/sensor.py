@@ -16,6 +16,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     AREA_SQUARE_METERS,
+    ATTR_ATTRIBUTION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_MONITORED_CONDITIONS,
