@@ -46,7 +46,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, str]) -> dict[str,
     async with async_timeout.timeout(CLIENT_TIMEOUT):
         await client.get_latest(base=data[CONF_BASE])
 
-    return {"title": f"{data[CONF_BASE]}"}
+    return {"title": data[CONF_BASE]}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
