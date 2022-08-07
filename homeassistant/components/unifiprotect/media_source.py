@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 from datetime import date, datetime, timedelta
-from enum import Enum
 from typing import Any, cast
 
 from pyunifiprotect.data import Camera, Event, EventType, SmartDetectObjectType
@@ -32,6 +31,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .data import ProtectData
+from .models import SimpleEventType
 from .views import async_generate_event_video_url, async_generate_thumbnail_url
 
 VIDEO_FORMAT = "video/mp4"
@@ -39,45 +39,11 @@ THUMBNAIL_WIDTH = 185
 THUMBNAIL_HEIGHT = 185
 
 
-class SimpleEventType(str, Enum):
-    """Enum to Camera Video events."""
-
-    ALL = "All Events"
-    RING = "Ring Events"
-    MOTION = "Motion Events"
-    SMART = "Smart Detections"
-
-    @classmethod
-    def get_from_name(cls, name: str) -> SimpleEventType:
-        """Get SimpleEventType from name."""
-
-        if name.lower() == "smart_detect":
-            return SimpleEventType.SMART
-
-        types: list[SimpleEventType] = list(cls)
-        for event_type in types:
-            if event_type.name.lower() == name.lower():
-                return event_type
-        raise ValueError("Invalid event_type")
-
-    @classmethod
-    def get_event_type(cls, event_type: SimpleEventType) -> EventType | None:
-        """Get UniFi Protect event type from SimpleEventType."""
-
-        if event_type == SimpleEventType.ALL:
-            return None
-        if event_type == SimpleEventType.RING:
-            return EventType.RING
-        if event_type == SimpleEventType.MOTION:
-            return EventType.MOTION
-        return EventType.SMART_DETECT
-
-
 async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
     """Set up UniFi Protect media source."""
 
     data_sources: dict[str, ProtectData] = {}
-    for data in hass.data[DOMAIN].values():
+    for data in hass.data.get(DOMAIN, {}).values():
         if isinstance(data, ProtectData):
             data_sources[data.api.bootstrap.nvr.id] = data
 
@@ -158,7 +124,7 @@ class ProtectMediaSource(MediaSource):
         thumbnail_only = parts[1] == "eventthumb"
         try:
             data = self.data_sources[parts[0]]
-        except IndexError as err:
+        except (KeyError, IndexError) as err:
             return _bad_identifier_media(item.identifier, err)
 
         event = data.api.bootstrap.events.get(parts[2])
@@ -173,7 +139,9 @@ class ProtectMediaSource(MediaSource):
 
         nvr = data.api.bootstrap.nvr
         if thumbnail_only:
-            PlayMedia(async_generate_thumbnail_url(event.id, nvr.id), "image/jpeg")
+            return PlayMedia(
+                async_generate_thumbnail_url(event.id, nvr.id), "image/jpeg"
+            )
         return PlayMedia(async_generate_event_video_url(event), "video/mp4")
 
     async def async_browse_media(self, item: MediaSourceItem) -> BrowseMediaSource:
@@ -227,7 +195,7 @@ class ProtectMediaSource(MediaSource):
 
         try:
             data = self.data_sources[parts[0]]
-        except IndexError as err:
+        except (KeyError, IndexError) as err:
             return _bad_identifier(item.identifier, err)
 
         # {nvr_id}
@@ -447,7 +415,7 @@ class ProtectMediaSource(MediaSource):
             # smart detect events have a paired motion event
             if (
                 event.get("type") == EventType.MOTION.value
-                and len(event.get("smartDetectTypes", [])) > 0
+                and len(event.get("smartDetectEvents", [])) > 0
             ):
                 continue
 
@@ -682,8 +650,8 @@ class ProtectMediaSource(MediaSource):
 
         return source
 
-    async def _get_camera_thumbnail_url(self, camera: Camera) -> str:
-        """Get camera thumbnail URL using the first avaiable camera entity."""
+    async def _get_camera_thumbnail_url(self, camera: Camera) -> str | None:
+        """Get camera thumbnail URL using the first available camera entity."""
 
         if not camera.is_connected or camera.is_privacy_on:
             return None
@@ -691,6 +659,10 @@ class ProtectMediaSource(MediaSource):
         entity_id: str | None = None
         entity_registry = await self.get_registry()
         for channel in camera.channels:
+            # do not use the package camera
+            if channel.id == 3:
+                continue
+
             base_id = f"{camera.mac}_{channel.id}"
             entity_id = entity_registry.async_get_entity_id(
                 Platform.CAMERA, DOMAIN, base_id
@@ -701,7 +673,11 @@ class ProtectMediaSource(MediaSource):
                 )
 
             if entity_id:
-                break
+                # verify entity is available
+                entry = entity_registry.async_get(entity_id)
+                if entry and not entry.disabled:
+                    break
+                entity_id = None
 
         if entity_id is not None:
             url = URL(CameraImageView.url.format(entity_id=entity_id))
@@ -803,12 +779,11 @@ class ProtectMediaSource(MediaSource):
         """Return all media source for all UniFi Protect NVRs."""
 
         consoles: list[BrowseMediaSource] = []
+        print(len(self.data_sources.values()))
         for data_source in self.data_sources.values():
             if not data_source.api.bootstrap.has_media:
                 continue
             console_source = await self._build_console(data_source)
-            if console_source.children is None or len(console_source.children) == 0:
-                continue
             consoles.append(console_source)
 
         if len(consoles) == 1:
