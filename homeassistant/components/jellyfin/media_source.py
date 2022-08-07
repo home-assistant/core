@@ -36,10 +36,12 @@ from .const import (
     ITEM_KEY_MEDIA_SOURCES,
     ITEM_KEY_MEDIA_TYPE,
     ITEM_KEY_NAME,
+    ITEM_KEY_TYPE,
     ITEM_TYPE_ALBUM,
     ITEM_TYPE_ARTIST,
     ITEM_TYPE_AUDIO,
-    ITEM_TYPE_LIBRARY,
+    ITEM_TYPE_BOXSET,
+    ITEM_TYPE_COLLECTION,
     ITEM_TYPE_MOVIE,
     MAX_IMAGE_WIDTH,
     MEDIA_SOURCE_KEY_PATH,
@@ -92,23 +94,25 @@ class JellyfinSource(MediaSource):
     async def async_browse_media(self, item: MediaSourceItem) -> BrowseMediaSource:
         """Return a browsable Jellyfin media source."""
         if not item.identifier:
-            return await self._build_libraries()
+            return await self._build_collections()
 
         media_item = await self.hass.async_add_executor_job(
             self.api.get_item, item.identifier
         )
 
         item_type = media_item["Type"]
-        if item_type == ITEM_TYPE_LIBRARY:
-            return await self._build_library(media_item, True)
+        if item_type == ITEM_TYPE_COLLECTION:
+            return await self._build_collection(media_item, True)
         if item_type == ITEM_TYPE_ARTIST:
             return await self._build_artist(media_item, True)
         if item_type == ITEM_TYPE_ALBUM:
             return await self._build_album(media_item, True)
+        if item_type == ITEM_TYPE_BOXSET:
+            return await self._build_movie_collection(media_item, True)
 
         raise BrowseError(f"Unsupported item type {item_type}")
 
-    async def _build_libraries(self) -> BrowseMediaSource:
+    async def _build_collections(self) -> BrowseMediaSource:
         """Return all supported libraries the user has access to as media sources."""
         base = BrowseMediaSource(
             domain=DOMAIN,
@@ -121,68 +125,70 @@ class JellyfinSource(MediaSource):
             children_media_class=MEDIA_CLASS_DIRECTORY,
         )
 
-        libraries = await self._get_libraries()
+        libraries = await self._get_collections()
 
         base.children = []
 
-        for library in libraries:
-            base.children.append(await self._build_library(library, False))
+        for collection in libraries:
+            base.children.append(await self._build_collection(collection, False))
 
         return base
 
-    async def _get_libraries(self) -> list[dict[str, Any]]:
+    async def _get_collections(self) -> list[dict[str, Any]]:
         """Return all supported libraries a user has access to."""
         response = await self.hass.async_add_executor_job(self.api.get_media_folders)
-        libraries = response["Items"]
+        collections = response["Items"]
         result = []
-        for library in libraries:
-            if ITEM_KEY_COLLECTION_TYPE in library:
-                if library[ITEM_KEY_COLLECTION_TYPE] in SUPPORTED_COLLECTION_TYPES:
-                    result.append(library)
+        for collection in collections:
+            if ITEM_KEY_COLLECTION_TYPE in collection:
+                if collection[ITEM_KEY_COLLECTION_TYPE] in SUPPORTED_COLLECTION_TYPES:
+                    result.append(collection)
         return result
 
-    async def _build_library(
-        self, library: dict[str, Any], include_children: bool
+    async def _build_collection(
+        self, collection: dict[str, Any], include_children: bool
     ) -> BrowseMediaSource:
-        """Return a single library as a browsable media source."""
-        collection_type = library[ITEM_KEY_COLLECTION_TYPE]
+        """Return a single collection as a browsable media source."""
+        collection_type = collection[ITEM_KEY_COLLECTION_TYPE]
 
         if collection_type == COLLECTION_TYPE_MUSIC:
-            return await self._build_music_library(library, include_children)
+            return await self._build_music_collection(collection, include_children)
         if collection_type == COLLECTION_TYPE_MOVIES:
-            return await self._build_movie_library(library, include_children)
+            return await self._build_movie_collection(collection, include_children)
 
         raise BrowseError(f"Unsupported collection type {collection_type}")
 
-    async def _build_music_library(
-        self, library: dict[str, Any], include_children: bool
+    async def _build_music_collection(
+        self, collection: dict[str, Any], include_children: bool
     ) -> BrowseMediaSource:
-        """Return a single music library as a browsable media source."""
-        library_id = library[ITEM_KEY_ID]
-        library_name = library[ITEM_KEY_NAME]
+        """Return a single music collection as a browsable media source."""
+        collection_id = collection[ITEM_KEY_ID]
+        collection_name = collection[ITEM_KEY_NAME]
+        thumbnail_url = self._get_thumbnail_url(collection)
 
         result = BrowseMediaSource(
             domain=DOMAIN,
-            identifier=library_id,
+            identifier=collection_id,
             media_class=MEDIA_CLASS_DIRECTORY,
             media_content_type=MEDIA_TYPE_NONE,
-            title=library_name,
+            title=collection_name,
             can_play=False,
             can_expand=True,
+            thumbnail=thumbnail_url,
         )
 
         if include_children:
             result.children_media_class = MEDIA_CLASS_ARTIST
-            result.children = await self._build_artists(library_id)  # type: ignore[assignment]
+            result.children = await self._build_artists(collection_id)  # type: ignore[assignment]
             if not result.children:
                 result.children_media_class = MEDIA_CLASS_ALBUM
-                result.children = await self._build_albums(library_id)  # type: ignore[assignment]
+                result.children = await self._build_albums(collection_id)  # type: ignore[assignment]
 
         return result
 
-    async def _build_artists(self, library_id: str) -> list[BrowseMediaSource]:
-        """Return all artists in the music library."""
-        artists = await self._get_children(library_id, ITEM_TYPE_ARTIST)
+    async def _build_artists(self, collection_id: str) -> list[BrowseMediaSource]:
+        """Return all artists in the music collection."""
+        artists = await self._get_children(collection_id, ITEM_TYPE_ARTIST)
         artists = sorted(artists, key=lambda k: k[ITEM_KEY_NAME])  # type: ignore[no-any-return]
         return [await self._build_artist(artist, False) for artist in artists]
 
@@ -274,34 +280,45 @@ class JellyfinSource(MediaSource):
 
         return result
 
-    async def _build_movie_library(
-        self, library: dict[str, Any], include_children: bool
+    async def _build_movie_collection(
+        self, collection: dict[str, Any], include_children: bool
     ) -> BrowseMediaSource:
-        """Return a single movie library as a browsable media source."""
-        library_id = library[ITEM_KEY_ID]
-        library_name = library[ITEM_KEY_NAME]
+        """Return a top level movie collection or a boxset as a browsable media source."""
+        collection_id = collection[ITEM_KEY_ID]
+        collection_name = collection[ITEM_KEY_NAME]
+        thumbnail_url = self._get_thumbnail_url(collection)
 
         result = BrowseMediaSource(
             domain=DOMAIN,
-            identifier=library_id,
+            identifier=collection_id,
             media_class=MEDIA_CLASS_DIRECTORY,
             media_content_type=MEDIA_TYPE_NONE,
-            title=library_name,
+            title=collection_name,
             can_play=False,
             can_expand=True,
+            thumbnail=thumbnail_url,
         )
 
         if include_children:
             result.children_media_class = MEDIA_CLASS_MOVIE
-            result.children = await self._build_movies(library_id)  # type: ignore[assignment]
+            result.children = await self._build_movies(collection_id)  # type: ignore[assignment]
 
         return result
 
-    async def _build_movies(self, library_id: str) -> list[BrowseMediaSource]:
-        """Return all movies in the movie library."""
-        movies = await self._get_children(library_id, ITEM_TYPE_MOVIE)
+    async def _build_movies(self, collection_id: str) -> list[BrowseMediaSource]:
+        """Return all movies in the movie collection."""
+        movies = await self._get_children(collection_id, ITEM_TYPE_MOVIE)
         movies = sorted(movies, key=lambda k: k[ITEM_KEY_NAME])  # type: ignore[no-any-return]
-        return [self._build_movie(movie) for movie in movies]
+
+        result = []
+
+        for movie in movies:
+            if movie[ITEM_KEY_TYPE] == ITEM_TYPE_MOVIE:
+                result.append(self._build_movie(movie))
+            elif movie[ITEM_KEY_TYPE] == ITEM_TYPE_BOXSET:
+                result.append(await self._build_movie_collection(movie, False))
+
+        return result
 
     def _build_movie(self, movie: dict[str, Any]) -> BrowseMediaSource:
         """Return a single movie as a browsable media source."""

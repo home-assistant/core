@@ -18,11 +18,13 @@ ITEM_KEY_INDEX_NUMBER: Final = "IndexNumber"
 ITEM_KEY_MEDIA_SOURCES: Final = "MediaSources"
 ITEM_KEY_MEDIA_TYPE: Final = "MediaType"
 ITEM_KEY_NAME: Final = "Name"
+ITEM_KEY_TYPE: Final = "Type"
 
 ITEM_TYPE_ALBUM: Final = "MusicAlbum"
 ITEM_TYPE_ARTIST: Final = "MusicArtist"
 ITEM_TYPE_AUDIO: Final = "Audio"
-ITEM_TYPE_LIBRARY: Final = "CollectionFolder"
+ITEM_TYPE_BOXSET: Final = "BoxSet"
+ITEM_TYPE_COLLECTION: Final = "CollectionFolder"
 ITEM_TYPE_MOVIE: Final = "Movie"
 
 MAX_IMAGE_WIDTH: Final = 500
