@@ -8,12 +8,13 @@ import pytest
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.escea.const import DOMAIN, ESCEA_FIREPLACE
 from homeassistant.components.escea.discovery import DiscoveryServiceListener
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="mock_discovery_service")
-def mock_discovery_service_fixture():
+def mock_discovery_service_fixture() -> AsyncMock:
     """Mock discovery service."""
     discovery_service = AsyncMock()
     discovery_service.controllers = {}
@@ -40,7 +41,9 @@ def _mock_start_discovery(
     return do_discovered
 
 
-async def test_not_found(hass, mock_discovery_service: MagicMock) -> None:
+async def test_not_found(
+    hass: HomeAssistant, mock_discovery_service: MagicMock
+) -> None:
     """Test not finding any Escea controllers."""
 
     with patch(
@@ -66,7 +69,7 @@ async def test_not_found(hass, mock_discovery_service: MagicMock) -> None:
 
 
 async def test_found(
-    hass, mock_controller: MagicMock, mock_discovery_service: AsyncMock
+    hass: HomeAssistant, mock_controller: MagicMock, mock_discovery_service: AsyncMock
 ) -> None:
     """Test finding an Escea controller."""
     mock_discovery_service.controllers["test-uid"] = mock_controller
@@ -96,7 +99,7 @@ async def test_found(
     assert mock_setup.call_count == 1
 
 
-async def test_single_instance_allowed(hass) -> None:
+async def test_single_instance_allowed(hass: HomeAssistant) -> None:
     """Test single instance allowed."""
     config_entry = MockConfigEntry(domain=DOMAIN, title=ESCEA_FIREPLACE)
     config_entry.add_to_hass(hass)
