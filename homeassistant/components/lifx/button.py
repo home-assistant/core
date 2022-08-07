@@ -19,14 +19,12 @@ RESTART_BUTTON_DESCRIPTION = ButtonEntityDescription(
     key=RESTART,
     name="Restart",
     device_class=ButtonDeviceClass.RESTART,
-    entity_registry_enabled_default=False,
     entity_category=EntityCategory.DIAGNOSTIC,
 )
 
 IDENTIFY_BUTTON_DESCRIPTION = ButtonEntityDescription(
     key=IDENTIFY,
     name="Identify",
-    entity_registry_enabled_default=False,
     entity_category=EntityCategory.DIAGNOSTIC,
 )
 
@@ -45,7 +43,7 @@ async def async_setup_entry(
 
 
 class LIFXButton(LIFXEntity, ButtonEntity):
-    """Representation of a LIFX restart button."""
+    """Base LIFX button."""
 
     _attr_has_entity_name: bool = True
 
@@ -58,7 +56,7 @@ class LIFXButton(LIFXEntity, ButtonEntity):
 
 
 class LIFXRestartButton(LIFXButton):
-    """Representation of a LIFX restart button."""
+    """LIFX restart button."""
 
     entity_description = RESTART_BUTTON_DESCRIPTION
 
@@ -68,7 +66,7 @@ class LIFXRestartButton(LIFXButton):
 
 
 class LIFXIdentifyButton(LIFXButton):
-    """Representation of a LIFX identify button."""
+    """LIFX identify button."""
 
     entity_description = IDENTIFY_BUTTON_DESCRIPTION
 

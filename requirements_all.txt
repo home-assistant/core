@@ -763,7 +763,7 @@ googlemaps==2.5.1
 goslide-api==0.5.1
 
 # homeassistant.components.govee_ble
-govee-ble==0.12.6
+govee-ble==0.12.7
 
 # homeassistant.components.remote_rpi_gpio
 gpiozero==1.6.2
@@ -1259,7 +1259,7 @@ pillow==9.2.0
 pizzapi==0.0.3
 
 # homeassistant.components.plex
-plexapi==4.11.2
+plexapi==4.12.1
 
 # homeassistant.components.plex
 plexauth==0.0.6
@@ -1818,6 +1818,7 @@ pyserial-asyncio==0.6
 # homeassistant.components.crownstone
 # homeassistant.components.usb
 # homeassistant.components.zha
+# homeassistant.components.zwave_js
 pyserial==3.5
 
 # homeassistant.components.sesame
@@ -2042,7 +2043,7 @@ pywebpush==1.9.2
 pywemo==0.9.1
 
 # homeassistant.components.wilight
-pywilight==0.0.70
+pywilight==0.0.74
 
 # homeassistant.components.wiz
 pywizlight==0.5.14

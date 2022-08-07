@@ -420,7 +420,10 @@ class BluetoothManager:
         time_since_last_detection = MONOTONIC_TIME() - self._last_detection
         if time_since_last_detection < SCANNER_WATCHDOG_TIMEOUT:
             return
-        _LOGGER.debug("Bluetooth scanner not running, restarting")
+        _LOGGER.info(
+            "Bluetooth scanner has gone quiet for %s, restarting",
+            SCANNER_WATCHDOG_INTERVAL,
+        )
         async with self.start_stop_lock:
             self.async_start_reload()
             await self.async_stop()
