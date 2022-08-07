@@ -40,34 +40,27 @@ async def async_setup_entry(
     domain_data = hass.data[DOMAIN]
     coordinator: LIFXUpdateCoordinator = domain_data[entry.entry_id]
     async_add_entities(
-        [
-            LIFXRestartButton(
-                coordinator=coordinator, description=RESTART_BUTTON_DESCRIPTION
-            ),
-            LIFXIdentifyButton(
-                coordinator=coordinator, description=IDENTIFY_BUTTON_DESCRIPTION
-            ),
-        ]
+        cls(coordinator) for cls in (LIFXRestartButton, LIFXIdentifyButton)
     )
 
 
 class LIFXButton(LIFXEntity, ButtonEntity):
-    """Representation of a LIFX restart button."""
+    """Base LIFX button."""
 
     _attr_has_entity_name: bool = True
-    entity_description: ButtonEntityDescription
 
-    def __init__(
-        self, coordinator: LIFXUpdateCoordinator, description: ButtonEntityDescription
-    ) -> None:
+    def __init__(self, coordinator: LIFXUpdateCoordinator) -> None:
         """Initialise a LIFX button."""
         super().__init__(coordinator)
-        self.entity_description = description
-        self._attr_unique_id = f"{coordinator.serial_number}_{description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.serial_number}_{self.entity_description.key}"
+        )
 
 
 class LIFXRestartButton(LIFXButton):
-    """Representation of a LIFX restart button."""
+    """LIFX restart button."""
+
+    entity_description = RESTART_BUTTON_DESCRIPTION
 
     async def async_press(self) -> None:
         """Restart the bulb on button press."""
@@ -75,7 +68,9 @@ class LIFXRestartButton(LIFXButton):
 
 
 class LIFXIdentifyButton(LIFXButton):
-    """Representation of a LIFX identify button."""
+    """LIFX identify button."""
+
+    entity_description = IDENTIFY_BUTTON_DESCRIPTION
 
     async def async_press(self) -> None:
         """Identify the bulb by flashing it when the button is pressed."""
