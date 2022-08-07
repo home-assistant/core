@@ -26,11 +26,13 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from . import BroadlinkDevice
 from .const import DOMAIN
 from .entity import BroadlinkEntity
 from .helpers import data_packet, import_device, mac_address
@@ -80,8 +82,18 @@ async def async_setup_platform(
     host = config.get(CONF_HOST)
 
     if switches := config.get(CONF_SWITCHES):
-        platform_data = hass.data[DOMAIN].platforms.setdefault(Platform.SWITCH, {})
-        platform_data.setdefault(mac_addr, []).extend(switches)
+        platform_data = hass.data[DOMAIN].platforms.get(Platform.SWITCH, {})
+        async_add_entities_config_entry: AddEntitiesCallback
+        device: BroadlinkDevice
+        async_add_entities_config_entry, device = platform_data.get(
+            mac_addr, (None, None)
+        )
+        if not async_add_entities_config_entry:
+            raise PlatformNotReady
+
+        async_add_entities_config_entry(
+            BroadlinkRMSwitch(device, config) for config in switches
+        )
 
     else:
         _LOGGER.warning(
@@ -104,12 +116,8 @@ async def async_setup_entry(
     switches: list[BroadlinkSwitch] = []
 
     if device.api.type in {"RM4MINI", "RM4PRO", "RMMINI", "RMMINIB", "RMPRO"}:
-        platform_data = hass.data[DOMAIN].platforms.get(Platform.SWITCH, {})
-        user_defined_switches = platform_data.get(device.api.mac, {})
-        switches.extend(
-            BroadlinkRMSwitch(device, config) for config in user_defined_switches
-        )
-
+        platform_data = hass.data[DOMAIN].platforms.setdefault(Platform.SWITCH, {})
+        platform_data[device.api.mac] = async_add_entities, device
     elif device.api.type == "SP1":
         switches.append(BroadlinkSP1Switch(device))
 
