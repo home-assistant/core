@@ -41,8 +41,8 @@ class SkybellFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input:
             password = user_input[CONF_PASSWORD]
-            context = self.context["entry_id"]
-            if entry := self.hass.config_entries.async_get_entry(context):
+            entry_id = self.context["entry_id"]
+            if entry := self.hass.config_entries.async_get_entry(entry_id):
                 _, error = await self._async_validate_input(self._email, password)
                 if error is None:
                     self.hass.config_entries.async_update_entry(
