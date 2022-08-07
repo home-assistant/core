@@ -83,7 +83,17 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
 
     async def async_identify_bulb(self) -> None:
         """Identify the device by flashing it three times."""
-        await self.async_set_waveform_optional(value=IDENTIFY_WAVEFORM)
+        bulb: Light = self.device
+        if bulb.power_level == 0:
+            # Turn the bulb on first, flash for 3 seconds, then turn off
+            await self.async_set_power(state=True, duration=1)
+            await self.async_set_waveform_optional(value=IDENTIFY_WAVEFORM)
+            await asyncio.sleep(3)
+            await self.async_set_power(state=False, duration=1)
+        else:
+            # just flash the bulb for three seconds
+            await self.async_set_waveform_optional(value=IDENTIFY_WAVEFORM)
+            await asyncio.sleep(3)
 
     async def _async_update_data(self) -> None:
         """Fetch all device data from the api."""
