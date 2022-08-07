@@ -41,6 +41,7 @@ def controller_fixture(
     controller_mac,
     data_api_versions,
     data_diagnostics_current,
+    data_machine_firmare_update_status,
     data_programs,
     data_provision_settings,
     data_restrictions_current,
@@ -59,6 +60,9 @@ def controller_fixture(
 
     controller.api.versions.return_value = data_api_versions
     controller.diagnostics.current.return_value = data_diagnostics_current
+    controller.machine.get_firmware_update_status.return_value = (
+        data_machine_firmare_update_status
+    )
     controller.programs.all.return_value = data_programs
     controller.provisioning.settings.return_value = data_provision_settings
     controller.restrictions.current.return_value = data_restrictions_current
@@ -84,6 +88,14 @@ def data_api_versions_fixture():
 def data_diagnostics_current_fixture():
     """Define current diagnostics data."""
     return json.loads(load_fixture("diagnostics_current_data.json", "rainmachine"))
+
+
+@pytest.fixture(name="data_machine_firmare_update_status", scope="session")
+def data_machine_firmare_update_status_fixture():
+    """Define machine firmware update status data."""
+    return json.loads(
+        load_fixture("machine_firmware_update_status_data.json", "rainmachine")
+    )
 
 
 @pytest.fixture(name="data_programs", scope="session")
