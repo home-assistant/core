@@ -15,6 +15,11 @@
                     "email": "Email",
                     "password": "Password"
                 }
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password"
+                }
             }
         }
     }

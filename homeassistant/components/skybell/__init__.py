@@ -91,7 +91,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         devices = await api.async_initialize()
     except SkybellAuthenticationException as ex:
-        raise ConfigEntryAuthFailed("Login failed: Invalid credentials") from ex
+        raise ConfigEntryAuthFailed from ex
     except SkybellException as ex:
         raise ConfigEntryNotReady(f"Unable to connect to Skybell service: {ex}") from ex
 
