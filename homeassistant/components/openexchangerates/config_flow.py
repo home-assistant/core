@@ -37,10 +37,7 @@ def get_data_schema(
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, str]) -> dict[str, str]:
-    """Validate the user input allows us to connect.
-
-    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-    """
+    """Validate the user input allows us to connect."""
     client = Client(data[CONF_API_KEY], async_get_clientsession(hass))
 
     async with async_timeout.timeout(CLIENT_TIMEOUT):
