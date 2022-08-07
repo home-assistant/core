@@ -437,6 +437,11 @@ class RainMachineEntity(CoordinatorEntity):
         self.update_from_latest_data()
         self.async_write_ha_state()
 
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        self.update_from_latest_data()
+
     @callback
     def update_from_latest_data(self) -> None:
         """Update the state."""
