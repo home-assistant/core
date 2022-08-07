@@ -24,11 +24,16 @@ from . import RainMachineData, RainMachineEntity, async_update_programs_and_zone
 from .const import (
     CONF_ZONE_RUN_TIME,
     DATA_PROGRAMS,
+    DATA_RESTRICTIONS_UNIVERSAL,
     DATA_ZONES,
     DEFAULT_ZONE_RUN,
     DOMAIN,
 )
-from .model import RainMachineEntityDescription, RainMachineEntityDescriptionMixinUid
+from .model import (
+    RainMachineEntityDescription,
+    RainMachineEntityDescriptionMixinDataKey,
+    RainMachineEntityDescriptionMixinUid,
+)
 from .util import RUN_STATE_MAP
 
 ATTR_AREA = "area"
@@ -128,11 +133,50 @@ def raise_on_request_error(
 
 @dataclass
 class RainMachineSwitchDescription(
-    SwitchEntityDescription,
-    RainMachineEntityDescription,
-    RainMachineEntityDescriptionMixinUid,
+    SwitchEntityDescription, RainMachineEntityDescription
 ):
     """Describe a RainMachine switch."""
+
+
+@dataclass
+class RainMachineActivitySwitchDescription(
+    RainMachineSwitchDescription, RainMachineEntityDescriptionMixinUid
+):
+    """Describe a RainMachine activity (program/zone) switch."""
+
+
+@dataclass
+class RainMachineRestrictionSwitchDescription(
+    RainMachineSwitchDescription, RainMachineEntityDescriptionMixinDataKey
+):
+    """Describe a RainMachine restriction switch."""
+
+
+TYPE_RESTRICTIONS_FREEZE_PROTECT_ENABLED = "freeze_protect_enabled"
+TYPE_RESTRICTIONS_HOT_DAYS_EXTRA_WATERING = "hot_days_extra_watering"
+
+RESTRICTIONS_SWITCH_DESCRIPTIONS = (
+    RainMachineRestrictionSwitchDescription(
+        key=TYPE_RESTRICTIONS_FREEZE_PROTECT_ENABLED,
+        name="Freeze protection",
+        icon="mdi:snowflake-alert",
+        entity_category=EntityCategory.CONFIG,
+        api_category=DATA_RESTRICTIONS_UNIVERSAL,
+        data_key="freezeProtectEnabled",
+    ),
+    RainMachineRestrictionSwitchDescription(
+        key=TYPE_RESTRICTIONS_HOT_DAYS_EXTRA_WATERING,
+        name="Extra watering on hot days",
+        icon="mdi:heat-wave",
+        entity_category=EntityCategory.CONFIG,
+        api_category=DATA_RESTRICTIONS_UNIVERSAL,
+        data_key="hotDaysExtraWatering",
+    ),
+)
+
+
+class SwitchUpdateError(HomeAssistantError):
+    """Define an error when a switch update fails."""
 
 
 async def async_setup_entry(
@@ -158,8 +202,9 @@ async def async_setup_entry(
         platform.async_register_entity_service(service_name, schema, method)
 
     data: RainMachineData = hass.data[DOMAIN][entry.entry_id]
-
     entities: list[RainMachineActivitySwitch | RainMachineEnabledSwitch] = []
+
+    # Add switches for programs and zones (plus associated switches to enable/disable):
     for kind, api_category, switch_class, switch_enabled_class in (
         ("program", DATA_PROGRAMS, RainMachineProgram, RainMachineProgramEnabled),
         ("zone", DATA_ZONES, RainMachineZone, RainMachineZoneEnabled),
@@ -173,7 +218,7 @@ async def async_setup_entry(
                 switch_class(
                     entry,
                     data,
-                    RainMachineSwitchDescription(
+                    RainMachineActivitySwitchDescription(
                         key=f"{kind}_{uid}",
                         name=name,
                         icon="mdi:water",
@@ -188,7 +233,7 @@ async def async_setup_entry(
                 switch_enabled_class(
                     entry,
                     data,
-                    RainMachineSwitchDescription(
+                    RainMachineActivitySwitchDescription(
                         key=f"{kind}_{uid}_enabled",
                         name=f"{name} enabled",
                         entity_category=EntityCategory.CONFIG,
@@ -198,6 +243,10 @@ async def async_setup_entry(
                     ),
                 )
             )
+
+    # Add switches to control restrictions:
+    for description in RESTRICTIONS_SWITCH_DESCRIPTIONS:
+        entities.append(RainMachineRestriction(entry, data, description))
 
     async_add_entities(entities)
 
@@ -358,6 +407,29 @@ class RainMachineProgramEnabled(RainMachineEnabledSwitch):
         """Enable the program."""
         await self._data.controller.programs.enable(self.entity_description.uid)
         self._update_activities()
+
+
+class RainMachineRestriction(RainMachineBaseSwitch):
+    """Define a RainMachine restriction setting."""
+
+    @raise_on_request_error
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Disable the restriction."""
+        await self._data.controller.restrictions.set_universal(
+            {self.entity_description.data_key: False}
+        )
+
+    @raise_on_request_error
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Enable the restriction."""
+        await self._data.controller.restrictions.set_universal(
+            {self.entity_description.data_key: True}
+        )
+
+    @callback
+    def update_from_latest_data(self) -> None:
+        """Update the entity when new data is received."""
+        self._attr_is_on = self.coordinator.data[self.entity_description.data_key]
 
 
 class RainMachineZone(RainMachineActivitySwitch):
