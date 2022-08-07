@@ -96,9 +96,16 @@ MOCK_STATUS_RPC = {
 
 
 @pytest.fixture(autouse=True)
-def mock_coap():
-    """Mock out coap."""
+def mock_coap_context():
+    """Mock out coap context."""
     with patch("homeassistant.components.shelly.utils.get_coap_context"):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def mock_ws_context():
+    """Mock out ws context."""
+    with patch("homeassistant.components.shelly.utils.get_ws_context"):
         yield
 
 

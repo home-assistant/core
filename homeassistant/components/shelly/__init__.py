@@ -68,6 +68,7 @@ from .utils import (
     get_coap_context,
     get_device_entry_gen,
     get_rpc_device_name,
+    get_ws_context,
 )
 
 BLOCK_PLATFORMS: Final = [
@@ -243,11 +244,13 @@ async def async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool
         entry.data.get(CONF_PASSWORD),
     )
 
+    ws_context = await get_ws_context(hass)
+
     LOGGER.debug("Setting up online RPC device %s", entry.title)
     try:
         async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
             device = await RpcDevice.create(
-                aiohttp_client.async_get_clientsession(hass), options
+                aiohttp_client.async_get_clientsession(hass), ws_context, options
             )
     except asyncio.TimeoutError as err:
         raise ConfigEntryNotReady(str(err) or "Timeout during device setup") from err

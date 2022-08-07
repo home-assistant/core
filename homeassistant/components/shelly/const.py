@@ -18,6 +18,8 @@ RPC_POLL: Final = "rpc_poll"
 
 CONF_COAP_PORT: Final = "coap_port"
 DEFAULT_COAP_PORT: Final = 5683
+CONF_WS_PORT: Final = "ws_port"
+DEFAULT_WS_PORT: Final = 5683
 FIRMWARE_PATTERN: Final = re.compile(r"^(\d{8})")
 
 # Firmware 1.11.0 release date, this firmware supports light transition
