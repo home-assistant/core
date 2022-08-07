@@ -52,7 +52,15 @@ class PassiveBluetoothDataUpdate(Generic[_T]):
     )
 
 
-class PassiveBluetoothProcessorCoordinator(BasePassiveBluetoothCoordinator):
+def _default_update_method(
+    service_info: BluetoothServiceInfoBleak,
+) -> BluetoothServiceInfoBleak:
+    return service_info
+
+
+class PassiveBluetoothProcessorCoordinator(
+    Generic[_T], BasePassiveBluetoothCoordinator
+):
     """Passive bluetooth processor coordinator for bluetooth advertisements.
 
     The coordinator is responsible for dispatching the bluetooth data,
@@ -65,10 +73,12 @@ class PassiveBluetoothProcessorCoordinator(BasePassiveBluetoothCoordinator):
         logger: logging.Logger,
         address: str,
         mode: BluetoothScanningMode,
+        update_method: Callable[[BluetoothServiceInfoBleak], _T] = _default_update_method,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(hass, logger, address, mode)
         self._processors: list[PassiveBluetoothDataProcessor] = []
+        self._update_method = update_method
 
     @callback
     def async_register_processor(
@@ -102,8 +112,11 @@ class PassiveBluetoothProcessorCoordinator(BasePassiveBluetoothCoordinator):
         super()._async_handle_bluetooth_event(service_info, change)
         if self.hass.is_stopping:
             return
+
+        update = self._update_method(service_info)
+
         for processor in self._processors:
-            processor.async_handle_bluetooth_event(service_info, change)
+            processor.async_handle_update(update)
 
 
 _PassiveBluetoothDataProcessorT = TypeVar(
@@ -138,9 +151,7 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
 
     def __init__(
         self,
-        update_method: Callable[
-            [BluetoothServiceInfoBleak], PassiveBluetoothDataUpdate[_T]
-        ],
+        update_method: Callable[[_T], PassiveBluetoothDataUpdate[_T]],
     ) -> None:
         """Initialize the coordinator."""
         self.coordinator: PassiveBluetoothProcessorCoordinator
@@ -244,14 +255,10 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
                 update_callback(data)
 
     @callback
-    def async_handle_bluetooth_event(
-        self,
-        service_info: BluetoothServiceInfoBleak,
-        change: BluetoothChange,
-    ) -> None:
+    def async_handle_update(self, update: _T) -> None:
         """Handle a Bluetooth event."""
         try:
-            new_data = self.update_method(service_info)
+            new_data = self.update_method(update)
         except Exception as err:  # pylint: disable=broad-except
             self.last_update_success = False
             self.coordinator.logger.exception(

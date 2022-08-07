@@ -84,14 +84,25 @@ async def test_basic_usage(hass, mock_bleak_scanner_start):
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
     @callback
-    def _async_generate_mock_data(
+    def _mock_update_method(
         service_info: BluetoothServiceInfo,
+    ) -> dict[str, str]:
+        return {"test": "data"}
+
+    @callback
+    def _async_generate_mock_data(
+        data: dict[str, str],
     ) -> PassiveBluetoothDataUpdate:
         """Generate mock data."""
+        assert data == {"test": "data"}
         return GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE
 
     coordinator = PassiveBluetoothProcessorCoordinator(
-        hass, _LOGGER, "aa:bb:cc:dd:ee:ff", BluetoothScanningMode.ACTIVE
+        hass,
+        _LOGGER,
+        "aa:bb:cc:dd:ee:ff",
+        BluetoothScanningMode.ACTIVE,
+        _mock_update_method,
     )
     assert coordinator.available is False  # no data yet
     saved_callback = None
@@ -186,14 +197,24 @@ async def test_unavailable_after_no_data(hass, mock_bleak_scanner_start):
         await hass.async_block_till_done()
 
     @callback
-    def _async_generate_mock_data(
+    def _mock_update_method(
         service_info: BluetoothServiceInfo,
+    ) -> dict[str, str]:
+        return {"test": "data"}
+
+    @callback
+    def _async_generate_mock_data(
+        data: dict[str, str],
     ) -> PassiveBluetoothDataUpdate:
         """Generate mock data."""
         return GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE
 
     coordinator = PassiveBluetoothProcessorCoordinator(
-        hass, _LOGGER, "aa:bb:cc:dd:ee:ff", BluetoothScanningMode.ACTIVE
+        hass,
+        _LOGGER,
+        "aa:bb:cc:dd:ee:ff",
+        BluetoothScanningMode.ACTIVE,
+        _mock_update_method,
     )
     assert coordinator.available is False  # no data yet
     saved_callback = None
@@ -271,14 +292,24 @@ async def test_no_updates_once_stopping(hass, mock_bleak_scanner_start):
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
     @callback
-    def _async_generate_mock_data(
+    def _mock_update_method(
         service_info: BluetoothServiceInfo,
+    ) -> dict[str, str]:
+        return {"test": "data"}
+
+    @callback
+    def _async_generate_mock_data(
+        data: dict[str, str],
     ) -> PassiveBluetoothDataUpdate:
         """Generate mock data."""
         return GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE
 
     coordinator = PassiveBluetoothProcessorCoordinator(
-        hass, _LOGGER, "aa:bb:cc:dd:ee:ff", BluetoothScanningMode.ACTIVE
+        hass,
+        _LOGGER,
+        "aa:bb:cc:dd:ee:ff",
+        BluetoothScanningMode.ACTIVE,
+        _mock_update_method,
     )
     assert coordinator.available is False  # no data yet
     saved_callback = None
@@ -326,8 +357,14 @@ async def test_exception_from_update_method(hass, caplog, mock_bleak_scanner_sta
     run_count = 0
 
     @callback
-    def _async_generate_mock_data(
+    def _mock_update_method(
         service_info: BluetoothServiceInfo,
+    ) -> dict[str, str]:
+        return {"test": "data"}
+
+    @callback
+    def _async_generate_mock_data(
+        data: dict[str, str],
     ) -> PassiveBluetoothDataUpdate:
         """Generate mock data."""
         nonlocal run_count
@@ -337,7 +374,11 @@ async def test_exception_from_update_method(hass, caplog, mock_bleak_scanner_sta
         return GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE
 
     coordinator = PassiveBluetoothProcessorCoordinator(
-        hass, _LOGGER, "aa:bb:cc:dd:ee:ff", BluetoothScanningMode.ACTIVE
+        hass,
+        _LOGGER,
+        "aa:bb:cc:dd:ee:ff",
+        BluetoothScanningMode.ACTIVE,
+        _mock_update_method,
     )
     assert coordinator.available is False  # no data yet
     saved_callback = None
@@ -379,8 +420,14 @@ async def test_bad_data_from_update_method(hass, mock_bleak_scanner_start):
     run_count = 0
 
     @callback
-    def _async_generate_mock_data(
+    def _mock_update_method(
         service_info: BluetoothServiceInfo,
+    ) -> dict[str, str]:
+        return {"test": "data"}
+
+    @callback
+    def _async_generate_mock_data(
+        data: dict[str, str],
     ) -> PassiveBluetoothDataUpdate:
         """Generate mock data."""
         nonlocal run_count
@@ -390,7 +437,11 @@ async def test_bad_data_from_update_method(hass, mock_bleak_scanner_start):
         return GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE
 
     coordinator = PassiveBluetoothProcessorCoordinator(
-        hass, _LOGGER, "aa:bb:cc:dd:ee:ff", BluetoothScanningMode.ACTIVE
+        hass,
+        _LOGGER,
+        "aa:bb:cc:dd:ee:ff",
+        BluetoothScanningMode.ACTIVE,
+        _mock_update_method,
     )
     assert coordinator.available is False  # no data yet
     saved_callback = None
@@ -721,8 +772,14 @@ async def test_integration_with_entity(hass, mock_bleak_scanner_start):
     update_count = 0
 
     @callback
-    def _async_generate_mock_data(
+    def _mock_update_method(
         service_info: BluetoothServiceInfo,
+    ) -> dict[str, str]:
+        return {"test": "data"}
+
+    @callback
+    def _async_generate_mock_data(
+        data: dict[str, str],
     ) -> PassiveBluetoothDataUpdate:
         """Generate mock data."""
         nonlocal update_count
@@ -732,7 +789,11 @@ async def test_integration_with_entity(hass, mock_bleak_scanner_start):
         return GOVEE_B5178_REMOTE_PASSIVE_BLUETOOTH_DATA_UPDATE
 
     coordinator = PassiveBluetoothProcessorCoordinator(
-        hass, _LOGGER, "aa:bb:cc:dd:ee:ff", BluetoothScanningMode.ACTIVE
+        hass,
+        _LOGGER,
+        "aa:bb:cc:dd:ee:ff",
+        BluetoothScanningMode.ACTIVE,
+        _mock_update_method,
     )
     assert coordinator.available is False  # no data yet
     saved_callback = None
@@ -835,14 +896,24 @@ async def test_integration_with_entity_without_a_device(hass, mock_bleak_scanner
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
     @callback
-    def _async_generate_mock_data(
+    def _mock_update_method(
         service_info: BluetoothServiceInfo,
+    ) -> dict[str, str]:
+        return {"test": "data"}
+
+    @callback
+    def _async_generate_mock_data(
+        data: dict[str, str],
     ) -> PassiveBluetoothDataUpdate:
         """Generate mock data."""
         return NO_DEVICES_PASSIVE_BLUETOOTH_DATA_UPDATE
 
     coordinator = PassiveBluetoothProcessorCoordinator(
-        hass, _LOGGER, "aa:bb:cc:dd:ee:ff", BluetoothScanningMode.ACTIVE
+        hass,
+        _LOGGER,
+        "aa:bb:cc:dd:ee:ff",
+        BluetoothScanningMode.ACTIVE,
+        _mock_update_method,
     )
     assert coordinator.available is False  # no data yet
     saved_callback = None
@@ -899,14 +970,24 @@ async def test_passive_bluetooth_entity_with_entity_platform(
     entity_platform = MockEntityPlatform(hass)
 
     @callback
-    def _async_generate_mock_data(
+    def _mock_update_method(
         service_info: BluetoothServiceInfo,
+    ) -> dict[str, str]:
+        return {"test": "data"}
+
+    @callback
+    def _async_generate_mock_data(
+        data: dict[str, str],
     ) -> PassiveBluetoothDataUpdate:
         """Generate mock data."""
         return NO_DEVICES_PASSIVE_BLUETOOTH_DATA_UPDATE
 
     coordinator = PassiveBluetoothProcessorCoordinator(
-        hass, _LOGGER, "aa:bb:cc:dd:ee:ff", BluetoothScanningMode.ACTIVE
+        hass,
+        _LOGGER,
+        "aa:bb:cc:dd:ee:ff",
+        BluetoothScanningMode.ACTIVE,
+        _mock_update_method,
     )
     assert coordinator.available is False  # no data yet
     saved_callback = None
@@ -992,8 +1073,18 @@ async def test_integration_multiple_entity_platforms(hass, mock_bleak_scanner_st
     """Test integration of PassiveBluetoothProcessorCoordinator with multiple platforms."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
+    @callback
+    def _mock_update_method(
+        service_info: BluetoothServiceInfo,
+    ) -> dict[str, str]:
+        return {"test": "data"}
+
     coordinator = PassiveBluetoothProcessorCoordinator(
-        hass, _LOGGER, "aa:bb:cc:dd:ee:ff", BluetoothScanningMode.ACTIVE
+        hass,
+        _LOGGER,
+        "aa:bb:cc:dd:ee:ff",
+        BluetoothScanningMode.ACTIVE,
+        _mock_update_method,
     )
     assert coordinator.available is False  # no data yet
     saved_callback = None

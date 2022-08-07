@@ -3,7 +3,10 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.bluetooth import BluetoothScanningMode
+from homeassistant.components.bluetooth import (
+    BluetoothScanningMode,
+    BluetoothServiceInfoBleak,
+)
 from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothProcessorCoordinator,
 )
@@ -24,7 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     assert address is not None
     coordinator = hass.data.setdefault(DOMAIN, {})[
         entry.entry_id
-    ] = PassiveBluetoothProcessorCoordinator(
+    ] = PassiveBluetoothProcessorCoordinator[BluetoothServiceInfoBleak](
         hass, _LOGGER, address=address, mode=BluetoothScanningMode.PASSIVE
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
