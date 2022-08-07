@@ -17,7 +17,6 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY, CONF_BASE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CLIENT_TIMEOUT, DEFAULT_BASE, DOMAIN, LOGGER
@@ -44,15 +43,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, str]) -> dict[str,
     """
     client = Client(data[CONF_API_KEY], async_get_clientsession(hass))
 
-    try:
-        async with async_timeout.timeout(CLIENT_TIMEOUT):
-            await client.get_latest(base=data[CONF_BASE])
-    except OpenExchangeRatesAuthError as err:
-        raise InvalidAuth from err
-    except OpenExchangeRatesClientError as err:
-        raise CannotConnect from err
-    except asyncio.TimeoutError as err:
-        raise TimeoutConnect from err
+    async with async_timeout.timeout(CLIENT_TIMEOUT):
+        await client.get_latest(base=data[CONF_BASE])
 
     return {"title": f"{data[CONF_BASE]}"}
 
@@ -85,11 +77,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             info = await validate_input(self.hass, user_input)
-        except CannotConnect:
-            errors["base"] = "cannot_connect"
-        except InvalidAuth:
+        except OpenExchangeRatesAuthError:
             errors["base"] = "invalid_auth"
-        except TimeoutConnect:
+        except OpenExchangeRatesClientError:
+            errors["base"] = "cannot_connect"
+        except asyncio.TimeoutError:
             errors["base"] = "timeout_connect"
         except Exception:  # pylint: disable=broad-except
             LOGGER.exception("Unexpected exception")
@@ -141,15 +133,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
         """Handle import from yaml/configuration."""
         return await self.async_step_user(import_config)
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""
-
-
-class TimeoutConnect(HomeAssistantError):
-    """Error to indicate we timed out when connecting."""
