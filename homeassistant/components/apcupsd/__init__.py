@@ -53,7 +53,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     _LOGGER.warning(
         "Configuration of apcupsd in YAML is deprecated and will be "
-        "removed in Home Assistant 2022.7; Your existing configuration "
+        "removed in Home Assistant 2022.12; Your existing configuration "
         "has been imported into the UI automatically and can be safely removed "
         "from your configuration.yaml file"
     )
