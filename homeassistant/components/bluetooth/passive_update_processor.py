@@ -59,6 +59,10 @@ class PassiveBluetoothProcessorCoordinator(
 
     The coordinator is responsible for dispatching the bluetooth data,
     to each processor, and tracking devices.
+
+    The update_method should return the data that is dispatched to each processor.
+    This is normally a parsed form of the data, but you can just forward the
+    BluetoothServiceInfoBleak if needed.
     """
 
     def __init__(
@@ -130,9 +134,8 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
     the appropriate format.
 
     The processor will call the update_method every time the bluetooth device
-    receives a new advertisement data from the coordinator with the following signature:
-
-    update_method(service_info: BluetoothServiceInfoBleak) -> PassiveBluetoothDataUpdate
+    receives a new advertisement data from the coordinator with the data
+    returned by he update_method of the coordinator.
 
     As the size of each advertisement is limited, the update_method should
     return a PassiveBluetoothDataUpdate object that contains only data that
