@@ -32,7 +32,6 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 ATTR_SYSTEM_MODE = "system_mode"
 ATTR_SYSTEM_NAME = "system_name"
 
-DEFAULT_ATTRIBUTION = "Data provided by Notion"
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=1)
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
