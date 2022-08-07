@@ -6,15 +6,17 @@ from datetime import timedelta
 from typing import Any
 
 from homeassistant.backports.enum import StrEnum
+from homeassistant.components.repairs import IssueSeverity, async_create_issue
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import LOGGER
+from .const import DOMAIN, LOGGER
 
 SIGNAL_REBOOT_COMPLETED = "rainmachine_reboot_completed_{0}"
 SIGNAL_REBOOT_REQUESTED = "rainmachine_reboot_requested_{0}"
@@ -33,6 +35,39 @@ RUN_STATE_MAP = {
     1: RunStates.RUNNING,
     2: RunStates.QUEUED,
 }
+
+
+@callback
+def async_clean_up_old_entities(
+    hass: HomeAssistant, entry: ConfigEntry, unique_id_suffixes_to_remove: tuple[str]
+) -> None:
+    """Clean up old, no-longer-used entities."""
+    ent_reg = entity_registry.async_get(hass)
+    for entity_registry_item in [
+        e
+        for e in ent_reg.entities.values()
+        if e.config_entry_id == entry.entry_id
+        and any(
+            suffix
+            for suffix in unique_id_suffixes_to_remove
+            if e.unique_id.endswith(suffix)
+        )
+    ]:
+        removed_entity_id = entity_registry_item.entity_id
+        async_create_issue(
+            hass,
+            DOMAIN,
+            f"removed_old_entity_{removed_entity_id}",
+            is_fixable=True,
+            is_persistent=True,
+            severity=IssueSeverity.WARNING,
+            translation_key="removed_old_entity",
+            translation_placeholders={
+                "removed_entity_id": removed_entity_id,
+            },
+        )
+        LOGGER.debug('Removing old entity: "%s"', removed_entity_id)
+        ent_reg.async_remove(removed_entity_id)
 
 
 def key_exists(data: dict[str, Any], search_key: str) -> bool:
