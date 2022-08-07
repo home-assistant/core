@@ -220,6 +220,7 @@ def websocket_list(
             "domain": info["domain"],
             "name": info["name"],
             "local_only": info["local_only"],
+            "allowed_methods": sorted(info["allowed_methods"]),
         }
         for webhook_id, info in handlers.items()
     ]
@@ -231,7 +232,7 @@ def websocket_list(
     {
         vol.Required("type"): "webhook/handle",
         vol.Required("webhook_id"): str,
-        vol.Required("method"): vol.In(["GET", "POST", "PUT"]),
+        vol.Required("method"): vol.In(SUPPORTED_METHODS),
         vol.Optional("body", default=""): str,
         vol.Optional("headers", default={}): {str: str},
         vol.Optional("query", default=""): str,

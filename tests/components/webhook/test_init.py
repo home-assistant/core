@@ -246,7 +246,15 @@ async def test_listing_webhook(
     client = await hass_ws_client(hass, hass_access_token)
 
     webhook.async_register(hass, "test", "Test hook", "my-id", None)
-    webhook.async_register(hass, "test", "Test hook", "my-2", None, local_only=True)
+    webhook.async_register(
+        hass,
+        "test",
+        "Test hook",
+        "my-2",
+        None,
+        local_only=True,
+        allowed_methods=["GET"],
+    )
 
     await client.send_json({"id": 5, "type": "webhook/list"})
 
@@ -259,12 +267,14 @@ async def test_listing_webhook(
             "domain": "test",
             "name": "Test hook",
             "local_only": False,
+            "allowed_methods": ["POST", "PUT"],
         },
         {
             "webhook_id": "my-2",
             "domain": "test",
             "name": "Test hook",
             "local_only": True,
+            "allowed_methods": ["GET"],
         },
     ]
 
