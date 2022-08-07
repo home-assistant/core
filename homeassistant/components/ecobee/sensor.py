@@ -62,6 +62,7 @@ runtimeKeys = {
    "vocPPM" : 'actualVOC',
    "airQuality" : 'actualAQScore'
 }
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -165,6 +166,6 @@ class EcobeeSensor(SensorEntity):
             for item in sensor["capability"]:
                 if item["type"] != self.entity_description.key:
                     continue
-                thermostat = self.data.ecobee.get_thermostat(self.index)
+                thermostat = self.thermostat(self.index)
                 self._state=thermostat["runtime"][runtimeKeys[self.entity_description.key]]
                 break
