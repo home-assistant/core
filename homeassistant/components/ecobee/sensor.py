@@ -166,6 +166,5 @@ class EcobeeSensor(SensorEntity):
             for item in sensor["capability"]:
                 if item["type"] != self.entity_description.key:
                     continue
-                thermostat = self.thermostat(self.index)
-                self._state=thermostat["runtime"][runtimeKeys[self.entity_description.key]]
+                self._state=self.thermostat["runtime"][runtimeKeys[self.entity_description.key]]
                 break
