@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, TypeVar
 
-from regenmaschine.errors import RequestError
+from regenmaschine.errors import RainMachineError
 from typing_extensions import Concatenate, ParamSpec
 import voluptuous as vol
 
@@ -118,7 +118,7 @@ def raise_on_request_error(
         """Decorate."""
         try:
             await func(self, *args, **kwargs)
-        except RequestError as err:
+        except RainMachineError as err:
             raise HomeAssistantError(
                 f"Error while executing {func.__name__}: {err}",
             ) from err
