@@ -77,6 +77,7 @@ class PassiveBluetoothProcessorCoordinator(
         super().__init__(hass, logger, address, mode)
         self._processors: list[PassiveBluetoothDataProcessor] = []
         self._update_method = update_method
+        self.last_update_success = True
 
     @callback
     def async_register_processor(
@@ -111,7 +112,18 @@ class PassiveBluetoothProcessorCoordinator(
         if self.hass.is_stopping:
             return
 
-        update = self._update_method(service_info)
+        try:
+            update = self._update_method(service_info)
+        except Exception as err:  # pylint: disable=broad-except
+            self.last_update_success = False
+            self.logger.exception(
+                "Unexpected error updating %s data: %s", self.name, err
+            )
+            return
+
+        if not self.last_update_success:
+            self.last_update_success = True
+            self.logger.info("Coordinator %s recovered", self.name)
 
         for processor in self._processors:
             processor.async_handle_update(update)
