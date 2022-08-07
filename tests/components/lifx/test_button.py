@@ -99,9 +99,12 @@ async def test_button_identify(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         BUTTON_DOMAIN, "press", {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
-    call_dict = bulb.set_waveform_optional.calls[0][1]
-    call_dict.pop("callb")
-    assert call_dict == {
+
+    assert len(bulb.set_power.calls) == 2
+
+    waveform_call_dict = bulb.set_waveform_optional.calls[0][1]
+    waveform_call_dict.pop("callb")
+    assert waveform_call_dict == {
         "rapid": False,
         "value": {
             "transient": True,
@@ -116,3 +119,14 @@ async def test_button_identify(hass: HomeAssistant) -> None:
             "set_kelvin": True,
         },
     }
+
+    bulb.set_power.reset_mock()
+    bulb.set_waveform_optional.reset_mock()
+    bulb.power_level = 65535
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN, "press", {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+
+    assert len(bulb.set_waveform_optional.calls) == 1
+    assert len(bulb.set_power.calls) == 0
