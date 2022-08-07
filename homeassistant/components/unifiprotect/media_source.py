@@ -298,32 +298,33 @@ class ProtectMediaSource(MediaSource):
 
         # {nvr_id}:all|{camera_id}:all|{event_type}:range:{year}:{month}
         # {nvr_id}:all|{camera_id}:all|{event_type}:range:{year}:{month}:all|{day}
-        day = 1
-        is_root = True
-        is_all = True
         try:
-            year = int(parts[0])
-            month = int(parts[1])
-            if len(parts) == 3:
-                is_root = False
-                if parts[2] != "all":
-                    is_all = False
-                    day = int(parts[2])
+            start, is_month, is_all = self._parse_range(parts)
         except (IndexError, ValueError) as err:
             return _bad_identifier(item.identifier, err)
 
-        try:
-            start = date(year=year, month=month, day=day)
-        except ValueError as err:
-            return _bad_identifier(item.identifier, err)
-
-        if is_root:
+        if is_month:
             return await self._build_month(
                 data, camera_id, event_type, start, build_children=True
             )
         return await self._build_days(
             data, camera_id, event_type, start, build_children=True, is_all=is_all
         )
+
+    def _parse_range(self, parts: list[str]) -> tuple[date, bool, bool]:
+        day = 1
+        is_month = True
+        is_all = True
+        year = int(parts[0])
+        month = int(parts[1])
+        if len(parts) == 3:
+            is_month = False
+            if parts[2] != "all":
+                is_all = False
+                day = int(parts[2])
+
+        start = date(year=year, month=month, day=day)
+        return start, is_month, is_all
 
     async def _resolve_event(
         self, data: ProtectData, event_id: str, thumbnail_only: bool = False
