@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
+import traceback
 from typing import Any
 
 from aionotion import async_get_client
@@ -75,6 +76,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     f"There was a Notion error while updating {attr}: {result}"
                 ) from result
             if isinstance(result, Exception):
+                LOGGER.debug("".join(traceback.format_tb(result.__traceback__)))
                 raise UpdateFailed(
                     f"There was an unknown error while updating {attr}: {result}"
                 ) from result
