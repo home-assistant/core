@@ -48,6 +48,7 @@ async def test_get_media_source(hass: HomeAssistant) -> None:
         "test_id:bad_type:test_id",
         "bad_id:event:test_id",
         "test_id:event:bad_id",
+        "test_id",
     ],
 )
 async def test_resolve_media_bad_identifier(
@@ -134,15 +135,20 @@ async def test_resolve_media_event(
     "identifier",
     [
         "bad_id:event:test_id",
-        "test_id:all:bad_event",
-        "test_id:all:all:recent:not_a_num",
-        "test_id:all:all:browse:not_a_num",
-        "test_id:all:all:browse:2022:not_a_num",
-        "test_id:all:all:browse:2022:1:not_a_num",
-        "test_id:all:all:browse:2022:1:50",
-        "test_id:all:all:invalid",
+        "test_id",
+        "test_id:bad_type",
+        "test_id:browse:all:all:bad_type",
+        "test_id:browse:all:bad_event",
+        "test_id:browse:all:all:recent",
+        "test_id:browse:all:all:recent:not_a_num",
+        "test_id:browse:all:all:range",
+        "test_id:browse:all:all:range:not_a_num",
+        "test_id:browse:all:all:range:2022:not_a_num",
+        "test_id:browse:all:all:range:2022:1:not_a_num",
+        "test_id:browse:all:all:range:2022:1:50",
+        "test_id:browse:all:all:invalid",
         "test_id:event:bad_event_id",
-        "test_id:bad_camera_id",
+        "test_id:browse:bad_camera_id",
     ],
 )
 async def test_browse_media_bad_identifier(
@@ -306,10 +312,10 @@ async def test_browse_media_root_multiple_consoles_only_one_media(
     browse = await source.async_browse_media(media_item)
 
     assert browse.title == "UnifiProtect"
-    assert browse.identifier == "test_id"
+    assert browse.identifier == "test_id:browse"
     assert len(browse.children) == 1
     assert browse.children[0].title == "All Cameras"
-    assert browse.children[0].identifier == "test_id:all"
+    assert browse.children[0].identifier == "test_id:browse:all"
 
 
 async def test_browse_media_root_single_console(
@@ -326,12 +332,12 @@ async def test_browse_media_root_single_console(
     browse = await source.async_browse_media(media_item)
 
     assert browse.title == "UnifiProtect"
-    assert browse.identifier == "test_id"
+    assert browse.identifier == "test_id:browse"
     assert len(browse.children) == 2
     assert browse.children[0].title == "All Cameras"
-    assert browse.children[0].identifier == "test_id:all"
+    assert browse.children[0].identifier == "test_id:browse:all"
     assert browse.children[1].title == doorbell.name
-    assert browse.children[1].identifier == f"test_id:{doorbell.id}"
+    assert browse.children[1].identifier == f"test_id:browse:{doorbell.id}"
     assert browse.children[1].thumbnail is not None
 
 
@@ -359,17 +365,17 @@ async def test_browse_media_camera(
     await hass.async_block_till_done()
 
     source = await async_get_media_source(hass)
-    media_item = MediaSourceItem(hass, DOMAIN, "test_id", None)
+    media_item = MediaSourceItem(hass, DOMAIN, "test_id:browse", None)
 
     browse = await source.async_browse_media(media_item)
 
     assert browse.title == "UnifiProtect"
-    assert browse.identifier == "test_id"
+    assert browse.identifier == "test_id:browse"
     assert len(browse.children) == 2
     assert browse.children[0].title == "All Cameras"
-    assert browse.children[0].identifier == "test_id:all"
+    assert browse.children[0].identifier == "test_id:browse:all"
     assert browse.children[1].title == doorbell.name
-    assert browse.children[1].identifier == f"test_id:{doorbell.id}"
+    assert browse.children[1].identifier == f"test_id:browse:{doorbell.id}"
     assert browse.children[1].thumbnail is None
 
 
@@ -384,17 +390,17 @@ async def test_browse_media_camera_offline(
     await init_entry(hass, ufp, [doorbell])
 
     source = await async_get_media_source(hass)
-    media_item = MediaSourceItem(hass, DOMAIN, "test_id", None)
+    media_item = MediaSourceItem(hass, DOMAIN, "test_id:browse", None)
 
     browse = await source.async_browse_media(media_item)
 
     assert browse.title == "UnifiProtect"
-    assert browse.identifier == "test_id"
+    assert browse.identifier == "test_id:browse"
     assert len(browse.children) == 2
     assert browse.children[0].title == "All Cameras"
-    assert browse.children[0].identifier == "test_id:all"
+    assert browse.children[0].identifier == "test_id:browse:all"
     assert browse.children[1].title == doorbell.name
-    assert browse.children[1].identifier == f"test_id:{doorbell.id}"
+    assert browse.children[1].identifier == f"test_id:browse:{doorbell.id}"
     assert browse.children[1].thumbnail is None
 
 
@@ -407,21 +413,21 @@ async def test_browse_media_event_type(
     await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
 
     source = await async_get_media_source(hass)
-    media_item = MediaSourceItem(hass, DOMAIN, "test_id:all", None)
+    media_item = MediaSourceItem(hass, DOMAIN, "test_id:browse:all", None)
 
     browse = await source.async_browse_media(media_item)
 
     assert browse.title == "UnifiProtect > All Cameras"
-    assert browse.identifier == "test_id:all"
+    assert browse.identifier == "test_id:browse:all"
     assert len(browse.children) == 4
     assert browse.children[0].title == "All Events"
-    assert browse.children[0].identifier == "test_id:all:all"
+    assert browse.children[0].identifier == "test_id:browse:all:all"
     assert browse.children[1].title == "Ring Events"
-    assert browse.children[1].identifier == "test_id:all:ring"
+    assert browse.children[1].identifier == "test_id:browse:all:ring"
     assert browse.children[2].title == "Motion Events"
-    assert browse.children[2].identifier == "test_id:all:motion"
+    assert browse.children[2].identifier == "test_id:browse:all:motion"
     assert browse.children[3].title == "Smart Detections"
-    assert browse.children[3].identifier == "test_id:all:smart"
+    assert browse.children[3].identifier == "test_id:browse:all:smart"
 
 
 async def test_browse_media_time(
@@ -435,7 +441,7 @@ async def test_browse_media_time(
     ufp.api.get_bootstrap = AsyncMock(return_value=ufp.api.bootstrap)
     await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
 
-    base_id = f"test_id:{doorbell.id}:all"
+    base_id = f"test_id:browse:{doorbell.id}:all"
     source = await async_get_media_source(hass)
     media_item = MediaSourceItem(hass, DOMAIN, base_id, None)
 
@@ -453,7 +459,7 @@ async def test_browse_media_time(
     assert browse.children[3].title == f"{fixed_now.strftime('%B %Y')}"
     assert (
         browse.children[3].identifier
-        == f"{base_id}:browse:{fixed_now.year}:{fixed_now.month}"
+        == f"{base_id}:range:{fixed_now.year}:{fixed_now.month}"
     )
 
 
@@ -478,7 +484,7 @@ async def test_browse_media_recent(
     event._api = ufp.api
     ufp.api.get_events_raw = AsyncMock(return_value=[event.unifi_dict()])
 
-    base_id = f"test_id:{doorbell.id}:motion:recent:1"
+    base_id = f"test_id:browse:{doorbell.id}:motion:recent:1"
     source = await async_get_media_source(hass)
     media_item = MediaSourceItem(hass, DOMAIN, base_id, None)
 
@@ -516,7 +522,7 @@ async def test_browse_media_recent_truncated(
     event._api = ufp.api
     ufp.api.get_events_raw = AsyncMock(return_value=[event.unifi_dict()])
 
-    base_id = f"test_id:{doorbell.id}:motion:recent:1"
+    base_id = f"test_id:browse:{doorbell.id}:motion:recent:1"
     source = await async_get_media_source(hass)
     media_item = MediaSourceItem(hass, DOMAIN, base_id, None)
 
@@ -604,7 +610,9 @@ async def test_browse_media_day(
     ufp.api.get_bootstrap = AsyncMock(return_value=ufp.api.bootstrap)
     await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
 
-    base_id = f"test_id:{doorbell.id}:all:browse:{fixed_now.year}:{fixed_now.month}"
+    base_id = (
+        f"test_id:browse:{doorbell.id}:all:range:{fixed_now.year}:{fixed_now.month}"
+    )
     source = await async_get_media_source(hass)
     media_item = MediaSourceItem(hass, DOMAIN, base_id, None)
 
@@ -644,9 +652,7 @@ async def test_browse_media_browse_day(
     event._api = ufp.api
     ufp.api.get_events_raw = AsyncMock(return_value=[event.unifi_dict()])
 
-    base_id = (
-        f"test_id:{doorbell.id}:motion:browse:{fixed_now.year}:{fixed_now.month}:1"
-    )
+    base_id = f"test_id:browse:{doorbell.id}:motion:range:{fixed_now.year}:{fixed_now.month}:1"
     source = await async_get_media_source(hass)
     media_item = MediaSourceItem(hass, DOMAIN, base_id, None)
 
@@ -687,7 +693,9 @@ async def test_browse_media_browse_whole_month(
     event._api = ufp.api
     ufp.api.get_events_raw = AsyncMock(return_value=[event.unifi_dict()])
 
-    base_id = f"test_id:{doorbell.id}:all:browse:{fixed_now.year}:{fixed_now.month}:all"
+    base_id = (
+        f"test_id:browse:{doorbell.id}:all:range:{fixed_now.year}:{fixed_now.month}:all"
+    )
     source = await async_get_media_source(hass)
     media_item = MediaSourceItem(hass, DOMAIN, base_id, None)
 
@@ -768,7 +776,9 @@ async def test_browse_media_browse_whole_month_december(
         ]
     )
 
-    base_id = f"test_id:{doorbell.id}:all:browse:{fixed_now.year}:{fixed_now.month}:all"
+    base_id = (
+        f"test_id:browse:{doorbell.id}:all:range:{fixed_now.year}:{fixed_now.month}:all"
+    )
     source = await async_get_media_source(hass)
     media_item = MediaSourceItem(hass, DOMAIN, base_id, None)
 

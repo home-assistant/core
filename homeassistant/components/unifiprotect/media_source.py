@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import date, datetime, timedelta
+from enum import Enum
 from typing import Any, cast
 
 from pyunifiprotect.data import Camera, Event, EventType, SmartDetectObjectType
@@ -31,12 +32,55 @@ from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .data import ProtectData
-from .models import SimpleEventType
 from .views import async_generate_event_video_url, async_generate_thumbnail_url
 
 VIDEO_FORMAT = "video/mp4"
 THUMBNAIL_WIDTH = 185
 THUMBNAIL_HEIGHT = 185
+
+
+class SimpleEventType(str, Enum):
+    """Enum to Camera Video events."""
+
+    ALL = "all"
+    RING = "ring"
+    MOTION = "motion"
+    SMART = "smart"
+
+
+class IdentifierType(str, Enum):
+    """UniFi Protect identifer type."""
+
+    EVENT = "event"
+    EVENT_THUMB = "eventthumb"
+    BROWSE = "browse"
+
+
+class IdentifierTimeType(str, Enum):
+    """UniFi Protect identifer subtype."""
+
+    RECENT = "recent"
+    RANGE = "range"
+
+
+EVENT_MAP = {
+    SimpleEventType.ALL: None,
+    SimpleEventType.RING: EventType.RING,
+    SimpleEventType.MOTION: EventType.MOTION,
+    SimpleEventType.SMART: EventType.SMART_DETECT,
+}
+EVENT_NAME_MAP = {
+    SimpleEventType.ALL: "All Events",
+    SimpleEventType.RING: "Ring Events",
+    SimpleEventType.MOTION: "Motion Events",
+    SimpleEventType.SMART: "Smart Detections",
+}
+
+
+def get_ufp_event(event_type: SimpleEventType) -> EventType | None:
+    """Get UniFi Protect event type from SimpleEventType."""
+
+    return EVENT_MAP[event_type]
 
 
 async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
@@ -170,21 +214,21 @@ class ProtectMediaSource(MediaSource):
 
         Accepted identifier formats:
 
-        * {nvr_id}
-            Root NVR source
         * {nvr_id}:event:{event_id}
             Specific Event for NVR
         * {nvr_id}:eventthumb:{event_id}
             Specific Event Thumbnail for NVR
-        * {nvr_id}:all|{camera_id}
-            Root Camera(s) source
-        * {nvr_id}:all|{camera_id}:all|{event_type}
-            Root Camera(s) Event Type(s) source
-        * {nvr_id}:all|{camera_id}:all|{event_type}:recent:{day_count}
+        * {nvr_id}:browse
+            Root NVR browse source
+        * {nvr_id}:browse:all|{camera_id}
+            Root Camera(s) browse source
+        * {nvr_id}:browse:all|{camera_id}:all|{event_type}
+            Root Camera(s) Event Type(s) browse source
+        * {nvr_id}:browse:all|{camera_id}:all|{event_type}:recent:{day_count}
             Listing of all events in last {day_count}, sorted in reverse chronological order
-        * {nvr_id}:all|{camera_id}:all|{event_type}:browse:{year}:{month}
+        * {nvr_id}:browse:all|{camera_id}:all|{event_type}:range:{year}:{month}
             List of folders for each day in month + all events for month
-        * {nvr_id}:all|{camera_id}:all|{event_type}:browse:{year}:{month}:all|{day}
+        * {nvr_id}:browse:all|{camera_id}:all|{event_type}:range:{year}:{month}:all|{day}
             Listing of all events for give {day} + {month} + {year} combination in chronological order
         """
 
@@ -198,35 +242,53 @@ class ProtectMediaSource(MediaSource):
         except (KeyError, IndexError) as err:
             return _bad_identifier(item.identifier, err)
 
-        # {nvr_id}
-        if len(parts) == 1:
-            return await self._build_console(data)
+        if len(parts) < 2:
+            return _bad_identifier(item.identifier)
 
-        # {nvr_id}:event:{id}
-        if len(parts) == 3 and parts[1] in ("event", "eventthumb"):
-            thumbnail_only = parts[1] == "eventthumb"
+        try:
+            identifier_type = IdentifierType(parts[1])
+        except ValueError as err:
+            return _bad_identifier(item.identifier, err)
+
+        if identifier_type in (IdentifierType.EVENT, IdentifierType.EVENT_THUMB):
+            thumbnail_only = identifier_type == IdentifierType.EVENT_THUMB
             return await self._resolve_event(data, parts[2], thumbnail_only)
 
-        # {nvr_id}:all|{camera_id}
-        camera_id = parts[1]
-        if len(parts) == 2:
+        # rest are params for browse
+        parts = parts[2:]
+
+        # {nvr_id}:browse
+        if len(parts) == 0:
+            return await self._build_console(data)
+
+        # {nvr_id}:browse:all|{camera_id}
+        camera_id = parts.pop(0)
+        if len(parts) == 0:
             return await self._build_camera(data, camera_id, build_children=True)
 
-        # {nvr_id}:all|{camera_id}:all|{event_type}
+        # {nvr_id}:browse:all|{camera_id}:all|{event_type}
         try:
-            event_type = SimpleEventType.get_from_name(parts[2])
+            event_type = SimpleEventType(parts.pop(0).lower())
         except (IndexError, ValueError) as err:
             return _bad_identifier(item.identifier, err)
 
-        if len(parts) == 3:
+        if len(parts) == 0:
             return await self._build_events_type(
                 data, camera_id, event_type, build_children=True
             )
 
-        # {nvr_id}:all|{camera_id}:all|{event_type}:recent:{day_count}
-        if parts[3] == "recent":
+        try:
+            time_type = IdentifierTimeType(parts.pop(0))
+        except ValueError as err:
+            return _bad_identifier(item.identifier, err)
+
+        if len(parts) == 0:
+            return _bad_identifier(item.identifier)
+
+        # {nvr_id}:browse:all|{camera_id}:all|{event_type}:recent:{day_count}
+        if time_type == IdentifierTimeType.RECENT:
             try:
-                days = int(parts[4])
+                days = int(parts.pop(0))
             except (IndexError, ValueError) as err:
                 return _bad_identifier(item.identifier, err)
 
@@ -234,37 +296,34 @@ class ProtectMediaSource(MediaSource):
                 data, camera_id, event_type, days, build_children=True
             )
 
-        # {nvr_id}:all|{camera_id}:all|{event_type}:browse:{year}:{month}
-        # {nvr_id}:all|{camera_id}:all|{event_type}:browse:{year}:{month}:all|{day}
-        if parts[3] == "browse":
-            day = 1
-            is_root = True
-            is_all = True
-            try:
-                year = int(parts[4])
-                month = int(parts[5])
-                if len(parts) == 7:
-                    is_root = False
-                    if parts[6] != "all":
-                        is_all = False
-                        day = int(parts[6])
-            except (IndexError, ValueError) as err:
-                return _bad_identifier(item.identifier, err)
+        # {nvr_id}:all|{camera_id}:all|{event_type}:range:{year}:{month}
+        # {nvr_id}:all|{camera_id}:all|{event_type}:range:{year}:{month}:all|{day}
+        day = 1
+        is_root = True
+        is_all = True
+        try:
+            year = int(parts[0])
+            month = int(parts[1])
+            if len(parts) == 3:
+                is_root = False
+                if parts[2] != "all":
+                    is_all = False
+                    day = int(parts[2])
+        except (IndexError, ValueError) as err:
+            return _bad_identifier(item.identifier, err)
 
-            try:
-                start = date(year=year, month=month, day=day)
-            except ValueError as err:
-                return _bad_identifier(item.identifier, err)
+        try:
+            start = date(year=year, month=month, day=day)
+        except ValueError as err:
+            return _bad_identifier(item.identifier, err)
 
-            if is_root:
-                return await self._build_month(
-                    data, camera_id, event_type, start, build_children=True
-                )
-            return await self._build_days(
-                data, camera_id, event_type, start, build_children=True, is_all=is_all
+        if is_root:
+            return await self._build_month(
+                data, camera_id, event_type, start, build_children=True
             )
-
-        return _bad_identifier(item.identifier)
+        return await self._build_days(
+            data, camera_id, event_type, start, build_children=True, is_all=is_all
+        )
 
     async def _resolve_event(
         self, data: ProtectData, event_id: str, thumbnail_only: bool = False
@@ -307,7 +366,7 @@ class ProtectMediaSource(MediaSource):
                 title = f"{title} ({count})"
 
         if event_type is not None:
-            title = f"{event_type.value.title()} > {title}"
+            title = f"{EVENT_NAME_MAP[event_type].title()} > {title}"
 
         if camera is not None:
             title = f"{camera.display_name} > {title}"
@@ -433,7 +492,7 @@ class ProtectMediaSource(MediaSource):
     ) -> BrowseMediaSource:
         """Build media source for events in relative days."""
 
-        base_id = f"{data.api.bootstrap.nvr.id}:{camera_id}:{event_type.name.lower()}"
+        base_id = f"{data.api.bootstrap.nvr.id}:browse:{camera_id}:{event_type.value}"
         title = f"Last {days} Days"
         if days == 1:
             title = "Last 24 Hours"
@@ -461,7 +520,7 @@ class ProtectMediaSource(MediaSource):
             "reserve": True,
         }
         if event_type != SimpleEventType.ALL:
-            args["event_type"] = SimpleEventType.get_event_type(event_type)
+            args["event_type"] = get_ufp_event(event_type)
 
         camera: Camera | None = None
         if camera_id != "all":
@@ -489,12 +548,12 @@ class ProtectMediaSource(MediaSource):
     ) -> BrowseMediaSource:
         """Build media source for selectors for a given month."""
 
-        base_id = f"{data.api.bootstrap.nvr.id}:{camera_id}:{event_type.name.lower()}"
+        base_id = f"{data.api.bootstrap.nvr.id}:browse:{camera_id}:{event_type.value}"
 
         title = f"{start.strftime('%B %Y')}"
         source = BrowseMediaSource(
             domain=DOMAIN,
-            identifier=f"{base_id}:browse:{start.year}:{start.month}",
+            identifier=f"{base_id}:range:{start.year}:{start.month}",
             media_class=MEDIA_CLASS_DIRECTORY,
             media_content_type=VIDEO_FORMAT,
             title=title,
@@ -539,14 +598,14 @@ class ProtectMediaSource(MediaSource):
     ) -> BrowseMediaSource:
         """Build media source for events for a given day or whole month."""
 
-        base_id = f"{data.api.bootstrap.nvr.id}:{camera_id}:{event_type.name.lower()}"
+        base_id = f"{data.api.bootstrap.nvr.id}:browse:{camera_id}:{event_type.value}"
 
         if is_all:
             title = "Whole Month"
-            identifier = f"{base_id}:browse:{start.year}:{start.month}:all"
+            identifier = f"{base_id}:range:{start.year}:{start.month}:all"
         else:
             title = f"{start.strftime('%x')}"
-            identifier = f"{base_id}:browse:{start.year}:{start.month}:{start.day}"
+            identifier = f"{base_id}:range:{start.year}:{start.month}:{start.day}"
         source = BrowseMediaSource(
             domain=DOMAIN,
             identifier=identifier,
@@ -585,7 +644,7 @@ class ProtectMediaSource(MediaSource):
             "reserve": False,
         }
         if event_type != SimpleEventType.ALL:
-            args["event_type"] = SimpleEventType.get_event_type(event_type)
+            args["event_type"] = get_ufp_event(event_type)
 
         camera: Camera | None = None
         if camera_id != "all":
@@ -614,9 +673,9 @@ class ProtectMediaSource(MediaSource):
     ) -> BrowseMediaSource:
         """Build folder media source for a selectors for a given event type."""
 
-        base_id = f"{data.api.bootstrap.nvr.id}:{camera_id}:{event_type.name.lower()}"
+        base_id = f"{data.api.bootstrap.nvr.id}:browse:{camera_id}:{event_type.value}"
 
-        title = event_type.value.title()
+        title = EVENT_NAME_MAP[event_type].title()
         source = BrowseMediaSource(
             domain=DOMAIN,
             identifier=base_id,
@@ -708,7 +767,7 @@ class ProtectMediaSource(MediaSource):
             thumbnail_url = await self._get_camera_thumbnail_url(camera)
         source = BrowseMediaSource(
             domain=DOMAIN,
-            identifier=f"{data.api.bootstrap.nvr.id}:{camera_id}",
+            identifier=f"{data.api.bootstrap.nvr.id}:browse:{camera_id}",
             media_class=MEDIA_CLASS_DIRECTORY,
             media_content_type=VIDEO_FORMAT,
             title=name,
@@ -763,7 +822,7 @@ class ProtectMediaSource(MediaSource):
 
         base = BrowseMediaSource(
             domain=DOMAIN,
-            identifier=f"{data.api.bootstrap.nvr.id}",
+            identifier=f"{data.api.bootstrap.nvr.id}:browse",
             media_class=MEDIA_CLASS_DIRECTORY,
             media_content_type=VIDEO_FORMAT,
             title=data.api.bootstrap.nvr.name,
