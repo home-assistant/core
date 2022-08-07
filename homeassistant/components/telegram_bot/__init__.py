@@ -583,13 +583,11 @@ class TelegramNotificationService:
             if ATTR_KEYBOARD in data:
                 keys = data.get(ATTR_KEYBOARD)
                 keys = keys if isinstance(keys, list) else [keys]
-                is_resize_keyboard = data[ATTR_RESIZE_KEYBOARD] if ATTR_RESIZE_KEYBOARD in data else False
-                is_one_time_keyboard = data[ATTR_ONE_TIME_KEYBOARD] if ATTR_ONE_TIME_KEYBOARD in data else False
                 if keys:
                     params[ATTR_REPLYMARKUP] = ReplyKeyboardMarkup(
                         [[key.strip() for key in row.split(",")] for row in keys],
-                        resize_keyboard = is_resize_keyboard,
-                        one_time_keyboard = is_one_time_keyboard
+                        resize_keyboard =  data[ATTR_RESIZE_KEYBOARD] if ATTR_RESIZE_KEYBOARD in data else False,
+                        one_time_keyboard = data[ATTR_ONE_TIME_KEYBOARD] if ATTR_ONE_TIME_KEYBOARD in data else False
                     )
                 else:
                     params[ATTR_REPLYMARKUP] = ReplyKeyboardRemove(True)
