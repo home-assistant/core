@@ -11,7 +11,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
     DISPATCH_CONTROLLER_DISCOVERED,
-    ESCEA,
+    DOMAIN,
     ESCEA_FIREPLACE,
     TIMEOUT_DISCOVERY,
 )
@@ -49,4 +49,4 @@ async def _async_has_devices(hass: HomeAssistant) -> bool:
     return True
 
 
-config_entry_flow.register_discovery_flow(ESCEA, ESCEA_FIREPLACE, _async_has_devices)
+config_entry_flow.register_discovery_flow(DOMAIN, ESCEA_FIREPLACE, _async_has_devices)

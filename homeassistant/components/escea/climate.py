@@ -28,7 +28,7 @@ from .const import (
     DISPATCH_CONTROLLER_DISCOVERED,
     DISPATCH_CONTROLLER_RECONNECTED,
     DISPATCH_CONTROLLER_UPDATE,
-    ESCEA,
+    DOMAIN,
     ESCEA_FIREPLACE,
     ESCEA_MANUFACTURER,
     ICON,
@@ -99,7 +99,7 @@ class ControllerEntity(ClimateEntity):
         unique_id: str = controller.device_uid
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(ESCEA, unique_id)},
+            identifiers={(DOMAIN, unique_id)},
             manufacturer=ESCEA_MANUFACTURER,
             name=ESCEA_FIREPLACE,
         )

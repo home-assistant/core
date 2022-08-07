@@ -1,6 +1,6 @@
 """Constants used by the escea component."""
 
-ESCEA = "escea"
+DOMAIN = "escea"
 ESCEA_MANUFACTURER = "Escea"
 ESCEA_FIREPLACE = "Escea Fireplace"
 ICON = "mdi:fire"
