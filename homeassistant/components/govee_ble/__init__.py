@@ -3,10 +3,9 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.bluetooth import (
-    BluetoothScanningMode,
-    BluetoothServiceInfoBleak,
-)
+from govee_ble import GoveeBluetoothDeviceData
+
+from homeassistant.components.bluetooth import BluetoothScanningMode
 from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothProcessorCoordinator,
 )
@@ -25,13 +24,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Govee BLE device from a config entry."""
     address = entry.unique_id
     assert address is not None
+    data = GoveeBluetoothDeviceData()
     coordinator = hass.data.setdefault(DOMAIN, {})[
         entry.entry_id
-    ] = PassiveBluetoothProcessorCoordinator[BluetoothServiceInfoBleak](
+    ] = PassiveBluetoothProcessorCoordinator(
         hass,
         _LOGGER,
         address=address,
         mode=BluetoothScanningMode.ACTIVE,
+        update_method=data.update,
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(
