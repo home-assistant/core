@@ -110,7 +110,7 @@ class OpenexchangeratesSensor(
         self._attr_entity_registry_enabled_default = enabled
         if name and enabled:
             # name is legacy imported from YAML config
-            # this block can be removed after a deprecation period
+            # this block can be removed when removing import from YAML
             self._attr_name = name
             self._attr_has_entity_name = False
         else:
