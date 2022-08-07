@@ -15,6 +15,7 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN
@@ -58,6 +59,17 @@ class ProsegurAlarm(alarm.AlarmControlPanelEntity):
         self._attr_code_arm_required = False
         self._attr_name = f"contract {self.contract}"
         self._attr_unique_id = self.contract
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device information about this entity."""
+        return DeviceInfo(
+            name="Prosegur Alarm",
+            manufacturer="Prosegur",
+            model="smart",
+            identifiers={(DOMAIN, self.contract)},
+            configuration_url="https://smart.prosegur.com",
+        )
 
     async def async_update(self) -> None:
         """Update alarm status."""
