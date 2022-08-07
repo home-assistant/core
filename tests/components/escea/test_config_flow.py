@@ -6,8 +6,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.escea.const import DOMAIN
+from homeassistant.components.escea.const import DOMAIN, ESCEA_FIREPLACE
 from homeassistant.components.escea.discovery import DiscoveryServiceListener
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="mock_discovery_service")
@@ -92,3 +94,21 @@ async def test_found(
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert mock_setup.call_count == 1
+
+
+async def test_single_instance_allowed(hass) -> None:
+    """Test single instance allowed."""
+    config_entry = MockConfigEntry(domain=DOMAIN, title=ESCEA_FIREPLACE)
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.escea.discovery.pescea_discovery_service"
+    ) as discovery_service:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "single_instance_allowed"
+    assert discovery_service.call_count == 0
