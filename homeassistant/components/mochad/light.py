@@ -85,6 +85,7 @@ class MochadLight(LightEntity):
         return int(value * (float(self._brightness_levels) / 255.0))
 
     def _adjust_brightness(self, brightness: int) -> None:
+        assert self.brightness is not None
         if self.brightness > brightness:
             bdelta = self.brightness - brightness
             mochad_brightness = self._calculate_brightness_value(bdelta)
