@@ -602,6 +602,10 @@ omit =
     homeassistant/components/juicenet/number.py
     homeassistant/components/juicenet/sensor.py
     homeassistant/components/juicenet/switch.py
+    homeassistant/components/justnimbus/const.py
+    homeassistant/components/justnimbus/coordinator.py
+    homeassistant/components/justnimbus/entity.py
+    homeassistant/components/justnimbus/sensor.py
     homeassistant/components/kaiterra/*
     homeassistant/components/kankun/switch.py
     homeassistant/components/keba/*
