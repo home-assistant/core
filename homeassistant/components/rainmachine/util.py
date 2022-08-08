@@ -66,7 +66,7 @@ def async_clean_up_old_entities(
                 "removed_entity_id": removed_entity_id,
             },
         )
-        LOGGER.debug('Removing old entity: "%s"', removed_entity_id)
+        LOGGER.info('Removing old entity: "%s"', removed_entity_id)
         ent_reg.async_remove(removed_entity_id)
 
 
