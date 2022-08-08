@@ -2,12 +2,13 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine
+from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
+from typing import Any, TypeVar
 
-from regenmaschine.errors import RequestError
+from regenmaschine.errors import RainMachineError
+from typing_extensions import Concatenate, ParamSpec
 import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
@@ -104,6 +105,27 @@ VEGETATION_MAP = {
 }
 
 
+_T = TypeVar("_T", bound="RainMachineBaseSwitch")
+_P = ParamSpec("_P")
+
+
+def raise_on_request_error(
+    func: Callable[Concatenate[_T, _P], Awaitable[None]]
+) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, None]]:
+    """Define a decorator to raise on a request error."""
+
+    async def decorator(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> None:
+        """Decorate."""
+        try:
+            await func(self, *args, **kwargs)
+        except RainMachineError as err:
+            raise HomeAssistantError(
+                f"Error while executing {func.__name__}: {err}",
+            ) from err
+
+    return decorator
+
+
 @dataclass
 class RainMachineSwitchDescription(
     SwitchEntityDescription,
@@ -178,26 +200,6 @@ async def async_setup_entry(
             )
 
     async_add_entities(entities)
-
-
-def raise_on_request_error(func: Callable[..., Coroutine]) -> Callable[..., Coroutine]:
-    """Define a decorator to raise on a request error."""
-
-    async def decorator(self: RainMachineBaseSwitch, **kwargs: Any) -> None:
-        """Decorate."""
-        try:
-            data = await func(self, **kwargs)
-        except RequestError as err:
-            raise HomeAssistantError(
-                f"Error while executing {func.__name__}: {err}",
-            ) from err
-
-        if data and data["statusCode"] != 0:
-            raise HomeAssistantError(
-                f'Error while executing {func.__name__}: {data["message"]}',
-            )
-
-    return decorator
 
 
 class RainMachineBaseSwitch(RainMachineEntity, SwitchEntity):

@@ -1230,6 +1230,9 @@ peco==0.0.29
 # homeassistant.components.pencom
 pencompy==0.0.3
 
+# homeassistant.components.escea
+pescea==1.0.12
+
 # homeassistant.components.aruba
 # homeassistant.components.cisco_ios
 # homeassistant.components.pandora
@@ -2010,7 +2013,7 @@ pytrafikverket==0.2.0.1
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.0.11
+pyunifiprotect==4.0.12
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
