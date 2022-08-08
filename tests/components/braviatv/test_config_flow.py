@@ -206,17 +206,6 @@ async def test_options_flow(hass):
     )
     config_entry.add_to_hass(hass)
 
-    # with patch("pybravia.BraviaTV.connect"), patch(
-    #     "pybravia.BraviaTV.get_power_status", return_value="active"
-    # ), patch("pybravia.BraviaTV.get_external_status", return_value=BRAVIA_SOURCES), patch(
-    #     "pybravia.BraviaTV.get_app_list", return_value={}
-    # ), patch(
-    #     "pybravia.BraviaTV.get_content_list_all", return_value={}
-    # ), patch(
-    #     "pybravia.BraviaTV.get_volume_info", return_value={}
-    # ), patch(
-    #     "pybravia.BraviaTV.get_playing_info", return_value={}
-    # ):
     with patch("pybravia.BraviaTV.connect"), patch(
         "pybravia.BraviaTV.get_power_status",
         return_value="active",
