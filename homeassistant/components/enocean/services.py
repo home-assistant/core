@@ -1,8 +1,9 @@
 """EnOcean services."""
+from __future__ import annotations
+
 import logging
 import queue
 import time
-from typing import Union
 
 from enocean import utils
 from enocean.communicators import Communicator
@@ -58,14 +59,14 @@ def async_setup_services(hass: HomeAssistant) -> None:
     def call_enocean_service(service_call: ServiceCall) -> None:
         """Call correct EnOcean service."""
         services[service_call.service](hass, service_call)
-        _LOGGER.info("Service %s has been called.", str(service_call.service))
+        _LOGGER.info("Service %s has been called", str(service_call.service))
 
-    # register the services
-    for service in SUPPORTED_SERVICES:
-        hass.services.async_register(
-            DOMAIN, service, call_enocean_service, schema=SERVICE_TO_SCHEMA.get(service)
-        )
-        _LOGGER.info("Request to register service %s has been sent.", str(service))
+    # register the service
+    service = TEACH_IN_DEVICE
+    hass.services.async_register(
+        DOMAIN, service, call_enocean_service, schema=SERVICE_TO_SCHEMA.get(service)
+    )
+    _LOGGER.debug("Request to register service %s has been sent", str(service))
 
 
 def get_teach_in_seconds(service_call: ServiceCall) -> int:
@@ -84,12 +85,6 @@ def get_teach_in_seconds(service_call: ServiceCall) -> int:
     return teachin_for_seconds
 
 
-def get_base_id_from_service_call(service_call: ServiceCall) -> Union[str, None]:
-    """Get the Base ID to use when pairing during BS4 teach-in."""
-    base_id_from_call = service_call.data.get(SERVICE_CALL_ATTR_TEACH_IN_BASE_ID_TO_USE)
-    return base_id_from_call
-
-
 def determine_rorg_type(packet):
     """Determine the type of packet."""
     if packet is None:
@@ -103,6 +98,12 @@ def determine_rorg_type(packet):
         return RORG.BS4
 
     return result
+
+
+def get_base_id_from_service_call(service_call: ServiceCall) -> str | None:
+    """Get the Base ID to use when pairing during BS4 teach-in."""
+    base_id_from_call = service_call.data.get(SERVICE_CALL_ATTR_TEACH_IN_BASE_ID_TO_USE)
+    return base_id_from_call
 
 
 def handle_teach_in(hass: HomeAssistant, service_call: ServiceCall) -> None:
@@ -124,7 +125,7 @@ def handle_teach_in(hass: HomeAssistant, service_call: ServiceCall) -> None:
     # to get access to the communicator. But, the enocean library seems abandoned
     cb_to_restore = communicator._Communicator__callback
 
-    communicator.callback = None
+    communicator._Communicator__callback = None
 
     try:
         # get time to run of the teach-in process from the service call
@@ -187,7 +188,7 @@ def is_service_already_running(hass):
         service_state is not None
         and SERVICE_TEACHIN_STATE_VALUE_RUNNING == service_state.state
     ):
-        _LOGGER.warning("Service is already running. Aborting...")
+        _LOGGER.warning("Service is already running. Aborting")
 
 
 def create_result_messages(successful_teachin, to_be_taught_device_id):
@@ -237,7 +238,7 @@ def react_to_teachin_requests(
 
             rorg_type = determine_rorg_type(packet)
 
-            _LOGGER.info(str(packet))
+            _LOGGER.debug(str(packet))
             if isinstance(packet, UTETeachInPacket):
                 # THINK: handler, maybe deactivate teach in before and handle it the "handler"
                 handler: TeachInHandler = UteTeachInHandler()
@@ -249,7 +250,7 @@ def react_to_teachin_requests(
 
             # if packet.packet_type == PACKET.RADIO_ERP1 and packet.rorg == RORG.BS4:
             if rorg_type == RORG.BS4:
-                _LOGGER.info("Received BS4 packet")
+                _LOGGER.debug("Received BS4 packet")
                 # get the third bit of the fourth byte and check for "0".
                 if is_bs4_teach_in_packet(packet):
                     # we have a teach-in packet
@@ -277,11 +278,10 @@ def react_to_teachin_requests(
     if to_be_taught_device_id is not None:
         _LOGGER.info("Device ID of paired device: %s", to_be_taught_device_id)
     if not successful_teachin:
-        _LOGGER.info("Teach-In time is over.")
+        _LOGGER.info("Teach-In time is over")
     return successful_teachin, to_be_taught_device_id
 
 
 def is_bs4_teach_in_packet(packet):
     """Checker whether it's a 4BS packet."""
     return len(packet.data) > 3 and utils.get_bit(packet.data[4], 3) == 0
-
