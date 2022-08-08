@@ -25,14 +25,11 @@ class JustNimbusEntity(
     ) -> None:
         """Initialize the JustNimbus entity."""
         super().__init__(coordinator=coordinator)
-        self._device_id = device_id
-        if self._device_id:
-            self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, device_id)},
-                name="JustNimbus Sensor",
-                manufacturer="JustNimbus",
-                suggested_area="Basement",
-            )
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, device_id)},
+            name="JustNimbus Sensor",
+            manufacturer="JustNimbus",
+        )
 
     @property
     def available(self) -> bool:

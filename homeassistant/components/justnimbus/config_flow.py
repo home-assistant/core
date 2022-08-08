@@ -8,8 +8,8 @@ import justnimbus
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_CLIENT_ID, CONF_SCAN_INTERVAL
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import CONF_CLIENT_ID
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
@@ -18,19 +18,9 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-scan_interval = vol.Required(CONF_SCAN_INTERVAL, default=5)
-scan_interval_options = vol.In(
-    (
-        1,
-        5,
-        15,
-    ),
-)
-
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_CLIENT_ID): cv.string,
-        scan_interval: scan_interval_options,
     },
 )
 
@@ -112,36 +102,4 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
-        )
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> JustNimbusOptionFlow:
-        """Get the options flow for this handler."""
-        return JustNimbusOptionFlow(config_entry)
-
-
-class JustNimbusOptionFlow(config_entries.OptionsFlow):
-    """Handle options."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Manage the options."""
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(
-                {
-                    scan_interval: scan_interval_options,
-                }
-            ),
         )

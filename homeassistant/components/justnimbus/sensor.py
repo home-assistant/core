@@ -185,13 +185,7 @@ class JustNimbusSensor(
             device_id=device_id,
             coordinator=coordinator,
         )
-        self._device_id = device_id
-        self._attr_unique_id = f"{coordinator.entry_id}_{description.key}"
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return super().available and self.native_value is not None
+        self._attr_unique_id = f"{device_id}_{description.key}"
 
     @property
     def native_value(self) -> StateType:
