@@ -39,7 +39,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_FILENAME,
     CONTENT_TYPE_MULTIPART,
-    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STARTED,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
@@ -374,7 +374,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             stream.add_provider("hls")
             await stream.start()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, preload_stream)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, preload_stream)
 
     @callback
     def update_tokens(time: datetime) -> None:
