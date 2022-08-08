@@ -24,19 +24,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-class JustNimbus:
-    """Wrapper to be used by config flow to check for a valid client id."""
-
-    def __init__(self, client_id: str) -> None:
-        """Initialize."""
-        self.client_id = client_id
-
-    def authenticate(self) -> bool:
-        """Test if we can authenticate with the host."""
-        justnimbus.JustNimbusClient(client_id=self.client_id).get_data()
-        return True
-
-
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for JustNimbus."""
 
