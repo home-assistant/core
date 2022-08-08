@@ -1,11 +1,13 @@
 """Test NextDNS diagnostics."""
 from collections.abc import Awaitable, Callable
+import json
 
 from aiohttp import ClientSession
 
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.core import HomeAssistant
 
+from tests.common import load_fixture
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.components.nextdns import init_integration
 
@@ -14,6 +16,8 @@ async def test_entry_diagnostics(
     hass: HomeAssistant, hass_client: Callable[..., Awaitable[ClientSession]]
 ) -> None:
     """Test config entry diagnostics."""
+    settings = json.loads(load_fixture("settings.json", "nextdns"))
+
     entry = await init_integration(hass)
 
     result = await get_diagnostics_for_config_entry(hass, hass_client, entry)
@@ -60,6 +64,7 @@ async def test_entry_diagnostics(
         "tcp_queries_ratio": 0.0,
         "udp_queries_ratio": 40.0,
     }
+    assert result["settings_coordinator_data"] == settings
     assert result["status_coordinator_data"] == {
         "all_queries": 100,
         "allowed_queries": 30,
