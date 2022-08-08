@@ -72,7 +72,6 @@ async def test_import_flow_success(hass: HomeAssistant, aioclient_mock_fixture) 
         "host": "1.1.1.1",
         "port": 8080,
         "timeout": 10,
-        "scan_interval": 30,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 

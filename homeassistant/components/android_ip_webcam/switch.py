@@ -18,11 +18,18 @@ from .entity import AndroidIPCamBaseEntity
 
 
 @dataclass
-class AndroidIPWebcamSwitchEntityDescription(SwitchEntityDescription):
-    """Entity description class for Android IP Webcam."""
+class AndroidIPWebcamSwitchEntityDescriptionMixin:
+    """Mixin for required keys."""
 
-    on_func: Callable[[PyDroidIPCam], None] = lambda _: None
-    off_func: Callable[[PyDroidIPCam], None] = lambda _: None
+    on_func: Callable[[PyDroidIPCam], None]
+    off_func: Callable[[PyDroidIPCam], None]
+
+
+@dataclass
+class AndroidIPWebcamSwitchEntityDescription(
+    SwitchEntityDescription, AndroidIPWebcamSwitchEntityDescriptionMixin
+):
+    """Entity description class for Android IP Webcam switches."""
 
 
 SWITCH_TYPES: tuple[AndroidIPWebcamSwitchEntityDescription, ...] = (

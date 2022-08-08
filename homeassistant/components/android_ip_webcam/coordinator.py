@@ -6,7 +6,6 @@ import logging
 from pydroid_ipcam import PyDroidIPCam
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -27,20 +26,13 @@ class AndroidIPCamDataUpdateCoordinator(DataUpdateCoordinator):
         """Initialize the Android IP Webcam."""
         self.hass = hass
         self.config_entry: ConfigEntry = config_entry
-        self._ipcam = ipcam
+        self.ipcam = ipcam
         super().__init__(
             self.hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(
-                seconds=config_entry.data.get(CONF_SCAN_INTERVAL, 10)
-            ),
+            update_interval=timedelta(seconds=10),
         )
-
-    @property
-    def ipcam(self) -> PyDroidIPCam:
-        """Return IP web camera object."""
-        return self._ipcam
 
     async def _async_update_data(self) -> None:
         """Update Android IP Webcam entities."""

@@ -81,6 +81,5 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
         """Import a config entry from configuration.yaml."""
-        if scan_interval := import_config.get(CONF_SCAN_INTERVAL):
-            import_config[CONF_SCAN_INTERVAL] = scan_interval.total_seconds()
+        import_config.pop(CONF_SCAN_INTERVAL)
         return await self.async_step_user(import_config)

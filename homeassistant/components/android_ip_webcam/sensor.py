@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -24,10 +24,19 @@ from .entity import AndroidIPCamBaseEntity
 
 
 @dataclass
-class AndroidIPWebcamSensorEntityDescription(SensorEntityDescription):
-    """Entity description class for Android IP Webcam."""
+class AndroidIPWebcamSensorEntityDescriptionMixin:
+    """Mixin for required keys."""
 
-    value_fn: Callable[[PyDroidIPCam], tuple[StateType, str | None]] = lambda _: (
+    value_fn: Callable[[PyDroidIPCam], tuple[StateType, str | None]]
+
+
+@dataclass
+class AndroidIPWebcamSensorEntityDescription(
+    SensorEntityDescription, AndroidIPWebcamSensorEntityDescriptionMixin
+):
+    """Entity description class for Android IP Webcam sensors."""
+
+    unit_fn: Callable[[PyDroidIPCam], tuple[StateType, str | None]] = lambda _: (
         None,
         None,
     )
@@ -40,7 +49,7 @@ SENSOR_TYPES: tuple[AndroidIPWebcamSensorEntityDescription, ...] = (
         icon="mdi:speaker",
         state_class=SensorStateClass.TOTAL,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda ipcam: (ipcam.status_data.get("audio_connections"), None),
+        value_fn=lambda ipcam: ipcam.status_data.get("audio_connections"),
     ),
     AndroidIPWebcamSensorEntityDescription(
         key="battery_level",
@@ -49,6 +58,7 @@ SENSOR_TYPES: tuple[AndroidIPWebcamSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda ipcam: ipcam.export_sensor("battery_level"),
+        unit_fn=lambda ipcam: ipcam.export_sensor("battery_level"),
     ),
     AndroidIPWebcamSensorEntityDescription(
         key="battery_temp",
@@ -58,6 +68,7 @@ SENSOR_TYPES: tuple[AndroidIPWebcamSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda ipcam: ipcam.export_sensor("battery_temp"),
+        unit_fn=lambda ipcam: ipcam.export_sensor("battery_temp"),
     ),
     AndroidIPWebcamSensorEntityDescription(
         key="battery_voltage",
@@ -66,6 +77,7 @@ SENSOR_TYPES: tuple[AndroidIPWebcamSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda ipcam: ipcam.export_sensor("battery_voltage"),
+        unit_fn=lambda ipcam: ipcam.export_sensor("battery_voltage"),
     ),
     AndroidIPWebcamSensorEntityDescription(
         key="light",
@@ -75,6 +87,7 @@ SENSOR_TYPES: tuple[AndroidIPWebcamSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda ipcam: ipcam.export_sensor("light"),
+        unit_fn=lambda ipcam: ipcam.export_sensor("light"),
     ),
     AndroidIPWebcamSensorEntityDescription(
         key="motion",
@@ -83,6 +96,7 @@ SENSOR_TYPES: tuple[AndroidIPWebcamSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda ipcam: ipcam.export_sensor("motion"),
+        unit_fn=lambda ipcam: ipcam.export_sensor("motion"),
     ),
     AndroidIPWebcamSensorEntityDescription(
         key="pressure",
@@ -92,6 +106,7 @@ SENSOR_TYPES: tuple[AndroidIPWebcamSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda ipcam: ipcam.export_sensor("pressure"),
+        unit_fn=lambda ipcam: ipcam.export_sensor("pressure"),
     ),
     AndroidIPWebcamSensorEntityDescription(
         key="proximity",
@@ -100,6 +115,7 @@ SENSOR_TYPES: tuple[AndroidIPWebcamSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda ipcam: ipcam.export_sensor("proximity"),
+        unit_fn=lambda ipcam: ipcam.export_sensor("proximity"),
     ),
     AndroidIPWebcamSensorEntityDescription(
         key="sound",
@@ -108,6 +124,7 @@ SENSOR_TYPES: tuple[AndroidIPWebcamSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda ipcam: ipcam.export_sensor("sound"),
+        unit_fn=lambda ipcam: ipcam.export_sensor("sound"),
     ),
     AndroidIPWebcamSensorEntityDescription(
         key="video_connections",
@@ -115,7 +132,7 @@ SENSOR_TYPES: tuple[AndroidIPWebcamSensorEntityDescription, ...] = (
         icon="mdi:eye",
         state_class=SensorStateClass.TOTAL,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda ipcam: (ipcam.status_data.get("video_connections"), None),
+        value_fn=lambda ipcam: ipcam.status_data.get("video_connections"),
     ),
 )
 
@@ -138,7 +155,7 @@ async def async_setup_entry(
         + ["audio_connections", "video_connections"]
     ]
     async_add_entities(
-        [IPWebcamSensor(coordinator, description) for description in sensor_types], True
+        [IPWebcamSensor(coordinator, description) for description in sensor_types]
     )
 
 
@@ -157,11 +174,14 @@ class IPWebcamSensor(AndroidIPCamBaseEntity, SensorEntity):
         self.entity_description = description
         super().__init__(coordinator)
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Update value and unit of sensor."""
-        (
-            self._attr_native_value,
-            self._attr_native_unit_of_measurement,
-        ) = self.entity_description.value_fn(self._ipcam)
-        self.async_write_ha_state()
+    @property
+    def native_value(self) -> StateType:
+        """Return native value of sensor."""
+        value, _ = self.entity_description.value_fn(self.entity_description.key)
+        return value
+
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        """Return native unit of measurement of sensor."""
+        _, unit = self.entity_description.unit_fn(self.entity_description.key)
+        return unit
