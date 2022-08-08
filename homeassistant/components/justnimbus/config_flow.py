@@ -9,7 +9,6 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_CLIENT_ID
-from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 
@@ -43,9 +42,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(user_input[CONF_CLIENT_ID])
         self._abort_if_unique_id_configured()
 
-        client = justnimbus.JustNimbusClient(client_id=data[CONF_CLIENT_ID])
+        client = justnimbus.JustNimbusClient(client_id=user_input[CONF_CLIENT_ID])
         try:
-            await hass.async_add_executor_job(client.get_data)
+            await self.hass.async_add_executor_job(client.get_data)
         except justnimbus.InvalidClientID:
             errors["base"] = "invalid_auth"
         except justnimbus.JustNimbusError:

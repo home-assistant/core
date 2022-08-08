@@ -5,7 +5,7 @@ from justnimbus.exceptions import InvalidClientID, JustNimbusError
 
 from homeassistant import config_entries
 from homeassistant.components.justnimbus.const import DOMAIN
-from homeassistant.const import CONF_CLIENT_ID, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_CLIENT_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -26,7 +26,6 @@ async def test_form(hass: HomeAssistant) -> None:
             result["flow_id"],
             {
                 CONF_CLIENT_ID: "test_id",
-                CONF_SCAN_INTERVAL: 5,
             },
         )
         await hass.async_block_till_done()
@@ -35,7 +34,6 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["title"] == "JustNimbus"
     assert result2["data"] == {
         CONF_CLIENT_ID: "test_id",
-        CONF_SCAN_INTERVAL: 5,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -56,7 +54,6 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
             result["flow_id"],
             {
                 CONF_CLIENT_ID: mock_client_id,
-                CONF_SCAN_INTERVAL: 5,
             },
         )
 
@@ -78,7 +75,6 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
             result["flow_id"],
             {
                 CONF_CLIENT_ID: "test_id",
-                CONF_SCAN_INTERVAL: 5,
             },
         )
 
