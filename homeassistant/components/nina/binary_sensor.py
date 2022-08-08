@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import NINADataUpdateCoordinator
+from . import NINADataUpdateCoordinator, NinaWarningData
 from .const import (
     ATTR_DESCRIPTION,
     ATTR_EXPIRES,
@@ -24,7 +24,6 @@ from .const import (
     ATTR_START,
     CONF_MESSAGE_SLOTS,
     CONF_REGIONS,
-    CONST_WARNING_ACTIVE,
     DOMAIN,
 )
 
@@ -76,9 +75,9 @@ class NINAMessage(CoordinatorEntity[NINADataUpdateCoordinator], BinarySensorEnti
         if not len(self.coordinator.data[self._region]) > self._warning_index:
             return False
 
-        data: dict[str, Any] = self.coordinator.data[self._region][self._warning_index]
+        data: NinaWarningData = self.coordinator.data[self._region][self._warning_index]
 
-        return data[CONST_WARNING_ACTIVE]
+        return data.is_valid
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -88,15 +87,15 @@ class NINAMessage(CoordinatorEntity[NINADataUpdateCoordinator], BinarySensorEnti
         ) or not self.is_on:
             return {}
 
-        data: dict[str, Any] = self.coordinator.data[self._region][self._warning_index]
+        data: NinaWarningData = self.coordinator.data[self._region][self._warning_index]
 
         return {
-            ATTR_HEADLINE: data[ATTR_HEADLINE],
-            ATTR_DESCRIPTION: data[ATTR_DESCRIPTION],
-            ATTR_SENDER: data[ATTR_SENDER],
-            ATTR_SEVERITY: data[ATTR_SEVERITY],
-            ATTR_ID: data[ATTR_ID],
-            ATTR_SENT: data[ATTR_SENT],
-            ATTR_START: data[ATTR_START],
-            ATTR_EXPIRES: data[ATTR_EXPIRES],
+            ATTR_HEADLINE: data.headline,
+            ATTR_DESCRIPTION: data.description,
+            ATTR_SENDER: data.sender,
+            ATTR_SEVERITY: data.severity,
+            ATTR_ID: data.id,
+            ATTR_SENT: data.sent,
+            ATTR_START: data.start,
+            ATTR_EXPIRES: data.expires,
         }
