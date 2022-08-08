@@ -99,6 +99,7 @@ class LIFXLight(LIFXEntity, LightEntity):
     """Representation of a LIFX light."""
 
     _attr_supported_features = LightEntityFeature.TRANSITION | LightEntityFeature.EFFECT
+    coordinator: LIFXLightUpdateCoordinator
 
     def __init__(
         self,
@@ -108,7 +109,7 @@ class LIFXLight(LIFXEntity, LightEntity):
     ) -> None:
         """Initialize the light."""
         super().__init__(coordinator)
-
+        self.bulb = coordinator.device
         self.mac_addr = self.bulb.mac_addr
         bulb_features = lifx_features(self.bulb)
         self.manager = manager

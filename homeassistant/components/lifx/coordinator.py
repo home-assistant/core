@@ -214,7 +214,15 @@ class LIFXLightUpdateCoordinator(LIFXUpdateCoordinator):
 
     async def async_identify_bulb(self) -> None:
         """Identify the device by flashing it three times."""
+        if self.device.power_level:
+            # just flash the bulb for three seconds
+            await self.async_set_waveform_optional(value=IDENTIFY_WAVEFORM)
+            return
+        # Turn the bulb on first, flash for 3 seconds, then turn off
+        await self.async_set_power(state=True, duration=1)
         await self.async_set_waveform_optional(value=IDENTIFY_WAVEFORM)
+        await asyncio.sleep(3)
+        await self.async_set_power(state=False, duration=1)
 
 
 class LIFXSensorUpdateCoordinator(LIFXUpdateCoordinator):

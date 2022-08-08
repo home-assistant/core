@@ -27,7 +27,7 @@ from homeassistant.helpers.event import async_call_later, async_track_time_inter
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DATA_LIFX_MANAGER, DOMAIN, TARGET_ANY
-from .coordinator import LIFXUpdateCoordinator, LIFXLightUpdateCoordinator, LIFXSensorUpdateCoordinator
+from .coordinator import LIFXLightUpdateCoordinator, LIFXSensorUpdateCoordinator
 from .discovery import async_discover_devices, async_trigger_discovery
 from .manager import LIFXManager
 from .migration import async_migrate_entities_devices, async_migrate_legacy_entries
@@ -198,9 +198,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await connection.async_setup()
     except socket.gaierror as ex:
         raise ConfigEntryNotReady(f"Could not resolve {host}: {ex}") from ex
-    coordinator = LIFXUpdateCoordinator(hass, connection, entry.title)
-    coordinator.async_setup()
-    await coordinator.async_config_entry_first_refresh()
 
     light_coordinator = LIFXLightUpdateCoordinator(hass, entry, connection)
     light_coordinator.async_setup()

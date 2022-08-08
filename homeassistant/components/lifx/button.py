@@ -50,7 +50,8 @@ class LIFXButton(LIFXEntity, ButtonEntity):
 
     def __init__(self, coordinator: LIFXLightUpdateCoordinator) -> None:
         """Initialise a LIFX button."""
-        self.coordinator: LIFXLightUpdateCoordinator
+        self.coordinator: LIFXLightUpdateCoordinator = coordinator
+        self.bulb = coordinator.device
         super().__init__(coordinator)
         self._attr_unique_id = (
             f"{coordinator.serial_number}_{self.entity_description.key}"
