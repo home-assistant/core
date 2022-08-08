@@ -13,7 +13,6 @@ from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers import discovery, entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -27,7 +26,6 @@ from .const import (
     CONF_TARIFF,
     CONF_TARIFF_ENTITY,
     CONF_TARIFFS,
-    DATA_LEGACY_COMPONENT,
     DATA_TARIFF_SENSORS,
     DATA_UTILITY,
     DOMAIN,
@@ -101,8 +99,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up an Utility Meter."""
-    hass.data[DATA_LEGACY_COMPONENT] = EntityComponent(_LOGGER, DOMAIN, hass)
-
     hass.data[DATA_UTILITY] = {}
 
     async def async_reset_meters(service_call):
