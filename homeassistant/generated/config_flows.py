@@ -259,6 +259,7 @@ FLOWS = {
         "onewire",
         "onvif",
         "open_meteo",
+        "openexchangerates",
         "opengarage",
         "opentherm_gw",
         "openuv",

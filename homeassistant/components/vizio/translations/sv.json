@@ -7,6 +7,7 @@
         },
         "error": {
             "cannot_connect": "Det gick inte att ansluta.",
+            "complete_pairing_failed": "Det gick inte att slutf\u00f6ra ihopkopplingen. Se till att PIN-koden du angav \u00e4r korrekt och att TV:n fortfarande \u00e4r str\u00f6msatt och ansluten till n\u00e4tverket innan du skickar in igen.",
             "existing_config_entry_found": "En befintlig St\u00e4ll in Vizio SmartCast-klient konfigurationspost med samma serienummer har redan konfigurerats. Du m\u00e5ste ta bort den befintliga posten f\u00f6r att konfigurera denna."
         },
         "step": {
