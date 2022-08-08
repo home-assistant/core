@@ -82,6 +82,10 @@ BLUETOOTH: list[dict[str, str | int | list[int]]] = [
     },
     {
         "domain": "inkbird",
+        "local_name": "xBBQ*"
+    },
+    {
+        "domain": "inkbird",
         "local_name": "tps"
     },
     {
