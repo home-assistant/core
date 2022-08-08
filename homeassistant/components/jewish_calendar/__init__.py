@@ -18,15 +18,18 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-DOMAIN = "jewish_calendar"
-PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.BINARY_SENSOR]
-
-CONF_DIASPORA = "diaspora"
-CONF_LANGUAGE = "language"
-CONF_CANDLE_LIGHT_MINUTES = "candle_lighting_minutes_before_sunset"
-CONF_HAVDALAH_OFFSET_MINUTES = "havdalah_minutes_after_sunset"
-
-CANDLE_LIGHT_DEFAULT = 18
+from .const import (
+    CONF_CANDLE_LIGHT_MINUTES,
+    CONF_DIASPORA,
+    CONF_HAVDALAH_OFFSET_MINUTES,
+    CONF_LANGUAGE,
+    DEFAULT_CANDLE_LIGHT,
+    DEFAULT_DIASPORA,
+    DEFAULT_HAVDALAH_OFFSET_MINUTES,
+    DEFAULT_LANGUAGE,
+    DEFAULT_NAME,
+    DOMAIN,
+)
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
