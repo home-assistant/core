@@ -166,7 +166,7 @@ RESTRICTIONS_SWITCH_DESCRIPTIONS = (
     ),
     RainMachineRestrictionSwitchDescription(
         key=TYPE_RESTRICTIONS_HOT_DAYS_EXTRA_WATERING,
-        name="Extra watering on hot days",
+        name="Extra water on hot days",
         icon="mdi:heat-wave",
         entity_category=EntityCategory.CONFIG,
         api_category=DATA_RESTRICTIONS_UNIVERSAL,
