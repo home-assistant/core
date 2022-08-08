@@ -438,9 +438,18 @@ async def test_service_send_command(hass, create_hdmi_network, data, expected):
     assert str(command) == expected
 
 
-async def test_watchdog_down(hass, create_hdmi_network, mock_cec_adapter):
-    """Test that the watchdog is initialized and works as expected when adapter is down."""
-    adapter_initialized = PropertyMock(return_value=False)
+@pytest.mark.parametrize(
+    "adapter_initialized_value, watchdog_actions", [(False, 1), (True, 0)]
+)
+async def test_watchdog(
+    hass,
+    create_hdmi_network,
+    mock_cec_adapter,
+    adapter_initialized_value,
+    watchdog_actions,
+):
+    """Test the watchdog when adapter is down/up."""
+    adapter_initialized = PropertyMock(return_value=adapter_initialized_value)
     events = async_capture_events(hass, EVENT_HDMI_CEC_UNAVAILABLE)
 
     mock_cec_adapter_instance = mock_cec_adapter.return_value
@@ -456,27 +465,5 @@ async def test_watchdog_down(hass, create_hdmi_network, mock_cec_adapter):
     await hass.async_block_till_done()
 
     adapter_initialized.assert_called_once_with()
-    assert len(events) == 1
-    mock_cec_adapter_instance.init.assert_called_once_with()
-
-
-async def test_watchdog_up(hass, create_hdmi_network, mock_cec_adapter):
-    """Test that the watchdog is initialized and works as expected when adapter is up."""
-    adapter_initialized = PropertyMock(return_value=True)
-    events = async_capture_events(hass, EVENT_HDMI_CEC_UNAVAILABLE)
-
-    mock_cec_adapter_instance = mock_cec_adapter.return_value
-    type(mock_cec_adapter_instance).initialized = adapter_initialized
-
-    mock_hdmi_network_instance = await create_hdmi_network()
-
-    mock_hdmi_network_instance.set_initialized_callback.assert_called_once()
-    callback = mock_hdmi_network_instance.set_initialized_callback.call_args.args[0]
-    callback()
-
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=WATCHDOG_INTERVAL))
-    await hass.async_block_till_done()
-
-    adapter_initialized.assert_called_once_with()
-    assert len(events) == 0
-    mock_cec_adapter_instance.init.assert_not_called()
+    assert len(events) == watchdog_actions
+    assert mock_cec_adapter_instance.init.call_count == watchdog_actions
