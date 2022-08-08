@@ -1,4 +1,4 @@
-"""Support for interface with a Bravia TV."""
+"""Media player support for Bravia TV integration."""
 from __future__ import annotations
 
 from homeassistant.components.media_player import (
