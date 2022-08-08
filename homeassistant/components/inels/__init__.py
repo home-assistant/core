@@ -22,7 +22,7 @@ from .const import (
 )
 from .coordinator import InelsDeviceUpdateCoordinator
 
-PLATFORMS: list[Platform] = [Platform.SWITCH, Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.SWITCH, Platform.SENSOR, Platform.LIGHT]
 
 
 async def _async_config_entry_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
