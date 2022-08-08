@@ -53,13 +53,15 @@ async def async_setup_entry(
 class LoqedLock(CoordinatorEntity[LoqedDataCoordinator], LockEntity):
     """Representation of a loqed lock."""
 
+    _attr_supported_features = LockEntityFeature.OPEN
+    _state: str | None = None
+
     def __init__(self, coordinator: LoqedDataCoordinator) -> None:
         """Initialize the lock."""
         super().__init__(coordinator)
         self._lock = coordinator.lock
         self._attr_unique_id = self._lock.id
         self._attr_name = self._lock.name
-        self._attr_supported_features = LockEntityFeature.OPEN
         self._state = STATE_UNKNOWN
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._lock.id)},
