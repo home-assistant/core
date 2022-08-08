@@ -27,6 +27,7 @@ from .const import DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
 
 @dataclass
 class EcobeeSensorEntityDescriptionMixin:
+    """Represent the required ecobee entity description attributes."""
     runtime_key: str
 
 
@@ -34,7 +35,7 @@ class EcobeeSensorEntityDescriptionMixin:
 class EcobeeSensorEntityDescription(
     SensorEntityDescription, EcobeeSensorEntityDescriptionMixin
 ):
-    pass
+    """Represent the ecobee sensor entity description."""
 
 
 SENSOR_TYPES: tuple[EcobeeSensorEntityDescription, ...] = (
