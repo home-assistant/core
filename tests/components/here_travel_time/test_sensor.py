@@ -447,6 +447,42 @@ async def test_invalid_origin_entity_state(hass: HomeAssistant, caplog):
     assert "test_state are not valid coordinates" in caplog.text
 
 
+@pytest.mark.usefixtures("long_route_response")
+async def test_long_route_truncate(hass: HomeAssistant, caplog):
+    """Test that a route longer than 255 characters is truncated."""
+    hass.states.async_set(
+        "device_tracker.test",
+        "test_state",
+    )
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="0123456789",
+        data={
+            CONF_ORIGIN_LATITUDE: float(CAR_ORIGIN_LATITUDE),
+            CONF_ORIGIN_LONGITUDE: float(CAR_ORIGIN_LONGITUDE),
+            CONF_DESTINATION_LATITUDE: float(CAR_DESTINATION_LATITUDE),
+            CONF_DESTINATION_LONGITUDE: float(CAR_DESTINATION_LONGITUDE),
+            CONF_API_KEY: API_KEY,
+            CONF_MODE: TRAVEL_MODE_TRUCK,
+            CONF_NAME: "test",
+        },
+        options=default_options(hass),
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("sensor.test_route").state
+        == "I-495 N - Capital Beltway; I-495 N - Capital Beltway; I-495 N - Capital Beltway; I-495 N - Capital Beltway; I-495 N - Capital Beltway; I-495 N - Capital Beltway; I-495 N - Capital Beltway; I-495 N - Capital Beltway; MD-187 S - Old Georgetown Rd"
+    )
+
+    assert "It will be truncated to 255 chars" in caplog.text
+
+
 async def test_route_not_found(hass: HomeAssistant, caplog):
     """Test that route not found error is correctly handled."""
     with patch(

@@ -18,6 +18,12 @@ EMPTY_ATTRIBUTION_RESPONSE = RoutingResponse.new_from_jsondict(
 EMPTY_ATTRIBUTION_RESPONSE.route_short = "US-29 - K St NW; US-29 - Whitehurst Fwy; I-495 N - Capital Beltway; MD-187 S - Old Georgetown Rd"
 
 
+LONG_ROUTE_RESPONSE = RoutingResponse.new_from_jsondict(
+    json.loads(load_fixture("here_travel_time/car_response.json"))
+)
+LONG_ROUTE_RESPONSE.route_short = "US-29 - K St NW; US-29 - Whitehurst Fwy; I-495 N - Capital Beltway; I-495 N - Capital Beltway; I-495 N - Capital Beltway; I-495 N - Capital Beltway; I-495 N - Capital Beltway; I-495 N - Capital Beltway; I-495 N - Capital Beltway; I-495 N - Capital Beltway; I-495 N - Capital Beltway; I-495 N - Capital Beltway; MD-187 S - Old Georgetown Rd"
+
+
 @pytest.fixture(name="valid_response")
 def valid_response_fixture():
     """Return valid api response."""
@@ -34,5 +40,15 @@ def empty_attribution_response_fixture():
     with patch(
         "herepy.RoutingApi.public_transport_timetable",
         return_value=EMPTY_ATTRIBUTION_RESPONSE,
+    ) as mock:
+        yield mock
+
+
+@pytest.fixture(name="long_route_response")
+def long_route_response_fixture():
+    """Return valid api response with a longer than 255 character route."""
+    with patch(
+        "herepy.RoutingApi.public_transport_timetable",
+        return_value=LONG_ROUTE_RESPONSE,
     ) as mock:
         yield mock
