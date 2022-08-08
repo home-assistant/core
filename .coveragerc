@@ -851,7 +851,9 @@ omit =
     homeassistant/components/open_meteo/weather.py
     homeassistant/components/opencv/*
     homeassistant/components/openevse/sensor.py
-    homeassistant/components/openexchangerates/*
+    homeassistant/components/openexchangerates/__init__.py
+    homeassistant/components/openexchangerates/coordinator.py
+    homeassistant/components/openexchangerates/sensor.py
     homeassistant/components/opengarage/__init__.py
     homeassistant/components/opengarage/binary_sensor.py
     homeassistant/components/opengarage/cover.py
@@ -980,6 +982,7 @@ omit =
     homeassistant/components/rainmachine/model.py
     homeassistant/components/rainmachine/sensor.py
     homeassistant/components/rainmachine/switch.py
+    homeassistant/components/rainmachine/update.py
     homeassistant/components/rainmachine/util.py
     homeassistant/components/raspyrfm/*
     homeassistant/components/recollect_waste/__init__.py
