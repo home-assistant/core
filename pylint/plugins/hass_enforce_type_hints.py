@@ -1465,6 +1465,55 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             ],
         ),
     ],
+    "number": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="NumberEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="device_class",
+                    return_type=["NumberDeviceClass", "str", None],
+                ),
+                TypeHintMatch(
+                    function_name="capability_attributes",
+                    return_type="dict[str, Any]",
+                ),
+                TypeHintMatch(
+                    function_name="native_min_value",
+                    return_type="float",
+                ),
+                TypeHintMatch(
+                    function_name="native_max_value",
+                    return_type="float",
+                ),
+                TypeHintMatch(
+                    function_name="native_step",
+                    return_type=["float", None],
+                ),
+                TypeHintMatch(
+                    function_name="mode",
+                    return_type="NumberMode",
+                ),
+                TypeHintMatch(
+                    function_name="native_unit_of_measurement",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="native_value",
+                    return_type=["float", None],
+                ),
+                TypeHintMatch(
+                    function_name="set_native_value",
+                    arg_types={1: "float"},
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+            ],
+        ),
+    ],
     "select": [
         ClassTypeHintMatch(
             base_class="Entity",
