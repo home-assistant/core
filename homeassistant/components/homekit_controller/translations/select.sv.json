@@ -1,0 +1,9 @@
+{
+    "state": {
+        "homekit_controller__ecobee_mode": {
+            "away": "Borta",
+            "home": "Hemma",
+            "sleep": "Vilol\u00e4ge"
+        }
+    }
+}

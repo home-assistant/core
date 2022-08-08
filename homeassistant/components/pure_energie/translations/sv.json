@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad",
+            "cannot_connect": "Det gick inte att ansluta."
+        },
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta."
+        },
+        "flow_title": "{model} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "V\u00e4rd"
+                }
+            },
+            "zeroconf_confirm": {
+                "description": "Vill du l\u00e4gga till Pure Energie Meter (` {model} `) till Home Assistant?",
+                "title": "Uppt\u00e4ckte Pure Energie Meter-enhet"
+            }
+        }
+    }
+}

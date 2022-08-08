@@ -14,6 +14,7 @@
             "invalid_serial": "Ung\u00fcltiger Serieller Port",
             "invalid_subscribe_topic": "Ung\u00fcltiges Abonnementthema",
             "invalid_version": "Ung\u00fcltige MySensors Version",
+            "mqtt_required": "Die MQTT-Integration ist nicht eingerichtet",
             "not_a_number": "Bitte eine Nummer eingeben",
             "port_out_of_range": "Die Portnummer muss mindestens 1 und darf h\u00f6chstens 65535 sein",
             "same_topic": "Themen zum Abonnieren und Ver\u00f6ffentlichen sind gleich",
@@ -67,6 +68,14 @@
                     "version": "MySensors Version"
                 },
                 "description": "Einrichtung des Ethernet-Gateways"
+            },
+            "select_gateway_type": {
+                "description": "W\u00e4hle das zu konfigurierende Gateway aus.",
+                "menu_options": {
+                    "gw_mqtt": "Konfiguriere ein MQTT-Gateway",
+                    "gw_serial": "Konfiguriere ein serielles Gateway",
+                    "gw_tcp": "Konfiguriere ein TCP-Gateway"
+                }
             },
             "user": {
                 "data": {
