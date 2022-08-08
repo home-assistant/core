@@ -45,8 +45,6 @@ async def test_form_errors(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_client_id = "test_id"
-
     with patch(
         "justnimbus.JustNimbusClient.get_data",
         side_effect=side_effect,
@@ -54,7 +52,7 @@ async def test_form_errors(
         result2 = await hass.config_entries.flow.async_configure(
             flow_id=result["flow_id"],
             user_input={
-                CONF_CLIENT_ID: mock_client_id,
+                CONF_CLIENT_ID: "test_id",
             },
         )
 
@@ -64,7 +62,7 @@ async def test_form_errors(
     await _set_up_justnimbus(hass=hass, flow_id=result["flow_id"])
 
 
-async def _set_up_justnimbus(hass: HomeAssistant, flow_id: str):
+async def _set_up_justnimbus(hass: HomeAssistant, flow_id: str) -> None:
     """Reusable successful setup of JustNimbus sensor."""
     with patch("justnimbus.JustNimbusClient.get_data"), patch(
         "homeassistant.components.justnimbus.async_setup_entry",
