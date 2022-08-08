@@ -30,22 +30,16 @@ class JustNimbusEntity(
         self._entry_id = entry_id
         self._device_id = device_id
         self.client = client
-
-    @property
-    def device_info(self) -> DeviceInfo | None:
-        """Return device information about the application."""
-        if self._device_id is None:
-            return None
-
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._device_id)},
-            name="Just Nimbus Sensor",
-            manufacturer="Just Nimbus",
-            suggested_area="Basement",
-            via_device=(DOMAIN, self._device_id),
-        )
+        if self._device_id:
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, device_id)},
+                name="Just Nimbus Sensor",
+                manufacturer="Just Nimbus",
+                suggested_area="Basement",
+                via_device=(DOMAIN, device_id),
+            )
 
     @property
     def available(self) -> bool:
         """Return device availability."""
-        return getattr(self.coordinator.data, "error_code") == 0
+        return super.available() and getattr(self.coordinator.data, "error_code") == 0
