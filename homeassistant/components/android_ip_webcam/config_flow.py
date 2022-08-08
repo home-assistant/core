@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
+    CONF_SCAN_INTERVAL,
     CONF_TIMEOUT,
     CONF_USERNAME,
 )
@@ -20,11 +21,10 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DEFAULT_NAME, DEFAULT_PORT, DEFAULT_TIMEOUT, DOMAIN
+from .const import DEFAULT_PORT, DEFAULT_TIMEOUT, DOMAIN
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
         vol.Required(CONF_HOST): str,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
@@ -65,9 +65,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
 
-        self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
+        self._async_abort_entries_match(
+            {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
+        )
+        # to be removed when YAML import is removed
+        title = user_input.get(CONF_NAME) or user_input[CONF_HOST]
         if await validate_input(self.hass, user_input):
-            return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
+            return self.async_create_entry(title=title, data=user_input)
 
         return self.async_show_form(
             step_id="user",
@@ -75,6 +79,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors={"base": "cannot_connect"},
         )
 
-    async def async_step_import(self, import_config: dict[str, str]) -> FlowResult:
+    async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
         """Import a config entry from configuration.yaml."""
+        if scan_interval := import_config.get(CONF_SCAN_INTERVAL):
+            import_config[CONF_SCAN_INTERVAL] = scan_interval.total_seconds()
         return await self.async_step_user(import_config)

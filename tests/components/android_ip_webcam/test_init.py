@@ -1,13 +1,18 @@
 """Tests for the Android IP Webcam integration."""
 
 
+from collections.abc import Awaitable
+from typing import Callable
+
 import aiohttp
 
 from homeassistant.components.android_ip_webcam.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
+from tests.components.repairs import get_repairs
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 MOCK_CONFIG_DATA = {
@@ -16,6 +21,21 @@ MOCK_CONFIG_DATA = {
     "port": 8080,
     "timeout": 10,
 }
+
+
+async def test_setup(
+    hass: HomeAssistant,
+    aioclient_mock_fixture,
+    hass_ws_client: Callable[
+        [HomeAssistant], Awaitable[aiohttp.ClientWebSocketResponse]
+    ],
+) -> None:
+    """Test integration failed due to an error."""
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: [MOCK_CONFIG_DATA]})
+    assert hass.config_entries.async_entries(DOMAIN)
+    issues = await get_repairs(hass, hass_ws_client)
+    assert len(issues) == 1
+    assert issues[0]["issue_id"] == "deprecated_yaml"
 
 
 async def test_successful_config_entry(

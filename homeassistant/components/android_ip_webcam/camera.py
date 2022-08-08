@@ -1,9 +1,12 @@
 """Support for Android IP Webcam Cameras."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.mjpeg import MjpegCamera, filter_urllib3_logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONF_HOST,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_USERNAME,
@@ -13,8 +16,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AndroidIPCamDataUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import AndroidIPCamDataUpdateCoordinator
 
 
 async def async_setup_entry(
@@ -31,7 +34,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             IPWebcamCamera(
-                coordinator.config_entry.data[CONF_NAME],
+                dict(coordinator.config_entry.data),
                 coordinator.config_entry.entry_id,
                 coordinator.ipcam.mjpeg_url,
                 coordinator.ipcam.image_url,
@@ -45,9 +48,11 @@ async def async_setup_entry(
 class IPWebcamCamera(MjpegCamera):
     """Representation of a IP Webcam camera."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
-        name: str,
+        entry: dict[str, Any],
         entry_id: str,
         mjpeg_url: str,
         still_image_url: str,
@@ -55,6 +60,9 @@ class IPWebcamCamera(MjpegCamera):
         password: str,
     ) -> None:
         """Initialize the camera."""
+        # keep imported name until YAML is removed
+        name = entry.get(CONF_NAME) or entry[CONF_HOST]
+
         super().__init__(
             name=name,
             mjpeg_url=mjpeg_url,

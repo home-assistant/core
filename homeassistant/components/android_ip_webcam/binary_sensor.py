@@ -4,14 +4,21 @@ from __future__ import annotations
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AndroidIPCamBaseEntity, AndroidIPCamDataUpdateCoordinator
 from .const import DOMAIN, MOTION_ACTIVE
+from .coordinator import AndroidIPCamDataUpdateCoordinator
+from .entity import AndroidIPCamBaseEntity
+
+BINARY_SENSOR_DESCRIPTION = BinarySensorEntityDescription(
+    key="motion_active",
+    name="Motion Active",
+    device_class=BinarySensorDeviceClass.MOTION,
+)
 
 
 async def async_setup_entry(
@@ -32,15 +39,18 @@ class IPWebcamBinarySensor(AndroidIPCamBaseEntity, BinarySensorEntity):
     """Representation of an IP Webcam binary sensor."""
 
     _attr_device_class = BinarySensorDeviceClass.MOTION
+    _attr_has_entity_name = True
 
     def __init__(
         self,
         coordinator: AndroidIPCamDataUpdateCoordinator,
     ) -> None:
         """Initialize the binary sensor."""
+        self.entity_description = BINARY_SENSOR_DESCRIPTION
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}-{BINARY_SENSOR_DESCRIPTION.key}"
+        )
         super().__init__(coordinator)
-        self._attr_name = f"{coordinator.config_entry.data[CONF_NAME]} {MOTION_ACTIVE}"
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}-{MOTION_ACTIVE}"
 
     @property
     def available(self) -> bool:

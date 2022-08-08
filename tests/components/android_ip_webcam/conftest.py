@@ -9,7 +9,7 @@ from tests.common import load_fixture
 
 
 @pytest.fixture
-def aioclient_mock_fixture(aioclient_mock):
+def aioclient_mock_fixture(aioclient_mock) -> None:
     """Fixture to provide a aioclient mocker."""
     aioclient_mock.get(
         "http://1.1.1.1:8080/status.json?show_avail=1",

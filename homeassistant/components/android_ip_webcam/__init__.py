@@ -1,9 +1,6 @@
 """The Android IP Webcam integration."""
 from __future__ import annotations
 
-from datetime import timedelta
-import logging
-
 from pydroid_ipcam import PyDroidIPCam
 import voluptuous as vol
 
@@ -25,13 +22,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
 
 from .const import (
     CONF_MOTION_SENSOR,
@@ -43,6 +34,7 @@ from .const import (
     SENSORS,
     SWITCHES,
 )
+from .coordinator import AndroidIPCamDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
@@ -51,7 +43,6 @@ PLATFORMS: list[Platform] = [
     Platform.SWITCH,
 ]
 
-_LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
     vol.All(
@@ -143,48 +134,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
-
-
-class AndroidIPCamDataUpdateCoordinator(DataUpdateCoordinator):
-    """Coordinator class for the Android IP Webcam."""
-
-    def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, ipcam: PyDroidIPCam
-    ) -> None:
-        """Initialize the Android IP Webcam."""
-        self.hass = hass
-        self.config_entry: ConfigEntry = config_entry
-        self._ipcam = ipcam
-        super().__init__(
-            self.hass,
-            _LOGGER,
-            name=DOMAIN,
-            update_interval=timedelta(seconds=10),
-        )
-
-    @property
-    def ipcam(self):
-        """Return IP web camera object."""
-        return self._ipcam
-
-    async def _async_update_data(self) -> None:
-        """Update Android IP Webcam entities."""
-        await self.ipcam.update()
-        if not self.ipcam.available:
-            raise UpdateFailed
-
-
-class AndroidIPCamBaseEntity(CoordinatorEntity[AndroidIPCamDataUpdateCoordinator]):
-    """Base class for Android IP Webcam entities."""
-
-    def __init__(
-        self,
-        coordinator: AndroidIPCamDataUpdateCoordinator,
-    ) -> None:
-        """Initialize the base entity."""
-        super().__init__(coordinator)
-        self._ipcam = coordinator.ipcam
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
-            name=coordinator.config_entry.data[CONF_NAME],
-        )
