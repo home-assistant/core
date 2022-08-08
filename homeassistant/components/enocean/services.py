@@ -61,11 +61,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
         _LOGGER.info("Service %s has been called.", str(service_call.service))
 
     # register the services
-    for service in SUPPORTED_SERVICES:
-        hass.services.async_register(
-            DOMAIN, service, call_enocean_service, schema=SERVICE_TO_SCHEMA.get(service)
-        )
-        _LOGGER.info("Request to register service %s has been sent.", str(service))
+    service = TEACH_IN_DEVICE
+    hass.services.async_register(
+        DOMAIN, service, call_enocean_service, schema=SERVICE_TO_SCHEMA.get(service)
+    )
+    _LOGGER.debug("Request to register service %s has been sent.", str(service))
 
 
 def get_teach_in_seconds(service_call: ServiceCall) -> int:
@@ -124,7 +124,7 @@ def handle_teach_in(hass: HomeAssistant, service_call: ServiceCall) -> None:
     # to get access to the communicator. But, the enocean library seems abandoned
     cb_to_restore = communicator._Communicator__callback
 
-    communicator.callback = None
+    communicator._Communicator__callback = None
 
     try:
         # get time to run of the teach-in process from the service call
@@ -237,7 +237,7 @@ def react_to_teachin_requests(
 
             rorg_type = determine_rorg_type(packet)
 
-            _LOGGER.info(str(packet))
+            _LOGGER.debug(str(packet))
             if isinstance(packet, UTETeachInPacket):
                 # THINK: handler, maybe deactivate teach in before and handle it the "handler"
                 handler: TeachInHandler = UteTeachInHandler()
@@ -249,7 +249,7 @@ def react_to_teachin_requests(
 
             # if packet.packet_type == PACKET.RADIO_ERP1 and packet.rorg == RORG.BS4:
             if rorg_type == RORG.BS4:
-                _LOGGER.info("Received BS4 packet")
+                _LOGGER.debug("Received BS4 packet")
                 # get the third bit of the fourth byte and check for "0".
                 if is_bs4_teach_in_packet(packet):
                     # we have a teach-in packet
@@ -284,4 +284,3 @@ def react_to_teachin_requests(
 def is_bs4_teach_in_packet(packet):
     """Checker whether it's a 4BS packet."""
     return len(packet.data) > 3 and utils.get_bit(packet.data[4], 3) == 0
-

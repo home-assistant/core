@@ -28,7 +28,7 @@ teach_in_device:
       description:
         "A communicator can use up to 128 different Base ID values within the allowed
         range of the start Base ID. If nothing is specified, the default Base ID will
-        be used when communication over BS4"
+        be used when communication over BS4. This ID has to be within the range of your transceiver."
       required: false
       advanced: true
       example: 01BEEF23
