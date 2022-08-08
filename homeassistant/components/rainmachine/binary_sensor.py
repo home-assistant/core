@@ -12,7 +12,12 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RainMachineData, RainMachineEntity
-from .const import DATA_PROVISION_SETTINGS, DATA_RESTRICTIONS_CURRENT, DOMAIN
+from .const import (
+    DATA_PROVISION_SETTINGS,
+    DATA_RESTRICTIONS_CURRENT,
+    DATA_RESTRICTIONS_UNIVERSAL,
+    DOMAIN,
+)
 from .model import (
     RainMachineEntityDescription,
     RainMachineEntityDescriptionMixinDataKey,
@@ -60,6 +65,22 @@ BINARY_SENSOR_DESCRIPTIONS = (
         data_key="freeze",
     ),
     RainMachineBinarySensorDescription(
+        key=TYPE_FREEZE_PROTECTION,
+        name="Freeze protection",
+        icon="mdi:weather-snowy",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        api_category=DATA_RESTRICTIONS_UNIVERSAL,
+        data_key="freezeProtectEnabled",
+    ),
+    RainMachineBinarySensorDescription(
+        key=TYPE_HOT_DAYS,
+        name="Extra water on hot days",
+        icon="mdi:thermometer-lines",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        api_category=DATA_RESTRICTIONS_UNIVERSAL,
+        data_key="hotDaysExtraWatering",
+    ),
+    RainMachineBinarySensorDescription(
         key=TYPE_HOURLY,
         name="Hourly restrictions",
         icon="mdi:cancel",
@@ -102,11 +123,6 @@ BINARY_SENSOR_DESCRIPTIONS = (
     ),
 )
 
-ENTITY_UNIQUE_ID_SUFFIXES_TO_REMOVE = (
-    "extra_water_on_hot_days",
-    "freeze_protection",
-)
-
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -138,6 +154,7 @@ async def async_setup_entry(
     api_category_sensor_map = {
         DATA_PROVISION_SETTINGS: ProvisionSettingsBinarySensor,
         DATA_RESTRICTIONS_CURRENT: CurrentRestrictionsBinarySensor,
+        DATA_RESTRICTIONS_UNIVERSAL: UniversalRestrictionsBinarySensor,
     }
 
     async_add_entities(
