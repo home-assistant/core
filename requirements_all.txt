@@ -763,7 +763,7 @@ googlemaps==2.5.1
 goslide-api==0.5.1
 
 # homeassistant.components.govee_ble
-govee-ble==0.13.0
+govee-ble==0.14.0
 
 # homeassistant.components.remote_rpi_gpio
 gpiozero==1.6.2
@@ -2013,7 +2013,7 @@ pytrafikverket==0.2.0.1
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.0.12
+pyunifiprotect==4.0.11
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
