@@ -27,7 +27,6 @@ class ConfirmRepairFlow(RepairsFlow):
         self, user_input: dict[str, str] | None = None
     ) -> data_entry_flow.FlowResult:
         """Handle the first step of a fix flow."""
-
         return await (self.async_step_confirm())
 
     async def async_step_confirm(
@@ -37,7 +36,16 @@ class ConfirmRepairFlow(RepairsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data={})
 
-        return self.async_show_form(step_id="confirm", data_schema=vol.Schema({}))
+        issue_registry = async_get_issue_registry(self.hass)
+        description_placeholders = None
+        if issue := issue_registry.async_get_issue(self.handler, self.issue_id):
+            description_placeholders = issue.translation_placeholders
+
+        return self.async_show_form(
+            step_id="confirm",
+            data_schema=vol.Schema({}),
+            description_placeholders=description_placeholders,
+        )
 
 
 class RepairsFlowManager(data_entry_flow.FlowManager):
