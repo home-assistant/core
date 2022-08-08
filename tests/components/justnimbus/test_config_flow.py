@@ -19,6 +19,8 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
+    await _set_up_justnimbus(hass=hass, flow_id=result["flow_id"])
+
 
 @pytest.mark.parametrize(
     "side_effect,errors",
@@ -50,8 +52,8 @@ async def test_form_errors(
         side_effect=side_effect,
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
+            flow_id=result["flow_id"],
+            user_input={
                 CONF_CLIENT_ID: mock_client_id,
             },
         )
@@ -59,5 +61,26 @@ async def test_form_errors(
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == errors
 
-    # check if it's still possible to configure the integration/no weird side-effects were caused
-    await test_form(hass=hass)
+    await _set_up_justnimbus(hass=hass, flow_id=result["flow_id"])
+
+
+async def _set_up_justnimbus(hass: HomeAssistant, flow_id: str):
+    """Reusable successful setup of JustNimbus sensor."""
+    with patch("justnimbus.JustNimbusClient.get_data"), patch(
+        "homeassistant.components.justnimbus.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            flow_id=flow_id,
+            user_input={
+                CONF_CLIENT_ID: "test_id",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "JustNimbus"
+    assert result2["data"] == {
+        CONF_CLIENT_ID: "test_id",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
