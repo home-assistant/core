@@ -18,7 +18,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
-    with patch("justnimbus.JustNimbusClient.get_data", return_value=True,), patch(
+    with patch("justnimbus.JustNimbusClient.get_data"), patch(
         "homeassistant.components.justnimbus.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:

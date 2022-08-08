@@ -31,8 +31,4 @@ class JustNimbusCoordinator(DataUpdateCoordinator[justnimbus.JustNimbusModel]):
 
     async def _async_update_data(self) -> justnimbus.JustNimbusModel:
         """Fetch the latest data from the source."""
-        return await self.hass.async_add_executor_job(self.get_data)
-
-    def get_data(self) -> justnimbus.JustNimbusModel:
-        """Get data from the API."""
-        return self._client.get_data()
+        return await self.hass.async_add_executor_job(self._client.get_data)
