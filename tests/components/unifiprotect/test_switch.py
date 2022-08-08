@@ -9,9 +9,9 @@ from pyunifiprotect.data import Camera, Light, Permission, RecordingMode, VideoM
 
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
 from homeassistant.components.unifiprotect.switch import (
-    CAMERA_SWITCHES,
     ATTR_PREV_MIC,
     ATTR_PREV_RECORD,
+    CAMERA_SWITCHES,
     LIGHT_SWITCHES,
     PRIVACY_MODE_SWITCH,
     ProtectSwitchEntityDescription,

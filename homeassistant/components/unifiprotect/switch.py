@@ -182,7 +182,7 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
     ),
 )
 
-PRIVACY_MODE_SWITCH = ProtectSwitchEntityDescription(
+PRIVACY_MODE_SWITCH = ProtectSwitchEntityDescription[Camera](
     key="privacy_mode",
     name="Privacy Mode",
     icon="mdi:eye-settings",
@@ -408,7 +408,7 @@ class ProtectPrivacyModeSwitch(RestoreEntity, ProtectSwitch):
                 ATTR_PREV_RECORD: self._previous_record_mode,
             }
         else:
-            self._attr_extra_state_attributes = None
+            self._attr_extra_state_attributes = {}
 
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
