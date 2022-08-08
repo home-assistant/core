@@ -309,6 +309,9 @@ omit =
     homeassistant/components/epson/media_player.py
     homeassistant/components/epsonworkforce/sensor.py
     homeassistant/components/eq3btsmart/climate.py
+    homeassistant/components/escea/climate.py
+    homeassistant/components/escea/discovery.py
+    homeassistant/components/escea/__init__.py
     homeassistant/components/esphome/__init__.py
     homeassistant/components/esphome/binary_sensor.py
     homeassistant/components/esphome/button.py
@@ -470,7 +473,6 @@ omit =
     homeassistant/components/harmony/remote.py
     homeassistant/components/harmony/util.py
     homeassistant/components/haveibeenpwned/sensor.py
-    homeassistant/components/hdmi_cec/*
     homeassistant/components/heatmiser/climate.py
     homeassistant/components/hikvision/binary_sensor.py
     homeassistant/components/hikvisioncam/switch.py

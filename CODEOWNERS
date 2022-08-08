@@ -309,6 +309,8 @@ build.json @home-assistant/supervisor
 /tests/components/epson/ @pszafer
 /homeassistant/components/epsonworkforce/ @ThaStealth
 /homeassistant/components/eq3btsmart/ @rytilahti
+/homeassistant/components/escea/ @lazdavila
+/tests/components/escea/ @lazdavila
 /homeassistant/components/esphome/ @OttoWinter @jesserockz
 /tests/components/esphome/ @OttoWinter @jesserockz
 /homeassistant/components/evil_genius_labs/ @balloob
@@ -434,6 +436,8 @@ build.json @home-assistant/supervisor
 /tests/components/harmony/ @ehendrix23 @bramkragten @bdraco @mkeesey @Aohzan
 /homeassistant/components/hassio/ @home-assistant/supervisor
 /tests/components/hassio/ @home-assistant/supervisor
+/homeassistant/components/hdmi_cec/ @inytar
+/tests/components/hdmi_cec/ @inytar
 /homeassistant/components/heatmiser/ @andylockran
 /homeassistant/components/heos/ @andrewsayre
 /tests/components/heos/ @andrewsayre
