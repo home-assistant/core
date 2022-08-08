@@ -31,6 +31,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity, UpdateFailed
+from homeassistant.util.dt import as_timestamp, utcnow
 from homeassistant.util.network import is_ip_address
 
 from .config_flow import get_client_controller
@@ -299,7 +300,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def async_restrict_watering(call: ServiceCall) -> None:
         """Restrict watering for a time period."""
         controller = async_get_controller_for_service_call(hass, call)
-        await controller.restrictions.restrict(call.data[CONF_DURATION])
+        duration = call.data[CONF_DURATION]
+        await controller.restrictions.set_universal(
+            {
+                "rainDelayStartTime": round(as_timestamp(utcnow())),
+                "rainDelayDuration": duration.total_seconds(),
+            },
+        )
         await async_update_programs_and_zones(hass, entry)
 
     async def async_stop_all(call: ServiceCall) -> None:
@@ -317,7 +324,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def async_unrestrict_watering(call: ServiceCall) -> None:
         """Unrestrict watering."""
         controller = async_get_controller_for_service_call(hass, call)
-        await controller.restrictions.unrestrict()
+        await controller.restrictions.set_universal(
+            {
+                "rainDelayStartTime": round(as_timestamp(utcnow())),
+                "rainDelayDuration": 0,
+            },
+        )
         await async_update_programs_and_zones(hass, entry)
 
     for service_name, schema, method in (
