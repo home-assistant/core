@@ -25,22 +25,23 @@ from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_S
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
+from . import assert_key_press_release
+
 from tests.common import (
     MockEntity,
     MockEntityPlatform,
     async_capture_events,
     async_fire_time_changed,
 )
-from tests.components.hdmi_cec import assert_key_press_release
 
 
-@pytest.fixture
-def mock_tcp_adapter():
+@pytest.fixture(name="mock_tcp_adapter")
+def mock_tcp_adapter_fixture():
     """Mock TcpAdapter."""
     with patch(
         "homeassistant.components.hdmi_cec.TcpAdapter", autospec=True
-    ) as MockTcpAdapter:
-        yield MockTcpAdapter
+    ) as mock_tcp_adapter:
+        yield mock_tcp_adapter
 
 
 @pytest.mark.parametrize(

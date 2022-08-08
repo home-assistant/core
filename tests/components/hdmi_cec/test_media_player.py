@@ -50,10 +50,11 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 
-from tests.components.hdmi_cec import MockHDMIDevice, assert_key_press_release
+from . import MockHDMIDevice, assert_key_press_release
 
 
 @pytest.fixture(
+    name="assert_state",
     params=[
         False,
         pytest.param(
@@ -67,7 +68,7 @@ from tests.components.hdmi_cec import MockHDMIDevice, assert_key_press_release
     ],
     ids=["skip_assert_state", "run_assert_state"],
 )
-def assert_state(hass, request):
+def assert_state_fixture(hass, request):
     """Allow for skipping the assert state changes.
 
     This is broken in this entity, but we still want to test that

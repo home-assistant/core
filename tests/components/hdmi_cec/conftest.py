@@ -8,25 +8,25 @@ from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.setup import async_setup_component
 
 
-@pytest.fixture(autouse=True)
-def mock_cec_adapter():
+@pytest.fixture(name="mock_cec_adapter", autouse=True)
+def mock_cec_adapter_fixture():
     """Mock CecAdapter.
 
     Always mocked as it imports the `cec` library which is part of `libcec`.
     """
     with patch(
         "homeassistant.components.hdmi_cec.CecAdapter", autospec=True
-    ) as MockCecAdapter:
-        yield MockCecAdapter
+    ) as mock_cec_adapter:
+        yield mock_cec_adapter
 
 
-@pytest.fixture
-def mock_hdmi_network():
+@pytest.fixture(name="mock_hdmi_network")
+def mock_hdmi_network_fixture():
     """Mock HDMINetwork."""
     with patch(
         "homeassistant.components.hdmi_cec.HDMINetwork", autospec=True
-    ) as MockHDMINetwork:
-        yield MockHDMINetwork
+    ) as mock_hdmi_network:
+        yield mock_hdmi_network
 
 
 @pytest.fixture
