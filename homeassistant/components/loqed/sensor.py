@@ -15,26 +15,25 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import LoqedDataCoordinator
-from .const import CONF_COORDINATOR, CONF_LOCK, DOMAIN
+from .const import DOMAIN
 
 SENSORS: list[SensorEntityDescription] = [
     SensorEntityDescription(
-        name="Loqed battery status",
+        name="Battery",
         key="battery_percentage",
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:battery",
     ),
     SensorEntityDescription(
-        name="Loqed wifi signal strength",
+        name="Wi-Fi signal",
         key="wifi_strength",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
         entity_registry_enabled_default=False,
-        icon="mdi:signal",
     ),
     SensorEntityDescription(
-        name="Loqed bluetooth signal strength",
+        name="Bluetooth signal",
         key="ble_strength",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
@@ -48,13 +47,9 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Loqed sensor."""
-    coordinator: LoqedDataCoordinator = hass.data[DOMAIN][entry.entry_id][
-        CONF_COORDINATOR
-    ]
-    mac_address = hass.data[DOMAIN][entry.entry_id][CONF_LOCK].id
+    coordinator: LoqedDataCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    entities = [LoqedSensor(mac_address, sensor, coordinator) for sensor in SENSORS]
-    async_add_entities(entities)
+    async_add_entities(LoqedSensor(sensor, coordinator) for sensor in SENSORS)
 
 
 class LoqedSensor(CoordinatorEntity[LoqedDataCoordinator], SensorEntity):
@@ -65,22 +60,17 @@ class LoqedSensor(CoordinatorEntity[LoqedDataCoordinator], SensorEntity):
 
     def __init__(
         self,
-        mac_address: str,
         sensor_description: SensorEntityDescription,
         coordinator: LoqedDataCoordinator,
     ) -> None:
         """Initialize the loqed sensor."""
         super().__init__(coordinator)
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, mac_address)},
+            identifiers={(DOMAIN, coordinator.lock.id)},
             name="Loqed instance",
         )
         self.entity_description = sensor_description
-        self._attr_unique_id = f"{sensor_description.key}-{mac_address}"
-        self._attr_native_unit_of_measurement = (
-            sensor_description.native_unit_of_measurement
-        )
-
+        self._attr_unique_id = f"{sensor_description.key}-{coordinator.lock.id}"
         self._attr_native_value = coordinator.data[sensor_description.key]
 
     @callback

@@ -1,6 +1,6 @@
 """Tests the sensor platform of the Loqed integration."""
 from homeassistant.components.loqed import LoqedDataCoordinator
-from homeassistant.components.loqed.const import CONF_COORDINATOR, DOMAIN
+from homeassistant.components.loqed.const import DOMAIN
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     SensorDeviceClass,
@@ -17,7 +17,7 @@ async def test_battery_sensor(
     integration: MockConfigEntry,
 ) -> None:
     """Test the battery sensor."""
-    entity_id = "sensor.loqed_battery_status"
+    entity_id = "sensor.battery"
 
     state = hass.states.get(entity_id)
 
@@ -33,11 +33,9 @@ async def test_battery_sensor_update(
 ) -> None:
     """Tests the sensor responding to a coordinator update."""
 
-    entity_id = "sensor.loqed_battery_status"
+    entity_id = "sensor.battery"
 
-    coordinator: LoqedDataCoordinator = hass.data[DOMAIN][integration.entry_id][
-        CONF_COORDINATOR
-    ]
+    coordinator: LoqedDataCoordinator = hass.data[DOMAIN][integration.entry_id]
     coordinator.async_set_updated_data({"battery_percentage": 99})
 
     state = hass.states.get(entity_id)

@@ -3,8 +3,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from loqedAPI import loqed
-
 from homeassistant.components.lock import LockEntity, LockEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -21,7 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import LoqedDataCoordinator
-from .const import CONF_COORDINATOR, CONF_LOCK, DOMAIN
+from .const import DOMAIN
 
 LOCK_STATES = {
     "latch": STATE_UNLOCKED,
@@ -47,51 +45,49 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Loqed lock platform."""
-    entry_state = hass.data[DOMAIN][entry.entry_id]
-    lock = entry_state[CONF_LOCK]
-    coordinator = entry_state[CONF_COORDINATOR]
+    coordinator = hass.data[DOMAIN][entry.entry_id]
 
-    async_add_entities([LoqedLock(lock, coordinator)])
+    async_add_entities([LoqedLock(coordinator)])
 
 
 class LoqedLock(CoordinatorEntity[LoqedDataCoordinator], LockEntity):
     """Representation of a loqed lock."""
 
-    def __init__(self, lock: loqed.Lock, coordinator: LoqedDataCoordinator) -> None:
+    def __init__(self, coordinator: LoqedDataCoordinator) -> None:
         """Initialize the lock."""
         super().__init__(coordinator)
-        self._lock = lock
+        self._lock = coordinator.lock
         self._attr_unique_id = self._lock.id
         self._attr_name = self._lock.name
         self._attr_supported_features = LockEntityFeature.OPEN
         self._state = STATE_UNKNOWN
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, lock.id)},
+            identifiers={(DOMAIN, self._lock.id)},
             name="Loqed instance",
         )
 
     @property
-    def changed_by(self):
+    def changed_by(self) -> str:
         """Return true if lock is locking."""
         return "KeyID " + str(self._lock.last_key_id)
 
     @property
-    def is_locking(self):
+    def is_locking(self) -> bool | None:
         """Return true if lock is locking."""
         return self._state == STATE_LOCKING
 
     @property
-    def is_unlocking(self):
+    def is_unlocking(self) -> bool | None:
         """Return true if lock is unlocking."""
         return self._state == STATE_UNLOCKING
 
     @property
-    def is_jammed(self):
+    def is_jammed(self) -> bool | None:
         """Return true if lock is jammed."""
         return self._state == STATE_JAMMED
 
     @property
-    def is_locked(self):
+    def is_locked(self) -> bool | None:
         """Return true if lock is locked."""
         return self._state == STATE_LOCKED
 

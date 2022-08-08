@@ -45,7 +45,7 @@ async def validate_input(
     try:
         session = async_get_clientsession(hass)
 
-        apiclient = loqed.APIClient(session, "http://" + newdata["ip"])
+        apiclient = loqed.APIClient(session, f"http://{newdata['ip']}")
         api = loqed.LoqedAPI(apiclient)
         lock = await api.async_get_lock(
             newdata["api_key"], newdata["bkey"], newdata["key_id"], newdata["host"]
@@ -62,11 +62,11 @@ async def validate_input(
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for loqed."""
 
-    VERSION = 2
+    VERSION = 1
+    _host: str | None = None
 
     def __init__(self) -> None:
         """Initialize the ConfigFlow for the LOQED integration."""
-        self._host: str | None = None
 
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo

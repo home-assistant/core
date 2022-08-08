@@ -6,11 +6,7 @@ from unittest.mock import AsyncMock, patch
 
 from loqedAPI import loqed
 
-from homeassistant.components.loqed.const import (
-    CONF_COORDINATOR,
-    CONF_WEBHOOK_INDEX,
-    DOMAIN,
-)
+from homeassistant.components.loqed.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
@@ -29,7 +25,7 @@ async def test_webhook_rejects_invalid_message(
     await async_setup_component(hass, "http", {"http": {}})
     client = await hass_client_no_auth()
 
-    coordinator = hass.data[DOMAIN][integration.entry_id][CONF_COORDINATOR]
+    coordinator = hass.data[DOMAIN][integration.entry_id]
     lock.receiveWebhook = AsyncMock(return_value={"error": "invalid hash"})
 
     with patch.object(coordinator, "async_set_updated_data") as mock:
@@ -54,7 +50,7 @@ async def test_webhook_accepts_valid_message(
     await async_setup_component(hass, "http", {"http": {}})
     client = await hass_client_no_auth()
     processed_message = json.loads(load_fixture("loqed/battery_update.json"))
-    coordinator = hass.data[DOMAIN][integration.entry_id][CONF_COORDINATOR]
+    coordinator = hass.data[DOMAIN][integration.entry_id]
     lock.receiveWebhook = AsyncMock(return_value=processed_message)
 
     with patch.object(coordinator, "async_set_updated_data") as mock:
@@ -73,7 +69,7 @@ async def test_setup_webhook_in_bridge(
     hass: HomeAssistant, config_entry: MockConfigEntry, lock: loqed.Lock
 ):
     """Test webhook setup in loqed bridge."""
-    config: dict[str, Any] = {DOMAIN: {CONF_COORDINATOR: ""}}
+    config: dict[str, Any] = {DOMAIN: {}}
     config_entry.add_to_hass(hass)
 
     lock_status = json.loads(load_fixture("loqed/status_ok.json"))
@@ -94,12 +90,11 @@ async def test_setup_webhook_in_bridge(
 
 async def test_unload_entry(hass, integration: MockConfigEntry, lock: loqed.Lock):
     """Test successful unload of entry."""
-    webhook_index = hass.data[DOMAIN][integration.entry_id][CONF_WEBHOOK_INDEX]
 
     assert await hass.config_entries.async_unload(integration.entry_id)
     await hass.async_block_till_done()
 
-    lock.deleteWebhook.assert_called_with(webhook_index)
+    lock.deleteWebhook.assert_called_with(1)
     assert integration.state is ConfigEntryState.NOT_LOADED
     assert not hass.data.get(DOMAIN)
 

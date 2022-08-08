@@ -4,7 +4,7 @@ import json
 from loqedAPI import loqed
 
 from homeassistant.components.loqed import LoqedDataCoordinator
-from homeassistant.components.loqed.const import CONF_COORDINATOR, DOMAIN
+from homeassistant.components.loqed.const import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_LOCK,
@@ -37,9 +37,7 @@ async def test_lock_responds_to_updates(
     hass: HomeAssistant, integration: MockConfigEntry
 ) -> None:
     """Test the lock responding to updates."""
-    coordinator: LoqedDataCoordinator = hass.data[DOMAIN][integration.entry_id][
-        CONF_COORDINATOR
-    ]
+    coordinator: LoqedDataCoordinator = hass.data[DOMAIN][integration.entry_id]
     coordinator.async_set_updated_data(
         {
             "go_to_state": "DAY_LOCK",
@@ -60,9 +58,7 @@ async def test_lock_responds_to_status_updates(
     """Tests the lock responding to updates."""
     message = json.loads(load_fixture("loqed/lock_going_to_daylock.json"))
 
-    coordinator: LoqedDataCoordinator = hass.data[DOMAIN][integration.entry_id][
-        CONF_COORDINATOR
-    ]
+    coordinator: LoqedDataCoordinator = hass.data[DOMAIN][integration.entry_id]
     coordinator.async_set_updated_data(message)
 
     entity_id = "lock.loqed_smart_lock"
@@ -79,9 +75,7 @@ async def test_lock_responds_to_webhook_calls(
     """Tests the lock responding to updates."""
     message = json.loads(load_fixture("loqed/nightlock_reached.json"))
 
-    coordinator: LoqedDataCoordinator = hass.data[DOMAIN][integration.entry_id][
-        CONF_COORDINATOR
-    ]
+    coordinator: LoqedDataCoordinator = hass.data[DOMAIN][integration.entry_id]
     coordinator.async_set_updated_data(message)
 
     entity_id = "lock.loqed_smart_lock"
@@ -96,9 +90,7 @@ async def test_lock_responds_to_bolt_state_updates(
     hass: HomeAssistant, integration: MockConfigEntry
 ) -> None:
     """Tests the lock responding to updates."""
-    coordinator: LoqedDataCoordinator = hass.data[DOMAIN][integration.entry_id][
-        CONF_COORDINATOR
-    ]
+    coordinator: LoqedDataCoordinator = hass.data[DOMAIN][integration.entry_id]
     coordinator.async_set_updated_data(
         {
             "bolt_state": "night_lock",

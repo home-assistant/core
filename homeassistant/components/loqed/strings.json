@@ -1,9 +1,9 @@
 {
   "config": {
-    "flow_title": "LOQED Touch Smartlock setup ({host})",
+    "flow_title": "LOQED Touch Smartlock setup",
     "step": {
       "user": {
-        "description": "Visit {config_url} and: <BR/>* Create an API-key: [add new api-key] <BR/>* Copy the [Integration information] value by clicking on the copy button in the detail-page of the just created API-key.",
+        "description": "Visit {config_url} and: \n* Create an API-key by clicking 'add new api-key' \n* Copy the value of the 'Integration information' field by clicking on the copy button in the detail-page of the just created API-key.",
         "data": {
           "config": "Loqed Configuration copied from the API setup page"
         }
