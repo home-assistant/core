@@ -13,7 +13,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import DOMAIN
 from .coordinator import LoqedDataCoordinator
 
-PLATFORMS: list[str] = [Platform.LOCK, Platform.SENSOR]
+PLATFORMS: list[str] = [Platform.LOCK]
 
 
 _LOGGER = logging.getLogger(__name__)
