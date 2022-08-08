@@ -138,7 +138,7 @@ async def async_setup_entry(
         + ["audio_connections", "video_connections"]
     ]
     async_add_entities(
-        [IPWebcamSensor(coordinator, description) for description in sensor_types]
+        [IPWebcamSensor(coordinator, description) for description in sensor_types], True
     )
 
 
@@ -156,10 +156,6 @@ class IPWebcamSensor(AndroidIPCamBaseEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}-{description.key}"
         self.entity_description = description
         super().__init__(coordinator)
-        (
-            self._attr_native_value,
-            self._attr_native_unit_of_measurement,
-        ) = self.entity_description.value_fn(self._ipcam)
 
     @callback
     def _handle_coordinator_update(self) -> None:
