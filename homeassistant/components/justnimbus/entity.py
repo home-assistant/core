@@ -32,7 +32,6 @@ class JustNimbusEntity(
                 name="JustNimbus Sensor",
                 manufacturer="JustNimbus",
                 suggested_area="Basement",
-                via_device=(DOMAIN, device_id),
             )
 
     @property
