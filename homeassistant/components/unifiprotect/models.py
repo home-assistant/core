@@ -7,7 +7,7 @@ from enum import Enum
 import logging
 from typing import Any, Generic, TypeVar, Union
 
-from pyunifiprotect.data import NVR, EventType, ProtectAdoptableDeviceModel
+from pyunifiprotect.data import NVR, ProtectAdoptableDeviceModel
 
 from homeassistant.helpers.entity import EntityDescription
 
@@ -68,37 +68,3 @@ class ProtectSetableKeysMixin(ProtectRequiredKeysMixin[T]):
             await getattr(obj, self.ufp_set_method)(value)
         elif self.ufp_set_method_fn is not None:
             await self.ufp_set_method_fn(obj, value)
-
-
-class SimpleEventType(str, Enum):
-    """Enum to Camera Video events."""
-
-    ALL = "All Events"
-    RING = "Ring Events"
-    MOTION = "Motion Events"
-    SMART = "Smart Detections"
-
-    @classmethod
-    def get_from_name(cls, name: str) -> SimpleEventType:
-        """Get SimpleEventType from name."""
-
-        if name.lower() == "smart_detect":
-            return SimpleEventType.SMART
-
-        types: list[SimpleEventType] = list(cls)
-        for event_type in types:
-            if event_type.name.lower() == name.lower():
-                return event_type
-        raise ValueError("Invalid event_type")
-
-    @classmethod
-    def get_event_type(cls, event_type: SimpleEventType) -> EventType | None:
-        """Get UniFi Protect event type from SimpleEventType."""
-
-        if event_type == SimpleEventType.ALL:
-            return None
-        if event_type == SimpleEventType.RING:
-            return EventType.RING
-        if event_type == SimpleEventType.MOTION:
-            return EventType.MOTION
-        return EventType.SMART_DETECT
