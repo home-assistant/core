@@ -34,9 +34,3 @@ teach_in_device:
       example: 01BEEF23
       default: ""
 
-# Service ID
-get_next_free_base_id:
-  # Service name as shown in UI
-  name: Get next unused base ID
-  description: Depending on the base ID of the communicator and already used ID in the config, it returns a free base id
-  # fields:

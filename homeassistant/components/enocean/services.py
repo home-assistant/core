@@ -39,18 +39,7 @@ SERVICE_TEACHIN_MAX_RUNTIME = 600
 SERVICE_TEACHIN_STATE_VALUE_RUNNING = "RUNNING"
 SERVICE_TEACHIN_STATE = "enocean.service_teachin_state"
 
-GET_NEXT_FREE_BASE_ID = "get_next_free_base_id"  # service name
-# SERVICE_CALL_ATTR_GNFBI_BASE_ID = "base_id"
-# SERVICE_CALL_GNFBI_SCHEMA = vol.All(
-#    vol.Schema(
-#        {
-#            vol.Required(SERVICE_CALL_ATTR_GNFBI_BASE_ID): vol.All(
-#                vol.Length(min=8, max=8)
-#            )
-#        }
-#    )
-# )
-SUPPORTED_SERVICES = (TEACH_IN_DEVICE, GET_NEXT_FREE_BASE_ID)
+SUPPORTED_SERVICES = TEACH_IN_DEVICE
 
 SERVICE_TO_SCHEMA = {
     TEACH_IN_DEVICE: SERVICE_CALL_TEACH_IN_SCHEMA,
@@ -64,7 +53,6 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     services = {
         TEACH_IN_DEVICE: handle_teach_in,
-        GET_NEXT_FREE_BASE_ID: get_next_free_base_id,
     }
 
     def call_enocean_service(service_call: ServiceCall) -> None:
@@ -297,50 +285,3 @@ def is_bs4_teach_in_packet(packet):
     """Checker whether it's a 4BS packet."""
     return len(packet.data) > 3 and utils.get_bit(packet.data[4], 3) == 0
 
-
-def get_next_free_base_id(hass: HomeAssistant, service_call: ServiceCall):
-    """Determine the next free base ID which can be used from the already used IDs."""
-    # next_free_base_id = 0
-    # used_base_ids_so_far: list[list[int]] = []  # THINK: get from config entries
-
-    communicator: Communicator = get_communicator_reference(hass)
-
-    _LOGGER.debug("Storing existing callback function")
-    cb_to_restore = communicator._Communicator__callback
-    # communicator___callback = communicator.__callback
-    # store the originally set callback to restore it after
-    # the end of the teach-in process.
-    communicator._Communicator__callback = None
-
-    try:
-        base_id = communicator.base_id
-        _LOGGER.info("Base id to use: %s", base_id)
-
-    finally:
-        communicator._Communicator__callback = cb_to_restore
-
-    # entries: ConfigEntries = hass.config_entries. There should be no config entries
-    # at that time for devices
-    # because they are configured via configuration.yaml. Only the dongle has one config entry
-    # enocean_data = hass.data.get(DATA_ENOCEAN, {})
-    # config = hass.config
-
-    # hass.config_entries.options
-    # enocean_ = hass.data['components']['enocean']
-    # entities = hass.data['entity_platform']['enocean'][0].entities  # 0 = switch
-    # hass.data['entity_platform']['enocean'][0].entities
-    # hass.data['entity_platform']['enocean'][0].entities['switch.nodon_switch']
-    # keys = hass.data["entity_platform"]["enocean"][0].entities.keys()
-    # entities: dict = hass.data["entity_platform"]["enocean"][0].entities
-    # items = entities.items()
-    # key: str
-    # value: EnOceanSwitch
-    # for key, value in items:
-    #     # entities[key].base_id
-    #     _LOGGER.info(
-    #         "Dev Name: %s - Base ID: %s", entities[key].dev_name, str(value.base_id)
-    #     )
-    # THINK: flatten all the values which can have a base id. see above
-    # get_next_free_sender_id(base_id, used_base_ids_so_far)
-
-    # return next_free_base_id

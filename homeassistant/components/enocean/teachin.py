@@ -26,14 +26,13 @@ class TeachInHandler(ABC):
         self, hass: HomeAssistant, packet: Packet, communicator: Communicator
     ):
         """Abstract method for handling incoming teach-in requests."""
-        pass
 
 
 class UteTeachInHandler(TeachInHandler):
     """Implementation to handle UTE teach-in requests."""
 
     def handle_teach_in_request(
-        self, hass: HomeAssistant, packet: Packet, communicator: Communicator
+        self, hass: HomeAssistant, packet: RadioPacket, communicator: Communicator
     ):
         """Handle the UTE-type teach-in request."""
         self.logger.info(
