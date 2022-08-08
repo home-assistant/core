@@ -8,6 +8,7 @@
             "sleepy": "Dispositiu final dorment"
         },
         "homekit_controller__thread_status": {
+            "border_router": "Encaminador (router) frontera",
             "child": "Fill",
             "detached": "Desconnectat",
             "disabled": "Desactivat",

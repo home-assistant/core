@@ -11,7 +11,7 @@
     "state": {
         "_": {
             "idle": "V pripravljenosti",
-            "off": "Izklju\u010den",
+            "off": "Izklopljen",
             "on": "Vklopljen",
             "paused": "Na pavzi",
             "playing": "Predvajanje",
