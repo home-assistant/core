@@ -24,7 +24,7 @@ class AndroidIPCamBaseEntity(CoordinatorEntity[AndroidIPCamDataUpdateCoordinator
             # this block can be removed when removing import from YAML
             self._attr_name = f"{coordinator.config_entry.data[CONF_NAME]} {self.entity_description.name}"
             self._attr_has_entity_name = False
-        self._ipcam = coordinator.ipcam
+        self.ipcam = coordinator.ipcam
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
             name=coordinator.config_entry.data.get(CONF_NAME)

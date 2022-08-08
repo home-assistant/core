@@ -157,14 +157,14 @@ class IPWebcamSettingSwitch(AndroidIPCamBaseEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return if settings is on or off."""
-        return bool(self._ipcam.current_settings.get(self.entity_description.key))
+        return bool(self.ipcam.current_settings.get(self.entity_description.key))
 
     async def async_turn_on(self, **kwargs):
         """Turn device on."""
-        await self.entity_description.on_func(self._ipcam)
+        await self.entity_description.on_func(self.ipcam)
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs):
         """Turn device off."""
-        await self.entity_description.off_func(self._ipcam)
+        await self.entity_description.off_func(self.ipcam)
         await self.coordinator.async_request_refresh()

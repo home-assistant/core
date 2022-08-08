@@ -55,10 +55,9 @@ class IPWebcamBinarySensor(AndroidIPCamBaseEntity, BinarySensorEntity):
     @property
     def available(self) -> bool:
         """Return avaibility if setting is enabled."""
-        return MOTION_ACTIVE in self._ipcam.enabled_sensors and super().available
+        return MOTION_ACTIVE in self.ipcam.enabled_sensors and super().available
 
     @property
     def is_on(self) -> bool:
         """Return if motion is detected."""
-        state, _ = self._ipcam.export_sensor(MOTION_ACTIVE)
-        return state == 1.0
+        return self.ipcam.export_sensor(MOTION_ACTIVE)[0] == 1.0
