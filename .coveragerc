@@ -998,6 +998,7 @@ omit =
     homeassistant/components/rainmachine/binary_sensor.py
     homeassistant/components/rainmachine/button.py
     homeassistant/components/rainmachine/model.py
+    homeassistant/components/rainmachine/select.py
     homeassistant/components/rainmachine/sensor.py
     homeassistant/components/rainmachine/switch.py
     homeassistant/components/rainmachine/update.py

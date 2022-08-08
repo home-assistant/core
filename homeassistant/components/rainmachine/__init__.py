@@ -57,6 +57,7 @@ CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.UPDATE,
