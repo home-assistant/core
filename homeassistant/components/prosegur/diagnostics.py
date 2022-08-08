@@ -25,5 +25,5 @@ async def async_get_config_entry_diagnostics(
 
     return {
         "installation": async_redact_data(installation.data, TO_REDACT),
-        "activity": async_redact_data(activity, {}),
+        "activity": activity,
     }

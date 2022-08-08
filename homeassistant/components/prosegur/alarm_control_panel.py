@@ -60,10 +60,7 @@ class ProsegurAlarm(alarm.AlarmControlPanelEntity):
         self._attr_name = f"contract {self.contract}"
         self._attr_unique_id = self.contract
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information about this entity."""
-        return DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             name="Prosegur Alarm",
             manufacturer="Prosegur",
             model="smart",

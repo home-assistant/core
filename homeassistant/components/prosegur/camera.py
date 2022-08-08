@@ -60,10 +60,7 @@ class ProsegurCamera(Camera):
         self._attr_name = camera.description
         self._attr_unique_id = f"{self._installation.contract} {camera.id}"
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information about this entity."""
-        return DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             name=self._camera.description,
             manufacturer="Prosegur",
             model="smart camera",
