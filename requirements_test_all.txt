@@ -857,6 +857,9 @@ pdunehd==1.3.2
 # homeassistant.components.peco
 peco==0.0.29
 
+# homeassistant.components.escea
+pescea==1.0.12
+
 # homeassistant.components.aruba
 # homeassistant.components.cisco_ios
 # homeassistant.components.pandora
@@ -935,6 +938,9 @@ py-synologydsm-api==1.0.8
 
 # homeassistant.components.seventeentrack
 py17track==2021.12.2
+
+# homeassistant.components.hdmi_cec
+pyCEC==0.5.2
 
 # homeassistant.components.control4
 pyControl4==0.0.6

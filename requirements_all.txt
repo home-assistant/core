@@ -1230,6 +1230,9 @@ peco==0.0.29
 # homeassistant.components.pencom
 pencompy==0.0.3
 
+# homeassistant.components.escea
+pescea==1.0.12
+
 # homeassistant.components.aruba
 # homeassistant.components.cisco_ios
 # homeassistant.components.pandora
