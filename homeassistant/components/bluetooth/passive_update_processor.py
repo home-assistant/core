@@ -79,6 +79,11 @@ class PassiveBluetoothProcessorCoordinator(
         self._update_method = update_method
         self.last_update_success = True
 
+    @property
+    def available(self) -> bool:
+        """Return if the device is available."""
+        return super().available and self.last_update_success
+
     @callback
     def async_register_processor(
         self, processor: PassiveBluetoothDataProcessor

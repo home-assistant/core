@@ -1166,3 +1166,68 @@ async def test_integration_multiple_entity_platforms(hass, mock_bleak_scanner_st
         key="motion", device_id=None
     )
     cancel_coordinator()
+
+
+async def test_exception_from_coordinator_update_method(
+    hass, caplog, mock_bleak_scanner_start
+):
+    """Test we handle exceptions from the update method."""
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+
+    run_count = 0
+
+    @callback
+    def _mock_update_method(
+        service_info: BluetoothServiceInfo,
+    ) -> dict[str, str]:
+        nonlocal run_count
+        run_count += 1
+        if run_count == 2:
+            raise Exception("Test exception")
+        return {"test": "data"}
+
+    @callback
+    def _async_generate_mock_data(
+        data: dict[str, str],
+    ) -> PassiveBluetoothDataUpdate:
+        """Generate mock data."""
+        return GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE
+
+    coordinator = PassiveBluetoothProcessorCoordinator(
+        hass,
+        _LOGGER,
+        "aa:bb:cc:dd:ee:ff",
+        BluetoothScanningMode.ACTIVE,
+        _mock_update_method,
+    )
+    assert coordinator.available is False  # no data yet
+    saved_callback = None
+
+    def _async_register_callback(_hass, _callback, _matcher, _mode):
+        nonlocal saved_callback
+        saved_callback = _callback
+        return lambda: None
+
+    processor = PassiveBluetoothDataProcessor(_async_generate_mock_data)
+    with patch(
+        "homeassistant.components.bluetooth.update_coordinator.async_register_callback",
+        _async_register_callback,
+    ):
+        unregister_processor = coordinator.async_register_processor(processor)
+        cancel_coordinator = coordinator.async_start()
+
+    processor.async_add_listener(MagicMock())
+
+    saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    assert processor.available is True
+
+    # We should go unavailable once we get an exception
+    saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    assert "Test exception" in caplog.text
+    assert processor.available is False
+
+    # We should go available again once we get data again
+    saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
+    assert processor.available is True
+    unregister_processor()
+    cancel_coordinator()
