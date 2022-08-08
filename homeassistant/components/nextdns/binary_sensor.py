@@ -62,7 +62,7 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Add a NextDNS entities from a config_entry."""
+    """Add NextDNS entities from a config_entry."""
     coordinator: NextDnsConnectionUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
         ATTR_CONNECTION
     ]
