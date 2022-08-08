@@ -9,6 +9,7 @@
         "error": {
             "identifier_exists": "Akun sudah terdaftar",
             "invalid_auth": "Autentikasi tidak valid",
+            "invalid_auth_code_length": "Panjang kode otorisasi SimpliSafe adalah 45 karakter",
             "unknown": "Kesalahan yang tidak diharapkan"
         },
         "progress": {
@@ -34,7 +35,7 @@
                     "password": "Kata Sandi",
                     "username": "Nama Pengguna"
                 },
-                "description": "SimpliSafe mengautentikasi pengguna melalui aplikasi webnya. Karena keterbatasan teknis, ada langkah manual di akhir proses ini; pastikan bahwa Anda membaca [dokumentasi] (http://home-assistant.io/integrations/simplisafe#getting-an-authorization-code) sebelum memulai.\n\nJika sudah siap, klik [di sini]({url}) untuk membuka aplikasi web SimpliSafe dan memasukkan kredensial Anda. Setelah proses selesai, kembali ke sini dan masukkan kode otorisasi dari URL aplikasi web SimpliSafe."
+                "description": "SimpliSafe mengautentikasi pengguna melalui aplikasi webnya. Karena keterbatasan teknis, ada langkah manual di akhir proses ini; pastikan bahwa Anda membaca [dokumentasi] (http://home-assistant.io/integrations/simplisafe#getting-an-authorization-code) sebelum memulai.\n\nJika sudah siap, klik [di sini]({url}) untuk membuka aplikasi web SimpliSafe dan memasukkan kredensial Anda. Jika Anda sedang masuk ke SimpliSafe di browser, Anda mungkin harus membuka tab baru, kemudian menyalin-tempel URL di atas di tab baru tersebut.\n\nSetelah proses selesai, kembali ke sini dan masukkan kode otorisasi dari URL `com.simplisafe.mobile`."
             }
         }
     },

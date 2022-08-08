@@ -8,6 +8,18 @@ from __future__ import annotations
 
 BLUETOOTH: list[dict[str, str | int | list[int]]] = [
     {
+        "domain": "fjaraskupan",
+        "manufacturer_id": 20296,
+        "manufacturer_data_start": [
+            79,
+            68,
+            70,
+            74,
+            65,
+            82
+        ]
+    },
+    {
         "domain": "govee_ble",
         "local_name": "Govee*"
     },
@@ -27,6 +39,11 @@ BLUETOOTH: list[dict[str, str | int | list[int]]] = [
     {
         "domain": "govee_ble",
         "manufacturer_id": 18994,
+        "service_uuid": "00008551-0000-1000-8000-00805f9b34fb"
+    },
+    {
+        "domain": "govee_ble",
+        "manufacturer_id": 818,
         "service_uuid": "00008551-0000-1000-8000-00805f9b34fb"
     },
     {
