@@ -6,7 +6,7 @@ from homeassistant.const import Platform
 
 DOMAIN = "justnimbus"
 
-VOLUME_FLOW_RATE_LITERS_PER_MINUTE: Final = "L/m"
+VOLUME_FLOW_RATE_LITERS_PER_MINUTE: Final = "L/min"
 
 PLATFORMS = [
     Platform.SENSOR,

@@ -11,7 +11,6 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_CLIENT_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN
@@ -25,18 +24,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-class JustNimbusError(HomeAssistantError):
-    """Base exception of the JustNimbus integration."""
-
-
-class InvalidClientId(JustNimbusError):
-    """Exception to be raised by JustNimbus when the client id provided is invalid."""
-
-
-class CannotConnect(JustNimbusError):
-    """Error to indicate we cannot connect."""
-
-
 class JustNimbus:
     """Wrapper to be used by config flow to check for a valid client id."""
 
@@ -48,25 +35,6 @@ class JustNimbus:
         """Test if we can authenticate with the host."""
         justnimbus.JustNimbusClient(client_id=self.client_id).get_data()
         return True
-
-
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
-    """Validate the user input allows us to connect.
-
-    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-    """
-
-    justnimbus_wrapper = JustNimbus(data[CONF_CLIENT_ID])
-
-    try:
-        if not await hass.async_add_executor_job(justnimbus_wrapper.authenticate):
-            raise CannotConnect
-    except justnimbus.InvalidClientID as error:
-        raise InvalidClientId from error
-    except justnimbus.JustNimbusError as error:
-        raise CannotConnect from error
-
-    return {"name": "JustNimbus"}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -88,17 +56,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(user_input[CONF_CLIENT_ID])
         self._abort_if_unique_id_configured()
 
+        client = justnimbus.JustNimbusClient(client_id=data[CONF_CLIENT_ID])
         try:
-            info = await validate_input(self.hass, user_input)
-        except CannotConnect:
-            errors["base"] = "cannot_connect"
-        except InvalidClientId:
+            await hass.async_add_executor_job(client.get_data)
+        except justnimbus.InvalidClientID:
             errors["base"] = "invalid_auth"
+        except justnimbus.JustNimbusError:
+            errors["base"] = "cannot_connect"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            return self.async_create_entry(title=info["name"], data=user_input)
+            return self.async_create_entry(title="JustNimbus", data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
