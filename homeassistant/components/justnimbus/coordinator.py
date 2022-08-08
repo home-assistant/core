@@ -25,7 +25,7 @@ class JustNimbusCoordinator(DataUpdateCoordinator[justnimbus.JustNimbusModel]):
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(minutes=5),
+            update_interval=timedelta(minutes=1),
         )
         self._client = justnimbus.JustNimbusClient(client_id=entry.data[CONF_CLIENT_ID])
 
