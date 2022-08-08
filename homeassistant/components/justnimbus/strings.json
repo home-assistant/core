@@ -3,8 +3,8 @@
     "step": {
       "user": {
         "data": {
-          "name": "Device Name (Defaults to 'Just Nimbus')",
-          "client_id": "Client ID"
+          "client_id": "Client ID",
+          "scan_interval": "Interval (in minutes)"
         }
       }
     },

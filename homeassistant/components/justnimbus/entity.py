@@ -20,21 +20,17 @@ class JustNimbusEntity(
     def __init__(
         self,
         *,
-        client: justnimbus.JustNimbusClient,
-        entry_id: str,
         device_id: str,
         coordinator: JustNimbusCoordinator,
     ) -> None:
         """Initialize the JustNimbus entity."""
         super().__init__(coordinator=coordinator)
-        self._entry_id = entry_id
         self._device_id = device_id
-        self.client = client
         if self._device_id:
             self._attr_device_info = DeviceInfo(
                 identifiers={(DOMAIN, device_id)},
-                name="Just Nimbus Sensor",
-                manufacturer="Just Nimbus",
+                name="JustNimbus Sensor",
+                manufacturer="JustNimbus",
                 suggested_area="Basement",
                 via_device=(DOMAIN, device_id),
             )
@@ -42,4 +38,4 @@ class JustNimbusEntity(
     @property
     def available(self) -> bool:
         """Return device availability."""
-        return super.available() and getattr(self.coordinator.data, "error_code") == 0
+        return super().available and getattr(self.coordinator.data, "error_code") == 0

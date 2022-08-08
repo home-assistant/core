@@ -1,12 +1,15 @@
-"""Support for the CO2signal platform."""
+"""Support for the JustNimbus platform."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import timedelta
+from typing import Any
 
-import justnimbus
-
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_CLIENT_ID,
@@ -15,6 +18,7 @@ from homeassistant.const import (
     VOLUME_LITERS,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
@@ -22,14 +26,19 @@ from . import JustNimbusCoordinator
 from .const import DOMAIN, VOLUME_FLOW_RATE_LITERS_PER_MINUTE
 from .entity import JustNimbusEntity
 
-SCAN_INTERVAL = timedelta(minutes=3)
+
+@dataclass
+class JustNimbusEntityDescriptionMixin:
+    """Mixin for required keys."""
+
+    value_fn: Callable[[JustNimbusCoordinator], Any]
 
 
 @dataclass
-class JustNimbusEntityDescription(SensorEntityDescription):
-    """Provide a description of a JustNimbus sensor."""
-
-    unique_id: str | None = None
+class JustNimbusEntityDescription(
+    SensorEntityDescription, JustNimbusEntityDescriptionMixin
+):
+    """Describes JustNimbus sensor entity."""
 
 
 SENSOR_TYPES = (
@@ -38,62 +47,80 @@ SENSOR_TYPES = (
         name="Pump flow",
         icon="mdi:pump",
         native_unit_of_measurement=VOLUME_FLOW_RATE_LITERS_PER_MINUTE,
-        unique_id="jn:pump_flow",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda coordinator: coordinator.data.pump_flow,
     ),
     JustNimbusEntityDescription(
         key="drink_flow",
         name="Drink flow",
         icon="mdi:water-pump",
         native_unit_of_measurement=VOLUME_FLOW_RATE_LITERS_PER_MINUTE,
-        unique_id="jn:drink_flow",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda coordinator: coordinator.data.drink_flow,
     ),
     JustNimbusEntityDescription(
         key="pump_pressure",
         name="Pump pressure",
         native_unit_of_measurement=PRESSURE_BAR,
         device_class=SensorDeviceClass.PRESSURE,
-        unique_id="jn:pump_pressure",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda coordinator: coordinator.data.pump_pressure,
     ),
     JustNimbusEntityDescription(
         key="pump_starts",
         name="Pump starts",
         icon="mdi:restart",
-        unique_id="jn:pump_starts",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda coordinator: coordinator.data.pump_starts,
     ),
     JustNimbusEntityDescription(
         key="pump_hours",
         name="Pump hours",
         icon="mdi:clock",
         device_class=SensorDeviceClass.DURATION,
-        unique_id="jn:pump_hours",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda coordinator: coordinator.data.pump_hours,
     ),
     JustNimbusEntityDescription(
         key="reservoir_temp",
         name="Reservoir Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
-        unique_id="jn:reservoir_temp",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda coordinator: coordinator.data.reservoir_temp,
     ),
     JustNimbusEntityDescription(
         key="reservoir_content",
         name="Reservoir content",
         icon="mdi:car-coolant-level",
         native_unit_of_measurement=VOLUME_LITERS,
-        unique_id="jn:reservoir_content",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda coordinator: coordinator.data.reservoir_content,
     ),
     JustNimbusEntityDescription(
         key="total_saved",
         name="Total saved",
         icon="mdi:water-opacity",
         native_unit_of_measurement=VOLUME_LITERS,
-        unique_id="jn:total_saved",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda coordinator: coordinator.data.total_saved,
     ),
     JustNimbusEntityDescription(
         key="total_replenished",
         name="Total replenished",
         icon="mdi:water",
         native_unit_of_measurement=VOLUME_LITERS,
-        unique_id="jn:total_replenished",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda coordinator: coordinator.data.total_replenished,
     ),
     JustNimbusEntityDescription(
         key="error_code",
@@ -101,21 +128,26 @@ SENSOR_TYPES = (
         icon="mdi:bug",
         entity_registry_enabled_default=False,
         native_unit_of_measurement="",
-        unique_id="jn:error_code",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda coordinator: coordinator.data.error_code,
     ),
     JustNimbusEntityDescription(
         key="totver",
         name="Total use",
         icon="mdi:chart-donut",
         native_unit_of_measurement=VOLUME_LITERS,
-        unique_id="jn:totver",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda coordinator: coordinator.data.totver,
     ),
     JustNimbusEntityDescription(
         key="reservoir_content_max",
         name="Max reservoir content",
         icon="mdi:waves",
         native_unit_of_measurement=VOLUME_LITERS,
-        unique_id="jn:reservoir_content_max",
+        state_class=SensorStateClass.TOTAL,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda coordinator: coordinator.data.reservoir_content_max,
     ),
 )
 
@@ -127,8 +159,6 @@ async def async_setup_entry(
     coordinator: JustNimbusCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         JustNimbusSensor(
-            client=justnimbus.JustNimbusClient(entry.data[CONF_CLIENT_ID]),
-            entry_id=entry.entry_id,
             device_id=entry.data[CONF_CLIENT_ID],
             description=description,
             coordinator=coordinator,
@@ -145,34 +175,25 @@ class JustNimbusSensor(
     def __init__(
         self,
         *,
-        client: justnimbus.JustNimbusClient,
-        entry_id: str,
         device_id: str,
         description: JustNimbusEntityDescription,
         coordinator: JustNimbusCoordinator,
     ) -> None:
         """Initialize the sensor."""
-        self.entity_description = description
+        self.entity_description: JustNimbusEntityDescription = description
         super().__init__(
-            client=client,
-            entry_id=entry_id,
             device_id=device_id,
             coordinator=coordinator,
         )
-        self.client = client
-        self._entry_id = entry_id
         self._device_id = device_id
-        self._attr_unique_id = f"{entry_id}_{description.unique_id}"
+        self._attr_unique_id = f"{coordinator.entry_id}_{description.key}"
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return (
-            super().available
-            and getattr(self.coordinator.data, self.entity_description.key) is not None
-        )
+        return super().available and self.native_value is not None
 
     @property
     def native_value(self) -> StateType:
         """Return sensor state."""
-        return getattr(self.coordinator.data, self.entity_description.key)
+        return self.entity_description.value_fn(self.coordinator)

@@ -1,4 +1,4 @@
-"""Config flow for Just Nimbus integration."""
+"""Config flow for JustNimbus integration."""
 from __future__ import annotations
 
 import logging
@@ -8,29 +8,47 @@ import justnimbus
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_CLIENT_ID, CONF_NAME
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_CLIENT_ID, CONF_SCAN_INTERVAL
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 
-from . import CannotConnect, InvalidClientId
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+scan_interval = vol.Required(CONF_SCAN_INTERVAL, default=5)
+scan_interval_options = vol.In(
+    (
+        1,
+        5,
+        15,
+    ),
+)
+
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_NAME): cv.string,
         vol.Required(CONF_CLIENT_ID): cv.string,
+        scan_interval: scan_interval_options,
     },
 )
 
 
-class JustNimbus:
-    """Placeholder class to make tests pass.
+class JustNimbusError(HomeAssistantError):
+    """Base exception of the JustNimbus integration."""
 
-    TODO Remove this placeholder class and replace with things from your PyPI package.
-    """
+
+class InvalidClientId(JustNimbusError):
+    """Exception to be raised by JustNimbus when the client id provided is invalid."""
+
+
+class CannotConnect(JustNimbusError):
+    """Error to indicate we cannot connect."""
+
+
+class JustNimbus:
+    """Wrapper to be used by config flow to check for a valid client id."""
 
     def __init__(self, client_id: str) -> None:
         """Initialize."""
@@ -48,19 +66,21 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
 
-    just_nimbus = JustNimbus(data[CONF_CLIENT_ID])
+    justnimbus_wrapper = JustNimbus(data[CONF_CLIENT_ID])
 
     try:
-        if not await hass.async_add_executor_job(just_nimbus.authenticate):
+        if not await hass.async_add_executor_job(justnimbus_wrapper.authenticate):
             raise CannotConnect
     except justnimbus.InvalidClientID as error:
         raise InvalidClientId from error
+    except justnimbus.JustNimbusError as error:
+        raise CannotConnect from error
 
-    return {"name": data.get(CONF_NAME) or "Just Nimbus"}
+    return {"name": "JustNimbus"}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Just Nimbus."""
+    """Handle a config flow for JustNimbus."""
 
     VERSION = 1
 
@@ -92,4 +112,36 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+        )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> JustNimbusOptionFlow:
+        """Get the options flow for this handler."""
+        return JustNimbusOptionFlow(config_entry)
+
+
+class JustNimbusOptionFlow(config_entries.OptionsFlow):
+    """Handle options."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    scan_interval: scan_interval_options,
+                }
+            ),
         )

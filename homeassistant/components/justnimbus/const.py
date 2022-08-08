@@ -1,10 +1,10 @@
-"""Constants for the Just Nimbus integration."""
+"""Constants for the JustNimbus integration."""
 
 from typing import Final
 
 from homeassistant.const import Platform
 
-DOMAIN = "just_nimbus"
+DOMAIN = "justnimbus"
 
 VOLUME_FLOW_RATE_LITERS_PER_MINUTE: Final = "L/m"
 

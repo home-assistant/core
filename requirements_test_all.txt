@@ -675,8 +675,8 @@ jellyfin-apiclient-python==1.8.1
 # homeassistant.components.rest
 jsonpath==0.82
 
-# homeassistant.components.just_nimbus
-justnimbus==0.5.0
+# homeassistant.components.justnimbus
+justnimbus==0.6.0
 
 # homeassistant.components.konnected
 konnected==1.2.0

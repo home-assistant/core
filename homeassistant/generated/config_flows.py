@@ -183,7 +183,7 @@ FLOWS = {
         "izone",
         "jellyfin",
         "juicenet",
-        "just_nimbus",
+        "justnimbus",
         "kaleidescape",
         "keenetic_ndms2",
         "kmtronic",
