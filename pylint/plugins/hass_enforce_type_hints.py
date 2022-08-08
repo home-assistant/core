@@ -1648,6 +1648,15 @@ def _is_valid_type(
             and _is_valid_type(match.group(2), node.slice)
         )
 
+    # Special case for float in return type
+    if (
+        expected_type == "float"
+        and in_return
+        and isinstance(node, nodes.Name)
+        and node.name in ("float", "int")
+    ):
+        return True
+
     # Name occurs when a namespace is not used, eg. "HomeAssistant"
     if isinstance(node, nodes.Name) and node.name == expected_type:
         return True
@@ -1786,12 +1795,15 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
         ):
             self._class_matchers.extend(property_matches)
 
+        self._class_matchers.reverse()
+
     def visit_classdef(self, node: nodes.ClassDef) -> None:
         """Called when a ClassDef node is visited."""
         ancestor: nodes.ClassDef
         checked_class_methods: set[str] = set()
-        for ancestor in node.ancestors():
-            for class_matches in self._class_matchers:
+        ancestors = list(node.ancestors())  # cache result for inside loop
+        for class_matches in self._class_matchers:
+            for ancestor in ancestors:
                 if ancestor.name == class_matches.base_class:
                     self._visit_class_functions(
                         node, class_matches.matches, checked_class_methods
