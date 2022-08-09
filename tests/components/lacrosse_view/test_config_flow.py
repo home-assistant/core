@@ -6,7 +6,7 @@ from lacrosse_view import Location, LoginError
 from homeassistant import config_entries
 from homeassistant.components.lacrosse_view.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
+from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, FlowResultType
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -14,7 +14,7 @@ async def test_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
     with patch("lacrosse_view.LaCrosse.login", return_value=True,), patch(
@@ -30,7 +30,7 @@ async def test_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["step_id"] == "location"
     assert result2["errors"] is None
 
@@ -75,7 +75,7 @@ async def test_form_auth_false(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
@@ -94,7 +94,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
@@ -115,7 +115,7 @@ async def test_form_login_first(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
@@ -137,7 +137,7 @@ async def test_form_no_locations(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "no_locations"}
 
 
@@ -159,5 +159,5 @@ async def test_form_unexpected_error(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}

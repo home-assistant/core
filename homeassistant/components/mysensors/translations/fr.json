@@ -14,6 +14,7 @@
             "invalid_serial": "Port s\u00e9rie non valide",
             "invalid_subscribe_topic": "Sujet d'abonnement non valide",
             "invalid_version": "Version de MySensors non valide",
+            "mqtt_required": "L'int\u00e9gration MQTT n'est pas configur\u00e9e",
             "not_a_number": "Veuillez saisir un nombre",
             "port_out_of_range": "Le num\u00e9ro de port doit \u00eatre au moins 1 et au plus 65535",
             "same_topic": "Les sujets de souscription et de publication sont identiques",
@@ -67,6 +68,14 @@
                     "version": "Version de MySensors"
                 },
                 "description": "Configuration de la passerelle Ethernet"
+            },
+            "select_gateway_type": {
+                "description": "S\u00e9lectionnez la passerelle \u00e0 configurer.",
+                "menu_options": {
+                    "gw_mqtt": "Configurer une passerelle MQTT",
+                    "gw_serial": "Configurer une passerelle s\u00e9rie",
+                    "gw_tcp": "Configurer une passerelle TCP"
+                }
             },
             "user": {
                 "data": {
