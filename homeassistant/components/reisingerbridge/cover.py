@@ -62,7 +62,7 @@ class OpenReisingerCover(OpenReisingerEntity, CoverEntity):
             return None
         return self._state == STATE_OPENING
 
-    async def async_close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         if self._state in [STATE_CLOSED, STATE_CLOSING]:
             return
