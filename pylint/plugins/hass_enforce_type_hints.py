@@ -1477,6 +1477,58 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             ],
         ),
     ],
+    "select": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="SelectEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="capability_attributes",
+                    return_type="dict[str, Any]",
+                ),
+                TypeHintMatch(
+                    function_name="options",
+                    return_type="list[str]",
+                ),
+                TypeHintMatch(
+                    function_name="current_option",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="select_option",
+                    return_type=None,
+                ),
+                TypeHintMatch(
+                    function_name="select_option",
+                    arg_types={1: "str"},
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+            ],
+        ),
+    ],
+    "siren": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="ToggleEntity",
+            matches=_TOGGLE_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="SirenEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="available_tones",
+                    return_type=["dict[int, str]", "list[int | str]", None],
+                ),
+            ],
+        ),
+    ],
 }
 
 
