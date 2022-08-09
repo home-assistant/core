@@ -296,6 +296,7 @@ FLOWS = {
         "rainmachine",
         "rdw",
         "recollect_waste",
+        "reisingerbridge",
         "renault",
         "rfxtrx",
         "rhasspy",
