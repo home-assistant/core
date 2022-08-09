@@ -129,7 +129,7 @@ async def async_setup_entry(
     switch_types = [
         switch
         for switch in SWITCH_TYPES
-        if switch.key in coordinator.ipcam.enabled_settings
+        if switch.key in coordinator.cam.enabled_settings
     ]
     async_add_entities(
         [
@@ -157,14 +157,14 @@ class IPWebcamSettingSwitch(AndroidIPCamBaseEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return if settings is on or off."""
-        return bool(self.ipcam.current_settings.get(self.entity_description.key))
+        return bool(self.cam.current_settings.get(self.entity_description.key))
 
     async def async_turn_on(self, **kwargs):
         """Turn device on."""
-        await self.entity_description.on_func(self.ipcam)
+        await self.entity_description.on_func(self.cam)
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs):
         """Turn device off."""
-        await self.entity_description.off_func(self.ipcam)
+        await self.entity_description.off_func(self.cam)
         await self.coordinator.async_request_refresh()

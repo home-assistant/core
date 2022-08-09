@@ -47,8 +47,8 @@ class IPWebcamCamera(MjpegCamera):
 
         super().__init__(
             name=name,
-            mjpeg_url=coordinator.ipcam.mjpeg_url,
-            still_image_url=coordinator.ipcam.image_url,
+            mjpeg_url=coordinator.cam.mjpeg_url,
+            still_image_url=coordinator.cam.image_url,
             authentication=HTTP_BASIC_AUTHENTICATION,
             username=coordinator.config_entry.data.get(CONF_USERNAME),
             password=coordinator.config_entry.data.get(CONF_PASSWORD, ""),

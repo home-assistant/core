@@ -21,12 +21,12 @@ class AndroidIPCamDataUpdateCoordinator(DataUpdateCoordinator):
         self,
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        ipcam: PyDroidIPCam,
+        cam: PyDroidIPCam,
     ) -> None:
         """Initialize the Android IP Webcam."""
         self.hass = hass
         self.config_entry: ConfigEntry = config_entry
-        self.ipcam = ipcam
+        self.cam = cam
         super().__init__(
             self.hass,
             _LOGGER,
@@ -36,6 +36,6 @@ class AndroidIPCamDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> None:
         """Update Android IP Webcam entities."""
-        await self.ipcam.update()
-        if not self.ipcam.available:
+        await self.cam.update()
+        if not self.cam.available:
             raise UpdateFailed

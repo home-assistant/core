@@ -61,7 +61,6 @@ SENSOR_TYPES: tuple[AndroidIPWebcamSensorEntityDescription, ...] = (
         key="battery_temp",
         name="Battery Temperature",
         icon="mdi:thermometer",
-        device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda ipcam: ipcam.export_sensor("battery_temp")[0],
@@ -70,7 +69,6 @@ SENSOR_TYPES: tuple[AndroidIPWebcamSensorEntityDescription, ...] = (
     AndroidIPWebcamSensorEntityDescription(
         key="battery_voltage",
         name="Battery Voltage",
-        device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda ipcam: ipcam.export_sensor("battery_voltage")[0],
@@ -80,7 +78,6 @@ SENSOR_TYPES: tuple[AndroidIPWebcamSensorEntityDescription, ...] = (
         key="light",
         name="Light Level",
         icon="mdi:flashlight",
-        device_class=SensorDeviceClass.ILLUMINANCE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda ipcam: ipcam.export_sensor("light")[0],
@@ -99,7 +96,6 @@ SENSOR_TYPES: tuple[AndroidIPWebcamSensorEntityDescription, ...] = (
         key="pressure",
         name="Pressure",
         icon="mdi:gauge",
-        device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda ipcam: ipcam.export_sensor("pressure")[0],
@@ -148,11 +144,10 @@ async def async_setup_entry(
         sensor
         for sensor in SENSOR_TYPES
         if sensor.key
-        in coordinator.ipcam.enabled_sensors
-        + ["audio_connections", "video_connections"]
+        in coordinator.cam.enabled_sensors + ["audio_connections", "video_connections"]
     ]
     async_add_entities(
-        [IPWebcamSensor(coordinator, description) for description in sensor_types]
+        IPWebcamSensor(coordinator, description) for description in sensor_types
     )
 
 
@@ -174,9 +169,9 @@ class IPWebcamSensor(AndroidIPCamBaseEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return native value of sensor."""
-        return self.entity_description.value_fn(self.ipcam)
+        return self.entity_description.value_fn(self.cam)
 
     @property
     def native_unit_of_measurement(self) -> str | None:
         """Return native unit of measurement of sensor."""
-        return self.entity_description.unit_fn(self.ipcam)
+        return self.entity_description.unit_fn(self.cam)
