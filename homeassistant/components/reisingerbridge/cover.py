@@ -70,7 +70,7 @@ class OpenReisingerCover(OpenReisingerEntity, CoverEntity):
         self._state = STATE_CLOSING
         await self._push_button()
 
-    async def async_open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         if self._state in [STATE_OPEN, STATE_OPENING]:
             return
