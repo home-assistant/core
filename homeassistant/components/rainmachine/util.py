@@ -1,7 +1,7 @@
 """Define RainMachine utilities."""
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Iterable
 from datetime import timedelta
 from typing import Any
 
@@ -39,7 +39,7 @@ RUN_STATE_MAP = {
 
 @callback
 def async_clean_up_old_entities(
-    hass: HomeAssistant, entry: ConfigEntry, unique_id_suffixes_to_remove: tuple[str]
+    hass: HomeAssistant, entry: ConfigEntry, unique_id_suffixes_to_remove: Iterable[str]
 ) -> None:
     """Clean up old, no-longer-used entities."""
     ent_reg = entity_registry.async_get(hass)

@@ -95,6 +95,8 @@ async def async_setup_entry(
 class UniversalRestrictionsSelect(RainMachineEntity, SelectEntity):
     """Define a RainMachine select."""
 
+    entity_description: RainMachineSelectDescription
+
     def __init__(
         self,
         entry: ConfigEntry,

@@ -117,7 +117,9 @@ async def async_setup_entry(
         DATA_PROVISION_SETTINGS: ProvisionSettingsSensor,
     }
 
-    sensors = [
+    sensors: list[
+        ProgramTimeRemainingSensor | ProvisionSettingsSensor | TimeRemainingSensor
+    ] = [
         api_category_sensor_map[description.api_category](entry, data, description)
         for description in SENSOR_DESCRIPTIONS
         if (
