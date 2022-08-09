@@ -5,6 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/hardkernel",
   "dependencies": ["hardware", "hassio"],
   "codeowners": ["@home-assistant/core"],
-  "integration_type": "hardware",
-  "quality_scale": "internal"
+  "integration_type": "hardware"
 }
