@@ -21,13 +21,12 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DEFAULT_PORT, DEFAULT_TIMEOUT, DOMAIN
+from .const import DEFAULT_PORT, DOMAIN
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
         vol.Inclusive(CONF_USERNAME, "authentication"): str,
         vol.Inclusive(CONF_PASSWORD, "authentication"): str,
     }
@@ -44,7 +43,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> bool:
         data[CONF_PORT],
         username=data.get(CONF_USERNAME),
         password=data.get(CONF_PASSWORD),
-        timeout=data[CONF_TIMEOUT],
         ssl=False,
     )
     await cam.update()
@@ -82,4 +80,5 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
         """Import a config entry from configuration.yaml."""
         import_config.pop(CONF_SCAN_INTERVAL)
+        import_config.pop(CONF_TIMEOUT)
         return await self.async_step_user(import_config)

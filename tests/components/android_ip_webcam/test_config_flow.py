@@ -41,7 +41,6 @@ async def test_form(hass: HomeAssistant, aioclient_mock_fixture) -> None:
     assert result2["data"] == {
         "host": "1.1.1.1",
         "port": 8080,
-        "timeout": 10,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -71,7 +70,6 @@ async def test_import_flow_success(hass: HomeAssistant, aioclient_mock_fixture) 
         "name": "IP Webcam",
         "host": "1.1.1.1",
         "port": 8080,
-        "timeout": 10,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 

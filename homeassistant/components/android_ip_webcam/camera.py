@@ -39,11 +39,11 @@ class IPWebcamCamera(MjpegCamera):
 
     def __init__(self, coordinator: AndroidIPCamDataUpdateCoordinator) -> None:
         """Initialize the camera."""
+        name = None
         # keep imported name until YAML is removed
-        name = (
-            coordinator.config_entry.data.get(CONF_NAME)
-            or coordinator.config_entry.data[CONF_HOST]
-        )
+        if CONF_NAME in coordinator.config_entry.data:
+            name = coordinator.config_entry.data[CONF_NAME]
+            self._attr_has_entity_name = False
 
         super().__init__(
             name=name,
@@ -56,5 +56,5 @@ class IPWebcamCamera(MjpegCamera):
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}-camera"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
-            name=name,
+            name=name or coordinator.config_entry.data[CONF_HOST],
         )

@@ -16,7 +16,7 @@ from .entity import AndroidIPCamBaseEntity
 
 BINARY_SENSOR_DESCRIPTION = BinarySensorEntityDescription(
     key="motion_active",
-    name="Motion Active",
+    name="Motion active",
     device_class=BinarySensorDeviceClass.MOTION,
 )
 
@@ -37,9 +37,6 @@ async def async_setup_entry(
 
 class IPWebcamBinarySensor(AndroidIPCamBaseEntity, BinarySensorEntity):
     """Representation of an IP Webcam binary sensor."""
-
-    _attr_device_class = BinarySensorDeviceClass.MOTION
-    _attr_has_entity_name = True
 
     def __init__(
         self,

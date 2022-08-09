@@ -12,7 +12,6 @@
                     "host": "Host",
                     "password": "Password",
                     "port": "Port",
-                    "timeout": "Timeout",
                     "username": "Username"
                 }
             }

@@ -115,7 +115,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data[CONF_PORT],
         username=entry.data.get(CONF_USERNAME),
         password=entry.data.get(CONF_PASSWORD),
-        timeout=entry.data[CONF_TIMEOUT],
         ssl=False,
     )
     coordinator = AndroidIPCamDataUpdateCoordinator(hass, entry, cam)

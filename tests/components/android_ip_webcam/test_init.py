@@ -19,7 +19,6 @@ MOCK_CONFIG_DATA = {
     "name": "IP Webcam",
     "host": "1.1.1.1",
     "port": 8080,
-    "timeout": 10,
 }
 
 

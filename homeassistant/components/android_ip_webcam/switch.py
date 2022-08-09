@@ -70,8 +70,8 @@ SWITCH_TYPES: tuple[AndroidIPWebcamSwitchEntityDescription, ...] = (
         name="Motion Detection",
         icon="mdi:flash",
         entity_category=EntityCategory.CONFIG,
-        on_func=lambda ipcam: ipcam.change_setting("exposure_lock", True),
-        off_func=lambda ipcam: ipcam.change_setting("exposure_lock", False),
+        on_func=lambda ipcam: ipcam.change_setting("motion_detect", True),
+        off_func=lambda ipcam: ipcam.change_setting("motion_detect", False),
     ),
     AndroidIPWebcamSwitchEntityDescription(
         key="night_vision",

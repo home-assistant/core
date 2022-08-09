@@ -14,7 +14,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class AndroidIPCamDataUpdateCoordinator(DataUpdateCoordinator):
+class AndroidIPCamDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Coordinator class for the Android IP Webcam."""
 
     def __init__(
