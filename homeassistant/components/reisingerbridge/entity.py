@@ -8,7 +8,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import DOMAIN
 
 
-class OpenReisingerEntity(CoordinatorEntity):
+class OpenReisingerEntity(CoordinatorEntity[OpenReisingerDataUpdateCoordinator]):
     """Representation of a OpenReisinger entity."""
 
     def __init__(self, open_reisinger_data_coordinator, device_id, description=None):
