@@ -39,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if status.get("serial") is None:
         raise CannotConnect
 
-    open_reisinger_data_coordinator = OpenReisingerDataUpdateCoordinator(
+    coordinator = OpenReisingerDataUpdateCoordinator(
         hass,
         open_reisinger_connection=open_reisinger_connection,
     )
