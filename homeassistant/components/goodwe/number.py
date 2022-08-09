@@ -83,9 +83,9 @@ async def async_setup_entry(
 
         # DT family of inverter uses % instead of W in grid export limit
         if type(inverter).__name__ == "DT" and description.key == "grid_export_limit":
-            description.unit_of_measurement = PERCENTAGE
-            description.step = 1
-            description.max_value = 100
+            description.native_unit_of_measurement = PERCENTAGE
+            description.native_step = 1
+            description.native_max_value = 100
 
         entities.append(
             InverterNumberEntity(device_info, description, inverter, current_value),

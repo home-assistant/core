@@ -7,7 +7,10 @@ import logging
 from goodwe import Inverter, InverterError
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, KEY_DEVICE_INFO, KEY_INVERTER
 
@@ -37,8 +40,12 @@ SYNCHRONIZE_CLOCK = GoodweButtonEntityDescription(
 )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up the inverter select entities from a config entry."""
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the inverter button entities from a config entry."""
     inverter = hass.data[DOMAIN][config_entry.entry_id][KEY_INVERTER]
     device_info = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE_INFO]
 
@@ -68,7 +75,7 @@ class GoodweButtonEntity(ButtonEntity):
     ) -> None:
         """Initialize the inverter operation mode setting entity."""
         self.entity_description = description
-        self._attr_unique_id = f"{DOMAIN}-{description.key}-{inverter.serial_number}"
+        self._attr_unique_id = f"{description.key}-{inverter.serial_number}"
         self._attr_device_info = device_info
         self._inverter: Inverter = inverter
 
