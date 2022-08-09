@@ -42,7 +42,7 @@ class OpenReisingerCover(OpenReisingerEntity, CoverEntity):
         super().__init__(open_reisinger_data_coordinator, device_id)
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
         if self._state is None:
             return None
