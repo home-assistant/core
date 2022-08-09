@@ -119,7 +119,6 @@ class AutomationActionType(Protocol):
         self,
         run_variables: dict[str, Any],
         context: Context | None = None,
-        skip_condition: bool = False,
     ) -> None:
         """Define action callback type."""
 
