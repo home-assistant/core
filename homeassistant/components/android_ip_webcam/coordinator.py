@@ -30,7 +30,7 @@ class AndroidIPCamDataUpdateCoordinator(DataUpdateCoordinator[None]):
         super().__init__(
             self.hass,
             _LOGGER,
-            name=DOMAIN,
+            name=f{DOMAIN} {config_entry.data[CONF_HOST]}",
             update_interval=timedelta(seconds=10),
         )
 

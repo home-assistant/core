@@ -42,7 +42,7 @@ class AndroidIPWebcamSensorEntityDescription(
 SENSOR_TYPES: tuple[AndroidIPWebcamSensorEntityDescription, ...] = (
     AndroidIPWebcamSensorEntityDescription(
         key="audio_connections",
-        name="Audio Connections",
+        name="Audio connections",
         icon="mdi:speaker",
         state_class=SensorStateClass.TOTAL,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -50,7 +50,7 @@ SENSOR_TYPES: tuple[AndroidIPWebcamSensorEntityDescription, ...] = (
     ),
     AndroidIPWebcamSensorEntityDescription(
         key="battery_level",
-        name="Battery Level",
+        name="Battery level",
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -59,7 +59,7 @@ SENSOR_TYPES: tuple[AndroidIPWebcamSensorEntityDescription, ...] = (
     ),
     AndroidIPWebcamSensorEntityDescription(
         key="battery_temp",
-        name="Battery Temperature",
+        name="Battery temperature",
         icon="mdi:thermometer",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -68,7 +68,7 @@ SENSOR_TYPES: tuple[AndroidIPWebcamSensorEntityDescription, ...] = (
     ),
     AndroidIPWebcamSensorEntityDescription(
         key="battery_voltage",
-        name="Battery Voltage",
+        name="Battery voltage",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda ipcam: ipcam.export_sensor("battery_voltage")[0],
@@ -76,7 +76,7 @@ SENSOR_TYPES: tuple[AndroidIPWebcamSensorEntityDescription, ...] = (
     ),
     AndroidIPWebcamSensorEntityDescription(
         key="light",
-        name="Light Level",
+        name="Light level",
         icon="mdi:flashlight",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda ipcam: ipcam.export_sensor("light")[0],
@@ -116,7 +116,7 @@ SENSOR_TYPES: tuple[AndroidIPWebcamSensorEntityDescription, ...] = (
     ),
     AndroidIPWebcamSensorEntityDescription(
         key="video_connections",
-        name="Video Connections",
+        name="Video connections",
         icon="mdi:eye",
         state_class=SensorStateClass.TOTAL,
         entity_category=EntityCategory.DIAGNOSTIC,
