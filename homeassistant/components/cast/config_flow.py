@@ -11,7 +11,13 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 
-from .const import CONF_IGNORE_CEC, CONF_KNOWN_HOSTS, CONF_UUID, DOMAIN
+from .const import (
+    CONF_IGNORE_CEC,
+    CONF_KNOWN_HOSTS,
+    CONF_PREFER_EXTERNAL,
+    CONF_UUID,
+    DOMAIN,
+)
 
 IGNORE_CEC_SCHEMA = vol.Schema(vol.All(cv.ensure_list, [cv.string]))
 KNOWN_HOSTS_SCHEMA = vol.Schema(vol.All(cv.ensure_list, [cv.string]))
@@ -173,6 +179,9 @@ class CastOptionsFlowHandler(config_entries.OptionsFlow):
             if not bad_cec and not bad_uuid:
                 self.updated_config[CONF_IGNORE_CEC] = ignore_cec
                 self.updated_config[CONF_UUID] = wanted_uuid
+                self.updated_config[CONF_PREFER_EXTERNAL] = user_input.get(
+                    CONF_PREFER_EXTERNAL, True
+                )
                 self.hass.config_entries.async_update_entry(
                     self.config_entry, data=self.updated_config
                 )
@@ -184,6 +193,7 @@ class CastOptionsFlowHandler(config_entries.OptionsFlow):
         _add_with_suggestion(fields, CONF_UUID, suggested_value)
         suggested_value = _list_to_string(current_config.get(CONF_IGNORE_CEC))
         _add_with_suggestion(fields, CONF_IGNORE_CEC, suggested_value)
+        fields[vol.Optional(CONF_PREFER_EXTERNAL, default=True)] = bool
 
         return self.async_show_form(
             step_id="advanced_options",

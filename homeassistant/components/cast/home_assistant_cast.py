@@ -11,7 +11,7 @@ from homeassistant.helpers import config_validation as cv, dispatcher
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.service import async_register_admin_service
 
-from .const import DOMAIN, SIGNAL_HASS_CAST_SHOW_VIEW
+from .const import CONF_PREFER_EXTERNAL, DOMAIN, SIGNAL_HASS_CAST_SHOW_VIEW
 
 SERVICE_SHOW_VIEW = "show_lovelace_view"
 ATTR_VIEW_PATH = "view_path"
@@ -42,10 +42,12 @@ async def async_setup_ha_cast(
     else:
         refresh_token = await hass.auth.async_create_refresh_token(user)
 
+    prefer_external = entry.data.get(CONF_PREFER_EXTERNAL, True)
+
     async def handle_show_view(call: core.ServiceCall) -> None:
         """Handle a Show View service call."""
         try:
-            hass_url = get_url(hass, require_ssl=True, prefer_external=True)
+            hass_url = get_url(hass, require_ssl=True, prefer_external=prefer_external)
         except NoURLAvailableError as err:
             raise HomeAssistantError(NO_URL_AVAILABLE_ERROR) from err
 

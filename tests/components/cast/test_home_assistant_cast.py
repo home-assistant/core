@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant import config_entries
 from homeassistant.components.cast import home_assistant_cast
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.exceptions import HomeAssistantError
@@ -100,6 +101,78 @@ async def test_use_cloud_url(hass, mock_zeroconf):
     assert len(calls) == 1
     controller = calls[0][0]
     assert controller.hass_url == "https://something.nabu.casa"
+
+
+async def test_prefer_external(hass):
+    """Test casting via the internal URL."""
+    await async_process_ha_core_config(
+        hass,
+        {
+            "external_url": "https://external.example.com",
+            "internal_url": "https://internal.example.org",
+        },
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        "cast", context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] == "create_entry"
+    await hass.async_block_till_done()
+    config_entry = hass.config_entries.async_entries("cast")[0]
+
+    await home_assistant_cast.async_setup_ha_cast(hass, config_entry)
+    calls = async_mock_signal(hass, home_assistant_cast.SIGNAL_HASS_CAST_SHOW_VIEW)
+
+    await hass.services.async_call(
+        "cast",
+        "show_lovelace_view",
+        {
+            "entity_id": "media_player.kitchen",
+            "view_path": "mock_path",
+            "dashboard_path": "mock-dashboard",
+        },
+        blocking=True,
+    )
+
+    assert len(calls) == 1
+    controller = calls[0][0]
+    assert controller.hass_url == "https://external.example.com"
+
+    context = {"source": config_entries.SOURCE_USER, "show_advanced_options": True}
+    result = await hass.config_entries.options.async_init(
+        config_entry.entry_id, context=context
+    )
+    assert result["step_id"] == "basic_options"
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={},
+    )
+    assert result["step_id"] == "advanced_options"
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"prefer_external": False},
+    )
+    await hass.async_block_till_done()
+    config_entry = hass.config_entries.async_entries("cast")[0]
+
+    await home_assistant_cast.async_setup_ha_cast(hass, config_entry)
+    calls = async_mock_signal(hass, home_assistant_cast.SIGNAL_HASS_CAST_SHOW_VIEW)
+
+    await hass.services.async_call(
+        "cast",
+        "show_lovelace_view",
+        {
+            "entity_id": "media_player.kitchen",
+            "view_path": "mock_path",
+            "dashboard_path": "mock-dashboard",
+        },
+        blocking=True,
+    )
+
+    assert len(calls) == 1
+    controller = calls[0][0]
+    assert controller.hass_url == "https://internal.example.org"
 
 
 async def test_remove_entry(hass, mock_zeroconf):
