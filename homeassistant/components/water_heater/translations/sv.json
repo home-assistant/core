@@ -11,7 +11,9 @@
             "electric": "Elektrisk",
             "gas": "Gas",
             "heat_pump": "V\u00e4rmepump",
-            "off": "Av"
+            "high_demand": "H\u00f6g efterfr\u00e5gan",
+            "off": "Av",
+            "performance": "Prestanda"
         }
     }
 }

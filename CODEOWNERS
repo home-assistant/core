@@ -309,6 +309,8 @@ build.json @home-assistant/supervisor
 /tests/components/epson/ @pszafer
 /homeassistant/components/epsonworkforce/ @ThaStealth
 /homeassistant/components/eq3btsmart/ @rytilahti
+/homeassistant/components/escea/ @lazdavila
+/tests/components/escea/ @lazdavila
 /homeassistant/components/esphome/ @OttoWinter @jesserockz
 /tests/components/esphome/ @OttoWinter @jesserockz
 /homeassistant/components/evil_genius_labs/ @balloob
@@ -434,6 +436,8 @@ build.json @home-assistant/supervisor
 /tests/components/harmony/ @ehendrix23 @bramkragten @bdraco @mkeesey @Aohzan
 /homeassistant/components/hassio/ @home-assistant/supervisor
 /tests/components/hassio/ @home-assistant/supervisor
+/homeassistant/components/hdmi_cec/ @inytar
+/tests/components/hdmi_cec/ @inytar
 /homeassistant/components/heatmiser/ @andylockran
 /homeassistant/components/heos/ @andrewsayre
 /tests/components/heos/ @andrewsayre
@@ -551,6 +555,8 @@ build.json @home-assistant/supervisor
 /tests/components/jewish_calendar/ @tsvi
 /homeassistant/components/juicenet/ @jesserockz
 /tests/components/juicenet/ @jesserockz
+/homeassistant/components/justnimbus/ @kvanzuijlen
+/tests/components/justnimbus/ @kvanzuijlen
 /homeassistant/components/kaiterra/ @Michsior14
 /homeassistant/components/kaleidescape/ @SteveEasley
 /tests/components/kaleidescape/ @SteveEasley
@@ -767,6 +773,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/openerz/ @misialq
 /tests/components/openerz/ @misialq
 /homeassistant/components/openexchangerates/ @MartinHjelmare
+/tests/components/openexchangerates/ @MartinHjelmare
 /homeassistant/components/opengarage/ @danielhiversen
 /tests/components/opengarage/ @danielhiversen
 /homeassistant/components/openhome/ @bazwilliams
@@ -1178,7 +1185,7 @@ build.json @home-assistant/supervisor
 /tests/components/vlc_telnet/ @rodripf @MartinHjelmare
 /homeassistant/components/volumio/ @OnFreund
 /tests/components/volumio/ @OnFreund
-/homeassistant/components/volvooncall/ @molobrakos @decompil3d
+/homeassistant/components/volvooncall/ @molobrakos
 /homeassistant/components/vulcan/ @Antoni-Czaplicki
 /tests/components/vulcan/ @Antoni-Czaplicki
 /homeassistant/components/wake_on_lan/ @ntilley905

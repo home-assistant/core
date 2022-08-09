@@ -10,12 +10,15 @@ import pytest
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
+    SCANNER_WATCHDOG_INTERVAL,
+    SCANNER_WATCHDOG_TIMEOUT,
     SOURCE_LOCAL,
     UNAVAILABLE_TRACK_SECONDS,
     BluetoothChange,
     BluetoothScanningMode,
     BluetoothServiceInfo,
     async_process_advertisements,
+    async_rediscover_address,
     async_track_unavailable,
     models,
 )
@@ -560,6 +563,45 @@ async def test_discovery_match_first_by_service_uuid_and_then_manufacturer_id(
         assert len(mock_config_flow.mock_calls) == 0
 
 
+async def test_rediscovery(hass, mock_bleak_scanner_start, enable_bluetooth):
+    """Test bluetooth discovery can be re-enabled for a given domain."""
+    mock_bt = [
+        {"domain": "switchbot", "service_uuid": "cba20d00-224d-11e6-9fb8-0002a5d5c51b"}
+    ]
+    with patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
+    ), patch.object(hass.config_entries.flow, "async_init") as mock_config_flow:
+        assert await async_setup_component(
+            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
+        )
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        assert len(mock_bleak_scanner_start.mock_calls) == 1
+
+        switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
+        switchbot_adv = AdvertisementData(
+            local_name="wohand", service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]
+        )
+
+        _get_underlying_scanner()._callback(switchbot_device, switchbot_adv)
+        await hass.async_block_till_done()
+
+        _get_underlying_scanner()._callback(switchbot_device, switchbot_adv)
+        await hass.async_block_till_done()
+
+        assert len(mock_config_flow.mock_calls) == 1
+        assert mock_config_flow.mock_calls[0][1][0] == "switchbot"
+
+        async_rediscover_address(hass, "44:44:33:11:23:45")
+
+        _get_underlying_scanner()._callback(switchbot_device, switchbot_adv)
+        await hass.async_block_till_done()
+
+        assert len(mock_config_flow.mock_calls) == 2
+        assert mock_config_flow.mock_calls[1][1][0] == "switchbot"
+
+
 async def test_async_discovered_device_api(hass, mock_bleak_scanner_start):
     """Test the async_discovered_device API."""
     mock_bt = []
@@ -856,6 +898,9 @@ async def test_process_advertisements_bail_on_good_advertisement(
         )
 
         _get_underlying_scanner()._callback(device, adv)
+        _get_underlying_scanner()._callback(device, adv)
+        _get_underlying_scanner()._callback(device, adv)
+
         await asyncio.sleep(0)
 
     result = await handle
@@ -1519,3 +1564,57 @@ async def test_invalid_dbus_message(hass, caplog):
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
     assert "dbus" in caplog.text
+
+
+async def test_recovery_from_dbus_restart(
+    hass, mock_bleak_scanner_start, enable_bluetooth
+):
+    """Test we can recover when DBus gets restarted out from under us."""
+    assert await async_setup_component(hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}})
+    await hass.async_block_till_done()
+    assert len(mock_bleak_scanner_start.mock_calls) == 1
+
+    start_time_monotonic = 1000
+    scanner = _get_underlying_scanner()
+    mock_discovered = [MagicMock()]
+    type(scanner).discovered_devices = mock_discovered
+
+    # Ensure we don't restart the scanner if we don't need to
+    with patch(
+        "homeassistant.components.bluetooth.MONOTONIC_TIME",
+        return_value=start_time_monotonic + 10,
+    ):
+        async_fire_time_changed(hass, dt_util.utcnow() + SCANNER_WATCHDOG_INTERVAL)
+        await hass.async_block_till_done()
+
+    assert len(mock_bleak_scanner_start.mock_calls) == 1
+
+    # Fire a callback to reset the timer
+    with patch(
+        "homeassistant.components.bluetooth.MONOTONIC_TIME",
+        return_value=start_time_monotonic,
+    ):
+        scanner._callback(
+            BLEDevice("44:44:33:11:23:42", "any_name"),
+            AdvertisementData(local_name="any_name"),
+        )
+
+    # Ensure we don't restart the scanner if we don't need to
+    with patch(
+        "homeassistant.components.bluetooth.MONOTONIC_TIME",
+        return_value=start_time_monotonic + 20,
+    ):
+        async_fire_time_changed(hass, dt_util.utcnow() + SCANNER_WATCHDOG_INTERVAL)
+        await hass.async_block_till_done()
+
+    assert len(mock_bleak_scanner_start.mock_calls) == 1
+
+    # We hit the timer, so we restart the scanner
+    with patch(
+        "homeassistant.components.bluetooth.MONOTONIC_TIME",
+        return_value=start_time_monotonic + SCANNER_WATCHDOG_TIMEOUT,
+    ):
+        async_fire_time_changed(hass, dt_util.utcnow() + SCANNER_WATCHDOG_INTERVAL)
+        await hass.async_block_till_done()
+
+    assert len(mock_bleak_scanner_start.mock_calls) == 2

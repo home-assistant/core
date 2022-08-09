@@ -5,6 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
+from aiohomekit.model.characteristics.const import ThreadNodeCapabilities, ThreadStatus
 from aiohomekit.model.services import Service, ServicesTypes
 
 from homeassistant.components.sensor import (
@@ -27,11 +28,13 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
-from . import KNOWN_DEVICES, CharacteristicEntity, HomeKitEntity
+from . import KNOWN_DEVICES
 from .connection import HKDevice
+from .entity import CharacteristicEntity, HomeKitEntity
 from .utils import folded_name
 
 
@@ -40,6 +43,93 @@ class HomeKitSensorEntityDescription(SensorEntityDescription):
     """Describes Homekit sensor."""
 
     probe: Callable[[Characteristic], bool] | None = None
+    format: Callable[[Characteristic], str] | None = None
+
+
+def thread_node_capability_to_str(char: Characteristic) -> str:
+    """
+    Return the thread device type as a string.
+
+    The underlying value is a bitmask, but we want to turn that to
+    a human readable string. Some devices will have multiple capabilities.
+    For example, an NL55 is SLEEPY | MINIMAL. In that case we return the
+    "best" capability.
+
+    https://openthread.io/guides/thread-primer/node-roles-and-types
+    """
+
+    val = ThreadNodeCapabilities(char.value)
+
+    if val & ThreadNodeCapabilities.BORDER_ROUTER_CAPABLE:
+        # can act as a bridge between thread network and e.g. WiFi
+        return "border_router_capable"
+
+    if val & ThreadNodeCapabilities.ROUTER_ELIGIBLE:
+        # radio always on, can be a router
+        return "router_eligible"
+
+    if val & ThreadNodeCapabilities.FULL:
+        # radio always on, but can't be a router
+        return "full"
+
+    if val & ThreadNodeCapabilities.MINIMAL:
+        # transceiver always on, does not need to poll for messages from its parent
+        return "minimal"
+
+    if val & ThreadNodeCapabilities.SLEEPY:
+        # normally disabled, wakes on occasion to poll for messages from its parent
+        return "sleepy"
+
+    # Device has no known thread capabilities
+    return "none"
+
+
+def thread_status_to_str(char: Characteristic) -> str:
+    """
+    Return the thread status as a string.
+
+    The underlying value is a bitmask, but we want to turn that to
+    a human readable string. So we check the flags in order. E.g. BORDER_ROUTER implies
+    ROUTER, so its more important to show that value.
+    """
+
+    val = ThreadStatus(char.value)
+
+    if val & ThreadStatus.BORDER_ROUTER:
+        # Device has joined the Thread network and is participating
+        # in routing between mesh nodes.
+        # It's also the border router - bridging the thread network
+        # to WiFI/Ethernet/etc
+        return "border_router"
+
+    if val & ThreadStatus.LEADER:
+        # Device has joined the Thread network and is participating
+        # in routing between mesh nodes.
+        # It's also the leader. There's only one leader and it manages
+        # which nodes are routers.
+        return "leader"
+
+    if val & ThreadStatus.ROUTER:
+        # Device has joined the Thread network and is participating
+        # in routing between mesh nodes.
+        return "router"
+
+    if val & ThreadStatus.CHILD:
+        # Device has joined the Thread network as a child
+        # It's not participating in routing between mesh nodes
+        return "child"
+
+    if val & ThreadStatus.JOINING:
+        # Device is currently joining its Thread network
+        return "joining"
+
+    if val & ThreadStatus.DETACHED:
+        # Device is currently unable to reach its Thread network
+        return "detached"
+
+    # Must be ThreadStatus.DISABLED
+    # Device is not currently connected to Thread and will not try to.
+    return "disabled"
 
 
 SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
@@ -194,6 +284,20 @@ SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
         device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    ),
+    CharacteristicsTypes.THREAD_NODE_CAPABILITIES: HomeKitSensorEntityDescription(
+        key=CharacteristicsTypes.THREAD_NODE_CAPABILITIES,
+        name="Thread Capabilities",
+        device_class="homekit_controller__thread_node_capabilities",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        format=thread_node_capability_to_str,
+    ),
+    CharacteristicsTypes.THREAD_STATUS: HomeKitSensorEntityDescription(
+        key=CharacteristicsTypes.THREAD_STATUS,
+        name="Thread Status",
+        device_class="homekit_controller__thread_status",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        format=thread_status_to_str,
     ),
 }
 
@@ -399,7 +503,10 @@ class SimpleSensor(CharacteristicEntity, SensorEntity):
     @property
     def native_value(self) -> str | int | float:
         """Return the current sensor value."""
-        return self._char.value
+        val = self._char.value
+        if self.entity_description.format:
+            return self.entity_description.format(val)
+        return val
 
 
 ENTITY_TYPES = {

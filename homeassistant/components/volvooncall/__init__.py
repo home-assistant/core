@@ -2,8 +2,10 @@
 from datetime import timedelta
 import logging
 
+import async_timeout
 import voluptuous as vol
 from volvooncall import Connection
+from volvooncall.dashboard import Instrument
 
 from homeassistant.const import (
     CONF_NAME,
@@ -17,14 +19,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.dt import utcnow
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 
 DOMAIN = "volvooncall"
 
@@ -32,7 +33,6 @@ DATA_KEY = DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-MIN_UPDATE_INTERVAL = timedelta(minutes=1)
 DEFAULT_UPDATE_INTERVAL = timedelta(minutes=1)
 
 CONF_SERVICE_URL = "service_url"
@@ -92,24 +92,31 @@ RESOURCES = [
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(
-                    CONF_SCAN_INTERVAL, default=DEFAULT_UPDATE_INTERVAL
-                ): vol.All(cv.time_period, vol.Clamp(min=MIN_UPDATE_INTERVAL)),
-                vol.Optional(CONF_NAME, default={}): cv.schema_with_slug_keys(
-                    cv.string
-                ),
-                vol.Optional(CONF_RESOURCES): vol.All(
-                    cv.ensure_list, [vol.In(RESOURCES)]
-                ),
-                vol.Optional(CONF_REGION): cv.string,
-                vol.Optional(CONF_SERVICE_URL): cv.string,
-                vol.Optional(CONF_MUTABLE, default=True): cv.boolean,
-                vol.Optional(CONF_SCANDINAVIAN_MILES, default=False): cv.boolean,
-            }
+        DOMAIN: vol.All(
+            cv.deprecated(CONF_SCAN_INTERVAL),
+            cv.deprecated(CONF_NAME),
+            cv.deprecated(CONF_RESOURCES),
+            vol.Schema(
+                {
+                    vol.Required(CONF_USERNAME): cv.string,
+                    vol.Required(CONF_PASSWORD): cv.string,
+                    vol.Optional(
+                        CONF_SCAN_INTERVAL, default=DEFAULT_UPDATE_INTERVAL
+                    ): vol.All(
+                        cv.time_period, vol.Clamp(min=DEFAULT_UPDATE_INTERVAL)
+                    ),  # ignored, using DataUpdateCoordinator instead
+                    vol.Optional(CONF_NAME, default={}): cv.schema_with_slug_keys(
+                        cv.string
+                    ),  # ignored, users can modify names of entities in the UI
+                    vol.Optional(CONF_RESOURCES): vol.All(
+                        cv.ensure_list, [vol.In(RESOURCES)]
+                    ),  # ignored, users can disable entities in the UI
+                    vol.Optional(CONF_REGION): cv.string,
+                    vol.Optional(CONF_SERVICE_URL): cv.string,
+                    vol.Optional(CONF_MUTABLE, default=True): cv.boolean,
+                    vol.Optional(CONF_SCANDINAVIAN_MILES, default=False): cv.boolean,
+                }
+            ),
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -128,34 +135,70 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         region=config[DOMAIN].get(CONF_REGION),
     )
 
-    interval = config[DOMAIN][CONF_SCAN_INTERVAL]
+    hass.data[DATA_KEY] = {}
 
-    data = hass.data[DATA_KEY] = VolvoData(config)
+    volvo_data = VolvoData(hass, connection, config)
 
-    def is_enabled(attr):
-        """Return true if the user has enabled the resource."""
-        return attr in config[DOMAIN].get(CONF_RESOURCES, [attr])
+    hass.data[DATA_KEY] = VolvoUpdateCoordinator(hass, volvo_data)
 
-    def discover_vehicle(vehicle):
+    return await volvo_data.update()
+
+
+class VolvoData:
+    """Hold component state."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        connection: Connection,
+        config: ConfigType,
+    ) -> None:
+        """Initialize the component state."""
+        self.hass = hass
+        self.vehicles: set[str] = set()
+        self.instruments: set[Instrument] = set()
+        self.config = config
+        self.connection = connection
+
+    def instrument(self, vin, component, attr, slug_attr):
+        """Return corresponding instrument."""
+        return next(
+            instrument
+            for instrument in self.instruments
+            if instrument.vehicle.vin == vin
+            and instrument.component == component
+            and instrument.attr == attr
+            and instrument.slug_attr == slug_attr
+        )
+
+    def vehicle_name(self, vehicle):
+        """Provide a friendly name for a vehicle."""
+        if vehicle.registration_number and vehicle.registration_number != "UNKNOWN":
+            return vehicle.registration_number
+        if vehicle.vin:
+            return vehicle.vin
+        return "Volvo"
+
+    def discover_vehicle(self, vehicle):
         """Load relevant platforms."""
-        data.vehicles.add(vehicle.vin)
+        self.vehicles.add(vehicle.vin)
 
         dashboard = vehicle.dashboard(
-            mutable=config[DOMAIN][CONF_MUTABLE],
-            scandinavian_miles=config[DOMAIN][CONF_SCANDINAVIAN_MILES],
+            mutable=self.config[DOMAIN][CONF_MUTABLE],
+            scandinavian_miles=self.config[DOMAIN][CONF_SCANDINAVIAN_MILES],
         )
 
         for instrument in (
             instrument
             for instrument in dashboard.instruments
-            if instrument.component in PLATFORMS and is_enabled(instrument.slug_attr)
+            if instrument.component in PLATFORMS
         ):
 
-            data.instruments.add(instrument)
+            self.instruments.add(instrument)
 
-            hass.async_create_task(
+            self.hass.async_create_task(
                 discovery.async_load_platform(
-                    hass,
+                    self.hass,
                     PLATFORMS[instrument.component],
                     DOMAIN,
                     (
@@ -164,93 +207,71 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                         instrument.attr,
                         instrument.slug_attr,
                     ),
-                    config,
+                    self.config,
                 )
             )
 
-    async def update(now):
+    async def update(self):
         """Update status from the online service."""
-        try:
-            if not await connection.update(journal=True):
-                _LOGGER.warning("Could not query server")
-                return False
+        if not await self.connection.update(journal=True):
+            return False
 
-            for vehicle in connection.vehicles:
-                if vehicle.vin not in data.vehicles:
-                    discover_vehicle(vehicle)
+        for vehicle in self.connection.vehicles:
+            if vehicle.vin not in self.vehicles:
+                self.discover_vehicle(vehicle)
 
-            async_dispatcher_send(hass, SIGNAL_STATE_UPDATED)
+        # this is currently still needed for device_tracker, which isn't using the update coordinator yet
+        async_dispatcher_send(self.hass, SIGNAL_STATE_UPDATED)
 
-            return True
-        finally:
-            async_track_point_in_utc_time(hass, update, utcnow() + interval)
-
-    _LOGGER.info("Logging in to service")
-    return await update(utcnow())
+        return True
 
 
-class VolvoData:
-    """Hold component state."""
+class VolvoUpdateCoordinator(DataUpdateCoordinator):
+    """Volvo coordinator."""
 
-    def __init__(self, config):
-        """Initialize the component state."""
-        self.vehicles = set()
-        self.instruments = set()
-        self.config = config[DOMAIN]
-        self.names = self.config.get(CONF_NAME)
+    def __init__(self, hass: HomeAssistant, volvo_data: VolvoData) -> None:
+        """Initialize the data update coordinator."""
 
-    def instrument(self, vin, component, attr, slug_attr):
-        """Return corresponding instrument."""
-        return next(
-            (
-                instrument
-                for instrument in self.instruments
-                if instrument.vehicle.vin == vin
-                and instrument.component == component
-                and instrument.attr == attr
-                and instrument.slug_attr == slug_attr
-            ),
-            None,
+        super().__init__(
+            hass,
+            _LOGGER,
+            name="volvooncall",
+            update_interval=DEFAULT_UPDATE_INTERVAL,
         )
 
-    def vehicle_name(self, vehicle):
-        """Provide a friendly name for a vehicle."""
-        if (
-            vehicle.registration_number and vehicle.registration_number.lower()
-        ) in self.names:
-            return self.names[vehicle.registration_number.lower()]
-        if vehicle.vin and vehicle.vin.lower() in self.names:
-            return self.names[vehicle.vin.lower()]
-        if vehicle.registration_number:
-            return vehicle.registration_number
-        if vehicle.vin:
-            return vehicle.vin
-        return ""
+        self.volvo_data = volvo_data
+
+    async def _async_update_data(self):
+        """Fetch data from API endpoint."""
+
+        async with async_timeout.timeout(10):
+            if not await self.volvo_data.update():
+                raise UpdateFailed("Error communicating with API")
 
 
-class VolvoEntity(Entity):
+class VolvoEntity(CoordinatorEntity):
     """Base class for all VOC entities."""
 
-    def __init__(self, data, vin, component, attribute, slug_attr):
+    def __init__(
+        self,
+        vin: str,
+        component: str,
+        attribute: str,
+        slug_attr: str,
+        coordinator: VolvoUpdateCoordinator,
+    ) -> None:
         """Initialize the entity."""
-        self.data = data
+        super().__init__(coordinator)
+
         self.vin = vin
         self.component = component
         self.attribute = attribute
         self.slug_attr = slug_attr
 
-    async def async_added_to_hass(self):
-        """Register update dispatcher."""
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, SIGNAL_STATE_UPDATED, self.async_write_ha_state
-            )
-        )
-
     @property
     def instrument(self):
         """Return corresponding instrument."""
-        return self.data.instrument(
+        return self.coordinator.volvo_data.instrument(
             self.vin, self.component, self.attribute, self.slug_attr
         )
 
@@ -270,17 +291,12 @@ class VolvoEntity(Entity):
 
     @property
     def _vehicle_name(self):
-        return self.data.vehicle_name(self.vehicle)
+        return self.coordinator.volvo_data.vehicle_name(self.vehicle)
 
     @property
     def name(self):
         """Return full name of the entity."""
         return f"{self._vehicle_name} {self._entity_name}"
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return False
 
     @property
     def assumed_state(self):

@@ -26,8 +26,18 @@
         "step": {
             "advanced_options": {
                 "data": {
-                    "ignore_cec": "Ignorera CEC"
-                }
+                    "ignore_cec": "Ignorera CEC",
+                    "uuid": "Till\u00e5tna UUID"
+                },
+                "description": "Till\u00e5tna UUID - En kommaseparerad lista \u00f6ver UUID f\u00f6r Cast-enheter att l\u00e4gga till i Home Assistant. Anv\u00e4nd endast om du inte vill l\u00e4gga till alla tillg\u00e4ngliga cast-enheter.\n Ignorera CEC \u2013 En kommaseparerad lista \u00f6ver Chromecast-enheter som ska ignorera CEC-data f\u00f6r att fastst\u00e4lla den aktiva ing\u00e5ngen. Detta skickas till pychromecast.IGNORE_CEC.",
+                "title": "Avancerad Google Cast-konfiguration"
+            },
+            "basic_options": {
+                "data": {
+                    "known_hosts": "K\u00e4nad v\u00e4rdar"
+                },
+                "description": "K\u00e4nda v\u00e4rdar - En kommaseparerad lista \u00f6ver v\u00e4rdnamn eller IP-adresser f\u00f6r cast-enheter, anv\u00e4nd om mDNS-uppt\u00e4ckt inte fungerar.",
+                "title": "Google Cast-konfiguration"
             }
         }
     }

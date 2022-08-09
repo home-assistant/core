@@ -17,7 +17,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import KNOWN_DEVICES, HomeKitEntity
+from . import KNOWN_DEVICES
+from .entity import HomeKitEntity
 
 
 async def async_setup_entry(
@@ -107,9 +108,9 @@ class HomeKitLight(HomeKitEntity, LightEntity):
         return ColorMode.ONOFF
 
     @property
-    def supported_color_modes(self) -> set[ColorMode | str] | None:
+    def supported_color_modes(self) -> set[ColorMode]:
         """Flag supported color modes."""
-        color_modes: set[ColorMode | str] = set()
+        color_modes: set[ColorMode] = set()
 
         if self.service.has(CharacteristicsTypes.HUE) or self.service.has(
             CharacteristicsTypes.SATURATION

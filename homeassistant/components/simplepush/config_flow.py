@@ -1,7 +1,6 @@
 """Config flow for simplepush integration."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from simplepush import UnknownError, send, send_encrypted
@@ -12,8 +11,6 @@ from homeassistant.const import CONF_NAME, CONF_PASSWORD
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import ATTR_ENCRYPTED, CONF_DEVICE_KEY, CONF_SALT, DEFAULT_NAME, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def validate_input(entry: dict[str, str]) -> dict[str, str] | None:
@@ -76,13 +73,3 @@ class SimplePushFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
-
-    async def async_step_import(self, import_config: dict[str, str]) -> FlowResult:
-        """Import a config entry from configuration.yaml."""
-        _LOGGER.warning(
-            "Configuration of the simplepush integration in YAML is deprecated and "
-            "will be removed in a future release; Your existing configuration "
-            "has been imported into the UI automatically and can be safely removed "
-            "from your configuration.yaml file"
-        )
-        return await self.async_step_user(import_config)
