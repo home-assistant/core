@@ -38,19 +38,26 @@ LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Philips TV from a config entry."""
 
+    system: SystemType | None = entry.data.get(CONF_SYSTEM)
     tvapi = PhilipsTV(
         entry.data[CONF_HOST],
         entry.data[CONF_API_VERSION],
         username=entry.data.get(CONF_USERNAME),
         password=entry.data.get(CONF_PASSWORD),
+        system=system,
     )
     coordinator = PhilipsTVDataUpdateCoordinator(hass, tvapi, entry.options)
 
     await coordinator.async_refresh()
+
+    if (actual_system := tvapi.system) and actual_system != system:
+        data = {**entry.data, CONF_SYSTEM: actual_system}
+        hass.config_entries.async_update_entry(entry, data=data)
+
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(async_update_entry))
 
@@ -108,6 +115,8 @@ class PluggableAction:
 class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Coordinator to update data."""
 
+    config_entry: ConfigEntry
+
     def __init__(self, hass, api: PhilipsTV, options: Mapping) -> None:
         """Set up the coordinator."""
         self.api = api
@@ -136,8 +145,7 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
     @property
     def unique_id(self) -> str:
         """Return the system descriptor."""
-        entry: ConfigEntry = self.config_entry
-        assert entry
+        entry = self.config_entry
         if entry.unique_id:
             return entry.unique_id
         assert entry.entry_id
@@ -186,7 +194,6 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
         super()._unschedule_refresh()
         self._async_notify_stop()
 
-    @callback
     async def _async_update_data(self):
         """Fetch the latest data from the source."""
         try:

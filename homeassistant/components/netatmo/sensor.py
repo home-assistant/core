@@ -41,7 +41,6 @@ from .const import (
     CONF_WEATHER_AREAS,
     DATA_HANDLER,
     DOMAIN,
-    MANUFACTURER,
     NETATMO_CREATE_BATTERY,
     SIGNAL_NAME,
     TYPE_WEATHER,
@@ -422,7 +421,7 @@ async def async_setup_entry(
                     )
                     continue
 
-            await data_handler.register_data_class(
+            await data_handler.subscribe(
                 PUBLICDATA_DATA_CLASS_NAME,
                 signal_name,
                 None,
@@ -487,9 +486,7 @@ class NetatmoSensor(NetatmoBase, SensorEntity):
         super().__init__(data_handler)
         self.entity_description = description
 
-        self._data_classes.append(
-            {"name": data_class_name, SIGNAL_NAME: data_class_name}
-        )
+        self._publishers.append({"name": data_class_name, SIGNAL_NAME: data_class_name})
 
         self._id = module_info["_id"]
         self._station_id = module_info.get("main_device", self._id)
@@ -507,7 +504,7 @@ class NetatmoSensor(NetatmoBase, SensorEntity):
                 f"{module_info.get('module_name', device['type'])}"
             )
 
-        self._attr_name = f"{MANUFACTURER} {self._device_name} {description.name}"
+        self._attr_name = f"{self._device_name} {description.name}"
         self._model = device["type"]
         self._netatmo_type = TYPE_WEATHER
         self._attr_unique_id = f"{self._id}-{description.key}"
@@ -517,7 +514,7 @@ class NetatmoSensor(NetatmoBase, SensorEntity):
         """Return data for this entity."""
         return cast(
             pyatmo.AsyncWeatherStationData,
-            self.data_handler.data[self._data_classes[0]["name"]],
+            self.data_handler.data[self._publishers[0]["name"]],
         )
 
     @property
@@ -598,7 +595,7 @@ class NetatmoClimateBatterySensor(NetatmoBase, SensorEntity):
         self._id = netatmo_device.parent_id
         self._attr_name = f"{self._module.name} {self.entity_description.name}"
 
-        self._state_class_name = netatmo_device.state_class_name
+        self._signal_name = netatmo_device.signal_name
         self._room_id = self._module.room_id
         self._model = getattr(self._module.device_type, "value")
 
@@ -734,7 +731,7 @@ class NetatmoPublicSensor(NetatmoBase, SensorEntity):
 
         self._signal_name = f"{PUBLICDATA_DATA_CLASS_NAME}-{area.uuid}"
 
-        self._data_classes.append(
+        self._publishers.append(
             {
                 "name": PUBLICDATA_DATA_CLASS_NAME,
                 "lat_ne": area.lat_ne,
@@ -751,7 +748,7 @@ class NetatmoPublicSensor(NetatmoBase, SensorEntity):
         self._area_name = area.area_name
         self._id = self._area_name
         self._device_name = f"{self._area_name}"
-        self._attr_name = f"{MANUFACTURER} {self._device_name} {description.name}"
+        self._attr_name = f"{self._device_name} {description.name}"
         self._show_on_map = area.show_on_map
         self._attr_unique_id = (
             f"{self._device_name.replace(' ', '-')}-{description.key}"
@@ -788,13 +785,13 @@ class NetatmoPublicSensor(NetatmoBase, SensorEntity):
         if self.area == area:
             return
 
-        await self.data_handler.unregister_data_class(
+        await self.data_handler.unsubscribe(
             self._signal_name, self.async_update_callback
         )
 
         self.area = area
         self._signal_name = f"{PUBLICDATA_DATA_CLASS_NAME}-{area.uuid}"
-        self._data_classes = [
+        self._publishers = [
             {
                 "name": PUBLICDATA_DATA_CLASS_NAME,
                 "lat_ne": area.lat_ne,
@@ -807,7 +804,7 @@ class NetatmoPublicSensor(NetatmoBase, SensorEntity):
         ]
         self._mode = area.mode
         self._show_on_map = area.show_on_map
-        await self.data_handler.register_data_class(
+        await self.data_handler.subscribe(
             PUBLICDATA_DATA_CLASS_NAME,
             self._signal_name,
             self.async_update_callback,

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections import deque
 import logging
+from typing import Any
 
 from homeassistant.const import MATCH_ALL
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
@@ -28,7 +29,7 @@ def async_enable_report_state(hass: HomeAssistant, google_config: AbstractConfig
     """Enable state reporting."""
     checker = None
     unsub_pending: CALLBACK_TYPE | None = None
-    pending = deque([{}])
+    pending: deque[dict[str, Any]] = deque([{}])
 
     async def report_states(now=None):
         """Report the states."""

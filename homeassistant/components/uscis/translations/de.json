@@ -1,0 +1,8 @@
+{
+    "issues": {
+        "pending_removal": {
+            "description": "Die Integration der U.S. Citizenship and Immigration Services (USCIS) wird aus Home Assistant entfernt und steht ab Home Assistant 2022.10 nicht mehr zur Verf\u00fcgung.\n\nDie Integration wird entfernt, weil sie auf Webscraping beruht, was nicht erlaubt ist.\n\nEntferne die YAML-Konfiguration aus deiner configuration.yaml-Datei und starte Home Assistant neu, um dieses Problem zu beheben.",
+            "title": "Die USCIS-Integration wird entfernt"
+        }
+    }
+}

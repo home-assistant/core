@@ -162,7 +162,7 @@ async def test_duplicate_mac_dev_id(mock_warning, hass):
     assert "Duplicate device IDs" in args[0], "Duplicate device IDs warning expected"
 
 
-async def test_setup_without_yaml_file(hass, enable_custom_integrations):
+async def test_setup_without_yaml_file(hass, yaml_devices, enable_custom_integrations):
     """Test with no YAML file."""
     with assert_setup_component(1, device_tracker.DOMAIN):
         assert await async_setup_component(hass, device_tracker.DOMAIN, TEST_PLATFORM)

@@ -17,7 +17,7 @@ async def test_form(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -68,7 +68,7 @@ async def test_form_invalid_auth(hass):
             },
         )
 
-    assert form_result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert form_result["type"] == data_entry_flow.FlowResultType.FORM
     assert form_result["errors"] == {"base": "invalid_auth"}
 
 
@@ -90,7 +90,7 @@ async def test_form_cannot_connect(hass):
             },
         )
 
-    assert form_result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert form_result["type"] == data_entry_flow.FlowResultType.FORM
     assert form_result["errors"] == {"base": "cannot_connect"}
 
 
@@ -112,7 +112,7 @@ async def test_form_unknown_error(hass):
             },
         )
 
-    assert form_result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert form_result["type"] == data_entry_flow.FlowResultType.FORM
     assert form_result["errors"] == {"base": "unknown"}
 
 
@@ -148,5 +148,5 @@ async def test_form_entry_exists(hass):
             },
         )
 
-    assert form_result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert form_result["type"] == data_entry_flow.FlowResultType.ABORT
     assert form_result["reason"] == "already_configured"

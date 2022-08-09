@@ -3,10 +3,13 @@
         "abort": {
             "already_configured": "Ez a SimpliSafe-fi\u00f3k m\u00e1r haszn\u00e1latban van.",
             "email_2fa_timed_out": "Az e-mail alap\u00fa k\u00e9tfaktoros hiteles\u00edt\u00e9sre val\u00f3 v\u00e1rakoz\u00e1s ideje lej\u00e1rt",
-            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt."
+            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt.",
+            "wrong_account": "A megadott felhaszn\u00e1l\u00f3i hiteles\u00edt\u0151 adatok nem j\u00f3k ehhez a SimpliSafe fi\u00f3khoz."
         },
         "error": {
+            "identifier_exists": "A fi\u00f3k m\u00e1r regisztr\u00e1lva van",
             "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
+            "invalid_auth_code_length": "A SimpliSafe enged\u00e9lyez\u00e9si k\u00f3dok 45 karakter hossz\u00faak.",
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
         "progress": {
@@ -28,10 +31,11 @@
             },
             "user": {
                 "data": {
+                    "auth_code": "Enged\u00e9lyez\u00e9si k\u00f3d",
                     "password": "Jelsz\u00f3",
                     "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
                 },
-                "description": "Adja meg felhaszn\u00e1l\u00f3nev\u00e9t \u00e9s jelszav\u00e1t."
+                "description": "A SimpliSafe a webes alkalmaz\u00e1son kereszt\u00fcl hiteles\u00edti a felhaszn\u00e1l\u00f3kat. A technikai korl\u00e1toz\u00e1sok miatt a folyamat v\u00e9g\u00e9n van egy k\u00e9zi l\u00e9p\u00e9s: k\u00e9rem, hogy a kezd\u00e9s el\u0151tt olvassa el a [dokument\u00e1ci\u00f3t](http://home-assistant.io/integrations/simplisafe#getting-an-authorization-code).\n\nHa k\u00e9szen \u00e1ll, kattintson [ide]({url}) a SimpliSafe webes alkalmaz\u00e1s megnyit\u00e1s\u00e1hoz \u00e9s a hiteles\u00edt\u0151 adatok megad\u00e1s\u00e1hoz. Ha a folyamat befejez\u0151d\u00f6tt, t\u00e9rjen vissza ide, \u00e9s adja meg a SimpliSafe webalkalmaz\u00e1s URL-c\u00edm\u00e9r\u0151l sz\u00e1rmaz\u00f3 enged\u00e9lyez\u00e9si k\u00f3dot."
             }
         }
     },

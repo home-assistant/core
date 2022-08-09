@@ -7,10 +7,11 @@
             "switchbot_unsupported_type": "Tipo de Switchbot sem suporte.",
             "unknown": "Erro inesperado"
         },
-        "flow_title": "{name}",
+        "flow_title": "{name} ({address})",
         "step": {
             "user": {
                 "data": {
+                    "address": "Endere\u00e7o do dispositivo",
                     "mac": "Endere\u00e7o MAC do dispositivo",
                     "name": "Nome",
                     "password": "Senha"

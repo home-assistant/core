@@ -15,7 +15,7 @@ from .const import DOMAIN
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Radio Browser from a config entry.
 
-    This integration doesn't set up any enitites, as it provides a media source
+    This integration doesn't set up any entities, as it provides a media source
     only.
     """
     session = async_get_clientsession(hass)

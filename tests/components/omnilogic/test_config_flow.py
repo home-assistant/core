@@ -129,7 +129,7 @@ async def test_option_flow(hass):
             data=None,
         )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
@@ -137,6 +137,6 @@ async def test_option_flow(hass):
         user_input={"polling_interval": 9},
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == ""
     assert result["data"]["polling_interval"] == 9

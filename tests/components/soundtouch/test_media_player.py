@@ -1,4 +1,5 @@
 """Test the SoundTouch component."""
+from datetime import timedelta
 from typing import Any
 
 from requests_mock import Mocker
@@ -25,22 +26,26 @@ from homeassistant.components.soundtouch.const import (
 from homeassistant.components.soundtouch.media_player import (
     ATTR_SOUNDTOUCH_GROUP,
     ATTR_SOUNDTOUCH_ZONE,
-    DATA_SOUNDTOUCH,
 )
+from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt
 
 from .conftest import DEVICE_1_ENTITY_ID, DEVICE_2_ENTITY_ID
 
+from tests.common import MockConfigEntry, async_fire_time_changed
 
-async def setup_soundtouch(hass: HomeAssistant, *configs: dict[str, str]):
+
+async def setup_soundtouch(hass: HomeAssistant, *mock_entries: MockConfigEntry):
     """Initialize media_player for tests."""
-    assert await async_setup_component(
-        hass, MEDIA_PLAYER_DOMAIN, {MEDIA_PLAYER_DOMAIN: list(configs)}
-    )
+    assert await async_setup_component(hass, MEDIA_PLAYER_DOMAIN, {})
+
+    for mock_entry in mock_entries:
+        mock_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
-    await hass.async_start()
 
 
 async def _test_key_service(
@@ -59,7 +64,7 @@ async def _test_key_service(
 
 async def test_playing_media(
     hass: HomeAssistant,
-    device1_config: dict[str, str],
+    device1_config: MockConfigEntry,
     device1_requests_mock_upnp,
 ):
     """Test playing media info."""
@@ -76,7 +81,7 @@ async def test_playing_media(
 
 async def test_playing_radio(
     hass: HomeAssistant,
-    device1_config: dict[str, str],
+    device1_config: MockConfigEntry,
     device1_requests_mock_radio,
 ):
     """Test playing radio info."""
@@ -89,7 +94,7 @@ async def test_playing_radio(
 
 async def test_playing_aux(
     hass: HomeAssistant,
-    device1_config: dict[str, str],
+    device1_config: MockConfigEntry,
     device1_requests_mock_aux,
 ):
     """Test playing AUX info."""
@@ -102,7 +107,7 @@ async def test_playing_aux(
 
 async def test_playing_bluetooth(
     hass: HomeAssistant,
-    device1_config: dict[str, str],
+    device1_config: MockConfigEntry,
     device1_requests_mock_bluetooth,
 ):
     """Test playing Bluetooth info."""
@@ -118,7 +123,7 @@ async def test_playing_bluetooth(
 
 async def test_get_volume_level(
     hass: HomeAssistant,
-    device1_config: dict[str, str],
+    device1_config: MockConfigEntry,
     device1_requests_mock_upnp,
 ):
     """Test volume level."""
@@ -130,7 +135,7 @@ async def test_get_volume_level(
 
 async def test_get_state_off(
     hass: HomeAssistant,
-    device1_config: dict[str, str],
+    device1_config: MockConfigEntry,
     device1_requests_mock_standby,
 ):
     """Test state device is off."""
@@ -142,7 +147,7 @@ async def test_get_state_off(
 
 async def test_get_state_pause(
     hass: HomeAssistant,
-    device1_config: dict[str, str],
+    device1_config: MockConfigEntry,
     device1_requests_mock_upnp_paused,
 ):
     """Test state device is paused."""
@@ -154,7 +159,7 @@ async def test_get_state_pause(
 
 async def test_is_muted(
     hass: HomeAssistant,
-    device1_config: dict[str, str],
+    device1_config: MockConfigEntry,
     device1_requests_mock_upnp,
     device1_volume_muted: str,
 ):
@@ -170,7 +175,7 @@ async def test_is_muted(
 
 async def test_should_turn_off(
     hass: HomeAssistant,
-    device1_config: dict[str, str],
+    device1_config: MockConfigEntry,
     device1_requests_mock_upnp,
     device1_requests_mock_key,
 ):
@@ -187,7 +192,7 @@ async def test_should_turn_off(
 
 async def test_should_turn_on(
     hass: HomeAssistant,
-    device1_config: dict[str, str],
+    device1_config: MockConfigEntry,
     device1_requests_mock_standby,
     device1_requests_mock_key,
 ):
@@ -204,7 +209,7 @@ async def test_should_turn_on(
 
 async def test_volume_up(
     hass: HomeAssistant,
-    device1_config: dict[str, str],
+    device1_config: MockConfigEntry,
     device1_requests_mock_upnp,
     device1_requests_mock_key,
 ):
@@ -221,7 +226,7 @@ async def test_volume_up(
 
 async def test_volume_down(
     hass: HomeAssistant,
-    device1_config: dict[str, str],
+    device1_config: MockConfigEntry,
     device1_requests_mock_upnp,
     device1_requests_mock_key,
 ):
@@ -238,7 +243,7 @@ async def test_volume_down(
 
 async def test_set_volume_level(
     hass: HomeAssistant,
-    device1_config: dict[str, str],
+    device1_config: MockConfigEntry,
     device1_requests_mock_upnp,
     device1_requests_mock_volume,
 ):
@@ -258,7 +263,7 @@ async def test_set_volume_level(
 
 async def test_mute(
     hass: HomeAssistant,
-    device1_config: dict[str, str],
+    device1_config: MockConfigEntry,
     device1_requests_mock_upnp,
     device1_requests_mock_key,
 ):
@@ -275,7 +280,7 @@ async def test_mute(
 
 async def test_play(
     hass: HomeAssistant,
-    device1_config: dict[str, str],
+    device1_config: MockConfigEntry,
     device1_requests_mock_upnp_paused,
     device1_requests_mock_key,
 ):
@@ -292,7 +297,7 @@ async def test_play(
 
 async def test_pause(
     hass: HomeAssistant,
-    device1_config: dict[str, str],
+    device1_config: MockConfigEntry,
     device1_requests_mock_upnp,
     device1_requests_mock_key,
 ):
@@ -309,7 +314,7 @@ async def test_pause(
 
 async def test_play_pause(
     hass: HomeAssistant,
-    device1_config: dict[str, str],
+    device1_config: MockConfigEntry,
     device1_requests_mock_upnp,
     device1_requests_mock_key,
 ):
@@ -326,7 +331,7 @@ async def test_play_pause(
 
 async def test_next_previous_track(
     hass: HomeAssistant,
-    device1_config: dict[str, str],
+    device1_config: MockConfigEntry,
     device1_requests_mock_upnp,
     device1_requests_mock_key,
 ):
@@ -351,7 +356,7 @@ async def test_next_previous_track(
 
 async def test_play_media(
     hass: HomeAssistant,
-    device1_config: dict[str, str],
+    device1_config: MockConfigEntry,
     device1_requests_mock_standby,
     device1_requests_mock_select,
 ):
@@ -391,7 +396,7 @@ async def test_play_media(
 
 async def test_play_media_url(
     hass: HomeAssistant,
-    device1_config: dict[str, str],
+    device1_config: MockConfigEntry,
     device1_requests_mock_standby,
     device1_requests_mock_dlna,
 ):
@@ -415,7 +420,7 @@ async def test_play_media_url(
 
 async def test_select_source_aux(
     hass: HomeAssistant,
-    device1_config: dict[str, str],
+    device1_config: MockConfigEntry,
     device1_requests_mock_standby,
     device1_requests_mock_select,
 ):
@@ -435,7 +440,7 @@ async def test_select_source_aux(
 
 async def test_select_source_bluetooth(
     hass: HomeAssistant,
-    device1_config: dict[str, str],
+    device1_config: MockConfigEntry,
     device1_requests_mock_standby,
     device1_requests_mock_select,
 ):
@@ -455,7 +460,7 @@ async def test_select_source_bluetooth(
 
 async def test_select_source_invalid_source(
     hass: HomeAssistant,
-    device1_config: dict[str, str],
+    device1_config: MockConfigEntry,
     device1_requests_mock_standby,
     device1_requests_mock_select,
 ):
@@ -477,14 +482,25 @@ async def test_select_source_invalid_source(
 
 async def test_play_everywhere(
     hass: HomeAssistant,
-    device1_config: dict[str, str],
-    device2_config: dict[str, str],
+    device1_config: MockConfigEntry,
+    device2_config: MockConfigEntry,
     device1_requests_mock_standby,
     device2_requests_mock_standby,
     device1_requests_mock_set_zone,
 ):
     """Test play everywhere."""
-    await setup_soundtouch(hass, device1_config, device2_config)
+    await setup_soundtouch(hass, device1_config)
+
+    # no slaves, set zone must not be called
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_PLAY_EVERYWHERE,
+        {"master": DEVICE_1_ENTITY_ID},
+        True,
+    )
+    assert device1_requests_mock_set_zone.call_count == 0
+
+    await setup_soundtouch(hass, device2_config)
 
     # one master, one slave => set zone
     await hass.services.async_call(
@@ -504,27 +520,11 @@ async def test_play_everywhere(
     )
     assert device1_requests_mock_set_zone.call_count == 1
 
-    # remove second device
-    for entity in list(hass.data[DATA_SOUNDTOUCH]):
-        if entity.entity_id == DEVICE_1_ENTITY_ID:
-            continue
-        hass.data[DATA_SOUNDTOUCH].remove(entity)
-        await entity.async_remove()
-
-    # no slaves, set zone must not be called
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_PLAY_EVERYWHERE,
-        {"master": DEVICE_1_ENTITY_ID},
-        True,
-    )
-    assert device1_requests_mock_set_zone.call_count == 1
-
 
 async def test_create_zone(
     hass: HomeAssistant,
-    device1_config: dict[str, str],
-    device2_config: dict[str, str],
+    device1_config: MockConfigEntry,
+    device2_config: MockConfigEntry,
     device1_requests_mock_standby,
     device2_requests_mock_standby,
     device1_requests_mock_set_zone,
@@ -567,8 +567,8 @@ async def test_create_zone(
 
 async def test_remove_zone_slave(
     hass: HomeAssistant,
-    device1_config: dict[str, str],
-    device2_config: dict[str, str],
+    device1_config: MockConfigEntry,
+    device2_config: MockConfigEntry,
     device1_requests_mock_standby,
     device2_requests_mock_standby,
     device1_requests_mock_remove_zone_slave,
@@ -609,8 +609,8 @@ async def test_remove_zone_slave(
 
 async def test_add_zone_slave(
     hass: HomeAssistant,
-    device1_config: dict[str, str],
-    device2_config: dict[str, str],
+    device1_config: MockConfigEntry,
+    device2_config: MockConfigEntry,
     device1_requests_mock_standby,
     device2_requests_mock_standby,
     device1_requests_mock_add_zone_slave,
@@ -651,13 +651,20 @@ async def test_add_zone_slave(
 
 async def test_zone_attributes(
     hass: HomeAssistant,
-    device1_config: dict[str, str],
-    device2_config: dict[str, str],
+    device1_config: MockConfigEntry,
+    device2_config: MockConfigEntry,
     device1_requests_mock_standby,
     device2_requests_mock_standby,
 ):
     """Test zone attributes."""
     await setup_soundtouch(hass, device1_config, device2_config)
+
+    # Fast-forward time to allow all entities to be set up and updated again
+    async_fire_time_changed(
+        hass,
+        dt.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+    )
+    await hass.async_block_till_done()
 
     entity_1_state = hass.states.get(DEVICE_1_ENTITY_ID)
     assert entity_1_state.attributes[ATTR_SOUNDTOUCH_ZONE]["is_master"]

@@ -18,7 +18,7 @@ async def test_create_entry(hass: HomeAssistant):
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") == data_entry_flow.RESULT_TYPE_FORM
+    assert result.get("type") == data_entry_flow.FlowResultType.FORM
     assert result.get("step_id") == SOURCE_USER
 
     with patch("homeassistant.components.iss.async_setup_entry", return_value=True):
@@ -28,7 +28,7 @@ async def test_create_entry(hass: HomeAssistant):
             {},
         )
 
-        assert result.get("type") == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result.get("result").data == {}
 
 
@@ -44,7 +44,7 @@ async def test_integration_already_exists(hass: HomeAssistant):
         DOMAIN, context={"source": SOURCE_USER}, data={}
     )
 
-    assert result.get("type") == data_entry_flow.RESULT_TYPE_ABORT
+    assert result.get("type") == data_entry_flow.FlowResultType.ABORT
     assert result.get("reason") == "single_instance_allowed"
 
 
@@ -60,7 +60,7 @@ async def test_abort_no_home(hass: HomeAssistant):
         DOMAIN, context={"source": SOURCE_USER}, data={}
     )
 
-    assert result.get("type") == data_entry_flow.RESULT_TYPE_ABORT
+    assert result.get("type") == data_entry_flow.FlowResultType.ABORT
     assert result.get("reason") == "latitude_longitude_not_defined"
 
 

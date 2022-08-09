@@ -21,8 +21,9 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
-from . import KNOWN_DEVICES, CharacteristicEntity
+from . import KNOWN_DEVICES
 from .connection import HKDevice
+from .entity import CharacteristicEntity
 
 
 @dataclass
@@ -106,7 +107,7 @@ class HomeKitButton(CharacteristicEntity, ButtonEntity):
     @property
     def name(self) -> str:
         """Return the name of the device if any."""
-        if name := super().name:
+        if name := self.accessory.name:
             return f"{name} {self.entity_description.name}"
         return f"{self.entity_description.name}"
 

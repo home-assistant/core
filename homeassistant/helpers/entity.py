@@ -936,7 +936,7 @@ class Entity(ABC):
         """Suggest to report an issue."""
         report_issue = ""
         if "custom_components" in type(self).__module__:
-            report_issue = "report it to the custom component author."
+            report_issue = "report it to the custom integration author."
         else:
             report_issue = (
                 "create a bug report at "

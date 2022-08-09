@@ -22,6 +22,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 import logging
 import os
+from typing import Any
 
 from google_nest_sdm.camera_traits import CameraClipPreviewTrait, CameraEventImageTrait
 from google_nest_sdm.device import Device
@@ -89,7 +90,7 @@ async def async_get_media_event_store(
         os.makedirs(media_path, exist_ok=True)
 
     await hass.async_add_executor_job(mkdir)
-    store = Store(hass, STORAGE_VERSION, STORAGE_KEY, private=True)
+    store = Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY, private=True)
     return NestEventMediaStore(hass, subscriber, store, media_path)
 
 
@@ -119,7 +120,7 @@ class NestEventMediaStore(EventMediaStore):
         self,
         hass: HomeAssistant,
         subscriber: GoogleNestSubscriber,
-        store: Store,
+        store: Store[dict[str, Any]],
         media_path: str,
     ) -> None:
         """Initialize NestEventMediaStore."""
@@ -127,7 +128,7 @@ class NestEventMediaStore(EventMediaStore):
         self._subscriber = subscriber
         self._store = store
         self._media_path = media_path
-        self._data: dict | None = None
+        self._data: dict[str, Any] | None = None
         self._devices: Mapping[str, str] | None = {}
 
     async def async_load(self) -> dict | None:
@@ -137,15 +138,9 @@ class NestEventMediaStore(EventMediaStore):
             if (data := await self._store.async_load()) is None:
                 _LOGGER.debug("Loaded empty event store")
                 self._data = {}
-            elif isinstance(data, dict):
+            else:
                 _LOGGER.debug("Loaded event store with %d records", len(data))
                 self._data = data
-            else:
-                raise ValueError(
-                    "Unexpected data in storage version={}, key={}".format(
-                        STORAGE_VERSION, STORAGE_KEY
-                    )
-                )
         return self._data
 
     async def async_save(self, data: dict) -> None:

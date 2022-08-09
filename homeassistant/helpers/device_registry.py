@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections import OrderedDict
+from collections.abc import Coroutine
 import logging
 import time
 from typing import TYPE_CHECKING, Any, NamedTuple, cast
@@ -37,6 +38,7 @@ STORAGE_VERSION_MINOR = 3
 SAVE_DELAY = 10
 CLEANUP_DELAY = 10
 
+CONNECTION_BLUETOOTH = "bluetooth"
 CONNECTION_NETWORK_MAC = "mac"
 CONNECTION_UPNP = "upnp"
 CONNECTION_ZIGBEE = "zigbee"
@@ -164,7 +166,7 @@ def _async_get_device_id_from_index(
     return None
 
 
-class DeviceRegistryStore(storage.Store):
+class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
     """Store entity registry data."""
 
     async def _async_migrate_func(
@@ -569,7 +571,6 @@ class DeviceRegistry:
         deleted_devices = OrderedDict()
 
         if data is not None:
-            data = cast("dict[str, Any]", data)
             for device in data["devices"]:
                 devices[device["id"]] = DeviceEntry(
                     area_id=device["area_id"],
@@ -833,7 +834,7 @@ def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
         ent_reg = entity_registry.async_get(hass)
         async_cleanup(hass, dev_reg, ent_reg)
 
-    debounced_cleanup = Debouncer(
+    debounced_cleanup: Debouncer[Coroutine[Any, Any, None]] = Debouncer(
         hass, _LOGGER, cooldown=CLEANUP_DELAY, immediate=False, function=cleanup
     )
 

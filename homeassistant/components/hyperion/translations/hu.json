@@ -27,7 +27,7 @@
                 "title": "Er\u0151s\u00edtse meg a Hyperion Ambilight szolg\u00e1ltat\u00e1s hozz\u00e1ad\u00e1s\u00e1t"
             },
             "create_token": {
-                "description": "Az al\u00e1bbiakban v\u00e1lassza a **Mehet** lehet\u0151s\u00e9get \u00faj hiteles\u00edt\u00e9si token k\u00e9r\u00e9s\u00e9hez. A k\u00e9relem j\u00f3v\u00e1hagy\u00e1s\u00e1hoz \u00e1tir\u00e1ny\u00edtunk a Hyperion felhaszn\u00e1l\u00f3i fel\u00fcletre. K\u00e9rj\u00fck, ellen\u0151rizze, hogy a megjelen\u00edtett azonos\u00edt\u00f3 \"{auth_id}\"",
+                "description": "Az al\u00e1bbiakban v\u00e1lassza a **Mehet** lehet\u0151s\u00e9get \u00faj hiteles\u00edt\u00e9si token k\u00e9r\u00e9s\u00e9hez. A k\u00e9relem j\u00f3v\u00e1hagy\u00e1s\u00e1hoz \u00e1tir\u00e1ny\u00edtunk a Hyperion felhaszn\u00e1l\u00f3i fel\u00fcletre. K\u00e9rem, ellen\u0151rizze, hogy a megjelen\u00edtett azonos\u00edt\u00f3 \"{auth_id}\"",
                 "title": "\u00daj hiteles\u00edt\u00e9si token automatikus l\u00e9trehoz\u00e1sa"
             },
             "create_token_external": {
