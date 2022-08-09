@@ -4,7 +4,16 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Final
 
-from aioqsw.const import QSD_ANOMALY, QSD_FIRMWARE_CONDITION, QSD_MESSAGE
+from aioqsw.const import (
+    QSD_ANOMALY,
+    QSD_FIRMWARE_CONDITION,
+    QSD_LINK,
+    QSD_MESSAGE,
+    QSD_PORT_NUM,
+    QSD_PORTS,
+    QSD_PORTS_STATUS,
+    QSD_SYSTEM_BOARD,
+)
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -28,6 +37,7 @@ class QswBinarySensorEntityDescription(
     """A class that describes QNAP QSW binary sensor entities."""
 
     attributes: dict[str, list[str]] | None = None
+    port: bool = False
 
 
 BINARY_SENSOR_TYPES: Final[tuple[QswBinarySensorEntityDescription, ...]] = (
@@ -43,20 +53,53 @@ BINARY_SENSOR_TYPES: Final[tuple[QswBinarySensorEntityDescription, ...]] = (
     ),
 )
 
+PORT_BINARY_SENSOR_TYPES: Final[tuple[QswBinarySensorEntityDescription, ...]] = (
+    QswBinarySensorEntityDescription(
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        entity_registry_enabled_default=False,
+        key=QSD_PORTS_STATUS,
+        port=True,
+        name="Link",
+        subkey=QSD_LINK,
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Add QNAP QSW binary sensors from a config_entry."""
     coordinator: QswDataCoordinator = hass.data[DOMAIN][entry.entry_id][QSW_COORD_DATA]
-    async_add_entities(
-        QswBinarySensor(coordinator, description, entry)
-        for description in BINARY_SENSOR_TYPES
+
+    entities: list[QswBinarySensor] = []
+
+    for description in BINARY_SENSOR_TYPES:
         if (
             description.key in coordinator.data
             and description.subkey in coordinator.data[description.key]
-        )
-    )
+        ):
+            entities.append(QswBinarySensor(coordinator, description, entry))
+
+    if (
+        QSD_SYSTEM_BOARD in coordinator.data
+        and QSD_PORT_NUM in coordinator.data[QSD_SYSTEM_BOARD]
+    ):
+        port_num = coordinator.data[QSD_SYSTEM_BOARD][QSD_PORT_NUM]
+
+        for description in PORT_BINARY_SENSOR_TYPES:
+            if (
+                description.key in coordinator.data
+                and QSD_PORTS in coordinator.data[description.key]
+            ):
+                for port_id, port_values in coordinator.data[description.key][
+                    QSD_PORTS
+                ].items():
+                    if port_id <= port_num and description.subkey in port_values:
+                        entities.append(
+                            QswBinarySensor(coordinator, description, entry, port_id)
+                        )
+
+    async_add_entities(entities)
 
 
 class QswBinarySensor(QswSensorEntity, BinarySensorEntity):
@@ -69,13 +112,18 @@ class QswBinarySensor(QswSensorEntity, BinarySensorEntity):
         coordinator: QswDataCoordinator,
         description: QswBinarySensorEntityDescription,
         entry: ConfigEntry,
+        port_id: int | None = None,
     ) -> None:
         """Initialize."""
-        super().__init__(coordinator, entry)
-        self._attr_name = f"{self.product} {description.name}"
-        self._attr_unique_id = (
-            f"{entry.unique_id}_{description.key}_{description.subkey}"
-        )
+        super().__init__(coordinator, entry, port_id)
+        if port_id is not None:
+            self._attr_name = f"{self.product} Port {port_id} {description.name}"
+            self._attr_unique_id = f"{entry.unique_id}_{description.key}_port_{port_id}_{description.subkey}"
+        else:
+            self._attr_name = f"{self.product} {description.name}"
+            self._attr_unique_id = (
+                f"{entry.unique_id}_{description.key}_{description.subkey}"
+            )
         self.entity_description = description
         self._async_update_attrs()
 
@@ -83,6 +131,8 @@ class QswBinarySensor(QswSensorEntity, BinarySensorEntity):
     def _async_update_attrs(self) -> None:
         """Update binary sensor attributes."""
         self._attr_is_on = self.get_device_value(
-            self.entity_description.key, self.entity_description.subkey
+            self.entity_description.key,
+            self.entity_description.subkey,
+            self.entity_description.port,
         )
         super()._async_update_attrs()

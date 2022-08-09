@@ -8,6 +8,7 @@ from aioqsw.const import (
     QSD_FIRMWARE,
     QSD_FIRMWARE_INFO,
     QSD_MAC,
+    QSD_PORTS,
     QSD_PRODUCT,
     QSD_SYSTEM_BOARD,
 )
@@ -30,10 +31,12 @@ class QswDataEntity(CoordinatorEntity[QswDataCoordinator]):
         self,
         coordinator: QswDataCoordinator,
         entry: ConfigEntry,
+        port_id: int | None = None,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
 
+        self.port_id = port_id
         self.product = self.get_device_value(QSD_SYSTEM_BOARD, QSD_PRODUCT)
         self._attr_device_info = DeviceInfo(
             configuration_url=entry.data[CONF_URL],
@@ -49,12 +52,19 @@ class QswDataEntity(CoordinatorEntity[QswDataCoordinator]):
             sw_version=self.get_device_value(QSD_FIRMWARE_INFO, QSD_FIRMWARE),
         )
 
-    def get_device_value(self, key: str, subkey: str) -> Any:
+    def get_device_value(self, key: str, subkey: str, port: bool = False) -> Any:
         """Return device value by key."""
         value = None
         if key in self.coordinator.data:
             data = self.coordinator.data[key]
-            if subkey in data:
+            if port and self.port_id is not None:
+                if (
+                    QSD_PORTS in data
+                    and self.port_id in data[QSD_PORTS]
+                    and subkey in data[QSD_PORTS][self.port_id]
+                ):
+                    value = data[QSD_PORTS][self.port_id][subkey]
+            elif subkey in data:
                 value = data[subkey]
         return value
 
