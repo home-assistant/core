@@ -7,6 +7,7 @@ from regenmaschine.errors import RainMachineError
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_UNIT_SYSTEM_IMPERIAL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -21,31 +22,47 @@ from .util import key_exists
 
 
 @dataclass
-class RainMachineEntityDescriptionMixinOptions:
-    """Define an entity description mixin to include an options list."""
-
-    options: list[str]
-
-
-@dataclass
 class RainMachineSelectDescription(
     SelectEntityDescription,
     RainMachineEntityDescription,
     RainMachineEntityDescriptionMixinDataKey,
-    RainMachineEntityDescriptionMixinOptions,
 ):
-    """Describe a RainMachine select."""
+    """Describe a generic RainMachine select."""
+
+
+@dataclass
+class FreezeProtectionSelectOption:
+    """Define an option for a freeze selection select."""
+
+    api_value: float
+    imperial_label: str
+    metric_label: str
+
+    def get_label(self, unit_system: str) -> str:
+        """Get the appropriate label for a unit system."""
+        if unit_system == CONF_UNIT_SYSTEM_IMPERIAL:
+            return self.imperial_label
+        return self.metric_label
+
+
+@dataclass
+class FreezeProtectionTemperatureMixin:
+    """Define an entity description mixin to include an options list."""
+
+    options: list[FreezeProtectionSelectOption]
+
+
+@dataclass
+class FreezeProtectionSelectDescription(
+    RainMachineSelectDescription, FreezeProtectionTemperatureMixin
+):
+    """Describe a freeze protection temperature select."""
 
 
 TYPE_FREEZE_PROTECTION_TEMPERATURE = "freeze_protection_temperature"
 
-OPTION_FREEZE_PROTECTION_0 = "0°C/32°F"
-OPTION_FREEZE_PROTECTION_2 = "2°C/35.6°F"
-OPTION_FREEZE_PROTECTION_5 = "5°C/41°F"
-OPTION_FREEZE_PROTECTION_10 = "10°C/50°F"
-
 SELECT_DESCRIPTIONS = (
-    RainMachineSelectDescription(
+    FreezeProtectionSelectDescription(
         key=TYPE_FREEZE_PROTECTION_TEMPERATURE,
         name="Freeze protect temperature",
         icon="mdi:thermometer",
@@ -53,20 +70,29 @@ SELECT_DESCRIPTIONS = (
         api_category=DATA_RESTRICTIONS_UNIVERSAL,
         data_key="freezeProtectTemp",
         options=[
-            OPTION_FREEZE_PROTECTION_0,
-            OPTION_FREEZE_PROTECTION_2,
-            OPTION_FREEZE_PROTECTION_5,
-            OPTION_FREEZE_PROTECTION_10,
+            FreezeProtectionSelectOption(
+                api_value=0.0,
+                imperial_label="32°F",
+                metric_label="0°C",
+            ),
+            FreezeProtectionSelectOption(
+                api_value=2.0,
+                imperial_label="35.6°F",
+                metric_label="2°C",
+            ),
+            FreezeProtectionSelectOption(
+                api_value=5.0,
+                imperial_label="41°F",
+                metric_label="5°C",
+            ),
+            FreezeProtectionSelectOption(
+                api_value=10.0,
+                imperial_label="50°F",
+                metric_label="10°C",
+            ),
         ],
     ),
 )
-
-FREEZE_PROTECTION_RAW_VALUE_MAP = {
-    OPTION_FREEZE_PROTECTION_0: 0.0,
-    OPTION_FREEZE_PROTECTION_2: 2.0,
-    OPTION_FREEZE_PROTECTION_5: 5.0,
-    OPTION_FREEZE_PROTECTION_10: 10.0,
-}
 
 
 async def async_setup_entry(
@@ -75,13 +101,15 @@ async def async_setup_entry(
     """Set up RainMachine selects based on a config entry."""
     data: RainMachineData = hass.data[DOMAIN][entry.entry_id]
 
-    api_category_select_map = {
-        DATA_RESTRICTIONS_UNIVERSAL: UniversalRestrictionsSelect,
+    entity_map = {
+        TYPE_FREEZE_PROTECTION_TEMPERATURE: FreezeProtectionTemperatureSelect,
     }
 
     async_add_entities(
         [
-            api_category_select_map[description.api_category](entry, data, description)
+            entity_map[description.key](
+                entry, data, description, hass.config.units.name
+            )
             for description in SELECT_DESCRIPTIONS
             if (
                 (coordinator := data.coordinators[description.api_category]) is not None
@@ -92,29 +120,36 @@ async def async_setup_entry(
     )
 
 
-class UniversalRestrictionsSelect(RainMachineEntity, SelectEntity):
+class FreezeProtectionTemperatureSelect(RainMachineEntity, SelectEntity):
     """Define a RainMachine select."""
 
-    entity_description: RainMachineSelectDescription
+    entity_description: FreezeProtectionSelectDescription
 
     def __init__(
         self,
         entry: ConfigEntry,
         data: RainMachineData,
-        description: RainMachineSelectDescription,
+        description: FreezeProtectionSelectDescription,
+        unit_system: str,
     ) -> None:
         """Initialize."""
         super().__init__(entry, data, description)
 
-        self._attr_options = description.options
+        self._api_value_to_label_map = {}
+        self._label_to_api_value_map = {}
+
+        for option in description.options:
+            label = option.get_label(unit_system)
+            self._api_value_to_label_map[option.api_value] = label
+            self._label_to_api_value_map[label] = option.api_value
+
+        self._attr_options = list(self._label_to_api_value_map)
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        raw_value = FREEZE_PROTECTION_RAW_VALUE_MAP[option]
-
         try:
             await self._data.controller.restrictions.set_universal(
-                {self.entity_description.data_key: raw_value}
+                {self.entity_description.data_key: self._label_to_api_value_map[option]}
             )
         except RainMachineError as err:
             LOGGER.error("Error while setting %s: %s", self.name, err)
@@ -125,11 +160,9 @@ class UniversalRestrictionsSelect(RainMachineEntity, SelectEntity):
         raw_value = self.coordinator.data[self.entity_description.data_key]
 
         try:
-            [translated_value] = [
-                k for k, v in FREEZE_PROTECTION_RAW_VALUE_MAP.items() if v == raw_value
-            ]
-        except ValueError:
+            label = self._api_value_to_label_map[raw_value]
+        except KeyError:
             LOGGER.error("Cannot translate raw value: %s", raw_value)
-            translated_value = None
+            label = None
 
-        self._attr_current_option = translated_value
+        self._attr_current_option = label
