@@ -70,7 +70,7 @@ class LoqedLock(CoordinatorEntity[LoqedDataCoordinator], LockEntity):
 
     @property
     def changed_by(self) -> str:
-        """Return true if lock is locking."""
+        """Return internal ID of last used key."""
         return "KeyID " + str(self._lock.last_key_id)
 
     @property
