@@ -1,29 +1,35 @@
 """Litter-Robot entities for common data and methods."""
 from __future__ import annotations
 
+from collections.abc import Callable, Coroutine
 from datetime import time
 import logging
-from types import MethodType
 from typing import Any
 
 from pylitterbot import Robot
 from pylitterbot.exceptions import InvalidCommandException
+from typing_extensions import ParamSpec
 
 from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
 from .hub import LitterRobotHub
+
+_P = ParamSpec("_P")
 
 _LOGGER = logging.getLogger(__name__)
 
 REFRESH_WAIT_TIME_SECONDS = 8
 
 
-class LitterRobotEntity(CoordinatorEntity):
+class LitterRobotEntity(CoordinatorEntity[DataUpdateCoordinator[bool]]):
     """Generic Litter-Robot entity representing common data and methods."""
 
     def __init__(self, robot: Robot, entity_type: str, hub: LitterRobotHub) -> None:
@@ -63,7 +69,10 @@ class LitterRobotControlEntity(LitterRobotEntity):
         self._refresh_callback: CALLBACK_TYPE | None = None
 
     async def perform_action_and_refresh(
-        self, action: MethodType, *args: Any, **kwargs: Any
+        self,
+        action: Callable[_P, Coroutine[Any, Any, bool]],
+        *args: _P.args,
+        **kwargs: _P.kwargs,
     ) -> bool:
         """Perform an action and initiates a refresh of the robot data after a few seconds."""
         success = False
@@ -82,7 +91,7 @@ class LitterRobotControlEntity(LitterRobotEntity):
             )
         return success
 
-    async def async_call_later_callback(self, *_) -> None:
+    async def async_call_later_callback(self, *_: Any) -> None:
         """Perform refresh request on callback."""
         self._refresh_callback = None
         await self.coordinator.async_request_refresh()
@@ -92,7 +101,7 @@ class LitterRobotControlEntity(LitterRobotEntity):
         self.async_cancel_refresh_callback()
 
     @callback
-    def async_cancel_refresh_callback(self):
+    def async_cancel_refresh_callback(self) -> None:
         """Clear the refresh callback if it has not already fired."""
         if self._refresh_callback is not None:
             self._refresh_callback()
@@ -126,10 +135,10 @@ class LitterRobotConfigEntity(LitterRobotControlEntity):
     def __init__(self, robot: Robot, entity_type: str, hub: LitterRobotHub) -> None:
         """Init a Litter-Robot control entity."""
         super().__init__(robot=robot, entity_type=entity_type, hub=hub)
-        self._assumed_state: Any = None
+        self._assumed_state: bool | None = None
 
     async def perform_action_and_assume_state(
-        self, action: MethodType, assumed_state: Any
+        self, action: Callable[[bool], Coroutine[Any, Any, bool]], assumed_state: bool
     ) -> None:
         """Perform an action and assume the state passed in if call is successful."""
         if await self.perform_action_and_refresh(action, assumed_state):

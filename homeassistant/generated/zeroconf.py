@@ -426,6 +426,7 @@ HOMEKIT = {
     "C105X": "roku",
     "C135X": "roku",
     "EB-*": "ecobee",
+    "Escea": "escea",
     "HHKBridge*": "hive",
     "Healty Home Coach": "netatmo",
     "Iota": "abode",

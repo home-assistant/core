@@ -11,5 +11,6 @@ HAS_SUPPORTED_BRANDS = (
     "motion_blinds",
     "overkiz",
     "renault",
-    "wemo"
+    "wemo",
+    "zwave_js"
 )

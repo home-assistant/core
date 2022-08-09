@@ -43,7 +43,7 @@ async def test_tailscale_binary_sensors(
     assert state.state == STATE_OFF
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
-        == "frencks-iphone Supports Hairpinning"
+        == "frencks-iphone Supports hairpinning"
     )
     assert state.attributes.get(ATTR_ICON) == "mdi:wan"
     assert ATTR_DEVICE_CLASS not in state.attributes
