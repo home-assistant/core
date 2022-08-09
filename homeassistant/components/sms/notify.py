@@ -54,8 +54,8 @@ class SMSNotificationService(BaseNotificationService):
         }
         try:
             # Encode messages
-            encoded = gammu.EncodeSMS(smsinfo)  # pylint: disable=no-member
-        except gammu.GSMError as exc:  # pylint: disable=no-member
+            encoded = gammu.EncodeSMS(smsinfo)
+        except gammu.GSMError as exc:
             _LOGGER.error("Encoding message %s failed: %s", message, exc)
             return
 
@@ -68,8 +68,6 @@ class SMSNotificationService(BaseNotificationService):
                 encoded_message["Number"] = target
                 try:
                     # Actually send the message
-                    await gateway.send_sms_async(
-                        encoded_message
-                    )  # pylint: disable=import-error
-                except gammu.GSMError as exc:  # pylint: disable=no-member
+                    await gateway.send_sms_async(encoded_message)
+                except gammu.GSMError as exc:
                     _LOGGER.error("Sending to %s failed: %s", target, exc)
