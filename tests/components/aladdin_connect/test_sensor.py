@@ -10,7 +10,7 @@ from homeassistant.util.dt import utcnow
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
-DEVICE_CONFIG_MODEL_02 = {
+DEVICE_CONFIG_MODEL_01 = {
     "device_id": 533255,
     "door_number": 1,
     "name": "home",
@@ -47,9 +47,7 @@ async def test_sensors(
         await hass.async_block_till_done()
 
         registry = entity_registry.async_get(hass)
-        await hass.async_block_till_done()
         entry = registry.async_get("sensor.home_battery_level")
-        await hass.async_block_till_done()
         assert entry
         assert entry.disabled
         assert entry.disabled_by is entity_registry.RegistryEntryDisabler.INTEGRATION
@@ -98,7 +96,7 @@ async def test_sensors(
         assert state
 
 
-async def test_sensors_model_02(
+async def test_sensors_model_01(
     hass: HomeAssistant,
     mock_aladdinconnect_api: MagicMock,
 ) -> None:
@@ -117,7 +115,7 @@ async def test_sensors_model_02(
         return_value=mock_aladdinconnect_api,
     ):
         mock_aladdinconnect_api.get_doors = AsyncMock(
-            return_value=[DEVICE_CONFIG_MODEL_02]
+            return_value=[DEVICE_CONFIG_MODEL_01]
         )
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
