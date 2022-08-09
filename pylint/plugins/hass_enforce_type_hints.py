@@ -612,10 +612,6 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             base_class="AlarmControlPanelEntity",
             matches=[
                 TypeHintMatch(
-                    function_name="device_class",
-                    return_type=["str", None],
-                ),
-                TypeHintMatch(
                     function_name="code_format",
                     return_type=["CodeFormat", None],
                 ),
@@ -1221,10 +1217,6 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             base_class="FanEntity",
             matches=[
                 TypeHintMatch(
-                    function_name="device_class",
-                    return_type=["str", None],
-                ),
-                TypeHintMatch(
                     function_name="percentage",
                     return_type=["int", None],
                 ),
@@ -1428,10 +1420,6 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
         ClassTypeHintMatch(
             base_class="LockEntity",
             matches=[
-                TypeHintMatch(
-                    function_name="device_class",
-                    return_type=["str", None],
-                ),
                 TypeHintMatch(
                     function_name="changed_by",
                     return_type=["str", None],
