@@ -2223,7 +2223,6 @@ async def test_unignore_create_entry(hass, manager):
         assert entry.title == "Ignored Title"
 
         await manager.async_remove(entry.entry_id)
-        await hass.async_block_till_done()
 
         # Right after removal there shouldn't be an entry or flow
         assert len(hass.config_entries.flow.async_progress_by_handler("comp")) == 0
