@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.const import ATTR_NAME
 from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -20,6 +19,8 @@ from .const import (
 class HassioAddonEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
     """Base entity for a Hass.io add-on."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: HassioDataUpdateCoordinator,
@@ -30,7 +31,6 @@ class HassioAddonEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
         super().__init__(coordinator)
         self.entity_description = entity_description
         self._addon_slug = addon[ATTR_SLUG]
-        self._attr_name = f"{addon[ATTR_NAME]}: {entity_description.name}"
         self._attr_unique_id = f"{addon[ATTR_SLUG]}_{entity_description.key}"
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, addon[ATTR_SLUG])})
 
@@ -48,6 +48,8 @@ class HassioAddonEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
 class HassioOSEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
     """Base Entity for Hass.io OS."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: HassioDataUpdateCoordinator,
@@ -56,7 +58,6 @@ class HassioOSEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
         """Initialize base entity."""
         super().__init__(coordinator)
         self.entity_description = entity_description
-        self._attr_name = f"Home Assistant Operating System: {entity_description.name}"
         self._attr_unique_id = f"home_assistant_os_{entity_description.key}"
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, "OS")})
 
@@ -73,6 +74,8 @@ class HassioOSEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
 class HassioSupervisorEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
     """Base Entity for Supervisor."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: HassioDataUpdateCoordinator,
@@ -81,7 +84,6 @@ class HassioSupervisorEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
         """Initialize base entity."""
         super().__init__(coordinator)
         self.entity_description = entity_description
-        self._attr_name = f"Home Assistant Supervisor: {entity_description.name}"
         self._attr_unique_id = f"home_assistant_supervisor_{entity_description.key}"
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, "supervisor")})
 
@@ -90,7 +92,7 @@ class HassioSupervisorEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
         """Return True if entity is available."""
         return (
             super().available
-            and DATA_KEY_OS in self.coordinator.data
+            and DATA_KEY_SUPERVISOR in self.coordinator.data
             and self.entity_description.key
             in self.coordinator.data[DATA_KEY_SUPERVISOR]
         )
@@ -98,6 +100,8 @@ class HassioSupervisorEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
 
 class HassioCoreEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
     """Base Entity for Core."""
+
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -107,7 +111,6 @@ class HassioCoreEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
         """Initialize base entity."""
         super().__init__(coordinator)
         self.entity_description = entity_description
-        self._attr_name = f"Home Assistant Core: {entity_description.name}"
         self._attr_unique_id = f"home_assistant_core_{entity_description.key}"
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, "core")})
 

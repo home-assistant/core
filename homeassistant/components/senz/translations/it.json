@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'account \u00e8 gi\u00e0 configurato",
+            "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
+            "authorize_url_timeout": "Tempo scaduto nel generare l'URL di autorizzazione.",
+            "missing_configuration": "Il componente non \u00e8 configurato. Segui la documentazione.",
+            "no_url_available": "Nessun URL disponibile. Per informazioni su questo errore, [controlla la sezione della guida]({docs_url})",
+            "oauth_error": "Ricevuti dati token non validi."
+        },
+        "create_entry": {
+            "default": "Autenticazione riuscita"
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Scegli il metodo di autenticazione"
+            }
+        }
+    },
+    "issues": {
+        "removed_yaml": {
+            "description": "La configurazione di nVent RAYCHEM SENZ tramite YAML \u00e8 stata rimossa. \n\n La tua configurazione YAML esistente non \u00e8 utilizzata da Home Assistant. \n\nRimuovi la configurazione YAML dal file configuration.yaml e riavvia Home Assistant per risolvere questo problema.",
+            "title": "La configurazione YAML di nVent RAYCHEM SENZ \u00e8 stata rimossa"
+        }
+    }
+}

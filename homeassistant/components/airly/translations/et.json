@@ -15,8 +15,7 @@
                     "longitude": "Pikkuskraad",
                     "name": "Nimi"
                 },
-                "description": "Seadista Airly \u00f5hukvaliteedi andmete sidumine. API v\u00f5tme loomiseks mine aadressile https://developer.airly.eu/register",
-                "title": ""
+                "description": "API-v\u00f5tme loomiseks mine aadressile https://developer.airly.eu/register"
             }
         }
     },

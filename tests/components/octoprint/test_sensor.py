@@ -23,7 +23,7 @@ async def test_sensors(hass):
     }
     with patch(
         "homeassistant.util.dt.utcnow",
-        return_value=datetime(2020, 2, 20, 9, 10, 0, tzinfo=timezone.utc),
+        return_value=datetime(2020, 2, 20, 9, 10, 13, 543, tzinfo=timezone.utc),
     ):
         await init_integration(hass, "sensor", printer=printer, job=job)
 

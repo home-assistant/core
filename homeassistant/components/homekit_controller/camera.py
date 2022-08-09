@@ -9,7 +9,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import KNOWN_DEVICES, AccessoryEntity
+from . import KNOWN_DEVICES
+from .entity import AccessoryEntity
 
 
 class HomeKitCamera(AccessoryEntity, Camera):
@@ -25,7 +26,7 @@ class HomeKitCamera(AccessoryEntity, Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return a jpeg with the current camera snapshot."""
-        return await self._accessory.pairing.image(
+        return await self._accessory.pairing.image(  # type: ignore[attr-defined]
             self._aid,
             width or 640,
             height or 480,

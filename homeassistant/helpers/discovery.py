@@ -7,7 +7,7 @@ There are two different types of discoveries that can be fired/listened for.
 """
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable, Coroutine
 from typing import Any, TypedDict
 
 from homeassistant import core, setup
@@ -36,7 +36,9 @@ class DiscoveryDict(TypedDict):
 def async_listen(
     hass: core.HomeAssistant,
     service: str,
-    callback: Callable[[str, DiscoveryInfoType | None], Awaitable[None] | None],
+    callback: Callable[
+        [str, DiscoveryInfoType | None], Coroutine[Any, Any, None] | None
+    ],
 ) -> None:
     """Set up listener for discovery of specific service.
 
@@ -146,7 +148,7 @@ async def async_load_platform(
     Warning: Do not await this inside a setup method to avoid a dead lock.
     Use `hass.async_create_task(async_load_platform(..))` instead.
     """
-    assert hass_config, "You need to pass in the real hass config"
+    assert hass_config is not None, "You need to pass in the real hass config"
 
     setup_success = True
 

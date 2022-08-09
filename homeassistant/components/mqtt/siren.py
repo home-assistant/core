@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import copy
 import functools
-import json
 import logging
 from typing import Any
 
@@ -13,6 +12,7 @@ from homeassistant.components import siren
 from homeassistant.components.siren import (
     TURN_ON_SCHEMA,
     SirenEntity,
+    SirenEntityFeature,
     process_turn_on_params,
 )
 from homeassistant.components.siren.const import (
@@ -20,11 +20,6 @@ from homeassistant.components.siren.const import (
     ATTR_DURATION,
     ATTR_TONE,
     ATTR_VOLUME_LEVEL,
-    SUPPORT_DURATION,
-    SUPPORT_TONES,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_SET,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -36,10 +31,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.json import JSON_DECODE_EXCEPTIONS, json_dumps, json_loads
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import MqttCommandTemplate, MqttValueTemplate, subscription
-from .. import mqtt
+from . import subscription
+from .config import MQTT_RW_SCHEMA
 from .const import (
     CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
@@ -55,9 +51,12 @@ from .debug_info import log_messages
 from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
+    async_discover_yaml_entities,
     async_setup_entry_helper,
     async_setup_platform_helper,
+    warn_for_legacy_schema,
 )
+from .models import MqttCommandTemplate, MqttValueTemplate
 
 DEFAULT_NAME = "MQTT Siren"
 DEFAULT_PAYLOAD_ON = "ON"
@@ -75,7 +74,7 @@ CONF_SUPPORT_VOLUME_SET = "support_volume_set"
 
 STATE = "state"
 
-PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA_MODERN = MQTT_RW_SCHEMA.extend(
     {
         vol.Optional(CONF_AVAILABLE_TONES): cv.ensure_list,
         vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
@@ -92,7 +91,13 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
     },
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-DISCOVERY_SCHEMA = vol.All(PLATFORM_SCHEMA.extend({}, extra=vol.REMOVE_EXTRA))
+# Configuring MQTT Sirens under the siren platform key is deprecated in HA Core 2022.6
+PLATFORM_SCHEMA = vol.All(
+    cv.PLATFORM_SCHEMA.extend(PLATFORM_SCHEMA_MODERN.schema),
+    warn_for_legacy_schema(siren.DOMAIN),
+)
+
+DISCOVERY_SCHEMA = vol.All(PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA))
 
 MQTT_SIREN_ATTRIBUTES_BLOCKED = frozenset(
     {
@@ -103,12 +108,12 @@ MQTT_SIREN_ATTRIBUTES_BLOCKED = frozenset(
     }
 )
 
-SUPPORTED_BASE = SUPPORT_TURN_OFF | SUPPORT_TURN_ON
+SUPPORTED_BASE = SirenEntityFeature.TURN_OFF | SirenEntityFeature.TURN_ON
 
 SUPPORTED_ATTRIBUTES = {
-    ATTR_DURATION: SUPPORT_DURATION,
-    ATTR_TONE: SUPPORT_TONES,
-    ATTR_VOLUME_LEVEL: SUPPORT_VOLUME_SET,
+    ATTR_DURATION: SirenEntityFeature.DURATION,
+    ATTR_TONE: SirenEntityFeature.TONES,
+    ATTR_VOLUME_LEVEL: SirenEntityFeature.VOLUME_SET,
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -120,9 +125,14 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up MQTT siren through configuration.yaml."""
+    """Set up MQTT sirens configured under the fan platform key (deprecated)."""
+    # Deprecated in HA Core 2022.6
     await async_setup_platform_helper(
-        hass, siren.DOMAIN, config, async_add_entities, _async_setup_entity
+        hass,
+        siren.DOMAIN,
+        discovery_info or config,
+        async_add_entities,
+        _async_setup_entity,
     )
 
 
@@ -131,7 +141,10 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up MQTT siren dynamically through MQTT discovery."""
+    """Set up MQTT siren through configuration.yaml and dynamically through MQTT discovery."""
+    # load and initialize platform config from configuration.yaml
+    await async_discover_yaml_entities(hass, siren.DOMAIN)
+    # setup for discovery
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
@@ -139,8 +152,12 @@ async def async_setup_entry(
 
 
 async def _async_setup_entity(
-    hass, async_add_entities, config, config_entry=None, discovery_data=None
-):
+    hass: HomeAssistant,
+    async_add_entities: AddEntitiesCallback,
+    config: ConfigType,
+    config_entry: ConfigEntry | None = None,
+    discovery_data: dict | None = None,
+) -> None:
     """Set up the MQTT siren."""
     async_add_entities([MqttSiren(hass, config, config_entry, discovery_data)])
 
@@ -182,16 +199,16 @@ class MqttSiren(MqttEntity, SirenEntity):
         self._state_off = state_off if state_off else config[CONF_PAYLOAD_OFF]
 
         if config[CONF_SUPPORT_DURATION]:
-            self._supported_features |= SUPPORT_DURATION
+            self._supported_features |= SirenEntityFeature.DURATION
             self._attr_extra_state_attributes[ATTR_DURATION] = None
 
         if config.get(CONF_AVAILABLE_TONES):
-            self._supported_features |= SUPPORT_TONES
+            self._supported_features |= SirenEntityFeature.TONES
             self._attr_available_tones = config[CONF_AVAILABLE_TONES]
             self._attr_extra_state_attributes[ATTR_TONE] = None
 
         if config[CONF_SUPPORT_VOLUME_SET]:
-            self._supported_features |= SUPPORT_VOLUME_SET
+            self._supported_features |= SirenEntityFeature.VOLUME_SET
             self._attr_extra_state_attributes[ATTR_VOLUME_LEVEL] = None
 
         self._optimistic = config[CONF_OPTIMISTIC] or CONF_STATE_TOPIC not in config
@@ -238,13 +255,13 @@ class MqttSiren(MqttEntity, SirenEntity):
                 json_payload = {STATE: payload}
             else:
                 try:
-                    json_payload = json.loads(payload)
+                    json_payload = json_loads(payload)
                     _LOGGER.debug(
                         "JSON payload detected after processing payload '%s' on topic %s",
                         json_payload,
                         msg.topic,
                     )
-                except json.decoder.JSONDecodeError:
+                except JSON_DECODE_EXCEPTIONS:
                     _LOGGER.warning(
                         "No valid (JSON) payload detected after processing payload '%s' on topic %s",
                         json_payload,
@@ -296,12 +313,12 @@ class MqttSiren(MqttEntity, SirenEntity):
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
     @property
-    def assumed_state(self):
+    def assumed_state(self) -> bool:
         """Return true if we do optimistic updates."""
         return self._optimistic
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         mqtt_attributes = super().extra_state_attributes
         attributes = (
@@ -329,7 +346,7 @@ class MqttSiren(MqttEntity, SirenEntity):
         payload = (
             self._command_templates[template](value, template_variables)
             if self._command_templates[template]
-            else json.dumps(template_variables)
+            else json_dumps(template_variables)
         )
         if payload and payload not in PAYLOAD_NONE:
             await self.async_publish(
@@ -340,7 +357,7 @@ class MqttSiren(MqttEntity, SirenEntity):
                 self._config[CONF_ENCODING],
             )
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the siren on.
 
         This method is a coroutine.
@@ -358,7 +375,7 @@ class MqttSiren(MqttEntity, SirenEntity):
             self._update(kwargs)
             self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the siren off.
 
         This method is a coroutine.

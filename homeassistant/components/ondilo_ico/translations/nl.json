@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "authorize_url_timeout": "Time-out tijdens genereren autorisatie url.",
-            "missing_configuration": "De component is niet geconfigureerd. Gelieve de documentatie volgen."
+            "authorize_url_timeout": "Time-out bij het genereren van autorisatie-URL.",
+            "missing_configuration": "Integratie niet geconfigureerd. Raadpleeg de documentatie."
         },
         "create_entry": {
-            "default": "Succesvol geauthenticeerd"
+            "default": "Authenticatie geslaagd"
         },
         "step": {
             "pick_implementation": {

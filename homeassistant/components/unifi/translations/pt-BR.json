@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "A conta j\u00e1 foi configurada",
-            "configuration_updated": "Configura\u00e7\u00e3o atualizada.",
+            "configuration_updated": "Configura\u00e7\u00e3o atualizada",
             "reauth_successful": "A reautentica\u00e7\u00e3o foi bem-sucedida"
         },
         "error": {
@@ -26,6 +26,9 @@
         }
     },
     "options": {
+        "abort": {
+            "integration_not_setup": "A integra\u00e7\u00e3o UniFi n\u00e3o est\u00e1 configurada"
+        },
         "step": {
             "client_control": {
                 "data": {

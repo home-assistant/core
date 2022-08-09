@@ -61,8 +61,6 @@ HA_VERSION_SOURCES: Final[list[str]] = [source.value for source in HaVersionSour
 
 BOARD_MAP: Final[dict[str, str]] = {
     "OVA": "ova",
-    "RaspberryPi": "rpi",
-    "RaspberryPi Zero-W": "rpi0-w",
     "RaspberryPi 2": "rpi2",
     "RaspberryPi 3": "rpi3",
     "RaspberryPi 3 64bit": "rpi3-64",
@@ -73,8 +71,10 @@ BOARD_MAP: Final[dict[str, str]] = {
     "ODROID C4": "odroid-c4",
     "ODROID N2": "odroid-n2",
     "ODROID XU4": "odroid-xu4",
+    "Generic AArch64": "generic-aarch64",
     "Generic x86-64": "generic-x86-64",
-    "Intel NUC": "intel-nuc",
+    "Home Assistant Yellow": "yellow",
+    "Khadas VIM3": "khadas-vim3",
 }
 
 VALID_BOARDS: Final[list[str]] = list(BOARD_MAP)

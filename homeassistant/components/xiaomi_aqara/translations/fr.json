@@ -18,8 +18,7 @@
                 "data": {
                     "select_ip": "Adresse IP"
                 },
-                "description": "Ex\u00e9cutez \u00e0 nouveau la configuration si vous souhaitez connecter des passerelles suppl\u00e9mentaires",
-                "title": "S\u00e9lectionnez la passerelle Xiaomi Aqara que vous souhaitez connecter"
+                "description": "S\u00e9lectionnez la passerelle Xiaomi Aqara que vous souhaitez connecter"
             },
             "settings": {
                 "data": {
@@ -27,7 +26,7 @@
                     "name": "Nom de la passerelle"
                 },
                 "description": "La cl\u00e9 (mot de passe) peut \u00eatre r\u00e9cup\u00e9r\u00e9e \u00e0 l'aide de ce tutoriel: https://www.domoticz.com/wiki/Xiaomi_Gateway_(Aqara)#Adding_the_Xiaomi_Gateway_to_Domoticz. Si la cl\u00e9 n'est pas fournie, seuls les capteurs seront accessibles",
-                "title": "Passerelle Xiaomi Aqara, param\u00e8tres optionnels"
+                "title": "Param\u00e8tres optionnels"
             },
             "user": {
                 "data": {
@@ -35,8 +34,7 @@
                     "interface": "Interface r\u00e9seau \u00e0 utiliser",
                     "mac": "Adresse MAC (facultatif)"
                 },
-                "description": "Connectez-vous \u00e0 votre passerelle Xiaomi Aqara, si les adresses IP et mac sont laiss\u00e9es vides, la d\u00e9tection automatique est utilis\u00e9e",
-                "title": "Passerelle Xiaomi Aqara"
+                "description": "Si les adresses IP et MAC sont laiss\u00e9es vides, la d\u00e9couverte automatique sera utilis\u00e9e"
             }
         }
     }

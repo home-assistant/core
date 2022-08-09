@@ -29,31 +29,23 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN]
 
     async_add_entities(
-        MullvadBinarySensor(coordinator, sensor) for sensor in BINARY_SENSORS
+        MullvadBinarySensor(coordinator, sensor, config_entry)
+        for sensor in BINARY_SENSORS
     )
 
 
 class MullvadBinarySensor(CoordinatorEntity, BinarySensorEntity):
     """Represents a Mullvad binary sensor."""
 
-    def __init__(self, coordinator, sensor):
+    def __init__(self, coordinator, sensor, config_entry):
         """Initialize the Mullvad binary sensor."""
         super().__init__(coordinator)
-        self.id = sensor[CONF_ID]
-        self._name = sensor[CONF_NAME]
-        self._device_class = sensor[CONF_DEVICE_CLASS]
-
-    @property
-    def device_class(self):
-        """Return the device class for this binary sensor."""
-        return self._device_class
-
-    @property
-    def name(self):
-        """Return the name for this binary sensor."""
-        return self._name
+        self._sensor = sensor
+        self._attr_device_class = sensor[CONF_DEVICE_CLASS]
+        self._attr_name = sensor[CONF_NAME]
+        self._attr_unique_id = f"{config_entry.entry_id}_{sensor[CONF_ID]}"
 
     @property
     def is_on(self):
         """Return the state for this binary sensor."""
-        return self.coordinator.data[self.id]
+        return self.coordinator.data[self._sensor[CONF_ID]]

@@ -2,43 +2,40 @@
     "config": {
         "abort": {
             "already_configured": "This SimpliSafe account is already in use.",
+            "email_2fa_timed_out": "Timed out while waiting for email-based two-factor authentication.",
             "reauth_successful": "Re-authentication was successful",
             "wrong_account": "The user credentials provided do not match this SimpliSafe account."
         },
         "error": {
             "identifier_exists": "Account already registered",
             "invalid_auth": "Invalid authentication",
-            "still_awaiting_mfa": "Still awaiting MFA email click",
+            "invalid_auth_code_length": "SimpliSafe authorization codes are 45 characters in length",
             "unknown": "Unexpected error"
         },
+        "progress": {
+            "email_2fa": "Check your email for a verification link from Simplisafe."
+        },
         "step": {
-            "input_auth_code": {
-                "data": {
-                    "auth_code": "Authorization Code"
-                },
-                "description": "Input the authorization code from the SimpliSafe web app URL:",
-                "title": "Finish Authorization"
-            },
-            "mfa": {
-                "description": "Check your email for a link from SimpliSafe. After verifying the link, return here to complete the installation of the integration.",
-                "title": "SimpliSafe Multi-Factor Authentication"
-            },
             "reauth_confirm": {
                 "data": {
                     "password": "Password"
                 },
-                "description": "Your access has expired or been revoked. Enter your password to re-link your account.",
+                "description": "Please re-enter the password for {username}.",
                 "title": "Reauthenticate Integration"
+            },
+            "sms_2fa": {
+                "data": {
+                    "code": "Code"
+                },
+                "description": "Input the two-factor authentication code sent to you via SMS."
             },
             "user": {
                 "data": {
                     "auth_code": "Authorization Code",
-                    "code": "Code (used in Home Assistant UI)",
                     "password": "Password",
-                    "username": "Email"
+                    "username": "Username"
                 },
-                "description": "SimpliSafe authenticates with Home Assistant via the SimpliSafe web app. Due to technical limitations, there is a manual step at the end of this process; please ensure that you read the [documentation]({docs_url}) before starting.\n\n1. Click [here]({url}) to open the SimpliSafe web app and input your credentials.\n\n2. When the login process is complete, return here and input the authorization code below.",
-                "title": "Fill in your information."
+                "description": "SimpliSafe authenticates users via its web app. Due to technical limitations, there is a manual step at the end of this process; please ensure that you read the [documentation](http://home-assistant.io/integrations/simplisafe#getting-an-authorization-code) before starting.\n\nWhen you are ready, click [here]({url}) to open the SimpliSafe web app and input your credentials. If you've already logged into SimpliSafe in your browser, you may want to open a new tab, then copy/paste the above URL into that tab.\n\nWhen the process is complete, return here and input the authorization code from the `com.simplisafe.mobile` URL."
             }
         }
     },

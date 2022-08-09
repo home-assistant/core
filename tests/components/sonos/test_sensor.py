@@ -1,13 +1,17 @@
 """Tests for the Sonos battery sensor platform."""
-from unittest.mock import PropertyMock
+from datetime import timedelta
+from unittest.mock import PropertyMock, patch
 
 from soco.exceptions import NotSupportedException
 
 from homeassistant.components.sensor import SCAN_INTERVAL
 from homeassistant.components.sonos.binary_sensor import ATTR_BATTERY_POWER_SOURCE
+from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers import entity_registry as ent_reg
 from homeassistant.util import dt as dt_util
+
+from .conftest import SonosMockEvent
 
 from tests.common import async_fire_time_changed
 
@@ -178,3 +182,38 @@ async def test_microphone_binary_sensor(
 
     mic_binary_sensor_state = hass.states.get(mic_binary_sensor.entity_id)
     assert mic_binary_sensor_state.state == STATE_ON
+
+
+async def test_favorites_sensor(hass, async_autosetup_sonos, soco):
+    """Test Sonos favorites sensor."""
+    entity_registry = ent_reg.async_get(hass)
+    favorites = entity_registry.entities["sensor.sonos_favorites"]
+    assert hass.states.get(favorites.entity_id) is None
+
+    # Enable disabled sensor
+    entity_registry.async_update_entity(entity_id=favorites.entity_id, disabled_by=None)
+    await hass.async_block_till_done()
+
+    # Fire event to cancel poll timer and avoid triggering errors during time jump
+    service = soco.contentDirectory
+    empty_event = SonosMockEvent(soco, service, {})
+    subscription = service.subscribe.return_value
+    subscription.callback(event=empty_event)
+    await hass.async_block_till_done()
+
+    # Reload the integration to enable the sensor
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+    )
+    await hass.async_block_till_done()
+
+    favorites_updated_event = SonosMockEvent(
+        soco, service, {"favorites_update_id": "2", "container_update_i_ds": "FV:2,2"}
+    )
+    with patch(
+        "homeassistant.components.sonos.favorites.SonosFavorites.update_cache",
+        return_value=True,
+    ):
+        subscription.callback(event=favorites_updated_event)
+        await hass.async_block_till_done()

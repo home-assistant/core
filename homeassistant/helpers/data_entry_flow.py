@@ -22,12 +22,11 @@ class _BaseFlowManagerView(HomeAssistantView):
         """Initialize the flow manager index view."""
         self._flow_mgr = flow_mgr
 
-    # pylint: disable=no-self-use
     def _prepare_result_json(
         self, result: data_entry_flow.FlowResult
     ) -> data_entry_flow.FlowResult:
         """Convert result to JSON."""
-        if result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
+        if result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY:
             data = result.copy()
             data.pop("result")
             data.pop("data")
@@ -103,7 +102,7 @@ class FlowManagerResourceView(_BaseFlowManagerView):
 
     @RequestDataValidator(vol.Schema(dict), allow_empty=True)
     async def post(
-        self, request: web.Request, flow_id: str, data: dict[str, Any]
+        self, request: web.Request, data: dict[str, Any], flow_id: str
     ) -> web.Response:
         """Handle a POST request."""
         try:

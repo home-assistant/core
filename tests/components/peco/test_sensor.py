@@ -1,7 +1,7 @@
 """Test the PECO Outage Counter sensors."""
 from unittest.mock import patch
 
-from peco import OutageResults
+from peco import AlertResults, OutageResults
 import pytest
 
 from homeassistant.components.peco.const import DOMAIN
@@ -42,8 +42,14 @@ async def test_sensor_available(
             customers_served=789,
         ),
     ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+        with patch(
+            "peco.PecoOutageApi.get_map_alerts",
+            return_value=AlertResults(
+                alert_content="Testing 1234", alert_title="Testing 4321"
+            ),
+        ):
+            assert await hass.config_entries.async_setup(config_entry.entry_id)
+            await hass.async_block_till_done()
     assert hass.data[DOMAIN]
 
     entries = hass.config_entries.async_entries(DOMAIN)
@@ -69,8 +75,14 @@ async def test_sensor_available(
             customers_served=789,
         ),
     ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+        with patch(
+            "peco.PecoOutageApi.get_map_alerts",
+            return_value=AlertResults(
+                alert_content="Testing 1234", alert_title="Testing 4321"
+            ),
+        ):
+            assert await hass.config_entries.async_setup(config_entry.entry_id)
+            await hass.async_block_till_done()
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 2

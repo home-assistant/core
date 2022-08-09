@@ -1,5 +1,5 @@
 """The scene tests for the myq platform."""
-
+from homeassistant.components.light import ColorMode
 from homeassistant.const import STATE_OFF, STATE_ON
 
 from .util import async_init_integration
@@ -15,6 +15,7 @@ async def test_create_lights(hass):
     expected_attributes = {
         "friendly_name": "Garage Door Light Off",
         "supported_features": 0,
+        "supported_color_modes": [ColorMode.ONOFF],
     }
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
@@ -27,6 +28,7 @@ async def test_create_lights(hass):
     expected_attributes = {
         "friendly_name": "Garage Door Light On",
         "supported_features": 0,
+        "supported_color_modes": [ColorMode.ONOFF],
     }
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears

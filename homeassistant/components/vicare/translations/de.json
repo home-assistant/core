@@ -13,13 +13,10 @@
                 "data": {
                     "client_id": "API-Schl\u00fcssel",
                     "heating_type": "Art der Heizung",
-                    "name": "Name",
                     "password": "Passwort",
-                    "scan_interval": "Scanintervall (Sekunden)",
                     "username": "E-Mail"
                 },
-                "description": "Richte die ViCare-Integration ein. Um einen API-Schl\u00fcssel zu generieren, gehe auf https://developer.viessmann.com",
-                "title": "{name}"
+                "description": "Richte die ViCare-Integration ein. Um einen API-Schl\u00fcssel zu generieren, gehe auf https://developer.viessmann.com"
             }
         }
     }

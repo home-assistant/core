@@ -4,7 +4,8 @@
             "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado"
         },
         "error": {
-            "cannot_connect": "Falha ao conectar"
+            "cannot_connect": "Falha ao conectar",
+            "invalid_system_id": "ID do sistema Airzone inv\u00e1lido"
         },
         "step": {
             "user": {

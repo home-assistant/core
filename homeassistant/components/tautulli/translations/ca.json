@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament",
+            "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "unknown": "Error inesperat"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "Clau API"
+                },
+                "description": "Per trobar la teva clau API, obre la web de Tautulli i v\u00e9s a Configuraci\u00f3 i despr\u00e9s a Interf\u00edcie web. La clau API estar\u00e0 a la part inferior d'aquesta p\u00e0gina.",
+                "title": "Re-autenticaci\u00f3 de Tautulli"
+            },
+            "user": {
+                "data": {
+                    "api_key": "Clau API",
+                    "url": "URL",
+                    "verify_ssl": "Verifica el certificat SSL"
+                },
+                "description": "Per trobar la teva clau API, obre la web de Tautulli i v\u00e9s a Configuraci\u00f3 i despr\u00e9s a Interf\u00edcie web. La clau API estar\u00e0 a la part inferior d'aquesta p\u00e0gina.\n\nExemple de l'URL: ```http://192.168.0.10:8181``` on 8181 \u00e9s el port predeterminat."
+            }
+        }
+    }
+}

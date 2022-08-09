@@ -76,7 +76,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
 )
 
-_T = TypeVar("_T", bound="SonarrSensor")
+_SonarrSensorT = TypeVar("_SonarrSensorT", bound="SonarrSensor")
 _P = ParamSpec("_P")
 
 
@@ -109,8 +109,8 @@ async def async_setup_entry(
 
 
 def sonarr_exception_handler(
-    func: Callable[Concatenate[_T, _P], Awaitable[None]]  # type: ignore[misc]
-) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, None]]:  # type: ignore[misc]
+    func: Callable[Concatenate[_SonarrSensorT, _P], Awaitable[None]]
+) -> Callable[Concatenate[_SonarrSensorT, _P], Coroutine[Any, Any, None]]:
     """Decorate Sonarr calls to handle Sonarr exceptions.
 
     A decorator that wraps the passed in function, catches Sonarr errors,
@@ -118,7 +118,9 @@ def sonarr_exception_handler(
     """
 
     @wraps(func)
-    async def wrapper(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> None:
+    async def wrapper(
+        self: _SonarrSensorT, *args: _P.args, **kwargs: _P.kwargs
+    ) -> None:
         try:
             await func(self, *args, **kwargs)
             self.last_update_success = True
@@ -235,7 +237,7 @@ class SonarrSensor(SonarrEntity, SensorEntity):
                 stats = item.statistics
                 attrs[
                     item.title
-                ] = f"{stats.episodeFileCount}/{stats.episodeCount} Episodes"
+                ] = f"{getattr(stats,'episodeFileCount', 0)}/{getattr(stats, 'episodeCount', 0)} Episodes"
         elif key == "upcoming" and self.data.get(key) is not None:
             for episode in self.data[key]:
                 identifier = f"S{episode.seasonNumber:02d}E{episode.episodeNumber:02d}"

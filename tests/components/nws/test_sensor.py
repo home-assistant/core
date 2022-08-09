@@ -4,6 +4,7 @@ import pytest
 from homeassistant.components.nws.const import ATTRIBUTION, DOMAIN, SENSOR_TYPES
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import ATTR_ATTRIBUTION, STATE_UNKNOWN
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import slugify
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 
@@ -33,7 +34,7 @@ async def test_imperial_metric(
     hass, units, result_observation, result_forecast, mock_simple_nws, no_weather
 ):
     """Test with imperial and metric units."""
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     for description in SENSOR_TYPES:
         registry.async_get_or_create(
@@ -66,7 +67,7 @@ async def test_none_values(hass, mock_simple_nws, no_weather):
     instance = mock_simple_nws.return_value
     instance.observation = NONE_OBSERVATION
 
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     for description in SENSOR_TYPES:
         registry.async_get_or_create(

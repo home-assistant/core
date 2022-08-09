@@ -20,10 +20,9 @@ from homeassistant.components.light import (
     ATTR_COLOR_NAME,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_TRANSITION,
+    ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -70,6 +69,9 @@ async def async_setup_entry(
 class HomematicipLight(HomematicipGenericEntity, LightEntity):
     """Representation of the HomematicIP light."""
 
+    _attr_color_mode = ColorMode.ONOFF
+    _attr_supported_color_modes = {ColorMode.ONOFF}
+
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the light entity."""
         super().__init__(hap, device)
@@ -79,11 +81,11 @@ class HomematicipLight(HomematicipGenericEntity, LightEntity):
         """Return true if light is on."""
         return self._device.on
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         await self._device.turn_on()
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self._device.turn_off()
 
@@ -94,6 +96,9 @@ class HomematicipLightMeasuring(HomematicipLight):
 
 class HomematicipMultiDimmer(HomematicipGenericEntity, LightEntity):
     """Representation of HomematicIP Cloud dimmer."""
+
+    _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
     def __init__(
         self,
@@ -120,12 +125,7 @@ class HomematicipMultiDimmer(HomematicipGenericEntity, LightEntity):
             (self._device.functionalChannels[self._channel].dimLevel or 0.0) * 255
         )
 
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return SUPPORT_BRIGHTNESS
-
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the dimmer on."""
         if ATTR_BRIGHTNESS in kwargs:
             await self._device.set_dim_level(
@@ -134,7 +134,7 @@ class HomematicipMultiDimmer(HomematicipGenericEntity, LightEntity):
         else:
             await self._device.set_dim_level(1, self._channel)
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the dimmer off."""
         await self._device.set_dim_level(0, self._channel)
 
@@ -149,6 +149,10 @@ class HomematicipDimmer(HomematicipMultiDimmer, LightEntity):
 
 class HomematicipNotificationLight(HomematicipGenericEntity, LightEntity):
     """Representation of HomematicIP Cloud notification light."""
+
+    _attr_color_mode = ColorMode.HS
+    _attr_supported_color_modes = {ColorMode.HS}
+    _attr_supported_features = LightEntityFeature.TRANSITION
 
     def __init__(self, hap: HomematicipHAP, device, channel: int) -> None:
         """Initialize the notification light entity."""
@@ -205,16 +209,11 @@ class HomematicipNotificationLight(HomematicipGenericEntity, LightEntity):
         return state_attr
 
     @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return SUPPORT_BRIGHTNESS | SUPPORT_COLOR | SUPPORT_TRANSITION
-
-    @property
     def unique_id(self) -> str:
         """Return a unique ID."""
         return f"{self.__class__.__name__}_{self._post}_{self._device.id}"
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         # Use hs_color from kwargs,
         # if not applicable use current hs_color.
@@ -242,7 +241,7 @@ class HomematicipNotificationLight(HomematicipGenericEntity, LightEntity):
             rampTime=transition,
         )
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         simple_rgb_color = self._func_channel.simpleRGBColorState
         transition = kwargs.get(ATTR_TRANSITION, 0.5)

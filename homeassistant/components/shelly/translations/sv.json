@@ -1,0 +1,54 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad",
+            "unsupported_firmware": "Enheten anv\u00e4nder en firmwareversion som inte st\u00f6ds."
+        },
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta.",
+            "firmware_not_fully_provisioned": "Enheten \u00e4r inte helt etablerad. Kontakta Shellys support",
+            "invalid_auth": "Ogiltig autentisering",
+            "unknown": "Ov\u00e4ntat fel"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm_discovery": {
+                "description": "Vill du konfigurera {model} p\u00e5 {host} ? \n\n Batteridrivna enheter som \u00e4r l\u00f6senordsskyddade m\u00e5ste v\u00e4ckas innan du forts\u00e4tter med installationen.\n Batteridrivna enheter som inte \u00e4r l\u00f6senordsskyddade kommer att l\u00e4ggas till n\u00e4r enheten vaknar, du kan nu manuellt v\u00e4cka enheten med en knapp p\u00e5 den eller v\u00e4nta p\u00e5 n\u00e4sta datauppdatering fr\u00e5n enheten."
+            },
+            "credentials": {
+                "data": {
+                    "password": "L\u00f6senord",
+                    "username": "Anv\u00e4ndarnamn"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "V\u00e4rd"
+                },
+                "description": "F\u00f6re installationen m\u00e5ste batteridrivna enheter v\u00e4ckas, du kan nu v\u00e4cka enheten med en knapp p\u00e5 den."
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button": "Knapp",
+            "button1": "F\u00f6rsta knappen",
+            "button2": "Andra knappen",
+            "button3": "Tredje knappen",
+            "button4": "Fj\u00e4rde knappen"
+        },
+        "trigger_type": {
+            "btn_down": "\"{subtype}\" knappen nedtryckt",
+            "btn_up": "\"{subtype}\" knappen uppsl\u00e4ppt",
+            "double": "\"{subtyp}\" dubbelklickad",
+            "double_push": "{subtype} dubbeltryck",
+            "long": "{subtype} l\u00e5ngklickad",
+            "long_push": "{subtype} l\u00e5ngtryck",
+            "long_single": "{subtype} l\u00e5ngklickad och sedan enkelklickad",
+            "single": "{subtype} enkelklickad",
+            "single_long": "{subtype} enkelklickad och sedan l\u00e5ngklickad",
+            "single_push": "{subtyp} enkeltryck",
+            "triple": "{subtype} trippelklickad"
+        }
+    }
+}

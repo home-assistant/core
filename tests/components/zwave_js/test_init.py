@@ -8,7 +8,6 @@ from zwave_js_server.exceptions import BaseZwaveJSServerError, InvalidServerVers
 from zwave_js_server.model.node import Node
 
 from homeassistant.components.hassio.handler import HassioAPIError
-from homeassistant.components.zwave_js import async_migrate_entry
 from homeassistant.components.zwave_js.const import DOMAIN
 from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
@@ -433,10 +432,14 @@ async def test_start_addon(
 
 
 async def test_install_addon(
-    hass, addon_installed, install_addon, addon_options, set_addon_options, start_addon
+    hass,
+    addon_not_installed,
+    install_addon,
+    addon_options,
+    set_addon_options,
+    start_addon,
 ):
     """Test install and start the Z-Wave JS add-on during entry setup."""
-    addon_installed.return_value["version"] = None
     device = "/test"
     s0_legacy_key = "s0_legacy"
     s2_access_control_key = "s2_access_control"
@@ -584,10 +587,10 @@ async def test_addon_options_changed(
     "addon_version, update_available, update_calls, backup_calls, "
     "update_addon_side_effect, create_backup_side_effect",
     [
-        ("1.0", True, 1, 1, None, None),
-        ("1.0", False, 0, 0, None, None),
-        ("1.0", True, 1, 1, HassioAPIError("Boom"), None),
-        ("1.0", True, 0, 1, None, HassioAPIError("Boom")),
+        ("1.0.0", True, 1, 1, None, None),
+        ("1.0.0", False, 0, 0, None, None),
+        ("1.0.0", True, 1, 1, HassioAPIError("Boom"), None),
+        ("1.0.0", True, 0, 1, None, HassioAPIError("Boom")),
     ],
 )
 async def test_update_addon(
@@ -721,7 +724,7 @@ async def test_remove_entry(
     assert create_backup.call_count == 1
     assert create_backup.call_args == call(
         hass,
-        {"name": "addon_core_zwave_js_1.0", "addons": ["core_zwave_js"]},
+        {"name": "addon_core_zwave_js_1.0.0", "addons": ["core_zwave_js"]},
         partial=True,
     )
     assert uninstall_addon.call_count == 1
@@ -763,7 +766,7 @@ async def test_remove_entry(
     assert create_backup.call_count == 1
     assert create_backup.call_args == call(
         hass,
-        {"name": "addon_core_zwave_js_1.0", "addons": ["core_zwave_js"]},
+        {"name": "addon_core_zwave_js_1.0.0", "addons": ["core_zwave_js"]},
         partial=True,
     )
     assert uninstall_addon.call_count == 0
@@ -787,7 +790,7 @@ async def test_remove_entry(
     assert create_backup.call_count == 1
     assert create_backup.call_args == call(
         hass,
-        {"name": "addon_core_zwave_js_1.0", "addons": ["core_zwave_js"]},
+        {"name": "addon_core_zwave_js_1.0.0", "addons": ["core_zwave_js"]},
         partial=True,
     )
     assert uninstall_addon.call_count == 1
@@ -801,8 +804,10 @@ async def test_removed_device(
     hass, client, climate_radio_thermostat_ct100_plus, lock_schlage_be469, integration
 ):
     """Test that the device registry gets updated when a device gets removed."""
+    driver = client.driver
+    assert driver
     # Verify how many nodes are available
-    assert len(client.driver.controller.nodes) == 2
+    assert len(driver.controller.nodes) == 2
 
     # Make sure there are the same number of devices
     dev_reg = dr.async_get(hass)
@@ -815,7 +820,7 @@ async def test_removed_device(
     assert len(entity_entries) == 29
 
     # Remove a node and reload the entry
-    old_node = client.driver.controller.nodes.pop(13)
+    old_node = driver.controller.nodes.pop(13)
     await hass.config_entries.async_reload(integration.entry_id)
     await hass.async_block_till_done()
 
@@ -825,7 +830,7 @@ async def test_removed_device(
     assert len(device_entries) == 1
     entity_entries = er.async_entries_for_config_entry(ent_reg, integration.entry_id)
     assert len(entity_entries) == 17
-    assert dev_reg.async_get_device({get_device_id(client, old_node)}) is None
+    assert dev_reg.async_get_device({get_device_id(driver, old_node)}) is None
 
 
 async def test_suggested_area(hass, client, eaton_rf9640_dimmer):
@@ -1328,12 +1333,3 @@ async def test_disabled_entity_on_value_removed(hass, zp3111, client, integratio
         | {battery_level_entity, binary_cover_entity, sensor_cover_entity}
         == new_unavailable_entities
     )
-
-
-async def test_async_migrate_entry(hass):
-    """Test async_migrate_entry."""
-    entry = MockConfigEntry(domain=DOMAIN, unique_id=123456789)
-    assert isinstance(entry.unique_id, int)
-    await async_migrate_entry(hass, entry)
-    assert isinstance(entry.unique_id, str)
-    assert entry.unique_id == "123456789"

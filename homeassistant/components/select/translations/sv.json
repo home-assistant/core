@@ -1,0 +1,14 @@
+{
+    "device_automation": {
+        "action_type": {
+            "select_option": "\u00c4ndra alternativet {entity_name}"
+        },
+        "condition_type": {
+            "selected_option": "Nuvarande {entity_name} markerad option"
+        },
+        "trigger_type": {
+            "current_option_changed": "Alternativet {entity_name} har \u00e4ndrats"
+        }
+    },
+    "title": "V\u00e4lj"
+}

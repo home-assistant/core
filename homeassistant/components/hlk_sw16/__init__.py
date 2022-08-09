@@ -96,29 +96,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.warning("HLK-SW16 %s connected", address)
         async_dispatcher_send(hass, f"hlk_sw16_device_available_{entry.entry_id}", True)
 
-    async def connect():
-        """Set up connection and hook it into HA for reconnect/shutdown."""
-        _LOGGER.info("Initiating HLK-SW16 connection to %s", address)
+    _LOGGER.debug("Initiating HLK-SW16 connection to %s", address)
 
-        client = await create_hlk_sw16_connection(
-            host=host,
-            port=port,
-            disconnect_callback=disconnected,
-            reconnect_callback=reconnected,
-            loop=hass.loop,
-            timeout=CONNECTION_TIMEOUT,
-            reconnect_interval=DEFAULT_RECONNECT_INTERVAL,
-            keep_alive_interval=DEFAULT_KEEP_ALIVE_INTERVAL,
-        )
+    client = await create_hlk_sw16_connection(
+        host=host,
+        port=port,
+        disconnect_callback=disconnected,
+        reconnect_callback=reconnected,
+        loop=hass.loop,
+        timeout=CONNECTION_TIMEOUT,
+        reconnect_interval=DEFAULT_RECONNECT_INTERVAL,
+        keep_alive_interval=DEFAULT_KEEP_ALIVE_INTERVAL,
+    )
 
-        hass.data[DOMAIN][entry.entry_id][DATA_DEVICE_REGISTER] = client
+    hass.data[DOMAIN][entry.entry_id][DATA_DEVICE_REGISTER] = client
 
-        # Load entities
-        hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    # Load entities
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-        _LOGGER.info("Connected to HLK-SW16 device: %s", address)
-
-    hass.loop.create_task(connect())
+    _LOGGER.debug("Connected to HLK-SW16 device: %s", address)
 
     return True
 

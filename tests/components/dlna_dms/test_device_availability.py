@@ -152,15 +152,15 @@ async def test_unavailable_device(
         )
     with pytest.raises(Unresolvable, match="DMS is not connected"):
         await media_source.async_resolve_media(
-            hass, f"media-source://{DOMAIN}/{MOCK_SOURCE_ID}//resolve_path"
+            hass, f"media-source://{DOMAIN}/{MOCK_SOURCE_ID}//resolve_path", None
         )
     with pytest.raises(Unresolvable, match="DMS is not connected"):
         await media_source.async_resolve_media(
-            hass, f"media-source://{DOMAIN}/{MOCK_SOURCE_ID}/:resolve_object"
+            hass, f"media-source://{DOMAIN}/{MOCK_SOURCE_ID}/:resolve_object", None
         )
     with pytest.raises(Unresolvable):
         await media_source.async_resolve_media(
-            hass, f"media-source://{DOMAIN}/{MOCK_SOURCE_ID}/?resolve_search"
+            hass, f"media-source://{DOMAIN}/{MOCK_SOURCE_ID}/?resolve_search", None
         )
 
 
@@ -651,7 +651,7 @@ async def test_become_unavailable(
 
     # Check async_resolve_object currently works
     assert await media_source.async_resolve_media(
-        hass, f"media-source://{DOMAIN}/{MOCK_SOURCE_ID}/:object_id"
+        hass, f"media-source://{DOMAIN}/{MOCK_SOURCE_ID}/:object_id", None
     )
 
     # Now break the network connection
@@ -660,7 +660,7 @@ async def test_become_unavailable(
     # async_resolve_object should fail
     with pytest.raises(Unresolvable):
         await media_source.async_resolve_media(
-            hass, f"media-source://{DOMAIN}/{MOCK_SOURCE_ID}/:object_id"
+            hass, f"media-source://{DOMAIN}/{MOCK_SOURCE_ID}/:object_id", None
         )
 
     # The device should now be unavailable

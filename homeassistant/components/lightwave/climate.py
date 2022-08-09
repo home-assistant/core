@@ -4,12 +4,13 @@ from __future__ import annotations
 from homeassistant.components.climate import (
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_TEMP,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
-    SUPPORT_TARGET_TEMPERATURE,
     ClimateEntity,
 )
-from homeassistant.components.climate.const import CURRENT_HVAC_HEAT, CURRENT_HVAC_OFF
+from homeassistant.components.climate.const import (
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
+)
 from homeassistant.const import ATTR_TEMPERATURE, CONF_NAME, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -42,11 +43,11 @@ async def async_setup_platform(
 class LightwaveTrv(ClimateEntity):
     """Representation of a LightWaveRF TRV."""
 
-    _attr_hvac_mode = HVAC_MODE_HEAT
-    _attr_hvac_modes = [HVAC_MODE_HEAT, HVAC_MODE_OFF]
+    _attr_hvac_mode = HVACMode.HEAT
+    _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
     _attr_min_temp = DEFAULT_MIN_TEMP
     _attr_max_temp = DEFAULT_MAX_TEMP
-    _attr_supported_features = SUPPORT_TARGET_TEMPERATURE
+    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
     _attr_target_temperature_step = 0.5
     _attr_temperature_unit = TEMP_CELSIUS
 
@@ -79,9 +80,9 @@ class LightwaveTrv(ClimateEntity):
                 self._inhibit = 0
         if trv_output is not None:
             if trv_output > 0:
-                self._attr_hvac_action = CURRENT_HVAC_HEAT
+                self._attr_hvac_action = HVACAction.HEATING
             else:
-                self._attr_hvac_action = CURRENT_HVAC_OFF
+                self._attr_hvac_action = HVACAction.OFF
 
     @property
     def target_temperature(self):
@@ -103,5 +104,5 @@ class LightwaveTrv(ClimateEntity):
             self._device_id, self._attr_target_temperature, self._attr_name
         )
 
-    async def async_set_hvac_mode(self, hvac_mode):
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVAC Mode for TRV."""

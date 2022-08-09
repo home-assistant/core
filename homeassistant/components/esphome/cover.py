@@ -9,14 +9,8 @@ from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
     DEVICE_CLASSES,
-    SUPPORT_CLOSE,
-    SUPPORT_CLOSE_TILT,
-    SUPPORT_OPEN,
-    SUPPORT_OPEN_TILT,
-    SUPPORT_SET_POSITION,
-    SUPPORT_SET_TILT_POSITION,
-    SUPPORT_STOP,
     CoverEntity,
+    CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -50,11 +44,17 @@ class EsphomeCover(EsphomeEntity[CoverInfo, CoverState], CoverEntity):
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
-        flags = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP
+        flags = (
+            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
+        )
         if self._static_info.supports_position:
-            flags |= SUPPORT_SET_POSITION
+            flags |= CoverEntityFeature.SET_POSITION
         if self._static_info.supports_tilt:
-            flags |= SUPPORT_OPEN_TILT | SUPPORT_CLOSE_TILT | SUPPORT_SET_TILT_POSITION
+            flags |= (
+                CoverEntityFeature.OPEN_TILT
+                | CoverEntityFeature.CLOSE_TILT
+                | CoverEntityFeature.SET_TILT_POSITION
+            )
         return flags
 
     @property
@@ -111,7 +111,7 @@ class EsphomeCover(EsphomeEntity[CoverInfo, CoverState], CoverEntity):
         """Stop the cover."""
         await self._client.cover_command(key=self._static_info.key, stop=True)
 
-    async def async_set_cover_position(self, **kwargs: int) -> None:
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         await self._client.cover_command(
             key=self._static_info.key, position=kwargs[ATTR_POSITION] / 100
@@ -125,8 +125,9 @@ class EsphomeCover(EsphomeEntity[CoverInfo, CoverState], CoverEntity):
         """Close the cover tilt."""
         await self._client.cover_command(key=self._static_info.key, tilt=0.0)
 
-    async def async_set_cover_tilt_position(self, **kwargs: int) -> None:
+    async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
+        tilt_position: int = kwargs[ATTR_TILT_POSITION]
         await self._client.cover_command(
-            key=self._static_info.key, tilt=kwargs[ATTR_TILT_POSITION] / 100
+            key=self._static_info.key, tilt=tilt_position / 100
         )

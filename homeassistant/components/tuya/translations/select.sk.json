@@ -1,0 +1,18 @@
+{
+    "state": {
+        "tuya__countdown": {
+            "3h": "3 hodiny"
+        },
+        "tuya__decibel_sensitivity": {
+            "1": "Vysok\u00e1 citlivos\u0165"
+        },
+        "tuya__motion_sensitivity": {
+            "0": "N\u00edzka citlivos\u0165",
+            "1": "Stredn\u00e1 citlivos\u0165",
+            "2": "Vysok\u00e1 citlivos\u0165"
+        },
+        "tuya__vacuum_mode": {
+            "random": "N\u00e1hodn\u00fd"
+        }
+    }
+}

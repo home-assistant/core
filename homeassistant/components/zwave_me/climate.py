@@ -4,10 +4,7 @@ from __future__ import annotations
 from zwave_me_ws import ZWaveMeData
 
 from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
-    HVAC_MODE_HEAT,
-    SUPPORT_TARGET_TEMPERATURE,
-)
+from homeassistant.components.climate.const import ClimateEntityFeature, HVACMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant, callback
@@ -51,6 +48,10 @@ async def async_setup_entry(
 class ZWaveMeClimate(ZWaveMeEntity, ClimateEntity):
     """Representation of a ZWaveMe sensor."""
 
+    _attr_hvac_mode = HVACMode.HEAT
+    _attr_hvac_modes = [HVACMode.HEAT]
+    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+
     def set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
@@ -79,21 +80,6 @@ class ZWaveMeClimate(ZWaveMeEntity, ClimateEntity):
     def min_temp(self) -> float:
         """Return max temperature for the device."""
         return self.device.min
-
-    @property
-    def hvac_modes(self) -> list[str]:
-        """Return the list of available operation modes."""
-        return [HVAC_MODE_HEAT]
-
-    @property
-    def hvac_mode(self) -> str:
-        """Return the current mode."""
-        return HVAC_MODE_HEAT
-
-    @property
-    def supported_features(self) -> int:
-        """Return the supported features."""
-        return SUPPORT_TARGET_TEMPERATURE
 
     @property
     def target_temperature_step(self) -> float:

@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'emplacement est d\u00e9j\u00e0 configur\u00e9",
+            "cannot_connect": "\u00c9chec de connexion",
+            "max_regions": "Un maximum de cinq r\u00e9gions peuvent \u00eatre configur\u00e9es",
+            "rate_limit": "Trop de demandes",
+            "timeout": "D\u00e9lai d'attente pour \u00e9tablir la connexion expir\u00e9",
+            "unknown": "Erreur inattendue"
+        },
+        "step": {
+            "community": {
+                "data": {
+                    "region": "R\u00e9gion"
+                },
+                "description": "Si vous ne d\u00e9sirez pas uniquement surveiller l'\u00c9tat et son district, s\u00e9lectionnez sa communaut\u00e9 sp\u00e9cifique"
+            },
+            "district": {
+                "data": {
+                    "region": "R\u00e9gion"
+                },
+                "description": "Si vous ne d\u00e9sirez pas uniquement surveiller l'\u00c9tat, s\u00e9lectionnez son district sp\u00e9cifique"
+            },
+            "user": {
+                "data": {
+                    "region": "R\u00e9gion"
+                },
+                "description": "Choisissez l'\u00c9tat \u00e0 surveiller"
+            }
+        }
+    }
+}

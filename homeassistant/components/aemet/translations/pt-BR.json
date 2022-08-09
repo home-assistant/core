@@ -14,8 +14,7 @@
                     "longitude": "Longitude",
                     "name": "Nome da integra\u00e7\u00e3o"
                 },
-                "description": "Configure a integra\u00e7\u00e3o AEMET OpenData. Para gerar a chave API acesse https://opendata.aemet.es/centrodedescargas/altaUsuario",
-                "title": "AEMET OpenData"
+                "description": "Para gerar a chave API acesse https://opendata.aemet.es/centrodedescargas/altaUsuario"
             }
         }
     },

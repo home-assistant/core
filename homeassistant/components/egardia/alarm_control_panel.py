@@ -6,10 +6,7 @@ import logging
 import requests
 
 import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
-)
+from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
@@ -66,40 +63,30 @@ def setup_platform(
 class EgardiaAlarm(alarm.AlarmControlPanelEntity):
     """Representation of a Egardia alarm."""
 
+    _attr_state: str | None
+    _attr_supported_features = (
+        AlarmControlPanelEntityFeature.ARM_HOME
+        | AlarmControlPanelEntityFeature.ARM_AWAY
+    )
+
     def __init__(
         self, name, egardiasystem, rs_enabled=False, rs_codes=None, rs_port=52010
     ):
         """Initialize the Egardia alarm."""
-        self._name = name
+        self._attr_name = name
         self._egardiasystem = egardiasystem
-        self._status = None
         self._rs_enabled = rs_enabled
         self._rs_codes = rs_codes
         self._rs_port = rs_port
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Add Egardiaserver callback if enabled."""
         if self._rs_enabled:
             _LOGGER.debug("Registering callback to Egardiaserver")
             self.hass.data[EGARDIA_SERVER].register_callback(self.handle_status_event)
 
     @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._status
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
-
-    @property
-    def should_poll(self):
+    def should_poll(self) -> bool:
         """Poll if no report server is enabled."""
         if not self._rs_enabled:
             return True
@@ -133,16 +120,16 @@ class EgardiaAlarm(alarm.AlarmControlPanelEntity):
             _LOGGER.debug("Not ignoring status %s", status)
             newstatus = STATES.get(status.upper())
             _LOGGER.debug("newstatus %s", newstatus)
-            self._status = newstatus
+            self._attr_state = newstatus
         else:
             _LOGGER.error("Ignoring status")
 
-    def update(self):
+    def update(self) -> None:
         """Update the alarm status."""
         status = self._egardiasystem.getstate()
         self.parsestatus(status)
 
-    def alarm_disarm(self, code=None):
+    def alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         try:
             self._egardiasystem.alarm_disarm()
@@ -152,7 +139,7 @@ class EgardiaAlarm(alarm.AlarmControlPanelEntity):
                 err,
             )
 
-    def alarm_arm_home(self, code=None):
+    def alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         try:
             self._egardiasystem.alarm_arm_home()
@@ -163,7 +150,7 @@ class EgardiaAlarm(alarm.AlarmControlPanelEntity):
                 err,
             )
 
-    def alarm_arm_away(self, code=None):
+    def alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         try:
             self._egardiasystem.alarm_arm_away()

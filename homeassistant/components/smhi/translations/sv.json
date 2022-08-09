@@ -1,15 +1,16 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Konto har redan konfigurerats"
+        },
         "error": {
-            "name_exists": "Namnet finns redan",
             "wrong_location": "Plats i Sverige endast"
         },
         "step": {
             "user": {
                 "data": {
                     "latitude": "Latitud",
-                    "longitude": "Longitud",
-                    "name": "Namn"
+                    "longitude": "Longitud"
                 },
                 "title": "Plats i Sverige"
             }

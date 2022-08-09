@@ -1,14 +1,14 @@
 {
     "config": {
         "step": {
-            "init": {
+            "user": {
                 "data": {
-                    "entity_id": "Entitat d'interruptor",
-                    "target_domain": "Tipus"
+                    "entity_id": "Commutador",
+                    "target_domain": "Nou tipus"
                 },
-                "title": "Converteix un interruptor en \u2026"
+                "description": "Tria un commutador que vulguis que aparegui a Home Assistant com a llum, coberta o qualsevol altra cosa. El commutador original s'amagar\u00e0."
             }
         }
     },
-    "title": "Interruptor com a X"
+    "title": "Canvia el tipus de dispositiu d'un commutador"
 }

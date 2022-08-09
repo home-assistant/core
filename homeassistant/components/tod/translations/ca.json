@@ -1,0 +1,26 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "after_time": "Temps d'activaci\u00f3",
+                    "before_time": "Temps de desactivaci\u00f3",
+                    "name": "Nom"
+                },
+                "description": "Crea un sensor binari que s'activa o es desactiva en funci\u00f3 de l'hora.",
+                "title": "Afegeix sensor temps del dia"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "after_time": "Temps d'activaci\u00f3",
+                    "before_time": "Temps de desactivaci\u00f3"
+                }
+            }
+        }
+    },
+    "title": "Sensor temps del dia"
+}

@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "alread_configured": "Juba seadistatud. Lubatud on ainult \u00fcks sidumine.",
             "already_configured": "Juba seadistatud. Lubatud on ainult \u00fcks seadistamine.",
             "not_compatible": "CPU teavet ei saa hankida, see sidumine ei \u00fchildu s\u00fcsteemiga"
         },

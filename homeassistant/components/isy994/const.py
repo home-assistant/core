@@ -3,23 +3,14 @@ import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.climate.const import (
-    CURRENT_HVAC_COOL,
-    CURRENT_HVAC_FAN,
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
     FAN_AUTO,
     FAN_HIGH,
     FAN_MEDIUM,
     FAN_ON,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_COOL,
-    HVAC_MODE_DRY,
-    HVAC_MODE_FAN_ONLY,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_HEAT_COOL,
-    HVAC_MODE_OFF,
     PRESET_AWAY,
     PRESET_BOOST,
+    HVACAction,
+    HVACMode,
 )
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
@@ -199,6 +190,8 @@ UOM_FAN_MODES = "99"
 UOM_INDEX = "25"
 UOM_ON_OFF = "2"
 UOM_PERCENTAGE = "51"
+
+SENSOR_AUX = "sensor_aux"
 
 # Do not use the Home Assistant consts for the states here - we're matching exact API
 # responses, not using them for Home Assistant states
@@ -465,38 +458,38 @@ UOM_TO_STATES = {
         27: "factory reset",
     },
     UOM_HVAC_ACTIONS: {  # Thermostat Heat/Cool State
-        0: CURRENT_HVAC_IDLE,
-        1: CURRENT_HVAC_HEAT,
-        2: CURRENT_HVAC_COOL,
-        3: CURRENT_HVAC_FAN,
-        4: CURRENT_HVAC_HEAT,  # Pending Heat
-        5: CURRENT_HVAC_COOL,  # Pending Cool
+        0: HVACAction.IDLE.value,
+        1: HVACAction.HEATING.value,
+        2: HVACAction.COOLING.value,
+        3: HVACAction.FAN.value,
+        4: HVACAction.HEATING.value,  # Pending Heat
+        5: HVACAction.COOLING.value,  # Pending Cool
         # >6 defined in ISY but not implemented, leaving for future expanision.
-        6: CURRENT_HVAC_IDLE,
-        7: CURRENT_HVAC_HEAT,
-        8: CURRENT_HVAC_HEAT,
-        9: CURRENT_HVAC_COOL,
-        10: CURRENT_HVAC_HEAT,
-        11: CURRENT_HVAC_HEAT,
+        6: HVACAction.IDLE.value,
+        7: HVACAction.HEATING.value,
+        8: HVACAction.HEATING.value,
+        9: HVACAction.COOLING.value,
+        10: HVACAction.HEATING.value,
+        11: HVACAction.HEATING.value,
     },
     UOM_HVAC_MODE_GENERIC: {  # Thermostat Mode
-        0: HVAC_MODE_OFF,
-        1: HVAC_MODE_HEAT,
-        2: HVAC_MODE_COOL,
-        3: HVAC_MODE_AUTO,
+        0: HVACMode.OFF.value,
+        1: HVACMode.HEAT.value,
+        2: HVACMode.COOL.value,
+        3: HVACMode.AUTO.value,
         4: PRESET_BOOST,
         5: "resume",
-        6: HVAC_MODE_FAN_ONLY,
+        6: HVACMode.FAN_ONLY.value,
         7: "furnace",
-        8: HVAC_MODE_DRY,
+        8: HVACMode.DRY.value,
         9: "moist air",
         10: "auto changeover",
         11: "energy save heat",
         12: "energy save cool",
         13: PRESET_AWAY,
-        14: HVAC_MODE_AUTO,
-        15: HVAC_MODE_AUTO,
-        16: HVAC_MODE_AUTO,
+        14: HVACMode.AUTO.value,
+        15: HVACMode.AUTO.value,
+        16: HVACMode.AUTO.value,
     },
     "68": {  # Thermostat Fan Mode
         0: FAN_AUTO,
@@ -589,14 +582,14 @@ UOM_TO_STATES = {
         },  # 1-99 are percentage open
     },
     UOM_HVAC_MODE_INSTEON: {  # Insteon Thermostat Mode
-        0: HVAC_MODE_OFF,
-        1: HVAC_MODE_HEAT,
-        2: HVAC_MODE_COOL,
-        3: HVAC_MODE_HEAT_COOL,
-        4: HVAC_MODE_FAN_ONLY,
-        5: HVAC_MODE_AUTO,  # Program Auto
-        6: HVAC_MODE_AUTO,  # Program Heat-Set @ Local Device Only
-        7: HVAC_MODE_AUTO,  # Program Cool-Set @ Local Device Only
+        0: HVACMode.OFF.value,
+        1: HVACMode.HEAT.value,
+        2: HVACMode.COOL.value,
+        3: HVACMode.HEAT_COOL.value,
+        4: HVACMode.FAN_ONLY.value,
+        5: HVACMode.AUTO.value,  # Program Auto
+        6: HVACMode.AUTO.value,  # Program Heat-Set @ Local Device Only
+        7: HVACMode.AUTO.value,  # Program Cool-Set @ Local Device Only
     },
     UOM_FAN_MODES: {7: FAN_ON, 8: FAN_AUTO},  # Insteon Thermostat Fan Mode
     "115": {  # Most recent On style action taken for lamp control
@@ -617,21 +610,21 @@ UOM_TO_STATES = {
 }
 
 ISY_HVAC_MODES = [
-    HVAC_MODE_OFF,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_COOL,
-    HVAC_MODE_HEAT_COOL,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_FAN_ONLY,
+    HVACMode.OFF,
+    HVACMode.HEAT,
+    HVACMode.COOL,
+    HVACMode.HEAT_COOL,
+    HVACMode.AUTO,
+    HVACMode.FAN_ONLY,
 ]
 
 HA_HVAC_TO_ISY = {
-    HVAC_MODE_OFF: "off",
-    HVAC_MODE_HEAT: "heat",
-    HVAC_MODE_COOL: "cool",
-    HVAC_MODE_HEAT_COOL: "auto",
-    HVAC_MODE_FAN_ONLY: "fan_only",
-    HVAC_MODE_AUTO: "program_auto",
+    HVACMode.OFF: "off",
+    HVACMode.HEAT: "heat",
+    HVACMode.COOL: "cool",
+    HVACMode.HEAT_COOL: "auto",
+    HVACMode.FAN_ONLY: "fan_only",
+    HVACMode.AUTO: "program_auto",
 }
 
 HA_FAN_TO_ISY = {FAN_ON: "on", FAN_AUTO: "auto"}

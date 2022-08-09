@@ -5,6 +5,7 @@ import logging
 
 from sense_energy import (
     ASyncSenseable,
+    SenseAPIException,
     SenseAuthenticationException,
     SenseMFARequiredException,
 )
@@ -80,6 +81,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except (SenseAuthenticationException, SenseMFARequiredException) as err:
         _LOGGER.warning("Sense authentication expired")
         raise ConfigEntryAuthFailed(err) from err
+    except SENSE_TIMEOUT_EXCEPTIONS as err:
+        raise ConfigEntryNotReady(
+            str(err) or "Timed out during authentication"
+        ) from err
+    except SenseAPIException as err:
+        raise ConfigEntryNotReady(str(err)) from err
 
     sense_devices_data = SenseDevicesData()
     try:
@@ -123,7 +130,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         SENSE_DISCOVERED_DEVICES_DATA: sense_discovered_devices,
     }
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     async def async_sense_update(_):
         """Retrieve latest state."""

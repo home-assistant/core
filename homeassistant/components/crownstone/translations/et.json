@@ -56,13 +56,6 @@
                 "description": "Vali Crownstone'i USB seadme jadaport. \n\n Otsi seadet  mille VID on 10C4 ja PID on EA60.",
                 "title": "Crownstone'i USB seadme s\u00e4tted"
             },
-            "usb_config_option": {
-                "data": {
-                    "usb_path": "USB seadme rada"
-                },
-                "description": "Vali Crownstone'i USB seadme jadaport. \n\n Otsi seadet  mille VID on 10C4 ja PID on EA60.",
-                "title": "Crownstone'i USB seadme s\u00e4tted"
-            },
             "usb_manual_config": {
                 "data": {
                     "usb_manual_path": "USB seadme rada"
@@ -70,21 +63,7 @@
                 "description": "Sisesta k\u00e4sitsi Crownstone'i USBseadme rada.",
                 "title": "Crownstone'i USB seadme rada"
             },
-            "usb_manual_config_option": {
-                "data": {
-                    "usb_manual_path": "USB seadme rada"
-                },
-                "description": "Sisesta k\u00e4sitsi Crownstone'i USBseadme rada.",
-                "title": "Crownstone'i USB seadme rada"
-            },
             "usb_sphere_config": {
-                "data": {
-                    "usb_sphere": "Crownstone Sphere"
-                },
-                "description": "Vali Crownstone Sphere kus USB asub.",
-                "title": "Crownstone USB Sphere"
-            },
-            "usb_sphere_config_option": {
                 "data": {
                     "usb_sphere": "Crownstone Sphere"
                 },

@@ -8,7 +8,6 @@ from aiohomekit.model import CharacteristicsTypes, ServicesTypes
 from aiohomekit.testing import FakePairing
 import pytest
 
-from homeassistant.components.light import SUPPORT_BRIGHTNESS, SUPPORT_COLOR
 from homeassistant.helpers.entity import EntityCategory
 import homeassistant.util.dt as dt_util
 
@@ -44,10 +43,10 @@ async def test_koogeek_ls1_setup(hass):
             devices=[],
             entities=[
                 EntityTestInfo(
-                    entity_id="light.koogeek_ls1_20833f",
-                    friendly_name="Koogeek-LS1-20833F",
+                    entity_id="light.koogeek_ls1_20833f_light_strip",
+                    friendly_name="Koogeek-LS1-20833F Light Strip",
                     unique_id="homekit-AAAA011111111111-7",
-                    supported_features=SUPPORT_BRIGHTNESS | SUPPORT_COLOR,
+                    supported_features=0,
                     capabilities={"supported_color_modes": ["hs"]},
                     state="off",
                 ),
@@ -76,7 +75,11 @@ async def test_recover_from_failure(hass, utcnow, failure_cls):
     pairing.testing.events_enabled = False
 
     helper = Helper(
-        hass, "light.koogeek_ls1_20833f", pairing, accessories[0], config_entry
+        hass,
+        "light.koogeek_ls1_20833f_light_strip",
+        pairing,
+        accessories[0],
+        config_entry,
     )
 
     # Set light state on fake device to off

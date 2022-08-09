@@ -2,6 +2,7 @@
 from datetime import datetime, timedelta
 from unittest.mock import patch
 
+from freezegun import freeze_time
 from pytest import mark
 
 import homeassistant.components.sun as sun
@@ -10,13 +11,13 @@ import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_setting_rising(hass, legacy_patchable_time):
+async def test_setting_rising(hass):
     """Test retrieving sun setting and rising."""
     utc_now = datetime(2016, 11, 1, 8, 0, 0, tzinfo=dt_util.UTC)
-    with patch("homeassistant.helpers.condition.dt_util.utcnow", return_value=utc_now):
+    with freeze_time(utc_now):
         await async_setup_component(
             hass, sun.DOMAIN, {sun.DOMAIN: {sun.CONF_ELEVATION: 0}}
         )
@@ -107,10 +108,10 @@ async def test_setting_rising(hass, legacy_patchable_time):
     )
 
 
-async def test_state_change(hass, legacy_patchable_time, caplog):
+async def test_state_change(hass, caplog):
     """Test if the state changes at next setting/rising."""
     now = datetime(2016, 6, 1, 8, 0, 0, tzinfo=dt_util.UTC)
-    with patch("homeassistant.helpers.condition.dt_util.utcnow", return_value=now):
+    with freeze_time(now):
         await async_setup_component(
             hass, sun.DOMAIN, {sun.DOMAIN: {sun.CONF_ELEVATION: 0}}
         )
@@ -125,10 +126,8 @@ async def test_state_change(hass, legacy_patchable_time, caplog):
     assert sun.STATE_BELOW_HORIZON == hass.states.get(sun.ENTITY_ID).state
 
     patched_time = test_time + timedelta(seconds=5)
-    with patch(
-        "homeassistant.helpers.condition.dt_util.utcnow", return_value=patched_time
-    ):
-        hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: patched_time})
+    with freeze_time(patched_time):
+        async_fire_time_changed(hass, patched_time)
         await hass.async_block_till_done()
 
     assert sun.STATE_ABOVE_HORIZON == hass.states.get(sun.ENTITY_ID).state
@@ -148,10 +147,8 @@ async def test_state_change(hass, legacy_patchable_time, caplog):
 
     patched_time = test_time + timedelta(seconds=5)
     caplog.clear()
-    with patch(
-        "homeassistant.helpers.condition.dt_util.utcnow", return_value=patched_time
-    ):
-        hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: patched_time})
+    with freeze_time(patched_time):
+        async_fire_time_changed(hass, patched_time)
         await hass.async_block_till_done()
         await hass.async_block_till_done()
 
@@ -197,7 +194,7 @@ async def test_state_change_count(hass):
 
     now = datetime(2016, 6, 1, tzinfo=dt_util.UTC)
 
-    with patch("homeassistant.helpers.condition.dt_util.utcnow", return_value=now):
+    with freeze_time(now):
         assert await async_setup_component(
             hass, sun.DOMAIN, {sun.DOMAIN: {sun.CONF_ELEVATION: 0}}
         )
@@ -214,21 +211,19 @@ async def test_state_change_count(hass):
 
     for _ in range(24 * 60 * 60):
         now += timedelta(seconds=1)
-        hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: now})
+        async_fire_time_changed(hass, now)
         await hass.async_block_till_done()
 
     assert len(events) < 721
 
 
-async def test_setup_and_remove_config_entry(
-    hass: ha.HomeAssistant, legacy_patchable_time
-) -> None:
+async def test_setup_and_remove_config_entry(hass: ha.HomeAssistant) -> None:
     """Test setting up and removing a config entry."""
     # Setup the config entry
     config_entry = MockConfigEntry(domain=sun.DOMAIN)
     config_entry.add_to_hass(hass)
     now = datetime(2016, 6, 1, 8, 0, 0, tzinfo=dt_util.UTC)
-    with patch("homeassistant.helpers.condition.dt_util.utcnow", return_value=now):
+    with freeze_time(now):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -250,10 +245,8 @@ async def test_setup_and_remove_config_entry(
     assert hass.states.get("sun.sun") is None
 
     patched_time = test_time + timedelta(seconds=5)
-    with patch(
-        "homeassistant.helpers.condition.dt_util.utcnow", return_value=patched_time
-    ):
-        hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: patched_time})
+    with freeze_time(patched_time):
+        async_fire_time_changed(hass, patched_time)
         await hass.async_block_till_done()
 
     assert hass.states.get("sun.sun") is None

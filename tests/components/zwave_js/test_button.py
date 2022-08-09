@@ -49,11 +49,12 @@ async def test_ping_entity(
     assert "There is no value to refresh for this entity" in caplog.text
 
     # Assert a node ping button entity is not created for the controller
-    node = client.driver.controller.nodes[1]
+    driver = client.driver
+    node = driver.controller.nodes[1]
     assert node.is_controller_node
     assert (
         async_get(hass).async_get_entity_id(
-            DOMAIN, "sensor", f"{get_valueless_base_unique_id(client, node)}.ping"
+            DOMAIN, "sensor", f"{get_valueless_base_unique_id(driver, node)}.ping"
         )
         is None
     )

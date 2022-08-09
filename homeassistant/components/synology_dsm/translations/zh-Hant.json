@@ -28,16 +28,7 @@
                     "username": "\u4f7f\u7528\u8005\u540d\u7a31",
                     "verify_ssl": "\u78ba\u8a8d SSL \u8a8d\u8b49"
                 },
-                "description": "\u662f\u5426\u8981\u8a2d\u5b9a {name} ({host})\uff1f",
-                "title": "\u7fa4\u6689 DSM"
-            },
-            "reauth": {
-                "data": {
-                    "password": "\u5bc6\u78bc",
-                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
-                },
-                "description": "\u8a73\u7d30\u8cc7\u8a0a\uff1a{details}",
-                "title": "Synology DSM \u91cd\u65b0\u8a8d\u8b49\u6574\u5408"
+                "description": "\u662f\u5426\u8981\u8a2d\u5b9a {name} ({host})\uff1f"
             },
             "reauth_confirm": {
                 "data": {
@@ -54,8 +45,7 @@
                     "ssl": "\u4f7f\u7528 SSL \u8a8d\u8b49",
                     "username": "\u4f7f\u7528\u8005\u540d\u7a31",
                     "verify_ssl": "\u78ba\u8a8d SSL \u8a8d\u8b49"
-                },
-                "title": "\u7fa4\u6689 DSM"
+                }
             }
         }
     },

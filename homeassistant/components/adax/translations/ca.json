@@ -7,8 +7,7 @@
             "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida"
         },
         "error": {
-            "cannot_connect": "Ha fallat la connexi\u00f3",
-            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida"
+            "cannot_connect": "Ha fallat la connexi\u00f3"
         },
         "step": {
             "cloud": {
@@ -26,10 +25,7 @@
             },
             "user": {
                 "data": {
-                    "account_id": "ID del compte",
-                    "connection_type": "Selecciona el tipus de connexi\u00f3",
-                    "host": "Amfitri\u00f3",
-                    "password": "Contrasenya"
+                    "connection_type": "Selecciona el tipus de connexi\u00f3"
                 },
                 "description": "Selecciona el tipus de connexi\u00f3. La local necessita escalfadors amb Bluetooth"
             }

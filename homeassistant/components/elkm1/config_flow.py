@@ -6,8 +6,8 @@ import logging
 from typing import Any
 from urllib.parse import urlparse
 
-import elkm1_lib as elkm1
 from elkm1_lib.discovery import ElkSystem
+from elkm1_lib.elk import Elk
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
@@ -84,7 +84,7 @@ async def validate_input(data: dict[str, str], mac: str | None) -> dict[str, str
     if requires_password and (not userid or not password):
         raise InvalidAuth
 
-    elk = elkm1.Elk(
+    elk = Elk(
         {"url": url, "userid": userid, "password": password, "element_list": ["panel"]}
     )
     elk.connect()
@@ -105,14 +105,14 @@ async def validate_input(data: dict[str, str], mac: str | None) -> dict[str, str
     return {"title": device_name, CONF_HOST: url, CONF_PREFIX: slugify(prefix)}
 
 
-def _address_from_discovery(device: ElkSystem):
+def _address_from_discovery(device: ElkSystem) -> str:
     """Append the port only if its non-standard."""
     if device.port in STANDARD_PORTS:
         return device.ip_address
     return f"{device.ip_address}:{device.port}"
 
 
-def _make_url_from_data(data):
+def _make_url_from_data(data: dict[str, str]) -> str:
     if host := data.get(CONF_HOST):
         return host
 
@@ -133,7 +133,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the elkm1 config flow."""
         self._discovered_device: ElkSystem | None = None
         self._discovered_devices: dict[str, ElkSystem] = {}
@@ -267,9 +267,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_discovered_connection(self, user_input=None):
+    async def async_step_discovered_connection(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle connecting the device when we have a discovery."""
-        errors = {}
+        errors: dict[str, str] | None = {}
         device = self._discovered_device
         assert device is not None
         if user_input is not None:
@@ -279,7 +281,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 user_input[CONF_PREFIX] = ""
             errors, result = await self._async_create_or_error(user_input, False)
-            if not errors:
+            if result is not None:
                 return result
 
         default_proto = PORT_PROTOCOL_MAP.get(device.port, DEFAULT_SECURE_PROTOCOL)
@@ -297,9 +299,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders=_placeholders_from_device(device),
         )
 
-    async def async_step_manual_connection(self, user_input=None):
+    async def async_step_manual_connection(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle connecting the device when we need manual entry."""
-        errors = {}
+        errors: dict[str, str] | None = {}
         if user_input is not None:
             # We might be able to discover the device via directed UDP
             # in case its on another subnet
@@ -314,7 +318,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 # 2601 if secure is turned on even though they may want insecure
                 user_input[CONF_ADDRESS] = device.ip_address
             errors, result = await self._async_create_or_error(user_input, False)
-            if not errors:
+            if result is not None:
                 return result
 
         return self.async_show_form(
@@ -332,7 +336,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, user_input):
+    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
         """Handle import."""
         _LOGGER.debug("Elk is importing from yaml")
         url = _make_url_from_data(user_input)
@@ -344,8 +348,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         _LOGGER.debug(
             "Importing is trying to fill unique id from discovery for %s", host
         )
-        if is_ip_address(host) and (
-            device := await async_discover_device(self.hass, host)
+        if (
+            host
+            and is_ip_address(host)
+            and (device := await async_discover_device(self.hass, host))
         ):
             await self.async_set_unique_id(
                 dr.format_mac(device.mac_address), raise_on_progress=False
@@ -355,9 +361,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors, result = await self._async_create_or_error(user_input, True)
         if errors:
             return self.async_abort(reason=list(errors.values())[0])
+        assert result is not None
         return result
 
-    def _url_already_configured(self, url):
+    def _url_already_configured(self, url: str) -> bool:
         """See if we already have a elkm1 matching user input configured."""
         existing_hosts = {
             urlparse(entry.data[CONF_HOST]).hostname

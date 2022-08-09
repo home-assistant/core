@@ -28,6 +28,11 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (  # noqa: F401
+    ATTR_CHANGED_BY,
+    ATTR_CODE_ARM_REQUIRED,
+    DOMAIN,
+    FORMAT_NUMBER,
+    FORMAT_TEXT,
     SUPPORT_ALARM_ARM_AWAY,
     SUPPORT_ALARM_ARM_CUSTOM_BYPASS,
     SUPPORT_ALARM_ARM_HOME,
@@ -35,17 +40,12 @@ from .const import (  # noqa: F401
     SUPPORT_ALARM_ARM_VACATION,
     SUPPORT_ALARM_TRIGGER,
     AlarmControlPanelEntityFeature,
+    CodeFormat,
 )
 
 _LOGGER: Final = logging.getLogger(__name__)
 
-DOMAIN: Final = "alarm_control_panel"
 SCAN_INTERVAL: Final = timedelta(seconds=30)
-ATTR_CHANGED_BY: Final = "changed_by"
-FORMAT_TEXT: Final = "text"
-FORMAT_NUMBER: Final = "number"
-ATTR_CODE_ARM_REQUIRED: Final = "code_arm_required"
-
 ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
 
 ALARM_SERVICE_SCHEMA: Final = make_entity_service_schema(
@@ -130,12 +130,12 @@ class AlarmControlPanelEntity(Entity):
     entity_description: AlarmControlPanelEntityDescription
     _attr_changed_by: str | None = None
     _attr_code_arm_required: bool = True
-    _attr_code_format: str | None = None
+    _attr_code_format: CodeFormat | None = None
     _attr_supported_features: int
 
     @property
-    def code_format(self) -> str | None:
-        """Regex for code format or None if no code is required."""
+    def code_format(self) -> CodeFormat | None:
+        """Code format or None if no code is required."""
         return self._attr_code_format
 
     @property

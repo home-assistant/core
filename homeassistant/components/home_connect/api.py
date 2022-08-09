@@ -312,7 +312,6 @@ class Dishwasher(
     """Dishwasher class."""
 
     PROGRAMS = [
-        {"name": "Dishcare.Dishwasher.Program.PreRinse"},
         {"name": "Dishcare.Dishwasher.Program.Auto1"},
         {"name": "Dishcare.Dishwasher.Program.Auto2"},
         {"name": "Dishcare.Dishwasher.Program.Auto3"},

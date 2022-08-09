@@ -2,24 +2,78 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import dataclass
 from typing import Any
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from synology_dsm.api.core.security import SynoCoreSecurity
+from synology_dsm.api.core.upgrade import SynoCoreUpgrade
+from synology_dsm.api.storage.storage import SynoStorage
+
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+    BinarySensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DISKS
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import SynoApi, SynologyDSMBaseEntity, SynologyDSMDeviceEntity
-from .const import (
-    COORDINATOR_CENTRAL,
-    DOMAIN,
-    SECURITY_BINARY_SENSORS,
-    STORAGE_DISK_BINARY_SENSORS,
-    SYNO_API,
-    UPGRADE_BINARY_SENSORS,
-    SynologyDSMBinarySensorEntityDescription,
+from . import SynoApi
+from .const import DOMAIN
+from .entity import (
+    SynologyDSMBaseEntity,
+    SynologyDSMDeviceEntity,
+    SynologyDSMEntityDescription,
+)
+from .models import SynologyDSMData
+
+
+@dataclass
+class SynologyDSMBinarySensorEntityDescription(
+    BinarySensorEntityDescription, SynologyDSMEntityDescription
+):
+    """Describes Synology DSM binary sensor entity."""
+
+
+UPGRADE_BINARY_SENSORS: tuple[SynologyDSMBinarySensorEntityDescription, ...] = (
+    SynologyDSMBinarySensorEntityDescription(
+        # Deprecated, scheduled to be removed in 2022.6 (#68664)
+        api_key=SynoCoreUpgrade.API_KEY,
+        key="update_available",
+        name="Update Available",
+        entity_registry_enabled_default=False,
+        device_class=BinarySensorDeviceClass.UPDATE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+)
+
+SECURITY_BINARY_SENSORS: tuple[SynologyDSMBinarySensorEntityDescription, ...] = (
+    SynologyDSMBinarySensorEntityDescription(
+        api_key=SynoCoreSecurity.API_KEY,
+        key="status",
+        name="Security Status",
+        device_class=BinarySensorDeviceClass.SAFETY,
+    ),
+)
+
+STORAGE_DISK_BINARY_SENSORS: tuple[SynologyDSMBinarySensorEntityDescription, ...] = (
+    SynologyDSMBinarySensorEntityDescription(
+        api_key=SynoStorage.API_KEY,
+        key="disk_exceed_bad_sector_thr",
+        name="Exceeded Max Bad Sectors",
+        device_class=BinarySensorDeviceClass.SAFETY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SynologyDSMBinarySensorEntityDescription(
+        api_key=SynoStorage.API_KEY,
+        key="disk_below_remain_life_thr",
+        name="Below Min Remaining Life",
+        device_class=BinarySensorDeviceClass.SAFETY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
 )
 
 
@@ -27,10 +81,9 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Synology NAS binary sensor."""
-
-    data = hass.data[DOMAIN][entry.unique_id]
-    api: SynoApi = data[SYNO_API]
-    coordinator = data[COORDINATOR_CENTRAL]
+    data: SynologyDSMData = hass.data[DOMAIN][entry.unique_id]
+    api = data.api
+    coordinator = data.coordinator_central
 
     entities: list[
         SynoDSMSecurityBinarySensor

@@ -13,8 +13,7 @@
         "flow_title": "{name}",
         "step": {
             "confirm": {
-                "description": "Bitte best\u00e4tige das Hinzuf\u00fcgen des Receivers",
-                "title": "Denon AVR-Netzwerk-Receiver"
+                "description": "Bitte best\u00e4tige das Hinzuf\u00fcgen des Receivers"
             },
             "select": {
                 "data": {
@@ -27,8 +26,9 @@
                 "data": {
                     "host": "IP-Adresse"
                 },
-                "description": "Verbinde dich mit deinem Receiver, wenn die IP-Adresse nicht eingestellt ist, wird die automatische Erkennung verwendet",
-                "title": "Denon AVR-Netzwerk-Receiver"
+                "data_description": {
+                    "host": "Leer lassen, um automatische Erkennung zu verwenden"
+                }
             }
         }
     },
@@ -41,8 +41,7 @@
                     "zone2": "Zone 2 einrichten",
                     "zone3": "Zone 3 einrichten"
                 },
-                "description": "Optionale Einstellungen festlegen",
-                "title": "Denon AVR-Netzwerk-Receiver"
+                "description": "Optionale Einstellungen festlegen"
             }
         }
     }

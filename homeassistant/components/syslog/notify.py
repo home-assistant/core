@@ -83,7 +83,7 @@ class SyslogNotificationService(BaseNotificationService):
         self._priority = priority
 
     def send_message(self, message="", **kwargs):
-        """Send a message to a user."""
+        """Send a message to syslog."""
 
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
 

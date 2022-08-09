@@ -14,11 +14,8 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "C\u00edm",
-                    "name": "N\u00e9v"
-                },
-                "description": "A Vallox integr\u00e1ci\u00f3 be\u00e1ll\u00edt\u00e1sa. Ha probl\u00e9m\u00e1i vannak a konfigur\u00e1ci\u00f3val, l\u00e1togasson el a https://www.home-assistant.io/integrations/vallox oldalra.",
-                "title": "Vallox"
+                    "host": "C\u00edm"
+                }
             }
         }
     }

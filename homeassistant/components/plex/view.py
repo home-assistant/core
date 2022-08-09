@@ -22,7 +22,7 @@ class PlexImageView(HomeAssistantView):
     name = "api:plex:image"
     url = "/api/plex_image_proxy/{server_id}/{media_content_id}"
 
-    async def get(  # pylint: disable=no-self-use
+    async def get(
         self,
         request: web.Request,
         server_id: str,

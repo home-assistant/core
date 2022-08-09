@@ -1142,29 +1142,41 @@ async def test_template_with_trigger_templated_delay_on(hass, start_ha):
                     "name": "test",
                     "state": "{{ trigger.event.data.beer == 2 }}",
                     "device_class": "motion",
+                    "picture": "{{ '/local/dogs.png' }}",
+                    "icon": "{{ 'mdi:pirate' }}",
+                    "attributes": {
+                        "plus_one": "{{ trigger.event.data.beer + 1 }}",
+                        "another": "{{ trigger.event.data.uno_mas or 1 }}",
+                    },
                 },
             },
         },
     ],
 )
 @pytest.mark.parametrize(
-    "restored_state, initial_state",
+    "restored_state, initial_state, initial_attributes",
     [
-        (ON, ON),
-        (OFF, OFF),
-        (STATE_UNAVAILABLE, STATE_UNKNOWN),
-        (STATE_UNKNOWN, STATE_UNKNOWN),
+        (ON, ON, ["entity_picture", "icon", "plus_one"]),
+        (OFF, OFF, ["entity_picture", "icon", "plus_one"]),
+        (STATE_UNAVAILABLE, STATE_UNKNOWN, []),
+        (STATE_UNKNOWN, STATE_UNKNOWN, []),
     ],
 )
 async def test_trigger_entity_restore_state(
-    hass, count, domain, config, restored_state, initial_state
+    hass, count, domain, config, restored_state, initial_state, initial_attributes
 ):
     """Test restoring trigger template binary sensor."""
+
+    restored_attributes = {
+        "entity_picture": "/local/cats.png",
+        "icon": "mdi:ship",
+        "plus_one": 55,
+    }
 
     fake_state = State(
         "binary_sensor.test",
         restored_state,
-        {},
+        restored_attributes,
     )
     fake_extra_data = {
         "auto_off_time": None,
@@ -1183,6 +1195,22 @@ async def test_trigger_entity_restore_state(
 
     state = hass.states.get("binary_sensor.test")
     assert state.state == initial_state
+    for attr in restored_attributes:
+        if attr in initial_attributes:
+            assert state.attributes[attr] == restored_attributes[attr]
+        else:
+            assert attr not in state.attributes
+    assert "another" not in state.attributes
+
+    hass.bus.async_fire("test_event", {"beer": 2})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == ON
+    assert state.attributes["icon"] == "mdi:pirate"
+    assert state.attributes["entity_picture"] == "/local/dogs.png"
+    assert state.attributes["plus_one"] == 3
+    assert state.attributes["another"] == 1
 
 
 @pytest.mark.parametrize("count,domain", [(1, "template")])

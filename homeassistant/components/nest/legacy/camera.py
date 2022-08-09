@@ -8,7 +8,7 @@ import logging
 
 import requests
 
-from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_ON_OFF, Camera
+from homeassistant.components.camera import PLATFORM_SCHEMA, Camera, CameraEntityFeature
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.util.dt import utcnow
 
@@ -37,6 +37,8 @@ async def async_setup_legacy_entry(hass, entry, async_add_entities) -> None:
 
 class NestCamera(Camera):
     """Representation of a Nest Camera."""
+
+    _attr_supported_features = CameraEntityFeature.ON_OFF
 
     def __init__(self, structure, device):
         """Initialize a Nest Camera."""
@@ -87,11 +89,6 @@ class NestCamera(Camera):
     def brand(self):
         """Return the brand of the camera."""
         return NEST_BRAND
-
-    @property
-    def supported_features(self):
-        """Nest Cam support turn on and off."""
-        return SUPPORT_ON_OFF
 
     @property
     def is_on(self):

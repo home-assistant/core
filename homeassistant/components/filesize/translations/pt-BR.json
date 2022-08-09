@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "O servi\u00e7o j\u00e1 est\u00e1 configurado"
+        },
+        "error": {
+            "not_allowed": "O caminho n\u00e3o \u00e9 permitido",
+            "not_valid": "O caminho n\u00e3o \u00e9 v\u00e1lido"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "file_path": "Caminho para o arquivo"
+                }
+            }
+        }
+    },
+    "title": "Tamanho do arquivo"
+}

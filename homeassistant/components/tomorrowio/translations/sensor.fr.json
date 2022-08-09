@@ -1,0 +1,27 @@
+{
+    "state": {
+        "tomorrowio__health_concern": {
+            "good": "Bon",
+            "hazardous": "Dangereux",
+            "moderate": "Mod\u00e9r\u00e9",
+            "unhealthy": "Malsain",
+            "unhealthy_for_sensitive_groups": "Malsain pour les groupes sensibles",
+            "very_unhealthy": "Tr\u00e8s malsain"
+        },
+        "tomorrowio__pollen_index": {
+            "high": "\u00c9lev\u00e9",
+            "low": "Faible",
+            "medium": "Moyen",
+            "none": "Nul",
+            "very_high": "Tr\u00e8s \u00e9lev\u00e9",
+            "very_low": "Tr\u00e8s faible"
+        },
+        "tomorrowio__precipitation_type": {
+            "freezing_rain": "Pluie vergla\u00e7ante",
+            "ice_pellets": "Gr\u00e9sil",
+            "none": "Aucune",
+            "rain": "Pluie",
+            "snow": "Neige"
+        }
+    }
+}

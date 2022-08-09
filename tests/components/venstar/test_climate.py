@@ -1,18 +1,14 @@
 """The climate tests for the venstar integration."""
-
 from unittest.mock import patch
 
-from homeassistant.components.climate.const import (
-    SUPPORT_FAN_MODE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_HUMIDITY,
-    SUPPORT_TARGET_TEMPERATURE,
-)
+from homeassistant.components.climate.const import ClimateEntityFeature
 
 from .util import async_init_integration, mock_venstar_devices
 
 EXPECTED_BASE_SUPPORTED_FEATURES = (
-    SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE | SUPPORT_PRESET_MODE
+    ClimateEntityFeature.TARGET_TEMPERATURE
+    | ClimateEntityFeature.FAN_MODE
+    | ClimateEntityFeature.PRESET_MODE
 )
 
 
@@ -45,7 +41,7 @@ async def test_colortouch(hass):
         "hvac_mode": 0,
         "friendly_name": "COLORTOUCH",
         "supported_features": EXPECTED_BASE_SUPPORTED_FEATURES
-        | SUPPORT_TARGET_HUMIDITY,
+        | ClimateEntityFeature.TARGET_HUMIDITY,
     }
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears

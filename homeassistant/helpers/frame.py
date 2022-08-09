@@ -96,7 +96,7 @@ def report_integration(
 
     index = found_frame.filename.index(path)
     if path == "custom_components/":
-        extra = " to the custom component author"
+        extra = " to the custom integration author"
     else:
         extra = ""
 
@@ -109,7 +109,7 @@ def report_integration(
         integration,
         found_frame.filename[index:],
         found_frame.lineno,
-        found_frame.line.strip(),
+        (found_frame.line or "?").strip(),
     )
 
 

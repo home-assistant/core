@@ -93,7 +93,7 @@ random_effect:
         - [199, 89, 50]
         - [160, 50, 50]
         - [180, 100, 50]
-      required: true
+      required: false
       selector:
         object:
     segments:
@@ -180,4 +180,4 @@ random_effect:
         number:
           min: 1
           step: 1
-          max: 100
+          max: 600

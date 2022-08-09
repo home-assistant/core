@@ -1,12 +1,9 @@
 """Support for Tellstick lights using Tellstick Net."""
 import logging
+from typing import Any
 
 from homeassistant.components import light, tellduslive
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    SUPPORT_BRIGHTNESS,
-    LightEntity,
-)
+from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -39,6 +36,9 @@ async def async_setup_entry(
 class TelldusLiveLight(TelldusLiveEntity, LightEntity):
     """Representation of a Tellstick Net light."""
 
+    _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+
     def __init__(self, client, device_id):
         """Initialize the  Tellstick Net light."""
         super().__init__(client, device_id)
@@ -55,16 +55,11 @@ class TelldusLiveLight(TelldusLiveEntity, LightEntity):
         return self.device.dim_level
 
     @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_BRIGHTNESS
-
-    @property
     def is_on(self):
         """Return true if light is on."""
         return self.device.is_on
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS, self._last_brightness)
         if brightness == 0:
@@ -76,7 +71,7 @@ class TelldusLiveLight(TelldusLiveEntity, LightEntity):
         self.device.dim(level=brightness)
         self.changed()
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         self.device.turn_off()
         self.changed()

@@ -30,6 +30,7 @@ from homeassistant.components.homekit.const import (
     MANUFACTURER,
     SERV_ACCESSORY_INFO,
 )
+from homeassistant.components.homekit.util import format_version
 from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
@@ -165,7 +166,7 @@ async def test_home_accessory(hass, hk_driver):
         serv.get_characteristic(CHAR_SERIAL_NUMBER).value
         == "light.accessory_that_exceeds_the_maximum_maximum_maximum_maximum"
     )
-    assert hass_version.startswith(
+    assert format_version(hass_version).startswith(
         serv.get_characteristic(CHAR_FIRMWARE_REVISION).value
     )
 
@@ -217,7 +218,7 @@ async def test_accessory_with_missing_basic_service_info(hass, hk_driver):
     assert serv.get_characteristic(CHAR_MANUFACTURER).value == "Home Assistant Sensor"
     assert serv.get_characteristic(CHAR_MODEL).value == "Sensor"
     assert serv.get_characteristic(CHAR_SERIAL_NUMBER).value == entity_id
-    assert hass_version.startswith(
+    assert format_version(hass_version).startswith(
         serv.get_characteristic(CHAR_FIRMWARE_REVISION).value
     )
     assert isinstance(acc.to_HAP(), dict)
@@ -247,7 +248,7 @@ async def test_accessory_with_hardware_revision(hass, hk_driver):
     assert serv.get_characteristic(CHAR_MANUFACTURER).value == "Home Assistant Sensor"
     assert serv.get_characteristic(CHAR_MODEL).value == "Sensor"
     assert serv.get_characteristic(CHAR_SERIAL_NUMBER).value == entity_id
-    assert hass_version.startswith(
+    assert format_version(hass_version).startswith(
         serv.get_characteristic(CHAR_FIRMWARE_REVISION).value
     )
     assert serv.get_characteristic(CHAR_HARDWARE_REVISION).value == "1.2.3"
@@ -692,7 +693,7 @@ def test_home_bridge(hk_driver):
     serv = bridge.services[0]  # SERV_ACCESSORY_INFO
     assert serv.display_name == SERV_ACCESSORY_INFO
     assert serv.get_characteristic(CHAR_NAME).value == BRIDGE_NAME
-    assert hass_version.startswith(
+    assert format_version(hass_version).startswith(
         serv.get_characteristic(CHAR_FIRMWARE_REVISION).value
     )
     assert serv.get_characteristic(CHAR_MANUFACTURER).value == MANUFACTURER

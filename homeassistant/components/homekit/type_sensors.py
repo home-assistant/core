@@ -11,7 +11,6 @@ from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
-    DEVICE_CLASS_CO2,
     STATE_HOME,
     STATE_ON,
     TEMP_CELSIUS,
@@ -57,7 +56,6 @@ from .util import (
     convert_to_float,
     density_to_air_quality,
     density_to_air_quality_pm10,
-    density_to_air_quality_pm25,
     temperature_to_homekit,
 )
 
@@ -76,7 +74,6 @@ BINARY_SENSOR_SERVICE_MAP: dict[str, SI] = {
     BinarySensorDeviceClass.CO: SI(
         SERV_CARBON_MONOXIDE_SENSOR, CHAR_CARBON_MONOXIDE_DETECTED, int
     ),
-    DEVICE_CLASS_CO2: SI(SERV_CARBON_DIOXIDE_SENSOR, CHAR_CARBON_DIOXIDE_DETECTED, int),
     BinarySensorDeviceClass.DOOR: SI(
         SERV_CONTACT_SENSOR, CHAR_CONTACT_SENSOR_STATE, int
     ),
@@ -241,7 +238,7 @@ class PM25Sensor(AirQualitySensor):
         if self.char_density.value != density:
             self.char_density.set_value(density)
             _LOGGER.debug("%s: Set density to %d", self.entity_id, density)
-        air_quality = density_to_air_quality_pm25(density)
+        air_quality = density_to_air_quality(density)
         if self.char_quality.value != air_quality:
             self.char_quality.set_value(air_quality)
             _LOGGER.debug("%s: Set air_quality to %d", self.entity_id, air_quality)

@@ -14,13 +14,7 @@ from homeassistant.components.light import (
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
     ATTR_XY_COLOR,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_COLOR_TEMP,
-    COLOR_MODE_HS,
-    COLOR_MODE_ONOFF,
-    COLOR_MODE_RGB,
-    COLOR_MODE_RGBW,
-    COLOR_MODE_XY,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME, Platform
@@ -267,24 +261,24 @@ class KNXLight(KnxEntity, LightEntity):
         return None
 
     @property
-    def color_mode(self) -> str | None:
+    def color_mode(self) -> ColorMode | None:
         """Return the color mode of the light."""
         if self._device.supports_xyy_color:
-            return COLOR_MODE_XY
+            return ColorMode.XY
         if self._device.supports_hs_color:
-            return COLOR_MODE_HS
+            return ColorMode.HS
         if self._device.supports_rgbw:
-            return COLOR_MODE_RGBW
+            return ColorMode.RGBW
         if self._device.supports_color:
-            return COLOR_MODE_RGB
+            return ColorMode.RGB
         if (
             self._device.supports_color_temperature
             or self._device.supports_tunable_white
         ):
-            return COLOR_MODE_COLOR_TEMP
+            return ColorMode.COLOR_TEMP
         if self._device.supports_brightness:
-            return COLOR_MODE_BRIGHTNESS
-        return COLOR_MODE_ONOFF
+            return ColorMode.BRIGHTNESS
+        return ColorMode.ONOFF
 
     @property
     def supported_color_modes(self) -> set | None:
@@ -373,17 +367,17 @@ class KNXLight(KnxEntity, LightEntity):
                 await self._device.set_brightness(brightness)
                 return
             # brightness without color in kwargs; set via color
-            if self.color_mode == COLOR_MODE_XY:
+            if self.color_mode == ColorMode.XY:
                 await self._device.set_xyy_color(XYYColor(brightness=brightness))
                 return
             # default to white if color not known for RGB(W)
-            if self.color_mode == COLOR_MODE_RGBW:
+            if self.color_mode == ColorMode.RGBW:
                 _rgbw = self.rgbw_color
                 if not _rgbw or not any(_rgbw):
                     _rgbw = (0, 0, 0, 255)
                 await set_color(_rgbw[:3], _rgbw[3], brightness)
                 return
-            if self.color_mode == COLOR_MODE_RGB:
+            if self.color_mode == ColorMode.RGB:
                 _rgb = self.rgb_color
                 if not _rgb or not any(_rgb):
                     _rgb = (255, 255, 255)

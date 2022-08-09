@@ -4,14 +4,9 @@ import logging
 from serial import SerialException
 
 from homeassistant import core
-from homeassistant.components.media_player import MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
+from homeassistant.components.media_player import (
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT, STATE_OFF, STATE_ON
@@ -32,15 +27,6 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
-
-SUPPORT_MONOPRICE = (
-    SUPPORT_VOLUME_MUTE
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_STEP
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_SELECT_SOURCE
-)
 
 
 @core.callback
@@ -127,6 +113,15 @@ async def async_setup_entry(
 class MonopriceZone(MediaPlayerEntity):
     """Representation of a Monoprice amplifier zone."""
 
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.VOLUME_STEP
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.SELECT_SOURCE
+    )
+
     def __init__(self, monoprice, sources, namespace, zone_id):
         """Initialize new zone."""
         self._monoprice = monoprice
@@ -210,11 +205,6 @@ class MonopriceZone(MediaPlayerEntity):
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
         return self._mute
-
-    @property
-    def supported_features(self):
-        """Return flag of media commands that are supported."""
-        return SUPPORT_MONOPRICE
 
     @property
     def media_title(self):

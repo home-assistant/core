@@ -15,10 +15,9 @@
                     "latitude": "\u7def\u5ea6",
                     "longitude": "\u7d93\u5ea6",
                     "mode": "\u6a21\u5f0f",
-                    "name": "\u6574\u5408\u540d\u7a31"
+                    "name": "\u540d\u7a31"
                 },
-                "description": "\u6b32\u8a2d\u5b9a OpenWeatherMap \u6574\u5408\u3002\u8acb\u81f3 https://openweathermap.org/appid \u7522\u751f API \u91d1\u9470",
-                "title": "OpenWeatherMap"
+                "description": "\u8acb\u81f3 https://openweathermap.org/appid \u4ee5\u7522\u751f API \u91d1\u9470"
             }
         }
     },

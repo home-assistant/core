@@ -3,7 +3,7 @@ from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.components.device_tracker.const import (
     ATTR_SOURCE_TYPE,
     DOMAIN,
-    SOURCE_TYPE_GPS,
+    SourceType,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -26,7 +26,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up OwnTracks based off an entry."""
     # Restore previously loaded devices
-    dev_reg = await device_registry.async_get_registry(hass)
+    dev_reg = device_registry.async_get(hass)
     dev_ids = {
         identifier[1]
         for device in dev_reg.devices.values()
@@ -115,9 +115,9 @@ class OwnTracksEntity(TrackerEntity, RestoreEntity):
         return self._data.get("host_name")
 
     @property
-    def source_type(self):
+    def source_type(self) -> SourceType:
         """Return the source type, eg gps or router, of the device."""
-        return self._data.get("source_type", SOURCE_TYPE_GPS)
+        return self._data.get("source_type", SourceType.GPS)
 
     @property
     def device_info(self) -> DeviceInfo:

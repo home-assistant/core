@@ -3,13 +3,14 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Any
 
 import pykulersky
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_RGBW_COLOR,
-    COLOR_MODE_RGBW,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -67,8 +68,8 @@ class KulerskyLight(LightEntity):
         """Initialize a Kuler Sky light."""
         self._light = light
         self._available = False
-        self._attr_supported_color_modes = {COLOR_MODE_RGBW}
-        self._attr_color_mode = COLOR_MODE_RGBW
+        self._attr_supported_color_modes = {ColorMode.RGBW}
+        self._attr_color_mode = ColorMode.RGBW
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
@@ -116,7 +117,7 @@ class KulerskyLight(LightEntity):
         """Return True if entity is available."""
         return self._available
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         default_rgbw = (255,) * 4 if self.rgbw_color is None else self.rgbw_color
         rgbw = kwargs.get(ATTR_RGBW_COLOR, default_rgbw)
@@ -134,7 +135,7 @@ class KulerskyLight(LightEntity):
 
         await self._light.set_color(*rgbw_scaled)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         await self._light.set_color(0, 0, 0, 0)
 

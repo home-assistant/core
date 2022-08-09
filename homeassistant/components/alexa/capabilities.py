@@ -4,19 +4,19 @@ from __future__ import annotations
 import logging
 
 from homeassistant.components import (
+    button,
     cover,
     fan,
     image_processing,
+    input_button,
     input_number,
     light,
     timer,
     vacuum,
 )
-from homeassistant.components.alarm_control_panel import FORMAT_NUMBER
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_ARM_NIGHT,
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanelEntityFeature,
+    CodeFormat,
 )
 import homeassistant.components.climate.const as climate
 import homeassistant.components.media_player.const as media_player
@@ -74,8 +74,6 @@ class AlexaCapability:
 
     https://developer.amazon.com/docs/device-apis/message-guide.html
     """
-
-    # pylint: disable=no-self-use
 
     supported_locales = {"en-US"}
 
@@ -381,7 +379,7 @@ class AlexaPowerController(AlexaCapability):
             raise UnsupportedProperty(name)
 
         if self.entity.domain == climate.DOMAIN:
-            is_on = self.entity.state != climate.HVAC_MODE_OFF
+            is_on = self.entity.state != climate.HVACMode.OFF
         elif self.entity.domain == fan.DOMAIN:
             is_on = self.entity.state == fan.STATE_ON
         elif self.entity.domain == vacuum.DOMAIN:
@@ -701,7 +699,7 @@ class AlexaSpeaker(AlexaCapability):
         properties = [{"name": "volume"}]
 
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        if supported & media_player.SUPPORT_VOLUME_MUTE:
+        if supported & media_player.MediaPlayerEntityFeature.VOLUME_MUTE:
             properties.append({"name": "muted"})
 
         return properties
@@ -774,11 +772,11 @@ class AlexaPlaybackController(AlexaCapability):
         supported_features = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
         operations = {
-            media_player.SUPPORT_NEXT_TRACK: "Next",
-            media_player.SUPPORT_PAUSE: "Pause",
-            media_player.SUPPORT_PLAY: "Play",
-            media_player.SUPPORT_PREVIOUS_TRACK: "Previous",
-            media_player.SUPPORT_STOP: "Stop",
+            media_player.MediaPlayerEntityFeature.NEXT_TRACK: "Next",
+            media_player.MediaPlayerEntityFeature.PAUSE: "Pause",
+            media_player.MediaPlayerEntityFeature.PLAY: "Play",
+            media_player.MediaPlayerEntityFeature.PREVIOUS_TRACK: "Previous",
+            media_player.MediaPlayerEntityFeature.STOP: "Stop",
         }
 
         return [
@@ -905,6 +903,7 @@ class AlexaContactSensor(AlexaCapability):
         "en-CA",
         "en-IN",
         "en-US",
+        "en-GB",
         "es-ES",
         "it-IT",
         "ja-JP",
@@ -953,6 +952,7 @@ class AlexaMotionSensor(AlexaCapability):
         "en-CA",
         "en-IN",
         "en-US",
+        "en-GB",
         "es-ES",
         "it-IT",
         "ja-JP",
@@ -1023,9 +1023,9 @@ class AlexaThermostatController(AlexaCapability):
         """Return what properties this entity supports."""
         properties = [{"name": "thermostatMode"}]
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        if supported & climate.SUPPORT_TARGET_TEMPERATURE:
+        if supported & climate.ClimateEntityFeature.TARGET_TEMPERATURE:
             properties.append({"name": "targetSetpoint"})
-        if supported & climate.SUPPORT_TARGET_TEMPERATURE_RANGE:
+        if supported & climate.ClimateEntityFeature.TARGET_TEMPERATURE_RANGE:
             properties.append({"name": "lowerSetpoint"})
             properties.append({"name": "upperSetpoint"})
         return properties
@@ -1048,6 +1048,8 @@ class AlexaThermostatController(AlexaCapability):
 
             if preset in API_THERMOSTAT_PRESETS:
                 mode = API_THERMOSTAT_PRESETS[preset]
+            elif self.entity.state == STATE_UNKNOWN:
+                return None
             else:
                 mode = API_THERMOSTAT_MODES.get(self.entity.state)
                 if mode is None:
@@ -1219,16 +1221,16 @@ class AlexaSecurityPanelController(AlexaCapability):
         configuration = {}
 
         supported_arm_states = [{"value": "DISARMED"}]
-        if supported & SUPPORT_ALARM_ARM_AWAY:
+        if supported & AlarmControlPanelEntityFeature.ARM_AWAY:
             supported_arm_states.append({"value": "ARMED_AWAY"})
-        if supported & SUPPORT_ALARM_ARM_HOME:
+        if supported & AlarmControlPanelEntityFeature.ARM_HOME:
             supported_arm_states.append({"value": "ARMED_STAY"})
-        if supported & SUPPORT_ALARM_ARM_NIGHT:
+        if supported & AlarmControlPanelEntityFeature.ARM_NIGHT:
             supported_arm_states.append({"value": "ARMED_NIGHT"})
 
         configuration["supportedArmStates"] = supported_arm_states
 
-        if code_format == FORMAT_NUMBER:
+        if code_format == CodeFormat.NUMBER:
             configuration["supportedAuthorizationTypes"] = [{"type": "FOUR_DIGIT_PIN"}]
 
         return configuration
@@ -1392,7 +1394,7 @@ class AlexaModeController(AlexaCapability):
             self._semantics = AlexaSemantics()
 
             # Add open/close semantics if tilt is not supported.
-            if not supported & cover.SUPPORT_SET_TILT_POSITION:
+            if not supported & cover.CoverEntityFeature.SET_TILT_POSITION:
                 lower_labels.append(AlexaSemantics.ACTION_CLOSE)
                 raise_labels.append(AlexaSemantics.ACTION_OPEN)
                 self._semantics.add_states_to_value(
@@ -1494,7 +1496,7 @@ class AlexaRangeController(AlexaCapability):
         # Fan speed percentage
         if self.instance == f"{fan.DOMAIN}.{fan.ATTR_PERCENTAGE}":
             supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-            if supported and fan.SUPPORT_SET_SPEED:
+            if supported and fan.FanEntityFeature.SET_SPEED:
                 return self.entity.attributes.get(fan.ATTR_PERCENTAGE)
             return 100 if self.entity.state == fan.STATE_ON else 0
 
@@ -1615,7 +1617,7 @@ class AlexaRangeController(AlexaCapability):
             self._semantics = AlexaSemantics()
 
             # Add open/close semantics if tilt is not supported.
-            if not supported & cover.SUPPORT_SET_TILT_POSITION:
+            if not supported & cover.CoverEntityFeature.SET_TILT_POSITION:
                 lower_labels.append(AlexaSemantics.ACTION_CLOSE)
                 raise_labels.append(AlexaSemantics.ACTION_OPEN)
                 self._semantics.add_states_to_value(
@@ -1895,7 +1897,10 @@ class AlexaEventDetectionSensor(AlexaCapability):
         if self.entity.domain == image_processing.DOMAIN:
             if int(state):
                 human_presence = "DETECTED"
-        elif state == STATE_ON:
+        elif state == STATE_ON or self.entity.domain in [
+            input_button.DOMAIN,
+            button.DOMAIN,
+        ]:
             human_presence = "DETECTED"
 
         return {"value": human_presence}
@@ -1907,7 +1912,8 @@ class AlexaEventDetectionSensor(AlexaCapability):
             "detectionModes": {
                 "humanPresence": {
                     "featureAvailability": "ENABLED",
-                    "supportsNotDetected": True,
+                    "supportsNotDetected": self.entity.domain
+                    not in [input_button.DOMAIN, button.DOMAIN],
                 }
             },
         }

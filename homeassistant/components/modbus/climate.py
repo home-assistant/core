@@ -6,10 +6,7 @@ import struct
 from typing import Any
 
 from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
-    HVAC_MODE_AUTO,
-    SUPPORT_TARGET_TEMPERATURE,
-)
+from homeassistant.components.climate.const import ClimateEntityFeature, HVACMode
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_NAME,
@@ -63,6 +60,10 @@ async def async_setup_platform(
 class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
     """Representation of a Modbus Thermostat."""
 
+    _attr_hvac_mode = HVACMode.AUTO
+    _attr_hvac_modes = [HVACMode.AUTO]
+    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+
     def __init__(
         self,
         hub: ModbusHub,
@@ -73,9 +74,6 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         self._target_temperature_register = config[CONF_TARGET_TEMP]
         self._unit = config[CONF_TEMPERATURE_UNIT]
 
-        self._attr_supported_features = SUPPORT_TARGET_TEMPERATURE
-        self._attr_hvac_mode = HVAC_MODE_AUTO
-        self._attr_hvac_modes = [HVAC_MODE_AUTO]
         self._attr_current_temperature = None
         self._attr_target_temperature = None
         self._attr_temperature_unit = (
@@ -96,7 +94,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         if state and state.attributes.get(ATTR_TEMPERATURE):
             self._attr_target_temperature = float(state.attributes[ATTR_TEMPERATURE])
 
-    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         # Home Assistant expects this method.
         # We'll keep it here to avoid getting exceptions.

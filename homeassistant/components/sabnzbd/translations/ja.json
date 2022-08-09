@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
+            "invalid_api_key": "\u7121\u52b9\u306aAPI\u30ad\u30fc"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API\u30ad\u30fc",
+                    "name": "\u540d\u524d",
+                    "path": "\u30d1\u30b9",
+                    "url": "URL"
+                }
+            }
+        }
+    }
+}

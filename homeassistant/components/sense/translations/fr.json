@@ -14,6 +14,7 @@
                 "data": {
                     "password": "Mot de passe"
                 },
+                "description": "L'int\u00e9gration Sense doit r\u00e9-authentifier votre compte {email}.",
                 "title": "R\u00e9-authentifier l'int\u00e9gration"
             },
             "user": {
@@ -27,7 +28,8 @@
             "validation": {
                 "data": {
                     "code": "Code de v\u00e9rification"
-                }
+                },
+                "title": "Authentification multi-facteurs Sense"
             }
         }
     }

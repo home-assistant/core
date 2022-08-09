@@ -6,25 +6,25 @@
         },
         "error": {
             "cannot_connect": "Failed to connect",
+            "incorrect_api_key": "Invalid API key for selected account",
             "invalid_auth": "Invalid authentication",
             "invalid_station": "Could not find a station with the specified name",
-            "more_stations": "Found multiple stations with the specified name",
             "invalid_time": "Invalid time provided",
-            "incorrect_api_key": "Invalid API key for selected account"
+            "more_stations": "Found multiple stations with the specified name"
         },
         "step": {
-            "user": {
-                "data": {
-                    "api_key": "API Key",
-                    "to": "To station",
-                    "from": "From station",
-                    "time": "Time (optional)",
-                    "weekday": "Days"
-                }
-            },
             "reauth_confirm": {
                 "data": {
                     "api_key": "API Key"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "API Key",
+                    "from": "From station",
+                    "time": "Time (optional)",
+                    "to": "To station",
+                    "weekday": "Days"
                 }
             }
         }

@@ -17,5 +17,11 @@
                 "title": "Reautenticaci\u00f3 de la integraci\u00f3"
             }
         }
+    },
+    "issues": {
+        "removed_yaml": {
+            "description": "La configuraci\u00f3 de Honeywell Lyric mitjan\u00e7ant YAML s'ha eliminat de Home Assistant.\n\nHome Assistant ja no utilitza la configuraci\u00f3 YAML existent.\n\nElimina la configuraci\u00f3 YAML corresponent del fitxer configuration.yaml i reinicia Home Assistant per solucionar aquest problema.",
+            "title": "La configuraci\u00f3 YAML de Honeywell Lyric s'ha eliminat"
+        }
     }
 }

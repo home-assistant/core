@@ -1,0 +1,36 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "method": "Integreerimismeetod",
+                    "name": "Nimi",
+                    "round": "T\u00e4psus",
+                    "source": "Sisendandur",
+                    "unit_prefix": "M\u00f5\u00f5diku eesliide",
+                    "unit_time": "Aja\u00fchik"
+                },
+                "data_description": {
+                    "round": "K\u00fcmnendkohtade arv v\u00e4ljundis.",
+                    "unit_prefix": "V\u00e4ljund skaleeritakse vastavalt valitud m\u00f5\u00f5diku prefiksile.",
+                    "unit_time": "V\u00e4ljund skaleeritakse vastavalt valitud aja\u00fchikule."
+                },
+                "description": "Looge andur, mis arvutab anduri integraali hindamiseks Riemanni summa.",
+                "title": "Lisa Riemanni summa integraalandur"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "round": "T\u00e4psus"
+                },
+                "data_description": {
+                    "round": "M\u00e4\u00e4rab k\u00fcmnendkohtade arvu v\u00e4ljundis."
+                }
+            }
+        }
+    },
+    "title": "Sidumine - Riemanni integraalsumma andur"
+}

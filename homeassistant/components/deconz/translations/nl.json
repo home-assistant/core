@@ -2,13 +2,13 @@
     "config": {
         "abort": {
             "already_configured": "Bridge is al geconfigureerd",
-            "already_in_progress": "De configuratiestroom is al aan de gang",
+            "already_in_progress": "De configuratie is momenteel al bezig",
             "no_bridges": "Geen deCONZ bridges ontdekt",
             "no_hardware_available": "Geen radiohardware aangesloten op deCONZ",
-            "not_deconz_bridge": "Geen deCONZ bridge",
             "updated_instance": "DeCONZ-instantie bijgewerkt met nieuw host-adres"
         },
         "error": {
+            "linking_not_possible": "Kan geen koppeling maken met de gateway",
             "no_key": "Kon geen API-sleutel ophalen"
         },
         "flow_title": "{host}",

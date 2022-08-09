@@ -39,6 +39,7 @@ from homeassistant.components.climate.const import (
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_TEMPERATURE,
+    ClimateEntityFeature,
 )
 from homeassistant.components.maxcube.climate import (
     MAX_TEMPERATURE,
@@ -46,7 +47,6 @@ from homeassistant.components.maxcube.climate import (
     OFF_TEMPERATURE,
     ON_TEMPERATURE,
     PRESET_ON,
-    SUPPORT_FLAGS,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -89,7 +89,10 @@ async def test_setup_thermostat(hass, cube: MaxCube):
         PRESET_ON,
     ]
     assert state.attributes.get(ATTR_PRESET_MODE) == PRESET_NONE
-    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == SUPPORT_FLAGS
+    assert (
+        state.attributes.get(ATTR_SUPPORTED_FEATURES)
+        == ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+    )
     assert state.attributes.get(ATTR_MAX_TEMP) == MAX_TEMPERATURE
     assert state.attributes.get(ATTR_MIN_TEMP) == 5.0
     assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == 19.0

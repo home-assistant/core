@@ -84,6 +84,7 @@ async def test_get_triggers(
                         "subtype": subtype,
                         "device_id": device_entry.id,
                         "entity_id": f"{platform}.{NETATMO_DOMAIN}_5678",
+                        "metadata": {"secondary": False},
                     }
                 )
         else:
@@ -94,6 +95,7 @@ async def test_get_triggers(
                     "type": event_type,
                     "device_id": device_entry.id,
                     "entity_id": f"{platform}.{NETATMO_DOMAIN}_5678",
+                    "metadata": {"secondary": False},
                 }
             )
     triggers = [

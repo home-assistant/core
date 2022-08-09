@@ -3,14 +3,22 @@ import pytest
 
 import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.sensor import DOMAIN, SensorDeviceClass
+from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
+    DOMAIN,
+    SensorDeviceClass,
+    SensorStateClass,
+)
 from homeassistant.components.sensor.device_condition import ENTITY_CONDITIONS
 from homeassistant.const import CONF_PLATFORM, PERCENTAGE, STATE_UNKNOWN
 from homeassistant.helpers import device_registry
+from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
+    assert_lists_same,
     async_get_device_automation_capabilities,
     async_get_device_automations,
     async_mock_service,
@@ -68,6 +76,7 @@ async def test_get_conditions(hass, device_reg, entity_reg, enable_custom_integr
             "type": condition["type"],
             "device_id": device_entry.id,
             "entity_id": platform.ENTITIES[device_class].entity_id,
+            "metadata": {"secondary": False},
         }
         for device_class in SensorDeviceClass
         if device_class in UNITS_OF_MEASUREMENT
@@ -78,7 +87,56 @@ async def test_get_conditions(hass, device_reg, entity_reg, enable_custom_integr
         hass, DeviceAutomationType.CONDITION, device_entry.id
     )
     assert len(conditions) == 26
-    assert conditions == expected_conditions
+    assert_lists_same(conditions, expected_conditions)
+
+
+@pytest.mark.parametrize(
+    "hidden_by,entity_category",
+    (
+        (RegistryEntryHider.INTEGRATION, None),
+        (RegistryEntryHider.USER, None),
+        (None, EntityCategory.CONFIG),
+        (None, EntityCategory.DIAGNOSTIC),
+    ),
+)
+async def test_get_conditions_hidden_auxiliary(
+    hass,
+    device_reg,
+    entity_reg,
+    hidden_by,
+    entity_category,
+):
+    """Test we get the expected conditions from a hidden or auxiliary entity."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_reg.async_get_or_create(
+        DOMAIN,
+        "test",
+        "5678",
+        device_id=device_entry.id,
+        entity_category=entity_category,
+        hidden_by=hidden_by,
+        unit_of_measurement="dogs",
+    )
+    expected_conditions = [
+        {
+            "condition": "device",
+            "domain": DOMAIN,
+            "type": condition,
+            "device_id": device_entry.id,
+            "entity_id": f"{DOMAIN}.test_5678",
+            "metadata": {"secondary": True},
+        }
+        for condition in ["is_value"]
+    ]
+    conditions = await async_get_device_automations(
+        hass, DeviceAutomationType.CONDITION, device_entry.id
+    )
+    assert_lists_same(conditions, expected_conditions)
 
 
 async def test_get_conditions_no_state(hass, device_reg, entity_reg):
@@ -109,6 +167,7 @@ async def test_get_conditions_no_state(hass, device_reg, entity_reg):
             "type": condition["type"],
             "device_id": device_entry.id,
             "entity_id": entity_ids[device_class],
+            "metadata": {"secondary": False},
         }
         for device_class in SensorDeviceClass
         if device_class in UNITS_OF_MEASUREMENT
@@ -118,7 +177,57 @@ async def test_get_conditions_no_state(hass, device_reg, entity_reg):
     conditions = await async_get_device_automations(
         hass, DeviceAutomationType.CONDITION, device_entry.id
     )
-    assert conditions == expected_conditions
+    assert_lists_same(conditions, expected_conditions)
+
+
+@pytest.mark.parametrize(
+    "state_class,unit,condition_types",
+    (
+        (SensorStateClass.MEASUREMENT, None, ["is_value"]),
+        (SensorStateClass.TOTAL, None, ["is_value"]),
+        (SensorStateClass.TOTAL_INCREASING, None, ["is_value"]),
+        (SensorStateClass.MEASUREMENT, "dogs", ["is_value"]),
+        (None, None, []),
+    ),
+)
+async def test_get_conditions_no_unit_or_stateclass(
+    hass,
+    device_reg,
+    entity_reg,
+    state_class,
+    unit,
+    condition_types,
+):
+    """Test we get the expected conditions from an entity with no unit or state class."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_reg.async_get_or_create(
+        DOMAIN,
+        "test",
+        "5678",
+        capabilities={ATTR_STATE_CLASS: state_class},
+        device_id=device_entry.id,
+        unit_of_measurement=unit,
+    )
+    expected_conditions = [
+        {
+            "condition": "device",
+            "domain": DOMAIN,
+            "type": condition,
+            "device_id": device_entry.id,
+            "entity_id": f"{DOMAIN}.test_5678",
+            "metadata": {"secondary": False},
+        }
+        for condition in condition_types
+    ]
+    conditions = await async_get_device_automations(
+        hass, DeviceAutomationType.CONDITION, device_entry.id
+    )
+    assert_lists_same(conditions, expected_conditions)
 
 
 @pytest.mark.parametrize(

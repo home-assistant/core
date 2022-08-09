@@ -16,15 +16,5 @@
                 "title": "Tesla Wall Connector'i seadistamine"
             }
         }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "scan_interval": "V\u00e4rskendussagedus"
-                },
-                "title": "Tesla Wall Connector'i seadistamise valikud"
-            }
-        }
     }
 }

@@ -13,13 +13,19 @@ from homeassistant.components.select.const import (
     SERVICE_SELECT_OPTION,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, STATE_UNAVAILABLE
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_FRIENDLY_NAME,
+    CONF_UNIQUE_ID,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import Event, HomeAssistant, callback, split_entity_id
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     ATTR_TARIFF,
@@ -27,6 +33,7 @@ from .const import (
     CONF_METER,
     CONF_TARIFFS,
     DATA_LEGACY_COMPONENT,
+    DATA_UTILITY,
     SERVICE_SELECT_NEXT_TARIFF,
     SERVICE_SELECT_TARIFF,
     TARIFF_ICON,
@@ -50,16 +57,33 @@ async def async_setup_entry(
     async_add_entities([tariff_select])
 
 
-async def async_setup_platform(hass, conf, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    conf: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the utility meter select."""
+    if discovery_info is None:
+        _LOGGER.error(
+            "This platform is not available to configure "
+            "from 'select:' in configuration.yaml"
+        )
+        return
+
     legacy_component = hass.data[DATA_LEGACY_COMPONENT]
+    meter: str = discovery_info[CONF_METER]
+    conf_meter_unique_id: str | None = hass.data[DATA_UTILITY][meter].get(
+        CONF_UNIQUE_ID
+    )
+
     async_add_entities(
         [
             TariffSelect(
                 discovery_info[CONF_METER],
                 discovery_info[CONF_TARIFFS],
                 legacy_component.async_add_entities,
-                None,
+                conf_meter_unique_id,
             )
         ]
     )
@@ -123,7 +147,7 @@ class LegacyTariffSelect(Entity):
     def __init__(self, tracked_entity_id):
         """Initialize the entity."""
         self._attr_icon = TARIFF_ICON
-        # Set name to influence enity_id
+        # Set name to influence entity_id
         self._attr_name = split_entity_id(tracked_entity_id)[1]
         self.tracked_entity_id = tracked_entity_id
 

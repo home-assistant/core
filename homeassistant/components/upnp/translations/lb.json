@@ -13,12 +13,6 @@
         "step": {
             "ssdp_confirm": {
                 "description": "Soll d\u00ebsen UPnP/IGD Apparat konfigur\u00e9iert ginn?"
-            },
-            "user": {
-                "data": {
-                    "scan_interval": "Update Intervall (Sekonnen, minimum 30)",
-                    "usn": "Apparat"
-                }
             }
         }
     }

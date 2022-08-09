@@ -9,9 +9,8 @@ from pymelcloud.atw_device import (
 from pymelcloud.device import PROPERTY_POWER
 
 from homeassistant.components.water_heater import (
-    SUPPORT_OPERATION_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
     WaterHeaterEntity,
+    WaterHeaterEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TEMP_CELSIUS
@@ -38,6 +37,11 @@ async def async_setup_entry(
 
 class AtwWaterHeater(WaterHeaterEntity):
     """Air-to-Water water heater."""
+
+    _attr_supported_features = (
+        WaterHeaterEntityFeature.TARGET_TEMPERATURE
+        | WaterHeaterEntityFeature.OPERATION_MODE
+    )
 
     def __init__(self, api: MelCloudDevice, device: AtwDevice) -> None:
         """Initialize water heater device."""
@@ -116,11 +120,6 @@ class AtwWaterHeater(WaterHeaterEntity):
     async def async_set_operation_mode(self, operation_mode):
         """Set new target operation mode."""
         await self._device.set({PROPERTY_OPERATION_MODE: operation_mode})
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
 
     @property
     def min_temp(self) -> float | None:

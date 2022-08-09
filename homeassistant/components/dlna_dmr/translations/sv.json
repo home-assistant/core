@@ -1,0 +1,56 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad",
+            "alternative_integration": "Enheten st\u00f6ds b\u00e4ttre av en annan integration",
+            "cannot_connect": "Det gick inte att ansluta.",
+            "discovery_error": "Det gick inte att uppt\u00e4cka en matchande DLNA-enhet",
+            "incomplete_config": "Konfigurationen saknar en n\u00f6dv\u00e4ndig variabel",
+            "non_unique_id": "Flera enheter hittades med samma unika ID",
+            "not_dmr": "Enheten \u00e4r inte en digital mediarenderare som st\u00f6ds"
+        },
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta.",
+            "not_dmr": "Enheten \u00e4r inte en digital mediarenderare som st\u00f6ds"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm": {
+                "description": "Vill du starta konfigurationen?"
+            },
+            "import_turn_on": {
+                "description": "Sl\u00e5 p\u00e5 enheten och klicka p\u00e5 skicka f\u00f6r att forts\u00e4tta migreringen"
+            },
+            "manual": {
+                "data": {
+                    "url": "URL"
+                },
+                "description": "URL till en XML-fil f\u00f6r enhetsbeskrivning",
+                "title": "Manuell DLNA DMR-enhetsanslutning"
+            },
+            "user": {
+                "data": {
+                    "host": "V\u00e4rd"
+                },
+                "description": "V\u00e4lj en enhet att konfigurera eller l\u00e4mna tomt f\u00f6r att ange en URL",
+                "title": "Uppt\u00e4ckte DLNA DMR-enheter"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_url": "Ogiltig URL"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "browse_unfiltered": "Visa inkompatibla media n\u00e4r du surfar",
+                    "callback_url_override": "URL f\u00f6r \u00e5teruppringning av h\u00e4ndelseavlyssnare",
+                    "listen_port": "H\u00e4ndelseavlyssnarport (slumpm\u00e4ssig om inte inst\u00e4llt)",
+                    "poll_availability": "Fr\u00e5ga efter om en enhet \u00e4r tillg\u00e4nglig"
+                },
+                "title": "Konfiguration av DLNA Digital Media Renderer"
+            }
+        }
+    }
+}

@@ -13,8 +13,7 @@
                 "data": {
                     "access_token": "Hozz\u00e1f\u00e9r\u00e9si token"
                 },
-                "description": "Adja meg a hozz\u00e1f\u00e9r\u00e9si tokent a https://developer.tibber.com/settings/accesstoken c\u00edmr\u0151l",
-                "title": "Tibber"
+                "description": "Adja meg a hozz\u00e1f\u00e9r\u00e9si tokent a https://developer.tibber.com/settings/accesstoken c\u00edmr\u0151l"
             }
         }
     }

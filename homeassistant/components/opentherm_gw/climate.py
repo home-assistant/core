@@ -1,19 +1,17 @@
 """Support for OpenTherm Gateway climate devices."""
+from __future__ import annotations
+
 import logging
 
 from pyotgw import vars as gw_vars
 
 from homeassistant.components.climate import ENTITY_ID_FORMAT, ClimateEntity
 from homeassistant.components.climate.const import (
-    CURRENT_HVAC_COOL,
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
-    HVAC_MODE_COOL,
-    HVAC_MODE_HEAT,
     PRESET_AWAY,
     PRESET_NONE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -43,8 +41,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_FLOOR_TEMP = False
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -66,6 +62,10 @@ async def async_setup_entry(
 class OpenThermClimate(ClimateEntity):
     """Representation of a climate device."""
 
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+    )
+
     def __init__(self, gw_dev, options):
         """Initialize the device."""
         self._gateway = gw_dev
@@ -78,9 +78,9 @@ class OpenThermClimate(ClimateEntity):
         self.temp_set_precision = options.get(CONF_SET_PRECISION)
         self.temporary_ovrd_mode = options.get(CONF_TEMPORARY_OVRD_MODE, True)
         self._available = False
-        self._current_operation = None
+        self._current_operation: HVACAction | None = None
         self._current_temperature = None
-        self._hvac_mode = HVAC_MODE_HEAT
+        self._hvac_mode = HVACMode.HEAT
         self._new_target_temperature = None
         self._target_temperature = None
         self._away_mode_a = None
@@ -123,13 +123,13 @@ class OpenThermClimate(ClimateEntity):
         flame_on = status[gw_vars.BOILER].get(gw_vars.DATA_SLAVE_FLAME_ON)
         cooling_active = status[gw_vars.BOILER].get(gw_vars.DATA_SLAVE_COOLING_ACTIVE)
         if ch_active and flame_on:
-            self._current_operation = CURRENT_HVAC_HEAT
-            self._hvac_mode = HVAC_MODE_HEAT
+            self._current_operation = HVACAction.HEATING
+            self._hvac_mode = HVACMode.HEAT
         elif cooling_active:
-            self._current_operation = CURRENT_HVAC_COOL
-            self._hvac_mode = HVAC_MODE_COOL
+            self._current_operation = HVACAction.COOLING
+            self._hvac_mode = HVACMode.COOL
         else:
-            self._current_operation = CURRENT_HVAC_IDLE
+            self._current_operation = HVACAction.IDLE
 
         self._current_temperature = status[gw_vars.THERMOSTAT].get(
             gw_vars.DATA_ROOM_TEMP
@@ -212,21 +212,21 @@ class OpenThermClimate(ClimateEntity):
         return TEMP_CELSIUS
 
     @property
-    def hvac_action(self):
+    def hvac_action(self) -> HVACAction | None:
         """Return current HVAC operation."""
         return self._current_operation
 
     @property
-    def hvac_mode(self):
+    def hvac_mode(self) -> HVACMode:
         """Return current HVAC mode."""
         return self._hvac_mode
 
     @property
-    def hvac_modes(self):
+    def hvac_modes(self) -> list[HVACMode]:
         """Return available HVAC modes."""
         return []
 
-    def set_hvac_mode(self, hvac_mode):
+    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC mode."""
         _LOGGER.warning("Changing HVAC mode is not supported")
 
@@ -283,11 +283,6 @@ class OpenThermClimate(ClimateEntity):
                 temp, self.temporary_ovrd_mode
             )
             self.async_write_ha_state()
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS
 
     @property
     def min_temp(self):

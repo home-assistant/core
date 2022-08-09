@@ -8,11 +8,10 @@ import snapcast.control
 from snapcast.control.server import CONTROL_PORT
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
+from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -44,13 +43,6 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-SUPPORT_SNAPCAST_CLIENT = (
-    SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | SUPPORT_SELECT_SOURCE
-)
-SUPPORT_SNAPCAST_GROUP = (
-    SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | SUPPORT_SELECT_SOURCE
-)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_HOST): cv.string, vol.Optional(CONF_PORT): cv.port}
@@ -124,6 +116,12 @@ async def handle_set_latency(entity, service_call):
 class SnapcastGroupDevice(MediaPlayerEntity):
     """Representation of a Snapcast group device."""
 
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.SELECT_SOURCE
+    )
+
     def __init__(self, group, uid_part):
         """Initialize the Snapcast group device."""
         group.set_callback(self.schedule_update_ha_state)
@@ -163,11 +161,6 @@ class SnapcastGroupDevice(MediaPlayerEntity):
     def is_volume_muted(self):
         """Volume muted."""
         return self._group.muted
-
-    @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return SUPPORT_SNAPCAST_GROUP
 
     @property
     def source_list(self):
@@ -215,6 +208,12 @@ class SnapcastGroupDevice(MediaPlayerEntity):
 class SnapcastClientDevice(MediaPlayerEntity):
     """Representation of a Snapcast client device."""
 
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.SELECT_SOURCE
+    )
+
     def __init__(self, client, uid_part):
         """Initialize the Snapcast client device."""
         client.set_callback(self.schedule_update_ha_state)
@@ -254,11 +253,6 @@ class SnapcastClientDevice(MediaPlayerEntity):
     def is_volume_muted(self):
         """Volume muted."""
         return self._client.muted
-
-    @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return SUPPORT_SNAPCAST_CLIENT
 
     @property
     def source_list(self):

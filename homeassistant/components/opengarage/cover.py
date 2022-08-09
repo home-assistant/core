@@ -1,11 +1,13 @@
 """Platform for the opengarage.io cover component."""
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 from homeassistant.components.cover import (
-    SUPPORT_CLOSE,
-    SUPPORT_OPEN,
     CoverDeviceClass,
     CoverEntity,
+    CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING
@@ -33,7 +35,7 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
     """Representation of a OpenGarage cover."""
 
     _attr_device_class = CoverDeviceClass.GARAGE
-    _attr_supported_features = SUPPORT_OPEN | SUPPORT_CLOSE
+    _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
 
     def __init__(self, open_garage_data_coordinator, device_id):
         """Initialize the cover."""
@@ -43,27 +45,27 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
         super().__init__(open_garage_data_coordinator, device_id)
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
         if self._state is None:
             return None
         return self._state == STATE_CLOSED
 
     @property
-    def is_closing(self):
+    def is_closing(self) -> bool | None:
         """Return if the cover is closing."""
         if self._state is None:
             return None
         return self._state == STATE_CLOSING
 
     @property
-    def is_opening(self):
+    def is_opening(self) -> bool | None:
         """Return if the cover is opening."""
         if self._state is None:
             return None
         return self._state == STATE_OPENING
 
-    async def async_close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         if self._state in [STATE_CLOSED, STATE_CLOSING]:
             return
@@ -71,7 +73,7 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
         self._state = STATE_CLOSING
         await self._push_button()
 
-    async def async_open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         if self._state in [STATE_OPEN, STATE_OPENING]:
             return

@@ -1,7 +1,7 @@
 """Support for Axis camera streaming."""
 from urllib.parse import urlencode
 
-from homeassistant.components.camera import SUPPORT_STREAM
+from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.components.mjpeg import MjpegCamera, filter_urllib3_logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import HTTP_DIGEST_AUTHENTICATION
@@ -11,6 +11,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .axis_base import AxisEntityBase
 from .const import DEFAULT_STREAM_PROFILE, DEFAULT_VIDEO_SOURCE, DOMAIN as AXIS_DOMAIN
+from .device import AxisNetworkDevice
 
 
 async def async_setup_entry(
@@ -21,7 +22,7 @@ async def async_setup_entry(
     """Set up the Axis camera video stream."""
     filter_urllib3_logging()
 
-    device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
+    device: AxisNetworkDevice = hass.data[AXIS_DOMAIN][config_entry.unique_id]
 
     if not device.api.vapix.params.image_format:
         return
@@ -32,13 +33,14 @@ async def async_setup_entry(
 class AxisCamera(AxisEntityBase, MjpegCamera):
     """Representation of a Axis camera."""
 
-    def __init__(self, device):
+    _attr_supported_features = CameraEntityFeature.STREAM
+
+    def __init__(self, device: AxisNetworkDevice) -> None:
         """Initialize Axis Communications camera component."""
         AxisEntityBase.__init__(self, device)
 
         MjpegCamera.__init__(
             self,
-            name=device.name,
             username=device.username,
             password=device.password,
             mjpeg_url=self.mjpeg_source,
@@ -48,7 +50,7 @@ class AxisCamera(AxisEntityBase, MjpegCamera):
 
         self._attr_unique_id = f"{device.unique_id}-camera"
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Subscribe camera events."""
         self.async_on_remove(
             async_dispatcher_connect(
@@ -57,11 +59,6 @@ class AxisCamera(AxisEntityBase, MjpegCamera):
         )
 
         await super().async_added_to_hass()
-
-    @property
-    def supported_features(self) -> int:
-        """Return supported features."""
-        return SUPPORT_STREAM
 
     def _new_address(self) -> None:
         """Set new device address for video stream."""

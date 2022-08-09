@@ -38,14 +38,13 @@ class PowerwallData:
     meters: MetersAggregates
     grid_services_active: bool
     grid_status: GridStatus
-    backup_reserve: float
+    backup_reserve: float | None
 
 
 class PowerwallRuntimeData(TypedDict):
     """Run time data for the powerwall."""
 
     coordinator: DataUpdateCoordinator | None
-    login_failed_count: int
     base_info: PowerwallBaseInfo
     api_changed: bool
     http_session: Session

@@ -24,19 +24,11 @@ from pycec.const import (
     TYPE_TUNER,
 )
 
-from homeassistant.components.media_player import MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    DOMAIN as MP_DOMAIN,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_STEP,
+from homeassistant.components.media_player import (
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
+from homeassistant.components.media_player.const import DOMAIN as MP_DOMAIN
 from homeassistant.const import (
     STATE_IDLE,
     STATE_OFF,
@@ -185,27 +177,27 @@ class CecPlayerEntity(CecEntity, MediaPlayerEntity):
         """Flag media player features that are supported."""
         if self.type_id == TYPE_RECORDER or self.type == TYPE_PLAYBACK:
             return (
-                SUPPORT_TURN_ON
-                | SUPPORT_TURN_OFF
-                | SUPPORT_PLAY_MEDIA
-                | SUPPORT_PAUSE
-                | SUPPORT_STOP
-                | SUPPORT_PREVIOUS_TRACK
-                | SUPPORT_NEXT_TRACK
+                MediaPlayerEntityFeature.TURN_ON
+                | MediaPlayerEntityFeature.TURN_OFF
+                | MediaPlayerEntityFeature.PLAY_MEDIA
+                | MediaPlayerEntityFeature.PAUSE
+                | MediaPlayerEntityFeature.STOP
+                | MediaPlayerEntityFeature.PREVIOUS_TRACK
+                | MediaPlayerEntityFeature.NEXT_TRACK
             )
         if self.type == TYPE_TUNER:
             return (
-                SUPPORT_TURN_ON
-                | SUPPORT_TURN_OFF
-                | SUPPORT_PLAY_MEDIA
-                | SUPPORT_PAUSE
-                | SUPPORT_STOP
+                MediaPlayerEntityFeature.TURN_ON
+                | MediaPlayerEntityFeature.TURN_OFF
+                | MediaPlayerEntityFeature.PLAY_MEDIA
+                | MediaPlayerEntityFeature.PAUSE
+                | MediaPlayerEntityFeature.STOP
             )
         if self.type_id == TYPE_AUDIO:
             return (
-                SUPPORT_TURN_ON
-                | SUPPORT_TURN_OFF
-                | SUPPORT_VOLUME_STEP
-                | SUPPORT_VOLUME_MUTE
+                MediaPlayerEntityFeature.TURN_ON
+                | MediaPlayerEntityFeature.TURN_OFF
+                | MediaPlayerEntityFeature.VOLUME_STEP
+                | MediaPlayerEntityFeature.VOLUME_MUTE
             )
-        return SUPPORT_TURN_ON | SUPPORT_TURN_OFF
+        return MediaPlayerEntityFeature.TURN_ON | MediaPlayerEntityFeature.TURN_OFF

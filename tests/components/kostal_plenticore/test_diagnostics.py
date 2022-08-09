@@ -1,7 +1,9 @@
 """Test Kostal Plenticore diagnostics."""
 from aiohttp import ClientSession
+from kostal.plenticore import SettingsData
 
 from homeassistant.components.diagnostics import REDACTED
+from homeassistant.components.kostal_plenticore.helper import Plenticore
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -9,9 +11,34 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
 
 
 async def test_entry_diagnostics(
-    hass: HomeAssistant, hass_client: ClientSession, init_integration: MockConfigEntry
-):
+    hass: HomeAssistant,
+    hass_client: ClientSession,
+    mock_plenticore: Plenticore,
+    init_integration: MockConfigEntry,
+) -> None:
     """Test config entry diagnostics."""
+
+    # set some test process and settings data for the diagnostics output
+    mock_plenticore.client.get_process_data.return_value = {
+        "devices:local": ["HomeGrid_P", "HomePv_P"]
+    }
+
+    mock_plenticore.client.get_settings.return_value = {
+        "devices:local": [
+            SettingsData(
+                {
+                    "id": "Battery:MinSoc",
+                    "unit": "%",
+                    "default": "None",
+                    "min": 5,
+                    "max": 100,
+                    "type": "byte",
+                    "access": "readwrite",
+                }
+            )
+        ]
+    }
+
     assert await get_diagnostics_for_config_entry(
         hass, hass_client, init_integration
     ) == {

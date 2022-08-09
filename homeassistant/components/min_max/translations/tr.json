@@ -1,0 +1,34 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "entity_ids": "Giri\u015f varl\u0131klar\u0131",
+                    "name": "Ad",
+                    "round_digits": "Hassas",
+                    "type": "\u0130statistik \u00f6zelli\u011fi"
+                },
+                "data_description": {
+                    "round_digits": "\u0130statistik \u00f6zelli\u011fi ortalama veya medyan oldu\u011funda \u00e7\u0131kt\u0131daki ondal\u0131k basamak say\u0131s\u0131n\u0131 kontrol eder."
+                },
+                "description": "Giri\u015f sens\u00f6rleri listesinden minimum, maksimum, ortalama veya medyan de\u011feri hesaplayan bir sens\u00f6r olu\u015fturun.",
+                "title": "Min / maks / ortalama / medyan sens\u00f6r\u00fc ekle"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "entity_ids": "Giri\u015f varl\u0131klar\u0131",
+                    "round_digits": "Hassas",
+                    "type": "\u0130statistik \u00f6zelli\u011fi"
+                },
+                "data_description": {
+                    "round_digits": "\u0130statistik \u00f6zelli\u011fi ortalama veya medyan oldu\u011funda \u00e7\u0131kt\u0131daki ondal\u0131k basamak say\u0131s\u0131n\u0131 kontrol eder."
+                }
+            }
+        }
+    },
+    "title": "Min / maks / ortalama / medyan sens\u00f6r"
+}

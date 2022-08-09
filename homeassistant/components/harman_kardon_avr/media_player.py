@@ -4,13 +4,10 @@ from __future__ import annotations
 import hkavr
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_STEP,
+from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -20,14 +17,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 DEFAULT_NAME = "Harman Kardon AVR"
 DEFAULT_PORT = 10025
-
-SUPPORT_HARMAN_KARDON_AVR = (
-    SUPPORT_VOLUME_STEP
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_TURN_OFF
-    | SUPPORT_TURN_ON
-    | SUPPORT_SELECT_SOURCE
-)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -57,6 +46,14 @@ def setup_platform(
 
 class HkAvrDevice(MediaPlayerEntity):
     """Representation of a Harman Kardon AVR / JBL AVR TV."""
+
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.VOLUME_STEP
+        | MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.SELECT_SOURCE
+    )
 
     def __init__(self, avr):
         """Initialize a new HarmanKardonAVR."""
@@ -108,11 +105,6 @@ class HkAvrDevice(MediaPlayerEntity):
     def source_list(self):
         """Available sources."""
         return self._source_list
-
-    @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return SUPPORT_HARMAN_KARDON_AVR
 
     def turn_on(self):
         """Turn the AVR on."""

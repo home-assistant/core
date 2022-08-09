@@ -2,11 +2,10 @@
     "config": {
         "abort": {
             "already_configured": "Account is al geconfigureerd",
-            "reauth_successful": "Herauthenticatie was succesvol"
+            "reauth_successful": "Herauthenticatie geslaagd"
         },
         "error": {
             "invalid_auth": "Ongeldige authenticatie",
-            "no_devices": "Geen apparaten gevonden in account",
             "unknown": "Onverwachte fout"
         },
         "step": {
@@ -15,7 +14,7 @@
                     "password": "Wachtwoord"
                 },
                 "description": "Voer het wachtwoord voor {username} opnieuw in.",
-                "title": "Verifieer de integratie opnieuw"
+                "title": "Integratie herauthenticeren"
             },
             "user": {
                 "data": {

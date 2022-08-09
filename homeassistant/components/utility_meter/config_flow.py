@@ -6,7 +6,7 @@ from typing import Any, cast
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_NAME, CONF_UNIT_OF_MEASUREMENT
+from homeassistant.const import CONF_NAME
 from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaConfigFlowHandler,
@@ -34,15 +34,15 @@ from .const import (
 )
 
 METER_TYPES = [
-    {"value": "none", "label": "No cycle"},
-    {"value": QUARTER_HOURLY, "label": "Every 15 minutes"},
-    {"value": HOURLY, "label": "Hourly"},
-    {"value": DAILY, "label": "Daily"},
-    {"value": WEEKLY, "label": "Weekly"},
-    {"value": MONTHLY, "label": "Monthly"},
-    {"value": BIMONTHLY, "label": "Every two months"},
-    {"value": QUARTERLY, "label": "Quarterly"},
-    {"value": YEARLY, "label": "Yearly"},
+    selector.SelectOptionDict(value="none", label="No cycle"),
+    selector.SelectOptionDict(value=QUARTER_HOURLY, label="Every 15 minutes"),
+    selector.SelectOptionDict(value=HOURLY, label="Hourly"),
+    selector.SelectOptionDict(value=DAILY, label="Daily"),
+    selector.SelectOptionDict(value=WEEKLY, label="Weekly"),
+    selector.SelectOptionDict(value=MONTHLY, label="Monthly"),
+    selector.SelectOptionDict(value=BIMONTHLY, label="Every two months"),
+    selector.SelectOptionDict(value=QUARTERLY, label="Quarterly"),
+    selector.SelectOptionDict(value=YEARLY, label="Yearly"),
 ]
 
 
@@ -58,40 +58,38 @@ def _validate_config(data: Any) -> Any:
 
 OPTIONS_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_SOURCE_SENSOR): selector.selector(
-            {"entity": {"domain": "sensor"}},
+        vol.Required(CONF_SOURCE_SENSOR): selector.EntitySelector(
+            selector.EntitySelectorConfig(domain="sensor"),
         ),
     }
 )
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_NAME): selector.selector({"text": {}}),
-        vol.Required(CONF_SOURCE_SENSOR): selector.selector(
-            {"entity": {"domain": "sensor"}},
+        vol.Required(CONF_NAME): selector.TextSelector(),
+        vol.Required(CONF_SOURCE_SENSOR): selector.EntitySelector(
+            selector.EntitySelectorConfig(domain="sensor"),
         ),
-        vol.Required(CONF_METER_TYPE): selector.selector(
-            {"select": {"options": METER_TYPES}}
+        vol.Required(CONF_METER_TYPE): selector.SelectSelector(
+            selector.SelectSelectorConfig(options=METER_TYPES),
         ),
-        vol.Required(CONF_METER_OFFSET, default=0): selector.selector(
-            {
-                "number": {
-                    "min": 0,
-                    "max": 28,
-                    "mode": "box",
-                    CONF_UNIT_OF_MEASUREMENT: "days",
-                }
-            }
+        vol.Required(CONF_METER_OFFSET, default=0): selector.NumberSelector(
+            selector.NumberSelectorConfig(
+                min=0,
+                max=28,
+                mode=selector.NumberSelectorMode.BOX,
+                unit_of_measurement="days",
+            ),
         ),
-        vol.Required(CONF_TARIFFS, default=[]): selector.selector(
-            {"select": {"options": [], "custom_value": True, "multiple": True}}
+        vol.Required(CONF_TARIFFS, default=[]): selector.SelectSelector(
+            selector.SelectSelectorConfig(options=[], custom_value=True, multiple=True),
         ),
-        vol.Required(CONF_METER_NET_CONSUMPTION, default=False): selector.selector(
-            {"boolean": {}}
-        ),
-        vol.Required(CONF_METER_DELTA_VALUES, default=False): selector.selector(
-            {"boolean": {}}
-        ),
+        vol.Required(
+            CONF_METER_NET_CONSUMPTION, default=False
+        ): selector.BooleanSelector(),
+        vol.Required(
+            CONF_METER_DELTA_VALUES, default=False
+        ): selector.BooleanSelector(),
     }
 )
 

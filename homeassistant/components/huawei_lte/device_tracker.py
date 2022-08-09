@@ -11,7 +11,7 @@ from stringcase import snakecase
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.components.device_tracker.const import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
-    SOURCE_TYPE_ROUTER,
+    SourceType,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -66,7 +66,7 @@ async def async_setup_entry(
 
     # Initialize already tracked entities
     tracked: set[str] = set()
-    registry = await entity_registry.async_get_registry(hass)
+    registry = entity_registry.async_get(hass)
     known_entities: list[Entity] = []
     track_wired_clients = router.config_entry.options.get(
         CONF_TRACK_WIRED_CLIENTS, DEFAULT_TRACK_WIRED_CLIENTS
@@ -185,7 +185,8 @@ class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
     _extra_state_attributes: dict[str, Any] = field(default_factory=dict, init=False)
 
     @property
-    def _entity_name(self) -> str:
+    def name(self) -> str:
+        """Return the name of the entity."""
         return self.hostname or self.mac_address
 
     @property
@@ -193,9 +194,9 @@ class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
         return self.mac_address
 
     @property
-    def source_type(self) -> str:
-        """Return SOURCE_TYPE_ROUTER."""
-        return SOURCE_TYPE_ROUTER
+    def source_type(self) -> SourceType:
+        """Return SourceType.ROUTER."""
+        return SourceType.ROUTER
 
     @property
     def ip_address(self) -> str | None:

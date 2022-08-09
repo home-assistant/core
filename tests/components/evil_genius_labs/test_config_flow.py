@@ -7,23 +7,28 @@ import aiohttp
 from homeassistant import config_entries
 from homeassistant.components.evil_genius_labs.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
+from homeassistant.data_entry_flow import FlowResultType
 
 
-async def test_form(hass: HomeAssistant, data_fixture, info_fixture) -> None:
+async def test_form(
+    hass: HomeAssistant, all_fixture, info_fixture, product_fixture
+) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
     with patch(
-        "pyevilgenius.EvilGeniusDevice.get_data",
-        return_value=data_fixture,
+        "pyevilgenius.EvilGeniusDevice.get_all",
+        return_value=all_fixture,
     ), patch(
         "pyevilgenius.EvilGeniusDevice.get_info",
         return_value=info_fixture,
+    ), patch(
+        "pyevilgenius.EvilGeniusDevice.get_product",
+        return_value=product_fixture,
     ), patch(
         "homeassistant.components.evil_genius_labs.async_setup_entry",
         return_value=True,
@@ -36,7 +41,7 @@ async def test_form(hass: HomeAssistant, data_fixture, info_fixture) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Fibonacci256-23D4"
     assert result2["data"] == {
         "host": "1.1.1.1",
@@ -51,7 +56,7 @@ async def test_form_cannot_connect(hass: HomeAssistant, caplog) -> None:
     )
 
     with patch(
-        "pyevilgenius.EvilGeniusDevice.get_data",
+        "pyevilgenius.EvilGeniusDevice.get_all",
         side_effect=aiohttp.ClientError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -61,7 +66,7 @@ async def test_form_cannot_connect(hass: HomeAssistant, caplog) -> None:
             },
         )
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
     assert "Unable to connect" in caplog.text
 
@@ -73,7 +78,7 @@ async def test_form_timeout(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "pyevilgenius.EvilGeniusDevice.get_data",
+        "pyevilgenius.EvilGeniusDevice.get_all",
         side_effect=asyncio.TimeoutError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -83,7 +88,7 @@ async def test_form_timeout(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "timeout"}
 
 
@@ -94,7 +99,7 @@ async def test_form_unknown(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "pyevilgenius.EvilGeniusDevice.get_data",
+        "pyevilgenius.EvilGeniusDevice.get_all",
         side_effect=ValueError("BOOM"),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -104,5 +109,5 @@ async def test_form_unknown(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
