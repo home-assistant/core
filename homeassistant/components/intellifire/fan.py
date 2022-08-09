@@ -16,7 +16,10 @@ from homeassistant.components.fan import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.percentage import ordered_list_item_to_percentage
+from homeassistant.util.percentage import (
+    ordered_list_item_to_percentage,
+    percentage_to_ranged_value,
+)
 
 from .const import DOMAIN, LOGGER
 from .coordinator import IntellifireDataUpdateCoordinator
@@ -116,8 +119,8 @@ class IntellifireFan(IntellifireEntity, FanEntity):
         """Set the speed percentage of the fan."""
         # Calculate percentage steps
         LOGGER.debug("Setting Fan Speed %s", percentage)
-        percent_step = 100.0 / len(self.entity_description.named_speeds)
-        int_value = int(math.ceil(float(percentage) / percent_step))
+
+        int_value = math.ceil(percentage_to_ranged_value((1, 4), percentage))
         await self.entity_description.set_fn(self.coordinator.control_api, int_value)
         await self.async_update_ha_state(force_refresh=True)
 
