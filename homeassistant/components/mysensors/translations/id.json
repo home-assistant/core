@@ -70,6 +70,7 @@
                 "description": "Pengaturan gateway Ethernet"
             },
             "select_gateway_type": {
+                "description": "Pilih gateway mana yang akan dikonfigurasi.",
                 "menu_options": {
                     "gw_mqtt": "Konfigurasikan gateway MQTT",
                     "gw_serial": "Konfigurasikan gateway serial",
