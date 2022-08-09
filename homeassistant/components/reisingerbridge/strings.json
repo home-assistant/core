@@ -3,7 +3,6 @@
     "step": {
       "user": {
         "data": {
-          "device_name": "Device name",
           "device_key": "Device key",
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]"
