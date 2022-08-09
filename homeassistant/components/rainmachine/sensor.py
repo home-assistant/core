@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from typing import Any, cast
 
 from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
     RestoreSensor,
     SensorDeviceClass,
     SensorEntity,
@@ -26,7 +27,13 @@ from .model import (
     RainMachineEntityDescriptionMixinDataKey,
     RainMachineEntityDescriptionMixinUid,
 )
-from .util import RUN_STATE_MAP, RunStates, async_clean_up_old_entities, key_exists
+from .util import (
+    RUN_STATE_MAP,
+    EntityDomainReplacementStrategy,
+    RunStates,
+    async_finish_entity_domain_replacements,
+    key_exists,
+)
 
 DEFAULT_ZONE_COMPLETION_TIME_WOBBLE_TOLERANCE = timedelta(seconds=5)
 
@@ -102,16 +109,24 @@ SENSOR_DESCRIPTIONS = (
     ),
 )
 
-ENTITY_UNIQUE_ID_SUFFIXES_TO_REMOVE = ("freeze_protect_temp",)
-
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up RainMachine sensors based on a config entry."""
-    async_clean_up_old_entities(hass, entry, ENTITY_UNIQUE_ID_SUFFIXES_TO_REMOVE)
-
     data: RainMachineData = hass.data[DOMAIN][entry.entry_id]
+
+    async_finish_entity_domain_replacements(
+        hass,
+        entry,
+        (
+            EntityDomainReplacementStrategy(
+                old_domain=SENSOR_DOMAIN,
+                old_unique_id=f"{data.controller.mac}_freeze_protect_temp",
+                replacement_entity_id=f"select.{data.controller.name.lower()}_freeze_protect_temperature",
+            ),
+        ),
+    )
 
     api_category_sensor_map = {
         DATA_PROVISION_SETTINGS: ProvisionSettingsSensor,
