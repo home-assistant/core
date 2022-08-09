@@ -1,9 +1,19 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Konto har redan konfigurerats"
+            "already_configured": "Konto har redan konfigurerats",
+            "reauth_successful": "\u00c5terautentisering lyckades"
+        },
+        "error": {
+            "invalid_auth": "Ogiltig autentisering"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "L\u00f6senord"
+                },
+                "title": "Autentisera panelen igen"
+            },
             "user": {
                 "data": {
                     "password": "L\u00f6senord",

@@ -612,10 +612,6 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             base_class="AlarmControlPanelEntity",
             matches=[
                 TypeHintMatch(
-                    function_name="device_class",
-                    return_type=["str", None],
-                ),
-                TypeHintMatch(
                     function_name="code_format",
                     return_type=["CodeFormat", None],
                 ),
@@ -1221,10 +1217,6 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             base_class="FanEntity",
             matches=[
                 TypeHintMatch(
-                    function_name="device_class",
-                    return_type=["str", None],
-                ),
-                TypeHintMatch(
                     function_name="percentage",
                     return_type=["int", None],
                 ),
@@ -1429,10 +1421,6 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             base_class="LockEntity",
             matches=[
                 TypeHintMatch(
-                    function_name="device_class",
-                    return_type=["str", None],
-                ),
-                TypeHintMatch(
                     function_name="changed_by",
                     return_type=["str", None],
                 ),
@@ -1473,6 +1461,58 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     kwargs_type="Any",
                     return_type=None,
                     has_async_counterpart=True,
+                ),
+            ],
+        ),
+    ],
+    "select": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="SelectEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="capability_attributes",
+                    return_type="dict[str, Any]",
+                ),
+                TypeHintMatch(
+                    function_name="options",
+                    return_type="list[str]",
+                ),
+                TypeHintMatch(
+                    function_name="current_option",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="select_option",
+                    return_type=None,
+                ),
+                TypeHintMatch(
+                    function_name="select_option",
+                    arg_types={1: "str"},
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+            ],
+        ),
+    ],
+    "siren": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="ToggleEntity",
+            matches=_TOGGLE_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="SirenEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="available_tones",
+                    return_type=["dict[int, str]", "list[int | str]", None],
                 ),
             ],
         ),
