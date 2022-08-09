@@ -171,12 +171,12 @@ class OptionsFlow(config_entries.OptionsFlow):
     ) -> data_entry_flow.FlowResult:
         """Manage device options."""
         errors = {}
-        devices: dict[str, dict[str, Any] | None] = {}
-        device: dict[str, Any]
         assert self._selected_device_object
         assert self._selected_device_event_code
 
         if user_input is not None:
+            devices: dict[str, dict[str, Any] | None] = {}
+            device: dict[str, Any]
             device_id = get_device_id(
                 self._selected_device_object.device,
                 data_bits=user_input.get(CONF_DATA_BITS),
