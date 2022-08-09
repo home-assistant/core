@@ -62,6 +62,7 @@ class TuyaLightEntityDescription(LightEntityDescription):
     default_color_type: ColorTypeData = DEFAULT_COLOR_TYPE_DATA
     separate_brightness_message: bool = False
 
+
 LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
     # Curtain Switch
     # https://developer.tuya.com/en/docs/iot/category-clkg?id=Kaiuz0gitil39
@@ -581,7 +582,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                 },
             ]
 
-        #Some Tuya dimmers require the brightness to be sent separately to the power.
+        # Some Tuya dimmers require the brightness to be sent separately to the power.
         if (self.entity_description.separate_brightness_message):
             self._send_command(commands)
             self._send_command(brightness_commands)
