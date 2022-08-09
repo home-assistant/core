@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import ChainMap
-from collections.abc import Awaitable, Callable, Coroutine, Iterable, Mapping
+from collections.abc import Callable, Coroutine, Iterable, Mapping
 from contextvars import ContextVar
 from enum import Enum
 import functools
@@ -858,14 +858,6 @@ class ConfigEntries:
             hass, STORAGE_VERSION, STORAGE_KEY
         )
         EntityRegistryDisabledHandler(hass).async_setup()
-        self._post_remove_calls: list[
-            tuple[
-                str,
-                Callable[
-                    [HomeAssistant, ConfigEntry], Awaitable[dict[str, Any] | None]
-                ],
-            ]
-        ] = []
 
     @callback
     def async_domains(
@@ -958,19 +950,7 @@ class ConfigEntries:
                 )
             )
 
-        result: dict[str, Any] = {"require_restart": not unload_success}
-        for (domain, call) in self._post_remove_calls:
-            if domain == entry.domain and (data := await call(self.hass, entry)):
-                result.update(data)
-        return result
-
-    def async_add_post_remove_call(
-        self,
-        domain: str,
-        call: Callable[[HomeAssistant, ConfigEntry], Awaitable[dict[str, Any] | None]],
-    ) -> None:
-        """Register a callback invoked to process the remove and add to the result."""
-        self._post_remove_calls.append((domain, call))
+        return {"require_restart": not unload_success}
 
     async def _async_shutdown(self, event: Event) -> None:
         """Call when Home Assistant is stopping."""

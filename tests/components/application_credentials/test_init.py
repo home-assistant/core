@@ -485,15 +485,26 @@ async def test_config_flow(
         == "Cannot delete credential in use by integration fake_integration"
     )
 
-    # Delete the config entry, which returns the dangling application credential id
+    # Return information about the in use config entry
     entries = hass.config_entries.async_entries(TEST_DOMAIN)
     assert len(entries) == 1
-    result = await hass.config_entries.async_remove(entries[0].entry_id)
+    client = await ws_client()
+    result = await client.cmd_result(
+        "config_entry", {"config_entry_id": entries[0].entry_id}
+    )
     assert result.get("application_credentials_id") == ID
+
+    # Delete the config entry
+    await hass.config_entries.async_remove(entries[0].entry_id)
 
     # Application credential can now be removed
     resp = await client.cmd("delete", {"application_credentials_id": ID})
     assert resp.get("success")
+
+    # Config entry information no longer found
+    result = await client.cmd("config_entry", {"config_entry_id": entries[0].entry_id})
+    assert "error" in result
+    assert result["error"].get("code") == "invalid_config_entry_id"
 
 
 async def test_config_flow_multiple_entries(
@@ -779,5 +790,8 @@ async def test_remove_config_entry_without_app_credentials(
     entries = hass.config_entries.async_entries("other_domain")
     assert len(entries) == 1
 
-    result = await hass.config_entries.async_remove(entries[0].entry_id)
+    client = await ws_client()
+    result = await client.cmd_result(
+        "config_entry", {"config_entry_id": entries[0].entry_id}
+    )
     assert "application_credential_id" not in result

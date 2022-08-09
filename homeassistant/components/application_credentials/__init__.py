@@ -155,15 +155,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     ).async_setup(hass)
 
     websocket_api.async_register_command(hass, handle_integration_list)
+    websocket_api.async_register_command(hass, handle_config_entry)
 
     config_entry_oauth2_flow.async_add_implementation_provider(
         hass, DOMAIN, _async_provide_implementation
     )
-
-    for domain in await async_get_application_credentials(hass):
-        hass.config_entries.async_add_post_remove_call(
-            domain, async_post_remove_config_entry
-        )
 
     return True
 
@@ -238,10 +234,10 @@ async def _async_provide_implementation(
     ]
 
 
-async def async_post_remove_config_entry(
+async def _async_config_entry_app_credentails(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-) -> dict[str, Any] | None:
+) -> str | None:
     """Return the item id of an application credential for an existing ConfigEntry."""
     if not await _get_platform(hass, config_entry.domain) or not (
         auth_domain := config_entry.data.get("auth_implementation")
@@ -255,7 +251,7 @@ async def async_post_remove_config_entry(
             item[CONF_DOMAIN] == config_entry.domain
             and item.get(CONF_AUTH_DOMAIN, item_id) == auth_domain
         ):
-            return {"application_credentials_id": item_id}
+            return item_id
     return None
 
 
@@ -335,4 +331,32 @@ async def handle_integration_list(
             domain: await _async_integration_config(hass, domain) for domain in domains
         },
     }
+    connection.send_result(msg["id"], result)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "application_credentials/config_entry",
+        vol.Required("config_entry_id"): str,
+    }
+)
+@websocket_api.async_response
+async def handle_config_entry(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Return application credentials information for a config entry."""
+    entry_id = msg["config_entry_id"]
+    config_entry = hass.config_entries.async_get_entry(entry_id)
+    if not config_entry:
+        connection.send_error(
+            msg["id"],
+            "invalid_config_entry_id",
+            f"Config entry not found: {entry_id}",
+        )
+        return
+    result = {}
+    if application_credentials_id := await _async_config_entry_app_credentails(
+        hass, config_entry
+    ):
+        result["application_credentials_id"] = application_credentials_id
     connection.send_result(msg["id"], result)
