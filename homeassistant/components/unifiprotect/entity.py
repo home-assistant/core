@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from datetime import timedelta
 import logging
 from typing import Any
 
@@ -20,14 +21,23 @@ from pyunifiprotect.data import (
     Viewer,
 )
 
+from homeassistant.components.http.auth import async_sign_path
+from homeassistant.components.media_player.const import CONTENT_AUTH_EXPIRY_TIME
 from homeassistant.core import callback
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 
-from .const import ATTR_EVENT_SCORE, DEFAULT_ATTRIBUTION, DEFAULT_BRAND, DOMAIN
+from .const import (
+    ATTR_EVENT_SCORE,
+    ATTR_EVENT_THUMB,
+    DEFAULT_ATTRIBUTION,
+    DEFAULT_BRAND,
+    DOMAIN,
+)
 from .data import ProtectData
 from .models import PermRequired, ProtectRequiredKeysMixin
 from .utils import get_nested_attr
+from .views import ThumbnailProxyView
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -282,6 +292,13 @@ class EventThumbnailMixin(ProtectDeviceEntity):
             return attrs
 
         attrs[ATTR_EVENT_SCORE] = self._event.score
+        attrs[ATTR_EVENT_THUMB] = async_sign_path(
+            self.hass,
+            ThumbnailProxyView.url.format(
+                nvr_id=self.data.api.bootstrap.nvr.id, event_id=self._event.id
+            ),
+            expiration=timedelta(seconds=CONTENT_AUTH_EXPIRY_TIME),
+        )
         return attrs
 
     @callback
