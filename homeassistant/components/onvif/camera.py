@@ -136,13 +136,16 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return a still image response from the camera."""
-        image = None
+
+        if self.stream and self.stream.keepalive:
+            return await self.stream.async_get_image(width, height)
 
         if self.device.capabilities.snapshot:
             try:
                 image = await self.device.device.get_snapshot(
                     self.profile.token, self._basic_auth
                 )
+                return image
             except ONVIFError as err:
                 LOGGER.error(
                     "Fetch snapshot image failed from %s, falling back to FFmpeg; %s",
@@ -150,17 +153,14 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
                     err,
                 )
 
-        if image is None:
-            assert self._stream_uri
-            return await ffmpeg.async_get_image(
-                self.hass,
-                self._stream_uri,
-                extra_cmd=self.device.config_entry.options.get(CONF_EXTRA_ARGUMENTS),
-                width=width,
-                height=height,
-            )
-
-        return image
+        assert self._stream_uri
+        return await ffmpeg.async_get_image(
+            self.hass,
+            self._stream_uri,
+            extra_cmd=self.device.config_entry.options.get(CONF_EXTRA_ARGUMENTS),
+            width=width,
+            height=height,
+        )
 
     async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""
