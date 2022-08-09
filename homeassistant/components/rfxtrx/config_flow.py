@@ -289,16 +289,16 @@ class OptionsFlow(config_entries.OptionsFlow):
                     ),
                 }
             )
-        devices2 = {
+        replace_devices = {
             entry.id: entry.name_by_user if entry.name_by_user else entry.name
             for entry in self._device_entries
             if self._can_replace_device(entry.id)
         }
 
-        if devices2:
+        if replace_devices:
             data_schema.update(
                 {
-                    vol.Optional(CONF_REPLACE_DEVICE): vol.In(devices2),
+                    vol.Optional(CONF_REPLACE_DEVICE): vol.In(replace_devices),
                 }
             )
 
