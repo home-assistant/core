@@ -132,7 +132,8 @@ PORTS_STATISTICS_MOCK = {
                 API_TX_OCTETS: 10000,
                 API_FCS_ERRORS: 10,
             },
-        }, {
+        },
+        {
             API_KEY: "2",
             API_VAL: {
                 API_RX_OCTETS: 2000,
@@ -140,7 +141,8 @@ PORTS_STATISTICS_MOCK = {
                 API_TX_OCTETS: 1000,
                 API_FCS_ERRORS: 1,
             },
-        }, {
+        },
+        {
             API_KEY: "3",
             API_VAL: {
                 API_RX_OCTETS: 200,
@@ -148,7 +150,8 @@ PORTS_STATISTICS_MOCK = {
                 API_TX_OCTETS: 100,
                 API_FCS_ERRORS: 0,
             },
-        }, {
+        },
+        {
             API_KEY: "4",
             API_VAL: {
                 API_RX_OCTETS: 0,
@@ -156,7 +159,8 @@ PORTS_STATISTICS_MOCK = {
                 API_TX_OCTETS: 0,
                 API_FCS_ERRORS: 0,
             },
-        }, {
+        },
+        {
             API_KEY: "5",
             API_VAL: {
                 API_RX_OCTETS: 0,
@@ -164,7 +168,8 @@ PORTS_STATISTICS_MOCK = {
                 API_TX_OCTETS: 0,
                 API_FCS_ERRORS: 0,
             },
-        }, {
+        },
+        {
             API_KEY: "6",
             API_VAL: {
                 API_RX_OCTETS: 0,
@@ -172,7 +177,8 @@ PORTS_STATISTICS_MOCK = {
                 API_TX_OCTETS: 0,
                 API_FCS_ERRORS: 0,
             },
-        }, {
+        },
+        {
             API_KEY: "7",
             API_VAL: {
                 API_RX_OCTETS: 0,
@@ -180,7 +186,8 @@ PORTS_STATISTICS_MOCK = {
                 API_TX_OCTETS: 0,
                 API_FCS_ERRORS: 0,
             },
-        }, {
+        },
+        {
             API_KEY: "8",
             API_VAL: {
                 API_RX_OCTETS: 0,
@@ -188,7 +195,8 @@ PORTS_STATISTICS_MOCK = {
                 API_TX_OCTETS: 0,
                 API_FCS_ERRORS: 0,
             },
-        }, {
+        },
+        {
             API_KEY: "9",
             API_VAL: {
                 API_RX_OCTETS: 0,
@@ -196,7 +204,8 @@ PORTS_STATISTICS_MOCK = {
                 API_TX_OCTETS: 0,
                 API_FCS_ERRORS: 0,
             },
-        }, {
+        },
+        {
             API_KEY: "10",
             API_VAL: {
                 API_RX_OCTETS: 0,
@@ -204,7 +213,8 @@ PORTS_STATISTICS_MOCK = {
                 API_TX_OCTETS: 0,
                 API_FCS_ERRORS: 0,
             },
-        }, {
+        },
+        {
             API_KEY: "11",
             API_VAL: {
                 API_RX_OCTETS: 0,
@@ -212,7 +222,8 @@ PORTS_STATISTICS_MOCK = {
                 API_TX_OCTETS: 0,
                 API_FCS_ERRORS: 0,
             },
-        }, {
+        },
+        {
             API_KEY: "12",
             API_VAL: {
                 API_RX_OCTETS: 0,
@@ -220,7 +231,8 @@ PORTS_STATISTICS_MOCK = {
                 API_TX_OCTETS: 0,
                 API_FCS_ERRORS: 0,
             },
-        }, {
+        },
+        {
             API_KEY: "29",
             API_VAL: {
                 API_RX_OCTETS: 0,
@@ -228,7 +240,8 @@ PORTS_STATISTICS_MOCK = {
                 API_TX_OCTETS: 0,
                 API_FCS_ERRORS: 0,
             },
-        }, {
+        },
+        {
             API_KEY: "30",
             API_VAL: {
                 API_RX_OCTETS: 0,
@@ -236,7 +249,8 @@ PORTS_STATISTICS_MOCK = {
                 API_TX_OCTETS: 0,
                 API_FCS_ERRORS: 0,
             },
-        }, {
+        },
+        {
             API_KEY: "31",
             API_VAL: {
                 API_RX_OCTETS: 0,
@@ -244,7 +258,8 @@ PORTS_STATISTICS_MOCK = {
                 API_TX_OCTETS: 0,
                 API_FCS_ERRORS: 0,
             },
-        }, {
+        },
+        {
             API_KEY: "32",
             API_VAL: {
                 API_RX_OCTETS: 0,
@@ -252,7 +267,8 @@ PORTS_STATISTICS_MOCK = {
                 API_TX_OCTETS: 0,
                 API_FCS_ERRORS: 0,
             },
-        }, {
+        },
+        {
             API_KEY: "33",
             API_VAL: {
                 API_RX_OCTETS: 0,
@@ -260,7 +276,8 @@ PORTS_STATISTICS_MOCK = {
                 API_TX_OCTETS: 0,
                 API_FCS_ERRORS: 0,
             },
-        }, {
+        },
+        {
             API_KEY: "34",
             API_VAL: {
                 API_RX_OCTETS: 0,
@@ -283,119 +300,136 @@ PORTS_STATUS_MOCK = {
                 API_FULL_DUPLEX: True,
                 API_SPEED: "10000",
             },
-        }, {
+        },
+        {
             API_KEY: "2",
             API_VAL: {
                 API_LINK: True,
                 API_FULL_DUPLEX: True,
                 API_SPEED: "1000",
             },
-        }, {
+        },
+        {
             API_KEY: "3",
             API_VAL: {
                 API_LINK: True,
                 API_FULL_DUPLEX: False,
                 API_SPEED: "100",
             },
-        }, {
+        },
+        {
             API_KEY: "4",
             API_VAL: {
                 API_LINK: False,
                 API_FULL_DUPLEX: False,
                 API_SPEED: "1000",
             },
-        }, {
+        },
+        {
             API_KEY: "5",
             API_VAL: {
                 API_LINK: False,
                 API_FULL_DUPLEX: False,
                 API_SPEED: "1000",
             },
-        }, {
+        },
+        {
             API_KEY: "6",
             API_VAL: {
                 API_LINK: False,
                 API_FULL_DUPLEX: False,
                 API_SPEED: "1000",
             },
-        }, {
+        },
+        {
             API_KEY: "7",
             API_VAL: {
                 API_LINK: False,
                 API_FULL_DUPLEX: False,
                 API_SPEED: "1000",
             },
-        }, {
+        },
+        {
             API_KEY: "8",
             API_VAL: {
                 API_LINK: False,
                 API_FULL_DUPLEX: False,
                 API_SPEED: "1000",
             },
-        }, {
+        },
+        {
             API_KEY: "9",
             API_VAL: {
                 API_LINK: False,
                 API_FULL_DUPLEX: False,
                 API_SPEED: "1000",
             },
-        }, {
+        },
+        {
             API_KEY: "10",
             API_VAL: {
                 API_LINK: False,
                 API_FULL_DUPLEX: False,
                 API_SPEED: "1000",
             },
-        }, {
+        },
+        {
             API_KEY: "11",
             API_VAL: {
                 API_LINK: False,
                 API_FULL_DUPLEX: False,
                 API_SPEED: "1000",
             },
-        }, {
+        },
+        {
             API_KEY: "12",
             API_VAL: {
                 API_LINK: False,
                 API_FULL_DUPLEX: False,
                 API_SPEED: "1000",
             },
-        }, {
+        },
+        {
             API_KEY: "29",
             API_VAL: {
                 API_LINK: False,
                 API_FULL_DUPLEX: False,
                 API_SPEED: "0",
             },
-        }, {
+        },
+        {
             API_KEY: "30",
             API_VAL: {
                 API_LINK: False,
                 API_FULL_DUPLEX: False,
                 API_SPEED: "0",
             },
-        }, {
+        },
+        {
             API_KEY: "31",
             API_VAL: {
                 API_LINK: False,
                 API_FULL_DUPLEX: False,
                 API_SPEED: "0",
             },
-        }, {
+        },
+        {
             API_KEY: "32",
             API_VAL: {
                 API_LINK: False,
                 API_FULL_DUPLEX: False,
                 API_SPEED: "0",
             },
-        }, {
+        },
+        {
             API_KEY: "33",
             API_VAL: {
                 API_LINK: False,
                 API_FULL_DUPLEX: False,
                 API_SPEED: "0",
             },
-        }, {
+        },
+        {
             API_KEY: "34",
             API_VAL: {
                 API_LINK: False,
