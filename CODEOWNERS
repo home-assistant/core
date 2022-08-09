@@ -559,6 +559,8 @@ build.json @home-assistant/supervisor
 /tests/components/jewish_calendar/ @tsvi
 /homeassistant/components/juicenet/ @jesserockz
 /tests/components/juicenet/ @jesserockz
+/homeassistant/components/justnimbus/ @kvanzuijlen
+/tests/components/justnimbus/ @kvanzuijlen
 /homeassistant/components/kaiterra/ @Michsior14
 /homeassistant/components/kaleidescape/ @SteveEasley
 /tests/components/kaleidescape/ @SteveEasley

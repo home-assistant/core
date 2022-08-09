@@ -928,6 +928,9 @@ jellyfin-apiclient-python==1.8.1
 # homeassistant.components.rest
 jsonpath==0.82
 
+# homeassistant.components.justnimbus
+justnimbus==0.6.0
+
 # homeassistant.components.kaiterra
 kaiterra-async-client==1.0.0
 
