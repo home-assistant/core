@@ -137,6 +137,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # so we use a lock to ensure that only one API request is reaching it at a time:
     api_lock = asyncio.Lock()
 
+    async def async_init_coordinator(
+        coordinator: GuardianDataUpdateCoordinator,
+    ) -> None:
+        """Initialize a GuardianDataUpdateCoordinator."""
+        await coordinator.async_initialize()
+        await coordinator.async_config_entry_first_refresh()
+
     # Set up GuardianDataUpdateCoordinators for the valve controller:
     valve_controller_coordinators: dict[str, GuardianDataUpdateCoordinator] = {}
     init_valve_controller_tasks = []
@@ -151,13 +158,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             api
         ] = GuardianDataUpdateCoordinator(
             hass,
+            entry=entry,
             client=client,
             api_name=api,
             api_coro=api_coro,
             api_lock=api_lock,
             valve_controller_uid=entry.data[CONF_UID],
         )
-        init_valve_controller_tasks.append(coordinator.async_refresh())
+        init_valve_controller_tasks.append(async_init_coordinator(coordinator))
 
     await asyncio.gather(*init_valve_controller_tasks)
 
@@ -352,6 +360,7 @@ class PairedSensorManager:
 
         coordinator = self.coordinators[uid] = GuardianDataUpdateCoordinator(
             self._hass,
+            entry=self._entry,
             client=self._client,
             api_name=f"{API_SENSOR_PAIRED_SENSOR_STATUS}_{uid}",
             api_coro=lambda: cast(
@@ -422,7 +431,7 @@ class GuardianEntity(CoordinatorEntity[GuardianDataUpdateCoordinator]):
 
     @callback
     def _async_update_from_latest_data(self) -> None:
-        """Update the entity.
+        """Update the entity's underlying data.
 
         This should be extended by Guardian platforms.
         """

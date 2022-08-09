@@ -3,14 +3,7 @@ from __future__ import annotations
 
 from typing import Optional, Union
 
-from xiaomi_ble import (
-    DeviceClass,
-    DeviceKey,
-    SensorDeviceInfo,
-    SensorUpdate,
-    Units,
-    XiaomiBluetoothDeviceData,
-)
+from xiaomi_ble import DeviceClass, DeviceKey, SensorDeviceInfo, SensorUpdate, Units
 
 from homeassistant import config_entries
 from homeassistant.components.bluetooth.passive_update_processor import (
@@ -172,15 +165,7 @@ async def async_setup_entry(
     coordinator: PassiveBluetoothProcessorCoordinator = hass.data[DOMAIN][
         entry.entry_id
     ]
-    kwargs = {}
-    if bindkey := entry.data.get("bindkey"):
-        kwargs["bindkey"] = bytes.fromhex(bindkey)
-    data = XiaomiBluetoothDeviceData(**kwargs)
-    processor = PassiveBluetoothDataProcessor(
-        lambda service_info: sensor_update_to_bluetooth_data_update(
-            data.update(service_info)
-        )
-    )
+    processor = PassiveBluetoothDataProcessor(sensor_update_to_bluetooth_data_update)
     entry.async_on_unload(
         processor.async_add_entities_listener(
             XiaomiBluetoothSensorEntity, async_add_entities

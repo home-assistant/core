@@ -61,6 +61,18 @@ YLKG07YL_SERVICE_INFO = BluetoothServiceInfo(
     source="local",
 )
 
+MISSING_PAYLOAD_ENCRYPTED = BluetoothServiceInfo(
+    name="LYWSD02MMC",
+    address="A4:C1:38:56:53:84",
+    rssi=-56,
+    manufacturer_data={},
+    service_data={
+        "0000fe95-0000-1000-8000-00805f9b34fb": b"0X[\x05\x02\x84\x53\x568\xc1\xa4\x08",
+    },
+    service_uuids=["0000fe95-0000-1000-8000-00805f9b34fb"],
+    source="local",
+)
+
 
 def make_advertisement(address: str, payload: bytes) -> BluetoothServiceInfo:
     """Make a dummy advertisement."""

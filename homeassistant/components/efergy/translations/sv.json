@@ -1,10 +1,13 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Enheten \u00e4r redan konfigurerad"
+            "already_configured": "Enheten \u00e4r redan konfigurerad",
+            "reauth_successful": "\u00c5terautentisering lyckades"
         },
         "error": {
-            "invalid_auth": "Ogiltig autentisering"
+            "cannot_connect": "Det gick inte att ansluta.",
+            "invalid_auth": "Ogiltig autentisering",
+            "unknown": "Ov\u00e4ntat fel"
         },
         "step": {
             "user": {

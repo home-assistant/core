@@ -169,7 +169,7 @@ class DeconzGateway:
             )
         )
 
-        for device_id in deconz_device_interface:
+        for device_id in sorted(deconz_device_interface, key=int):
             async_add_device(EventType.ADDED, device_id)
 
         initializing = False
