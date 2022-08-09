@@ -21,8 +21,6 @@ PLATFORMS: list[Platform] = [Platform.COVER]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Reisinger Bridge from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
-
     open_reisinger_connection = reisingerdrive.OpenReisinger(
         f"{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}",
         entry.data[CONF_DEVICE_KEY],
