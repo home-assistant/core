@@ -82,9 +82,7 @@ class NINAMessage(CoordinatorEntity[NINADataUpdateCoordinator], BinarySensorEnti
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return extra attributes of the sensor."""
-        if (
-            not len(self.coordinator.data[self._region]) > self._warning_index
-        ) or not self.is_on:
+        if not self.is_on:
             return {}
 
         data: NinaWarningData = self.coordinator.data[self._region][self._warning_index]
