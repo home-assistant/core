@@ -586,7 +586,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
             self._send_command(commands)
             self._send_command(brightness_commands)
         else:
-            self._send_command(commaands + brightness_commands)
+            self._send_command(commands + brightness_commands)
 
     def turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
