@@ -89,6 +89,7 @@ def assert_entity_counts(
         e for e in entity_registry.entities if split_entity_id(e)[0] == platform.value
     ]
 
+    print(len(entities), total)
     assert len(entities) == total
     assert len(hass.states.async_all(platform.value)) == enabled
 
@@ -203,10 +204,16 @@ async def adopt_devices(
     hass: HomeAssistant,
     ufp: MockUFPFixture,
     ufp_devices: list[ProtectAdoptableDeviceModel],
+    fully_adopt: bool = False,
 ):
     """Emit WS to re-adopt give Protect devices."""
 
     for ufp_device in ufp_devices:
+        if fully_adopt:
+            ufp_device.is_adopted = True
+            ufp_device.is_adopted_by_other = False
+            ufp_device.can_adopt = False
+
         mock_msg = Mock()
         mock_msg.changed_data = {}
         mock_msg.new_obj = Event(
