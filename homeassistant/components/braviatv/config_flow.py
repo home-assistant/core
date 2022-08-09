@@ -40,34 +40,39 @@ def host_valid(host: str) -> bool:
 
 
 class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for BraviaTV integration."""
+    """Handle a config flow for Bravia TV integration."""
 
     VERSION = 1
 
+    client: BraviaTV
+
     def __init__(self) -> None:
-        """Initialize."""
-        self.client: BraviaTV
-        self.host: str
-        self.title = ""
-        self.mac: str
-
-    async def init_device(self, pin: str) -> None:
-        """Initialize Bravia TV device."""
-        await self.client.connect(pin=pin, clientid=CLIENTID_PREFIX, nickname=NICKNAME)
-        await self.client.set_wol_mode(True)
-        system_info = await self.client.get_system_info()
-
-        await self.async_set_unique_id(system_info[ATTR_CID].lower())
-        self._abort_if_unique_id_configured()
-
-        self.title = system_info[ATTR_MODEL]
-        self.mac = system_info[ATTR_MAC]
+        """Initialize config flow."""
+        self.device_config: dict[str, Any] = {}
 
     @staticmethod
     @callback
     def async_get_options_flow(config_entry: ConfigEntry) -> BraviaTVOptionsFlowHandler:
         """Bravia TV options callback."""
         return BraviaTVOptionsFlowHandler(config_entry)
+
+    async def async_init_device(self) -> FlowResult:
+        """Initialize and create Bravia TV device from config."""
+        pin = self.device_config[CONF_PIN]
+
+        await self.client.connect(pin=pin, clientid=CLIENTID_PREFIX, nickname=NICKNAME)
+        await self.client.set_wol_mode(True)
+
+        system_info = await self.client.get_system_info()
+        cid = system_info[ATTR_CID].lower()
+        title = system_info[ATTR_MODEL]
+
+        self.device_config[CONF_MAC] = system_info[ATTR_MAC]
+
+        await self.async_set_unique_id(cid)
+        self._abort_if_unique_id_configured()
+
+        return self.async_create_entry(title=title, data=self.device_config)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -76,13 +81,14 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            if host_valid(user_input[CONF_HOST]):
+            host = user_input[CONF_HOST]
+            if host_valid(host):
                 session = async_create_clientsession(
                     self.hass,
                     cookie_jar=CookieJar(unsafe=True, quote_cookie=False),
                 )
-                self.host = user_input[CONF_HOST]
-                self.client = BraviaTV(host=self.host, session=session)
+                self.client = BraviaTV(host=host, session=session)
+                self.device_config[CONF_HOST] = host
 
                 return await self.async_step_authorize()
 
@@ -102,15 +108,12 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                await self.init_device(user_input[CONF_PIN])
+                self.device_config[CONF_PIN] = user_input[CONF_PIN]
+                return await self.async_init_device()
             except BraviaTVNotSupported:
                 errors["base"] = "unsupported_model"
             except BraviaTVError:
                 errors["base"] = "cannot_connect"
-            else:
-                user_input[CONF_HOST] = self.host
-                user_input[CONF_MAC] = self.mac
-                return self.async_create_entry(title=self.title, data=user_input)
 
         try:
             await self.client.pair(CLIENTID_PREFIX, NICKNAME)
@@ -143,7 +146,7 @@ class BraviaTVOptionsFlowHandler(config_entries.OptionsFlow):
 
         await coordinator.async_update_sources()
         sources = coordinator.source_map.values()
-        self.source_list = [item.get("title", "") for item in sources]
+        self.source_list = [item["title"] for item in sources]
         return await self.async_step_user()
 
     async def async_step_user(

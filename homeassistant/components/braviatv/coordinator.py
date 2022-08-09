@@ -41,6 +41,7 @@ def catch_braviatv_errors(
         """Catch BraviaTV errors and log message."""
         try:
             await func(self, *args, **kwargs)
+            await self.async_request_refresh()
         except BraviaTVError as err:
             _LOGGER.error("Command error: %s", err)
 
@@ -179,57 +180,48 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
     async def async_turn_on(self) -> None:
         """Turn the device on."""
         await self.client.turn_on()
-        await self.async_request_refresh()
 
     @catch_braviatv_errors
     async def async_turn_off(self) -> None:
         """Turn off device."""
         await self.client.turn_off()
-        await self.async_request_refresh()
 
     @catch_braviatv_errors
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         await self.client.volume_level(round(volume * 100))
-        await self.async_request_refresh()
 
     @catch_braviatv_errors
     async def async_volume_up(self) -> None:
         """Send volume up command to device."""
         await self.client.volume_up()
-        await self.async_request_refresh()
 
     @catch_braviatv_errors
     async def async_volume_down(self) -> None:
         """Send volume down command to device."""
         await self.client.volume_down()
-        await self.async_request_refresh()
 
     @catch_braviatv_errors
     async def async_volume_mute(self, mute: bool) -> None:
         """Send mute command to device."""
         await self.client.volume_mute()
-        await self.async_request_refresh()
 
     @catch_braviatv_errors
     async def async_media_play(self) -> None:
         """Send play command to device."""
         await self.client.play()
         self.playing = True
-        await self.async_request_refresh()
 
     @catch_braviatv_errors
     async def async_media_pause(self) -> None:
         """Send pause command to device."""
         await self.client.pause()
         self.playing = False
-        await self.async_request_refresh()
 
     @catch_braviatv_errors
     async def async_media_stop(self) -> None:
         """Send stop command to device."""
         await self.client.stop()
-        await self.async_request_refresh()
 
     @catch_braviatv_errors
     async def async_media_next_track(self) -> None:
@@ -238,7 +230,6 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
             await self.client.channel_up()
         else:
             await self.client.next_track()
-        await self.async_request_refresh()
 
     @catch_braviatv_errors
     async def async_media_previous_track(self) -> None:
@@ -247,7 +238,6 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
             await self.client.channel_down()
         else:
             await self.client.previous_track()
-        await self.async_request_refresh()
 
     @catch_braviatv_errors
     async def async_select_source(self, source: str) -> None:
@@ -259,7 +249,6 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                 else:
                     await self.client.set_play_content(uri)
                 break
-        await self.async_request_refresh()
 
     @catch_braviatv_errors
     async def async_send_command(self, command: Iterable[str], repeats: int) -> None:
@@ -267,4 +256,3 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         for _ in range(repeats):
             for cmd in command:
                 await self.client.send_command(cmd)
-        await self.async_request_refresh()
