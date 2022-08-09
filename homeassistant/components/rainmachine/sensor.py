@@ -109,8 +109,6 @@ SENSOR_DESCRIPTIONS = (
     ),
 )
 
-ENTITY_UNIQUE_ID_SUFFIXES_TO_REMOVE = ("freeze_protect_temp",)
-
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
