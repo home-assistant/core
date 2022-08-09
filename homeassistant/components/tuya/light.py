@@ -60,7 +60,7 @@ class TuyaLightEntityDescription(LightEntityDescription):
     color_mode: DPCode | None = None
     color_temp: DPCode | tuple[DPCode, ...] | None = None
     default_color_type: ColorTypeData = DEFAULT_COLOR_TYPE_DATA
-
+    separate_brightness_message: bool = False
 
 LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
     # Curtain Switch
@@ -104,6 +104,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             brightness=(DPCode.BRIGHT_VALUE_V2, DPCode.BRIGHT_VALUE),
             color_temp=(DPCode.TEMP_VALUE_V2, DPCode.TEMP_VALUE),
             color_data=(DPCode.COLOUR_DATA_V2, DPCode.COLOUR_DATA),
+            separate_brightness_message=True,
         ),
         # Not documented
         # Based on multiple reports: manufacturer customized Dimmer 2 switches
@@ -470,6 +471,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on or control the light."""
         commands = [{"code": self.entity_description.key, "value": True}]
+        brightness_commands = []
 
         if self._color_temp and ATTR_COLOR_TEMP in kwargs:
             if self._color_mode_dpcode:
@@ -572,14 +574,19 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                     to_max=brightness_max,
                 )
 
-            commands += [
+            brightness_commands += [
                 {
                     "code": self._brightness.dpcode,
                     "value": round(self._brightness.remap_value_from(brightness)),
                 },
             ]
 
-        self._send_command(commands)
+        #Some Tuya dimmers require the brightness to be sent separately to the power.
+        if (self.entity_description.separate_brightness_message):
+            self._send_command(commands)
+            self._send_command(brightness_commands)
+        else:
+            self._send_command(commaands + brightness_commands)
 
     def turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
