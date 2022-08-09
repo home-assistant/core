@@ -5,5 +5,6 @@
   "documentation": "https://www.home-assistant.io/integrations/raspberry_pi",
   "dependencies": ["hardware", "hassio"],
   "codeowners": ["@home-assistant/core"],
-  "integration_type": "hardware"
+  "integration_type": "hardware",
+  "quality_scale": "internal"
 }
