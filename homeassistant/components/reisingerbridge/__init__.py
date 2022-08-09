@@ -44,7 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         open_reisinger_connection=open_reisinger_connection,
     )
 
-    await open_reisinger_data_coordinator.async_config_entry_first_refresh()
+    await coordinator.async_config_entry_first_refresh()
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
