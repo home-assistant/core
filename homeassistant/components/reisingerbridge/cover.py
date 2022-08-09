@@ -56,7 +56,7 @@ class OpenReisingerCover(OpenReisingerEntity, CoverEntity):
         return self._state == STATE_CLOSING
 
     @property
-    def is_opening(self):
+    def is_opening(self) -> bool | None:
         """Return if the cover is opening."""
         if self._state is None:
             return None
