@@ -232,7 +232,7 @@ aiopvpc==3.0.0
 aiopyarr==22.7.0
 
 # homeassistant.components.qnap_qsw
-aioqsw==0.1.1
+aioqsw==0.2.0
 
 # homeassistant.components.recollect_waste
 aiorecollect==1.0.8
@@ -760,7 +760,7 @@ googlemaps==2.5.1
 goslide-api==0.5.1
 
 # homeassistant.components.govee_ble
-govee-ble==0.12.7
+govee-ble==0.14.0
 
 # homeassistant.components.remote_rpi_gpio
 gpiozero==1.6.2
@@ -902,7 +902,7 @@ influxdb-client==1.24.0
 influxdb==5.3.1
 
 # homeassistant.components.inkbird
-inkbird-ble==0.5.1
+inkbird-ble==0.5.2
 
 # homeassistant.components.insteon
 insteon-frontend-home-assistant==0.2.0
@@ -2013,7 +2013,7 @@ pytrafikverket==0.2.0.1
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.0.12
+pyunifiprotect==4.0.13
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -2243,7 +2243,7 @@ spotipy==2.20.0
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-sqlalchemy==1.4.38
+sqlalchemy==1.4.40
 
 # homeassistant.components.srp_energy
 srpenergy==1.3.6
