@@ -38,12 +38,6 @@ class FreezeProtectionSelectOption:
     imperial_label: str
     metric_label: str
 
-    def get_label(self, unit_system: str) -> str:
-        """Get the appropriate label for a unit system."""
-        if unit_system == CONF_UNIT_SYSTEM_IMPERIAL:
-            return self.imperial_label
-        return self.metric_label
-
 
 @dataclass
 class FreezeProtectionTemperatureMixin:
@@ -139,7 +133,10 @@ class FreezeProtectionTemperatureSelect(RainMachineEntity, SelectEntity):
         self._label_to_api_value_map = {}
 
         for option in description.options:
-            label = option.get_label(unit_system)
+            if unit_system == CONF_UNIT_SYSTEM_IMPERIAL:
+                label = option.imperial_label
+            else:
+                label = option.metric_label
             self._api_value_to_label_map[option.api_value] = label
             self._label_to_api_value_map[label] = option.api_value
 
