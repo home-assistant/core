@@ -51,6 +51,7 @@ class ActiveBluetoothProcessorCoordinator(PassiveBluetoothProcessorCoordinator):
         self,
         hass: HomeAssistant,
         logger: logging.Logger,
+        *,
         address: str,
         mode: BluetoothScanningMode,
         update_method: Callable[[BluetoothServiceInfoBleak], _T],
