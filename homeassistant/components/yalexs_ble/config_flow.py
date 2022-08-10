@@ -17,7 +17,6 @@ from yalexs_ble import (
 from yalexs_ble.const import YALE_MFR_ID
 
 from homeassistant import config_entries
-from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
@@ -28,8 +27,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant.loader import async_get_integration
 
-from .const import CONF_KEY, CONF_LOCAL_NAME, CONF_SLOT, DISCOVERY_TIMEOUT, DOMAIN
-from .util import bluetooth_callback_matcher
+from .const import CONF_KEY, CONF_LOCAL_NAME, CONF_SLOT, DOMAIN
+from .util import async_get_service_info
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -100,6 +99,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         self.hass.config_entries.async_reload(entry.entry_id)
                     )
                 raise AbortFlow(reason="already_configured")
+
+        try:
+            self._discovery_info = await async_get_service_info(
+                self.hass, lock_cfg.local_name, lock_cfg.address
+            )
+        except asyncio.TimeoutError:
+            return self.async_abort(reason="no_devices_found")
+
         for progress in self._async_in_progress(include_uninitialized=True):
             # Integration discovery should abort other discovery types
             # since it already has the keys and slots, and the other
@@ -112,16 +119,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ):
                 self.hass.config_entries.flow.async_abort(progress["flow_id"])
 
-        try:
-            self._discovery_info = await bluetooth.async_process_advertisements(
-                self.hass,
-                lambda service_info: True,
-                bluetooth_callback_matcher(lock_cfg.local_name, lock_cfg.address),
-                bluetooth.BluetoothScanningMode.ACTIVE,
-                DISCOVERY_TIMEOUT,
-            )
-        except asyncio.TimeoutError:
-            return self.async_abort(reason="no_devices_found")
         self._lock_cfg = lock_cfg
         self.context["title_placeholders"] = {
             "name": lock_cfg.name,
