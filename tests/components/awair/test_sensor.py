@@ -26,20 +26,21 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     TEMP_CELSIUS,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 
 from .const import (
     AWAIR_UUID,
-    CONFIG,
-    DEVICES_FIXTURE,
+    CLOUD_CONFIG,
+    CLOUD_DEVICES_FIXTURE,
+    CLOUD_UNIQUE_ID,
     GEN1_DATA_FIXTURE,
     GEN2_DATA_FIXTURE,
     GLOW_DATA_FIXTURE,
     MINT_DATA_FIXTURE,
     OFFLINE_FIXTURE,
     OMNI_DATA_FIXTURE,
-    UNIQUE_ID,
     USER_FIXTURE,
 )
 
@@ -50,10 +51,10 @@ SENSOR_TYPES_MAP = {
 }
 
 
-async def setup_awair(hass, fixtures):
+async def setup_awair(hass: HomeAssistant, fixtures):
     """Add Awair devices to hass, using specified fixtures for data."""
 
-    entry = MockConfigEntry(domain=DOMAIN, unique_id=UNIQUE_ID, data=CONFIG)
+    entry = MockConfigEntry(domain=DOMAIN, unique_id=CLOUD_UNIQUE_ID, data=CLOUD_CONFIG)
     with patch("python_awair.AwairClient.query", side_effect=fixtures):
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
@@ -61,7 +62,12 @@ async def setup_awair(hass, fixtures):
 
 
 def assert_expected_properties(
-    hass, registry, name, unique_id, state_value, attributes
+    hass: HomeAssistant,
+    registry: er.RegistryEntry,
+    name,
+    unique_id,
+    state_value,
+    attributes: dict,
 ):
     """Assert expected properties from a dict."""
 
@@ -74,10 +80,10 @@ def assert_expected_properties(
         assert state.attributes.get(attr) == value
 
 
-async def test_awair_gen1_sensors(hass):
+async def test_awair_gen1_sensors(hass: HomeAssistant):
     """Test expected sensors on a 1st gen Awair."""
 
-    fixtures = [USER_FIXTURE, DEVICES_FIXTURE, GEN1_DATA_FIXTURE]
+    fixtures = [USER_FIXTURE, CLOUD_DEVICES_FIXTURE, GEN1_DATA_FIXTURE]
     await setup_awair(hass, fixtures)
     registry = er.async_get(hass)
 
@@ -166,10 +172,10 @@ async def test_awair_gen1_sensors(hass):
     assert hass.states.get("sensor.living_room_illuminance") is None
 
 
-async def test_awair_gen2_sensors(hass):
+async def test_awair_gen2_sensors(hass: HomeAssistant):
     """Test expected sensors on a 2nd gen Awair."""
 
-    fixtures = [USER_FIXTURE, DEVICES_FIXTURE, GEN2_DATA_FIXTURE]
+    fixtures = [USER_FIXTURE, CLOUD_DEVICES_FIXTURE, GEN2_DATA_FIXTURE]
     await setup_awair(hass, fixtures)
     registry = er.async_get(hass)
 
@@ -199,10 +205,10 @@ async def test_awair_gen2_sensors(hass):
     assert hass.states.get("sensor.living_room_pm10") is None
 
 
-async def test_awair_mint_sensors(hass):
+async def test_awair_mint_sensors(hass: HomeAssistant):
     """Test expected sensors on an Awair mint."""
 
-    fixtures = [USER_FIXTURE, DEVICES_FIXTURE, MINT_DATA_FIXTURE]
+    fixtures = [USER_FIXTURE, CLOUD_DEVICES_FIXTURE, MINT_DATA_FIXTURE]
     await setup_awair(hass, fixtures)
     registry = er.async_get(hass)
 
@@ -240,10 +246,10 @@ async def test_awair_mint_sensors(hass):
     assert hass.states.get("sensor.living_room_carbon_dioxide") is None
 
 
-async def test_awair_glow_sensors(hass):
+async def test_awair_glow_sensors(hass: HomeAssistant):
     """Test expected sensors on an Awair glow."""
 
-    fixtures = [USER_FIXTURE, DEVICES_FIXTURE, GLOW_DATA_FIXTURE]
+    fixtures = [USER_FIXTURE, CLOUD_DEVICES_FIXTURE, GLOW_DATA_FIXTURE]
     await setup_awair(hass, fixtures)
     registry = er.async_get(hass)
 
@@ -260,10 +266,10 @@ async def test_awair_glow_sensors(hass):
     assert hass.states.get("sensor.living_room_pm2_5") is None
 
 
-async def test_awair_omni_sensors(hass):
+async def test_awair_omni_sensors(hass: HomeAssistant):
     """Test expected sensors on an Awair omni."""
 
-    fixtures = [USER_FIXTURE, DEVICES_FIXTURE, OMNI_DATA_FIXTURE]
+    fixtures = [USER_FIXTURE, CLOUD_DEVICES_FIXTURE, OMNI_DATA_FIXTURE]
     await setup_awair(hass, fixtures)
     registry = er.async_get(hass)
 
@@ -295,10 +301,10 @@ async def test_awair_omni_sensors(hass):
     )
 
 
-async def test_awair_offline(hass):
+async def test_awair_offline(hass: HomeAssistant):
     """Test expected behavior when an Awair is offline."""
 
-    fixtures = [USER_FIXTURE, DEVICES_FIXTURE, OFFLINE_FIXTURE]
+    fixtures = [USER_FIXTURE, CLOUD_DEVICES_FIXTURE, OFFLINE_FIXTURE]
     await setup_awair(hass, fixtures)
 
     # The expected behavior is that we won't have any sensors
@@ -313,10 +319,10 @@ async def test_awair_offline(hass):
     assert hass.states.get("sensor.living_room_awair_score") is None
 
 
-async def test_awair_unavailable(hass):
+async def test_awair_unavailable(hass: HomeAssistant):
     """Test expected behavior when an Awair becomes offline later."""
 
-    fixtures = [USER_FIXTURE, DEVICES_FIXTURE, GEN1_DATA_FIXTURE]
+    fixtures = [USER_FIXTURE, CLOUD_DEVICES_FIXTURE, GEN1_DATA_FIXTURE]
     await setup_awair(hass, fixtures)
     registry = er.async_get(hass)
 
