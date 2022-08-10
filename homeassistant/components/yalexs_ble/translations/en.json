@@ -12,10 +12,10 @@
             "invalid_key_index": "The offline key slot must be an integer between 0 and 255.",
             "unknown": "Unexpected error"
         },
-        "flow_title": "{name} ({local_name}) {address}",
+        "flow_title": "{name}",
         "step": {
             "integration_discovery_confirm": {
-                "description": "Do you want to setup {name} ({local_name}) over Bluetooth with address {address}?"
+                "description": "Do you want to setup {name} over Bluetooth with address {address}?"
             },
             "user": {
                 "data": {
