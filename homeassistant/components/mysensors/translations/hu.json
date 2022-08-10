@@ -14,6 +14,7 @@
             "invalid_serial": "\u00c9rv\u00e9nytelen soros port",
             "invalid_subscribe_topic": "\u00c9rv\u00e9nytelen feliratkoz\u00e1si (subscribe) topik",
             "invalid_version": "\u00c9rv\u00e9nytelen MySensors verzi\u00f3",
+            "mqtt_required": "Az MQTT integr\u00e1ci\u00f3 nincs be\u00e1ll\u00edtva",
             "not_a_number": "Adj meg egy sz\u00e1mot.",
             "port_out_of_range": "A portsz\u00e1mnak legal\u00e1bb 1-nek \u00e9s legfeljebb 65535-nek kell lennie",
             "same_topic": "A feliratkoz\u00e1s \u00e9s a k\u00f6zz\u00e9t\u00e9tel t\u00e9m\u00e1i ugyanazok",
@@ -67,6 +68,14 @@
                     "version": "MySensors verzi\u00f3"
                 },
                 "description": "Ethernet \u00e1tj\u00e1r\u00f3 be\u00e1ll\u00edt\u00e1sa"
+            },
+            "select_gateway_type": {
+                "description": "V\u00e1lassza ki a konfigur\u00e1land\u00f3 \u00e1tj\u00e1r\u00f3t.",
+                "menu_options": {
+                    "gw_mqtt": "MQTT \u00e1tj\u00e1r\u00f3 konfigur\u00e1l\u00e1sa",
+                    "gw_serial": "Soros-port \u00e1tj\u00e1r\u00f3 konfigur\u00e1l\u00e1sa",
+                    "gw_tcp": "TCP-\u00e1tj\u00e1r\u00f3 konfigur\u00e1l\u00e1sa"
+                }
             },
             "user": {
                 "data": {
