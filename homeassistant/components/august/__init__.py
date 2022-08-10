@@ -162,9 +162,8 @@ class AugustData(AugustSubscriberMixin):
             self._hass,
             [
                 lock_detail
-                for lock_detail in self.locks
-                if lock_detail.device_id in self._device_detail_by_id
-                and self.get_device_detail(lock_detail.device_id).offline_key
+                for lock_detail in self._device_detail_by_id.values()
+                if isinstance(lock_detail, LockDetail) and lock_detail.offline_key
             ],
         )
 
