@@ -44,15 +44,12 @@ async def async_setup_entry(
     client = get_entry_client(hass, config_entry)
 
     async_add_entities(
-        [
-            ArcamFmj(
-                config_entry.title,
-                State(client, zone),
-                config_entry.unique_id or config_entry.entry_id,
-            )
-            for zone in (1, 2)
-        ],
-        True,
+        ArcamFmj(
+            config_entry.title,
+            State(client, zone),
+            config_entry.unique_id or config_entry.entry_id,
+        )
+        for zone in (1, 2)
     )
 
 
