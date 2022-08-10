@@ -37,7 +37,7 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if self._device is not None:
             await self.async_set_unique_id(self._device.mac_address)
-            self._abort_if_unique_id_configured()
+            self._abort_if_unique_id_configured(error="already_configured_device")
             self.context.update(
                 {
                     "title_placeholders": {
@@ -90,7 +90,7 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
 
             if user is not None:
                 await self.async_set_unique_id(user.email)
-                self._abort_if_unique_id_configured()
+                self._abort_if_unique_id_configured(error="already_configured_account")
 
                 title = user.email
                 return self.async_create_entry(title=title, data=user_input)
@@ -121,7 +121,7 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
 
             if self._device is not None:
                 await self.async_set_unique_id(self._device.mac_address)
-                self._abort_if_unique_id_configured()
+                self._abort_if_unique_id_configured(error="already_configured_device")
                 title = f"{self._device.model} ({self._device.device_id})"
                 return self.async_create_entry(title=title, data=user_input)
 

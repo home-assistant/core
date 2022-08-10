@@ -106,7 +106,7 @@ async def test_duplicate_error(hass: HomeAssistant):
         )
 
         assert result["type"] == "abort"
-        assert result["reason"] == "already_configured"
+        assert result["reason"] == "already_configured_account"
 
 
 async def test_no_devices_error(hass: HomeAssistant):
