@@ -11,7 +11,7 @@
             "unknown": "Unexpected error",
             "unreachable": "Unable to connect to the device."
         },
-        "flow_title": "{model} ({host})",
+        "flow_title": "{model} ({device_id})",
         "step": {
             "reauth": {
                 "data": {
@@ -31,22 +31,22 @@
                 "data": {
                     "host": "Hostname or IP address of the device"
                 },
-                "description": "Awair Local API must be enabled following these steps: https://support.getawair.com/hc/en-us/articles/360049221014-Awair-Element-Local-API-Feature"
+                "description": "Awair Local API must be enabled following these steps: {url}"
             },
             "cloud" :{
                 "data": {
                     "access_token": "Access Token",
                     "email": "Email"
                 },
-                "description": "You must register for an Awair developer access token at: https://developer.getawair.com/onboard/login"
+                "description": "You must register for an Awair developer access token at: {url}"
             },
             "discovery_confirm": {
-                "description": "Do you want to setup local {model} device: {host}?"
+                "description": "Do you want to setup {model} ({device_id})?"
             },
             "user": {
                 "menu_options": {
-                    "cloud": "Cloud API",
-                    "local": "Local API"
+                    "cloud": "Connect via the cloud",
+                    "local": "Connect locally (preferred)"
                   },
                 "description": "Awair provides two APIs, a Cloud API with data summarized over 5 minutes, and a beta Local API which can be polled for real time data."
             }

@@ -2,12 +2,12 @@
 from __future__ import annotations
 
 from asyncio import gather
-from typing import Any
 
+from aiohttp.client_exceptions import ClientConnectorError
 from async_timeout import timeout
 from python_awair import Awair, AwairLocal
-from python_awair.devices import AwairBaseDevice
-from python_awair.exceptions import AuthError
+from python_awair.devices import AwairBaseDevice, AwairLocalDevice
+from python_awair.exceptions import AuthError, AwairError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, Platform
@@ -88,7 +88,7 @@ class AwairCloudDataUpdateCoordinator(AwairDataUpdateCoordinator):
 
         super().__init__(hass, config_entry, UPDATE_INTERVAL_CLOUD)
 
-    async def _async_update_data(self) -> Any | None:
+    async def _async_update_data(self) -> dict[str, AwairResult] | None:
         """Update data via Awair client library."""
         async with timeout(API_TIMEOUT):
             try:
@@ -108,6 +108,8 @@ class AwairCloudDataUpdateCoordinator(AwairDataUpdateCoordinator):
 class AwairLocalDataUpdateCoordinator(AwairDataUpdateCoordinator):
     """Define a wrapper class to update Awair data from the local API."""
 
+    _device: AwairLocalDevice | None = None
+
     def __init__(self, hass, config_entry, session) -> None:
         """Set up the AwairLocalDataUpdateCoordinator class."""
         self._awair = AwairLocal(
@@ -116,15 +118,19 @@ class AwairLocalDataUpdateCoordinator(AwairDataUpdateCoordinator):
 
         super().__init__(hass, config_entry, UPDATE_INTERVAL_LOCAL)
 
-    async def _async_update_data(self) -> Any | None:
+    async def _async_update_data(self) -> dict[str, AwairResult] | None:
         """Update data via Awair client library."""
         async with timeout(API_TIMEOUT):
             try:
-                LOGGER.debug("Fetching devices")
-                devices = await self._awair.devices()
-                results = await gather(
-                    *(self._fetch_air_data(device) for device in devices)
-                )
-                return {result.device.uuid: result for result in results}
-            except Exception as err:
+                if self._device is None:
+                    LOGGER.debug("Fetching devices")
+                    devices = await self._awair.devices()
+                    self._device = devices[0]
+                result = await self._fetch_air_data(self._device)
+                return {result.device.uuid: result}
+            except ClientConnectorError as err:
+                LOGGER.error("Unable to connect error: %s", err)
+                raise UpdateFailed(err) from err
+            except AwairError as err:
+                LOGGER.error("Unexpected API error: %s", err)
                 raise UpdateFailed(err) from err

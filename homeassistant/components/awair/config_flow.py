@@ -37,12 +37,12 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if self._device is not None:
             await self.async_set_unique_id(self._device.mac_address)
-            self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+            self._abort_if_unique_id_configured()
             self.context.update(
                 {
                     "title_placeholders": {
-                        "host": host,
                         "model": self._device.model,
+                        "device_id": self._device.device_id,
                     }
                 }
             )
@@ -55,14 +55,17 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Confirm discovery."""
         if user_input is not None:
-            title = f"{self._device.model} ({self._device.device_addr})"
+            title = f"{self._device.model} ({self._device.device_id})"
             return self.async_create_entry(
                 title=title,
                 data={CONF_HOST: self._device.device_addr},
             )
 
         self._set_confirm_only()
-        placeholders = {"host": self._device.device_addr, "model": self._device.model}
+        placeholders = {
+            "model": self._device.model,
+            "device_id": self._device.device_id,
+        }
         return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders=placeholders,
@@ -72,12 +75,6 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, str] | None = None
     ) -> FlowResult:
         """Handle a flow initialized by the user."""
-
-        if user_input is not None:
-            if CONF_ACCESS_TOKEN in user_input:
-                return await self.async_step_cloud(user_input)
-            if CONF_HOST in user_input:
-                return await self.async_step_local(user_input)
 
         return self.async_show_menu(step_id="user", menu_options=["local", "cloud"])
 
@@ -95,7 +92,7 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(user.email)
                 self._abort_if_unique_id_configured()
 
-                title = f"Awair Cloud {user.email} ({user.user_id})"
+                title = user.email
                 return self.async_create_entry(title=title, data=user_input)
 
             if error != "invalid_access_token":
@@ -106,6 +103,9 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="cloud",
             data_schema=vol.Schema({vol.Optional(CONF_ACCESS_TOKEN): str}),
+            description_placeholders={
+                "url": "https://developer.getawair.com/onboard/login"
+            },
             errors=errors,
         )
 
@@ -122,8 +122,7 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
             if self._device is not None:
                 await self.async_set_unique_id(self._device.mac_address)
                 self._abort_if_unique_id_configured()
-
-                title = f"{self._device.model} ({user_input[CONF_HOST]})"
+                title = f"{self._device.model} ({self._device.device_id})"
                 return self.async_create_entry(title=title, data=user_input)
 
             if error is not None:
@@ -132,6 +131,9 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="local",
             data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
+            description_placeholders={
+                "url": "https://support.getawair.com/hc/en-us/articles/360049221014-Awair-Element-Local-API-Feature"
+            },
             errors=errors,
         )
 

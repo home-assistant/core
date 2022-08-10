@@ -15,7 +15,7 @@ from .const import CONFIG, DEVICES_FIXTURE, NO_DEVICES_FIXTURE, UNIQUE_ID, USER_
 from tests.common import MockConfigEntry
 
 
-async def test_show_form(hass):
+async def test_show_form(hass: HomeAssistant):
     """Test that the form is served with no input."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -25,30 +25,50 @@ async def test_show_form(hass):
     assert result["step_id"] == SOURCE_USER
 
 
-async def test_invalid_access_token(hass):
+async def test_invalid_access_token(hass: HomeAssistant):
     """Test that errors are shown when the access token is invalid."""
 
     with patch("python_awair.AwairClient.query", side_effect=AuthError()):
-        result = await hass.config_entries.flow.async_init(
+        menu_step = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+        )
+
+        form_step = await hass.config_entries.flow.async_configure(
+            menu_step["flow_id"],
+            {"next_step_id": "cloud"},
+        )
+
+        result = await hass.config_entries.flow.async_configure(
+            form_step["flow_id"],
+            CONFIG,
         )
 
         assert result["errors"] == {CONF_ACCESS_TOKEN: "invalid_access_token"}
 
 
-async def test_unexpected_api_error(hass):
+async def test_unexpected_api_error(hass: HomeAssistant):
     """Test that we abort on generic errors."""
 
     with patch("python_awair.AwairClient.query", side_effect=AwairError()):
-        result = await hass.config_entries.flow.async_init(
+        menu_step = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+        )
+
+        form_step = await hass.config_entries.flow.async_configure(
+            menu_step["flow_id"],
+            {"next_step_id": "cloud"},
+        )
+
+        result = await hass.config_entries.flow.async_configure(
+            form_step["flow_id"],
+            CONFIG,
         )
 
         assert result["type"] == "abort"
         assert result["reason"] == "unknown"
 
 
-async def test_duplicate_error(hass):
+async def test_duplicate_error(hass: HomeAssistant):
     """Test that errors are shown when adding a duplicate config."""
 
     with patch(
@@ -61,22 +81,42 @@ async def test_duplicate_error(hass):
             hass
         )
 
-        result = await hass.config_entries.flow.async_init(
+        menu_step = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+        )
+
+        form_step = await hass.config_entries.flow.async_configure(
+            menu_step["flow_id"],
+            {"next_step_id": "cloud"},
+        )
+
+        result = await hass.config_entries.flow.async_configure(
+            form_step["flow_id"],
+            CONFIG,
         )
 
         assert result["type"] == "abort"
         assert result["reason"] == "already_configured"
 
 
-async def test_no_devices_error(hass):
+async def test_no_devices_error(hass: HomeAssistant):
     """Test that errors are shown when the API returns no devices."""
 
     with patch(
         "python_awair.AwairClient.query", side_effect=[USER_FIXTURE, NO_DEVICES_FIXTURE]
     ):
-        result = await hass.config_entries.flow.async_init(
+        menu_step = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+        )
+
+        form_step = await hass.config_entries.flow.async_configure(
+            menu_step["flow_id"],
+            {"next_step_id": "cloud"},
+        )
+
+        result = await hass.config_entries.flow.async_configure(
+            form_step["flow_id"],
+            CONFIG,
         )
 
         assert result["type"] == "abort"
@@ -147,7 +187,7 @@ async def test_reauth_error(hass: HomeAssistant) -> None:
         assert result["reason"] == "unknown"
 
 
-async def test_create_entry(hass):
+async def test_create_entry(hass: HomeAssistant):
     """Test overall flow."""
 
     with patch(
@@ -156,11 +196,21 @@ async def test_create_entry(hass):
         "homeassistant.components.awair.sensor.async_setup_entry",
         return_value=True,
     ):
-        result = await hass.config_entries.flow.async_init(
+        menu_step = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
         )
 
+        form_step = await hass.config_entries.flow.async_configure(
+            menu_step["flow_id"],
+            {"next_step_id": "cloud"},
+        )
+
+        result = await hass.config_entries.flow.async_configure(
+            form_step["flow_id"],
+            CONFIG,
+        )
+
         assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-        assert result["title"] == "Awair Cloud foo@bar.com (32406)"
+        assert result["title"] == "foo@bar.com"
         assert result["data"][CONF_ACCESS_TOKEN] == CONFIG[CONF_ACCESS_TOKEN]
         assert result["result"].unique_id == UNIQUE_ID
