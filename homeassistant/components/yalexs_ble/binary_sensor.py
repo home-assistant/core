@@ -31,7 +31,6 @@ class YaleXSBLEDoorSensor(YALEXSBLEEntity, BinarySensorEntity):
 
     _attr_device_class = BinarySensorDeviceClass.DOOR
     _attr_has_entity_name = True
-    _attr_name = "Door"
 
     @callback
     def _async_update_state(
