@@ -430,6 +430,7 @@ FLOWS = {
         "xiaomi_ble",
         "xiaomi_miio",
         "yale_smart_alarm",
+        "yalexs_ble",
         "yamaha_musiccast",
         "yeelight",
         "yolink",
