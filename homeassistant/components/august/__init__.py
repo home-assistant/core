@@ -13,7 +13,7 @@ from yalexs.lock import Lock, LockDetail
 from yalexs.pubnub_activity import activities_from_pubnub_message
 from yalexs.pubnub_async import AugustPubNub, async_create_pubnub
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY, ConfigEntry
 from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import (
@@ -93,6 +93,27 @@ async def async_setup_august(
     return True
 
 
+@callback
+def _async_trigger_ble_lock_discovery(
+    hass: HomeAssistant, locks_with_offline_keys: list[LockDetail]
+):
+    """Update keys for the yalexs-ble integration if available."""
+    for lock_detail in locks_with_offline_keys:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                "yalexs_ble",
+                context={"source": SOURCE_INTEGRATION_DISCOVERY},
+                data={
+                    "name": lock_detail.device_name,
+                    "address": lock_detail.mac_address,
+                    "serial": lock_detail.serial_number,
+                    "key": lock_detail.offline_key,
+                    "slot": lock_detail.offline_slot,
+                },
+            )
+        )
+
+
 class AugustData(AugustSubscriberMixin):
     """August data object."""
 
@@ -133,6 +154,20 @@ class AugustData(AugustSubscriberMixin):
         # detail as we cannot determine if they are usable.
         # This also allows us to avoid checking for
         # detail being None all over the place
+
+        # Currently we know how to feed data to yalexe_ble
+        # but we do not know how to send it to homekit_controller
+        # yet
+        _async_trigger_ble_lock_discovery(
+            self._hass,
+            [
+                lock_detail
+                for lock_detail in self.locks
+                if lock_detail.device_id in self._device_detail_by_id
+                and self.get_device_detail(lock_detail.device_id).offline_key
+            ],
+        )
+
         self._remove_inoperative_locks()
         self._remove_inoperative_doorbells()
 
