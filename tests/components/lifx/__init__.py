@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from contextlib import contextmanager
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from aiolifx.aiolifx import Light
 
@@ -72,6 +72,8 @@ def _mocked_bulb() -> Light:
     bulb.label = LABEL
     bulb.color = [1, 2, 3, 4]
     bulb.power_level = 0
+    bulb.fire_and_forget = AsyncMock()
+    bulb.set_reboot = Mock()
     bulb.try_sending = AsyncMock()
     bulb.set_infrared = MockLifxCommand(bulb)
     bulb.get_color = MockLifxCommand(bulb)
@@ -79,6 +81,7 @@ def _mocked_bulb() -> Light:
     bulb.set_color = MockLifxCommand(bulb)
     bulb.get_hostfirmware = MockLifxCommand(bulb)
     bulb.get_version = MockLifxCommand(bulb)
+    bulb.set_waveform_optional = MockLifxCommand(bulb)
     bulb.product = 1  # LIFX Original 1000
     return bulb
 

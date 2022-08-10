@@ -47,6 +47,7 @@
                 "data": {
                     "all_updates": "Realtime metrics (WARNING: Greatly increases CPU usage)",
                     "disable_rtsp": "Disable the RTSP stream",
+                    "max_media": "Max number of event to load for Media Browser (increases RAM usage)",
                     "override_connection_host": "Override Connection Host"
                 },
                 "description": "Realtime metrics option should only be enabled if you have enabled the diagnostics sensors and want them updated in realtime. If not enabled, they will only update once every 15 minutes.",
