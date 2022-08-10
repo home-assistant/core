@@ -395,7 +395,7 @@ class MiroboVacuum(
             segments=segments,
         )
 
-    async def async_clean_zone(self, zone, repeats=1) -> None:
+    async def async_clean_zone(self, zone: list[Any], repeats: int=1) -> None:
         """Clean selected area for the number of repeats indicated."""
         for _zone in zone:
             _zone.append(repeats)
