@@ -399,7 +399,7 @@ async def test_bluetooth_step_success(hass: HomeAssistant) -> None:
 async def test_integration_discovery_success(hass: HomeAssistant) -> None:
     """Test integration discovery step success path."""
     with patch(
-        "homeassistant.components.yalexs_ble.config_flow.bluetooth.async_process_advertisements",
+        "homeassistant.components.yalexs_ble.util.bluetooth.async_process_advertisements",
         return_value=YALE_ACCESS_LOCK_DISCOVERY_INFO,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -442,7 +442,7 @@ async def test_integration_discovery_success(hass: HomeAssistant) -> None:
 async def test_integration_discovery_device_not_found(hass: HomeAssistant) -> None:
     """Test integration discovery when the device is not found."""
     with patch(
-        "homeassistant.components.yalexs_ble.config_flow.bluetooth.async_process_advertisements",
+        "homeassistant.components.yalexs_ble.util.bluetooth.async_process_advertisements",
         side_effect=asyncio.TimeoutError,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -482,7 +482,7 @@ async def test_integration_discovery_takes_precedence_over_bluetooth(
     assert flows[0]["context"]["local_name"] == YALE_ACCESS_LOCK_DISCOVERY_INFO.name
 
     with patch(
-        "homeassistant.components.yalexs_ble.config_flow.bluetooth.async_process_advertisements",
+        "homeassistant.components.yalexs_ble.util.bluetooth.async_process_advertisements",
         return_value=YALE_ACCESS_LOCK_DISCOVERY_INFO,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -557,7 +557,7 @@ async def test_integration_discovery_updates_key_unique_local_name(
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.yalexs_ble.config_flow.bluetooth.async_process_advertisements",
+        "homeassistant.components.yalexs_ble.util.bluetooth.async_process_advertisements",
         return_value=LOCK_DISCOVERY_INFO_UUID_ADDRESS,
     ), patch(
         "homeassistant.components.yalexs_ble.async_setup_entry",
@@ -599,7 +599,7 @@ async def test_integration_discovery_updates_key_without_unique_local_name(
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.yalexs_ble.config_flow.bluetooth.async_process_advertisements",
+        "homeassistant.components.yalexs_ble.util.bluetooth.async_process_advertisements",
         return_value=LOCK_DISCOVERY_INFO_UUID_ADDRESS,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -642,7 +642,7 @@ async def test_integration_discovery_takes_precedence_over_bluetooth_uuid_addres
     assert flows[0]["context"]["local_name"] == LOCK_DISCOVERY_INFO_UUID_ADDRESS.name
 
     with patch(
-        "homeassistant.components.yalexs_ble.config_flow.bluetooth.async_process_advertisements",
+        "homeassistant.components.yalexs_ble.util.bluetooth.async_process_advertisements",
         return_value=LOCK_DISCOVERY_INFO_UUID_ADDRESS,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -722,7 +722,7 @@ async def test_integration_discovery_takes_precedence_over_bluetooth_non_unique_
     assert flows[0]["context"]["local_name"] == OLD_FIRMWARE_LOCK_DISCOVERY_INFO.name
 
     with patch(
-        "homeassistant.components.yalexs_ble.config_flow.bluetooth.async_process_advertisements",
+        "homeassistant.components.yalexs_ble.util.bluetooth.async_process_advertisements",
         return_value=OLD_FIRMWARE_LOCK_DISCOVERY_INFO,
     ):
         result = await hass.config_entries.flow.async_init(

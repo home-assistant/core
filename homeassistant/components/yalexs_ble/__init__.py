@@ -14,7 +14,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import CONF_KEY, CONF_LOCAL_NAME, CONF_SLOT, DISCOVERY_TIMEOUT, DOMAIN
 from .models import YaleXSBLEData
-from .util import bluetooth_callback_matcher
+from .util import async_find_existing_service_info, bluetooth_callback_matcher
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.LOCK, Platform.SENSOR]
 
@@ -33,6 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     push_lock = PushLock(local_name, address, None, key, slot)
     id_ = local_name if has_unique_local_name else address
     push_lock.set_name(f"{entry.title} ({id_})")
+
     startup_event = asyncio.Event()
 
     @callback
@@ -47,14 +48,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(await push_lock.start())
 
     # We may already have the advertisement, so check for it.
-    for service_info in bluetooth.async_discovered_service_info(hass):
-        if (
-            has_unique_local_name and service_info.device.name == local_name
-        ) or service_info.device.address == address:
-            push_lock.update_advertisement(
-                service_info.device, service_info.advertisement
-            )
-            break
+    if service_info := async_find_existing_service_info(hass, local_name, address):
+        push_lock.update_advertisement(service_info.device, service_info.advertisement)
 
     entry.async_on_unload(
         bluetooth.async_register_callback(
