@@ -98,7 +98,8 @@ STORAGE_SCHEDULE_SCHEMA = {
 
 
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: cv.schema_with_slug_keys(vol.All(BASE_SCHEMA | SCHEDULE_SCHEMA))}
+    {DOMAIN: cv.schema_with_slug_keys(vol.All(BASE_SCHEMA | SCHEDULE_SCHEMA))},
+    extra=vol.ALLOW_EXTRA,
 )
 STORAGE_SCHEMA = vol.Schema(
     {vol.Required(CONF_ID): cv.string} | BASE_SCHEMA | SCHEDULE_SCHEMA
