@@ -60,8 +60,8 @@ async def async_get_service_info(
 
 def short_address(address: str) -> str:
     """Convert a Bluetooth address to a short address."""
-    results = address.replace("-", ":").split(":")
-    return f"{results[-2].upper()}{results[-1].upper()}"[-4:]
+    split_address = address.replace("-", ":").split(":")
+    return f"{split_address[-2].upper()}{split_address[-1].upper()}"[-4:]
 
 
 def human_readable_name(name: str | None, local_name: str, address: str) -> str:
