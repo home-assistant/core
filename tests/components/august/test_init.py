@@ -29,6 +29,7 @@ from tests.components.august.mocks import (
     _mock_doorsense_missing_august_lock_detail,
     _mock_get_config,
     _mock_inoperative_august_lock_detail,
+    _mock_lock_with_offline_key,
     _mock_operative_august_lock_detail,
 )
 
@@ -321,6 +322,30 @@ async def test_load_unload(hass):
 
     await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
+
+
+async def test_load_triggers_ble_discovery(hass):
+    """Test that loading a lock that supports offline ble operation passes the keys to yalexe_ble."""
+
+    august_lock_with_key = await _mock_lock_with_offline_key(hass)
+    august_lock_without_key = await _mock_operative_august_lock_detail(hass)
+
+    with patch.object(hass.config_entries.flow, "async_init") as mock_config_flow:
+        config_entry = await _create_august_with_devices(
+            hass, [august_lock_with_key, august_lock_without_key]
+        )
+        await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    assert len(mock_config_flow.mock_calls) == 1
+    assert mock_config_flow.mock_calls[0][1][0] == "yalexs_ble"
+    assert mock_config_flow.mock_calls[0].kwargs["data"] == {
+        "name": "Front Door Lock",
+        "address": None,
+        "serial": "X2FSW05DGA",
+        "key": "kkk01d4300c1dcxxx1c330f794941111",
+        "slot": 1,
+    }
 
 
 async def remove_device(ws_client, device_id, config_entry_id):
