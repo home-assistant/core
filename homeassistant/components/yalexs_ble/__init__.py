@@ -12,15 +12,11 @@ from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import CONF_KEY, CONF_LOCAL_NAME, CONF_SLOT, DISCOVERY_TIMEOUT, DOMAIN
+from .const import CONF_KEY, CONF_LOCAL_NAME, CONF_SLOT, DEVICE_TIMEOUT, DOMAIN
 from .models import YaleXSBLEData
 from .util import async_find_existing_service_info, bluetooth_callback_matcher
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.LOCK, Platform.SENSOR]
-
-# We have 55s to find the lock, connect, and get status
-# before we give up and raise ConfigEntryNotReady.
-STARTUP_TIMEOUT = 55
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -61,7 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     try:
-        async with async_timeout.timeout(DISCOVERY_TIMEOUT):
+        async with async_timeout.timeout(DEVICE_TIMEOUT):
             await startup_event.wait()
     except asyncio.TimeoutError as ex:
         raise ConfigEntryNotReady(
