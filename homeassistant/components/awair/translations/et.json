@@ -24,7 +24,7 @@
                 },
                 "description": "Taassisesta oma Awairi arendaja juurdep\u00e4\u00e4suluba."
             },
-            "cloud": {
+            "user": {
                 "data": {
                     "access_token": "Juurdep\u00e4\u00e4sut\u00f5end",
                     "email": "E-post"

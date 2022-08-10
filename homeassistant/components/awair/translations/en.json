@@ -1,17 +1,14 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device or Awair account is already configured",
+            "already_configured": "Account is already configured",
             "no_devices_found": "No devices found on the network",
-            "reauth_successful": "Re-authentication was successful",
-            "unreachable": "Unable to connect to the device."
+            "reauth_successful": "Re-authentication was successful"
         },
         "error": {
             "invalid_access_token": "Invalid access token",
-            "unknown": "Unexpected error",
-            "unreachable": "Unable to connect to the device."
+            "unknown": "Unexpected error"
         },
-        "flow_title": "{model} ({device_id})",
         "step": {
             "reauth": {
                 "data": {
@@ -27,28 +24,12 @@
                 },
                 "description": "Please re-enter your Awair developer access token."
             },
-            "local" :{
-                "data": {
-                    "host": "Hostname or IP address of the device"
-                },
-                "description": "Awair Local API must be enabled following these steps: {url}"
-            },
-            "cloud" :{
+            "user": {
                 "data": {
                     "access_token": "Access Token",
                     "email": "Email"
                 },
-                "description": "You must register for an Awair developer access token at: {url}"
-            },
-            "discovery_confirm": {
-                "description": "Do you want to setup {model} ({device_id})?"
-            },
-            "user": {
-                "menu_options": {
-                    "cloud": "Connect via the cloud",
-                    "local": "Connect locally (preferred)"
-                  },
-                "description": "Awair provides two APIs, a Cloud API with data summarized over 5 minutes, and a beta Local API which can be polled for real time data."
+                "description": "You must register for an Awair developer access token at: https://developer.getawair.com/onboard/login"
             }
         }
     }

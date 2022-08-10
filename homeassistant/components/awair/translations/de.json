@@ -24,7 +24,7 @@
                 },
                 "description": "Bitte gib deinen Awair-Entwicklerzugriffstoken erneut ein."
             },
-            "cloud": {
+            "user": {
                 "data": {
                     "access_token": "Zugangstoken",
                     "email": "E-Mail"

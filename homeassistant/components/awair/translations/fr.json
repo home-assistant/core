@@ -24,7 +24,7 @@
                 },
                 "description": "Veuillez ressaisir votre jeton d'acc\u00e8s d\u00e9veloppeur Awair."
             },
-            "cloud": {
+            "user": {
                 "data": {
                     "access_token": "Jeton d'acc\u00e8s",
                     "email": "Courriel"
