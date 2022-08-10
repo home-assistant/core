@@ -18,6 +18,7 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
     LOCK_DISCOVERY_INFO_UUID_ADDRESS,
+    NOT_YALE_DISCOVERY_INFO,
     OLD_FIRMWARE_LOCK_DISCOVERY_INFO,
     YALE_ACCESS_LOCK_DISCOVERY_INFO,
 )
@@ -29,7 +30,7 @@ async def test_user_step_success(hass: HomeAssistant) -> None:
     """Test user step success path."""
     with patch(
         "homeassistant.components.yalexs_ble.config_flow.async_discovered_service_info",
-        return_value=[YALE_ACCESS_LOCK_DISCOVERY_INFO],
+        return_value=[NOT_YALE_DISCOVERY_INFO, YALE_ACCESS_LOCK_DISCOVERY_INFO],
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -70,7 +71,7 @@ async def test_user_step_no_devices_found(hass: HomeAssistant) -> None:
     """Test user step with no devices found."""
     with patch(
         "homeassistant.components.yalexs_ble.config_flow.async_discovered_service_info",
-        return_value=[],
+        return_value=[NOT_YALE_DISCOVERY_INFO],
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -243,7 +244,7 @@ async def test_user_step_auth_exception(hass: HomeAssistant) -> None:
     """Test user step with an authentication exception."""
     with patch(
         "homeassistant.components.yalexs_ble.config_flow.async_discovered_service_info",
-        return_value=[YALE_ACCESS_LOCK_DISCOVERY_INFO],
+        return_value=[YALE_ACCESS_LOCK_DISCOVERY_INFO, NOT_YALE_DISCOVERY_INFO],
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -302,7 +303,7 @@ async def test_user_step_unknown_exception(hass: HomeAssistant) -> None:
     """Test user step with an unknown exception."""
     with patch(
         "homeassistant.components.yalexs_ble.config_flow.async_discovered_service_info",
-        return_value=[YALE_ACCESS_LOCK_DISCOVERY_INFO],
+        return_value=[NOT_YALE_DISCOVERY_INFO, YALE_ACCESS_LOCK_DISCOVERY_INFO],
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
