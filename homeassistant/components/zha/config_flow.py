@@ -1,11 +1,16 @@
 """Config flow for ZHA."""
 from __future__ import annotations
 
+import contextlib
+import logging
 from typing import Any
 
 import serial.tools.list_ports
 import voluptuous as vol
+from zigpy.application import ControllerApplication
+import zigpy.backups
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
+from zigpy.exceptions import NetworkNotFormed
 
 from homeassistant import config_entries
 from homeassistant.components import onboarding, usb, zeroconf
@@ -14,8 +19,13 @@ from homeassistant.data_entry_flow import FlowResult
 
 from .core.const import (
     CONF_BAUDRATE,
+    CONF_DATABASE,
     CONF_FLOWCONTROL,
     CONF_RADIO_TYPE,
+    CONF_ZIGPY,
+    DATA_ZHA,
+    DATA_ZHA_CONFIG,
+    DEFAULT_DATABASE_NAME,
     DOMAIN,
     RadioType,
 )
@@ -27,6 +37,27 @@ SUPPORTED_PORT_SETTINGS = (
 )
 DECONZ_DOMAIN = "deconz"
 
+# Only the common common radio types will be autoprobed, in order of new device
+# popularity. XBee takes too long to probe since it scans through all possible bauds and
+# likely has very few users to begin with.
+AUTOPROBE_RADIOS = (
+    RadioType.ezsp,
+    RadioType.znp,
+    RadioType.deconz,
+    RadioType.zigate,
+)
+
+FORMATION_STRATEGY = "formation_strategy"
+FORMATION_FORM_NEW_NETWORK = "Form a new network"
+FORMATION_REUSE_SETTINGS = "Keep current network settings"
+FORMATION_RESTORE_AUTOMATIC_BACKUP = "Restore an automatic backup"
+FORMATION_RESTORE_MANUAL_BACKUP = "Restore a manual backup"
+
+CHOOSE_AUTOMATIC_BACKUP = "Choose an automatic backup"
+OVERWRITE_COORDINATOR_IEEE = "Overwrite the coordinator's IEEE address"
+
+_LOGGER = logging.getLogger(__name__)
+
 
 class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
@@ -35,10 +66,71 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize flow instance."""
-        self._device_path = None
-        self._device_settings = None
-        self._radio_type = None
-        self._title = None
+        self._device_settings: dict[str, Any] | None = None
+        self._radio_type: str | None = None
+        self._title: str | None = None
+        self._current_settings: zigpy.backups.NetworkBackup | None = None
+        self._backups: list[zigpy.backups.NetworkBackup] | None = None
+
+    @contextlib.asynccontextmanager
+    async def _connect_zigpy_app(self) -> ControllerApplication:
+        """Connect to the radio with the current config and then clean up."""
+        config = self.hass.data.get(DATA_ZHA, {}).get(DATA_ZHA_CONFIG, {})
+
+        app_controller_cls = RadioType[self._radio_type].controller
+        app_config = config.get(CONF_ZIGPY, {}).copy()
+
+        app_config[CONF_DATABASE] = config.get(
+            CONF_DATABASE,
+            self.hass.config.path(DEFAULT_DATABASE_NAME),
+        )
+        app_config[CONF_DEVICE] = self._device_settings
+        app_config = app_controller_cls.SCHEMA(app_config)
+
+        app = await app_controller_cls.new(
+            app_config, auto_form=False, start_radio=False
+        )
+        await app.connect()
+
+        try:
+            yield app
+        finally:
+            await app.disconnect()
+
+    async def _detect_radio_type(self) -> bool:
+        """Probe all radio types on the current port."""
+        for radio in AUTOPROBE_RADIOS:
+            _LOGGER.debug("Attempting to probe radio type %s", radio)
+
+            dev_config = radio.controller.SCHEMA_DEVICE(
+                {CONF_DEVICE_PATH: self._device_path}
+            )
+            probe_result = await radio.controller.probe(dev_config)
+
+            if not probe_result:
+                continue
+
+            # Radio library probing can succeed and return new device settings
+            if isinstance(probe_result, dict):
+                dev_config = probe_result
+
+            self._radio_type = radio.name
+            self._device_settings = dev_config
+
+            return True
+
+        return False
+
+    async def _async_create_radio_entity(self):
+        device_settings = self._device_settings.copy()
+        device_settings[CONF_DEVICE_PATH] = await self.hass.async_add_executor_job(
+            usb.get_serial_by_id, self._device_path
+        )
+
+        return self.async_create_entry(
+            title=self._title,
+            data={CONF_DEVICE: device_settings, CONF_RADIO_TYPE: self._radio_type},
+        )
 
     async def async_step_user(self, user_input=None):
         """Handle a zha config flow start."""
@@ -53,45 +145,44 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         ]
 
         if not list_of_ports:
-            return await self.async_step_pick_radio()
+            return await self.async_step_manual_pick_radio()
 
         list_of_ports.append(CONF_MANUAL_PATH)
 
         if user_input is not None:
             user_selection = user_input[CONF_DEVICE_PATH]
             if user_selection == CONF_MANUAL_PATH:
-                return await self.async_step_pick_radio()
+                return await self.async_step_manual_pick_radio()
 
             port = ports[list_of_ports.index(user_selection)]
-            dev_path = await self.hass.async_add_executor_job(
-                usb.get_serial_by_id, port.device
-            )
-            auto_detected_data = await detect_radios(dev_path)
-            if auto_detected_data is not None:
-                title = f"{port.description}, s/n: {port.serial_number or 'n/a'}"
-                title += f" - {port.manufacturer}" if port.manufacturer else ""
-                return self.async_create_entry(
-                    title=title,
-                    data=auto_detected_data,
-                )
+            self._device_path = port.device
 
-            # did not detect anything
-            self._device_path = dev_path
-            return await self.async_step_pick_radio()
+            if not await self._detect_radio_type():
+                # Did not autodetect anything, proceed to manual selection
+                return await self.async_step_manual_pick_radio()
+
+            self._title = (
+                f"{port.description}, s/n: {port.serial_number or 'n/a'}"
+                f" - {port.manufacturer}"
+                if port.manufacturer
+                else ""
+            )
+
+            return await self.async_step_choose_formation_strategy()
 
         schema = vol.Schema({vol.Required(CONF_DEVICE_PATH): vol.In(list_of_ports)})
         return self.async_show_form(step_id="user", data_schema=schema)
 
-    async def async_step_pick_radio(self, user_input=None):
-        """Select radio type."""
+    async def async_step_manual_pick_radio(self, user_input=None):
+        """Manually select radio type."""
 
         if user_input is not None:
             self._radio_type = RadioType.get_by_description(user_input[CONF_RADIO_TYPE])
-            return await self.async_step_port_config()
+            return await self.async_step_manual_port_config()
 
-        schema = {vol.Required(CONF_RADIO_TYPE): vol.In(sorted(RadioType.list()))}
+        schema = {vol.Required(CONF_RADIO_TYPE): vol.In(RadioType.list())}
         return self.async_show_form(
-            step_id="pick_radio",
+            step_id="manual_pick_radio",
             data_schema=vol.Schema(schema),
         )
 
@@ -143,16 +234,13 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_confirm(self, user_input=None):
         """Confirm a USB discovery."""
         if user_input is not None or not onboarding.async_is_onboarded(self.hass):
-            auto_detected_data = await detect_radios(self._device_path)
-            if auto_detected_data is None:
+            if not await self._detect_radio_type():
                 # This path probably will not happen now that we have
                 # more precise USB matching unless there is a problem
                 # with the device
                 return self.async_abort(reason="usb_probe_failed")
-            return self.async_create_entry(
-                title=self._title,
-                data=auto_detected_data,
-            )
+
+            return await self.async_step_choose_formation_strategy()
 
         return self.async_show_form(
             step_id="confirm",
@@ -200,24 +288,24 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         else:
             self._radio_type = RadioType.znp.name
 
-        return await self.async_step_port_config()
+        return await self.async_step_manual_port_config()
 
-    async def async_step_port_config(self, user_input=None):
+    async def async_step_manual_port_config(self, user_input=None):
         """Enter port settings specific for this type of radio."""
         errors = {}
         app_cls = RadioType[self._radio_type].controller
 
         if user_input is not None:
-            self._device_path = user_input.get(CONF_DEVICE_PATH)
+            self._device_path = await self.hass.async_add_executor_job(
+                usb.get_serial_by_id, user_input[CONF_DEVICE_PATH]
+            )
+            self._device_settings = {
+                k: v for k, v in user_input if k != CONF_DEVICE_PATH
+            }
+
             if await app_cls.probe(user_input):
-                serial_by_id = await self.hass.async_add_executor_job(
-                    usb.get_serial_by_id, user_input[CONF_DEVICE_PATH]
-                )
-                user_input[CONF_DEVICE_PATH] = serial_by_id
-                return self.async_create_entry(
-                    title=user_input[CONF_DEVICE_PATH],
-                    data={CONF_DEVICE: user_input, CONF_RADIO_TYPE: self._radio_type},
-                )
+                return await self._async_create_radio_entity()
+
             errors["base"] = "cannot_connect"
 
         schema = {
@@ -225,19 +313,16 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_DEVICE_PATH, default=self._device_path or vol.UNDEFINED
             ): str
         }
-        radio_schema = app_cls.SCHEMA_DEVICE.schema
-        if isinstance(radio_schema, vol.Schema):
-            radio_schema = radio_schema.schema
 
         source = self.context.get("source")
-        for param, value in radio_schema.items():
+        for param, value in app_cls.SCHEMA_DEVICE.schema.items():
             if param in SUPPORTED_PORT_SETTINGS:
                 schema[param] = value
                 if source == config_entries.SOURCE_ZEROCONF and param == CONF_BAUDRATE:
                     schema[param] = 115200
 
         return self.async_show_form(
-            step_id="port_config",
+            step_id="manual_port_config",
             data_schema=vol.Schema(schema),
             errors=errors,
         )
@@ -277,28 +362,118 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_confirm_hardware(self, user_input=None):
         """Confirm a hardware discovery."""
         if user_input is not None or not onboarding.async_is_onboarded(self.hass):
-            return self.async_create_entry(
-                title=self._title,
-                data={
-                    CONF_DEVICE: self._device_settings,
-                    CONF_RADIO_TYPE: self._radio_type,
-                },
-            )
+            return await self._async_create_radio_entity()
 
         return self.async_show_form(
             step_id="confirm_hardware",
             description_placeholders={CONF_NAME: self._title},
         )
 
+    async def async_step_choose_formation_strategy(self, user_input=None):
+        """Choose how to deal with the current radio's settings."""
 
-async def detect_radios(dev_path: str) -> dict[str, Any] | None:
-    """Probe all radio types on the device port."""
-    for radio in RadioType:
-        dev_config = radio.controller.SCHEMA_DEVICE({CONF_DEVICE_PATH: dev_path})
-        probe_result = await radio.controller.probe(dev_config)
-        if probe_result:
-            if isinstance(probe_result, dict):
-                return {CONF_RADIO_TYPE: radio.name, CONF_DEVICE: probe_result}
-            return {CONF_RADIO_TYPE: radio.name, CONF_DEVICE: dev_config}
+        if user_input is not None:
+            strategy = user_input[FORMATION_STRATEGY]
 
-    return None
+            if strategy == FORMATION_FORM_NEW_NETWORK:
+                async with self._connect_zigpy_app() as app:
+                    await app.form_network()
+            elif strategy == FORMATION_REUSE_SETTINGS:
+                pass
+            elif strategy == FORMATION_RESTORE_MANUAL_BACKUP:
+                raise NotImplementedError("Not implemented yet :(")
+            elif strategy == FORMATION_RESTORE_AUTOMATIC_BACKUP:
+                return await self.async_step_restore_automatic_backup()
+
+            return await self._async_create_radio_entity()
+
+        suggested_strategy = FORMATION_FORM_NEW_NETWORK
+
+        async with self._connect_zigpy_app() as app:
+            strategies = [
+                FORMATION_FORM_NEW_NETWORK,
+            ]
+
+            # Check if the stick has any settings
+            try:
+                await app.load_network_info()
+            except NetworkNotFormed:
+                pass
+            else:
+                # Load the current info while were'c onnected, to save time
+                self._backups = app.backups.backups.copy()
+                self._current_settings = zigpy.backups.NetworkBackup(
+                    network_info=app.state.network_info,
+                    node_info=app.state.node_info,
+                )
+                strategies.append(FORMATION_REUSE_SETTINGS)
+                suggested_strategy = FORMATION_REUSE_SETTINGS
+
+            strategies.append(FORMATION_RESTORE_MANUAL_BACKUP)
+
+            # Check if we have any automatic backups
+            if app.backups.backups:
+                strategies.append(FORMATION_RESTORE_AUTOMATIC_BACKUP)
+                suggested_strategy = FORMATION_RESTORE_AUTOMATIC_BACKUP
+
+        schema = vol.Schema(
+            {
+                vol.Required(FORMATION_STRATEGY, default=suggested_strategy): vol.In(
+                    strategies
+                ),
+            }
+        )
+
+        return self.async_show_form(
+            step_id="choose_formation_strategy",
+            data_schema=schema,
+        )
+
+    async def async_step_restore_automatic_backup(self, user_input=None):
+        """Select and restore an automatic backup."""
+
+        if user_input is not None:
+            backup = self._backups[user_input[CHOOSE_AUTOMATIC_BACKUP]]
+
+            if user_input.get(OVERWRITE_COORDINATOR_IEEE):
+                backup.network_info.stack_specific.setdefault("ezsp", {})[
+                    "i_understand_i_can_update_eui64_only_once"
+                    "_and_i_still_want_to_do_it"
+                ] = True
+
+            async with self._connect_zigpy_app() as app:
+                app.backups.restore_backup(backup)
+
+            return await self._async_create_radio_entity()
+
+        if self._backups is None or self._current_settings is None:
+            async with self._connect_zigpy_app() as app:
+                try:
+                    self._current_settings = app.backups.create_backup(
+                        load_devices=True
+                    )
+                except NetworkNotFormed:
+                    self._current_settings = None
+
+                self._backups = app.backups.backups
+
+        choices = [
+            (
+                f"{b.backup_time.strftime('%x')}"
+                f" (PAN ID: {b.network_info.pan_id}"
+                f", EPID: {b.network_info.extended_pan_id})"
+            )
+            for b in self._backups
+        ]
+
+        data_schema = {
+            vol.Required(CHOOSE_AUTOMATIC_BACKUP, default=0): vol.In(choices),
+        }
+
+        if self._radio_type == "ezsp":
+            data_schema[vol.Required(OVERWRITE_COORDINATOR_IEEE, default=True)] = bool
+
+        return self.async_show_form(
+            step_id="restore_automatic_backup",
+            data_schema=vol.Schema(data_schema),
+        )
