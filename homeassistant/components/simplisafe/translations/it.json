@@ -9,6 +9,7 @@
         "error": {
             "identifier_exists": "Account gi\u00e0 registrato",
             "invalid_auth": "Autenticazione non valida",
+            "invalid_auth_code_length": "I codici di autorizzazione SimpliSafe sono lunghi 45 caratteri",
             "unknown": "Errore imprevisto"
         },
         "progress": {
