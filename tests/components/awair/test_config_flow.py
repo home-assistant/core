@@ -1,5 +1,4 @@
 """Define tests for the Awair config flow."""
-
 from unittest.mock import patch
 
 from python_awair.exceptions import AuthError, AwairError
@@ -10,16 +9,7 @@ from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
 from homeassistant.core import HomeAssistant
 
-from .const import (
-    CLOUD_CONFIG,
-    CLOUD_DEVICES_FIXTURE,
-    CLOUD_UNIQUE_ID,
-    LOCAL_CONFIG,
-    LOCAL_DEVICES_FIXTURE,
-    LOCAL_UNIQUE_ID,
-    NO_DEVICES_FIXTURE,
-    USER_FIXTURE,
-)
+from .const import CLOUD_CONFIG, CLOUD_UNIQUE_ID, LOCAL_CONFIG, LOCAL_UNIQUE_ID
 
 from tests.common import MockConfigEntry
 
@@ -77,12 +67,12 @@ async def test_unexpected_api_error(hass: HomeAssistant):
         assert result["reason"] == "unknown"
 
 
-async def test_duplicate_error(hass: HomeAssistant):
+async def test_duplicate_error(hass: HomeAssistant, user, cloud_devices):
     """Test that errors are shown when adding a duplicate config."""
 
     with patch(
         "python_awair.AwairClient.query",
-        side_effect=[USER_FIXTURE, CLOUD_DEVICES_FIXTURE],
+        side_effect=[user, cloud_devices],
     ), patch(
         "homeassistant.components.awair.sensor.async_setup_entry",
         return_value=True,
@@ -109,12 +99,10 @@ async def test_duplicate_error(hass: HomeAssistant):
         assert result["reason"] == "already_configured_account"
 
 
-async def test_no_devices_error(hass: HomeAssistant):
+async def test_no_devices_error(hass: HomeAssistant, user, no_devices):
     """Test that errors are shown when the API returns no devices."""
 
-    with patch(
-        "python_awair.AwairClient.query", side_effect=[USER_FIXTURE, NO_DEVICES_FIXTURE]
-    ):
+    with patch("python_awair.AwairClient.query", side_effect=[user, no_devices]):
         menu_step = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CLOUD_CONFIG
         )
@@ -133,7 +121,7 @@ async def test_no_devices_error(hass: HomeAssistant):
         assert result["reason"] == "no_devices_found"
 
 
-async def test_reauth(hass: HomeAssistant) -> None:
+async def test_reauth(hass: HomeAssistant, user, cloud_devices) -> None:
     """Test reauth flow."""
     mock_config = MockConfigEntry(
         domain=DOMAIN,
@@ -163,7 +151,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
 
     with patch(
         "python_awair.AwairClient.query",
-        side_effect=[USER_FIXTURE, CLOUD_DEVICES_FIXTURE],
+        side_effect=[user, cloud_devices],
     ), patch("homeassistant.components.awair.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -202,12 +190,12 @@ async def test_reauth_error(hass: HomeAssistant) -> None:
         assert result["reason"] == "unknown"
 
 
-async def test_create_cloud_entry(hass: HomeAssistant):
+async def test_create_cloud_entry(hass: HomeAssistant, user, cloud_devices):
     """Test overall flow."""
 
     with patch(
         "python_awair.AwairClient.query",
-        side_effect=[USER_FIXTURE, CLOUD_DEVICES_FIXTURE],
+        side_effect=[user, cloud_devices],
     ), patch(
         "homeassistant.components.awair.sensor.async_setup_entry",
         return_value=True,
@@ -232,12 +220,10 @@ async def test_create_cloud_entry(hass: HomeAssistant):
         assert result["result"].unique_id == CLOUD_UNIQUE_ID
 
 
-async def test_create_local_entry(hass: HomeAssistant):
+async def test_create_local_entry(hass: HomeAssistant, local_devices):
     """Test overall flow."""
 
-    with patch(
-        "python_awair.AwairClient.query", side_effect=[LOCAL_DEVICES_FIXTURE]
-    ), patch(
+    with patch("python_awair.AwairClient.query", side_effect=[local_devices]), patch(
         "homeassistant.components.awair.sensor.async_setup_entry",
         return_value=True,
     ):
