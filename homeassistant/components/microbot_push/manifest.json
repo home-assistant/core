@@ -1,0 +1,23 @@
+{
+  "domain": "microbot_push",
+  "name": "MicroBot Push",
+  "documentation": "https://github.com/spycle/microbot_push",
+  "issue_tracker": "https://github.com/spycle/microbot_push/issues",
+  "config_flow": true,
+  "bluetooth": [
+    {
+      "service_uuid": "00001831-0000-1000-8000-00805f9b34fb"
+    },
+    {
+      "service_data_uuid": "00001831-0000-1000-8000-00805f9b34fb"
+    },
+    {
+      "local_name": "mib*"
+    }
+  ],
+  "codeowners": ["@spycle"],
+  "requirements": ["PyMicroBot==0.0.1"],
+  "iot_class": "assumed_state",
+  "dependencies": ["bluetooth"],
+  "loggers": ["microbot_push"]
+}

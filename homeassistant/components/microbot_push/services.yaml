@@ -1,0 +1,37 @@
+generate_token:
+  name: Pair/Repair
+  description: Pair/Repair (Generate a token)
+calibrate:
+  name: Calibrate
+  description: Calibration - Set mode, depth and press&hold duration. Warning - this will send a push command to the device
+  fields:
+    depth:
+      name: Depth
+      description: Depth (0-100)
+      required: true
+      selector:
+        number:
+          mode: slider
+          step: 1
+          min: 0
+          max: 100
+    duration:
+      name: Duration
+      description: Duration in seconds
+      required: true
+      selector:
+        number:
+          mode: box
+          step: 1
+          min: 0
+          max: 999999
+    mode:
+      name: Mode
+      description: normal|invert|toggle
+      required: true
+      selector:
+        select:
+          options:
+            - "normal"
+            - "invert"
+            - "toggle"

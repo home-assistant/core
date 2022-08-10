@@ -217,6 +217,7 @@ FLOWS = {
         "meteo_france",
         "meteoclimatic",
         "metoffice",
+        "microbot_push",
         "mikrotik",
         "mill",
         "minecraft_server",

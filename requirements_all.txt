@@ -22,6 +22,9 @@ PyFlick==0.0.2
 # homeassistant.components.mvglive
 PyMVGLive==1.1.4
 
+# homeassistant.components.microbot_push
+PyMicroBot==0.0.1
+
 # homeassistant.components.mobile_app
 # homeassistant.components.owntracks
 PyNaCl==1.5.0
