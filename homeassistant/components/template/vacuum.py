@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -204,46 +205,46 @@ class TemplateVacuum(TemplateEntity, StateVacuumEntity):
         """Return the status of the vacuum cleaner."""
         return self._state
 
-    async def async_start(self):
+    async def async_start(self) -> None:
         """Start or resume the cleaning task."""
         await self.async_run_script(self._start_script, context=self._context)
 
-    async def async_pause(self):
+    async def async_pause(self) -> None:
         """Pause the cleaning task."""
         if self._pause_script is None:
             return
 
         await self.async_run_script(self._pause_script, context=self._context)
 
-    async def async_stop(self, **kwargs):
+    async def async_stop(self, **kwargs: Any) -> None:
         """Stop the cleaning task."""
         if self._stop_script is None:
             return
 
         await self.async_run_script(self._stop_script, context=self._context)
 
-    async def async_return_to_base(self, **kwargs):
+    async def async_return_to_base(self, **kwargs: Any) -> None:
         """Set the vacuum cleaner to return to the dock."""
         if self._return_to_base_script is None:
             return
 
         await self.async_run_script(self._return_to_base_script, context=self._context)
 
-    async def async_clean_spot(self, **kwargs):
+    async def async_clean_spot(self, **kwargs: Any) -> None:
         """Perform a spot clean-up."""
         if self._clean_spot_script is None:
             return
 
         await self.async_run_script(self._clean_spot_script, context=self._context)
 
-    async def async_locate(self, **kwargs):
+    async def async_locate(self, **kwargs: Any) -> None:
         """Locate the vacuum cleaner."""
         if self._locate_script is None:
             return
 
         await self.async_run_script(self._locate_script, context=self._context)
 
-    async def async_set_fan_speed(self, fan_speed, **kwargs):
+    async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
         if self._set_fan_speed_script is None:
             return
