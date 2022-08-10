@@ -17,8 +17,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
-    ordered_list_item_to_percentage,
     percentage_to_ranged_value,
+    ranged_value_to_percentage,
 )
 
 from .const import DOMAIN, LOGGER
@@ -33,7 +33,7 @@ class IntellifireFanRequiredKeysMixin:
     set_fn: Callable[[IntellifireControlAsync, int], Awaitable]
     value_fn: Callable[[IntellifirePollData], bool]
     data_field: str
-    named_speeds: list[str]
+    speed_range: tuple[int, int]
 
 
 @dataclass
@@ -51,12 +51,7 @@ INTELLIFIRE_FANS: tuple[IntellifireFanEntityDescription, ...] = (
         set_fn=lambda control_api, speed: control_api.set_fan_speed(speed=speed),
         value_fn=lambda data: data.fanspeed,
         data_field="fanspeed",
-        named_speeds=[
-            "quiet",
-            "low",
-            "medium",
-            "high",
-        ],  # off is not included
+        speed_range=(1, 4),
     ),
 )
 
@@ -92,28 +87,14 @@ class IntellifireFan(IntellifireEntity, FanEntity):
     @property
     def percentage(self) -> int | None:
         """Return fan percentage."""
-        percent_step = ordered_list_item_to_percentage(
-            self.entity_description.named_speeds,
-            self.entity_description.named_speeds[0],
-        )
-        return (
-            self.entity_description.value_fn(self.coordinator.read_api.data)
-            * percent_step
+        return ranged_value_to_percentage(
+            self.entity_description.speed_range, self.coordinator.read_api.data.fanspeed
         )
 
     @property
     def speed_count(self) -> int:
         """Count of supported speeds."""
-        return len(self.entity_description.named_speeds)
-
-    async def async_set_preset_mode(self, preset_mode: str) -> None:
-        """Set the preset mode of the fan."""
-        # Get a percent from the preset
-
-        percent = ordered_list_item_to_percentage(
-            self.entity_description.named_speeds, preset_mode
-        )
-        await self.async_set_percentage(percent)
+        return self.entity_description.speed_range[1]
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
