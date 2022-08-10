@@ -51,11 +51,11 @@ async def test_basic_usage(hass: HomeAssistant, mock_bleak_scanner_start):
     coordinator = ActiveBluetoothProcessorCoordinator(
         hass,
         _LOGGER,
-        "aa:bb:cc:dd:ee:ff",
-        BluetoothScanningMode.ACTIVE,
-        _update_method,
-        _poll_needed,
-        _poll,
+        address="aa:bb:cc:dd:ee:ff",
+        mode=BluetoothScanningMode.ACTIVE,
+        update_method=_update_method,
+        needs_poll_method=_poll_needed,
+        poll_method=_poll,
     )
     assert coordinator.available is False  # no data yet
     saved_callback = None
@@ -111,12 +111,12 @@ async def test_poll_can_be_skipped(hass: HomeAssistant, mock_bleak_scanner_start
     coordinator = ActiveBluetoothProcessorCoordinator(
         hass,
         _LOGGER,
-        "aa:bb:cc:dd:ee:ff",
-        BluetoothScanningMode.ACTIVE,
-        _update_method,
-        _poll_needed,
-        _poll,
-        Debouncer(
+        address="aa:bb:cc:dd:ee:ff",
+        mode=BluetoothScanningMode.ACTIVE,
+        update_method=_update_method,
+        needs_poll_method=_poll_needed,
+        poll_method=_poll,
+        poll_debouncer=Debouncer(
             hass,
             _LOGGER,
             cooldown=0,
@@ -183,12 +183,12 @@ async def test_poll_failure_and_recover(hass: HomeAssistant, mock_bleak_scanner_
     coordinator = ActiveBluetoothProcessorCoordinator(
         hass,
         _LOGGER,
-        "aa:bb:cc:dd:ee:ff",
-        BluetoothScanningMode.ACTIVE,
-        _update_method,
-        _poll_needed,
-        _poll,
-        Debouncer(
+        address="aa:bb:cc:dd:ee:ff",
+        mode=BluetoothScanningMode.ACTIVE,
+        update_method=_update_method,
+        needs_poll_method=_poll_needed,
+        poll_method=_poll,
+        poll_debouncer=Debouncer(
             hass,
             _LOGGER,
             cooldown=0,
@@ -251,11 +251,11 @@ async def test_second_poll_needed(hass: HomeAssistant, mock_bleak_scanner_start)
     coordinator = ActiveBluetoothProcessorCoordinator(
         hass,
         _LOGGER,
-        "aa:bb:cc:dd:ee:ff",
-        BluetoothScanningMode.ACTIVE,
-        _update_method,
-        _poll_needed,
-        _poll,
+        address="aa:bb:cc:dd:ee:ff",
+        mode=BluetoothScanningMode.ACTIVE,
+        update_method=_update_method,
+        needs_poll_method=_poll_needed,
+        poll_method=_poll,
     )
     assert coordinator.available is False  # no data yet
     saved_callback = None
@@ -309,11 +309,11 @@ async def test_rate_limit(hass: HomeAssistant, mock_bleak_scanner_start):
     coordinator = ActiveBluetoothProcessorCoordinator(
         hass,
         _LOGGER,
-        "aa:bb:cc:dd:ee:ff",
-        BluetoothScanningMode.ACTIVE,
-        _update_method,
-        _poll_needed,
-        _poll,
+        address="aa:bb:cc:dd:ee:ff",
+        mode=BluetoothScanningMode.ACTIVE,
+        update_method=_update_method,
+        needs_poll_method=_poll_needed,
+        poll_method=_poll,
     )
     assert coordinator.available is False  # no data yet
     saved_callback = None

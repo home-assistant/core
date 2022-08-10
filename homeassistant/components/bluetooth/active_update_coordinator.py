@@ -4,16 +4,13 @@ from __future__ import annotations
 from collections.abc import Callable, Coroutine
 import logging
 import time
-from typing import Any, TypeVar
+from typing import Any, Generic, TypeVar
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
 
 from . import BluetoothChange, BluetoothScanningMode, BluetoothServiceInfoBleak
-from .passive_update_processor import (
-    PassiveBluetoothDataUpdate,
-    PassiveBluetoothProcessorCoordinator,
-)
+from .passive_update_processor import PassiveBluetoothProcessorCoordinator
 
 POLL_DEFAULT_COOLDOWN = 10
 POLL_DEFAULT_IMMEDIATE = True
@@ -21,7 +18,9 @@ POLL_DEFAULT_IMMEDIATE = True
 _T = TypeVar("_T")
 
 
-class ActiveBluetoothProcessorCoordinator(PassiveBluetoothProcessorCoordinator):
+class ActiveBluetoothProcessorCoordinator(
+    Generic[_T], PassiveBluetoothProcessorCoordinator[_T]
+):
     """
     A coordinator that parses passive data from advertisements but can also poll.
 
@@ -58,8 +57,9 @@ class ActiveBluetoothProcessorCoordinator(PassiveBluetoothProcessorCoordinator):
         needs_poll_method: Callable[[BluetoothServiceInfoBleak, float | None], bool],
         poll_method: Callable[
             [BluetoothServiceInfoBleak],
-            Coroutine[Any, Any, PassiveBluetoothDataUpdate[_T]],
-        ],
+            Coroutine[Any, Any, _T],
+        ]
+        | None = None,
         poll_debouncer: Debouncer[Coroutine[Any, Any, None]] | None = None,
     ) -> None:
         """Initialize the processor."""
@@ -68,7 +68,7 @@ class ActiveBluetoothProcessorCoordinator(PassiveBluetoothProcessorCoordinator):
         self._needs_poll_method = needs_poll_method
         self._poll_method = poll_method
         self._last_poll: float | None = None
-        self._last_poll_successful = True
+        self.last_poll_successful = True
 
         # We keep the last service info in case the poller needs to refer to
         # e.g. its BLEDevice
@@ -94,23 +94,31 @@ class ActiveBluetoothProcessorCoordinator(PassiveBluetoothProcessorCoordinator):
             poll_age = time.monotonic() - self._last_poll
         return self._needs_poll_method(service_info, poll_age)
 
+    async def _async_update_data(
+        self, last_service_info: BluetoothServiceInfoBleak
+    ) -> _T:
+        """Fetch the latest data from the source."""
+        if self._poll_method is None:
+            raise NotImplementedError("Poll method not implemented")
+        return await self._poll_method(last_service_info)
+
     async def _async_poll(self) -> None:
         """Poll the device to retrieve any extra data."""
         assert self._last_service_info
 
         try:
-            update = await self._poll_method(self._last_service_info)
+            update = await self._async_update_data(self._last_service_info)
         except Exception:  # pylint: disable=broad-except
-            if self._last_poll_successful:
+            if self.last_poll_successful:
                 self.logger.exception("%s: Failure while polling", self.address)
-                self._last_poll_successful = False
+                self.last_poll_successful = False
                 return
         finally:
             self._last_poll = time.monotonic()
 
-        if not self._last_poll_successful:
+        if not self.last_poll_successful:
             self.logger.debug("%s: Polling recovered")
-            self._last_poll_successful = True
+            self.last_poll_successful = True
 
         for processor in self._processors:
             processor.async_handle_update(update)
