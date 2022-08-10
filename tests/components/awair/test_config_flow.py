@@ -73,9 +73,6 @@ async def test_duplicate_error(hass: HomeAssistant, user, cloud_devices):
     with patch(
         "python_awair.AwairClient.query",
         side_effect=[user, cloud_devices],
-    ), patch(
-        "homeassistant.components.awair.sensor.async_setup_entry",
-        return_value=True,
     ):
         MockConfigEntry(
             domain=DOMAIN, unique_id=CLOUD_UNIQUE_ID, data=CLOUD_CONFIG
@@ -197,7 +194,7 @@ async def test_create_cloud_entry(hass: HomeAssistant, user, cloud_devices):
         "python_awair.AwairClient.query",
         side_effect=[user, cloud_devices],
     ), patch(
-        "homeassistant.components.awair.sensor.async_setup_entry",
+        "homeassistant.components.awair.async_setup_entry",
         return_value=True,
     ):
         menu_step = await hass.config_entries.flow.async_init(
@@ -224,7 +221,7 @@ async def test_create_local_entry(hass: HomeAssistant, local_devices):
     """Test overall flow."""
 
     with patch("python_awair.AwairClient.query", side_effect=[local_devices]), patch(
-        "homeassistant.components.awair.sensor.async_setup_entry",
+        "homeassistant.components.awair.async_setup_entry",
         return_value=True,
     ):
         menu_step = await hass.config_entries.flow.async_init(
