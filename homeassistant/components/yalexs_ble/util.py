@@ -16,7 +16,7 @@ from homeassistant.components.bluetooth.match import (
 )
 from homeassistant.core import HomeAssistant, callback
 
-from .const import DISCOVERY_TIMEOUT
+from .const import DEVICE_TIMEOUT
 
 
 def bluetooth_callback_matcher(
@@ -54,5 +54,5 @@ async def async_get_service_info(
         lambda service_info: True,
         bluetooth_callback_matcher(local_name, address),
         BluetoothScanningMode.ACTIVE,
-        DISCOVERY_TIMEOUT,
+        DEVICE_TIMEOUT,
     )
