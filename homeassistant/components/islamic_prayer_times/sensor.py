@@ -12,7 +12,38 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import IslamicPrayerDataUpdateCoordinator
-from .const import DOMAIN, NAME, PRAYER_TIMES_ICON, SENSOR_TYPES
+from .const import DOMAIN, NAME, PRAYER_TIMES_ICON
+
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="Fajr",
+        name="Fajr prayer",
+    ),
+    SensorEntityDescription(
+        key="Sunrise",
+        name="Sunrise time",
+    ),
+    SensorEntityDescription(
+        key="Dhuhr",
+        name="Dhuhr prayer",
+    ),
+    SensorEntityDescription(
+        key="Asr",
+        name="Asr prayer",
+    ),
+    SensorEntityDescription(
+        key="Maghrib",
+        name="Maghrib prayer",
+    ),
+    SensorEntityDescription(
+        key="Isha",
+        name="Isha prayer",
+    ),
+    SensorEntityDescription(
+        key="Midnight",
+        name="Midnight time",
+    ),
+)
 
 
 async def async_setup_entry(
