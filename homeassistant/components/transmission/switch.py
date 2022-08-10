@@ -1,6 +1,12 @@
 """Support for setting the Transmission BitTorrent client Turtle Mode."""
 import logging
 from typing import Any
+from __future__ import annotations
+
+from collections.abc import Callable
+from dataclasses import dataclass
+
+import transmissionrpc
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -12,16 +18,37 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 
-_LOGGING = logging.getLogger(__name__)
+
+@dataclass
+class TransmissionSwitchEntityDescriptionMixin:
+    """Mixin for required keys."""
+
+    state_fn: Callable[[transmissionrpc.Client], bool | None]
+    on_fn: Callable[[transmissionrpc.Client], None]
+    off_fn: Callable[[transmissionrpc.Client], None]
+
+
+@dataclass
+class TransmissionSwitchEntityDescription(
+    SwitchEntityDescription, TransmissionSwitchEntityDescriptionMixin
+):
+    """Describes Transmission switch entity."""
+
 
 ENTITY_DESCRIPTIONS = [
-    SwitchEntityDescription(
+    TransmissionSwitchEntityDescription(
         key="on_off",
         name="Switch",
+        state_fn=lambda api: api.data.activeTorrentCount > 0 if api.data else None,
+        on_fn=lambda api: api.start_torrents(),
+        off_fn=lambda api: api.stop_torrents(),
     ),
-    SwitchEntityDescription(
+    TransmissionSwitchEntityDescription(
         key="turtle_mode",
         name="Turtle mode",
+        state_fn=lambda api: api.get_alt_speed_enabled(),
+        on_fn=lambda api: api.set_alt_speed_enabled(True),
+        off_fn=lambda api: api.set_alt_speed_enabled(False),
     ),
 ]
 
@@ -47,10 +74,17 @@ async def async_setup_entry(
 class TransmissionSwitch(SwitchEntity):
     """Representation of a Transmission switch."""
 
+    entity_description: TransmissionSwitchEntityDescription
+
     _attr_has_entity_name = True
     _attr_should_poll = False
 
-    def __init__(self, entity_description, tm_client, client_name):
+    def __init__(
+        self,
+        entity_description: TransmissionSwitchEntityDescription,
+        tm_client,
+        client_name,
+    ):
         """Initialize the Transmission switch."""
         self.entity_description = entity_description
         self._tm_client = tm_client
@@ -79,22 +113,12 @@ class TransmissionSwitch(SwitchEntity):
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        if self.entity_description.key == "on_off":
-            _LOGGING.debug("Starting all torrents")
-            self._tm_client.api.start_torrents()
-        elif self.entity_description.key == "turtle_mode":
-            _LOGGING.debug("Turning Turtle Mode of Transmission on")
-            self._tm_client.api.set_alt_speed_enabled(True)
+        self.entity_description.on_fn(self._tm_client.api)
         self._tm_client.api.update()
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        if self.entity_description.key == "on_off":
-            _LOGGING.debug("Stopping all torrents")
-            self._tm_client.api.stop_torrents()
-        if self.entity_description.key == "turtle_mode":
-            _LOGGING.debug("Turning Turtle Mode of Transmission off")
-            self._tm_client.api.set_alt_speed_enabled(False)
+        self.entity_description.off_fn(self._tm_client.api)
         self._tm_client.api.update()
 
     async def async_added_to_hass(self) -> None:
@@ -117,14 +141,7 @@ class TransmissionSwitch(SwitchEntity):
 
     def update(self) -> None:
         """Get the latest data from Transmission and updates the state."""
-        active = None
-        if self.entity_description.key == "on_off":
-            self._data = self._tm_client.api.data
-            if self._data:
-                active = self._data.activeTorrentCount > 0
-
-        elif self.entity_description.key == "turtle_mode":
-            active = self._tm_client.api.get_alt_speed_enabled()
+        active = self.entity_description.state_fn(self._tm_client.api)
 
         if active is None:
             return
