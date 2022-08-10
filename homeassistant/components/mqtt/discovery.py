@@ -106,7 +106,10 @@ async def async_start(  # noqa: C901
         if not (match := TOPIC_MATCHER.match(topic_trimmed)):
             if topic_trimmed.endswith("config"):
                 _LOGGER.warning(
-                    "Received message on illegal discovery topic '%s'", topic
+                    "Received message on illegal discovery topic '%s'. The topic contains "
+                    "not allowed characters. For more information see "
+                    "https://www.home-assistant.io/docs/mqtt/discovery/#discovery-topic",
+                    topic,
                 )
             return
 
