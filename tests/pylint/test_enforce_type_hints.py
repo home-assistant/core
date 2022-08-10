@@ -977,8 +977,7 @@ def test_vacuum_entity(linter: UnittestLinter, type_hint_checker: BaseChecker) -
     # Set bypass option
     type_hint_checker.config.ignore_missing_annotations = False
 
-    # Ensure that device class is valid despite Entity inheritance
-    # Ensure that `int` is valid for `float` return type
+    # Ensure that `dict | list | None` is valid for params
     class_node = astroid.extract_node(
         """
     class Entity():
