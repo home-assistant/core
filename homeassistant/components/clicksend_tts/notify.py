@@ -23,7 +23,6 @@ HEADERS = {"Content-Type": CONTENT_TYPE_JSON}
 
 CONF_LANGUAGE = "language"
 CONF_VOICE = "voice"
-CONF_CALLER = "caller"
 
 DEFAULT_LANGUAGE = "en-us"
 DEFAULT_VOICE = "female"
@@ -36,7 +35,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_RECIPIENT): cv.string,
         vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): cv.string,
         vol.Optional(CONF_VOICE, default=DEFAULT_VOICE): cv.string,
-        vol.Optional(CONF_CALLER): cv.string,
     }
 )
 
@@ -60,9 +58,6 @@ class ClicksendNotificationService(BaseNotificationService):
         self.recipient = config[CONF_RECIPIENT]
         self.language = config[CONF_LANGUAGE]
         self.voice = config[CONF_VOICE]
-        self.caller = config.get(CONF_CALLER)
-        if self.caller is None:
-            self.caller = self.recipient
 
     def send_message(self, message="", **kwargs):
         """Send a voice call to a user."""
@@ -70,7 +65,6 @@ class ClicksendNotificationService(BaseNotificationService):
             "messages": [
                 {
                     "source": "hass.notify",
-                    "from": self.caller,
                     "to": self.recipient,
                     "body": message,
                     "lang": self.language,
