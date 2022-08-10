@@ -41,9 +41,9 @@ def catch_braviatv_errors(
         """Catch BraviaTV errors and log message."""
         try:
             await func(self, *args, **kwargs)
-            await self.async_request_refresh()
         except BraviaTVError as err:
             _LOGGER.error("Command error: %s", err)
+        await self.async_request_refresh()
 
     return wrapper
 

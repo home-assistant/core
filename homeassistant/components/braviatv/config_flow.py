@@ -107,8 +107,8 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            self.device_config[CONF_PIN] = user_input[CONF_PIN]
             try:
-                self.device_config[CONF_PIN] = user_input[CONF_PIN]
                 return await self.async_init_device()
             except BraviaTVNotSupported:
                 errors["base"] = "unsupported_model"
