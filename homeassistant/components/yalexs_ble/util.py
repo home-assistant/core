@@ -56,3 +56,14 @@ async def async_get_service_info(
         BluetoothScanningMode.ACTIVE,
         DEVICE_TIMEOUT,
     )
+
+
+def short_address(address: str) -> str:
+    """Convert a Bluetooth address to a short address."""
+    split_address = address.replace("-", ":").split(":")
+    return f"{split_address[-2].upper()}{split_address[-1].upper()}"[-4:]
+
+
+def human_readable_name(name: str | None, local_name: str, address: str) -> str:
+    """Return a human readable name for the given name, local_name, and address."""
+    return f"{name or local_name} ({short_address(address)})"

@@ -28,7 +28,7 @@ from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant.loader import async_get_integration
 
 from .const import CONF_KEY, CONF_LOCAL_NAME, CONF_SLOT, DOMAIN
-from .util import async_get_service_info
+from .util import async_get_service_info, human_readable_name
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,9 +68,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.context["local_name"] = discovery_info.name
         self._discovery_info = discovery_info
         self.context["title_placeholders"] = {
-            "name": discovery_info.name,
-            "local_name": discovery_info.name,
-            "address": self._discovery_info.address,
+            "name": human_readable_name(
+                None, discovery_info.name, discovery_info.address
+            ),
         }
         return await self.async_step_user()
 
@@ -121,9 +121,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         self._lock_cfg = lock_cfg
         self.context["title_placeholders"] = {
-            "name": lock_cfg.name,
-            "local_name": lock_cfg.local_name,
-            "address": self._discovery_info.address,
+            "name": human_readable_name(
+                lock_cfg.name, lock_cfg.local_name, self._discovery_info.address
+            )
         }
         return await self.async_step_integration_discovery_confirm()
 
@@ -149,7 +149,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="integration_discovery_confirm",
             description_placeholders={
                 "name": self._lock_cfg.name,
-                "local_name": self._discovery_info.name,
                 "address": self._discovery_info.address,
             },
         )
