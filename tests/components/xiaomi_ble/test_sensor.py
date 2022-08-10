@@ -78,7 +78,7 @@ async def test_xiaomi_formaldeyhde(hass):
     # obj type is 0x1010, payload len is 0x2 and payload is 0xf400
     saved_callback(
         make_advertisement(
-            "C4:7C:8D:6A:3E:7A", b"q \x98\x00iz>j\x8d|\xc4\r\x10\x10\x02\xf4\x00"
+            "C4:7C:8D:6A:3E:7A", b"q \x5d\x01iz>j\x8d|\xc4\r\x10\x10\x02\xf4\x00"
         ),
         BluetoothChange.ADVERTISEMENT,
     )
@@ -125,7 +125,7 @@ async def test_xiaomi_consumable(hass):
     # obj type is 0x1310, payload len is 0x2 and payload is 0x6000
     saved_callback(
         make_advertisement(
-            "C4:7C:8D:6A:3E:7A", b"q \x98\x00iz>j\x8d|\xc4\r\x13\x10\x02\x60\x00"
+            "C4:7C:8D:6A:3E:7A", b"q \x5d\x01iz>j\x8d|\xc4\r\x13\x10\x02\x60\x00"
         ),
         BluetoothChange.ADVERTISEMENT,
     )
@@ -172,7 +172,7 @@ async def test_xiaomi_battery_voltage(hass):
     # obj type is 0x0a10, payload len is 0x2 and payload is 0x6400
     saved_callback(
         make_advertisement(
-            "C4:7C:8D:6A:3E:7A", b"q \x98\x00iz>j\x8d|\xc4\r\x0a\x10\x02\x64\x00"
+            "C4:7C:8D:6A:3E:7A", b"q \x5d\x01iz>j\x8d|\xc4\r\x0a\x10\x02\x64\x00"
         ),
         BluetoothChange.ADVERTISEMENT,
     )
@@ -246,7 +246,7 @@ async def test_xiaomi_HHCCJCY01(hass):
         BluetoothChange.ADVERTISEMENT,
     )
     await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 4
+    assert len(hass.states.async_all()) == 5
 
     illum_sensor = hass.states.get("sensor.test_device_illuminance")
     illum_sensor_attr = illum_sensor.attributes
@@ -275,6 +275,13 @@ async def test_xiaomi_HHCCJCY01(hass):
     assert temp_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Test Device Temperature"
     assert temp_sensor_attribtes[ATTR_UNIT_OF_MEASUREMENT] == "°C"
     assert temp_sensor_attribtes[ATTR_STATE_CLASS] == "measurement"
+
+    batt_sensor = hass.states.get("sensor.test_device_battery")
+    batt_sensor_attribtes = batt_sensor.attributes
+    assert batt_sensor.state == "5"
+    assert batt_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Test Device Battery"
+    assert batt_sensor_attribtes[ATTR_UNIT_OF_MEASUREMENT] == "%"
+    assert batt_sensor_attribtes[ATTR_STATE_CLASS] == "measurement"
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
