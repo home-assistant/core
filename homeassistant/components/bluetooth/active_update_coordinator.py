@@ -94,7 +94,7 @@ class ActiveBluetoothProcessorCoordinator(
             poll_age = time.monotonic() - self._last_poll
         return self._needs_poll_method(service_info, poll_age)
 
-    async def _async_update_data(
+    async def _async_poll_data(
         self, last_service_info: BluetoothServiceInfoBleak
     ) -> _T:
         """Fetch the latest data from the source."""
@@ -107,7 +107,7 @@ class ActiveBluetoothProcessorCoordinator(
         assert self._last_service_info
 
         try:
-            update = await self._async_update_data(self._last_service_info)
+            update = await self._async_poll_data(self._last_service_info)
         except Exception:  # pylint: disable=broad-except
             if self.last_poll_successful:
                 self.logger.exception("%s: Failure while polling", self.address)
