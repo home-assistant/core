@@ -251,6 +251,14 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.PM10,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    "LEVEL": SensorEntityDescription(
+        key="LEVEL",
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+    "LEVEL2": SensorEntityDescription(
+        key="LEVEL2",
+        native_unit_of_measurement=PERCENTAGE,
+    ),
 }
 
 DEFAULT_SENSOR_DESCRIPTION = SensorEntityDescription(
