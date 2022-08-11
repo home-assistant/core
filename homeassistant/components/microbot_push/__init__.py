@@ -80,7 +80,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.debug("Token service called")
         await coordinator.api.connect(init=True)
 
-    @callback
     async def calibrate(call: ServiceCall) -> None:
         _LOGGER.debug("Calibrate service called")
         depth = call.data["depth"]
