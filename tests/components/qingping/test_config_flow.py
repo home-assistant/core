@@ -57,7 +57,7 @@ async def test_async_step_bluetooth_not_enough_info_at_start(hass):
             result["flow_id"], user_input={}
         )
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Motion & Light EEFF"
+    assert result2["title"] == "Qingping Motion & Light"
     assert result2["data"] == {}
     assert result2["result"].unique_id == "aa:bb:cc:dd:ee:ff"
 
