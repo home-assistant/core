@@ -1,8 +1,7 @@
 {
   "domain": "microbot_push",
   "name": "MicroBot Push",
-  "documentation": "https://github.com/spycle/microbot_push",
-  "issue_tracker": "https://github.com/spycle/microbot_push/issues",
+  "documentation": "https://www.home-assistant.io/integrations/keymitt_ble",
   "config_flow": true,
   "bluetooth": [
     {
