@@ -20,10 +20,17 @@
                 "description": "Introduzca su c\u00f3digo de autentificaci\u00f3n Hive. \n \n Introduzca el c\u00f3digo 0000 para solicitar otro c\u00f3digo.",
                 "title": "Autenticaci\u00f3n de dos factores de Hive."
             },
+            "configuration": {
+                "data": {
+                    "device_name": "Nombre del dispositivo"
+                },
+                "description": "Introduce tu configuraci\u00f3n de Hive",
+                "title": "Configuraci\u00f3n de Hive."
+            },
             "reauth": {
                 "data": {
                     "password": "Contrase\u00f1a",
-                    "username": "Usuario"
+                    "username": "Nombre de usuario"
                 },
                 "description": "Vuelva a introducir sus datos de acceso a Hive.",
                 "title": "Inicio de sesi\u00f3n en Hive"
@@ -32,9 +39,9 @@
                 "data": {
                     "password": "Contrase\u00f1a",
                     "scan_interval": "Intervalo de exploraci\u00f3n (segundos)",
-                    "username": "Usuario"
+                    "username": "Nombre de usuario"
                 },
-                "description": "Ingrese su configuraci\u00f3n e informaci\u00f3n de inicio de sesi\u00f3n de Hive.",
+                "description": "Introduce tus datos de acceso a Hive.",
                 "title": "Inicio de sesi\u00f3n en Hive"
             }
         }

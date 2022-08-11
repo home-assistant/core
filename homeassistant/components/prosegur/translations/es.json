@@ -14,14 +14,14 @@
                 "data": {
                     "description": "Vuelva a autenticarse con su cuenta Prosegur.",
                     "password": "Contrase\u00f1a",
-                    "username": "Usuario"
+                    "username": "Nombre de usuario"
                 }
             },
             "user": {
                 "data": {
                     "country": "Pa\u00eds",
                     "password": "Contrase\u00f1a",
-                    "username": "Usuario"
+                    "username": "Nombre de usuario"
                 }
             }
         }

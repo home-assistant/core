@@ -14,7 +14,7 @@
                     "import_plugins": "\u00bfImportar entidades desde los plugins de fibaro?",
                     "password": "Contrase\u00f1a",
                     "url": "URL en el format http://HOST/api/",
-                    "username": "Usuario"
+                    "username": "Nombre de usuario"
                 }
             }
         }
