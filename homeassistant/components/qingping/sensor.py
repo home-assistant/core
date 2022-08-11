@@ -23,6 +23,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
     PERCENTAGE,
@@ -31,6 +32,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -69,18 +71,18 @@ SENSOR_DESCRIPTIONS = {
         QingpingSensorDeviceClass.PM10,
         Units.CONCENTRATION_PARTS_PER_MILLION,
     ): SensorEntityDescription(
-        key=f"{QingpingSensorDeviceClass.PM10}_{Units.CONCENTRATION_PARTS_PER_MILLION}",
+        key=f"{QingpingSensorDeviceClass.PM10}_{Units.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER}",
         device_class=SensorDeviceClass.PM10,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     (
         QingpingSensorDeviceClass.PM25,
         Units.CONCENTRATION_PARTS_PER_MILLION,
     ): SensorEntityDescription(
-        key=f"{QingpingSensorDeviceClass.PM25}_{Units.CONCENTRATION_PARTS_PER_MILLION}",
+        key=f"{QingpingSensorDeviceClass.PM25}_{Units.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER}",
         device_class=SensorDeviceClass.PM25,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     (QingpingSensorDeviceClass.PRESSURE, Units.PRESSURE_MBAR): SensorEntityDescription(
