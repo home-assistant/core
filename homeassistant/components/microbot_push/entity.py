@@ -29,4 +29,4 @@ class MicroBotEntity(PassiveBluetoothCoordinatorEntity):
     @property
     def unique_id(self):
         """Return a unique ID to use for this entity."""
-        return self.config_entry.entry_id
+        return self._address
