@@ -24,7 +24,6 @@ CONF_ENABLED = "enabled"
 CONF_NAME = "name"
 CONF_PASSWORD = "password"
 CONF_BDADDR = "bdaddr"
-CONF_RETRY_COUNT = "retry_count"
 DEFAULT_RETRY_COUNT = 5
 
 # Defaults
