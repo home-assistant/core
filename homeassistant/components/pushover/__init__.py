@@ -8,7 +8,7 @@ from pushover_complete import BadAPIRequestError, PushoverAPI
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import discovery
 from homeassistant.helpers.typing import ConfigType
 
@@ -38,8 +38,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except BadAPIRequestError as err:
         if "application token is invalid" in str(err):
             raise ConfigEntryAuthFailed(err) from err
-        _LOGGER.error(err)
-        return False
+        if "user key is invalid" in str(err):
+            _LOGGER.error(err)
+            return False
+        raise ConfigEntryNotReady(err) from err
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = pushover_api
 

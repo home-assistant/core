@@ -15,6 +15,8 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
+from homeassistant.components.repairs.issue_handler import async_create_issue
+from homeassistant.components.repairs.models import IssueSeverity
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
@@ -44,25 +46,29 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_service(
+async def async_get_service(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> PushoverNotificationService | None:
     """Get the Pushover notification service."""
     if discovery_info is None:
+
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_yaml",
+            breaks_in_ha_version="2022.11.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+        )
         hass.create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
                 context={"source": SOURCE_IMPORT},
                 data=config,
             )
-        )
-
-        _LOGGER.warning(
-            "Pushover notify platform configuration has been imported into the UI. "
-            "Please remove it from configuration.yaml as it will be "
-            "removed in a future release"
         )
         return None
 
