@@ -20,6 +20,8 @@ ICON_TEMPERATURE = "mdi:thermometer"
 ICON_BATTERY = "mdi:battery-50"
 ICON_SWITCH = "mdi:power-socket-eu"
 ICON_LIGHT = "mdi:lightbulb"
+ICON_SHUTTER_CLOSED = "mdi:window-shutter"
+ICON_SHUTTER_OPEN = "mdi:window-shutter-open"
 
 ICONS = {
     Platform.SWITCH: ICON_SWITCH,

@@ -7,7 +7,7 @@ To update, run python3 -m script.hassfest
 
 MQTT = {
     "inels": [
-        "inels/#"
+        "inels/status/#"
     ],
     "tasmota": [
         "tasmota/discovery/#"
