@@ -1537,7 +1537,6 @@ omit =
     homeassistant/components/zha/core/helpers.py
     homeassistant/components/zha/core/registries.py
     homeassistant/components/zha/entity.py
-    homeassistant/components/zha/light.py
     homeassistant/components/zha/sensor.py
     homeassistant/components/zhong_hong/climate.py
     homeassistant/components/ziggo_mediabox_xl/media_player.py
