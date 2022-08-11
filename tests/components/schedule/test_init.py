@@ -116,10 +116,51 @@ async def test_invalid_config(hass: HomeAssistant) -> None:
         assert not await async_setup_component(hass, DOMAIN, {DOMAIN: cfg})
 
 
-async def test_overlapping_time_ranges(
+@pytest.mark.parametrize(
+    "schedule,error",
+    (
+        (
+            [
+                {CONF_FROM: "00:00:00", CONF_TO: "23:59:59"},
+                {CONF_FROM: "07:00:00", CONF_TO: "08:00:00"},
+            ],
+            "Overlapping times found in schedule",
+        ),
+        (
+            [
+                {CONF_FROM: "07:00:00", CONF_TO: "08:00:00"},
+                {CONF_FROM: "07:00:00", CONF_TO: "08:00:00"},
+            ],
+            "Overlapping times found in schedule",
+        ),
+        (
+            [
+                {CONF_FROM: "07:59:00", CONF_TO: "09:00:00"},
+                {CONF_FROM: "07:00:00", CONF_TO: "08:00:00"},
+            ],
+            "Overlapping times found in schedule",
+        ),
+        (
+            [
+                {CONF_FROM: "06:00:00", CONF_TO: "07:00:00"},
+                {CONF_FROM: "06:59:00", CONF_TO: "08:00:00"},
+            ],
+            "Overlapping times found in schedule",
+        ),
+        (
+            [
+                {CONF_FROM: "06:00:00", CONF_TO: "05:00:00"},
+            ],
+            "Invalid time range, from 06:00:00 is after 05:00:00",
+        ),
+    ),
+)
+async def test_invalid_schedules(
     hass: HomeAssistant,
     schedule_setup: Callable[..., Coroutine[Any, Any, bool]],
     caplog: pytest.LogCaptureFixture,
+    schedule: list[dict[str, str]],
+    error: str,
 ) -> None:
     """Test overlapping time ranges invalidate."""
     assert not await schedule_setup(
@@ -128,15 +169,12 @@ async def test_overlapping_time_ranges(
                 "from_yaml": {
                     CONF_NAME: "from yaml",
                     CONF_ICON: "mdi:party-pooper",
-                    CONF_SUNDAY: [
-                        {CONF_FROM: "00:00:00", CONF_TO: "23:59:59"},
-                        {CONF_FROM: "07:00:00", CONF_TO: "08:00:00"},
-                    ],
+                    CONF_SUNDAY: schedule,
                 }
             }
         }
     )
-    assert "Overlapping times found in schedule" in caplog.text
+    assert error in caplog.text
 
 
 async def test_setup_no_config(hass: HomeAssistant, hass_admin_user: MockUser) -> None:

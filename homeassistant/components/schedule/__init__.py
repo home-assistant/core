@@ -52,19 +52,31 @@ STORAGE_VERSION = 1
 STORAGE_VERSION_MINOR = 1
 
 
-def has_no_overlap(schedule: list[dict[str, str]]) -> list[dict[str, str]]:
-    """Test the time ranges don't overlap."""
-    # Make a list of all start and end times
-    times = itertools.chain(
-        *[[time_range[CONF_FROM], time_range[CONF_TO]] for time_range in schedule]
-    )
-    # Check if any time falls within the range of another time
-    if any(
-        time_range[CONF_FROM] < time < time_range[CONF_TO]
-        for time_range in schedule
-        for time in times
-    ):
-        raise vol.Invalid("Overlapping times found in schedule")
+def valid_schedule(schedule: list[dict[str, str]]) -> list[dict[str, str]]:
+    """Validate the schedule of time ranges.
+
+    Ensure they have no overlap and the end time is greater than the start time.
+    """
+    # Emtpty schedule is valid
+    if not schedule:
+        return schedule
+
+    # Sort the schedule by start times
+    schedule = sorted(schedule, key=lambda time_range: time_range[CONF_FROM])
+
+    # Check if the start time of the next event is before the end time of the previous event
+    previous_to = None
+    for time_range in schedule:
+        if time_range[CONF_FROM] >= time_range[CONF_TO]:
+            raise vol.Invalid(
+                f"Invalid time range, from {time_range[CONF_FROM]} is after {time_range[CONF_TO]}"
+            )
+
+        # Check if the from time of the event is after the to time of the previous event
+        if previous_to is not None and previous_to > time_range[CONF_FROM]:  # type: ignore[unreachable]
+            raise vol.Invalid("Overlapping times found in schedule")
+
+        previous_to = time_range[CONF_TO]
 
     return schedule
 
@@ -87,13 +99,13 @@ STORAGE_TIME_RANGE_SCHEMA = vol.Schema(
 
 SCHEDULE_SCHEMA = {
     vol.Optional(day, default=[]): vol.All(
-        cv.ensure_list, [TIME_RANGE_SCHEMA], has_no_overlap
+        cv.ensure_list, [TIME_RANGE_SCHEMA], valid_schedule
     )
     for day in CONF_ALL_DAYS
 }
 STORAGE_SCHEDULE_SCHEMA = {
     vol.Optional(day, default=[]): vol.All(
-        cv.ensure_list, [TIME_RANGE_SCHEMA], has_no_overlap, [STORAGE_TIME_RANGE_SCHEMA]
+        cv.ensure_list, [TIME_RANGE_SCHEMA], valid_schedule, [STORAGE_TIME_RANGE_SCHEMA]
     )
     for day in CONF_ALL_DAYS
 }
