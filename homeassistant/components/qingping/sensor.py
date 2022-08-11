@@ -3,7 +3,13 @@ from __future__ import annotations
 
 from typing import Optional, Union
 
-from qingping_ble import DeviceClass, DeviceKey, SensorDeviceInfo, SensorUpdate, Units
+from qingping_ble import (
+    DeviceKey,
+    SensorDeviceClass as QingpingSensorDeviceClass,
+    SensorDeviceInfo,
+    SensorUpdate,
+    Units,
+)
 
 from homeassistant import config_entries
 from homeassistant.components.bluetooth.passive_update_processor import (
@@ -23,7 +29,10 @@ from homeassistant.const import (
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_NAME,
+    CONCENTRATION_PARTS_PER_MILLION,
+    LIGHT_LUX,
     PERCENTAGE,
+    PRESSURE_MBAR,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     TEMP_CELSIUS,
 )
@@ -34,33 +43,75 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 
 SENSOR_DESCRIPTIONS = {
-    (DeviceClass.TEMPERATURE, Units.TEMP_CELSIUS): SensorEntityDescription(
-        key=f"{DeviceClass.TEMPERATURE}_{Units.TEMP_CELSIUS}",
-        device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    (DeviceClass.HUMIDITY, Units.PERCENTAGE): SensorEntityDescription(
-        key=f"{DeviceClass.HUMIDITY}_{Units.PERCENTAGE}",
-        device_class=SensorDeviceClass.HUMIDITY,
-        native_unit_of_measurement=PERCENTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    (DeviceClass.BATTERY, Units.PERCENTAGE): SensorEntityDescription(
-        key=f"{DeviceClass.BATTERY}_{Units.PERCENTAGE}",
+    (QingpingSensorDeviceClass.BATTERY, Units.PERCENTAGE): SensorEntityDescription(
+        key=f"{QingpingSensorDeviceClass.BATTERY}_{Units.PERCENTAGE}",
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     (
-        DeviceClass.SIGNAL_STRENGTH,
+        QingpingSensorDeviceClass.CO2,
+        Units.CONCENTRATION_PARTS_PER_MILLION,
+    ): SensorEntityDescription(
+        key=f"{QingpingSensorDeviceClass.CO2}_{Units.CONCENTRATION_PARTS_PER_MILLION}",
+        device_class=SensorDeviceClass.CO2,
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    (QingpingSensorDeviceClass.HUMIDITY, Units.PERCENTAGE): SensorEntityDescription(
+        key=f"{QingpingSensorDeviceClass.HUMIDITY}_{Units.PERCENTAGE}",
+        device_class=SensorDeviceClass.HUMIDITY,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    (QingpingSensorDeviceClass.ILLUMINANCE, Units.LIGHT_LUX): SensorEntityDescription(
+        key=f"{QingpingSensorDeviceClass.ILLUMINANCE}_{Units.LIGHT_LUX}",
+        device_class=SensorDeviceClass.ILLUMINANCE,
+        native_unit_of_measurement=LIGHT_LUX,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    (
+        QingpingSensorDeviceClass.PM10,
+        Units.CONCENTRATION_PARTS_PER_MILLION,
+    ): SensorEntityDescription(
+        key=f"{QingpingSensorDeviceClass.PM10}_{Units.CONCENTRATION_PARTS_PER_MILLION}",
+        device_class=SensorDeviceClass.PM10,
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    (
+        QingpingSensorDeviceClass.PM25,
+        Units.CONCENTRATION_PARTS_PER_MILLION,
+    ): SensorEntityDescription(
+        key=f"{QingpingSensorDeviceClass.PM25}_{Units.CONCENTRATION_PARTS_PER_MILLION}",
+        device_class=SensorDeviceClass.PM25,
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    (QingpingSensorDeviceClass.PRESSURE, Units.PRESSURE_MBAR): SensorEntityDescription(
+        key=f"{QingpingSensorDeviceClass.PRESSURE}_{Units.PRESSURE_MBAR}",
+        device_class=SensorDeviceClass.PRESSURE,
+        native_unit_of_measurement=PRESSURE_MBAR,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    (
+        QingpingSensorDeviceClass.SIGNAL_STRENGTH,
         Units.SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     ): SensorEntityDescription(
-        key=f"{DeviceClass.SIGNAL_STRENGTH}_{Units.SIGNAL_STRENGTH_DECIBELS_MILLIWATT}",
+        key=f"{QingpingSensorDeviceClass.SIGNAL_STRENGTH}_{Units.SIGNAL_STRENGTH_DECIBELS_MILLIWATT}",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
+    ),
+    (
+        QingpingSensorDeviceClass.TEMPERATURE,
+        Units.TEMP_CELSIUS,
+    ): SensorEntityDescription(
+        key=f"{QingpingSensorDeviceClass.TEMPERATURE}_{Units.TEMP_CELSIUS}",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=TEMP_CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 }
 
