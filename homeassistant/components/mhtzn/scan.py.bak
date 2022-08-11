@@ -1,0 +1,66 @@
+"""Utility functions for the MQTT integration."""
+import argparse
+import asyncio
+import logging
+from typing import Any, Optional, cast
+
+from homeassistant.core import HomeAssistant
+from zeroconf import DNSQuestionType, IPVersion, ServiceStateChange, Zeroconf
+from zeroconf.asyncio import AsyncServiceBrowser, AsyncServiceInfo, AsyncZeroconf
+
+
+ALL_SERVICES = [
+    "_mqtt._tcp.local.",
+]
+
+log = logging.getLogger(__name__)
+
+search_info = []
+
+
+def async_on_service_state_change(
+        zeroconf: Zeroconf, service_type: str, name: str, state_change: ServiceStateChange
+) -> None:
+    print(f"Service {name} of type {service_type} state changed: {state_change}")
+    if state_change is not ServiceStateChange.Added:
+        return
+    base_name = name[: -len(service_type) - 1]
+    asyncio.ensure_future(_async_show_service_info(zeroconf, service_type, name))
+
+
+async def _async_show_service_info(zeroconf: Zeroconf, service_type: str, name: str) -> None:
+    info = AsyncServiceInfo(service_type, name)
+    await info.async_request(zeroconf, 1000, question_type=DNSQuestionType.QU)
+    search_info.append(info)
+
+
+class AsyncAppleScanner:
+    def __init__(self) -> None:
+        self.aiobrowser: Optional[AsyncServiceBrowser] = None
+        self.aiozc: Optional[AsyncZeroconf] = None
+
+    async def async_run(self) -> None:
+        self.aiozc = AsyncZeroconf(ip_version=IPVersion.All)
+        await self.aiozc.zeroconf.async_wait_for_start()
+        print("\nBrowsing %s service(s), press Ctrl-C to exit...\n" % ALL_SERVICES)
+        kwargs = {'handlers': [async_on_service_state_change], 'question_type': DNSQuestionType.QU}
+        self.aiobrowser = AsyncServiceBrowser(self.aiozc.zeroconf, ALL_SERVICES, **kwargs)  # type: ignore
+        times = 0
+        while True:
+            if times > 1:
+                break
+            await asyncio.sleep(1)
+            times = times + 1
+
+    async def async_close(self) -> None:
+        assert self.aiozc is not None
+        assert self.aiobrowser is not None
+        await self.aiobrowser.async_cancel()
+        await self.aiozc.async_close()
+
+
+async def scan() -> list[AsyncServiceInfo]:
+    runner = AsyncAppleScanner()
+    await runner.async_run()
+
+    return search_info
