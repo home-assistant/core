@@ -200,7 +200,7 @@ async def test_awair_gen2_sensors(hass: HomeAssistant, user, cloud_devices, gen2
 
 
 async def test_local_awair_sensors(hass: HomeAssistant, local_devices, local_data):
-    """Test expected sensors on a 2nd gen Awair."""
+    """Test expected sensors on a local Awair."""
 
     fixtures = [local_devices, local_data]
     await setup_awair(hass, fixtures, LOCAL_UNIQUE_ID, LOCAL_CONFIG)
