@@ -175,9 +175,6 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
 
         try:
             devices = await awair.devices()
-            if not devices:
-                return (None, "no_devices")
-
             return (devices[0], None)
 
         except ClientConnectorError as err:
