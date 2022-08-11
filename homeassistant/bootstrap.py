@@ -100,6 +100,7 @@ async def async_setup_hass(
 ) -> core.HomeAssistant | None:
     """Set up Home Assistant."""
     hass = core.HomeAssistant()
+    core._cv_hass.set(hass)  # pylint: disable=protected-access
     hass.config.config_dir = runtime_config.config_dir
 
     async_enable_logging(
@@ -186,8 +187,6 @@ async def async_setup_hass(
 
     if runtime_config.open_ui:
         hass.add_job(open_hass_ui, hass)
-
-    core._cv_hass.set(hass)  # pylint: disable=protected-access
 
     return hass
 
