@@ -65,3 +65,9 @@ def omni_data_fixture():
 def user_fixture():
     """Fixture representing the User object returned from Awair's Cloud API."""
     return json.loads(load_fixture("awair/user.json"))
+
+
+@pytest.fixture(name="local_data", scope="session")
+def local_data_fixture():
+    """Fixture representing data returned from Awair local device."""
+    return json.loads(load_fixture("awair/awair-local.json"))
