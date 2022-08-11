@@ -7,7 +7,7 @@
             "user": {
                 "data": {
                     "password": "Contrase\u00f1a",
-                    "username": "Usuario"
+                    "username": "Nombre de usuario"
                 },
                 "description": "Por favor, introduzca las credenciales utilizadas para iniciar sesi\u00f3n en mytotalconnectcomfort.com."
             }

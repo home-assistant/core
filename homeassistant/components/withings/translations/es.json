@@ -27,6 +27,10 @@
             "reauth": {
                 "description": "El perfil \"{profile}\" debe volver a autenticarse para continuar recibiendo datos de Withings.",
                 "title": "Re-autentificar el perfil"
+            },
+            "reauth_confirm": {
+                "description": "El perfil \"{profile}\" debe volver a autenticarse para continuar recibiendo datos de Withings.",
+                "title": "Volver a autenticar la integraci\u00f3n"
             }
         }
     }

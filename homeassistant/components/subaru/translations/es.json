@@ -25,21 +25,21 @@
                 "data": {
                     "contact_method": "Selecciona un m\u00e9todo de contacto:"
                 },
-                "description": "Autenticaci\u00f3n de dos factores requerida",
+                "description": "Se requiere autenticaci\u00f3n de dos factores",
                 "title": "Configuraci\u00f3n de Subaru Starlink"
             },
             "two_factor_validate": {
                 "data": {
                     "validation_code": "C\u00f3digo de validaci\u00f3n"
                 },
-                "description": "Introduce el c\u00f3digo de validaci\u00f3n recibido",
+                "description": "Por favor, introduce el c\u00f3digo de validaci\u00f3n recibido",
                 "title": "Configuraci\u00f3n de Subaru Starlink"
             },
             "user": {
                 "data": {
                     "country": "Seleccionar pa\u00eds",
                     "password": "Contrase\u00f1a",
-                    "username": "Usuario"
+                    "username": "Nombre de usuario"
                 },
                 "description": "Por favor, introduzca sus credenciales de MySubaru\nNOTA: La configuraci\u00f3n inicial puede tardar hasta 30 segundos",
                 "title": "Configuraci\u00f3n de Subaru Starlink"

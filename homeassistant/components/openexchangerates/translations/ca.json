@@ -15,9 +15,18 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "Clau API"
+                    "api_key": "Clau API",
+                    "base": "Moneda base"
+                },
+                "data_description": {
+                    "base": "L'\u00fas d'una moneda base que no sigui USD requereix un [pla de pagament]({signup})."
                 }
             }
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "title": "La configuraci\u00f3 YAML d'Open Exchange Rates est\u00e0 sent eliminada"
         }
     }
 }

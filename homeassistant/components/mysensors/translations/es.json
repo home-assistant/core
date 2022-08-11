@@ -14,6 +14,7 @@
             "invalid_serial": "Puerto serie no v\u00e1lido",
             "invalid_subscribe_topic": "Tema de suscripci\u00f3n no v\u00e1lido",
             "invalid_version": "Versi\u00f3n inv\u00e1lida de MySensors",
+            "mqtt_required": "La integraci\u00f3n MQTT no est\u00e1 configurada",
             "not_a_number": "Por favor, introduzca un n\u00famero",
             "port_out_of_range": "El n\u00famero de puerto debe ser como m\u00ednimo 1 y como m\u00e1ximo 65535",
             "same_topic": "Los temas de suscripci\u00f3n y publicaci\u00f3n son los mismos",
@@ -67,6 +68,14 @@
                     "version": "Versi\u00f3n de MySensores"
                 },
                 "description": "Configuraci\u00f3n de la pasarela Ethernet"
+            },
+            "select_gateway_type": {
+                "description": "Selecciona qu\u00e9 puerta de enlace configurar.",
+                "menu_options": {
+                    "gw_mqtt": "Configurar una puerta de enlace MQTT",
+                    "gw_serial": "Configurar una puerta de enlace serie",
+                    "gw_tcp": "Configurar una puerta de enlace TCP"
+                }
             },
             "user": {
                 "data": {

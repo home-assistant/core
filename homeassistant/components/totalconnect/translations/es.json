@@ -24,7 +24,7 @@
             "user": {
                 "data": {
                     "password": "Contrase\u00f1a",
-                    "username": "Usuario"
+                    "username": "Nombre de usuario"
                 }
             }
         }
@@ -35,7 +35,7 @@
                 "data": {
                     "auto_bypass_low_battery": "Ignorar autom\u00e1ticamente bater\u00eda baja"
                 },
-                "description": "Ignorar autom\u00e1ticamente las zonas en el momento en que informan de que la bater\u00eda est\u00e1 baja.",
+                "description": "Omite zonas autom\u00e1ticamente en el momento en que informan que la bater\u00eda est\u00e1 baja.",
                 "title": "Opciones de TotalConnect"
             }
         }
