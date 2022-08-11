@@ -16,10 +16,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    _LOGGER,
     DOMAIN as ISY994_DOMAIN,
     ISY994_NODES,
     ISY994_PROGRAMS,
+    LOGGER,
     UOM_8_BIT_RANGE,
     UOM_BARRIER,
 )
@@ -72,12 +72,12 @@ class ISYCoverEntity(ISYNodeEntity, CoverEntity):
         """Send the open cover command to the ISY994 cover device."""
         val = 100 if self._node.uom == UOM_BARRIER else None
         if not await self._node.turn_on(val=val):
-            _LOGGER.error("Unable to open the cover")
+            LOGGER.error("Unable to open the cover")
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Send the close cover command to the ISY994 cover device."""
         if not await self._node.turn_off():
-            _LOGGER.error("Unable to close the cover")
+            LOGGER.error("Unable to close the cover")
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
@@ -85,7 +85,7 @@ class ISYCoverEntity(ISYNodeEntity, CoverEntity):
         if self._node.uom == UOM_8_BIT_RANGE:
             position = round(position * 255.0 / 100.0)
         if not await self._node.turn_on(val=position):
-            _LOGGER.error("Unable to set cover position")
+            LOGGER.error("Unable to set cover position")
 
 
 class ISYCoverProgramEntity(ISYProgramEntity, CoverEntity):
@@ -99,9 +99,9 @@ class ISYCoverProgramEntity(ISYProgramEntity, CoverEntity):
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Send the open cover command to the ISY994 cover program."""
         if not await self._actions.run_then():
-            _LOGGER.error("Unable to open the cover")
+            LOGGER.error("Unable to open the cover")
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Send the close cover command to the ISY994 cover program."""
         if not await self._actions.run_else():
-            _LOGGER.error("Unable to close the cover")
+            LOGGER.error("Unable to close the cover")

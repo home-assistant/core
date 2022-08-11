@@ -23,7 +23,6 @@ import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    _LOGGER,
     CONF_IGNORE_STRING,
     CONF_RESTORE_LIGHT_STATE,
     CONF_SENSOR_STRING,
@@ -38,6 +37,7 @@ from .const import (
     ISY994_NODES,
     ISY994_PROGRAMS,
     ISY994_VARIABLES,
+    LOGGER,
     MANUFACTURER,
     PLATFORMS,
     PROGRAM_PLATFORMS,
@@ -159,7 +159,7 @@ async def async_setup_entry(
         port = host.port or 443
         session = aiohttp_client.async_get_clientsession(hass)
     else:
-        _LOGGER.error("The isy994 host value in configuration is invalid")
+        LOGGER.error("The isy994 host value in configuration is invalid")
         return False
 
     # Connect to ISY controller.
@@ -198,7 +198,7 @@ async def async_setup_entry(
     _categorize_variables(hass_isy_data, isy.variables, variable_identifier)
 
     # Dump ISY Clock Information. Future: Add ISY as sensor to Hass with attrs
-    _LOGGER.info(repr(isy.clock))
+    LOGGER.info(repr(isy.clock))
 
     hass_isy_data[ISY994_ISY] = isy
     _async_get_or_create_isy_device_in_registry(hass, entry, isy)
@@ -209,10 +209,10 @@ async def async_setup_entry(
     @callback
     def _async_stop_auto_update(event: Event) -> None:
         """Stop the isy auto update on Home Assistant Shutdown."""
-        _LOGGER.debug("ISY Stopping Event Stream and automatic updates")
+        LOGGER.debug("ISY Stopping Event Stream and automatic updates")
         isy.websocket.stop()
 
-    _LOGGER.debug("ISY Starting Event Stream and automatic updates")
+    LOGGER.debug("ISY Starting Event Stream and automatic updates")
     isy.websocket.start()
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
@@ -288,7 +288,7 @@ async def async_unload_entry(
 
     isy: ISY = hass_isy_data[ISY994_ISY]
 
-    _LOGGER.debug("ISY Stopping Event Stream and automatic updates")
+    LOGGER.debug("ISY Stopping Event Stream and automatic updates")
     isy.websocket.stop()
 
     if unload_ok:

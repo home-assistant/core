@@ -33,10 +33,10 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    _LOGGER,
     DOMAIN as ISY994_DOMAIN,
     ISY994_NODES,
     ISY994_VARIABLES,
+    LOGGER,
     SENSOR_AUX,
     UOM_DOUBLE_TEMP,
     UOM_FRIENDLY_NAME,
@@ -86,7 +86,7 @@ async def async_setup_entry(
     entities: list[ISYSensorEntity | ISYSensorVariableEntity] = []
 
     for node in hass_isy_data[ISY994_NODES][SENSOR]:
-        _LOGGER.debug("Loading %s", node.name)
+        LOGGER.debug("Loading %s", node.name)
         entities.append(ISYSensorEntity(node))
 
     aux_nodes = set()
@@ -94,7 +94,7 @@ async def async_setup_entry(
         aux_nodes.add(node)
         if control in SKIP_AUX_PROPERTIES:
             continue
-        _LOGGER.debug("Loading %s %s", node.name, node.aux_properties[control])
+        LOGGER.debug("Loading %s %s", node.name, node.aux_properties[control])
         enabled_default = control not in AUX_DISABLED_BY_DEFAULT_EXACT and not any(
             control.startswith(match) for match in AUX_DISABLED_BY_DEFAULT_MATCH
         )

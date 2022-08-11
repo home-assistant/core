@@ -27,7 +27,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .const import (
-    _LOGGER,
     DEFAULT_PROGRAM_STRING,
     DOMAIN,
     FILTER_INSTEON_TYPE,
@@ -41,6 +40,7 @@ from .const import (
     ISY_GROUP_PLATFORM,
     KEY_ACTIONS,
     KEY_STATUS,
+    LOGGER,
     NODE_FILTERS,
     PLATFORMS,
     PROGRAM_PLATFORMS,
@@ -341,7 +341,7 @@ def _categorize_programs(hass_isy_data: dict, programs: Programs) -> None:
             actions = None
             status = entity_folder.get_by_name(KEY_STATUS)
             if not status or status.protocol != PROTO_PROGRAM:
-                _LOGGER.warning(
+                LOGGER.warning(
                     "Program %s entity '%s' not loaded, invalid/missing status program",
                     platform,
                     entity_folder.name,
@@ -351,7 +351,7 @@ def _categorize_programs(hass_isy_data: dict, programs: Programs) -> None:
             if platform != BINARY_SENSOR:
                 actions = entity_folder.get_by_name(KEY_ACTIONS)
                 if not actions or actions.protocol != PROTO_PROGRAM:
-                    _LOGGER.warning(
+                    LOGGER.warning(
                         "Program %s entity '%s' not loaded, invalid/missing actions program",
                         platform,
                         entity_folder.name,
@@ -373,7 +373,7 @@ def _categorize_variables(
             if identifier in vname
         ]
     except KeyError as err:
-        _LOGGER.error("Error adding ISY Variables: %s", err)
+        LOGGER.error("Error adding ISY Variables: %s", err)
         return
     for vtype, vname, vid in var_to_add:
         hass_isy_data[ISY994_VARIABLES].append((vname, variables[vtype][vid]))
@@ -392,7 +392,7 @@ async def migrate_old_unique_ids(
             platform, DOMAIN, entity.old_unique_id
         )
         if old_entity_id is not None:
-            _LOGGER.debug(
+            LOGGER.debug(
                 "Migrating unique_id from [%s] to [%s]",
                 entity.old_unique_id,
                 entity.unique_id,
@@ -403,7 +403,7 @@ async def migrate_old_unique_ids(
             platform, DOMAIN, entity.unique_id.replace(":", "")
         )
         if old_entity_id_2 is not None:
-            _LOGGER.debug(
+            LOGGER.debug(
                 "Migrating unique_id from [%s] to [%s]",
                 entity.unique_id.replace(":", ""),
                 entity.unique_id,

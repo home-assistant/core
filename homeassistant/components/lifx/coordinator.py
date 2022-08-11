@@ -14,8 +14,8 @@ from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
-    _LOGGER,
     IDENTIFY_WAVEFORM,
+    LOGGER,
     MESSAGE_RETRIES,
     MESSAGE_TIMEOUT,
     TARGET_ANY,
@@ -43,13 +43,13 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
         update_interval = timedelta(seconds=10)
         super().__init__(
             hass,
-            _LOGGER,
+            LOGGER,
             name=f"{title} ({self.device.ip_addr})",
             update_interval=update_interval,
             # We don't want an immediate refresh since the device
             # takes a moment to reflect the state change
             request_refresh_debouncer=Debouncer(
-                hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
+                hass, LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
             ),
         )
 

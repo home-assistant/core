@@ -40,7 +40,7 @@ from .const import (
     UDN_UUID_PREFIX,
 )
 
-_LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 def _data_schema(schema_input: dict[str, str]) -> vol.Schema:
@@ -79,7 +79,7 @@ async def validate_input(
         port = host.port or HTTPS_PORT
         session = aiohttp_client.async_get_clientsession(hass)
     else:
-        _LOGGER.error("The isy994 host value in configuration is invalid")
+        LOGGER.error("The isy994 host value in configuration is invalid")
         raise InvalidHost
 
     # Connect to ISY controller.
@@ -147,7 +147,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except InvalidAuth:
                 errors[CONF_PASSWORD] = "invalid_auth"
             except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
+                LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
             if not errors:

@@ -26,12 +26,12 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    _LOGGER,
     BINARY_SENSOR_DEVICE_TYPES_ISY,
     BINARY_SENSOR_DEVICE_TYPES_ZWAVE,
     DOMAIN as ISY994_DOMAIN,
     ISY994_NODES,
     ISY994_PROGRAMS,
+    LOGGER,
     SUBNODE_CLIMATE_COOL,
     SUBNODE_CLIMATE_HEAT,
     SUBNODE_DUSK_DAWN,
@@ -115,7 +115,7 @@ async def async_setup_entry(
         if device_class in DEVICE_PARENT_REQUIRED:
             parent_entity = entities_by_address.get(node.parent_node.address)
             if not parent_entity:
-                _LOGGER.error(
+                LOGGER.error(
                     "Node %s has a parent node %s, but no device "
                     "was created for the parent. Skipping",
                     node.address,
@@ -318,7 +318,7 @@ class ISYInsteonBinarySensorEntity(ISYBinarySensorEntity):
     def _async_negative_node_control_handler(self, event: NodeProperty) -> None:
         """Handle an "On" control event from the "negative" node."""
         if event.control == CMD_ON:
-            _LOGGER.debug(
+            LOGGER.debug(
                 "Sensor %s turning Off via the Negative node sending a DON command",
                 self.name,
             )
@@ -335,7 +335,7 @@ class ISYInsteonBinarySensorEntity(ISYBinarySensorEntity):
         events
         """
         if event.control == CMD_ON:
-            _LOGGER.debug(
+            LOGGER.debug(
                 "Sensor %s turning On via the Primary node sending a DON command",
                 self.name,
             )
@@ -343,7 +343,7 @@ class ISYInsteonBinarySensorEntity(ISYBinarySensorEntity):
             self.async_write_ha_state()
             self._async_heartbeat()
         if event.control == CMD_OFF:
-            _LOGGER.debug(
+            LOGGER.debug(
                 "Sensor %s turning Off via the Primary node sending a DOF command",
                 self.name,
             )
@@ -456,7 +456,7 @@ class ISYBinarySensorHeartbeat(ISYNodeEntity, BinarySensorEntity):
             self.async_write_ha_state()
 
         point_in_time = dt_util.utcnow() + timedelta(hours=25)
-        _LOGGER.debug(
+        LOGGER.debug(
             "Heartbeat timer starting. Now: %s Then: %s",
             dt_util.utcnow(),
             point_in_time,
