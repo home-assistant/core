@@ -1,6 +1,7 @@
 {
   "domain": "smtp",
   "name": "SMTP",
+  "dependencies": ["repairs"],
   "documentation": "https://www.home-assistant.io/integrations/smtp",
   "codeowners": ["@engrbm87"],
   "config_flow": true,
