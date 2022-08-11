@@ -13,7 +13,8 @@ from yalexs.lock import Lock, LockDetail
 from yalexs.pubnub_activity import activities_from_pubnub_message
 from yalexs.pubnub_async import AugustPubNub, async_create_pubnub
 
-from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY, ConfigEntry
+from homeassistant.components import yalexs_ble
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import (
@@ -99,18 +100,17 @@ def _async_trigger_ble_lock_discovery(
 ):
     """Update keys for the yalexs-ble integration if available."""
     for lock_detail in locks_with_offline_keys:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                "yalexs_ble",
-                context={"source": SOURCE_INTEGRATION_DISCOVERY},
-                data={
+        yalexs_ble.async_discovery(
+            hass,
+            yalexs_ble.YaleXSBLEDiscovery(
+                {
                     "name": lock_detail.device_name,
                     "address": lock_detail.mac_address,
                     "serial": lock_detail.serial_number,
                     "key": lock_detail.offline_key,
                     "slot": lock_detail.offline_slot,
-                },
-            )
+                }
+            ),
         )
 
 
