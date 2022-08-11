@@ -125,7 +125,7 @@ async def test_huawei_lte_wifi_guest_network_config_entry_when_ssid_is_str(
     client, hass: HomeAssistant
 ):
     """Test switch wifi guest network config entry when ssid is a str.
-    
+
     Issue #76244. Huawai models: H312-371, E5372 and E8372.
     """
     huawei_lte = MockConfigEntry(domain=DOMAIN, data={CONF_URL: "http://huawei-lte"})
@@ -145,7 +145,7 @@ async def test_huawei_lte_wifi_guest_network_config_entry_when_ssid_is_none(
     client, hass: HomeAssistant
 ):
     """Test switch wifi guest network config entry when ssid is a None.
-    
+
     Issue #76244.
     """
     huawei_lte = MockConfigEntry(domain=DOMAIN, data={CONF_URL: "http://huawei-lte"})
