@@ -5,10 +5,10 @@ from .const import DEFAULT_NAME, DOMAIN, ICON
 from .entity import MicroBotEntity
 
 
-async def async_setup_entry(hass, entry, async_add_devices):
+async def async_setup_entry(hass, entry, async_add_entities):
     """Set up MicroBot based on a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_devices([MicroBotBinarySwitch(coordinator, entry)])
+    async_add_entities([MicroBotBinarySwitch(coordinator, entry)])
 
 
 class MicroBotBinarySwitch(MicroBotEntity, SwitchEntity):
