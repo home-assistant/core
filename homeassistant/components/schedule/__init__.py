@@ -280,21 +280,19 @@ class Schedule(Entity):
                     ]
                 )
             )
-            if next_event := next(
-                (
-                    possible_next_event
-                    for time in times
-                    if (
+            next_event = None
+            
+            for time in times:
+                if (
                         possible_next_event := (
                             datetime.combine(now.date(), time, tzinfo=now.tzinfo)
                             + timedelta(days=day)
                         )
                     )
                     > now
-                ),
-                None,
-            ):
-                break
+                ):
+                    next_event = possible_next_event
+                    break
 
         self._attr_extra_state_attributes = {
             ATTR_NEXT_EVENT: next_event,
