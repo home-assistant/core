@@ -25,7 +25,6 @@ from .const import (
     DEFAULT_RETRY_COUNT,
     DOMAIN,
     PLATFORMS,
-    STARTUP_MESSAGE,
 )
 
 if TYPE_CHECKING:
@@ -37,7 +36,6 @@ _LOGGER: logging.Logger = logging.getLogger(__package__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up this integration using UI."""
     hass.data.setdefault(DOMAIN, {})
-    _LOGGER.debug(STARTUP_MESSAGE)
 
     if not entry.options:
         hass.config_entries.async_update_entry(
