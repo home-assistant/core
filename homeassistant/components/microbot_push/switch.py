@@ -47,8 +47,3 @@ class MicroBotBinarySwitch(MicroBotEntity, SwitchEntity):
     def available(self) -> bool:
         """Return true if the switch is available."""
         return True
-
-    @property
-    def assumed_state(self) -> bool:
-        """Return true if the state is assumed."""
-        return False
