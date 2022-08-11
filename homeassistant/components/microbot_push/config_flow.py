@@ -27,12 +27,6 @@ from .const import CONF_BDADDR, CONF_NAME, DEFAULT_RETRY_COUNT, DOMAIN
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
-
-def format_unique_id(address: str) -> str:
-    """Format the unique ID for a switchbot."""
-    return address.replace(":", "").lower()
-
-
 class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for MicroBot."""
 
@@ -53,7 +47,7 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the bluetooth discovery step."""
         _LOGGER.debug("Discovered bluetooth device: %s", discovery_info)
-        await self.async_set_unique_id(format_unique_id(discovery_info.address))
+        await self.async_set_unique_id(discovery_info.address)
         self._abort_if_unique_id_configured()
         parsed = parse_advertisement_data(
             discovery_info.device, discovery_info.advertisement
@@ -86,7 +80,7 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
             for discovery_info in async_discovered_service_info(self.hass):
                 address = discovery_info.address
                 if (
-                    format_unique_id(address) in current_addresses
+                    address in current_addresses
                     or address in self._discovered_advs
                 ):
                     continue
@@ -115,7 +109,7 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
             self._name = user_input[CONF_NAME]
             self._bdaddr = user_input[CONF_BDADDR]
             await self.async_set_unique_id(
-                format_unique_id(self._bdaddr), raise_on_progress=False
+                self._bdaddr, raise_on_progress=False
             )
             self._abort_if_unique_id_configured()
             self._ble_device = bluetooth.async_ble_device_from_address(
