@@ -271,7 +271,9 @@ class Schedule(Entity):
         # Find next event in the schedule
         next_event = None
         for day in range(7):
-            day_schedule = self._config.get(WEEKDAY_TO_CONF[(now.weekday() + day) % 7], [])
+            day_schedule = self._config.get(
+                WEEKDAY_TO_CONF[(now.weekday() + day) % 7], []
+            )
             times = sorted(
                 itertools.chain(
                     *[
@@ -280,17 +282,14 @@ class Schedule(Entity):
                     ]
                 )
             )
-            next_event = None
-            
+
             for time in times:
                 if (
-                        possible_next_event := (
-                            datetime.combine(now.date(), time, tzinfo=now.tzinfo)
-                            + timedelta(days=day)
-                        )
+                    possible_next_event := (
+                        datetime.combine(now.date(), time, tzinfo=now.tzinfo)
+                        + timedelta(days=day)
                     )
-                    > now
-                ):
+                ) > now:
                     next_event = possible_next_event
                     break
 
