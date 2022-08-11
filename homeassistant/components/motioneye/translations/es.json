@@ -18,9 +18,9 @@
             "user": {
                 "data": {
                     "admin_password": "Contrase\u00f1a administrador",
-                    "admin_username": "Usuario administrador",
+                    "admin_username": "Nombre de usuario administrador",
                     "surveillance_password": "Contrase\u00f1a vigilancia",
-                    "surveillance_username": "Usuario vigilancia",
+                    "surveillance_username": "Nombre de usuario vigilancia",
                     "url": "URL"
                 }
             }

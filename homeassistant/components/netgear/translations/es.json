@@ -11,7 +11,7 @@
                 "data": {
                     "host": "Host (Opcional)",
                     "password": "Contrase\u00f1a",
-                    "username": "Usuario (Opcional)"
+                    "username": "Nombre de usuario (Opcional)"
                 },
                 "description": "Host predeterminado: {host} \nNombre de usuario predeterminado: {username}"
             }

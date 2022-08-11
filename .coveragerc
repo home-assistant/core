@@ -1485,6 +1485,7 @@ omit =
     homeassistant/components/xmpp/notify.py
     homeassistant/components/xs1/*
     homeassistant/components/yalexs_ble/__init__.py
+    homeassistant/components/yalexs_ble/binary_sensor.py
     homeassistant/components/yalexs_ble/entity.py
     homeassistant/components/yalexs_ble/lock.py
     homeassistant/components/yalexs_ble/util.py

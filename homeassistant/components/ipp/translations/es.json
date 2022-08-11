@@ -21,7 +21,7 @@
                     "host": "Host",
                     "port": "Puerto",
                     "ssl": "Utiliza un certificado SSL",
-                    "verify_ssl": "Verificar certificado SSL"
+                    "verify_ssl": "Verificar el certificado SSL"
                 },
                 "description": "Configura tu impresora a trav\u00e9s del Protocolo de Impresi\u00f3n de Internet (IPP) para integrarla con Home Assistant.",
                 "title": "Vincula tu impresora"

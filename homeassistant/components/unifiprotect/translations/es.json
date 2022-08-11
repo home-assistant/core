@@ -14,7 +14,7 @@
             "discovery_confirm": {
                 "data": {
                     "password": "Contrase\u00f1a",
-                    "username": "Usuario"
+                    "username": "Nombre de usuario"
                 },
                 "description": "\u00bfQuieres configurar {name} ({ip_address})? Necesitar\u00e1 un usuario local creado en su consola UniFi OS para iniciar sesi\u00f3n. Los usuarios de Ubiquiti Cloud no funcionar\u00e1n. Para m\u00e1s informaci\u00f3n: {local_user_documentation_url}",
                 "title": "UniFi Protect descubierto"
@@ -47,6 +47,7 @@
                 "data": {
                     "all_updates": "M\u00e9tricas en tiempo real (ADVERTENCIA: Aumenta en gran medida el uso de la CPU)",
                     "disable_rtsp": "Deshabilitar la transmisi\u00f3n RTSP",
+                    "max_media": "N\u00famero m\u00e1ximo de eventos a cargar para el Navegador de Medios (aumenta el uso de RAM)",
                     "override_connection_host": "Anular la conexi\u00f3n del host"
                 },
                 "description": "La opci\u00f3n de m\u00e9tricas en tiempo real s\u00f3lo debe estar activada si ha habilitado los sensores de diagn\u00f3stico y quiere que se actualicen en tiempo real. Si no est\u00e1 activada, s\u00f3lo se actualizar\u00e1n una vez cada 15 minutos.",
