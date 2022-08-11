@@ -379,6 +379,399 @@ async def test_setup_with_exception(hass: HomeAssistant) -> None:
 
 
 @respx.mock
+async def test_update_with_json_attrs(hass: HomeAssistant) -> None:
+    """Test attributes get extracted from a JSON result."""
+
+    respx.get("http://localhost").respond(
+        status_code=HTTPStatus.OK,
+        json={"key": "some_json_value"},
+    )
+    assert await async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": {
+                "platform": "rest",
+                "resource": "http://localhost",
+                "method": "GET",
+                "value_template": "{{ value_json.key == 'some_json_value' }}",
+                "json_attributes": ["key"],
+                "name": "foo",
+                "verify_ssl": "true",
+                "timeout": 30,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all("binary_sensor")) == 1
+
+    state = hass.states.get("binary_sensor.foo")
+    assert state.state == STATE_ON
+    assert state.attributes["key"] == "some_json_value"
+
+
+@respx.mock
+async def test_update_with_no_template(hass: HomeAssistant) -> None:
+    """Test update when there is no value template."""
+
+    respx.get("http://localhost").respond(
+        status_code=HTTPStatus.OK,
+        headers={"content-type": CONTENT_TYPE_JSON},
+        content="1",
+    )
+    assert await async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": {
+                "platform": "rest",
+                "resource": "http://localhost",
+                "method": "GET",
+                "json_attributes": ["key"],
+                "name": "foo",
+                "verify_ssl": "true",
+                "timeout": 30,
+                "headers": {"Accept": "text/xml"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all("binary_sensor")) == 1
+
+    state = hass.states.get("binary_sensor.foo")
+    assert state.state == STATE_ON
+
+
+@respx.mock
+async def test_update_with_json_attrs_no_data(hass: HomeAssistant, caplog) -> None:
+    """Test attributes when no JSON result fetched."""
+
+    respx.get("http://localhost").respond(
+        status_code=HTTPStatus.OK,
+        headers={"content-type": CONTENT_TYPE_JSON},
+        content="",
+    )
+    assert await async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": {
+                "platform": "rest",
+                "resource": "http://localhost",
+                "method": "GET",
+                "value_template": "{{ value_json.key }}",
+                "json_attributes": ["key"],
+                "name": "foo",
+                "verify_ssl": "true",
+                "timeout": 30,
+                "headers": {"Accept": "text/xml"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all("binary_sensor")) == 1
+
+    state = hass.states.get("binary_sensor.foo")
+    assert state.state == STATE_OFF
+    assert state.attributes == {"friendly_name": "foo"}
+    assert "Empty reply" in caplog.text
+
+
+@respx.mock
+async def test_update_with_json_attrs_not_dict(hass: HomeAssistant, caplog) -> None:
+    """Test attributes get extracted from a JSON result."""
+
+    respx.get("http://localhost").respond(
+        status_code=HTTPStatus.OK,
+        json=["list", "of", "things"],
+    )
+    assert await async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": {
+                "platform": "rest",
+                "resource": "http://localhost",
+                "method": "GET",
+                "value_template": "{{ value_json.key }}",
+                "json_attributes": ["key"],
+                "name": "foo",
+                "verify_ssl": "true",
+                "timeout": 30,
+                "headers": {"Accept": "text/xml"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all("binary_sensor")) == 1
+
+    state = hass.states.get("binary_sensor.foo")
+    assert state.state == STATE_OFF
+    assert state.attributes == {"friendly_name": "foo"}
+    assert "not a dictionary or list" in caplog.text
+
+
+@respx.mock
+async def test_update_with_json_attrs_bad_JSON(hass: HomeAssistant, caplog) -> None:
+    """Test attributes get extracted from a JSON result."""
+
+    respx.get("http://localhost").respond(
+        status_code=HTTPStatus.OK,
+        headers={"content-type": CONTENT_TYPE_JSON},
+        content="This is text rather than JSON data.",
+    )
+    assert await async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": {
+                "platform": "rest",
+                "resource": "http://localhost",
+                "method": "GET",
+                "value_template": "{{ value_json.key }}",
+                "json_attributes": ["key"],
+                "name": "foo",
+                "verify_ssl": "true",
+                "timeout": 30,
+                "headers": {"Accept": "text/xml"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all("binary_sensor")) == 1
+
+    state = hass.states.get("binary_sensor.foo")
+    assert state.state == STATE_OFF
+    assert state.attributes == {"friendly_name": "foo"}
+    assert "Erroneous JSON" in caplog.text
+
+
+@respx.mock
+async def test_update_with_json_attrs_with_json_attrs_path(hass: HomeAssistant) -> None:
+    """Test attributes get extracted from a JSON result with a template for the attributes."""
+
+    respx.get("http://localhost").respond(
+        status_code=HTTPStatus.OK,
+        json={
+            "toplevel": {
+                "master_value": "master",
+                "second_level": {
+                    "some_json_key": "some_json_value",
+                    "some_json_key2": "some_json_value2",
+                },
+            },
+        },
+    )
+    assert await async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": {
+                "platform": "rest",
+                "resource": "http://localhost",
+                "method": "GET",
+                "value_template": "{{ value_json.toplevel.master_value == 'master' }}",
+                "json_attributes_path": "$.toplevel.second_level",
+                "json_attributes": ["some_json_key", "some_json_key2"],
+                "name": "foo",
+                "verify_ssl": "true",
+                "timeout": 30,
+                "headers": {"Accept": "text/xml"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all("binary_sensor")) == 1
+    state = hass.states.get("binary_sensor.foo")
+
+    assert state.state == STATE_ON
+    assert state.attributes["some_json_key"] == "some_json_value"
+    assert state.attributes["some_json_key2"] == "some_json_value2"
+
+
+@respx.mock
+async def test_update_with_xml_convert_json_attrs_with_json_attrs_path(
+    hass: HomeAssistant,
+) -> None:
+    """Test attributes get extracted from a JSON result that was converted from XML with a template for the attributes."""
+
+    respx.get("http://localhost").respond(
+        status_code=HTTPStatus.OK,
+        headers={"content-type": "text/xml"},
+        content="<toplevel><master_value>master</master_value><second_level><some_json_key>some_json_value</some_json_key><some_json_key2>some_json_value2</some_json_key2></second_level></toplevel>",
+    )
+    assert await async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": {
+                "platform": "rest",
+                "resource": "http://localhost",
+                "method": "GET",
+                "value_template": "{{ value_json.toplevel.master_value == 'master' }}",
+                "json_attributes_path": "$.toplevel.second_level",
+                "json_attributes": ["some_json_key", "some_json_key2"],
+                "name": "foo",
+                "verify_ssl": "true",
+                "timeout": 30,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all("binary_sensor")) == 1
+    state = hass.states.get("binary_sensor.foo")
+
+    assert state.state == STATE_ON
+    assert state.attributes["some_json_key"] == "some_json_value"
+    assert state.attributes["some_json_key2"] == "some_json_value2"
+
+
+@respx.mock
+async def test_update_with_xml_convert_json_attrs_with_jsonattr_template(
+    hass: HomeAssistant,
+) -> None:
+    """Test attributes get extracted from a JSON result that was converted from XML."""
+
+    respx.get("http://localhost").respond(
+        status_code=HTTPStatus.OK,
+        headers={"content-type": "text/xml"},
+        content='<?xml version="1.0" encoding="utf-8"?><response><scan>0</scan><ver>12556</ver><count>48</count><ssid>alexander</ssid><bss><valid>0</valid><name>0</name><privacy>0</privacy><wlan>bogus</wlan><strength>0</strength></bss><led0>0</led0><led1>0</led1><led2>0</led2><led3>0</led3><led4>0</led4><led5>0</led5><led6>0</led6><led7>0</led7><btn0>up</btn0><btn1>up</btn1><btn2>up</btn2><btn3>up</btn3><pot0>0</pot0><usr0>0</usr0><temp0>0x0XF0x0XF</temp0><time0> 0</time0></response>',
+    )
+    assert await async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": {
+                "platform": "rest",
+                "resource": "http://localhost",
+                "method": "GET",
+                "value_template": "{{ value_json.response.bss.wlan == 'bogus' }}",
+                "json_attributes_path": "$.response",
+                "json_attributes": ["led0", "led1", "temp0", "time0", "ver"],
+                "name": "foo",
+                "verify_ssl": "true",
+                "timeout": 30,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all("binary_sensor")) == 1
+    state = hass.states.get("binary_sensor.foo")
+
+    assert state.state == STATE_ON
+    assert state.attributes["led0"] == "0"
+    assert state.attributes["led1"] == "0"
+    assert state.attributes["temp0"] == "0x0XF0x0XF"
+    assert state.attributes["time0"] == "0"
+    assert state.attributes["ver"] == "12556"
+
+
+@respx.mock
+async def test_update_with_application_xml_convert_json_attrs_with_jsonattr_template(
+    hass: HomeAssistant,
+) -> None:
+    """Test attributes get extracted from a JSON result that was converted from XML with application/xml mime type."""
+
+    respx.get("http://localhost").respond(
+        status_code=HTTPStatus.OK,
+        headers={"content-type": "application/xml"},
+        content="<main><dog>1</dog><cat>3</cat></main>",
+    )
+    assert await async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": {
+                "platform": "rest",
+                "resource": "http://localhost",
+                "method": "GET",
+                "value_template": "{{ value_json.main.dog }}",
+                "json_attributes_path": "$.main",
+                "json_attributes": ["dog", "cat"],
+                "name": "foo",
+                "verify_ssl": "true",
+                "timeout": 30,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all("binary_sensor")) == 1
+    state = hass.states.get("binary_sensor.foo")
+
+    assert state.state == STATE_ON
+    assert state.attributes["dog"] == "1"
+    assert state.attributes["cat"] == "3"
+
+
+@respx.mock
+async def test_update_with_xml_convert_bad_xml(hass: HomeAssistant, caplog) -> None:
+    """Test attributes get extracted from a XML result with bad xml."""
+
+    respx.get("http://localhost").respond(
+        status_code=HTTPStatus.OK,
+        headers={"content-type": "text/xml"},
+        content="",
+    )
+    assert await async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": {
+                "platform": "rest",
+                "resource": "http://localhost",
+                "method": "GET",
+                "value_template": "{{ value_json.toplevel.master_value }}",
+                "json_attributes": ["key"],
+                "name": "foo",
+                "verify_ssl": "true",
+                "timeout": 30,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all("binary_sensor")) == 1
+    state = hass.states.get("binary_sensor.foo")
+
+    assert state.state == STATE_OFF
+    assert "Erroneous XML" in caplog.text
+    assert "Empty reply" in caplog.text
+
+
+@respx.mock
+async def test_update_with_failed_get(hass: HomeAssistant, caplog) -> None:
+    """Test attributes get extracted from a XML result with bad xml."""
+
+    respx.get("http://localhost").respond(
+        status_code=HTTPStatus.OK,
+        headers={"content-type": "text/xml"},
+        content="",
+    )
+    assert await async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": {
+                "platform": "rest",
+                "resource": "http://localhost",
+                "method": "GET",
+                "value_template": "{{ value_json.toplevel.master_value }}",
+                "json_attributes": ["key"],
+                "name": "foo",
+                "verify_ssl": "true",
+                "timeout": 30,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all("binary_sensor")) == 1
+    state = hass.states.get("binary_sensor.foo")
+
+    assert state.state == STATE_OFF
+    assert "Erroneous XML" in caplog.text
+    assert "Empty reply" in caplog.text
+
+
+@respx.mock
 async def test_reload(hass: HomeAssistant) -> None:
     """Verify we can reload reset sensors."""
 
