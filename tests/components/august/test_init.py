@@ -340,7 +340,7 @@ async def test_load_triggers_ble_discovery(hass):
     assert config_entry.state is ConfigEntryState.LOADED
 
     assert len(mock_discovery.mock_calls) == 1
-    assert mock_discovery.mock_calls[0][1][0] == {
+    assert mock_discovery.mock_calls[0][1][1] == {
         "name": "Front Door Lock",
         "address": None,
         "serial": "X2FSW05DGA",
