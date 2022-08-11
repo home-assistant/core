@@ -21,7 +21,6 @@ from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import (
     CONF_BDADDR,
-    CONF_RETRY_COUNT,
     DEFAULT_RETRY_COUNT,
     DOMAIN,
     PLATFORMS,
@@ -36,12 +35,6 @@ _LOGGER: logging.Logger = logging.getLogger(__package__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up this integration using UI."""
     hass.data.setdefault(DOMAIN, {})
-
-    if not entry.options:
-        hass.config_entries.async_update_entry(
-            entry,
-            options={CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT},
-        )
 
     bdaddr: Any | None = entry.data.get(CONF_BDADDR)
     assert bdaddr is not None
@@ -60,7 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     client = MicroBotApiClient(
         device=ble_device,
         config=conf,
-        retry_count=entry.options[CONF_RETRY_COUNT],
+        retry_count=DEFAULT_RETRY_COUNT,
     )
     coordinator = MicroBotDataUpdateCoordinator(
         hass, client=client, ble_device=ble_device
