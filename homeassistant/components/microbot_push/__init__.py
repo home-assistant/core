@@ -76,7 +76,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
-    @callback
     async def generate_token(call: ServiceCall) -> None:
         _LOGGER.debug("Token service called")
         await coordinator.api.connect(init=True)
