@@ -3,7 +3,7 @@
   "name": "air-Q",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/airq",
-  "requirements": [],
+  "requirements": ["aioairq==0.1.1"],
   "ssdp": [],
   "zeroconf": [
     {
