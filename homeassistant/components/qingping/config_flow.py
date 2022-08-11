@@ -37,7 +37,10 @@ class QingpingConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_wait_for_full_advertisement(
         self, discovery_info: BluetoothServiceInfoBleak, device: DeviceData
     ) -> BluetoothServiceInfoBleak:
-        """Sometimes first advertisement we receive is blank or incomplete. Wait until we get a useful one."""
+        """Wait for the full advertisement.
+
+        Sometimes the first advertisement we receive is blank or incomplete.
+        """
         if device.supported(discovery_info):
             return discovery_info
         return await async_process_advertisements(
