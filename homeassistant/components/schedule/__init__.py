@@ -271,13 +271,12 @@ class Schedule(Entity):
         # Find next event in the schedule
         next_event = None
         for day in range(7):
+            day_schedule = self._config.get(WEEKDAY_TO_CONF[(now.weekday() + day) % 7], [])
             times = sorted(
                 itertools.chain(
                     *[
                         [time_range[CONF_FROM], time_range[CONF_TO]]
-                        for time_range in self._config.get(
-                            WEEKDAY_TO_CONF[(now.weekday() + day) % 7], []
-                        )
+                        for time_range in day_schedule
                     ]
                 )
             )
