@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from asyncio import gather
 
-from aiohttp.client_exceptions import ClientConnectorError
 from async_timeout import timeout
 from python_awair import Awair, AwairLocal
 from python_awair.devices import AwairBaseDevice, AwairLocalDevice
@@ -36,7 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     if CONF_HOST in config_entry.data:
         coordinator = AwairLocalDataUpdateCoordinator(hass, config_entry, session)
-    elif CONF_ACCESS_TOKEN in config_entry.data:
+    else:
         coordinator = AwairCloudDataUpdateCoordinator(hass, config_entry, session)
 
     await coordinator.async_config_entry_first_refresh()
@@ -128,9 +127,6 @@ class AwairLocalDataUpdateCoordinator(AwairDataUpdateCoordinator):
                     self._device = devices[0]
                 result = await self._fetch_air_data(self._device)
                 return {result.device.uuid: result}
-            except ClientConnectorError as err:
-                LOGGER.error("Unable to connect error: %s", err)
-                raise UpdateFailed(err) from err
             except AwairError as err:
                 LOGGER.error("Unexpected API error: %s", err)
                 raise UpdateFailed(err) from err
