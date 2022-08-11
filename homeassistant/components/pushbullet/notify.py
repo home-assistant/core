@@ -3,8 +3,11 @@ from __future__ import annotations
 
 import logging
 import mimetypes
+from typing import Any
 
 from pushbullet import PushBullet, PushError
+from pushbullet.channel import Channel
+from pushbullet.device import Device
 import voluptuous as vol
 
 from homeassistant.components.notify import (
@@ -15,6 +18,8 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
+from homeassistant.components.repairs.issue_handler import async_create_issue
+from homeassistant.components.repairs.models import IssueSeverity
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
@@ -35,18 +40,21 @@ def get_service(
 ) -> PushBulletNotificationService | None:
     """Get the Pushbullet notification service."""
     if discovery_info is None:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_yaml",
+            breaks_in_ha_version="2022.11.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+        )
         hass.create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
                 context={"source": SOURCE_IMPORT},
                 data=config,
             )
-        )
-
-        _LOGGER.warning(
-            "PushBullet notify platform configuration has been imported into the UI. "
-            "Please remove it from configuration.yaml as it will be "
-            "removed in a future release"
         )
         return None
 
@@ -57,11 +65,11 @@ def get_service(
 class PushBulletNotificationService(BaseNotificationService):
     """Implement the notification service for Pushbullet."""
 
-    def __init__(self, hass, pushbullet):
+    def __init__(self, hass: HomeAssistant, pushbullet: PushBullet) -> None:
         """Initialize the service."""
         self.hass = hass
         self.pushbullet = pushbullet
-        self.pbtargets = {}
+        self.pbtargets: dict[str, dict[str, Device | Channel]] = {}
         self.refresh()
 
     def refresh(self):
@@ -82,7 +90,7 @@ class PushBulletNotificationService(BaseNotificationService):
             },
         }
 
-    def send_message(self, message=None, **kwargs):
+    def send_message(self, message: str, **kwargs) -> None:
         """Send a message to a specified target.
 
         If no target specified, a 'normal' push will be sent to all devices
@@ -90,9 +98,9 @@ class PushBulletNotificationService(BaseNotificationService):
         Email is special, these are assumed to always exist. We use a special
         call which doesn't require a push object.
         """
-        targets = kwargs.get(ATTR_TARGET)
-        title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
-        data = kwargs.get(ATTR_DATA)
+        targets: list[str] = kwargs.get(ATTR_TARGET, [])
+        title: str = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
+        data: dict[str, Any] = kwargs.get(ATTR_DATA, {})
         refreshed = False
 
         if not targets:
@@ -145,7 +153,15 @@ class PushBulletNotificationService(BaseNotificationService):
                 _LOGGER.error("No such target: %s/%s", ttype, tname)
                 continue
 
-    def _push_data(self, message, title, data, pusher, email=None, phonenumber=None):
+    def _push_data(
+        self,
+        message: str,
+        title: str,
+        data: dict[str, Any],
+        pusher: PushBullet,
+        email: str | None = None,
+        phonenumber: str | None = None,
+    ):
         """Create the message content."""
 
         if data is None:
