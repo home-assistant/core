@@ -213,6 +213,7 @@ homeassistant.components.rpi_power.*
 homeassistant.components.rtsp_to_webrtc.*
 homeassistant.components.samsungtv.*
 homeassistant.components.scene.*
+homeassistant.components.schedule.*
 homeassistant.components.select.*
 homeassistant.components.sensibo.*
 homeassistant.components.sensor.*
