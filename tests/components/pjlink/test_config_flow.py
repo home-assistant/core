@@ -8,25 +8,27 @@ from homeassistant.components.pjlink.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import entity_registry
 
 NO_AUTH_RESPONSE = "PJLINK 0\r"
 
 
 def mock_projector():
     """Mock Projector."""
-    mock_proj = MagicMock()
+    proj = Projector(f=MagicMock(), encoding="utf-8")
 
-    mock_proj.get_manufacturer.return_value = "FakeManufacterer"
-    mock_proj.get_model.return_value = "FakeModel"
-    mock_proj.get_product_name.return_value = ""
-    mock_proj.get_name.return_value = ""
-    mock_proj.get_inputs.return_value = ""
-    mock_proj.get_power.return_value = ""
-    mock_proj.get_mute.return_value = " "
+    proj.authenticate = MagicMock()
+    proj.get_manufacturer = MagicMock(return_value="FakeManufacterer")
+    proj.get_product_name = MagicMock(return_value="FakeModel")
+    proj.get_name = MagicMock(return_value="FakeName")
+    proj.get_inputs = MagicMock(return_value=[["DIGITAL", 1], ["VIDEO", 2]])
+    proj.get_power = MagicMock(return_value="off")
+    proj.get_mute = MagicMock(return_value=(True, False))
+    proj.set_power = MagicMock()
+    proj.set_mute = MagicMock()
+    proj.set_input = MagicMock()
 
-    mock_proj.set_power.return_value = " "
-    mock_proj.set_mute.return_value = " "
-    mock_proj.set_input.return_value = " "
+    return proj
 
 
 async def test_full_user_flow(hass: HomeAssistant) -> None:
@@ -49,15 +51,18 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
         Projector, "from_address", timeout=True, return_value=mock_projector()
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], mock_user_input_data
+            result["flow_id"], user_input=mock_user_input_data
         )
 
     assert result.get("type") == FlowResultType.CREATE_ENTRY
     assert result.get("title") == "PJLink"
     assert result.get("data") == {
         "encoding": "utf-8",
-        "unique_id": "pjlink-1.2.3.4",
         "host": "1.2.3.4",
         "port": 1234,
         "name": "new thing",
     }
+
+    registry = entity_registry.async_get(hass)
+    entry = registry.async_get("media_player.new_thing")
+    assert entry.unique_id == entry.config_entry_id

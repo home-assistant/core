@@ -11,8 +11,6 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-
-# from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -58,7 +56,6 @@ def setup_platform(
     name = config.get(CONF_NAME)
     encoding = config.get(CONF_ENCODING)
     password = config.get(CONF_PASSWORD)
-    # unique_id = f"{DOMAIN}-{host}"  # How can we get the entity ID here instead?
 
     if "pjlink" not in hass.data:
         hass.data["pjlink"] = {}
@@ -95,11 +92,19 @@ async def async_setup_entry(
 ) -> None:
     """Set up the config entry."""
 
-    if config_entry.unique_id is None:
+    unique_id = config_entry.unique_id
+
+    if unique_id is None:
+        # How to generate a unique ID?
+        # The PJLink API does not expose MAC address or serial number, only name, manufacturer, and model
+        # Can we get the MAC address from the IP address?
+
+        unique_id = config_entry.entry_id
+
         hass.config_entries.async_update_entry(
-            config_entry, data={**config_entry.data, "unique_id": config_entry.entry_id}
+            config_entry, data={**config_entry.data, "unique_id": unique_id}
         )
-        _LOGGER.debug("===== setting pjlink unique_id: %s ", config_entry.unique_id)
+        _LOGGER.debug("===== setting pjlink unique_id: %s ", unique_id)
 
     encoding = None
     if CONF_ENCODING in config_entry.data:
@@ -120,9 +125,9 @@ async def async_setup_entry(
         name=name,
         encoding=encoding,
         password=password,
-        unique_id=config_entry.unique_id,
+        unique_id=unique_id,
     )
-    # hass_data[device_label] = device
+
     async_add_entities([device], True)
 
 
