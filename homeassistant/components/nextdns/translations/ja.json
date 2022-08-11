@@ -20,5 +20,10 @@
                 }
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "\u30b5\u30fc\u30d0\u30fc\u306b\u5230\u9054"
+        }
     }
 }

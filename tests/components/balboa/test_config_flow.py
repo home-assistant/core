@@ -6,11 +6,7 @@ from homeassistant.components.balboa.const import CONF_SYNC_TIME, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -25,7 +21,7 @@ async def test_form(hass: HomeAssistant, client: MagicMock) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -41,7 +37,7 @@ async def test_form(hass: HomeAssistant, client: MagicMock) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["data"] == TEST_DATA
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -62,7 +58,7 @@ async def test_form_cannot_connect(hass: HomeAssistant, client: MagicMock) -> No
             TEST_DATA,
         )
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -82,7 +78,7 @@ async def test_unknown_error(hass: HomeAssistant, client: MagicMock) -> None:
             TEST_DATA,
         )
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
 
@@ -94,7 +90,7 @@ async def test_already_configured(hass: HomeAssistant, client: MagicMock) -> Non
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == SOURCE_USER
 
     with patch(
@@ -110,7 +106,7 @@ async def test_already_configured(hass: HomeAssistant, client: MagicMock) -> Non
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_ABORT
+    assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
 
 
@@ -124,7 +120,7 @@ async def test_options_flow(hass: HomeAssistant, client: MagicMock) -> None:
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "init"
 
     with patch(
@@ -137,5 +133,5 @@ async def test_options_flow(hass: HomeAssistant, client: MagicMock) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert dict(config_entry.options) == {CONF_SYNC_TIME: True}

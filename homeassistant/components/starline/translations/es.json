@@ -31,7 +31,7 @@
             "auth_user": {
                 "data": {
                     "password": "Contrase\u00f1a",
-                    "username": "Usuario"
+                    "username": "Nombre de usuario"
                 },
                 "description": "Correo electr\u00f3nico y contrase\u00f1a de la cuenta StarLine",
                 "title": "Credenciales de usuario"

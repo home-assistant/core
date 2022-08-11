@@ -370,3 +370,41 @@ async def test_exception_bad_trigger(hass, mock_devices, calls, caplog):
     )
     await hass.async_block_till_done()
     assert "Invalid config for [automation]" in caplog.text
+
+
+async def test_exception_no_device(hass, mock_devices, calls, caplog):
+    """Test for exception on event triggers firing."""
+
+    zigpy_device, zha_device = mock_devices
+
+    zigpy_device.device_automation_triggers = {
+        (SHAKEN, SHAKEN): {COMMAND: COMMAND_SHAKE},
+        (DOUBLE_PRESS, DOUBLE_PRESS): {COMMAND: COMMAND_DOUBLE},
+        (SHORT_PRESS, SHORT_PRESS): {COMMAND: COMMAND_SINGLE},
+        (LONG_PRESS, LONG_PRESS): {COMMAND: COMMAND_HOLD},
+        (LONG_RELEASE, LONG_RELEASE): {COMMAND: COMMAND_HOLD},
+    }
+
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "device_id": "no_such_device_id",
+                        "domain": "zha",
+                        "platform": "device",
+                        "type": "junk",
+                        "subtype": "junk",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data": {"message": "service called"},
+                    },
+                }
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+    assert "Invalid config for [automation]" in caplog.text

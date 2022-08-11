@@ -68,7 +68,7 @@ async def async_setup_entry(
     create_elk_entities(
         elk_data, elk.thermostats, "thermostat", ElkThermostat, entities
     )
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class ElkThermostat(ElkEntity, ClimateEntity):

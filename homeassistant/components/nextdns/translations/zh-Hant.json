@@ -20,5 +20,10 @@
                 }
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "Reach \u4f3a\u670d\u5668"
+        }
     }
 }

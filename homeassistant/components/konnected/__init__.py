@@ -419,7 +419,7 @@ class KonnectedView(HomeAssistantView):
         resp = {}
         if request.query.get(CONF_ZONE):
             resp[CONF_ZONE] = zone_num
-        else:
+        elif zone_num:
             resp[CONF_PIN] = ZONE_TO_PIN[zone_num]
 
         # Make sure entity is setup

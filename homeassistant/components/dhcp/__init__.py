@@ -31,7 +31,7 @@ from homeassistant.components.device_tracker.const import (
     ATTR_SOURCE_TYPE,
     CONNECTED_DEVICE_REGISTERED,
     DOMAIN as DEVICE_TRACKER_DOMAIN,
-    SOURCE_TYPE_ROUTER,
+    SourceType,
 )
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
@@ -318,7 +318,7 @@ class DeviceTrackerWatcher(WatcherBase):
 
         attributes = state.attributes
 
-        if attributes.get(ATTR_SOURCE_TYPE) != SOURCE_TYPE_ROUTER:
+        if attributes.get(ATTR_SOURCE_TYPE) != SourceType.ROUTER:
             return
 
         ip_address = attributes.get(ATTR_IP)

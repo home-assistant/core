@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u670d\u52d9\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "no_adapters": "\u627e\u4e0d\u5230\u4efb\u4f55\u85cd\u82bd\u50b3\u8f38\u5668"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "bluetooth_confirm": {
+                "description": "\u662f\u5426\u8981\u8a2d\u5b9a {name}\uff1f"
+            },
+            "enable_bluetooth": {
+                "description": "\u662f\u5426\u8981\u8a2d\u5b9a\u85cd\u82bd\uff1f"
+            },
+            "user": {
+                "data": {
+                    "address": "\u88dd\u7f6e"
+                },
+                "description": "\u9078\u64c7\u6240\u8981\u8a2d\u5b9a\u7684\u88dd\u7f6e"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "adapter": "\u7528\u4ee5\u9032\u884c\u5075\u6e2c\u7684\u85cd\u82bd\u50b3\u8f38\u5668"
+                }
+            }
+        }
+    }
+}

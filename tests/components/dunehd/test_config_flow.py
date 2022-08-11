@@ -74,7 +74,7 @@ async def test_create_entry(hass):
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG_HOSTNAME
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["title"] == "dunehd-host"
         assert result["data"] == {CONF_HOST: "dunehd-host"}
 
@@ -90,6 +90,6 @@ async def test_create_entry_with_ipv6_address(hass):
             data={CONF_HOST: "2001:db8::1428:57ab"},
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["title"] == "2001:db8::1428:57ab"
         assert result["data"] == {CONF_HOST: "2001:db8::1428:57ab"}

@@ -32,7 +32,7 @@
                 "data": {
                     "host": "Host"
                 },
-                "description": "Elija un dispositivo para configurar o d\u00e9jelo en blanco para introducir una URL",
+                "description": "Elige un dispositivo para configurar o d\u00e9jalo en blanco para introducir una URL",
                 "title": "Dispositivos DLNA DMR descubiertos"
             }
         }
@@ -44,7 +44,7 @@
         "step": {
             "init": {
                 "data": {
-                    "browse_unfiltered": "Muestra archivos multimedia incompatibles mientras navega",
+                    "browse_unfiltered": "Mostrar medios incompatibles al navegar",
                     "callback_url_override": "URL de devoluci\u00f3n de llamada del detector de eventos",
                     "listen_port": "Puerto de escucha de eventos (aleatorio si no se establece)",
                     "poll_availability": "Sondeo para la disponibilidad del dispositivo"

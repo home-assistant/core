@@ -26,6 +26,8 @@ from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
     CONF_DISABLE_RTSP,
+    CONF_MAX_MEDIA,
+    DEFAULT_MAX_MEDIA,
     DEVICES_THAT_ADOPT,
     DISPATCH_ADOPT,
     DISPATCH_CHANNELS,
@@ -72,6 +74,7 @@ class ProtectData:
         self._pending_camera_ids: set[str] = set()
         self._unsub_interval: CALLBACK_TYPE | None = None
         self._unsub_websocket: CALLBACK_TYPE | None = None
+        self._auth_failures = 0
 
         self.last_update_success = False
         self.api = protect
@@ -80,6 +83,11 @@ class ProtectData:
     def disable_stream(self) -> bool:
         """Check if RTSP is disabled."""
         return self._entry.options.get(CONF_DISABLE_RTSP, False)
+
+    @property
+    def max_events(self) -> int:
+        """Max number of events to load at once."""
+        return self._entry.options.get(CONF_MAX_MEDIA, DEFAULT_MAX_MEDIA)
 
     def get_by_types(
         self, device_types: Iterable[ModelType]
@@ -117,9 +125,13 @@ class ProtectData:
         try:
             updates = await self.api.update(force=force)
         except NotAuthorized:
-            await self.async_stop()
-            _LOGGER.exception("Reauthentication required")
-            self._entry.async_start_reauth(self._hass)
+            if self._auth_failures < 10:
+                _LOGGER.exception("Auth error while updating")
+                self._auth_failures += 1
+            else:
+                await self.async_stop()
+                _LOGGER.exception("Reauthentication required")
+                self._entry.async_start_reauth(self._hass)
             self.last_update_success = False
         except ClientError:
             if self.last_update_success:
@@ -129,6 +141,7 @@ class ProtectData:
             self._async_process_updates(self.api.bootstrap)
         else:
             self.last_update_success = True
+            self._auth_failures = 0
             self._async_process_updates(updates)
 
     @callback

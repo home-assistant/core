@@ -44,7 +44,6 @@ PLATFORMS: Final = [Platform.DEVICE_TRACKER]
 
 ATTR_DEVICE_TRACKER: Final = [
     "comment",
-    "mac-address",
     "ssid",
     "interface",
     "signal-strength",

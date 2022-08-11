@@ -14,7 +14,7 @@
                     "client_id": "ID de cliente (Opcional)",
                     "client_secret": "Secreto de Cliente (Opcional)",
                     "password": "Contrase\u00f1a",
-                    "username": "Usuario"
+                    "username": "Nombre de usuario"
                 },
                 "title": "Credenciales de Inicio de Sesi\u00f3n de Flick"
             }

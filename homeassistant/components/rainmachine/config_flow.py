@@ -32,7 +32,7 @@ async def async_get_controller(
     websession = aiohttp_client.async_get_clientsession(hass)
     client = Client(session=websession)
     try:
-        await client.load_local(ip_address, password, port=port, ssl=ssl)
+        await client.load_local(ip_address, password, port=port, use_ssl=ssl)
     except RainMachineError:
         return None
     else:

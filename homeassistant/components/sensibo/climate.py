@@ -126,7 +126,6 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         """Initiate SensiboClimate."""
         super().__init__(coordinator, device_id)
         self._attr_unique_id = device_id
-        self._attr_name = self.device_data.name
         self._attr_temperature_unit = (
             TEMP_CELSIUS if self.device_data.temp_unit == "C" else TEMP_FAHRENHEIT
         )

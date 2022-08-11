@@ -1,4 +1,4 @@
-"""Support for interface with a Bravia TV."""
+"""Media player support for Bravia TV integration."""
 from __future__ import annotations
 
 from homeassistant.components.media_player import (
@@ -9,12 +9,10 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import BraviaTVCoordinator
-from .const import ATTR_MANUFACTURER, DEFAULT_NAME, DOMAIN
+from .const import DOMAIN
+from .entity import BraviaTVEntity
 
 
 async def async_setup_entry(
@@ -27,19 +25,13 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     unique_id = config_entry.unique_id
     assert unique_id is not None
-    device_info = DeviceInfo(
-        identifiers={(DOMAIN, unique_id)},
-        manufacturer=ATTR_MANUFACTURER,
-        model=config_entry.title,
-        name=DEFAULT_NAME,
-    )
 
     async_add_entities(
-        [BraviaTVMediaPlayer(coordinator, DEFAULT_NAME, unique_id, device_info)]
+        [BraviaTVMediaPlayer(coordinator, unique_id, config_entry.title)]
     )
 
 
-class BraviaTVMediaPlayer(CoordinatorEntity[BraviaTVCoordinator], MediaPlayerEntity):
+class BraviaTVMediaPlayer(BraviaTVEntity, MediaPlayerEntity):
     """Representation of a Bravia TV Media Player."""
 
     _attr_device_class = MediaPlayerDeviceClass.TV
@@ -56,21 +48,6 @@ class BraviaTVMediaPlayer(CoordinatorEntity[BraviaTVCoordinator], MediaPlayerEnt
         | MediaPlayerEntityFeature.PLAY
         | MediaPlayerEntityFeature.STOP
     )
-
-    def __init__(
-        self,
-        coordinator: BraviaTVCoordinator,
-        name: str,
-        unique_id: str,
-        device_info: DeviceInfo,
-    ) -> None:
-        """Initialize the entity."""
-
-        self._attr_device_info = device_info
-        self._attr_name = name
-        self._attr_unique_id = unique_id
-
-        super().__init__(coordinator)
 
     @property
     def state(self) -> str | None:
@@ -97,7 +74,7 @@ class BraviaTVMediaPlayer(CoordinatorEntity[BraviaTVCoordinator], MediaPlayerEnt
     @property
     def is_volume_muted(self) -> bool:
         """Boolean if volume is currently muted."""
-        return self.coordinator.muted
+        return self.coordinator.volume_muted
 
     @property
     def media_title(self) -> str | None:
@@ -107,12 +84,17 @@ class BraviaTVMediaPlayer(CoordinatorEntity[BraviaTVCoordinator], MediaPlayerEnt
     @property
     def media_content_id(self) -> str | None:
         """Content ID of current playing media."""
-        return self.coordinator.channel_name
+        return self.coordinator.media_content_id
+
+    @property
+    def media_content_type(self) -> str | None:
+        """Content type of current playing media."""
+        return self.coordinator.media_content_type
 
     @property
     def media_duration(self) -> int | None:
         """Duration of current playing media in seconds."""
-        return self.coordinator.duration
+        return self.coordinator.media_duration
 
     async def async_turn_on(self) -> None:
         """Turn the device on."""

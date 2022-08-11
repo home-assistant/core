@@ -89,7 +89,7 @@ async def test_flow_user_config(hass, api):
     result = await hass.config_entries.flow.async_init(
         transmission.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
@@ -101,7 +101,7 @@ async def test_flow_required_fields(hass, api):
         data={CONF_NAME: NAME, CONF_HOST: HOST, CONF_PORT: PORT},
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == NAME
     assert result["data"][CONF_NAME] == NAME
     assert result["data"][CONF_HOST] == HOST
@@ -116,7 +116,7 @@ async def test_flow_all_provided(hass, api):
         data=MOCK_ENTRY,
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == NAME
     assert result["data"][CONF_NAME] == NAME
     assert result["data"][CONF_HOST] == HOST
@@ -137,10 +137,10 @@ async def test_options(hass):
     options_flow = flow.async_get_options_flow(entry)
 
     result = await options_flow.async_step_init()
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "init"
     result = await options_flow.async_step_init({CONF_SCAN_INTERVAL: 10})
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_SCAN_INTERVAL] == 10
 
 
@@ -171,7 +171,7 @@ async def test_host_already_configured(hass, api):
         context={"source": config_entries.SOURCE_USER},
         data=mock_entry_unique_port,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
     mock_entry_unique_host = MOCK_ENTRY.copy()
     mock_entry_unique_host[CONF_HOST] = "192.168.1.101"
@@ -181,7 +181,7 @@ async def test_host_already_configured(hass, api):
         context={"source": config_entries.SOURCE_USER},
         data=mock_entry_unique_host,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
 
 async def test_name_already_configured(hass, api):
@@ -218,7 +218,7 @@ async def test_error_on_wrong_credentials(hass, auth_error):
             CONF_PORT: PORT,
         }
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {
         CONF_USERNAME: "invalid_auth",
         CONF_PASSWORD: "invalid_auth",
@@ -238,7 +238,7 @@ async def test_error_on_connection_failure(hass, conn_error):
             CONF_PORT: PORT,
         }
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -255,7 +255,7 @@ async def test_error_on_unknown_error(hass, unknown_error):
             CONF_PORT: PORT,
         }
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
 

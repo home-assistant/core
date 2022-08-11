@@ -90,7 +90,7 @@ NOTIFICATION_SENSOR_MAPPINGS: tuple[NotificationZWaveJSEntityDescription, ...] =
         # NotificationType 2: Carbon Monoxide - State Id's 1 and 2
         key=NOTIFICATION_CARBON_MONOOXIDE,
         states=("1", "2"),
-        device_class=BinarySensorDeviceClass.GAS,
+        device_class=BinarySensorDeviceClass.CO,
     ),
     NotificationZWaveJSEntityDescription(
         # NotificationType 2: Carbon Monoxide - All other State Id's

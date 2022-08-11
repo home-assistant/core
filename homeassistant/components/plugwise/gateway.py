@@ -77,7 +77,7 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         sw_version=api.smile_version[0],
     )
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS_GATEWAY)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS_GATEWAY)
 
     return True
 

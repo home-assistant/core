@@ -1,9 +1,9 @@
 """Allow to set up simple automation rules via the config file."""
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable
 import logging
-from typing import Any, TypedDict, cast
+from typing import Any, Protocol, TypedDict, cast
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -110,7 +110,17 @@ ATTR_VARIABLES = "variables"
 SERVICE_TRIGGER = "trigger"
 
 _LOGGER = logging.getLogger(__name__)
-AutomationActionType = Callable[[HomeAssistant, TemplateVarsType], Awaitable[None]]
+
+
+class AutomationActionType(Protocol):
+    """Protocol type for automation action callback."""
+
+    async def __call__(
+        self,
+        run_variables: dict[str, Any],
+        context: Context | None = None,
+    ) -> None:
+        """Define action callback type."""
 
 
 class AutomationTriggerData(TypedDict):
@@ -437,7 +447,12 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         else:
             await self.async_disable()
 
-    async def async_trigger(self, run_variables, context=None, skip_condition=False):
+    async def async_trigger(
+        self,
+        run_variables: dict[str, Any],
+        context: Context | None = None,
+        skip_condition: bool = False,
+    ) -> None:
         """Trigger automation.
 
         This method is a coroutine.
@@ -462,7 +477,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
             this = None
             if state := self.hass.states.get(self.entity_id):
                 this = state.as_dict()
-            variables = {"this": this, **(run_variables or {})}
+            variables: dict[str, Any] = {"this": this, **(run_variables or {})}
             if self._variables:
                 try:
                     variables = self._variables.async_render(self.hass, variables)

@@ -59,13 +59,13 @@ async def async_setup_entry(
 class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEntity):
     """Representation of a Verisure doorlock."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self, coordinator: VerisureDataUpdateCoordinator, serial_number: str
     ) -> None:
         """Initialize the Verisure lock."""
         super().__init__(coordinator)
-
-        self._attr_name = coordinator.data["locks"][serial_number]["area"]
         self._attr_unique_id = serial_number
 
         self.serial_number = serial_number
