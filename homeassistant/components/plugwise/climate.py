@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP, DOMAIN, MASTER_THERMOSTATS
+from .const import DOMAIN, MASTER_THERMOSTATS
 from .coordinator import PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
 from .util import plugwise_command
@@ -55,18 +55,15 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
         ]
         self._attr_unique_id = f"{device_id}-climate"
 
-        if presets := self.device.get("preset_modes"):
+        if presets := self.device["preset_modes"]:
             self._attr_preset_modes = presets
 
-        self._attr_min_temp = self.device["thermostat"].get(
-            "lower_bound", DEFAULT_MIN_TEMP
+        self._attr_min_temp = self.device["thermostat"]["lower_bound"]
+        self._attr_max_temp = self.device["thermostat"]["upper_bound"]
+        # Ensure we don't drop below 0.1
+        self._attr_target_temperature_step = max(
+            self.device["thermostat"]["resolution"], 0.1
         )
-        self._attr_max_temp = self.device["thermostat"].get(
-            "upper_bound", DEFAULT_MAX_TEMP
-        )
-        if resolution := self.device["thermostat"].get("resolution", 0.1):
-            # Ensure we don't drop below 0.1
-            self._attr_target_temperature_step = max(resolution, 0.1)
 
     @property
     def current_temperature(self) -> float | None:
@@ -170,9 +167,9 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
         if ATTR_TARGET_TEMP_LOW in kwargs:
             data["setpoint_low"] = kwargs.get(ATTR_TARGET_TEMP_LOW)
 
-        for temperature in data.values():
+        for setpoint, temperature in data.items():
             if not (self._attr_min_temp <= temperature <= self._attr_max_temp):
-                raise ValueError("Invalid temperature change requested")
+                raise ValueError(f"Invalid temperature change requested for {setpoint}")
 
         await self.coordinator.api.set_temperature(self.device["location"], data)
 
