@@ -28,6 +28,10 @@ class PlugwiseEntityDescriptionMixin:
     """Mixin values for Plugwse entities."""
 
     command: Callable[[Smile, str, float], Awaitable[None]]
+    native_max_value_key: str
+    native_min_value_key: str
+    native_step_key: str
+    native_value_key: str
 
 
 @dataclass
@@ -35,11 +39,6 @@ class PlugwiseNumberEntityDescription(
     NumberEntityDescription, PlugwiseEntityDescriptionMixin
 ):
     """Class describing Plugwise Number entities."""
-
-    native_max_value_key: str | None = None
-    native_min_value_key: str | None = None
-    native_step_key: str | None = None
-    native_value_key: str | None = None
 
 
 NUMBER_TYPES = (
