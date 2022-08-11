@@ -18,12 +18,12 @@ from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import CONF_BDADDR, CONF_NAME, CONF_RETRY_COUNT, DEFAULT_RETRY_COUNT, DOMAIN
+from .const import CONF_BDADDR, CONF_NAME, DEFAULT_RETRY_COUNT, DOMAIN
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
@@ -37,14 +37,6 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for MicroBot."""
 
     VERSION = 1
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(
-        config_entry: ConfigEntry,
-    ) -> MicroBotOptionsFlowHandler:
-        """Get the options flow for this handler."""
-        return MicroBotOptionsFlowHandler(config_entry)
 
     def __init__(self):
         """Initialize."""
@@ -177,30 +169,3 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
         user_input[CONF_BDADDR] = self._bdaddr
 
         return self.async_create_entry(title=self._name, data=user_input)
-
-
-class MicroBotOptionsFlowHandler(OptionsFlow):
-    """Handle Microbot options."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Manage Microbot options."""
-        if user_input is not None:
-            # Update common entity options for all other entities.
-            return self.async_create_entry(title="", data=user_input)
-
-        options = {
-            vol.Optional(
-                CONF_RETRY_COUNT,
-                default=self.config_entry.options.get(
-                    CONF_RETRY_COUNT, DEFAULT_RETRY_COUNT
-                ),
-            ): int
-        }
-
-        return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
