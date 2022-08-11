@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 import mimetypes
 import os
+from typing import Any
 
 import voluptuous as vol
 
@@ -58,9 +59,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Local File camera."""
     data = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(
-        [LocalFile(data[CONF_NAME], data[CONF_FILE_PATH], entry.entry_id)]
-    )
+    async_add_entities([LocalFile(data, entry.entry_id)])
 
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
@@ -76,18 +75,21 @@ async def async_setup_entry(
 class LocalFile(Camera):
     """Representation of a local file camera."""
 
-    def __init__(self, name: str, file_path: str, entry_id: str) -> None:
+    _attr_has_entity_name = True
+
+    def __init__(self, data: dict[str, Any], entry_id: str) -> None:
         """Initialize Local File Camera component."""
         super().__init__()
 
-        self._attr_name = name
-        self._file_path = file_path
+        self._file_path = data[CONF_FILE_PATH]
         # Set content type of local file
-        content, _ = mimetypes.guess_type(file_path)
+        content, _ = mimetypes.guess_type(self._file_path)
         if content is not None:
             self.content_type = content
         self._attr_unique_id = entry_id
-        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, entry_id)}, name=name)
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, entry_id)}, name=data[CONF_NAME]
+        )
 
     def camera_image(
         self, width: int | None = None, height: int | None = None
