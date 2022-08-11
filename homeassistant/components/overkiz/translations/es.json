@@ -9,7 +9,7 @@
             "cannot_connect": "Error al conectar",
             "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
             "server_in_maintenance": "El servidor est\u00e1 inactivo por mantenimiento",
-            "too_many_attempts": "Demasiados intentos con un 'token' inv\u00e1lido, bloqueado temporalmente",
+            "too_many_attempts": "Demasiados intentos con un token no v\u00e1lido, prohibido temporalmente",
             "too_many_requests": "Demasiadas solicitudes, int\u00e9ntalo de nuevo m\u00e1s tarde.",
             "unknown": "Error inesperado"
         },

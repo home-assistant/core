@@ -253,14 +253,19 @@ async def test_fix_non_existing_issue(
 
 
 @pytest.mark.parametrize(
-    "domain, step",
+    "domain, step, description_placeholders",
     (
-        ("fake_integration", "custom_step"),
-        ("fake_integration_default_handler", "confirm"),
+        ("fake_integration", "custom_step", None),
+        ("fake_integration_default_handler", "confirm", {"abc": "123"}),
     ),
 )
 async def test_fix_issue(
-    hass: HomeAssistant, hass_client, hass_ws_client, domain, step
+    hass: HomeAssistant,
+    hass_client,
+    hass_ws_client,
+    domain,
+    step,
+    description_placeholders,
 ) -> None:
     """Test we can fix an issue."""
     assert await async_setup_component(hass, "http", {})
@@ -288,7 +293,7 @@ async def test_fix_issue(
     flow_id = data["flow_id"]
     assert data == {
         "data_schema": [],
-        "description_placeholders": None,
+        "description_placeholders": description_placeholders,
         "errors": None,
         "flow_id": ANY,
         "handler": domain,

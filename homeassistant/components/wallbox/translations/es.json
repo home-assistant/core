@@ -14,14 +14,14 @@
             "reauth_confirm": {
                 "data": {
                     "password": "Contrase\u00f1a",
-                    "username": "Usuario"
+                    "username": "Nombre de usuario"
                 }
             },
             "user": {
                 "data": {
                     "password": "Contrase\u00f1a",
                     "station": "N\u00famero de serie de la estaci\u00f3n",
-                    "username": "Usuario"
+                    "username": "Nombre de usuario"
                 }
             }
         }

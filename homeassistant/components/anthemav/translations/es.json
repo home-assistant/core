@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado"
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar",
+            "cannot_receive_deviceinfo": "No se pudo recuperar la direcci\u00f3n MAC. Aseg\u00farate de que el dispositivo est\u00e9 encendido"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Puerto"
+                }
+            }
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Se va a eliminar la configuraci\u00f3n de los Receptores A/V Anthem mediante YAML. \n\nTu configuraci\u00f3n YAML existente se ha importado a la IU autom\u00e1ticamente. \n\nElimina la configuraci\u00f3n YAML de los Receptores A/V Anthem de tu archivo configuration.yaml y reinicia Home Assistant para solucionar este problema.",
+            "title": "Se va a eliminar la configuraci\u00f3n YAML de los Receptores A/V Anthem"
+        }
+    }
+}

@@ -56,7 +56,9 @@ omit =
     homeassistant/components/ambient_station/sensor.py
     homeassistant/components/amcrest/*
     homeassistant/components/ampio/*
-    homeassistant/components/android_ip_webcam/*
+    homeassistant/components/android_ip_webcam/binary_sensor.py
+    homeassistant/components/android_ip_webcam/sensor.py
+    homeassistant/components/android_ip_webcam/switch.py
     homeassistant/components/androidtv/diagnostics.py
     homeassistant/components/anel_pwrctrl/switch.py
     homeassistant/components/anthemav/media_player.py
@@ -137,6 +139,7 @@ omit =
     homeassistant/components/bosch_shc/switch.py
     homeassistant/components/braviatv/__init__.py
     homeassistant/components/braviatv/const.py
+    homeassistant/components/braviatv/coordinator.py
     homeassistant/components/braviatv/entity.py
     homeassistant/components/braviatv/media_player.py
     homeassistant/components/braviatv/remote.py
@@ -602,6 +605,10 @@ omit =
     homeassistant/components/juicenet/number.py
     homeassistant/components/juicenet/sensor.py
     homeassistant/components/juicenet/switch.py
+    homeassistant/components/justnimbus/const.py
+    homeassistant/components/justnimbus/coordinator.py
+    homeassistant/components/justnimbus/entity.py
+    homeassistant/components/justnimbus/sensor.py
     homeassistant/components/kaiterra/*
     homeassistant/components/kankun/switch.py
     homeassistant/components/keba/*
@@ -1476,6 +1483,11 @@ omit =
     homeassistant/components/xiaomi_tv/media_player.py
     homeassistant/components/xmpp/notify.py
     homeassistant/components/xs1/*
+    homeassistant/components/yalexs_ble/__init__.py
+    homeassistant/components/yalexs_ble/binary_sensor.py
+    homeassistant/components/yalexs_ble/entity.py
+    homeassistant/components/yalexs_ble/lock.py
+    homeassistant/components/yalexs_ble/util.py
     homeassistant/components/yale_smart_alarm/__init__.py
     homeassistant/components/yale_smart_alarm/alarm_control_panel.py
     homeassistant/components/yale_smart_alarm/binary_sensor.py
