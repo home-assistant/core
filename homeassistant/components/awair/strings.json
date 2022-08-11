@@ -10,7 +10,7 @@
       },
       "local": {
         "data": {
-          "host": "Hostname or IP address of the device"
+          "host": "[%key:common::config_flow::data::ip%]"
         },
         "description": "Awair Local API must be enabled following these steps: {url}"
       },
@@ -29,7 +29,7 @@
           "cloud": "Connect via the cloud",
           "local": "Connect locally (preferred)"
         },
-        "description": "Pick local for the best experience. Only use cloud if the device is not connected to the same network as Home Assistant, of if you have a legacy device."
+        "description": "Pick local for the best experience. Only use cloud if the device is not connected to the same network as Home Assistant, or if you have a legacy device."
       }
     },
     "error": {
