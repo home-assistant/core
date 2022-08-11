@@ -279,11 +279,12 @@ class Router:
         self._get_data(
             KEY_WLAN_WIFI_GUEST_NETWORK_SWITCH,
             lambda: next(
-                filter(
-                    lambda ssid: ssid.get("wifiisguestnetwork") == "1",
-                    self.client.wlan.multi_basic_settings()
+                (
+                    ssid
+                    for ssid in self.client.wlan.multi_basic_settings()
                     .get("Ssids", {})
-                    .get("Ssid", []),
+                    .get("Ssid", [])
+                    if isinstance(ssid, dict) and ssid.get("wifiisguestnetwork") == "1"
                 ),
                 {},
             ),
