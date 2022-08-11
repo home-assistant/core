@@ -16,7 +16,7 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage,
 )
 
-from .const import _LOGGER, DOMAIN as ISY994_DOMAIN, ISY994_NODES, ISY994_PROGRAMS
+from .const import DOMAIN as ISY994_DOMAIN, ISY994_NODES, ISY994_PROGRAMS, LOGGER
 from .entity import ISYNodeEntity, ISYProgramEntity
 from .helpers import migrate_old_unique_ids
 
@@ -113,7 +113,7 @@ class ISYFanProgramEntity(ISYProgramEntity, FanEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Send the turn on command to ISY994 fan program."""
         if not await self._actions.run_then():
-            _LOGGER.error("Unable to turn off the fan")
+            LOGGER.error("Unable to turn off the fan")
 
     async def async_turn_on(
         self,
@@ -123,4 +123,4 @@ class ISYFanProgramEntity(ISYProgramEntity, FanEntity):
     ) -> None:
         """Send the turn off command to ISY994 fan program."""
         if not await self._actions.run_else():
-            _LOGGER.error("Unable to turn on the fan")
+            LOGGER.error("Unable to turn on the fan")

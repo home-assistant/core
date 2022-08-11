@@ -11,7 +11,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 
-from .const import _LOGGER, DOMAIN, VENSTAR_TIMEOUT
+from .const import DOMAIN, LOGGER, VENSTAR_TIMEOUT
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -69,7 +69,7 @@ class VenstarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
+                LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(title=info["title"], data=user_input)

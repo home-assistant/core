@@ -3,7 +3,7 @@ import logging
 
 from homeassistant.const import Platform
 
-_LOGGER = logging.getLogger(".")
+LOGGER = logging.getLogger(".")
 
 DOMAIN = "homematicip_cloud"
 

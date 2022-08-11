@@ -25,7 +25,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 import homeassistant.util.color as color_util
 
-from .const import _LOGGER, DOMAIN, OVERALL_TIMEOUT
+from .const import DOMAIN, LOGGER, OVERALL_TIMEOUT
 
 FIX_MAC_FW = AwesomeVersion("3.70")
 
@@ -148,7 +148,7 @@ async def async_execute_lifx(method: Callable) -> Message:
             # us by async_timeout when we hit the OVERALL_TIMEOUT
             future.set_result(message)
 
-    _LOGGER.debug("Sending LIFX command: %s", method)
+    LOGGER.debug("Sending LIFX command: %s", method)
 
     method(callb=_callback)
     result = None

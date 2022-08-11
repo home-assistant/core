@@ -12,7 +12,7 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import Platform
 
-_LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "balboa"
 

@@ -10,7 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import _LOGGER, DOMAIN as ISY994_DOMAIN, ISY994_NODES, ISY994_PROGRAMS
+from .const import DOMAIN as ISY994_DOMAIN, ISY994_NODES, ISY994_PROGRAMS, LOGGER
 from .entity import ISYNodeEntity, ISYProgramEntity
 from .helpers import migrate_old_unique_ids
 
@@ -44,12 +44,12 @@ class ISYSwitchEntity(ISYNodeEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Send the turn off command to the ISY994 switch."""
         if not await self._node.turn_off():
-            _LOGGER.debug("Unable to turn off switch")
+            LOGGER.debug("Unable to turn off switch")
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Send the turn on command to the ISY994 switch."""
         if not await self._node.turn_on():
-            _LOGGER.debug("Unable to turn on switch")
+            LOGGER.debug("Unable to turn on switch")
 
     @property
     def icon(self) -> str | None:
@@ -70,12 +70,12 @@ class ISYSwitchProgramEntity(ISYProgramEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Send the turn on command to the ISY994 switch program."""
         if not await self._actions.run_then():
-            _LOGGER.error("Unable to turn on switch")
+            LOGGER.error("Unable to turn on switch")
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Send the turn off command to the ISY994 switch program."""
         if not await self._actions.run_else():
-            _LOGGER.error("Unable to turn off switch")
+            LOGGER.error("Unable to turn off switch")
 
     @property
     def icon(self) -> str:

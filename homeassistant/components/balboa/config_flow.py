@@ -13,17 +13,17 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.device_registry import format_mac
 
-from .const import _LOGGER, CONF_SYNC_TIME, DOMAIN
+from .const import CONF_SYNC_TIME, DOMAIN, LOGGER
 
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 
 
 async def validate_input(data: dict[str, Any]) -> dict[str, str]:
     """Validate the user input allows us to connect."""
-    _LOGGER.debug("Attempting to connect to %s", data[CONF_HOST])
+    LOGGER.debug("Attempting to connect to %s", data[CONF_HOST])
     spa = BalboaSpaWifi(data[CONF_HOST])
     connected = await spa.connect()
-    _LOGGER.debug("Got connected = %d", connected)
+    LOGGER.debug("Got connected = %d", connected)
     if not connected:
         raise CannotConnect
 
@@ -63,7 +63,7 @@ class BalboaSpaClientFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
+                LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(info["formatted_mac"])

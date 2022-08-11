@@ -28,7 +28,7 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.service import async_extract_referenced_entity_ids
 
-from .const import _LOGGER, DATA_LIFX_MANAGER, DOMAIN
+from .const import DATA_LIFX_MANAGER, DOMAIN, LOGGER
 from .util import convert_8_to_16, find_hsbk
 
 SCAN_INTERVAL = timedelta(seconds=10)
@@ -185,7 +185,7 @@ class LIFXManager:
             if entry_id != DATA_LIFX_MANAGER
             and self.entry_id_to_entity_id[entry_id] in entity_ids
         ]
-        _LOGGER.debug("Starting effect %s on %s", service, bulbs)
+        LOGGER.debug("Starting effect %s on %s", service, bulbs)
 
         if service == SERVICE_EFFECT_PULSE:
             effect = aiolifx_effects.EffectPulse(

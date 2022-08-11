@@ -1,9 +1,13 @@
 """Support for the Sabnzbd service."""
+import logging
+
 from pysabnzbd import SabnzbdApi, SabnzbdApiException
 
 from homeassistant.const import CONF_API_KEY, CONF_PATH, CONF_URL
-from homeassistant.core import _LOGGER, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def get_client(hass: HomeAssistant, data):

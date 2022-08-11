@@ -81,7 +81,7 @@ from homeassistant.const import (
     Platform,
 )
 
-_LOGGER = logging.getLogger(__package__)
+LOGGER = logging.getLogger(__package__)
 
 DOMAIN = "isy994"
 

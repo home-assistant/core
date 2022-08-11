@@ -18,7 +18,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .const import _LOGGER, CONF_SERIAL, DOMAIN, TARGET_ANY
+from .const import CONF_SERIAL, DOMAIN, LOGGER, TARGET_ANY
 from .discovery import async_discover_devices
 from .util import (
     async_entry_is_legacy,
@@ -71,7 +71,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: DiscoveryInfoType
     ) -> FlowResult:
         """Handle discovery."""
-        _LOGGER.debug("async_step_integration_discovery %s", discovery_info)
+        LOGGER.debug("async_step_integration_discovery %s", discovery_info)
         serial = discovery_info[CONF_SERIAL]
         host = discovery_info[CONF_HOST]
         await self.async_set_unique_id(formatted_serial(serial))
@@ -82,7 +82,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, host: str, serial: str | None = None
     ) -> FlowResult:
         """Handle any discovery."""
-        _LOGGER.debug("Discovery %s %s", host, serial)
+        LOGGER.debug("Discovery %s %s", host, serial)
         self._async_abort_entries_match({CONF_HOST: host})
         self.context[CONF_HOST] = host
         if any(
@@ -119,7 +119,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Confirm discovery."""
         assert self._discovered_device is not None
-        _LOGGER.debug(
+        LOGGER.debug(
             "Confirming discovery: %s with serial %s",
             self._discovered_device.label,
             self.unique_id,

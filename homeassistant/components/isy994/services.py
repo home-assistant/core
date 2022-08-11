@@ -21,7 +21,7 @@ from homeassistant.helpers.entity_platform import async_get_platforms
 import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.service import entity_service_call
 
-from .const import _LOGGER, DOMAIN, ISY994_ISY
+from .const import DOMAIN, ISY994_ISY, LOGGER
 from .util import unique_ids_for_config_entry_id
 
 # Common Services for All Platforms:
@@ -189,16 +189,14 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
             # If an address is provided, make sure we query the correct ISY.
             # Otherwise, query the whole system on all ISY's connected.
             if address and isy.nodes.get_by_id(address) is not None:
-                _LOGGER.debug(
+                LOGGER.debug(
                     "Requesting query of device %s on ISY %s",
                     address,
                     isy.configuration["uuid"],
                 )
                 await isy.query(address)
                 return
-            _LOGGER.debug(
-                "Requesting system query of ISY %s", isy.configuration["uuid"]
-            )
+            LOGGER.debug("Requesting system query of ISY %s", isy.configuration["uuid"])
             await isy.query()
 
     async def async_run_network_resource_service_handler(service: ServiceCall) -> None:
@@ -221,7 +219,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
             if command is not None:
                 await command.run()
                 return
-        _LOGGER.error(
+        LOGGER.error(
             "Could not run network resource command; not found or enabled on the ISY"
         )
 
@@ -244,7 +242,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
             if program is not None:
                 await getattr(program, command)()
                 return
-        _LOGGER.error("Could not send program command; not found or enabled on the ISY")
+        LOGGER.error("Could not send program command; not found or enabled on the ISY")
 
     async def async_set_variable_service_handler(service: ServiceCall) -> None:
         """Handle a set variable service call."""
@@ -267,7 +265,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
             if variable is not None:
                 await variable.set_value(value, init)
                 return
-        _LOGGER.error("Could not set variable value; not found or enabled on the ISY")
+        LOGGER.error("Could not set variable value; not found or enabled on the ISY")
 
     @callback
     def async_cleanup_registry_entries(service: ServiceCall) -> None:
@@ -298,7 +296,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
             if entity_registry.async_is_registered(entity_id):
                 entity_registry.async_remove(entity_id)
 
-        _LOGGER.debug(
+        LOGGER.debug(
             "Cleaning up ISY994 Entities and devices: Config Entries: %s, Current Entries: %s, "
             "Extra Entries Removed: %s",
             len(config_ids),
@@ -423,7 +421,7 @@ def async_unload_services(hass: HomeAssistant) -> None:
     ):
         return
 
-    _LOGGER.info("Unloading ISY994 Services")
+    LOGGER.info("Unloading ISY994 Services")
     hass.services.async_remove(domain=DOMAIN, service=SERVICE_SYSTEM_QUERY)
     hass.services.async_remove(domain=DOMAIN, service=SERVICE_RUN_NETWORK_RESOURCE)
     hass.services.async_remove(domain=DOMAIN, service=SERVICE_SEND_PROGRAM_COMMAND)

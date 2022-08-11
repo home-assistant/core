@@ -5,7 +5,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .const import _LOGGER, DOMAIN
+from .const import DOMAIN, LOGGER
 from .discovery import async_init_discovery_flow
 
 
@@ -17,7 +17,7 @@ def async_migrate_legacy_entries(
     legacy_entry: ConfigEntry,
 ) -> int:
     """Migrate the legacy config entries to have an entry per device."""
-    _LOGGER.debug(
+    LOGGER.debug(
         "Migrating legacy entries: discovered_hosts_by_serial=%s, existing_serials=%s",
         discovered_hosts_by_serial,
         existing_serials,
@@ -38,7 +38,7 @@ def async_migrate_legacy_entries(
     remaining_devices = dr.async_entries_for_config_entry(
         dr.async_get(hass), legacy_entry.entry_id
     )
-    _LOGGER.debug("The following devices remain: %s", remaining_devices)
+    LOGGER.debug("The following devices remain: %s", remaining_devices)
     return len(remaining_devices)
 
 
@@ -54,7 +54,7 @@ def async_migrate_entities_devices(
     ):
         for domain, value in dev_entry.identifiers:
             if domain == DOMAIN and value == new_entry.unique_id:
-                _LOGGER.debug(
+                LOGGER.debug(
                     "Migrating device with %s to %s",
                     dev_entry.identifiers,
                     new_entry.unique_id,

@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import update_coordinator
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import _LOGGER, DOMAIN, VENSTAR_SLEEP, VENSTAR_TIMEOUT
+from .const import DOMAIN, LOGGER, VENSTAR_SLEEP, VENSTAR_TIMEOUT
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.CLIMATE, Platform.SENSOR]
 
@@ -75,7 +75,7 @@ class VenstarDataUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
         """Initialize global Venstar data updater."""
         super().__init__(
             hass,
-            _LOGGER,
+            LOGGER,
             name=DOMAIN,
             update_interval=timedelta(seconds=60),
         )

@@ -31,4 +31,4 @@ RESTART = "restart"
 
 DATA_LIFX_MANAGER = "lifx_manager"
 
-_LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)

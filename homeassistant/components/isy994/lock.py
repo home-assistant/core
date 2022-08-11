@@ -10,7 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import _LOGGER, DOMAIN as ISY994_DOMAIN, ISY994_NODES, ISY994_PROGRAMS
+from .const import DOMAIN as ISY994_DOMAIN, ISY994_NODES, ISY994_PROGRAMS, LOGGER
 from .entity import ISYNodeEntity, ISYProgramEntity
 from .helpers import migrate_old_unique_ids
 
@@ -46,12 +46,12 @@ class ISYLockEntity(ISYNodeEntity, LockEntity):
     async def async_lock(self, **kwargs: Any) -> None:
         """Send the lock command to the ISY994 device."""
         if not await self._node.secure_lock():
-            _LOGGER.error("Unable to lock device")
+            LOGGER.error("Unable to lock device")
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Send the unlock command to the ISY994 device."""
         if not await self._node.secure_unlock():
-            _LOGGER.error("Unable to lock device")
+            LOGGER.error("Unable to lock device")
 
 
 class ISYLockProgramEntity(ISYProgramEntity, LockEntity):
@@ -65,9 +65,9 @@ class ISYLockProgramEntity(ISYProgramEntity, LockEntity):
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device."""
         if not await self._actions.run_then():
-            _LOGGER.error("Unable to lock device")
+            LOGGER.error("Unable to lock device")
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
         if not await self._actions.run_else():
-            _LOGGER.error("Unable to unlock device")
+            LOGGER.error("Unable to unlock device")

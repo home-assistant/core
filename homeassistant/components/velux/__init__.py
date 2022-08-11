@@ -19,7 +19,7 @@ from homeassistant.helpers.typing import ConfigType
 DOMAIN = "velux"
 DATA_VELUX = "data_velux"
 PLATFORMS = [Platform.COVER, Platform.LIGHT, Platform.SCENE]
-_LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -39,7 +39,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await hass.data[DATA_VELUX].async_start()
 
     except PyVLXException as ex:
-        _LOGGER.exception("Can't connect to velux interface: %s", ex)
+        LOGGER.exception("Can't connect to velux interface: %s", ex)
         return False
 
     for platform in PLATFORMS:
@@ -63,7 +63,7 @@ class VeluxModule:
 
         async def on_hass_stop(event):
             """Close connection when hass stops."""
-            _LOGGER.debug("Velux interface terminated")
+            LOGGER.debug("Velux interface terminated")
             await self.pyvlx.disconnect()
 
         async def async_reboot_gateway(service_call: ServiceCall) -> None:
@@ -80,7 +80,7 @@ class VeluxModule:
 
     async def async_start(self):
         """Start velux component."""
-        _LOGGER.debug("Velux interface started")
+        LOGGER.debug("Velux interface started")
         await self.pyvlx.load_scenes()
         await self.pyvlx.load_nodes()
 
