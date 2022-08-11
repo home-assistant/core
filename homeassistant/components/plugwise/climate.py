@@ -137,7 +137,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
 
         if self.hc_data["binary_sensors"]["heating_state"]:
             return HVACAction.HEATING
-        if self.hc_data["binary_sensors"].get("cooling_state", False):
+        if self.hc_data["binary_sensors"].get("cooling_state"):
             return HVACAction.COOLING
 
         return HVACAction.IDLE
