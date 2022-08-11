@@ -38,19 +38,11 @@ class QingpingConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: BluetoothServiceInfoBleak, device: DeviceData
     ) -> BluetoothServiceInfoBleak:
         """Sometimes first advertisement we receive is blank or incomplete. Wait until we get a useful one."""
-        device.update(discovery_info)
         if not device.supported(discovery_info):
             return discovery_info
-
-        def _process_more_advertisements(
-            service_info: BluetoothServiceInfoBleak,
-        ) -> bool:
-            device.update(service_info)
-            return device.supported(service_info)
-
         return await async_process_advertisements(
             self.hass,
-            _process_more_advertisements,
+            device.supported,
             {"address": discovery_info.address},
             BluetoothScanningMode.ACTIVE,
             ADDITIONAL_DISCOVERY_TIMEOUT,
