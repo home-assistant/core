@@ -54,9 +54,11 @@ STORAGE_VERSION_MINOR = 1
 
 def has_no_overlap(schedule: list[dict[str, str]]) -> list[dict[str, str]]:
     """Test the time ranges don't overlap."""
+    # Make a list of all start and end times
     times = itertools.chain(
         *[[time_range[CONF_FROM], time_range[CONF_TO]] for time_range in schedule]
     )
+    # Check if any time falls within the range of another time
     if any(
         time_range[CONF_FROM] < time < time_range[CONF_TO]
         for time_range in schedule
