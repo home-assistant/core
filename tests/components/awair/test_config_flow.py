@@ -70,7 +70,7 @@ async def test_unexpected_api_error(hass: HomeAssistant):
             CLOUD_CONFIG,
         )
 
-        assert result["type"] == "abort"
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
         assert result["reason"] == "unknown"
 
 
@@ -99,7 +99,7 @@ async def test_duplicate_error(hass: HomeAssistant, user, cloud_devices):
             CLOUD_CONFIG,
         )
 
-        assert result["type"] == "abort"
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
         assert result["reason"] == "already_configured_account"
 
 
@@ -121,7 +121,7 @@ async def test_no_devices_error(hass: HomeAssistant, user, no_devices):
             CLOUD_CONFIG,
         )
 
-        assert result["type"] == "abort"
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
         assert result["reason"] == "no_devices_found"
 
 
@@ -251,12 +251,12 @@ async def test_create_local_entry(hass: HomeAssistant, local_devices):
         assert result["result"].unique_id == LOCAL_UNIQUE_ID
 
 
-async def test_unsuccessful_create_local_entry(hass: HomeAssistant):
-    """Test overall flow when using local API and device is unreachable."""
+async def test_create_local_entry_awair_error(hass: HomeAssistant):
+    """Test overall flow when using local API and device is returns error."""
 
     with patch(
         "python_awair.AwairClient.query",
-        side_effect=ClientConnectorError(Mock(), OSError()),
+        side_effect=AwairError(),
     ):
         menu_step = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=LOCAL_CONFIG
