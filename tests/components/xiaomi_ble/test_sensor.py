@@ -39,10 +39,13 @@ async def test_sensors(hass):
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 2
 
-    temp_sensor = hass.states.get("sensor.mmc_t201_1_temperature")
+    temp_sensor = hass.states.get("sensor.baby_thermometer_dd6fc1_temperature")
     temp_sensor_attribtes = temp_sensor.attributes
     assert temp_sensor.state == "36.8719980616822"
-    assert temp_sensor_attribtes[ATTR_FRIENDLY_NAME] == "MMC_T201_1 Temperature"
+    assert (
+        temp_sensor_attribtes[ATTR_FRIENDLY_NAME]
+        == "Baby Thermometer DD6FC1 Temperature"
+    )
     assert temp_sensor_attribtes[ATTR_UNIT_OF_MEASUREMENT] == "°C"
     assert temp_sensor_attribtes[ATTR_STATE_CLASS] == "measurement"
 
@@ -86,10 +89,10 @@ async def test_xiaomi_formaldeyhde(hass):
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 1
 
-    sensor = hass.states.get("sensor.test_device_formaldehyde")
+    sensor = hass.states.get("sensor.smart_flower_pot_6a3e7a_formaldehyde")
     sensor_attr = sensor.attributes
     assert sensor.state == "2.44"
-    assert sensor_attr[ATTR_FRIENDLY_NAME] == "Test Device Formaldehyde"
+    assert sensor_attr[ATTR_FRIENDLY_NAME] == "Smart Flower Pot 6A3E7A Formaldehyde"
     assert sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "mg/m³"
     assert sensor_attr[ATTR_STATE_CLASS] == "measurement"
 
@@ -133,10 +136,10 @@ async def test_xiaomi_consumable(hass):
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 1
 
-    sensor = hass.states.get("sensor.test_device_consumable")
+    sensor = hass.states.get("sensor.smart_flower_pot_6a3e7a_consumable")
     sensor_attr = sensor.attributes
     assert sensor.state == "96"
-    assert sensor_attr[ATTR_FRIENDLY_NAME] == "Test Device Consumable"
+    assert sensor_attr[ATTR_FRIENDLY_NAME] == "Smart Flower Pot 6A3E7A Consumable"
     assert sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "%"
     assert sensor_attr[ATTR_STATE_CLASS] == "measurement"
 
@@ -180,17 +183,17 @@ async def test_xiaomi_battery_voltage(hass):
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 2
 
-    volt_sensor = hass.states.get("sensor.test_device_voltage")
+    volt_sensor = hass.states.get("sensor.smart_flower_pot_6a3e7a_voltage")
     volt_sensor_attr = volt_sensor.attributes
     assert volt_sensor.state == "3.1"
-    assert volt_sensor_attr[ATTR_FRIENDLY_NAME] == "Test Device Voltage"
+    assert volt_sensor_attr[ATTR_FRIENDLY_NAME] == "Smart Flower Pot 6A3E7A Voltage"
     assert volt_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "V"
     assert volt_sensor_attr[ATTR_STATE_CLASS] == "measurement"
 
-    bat_sensor = hass.states.get("sensor.test_device_battery")
+    bat_sensor = hass.states.get("sensor.smart_flower_pot_6a3e7a_battery")
     bat_sensor_attr = bat_sensor.attributes
     assert bat_sensor.state == "100"
-    assert bat_sensor_attr[ATTR_FRIENDLY_NAME] == "Test Device Battery"
+    assert bat_sensor_attr[ATTR_FRIENDLY_NAME] == "Smart Flower Pot 6A3E7A Battery"
     assert bat_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "%"
     assert bat_sensor_attr[ATTR_STATE_CLASS] == "measurement"
 
@@ -248,38 +251,42 @@ async def test_xiaomi_HHCCJCY01(hass):
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 5
 
-    illum_sensor = hass.states.get("sensor.test_device_illuminance")
+    illum_sensor = hass.states.get("sensor.plant_sensor_6a3e7a_illuminance")
     illum_sensor_attr = illum_sensor.attributes
     assert illum_sensor.state == "0"
-    assert illum_sensor_attr[ATTR_FRIENDLY_NAME] == "Test Device Illuminance"
+    assert illum_sensor_attr[ATTR_FRIENDLY_NAME] == "Plant Sensor 6A3E7A Illuminance"
     assert illum_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "lx"
     assert illum_sensor_attr[ATTR_STATE_CLASS] == "measurement"
 
-    cond_sensor = hass.states.get("sensor.test_device_conductivity")
+    cond_sensor = hass.states.get("sensor.plant_sensor_6a3e7a_conductivity")
     cond_sensor_attribtes = cond_sensor.attributes
     assert cond_sensor.state == "599"
-    assert cond_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Test Device Conductivity"
+    assert (
+        cond_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Plant Sensor 6A3E7A Conductivity"
+    )
     assert cond_sensor_attribtes[ATTR_UNIT_OF_MEASUREMENT] == "µS/cm"
     assert cond_sensor_attribtes[ATTR_STATE_CLASS] == "measurement"
 
-    moist_sensor = hass.states.get("sensor.test_device_moisture")
+    moist_sensor = hass.states.get("sensor.plant_sensor_6a3e7a_moisture")
     moist_sensor_attribtes = moist_sensor.attributes
     assert moist_sensor.state == "64"
-    assert moist_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Test Device Moisture"
+    assert moist_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Plant Sensor 6A3E7A Moisture"
     assert moist_sensor_attribtes[ATTR_UNIT_OF_MEASUREMENT] == "%"
     assert moist_sensor_attribtes[ATTR_STATE_CLASS] == "measurement"
 
-    temp_sensor = hass.states.get("sensor.test_device_temperature")
+    temp_sensor = hass.states.get("sensor.plant_sensor_6a3e7a_temperature")
     temp_sensor_attribtes = temp_sensor.attributes
     assert temp_sensor.state == "24.4"
-    assert temp_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Test Device Temperature"
+    assert (
+        temp_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Plant Sensor 6A3E7A Temperature"
+    )
     assert temp_sensor_attribtes[ATTR_UNIT_OF_MEASUREMENT] == "°C"
     assert temp_sensor_attribtes[ATTR_STATE_CLASS] == "measurement"
 
-    batt_sensor = hass.states.get("sensor.test_device_battery")
+    batt_sensor = hass.states.get("sensor.plant_sensor_6a3e7a_battery")
     batt_sensor_attribtes = batt_sensor.attributes
     assert batt_sensor.state == "5"
-    assert batt_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Test Device Battery"
+    assert batt_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Plant Sensor 6A3E7A Battery"
     assert batt_sensor_attribtes[ATTR_UNIT_OF_MEASUREMENT] == "%"
     assert batt_sensor_attribtes[ATTR_STATE_CLASS] == "measurement"
 
@@ -321,10 +328,15 @@ async def test_xiaomi_CGDK2(hass):
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 1
 
-    temp_sensor = hass.states.get("sensor.test_device_temperature")
+    temp_sensor = hass.states.get(
+        "sensor.temperature_humidity_sensor_122089_temperature"
+    )
     temp_sensor_attribtes = temp_sensor.attributes
     assert temp_sensor.state == "22.6"
-    assert temp_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Test Device Temperature"
+    assert (
+        temp_sensor_attribtes[ATTR_FRIENDLY_NAME]
+        == "Temperature/Humidity Sensor 122089 Temperature"
+    )
     assert temp_sensor_attribtes[ATTR_UNIT_OF_MEASUREMENT] == "°C"
     assert temp_sensor_attribtes[ATTR_STATE_CLASS] == "measurement"
 
