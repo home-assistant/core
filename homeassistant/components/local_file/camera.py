@@ -101,7 +101,7 @@ class LocalFile(Camera):
         except FileNotFoundError:
             _LOGGER.warning(
                 "Could not read camera %s image from file: %s",
-                self._attr_name,
+                self.entity_id,
                 self._file_path,
             )
         return None
@@ -111,7 +111,7 @@ class LocalFile(Camera):
         if not os.access(file_path, os.R_OK):
             _LOGGER.error(
                 "Could not read camera %s image from file: %s",
-                self._attr_name,
+                self.entity_id,
                 file_path,
             )
             return
