@@ -15,8 +15,6 @@ from homeassistant.const import (
     CONF_ID,
     CONF_NAME,
     SERVICE_RELOAD,
-    STATE_OFF,
-    STATE_ON,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.collection import (
@@ -45,6 +43,8 @@ from .const import (
     CONF_TO,
     DOMAIN,
     LOGGER,
+    STATE_ACTIVE,
+    STATE_INACTIVE,
     WEEKDAY_TO_CONF,
 )
 
@@ -200,7 +200,7 @@ class Schedule(Entity):
 
     _attr_has_entity_name = True
     _attr_should_poll = False
-    _attr_state: Literal["on", "off"]
+    _attr_state: Literal["active", "inactive"]
     _config: ConfigType
     _next: datetime
     _unsub_update: Callable[[], None] | None = None
@@ -256,11 +256,11 @@ class Schedule(Entity):
         # Determine current schedule state
         self._attr_state = next(
             (
-                STATE_ON
+                STATE_ACTIVE
                 for time_range in todays_schedule
                 if time_range[CONF_FROM] <= now.time() <= time_range[CONF_TO]
             ),
-            STATE_OFF,
+            STATE_INACTIVE,
         )
 
         # Find next event in the schedule

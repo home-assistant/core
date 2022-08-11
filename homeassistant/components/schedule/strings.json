@@ -2,8 +2,8 @@
   "title": "Schedule",
   "state": {
     "_": {
-      "off": "[%key:common::state::off%]",
-      "on": "[%key:common::state::on%]"
+      "active": "[%key:common::state::active%]",
+      "inactive": "[%key:common::state::inactive%]"
     }
   }
 }
