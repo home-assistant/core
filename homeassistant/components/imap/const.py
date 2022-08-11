@@ -9,5 +9,4 @@ CONF_FOLDER: Final = "folder"
 CONF_SEARCH: Final = "search"
 CONF_CHARSET: Final = "charset"
 
-DEFAULT_NAME: Final = "IMAP"
 DEFAULT_PORT: Final = 993

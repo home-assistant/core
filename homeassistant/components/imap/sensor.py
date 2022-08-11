@@ -1,10 +1,10 @@
 """IMAP sensor support."""
 from __future__ import annotations
 
-import logging
-
 import voluptuous as vol
 
+from homeassistant.components.repairs.issue_handler import async_create_issue
+from homeassistant.components.repairs.models import IssueSeverity
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
@@ -39,8 +39,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_platform(
     hass: HomeAssistant,
@@ -49,18 +47,21 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the IMAP platform."""
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2022.11.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+    )
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
             data=config,
         )
-    )
-
-    _LOGGER.warning(
-        "IMAP sensor platform configuration has been imported into the UI. "
-        "Please remove it from configuration.yaml as it will be "
-        "removed in a future release"
     )
 
 
@@ -78,19 +79,22 @@ class ImapSensor(CoordinatorEntity[ImapDataUpdateCoordinator], SensorEntity):
     """Representation of an IMAP sensor."""
 
     _attr_icon = "mdi:email-outline"
+    _attr_has_entity_name = True
 
     def __init__(self, coordinator: ImapDataUpdateCoordinator) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._attr_name = coordinator.entry.data[CONF_NAME]
-        self._attr_unique_id = (
-            f"{coordinator.entry.entry_id}-{coordinator.entry.data[CONF_USERNAME]}"
-        )
+        # To be removed when YAML import is removed
+        if CONF_NAME in coordinator.config_entry.data:
+            self._attr_name = coordinator.config_entry.data[CONF_NAME]
+            self._attr_has_entity_name = False
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}-{coordinator.config_entry.data[CONF_USERNAME]}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.entry.entry_id)},
-            name=coordinator.entry.data[CONF_NAME],
+            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
+            name=f"IMAP ({coordinator.config_entry.data[CONF_USERNAME]})",
             entry_type=DeviceEntryType.SERVICE,
         )
+        self._attr_should_poll = coordinator.support_push
 
     @property
     def native_value(self) -> int:
