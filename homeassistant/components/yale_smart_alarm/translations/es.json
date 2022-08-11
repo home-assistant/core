@@ -14,7 +14,7 @@
                     "area_id": "ID de \u00e1rea",
                     "name": "Nombre",
                     "password": "Contrase\u00f1a",
-                    "username": "Usuario"
+                    "username": "Nombre de usuario"
                 }
             },
             "user": {
@@ -22,7 +22,7 @@
                     "area_id": "ID de \u00e1rea",
                     "name": "Nombre",
                     "password": "Contrase\u00f1a",
-                    "username": "Usuario"
+                    "username": "Nombre de usuario"
                 }
             }
         }

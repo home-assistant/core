@@ -2,7 +2,7 @@
   "domain": "apprise",
   "name": "Apprise",
   "documentation": "https://www.home-assistant.io/integrations/apprise",
-  "requirements": ["apprise==0.9.9"],
+  "requirements": ["apprise==1.0.0"],
   "codeowners": ["@caronc"],
   "iot_class": "cloud_push",
   "loggers": ["apprise"]

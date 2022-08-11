@@ -25,7 +25,7 @@
                 "data": {
                     "host": "Host",
                     "password": "Contrase\u00f1a",
-                    "username": "Usuario"
+                    "username": "Nombre de usuario"
                 },
                 "title": "Conectar con el API de HVV"
             }

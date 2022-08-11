@@ -47,6 +47,7 @@
                 "data": {
                     "all_updates": "Reaalajas m\u00f5\u00f5dikud (HOIATUS: suurendab oluliselt CPU kasutust)",
                     "disable_rtsp": "Keela RTSP voog",
+                    "max_media": "Meediumibrauserisse laaditavate s\u00fcndmuste maksimaalne arv (suurendab RAM-i kasutamist)",
                     "override_connection_host": "\u00dchenduse hosti alistamine"
                 },
                 "description": "Reaalajas m\u00f5\u00f5dikute valik tuleks lubada ainult siis kui oled diagnostikaandurid sisse l\u00fclitanud ja soovid, et neid uuendatakse reaalajas. Kui see ei ole lubatud, uuendatakse neid ainult \u00fcks kord 15 minuti tagant.",
