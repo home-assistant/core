@@ -226,6 +226,7 @@ class Schedule(Entity):
         self._config = STORAGE_SCHEMA(config)
         self._attr_icon = config.get(CONF_ICON)
         self._attr_name = config[CONF_NAME]
+        self._clean_up_listener()
         self._update()
 
     @property
