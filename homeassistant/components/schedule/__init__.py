@@ -204,21 +204,20 @@ class Schedule(Entity):
     _config: ConfigType
     _next: datetime
     _unsub_update: Callable[[], None] | None = None
-    editable = True
 
-    def __init__(self, config: ConfigType) -> None:
+    def __init__(self, config: ConfigType, editable: bool = True) -> None:
         """Initialize a schedule."""
         self._config = STORAGE_SCHEMA(config)
-        self._attr_unique_id = self._config[CONF_ID]
+        self._attr_capability_attributes = {ATTR_EDITABLE: editable}
         self._attr_icon = self._config.get(CONF_ICON)
         self._attr_name = self._config[CONF_NAME]
+        self._attr_unique_id = self._config[CONF_ID]
 
     @classmethod
     def from_yaml(cls, config: ConfigType) -> Schedule:
         """Return entity instance initialized from yaml storage."""
-        schedule = cls(config)
+        schedule = cls(config, editable=False)
         schedule.entity_id = f"{DOMAIN}.{config[CONF_ID]}"
-        schedule.editable = False
         return schedule
 
     async def async_update_config(self, config: ConfigType) -> None:
@@ -228,13 +227,6 @@ class Schedule(Entity):
         self._attr_name = config[CONF_NAME]
         self._clean_up_listener()
         self._update()
-
-    @property
-    def capability_attributes(self) -> dict:
-        """Return the capability attributes."""
-        return {
-            ATTR_EDITABLE: self.editable,
-        }
 
     @callback
     def _clean_up_listener(self) -> None:
