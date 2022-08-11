@@ -1,6 +1,7 @@
 """Define tests for the Awair config flow."""
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
+from aiohttp.client_exceptions import ClientConnectorError
 from python_awair.exceptions import AuthError, AwairError
 
 from homeassistant import data_entry_flow
@@ -250,6 +251,32 @@ async def test_create_local_entry(hass: HomeAssistant, local_devices):
         assert result["result"].unique_id == LOCAL_UNIQUE_ID
 
 
+async def test_unsuccessful_create_local_entry(hass: HomeAssistant):
+    """Test overall flow when using local API and device is unreachable."""
+
+    with patch(
+        "python_awair.AwairClient.query",
+        side_effect=ClientConnectorError(Mock(), OSError()),
+    ):
+        menu_step = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=LOCAL_CONFIG
+        )
+
+        form_step = await hass.config_entries.flow.async_configure(
+            menu_step["flow_id"],
+            {"next_step_id": "local"},
+        )
+
+        result = await hass.config_entries.flow.async_configure(
+            form_step["flow_id"],
+            LOCAL_CONFIG,
+        )
+
+        # User is returned to form to try again
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["step_id"] == "local"
+
+
 async def test_create_zeroconf_entry(hass: HomeAssistant, local_devices):
     """Test overall flow when using discovery."""
 
@@ -270,3 +297,17 @@ async def test_create_zeroconf_entry(hass: HomeAssistant, local_devices):
         assert result["title"] == "Awair Element (24947)"
         assert result["data"][CONF_HOST] == ZEROCONF_DISCOVERY.host
         assert result["result"].unique_id == LOCAL_UNIQUE_ID
+
+
+async def test_unsuccessful_create_zeroconf_entry(hass: HomeAssistant):
+    """Test overall flow when using discovery and device is unreachable."""
+
+    with patch(
+        "python_awair.AwairClient.query",
+        side_effect=ClientConnectorError(Mock(), OSError()),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_ZEROCONF}, data=ZEROCONF_DISCOVERY
+        )
+
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
