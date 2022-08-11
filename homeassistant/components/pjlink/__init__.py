@@ -15,6 +15,15 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
     if config_entry.version == 1:
         config_entry.version = 2
         unique_id = config_entry.entry_id
+
+        if unique_id is None:
+            # How to generate a unique ID?
+            # The PJLink API does not expose MAC address or serial number, only name, manufacturer, and model
+            # Can we get the MAC address from the IP address?
+
+            unique_id = config_entry.entry_id
+            _LOGGER.debug("===== setting pjlink unique_id: %s ", unique_id)
+
         hass.config_entries.async_update_entry(
             config_entry, data={**config_entry.data, "unique_id": unique_id}
         )
