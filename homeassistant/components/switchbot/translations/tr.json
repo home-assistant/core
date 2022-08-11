@@ -11,10 +11,20 @@
             "one": "Bo\u015f",
             "other": "Bo\u015f"
         },
-        "flow_title": "{name}",
+        "flow_title": "{name} ({address})",
         "step": {
+            "confirm": {
+                "description": "{name} kurulumunu yapmak istiyor musunuz?"
+            },
+            "password": {
+                "data": {
+                    "password": "Parola"
+                },
+                "description": "{name} cihaz\u0131 bir \u015fifre gerektiriyor"
+            },
             "user": {
                 "data": {
+                    "address": "Cihaz adresi",
                     "mac": "Cihaz MAC adresi",
                     "name": "Ad",
                     "password": "Parola"

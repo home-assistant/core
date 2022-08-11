@@ -18,7 +18,7 @@
                     "password": "Contrase\u00f1a",
                     "port": "Puerto",
                     "site": "ID del sitio",
-                    "username": "Usuario",
+                    "username": "Nombre de usuario",
                     "verify_ssl": "Controlador usando el certificado adecuado"
                 },
                 "title": "Configuraci\u00f3n de UniFi Network"

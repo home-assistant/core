@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El servicio ya est\u00e1 configurado"
+            "already_configured": "El servicio ya est\u00e1 configurado",
+            "anna_with_adam": "Tanto Anna como Adam han sido detectados. A\u00f1ade tu Adam en lugar de tu Anna"
         },
         "error": {
             "cannot_connect": "Fall\u00f3 la conexi\u00f3n",
@@ -15,9 +16,9 @@
                 "data": {
                     "flow_type": "Tipo de conexi\u00f3n",
                     "host": "Direcci\u00f3n IP",
-                    "password": "ID Smile",
+                    "password": "ID de Smile",
                     "port": "Puerto",
-                    "username": "Nombre de usuario de la sonrisa"
+                    "username": "Nombre de usuario de Smile"
                 },
                 "description": "Producto:",
                 "title": "Conectarse a Smile"
