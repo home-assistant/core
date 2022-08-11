@@ -1,9 +1,14 @@
 """Fully Kiosk Browser sensor."""
+from __future__ import annotations
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -22,7 +27,11 @@ SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
 )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Fully Kiosk Browser sensor."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
@@ -57,17 +66,18 @@ class FullyBinarySensor(CoordinatorEntity, BinarySensorEntity):
         super().__init__(coordinator)
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return if the binary sensor is on."""
         if self.coordinator.data:
             return self.coordinator.data[self._sensor]
+        return None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Connect to dispatcher listening for entity data notifications."""
         self.async_on_remove(
             self.coordinator.async_add_listener(self.async_write_ha_state)
         )
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update Fully Kiosk Browser entity."""
         await self.coordinator.async_request_refresh()
