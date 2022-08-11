@@ -1,19 +1,18 @@
-"""Test the Qingping sensors."""
+"""Test the Qingping binary sensors."""
 
 from unittest.mock import patch
 
 from homeassistant.components.bluetooth import BluetoothChange
 from homeassistant.components.qingping.const import DOMAIN
-from homeassistant.components.sensor import ATTR_STATE_CLASS
-from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT
+from homeassistant.const import ATTR_FRIENDLY_NAME
 
 from . import LIGHT_AND_SIGNAL_SERVICE_INFO
 
 from tests.common import MockConfigEntry
 
 
-async def test_sensors(hass):
-    """Test setting up creates the sensors."""
+async def test_binary_sensors(hass):
+    """Test setting up creates the binary sensors."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="aa:bb:cc:dd:ee:ff",
@@ -34,17 +33,14 @@ async def test_sensors(hass):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert len(hass.states.async_all("sensor")) == 0
+    assert len(hass.states.async_all("binary_sensor")) == 0
     saved_callback(LIGHT_AND_SIGNAL_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
     await hass.async_block_till_done()
-    assert len(hass.states.async_all("sensor")) == 1
+    assert len(hass.states.async_all("binary_sensor")) == 1
 
-    lux_sensor = hass.states.get("sensor.motion_light_eeff_illuminance")
-    lux_sensor_attrs = lux_sensor.attributes
-    assert lux_sensor.state == "13"
-    assert lux_sensor_attrs[ATTR_FRIENDLY_NAME] == "Motion & Light EEFF Illuminance"
-    assert lux_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "lx"
-    assert lux_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
+    motion_sensor = hass.states.get("binary_sensor.motion_light_eeff_motion")
+    assert motion_sensor.state == "off"
+    assert motion_sensor.attributes[ATTR_FRIENDLY_NAME] == "Motion & Light EEFF Motion"
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()

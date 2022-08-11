@@ -3,7 +3,7 @@
 
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
-NOT_Qingping_SERVICE_INFO = BluetoothServiceInfo(
+NOT_QINGPING_SERVICE_INFO = BluetoothServiceInfo(
     name="Not it",
     address="61DE521B-F0BF-9F44-64D4-75BBE1738105",
     rssi=-63,
@@ -13,24 +13,28 @@ NOT_Qingping_SERVICE_INFO = BluetoothServiceInfo(
     source="local",
 )
 
-SPS_SERVICE_INFO = BluetoothServiceInfo(
-    name="sps",
-    address="61DE521B-F0BF-9F44-64D4-75BBE1738105",
-    rssi=-63,
-    service_data={},
-    manufacturer_data={2096: b"\x0f\x12\x00Z\xc7W\x06"},
-    service_uuids=["0000fff0-0000-1000-8000-00805f9b34fb"],
+LIGHT_AND_SIGNAL_SERVICE_INFO = BluetoothServiceInfo(
+    name="Qingping Motion & Light",
+    manufacturer_data={},
+    service_uuids=[],
+    address="aa:bb:cc:dd:ee:ff",
+    rssi=-60,
+    service_data={
+        "0000fdcd-0000-1000-8000-00805f9b34fb": b"H\x12"
+        b"\xcd\xd5`4-X\x08\x04\x00\r\x00\x00\x0f\x01\xee"
+    },
     source="local",
 )
 
-IBBQ_SERVICE_INFO = BluetoothServiceInfo(
-    name="iBBQ",
-    address="4125DDBA-2774-4851-9889-6AADDD4CAC3D",
-    rssi=-56,
-    manufacturer_data={
-        0: b"\x00\x000\xe2\x83}\xb5\x02\xc8\x00\xc8\x00\xc8\x00\xc8\x00"
+
+NO_DATA_SERVICE_INFO = BluetoothServiceInfo(
+    name="Qingping Motion & Light",
+    manufacturer_data={},
+    service_uuids=[],
+    address="aa:bb:cc:dd:ee:ff",
+    rssi=-60,
+    service_data={
+        "0000fdcd-0000-1000-8000-00805f9b34fb": b"0X\x83\n\x02\xcd\xd5`4-X\x08"
     },
-    service_uuids=["0000fff0-0000-1000-8000-00805f9b34fb"],
-    service_data={},
     source="local",
 )
