@@ -426,6 +426,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
 
         self.config = device.config
 
+        self._color_temp: int | None = None
         self._effect = None
 
         model_specs = self._bulb.get_model_specs()
