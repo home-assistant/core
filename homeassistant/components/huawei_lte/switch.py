@@ -151,6 +151,6 @@ class HuaweiLteWifiGuestNetworkSwitch(HuaweiLteBaseSwitch):
         return "mdi:wifi" if self.is_on else "mdi:wifi-off"
 
     @property
-    def extra_state_attributes(self) -> dict[str, str]:
+    def extra_state_attributes(self) -> dict[str, str | None]:
         """Return the state attributes."""
-        return {"ssid": self.router.data[self.key].get("WifiSsid", "")}
+        return {"ssid": self.router.data[self.key].get("WifiSsid")}
