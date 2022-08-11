@@ -38,14 +38,6 @@ class PJLinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Optional(CONF_PASSWORD): cv.string,
                 }
             ),
-            # description_placeholders={
-            #     CONF_NAME: self.unique_id,
-            #     CONF_HOST: self.host,
-            #     CONF_PORT: str(self.port),
-            #     CONF_ENCODING: DEFAULT_ENCODING,
-            #     CONF_PASSWORD: None,
-            # },
-            # errors=errors,
         )
 
     # Can we can identify PJLink devices with dhcp or something else?

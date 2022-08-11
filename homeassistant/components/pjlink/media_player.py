@@ -94,17 +94,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the config entry."""
-    _LOGGER.warning("==> Running async_setup_entry from pjlink.media_player")
-    _LOGGER.warning("===== entry_id: %s ", config_entry.entry_id)
-    _LOGGER.warning("===== unique_id: %s ", config_entry.unique_id)
-    _LOGGER.warning("===== entry: %s ", dir(config_entry))
-    _LOGGER.warning("===== entry.data: %s ", dir(config_entry.data))
 
     if config_entry.unique_id is None:
         hass.config_entries.async_update_entry(
             config_entry, data={**config_entry.data, "unique_id": config_entry.entry_id}
         )
-        _LOGGER.warning("===== setting unique_id: %s ", config_entry.unique_id)
+        _LOGGER.debug("===== setting pjlink unique_id: %s ", config_entry.unique_id)
 
     encoding = None
     if CONF_ENCODING in config_entry.data:
@@ -143,6 +138,7 @@ class PjLinkDevice(MediaPlayerEntity):
 
     def __init__(self, host, port, name, encoding, password, unique_id):
         """Iinitialize the PJLink device."""
+        _LOGGER.debug("===> Initializing PjLinkDevice <===")
         self._host = host
         self._port = port
         self._name = name
