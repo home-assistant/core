@@ -330,16 +330,17 @@ async def test_load_triggers_ble_discovery(hass):
     august_lock_with_key = await _mock_lock_with_offline_key(hass)
     august_lock_without_key = await _mock_operative_august_lock_detail(hass)
 
-    with patch.object(hass.config_entries.flow, "async_init") as mock_config_flow:
+    with patch(
+        "homeassistant.components.august.yalexs_ble.async_discovery"
+    ) as mock_discovery:
         config_entry = await _create_august_with_devices(
             hass, [august_lock_with_key, august_lock_without_key]
         )
         await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
-    assert len(mock_config_flow.mock_calls) == 1
-    assert mock_config_flow.mock_calls[0][1][0] == "yalexs_ble"
-    assert mock_config_flow.mock_calls[0].kwargs["data"] == {
+    assert len(mock_discovery.mock_calls) == 1
+    assert mock_discovery.mock_calls[0][1][0] == {
         "name": "Front Door Lock",
         "address": None,
         "serial": "X2FSW05DGA",
