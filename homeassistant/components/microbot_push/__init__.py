@@ -6,7 +6,7 @@ import logging
 import re
 from typing import TYPE_CHECKING, Any
 
-from microbot import (  # pylint: disable=import-error
+from microbot import (
     MicroBotApiClient,
     parse_advertisement_data,
 )
