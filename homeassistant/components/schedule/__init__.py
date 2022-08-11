@@ -291,8 +291,6 @@ class Schedule(Entity):
                 break
 
         self._attr_extra_state_attributes = {
-            day: self._config[day] for day in CONF_ALL_DAYS
-        } | {
             ATTR_NEXT_EVENT: next_event,
         }
         self.async_write_ha_state()

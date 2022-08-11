@@ -24,15 +24,6 @@ CONF_ALL_DAYS: Final = {
     CONF_SUNDAY,
 }
 
-ATTR_FRIDAY: Final = "friday"
-ATTR_FROM: Final = "from"
-ATTR_MONDAY: Final = "monday"
-ATTR_SATURDAY: Final = "saturday"
-ATTR_SUNDAY: Final = "sunday"
-ATTR_THURSDAY: Final = "thursday"
-ATTR_TO: Final = "to"
-ATTR_TUESDAY: Final = "tuesday"
-ATTR_WEDNESDAY: Final = "wednesday"
 ATTR_NEXT_EVENT: Final = "next_event"
 
 WEEKDAY_TO_CONF: Final = {

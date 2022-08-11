@@ -5,17 +5,7 @@ from datetime import timedelta
 
 from homeassistant.components.recorder.db_schema import StateAttributes, States
 from homeassistant.components.recorder.util import session_scope
-from homeassistant.components.schedule.const import (
-    ATTR_FRIDAY,
-    ATTR_MONDAY,
-    ATTR_NEXT_EVENT,
-    ATTR_SATURDAY,
-    ATTR_SUNDAY,
-    ATTR_THURSDAY,
-    ATTR_TUESDAY,
-    ATTR_WEDNESDAY,
-    DOMAIN,
-)
+from homeassistant.components.schedule.const import ATTR_NEXT_EVENT, DOMAIN
 from homeassistant.const import ATTR_EDITABLE, ATTR_FRIENDLY_NAME, ATTR_ICON
 from homeassistant.core import HomeAssistant, State
 from homeassistant.setup import async_setup_component
@@ -54,16 +44,9 @@ async def test_exclude_attributes(
     state = hass.states.get("schedule.test")
     assert state
     assert state.attributes[ATTR_EDITABLE] is False
-    assert state.attributes[ATTR_FRIDAY]
     assert state.attributes[ATTR_FRIENDLY_NAME]
     assert state.attributes[ATTR_ICON]
-    assert state.attributes[ATTR_MONDAY]
     assert state.attributes[ATTR_NEXT_EVENT]
-    assert state.attributes[ATTR_SATURDAY]
-    assert state.attributes[ATTR_SUNDAY]
-    assert state.attributes[ATTR_THURSDAY]
-    assert state.attributes[ATTR_TUESDAY]
-    assert state.attributes[ATTR_WEDNESDAY]
 
     await hass.async_block_till_done()
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
@@ -82,13 +65,6 @@ async def test_exclude_attributes(
     states: list[State] = await hass.async_add_executor_job(_fetch_states)
     assert len(states) == 1
     assert ATTR_EDITABLE not in states[0].attributes
-    assert ATTR_FRIDAY not in states[0].attributes
     assert ATTR_FRIENDLY_NAME in states[0].attributes
     assert ATTR_ICON in states[0].attributes
-    assert ATTR_MONDAY not in states[0].attributes
     assert ATTR_NEXT_EVENT not in states[0].attributes
-    assert ATTR_SATURDAY not in states[0].attributes
-    assert ATTR_SUNDAY not in states[0].attributes
-    assert ATTR_THURSDAY not in states[0].attributes
-    assert ATTR_TUESDAY not in states[0].attributes
-    assert ATTR_WEDNESDAY not in states[0].attributes

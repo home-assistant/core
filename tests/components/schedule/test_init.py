@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
-from datetime import time
 from typing import Any
 from unittest.mock import patch
 
@@ -12,16 +11,7 @@ import pytest
 
 from homeassistant.components.schedule import STORAGE_VERSION, STORAGE_VERSION_MINOR
 from homeassistant.components.schedule.const import (
-    ATTR_FRIDAY,
-    ATTR_FROM,
-    ATTR_MONDAY,
     ATTR_NEXT_EVENT,
-    ATTR_SATURDAY,
-    ATTR_SUNDAY,
-    ATTR_THURSDAY,
-    ATTR_TO,
-    ATTR_TUESDAY,
-    ATTR_WEDNESDAY,
     CONF_FRIDAY,
     CONF_FROM,
     CONF_MONDAY,
@@ -182,19 +172,6 @@ async def test_load(
     assert state.attributes[ATTR_FRIENDLY_NAME] == "from storage"
     assert state.attributes[ATTR_EDITABLE] is True
     assert state.attributes[ATTR_ICON] == "mdi:party-popper"
-    assert state.attributes[ATTR_MONDAY] == []
-    assert state.attributes[ATTR_TUESDAY] == []
-    assert state.attributes[ATTR_WEDNESDAY] == []
-    assert state.attributes[ATTR_THURSDAY] == []
-    assert state.attributes[ATTR_FRIDAY] == [
-        {ATTR_FROM: time(17, 00, 00), ATTR_TO: time(23, 59, 59)}
-    ]
-    assert state.attributes[ATTR_SATURDAY] == [
-        {ATTR_FROM: time(00, 00, 00), ATTR_TO: time(23, 59, 59)}
-    ]
-    assert state.attributes[ATTR_SUNDAY] == [
-        {ATTR_FROM: time(00, 00, 00), ATTR_TO: time(23, 59, 59)}
-    ]
     assert state.attributes[ATTR_NEXT_EVENT].isoformat() == "2022-08-12T17:00:00-07:00"
 
     state = hass.states.get(f"{DOMAIN}.from_yaml")
@@ -203,27 +180,6 @@ async def test_load(
     assert state.attributes[ATTR_FRIENDLY_NAME] == "from yaml"
     assert state.attributes[ATTR_EDITABLE] is False
     assert state.attributes[ATTR_ICON] == "mdi:party-pooper"
-    assert state.attributes[ATTR_MONDAY] == [
-        {ATTR_FROM: time(00, 00, 00), ATTR_TO: time(23, 59, 59)}
-    ]
-    assert state.attributes[ATTR_TUESDAY] == [
-        {ATTR_FROM: time(00, 00, 00), ATTR_TO: time(23, 59, 59)}
-    ]
-    assert state.attributes[ATTR_WEDNESDAY] == [
-        {ATTR_FROM: time(00, 00, 00), ATTR_TO: time(23, 59, 59)}
-    ]
-    assert state.attributes[ATTR_THURSDAY] == [
-        {ATTR_FROM: time(00, 00, 00), ATTR_TO: time(23, 59, 59)}
-    ]
-    assert state.attributes[ATTR_FRIDAY] == [
-        {ATTR_FROM: time(00, 00, 00), ATTR_TO: time(23, 59, 59)}
-    ]
-    assert state.attributes[ATTR_SATURDAY] == [
-        {ATTR_FROM: time(00, 00, 00), ATTR_TO: time(23, 59, 59)}
-    ]
-    assert state.attributes[ATTR_SUNDAY] == [
-        {ATTR_FROM: time(00, 00, 00), ATTR_TO: time(23, 59, 59)}
-    ]
     assert state.attributes[ATTR_NEXT_EVENT].isoformat() == "2022-08-10T23:59:59-07:00"
 
 
@@ -313,19 +269,6 @@ async def test_update(
     assert state.state == STATE_OFF
     assert state.attributes[ATTR_FRIENDLY_NAME] == "from storage"
     assert state.attributes[ATTR_ICON] == "mdi:party-popper"
-    assert state.attributes[ATTR_MONDAY] == []
-    assert state.attributes[ATTR_TUESDAY] == []
-    assert state.attributes[ATTR_WEDNESDAY] == []
-    assert state.attributes[ATTR_THURSDAY] == []
-    assert state.attributes[ATTR_FRIDAY] == [
-        {ATTR_FROM: time(17, 00, 00), ATTR_TO: time(23, 59, 59)}
-    ]
-    assert state.attributes[ATTR_SATURDAY] == [
-        {ATTR_FROM: time(00, 00, 00), ATTR_TO: time(23, 59, 59)}
-    ]
-    assert state.attributes[ATTR_SUNDAY] == [
-        {ATTR_FROM: time(00, 00, 00), ATTR_TO: time(23, 59, 59)}
-    ]
     assert state.attributes[ATTR_NEXT_EVENT].isoformat() == "2022-08-12T17:00:00-07:00"
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "from_storage") is not None
 
@@ -355,18 +298,10 @@ async def test_update(
     assert state.state == STATE_ON
     assert state.attributes[ATTR_FRIENDLY_NAME] == "Party pooper"
     assert state.attributes[ATTR_ICON] == "mdi:party-pooper"
-    assert state.attributes[ATTR_MONDAY] == []
-    assert state.attributes[ATTR_TUESDAY] == []
-    assert state.attributes[ATTR_WEDNESDAY] == [
-        {ATTR_FROM: time(17, 00, 00), ATTR_TO: time(23, 59, 59)}
-    ]
-    assert state.attributes[ATTR_THURSDAY] == []
-    assert state.attributes[ATTR_FRIDAY] == []
-    assert state.attributes[ATTR_SATURDAY] == []
-    assert state.attributes[ATTR_SUNDAY] == []
     assert state.attributes[ATTR_NEXT_EVENT].isoformat() == "2022-08-10T23:59:59-07:00"
 
 
+@pytest.mark.freeze_time("2022-08-11 8:52:00-07:00")
 async def test_ws_create(
     hass: HomeAssistant,
     hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
@@ -400,12 +335,4 @@ async def test_ws_create(
     assert state.attributes[ATTR_FRIENDLY_NAME] == "Party mode"
     assert state.attributes[ATTR_EDITABLE] is True
     assert state.attributes[ATTR_ICON] == "mdi:party-popper"
-    assert state.attributes[ATTR_MONDAY] == [
-        {ATTR_FROM: time(12, 00, 00), ATTR_TO: time(14, 00, 00)}
-    ]
-    assert state.attributes[ATTR_TUESDAY] == []
-    assert state.attributes[ATTR_WEDNESDAY] == []
-    assert state.attributes[ATTR_THURSDAY] == []
-    assert state.attributes[ATTR_FRIDAY] == []
-    assert state.attributes[ATTR_SATURDAY] == []
-    assert state.attributes[ATTR_SUNDAY] == []
+    assert state.attributes[ATTR_NEXT_EVENT].isoformat() == "2022-08-15T12:00:00-07:00"
