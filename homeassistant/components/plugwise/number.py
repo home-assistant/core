@@ -49,7 +49,6 @@ NUMBER_TYPES = (
         device_class=NumberDeviceClass.TEMPERATURE,
         name="Maximum boiler temperature setpoint",
         entity_category=EntityCategory.CONFIG,
-        entity_registry_enabled_default=False,
         native_max_value_key="upper_bound",
         native_min_value_key="lower_bound",
         native_step_key="resolution",
