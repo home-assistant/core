@@ -268,7 +268,8 @@ class Schedule(Entity):
             STATE_INACTIVE,
         )
 
-        # Find next event in the schedule
+        # Find next event in the schedule, loop over each day (starting with
+        # the current day) until the next event has been found.
         next_event = None
         for day in range(7):
             day_schedule = self._config.get(
@@ -283,15 +284,22 @@ class Schedule(Entity):
                 )
             )
 
-            for time in times:
-                if (
-                    possible_next_event := (
-                        datetime.combine(now.date(), time, tzinfo=now.tzinfo)
-                        + timedelta(days=day)
+            if next_event := next(
+                (
+                    possible_next_event
+                    for time in times
+                    if (
+                        possible_next_event := (
+                            datetime.combine(now.date(), time, tzinfo=now.tzinfo)
+                            + timedelta(days=day)
+                        )
                     )
-                ) > now:
-                    next_event = possible_next_event
-                    break
+                    > now
+                ),
+                None,
+            ):
+                # We have found the next event in this day, stop searching.
+                break
 
         self._attr_extra_state_attributes = {
             ATTR_NEXT_EVENT: next_event,
