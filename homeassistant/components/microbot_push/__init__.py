@@ -1,9 +1,4 @@
-"""
-Custom integration to integrate MicroBot with Home Assistant.
-
-For more details about this integration, please refer to
-https://github.com/spycle/microbot_push
-"""
+"""Integration to integrate MicroBot with Home Assistant."""
 from __future__ import annotations
 
 import asyncio
