@@ -1,4 +1,4 @@
-"""Config flow for qingping ble integration."""
+"""Config flow for Qingping integration."""
 from __future__ import annotations
 
 from typing import Any

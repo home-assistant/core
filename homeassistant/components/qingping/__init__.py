@@ -1,4 +1,4 @@
-"""The Qingping Bluetooth integration."""
+"""The Qingping integration."""
 from __future__ import annotations
 
 import logging

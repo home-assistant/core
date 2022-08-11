@@ -1,3 +1,3 @@
-"""Constants for the Qingping Bluetooth integration."""
+"""Constants for the Qingping integration."""
 
 DOMAIN = "qingping"

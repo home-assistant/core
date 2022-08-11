@@ -1,4 +1,4 @@
-"""Support for qingping ble sensors."""
+"""Support for Qingping sensors."""
 from __future__ import annotations
 
 from typing import Optional, Union
@@ -137,7 +137,7 @@ class QingpingBluetoothSensorEntity(
     ],
     SensorEntity,
 ):
-    """Representation of a qingping ble sensor."""
+    """Representation of a Qingping sensor."""
 
     @property
     def native_value(self) -> int | float | None:
