@@ -20,13 +20,13 @@ async def async_setup_entry(
     entry: config_entries.ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up YALE XS sensors."""
+    """Set up YALE XS Bluetooth sensors."""
     data: YaleXSBLEData = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([YaleXSBLEDoorSensor(data)])
+    async_add_entities([YaleXSBLERSSISensor(data)])
 
 
-class YaleXSBLEDoorSensor(YALEXSBLEEntity, SensorEntity):
-    """Yale XS BLE sensor."""
+class YaleXSBLERSSISensor(YALEXSBLEEntity, SensorEntity):
+    """Yale XS Bluetooth RSSI sensor."""
 
     _attr_device_class = SensorDeviceClass.SIGNAL_STRENGTH
     _attr_entity_category = EntityCategory.DIAGNOSTIC
