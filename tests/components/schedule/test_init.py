@@ -22,8 +22,6 @@ from homeassistant.components.schedule.const import (
     CONF_TUESDAY,
     CONF_WEDNESDAY,
     DOMAIN,
-    STATE_ACTIVE,
-    STATE_INACTIVE,
 )
 from homeassistant.const import (
     ATTR_EDITABLE,
@@ -34,6 +32,8 @@ from homeassistant.const import (
     CONF_ID,
     CONF_NAME,
     SERVICE_RELOAD,
+    STATE_OFF,
+    STATE_ON,
 )
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -206,7 +206,7 @@ async def test_load(
 
     state = hass.states.get(f"{DOMAIN}.from_storage")
     assert state
-    assert state.state == STATE_INACTIVE
+    assert state.state == STATE_OFF
     assert state.attributes[ATTR_FRIENDLY_NAME] == "from storage"
     assert state.attributes[ATTR_EDITABLE] is True
     assert state.attributes[ATTR_ICON] == "mdi:party-popper"
@@ -214,7 +214,7 @@ async def test_load(
 
     state = hass.states.get(f"{DOMAIN}.from_yaml")
     assert state
-    assert state.state == STATE_ACTIVE
+    assert state.state == STATE_ON
     assert state.attributes[ATTR_FRIENDLY_NAME] == "from yaml"
     assert state.attributes[ATTR_EDITABLE] is False
     assert state.attributes[ATTR_ICON] == "mdi:party-pooper"
@@ -231,7 +231,7 @@ async def test_schedule_updates(
 
     state = hass.states.get(f"{DOMAIN}.from_storage")
     assert state
-    assert state.state == STATE_INACTIVE
+    assert state.state == STATE_OFF
     assert state.attributes[ATTR_NEXT_EVENT].isoformat() == "2022-08-12T17:00:00-07:00"
 
     with freeze_time(state.attributes[ATTR_NEXT_EVENT]):
@@ -240,7 +240,7 @@ async def test_schedule_updates(
 
     state = hass.states.get(f"{DOMAIN}.from_storage")
     assert state
-    assert state.state == STATE_ACTIVE
+    assert state.state == STATE_ON
     assert state.attributes[ATTR_NEXT_EVENT].isoformat() == "2022-08-12T23:59:59-07:00"
 
 
@@ -304,7 +304,7 @@ async def test_update(
 
     state = hass.states.get("schedule.from_storage")
     assert state
-    assert state.state == STATE_INACTIVE
+    assert state.state == STATE_OFF
     assert state.attributes[ATTR_FRIENDLY_NAME] == "from storage"
     assert state.attributes[ATTR_ICON] == "mdi:party-popper"
     assert state.attributes[ATTR_NEXT_EVENT].isoformat() == "2022-08-12T17:00:00-07:00"
@@ -333,7 +333,7 @@ async def test_update(
 
     state = hass.states.get("schedule.from_storage")
     assert state
-    assert state.state == STATE_ACTIVE
+    assert state.state == STATE_ON
     assert state.attributes[ATTR_FRIENDLY_NAME] == "Party pooper"
     assert state.attributes[ATTR_ICON] == "mdi:party-pooper"
     assert state.attributes[ATTR_NEXT_EVENT].isoformat() == "2022-08-10T23:59:59-07:00"
@@ -369,7 +369,7 @@ async def test_ws_create(
 
     state = hass.states.get("schedule.party_mode")
     assert state
-    assert state.state == STATE_INACTIVE
+    assert state.state == STATE_OFF
     assert state.attributes[ATTR_FRIENDLY_NAME] == "Party mode"
     assert state.attributes[ATTR_EDITABLE] is True
     assert state.attributes[ATTR_ICON] == "mdi:party-popper"

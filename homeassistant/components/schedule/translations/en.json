@@ -1,8 +1,8 @@
 {
     "state": {
         "_": {
-            "active": "Active",
-            "inactive": "Inactive"
+            "off": "Off",
+            "on": "On"
         }
     },
     "title": "Schedule"

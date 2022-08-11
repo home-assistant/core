@@ -35,6 +35,3 @@ WEEKDAY_TO_CONF: Final = {
     5: CONF_SATURDAY,
     6: CONF_SUNDAY,
 }
-
-STATE_ACTIVE: Final = "active"
-STATE_INACTIVE: Final = "inactive"
