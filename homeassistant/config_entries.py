@@ -1297,6 +1297,8 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         self,
         updates: dict[str, Any] | None = None,
         reload_on_update: bool = True,
+        *,
+        error: str = "already_configured",
     ) -> None:
         """Abort if the unique ID is already configured."""
         if self.unique_id is None:
@@ -1332,7 +1334,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
                 self.hass.async_create_task(
                     self.hass.config_entries.async_reload(entry.entry_id)
                 )
-            raise data_entry_flow.AbortFlow("already_configured")
+            raise data_entry_flow.AbortFlow(error)
 
     async def async_set_unique_id(
         self, unique_id: str | None = None, *, raise_on_progress: bool = True
