@@ -179,7 +179,10 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
     @property
     def media_position(self) -> int | None:
         """Position of current playing media in seconds."""
-        if not self._currently_playing:
+        if (
+            not self._currently_playing
+            or self._currently_playing.get("progress_ms") is None
+        ):
             return None
         return self._currently_playing["progress_ms"] / 1000
 
