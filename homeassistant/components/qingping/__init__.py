@@ -31,7 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass,
         _LOGGER,
         address=address,
-        mode=BluetoothScanningMode.ACTIVE,
+        mode=BluetoothScanningMode.PASSIVE,
         update_method=data.update,
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

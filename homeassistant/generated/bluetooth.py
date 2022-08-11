@@ -94,23 +94,7 @@ BLUETOOTH: list[dict[str, str | int | list[int]]] = [
     },
     {
         "domain": "qingping",
-        "local_name": "sps"
-    },
-    {
-        "domain": "qingping",
         "local_name": "Qingping*"
-    },
-    {
-        "domain": "qingping",
-        "local_name": "iBBQ*"
-    },
-    {
-        "domain": "qingping",
-        "local_name": "xBBQ*"
-    },
-    {
-        "domain": "qingping",
-        "local_name": "tps"
     },
     {
         "domain": "sensorpush",
