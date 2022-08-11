@@ -5,11 +5,17 @@ from python_awair.exceptions import AuthError, AwairError
 
 from homeassistant import data_entry_flow
 from homeassistant.components.awair.const import DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
 from homeassistant.core import HomeAssistant
 
-from .const import CLOUD_CONFIG, CLOUD_UNIQUE_ID, LOCAL_CONFIG, LOCAL_UNIQUE_ID
+from .const import (
+    CLOUD_CONFIG,
+    CLOUD_UNIQUE_ID,
+    LOCAL_CONFIG,
+    LOCAL_UNIQUE_ID,
+    ZEROCONF_DISCOVERY,
+)
 
 from tests.common import MockConfigEntry
 
@@ -188,7 +194,7 @@ async def test_reauth_error(hass: HomeAssistant) -> None:
 
 
 async def test_create_cloud_entry(hass: HomeAssistant, user, cloud_devices):
-    """Test overall flow."""
+    """Test overall flow when using cloud api."""
 
     with patch(
         "python_awair.AwairClient.query",
@@ -218,7 +224,7 @@ async def test_create_cloud_entry(hass: HomeAssistant, user, cloud_devices):
 
 
 async def test_create_local_entry(hass: HomeAssistant, local_devices):
-    """Test overall flow."""
+    """Test overall flow when using local API."""
 
     with patch("python_awair.AwairClient.query", side_effect=[local_devices]), patch(
         "homeassistant.components.awair.async_setup_entry",
@@ -241,4 +247,26 @@ async def test_create_local_entry(hass: HomeAssistant, local_devices):
         assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["title"] == "Awair Element (24947)"
         assert result["data"][CONF_HOST] == LOCAL_CONFIG[CONF_HOST]
+        assert result["result"].unique_id == LOCAL_UNIQUE_ID
+
+
+async def test_create_zeroconf_entry(hass: HomeAssistant, local_devices):
+    """Test overall flow when using discovery."""
+
+    with patch("python_awair.AwairClient.query", side_effect=[local_devices]), patch(
+        "homeassistant.components.awair.async_setup_entry",
+        return_value=True,
+    ):
+        confirm_step = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_ZEROCONF}, data=ZEROCONF_DISCOVERY
+        )
+
+        result = await hass.config_entries.flow.async_configure(
+            confirm_step["flow_id"],
+            {},
+        )
+
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["title"] == "Awair Element (24947)"
+        assert result["data"][CONF_HOST] == ZEROCONF_DISCOVERY.host
         assert result["result"].unique_id == LOCAL_UNIQUE_ID
