@@ -42,19 +42,12 @@ async def async_setup_entry(
     """Set up Abode sensor devices."""
     data: AbodeSystem = hass.data[DOMAIN]
 
-    entities = []
-
-    for device in data.abode.get_devices(generic_type=CONST.TYPE_SENSOR):
-        conditions = device.get_value(CONST.STATUSES_KEY)
-        entities.extend(
-            [
-                AbodeSensor(data, device, description)
-                for description in SENSOR_TYPES
-                if description.key in conditions
-            ]
-        )
-
-    async_add_entities(entities)
+    async_add_entities(
+        AbodeSensor(data, device, description)
+        for description in SENSOR_TYPES
+        for device in data.abode.get_devices(generic_type=CONST.TYPE_SENSOR)
+        if description.key in device.get_value(CONST.STATUSES_KEY)
+    )
 
 
 class AbodeSensor(AbodeDevice, SensorEntity):

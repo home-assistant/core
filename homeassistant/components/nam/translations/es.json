@@ -19,14 +19,14 @@
             "credentials": {
                 "data": {
                     "password": "Contrase\u00f1a",
-                    "username": "Usuario"
+                    "username": "Nombre de usuario"
                 },
                 "description": "Por favor, introduzca el nombre de usuario y la contrase\u00f1a."
             },
             "reauth_confirm": {
                 "data": {
                     "password": "Contrase\u00f1a",
-                    "username": "Usuario"
+                    "username": "Nombre de usuario"
                 },
                 "description": "Por favor, introduzca el nombre de usuario y la contrase\u00f1a correctos para el host: {host}"
             },

@@ -27,7 +27,7 @@
                     "host": "Direcci\u00f3n IP",
                     "password": "Contrase\u00f1a",
                     "port": "Puerto",
-                    "username": "Usuario"
+                    "username": "Nombre de usuario"
                 },
                 "description": "Configure el Insteon Hub versi\u00f3n 2.",
                 "title": "Insteon Hub Versi\u00f3n 2"
@@ -76,7 +76,7 @@
                     "host": "Direcci\u00f3n IP",
                     "password": "Contrase\u00f1a",
                     "port": "Puerto",
-                    "username": "Usuario"
+                    "username": "Nombre de usuario"
                 },
                 "description": "Cambiar la informaci\u00f3n de la conexi\u00f3n del Hub Insteon. Debes reiniciar el Home Assistant despu\u00e9s de hacer este cambio. Esto no cambia la configuraci\u00f3n del Hub en s\u00ed. Para cambiar la configuraci\u00f3n del Hub usa la aplicaci\u00f3n Hub."
             },

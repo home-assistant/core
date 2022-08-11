@@ -52,11 +52,11 @@ class SelectableCapapility(MusicCastCapabilityEntity, SelectEntity):
         return DEVICE_CLASS_MAPPING.get(self.capability.id)
 
     @property
-    def options(self):
+    def options(self) -> list[str]:
         """Return the list possible options."""
         return list(self.capability.options.values())
 
     @property
-    def current_option(self):
+    def current_option(self) -> str | None:
         """Return the currently selected option."""
         return self.capability.options.get(self.capability.current)

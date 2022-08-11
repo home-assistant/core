@@ -15,7 +15,7 @@
             "confirm": {
                 "data": {
                     "password": "Contrase\u00f1a",
-                    "username": "Usuario"
+                    "username": "Nombre de usuario"
                 },
                 "description": "Introduce las credenciales RTSP para la c\u00e1mara Ezviz {serial} con IP {ip_address}",
                 "title": "Descubierta c\u00e1mara Ezviz"
@@ -24,7 +24,7 @@
                 "data": {
                     "password": "Contrase\u00f1a",
                     "url": "URL",
-                    "username": "Usuario"
+                    "username": "Nombre de usuario"
                 },
                 "title": "Conectar con Ezviz Cloud"
             },
@@ -32,7 +32,7 @@
                 "data": {
                     "password": "Contrase\u00f1a",
                     "url": "URL",
-                    "username": "Usuario"
+                    "username": "Nombre de usuario"
                 },
                 "description": "Especificar manualmente la URL de tu regi\u00f3n",
                 "title": "Conectar con la URL personalizada de Ezviz"

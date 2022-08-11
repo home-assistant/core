@@ -51,6 +51,7 @@ async def test_load_issues(hass: HomeAssistant) -> None:
         },
         {
             "breaks_in_ha_version": "2022.6",
+            "data": {"entry_id": "123"},
             "domain": "test",
             "issue_id": "issue_4",
             "is_fixable": True,
@@ -141,6 +142,7 @@ async def test_load_issues(hass: HomeAssistant) -> None:
         active=False,
         breaks_in_ha_version=None,
         created=issue1.created,
+        data=None,
         dismissed_version=issue1.dismissed_version,
         domain=issue1.domain,
         is_fixable=None,
@@ -157,6 +159,7 @@ async def test_load_issues(hass: HomeAssistant) -> None:
         active=False,
         breaks_in_ha_version=None,
         created=issue2.created,
+        data=None,
         dismissed_version=issue2.dismissed_version,
         domain=issue2.domain,
         is_fixable=None,
@@ -196,6 +199,7 @@ async def test_loading_issues_from_storage(hass: HomeAssistant, hass_storage) ->
                 {
                     "breaks_in_ha_version": "2022.6",
                     "created": "2022-07-19T19:41:13.746514+00:00",
+                    "data": {"entry_id": "123"},
                     "dismissed_version": None,
                     "domain": "test",
                     "issue_domain": "blubb",

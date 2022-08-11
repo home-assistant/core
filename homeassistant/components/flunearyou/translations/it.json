@@ -16,5 +16,17 @@
                 "title": "Configurare Flu Near You"
             }
         }
+    },
+    "issues": {
+        "integration_removal": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "title": "Rimuovi Flu Near You"
+                    }
+                }
+            },
+            "title": "Flu Near You non \u00e8 pi\u00f9 disponibile"
+        }
     }
 }

@@ -33,7 +33,7 @@
                     "account_balance_currencies": "Saldos de la cartera para informar.",
                     "exchange_base": "Moneda base para sensores de tipo de cambio.",
                     "exchange_rate_currencies": "Tipos de cambio a informar.",
-                    "exchnage_rate_precision": "N\u00famero de posiciones decimales para los tipos de cambio."
+                    "exchnage_rate_precision": "N\u00famero de decimales para los tipos de cambio."
                 },
                 "description": "Ajustar las opciones de Coinbase"
             }

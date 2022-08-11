@@ -25,7 +25,7 @@
                     "region": "Regi\u00f3n"
                 },
                 "data_description": {
-                    "code": "Vaya a 'Configuraci\u00f3n' en su consola PlayStation 4. Luego navegue hasta 'Configuraci\u00f3n de conexi\u00f3n de la aplicaci\u00f3n m\u00f3vil' y seleccione 'Agregar dispositivo' para obtener el pin."
+                    "code": "Ve a 'Configuraci\u00f3n' en tu consola PlayStation 4. Luego navega hasta 'Configuraci\u00f3n de conexi\u00f3n de la aplicaci\u00f3n m\u00f3vil' y selecciona 'Agregar dispositivo' para obtener el PIN."
                 }
             },
             "mode": {
@@ -34,7 +34,7 @@
                     "mode": "Modo configuraci\u00f3n"
                 },
                 "data_description": {
-                    "ip_address": "D\u00e9jelo en blanco si selecciona la detecci\u00f3n autom\u00e1tica."
+                    "ip_address": "D\u00e9jalo en blanco si seleccionas la detecci\u00f3n autom\u00e1tica."
                 }
             }
         }

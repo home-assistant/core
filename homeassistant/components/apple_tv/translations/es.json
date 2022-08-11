@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "El dispositivo ya est\u00e1 configurado",
-            "already_in_progress": "El flujo de configuraci\u00f3n ya est\u00e1 en proceso",
+            "already_in_progress": "El flujo de configuraci\u00f3n ya est\u00e1 en curso",
             "backoff": "El dispositivo no acepta solicitudes de emparejamiento en este momento (es posible que hayas introducido un c\u00f3digo PIN no v\u00e1lido demasiadas veces), int\u00e9ntalo de nuevo m\u00e1s tarde.",
             "device_did_not_pair": "No se ha intentado finalizar el proceso de emparejamiento desde el dispositivo.",
             "device_not_found": "No se ha encontrado el dispositivo durante la detecci\u00f3n, por favor, intente a\u00f1adirlo de nuevo.",

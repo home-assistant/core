@@ -164,7 +164,7 @@ class XiaomiAirHumidifierSelector(XiaomiSelector):
             self.async_write_ha_state()
 
     @property
-    def current_option(self):
+    def current_option(self) -> str:
         """Return the current option."""
         return self.led_brightness.lower()
 

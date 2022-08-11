@@ -9,6 +9,15 @@
         },
         "flow_title": "{name} ({address})",
         "step": {
+            "confirm": {
+                "description": "Vols configurar {name}?"
+            },
+            "password": {
+                "data": {
+                    "password": "Contrasenya"
+                },
+                "description": "El dispositiu {name} necessita una contrasenya"
+            },
             "user": {
                 "data": {
                     "address": "Adre\u00e7a del dispositiu",

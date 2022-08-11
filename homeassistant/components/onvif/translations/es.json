@@ -17,7 +17,7 @@
                     "name": "Nombre",
                     "password": "Contrase\u00f1a",
                     "port": "Puerto",
-                    "username": "Usuario"
+                    "username": "Nombre de usuario"
                 },
                 "title": "Configurar dispositivo ONVIF"
             },
