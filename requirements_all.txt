@@ -1914,6 +1914,9 @@ python-family-hub-local==0.0.2
 # homeassistant.components.darksky
 python-forecastio==1.4.0
 
+# homeassistant.components.fullykiosk
+python-fullykiosk==0.0.11
+
 # homeassistant.components.sms
 # python-gammu==3.2.4
 

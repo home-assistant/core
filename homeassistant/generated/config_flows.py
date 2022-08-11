@@ -125,6 +125,7 @@ FLOWS = {
         "fritzbox",
         "fritzbox_callmonitor",
         "fronius",
+        "fullykiosk",
         "garages_amsterdam",
         "gdacs",
         "generic",

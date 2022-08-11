@@ -1,0 +1,13 @@
+{
+  "domain": "fullykiosk",
+  "name": "Fully Kiosk Browser",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/fullykiosk",
+  "requirements": ["python-fullykiosk==0.0.11"],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": ["@cgarwood"],
+  "iot_class": "local_polling"
+}
