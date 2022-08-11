@@ -13,6 +13,9 @@ async def async_setup_entry(hass, entry, async_add_devices):
 
 class MicroBotBinarySwitch(MicroBotEntity, SwitchEntity):
     """MicroBot switch class."""
+    
+    _attr_icon = ICON
+    _attr_name = f"{DEFAULT_NAME}"
 
     async def async_turn_on(self, **kwargs):  # pylint: disable=unused-argument
         """Turn on the switch."""
@@ -27,16 +30,6 @@ class MicroBotBinarySwitch(MicroBotEntity, SwitchEntity):
         await self.coordinator.api.push_off()
         await self.coordinator.api.disconnect()
         self.async_write_ha_state()
-
-    @property
-    def name(self):
-        """Return the name of the switch."""
-        return f"{DEFAULT_NAME}"
-
-    @property
-    def icon(self):
-        """Return the icon of this switch."""
-        return ICON
 
     @property
     def is_on(self):
