@@ -1,7 +1,7 @@
 """Constants for Microbot."""
 # Base component constants
 NAME = "MicroBot Push"
-DOMAIN = "microbot_push"
+DOMAIN = "keymitt_ble"
 DOMAIN_DATA = f"{DOMAIN}_data"
 VERSION = "2022.08.0"
 MANUFACTURER = "Naran/Keymitt"
