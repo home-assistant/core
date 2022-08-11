@@ -1,6 +1,7 @@
 """Plugwise Climate component for Home Assistant."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 from homeassistant.components.climate import ClimateEntity
@@ -53,6 +54,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
         self.hc_data = self.coordinator.data.devices[
             self.coordinator.data.gateway["heater_id"]
         ]
+        self._attr_extra_state_attributes = {}
         self._attr_unique_id = f"{device_id}-climate"
 
         if presets := self.device["preset_modes"]:
@@ -144,6 +146,14 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
     def preset_mode(self) -> str | None:
         """Return the current preset mode."""
         return self.device.get("active_preset")
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return entity specific state attributes."""
+        return {
+            "available_schemas": self.device.get("available_schedules"),
+            "selected_schema": self.device.get("selected_schedule"),
+        }
 
     @property
     def supported_features(self) -> int:
