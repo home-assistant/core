@@ -198,6 +198,9 @@ class NetgearRouter:
             _LOGGER.debug("Netgear scan result: \n%s", ntg_devices)
 
         for ntg_device in ntg_devices:
+            if ntg_device.mac is None:
+                continue
+
             device_mac = format_mac(ntg_device.mac)
 
             if not self.devices.get(device_mac):
