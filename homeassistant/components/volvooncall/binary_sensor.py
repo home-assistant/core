@@ -5,27 +5,36 @@ from contextlib import suppress
 
 import voluptuous as vol
 
+from homeassistant import config_entries
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
     BinarySensorEntity,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DATA_KEY, VolvoEntity, VolvoUpdateCoordinator
+from . import DOMAIN, VolvoEntity, VolvoUpdateCoordinator
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    config_entry: config_entries.ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Volvo sensors."""
-    if discovery_info is None:
-        return
-    async_add_entities([VolvoSensor(hass.data[DATA_KEY], *discovery_info)])
+    """Configure binary_sensors from a config entry created in the integrations UI."""
+    volvo_data = hass.data[DOMAIN][config_entry.entry_id].volvo_data
+    for instrument in volvo_data.instruments:
+        if instrument.component == "binary_sensor":
+            discovery_info = (
+                instrument.vehicle.vin,
+                instrument.component,
+                instrument.attr,
+                instrument.slug_attr,
+            )
+
+            async_add_entities(
+                [VolvoSensor(hass.data[DOMAIN][config_entry.entry_id], *discovery_info)]
+            )
 
 
 class VolvoSensor(VolvoEntity, BinarySensorEntity):

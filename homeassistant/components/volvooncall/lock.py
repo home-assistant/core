@@ -6,25 +6,33 @@ from typing import Any
 
 from volvooncall.dashboard import Lock
 
+from homeassistant import config_entries
 from homeassistant.components.lock import LockEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DATA_KEY, VolvoEntity, VolvoUpdateCoordinator
+from . import DOMAIN, VolvoEntity, VolvoUpdateCoordinator
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    config_entry: config_entries.ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Volvo On Call lock."""
-    if discovery_info is None:
-        return
+    """Configure locks from a config entry created in the integrations UI."""
+    volvo_data = hass.data[DOMAIN][config_entry.entry_id].volvo_data
+    for instrument in volvo_data.instruments:
+        if instrument.component == "lock":
+            discovery_info = (
+                instrument.vehicle.vin,
+                instrument.component,
+                instrument.attr,
+                instrument.slug_attr,
+            )
 
-    async_add_entities([VolvoLock(hass.data[DATA_KEY], *discovery_info)])
+            async_add_entities(
+                [VolvoLock(hass.data[DOMAIN][config_entry.entry_id], *discovery_info)]
+            )
 
 
 class VolvoLock(VolvoEntity, LockEntity):

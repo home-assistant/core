@@ -1,0 +1,20 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Login to Volvo On Call",
+        "data": {
+          "username": "Username",
+          "password": "Password",
+          "region": "Region (Use 'na' for North America, 'cn' for China)",
+          "mutable": "Allow Remote Start / Lock / etc.",
+          "scandinavian_miles": "Use Scandinavian Miles"
+        }
+      }
+    },
+    "error": {
+      "auth": "Authentication failed. Please check your username, password, and region.",
+      "invalid_region": "Invalid region. Please use 'na' for North America or 'cn' for China. Otherwise, leave empty."
+    }
+  }
+}
