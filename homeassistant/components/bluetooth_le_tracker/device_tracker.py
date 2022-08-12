@@ -116,7 +116,7 @@ class BLETrackerEntity(BaseTrackerEntity):
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
-        """Register state update callback."""
+        """Register state update callbacks."""
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
