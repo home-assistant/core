@@ -1,4 +1,8 @@
-"""Platform for sensor integration."""
+"""Definition of air-Q sensor platform.
+
+This platform initialisation follows immediately after (or as the last part of) the
+integration setup, defined in __init__.py.
+"""
 from __future__ import annotations
 
 from homeassistant.components.sensor import (

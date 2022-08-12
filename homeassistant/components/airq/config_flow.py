@@ -1,4 +1,8 @@
-"""Config flow for air-Q integration."""
+"""Config flow for air-Q integration.
+
+Off all integration components, the content of this file is being executed first
+when the user sets up the integration.
+"""
 from __future__ import annotations
 
 import logging
