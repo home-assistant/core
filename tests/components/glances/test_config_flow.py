@@ -2,6 +2,7 @@
 from unittest.mock import patch
 
 from glances_api import exceptions
+import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import glances
@@ -18,7 +19,6 @@ VERSION = 3
 SCAN_INTERVAL = 10
 
 DEMO_USER_INPUT = {
-    "name": NAME,
     "host": HOST,
     "username": USERNAME,
     "password": PASSWORD,
@@ -27,6 +27,13 @@ DEMO_USER_INPUT = {
     "ssl": False,
     "verify_ssl": True,
 }
+
+
+@pytest.fixture(autouse=True)
+def glances_setup_fixture():
+    """Mock transmission entry setup."""
+    with patch("homeassistant.components.glances.async_setup_entry", return_value=True):
+        yield
 
 
 async def test_form(hass):
@@ -45,7 +52,7 @@ async def test_form(hass):
         )
 
     assert result["type"] == "create_entry"
-    assert result["title"] == NAME
+    assert result["title"] == HOST
     assert result["data"] == DEMO_USER_INPUT
 
 

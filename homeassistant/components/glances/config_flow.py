@@ -1,13 +1,14 @@
 """Config flow for Glances."""
 from __future__ import annotations
 
+from typing import Any
+
 import glances_api
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import (
     CONF_HOST,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SCAN_INTERVAL,
@@ -18,10 +19,10 @@ from homeassistant.const import (
 from homeassistant.core import callback
 
 from . import get_api
+from ...data_entry_flow import FlowResult
 from .const import (
     CONF_VERSION,
     DEFAULT_HOST,
-    DEFAULT_NAME,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_VERSION,
@@ -31,7 +32,6 @@ from .const import (
 
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
         vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
         vol.Optional(CONF_USERNAME): str,
         vol.Optional(CONF_PASSWORD): str,
@@ -67,7 +67,7 @@ class GlancesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return GlancesOptionsFlowHandler(config_entry)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input: dict[str, Any] = None) -> FlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
@@ -75,7 +75,7 @@ class GlancesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 await validate_input(self.hass, user_input)
                 return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=user_input
+                    title=user_input[CONF_HOST], data=user_input
                 )
             except CannotConnect:
                 errors["base"] = "cannot_connect"
@@ -94,7 +94,7 @@ class GlancesOptionsFlowHandler(config_entries.OptionsFlow):
         """Initialize Glances options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(self, user_input: dict[str, Any] = None) -> FlowResult:
         """Manage the Glances options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
