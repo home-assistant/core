@@ -9,6 +9,7 @@ import voluptuous as vol
 from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
 from homeassistant.const import (
     CONF_API_KEY,
+    CONF_NAME,
     CONF_RECIPIENT,
     CONF_USERNAME,
     CONTENT_TYPE_JSON,
@@ -24,12 +25,14 @@ HEADERS = {"Content-Type": CONTENT_TYPE_JSON}
 CONF_LANGUAGE = "language"
 CONF_VOICE = "voice"
 
+DEFAULT_NAME = "clicksend_tts"
 DEFAULT_LANGUAGE = "en-us"
 DEFAULT_VOICE = "female"
 TIMEOUT = 5
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_API_KEY): cv.string,
         vol.Required(CONF_RECIPIENT): cv.string,
