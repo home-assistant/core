@@ -947,8 +947,6 @@ def test_media_player_entity(
     # Set bypass option
     type_hint_checker.config.ignore_missing_annotations = False
 
-    # Ensure that device class is valid despite Entity inheritance
-    # Ensure that `int` is valid for `float` return type
     class_node = astroid.extract_node(
         """
     class Entity():
