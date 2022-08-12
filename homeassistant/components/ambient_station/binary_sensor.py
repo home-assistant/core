@@ -333,14 +333,12 @@ async def async_setup_entry(
     ambient = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        [
-            AmbientWeatherBinarySensor(
-                ambient, mac_address, station[ATTR_NAME], description
-            )
-            for mac_address, station in ambient.stations.items()
-            for description in BINARY_SENSOR_DESCRIPTIONS
-            if description.key in station[ATTR_LAST_DATA]
-        ]
+        AmbientWeatherBinarySensor(
+            ambient, mac_address, station[ATTR_NAME], description
+        )
+        for mac_address, station in ambient.stations.items()
+        for description in BINARY_SENSOR_DESCRIPTIONS
+        if description.key in station[ATTR_LAST_DATA]
     )
 
 

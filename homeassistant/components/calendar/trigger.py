@@ -1,6 +1,7 @@
 """Offer calendar automation rules."""
 from __future__ import annotations
 
+from collections.abc import Coroutine
 import datetime
 import logging
 from typing import Any
@@ -47,7 +48,7 @@ class CalendarEventListener:
     def __init__(
         self,
         hass: HomeAssistant,
-        job: HassJob,
+        job: HassJob[..., Coroutine[Any, Any, None]],
         trigger_data: dict[str, Any],
         entity: CalendarEntity,
         event_type: str,

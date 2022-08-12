@@ -900,3 +900,40 @@ def test_invalid_device_class(
         ),
     ):
         type_hint_checker.visit_classdef(class_node)
+
+
+def test_number_entity(linter: UnittestLinter, type_hint_checker: BaseChecker) -> None:
+    """Ensure valid hints are accepted for number entity."""
+    # Set bypass option
+    type_hint_checker.config.ignore_missing_annotations = False
+
+    # Ensure that device class is valid despite Entity inheritance
+    # Ensure that `int` is valid for `float` return type
+    class_node = astroid.extract_node(
+        """
+    class Entity():
+        pass
+
+    class RestoreEntity(Entity):
+        pass
+
+    class NumberEntity(Entity):
+        pass
+
+    class MyNumber( #@
+        RestoreEntity, NumberEntity
+    ):
+        @property
+        def device_class(self) -> NumberDeviceClass:
+            pass
+
+        @property
+        def native_value(self) -> int:
+            pass
+    """,
+        "homeassistant.components.pylint_test.number",
+    )
+    type_hint_checker.visit_module(class_node.parent)
+
+    with assert_no_messages(linter):
+        type_hint_checker.visit_classdef(class_node)

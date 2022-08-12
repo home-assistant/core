@@ -22,7 +22,7 @@
                 "description": "Por favor, introduzca su nombre de usuario y contrase\u00f1a de Kodi. Estos se pueden encontrar en Sistema/Configuraci\u00f3n/Red/Servicios."
             },
             "discovery_confirm": {
-                "description": "\u00bfQuieres agregar Kodi (`{name}`) a Home Assistant?",
+                "description": "\u00bfQuieres a\u00f1adir Kodi (`{name}`) a Home Assistant?",
                 "title": "Descubierto Kodi"
             },
             "user": {

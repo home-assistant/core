@@ -20,30 +20,31 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def get_service(hass, config, discovery_info=None):
     """Get the SMS notification service."""
 
-    if SMS_GATEWAY not in hass.data[DOMAIN]:
-        _LOGGER.error("SMS gateway not found, cannot initialize service")
-        return
-
-    gateway = hass.data[DOMAIN][SMS_GATEWAY][GATEWAY]
-
     if discovery_info is None:
         number = config[CONF_RECIPIENT]
     else:
         number = discovery_info[CONF_RECIPIENT]
 
-    return SMSNotificationService(gateway, number)
+    return SMSNotificationService(hass, number)
 
 
 class SMSNotificationService(BaseNotificationService):
     """Implement the notification service for SMS."""
 
-    def __init__(self, gateway, number):
+    def __init__(self, hass, number):
         """Initialize the service."""
-        self.gateway = gateway
+
+        self.hass = hass
         self.number = number
 
     async def async_send_message(self, message="", **kwargs):
         """Send SMS message."""
+
+        if SMS_GATEWAY not in self.hass.data[DOMAIN]:
+            _LOGGER.error("SMS gateway not found, cannot send message")
+            return
+
+        gateway = self.hass.data[DOMAIN][SMS_GATEWAY][GATEWAY]
 
         targets = kwargs.get(CONF_TARGET, [self.number])
         smsinfo = {
@@ -67,6 +68,6 @@ class SMSNotificationService(BaseNotificationService):
                 encoded_message["Number"] = target
                 try:
                     # Actually send the message
-                    await self.gateway.send_sms_async(encoded_message)
+                    await gateway.send_sms_async(encoded_message)
                 except gammu.GSMError as exc:
                     _LOGGER.error("Sending to %s failed: %s", target, exc)

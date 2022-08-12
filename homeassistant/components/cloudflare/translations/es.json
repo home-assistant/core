@@ -15,7 +15,7 @@
             "reauth_confirm": {
                 "data": {
                     "api_token": "Token API",
-                    "description": "Vuelva a autenticarse con su cuenta de Cloudflare."
+                    "description": "Vuelve a autenticarte con tu cuenta de Cloudflare."
                 }
             },
             "records": {

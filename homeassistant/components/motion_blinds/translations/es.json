@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "El dispositivo ya est\u00e1 configurado",
-            "already_in_progress": "El flujo de configuraci\u00f3n ya est\u00e1 en proceso",
+            "already_in_progress": "El flujo de configuraci\u00f3n ya est\u00e1 en curso",
             "connection_error": "No se pudo conectar"
         },
         "error": {
@@ -35,7 +35,7 @@
         "step": {
             "init": {
                 "data": {
-                    "wait_for_push": "Espere a que se realice la actualizaci\u00f3n de multidifusi\u00f3n"
+                    "wait_for_push": "Esperar a que se active la actualizaci\u00f3n de multicast"
                 }
             }
         }

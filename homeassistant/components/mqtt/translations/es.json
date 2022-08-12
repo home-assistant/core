@@ -14,7 +14,7 @@
                     "discovery": "Habilitar descubrimiento",
                     "password": "Contrase\u00f1a",
                     "port": "Puerto",
-                    "username": "Usuario"
+                    "username": "Nombre de usuario"
                 },
                 "description": "Por favor, introduzca la informaci\u00f3n de conexi\u00f3n de su br\u00f3ker MQTT."
             },
@@ -22,7 +22,7 @@
                 "data": {
                     "discovery": "Habilitar descubrimiento"
                 },
-                "description": "\u00bfDesea configurar Home Assistant para conectar con el br\u00f3ker de MQTT proporcionado por el complemento {addon}?",
+                "description": "\u00bfQuieres configurar Home Assistant para conectarse al agente MQTT proporcionado por el complemento {addon} ?",
                 "title": "Br\u00f3ker MQTT a trav\u00e9s de complemento de Home Assistant"
             }
         }
@@ -61,7 +61,7 @@
                     "broker": "Br\u00f3ker",
                     "password": "Contrase\u00f1a",
                     "port": "Puerto",
-                    "username": "Usuario"
+                    "username": "Nombre de usuario"
                 },
                 "description": "Por favor, introduzca la informaci\u00f3n de conexi\u00f3n de su br\u00f3ker MQTT.",
                 "title": "Opciones del br\u00f3ker"

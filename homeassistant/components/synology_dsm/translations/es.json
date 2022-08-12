@@ -25,15 +25,15 @@
                     "password": "Contrase\u00f1a",
                     "port": "Puerto",
                     "ssl": "Usar SSL/TLS para conectar con tu NAS",
-                    "username": "Usuario",
-                    "verify_ssl": "Verificar certificado SSL"
+                    "username": "Nombre de usuario",
+                    "verify_ssl": "Verificar el certificado SSL"
                 },
                 "description": "\u00bfQuieres configurar {name} ({host})?"
             },
             "reauth_confirm": {
                 "data": {
                     "password": "Contrase\u00f1a",
-                    "username": "Usuario"
+                    "username": "Nombre de usuario"
                 },
                 "title": "Volver a autenticar la integraci\u00f3n Synology DSM"
             },
@@ -44,7 +44,7 @@
                     "port": "Puerto",
                     "ssl": "Usar SSL/TLS para conectar con tu NAS",
                     "username": "Usuario",
-                    "verify_ssl": "Verificar certificado SSL"
+                    "verify_ssl": "Verificar el certificado SSL"
                 }
             }
         }
@@ -54,7 +54,7 @@
             "init": {
                 "data": {
                     "scan_interval": "Minutos entre escaneos",
-                    "snap_profile_type": "Calidad de las fotos de la c\u00e1mara (0:alta, 1:media, 2:baja)",
+                    "snap_profile_type": "Nivel de calidad de las instant\u00e1neas de la c\u00e1mara (0:alta 1:media 2:baja)",
                     "timeout": "Tiempo de espera (segundos)"
                 }
             }

@@ -15,14 +15,14 @@
                     "password": "Contrase\u00f1a"
                 },
                 "description": "La contrase\u00f1a de {username} ya no es v\u00e1lida.",
-                "title": "Reautenticar tu cuenta de Flume"
+                "title": "Volver a autenticar tu cuenta Flume"
             },
             "user": {
                 "data": {
                     "client_id": "Client ID",
                     "client_secret": "Client Secret",
                     "password": "Contrase\u00f1a",
-                    "username": "Usuario"
+                    "username": "Nombre de usuario"
                 },
                 "description": "Para acceder a la API Personal de Flume, tendr\u00e1s que solicitar un 'Client ID' y un 'Client Secret' en https://portal.flumetech.com/settings#token",
                 "title": "Conectar con tu cuenta de Flume"
