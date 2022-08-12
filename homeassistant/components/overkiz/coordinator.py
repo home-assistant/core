@@ -70,7 +70,6 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
 
     async def _async_update_data(self) -> dict[str, Device]:
         """Fetch Overkiz data via event listener."""
-
         try:
             events = await self.client.fetch_events()
         except BadCredentialsException as exception:
