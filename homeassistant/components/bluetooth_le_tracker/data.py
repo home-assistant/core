@@ -18,6 +18,7 @@ from .const import (
     CONF_TRACK_BATTERY_INTERVAL,
     SIGNAL_BLE_DEVICE_BATTERY_UPDATE,
     SIGNAL_BLE_DEVICE_NEW,
+    SIGNAL_BLE_DEVICE_SEEN,
     SIGNAL_BLE_DEVICE_UNAVAILABLE,
 )
 
@@ -40,7 +41,7 @@ def signal_unavailable(address: str) -> str:
 
 def signal_seen(address: str) -> str:
     """Signal for the device being seen."""
-    return f"{SIGNAL_BLE_DEVICE_UNAVAILABLE}_{address}"
+    return f"{SIGNAL_BLE_DEVICE_SEEN}_{address}"
 
 
 class BLEScanner:
@@ -99,14 +100,13 @@ class BLEScanner:
     ) -> None:
         """Update from a ble callback."""
         address = service_info.address
-
         if address not in self._unavailable_trackers:
             self._unavailable_trackers[address] = bluetooth.async_track_unavailable(
                 self.hass, self._async_handle_unavailable, address
             )
-            async_dispatcher_send(self.hass, SIGNAL_BLE_DEVICE_NEW, service_info.device)
+            async_dispatcher_send(self.hass, SIGNAL_BLE_DEVICE_NEW, service_info)
         else:
-            async_dispatcher_send(self.hass, signal_seen(address), service_info.device)
+            async_dispatcher_send(self.hass, signal_seen(address), service_info)
 
         if not self.battery_track_interval or address in self.battery_update_failed:
             return
