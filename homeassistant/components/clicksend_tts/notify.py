@@ -38,7 +38,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_RECIPIENT): cv.string,
+        vol.Required(CONF_RECIPIENT): vol.All(
+            cv.string, vol.Match(r"^\+?[1-9]\d{1,14}$")
+        ),
         vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): cv.string,
         vol.Optional(CONF_VOICE, default=DEFAULT_VOICE): vol.In(
             [MALE_VOICE, FEMALE_VOICE]
