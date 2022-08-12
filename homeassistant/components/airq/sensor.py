@@ -36,7 +36,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # Consider making key & name constants
 # NOTE: keys must match those in the data dictionary
-SENSOR_TYPES: list[SensorEntityDescription, ...] = [
+SENSOR_TYPES: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="co",
         name="CO",
