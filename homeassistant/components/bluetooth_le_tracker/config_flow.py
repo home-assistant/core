@@ -50,4 +50,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return self.async_create_entry(title="Bluetooth LE Tracker", data={})
 
-        return self.async_show_form(step_id="user", data_schema={})
+        return self.async_show_form(step_id="user")
+
+    async def async_step_import(self, options: dict[str, Any]) -> FlowResult:
+        """Handle import from configuration.yaml."""
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
+        return self.async_create_entry(
+            title="Bluetooth LE Tracker", data={}, options=options
+        )

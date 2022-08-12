@@ -12,4 +12,6 @@ SIGNAL_BLE_DEVICE_SEEN = "bluetooth_le_tracker_seen_device"
 SIGNAL_BLE_DEVICE_BATTERY_UPDATE = "bluetooth_le_tracker_battery_update"
 
 ATTR_ADDRESS = "address"
+ATTR_RSSI = "rssi"
+
 BLE_PREFIX = "BLE_"
