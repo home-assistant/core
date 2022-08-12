@@ -134,7 +134,7 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
         native_max_value=100,
         inverted=True,
     ),
-    # DomesticHotWaterProduction - boost mode duration in hours (0 - 7)
+    # DomesticHotWaterProduction - boost mode duration in days (0 - 7)
     OverkizNumberDescription(
         key=OverkizState.CORE_BOOST_MODE_DURATION,
         name="Boost mode duration",
