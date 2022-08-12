@@ -1,10 +1,10 @@
 {
     "config": {
         "error": {
-            "bad_station_id": "El ID de la estaci\u00f3n no es v\u00e1lido, falta o no se encuentra en la base de datos de ID de la estaci\u00f3n",
+            "bad_station_id": "El ID de la estaci\u00f3n no es v\u00e1lida, falta o no se encuentra en la base de datos de IDs de estaci\u00f3n",
             "cannot_connect": "No se pudo conectar",
             "error_response": "Error de respuesta de Environment Canada",
-            "too_many_attempts": "Las conexiones con Environment Canada son limitadas; Int\u00e9ntalo de nuevo en 60 segundos",
+            "too_many_attempts": "Las conexiones con Environment Canada tienen una frecuencia limitada; Int\u00e9ntalo de nuevo en 60 segundos",
             "unknown": "Error inesperado"
         },
         "step": {

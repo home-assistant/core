@@ -86,7 +86,7 @@
             "not_powered": "{entity_name} no est\u00e1 activado",
             "not_present": "{entity_name} no est\u00e1 presente",
             "not_running": "{entity_name} ya no se est\u00e1 ejecutando",
-            "not_tampered": "{entity_name} dej\u00f3 de detectar alteraciones",
+            "not_tampered": "{entity_name} dej\u00f3 de detectar manipulaci\u00f3n",
             "not_unsafe": "{entity_name} se volvi\u00f3 seguro",
             "occupied": "{entity_name} se convirti\u00f3 en ocupado",
             "opened": "{entity_name} abierto",
@@ -97,7 +97,7 @@
             "running": "{entity_name} comenz\u00f3 a ejecutarse",
             "smoke": "{entity_name} empez\u00f3 a detectar humo",
             "sound": "{entity_name} empez\u00f3 a detectar sonido",
-            "tampered": "{entity_name} comenz\u00f3 a detectar alteraciones",
+            "tampered": "{entity_name} comenz\u00f3 a detectar manipulaci\u00f3n",
             "turned_off": "{entity_name} desactivado",
             "turned_on": "{entity_name} activado",
             "unsafe": "{entity_name} se volvi\u00f3 inseguro",
@@ -112,9 +112,9 @@
         "heat": "calor",
         "moisture": "humedad",
         "motion": "movimiento",
-        "occupancy": "ocupaci\u00f3n",
+        "occupancy": "presencia",
         "power": "energ\u00eda",
-        "problem": "Problema",
+        "problem": "problema",
         "smoke": "humo",
         "sound": "sonido",
         "vibration": "vibraci\u00f3n"
@@ -133,7 +133,7 @@
             "on": "Cargando"
         },
         "carbon_monoxide": {
-            "off": "Libre",
+            "off": "No detectado",
             "on": "Detectado"
         },
         "cold": {
@@ -202,7 +202,7 @@
         },
         "running": {
             "off": "No se est\u00e1 ejecutando",
-            "on": "Corriendo"
+            "on": "Ejecutando"
         },
         "safety": {
             "off": "Seguro",

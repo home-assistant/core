@@ -54,7 +54,7 @@
             "init": {
                 "data": {
                     "scan_interval": "Minutos entre escaneos",
-                    "snap_profile_type": "Calidad de las fotos de la c\u00e1mara (0:alta, 1:media, 2:baja)",
+                    "snap_profile_type": "Nivel de calidad de las instant\u00e1neas de la c\u00e1mara (0:alta 1:media 2:baja)",
                     "timeout": "Tiempo de espera (segundos)"
                 }
             }

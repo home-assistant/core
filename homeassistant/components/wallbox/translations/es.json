@@ -7,7 +7,7 @@
         "error": {
             "cannot_connect": "No se pudo conectar",
             "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
-            "reauth_invalid": "Fallo en la reautenticaci\u00f3n; el n\u00famero de serie no coincide con el original",
+            "reauth_invalid": "La reautenticaci\u00f3n fall\u00f3; El n\u00famero de serie no coincide con el original",
             "unknown": "Error inesperado"
         },
         "step": {
