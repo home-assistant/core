@@ -40,6 +40,7 @@ from .const import (
     PLATFORMS,
     UPDATE_INTERVAL,
     UPDATE_INTERVAL_ALL_ASSUMED_STATE,
+    UPDATE_INTERVAL_LOCAL,
 )
 from .coordinator import OverkizDataUpdateCoordinator
 
@@ -59,8 +60,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     client = None
 
     # Local API vs Cloud API
+    # TODO add a helper function to see if local API
     if entry.data.get(CONF_HOST):
-        LOGGER.debug("Integration is using local API")
+        LOGGER.debug("CONFIGURING LOCAL INTEGRATION")
         host = entry.data[CONF_HOST]
         token = entry.data[CONF_TOKEN]
         session = async_create_clientsession(hass, verify_ssl=False)
@@ -133,6 +135,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             UPDATE_INTERVAL_ALL_ASSUMED_STATE,
         )
         coordinator.update_interval = UPDATE_INTERVAL_ALL_ASSUMED_STATE
+
+    if entry.data.get(CONF_HOST):
+        # TODO Fix, this part is called but does not change the update interval
+        coordinator.update_interval = UPDATE_INTERVAL_LOCAL
 
     platforms: defaultdict[Platform, list[Device]] = defaultdict(list)
 
