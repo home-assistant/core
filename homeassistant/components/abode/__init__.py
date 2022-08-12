@@ -279,11 +279,12 @@ class AbodeEntity(entity.Entity):
 class AbodeDevice(AbodeEntity):
     """Representation of an Abode device."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, data: AbodeSystem, device: AbodeDev) -> None:
         """Initialize Abode device."""
         super().__init__(data)
         self._device = device
-        self._attr_name = device.name
         self._attr_unique_id = device.device_uuid
 
     async def async_added_to_hass(self) -> None:
