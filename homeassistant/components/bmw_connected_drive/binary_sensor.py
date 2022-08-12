@@ -28,11 +28,32 @@ from .coordinator import BMWDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
+ALLOWED_CONDITION_BASED_SERVICE_KEYS = {
+    "BRAKE_FLUID",
+    "ENGINE_OIL",
+    "OIL",
+    "TIRE_WEAR_FRONT",
+    "TIRE_WEAR_REAR",
+    "VEHICLE_CHECK",
+    "VEHICLE_TUV",
+}
+
+ALLOWED_CHECK_CONTROL_MESSAGE_KEYS = {"ENGINE_OIL", "TIRE_PRESSURE"}
+
+
 def _condition_based_services(
     vehicle: MyBMWVehicle, unit_system: UnitSystem
 ) -> dict[str, Any]:
     extra_attributes = {}
     for report in vehicle.condition_based_services.messages:
+        if report.service_type not in ALLOWED_CONDITION_BASED_SERVICE_KEYS:
+            _LOGGER.warning(
+                "'%s' not an allowed condition based service (%s)",
+                report.service_type,
+                report,
+            )
+            continue
+
         extra_attributes.update(_format_cbs_report(report, unit_system))
     return extra_attributes
 
@@ -40,7 +61,17 @@ def _condition_based_services(
 def _check_control_messages(vehicle: MyBMWVehicle) -> dict[str, Any]:
     extra_attributes: dict[str, Any] = {}
     for message in vehicle.check_control_messages.messages:
-        extra_attributes.update({message.description_short: message.state.value})
+        if message.description_short not in ALLOWED_CHECK_CONTROL_MESSAGE_KEYS:
+            _LOGGER.warning(
+                "'%s' not an allowed check control message (%s)",
+                message.description_short,
+                message,
+            )
+            continue
+
+        extra_attributes.update(
+            {message.description_short.lower(): message.state.value}
+        )
     return extra_attributes
 
 
@@ -48,10 +79,10 @@ def _format_cbs_report(
     report: ConditionBasedService, unit_system: UnitSystem
 ) -> dict[str, Any]:
     result: dict[str, Any] = {}
-    service_type = report.service_type.lower().replace("_", " ")
-    result[f"{service_type} status"] = report.state.value
+    service_type = report.service_type.lower()
+    result[service_type] = report.state.value
     if report.due_date is not None:
-        result[f"{service_type} date"] = report.due_date.strftime("%Y-%m-%d")
+        result[f"{service_type}_date"] = report.due_date.strftime("%Y-%m-%d")
     if report.due_distance.value and report.due_distance.unit:
         distance = round(
             unit_system.length(
@@ -59,7 +90,7 @@ def _format_cbs_report(
                 UNIT_MAP.get(report.due_distance.unit, report.due_distance.unit),
             )
         )
-        result[f"{service_type} distance"] = f"{distance} {unit_system.length_unit}"
+        result[f"{service_type}_distance"] = f"{distance} {unit_system.length_unit}"
     return result
 
 
