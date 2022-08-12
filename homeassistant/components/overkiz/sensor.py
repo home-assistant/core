@@ -372,6 +372,12 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         name="Three Way Handle Direction",
         device_class=OverkizDeviceClass.THREE_WAY_HANDLE_DIRECTION,
     ),
+    # DomesticHotWaterProduction
+    OverkizSensorDescription(
+        key=OverkizState.MODBUSLINK_MIDDLE_WATER_TEMPERATURE,
+        name="Middle Water Temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+    ),
 ]
 
 SUPPORTED_STATES = {description.key: description for description in SENSOR_DESCRIPTIONS}
