@@ -1,5 +1,7 @@
 """Test the File Upload integration."""
 from pathlib import Path
+from random import getrandbits
+from unittest.mock import patch
 
 import pytest
 
@@ -16,7 +18,12 @@ async def uploaded_file_dir(hass: HomeAssistant, hass_client) -> Path:
     assert await async_setup_component(hass, "file_upload", {})
     client = await hass_client()
 
-    with TEST_IMAGE.open("rb") as fp:
+    with patch(
+        # Patch temp dir name to avoid tests fail running in parallel
+        "homeassistant.components.file_upload",
+        "TEMP_DIR_NAME",
+        file_upload.TEMP_DIR_NAME + f"-{getrandbits(10):03x}",
+    ), TEST_IMAGE.open("rb") as fp:
         res = await client.post("/api/file_upload", data={"file": fp})
 
     assert res.status == 200

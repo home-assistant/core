@@ -24,6 +24,7 @@ DOMAIN = "file_upload"
 # If increased, change upload view to streaming
 # https://docs.aiohttp.org/en/stable/web_quickstart.html#file-uploads
 MAX_SIZE = 1024 * 1024 * 10
+TEMP_DIR_NAME = f"home-assistant-{DOMAIN}"
 
 
 @contextmanager
@@ -59,7 +60,7 @@ async def _get_temp_dir(hass: HomeAssistant) -> Path:
 
     def _create_temp_dir() -> Path:
         """Create temporary directory."""
-        temp_dir = Path(tempfile.gettempdir()) / f"home-assistant-{DOMAIN}"
+        temp_dir = Path(tempfile.gettempdir()) / TEMP_DIR_NAME
         # If it exists, it's an old one and Home Assistant didn't shut down correctly.
         if temp_dir.exists():
             shutil.rmtree(temp_dir)
