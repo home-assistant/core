@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ATTR_ADDRESS, BLE_PREFIX, DOMAIN, SIGNAL_BLE_DEVICE_NEW
+from .const import ATTR_ADDRESS, ATTR_RSSI, BLE_PREFIX, DOMAIN, SIGNAL_BLE_DEVICE_NEW
 from .data import BLEScanner, signal_battery_update, signal_seen, signal_unavailable
 
 _LOGGER = logging.getLogger(__name__)
@@ -82,6 +82,7 @@ class BLETrackerEntity(BaseTrackerEntity):
         """Return the device state attributes."""
         return {
             ATTR_ADDRESS: self._ble_device.address,
+            ATTR_RSSI: self._ble_device.rssi,
         }
 
     @callback
