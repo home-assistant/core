@@ -33,7 +33,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.18.4
+PySwitchbot==0.18.5
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -558,7 +558,7 @@ google-nest-sdm==2.0.0
 googlemaps==2.5.1
 
 # homeassistant.components.govee_ble
-govee-ble==0.14.0
+govee-ble==0.14.1
 
 # homeassistant.components.gree
 greeclimate==1.3.0
@@ -1681,7 +1681,7 @@ wolf_smartset==0.1.11
 xbox-webapi==2.0.11
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==0.6.4
+xiaomi-ble==0.9.0
 
 # homeassistant.components.knx
 xknx==0.22.1
@@ -1698,7 +1698,7 @@ xmltodict==0.13.0
 yalesmartalarmclient==0.3.8
 
 # homeassistant.components.yalexs_ble
-yalexs-ble==1.1.2
+yalexs-ble==1.2.0
 
 # homeassistant.components.august
 yalexs==1.2.1

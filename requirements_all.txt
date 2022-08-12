@@ -37,7 +37,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.18.4
+PySwitchbot==0.18.5
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -757,7 +757,7 @@ googlemaps==2.5.1
 goslide-api==0.5.1
 
 # homeassistant.components.govee_ble
-govee-ble==0.14.0
+govee-ble==0.14.1
 
 # homeassistant.components.remote_rpi_gpio
 gpiozero==1.6.2
@@ -2483,7 +2483,7 @@ xbox-webapi==2.0.11
 xboxapi==2.0.1
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==0.6.4
+xiaomi-ble==0.9.0
 
 # homeassistant.components.knx
 xknx==0.22.1
@@ -2503,7 +2503,7 @@ xs1-api-client==3.0.0
 yalesmartalarmclient==0.3.8
 
 # homeassistant.components.yalexs_ble
-yalexs-ble==1.1.2
+yalexs-ble==1.2.0
 
 # homeassistant.components.august
 yalexs==1.2.1

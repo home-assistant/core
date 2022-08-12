@@ -11,7 +11,7 @@
             "reauth_confirm": {
                 "data": {
                     "api_key": "Clave API",
-                    "description": "Vuelva a autenticarse con su cuenta de Ambee."
+                    "description": "Vuelve a autenticarse con tu cuenta de Ambee."
                 }
             },
             "user": {
@@ -21,7 +21,7 @@
                     "longitude": "Longitud",
                     "name": "Nombre"
                 },
-                "description": "Configure Ambee para que se integre con Home Assistant."
+                "description": "Configura Ambee para que se integre con Home Assistant."
             }
         }
     },
