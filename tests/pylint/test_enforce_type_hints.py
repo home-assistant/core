@@ -53,6 +53,7 @@ def test_regex_get_module_platform(
         ("Awaitable[None]", 1, ("Awaitable", "None")),
         ("list[dict[str, str]]", 1, ("list", "dict[str, str]")),
         ("list[dict[str, Any]]", 1, ("list", "dict[str, Any]")),
+        ("tuple[bytes | None, str | None]", 2, ("tuple", "bytes | None", "str | None")),
     ],
 )
 def test_regex_x_of_y_i(
