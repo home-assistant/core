@@ -4,6 +4,7 @@ from __future__ import annotations
 import bisect
 from contextlib import suppress
 import datetime as dt
+import logging
 import re
 from typing import Any
 import zoneinfo
@@ -71,6 +72,8 @@ POSTGRES_INTERVAL_RE = re.compile(
     r")?$"
 )
 
+_LOGGER = logging.getLogger(__name__)
+
 
 def set_default_time_zone(time_zone: dt.tzinfo) -> None:
     """Set a default time zone to be used when none is specified.
@@ -92,6 +95,10 @@ def get_time_zone(time_zone_str: str) -> dt.tzinfo | None:
     try:
         return zoneinfo.ZoneInfo(time_zone_str)
     except zoneinfo.ZoneInfoNotFoundError:
+        try:
+            import tzdata
+        except ImportError:
+            _LOGGER.warn('Timezone %s not found. Try installing tzdata package and retry.', time_zone_str)
         return None
 
 
