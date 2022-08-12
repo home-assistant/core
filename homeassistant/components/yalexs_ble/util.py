@@ -1,6 +1,8 @@
 """The yalexs_ble integration models."""
 from __future__ import annotations
 
+import platform
+
 from yalexs_ble import local_name_is_unique
 
 from homeassistant.components.bluetooth import (
@@ -23,8 +25,14 @@ def bluetooth_callback_matcher(
     local_name: str, address: str
 ) -> BluetoothCallbackMatcher:
     """Return a BluetoothCallbackMatcher for the given local_name and address."""
-    if local_name_is_unique(local_name):
+    # On MacOS, coreblueooth uses UUIDs for addresses so we must
+    # have a unique local_name to match since the system
+    # hides the address from us.
+    if local_name_is_unique(local_name) and platform.system() == "Darwin":
         return BluetoothCallbackMatcher({LOCAL_NAME: local_name})
+    # On every other platform we actually get the mac address
+    # which is needed for the older August locks that use the
+    # older version of the underlying protocol.
     return BluetoothCallbackMatcher({ADDRESS: address})
 
 
