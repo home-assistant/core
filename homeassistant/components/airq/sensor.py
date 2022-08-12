@@ -5,6 +5,8 @@ integration setup, defined in __init__.py.
 """
 from __future__ import annotations
 
+import logging
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -29,6 +31,8 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 # Consider making key & name constants
 # NOTE: keys must match those in the data dictionary
@@ -140,7 +144,7 @@ async def async_setup_entry(
     # NOTE: In other components this function is called async_setup_entry
 
     coordinator = hass.data[DOMAIN][config.entry_id]
-    available_sensors = list(coordinator.data.keys())
+    available_keys = list(coordinator.data.keys())
 
     # Add sensors under warmup
     status = coordinator.data["Status"]
@@ -148,7 +152,24 @@ async def async_setup_entry(
         warming_up_sensors = [
             k for k, v in status.items() if "sensor still in warm up phase" in v
         ]
-        available_sensors.extend(warming_up_sensors)
+        available_keys.extend(warming_up_sensors)
+        _LOGGER.debug(
+            "Following %d sensors are warming up: %s",
+            len(warming_up_sensors),
+            ", ".join(warming_up_sensors),
+        )
+
+    # Filter out non-sensor keys and build a list of SensorEntityDescription objects
+    available_sensors = [
+        description for description in SENSOR_TYPES if description.key in available_keys
+    ]
+    # Perhaps unnecessary, as at the very next step Home Assistant logs (to INFO)
+    # creating of each AirQSensor entity
+    _LOGGER.debug(
+        "Identified %d  available sensors: %s",
+        len(available_sensors),
+        ", ".join([sensor.key for sensor in available_sensors]),
+    )
 
     # A potential nicer alternative to the iteration above is to fetch the list
     # of sensors from AirQ.sensors dynamic property. The issue with it is that I
@@ -160,9 +181,7 @@ async def async_setup_entry(
     # defined in config_flow.py?
 
     entities = [
-        AirQSensor(coordinator, description)
-        for description in SENSOR_TYPES
-        if description.key in available_sensors
+        AirQSensor(coordinator, description) for description in available_sensors
     ]
     async_add_entities(entities)
 

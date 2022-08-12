@@ -86,13 +86,27 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             info = await validate_input(self.hass, user_input)
         except CannotConnect:
+            # Is it ok to print the IP? Looks so judging by this
+            # https://developers.home-assistant.io/docs/development_guidelines?_highlight=print&_highlight=out#log-messages
+            # Also, I am opting for .error over .exception since the latter includes
+            # a humongous traceback, which looks far too scary for such a minor thing
+            _LOGGER.error(
+                "Failed to connect to device %s. Check the specified IP address / mDNS, "
+                "as well as whether the device is connected to power and the WiFi",
+                user_input[CONF_IP_ADDRESS],
+            )
             errors["base"] = "cannot_connect"
         except InvalidAuth:
+            _LOGGER.error(
+                "Incorrect password for device %s", user_input[CONF_IP_ADDRESS]
+            )
             errors["base"] = "invalid_auth"
         except Exception:  # pylint: disable=broad-except
+            # This really shouldn't happen, so .exception is perhaps more appropriate
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
+            _LOGGER.debug("Successfully connected to %s", user_input[CONF_IP_ADDRESS])
             await self.async_set_unique_id(info[CONF_ID])
             self._abort_if_unique_id_configured()
 
