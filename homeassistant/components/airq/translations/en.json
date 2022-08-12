@@ -9,11 +9,21 @@
       "unknown": "Unexpected error"
     },
     "step": {
+      "configure": {
+        "data": {
+          "interval_sec": "Scan interval in seconds",
+          "show_average": "Smooth the momentary values"
+        },
+        "description": "Select the desired scan interval (in seconds) and if the data should be smoothed",
+        "title": "Configure the integration"
+      },
       "user": {
         "data": {
           "ip_or_mdns": "Device IP or mDNS",
           "password": "Password"
-        }
+        },
+        "description": "Provide the IP address or mDNS of the device and its password",
+        "title": "Identify the device"
       }
     }
   }

@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Final
 
 from aioairq import AirQ
 
@@ -15,40 +16,40 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import CONF_IP_ADDRESS, CONF_SECRET, DOMAIN
+from .const import (
+    CONF_INTERVAL_SEC,
+    CONF_IP_ADDRESS,
+    CONF_SECRET,
+    CONF_SHOW_AVG,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
-SCAN_INTERVAL = timedelta(minutes=2)
-TARGET_ROUTE = "data"  # TODO: expose somehow
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up air-Q from a config entry."""
-    # entry.data is a dict with the data from STEP_USER_SCHEMA:
-    # {CONF_IP_ADDRESS: ..., CONF_SECRET: ...}
+    # entry.data is a dict with the data from STEP_USER_SCHEMA & STEP_CONFIG_SCHEMA
+    # entry.data.keys: [CONF_IP_ADDRESS, CONF_SECRET, CONF_INTERVAL_SEC, CONF_SHOW_AVG]
 
     # Set up the "access point"
     airq = AirQ(entry.data[CONF_IP_ADDRESS], entry.data[CONF_SECRET])
 
-    # TODO: expose the configuration to retrieve the averages or the momentary data
-    # target_route = entry.data[CONF_TARGET_ROUTE]
-    # # Perhaps, this check should happen elsewhere
-    # assert (
-    #     target_route in TARGET_ROUTS
-    # ), f"CONF_TARGET_ROUTE must be in {TARGET_ROUTS}, got {target_route}"
+    target_route: Final = {True: "average", False: "data"}[entry.data[CONF_SHOW_AVG]]
+    scan_interval = timedelta(seconds=entry.data[CONF_INTERVAL_SEC])
 
     # TODO: consider adding a more specific type alias, e.g.
     # Data = int | float | list[float] | str | dict[str, str]
     async def update_callback() -> dict:
         """Fetch the data from the device.
 
-        Function is meant as an async closure, or partial(airq.get, TARGET_ROUTE)
+        Function is meant as an async closure, or partial(airq.get, target_route)
         Additionally, the result dictionary is stripped of the errors. Subject to
         a discussion
         """
-        data = await airq.get(TARGET_ROUTE)
+        data = await airq.get(target_route)
         return airq.drop_errors_from_data(data)
 
     # Coordinator is responsible for querying the device through the callback.
@@ -58,7 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER,
         name=DOMAIN,
         update_method=update_callback,
-        update_interval=SCAN_INTERVAL,
+        update_interval=scan_interval,
     )
     # Query the device for the first time and initialise coordinator.data
     await coordinator.async_config_entry_first_refresh()
