@@ -49,6 +49,7 @@ FLOWS = {
         "blebox",
         "blink",
         "bluetooth",
+        "bluetooth_le_tracker",
         "bmw_connected_drive",
         "bond",
         "bosch_shc",
