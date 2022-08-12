@@ -354,10 +354,16 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
     OverkizSensorDescription(
         key=OverkizState.IO_HEAT_PUMP_OPERATING_TIME,
         name="Heat Pump Operating Time",
+        icon="mdi:home-clock",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=TIME_SECONDS,
     ),
     OverkizSensorDescription(
         key=OverkizState.IO_ELECTRIC_BOOSTER_OPERATING_TIME,
         name="Electric Booster Operating Time",
+        icon="mdi:home-clock",
+        native_unit_of_measurement=TIME_SECONDS,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # Cover
     OverkizSensorDescription(
