@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from http import HTTPStatus
+import os
 
 from aiohttp.web_exceptions import HTTPUnauthorized
 import voluptuous as vol
@@ -193,7 +194,8 @@ class CoreConfigOnboardingView(_BaseOnboardingView):
             await self._async_mark_done(hass)
 
             # Integrations to set up when finishing onboarding
-            onboard_integrations = ["met", "radio_browser"]
+            # [aiodns], a dependency of [radio_browser], is currently not compatible with Windows. See https://github.com/saghul/aiodns/issues/86
+            onboard_integrations = ["met", "radio_browser"] if os.name != 'nt' else ["met"]
 
             # pylint: disable=import-outside-toplevel
             from homeassistant.components import hassio

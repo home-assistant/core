@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 import dataclasses
 import logging
+import os
 import threading
 import traceback
 from typing import Any
@@ -106,7 +107,7 @@ async def setup_and_run_hass(runtime_config: RuntimeConfig) -> int:
     # threading._shutdown can deadlock forever
     threading._shutdown = deadlock_safe_shutdown  # type: ignore[attr-defined] # pylint: disable=protected-access
 
-    return await hass.async_run()
+    return await hass.async_run(attach_signals=os.name != 'nt')
 
 
 def run(runtime_config: RuntimeConfig) -> int:
