@@ -10,6 +10,7 @@ from homeassistant import config_entries
 from homeassistant.components import network
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import discovery_flow
 
 from .const import CONF_SERIAL, DOMAIN
 
@@ -38,12 +39,11 @@ async def async_discover_devices(hass: HomeAssistant) -> Iterable[Light]:
 @callback
 def async_init_discovery_flow(hass: HomeAssistant, host: str, serial: str) -> None:
     """Start discovery of devices."""
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
-            data={CONF_HOST: host, CONF_SERIAL: serial},
-        )
+    discovery_flow.async_create_flow(
+        hass,
+        DOMAIN,
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data={CONF_HOST: host, CONF_SERIAL: serial},
     )
 
 
