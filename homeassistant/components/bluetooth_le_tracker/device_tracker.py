@@ -144,7 +144,7 @@ async def async_setup_scanner(  # noqa: C901
                 bat_char = await client.read_gatt_char(BATTERY_CHARACTERISTIC_UUID)
                 battery = ord(bat_char)
         except asyncio.TimeoutError:
-            _LOGGER.warning(
+            _LOGGER.debug(
                 "Timeout when trying to get battery status for %s", service_info.name
             )
         # Bleak currently has a few places where checking dbus attributes
