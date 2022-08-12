@@ -7,5 +7,8 @@
   "dependencies": ["bluetooth"],
   "codeowners": ["@bdraco"],
   "bluetooth": [{ "manufacturer_id": 465 }],
-  "iot_class": "local_push"
+  "iot_class": "local_push",
+  "supported_brands": {
+    "august_ble": "August Bluetooth"
+  }
 }
