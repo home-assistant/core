@@ -5,7 +5,7 @@
         "title": "Identify the device",
         "description": "Provide the IP address or mDNS of the device and its password",
         "data": {
-          "ip_or_mdns": "Device IP or mDNS",
+          "ip_address": "[%key:common::config_flow::data::ip%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
       },
@@ -13,7 +13,7 @@
         "title": "Configure the integration",
         "description": "Select the desired scan interval (in seconds) and if the data should be smoothed",
         "data": {
-          "interval_sec": "Scan interval in seconds",
+          "scan_interval": "Scan interval in seconds",
           "show_average": "Smooth the momentary values"
         }
       }

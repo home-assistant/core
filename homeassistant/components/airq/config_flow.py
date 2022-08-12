@@ -13,29 +13,24 @@ from aiohttp.client_exceptions import ClientConnectionError
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import (
-    CONF_INTERVAL_SEC,
-    CONF_IP_ADDRESS,
-    CONF_SECRET,
-    CONF_SHOW_AVG,
-    DOMAIN,
-)
+from .const import CONF_SHOW_AVG, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_IP_ADDRESS): str,
-        vol.Required(CONF_SECRET): str,
+        vol.Required(CONF_PASSWORD): str,
     }
 )
 STEP_CONFIG_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_INTERVAL_SEC, default=2): vol.All(
+        vol.Required(CONF_SCAN_INTERVAL, default=2): vol.All(
             int, vol.Range(min=2, min_included=True)
         ),
         vol.Required(CONF_SHOW_AVG, default=True): bool,
@@ -49,7 +44,7 @@ async def validate_input(_: HomeAssistant, data: dict[str, Any]) -> tuple[str, s
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
 
-    airq = AirQ(data[CONF_IP_ADDRESS], data[CONF_SECRET])
+    airq = AirQ(data[CONF_IP_ADDRESS], data[CONF_PASSWORD])
 
     try:
         auth_success = await airq.test_authentication()

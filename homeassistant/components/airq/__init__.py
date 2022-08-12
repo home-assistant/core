@@ -12,17 +12,16 @@ from typing import Final
 from aioairq import AirQ
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import (
+    CONF_IP_ADDRESS,
+    CONF_PASSWORD,
+    CONF_SCAN_INTERVAL,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import (
-    CONF_INTERVAL_SEC,
-    CONF_IP_ADDRESS,
-    CONF_SECRET,
-    CONF_SHOW_AVG,
-    DOMAIN,
-)
+from .const import CONF_SHOW_AVG, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,13 +31,13 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up air-Q from a config entry."""
     # entry.data is a dict with the data from STEP_USER_SCHEMA & STEP_CONFIG_SCHEMA
-    # entry.data.keys: [CONF_IP_ADDRESS, CONF_SECRET, CONF_INTERVAL_SEC, CONF_SHOW_AVG]
+    # entry.data.keys: [CONF_IP_ADDRESS, CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_SHOW_AVG]
 
     # Set up the "access point"
-    airq = AirQ(entry.data[CONF_IP_ADDRESS], entry.data[CONF_SECRET])
+    airq = AirQ(entry.data[CONF_IP_ADDRESS], entry.data[CONF_PASSWORD])
 
     target_route: Final = {True: "average", False: "data"}[entry.data[CONF_SHOW_AVG]]
-    scan_interval = timedelta(seconds=entry.data[CONF_INTERVAL_SEC])
+    scan_interval = timedelta(seconds=entry.data[CONF_SCAN_INTERVAL])
 
     # TODO: consider adding a more specific type alias, e.g.
     # Data = int | float | list[float] | str | dict[str, str]
