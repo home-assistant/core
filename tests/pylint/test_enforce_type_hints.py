@@ -956,7 +956,7 @@ def test_media_player_entity(
     class MediaPlayerEntity(Entity):
         pass
 
-    class MyNumber( #@
+    class MyMediaPlayer( #@
         MediaPlayerEntity
     ):
         async def async_get_media_image(self) -> tuple[bytes | None, str | None]:
