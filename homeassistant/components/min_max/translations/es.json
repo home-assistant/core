@@ -11,7 +11,7 @@
                 "data_description": {
                     "round_digits": "Controla el n\u00famero de d\u00edgitos decimales en la salida cuando la caracter\u00edstica estad\u00edstica es media o mediana."
                 },
-                "description": "Cree un sensor que calcule un valor m\u00ednimo, m\u00e1ximo, medio o mediano a partir de una lista de sensores de entrada.",
+                "description": "Crea un sensor que calcula el valor m\u00ednimo, m\u00e1ximo, medio o mediano a partir de una lista de sensores de entrada.",
                 "title": "A\u00f1adir sensor m\u00edn / m\u00e1x / media / mediana"
             }
         }

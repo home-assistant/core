@@ -35,7 +35,7 @@
         "step": {
             "init": {
                 "data": {
-                    "wait_for_push": "Espere a que se realice la actualizaci\u00f3n de multidifusi\u00f3n"
+                    "wait_for_push": "Esperar a que se active la actualizaci\u00f3n de multicast"
                 }
             }
         }
