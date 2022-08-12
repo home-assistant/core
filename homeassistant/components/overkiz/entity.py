@@ -33,7 +33,6 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
         self._attr_assumed_state = not self.device.states
         self._attr_available = self.device.available
         self._attr_unique_id = self.device.device_url
-        self._attr_name = self.device.label
 
         self._attr_device_info = self.generate_device_info()
 
@@ -103,7 +102,6 @@ class OverkizDescriptiveEntity(OverkizEntity):
         super().__init__(device_url, coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}-{self.entity_description.key}"
-        self._attr_name = self.entity_description.name
 
 
 # Used by state translations for sensor and select entities
