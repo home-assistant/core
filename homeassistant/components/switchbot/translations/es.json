@@ -35,7 +35,7 @@
                 "data": {
                     "retry_count": "Recuento de reintentos",
                     "retry_timeout": "Tiempo de espera entre reintentos",
-                    "scan_timeout": "Cu\u00e1nto tiempo se debe buscar datos de anuncio",
+                    "scan_timeout": "Cu\u00e1nto tiempo escanear en busca de datos de anuncio",
                     "update_time": "Tiempo entre actualizaciones (segundos)"
                 }
             }

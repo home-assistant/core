@@ -28,7 +28,7 @@
                     "password": "Contrase\u00f1a",
                     "username": "Nombre de usuario"
                 },
-                "description": "Para configurar las opciones avanzadas, revisa la [documentaci\u00f3n de Life360]({docs_url}).\nDeber\u00edas hacerlo antes de a\u00f1adir alguna cuenta.",
+                "description": "Para configurar las opciones avanzadas, consulta la [documentaci\u00f3n de Life360]({docs_url}).\nEs posible que quieras hacerlo antes de a\u00f1adir cuentas.",
                 "title": "Configurar la cuenta de Life360"
             }
         }
