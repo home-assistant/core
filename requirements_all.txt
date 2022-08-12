@@ -168,7 +168,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==1.2.8
+aiohomekit==1.2.9
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -396,7 +396,7 @@ beautifulsoup4==4.11.1
 # beewi_smartclim==0.0.10
 
 # homeassistant.components.zha
-bellows==0.31.3
+bellows==0.32.0
 
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.10.1
@@ -760,7 +760,7 @@ googlemaps==2.5.1
 goslide-api==0.5.1
 
 # homeassistant.components.govee_ble
-govee-ble==0.14.0
+govee-ble==0.14.1
 
 # homeassistant.components.remote_rpi_gpio
 gpiozero==1.6.2
@@ -2535,7 +2535,7 @@ zigpy-zigate==0.9.1
 zigpy-znp==0.8.1
 
 # homeassistant.components.zha
-zigpy==0.49.0
+zigpy==0.49.1
 
 # homeassistant.components.zoneminder
 zm-py==0.5.2
