@@ -1,6 +1,7 @@
 """Support for Overkiz (virtual) numbers."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import cast
@@ -47,7 +48,7 @@ async def _async_set_native_value_boost_mode_duration(
 
     if value > 0:
         await execute_command(OverkizCommand.SET_BOOST_MODE_DURATION, value)
-
+        await asyncio.sleep(1)  # wait one second to not overload the device
         await execute_command(
             OverkizCommand.SET_CURRENT_OPERATING_MODE,
             {
@@ -64,7 +65,8 @@ async def _async_set_native_value_boost_mode_duration(
             },
         )
 
-        # await execute_command(OverkizCommand.REFRESH_BOOST_MODE_DURATION)
+    await asyncio.sleep(3)  # wait 3 seconds to have the new duration in
+    await execute_command(OverkizCommand.REFRESH_BOOST_MODE_DURATION)
 
 
 NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
