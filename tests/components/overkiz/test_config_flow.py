@@ -89,7 +89,8 @@ async def test_form(hass: HomeAssistant) -> None:
         (ClientError, "cannot_connect"),
         (MaintenanceException, "server_in_maintenance"),
         (TooManyAttemptsBannedException, "too_many_attempts"),
-        (UnknownUserException, "unknown_user")(Exception, "unknown"),
+        (UnknownUserException, "unknown_user"),
+        (Exception, "unknown"),
     ],
 )
 async def test_form_invalid_auth(
