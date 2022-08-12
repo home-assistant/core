@@ -25,7 +25,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.decorator import Registry
 
-from .const import DOMAIN, LOGGER, UPDATE_INTERVAL
+from .const import DOMAIN, LOGGER
 
 EVENT_HANDLERS: Registry[
     str, Callable[[OverkizDataUpdateCoordinator, Event], Coroutine[Any, Any, None]]
@@ -34,6 +34,8 @@ EVENT_HANDLERS: Registry[
 
 class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
     """Class to manage fetching data from Overkiz platform."""
+
+    original_update_interval: timedelta
 
     def __init__(
         self,
@@ -44,7 +46,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         client: OverkizClient,
         devices: list[Device],
         places: Place,
-        update_interval: timedelta | None = None,
+        update_interval: timedelta,
         config_entry_id: str,
     ) -> None:
         """Initialize global data updater."""
@@ -64,9 +66,11 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         self.executions: dict[str, dict[str, str]] = {}
         self.areas = self._places_to_area(places) if places else None
         self.config_entry_id = config_entry_id
+        self.original_update_interval = update_interval
 
     async def _async_update_data(self) -> dict[str, Device]:
         """Fetch Overkiz data via event listener."""
+
         try:
             events = await self.client.fetch_events()
         except BadCredentialsException as exception:
@@ -101,10 +105,22 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             if event_handler := EVENT_HANDLERS.get(event.name):
                 await event_handler(self, event)
 
+        # Reset update interval to previous value
+        # when all executions are finished
         if not self.executions:
-            self.update_interval = UPDATE_INTERVAL
+            self._restore_update_interval()
 
         return self.devices
+
+    def set_update_interval(self, update_interval: timedelta) -> None:
+        """Store update interval and set new update interval."""
+        if self.update_interval:
+            self.original_update_interval = self.update_interval
+        self.update_interval = update_interval
+
+    def _restore_update_interval(self) -> None:
+        """Restore update interval to original value."""
+        self.update_interval = self.original_update_interval
 
     async def _get_devices(self) -> dict[str, Device]:
         """Fetch devices."""
@@ -193,8 +209,10 @@ async def on_execution_registered(
     if event.exec_id and event.exec_id not in coordinator.executions:
         coordinator.executions[event.exec_id] = {}
 
+    # Set update interval to one second to receive faster
+    # state updates after command execution for stateful devices
     if not coordinator.is_stateless:
-        coordinator.update_interval = timedelta(seconds=1)
+        coordinator.set_update_interval(timedelta(seconds=1))
 
 
 @EVENT_HANDLERS.register(EventName.EXECUTION_STATE_CHANGED)

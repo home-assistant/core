@@ -91,7 +91,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "All devices have an assumed state. Update interval has been reduced to: %s",
             UPDATE_INTERVAL_ALL_ASSUMED_STATE,
         )
-        coordinator.update_interval = UPDATE_INTERVAL_ALL_ASSUMED_STATE
+        coordinator.set_update_interval(UPDATE_INTERVAL_ALL_ASSUMED_STATE)
 
     platforms: defaultdict[Platform, list[Device]] = defaultdict(list)
 
