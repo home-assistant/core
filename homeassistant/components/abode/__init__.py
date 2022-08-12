@@ -248,6 +248,7 @@ class AbodeEntity(entity.Entity):
     """Representation of an Abode entity."""
 
     _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
 
     def __init__(self, data: AbodeSystem) -> None:
         """Initialize Abode entity."""
@@ -278,8 +279,6 @@ class AbodeEntity(entity.Entity):
 
 class AbodeDevice(AbodeEntity):
     """Representation of an Abode device."""
-
-    _attr_has_entity_name = True
 
     def __init__(self, data: AbodeSystem, device: AbodeDev) -> None:
         """Initialize Abode device."""
