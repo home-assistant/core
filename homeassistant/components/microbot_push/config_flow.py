@@ -149,7 +149,7 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             try:
                 await self._client.connect(init=True)
-            except Exception as e
+            except Exception as e:
                 _LOGGER.exception("Error connecting with MicroBot: %s", e)
                 errors["base"] = "linking"
             return self.async_show_form(step_id="link")
