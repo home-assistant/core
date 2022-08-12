@@ -17,9 +17,9 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 
 from . import get_api
-from ...data_entry_flow import FlowResult
 from .const import (
     CONF_VERSION,
     DEFAULT_HOST,
@@ -67,7 +67,9 @@ class GlancesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return GlancesOptionsFlowHandler(config_entry)
 
-    async def async_step_user(self, user_input: dict[str, Any] = None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
@@ -94,7 +96,9 @@ class GlancesOptionsFlowHandler(config_entries.OptionsFlow):
         """Initialize Glances options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input: dict[str, Any] = None) -> FlowResult:
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Manage the Glances options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
