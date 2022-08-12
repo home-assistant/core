@@ -115,6 +115,9 @@ class DeviceConsumption(TypedDict):
     # This is an ever increasing value
     stat_consumption: str
 
+    # parent source (from grid) from which this device is drawing power
+    entity_parent_source: str | None
+
 
 class EnergyPreferences(TypedDict):
     """Dictionary holding the energy data."""
@@ -253,6 +256,7 @@ ENERGY_SOURCE_SCHEMA = vol.All(
 DEVICE_CONSUMPTION_SCHEMA = vol.Schema(
     {
         vol.Required("stat_consumption"): str,
+        vol.Optional("entity_parent_source"): vol.Any(str, None),
     }
 )
 

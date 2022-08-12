@@ -101,7 +101,12 @@ async def test_validation(
                 },
                 {"type": "solar", "stat_energy_from": "sensor.solar_production"},
             ],
-            "device_consumption": [{"stat_consumption": "sensor.device_cons"}],
+            "device_consumption": [
+                {
+                    "stat_consumption": "sensor.device_cons",
+                    "entity_parent_source": None,
+                }
+            ],
         }
     )
     assert (await validate.async_validate(hass)).as_dict() == {
@@ -958,4 +963,44 @@ async def test_validation_grid_no_costs_tracking(
     assert (await validate.async_validate(hass)).as_dict() == {
         "energy_sources": [[]],
         "device_consumption": [],
+    }
+
+
+async def test_validation_device_consumption_parent_missing(
+    hass, mock_energy_manager, mock_get_metadata
+):
+    """Test validating missing parent for device consumption."""
+
+    hass.states.async_set(
+        "sensor.device_cons",
+        "10.10",
+        {
+            "device_class": "energy",
+            "unit_of_measurement": "kWh",
+            "state_class": "total_increasing",
+        },
+    )
+
+    await mock_energy_manager.async_update(
+        {
+            "device_consumption": [
+                {
+                    "stat_consumption": "sensor.device_cons",
+                    "entity_parent_source": "sensor.definitely_missing",
+                }
+            ]
+        }
+    )
+
+    assert (await validate.async_validate(hass)).as_dict() == {
+        "energy_sources": [],
+        "device_consumption": [
+            [
+                {
+                    "type": "parent_entity_not_found",
+                    "identifier": "sensor.definitely_missing",
+                    "value": "sensor.device_cons",
+                }
+            ]
+        ],
     }

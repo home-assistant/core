@@ -208,6 +208,17 @@ def _async_validate_price_entity(
 
 
 @callback
+def _async_validate_parent_entity(
+    entity_id: str, parent: str, sources: list[str], result: list[ValidationIssue]
+) -> None:
+    """Validate that praent entity exists."""
+
+    if parent not in sources:
+        result.append(ValidationIssue("parent_entity_not_found", parent, entity_id))
+        return
+
+
+@callback
 def _async_validate_cost_stat(
     hass: HomeAssistant,
     metadata: dict[str, tuple[int, recorder.models.StatisticMetaData]],
@@ -496,6 +507,27 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                 device_result,
             )
         )
+
+        if "entity_parent_source" in device.keys():
+            # Create a list of possible candidates for grid sources
+            possible_sources = []
+            for source in manager.data["energy_sources"]:
+                if source["type"] == "grid":
+                    flow_from_grid: data.FlowFromGridSourceType
+                    for flow_from_grid in source["flow_from"]:
+                        possible_sources.append(flow_from_grid["stat_energy_from"])
+
+            if device["entity_parent_source"] is not None:
+
+                validate_calls.append(
+                    functools.partial(
+                        _async_validate_parent_entity,
+                        device["stat_consumption"],
+                        device["entity_parent_source"],
+                        possible_sources,
+                        device_result,
+                    )
+                )
 
     # Fetch the needed statistics metadata
     statistics_metadata.update(

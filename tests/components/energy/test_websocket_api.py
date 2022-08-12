@@ -138,7 +138,12 @@ async def test_save_preferences(
                 "stat_energy_to": "my_battery_charging",
             },
         ],
-        "device_consumption": [{"stat_consumption": "some_device_usage"}],
+        "device_consumption": [
+            {
+                "stat_consumption": "some_device_usage",
+                "entity_parent_source": "sensor.heat_pump_meter",
+            }
+        ],
     }
 
     await client.send_json({"id": 6, "type": "energy/save_prefs", **new_prefs})
