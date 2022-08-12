@@ -22,11 +22,11 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import dhcp, zeroconf
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from .const import CONF_HUB, CONF_TOKEN_UUID, DEFAULT_HOST, DEFAULT_HUB, DOMAIN, LOGGER
+from .const import CONF_HUB, DEFAULT_HUB, DOMAIN, LOGGER
 
 LOCAL = "local"
 LOCAL_HUB = {
@@ -56,9 +56,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._config_entry = None
         self._default_user = None
         self._default_hub = DEFAULT_HUB
-        self._default_host = DEFAULT_HOST
+        self._default_host = "gateway-xxxx-xxxx-xxxx.local:8443"
 
-    async def async_validate_input(self, user_input: dict[str, Any]) -> dict[str, Any]:
+    async def async_validate_input(self, user_input: dict[str, Any]) -> None:
         """Validate user credentials."""
         username = user_input[CONF_USERNAME]
         password = user_input[CONF_PASSWORD]
@@ -76,34 +76,41 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             for gateway in gateways:
                 # Generate tokens
-                # TODO check if gateway is in the right format (thermostat not supported)
-                token = await client.generate_local_token(gateway.id)
-                uuid = await client.activate_local_token(
-                    gateway_id=gateway.id, token=token, label="Home Assistant/local"
-                )
+                # TODO check if gateway is in the right format
+                gateway_id = gateway.id
 
-            host = user_input[CONF_HOST]
-            user_input[CONF_TOKEN] = token
-            user_input[CONF_TOKEN_UUID] = uuid
+            token = await client.generate_local_token(gateway_id)
+            uuid = await client.activate_local_token(
+                gateway_id=gateway_id, token=token, label="Home Assistant/local"
+            )
 
             # Verify SSL blocked by https://github.com/Somfy-Developer/Somfy-TaHoma-Developer-Mode/issues/5
             # Somfy (self-signed) SSL cert uses the wrong common name
             session = async_create_clientsession(self.hass, verify_ssl=False)
 
-            client = OverkizClient(
+            # TODO try if we can access the .local, otherwise remove the token
+            local_client = OverkizClient(
                 username="",
                 password="",
                 token=token,
                 session=session,
                 server=OverkizServer(
                     name="Somfy TaHoma Developer Mode (local API)",
-                    endpoint=f"https://{host}/enduser-mobile-web/1/enduserAPI/",
+                    endpoint=f"https://{user_input[CONF_HOST]}/enduser-mobile-web/1/enduserAPI/",
                     manufacturer="Somfy",
                     configuration_url=None,
                 ),
             )
 
-            # TODO try if we can access the .local, otherwise remove the token
+            # Test local connection
+            try:
+                await local_client.login()
+            except Exception as exception:  # pylint: disable=broad-except
+                await client.delete_local_token(gateway_id, uuid)
+                raise exception
+
+            user_input["token"] = token
+            user_input["token_uuid"] = uuid
 
         else:
             server = SUPPORTED_SERVERS[user_input[CONF_HUB]]
@@ -327,10 +334,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if discovery_info.type == "_kizbox._tcp.local.":
             return await self.async_step_cloud()
-        if discovery_info.type == "_kizboxdev._tcp.local.":
-            return await self.async_step_local()
 
-        return await self.async_step_cloud()
+        if discovery_info.type == "_kizboxdev._tcp.local.":
+            self._default_host = f"gateway-{gateway_id}.local:8443"
+            return await self.async_step_local()
 
     async def _process_discovery(self, gateway_id: str) -> FlowResult:
         """Handle discovery of a gateway."""
@@ -340,7 +347,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user()
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle reauth."""
         self._config_entry = cast(
             ConfigEntry,
@@ -354,4 +363,4 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._default_user = self._config_entry.data[CONF_USERNAME]
         self._default_hub = self._config_entry.data[CONF_HUB]
 
-        return await self.async_step_user(dict(entry_data))
+        return await self.async_step_user(user_input)
