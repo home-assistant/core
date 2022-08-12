@@ -53,7 +53,8 @@ def _play_media(
     result = process_plex_payload(hass, media_type, media_id)
     controller = PlexController()
     chromecast.register_handler(controller)
-    controller.play_media(result.media, offset=result.offset)
+    offset_in_s = result.offset / 1000
+    controller.play_media(result.media, offset=offset_in_s)
 
 
 async def async_play_media(
