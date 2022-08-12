@@ -249,12 +249,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
         )
     elif await _async_has_bluetooth_adapter():
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
-                data={},
-            )
+        discovery_flow.async_create_flow(
+            hass,
+            DOMAIN,
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+            data={},
         )
     return True
 
