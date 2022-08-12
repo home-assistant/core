@@ -14,7 +14,7 @@
         "flow_title": "{host}",
         "step": {
             "hassio_confirm": {
-                "description": "\u00bfQuieres configurar Home Assistant para que se conecte al gateway de deCONZ proporcionado por el add-on {addon} de Supervisor?",
+                "description": "\u00bfQuieres configurar Home Assistant para conectarse a la puerta de enlace deCONZ proporcionada por el complemento {addon} ?",
                 "title": "Pasarela de enlace de CONZ Zigbee v\u00eda complemento de Home Assistant"
             },
             "link": {

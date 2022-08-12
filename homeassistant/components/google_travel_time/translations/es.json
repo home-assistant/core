@@ -14,7 +14,7 @@
                     "name": "Nombre",
                     "origin": "Origen"
                 },
-                "description": "Al especificar el origen y el destino, puedes proporcionar una o m\u00e1s ubicaciones separadas por el car\u00e1cter de barra vertical, en forma de una direcci\u00f3n, coordenadas de latitud/longitud o un ID de lugar de Google. Al especificar la ubicaci\u00f3n utilizando un ID de lugar de Google, el ID debe tener el prefijo `place_id:`."
+                "description": "Al especificar el origen y el destino, puedes proporcionar una o m\u00e1s ubicaciones separadas por el car\u00e1cter de barra vertical, en forma de direcci\u00f3n, coordenadas de latitud/longitud o un ID de lugar de Google. Al especificar la ubicaci\u00f3n mediante un ID de lugar de Google, el ID debe tener el prefijo `place_id:`."
             }
         }
     },
@@ -28,10 +28,10 @@
                     "time": "Hora",
                     "time_type": "Tipo de tiempo",
                     "transit_mode": "Modo de tr\u00e1nsito",
-                    "transit_routing_preference": "Preferencia de enrutamiento de tr\u00e1nsito",
+                    "transit_routing_preference": "Preferencia de ruta de tr\u00e1nsito",
                     "units": "Unidades"
                 },
-                "description": "Opcionalmente, puedes especificar una hora de salida o una hora de llegada. Si especifica una hora de salida, puedes introducir `ahora`, una marca de tiempo Unix o una cadena de tiempo 24 horas como `08:00:00`. Si especifica una hora de llegada, puede usar una marca de tiempo Unix o una cadena de tiempo 24 horas como `08:00:00`"
+                "description": "Opcionalmente, puedes especificar una Hora de salida o una Hora de llegada. Si especificas una hora de salida, puedes introducir \"ahora\", una marca de tiempo de Unix o una cadena de tiempo de 24 horas como \"08:00:00\". Si especificas una hora de llegada, puedes usar una marca de tiempo de Unix o una cadena de tiempo de 24 horas como `08:00:00`"
             }
         }
     },

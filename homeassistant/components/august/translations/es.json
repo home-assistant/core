@@ -14,8 +14,8 @@
                 "data": {
                     "password": "Contrase\u00f1a"
                 },
-                "description": "Introduzca la contrase\u00f1a de {username}.",
-                "title": "Reautorizar una cuenta de August"
+                "description": "Introduce la contrase\u00f1a de {username}.",
+                "title": "Volver a autenticar una cuenta August"
             },
             "user_validate": {
                 "data": {
@@ -23,8 +23,8 @@
                     "password": "Contrase\u00f1a",
                     "username": "Nombre de usuario"
                 },
-                "description": "Si el m\u00e9todo de inicio de sesi\u00f3n es \"correo electr\u00f3nico\", el nombre de usuario es la direcci\u00f3n de correo electr\u00f3nico. Si el m\u00e9todo de inicio de sesi\u00f3n es \"tel\u00e9fono\", el nombre de usuario es el n\u00famero de tel\u00e9fono en el formato \"+NNNNNNN\".",
-                "title": "Configurar una cuenta de August"
+                "description": "Si el m\u00e9todo de inicio de sesi\u00f3n es 'correo electr\u00f3nico', el nombre de usuario es la direcci\u00f3n de correo electr\u00f3nico. Si el m\u00e9todo de inicio de sesi\u00f3n es 'tel\u00e9fono', el nombre de usuario es el n\u00famero de tel\u00e9fono en el formato '+NNNNNNNNN'.",
+                "title": "Configurar una cuenta August"
             },
             "validation": {
                 "data": {
