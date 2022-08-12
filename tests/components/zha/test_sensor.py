@@ -255,6 +255,17 @@ async def async_test_powerconfiguration(hass, cluster, entity_id):
     assert hass.states.get(entity_id).attributes["battery_voltage"] == 2.0
 
 
+async def async_test_powerconfiguration2(hass, cluster, entity_id):
+    """Test powerconfiguration/battery sensor."""
+    await send_attributes_report(hass, cluster, {33: -1})
+    assert_state(hass, entity_id, STATE_UNKNOWN, "%")
+    assert hass.states.get(entity_id).attributes["battery_voltage"] == 2.9
+    assert hass.states.get(entity_id).attributes["battery_quantity"] == 3
+    assert hass.states.get(entity_id).attributes["battery_size"] == "AAA"
+    await send_attributes_report(hass, cluster, {32: 20})
+    assert hass.states.get(entity_id).attributes["battery_voltage"] == 2.0
+
+
 async def async_test_device_temperature(hass, cluster, entity_id):
     """Test temperature sensor."""
     await send_attributes_report(hass, cluster, {0: 2900})
@@ -362,6 +373,18 @@ async def async_test_device_temperature(hass, cluster, entity_id):
             general.PowerConfiguration.cluster_id,
             "battery",
             async_test_powerconfiguration,
+            2,
+            {
+                "battery_size": 4,  # AAA
+                "battery_voltage": 29,
+                "battery_quantity": 3,
+            },
+            None,
+        ),
+        (
+            general.PowerConfiguration.cluster_id,
+            "battery",
+            async_test_powerconfiguration2,
             2,
             {
                 "battery_size": 4,  # AAA
