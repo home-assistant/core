@@ -137,7 +137,7 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
     # DomesticHotWaterProduction - boost mode duration in hours (0 - 7)
     OverkizNumberDescription(
         key=OverkizState.CORE_BOOST_MODE_DURATION,
-        name="Boost Mode Duration",
+        name="Boost mode duration",
         icon="mdi:water-boiler",
         command=OverkizCommand.SET_BOOST_MODE_DURATION,
         native_min_value=0,
@@ -148,7 +148,7 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
     # DomesticHotWaterProduction - away mode in days (0 - 6)
     OverkizNumberDescription(
         key=OverkizState.IO_AWAY_MODE_DURATION,
-        name="Away Mode Duration",
+        name="Away mode duration",
         icon="mdi:water-boiler-off",
         command=OverkizCommand.SET_AWAY_MODE_DURATION,
         native_min_value=0,
