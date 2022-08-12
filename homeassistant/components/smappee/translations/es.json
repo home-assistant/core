@@ -27,7 +27,7 @@
                 "title": "Selecciona el m\u00e9todo de autenticaci\u00f3n"
             },
             "zeroconf_confirm": {
-                "description": "\u00bfDesea agregar el dispositivo Smappee con el n\u00famero de serie `{serialnumber}` a Home Assistant?",
+                "description": "\u00bfQuieres a\u00f1adir el dispositivo Smappee con n\u00famero de serie `{serialnumber}` a Home Assistant?",
                 "title": "Dispositivo Smappee descubierto"
             }
         }

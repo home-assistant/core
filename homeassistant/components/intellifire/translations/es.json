@@ -7,7 +7,7 @@
         },
         "error": {
             "api_error": "Error de inicio de sesi\u00f3n",
-            "cannot_connect": "Fall\u00f3 la conexi\u00f3n",
+            "cannot_connect": "No se pudo conectar",
             "iftapi_connect": "Se ha producido un error al conectar a iftapi.net"
         },
         "flow_title": "{serial} ({host})",
@@ -19,11 +19,11 @@
                 }
             },
             "dhcp_confirm": {
-                "description": "\u00bfQuieres configurar {host} \nSerie: {serial}?"
+                "description": "\u00bfQuieres configurar {host} \nN\u00ba serie: {serial}?"
             },
             "manual_device_entry": {
                 "data": {
-                    "host": "Host (direcci\u00f3n IP)"
+                    "host": "Host (Direcci\u00f3n IP)"
                 },
                 "description": "Configuraci\u00f3n local"
             },

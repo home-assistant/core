@@ -13,14 +13,14 @@
             "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
             "upnp_not_configured": "Falta la configuraci\u00f3n de UPnP en el dispositivo."
         },
-        "flow_title": "FRITZ!Box Tools: {name}",
+        "flow_title": "{name}",
         "step": {
             "confirm": {
                 "data": {
                     "password": "Contrase\u00f1a",
                     "username": "Nombre de usuario"
                 },
-                "description": "Descubierto FRITZ!Box: {name}\n\nConfigurar FRITZ!Box Tools para controlar tu {name}",
+                "description": "Descubierto FRITZ!Box: {name}\n\nConfigura FRITZ!Box Tools para controlar tu {name}",
                 "title": "Configurar FRITZ!Box Tools"
             },
             "reauth_confirm": {
@@ -28,7 +28,7 @@
                     "password": "Contrase\u00f1a",
                     "username": "Nombre de usuario"
                 },
-                "description": "Actualizar credenciales de FRITZ!Box Tools para: {host}.\n\n FRITZ!Box Tools no puede iniciar sesi\u00f3n en tu FRITZ!Box.",
+                "description": "Actualiza las credenciales de FRITZ!Box Tools para: {host}. \n\nFRITZ!Box Tools no puede iniciar sesi\u00f3n en tu FRITZ!Box.",
                 "title": "Actualizando FRITZ!Box Tools - credenciales"
             },
             "user": {
@@ -38,8 +38,8 @@
                     "port": "Puerto",
                     "username": "Nombre de usuario"
                 },
-                "description": "Configure las herramientas de FRITZ! Box para controlar su FRITZ! Box.\n M\u00ednimo necesario: nombre de usuario, contrase\u00f1a.",
-                "title": "Configurar las herramientas de FRITZ! Box"
+                "description": "Configura las herramientas de FRITZ!Box para controlar tu FRITZ!Box.\nM\u00ednimo necesario: nombre de usuario, contrase\u00f1a.",
+                "title": "Configurar las herramientas de FRITZ!Box"
             }
         }
     },
@@ -48,7 +48,7 @@
             "init": {
                 "data": {
                     "consider_home": "Segundos para considerar un dispositivo en 'casa'",
-                    "old_discovery": "Habilitar m\u00e9todo de descubrimiento antiguo"
+                    "old_discovery": "Habilitar el m\u00e9todo de descubrimiento antiguo"
                 }
             }
         }
