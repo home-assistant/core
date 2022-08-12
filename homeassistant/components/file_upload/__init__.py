@@ -61,9 +61,11 @@ async def _get_temp_dir(hass: HomeAssistant) -> Path:
     def _create_temp_dir() -> Path:
         """Create temporary directory."""
         temp_dir = Path(tempfile.gettempdir()) / TEMP_DIR_NAME
+
         # If it exists, it's an old one and Home Assistant didn't shut down correctly.
         if temp_dir.exists():
             shutil.rmtree(temp_dir)
+
         temp_dir.mkdir()
         return temp_dir
 
