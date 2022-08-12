@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta.",
+            "invalid_auth": "Aktivera autentisering i m\u00fctesync-inst\u00e4llningar > Autentisering",
+            "unknown": "Ov\u00e4ntat fel"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "V\u00e4rd"
+                }
+            }
+        }
+    }
+}

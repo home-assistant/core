@@ -7,6 +7,14 @@
         },
         "description": "Choose connection method to the gateway"
       },
+      "select_gateway_type": {
+        "description": "Select which gateway to configure.",
+        "menu_options": {
+          "gw_mqtt": "Configure an MQTT gateway",
+          "gw_serial": "Configure a serial gateway",
+          "gw_tcp": "Configure a TCP gateway"
+        }
+      },
       "gw_tcp": {
         "description": "Ethernet gateway setup",
         "data": {
@@ -51,7 +59,6 @@
       "invalid_serial": "Invalid serial port",
       "invalid_device": "Invalid device",
       "invalid_version": "Invalid MySensors version",
-      "mqtt_required": "The MQTT integration is not set up",
       "not_a_number": "Please enter a number",
       "port_out_of_range": "Port number must be at least 1 and at most 65535",
       "unknown": "[%key:common::config_flow::error::unknown%]"
@@ -71,6 +78,7 @@
       "invalid_serial": "Invalid serial port",
       "invalid_device": "Invalid device",
       "invalid_version": "Invalid MySensors version",
+      "mqtt_required": "The MQTT integration is not set up",
       "not_a_number": "Please enter a number",
       "port_out_of_range": "Port number must be at least 1 and at most 65535",
       "unknown": "[%key:common::config_flow::error::unknown%]"

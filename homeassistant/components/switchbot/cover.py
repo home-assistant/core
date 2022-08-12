@@ -4,8 +4,6 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from switchbot import SwitchbotCurtain
-
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_POSITION,
@@ -14,7 +12,6 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ADDRESS, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -33,19 +30,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Switchbot curtain based on a config entry."""
     coordinator: SwitchbotDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    unique_id = entry.unique_id
-    assert unique_id is not None
-    async_add_entities(
-        [
-            SwitchBotCurtainEntity(
-                coordinator,
-                unique_id,
-                entry.data[CONF_ADDRESS],
-                entry.data[CONF_NAME],
-                coordinator.device,
-            )
-        ]
-    )
+    async_add_entities([SwitchBotCurtainEntity(coordinator)])
 
 
 class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
@@ -59,19 +44,10 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         | CoverEntityFeature.SET_POSITION
     )
 
-    def __init__(
-        self,
-        coordinator: SwitchbotDataUpdateCoordinator,
-        unique_id: str,
-        address: str,
-        name: str,
-        device: SwitchbotCurtain,
-    ) -> None:
+    def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
         """Initialize the Switchbot."""
-        super().__init__(coordinator, unique_id, address, name)
-        self._attr_unique_id = unique_id
+        super().__init__(coordinator)
         self._attr_is_closed = None
-        self._device = device
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added."""
@@ -80,9 +56,12 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         if not last_state or ATTR_CURRENT_POSITION not in last_state.attributes:
             return
 
-        self._attr_current_cover_position = last_state.attributes[ATTR_CURRENT_POSITION]
-        self._last_run_success = last_state.attributes["last_run_success"]
-        self._attr_is_closed = last_state.attributes[ATTR_CURRENT_POSITION] <= 20
+        self._attr_current_cover_position = last_state.attributes.get(
+            ATTR_CURRENT_POSITION
+        )
+        self._last_run_success = last_state.attributes.get("last_run_success")
+        if self._attr_current_cover_position is not None:
+            self._attr_is_closed = self._attr_current_cover_position <= 20
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the curtain."""

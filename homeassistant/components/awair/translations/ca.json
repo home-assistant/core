@@ -2,14 +2,30 @@
     "config": {
         "abort": {
             "already_configured": "El compte ja est\u00e0 configurat",
+            "already_configured_account": "El compte ja est\u00e0 configurat",
+            "already_configured_device": "El dispositiu ja est\u00e0 configurat",
             "no_devices_found": "No s'han trobat dispositius a la xarxa",
-            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament",
+            "unreachable": "Ha fallat la connexi\u00f3"
         },
         "error": {
             "invalid_access_token": "Token d'acc\u00e9s inv\u00e0lid",
-            "unknown": "Error inesperat"
+            "unknown": "Error inesperat",
+            "unreachable": "Ha fallat la connexi\u00f3"
         },
+        "flow_title": "{model} ({device_id})",
         "step": {
+            "cloud": {
+                "data": {
+                    "access_token": "Token d'acc\u00e9s",
+                    "email": "Correu electr\u00f2nic"
+                }
+            },
+            "local": {
+                "data": {
+                    "host": "Adre\u00e7a IP"
+                }
+            },
             "reauth": {
                 "data": {
                     "access_token": "Token d'acc\u00e9s",
@@ -29,7 +45,10 @@
                     "access_token": "Token d'acc\u00e9s",
                     "email": "Correu electr\u00f2nic"
                 },
-                "description": "T'has de registrar a Awair per a obtenir un token d'acc\u00e9s de desenvolupador a trav\u00e9s de l'enlla\u00e7 seg\u00fcent: https://developer.getawair.com/onboard/login"
+                "description": "T'has de registrar a Awair per a obtenir un token d'acc\u00e9s de desenvolupador a trav\u00e9s de l'enlla\u00e7 seg\u00fcent: https://developer.getawair.com/onboard/login",
+                "menu_options": {
+                    "local": "Connecta't localment (preferit)"
+                }
             }
         }
     }

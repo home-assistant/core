@@ -13,13 +13,13 @@
                 "data": {
                     "password": "Contrase\u00f1a"
                 },
-                "description": "Por favor, vuelva a introducir la contrase\u00f1a de {username}.",
+                "description": "Por favor, vuelve a introducir la contrase\u00f1a de {username}.",
                 "title": "Volver a autenticar la integraci\u00f3n"
             },
             "user": {
                 "data": {
                     "password": "Contrase\u00f1a",
-                    "username": "Usuario"
+                    "username": "Nombre de usuario"
                 },
                 "title": "Completa tu informaci\u00f3n"
             }

@@ -28,12 +28,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up Abode camera devices."""
     data: AbodeSystem = hass.data[DOMAIN]
-    entities = []
 
-    for device in data.abode.get_devices(generic_type=CONST.TYPE_CAMERA):
-        entities.append(AbodeCamera(data, device, TIMELINE.CAPTURE_IMAGE))
-
-    async_add_entities(entities)
+    async_add_entities(
+        AbodeCamera(data, device, TIMELINE.CAPTURE_IMAGE)
+        for device in data.abode.get_devices(generic_type=CONST.TYPE_CAMERA)
+    )
 
 
 class AbodeCamera(AbodeDevice, Camera):

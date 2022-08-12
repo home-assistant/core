@@ -7,7 +7,7 @@
             "cannot_connect": "Error al conectar",
             "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
             "invalid_host": "La entrada del host no estaba en formato URL completo, por ejemplo, http://192.168.10.100:80",
-            "reauth_successful": "La reautenticaci\u00f3n fue exitosa",
+            "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente",
             "unknown": "Error inesperado"
         },
         "flow_title": "{name} ({host})",
@@ -17,15 +17,15 @@
                     "password": "Contrase\u00f1a",
                     "username": "Nombre de usuario"
                 },
-                "description": "Las credenciales de {host} ya no son v\u00e1lidas.",
-                "title": "Re-autenticaci\u00f3n de ISY"
+                "description": "Las credenciales para {host} ya no son v\u00e1lidas.",
+                "title": "Vuelve a autenticar tu ISY"
             },
             "user": {
                 "data": {
                     "host": "URL",
                     "password": "Contrase\u00f1a",
                     "tls": "La versi\u00f3n de TLS del controlador ISY.",
-                    "username": "Usuario"
+                    "username": "Nombre de usuario"
                 },
                 "description": "La entrada del host debe estar en formato URL completo, por ejemplo, http://192.168.10.100:80",
                 "title": "Conexi\u00f3n con ISY"

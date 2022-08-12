@@ -47,7 +47,7 @@
                 "title": "Optionen f\u00fcr Plaato"
             },
             "webhook": {
-                "description": "Webhook-Informationen:\n\n- URL: `{webhook_url}`\n- Methode: POST\n\n",
+                "description": "Webhook-Informationen:\n\n- URL: `{webhook_url}`\n- Methode: POST",
                 "title": "Optionen f\u00fcr Plaato Airlock"
             }
         }
