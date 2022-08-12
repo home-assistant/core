@@ -234,7 +234,7 @@ async def async_setup_entry(
     """Set up the Glances sensors."""
 
     client: GlancesData = hass.data[DOMAIN][config_entry.entry_id]
-    name = config_entry.data.get(CONF_NAME, "")
+    name = config_entry.data.get(CONF_NAME)
     dev = []
 
     @callback
@@ -322,7 +322,7 @@ class GlancesSensor(SensorEntity):
     def __init__(
         self,
         glances_data: GlancesData,
-        name: str,
+        name: str | None,
         sensor_name_prefix: str,
         description: GlancesSensorEntityDescription,
     ) -> None:
@@ -334,10 +334,6 @@ class GlancesSensor(SensorEntity):
 
         self.entity_description = description
         self._attr_name = f"{sensor_name_prefix} {description.name_suffix}"
-        # if name exists preserve previous naming
-        if name:
-            self._attr_has_entity_name = False
-            self._attr_name = f"{name} {self._attr_name}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, glances_data.config_entry.entry_id)},
             manufacturer="Glances",
