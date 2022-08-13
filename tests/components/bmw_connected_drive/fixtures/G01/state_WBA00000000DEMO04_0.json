@@ -1,0 +1,214 @@
+{
+  "capabilities": {
+    "climateFunction": "AIR_CONDITIONING",
+    "climateNow": true,
+    "horn": true,
+    "isBmwChargingSupported": true,
+    "isCarSharingSupported": false,
+    "isChargeNowForBusinessSupported": true,
+    "isChargingHistorySupported": true,
+    "isChargingHospitalityEnabled": false,
+    "isChargingLoudnessEnabled": false,
+    "isChargingPlanSupported": true,
+    "isChargingPowerLimitEnabled": false,
+    "isChargingSettingsEnabled": false,
+    "isChargingTargetSocEnabled": false,
+    "isCustomerEsimSupported": false,
+    "isDCSContractManagementSupported": true,
+    "isDataPrivacyEnabled": false,
+    "isEasyChargeEnabled": false,
+    "isEvGoChargingSupported": false,
+    "isMiniChargingSupported": false,
+    "isNonLscFeatureEnabled": false,
+    "isRemoteEngineStartSupported": false,
+    "isRemoteHistoryDeletionSupported": false,
+    "isRemoteHistorySupported": true,
+    "isRemoteParkingSupported": false,
+    "isRemoteServicesActivationRequired": false,
+    "isRemoteServicesBookingRequired": false,
+    "isScanAndChargeSupported": true,
+    "isSustainabilitySupported": false,
+    "isWifiHotspotServiceSupported": true,
+    "lastStateCallState": "ACTIVATED",
+    "lights": true,
+    "lock": true,
+    "remote360": true,
+    "remoteSoftwareUpgrade": true,
+    "sendPoi": true,
+    "specialThemeSupport": [],
+    "speechThirdPartyAlexa": true,
+    "unlock": true,
+    "vehicleFinder": true,
+    "vehicleStateSource": "LAST_STATE_CALL"
+  },
+  "state": {
+    "chargingProfile": {
+      "chargingControlType": "WEEKLY_PLANNER",
+      "chargingMode": "IMMEDIATE_CHARGING",
+      "chargingPreference": "NO_PRESELECTION",
+      "chargingSettings": {
+        "acCurrentLimit": 16,
+        "hospitality": "NO_ACTION",
+        "idcc": "UNLIMITED_LOUD",
+        "targetSoc": 100
+      },
+      "departureTimes": [
+        {
+          "action": "DEACTIVATE",
+          "id": 1,
+          "timeStamp": {
+            "hour": 0,
+            "minute": 0
+          },
+          "timerWeekDays": []
+        },
+        {
+          "action": "DEACTIVATE",
+          "id": 2,
+          "timeStamp": {
+            "hour": 0,
+            "minute": 0
+          },
+          "timerWeekDays": []
+        },
+        {
+          "action": "DEACTIVATE",
+          "id": 3,
+          "timeStamp": {
+            "hour": 0,
+            "minute": 0
+          },
+          "timerWeekDays": []
+        },
+        {
+          "action": "DEACTIVATE",
+          "id": 4,
+          "timeStamp": {
+            "hour": 0,
+            "minute": 0
+          },
+          "timerWeekDays": []
+        }
+      ]
+    },
+    "checkControlMessages": [
+      {
+        "severity": "MEDIUM",
+        "type": "ENGINE_OIL"
+      }
+    ],
+    "climateControlState": {
+      "activity": "STANDBY"
+    },
+    "climateTimers": [
+      {
+        "departureTime": {
+          "hour": 6,
+          "minute": 40
+        },
+        "isWeeklyTimer": true,
+        "timerAction": "ACTIVATE",
+        "timerWeekDays": ["THURSDAY", "SUNDAY"]
+      },
+      {
+        "departureTime": {
+          "hour": 12,
+          "minute": 50
+        },
+        "isWeeklyTimer": false,
+        "timerAction": "ACTIVATE",
+        "timerWeekDays": ["MONDAY"]
+      },
+      {
+        "departureTime": {
+          "hour": 18,
+          "minute": 59
+        },
+        "isWeeklyTimer": true,
+        "timerAction": "DEACTIVATE",
+        "timerWeekDays": ["WEDNESDAY"]
+      }
+    ],
+    "combustionFuelLevel": {
+      "range": 476,
+      "remainingFuelLiters": 40,
+      "remainingFuelPercent": 80
+    },
+    "currentMileage": 1121,
+    "doorsState": {
+      "combinedSecurityState": "LOCKED",
+      "combinedState": "CLOSED",
+      "hood": "CLOSED",
+      "leftFront": "CLOSED",
+      "leftRear": "CLOSED",
+      "rightFront": "CLOSED",
+      "rightRear": "CLOSED",
+      "trunk": "CLOSED"
+    },
+    "driverPreferences": {
+      "lscPrivacyMode": "OFF"
+    },
+    "electricChargingState": {
+      "chargingConnectionType": "UNKNOWN",
+      "chargingLevelPercent": 80,
+      "chargingStatus": "INVALID",
+      "chargingTarget": 100,
+      "isChargerConnected": false,
+      "range": 40,
+      "remainingChargingMinutes": 10
+    },
+    "isLeftSteering": true,
+    "isLscSupported": true,
+    "lastFetched": "2022-06-01T19:18:54.488Z",
+    "lastUpdatedAt": "2022-06-01T19:18:54.619Z",
+    "location": {
+      "address": {
+        "formatted": "Am Olympiapark 1, 80809 München"
+      },
+      "coordinates": {
+        "latitude": 48.177334,
+        "longitude": 11.556274
+      },
+      "heading": 180
+    },
+    "range": 476,
+    "requiredServices": [
+      {
+        "dateTime": "2024-05-01T00:00:00.000Z",
+        "description": "",
+        "mileage": 50000,
+        "status": "OK",
+        "type": "OIL"
+      },
+      {
+        "dateTime": "2024-05-01T00:00:00.000Z",
+        "description": "",
+        "mileage": 50000,
+        "status": "OK",
+        "type": "BRAKE_FLUID"
+      },
+      {
+        "dateTime": "2024-05-01T00:00:00.000Z",
+        "description": "",
+        "mileage": 50000,
+        "status": "OK",
+        "type": "VEHICLE_TUV"
+      },
+      {
+        "dateTime": "2024-05-01T00:00:00.000Z",
+        "description": "",
+        "mileage": 50000,
+        "status": "OK",
+        "type": "VEHICLE_CHECK"
+      }
+    ],
+    "windowsState": {
+      "combinedState": "CLOSED",
+      "leftFront": "CLOSED",
+      "leftRear": "CLOSED",
+      "rear": "CLOSED",
+      "rightFront": "CLOSED",
+      "rightRear": "CLOSED"
+    }
+  }
+}
