@@ -16,7 +16,6 @@ class MicroBotEntity(PassiveBluetoothCoordinatorEntity):
     def __init__(self, coordinator, config_entry):
         """Initialise the entity."""
         super().__init__(coordinator)
-        self.config_entry = config_entry
         self._address = self.coordinator.ble_device.address
         self._attr_name = "MicroBot Push"
         self._attr_device_info = DeviceInfo(
