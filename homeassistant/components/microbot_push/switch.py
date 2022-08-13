@@ -35,8 +35,3 @@ class MicroBotBinarySwitch(MicroBotEntity, SwitchEntity):
     def is_on(self):
         """Return true if the switch is on."""
         return self.coordinator.api.is_on
-
-    @property
-    def available(self) -> bool:
-        """Return true if the switch is available."""
-        return True
