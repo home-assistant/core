@@ -433,20 +433,6 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_restore_automatic_backup(self, user_input=None):
         """Select and restore an automatic backup."""
 
-        if user_input is not None:
-            backup = self._backups[user_input[CHOOSE_AUTOMATIC_BACKUP]]
-
-            if user_input.get(OVERWRITE_COORDINATOR_IEEE):
-                backup.network_info.stack_specific.setdefault("ezsp", {})[
-                    "i_understand_i_can_update_eui64_only_once"
-                    "_and_i_still_want_to_do_it"
-                ] = True
-
-            async with self._connect_zigpy_app() as app:
-                app.backups.restore_backup(backup)
-
-            return await self._async_create_radio_entity()
-
         if self._backups is None or self._current_settings is None:
             async with self._connect_zigpy_app() as app:
                 try:
@@ -460,18 +446,35 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         choices = [
             (
-                f"{b.backup_time.strftime('%x')}"
+                f"{b.backup_time.strftime('%c')}"
                 f" (PAN ID: {b.network_info.pan_id}"
                 f", EPID: {b.network_info.extended_pan_id})"
             )
             for b in self._backups
         ]
 
+        if user_input is not None:
+            backup = self._backups[choices.index(user_input[CHOOSE_AUTOMATIC_BACKUP])]
+
+            if user_input.get(OVERWRITE_COORDINATOR_IEEE):
+                backup.network_info.stack_specific.setdefault("ezsp", {})[
+                    "i_understand_i_can_update_eui64_only_once"
+                    "_and_i_still_want_to_do_it"
+                ] = True
+
+            async with self._connect_zigpy_app() as app:
+                app.backups.restore_backup(backup)
+
+            return await self._async_create_radio_entity()
+
         data_schema = {
             vol.Required(CHOOSE_AUTOMATIC_BACKUP, default=0): vol.In(choices),
         }
 
-        if self._radio_type == "ezsp":
+        if self._radio_type == "ezsp" and (
+            self._current_settings is None
+            or any(backup.node_info.ieee != self._current_settings.node_info.ieee)
+        ):
             data_schema[vol.Required(OVERWRITE_COORDINATOR_IEEE, default=True)] = bool
 
         return self.async_show_form(
