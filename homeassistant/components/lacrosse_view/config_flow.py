@@ -50,9 +50,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self.data: dict[str, str] = {}
         self.locations: list[Location] = []
-        self.reauth = False
-        self.location_id = ""
-        self.location_name = ""
+        self._reauth_data: Mapping[str, Any] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -78,13 +76,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.data = user_input
             self.locations = info
 
-            existing_entry = await self.async_set_unique_id(self.location_id)
+            existing_entry = await self.async_set_unique_id(self._reauth_data["id"])
 
             # Check if we are reauthenticating
-            if self.reauth and existing_entry:
+            if self._reauth_data and existing_entry:
                 data = {
-                    "id": self.location_id,
-                    "name": self.location_name,
+                    "id": self._reauth_data["id"],
+                    "name": self._reauth_data["name"],
                     "username": self.data["username"],
                     "password": self.data["password"],
                 }
@@ -136,8 +134,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Reauth in case of a password change or other error."""
-        self.location_id = entry_data["id"]
-        self.location_name = entry_data["name"]
+        self._reauth_data = entry_data
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -149,8 +146,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="reauth_confirm",
                 data_schema=vol.Schema({}),
             )
-
-        self.reauth = True
 
         return await self.async_step_user()
 

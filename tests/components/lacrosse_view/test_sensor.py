@@ -3,7 +3,6 @@ from unittest.mock import patch
 
 from homeassistant.components.lacrosse_view import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from . import (
@@ -43,16 +42,15 @@ async def test_sensor_permission(hass: HomeAssistant, caplog) -> None:
     with patch("lacrosse_view.LaCrosse.login", return_value=True), patch(
         "lacrosse_view.LaCrosse.get_sensors", return_value=[TEST_NO_PERMISSION_SENSOR]
     ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        assert not await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert hass.data[DOMAIN]
     entries = hass.config_entries.async_entries(DOMAIN)
     assert entries
     assert len(entries) == 1
-    assert entries[0].state == ConfigEntryState.LOADED
-    assert hass.states.get("sensor.test_temperature").state is STATE_UNAVAILABLE
-    assert "No permission to read sensor" in caplog.text
+    assert entries[0].state == ConfigEntryState.SETUP_ERROR
+    assert not hass.states.get("sensor.test_temperature")
+    assert "This account does not have permission to read Test" in caplog.text
 
 
 async def test_field_not_supported(hass: HomeAssistant, caplog) -> None:

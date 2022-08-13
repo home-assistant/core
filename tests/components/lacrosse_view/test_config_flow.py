@@ -167,50 +167,17 @@ async def test_form_unexpected_error(hass: HomeAssistant) -> None:
 
 async def test_already_configured_device(hass: HomeAssistant) -> None:
     """Test we handle invalid auth."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "username": "test-username",
+            "password": "test-password",
+            "id": "1",
+            "name": "Test",
+        },
+        unique_id="1",
     )
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] is None
-
-    with patch("lacrosse_view.LaCrosse.login", return_value=True,), patch(
-        "lacrosse_view.LaCrosse.get_locations",
-        return_value=[Location(id=1, name="Test")],
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "username": "test-username",
-                "password": "test-password",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["step_id"] == "location"
-    assert result2["errors"] is None
-
-    with patch(
-        "homeassistant.components.lacrosse_view.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result3 = await hass.config_entries.flow.async_configure(
-            result2["flow_id"],
-            {
-                "location": "1",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
-    assert result3["title"] == "Test"
-    assert result3["data"] == {
-        "username": "test-username",
-        "password": "test-password",
-        "id": "1",
-        "name": "Test",
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
+    mock_config_entry.add_to_hass(hass)
 
     # Now that we did the config once, let's try to do it again, this should raise the abort for already configured device
 
@@ -285,9 +252,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
     with patch("lacrosse_view.LaCrosse.login", return_value=True,), patch(
         "lacrosse_view.LaCrosse.get_locations",
         return_value=[Location(id=1, name="Test")],
-    ), patch(
-        "homeassistant.components.lacrosse_view.config_flow.ConfigFlow.async_step_location"
-    ) as mock_step_location:
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -296,7 +261,6 @@ async def test_reauth(hass: HomeAssistant) -> None:
             },
         )
         await hass.async_block_till_done()
-        mock_step_location.assert_not_called()
 
     assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
