@@ -703,6 +703,7 @@ async def test_integration_discovery(hass):
 
     with patch("homeassistant.components.plex.config_flow.GDM", return_value=mock_gdm):
         await config_flow.async_discover(hass)
+        await hass.async_block_till_done()
 
     flows = hass.config_entries.flow.async_progress()
 

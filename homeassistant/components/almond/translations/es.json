@@ -8,8 +8,8 @@
         },
         "step": {
             "hassio_confirm": {
-                "description": "\u00bfDesea configurar Home Assistant para conectarse a Almond proporcionado por el complemento Supervisor: {addon} ?",
-                "title": "Almond a trav\u00e9s del complemento Supervisor"
+                "description": "\u00bfQuieres configurar Home Assistant para conectarse a Almond proporcionado por el complemento: {addon} ?",
+                "title": "Almond a trav\u00e9s del complemento Home Assistant"
             },
             "pick_implementation": {
                 "title": "Seleccione el m\u00e9todo de autenticaci\u00f3n"

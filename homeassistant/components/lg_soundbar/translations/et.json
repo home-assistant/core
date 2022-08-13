@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Teenus on juba h\u00e4\u00e4lestatud",
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
             "existing_instance_updated": "V\u00e4rskendati olemasolevat konfiguratsiooni."
         },
         "error": {

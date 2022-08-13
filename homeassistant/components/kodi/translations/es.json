@@ -12,7 +12,7 @@
             "invalid_auth": "Autenticaci\u00f3n inv\u00e1lida",
             "unknown": "Error inesperado"
         },
-        "flow_title": "Kodi: {name}",
+        "flow_title": "{name}",
         "step": {
             "credentials": {
                 "data": {
@@ -22,7 +22,7 @@
                 "description": "Por favor, introduzca su nombre de usuario y contrase\u00f1a de Kodi. Estos se pueden encontrar en Sistema/Configuraci\u00f3n/Red/Servicios."
             },
             "discovery_confirm": {
-                "description": "\u00bfQuieres agregar Kodi (`{name}`) a Home Assistant?",
+                "description": "\u00bfQuieres a\u00f1adir Kodi (`{name}`) a Home Assistant?",
                 "title": "Descubierto Kodi"
             },
             "user": {
@@ -37,7 +37,7 @@
                 "data": {
                     "ws_port": "Puerto"
                 },
-                "description": "El puerto WebSocket (a veces llamado puerto TCP en Kodi). Para conectarse a trav\u00e9s de WebSocket, necesitas habilitar \"Permitir a los programas... controlar Kodi\" en Sistema/Configuraci\u00f3n/Red/Servicios. Si el WebSocket no est\u00e1 habilitado, elimine el puerto y d\u00e9jelo vac\u00edo."
+                "description": "El puerto WebSocket (a veces llamado puerto TCP en Kodi). Para conectar a trav\u00e9s de WebSocket, debes habilitar \"Permitir que los programas... controlen Kodi\" en Sistema/Configuraci\u00f3n/Red/Servicios. Si WebSocket no est\u00e1 habilitado, elimina el puerto y d\u00e9jalo vac\u00edo."
             }
         }
     },

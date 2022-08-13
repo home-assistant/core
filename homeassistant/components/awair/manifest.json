@@ -5,6 +5,12 @@
   "requirements": ["python_awair==0.2.3"],
   "codeowners": ["@ahayworth", "@danielsjf"],
   "config_flow": true,
-  "iot_class": "cloud_polling",
-  "loggers": ["python_awair"]
+  "iot_class": "local_polling",
+  "loggers": ["python_awair"],
+  "zeroconf": [
+    {
+      "type": "_http._tcp.local.",
+      "name": "awair*"
+    }
+  ]
 }

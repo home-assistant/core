@@ -3,7 +3,7 @@
         "abort": {
             "all_configured": "Todos los servidores vinculados ya configurados",
             "already_configured": "Este servidor Plex ya est\u00e1 configurado",
-            "already_in_progress": "El flujo de configuraci\u00f3n ya est\u00e1 en proceso",
+            "already_in_progress": "El flujo de configuraci\u00f3n ya est\u00e1 en curso",
             "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente",
             "token_request_timeout": "Tiempo de espera agotado para la obtenci\u00f3n del token",
             "unknown": "Error inesperado"
@@ -22,8 +22,8 @@
                     "host": "Host",
                     "port": "Puerto",
                     "ssl": "Utiliza un certificado SSL",
-                    "token": "Token (Opcional)",
-                    "verify_ssl": "Verificar certificado SSL"
+                    "token": "Token (opcional)",
+                    "verify_ssl": "Verificar el certificado SSL"
                 },
                 "title": "Configuraci\u00f3n Manual de Plex"
             },
@@ -35,7 +35,7 @@
                 "title": "Seleccione el servidor Plex"
             },
             "user": {
-                "description": "Continuar hacia [plex.tv](https://plex.tv) para vincular un servidor Plex."
+                "description": "Contin\u00faa hacia [plex.tv](https://plex.tv) para vincular un servidor Plex."
             },
             "user_advanced": {
                 "data": {

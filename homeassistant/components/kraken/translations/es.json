@@ -5,10 +5,6 @@
         },
         "step": {
             "user": {
-                "data": {
-                    "one": "",
-                    "other": "Otros"
-                },
                 "description": "\u00bfQuieres iniciar la configuraci\u00f3n?"
             }
         }

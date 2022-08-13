@@ -216,7 +216,7 @@ class MusicCastCapabilityEntity(MusicCastDeviceEntity):
         self,
         coordinator: MusicCastDataUpdateCoordinator,
         capability: Capability,
-        zone_id: str = None,
+        zone_id: str | None = None,
     ) -> None:
         """Initialize a capability based entity."""
         if zone_id is not None:

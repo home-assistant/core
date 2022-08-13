@@ -10,7 +10,7 @@
             "default": "\u00a1El dispositivo Plaato {device_type} con nombre **{device_name}** se ha configurado correctamente!"
         },
         "error": {
-            "invalid_webhook_device": "Has seleccionado un dispositivo que no admite el env\u00edo de datos a un webhook. Solo est\u00e1 disponible para Airlock",
+            "invalid_webhook_device": "Has seleccionado un dispositivo que no admite el env\u00edo de datos a un webhook. Solo est\u00e1 disponible para el Airlock",
             "no_api_method": "Necesitas a\u00f1adir un token de autenticaci\u00f3n o seleccionar un webhook",
             "no_auth_token": "Es necesario a\u00f1adir un token de autenticaci\u00f3n"
         },

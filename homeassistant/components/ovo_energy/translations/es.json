@@ -17,7 +17,7 @@
             "user": {
                 "data": {
                     "password": "Contrase\u00f1a",
-                    "username": "Usuario"
+                    "username": "Nombre de usuario"
                 },
                 "description": "Configurar una instancia de OVO Energy para acceder a su consumo de energ\u00eda.",
                 "title": "A\u00f1adir cuenta de OVO Energy"

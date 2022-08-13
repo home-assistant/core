@@ -53,6 +53,11 @@ BLUETOOTH: list[dict[str, str | int | list[int]]] = [
     },
     {
         "domain": "govee_ble",
+        "manufacturer_id": 59970,
+        "service_uuid": "00008151-0000-1000-8000-00805f9b34fb"
+    },
+    {
+        "domain": "govee_ble",
         "manufacturer_id": 14474,
         "service_uuid": "00008151-0000-1000-8000-00805f9b34fb"
     },
@@ -107,5 +112,9 @@ BLUETOOTH: list[dict[str, str | int | list[int]]] = [
     {
         "domain": "xiaomi_ble",
         "service_data_uuid": "0000fe95-0000-1000-8000-00805f9b34fb"
+    },
+    {
+        "domain": "yalexs_ble",
+        "manufacturer_id": 465
     }
 ]
