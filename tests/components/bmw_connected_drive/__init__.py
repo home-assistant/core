@@ -39,11 +39,16 @@ FIXTURE_CONFIG_ENTRY = {
 }
 
 
-def mock_vehicles_from_fixture() -> list[MyBMWVehicle]:
-    """Load MyBMWVehicles from fixtures."""
+def mock_get_vehicles_from_fixture(account: MyBMWAccount) -> None:
+    """Load MyBMWVehicles from fixtures and add them to the account."""
     fixture_path = Path(get_fixture_path("", integration=BMW_DOMAIN))
     fixture_vehicles_v2 = list(fixture_path.rglob("vehicles_v2_*.json"))
 
+    # Creating vehicles is currently a bit of a workaround due to the way it is
+    # implemented in the library. Once the library has an improved way of handling,
+    # this can be updated as well.
+
+    fetched_at = datetime.datetime.now(datetime.timezone.utc)
     vehicles: list[dict] = []
 
     # First, load vehicle basee data as provided by vehicles/v2 API
@@ -55,17 +60,25 @@ def mock_vehicles_from_fixture() -> list[MyBMWVehicle]:
         )
 
     # Then, add vehicle specific state as provided by state/VIN API
-    for vehicle in vehicles:
-        vehicle.update(
+    for vehicle_dict in vehicles:
+        vehicle_dict.update(
             json.loads(
                 load_fixture(
-                    f"{vehicle['attributes']['bodyType']}/state_{vehicle['vin']}_0.json",
+                    f"{vehicle_dict['attributes']['bodyType']}/state_{vehicle_dict['vin']}_0.json",
                     integration=BMW_DOMAIN,
                 )
             )
         )
+        # Add unit information
+        vehicle_dict["is_metric"] = account.config.use_metric_units
+        vehicle_dict["fetched_at"] = fetched_at
 
-    return vehicles
+        # If vehicle already exists, just update it's state
+        existing_vehicle = account.get_vehicle(vehicle_dict["vin"])
+        if existing_vehicle:
+            existing_vehicle.update_state(vehicle_dict)
+        else:
+            account.vehicles.append(MyBMWVehicle(account, vehicle_dict))
 
 
 async def setup_mock_component(hass: HomeAssistant) -> MockConfigEntry:
@@ -74,27 +87,9 @@ async def setup_mock_component(hass: HomeAssistant) -> MockConfigEntry:
     mock_config_entry = MockConfigEntry(**FIXTURE_CONFIG_ENTRY)
     mock_config_entry.add_to_hass(hass)
 
-    def mock_get_vehicles(self: MyBMWAccount) -> None:
-        curr_time = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)
-
-        # Creating vehicles is currently a bit of a workaround due to the way it is
-        # implemented in the library. Once the library has an improved way of handling,
-        # this can be updated as well.
-        self.vehicles = [
-            MyBMWVehicle(
-                self,
-                {
-                    **v,
-                    "is_metric": self.config.use_metric_units,
-                    "fetched_at": curr_time,
-                },
-            )
-            for v in mock_vehicles_from_fixture()
-        ]
-
     with patch(
         "bimmer_connected.account.MyBMWAccount.get_vehicles",
-        side_effect=mock_get_vehicles,
+        side_effect=mock_get_vehicles_from_fixture,
         autospec=True,
     ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
