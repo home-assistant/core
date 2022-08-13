@@ -145,6 +145,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ATTR_SDS011_CAQI_LEVEL,
         name="SDS011 CAQI level",
+        device_class="nam__caqi_level",
     ),
     SensorEntityDescription(
         key=ATTR_SDS011_P1,
@@ -183,6 +184,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ATTR_SPS30_CAQI_LEVEL,
         name="SPS30 CAQI level",
+        device_class="nam__caqi_level",
     ),
     SensorEntityDescription(
         key=ATTR_SPS30_P0,
