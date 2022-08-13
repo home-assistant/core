@@ -1,12 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "ESP ya est\u00e1 configurado",
-            "already_in_progress": "La configuraci\u00f3n del ESP ya est\u00e1 en marcha",
+            "already_configured": "El dispositivo ya est\u00e1 configurado",
+            "already_in_progress": "El flujo de configuraci\u00f3n ya est\u00e1 en curso",
             "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente"
         },
         "error": {
-            "connection_error": "No se puede conectar a ESP. Aseg\u00farate de que tu archivo YAML contenga una l\u00ednea 'api:'.",
+            "connection_error": "No se puede conectar a ESP. Por favor, aseg\u00farate de que tu archivo YAML contiene una l\u00ednea 'api:'.",
             "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
             "invalid_psk": "La clave de cifrado de transporte no es v\u00e1lida. Por favor, aseg\u00farate de que coincida con lo que tienes en tu configuraci\u00f3n",
             "resolve_error": "No se puede resolver la direcci\u00f3n del ESP. Si este error persiste, por favor, configura una direcci\u00f3n IP est\u00e1tica"

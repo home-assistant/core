@@ -12,7 +12,7 @@
                 "data": {
                     "column": "Columna",
                     "db_url": "URL de la base de datos",
-                    "name": "[%key:component::sql::config::step::user::data::name%]",
+                    "name": "Nombre",
                     "query": "Selecciona la consulta",
                     "unit_of_measurement": "Unidad de medida",
                     "value_template": "Plantilla de valor"
@@ -38,7 +38,7 @@
                 "data": {
                     "column": "Columna",
                     "db_url": "URL de la base de datos",
-                    "name": "[%key:component::sql::config::step::user::data::name%]",
+                    "name": "Nombre",
                     "query": "Selecciona la consulta",
                     "unit_of_measurement": "Unidad de medida",
                     "value_template": "Plantilla de valor"

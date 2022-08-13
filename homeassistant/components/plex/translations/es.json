@@ -22,7 +22,7 @@
                     "host": "Host",
                     "port": "Puerto",
                     "ssl": "Utiliza un certificado SSL",
-                    "token": "Token (Opcional)",
+                    "token": "Token (opcional)",
                     "verify_ssl": "Verificar el certificado SSL"
                 },
                 "title": "Configuraci\u00f3n Manual de Plex"
@@ -35,7 +35,7 @@
                 "title": "Seleccione el servidor Plex"
             },
             "user": {
-                "description": "Continuar hacia [plex.tv](https://plex.tv) para vincular un servidor Plex."
+                "description": "Contin\u00faa hacia [plex.tv](https://plex.tv) para vincular un servidor Plex."
             },
             "user_advanced": {
                 "data": {

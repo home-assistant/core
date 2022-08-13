@@ -9,7 +9,7 @@
             "token_forbidden": "El token no tiene los \u00e1mbitos de OAuth necesarios.",
             "token_invalid_format": "El token debe estar en formato UID/GUID",
             "token_unauthorized": "El token no es v\u00e1lido o ya no est\u00e1 autorizado.",
-            "webhook_error": "SmartThings no ha podido validar el endpoint configurado en 'base_url'. Por favor, revisa los requisitos del componente."
+            "webhook_error": "SmartThings no pudo validar la URL del webhook. Aseg\u00farate de que la URL del webhook sea accesible desde Internet y vuelve a intentarlo."
         },
         "step": {
             "authorize": {
@@ -30,7 +30,7 @@
                 "title": "Seleccionar Ubicaci\u00f3n"
             },
             "user": {
-                "description": "Los SmartThings se configurar\u00e1n para enviar las actualizaciones a Home Assistant en:\n> {webhook_url}\n\nSi esto no es correcto, por favor, actualiza tu configuraci\u00f3n, reinicia Home Assistant e int\u00e9ntalo de nuevo.",
+                "description": "SmartThings se configurar\u00e1 para enviar actualizaciones a Home Assistant en:\n> {webhook_url}\n\nSi esto no es correcto, por favor, actualiza tu configuraci\u00f3n, reinicia Home Assistant e int\u00e9ntalo de nuevo.",
                 "title": "Confirmar URL de devoluci\u00f3n de llamada"
             }
         }

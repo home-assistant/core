@@ -754,7 +754,7 @@ moat-ble==0.1.1
 moehlenhoff-alpha2==1.2.1
 
 # homeassistant.components.motion_blinds
-motionblinds==0.6.11
+motionblinds==0.6.12
 
 # homeassistant.components.motioneye
 motioneye-client==0.3.12
@@ -781,7 +781,7 @@ netdisco==3.0.0
 netmap==0.7.0.2
 
 # homeassistant.components.nam
-nettigo-air-monitor==1.3.0
+nettigo-air-monitor==1.4.2
 
 # homeassistant.components.nexia
 nexia==2.0.2
@@ -1216,7 +1216,7 @@ pyotgw==2.0.2
 pyotp==2.6.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.4.2
+pyoverkiz==1.5.0
 
 # homeassistant.components.openweathermap
 pyowm==3.2.0

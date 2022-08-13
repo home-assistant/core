@@ -3,7 +3,7 @@
         "abort": {
             "already_configured_device": "El dispositivo ya est\u00e1 configurado",
             "cannot_connect": "No se pudo conectar",
-            "updated_entry": "Esta entrada ya ha sido configurada pero el nombre y/o las opciones definidas en la configuraci\u00f3n no coinciden con la configuraci\u00f3n previamente importada, por lo que la entrada de la configuraci\u00f3n ha sido actualizada en consecuencia."
+            "updated_entry": "Esta entrada ya se configur\u00f3, pero el nombre, las aplicaciones y/o las opciones definidas en la configuraci\u00f3n no coinciden con la configuraci\u00f3n importada anteriormente, por lo que la entrada de configuraci\u00f3n se actualiz\u00f3 en consecuencia."
         },
         "error": {
             "cannot_connect": "No se pudo conectar",
@@ -19,11 +19,11 @@
                 "title": "Completar Proceso de Emparejamiento"
             },
             "pairing_complete": {
-                "description": "El dispositivo VIZIO SmartCast ahora est\u00e1 conectado a Home Assistant.",
+                "description": "Tu VIZIO SmartCast Device ahora est\u00e1 conectado a Home Assistant.",
                 "title": "Emparejamiento Completado"
             },
             "pairing_complete_import": {
-                "description": "El dispositivo VIZIO SmartCast TV ahora est\u00e1 conectado a Home Assistant.\n\nEl token de acceso es '**{access_token}**'.",
+                "description": "Tu VIZIO SmartCast Device ahora est\u00e1 conectado a Home Assistant. \n\nTu Token de acceso es '**{access_token}**'.",
                 "title": "Emparejamiento Completado"
             },
             "user": {
@@ -33,7 +33,7 @@
                     "host": "Host",
                     "name": "Nombre"
                 },
-                "description": "El token de acceso solo se necesita para las televisiones. Si est\u00e1s configurando una televisi\u00f3n y a\u00fan no tienes un token de acceso, d\u00e9jalo en blanco para iniciar el proceso de sincronizaci\u00f3n.",
+                "description": "Solo se necesita un Token de acceso para TVs. Si est\u00e1s configurando una TV y a\u00fan no tienes un Token de acceso, d\u00e9jalo en blanco para pasar por un proceso de emparejamiento.",
                 "title": "VIZIO SmartCast Device"
             }
         }
@@ -47,7 +47,7 @@
                     "volume_step": "Tama\u00f1o del paso de volumen"
                 },
                 "description": "Si tienes un Smart TV, opcionalmente puedes filtrar su lista de fuentes eligiendo qu\u00e9 aplicaciones incluir o excluir en su lista de fuentes.",
-                "title": "Actualizar las opciones de SmartCast de Vizo"
+                "title": "Actualizar las opciones de VIZIO SmartCast Device"
             }
         }
     }

@@ -15,7 +15,7 @@
                 "title": "Error al importar la configuraci\u00f3n del bridge Cas\u00e9ta."
             },
             "link": {
-                "description": "Para emparejar con {name} ({host}), despu\u00e9s de enviar este formulario, presione el bot\u00f3n negro en la parte posterior del puente.",
+                "description": "Para emparejar con {name} ({host}), despu\u00e9s de enviar este formulario, presiona el bot\u00f3n negro en la parte posterior del puente.",
                 "title": "Emparejar con el puente"
             },
             "user": {
