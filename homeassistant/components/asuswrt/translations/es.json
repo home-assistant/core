@@ -19,12 +19,12 @@
                     "mode": "Modo",
                     "name": "Nombre",
                     "password": "Contrase\u00f1a",
-                    "port": "Puerto (d\u00e9jalo vac\u00edo por el predeterminado del protocolo)",
+                    "port": "Puerto (dejar vac\u00edo para el predeterminado del protocolo)",
                     "protocol": "Protocolo de comunicaci\u00f3n a utilizar",
-                    "ssh_key": "Ruta de acceso a su archivo de clave SSH (en lugar de la contrase\u00f1a)",
+                    "ssh_key": "Ruta a tu archivo de clave SSH (en lugar de contrase\u00f1a)",
                     "username": "Nombre de usuario"
                 },
-                "description": "Establezca los par\u00e1metros necesarios para conectarse a su router",
+                "description": "Establece el par\u00e1metro requerido para conectarte a tu router",
                 "title": "AsusWRT"
             }
         }
@@ -33,7 +33,7 @@
         "step": {
             "init": {
                 "data": {
-                    "consider_home": "Segundos de espera antes de considerar un dispositivo ausente",
+                    "consider_home": "Segundos de espera antes de considerar un dispositivo como ausente",
                     "dnsmasq": "La ubicaci\u00f3n en el router de los archivos dnsmasq.leases",
                     "interface": "La interfaz de la que quieres estad\u00edsticas (por ejemplo, eth0, eth1, etc.)",
                     "require_ip": "Los dispositivos deben tener IP (para el modo de punto de acceso)",

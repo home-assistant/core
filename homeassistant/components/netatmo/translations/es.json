@@ -47,10 +47,10 @@
             "public_weather": {
                 "data": {
                     "area_name": "Nombre del \u00e1rea",
-                    "lat_ne": "Longitud esquina noreste",
-                    "lat_sw": "Latitud esquina suroeste",
-                    "lon_ne": "Longitud esquina noreste",
-                    "lon_sw": "Longitud esquina Suroeste",
+                    "lat_ne": "Latitud Esquina noreste",
+                    "lat_sw": "Latitud Esquina suroeste",
+                    "lon_ne": "Longitud Esquina noreste",
+                    "lon_sw": "Longitud Esquina suroeste",
                     "mode": "C\u00e1lculo",
                     "show_on_map": "Mostrar en el mapa"
                 },

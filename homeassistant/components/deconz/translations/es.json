@@ -15,11 +15,11 @@
         "step": {
             "hassio_confirm": {
                 "description": "\u00bfQuieres configurar Home Assistant para conectarse a la puerta de enlace deCONZ proporcionada por el complemento {addon} ?",
-                "title": "Pasarela de enlace de CONZ Zigbee v\u00eda complemento de Home Assistant"
+                "title": "Puerta de enlace Zigbee deCONZ a trav\u00e9s del complemento Home Assistant"
             },
             "link": {
-                "description": "Desbloquea tu gateway de deCONZ para registrarte con Home Assistant.\n\n1. Dir\u00edgete a deCONZ Settings -> Gateway -> Advanced\n2. Pulsa el bot\u00f3n \"Authenticate app\"",
-                "title": "Enlazar con deCONZ"
+                "description": "Desbloquea tu puerta de enlace deCONZ para registrarlo con Home Assistant. \n\n 1. Ve a Configuraci\u00f3n deCONZ -> Puerta de enlace -> Avanzado\n 2. Presiona el bot\u00f3n \"Autenticar aplicaci\u00f3n\"",
+                "title": "Vincular con deCONZ"
             },
             "manual_input": {
                 "data": {
@@ -71,7 +71,7 @@
             "remote_button_quintuple_press": "Bot\u00f3n \"{subtype}\" qu\u00edntuple pulsaci\u00f3n",
             "remote_button_rotated": "Bot\u00f3n \"{subtype}\" girado",
             "remote_button_rotated_fast": "Bot\u00f3n \"{subtype}\" girado r\u00e1pido",
-            "remote_button_rotation_stopped": "Bot\u00f3n rotativo \"{subtype}\" detenido",
+            "remote_button_rotation_stopped": "Se detuvo la rotaci\u00f3n del bot\u00f3n \"{subtype}\"",
             "remote_button_short_press": "Bot\u00f3n \"{subtype}\" pulsado",
             "remote_button_short_release": "Bot\u00f3n \"{subtype}\" soltado",
             "remote_button_triple_press": "Bot\u00f3n \"{subtype}\" triple pulsaci\u00f3n",

@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "cannot_connect": "No se pudo conectar con el controlador con url {base_url}"
+            "cannot_connect": "No se pudo conectar al controlador con URL {base_url}"
         },
         "step": {
             "user": {

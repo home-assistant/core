@@ -2,10 +2,10 @@
     "config": {
         "abort": {
             "already_configured": "El servicio ya est\u00e1 configurado",
-            "single_instance_allowed": "Ya est\u00e1 configurado. S\u00f3lo se permite una \u00fanica configuraci\u00f3n."
+            "single_instance_allowed": "Ya est\u00e1 configurado. Solo es posible una \u00fanica configuraci\u00f3n."
         },
         "error": {
-            "cannot_connect": "No se puede conectar"
+            "cannot_connect": "No se pudo conectar"
         },
         "step": {
             "broker": {
@@ -16,13 +16,13 @@
                     "port": "Puerto",
                     "username": "Nombre de usuario"
                 },
-                "description": "Por favor, introduzca la informaci\u00f3n de conexi\u00f3n de su br\u00f3ker MQTT."
+                "description": "Por favor, introduce la informaci\u00f3n de conexi\u00f3n de tu br\u00f3ker MQTT."
             },
             "hassio_confirm": {
                 "data": {
                     "discovery": "Habilitar descubrimiento"
                 },
-                "description": "\u00bfQuieres configurar Home Assistant para conectarse al agente MQTT proporcionado por el complemento {addon} ?",
+                "description": "\u00bfQuieres configurar Home Assistant para conectarse al agente MQTT proporcionado por el complemento {addon}?",
                 "title": "Br\u00f3ker MQTT a trav\u00e9s de complemento de Home Assistant"
             }
         }
