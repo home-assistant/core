@@ -29,7 +29,7 @@
         "step": {
             "init": {
                 "data": {
-                    "model": "Modelo (opcional)",
+                    "model": "Modelo",
                     "nightlight_switch": "Usar interruptor de luz nocturna",
                     "save_on_change": "Guardar estado al cambiar",
                     "transition": "Tiempo de transici\u00f3n (ms)",

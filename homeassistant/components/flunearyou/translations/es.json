@@ -12,7 +12,7 @@
                     "latitude": "Latitud",
                     "longitude": "Longitud"
                 },
-                "description": "Monitorizar reportes de usuarios y del CDC para un par de coordenadas",
+                "description": "Supervisa los informes del CDC y los basados en los usuarios para un par de coordenadas.",
                 "title": "Configurar Flu Near You"
             }
         }

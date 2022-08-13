@@ -50,7 +50,7 @@
                     "access_token": "Juurdep\u00e4\u00e4sut\u00f5end",
                     "email": "E-post"
                 },
-                "description": "Pead registreerima Awair arendaja juurdep\u00e4\u00e4su loa aadressil: https://developer.getawair.com/onboard/login",
+                "description": "Parima kogemuse saamiseks vali kohalik \u00fchendus. Kasuta pilve ainult siis, kui seade ei ole \u00fchendatud samasse v\u00f5rku kui Home Assistant v\u00f5i kui on vanem seade.",
                 "menu_options": {
                     "cloud": "Pilve\u00fchendus",
                     "local": "Kohalik \u00fchendus (eelistatud)"

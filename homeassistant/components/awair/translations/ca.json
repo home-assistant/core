@@ -21,6 +21,9 @@
                     "email": "Correu electr\u00f2nic"
                 }
             },
+            "discovery_confirm": {
+                "description": "Vols configurar {model} ({device_id})?"
+            },
             "local": {
                 "data": {
                     "host": "Adre\u00e7a IP"

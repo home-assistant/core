@@ -12,13 +12,13 @@
             "invalid_key": "Clave del gateway inv\u00e1lida",
             "invalid_mac": "Direcci\u00f3n Mac no v\u00e1lida"
         },
-        "flow_title": "Xiaomi Aqara Gateway: {name}",
+        "flow_title": "{name}",
         "step": {
             "select": {
                 "data": {
                     "select_ip": "Direcci\u00f3n IP"
                 },
-                "description": "Ejecuta la configuraci\u00f3n de nuevo si deseas conectar gateways adicionales"
+                "description": "Selecciona la puerta de enlace Xiaomi Aqara que deseas conectar"
             },
             "settings": {
                 "data": {
@@ -34,7 +34,7 @@
                     "interface": "La interfaz de la red a usar",
                     "mac": "Direcci\u00f3n Mac (opcional)"
                 },
-                "description": "Con\u00e9ctate a tu Xiaomi Aqara Gateway, si las direcciones IP y mac se dejan vac\u00edas, se utiliza el auto-descubrimiento."
+                "description": "Si las direcciones IP y MAC se dejan vac\u00edas, se utiliza la detecci\u00f3n autom\u00e1tica"
             }
         }
     }

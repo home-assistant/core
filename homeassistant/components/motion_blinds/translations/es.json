@@ -8,7 +8,7 @@
         "error": {
             "discovery_error": "No se pudo descubrir un detector de movimiento"
         },
-        "flow_title": "Motion Blinds",
+        "flow_title": "{short_mac} ({ip_address})",
         "step": {
             "connect": {
                 "data": {

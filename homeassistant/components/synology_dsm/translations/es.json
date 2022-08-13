@@ -24,7 +24,7 @@
                 "data": {
                     "password": "Contrase\u00f1a",
                     "port": "Puerto",
-                    "ssl": "Usar SSL/TLS para conectar con tu NAS",
+                    "ssl": "Utiliza un certificado SSL",
                     "username": "Nombre de usuario",
                     "verify_ssl": "Verificar el certificado SSL"
                 },
@@ -42,8 +42,8 @@
                     "host": "Host",
                     "password": "Contrase\u00f1a",
                     "port": "Puerto",
-                    "ssl": "Usar SSL/TLS para conectar con tu NAS",
-                    "username": "Usuario",
+                    "ssl": "Utiliza un certificado SSL",
+                    "username": "Nombre de usuario",
                     "verify_ssl": "Verificar el certificado SSL"
                 }
             }

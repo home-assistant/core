@@ -20,8 +20,8 @@
                     "port": "Puerto",
                     "username": "Nombre de usuario de Smile"
                 },
-                "description": "Producto:",
-                "title": "Conectarse a Smile"
+                "description": "Por favor, introduce",
+                "title": "Conectar a Smile"
             },
             "user_gateway": {
                 "data": {
@@ -30,7 +30,7 @@
                     "port": "Puerto",
                     "username": "Nombre de usuario Smile"
                 },
-                "description": "Por favor introduce:",
+                "description": "Por favor, introduce:",
                 "title": "Conectarse a Smile"
             }
         }
