@@ -67,9 +67,9 @@ def _async_device_entities(
                 )
             continue
 
+        can_write = device.can_write(data.api.bootstrap.auth_user)
         for description in descs:
             if description.ufp_perm is not None:
-                can_write = device.can_write(data.api.bootstrap.auth_user)
                 if description.ufp_perm == PermRequired.WRITE and not can_write:
                     continue
                 if description.ufp_perm == PermRequired.NO_WRITE and can_write:

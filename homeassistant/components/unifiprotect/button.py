@@ -98,12 +98,12 @@ async def _remove_adopt_button(
 ) -> None:
 
     entity_registry = await er.async_get_registry(hass)
-    if device.is_adopted_by_us:
-        entity_id = entity_registry.async_get_entity_id(
+    if device.is_adopted_by_us and (
+        entity_id := entity_registry.async_get_entity_id(
             Platform.BUTTON, DOMAIN, f"{device.mac}_adopt"
         )
-        if entity_id is not None:
-            entity_registry.async_remove(entity_id)
+    ):
+        entity_registry.async_remove(entity_id)
 
 
 async def async_setup_entry(
