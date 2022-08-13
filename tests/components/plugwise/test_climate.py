@@ -77,7 +77,11 @@ async def test_adam_3_climate_entity_attributes(
     assert state
     assert state.state == HVACMode.COOL
     assert state.attributes["hvac_action"] == "cooling"
-    assert state.attributes["hvac_modes"] == [HVACMode.COOL, HVACMode.AUTO]
+    assert state.attributes["hvac_modes"] == [
+        HVACMode.HEAT,
+        HVACMode.COOL,
+        HVACMode.AUTO,
+    ]
 
 
 async def test_adam_climate_adjust_negative_testing(
