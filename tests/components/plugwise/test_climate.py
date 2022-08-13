@@ -103,19 +103,19 @@ async def test_adam_climate_adjust_negative_testing(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             "climate",
-            "set_hvac_mode",
-            {
-                "entity_id": "climate.zone_thermostat_jessie",
-                "hvac_mode": HVACMode.AUTO,
-            },
+            "set_preset_mode",
+            {"entity_id": "climate.zone_thermostat_jessie", "preset_mode": "home"},
             blocking=True,
         )
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             "climate",
-            "set_preset_mode",
-            {"entity_id": "climate.zone_thermostat_jessie", "preset_mode": "home"},
+            "set_hvac_mode",
+            {
+                "entity_id": "climate.zone_thermostat_jessie",
+                "hvac_mode": HVACMode.AUTO,
+            },
             blocking=True,
         )
 
