@@ -69,7 +69,7 @@ SENSOR_DESCRIPTIONS = {
     ),
     (
         QingpingSensorDeviceClass.PM10,
-        Units.CONCENTRATION_PARTS_PER_MILLION,
+        Units.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     ): SensorEntityDescription(
         key=f"{QingpingSensorDeviceClass.PM10}_{Units.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER}",
         device_class=SensorDeviceClass.PM10,
@@ -78,7 +78,7 @@ SENSOR_DESCRIPTIONS = {
     ),
     (
         QingpingSensorDeviceClass.PM25,
-        Units.CONCENTRATION_PARTS_PER_MILLION,
+        Units.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     ): SensorEntityDescription(
         key=f"{QingpingSensorDeviceClass.PM25}_{Units.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER}",
         device_class=SensorDeviceClass.PM25,
