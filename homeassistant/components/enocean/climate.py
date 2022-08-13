@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from abc import ABC
 
+from enocean.protocol.constants import PACKET, RORG
+from enocean.protocol.packet import Packet
 from enocean.utils import combine_hex
 
 from homeassistant.components.climate import (
@@ -12,7 +14,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.components.enocean.device import EnOceanEntity
 from homeassistant.components.enocean.light import CONF_SENDER_ID
-from homeassistant.const import CONF_ID, CONF_NAME, TEMP_CELSIUS
+from homeassistant.const import CONF_ID, CONF_NAME, TEMP_CELSIUS, ATTR_TEMPERATURE
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -41,6 +43,53 @@ def setup_platform(
     add_entities([EnOceanThermostat(base_id_to_use, dev_id, dev_name)])
 
 
+class PacketPreparator:
+
+    def __init__(self):
+        self._optional = None
+        self._data = None
+
+    @property
+    def optional(self):
+        return self._optional
+
+    @property
+    def data(self):
+        return self._data
+
+    def prepare_next_packet(self):
+        byte_three = 0x80  # 128 -> 20°  valve set point in celsius degrees
+        byte_two = 0x00   # temperature actual from RCU = 0b0
+        byte_one_bit_seven = 0 # run init sequence
+        byte_one_bit_six = 0  # lift set
+        byte_one_bit_five = 0  # valve open
+        byte_one_bit_four = 0  # valve closed
+        byte_one_bit_three = 0  # summer bit
+        byte_one_bit_two = 1  # set point selection (1 = temp (0-40), 0 = percent (0-100)
+        byte_one_bit_one = 0  # set point inverse
+        byte_one_bit_zero = 0  # 0 = RCU, 1 = service on
+        data_to_set = []
+        data_to_set[0] = byte_three
+        data_to_set[1] = byte_two
+        # TODO: set data_to_set[0] via bit shifting
+        data_to_set[2] = 0x0 | (byte_one_bit_seven << 7)
+        data_to_set[2] = 0x0 | (byte_one_bit_six << 6)
+        data_to_set[2] = 0x0 | (byte_one_bit_five << 5)
+        data_to_set[2] = 0x0 | (byte_one_bit_four << 4)
+        data_to_set[2] = 0x0 | (byte_one_bit_three << 3)
+        data_to_set[2] = 0x0 | (byte_one_bit_two << 2)
+        data_to_set[2] = 0x0 | (byte_one_bit_one << 1)
+        data_to_set[2] = 0x0 | byte_one_bit_zero
+        self._data = data_to_set
+
+
+    def update_optional(self):
+        pass
+
+    def update_target_temperature(self):
+        pass
+
+
 class EnOceanThermostat(EnOceanEntity, ClimateEntity, ABC):
     """Representation of an EnOcean Thermostat"""
 
@@ -59,6 +108,22 @@ class EnOceanThermostat(EnOceanEntity, ClimateEntity, ABC):
             key="thermostat",
             name=dev_name,
         )
+        self._packet_preparator = PacketPreparator()
+        self._packet_preparator.prepare_next_packet()
+
+    def value_changed(self, packet: Packet):
+        """Update the internal state of the device.
+
+         When a packet arrives, update the state and immediately send the response.
+         """
+        # extract data and update values
+        if packet.rorg == RORG.BS4:
+            pass
+
+
+
+        # send reply
+        self.send_command(self._packet_preparator.data, self._packet_preparator.optional, PACKET.RADIO_ERP1)
 
     @property
     def temperature_unit(self):
@@ -97,9 +162,13 @@ class EnOceanThermostat(EnOceanEntity, ClimateEntity, ABC):
     def target_temperature_step(self) -> float | None:
         return TEMPERATURE_STEP
 
-    def set_temperature(self, **kwargs) -> None:
+    async def set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
-        pass
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
+            return
+
+        if self.min_temp <= temperature <= self.max_temp:
+            await self._packet_preparator.update_target_temperature(temperature)
 
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode.
