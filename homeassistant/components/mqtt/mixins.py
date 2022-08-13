@@ -287,7 +287,7 @@ async def async_discover_yaml_entities(
 async def async_get_platform_config_from_yaml(
     hass: HomeAssistant,
     platform_domain: str,
-    config_yaml: ConfigType = None,
+    config_yaml: ConfigType | None = None,
 ) -> list[ConfigType]:
     """Return a list of validated configurations for the domain."""
 
