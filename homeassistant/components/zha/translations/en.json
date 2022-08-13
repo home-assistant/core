@@ -10,27 +10,42 @@
         },
         "flow_title": "{name}",
         "step": {
+            "choose_formation_strategy": {
+                "data": {
+                    "form_new_network": "Form a new network",
+                    "keep_current_settings": "Keep current network settings",
+                    "restore_automatic_backup": "Restore an automatic backup",
+                    "restore_manual_backup": "Restore a manual backup"
+                },
+                "description": "Choose the network settings for your coordinator",
+                "title": "Network Formation"
+            },
             "confirm": {
                 "description": "Do you want to setup {name}?"
             },
-            "confirm_hardware": {
-                "description": "Do you want to setup {name}?"
-            },
-            "pick_radio": {
+            "manual_pick_radio": {
                 "data": {
                     "radio_type": "Radio Type"
                 },
-                "description": "Pick a type of your Zigbee radio",
+                "description": "Pick your Zigbee radio type",
                 "title": "Radio Type"
             },
-            "port_config": {
+            "manual_port_config": {
                 "data": {
                     "baudrate": "port speed",
                     "flow_control": "data flow control",
                     "path": "Serial device path"
                 },
-                "description": "Enter port specific settings",
-                "title": "Settings"
+                "description": "Enter serial port settings",
+                "title": "Serial Port Settings"
+            },
+            "restore_automatic_backup": {
+                "data": {
+                    "choose_automatic_backup": "Choose an automatic backup",
+                    "overwrite_coordinator_ieee": "Overwrite the coordinator IEEE address (permanent)"
+                },
+                "description": "Restore your network settings from an automatic backup",
+                "title": "Restore Automatic Backup"
             },
             "user": {
                 "data": {

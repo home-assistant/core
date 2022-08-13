@@ -13,18 +13,36 @@
       "confirm_hardware": {
         "description": "Do you want to setup {name}?"
       },
-      "pick_radio": {
+      "manual_pick_radio": {
         "data": { "radio_type": "Radio Type" },
         "title": "Radio Type",
-        "description": "Pick a type of your Zigbee radio"
+        "description": "Pick your Zigbee radio type"
       },
-      "port_config": {
-        "title": "Settings",
-        "description": "Enter port specific settings",
+      "manual_port_config": {
+        "title": "Serial Port Settings",
+        "description": "Enter serial port settings",
         "data": {
           "path": "Serial device path",
           "baudrate": "port speed",
           "flow_control": "data flow control"
+        }
+      },
+      "choose_formation_strategy": {
+        "title": "Network Formation",
+        "description": "Choose the network settings for your coordinator",
+        "data": {
+          "form_new_network": "Form a new network",
+          "keep_current_settings": "Keep current network settings",
+          "restore_automatic_backup": "Restore an automatic backup",
+          "restore_manual_backup": "Restore a manual backup"
+        }
+      },
+      "restore_automatic_backup": {
+        "title": "Restore Automatic Backup",
+        "description": "Restore your network settings from an automatic backup",
+        "data": {
+          "choose_automatic_backup": "Choose an automatic backup",
+          "overwrite_coordinator_ieee": "Overwrite the coordinator IEEE address (permanent)"
         }
       }
     },

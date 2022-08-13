@@ -37,9 +37,9 @@ SUPPORTED_PORT_SETTINGS = (
 )
 DECONZ_DOMAIN = "deconz"
 
-# Only the common common radio types will be autoprobed, in order of new device
-# popularity. XBee takes too long to probe since it scans through all possible bauds and
-# likely has very few users to begin with.
+# Only the common radio types will be autoprobed, ordered by new device popularity.
+# XBee takes too long to probe since it scans through all possible bauds and likely has
+# very few users to begin with.
 AUTOPROBE_RADIOS = (
     RadioType.ezsp,
     RadioType.znp,
@@ -48,13 +48,13 @@ AUTOPROBE_RADIOS = (
 )
 
 FORMATION_STRATEGY = "formation_strategy"
-FORMATION_FORM_NEW_NETWORK = "Form a new network"
-FORMATION_REUSE_SETTINGS = "Keep current network settings"
-FORMATION_RESTORE_AUTOMATIC_BACKUP = "Restore an automatic backup"
-FORMATION_RESTORE_MANUAL_BACKUP = "Restore a manual backup"
+FORMATION_FORM_NEW_NETWORK = "form_new_network"
+FORMATION_REUSE_SETTINGS = "keep_current_settings"
+FORMATION_RESTORE_AUTOMATIC_BACKUP = "restore_automatic_backup"
+FORMATION_RESTORE_MANUAL_BACKUP = "restore_manual_backup"
 
-CHOOSE_AUTOMATIC_BACKUP = "Choose an automatic backup"
-OVERWRITE_COORDINATOR_IEEE = "Overwrite the coordinator's IEEE address"
+CHOOSE_AUTOMATIC_BACKUP = "choose_automatic_backup"
+OVERWRITE_COORDINATOR_IEEE = "overwrite_coordinator_ieee"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,6 +77,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Connect to the radio with the current config and then clean up."""
         config = self.hass.data.get(DATA_ZHA, {}).get(DATA_ZHA_CONFIG, {})
 
+        assert self._radio_type is not None
         app_controller_cls = RadioType[self._radio_type].controller
         app_config = config.get(CONF_ZIGPY, {}).copy()
 
