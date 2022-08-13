@@ -4,7 +4,12 @@ from abc import ABC
 
 from enocean.utils import combine_hex
 
-from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature, HVACMode, ClimateEntityDescription
+from homeassistant.components.climate import (
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACMode,
+    ClimateEntityDescription,
+)
 from homeassistant.components.enocean.device import EnOceanEntity
 from homeassistant.components.enocean.light import CONF_SENDER_ID
 from homeassistant.const import CONF_ID, CONF_NAME, TEMP_CELSIUS
@@ -51,9 +56,9 @@ class EnOceanThermostat(EnOceanEntity, ClimateEntity, ABC):
         self._current_valve_value = 0
         self._attr_unique_id = f"{combine_hex(dev_id)}"
         self.entity_description = ClimateEntityDescription(
-                        key="thermostat",
-                        name=dev_name,
-                    )
+            key="thermostat",
+            name=dev_name,
+        )
 
     @property
     def temperature_unit(self):

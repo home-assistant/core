@@ -297,6 +297,7 @@ omit =
     homeassistant/components/enocean/switch.py
     homeassistant/components/enocean/services.py
     homeassistant/components/enocean/teachin.py
+    homeassistant/components/enocean/climate.py
     homeassistant/components/enphase_envoy/__init__.py
     homeassistant/components/enphase_envoy/sensor.py
     homeassistant/components/entur_public_transport/*
