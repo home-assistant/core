@@ -263,11 +263,11 @@ class RadioType(enum.Enum):
         return [e.description for e in RadioType]
 
     @classmethod
-    def get_by_description(cls, description: str) -> str:
+    def get_by_description(cls, description: str) -> RadioType:
         """Get radio by description."""
         for radio in cls:
             if radio.description == description:
-                return radio.name
+                return radio
         raise ValueError
 
     def __init__(self, description: str, controller_cls: _ControllerClsType) -> None:

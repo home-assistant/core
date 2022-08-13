@@ -67,7 +67,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize flow instance."""
         self._device_settings: dict[str, Any] | None = None
-        self._radio_type: str | None = None
+        self._radio_type: RadioType | None = None
         self._title: str | None = None
         self._current_settings: zigpy.backups.NetworkBackup | None = None
         self._backups: list[zigpy.backups.NetworkBackup] | None = None
@@ -78,7 +78,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         config = self.hass.data.get(DATA_ZHA, {}).get(DATA_ZHA_CONFIG, {})
 
         assert self._radio_type is not None
-        app_controller_cls = RadioType[self._radio_type].controller
+        app_controller_cls = self._radio_type.controller
         app_config = config.get(CONF_ZIGPY, {}).copy()
 
         app_config[CONF_DATABASE] = config.get(
@@ -115,7 +115,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if isinstance(probe_result, dict):
                 dev_config = probe_result
 
-            self._radio_type = radio.name
+            self._radio_type = radio
             self._device_settings = dev_config
 
             return True
@@ -130,7 +130,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(
             title=self._title,
-            data={CONF_DEVICE: device_settings, CONF_RADIO_TYPE: self._radio_type},
+            data={CONF_DEVICE: device_settings, CONF_RADIO_TYPE: self._radio_type.name},
         )
 
     async def async_step_user(self, user_input=None):
@@ -283,18 +283,18 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         self._device_path = device_path
         if "efr32" in radio_type:
-            self._radio_type = RadioType.ezsp.name
+            self._radio_type = RadioType.ezsp
         elif "zigate" in radio_type:
-            self._radio_type = RadioType.zigate.name
+            self._radio_type = RadioType.zigate
         else:
-            self._radio_type = RadioType.znp.name
+            self._radio_type = RadioType.znp
 
         return await self.async_step_manual_port_config()
 
     async def async_step_manual_port_config(self, user_input=None):
         """Enter port settings specific for this type of radio."""
         errors = {}
-        app_cls = RadioType[self._radio_type].controller
+        app_cls = self._radio_type.controller
 
         if user_input is not None:
             self._device_path = await self.hass.async_add_executor_job(
@@ -336,8 +336,8 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="invalid_hardware_data")
         if data.get("radio_type") != "efr32":
             return self.async_abort(reason="invalid_hardware_data")
-        self._radio_type = RadioType.ezsp.name
-        app_cls = RadioType[self._radio_type].controller
+        self._radio_type = RadioType.ezsp
+        app_cls = self._radio_type.controller
 
         schema = {
             vol.Required(
@@ -471,7 +471,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Required(CHOOSE_AUTOMATIC_BACKUP, default=0): vol.In(choices),
         }
 
-        if self._radio_type == "ezsp" and (
+        if self._radio_type == RadioType.ezsp and (
             self._current_settings is None
             or any(backup.node_info.ieee != self._current_settings.node_info.ieee)
         ):
