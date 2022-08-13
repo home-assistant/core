@@ -50,7 +50,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self.data: dict[str, str] = {}
         self.locations: list[Location] = []
-        self._reauth_data: Mapping[str, Any] = {}
+        self._reauth_data: Mapping[str, Any] = {"id": None}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
