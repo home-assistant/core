@@ -76,12 +76,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         depth = call.data["depth"]
         duration = call.data["duration"]
         mode = call.data["mode"]
-        await coordinator.api.connect()
-        coordinator.api.setDepth(depth)
-        coordinator.api.setDuration(duration)
-        coordinator.api.setMode(mode)
-        await coordinator.api.calibrate()
-        await coordinator.api.disconnect()
+        await coordinator.api.calibrate(depth, duration, mode)
+
 
     hass.services.async_register(DOMAIN, "generate_token", generate_token)
     hass.services.async_register(DOMAIN, "calibrate", calibrate)
