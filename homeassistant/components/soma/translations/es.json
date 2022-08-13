@@ -1,9 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_setup": "S\u00f3lo puede configurar una cuenta de Soma.",
+            "already_setup": "Ya est\u00e1 configurado. Solo es posible una \u00fanica configuraci\u00f3n.",
             "authorize_url_timeout": "Tiempo de espera agotado durante la generaci\u00f3n de la URL de autorizaci\u00f3n.",
-            "connection_error": "No se ha podido conectar a SOMA Connect.",
+            "connection_error": "No se pudo conectar",
             "missing_configuration": "El componente Soma no est\u00e1 configurado. Por favor, leer la documentaci\u00f3n.",
             "result_error": "SOMA Connect respondi\u00f3 con un error."
         },

@@ -50,7 +50,7 @@
                     "access_token": "Token de acceso",
                     "email": "Correo electr\u00f3nico"
                 },
-                "description": "Debes registrarte para obtener un token de acceso de desarrollador Awair en: https://developer.getawair.com/onboard/login",
+                "description": "Elige local para la mejor experiencia. Usa solo la nube si el dispositivo no est\u00e1 conectado a la misma red que Home Assistant, o si tienes un dispositivo heredado.",
                 "menu_options": {
                     "cloud": "Conectar a trav\u00e9s de la nube",
                     "local": "Conectar localmente (preferido)"

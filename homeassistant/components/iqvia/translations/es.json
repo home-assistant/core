@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Este c\u00f3digo postal ya ha sido configurado."
+            "already_configured": "El servicio ya est\u00e1 configurado"
         },
         "error": {
             "invalid_zip_code": "El c\u00f3digo postal no es v\u00e1lido"

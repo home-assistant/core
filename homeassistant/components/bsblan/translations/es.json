@@ -17,7 +17,7 @@
                     "port": "Puerto",
                     "username": "Nombre de usuario"
                 },
-                "description": "Configura tu dispositivo BSB-Lan para integrarse con Home Assistant.",
+                "description": "Configura tu dispositivo BSB-Lan para que se integre con Home Assistant.",
                 "title": "Conectar con el dispositivo BSB-Lan"
             }
         }
