@@ -23,7 +23,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up YALE XS binary sensors."""
     data: YaleXSBLEData = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([YaleXSBLEDoorSensor(data)])
+    lock = data.lock
+    if lock.lock_info and lock.lock_info.door_sense:
+        async_add_entities([YaleXSBLEDoorSensor(data)])
 
 
 class YaleXSBLEDoorSensor(YALEXSBLEEntity, BinarySensorEntity):
