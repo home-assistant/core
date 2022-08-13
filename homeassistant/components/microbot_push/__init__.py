@@ -25,13 +25,13 @@ from .const import (
     CONF_BDADDR,
     DEFAULT_RETRY_COUNT,
     DOMAIN,
-    PLATFORMS,
 )
 
 if TYPE_CHECKING:
     from bleak.backends.device import BLEDevice
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
+PLATFORMS: list[str] = ["switch"]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -85,7 +85,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.services.async_register(DOMAIN, "generate_token", generate_token)
     hass.services.async_register(DOMAIN, "calibrate", calibrate)
-    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
     return True
 
 
