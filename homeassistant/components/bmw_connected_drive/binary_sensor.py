@@ -37,8 +37,10 @@ ALLOWED_CONDITION_BASED_SERVICE_KEYS = {
     "VEHICLE_CHECK",
     "VEHICLE_TUV",
 }
+LOGGED_CONDITION_BASED_SERVICE_WARNINGS = set()
 
 ALLOWED_CHECK_CONTROL_MESSAGE_KEYS = {"ENGINE_OIL", "TIRE_PRESSURE"}
+LOGGED_CHECK_CONTROL_MESSAGE_WARNINGS = set()
 
 
 def _condition_based_services(
@@ -46,12 +48,16 @@ def _condition_based_services(
 ) -> dict[str, Any]:
     extra_attributes = {}
     for report in vehicle.condition_based_services.messages:
-        if report.service_type not in ALLOWED_CONDITION_BASED_SERVICE_KEYS:
+        if (
+            report.service_type not in ALLOWED_CONDITION_BASED_SERVICE_KEYS
+            and report.service_type not in LOGGED_CONDITION_BASED_SERVICE_WARNINGS
+        ):
             _LOGGER.warning(
                 "'%s' not an allowed condition based service (%s)",
                 report.service_type,
                 report,
             )
+            LOGGED_CONDITION_BASED_SERVICE_WARNINGS.add(report.service_type)
             continue
 
         extra_attributes.update(_format_cbs_report(report, unit_system))
@@ -61,17 +67,19 @@ def _condition_based_services(
 def _check_control_messages(vehicle: MyBMWVehicle) -> dict[str, Any]:
     extra_attributes: dict[str, Any] = {}
     for message in vehicle.check_control_messages.messages:
-        if message.description_short not in ALLOWED_CHECK_CONTROL_MESSAGE_KEYS:
+        if (
+            message.description_short not in ALLOWED_CHECK_CONTROL_MESSAGE_KEYS
+            and message.description_short not in LOGGED_CHECK_CONTROL_MESSAGE_WARNINGS
+        ):
             _LOGGER.warning(
                 "'%s' not an allowed check control message (%s)",
                 message.description_short,
                 message,
             )
+            LOGGED_CHECK_CONTROL_MESSAGE_WARNINGS.add(message.description_short)
             continue
 
-        extra_attributes.update(
-            {message.description_short.lower(): message.state.value}
-        )
+        extra_attributes[message.description_short.lower()] = message.state.value
     return extra_attributes
 
 
