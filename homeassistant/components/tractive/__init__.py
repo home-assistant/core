@@ -210,6 +210,11 @@ class TractiveClient:
                     ):
                         self._last_pos_time = event["position"]["time"]
                         self._send_position_update(event)
+            except aiotractive.exceptions.UnauthorizedError:
+                _LOGGER.debug(
+                    "Tractive responds with unauthorized. Have you changed your password? Disabling integration"
+                )
+                # How do I disable the integration till restart and show an error message in the HASS UI from here?
             except aiotractive.exceptions.TractiveError:
                 _LOGGER.debug(
                     "Tractive is not available. Internet connection is down? Sleeping %i seconds and retrying",
