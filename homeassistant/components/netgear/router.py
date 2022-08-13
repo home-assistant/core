@@ -42,9 +42,9 @@ _LOGGER = logging.getLogger(__name__)
 
 def get_api(
     password: str,
-    host: str = None,
-    username: str = None,
-    port: int = None,
+    host: str | None = None,
+    username: str | None = None,
+    port: int | None = None,
     ssl: bool = False,
 ) -> Netgear:
     """Get the Netgear API and login to it."""
