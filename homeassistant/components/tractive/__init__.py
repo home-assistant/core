@@ -214,7 +214,11 @@ class TractiveClient:
                 _LOGGER.debug(
                     "Tractive responds with unauthorized. Have you changed your password? Disabling integration"
                 )
+                async_dispatcher_send(
+                    self._hass, f"{SERVER_UNAVAILABLE}-{self._user_id}"
+                )
                 # How do I disable the integration till restart and show an error message in the HASS UI from here?
+                return
             except aiotractive.exceptions.TractiveError:
                 _LOGGER.debug(
                     "Tractive is not available. Internet connection is down? Sleeping %i seconds and retrying",
