@@ -133,6 +133,11 @@ class MicroBotDataUpdateCoordinator(PassiveBluetoothDataUpdateCoordinator):
                 await self._ready_event.wait()
                 return True
         return False
+    
+    @property
+    def available(self) -> bool:
+        """Return true if the switch is available."""
+        return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
