@@ -1981,7 +1981,7 @@ python-telegram-bot==13.1
 python-vlc==1.1.2
 
 # homeassistant.components.awair
-python_awair==0.2.3
+python_awair==0.2.4
 
 # homeassistant.components.swiss_public_transport
 python_opendata_transport==0.3.0
