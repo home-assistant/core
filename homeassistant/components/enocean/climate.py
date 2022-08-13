@@ -2,15 +2,16 @@ from __future__ import annotations
 
 from abc import ABC
 
-from components.climate import ClimateEntity, ClimateEntityFeature, HVACMode
-from components.enocean.device import EnOceanEntity
-from components.enocean.light import CONF_SENDER_ID
-from const import CONF_ID, CONF_NAME, TEMP_CELSIUS
-from helpers import ConfigType
-from helpers.entity_platform import AddEntitiesCallback
-from helpers.typing import DiscoveryInfoType
+from enocean.utils import combine_hex
 
-from core import HomeAssistant
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature, HVACMode, ClimateEntityDescription
+from homeassistant.components.enocean.device import EnOceanEntity
+from homeassistant.components.enocean.light import CONF_SENDER_ID
+from homeassistant.const import CONF_ID, CONF_NAME, TEMP_CELSIUS
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from homeassistant.core import HomeAssistant
 
 MAX_TARGET_TEMP = 40
 MIN_TARGET_TEMP = 0
@@ -27,10 +28,10 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the EnOcean thermostat platform."""
-    sender_id = config.get(CONF_SENDER_ID)
-    dev_name = config.get(CONF_NAME)
-    dev_id = config.get(CONF_ID)
-    base_id_to_use = config.get(sender_id)
+    sender_id = config.get(CONF_SENDER_ID, [0x0, 0x0, 0x0, 0x0])
+    dev_name = config.get(CONF_NAME, "EnOcean Thermostat A5-20-01")
+    dev_id = config.get(CONF_ID, [0x0, 0x0, 0x0, 0x0])
+    base_id_to_use = sender_id
 
     add_entities([EnOceanThermostat(base_id_to_use, dev_id, dev_name)])
 
@@ -45,9 +46,14 @@ class EnOceanThermostat(EnOceanEntity, ClimateEntity, ABC):
         super().__init__(dev_id, dev_name)
         self._base_id_to_use = base_id_to_use
         self._set_point = DEFAULT_SET_POINT
-        self._current_temp = None
-        self._off_value = None
-        self._current_valve_value = None
+        self._current_temp = 0
+        self._off_value = 0
+        self._current_valve_value = 0
+        self._attr_unique_id = f"{combine_hex(dev_id)}"
+        self.entity_description = ClimateEntityDescription(
+                        key="thermostat",
+                        name=dev_name,
+                    )
 
     @property
     def temperature_unit(self):
@@ -61,6 +67,10 @@ class EnOceanThermostat(EnOceanEntity, ClimateEntity, ABC):
         if self.target_temperature > self._current_valve_value:
             return HVACMode.HEAT
         return HVACMode.HEAT
+
+    @property
+    def hvac_modes(self) -> list[HVACMode] | list[str]:
+        return [HVACMode.HEAT, HVACMode.OFF]
 
     @property
     def current_temperature(self) -> float | None:
