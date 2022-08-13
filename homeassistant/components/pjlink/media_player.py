@@ -33,6 +33,33 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
+ATTR_PROJECTOR_STATUS = "projector_status"
+ATTR_LAMP_STATUS = "lamp_status"
+ATTR_FAN_ERROR = "fan_error"
+ATTR_LAMP_ERROR = "lamp_error"
+ATTR_TEMP_ERROR = "temp_error"
+ATTR_COVER_ERROR = "cover_error"
+ATTR_FILTER_ERROR = "filter_error"
+ATTR_OTHER_ERROR = "other_error"
+ATTR_MANUFACTURER = "manufacturer"
+ATTR_PRODUCT_NAME = "product_name"
+ATTR_OTHER_INFO = "other_info"
+ATTR_HAS_ERROR = "has_error"
+
+ATTR_TO_PROPERTY = [
+    ATTR_PROJECTOR_STATUS,
+    ATTR_LAMP_STATUS,
+    ATTR_FAN_ERROR,
+    ATTR_LAMP_ERROR,
+    ATTR_TEMP_ERROR,
+    ATTR_COVER_ERROR,
+    ATTR_FILTER_ERROR,
+    ATTR_OTHER_ERROR,
+    ATTR_MANUFACTURER,
+    ATTR_OTHER_INFO,
+    ATTR_HAS_ERROR,
+]
+
 
 def setup_platform(
     hass: HomeAssistant,
@@ -49,9 +76,11 @@ def setup_platform(
 
     if "pjlink" not in hass.data:
         hass.data["pjlink"] = {}
+
     hass_data = hass.data["pjlink"]
 
     device_label = f"{host}:{port}"
+
     if device_label in hass_data:
         return
 
@@ -76,7 +105,7 @@ class PjLinkDevice(MediaPlayerEntity):
     )
 
     def __init__(self, host, port, name, encoding, password):
-        """Iinitialize the PJLink device."""
+        """Initialize the PJLink device."""
         self._host = host
         self._port = port
         self._name = name
@@ -85,28 +114,73 @@ class PjLinkDevice(MediaPlayerEntity):
         self._muted = False
         self._pwstate = MediaPlayerState.OFF
         self._current_source = None
+        self._source_name_mapping = None
+        self._source_list = None
+
+        # Other projector data.
+        self._raw_pwstate = "off"
+        self._lamp_status = []
+        self._fan_error = None
+        self._lamp_error = None
+        self._temp_error = None
+        self._cover_error = None
+        self._filter_error = None
+        self._other_error = None
+        self._manufacturer = None
+        self._product_name = None
+        self._other_info = None
+        self._has_error = False
+
         with self.projector() as projector:
-            if not self._name:
+            self.update_metadata(projector)
+
+    def update_metadata(self, projector):
+        """Update projector metadata if metadata hasn't been set."""
+        if not self._name:
+            try:
                 self._name = projector.get_name()
-            inputs = projector.get_inputs()
-        self._source_name_mapping = {format_input_source(*x): x for x in inputs}
-        self._source_list = sorted(self._source_name_mapping.keys())
+            except ProjectorError:
+                pass
+
+        if not self._manufacturer:
+            try:
+                self._manufacturer = projector.get_manufacturer()
+            except ProjectorError:
+                pass
+
+        if not self._product_name:
+            try:
+                self._product_name = projector.get_product_name()
+            except ProjectorError:
+                pass
+
+        if not self._source_list:
+            try:
+                inputs = projector.get_inputs()
+
+                self._source_name_mapping = {format_input_source(*x): x for x in inputs}
+                self._source_list = sorted(self._source_name_mapping.keys())
+            except ProjectorError:
+                pass
 
     def projector(self):
         """Create PJLink Projector instance."""
-
         projector = Projector.from_address(
             self._host, self._port, self._encoding, DEFAULT_TIMEOUT
         )
+
         projector.authenticate(self._password)
+
         return projector
 
     def update(self) -> None:
         """Get the latest state from the device."""
-
         with self.projector() as projector:
             try:
                 pwstate = projector.get_power()
+
+                self._raw_pwstate = pwstate
+
                 if pwstate in ("on", "warm-up"):
                     self._pwstate = MediaPlayerState.ON
                     self._muted = projector.get_mute()[1]
@@ -129,6 +203,56 @@ class PjLinkDevice(MediaPlayerEntity):
                     self._current_source = None
                 else:
                     raise
+
+            if self._raw_pwstate == "on":
+                # Try and update metadata; some projectors won't report data if they're not on.
+                self.update_metadata(projector)
+
+            try:
+                lamps_state = []
+
+                for lamp_hours, lamp_state in projector.get_lamps():
+                    lamps_state.append(
+                        {
+                            "hours": lamp_hours,
+                            "state": "on" if lamp_state else "off",
+                        }
+                    )
+
+                self._lamp_status = lamps_state
+            except ProjectorError:
+                pass
+
+            try:
+                # Get errors.
+                errors = projector.get_errors()
+
+                # Keep track of any errors.
+                self._has_error = False
+
+                for key, value in errors.items():
+                    if key == "temperature":
+                        key = "temp"
+
+                    # Clear error if error is "ok".
+                    if value == "ok":
+                        value = None
+                    else:
+                        self._has_error = True
+
+                    # Ignore unsupported errors - none at the time of writing.
+                    try:
+                        setattr(self, f"_{key}_error", value)
+                    except AttributeError:
+                        pass
+            except ProjectorError:
+                pass
+
+            # Get other info.
+            try:
+                self._other_info = projector.get_other_info()
+            except ProjectorError:
+                pass
 
     @property
     def name(self):
@@ -175,3 +299,74 @@ class PjLinkDevice(MediaPlayerEntity):
         source = self._source_name_mapping[source]
         with self.projector() as projector:
             projector.set_input(*source)
+
+    @property
+    def extra_state_attributes(self):
+        """Add the extra projector specific attributes."""
+        state_attr = {}
+
+        for attr in ATTR_TO_PROPERTY:
+            if (value := getattr(self, attr)) is not None:
+                state_attr[attr] = value
+
+        return state_attr
+
+    @property
+    def projector_status(self):
+        """Return the warming/on/cooling/off state of the device."""
+        return self._raw_pwstate
+
+    @property
+    def lamp_status(self):
+        """Return the lamp status of the device."""
+        return self._lamp_status
+
+    @property
+    def fan_error(self):
+        """Return the fan error, if any."""
+        return self._fan_error
+
+    @property
+    def lamp_error(self):
+        """Return the lamp error, if any."""
+        return self._lamp_error
+
+    @property
+    def temp_error(self):
+        """Return the temperature error, if any."""
+        return self._temp_error
+
+    @property
+    def cover_error(self):
+        """Return the cover error, if any."""
+        return self._cover_error
+
+    @property
+    def filter_error(self):
+        """Return the filter error, if any."""
+        return self._filter_error
+
+    @property
+    def other_error(self):
+        """Return the lamp error, if any."""
+        return self._other_error
+
+    @property
+    def manufacturer(self):
+        """Return the manufacturer."""
+        return self._manufacturer
+
+    @property
+    def product_name(self):
+        """Return the product name."""
+        return self._product_name
+
+    @property
+    def other_info(self):
+        """Return other information."""
+        return self._other_info
+
+    @property
+    def has_error(self):
+        """Return whether any errors are set."""
+        return self._has_error
