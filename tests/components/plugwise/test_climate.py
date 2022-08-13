@@ -103,6 +103,17 @@ async def test_adam_climate_adjust_negative_testing(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             "climate",
+            "set_hvac_mode",
+            {
+                "entity_id": "climate.zone_thermostat_jessie",
+                "hvac_mode": HVACMode.AUTO,
+            },
+            blocking=True,
+        )
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "climate",
             "set_preset_mode",
             {"entity_id": "climate.zone_thermostat_jessie", "preset_mode": "home"},
             blocking=True,
@@ -250,14 +261,14 @@ async def test_anna_climate_entity_climate_changes(
     await hass.services.async_call(
         "climate",
         "set_temperature",
-        {"entity_id": "climate.anna", "temperature": 20},
+        {"entity_id": "climate.anna", "temperature": 25},
         blocking=True,
     )
 
     assert mock_smile_anna.set_temperature.call_count == 1
     mock_smile_anna.set_temperature.assert_called_with(
         "c784ee9fdab44e1395b8dee7d7a497d5",
-        20.0,
+        25.0,
     )
 
     await hass.services.async_call(
