@@ -10,8 +10,6 @@ CONF_SERVICE_URL = "service_url"
 CONF_SCANDINAVIAN_MILES = "scandinavian_miles"
 CONF_MUTABLE = "mutable"
 
-SIGNAL_STATE_UPDATED = f"{DOMAIN}.updated"
-
 PLATFORMS = {
     "sensor": "sensor",
     "binary_sensor": "binary_sensor",
