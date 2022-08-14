@@ -147,21 +147,22 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         ]
 
         if not list_of_ports:
-            return await self.async_step_manual_pick_radio()
+            return await self.async_step_manual_pick_radio_type()
 
         list_of_ports.append(CONF_MANUAL_PATH)
 
         if user_input is not None:
             user_selection = user_input[CONF_DEVICE_PATH]
+
             if user_selection == CONF_MANUAL_PATH:
-                return await self.async_step_manual_pick_radio()
+                return await self.async_step_manual_pick_radio_type()
 
             port = ports[list_of_ports.index(user_selection)]
             self._device_path = port.device
 
             if not await self._detect_radio_type():
                 # Did not autodetect anything, proceed to manual selection
-                return await self.async_step_manual_pick_radio()
+                return await self.async_step_manual_pick_radio_type()
 
             self._title = (
                 f"{port.description}, s/n: {port.serial_number or 'n/a'}"
@@ -175,7 +176,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         schema = vol.Schema({vol.Required(CONF_DEVICE_PATH): vol.In(list_of_ports)})
         return self.async_show_form(step_id="user", data_schema=schema)
 
-    async def async_step_manual_pick_radio(self, user_input=None):
+    async def async_step_manual_pick_radio_type(self, user_input=None):
         """Manually select radio type."""
 
         if user_input is not None:
@@ -184,7 +185,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         schema = {vol.Required(CONF_RADIO_TYPE): vol.In(RadioType.list())}
         return self.async_show_form(
-            step_id="manual_pick_radio",
+            step_id="manual_pick_radio_type",
             data_schema=vol.Schema(schema),
         )
 
