@@ -93,7 +93,8 @@ CHIME_BUTTONS: tuple[ProtectButtonEntityDescription, ...] = (
 )
 
 
-async def _remove_adopt_button(
+@callback
+def _async_remove_adopt_button(
     hass: HomeAssistant, device: ProtectAdoptableDeviceModel
 ) -> None:
 
