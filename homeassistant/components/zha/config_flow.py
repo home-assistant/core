@@ -66,6 +66,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize flow instance."""
+        self._device_path: str | None = None
         self._device_settings: dict[str, Any] | None = None
         self._radio_type: RadioType | None = None
         self._title: str | None = None
@@ -91,9 +92,9 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         app = await app_controller_cls.new(
             app_config, auto_form=False, start_radio=False
         )
-        await app.connect()
 
         try:
+            await app.connect()
             yield app
         finally:
             await app.disconnect()
@@ -301,7 +302,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 usb.get_serial_by_id, user_input[CONF_DEVICE_PATH]
             )
             self._device_settings = {
-                k: v for k, v in user_input if k != CONF_DEVICE_PATH
+                k: v for k, v in user_input.items() if k != CONF_DEVICE_PATH
             }
 
             if await app_cls.probe(user_input):
