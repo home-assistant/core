@@ -48,10 +48,21 @@ SERVICE_ADD_PACKAGE_SCHEMA = vol.Schema(
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up the SeventeenTrack component."""
-    coordinator = SeventeenTrackDataCoordinator(hass, config_entry)
+    try:
+        client = await get_client(hass, config_entry.data)
 
-    await coordinator.async_setup()
+    except AuthenticationError as err:
+        raise ConfigEntryAuthFailed from err
+    except SeventeenTrackError as err:
+        raise ConfigEntryNotReady(
+            f"There was an error while logging in: {err}"
+        ) from err
+
+    coordinator = SeventeenTrackDataCoordinator(hass, config_entry, client)
+
+    config_entry.add_update_listener(coordinator.async_options_updated)
     await coordinator.async_config_entry_first_refresh()
+    await coordinator.async_register_service()
 
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = coordinator
 
@@ -63,10 +74,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload SeventeenTrack Entry from config_entry."""
 
-    unload_ok = await hass.config_entries.async_unload_platforms(
+    if unload_ok := await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
-    )
-    if unload_ok:
+    ):
         hass.data[DOMAIN].pop(config_entry.entry_id)
         if not hass.data[DOMAIN]:
             hass.services.async_remove(DOMAIN, SERVICE_ADD_PACKAGE)
@@ -78,17 +88,21 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 class SeventeenTrackDataCoordinator(DataUpdateCoordinator):
     """Get the latest data from SeventeenTrack."""
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        client: SeventeenTrackClient,
+    ) -> None:
         """Initialize the data object."""
         self.hass = hass
         self.config_entry: ConfigEntry = config_entry
-        self.client: SeventeenTrackClient = None
-        self.account_id: str = ""
+        self.client = client
+        self.account_id: str = client.profile.account_id
         super().__init__(
             self.hass,
             _LOGGER,
             name=DOMAIN,
-            update_method=self.async_update,
             update_interval=timedelta(
                 minutes=self.config_entry.options.get(
                     CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
@@ -101,7 +115,7 @@ class SeventeenTrackDataCoordinator(DataUpdateCoordinator):
         """Include archived packages when fetching data."""
         return self.config_entry.options.get(CONF_SHOW_ARCHIVED, DEFAULT_SHOW_ARCHIVED)
 
-    async def async_update(self) -> dict[str, dict]:
+    async def _async_update_data(self) -> dict[str, dict]:
         """Update SeventeenTrack data."""
         try:
             packages = await self.client.profile.packages(
@@ -127,18 +141,8 @@ class SeventeenTrackDataCoordinator(DataUpdateCoordinator):
 
         return {"packages": packages, "summary": summary}
 
-    async def async_setup(self) -> bool:
+    async def async_register_service(self) -> bool:
         """Set up SeventeenTrack."""
-        try:
-            self.client = await get_client(self.hass, self.config_entry.data)
-            self.account_id = self.client.profile.account_id
-
-        except AuthenticationError as err:
-            raise ConfigEntryAuthFailed from err
-        except SeventeenTrackError as err:
-            raise ConfigEntryNotReady(
-                f"There was an error while logging in: {err}"
-            ) from err
 
         async def async_add_package(service: ServiceCall) -> None:
             """Add new package."""
@@ -178,7 +182,6 @@ class SeventeenTrackDataCoordinator(DataUpdateCoordinator):
             async_add_package,
             schema=SERVICE_ADD_PACKAGE_SCHEMA,
         )
-        self.config_entry.add_update_listener(self.async_options_updated)
 
         return True
 

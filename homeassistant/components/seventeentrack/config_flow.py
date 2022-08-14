@@ -1,6 +1,9 @@
 """Config flow for SeventeenTrack."""
 from __future__ import annotations
 
+from collections.abc import Mapping
+from typing import Any
+
 from seventeentrack import Client as SeventeenTrackClient
 from seventeentrack.errors import SeventeenTrackError
 import voluptuous as vol
@@ -32,8 +35,7 @@ async def get_client(hass: HomeAssistant, entry):
     """Return SeventeenTrack client."""
     session = aiohttp_client.async_get_clientsession(hass)
     client = SeventeenTrackClient(session=session)
-    login_result = await client.profile.login(entry[CONF_TOKEN])
-    if not login_result:
+    if not await client.profile.login(entry[CONF_TOKEN]):
         raise AuthenticationError
 
     return client
@@ -44,7 +46,6 @@ class SeventeenTrackFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize config flow."""
-        self.entry: config_entries.ConfigEntry | None = None
         self.account_id: str | None = None
 
     @staticmethod
@@ -57,7 +58,7 @@ class SeventeenTrackFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_validate_input(self, user_input):
         """Validate the user input allows us to connect."""
-        errors = {}
+        errors: dict[str, str] = {}
         try:
             client = await get_client(self.hass, user_input)
             self.account_id = client.profile.account_id
@@ -71,14 +72,13 @@ class SeventeenTrackFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
 
-            errors = await self._async_validate_input(user_input)
-            await self.async_set_unique_id(self.account_id)
-            self._abort_if_unique_id_configured()
+            if not (errors := await self._async_validate_input(user_input)):
+                await self.async_set_unique_id(self.account_id)
+                self._abort_if_unique_id_configured()
 
-            if not errors:
                 return self.async_create_entry(
                     title=user_input[CONF_NAME], data=user_input
                 )
@@ -89,29 +89,28 @@ class SeventeenTrackFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, user_input=None) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""
-        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         return await self.async_step_reauth_confirm()
 
-    async def async_step_reauth_confirm(self, user_input=None) -> FlowResult:
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Dialog that informs the user that reauth is required."""
-        errors = {}
-        if self.entry is not None:
-            _token = self.entry.data[CONF_TOKEN]
-        if user_input is not None and self.entry:
-            user_input[CONF_TOKEN] = _token
-            errors = await self._async_validate_input(user_input)
-
-            if not errors:
+        errors: dict[str, str] = {}
+        existing_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+        if user_input is not None and existing_entry is not None:
+            if not (errors := await self._async_validate_input(user_input)):
                 self.hass.config_entries.async_update_entry(
-                    self.entry,
+                    existing_entry,
                     data={
-                        **self.entry.data,
+                        **existing_entry.data,
                         **user_input,
                     },
                 )
-                await self.hass.config_entries.async_reload(self.entry.entry_id)
+                await self.hass.config_entries.async_reload(existing_entry.entry_id)
                 return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
