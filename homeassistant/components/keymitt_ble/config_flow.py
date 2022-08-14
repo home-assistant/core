@@ -23,7 +23,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.const import CONF_ACCESS_TOKEN
 
-from .const import CONF_BDADDR, DEFAULT_RETRY_COUNT, DOMAIN
+from .const import CONF_BDADDR, DEFAULT_RETRY_COUNT, DOMAIN, DEFAULT_NAME
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
@@ -34,7 +34,7 @@ def short_address(address: str) -> str:
     return f"{results[0].upper()}{results[1].upper()}"[0:4]
 
 
-def name_from_discovery(discovery: SwitchBotAdvertisement) -> str:
+def name_from_discovery(discovery: MicroBotAdvertisement) -> str:
     """Get the name from a discovery."""
     return f'{discovery.data["local_name"]} {short_address(discovery.address)}'
 
@@ -87,7 +87,9 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if discovery := self._discovered_adv:
             self._discovered_advs[discovery.address] = discovery
+            self._name = name_from_discovery(discovery)
         else:
+            self._name = DEFAULT_NAME
             current_addresses = self._async_current_ids()
             for discovery_info in async_discovered_service_info(self.hass):
                 address = discovery_info.address
@@ -117,7 +119,6 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         if user_input is not None:
-            self._name = name_from_discovery(discovery)
             self._bdaddr = user_input[CONF_BDADDR]
             await self.async_set_unique_id(
                 self._bdaddr, raise_on_progress=False
