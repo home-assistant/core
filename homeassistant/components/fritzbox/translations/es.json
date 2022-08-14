@@ -25,7 +25,7 @@
                     "password": "Contrase\u00f1a",
                     "username": "Nombre de usuario"
                 },
-                "description": "Actualice la informaci\u00f3n de inicio de sesi\u00f3n para {name}."
+                "description": "Actualiza tu informaci\u00f3n de inicio de sesi\u00f3n para {name}."
             },
             "user": {
                 "data": {

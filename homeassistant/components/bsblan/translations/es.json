@@ -12,7 +12,7 @@
             "user": {
                 "data": {
                     "host": "Host",
-                    "passkey": "Clave de acceso",
+                    "passkey": "Cadena de clave de acceso",
                     "password": "Contrase\u00f1a",
                     "port": "Puerto",
                     "username": "Nombre de usuario"
