@@ -55,11 +55,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_manual()
 
         errors = {}
+        serial_suffix = ""
         if user_input is not None:
             if "manual" in user_input:
                 return await self.async_step_manual()
             serial, ip_address = None, None
-            if "serial_suffix" not in user_input:
+            if "serial_suffix" not in user_input or user_input["serial_suffix"] == "":
                 errors["base"] = "missing_serial_suffix"
             else:
                 hub = self._discovered_hubs[user_input["device"]]
@@ -79,7 +80,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             {
                 vol.Optional("manual"): bool,
                 vol.Required("device"): vol.In(self._hubs()),
-                vol.Optional("serial_suffix"): str,
+                vol.Optional("serial_suffix", default=serial_suffix): str,
                 vol.Optional("store_ip"): bool,
             }
         )
@@ -175,7 +176,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Initialize the options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(self, user_input=None) -> FlowResult:
         """Manage the options."""
 
         hub = self.hass.data[DOMAIN][self.config_entry.entry_id]
@@ -227,7 +228,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         )
 
         placeholder = ""
-        on_commands = self.config_entry.options.get(CONF_COMMAND_ON)
+        on_commands = self.config_entry.options.get(CONF_COMMAND_ON)  # type: ignore[assignment]
         if on_commands is None:
             on_commands = {}
         for zone in hub.zones:

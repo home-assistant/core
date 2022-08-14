@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from typing import Any
 
 from pynobo import nobo
 import voluptuous as vol
@@ -197,7 +198,7 @@ class NoboZone(ClimateEntity):
         hub.register_callback(self._after_update)
         self.update()
 
-    async def async_set_hvac_mode(self, hvac_mode):
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target HVAC mode, if it's supported."""
         if hvac_mode not in self.hvac_modes:
             _LOGGER.warning(
@@ -234,7 +235,7 @@ class NoboZone(ClimateEntity):
         # When switching between AUTO and OFF an immediate update does not work (the Nobø API seems to answer with old values), but it works if we add a short delay:
         await asyncio.sleep(0.5)
 
-    async def async_set_preset_mode(self, preset_mode):
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new zone override."""
         if self._nobo.zones[self._id][ATTR_OVERRIDE_ALLOWED] != "1":
             return
@@ -253,26 +254,26 @@ class NoboZone(ClimateEntity):
             self._id,
         )
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         low, high = None, None
         if ATTR_TARGET_TEMP_LOW in kwargs:
-            low = int(kwargs.get(ATTR_TARGET_TEMP_LOW))
+            low = int(kwargs.get(ATTR_TARGET_TEMP_LOW))  # type: ignore[arg-type]  # ATTR_TARGET_TEMP_LOW is float if set
         if ATTR_TARGET_TEMP_HIGH in kwargs:
-            high = int(kwargs.get(ATTR_TARGET_TEMP_HIGH))
+            high = int(kwargs.get(ATTR_TARGET_TEMP_HIGH))  # type: ignore[arg-type]  # ATTR_TARGET_TEMP_HIGH is float if set
         if low is not None:
             if high is not None:
                 low = min(low, high)
-            else:
+            elif self.target_temperature_high is not None:
                 low = min(low, int(self.target_temperature_high))
-        elif high is not None:
+        elif high is not None and self.target_temperature_low is not None:
             high = max(high, int(self.target_temperature_low))
         await self._nobo.async_update_zone(
             self._id, temp_comfort_c=high, temp_eco_c=low
         )
 
     @callback
-    def update(self):
+    def update(self) -> None:
         """Fetch new state data for this zone."""
         state = self._nobo.get_current_zone_mode(self._id, dt_util.now())
         self._attr_hvac_mode = HVACMode.AUTO

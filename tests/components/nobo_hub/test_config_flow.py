@@ -91,6 +91,7 @@ async def test_configure_user_show_manual(hass: HomeAssistant) -> None:
             {
                 "device": 0,
                 "manual": True,
+                "serial_suffix": "",
             },
         )
         assert result2["type"] == "form"
@@ -217,6 +218,7 @@ async def test_configure_missing_serial_suffix(hass: HomeAssistant) -> None:
         result["flow_id"],
         {
             "device": 0,
+            "serial_suffix": "",
         },
     )
 
