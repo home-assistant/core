@@ -2176,7 +2176,7 @@ sendgrid==6.8.2
 sense_energy==0.10.4
 
 # homeassistant.components.sensorpush
-sensorpush-ble==1.5.1
+sensorpush-ble==1.5.2
 
 # homeassistant.components.sentry
 sentry-sdk==1.9.3
@@ -2489,7 +2489,7 @@ xboxapi==2.0.1
 xiaomi-ble==0.9.0
 
 # homeassistant.components.knx
-xknx==0.22.1
+xknx==1.0.0
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz
