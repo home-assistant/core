@@ -40,7 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     token: str = entry.data[CONF_ACCESS_TOKEN]
     bdaddr: str = entry.data[CONF_BDADDR]
     ble_device: BLEDevice | None = bluetooth.async_ble_device_from_address(
-        hass, bdaddr.upper()
+        hass, bdaddr
     )
     if not ble_device:
         raise ConfigEntryNotReady(f"Could not find MicroBot with address {bdaddr}")
