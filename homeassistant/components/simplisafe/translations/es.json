@@ -8,7 +8,7 @@
         },
         "error": {
             "identifier_exists": "Cuenta ya registrada",
-            "invalid_auth": "Autenticaci\u00f3n inv\u00e1lida",
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
             "invalid_auth_code_length": "Los c\u00f3digos de autorizaci\u00f3n de SimpliSafe tienen 45 caracteres de longitud",
             "unknown": "Error inesperado"
         },
@@ -20,8 +20,8 @@
                 "data": {
                     "password": "Contrase\u00f1a"
                 },
-                "description": "Vuelve a introducir la contrase\u00f1a de {username}",
-                "title": "Reautenticaci\u00f3n de la integraci\u00f3n"
+                "description": "Por favor, vuelve a introducir la contrase\u00f1a de {username}",
+                "title": "Volver a autenticar la integraci\u00f3n"
             },
             "sms_2fa": {
                 "data": {
@@ -43,7 +43,7 @@
         "step": {
             "init": {
                 "data": {
-                    "code": "C\u00f3digo (utilizado en el interfaz de usuario de Home Assistant)"
+                    "code": "C\u00f3digo (utilizado en la IU de Home Assistant)"
                 },
                 "title": "Configurar SimpliSafe"
             }

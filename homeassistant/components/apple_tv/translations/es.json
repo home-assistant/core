@@ -22,8 +22,8 @@
         "flow_title": "{name} ({type})",
         "step": {
             "confirm": {
-                "description": "Est\u00e1s a punto de a\u00f1adir `{name}` con el tipo `{type}` en Home Assistant.\n\n**Para completar el proceso, puede que tengas que introducir varios c\u00f3digos PIN.**\n\nTen en cuenta que *no* podr\u00e1s apagar tu Apple TV con esta integraci\u00f3n. \u00a1S\u00f3lo se apagar\u00e1 el reproductor de medios de Home Assistant!",
-                "title": "Confirma la adici\u00f3n del Apple TV"
+                "description": "Est\u00e1s a punto de a\u00f1adir `{name}` con el tipo `{type}` en Home Assistant.\n\n**Para completar el proceso, puede que tengas que introducir varios c\u00f3digos PIN.**\n\nTen en cuenta que *no* podr\u00e1s apagar tu Apple TV con esta integraci\u00f3n. \u00a1S\u00f3lo se apagar\u00e1 el reproductor de medios en Home Assistant!",
+                "title": "Confirma para a\u00f1adir Apple TV"
             },
             "pair_no_pin": {
                 "description": "Se requiere emparejamiento para el servicio `{protocol}`. Por favor, introduce el PIN {pin} en tu dispositivo para continuar.",
@@ -56,7 +56,7 @@
                 "data": {
                     "device_input": "Dispositivo"
                 },
-                "description": "Comienza introduciendo el nombre del dispositivo (por ejemplo, cocina o dormitorio) o la direcci\u00f3n IP del Apple TV que deseas a\u00f1adir. \n\n Si no puedes ver tu dispositivo o experimentas alg\u00fan problema, intenta especificar la direcci\u00f3n IP del dispositivo.",
+                "description": "Comienza introduciendo el nombre del dispositivo (por ejemplo, cocina o dormitorio) o la direcci\u00f3n IP del Apple TV que deseas a\u00f1adir. \n\nSi no puedes ver tu dispositivo o experimentas alg\u00fan problema, intenta especificar la direcci\u00f3n IP del dispositivo.",
                 "title": "Configurar un nuevo Apple TV"
             }
         }
