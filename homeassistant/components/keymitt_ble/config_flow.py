@@ -38,7 +38,7 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
         self._errors = {}
         self._discovered_adv: MicroBotAdvertisement | None = None
         self._discovered_advs: dict[str, MicroBotAdvertisement] = {}
-        self._client: Any | None
+        self._client: MicroBotApiClient | None = None
         self._ble_device: BLEDevice | None
         self._name = None
         self._bdaddr: str
