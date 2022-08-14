@@ -18,7 +18,7 @@ from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import ConfigEntryNotReady
