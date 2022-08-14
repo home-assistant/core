@@ -677,213 +677,231 @@ class MediaPlayerEntity(Entity):
         """Flag media player features that are supported."""
         return self._attr_supported_features
 
-    def turn_on(self):
+    def turn_on(self) -> None:
         """Turn the media player on."""
         raise NotImplementedError()
 
-    async def async_turn_on(self):
+    async def async_turn_on(self) -> None:
         """Turn the media player on."""
         await self.hass.async_add_executor_job(self.turn_on)
 
-    def turn_off(self):
+    def turn_off(self) -> None:
         """Turn the media player off."""
         raise NotImplementedError()
 
-    async def async_turn_off(self):
+    async def async_turn_off(self) -> None:
         """Turn the media player off."""
         await self.hass.async_add_executor_job(self.turn_off)
 
-    def mute_volume(self, mute):
+    def mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
         raise NotImplementedError()
 
-    async def async_mute_volume(self, mute):
+    async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
         await self.hass.async_add_executor_job(self.mute_volume, mute)
 
-    def set_volume_level(self, volume):
+    def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         raise NotImplementedError()
 
-    async def async_set_volume_level(self, volume):
+    async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         await self.hass.async_add_executor_job(self.set_volume_level, volume)
 
-    def media_play(self):
+    def media_play(self) -> None:
         """Send play command."""
         raise NotImplementedError()
 
-    async def async_media_play(self):
+    async def async_media_play(self) -> None:
         """Send play command."""
         await self.hass.async_add_executor_job(self.media_play)
 
-    def media_pause(self):
+    def media_pause(self) -> None:
         """Send pause command."""
         raise NotImplementedError()
 
-    async def async_media_pause(self):
+    async def async_media_pause(self) -> None:
         """Send pause command."""
         await self.hass.async_add_executor_job(self.media_pause)
 
-    def media_stop(self):
+    def media_stop(self) -> None:
         """Send stop command."""
         raise NotImplementedError()
 
-    async def async_media_stop(self):
+    async def async_media_stop(self) -> None:
         """Send stop command."""
         await self.hass.async_add_executor_job(self.media_stop)
 
-    def media_previous_track(self):
+    def media_previous_track(self) -> None:
         """Send previous track command."""
         raise NotImplementedError()
 
-    async def async_media_previous_track(self):
+    async def async_media_previous_track(self) -> None:
         """Send previous track command."""
         await self.hass.async_add_executor_job(self.media_previous_track)
 
-    def media_next_track(self):
+    def media_next_track(self) -> None:
         """Send next track command."""
         raise NotImplementedError()
 
-    async def async_media_next_track(self):
+    async def async_media_next_track(self) -> None:
         """Send next track command."""
         await self.hass.async_add_executor_job(self.media_next_track)
 
-    def media_seek(self, position):
+    def media_seek(self, position: float) -> None:
         """Send seek command."""
         raise NotImplementedError()
 
-    async def async_media_seek(self, position):
+    async def async_media_seek(self, position: float) -> None:
         """Send seek command."""
         await self.hass.async_add_executor_job(self.media_seek, position)
 
-    def play_media(self, media_type, media_id, **kwargs):
+    def play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
         """Play a piece of media."""
         raise NotImplementedError()
 
-    async def async_play_media(self, media_type, media_id, **kwargs):
+    async def async_play_media(
+        self, media_type: str, media_id: str, **kwargs: Any
+    ) -> None:
         """Play a piece of media."""
         await self.hass.async_add_executor_job(
             ft.partial(self.play_media, media_type, media_id, **kwargs)
         )
 
-    def select_source(self, source):
+    def select_source(self, source: str) -> None:
         """Select input source."""
         raise NotImplementedError()
 
-    async def async_select_source(self, source):
+    async def async_select_source(self, source: str) -> None:
         """Select input source."""
         await self.hass.async_add_executor_job(self.select_source, source)
 
-    def select_sound_mode(self, sound_mode):
+    def select_sound_mode(self, sound_mode: str) -> None:
         """Select sound mode."""
         raise NotImplementedError()
 
-    async def async_select_sound_mode(self, sound_mode):
+    async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select sound mode."""
         await self.hass.async_add_executor_job(self.select_sound_mode, sound_mode)
 
-    def clear_playlist(self):
+    def clear_playlist(self) -> None:
         """Clear players playlist."""
         raise NotImplementedError()
 
-    async def async_clear_playlist(self):
+    async def async_clear_playlist(self) -> None:
         """Clear players playlist."""
         await self.hass.async_add_executor_job(self.clear_playlist)
 
-    def set_shuffle(self, shuffle):
+    def set_shuffle(self, shuffle: bool) -> None:
         """Enable/disable shuffle mode."""
         raise NotImplementedError()
 
-    async def async_set_shuffle(self, shuffle):
+    async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable/disable shuffle mode."""
         await self.hass.async_add_executor_job(self.set_shuffle, shuffle)
 
-    def set_repeat(self, repeat):
+    def set_repeat(self, repeat: str) -> None:
         """Set repeat mode."""
         raise NotImplementedError()
 
-    async def async_set_repeat(self, repeat):
+    async def async_set_repeat(self, repeat: str) -> None:
         """Set repeat mode."""
         await self.hass.async_add_executor_job(self.set_repeat, repeat)
 
     # No need to overwrite these.
+    @final
     @property
-    def support_play(self):
+    def support_play(self) -> bool:
         """Boolean if play is supported."""
         return bool(self.supported_features & MediaPlayerEntityFeature.PLAY)
 
+    @final
     @property
-    def support_pause(self):
+    def support_pause(self) -> bool:
         """Boolean if pause is supported."""
         return bool(self.supported_features & MediaPlayerEntityFeature.PAUSE)
 
+    @final
     @property
-    def support_stop(self):
+    def support_stop(self) -> bool:
         """Boolean if stop is supported."""
         return bool(self.supported_features & MediaPlayerEntityFeature.STOP)
 
+    @final
     @property
-    def support_seek(self):
+    def support_seek(self) -> bool:
         """Boolean if seek is supported."""
         return bool(self.supported_features & MediaPlayerEntityFeature.SEEK)
 
+    @final
     @property
-    def support_volume_set(self):
+    def support_volume_set(self) -> bool:
         """Boolean if setting volume is supported."""
         return bool(self.supported_features & MediaPlayerEntityFeature.VOLUME_SET)
 
+    @final
     @property
-    def support_volume_mute(self):
+    def support_volume_mute(self) -> bool:
         """Boolean if muting volume is supported."""
         return bool(self.supported_features & MediaPlayerEntityFeature.VOLUME_MUTE)
 
+    @final
     @property
-    def support_previous_track(self):
+    def support_previous_track(self) -> bool:
         """Boolean if previous track command supported."""
         return bool(self.supported_features & MediaPlayerEntityFeature.PREVIOUS_TRACK)
 
+    @final
     @property
-    def support_next_track(self):
+    def support_next_track(self) -> bool:
         """Boolean if next track command supported."""
         return bool(self.supported_features & MediaPlayerEntityFeature.NEXT_TRACK)
 
+    @final
     @property
-    def support_play_media(self):
+    def support_play_media(self) -> bool:
         """Boolean if play media command supported."""
         return bool(self.supported_features & MediaPlayerEntityFeature.PLAY_MEDIA)
 
+    @final
     @property
-    def support_select_source(self):
+    def support_select_source(self) -> bool:
         """Boolean if select source command supported."""
         return bool(self.supported_features & MediaPlayerEntityFeature.SELECT_SOURCE)
 
+    @final
     @property
-    def support_select_sound_mode(self):
+    def support_select_sound_mode(self) -> bool:
         """Boolean if select sound mode command supported."""
         return bool(
             self.supported_features & MediaPlayerEntityFeature.SELECT_SOUND_MODE
         )
 
+    @final
     @property
-    def support_clear_playlist(self):
+    def support_clear_playlist(self) -> bool:
         """Boolean if clear playlist command supported."""
         return bool(self.supported_features & MediaPlayerEntityFeature.CLEAR_PLAYLIST)
 
+    @final
     @property
-    def support_shuffle_set(self):
+    def support_shuffle_set(self) -> bool:
         """Boolean if shuffle is supported."""
         return bool(self.supported_features & MediaPlayerEntityFeature.SHUFFLE_SET)
 
+    @final
     @property
-    def support_grouping(self):
+    def support_grouping(self) -> bool:
         """Boolean if player grouping is supported."""
         return bool(self.supported_features & MediaPlayerEntityFeature.GROUPING)
 
-    async def async_toggle(self):
+    async def async_toggle(self) -> None:
         """Toggle the power on the media player."""
         if hasattr(self, "toggle"):
-            await self.hass.async_add_executor_job(self.toggle)
+            await self.hass.async_add_executor_job(
+                self.toggle  # type: ignore[attr-defined]
+            )
             return
 
         if self.state in (STATE_OFF, STATE_IDLE, STATE_STANDBY):
@@ -891,40 +909,48 @@ class MediaPlayerEntity(Entity):
         else:
             await self.async_turn_off()
 
-    async def async_volume_up(self):
+    async def async_volume_up(self) -> None:
         """Turn volume up for media player.
 
         This method is a coroutine.
         """
         if hasattr(self, "volume_up"):
-            await self.hass.async_add_executor_job(self.volume_up)
+            await self.hass.async_add_executor_job(
+                self.volume_up  # type: ignore[attr-defined]
+            )
             return
 
         if (
-            self.volume_level < 1
+            self.volume_level is not None
+            and self.volume_level < 1
             and self.supported_features & MediaPlayerEntityFeature.VOLUME_SET
         ):
             await self.async_set_volume_level(min(1, self.volume_level + 0.1))
 
-    async def async_volume_down(self):
+    async def async_volume_down(self) -> None:
         """Turn volume down for media player.
 
         This method is a coroutine.
         """
         if hasattr(self, "volume_down"):
-            await self.hass.async_add_executor_job(self.volume_down)
+            await self.hass.async_add_executor_job(
+                self.volume_down  # type: ignore[attr-defined]
+            )
             return
 
         if (
-            self.volume_level > 0
+            self.volume_level is not None
+            and self.volume_level > 0
             and self.supported_features & MediaPlayerEntityFeature.VOLUME_SET
         ):
             await self.async_set_volume_level(max(0, self.volume_level - 0.1))
 
-    async def async_media_play_pause(self):
+    async def async_media_play_pause(self) -> None:
         """Play or pause the media player."""
         if hasattr(self, "media_play_pause"):
-            await self.hass.async_add_executor_job(self.media_play_pause)
+            await self.hass.async_add_executor_job(
+                self.media_play_pause  # type: ignore[attr-defined]
+            )
             return
 
         if self.state == STATE_PLAYING:
@@ -933,7 +959,7 @@ class MediaPlayerEntity(Entity):
             await self.async_media_play()
 
     @property
-    def entity_picture(self):
+    def entity_picture(self) -> str | None:
         """Return image of the media playing."""
         if self.state == STATE_OFF:
             return None
@@ -944,7 +970,7 @@ class MediaPlayerEntity(Entity):
         return self.media_image_local
 
     @property
-    def media_image_local(self):
+    def media_image_local(self) -> str | None:
         """Return local url to media image."""
         if (image_hash := self.media_image_hash) is None:
             return None
@@ -955,10 +981,10 @@ class MediaPlayerEntity(Entity):
         )
 
     @property
-    def capability_attributes(self):
+    def capability_attributes(self) -> dict[str, Any]:
         """Return capability attributes."""
         supported_features = self.supported_features or 0
-        data = {}
+        data: dict[str, Any] = {}
 
         if supported_features & MediaPlayerEntityFeature.SELECT_SOURCE and (
             source_list := self.source_list
@@ -974,9 +1000,9 @@ class MediaPlayerEntity(Entity):
 
     @final
     @property
-    def state_attributes(self):
+    def state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        state_attr = {}
+        state_attr: dict[str, Any] = {}
 
         if self.support_grouping:
             state_attr[ATTR_GROUP_MEMBERS] = self.group_members
@@ -1005,19 +1031,19 @@ class MediaPlayerEntity(Entity):
         """
         raise NotImplementedError()
 
-    def join_players(self, group_members):
+    def join_players(self, group_members: list[str]) -> None:
         """Join `group_members` as a player group with the current player."""
         raise NotImplementedError()
 
-    async def async_join_players(self, group_members):
+    async def async_join_players(self, group_members: list[str]) -> None:
         """Join `group_members` as a player group with the current player."""
         await self.hass.async_add_executor_job(self.join_players, group_members)
 
-    def unjoin_player(self):
+    def unjoin_player(self) -> None:
         """Remove this player from any group."""
         raise NotImplementedError()
 
-    async def async_unjoin_player(self):
+    async def async_unjoin_player(self) -> None:
         """Remove this player from any group."""
         await self.hass.async_add_executor_job(self.unjoin_player)
 
