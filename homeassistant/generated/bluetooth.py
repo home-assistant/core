@@ -80,15 +80,15 @@ BLUETOOTH: list[dict[str, str | int | list[int]]] = [
         "local_name": "tps"
     },
     {
-        "domain": "microbot_push",
+        "domain": "keymitt_ble",
         "service_uuid": "00001831-0000-1000-8000-00805f9b34fb"
     },
     {
-        "domain": "microbot_push",
+        "domain": "keymitt_ble",
         "service_data_uuid": "00001831-0000-1000-8000-00805f9b34fb"
     },
     {
-        "domain": "microbot_push",
+        "domain": "keymitt_ble",
         "local_name": "mib*"
     },
     {
