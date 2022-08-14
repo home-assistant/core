@@ -75,13 +75,13 @@ async def test_create_sensors(mock_heat_meter, hass):
     )
     await hass.async_block_till_done()
 
-    # check if 25 attributes have been created
-    assert len(hass.states.async_all()) == 25
+    # check if 26 attributes have been created
+    assert len(hass.states.async_all()) == 26
     entity_reg = entity_registry.async_get(hass)
 
     state = hass.states.get("sensor.heat_meter_heat_usage")
     assert state
-    assert state.state == "34.167"
+    assert state.state == "34.16669"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_MEGA_WATT_HOUR
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY

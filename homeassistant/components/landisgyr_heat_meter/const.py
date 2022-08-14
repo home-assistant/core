@@ -29,6 +29,13 @@ HEAT_METER_SENSOR_TYPES = (
         state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
+        key="heat_usage_gj",
+        icon="mdi:fire",
+        name="Heat usage GJ",
+        native_unit_of_measurement="GJ",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
         key="heat_previous_year",
         icon="mdi:fire",
         name="Heat usage previous year",
