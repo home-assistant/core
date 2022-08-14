@@ -1,0 +1,9 @@
+{
+  "domain": "tami4",
+  "name": "Tami4 Edge / Edge+",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/tami4",
+  "requirements": ["Tami4EdgeAPI==1.0"],
+  "codeowners": ["@Guy293"],
+  "iot_class": "cloud_polling"
+}
