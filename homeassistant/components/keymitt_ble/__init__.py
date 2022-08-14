@@ -123,13 +123,13 @@ class MicroBotDataUpdateCoordinator(PassiveBluetoothDataUpdateCoordinator):
         """Return true if the switch is available."""
         return True
 
+
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Handle removal of an entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
     unload_ok = await hass.config_entries.async_unload_platforms(
         entry, PLATFORMS
     )
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 
-    return unloaded
+    return unload_pk
