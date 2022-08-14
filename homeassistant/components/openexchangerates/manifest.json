@@ -2,6 +2,9 @@
   "domain": "openexchangerates",
   "name": "Open Exchange Rates",
   "documentation": "https://www.home-assistant.io/integrations/openexchangerates",
-  "codeowners": [],
-  "iot_class": "cloud_polling"
+  "requirements": ["aioopenexchangerates==0.4.0"],
+  "dependencies": ["repairs"],
+  "codeowners": ["@MartinHjelmare"],
+  "iot_class": "cloud_polling",
+  "config_flow": true
 }

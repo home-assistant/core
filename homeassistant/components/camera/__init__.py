@@ -14,7 +14,7 @@ import os
 from random import SystemRandom
 from typing import Final, Optional, cast, final
 
-from aiohttp import web
+from aiohttp import hdrs, web
 import async_timeout
 import attr
 import voluptuous as vol
@@ -39,7 +39,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_FILENAME,
     CONTENT_TYPE_MULTIPART,
-    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STARTED,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
@@ -128,14 +128,6 @@ CAMERA_SERVICE_RECORD: Final = {
     vol.Optional(CONF_DURATION, default=30): vol.Coerce(int),
     vol.Optional(CONF_LOOKBACK, default=0): vol.Coerce(int),
 }
-
-WS_TYPE_CAMERA_THUMBNAIL: Final = "camera_thumbnail"
-SCHEMA_WS_CAMERA_THUMBNAIL: Final = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {
-        vol.Required("type"): WS_TYPE_CAMERA_THUMBNAIL,
-        vol.Required("entity_id"): cv.entity_id,
-    }
-)
 
 
 @dataclass
@@ -382,7 +374,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             stream.add_provider("hls")
             await stream.start()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, preload_stream)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, preload_stream)
 
     @callback
     def update_tokens(time: datetime) -> None:
@@ -723,7 +715,12 @@ class CameraView(HomeAssistantView):
         )
 
         if not authenticated:
-            raise web.HTTPUnauthorized()
+            # Attempt with invalid bearer token, raise unauthorized
+            # so ban middleware can handle it.
+            if hdrs.AUTHORIZATION in request.headers:
+                raise web.HTTPUnauthorized()
+            # Invalid sigAuth or camera access token
+            raise web.HTTPForbidden()
 
         if not camera.is_on:
             _LOGGER.debug("Camera is off")

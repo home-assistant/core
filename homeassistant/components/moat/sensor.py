@@ -3,14 +3,7 @@ from __future__ import annotations
 
 from typing import Optional, Union
 
-from moat_ble import (
-    DeviceClass,
-    DeviceKey,
-    MoatBluetoothDeviceData,
-    SensorDeviceInfo,
-    SensorUpdate,
-    Units,
-)
+from moat_ble import DeviceClass, DeviceKey, SensorDeviceInfo, SensorUpdate, Units
 
 from homeassistant import config_entries
 from homeassistant.components.bluetooth.passive_update_processor import (
@@ -136,18 +129,13 @@ async def async_setup_entry(
     coordinator: PassiveBluetoothProcessorCoordinator = hass.data[DOMAIN][
         entry.entry_id
     ]
-    data = MoatBluetoothDeviceData()
-    processor = PassiveBluetoothDataProcessor(
-        lambda service_info: sensor_update_to_bluetooth_data_update(
-            data.update(service_info)
-        )
-    )
-    entry.async_on_unload(coordinator.async_register_processor(processor))
+    processor = PassiveBluetoothDataProcessor(sensor_update_to_bluetooth_data_update)
     entry.async_on_unload(
         processor.async_add_entities_listener(
             MoatBluetoothSensorEntity, async_add_entities
         )
     )
+    entry.async_on_unload(coordinator.async_register_processor(processor))
 
 
 class MoatBluetoothSensorEntity(

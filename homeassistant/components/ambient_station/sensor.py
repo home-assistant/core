@@ -646,12 +646,10 @@ async def async_setup_entry(
     ambient = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        [
-            AmbientWeatherSensor(ambient, mac_address, station[ATTR_NAME], description)
-            for mac_address, station in ambient.stations.items()
-            for description in SENSOR_DESCRIPTIONS
-            if description.key in station[ATTR_LAST_DATA]
-        ]
+        AmbientWeatherSensor(ambient, mac_address, station[ATTR_NAME], description)
+        for mac_address, station in ambient.stations.items()
+        for description in SENSOR_DESCRIPTIONS
+        if description.key in station[ATTR_LAST_DATA]
     )
 
 

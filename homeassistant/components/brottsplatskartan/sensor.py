@@ -10,12 +10,7 @@ import brottsplatskartan
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_NAME,
-)
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -90,6 +85,8 @@ def setup_platform(
 class BrottsplatskartanSensor(SensorEntity):
     """Representation of a Brottsplatskartan Sensor."""
 
+    _attr_attribution = brottsplatskartan.ATTRIBUTION
+
     def __init__(self, bpk, name):
         """Initialize the Brottsplatskartan sensor."""
         self._brottsplatskartan = bpk
@@ -109,8 +106,5 @@ class BrottsplatskartanSensor(SensorEntity):
             incident_type = incident.get("title_type")
             incident_counts[incident_type] += 1
 
-        self._attr_extra_state_attributes = {
-            ATTR_ATTRIBUTION: brottsplatskartan.ATTRIBUTION
-        }
-        self._attr_extra_state_attributes.update(incident_counts)
+        self._attr_extra_state_attributes = incident_counts
         self._attr_native_value = len(incidents)

@@ -64,7 +64,8 @@ def ws_list_issues(
     """Return a list of issues."""
 
     def ws_dict(kv_pairs: list[tuple[Any, Any]]) -> dict[Any, Any]:
-        result = {k: v for k, v in kv_pairs if k not in ("active")}
+        excluded_keys = ("active", "data", "is_persistent")
+        result = {k: v for k, v in kv_pairs if k not in excluded_keys}
         result["ignored"] = result["dismissed_version"] is not None
         result["created"] = result["created"].isoformat()
         return result

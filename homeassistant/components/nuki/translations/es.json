@@ -13,7 +13,7 @@
                 "data": {
                     "token": "Token de acceso"
                 },
-                "description": "La integraci\u00f3n de Nuki debe volver a autenticarse con tu bridge.",
+                "description": "La integraci\u00f3n Nuki debe volver a autenticarse con tu bridge.",
                 "title": "Volver a autenticar la integraci\u00f3n"
             },
             "user": {

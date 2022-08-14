@@ -47,6 +47,7 @@
                 "data": {
                     "all_updates": "Metriche in tempo reale (ATTENZIONE: aumenta notevolmente l'utilizzo della CPU)",
                     "disable_rtsp": "Disabilita il flusso RTSP",
+                    "max_media": "Numero massimo di eventi da caricare per Media Browser (aumenta l'utilizzo della RAM)",
                     "override_connection_host": "Sostituisci host di connessione"
                 },
                 "description": "L'opzione delle metriche in tempo reale dovrebbe essere abilitata solo se hai abilitato i sensori di diagnostica e desideri che vengano aggiornati in tempo reale. Se non sono abilitati, si aggiorneranno solo una volta ogni 15 minuti.",

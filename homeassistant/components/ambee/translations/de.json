@@ -24,5 +24,11 @@
                 "description": "Richte Ambee f\u00fcr die Integration mit Home Assistant ein."
             }
         }
+    },
+    "issues": {
+        "pending_removal": {
+            "description": "Die Ambee-Integration ist dabei, aus Home Assistant entfernt zu werden und wird ab Home Assistant 2022.10 nicht mehr verf\u00fcgbar sein.\n\nDie Integration wird entfernt, weil Ambee seine kostenlosen (begrenzten) Konten entfernt hat und keine M\u00f6glichkeit mehr f\u00fcr regul\u00e4re Nutzer bietet, sich f\u00fcr einen kostenpflichtigen Plan anzumelden.\n\nEntferne den Ambee-Integrationseintrag aus deiner Instanz, um dieses Problem zu beheben.",
+            "title": "Die Ambee-Integration wird entfernt"
+        }
     }
 }

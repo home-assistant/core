@@ -22,7 +22,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import HassJob, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import TemplateError, Unauthorized
-from homeassistant.helpers import config_validation as cv, event, template
+from homeassistant.helpers import (
+    config_validation as cv,
+    discovery_flow,
+    event,
+    template,
+)
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.reload import (
@@ -178,12 +183,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         # Create an import flow if the user has yaml configured entities etc.
         # but no broker configuration. Note: The intention is not for this to
         # import broker configuration from YAML because that has been deprecated.
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
-                data={},
-            )
+        discovery_flow.async_create_flow(
+            hass,
+            DOMAIN,
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+            data={},
         )
         hass.data[DATA_MQTT_RELOAD_NEEDED] = True
     elif mqtt_entry_status is False:

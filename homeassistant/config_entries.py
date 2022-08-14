@@ -27,12 +27,12 @@ from .util import uuid as uuid_util
 from .util.decorator import Registry
 
 if TYPE_CHECKING:
+    from .components.bluetooth import BluetoothServiceInfoBleak
     from .components.dhcp import DhcpServiceInfo
     from .components.hassio import HassioServiceInfo
     from .components.ssdp import SsdpServiceInfo
     from .components.usb import UsbServiceInfo
     from .components.zeroconf import ZeroconfServiceInfo
-    from .helpers.service_info.bluetooth import BluetoothServiceInfo
     from .helpers.service_info.mqtt import MqttServiceInfo
 
 _LOGGER = logging.getLogger(__name__)
@@ -640,7 +640,12 @@ class ConfigEntry:
                 await asyncio.gather(*pending)
 
     @callback
-    def async_start_reauth(self, hass: HomeAssistant) -> None:
+    def async_start_reauth(
+        self,
+        hass: HomeAssistant,
+        context: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+    ) -> None:
         """Start a reauth flow."""
         flow_context = {
             "source": SOURCE_REAUTH,
@@ -648,6 +653,9 @@ class ConfigEntry:
             "title_placeholders": {"name": self.title},
             "unique_id": self.unique_id,
         }
+
+        if context:
+            flow_context.update(context)
 
         for flow in hass.config_entries.flow.async_progress_by_handler(self.domain):
             if flow["context"] == flow_context:
@@ -657,7 +665,7 @@ class ConfigEntry:
             hass.config_entries.flow.async_init(
                 self.domain,
                 context=flow_context,
-                data=self.data,
+                data=self.data | (data or {}),
             )
         )
 
@@ -1289,6 +1297,8 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         self,
         updates: dict[str, Any] | None = None,
         reload_on_update: bool = True,
+        *,
+        error: str = "already_configured",
     ) -> None:
         """Abort if the unique ID is already configured."""
         if self.unique_id is None:
@@ -1324,7 +1334,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
                 self.hass.async_create_task(
                     self.hass.config_entries.async_reload(entry.entry_id)
                 )
-            raise data_entry_flow.AbortFlow("already_configured")
+            raise data_entry_flow.AbortFlow(error)
 
     async def async_set_unique_id(
         self, unique_id: str | None = None, *, raise_on_progress: bool = True
@@ -1485,7 +1495,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         )
 
     async def async_step_bluetooth(
-        self, discovery_info: BluetoothServiceInfo
+        self, discovery_info: BluetoothServiceInfoBleak
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by Bluetooth discovery."""
         return await self._async_step_discovery_without_unique_id()
