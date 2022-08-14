@@ -295,7 +295,7 @@ class _BaseVacuum(Entity):
         self,
         command: str,
         params: dict[str, Any] | list[Any] | None = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> None:
         """Send a command to a vacuum cleaner.
 
