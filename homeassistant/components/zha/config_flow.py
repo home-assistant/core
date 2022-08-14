@@ -79,17 +79,16 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         config = self.hass.data.get(DATA_ZHA, {}).get(DATA_ZHA_CONFIG, {})
 
         assert self._radio_type is not None
-        app_controller_cls = self._radio_type.controller
-        app_config = config.get(CONF_ZIGPY, {}).copy()
 
+        app_config = config.get(CONF_ZIGPY, {}).copy()
         app_config[CONF_DATABASE] = config.get(
             CONF_DATABASE,
             self.hass.config.path(DEFAULT_DATABASE_NAME),
         )
         app_config[CONF_DEVICE] = self._device_settings
-        app_config = app_controller_cls.SCHEMA(app_config)
+        app_config = self._radio_type.controller.SCHEMA(app_config)
 
-        app = await app_controller_cls.new(
+        app = await self._radio_type.controller.new(
             app_config, auto_form=False, start_radio=False
         )
 
@@ -273,17 +272,15 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 strategies.append(FORMATION_RESTORE_AUTOMATIC_BACKUP)
                 suggested_strategy = FORMATION_RESTORE_AUTOMATIC_BACKUP
 
-        schema = vol.Schema(
-            {
-                vol.Required(FORMATION_STRATEGY, default=suggested_strategy): vol.In(
-                    strategies
-                ),
-            }
-        )
+        schema = {
+            vol.Required(FORMATION_STRATEGY, default=suggested_strategy): vol.In(
+                strategies
+            ),
+        }
 
         return self.async_show_form(
             step_id="choose_formation_strategy",
-            data_schema=schema,
+            data_schema=vol.Schema(schema),
         )
 
     async def async_step_restore_automatic_backup(self, user_input=None):
