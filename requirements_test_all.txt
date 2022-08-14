@@ -152,7 +152,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==1.2.9
+aiohomekit==1.2.10
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -1405,6 +1405,9 @@ pyws66i==1.1
 # homeassistant.components.zerproc
 pyzerproc==0.4.8
 
+# homeassistant.components.qingping
+qingping-ble==0.2.3
+
 # homeassistant.components.rachio
 rachiopy==1.0.3
 
@@ -1681,7 +1684,7 @@ xbox-webapi==2.0.11
 xiaomi-ble==0.9.0
 
 # homeassistant.components.knx
-xknx==0.22.1
+xknx==1.0.0
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz
