@@ -1,7 +1,7 @@
 {
     "config": {
         "error": {
-            "name_exists": "El nombre ya existe"
+            "name_exists": "Nombre ya existe"
         },
         "step": {
             "user": {
@@ -18,7 +18,7 @@
     },
     "system_health": {
         "info": {
-            "api_endpoint_reachable": "Se puede acceder al punto de conexi\u00f3n de la API IPMA"
+            "api_endpoint_reachable": "Se puede llegar al punto de conexi\u00f3n de la API IPMA"
         }
     }
 }

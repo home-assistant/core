@@ -8,7 +8,7 @@
             "discover_timeout": "Imposible encontrar pasarelas Philips Hue",
             "invalid_host": "Host inv\u00e1lido",
             "no_bridges": "No se han encontrado pasarelas Philips Hue.",
-            "not_hue_bridge": "No es un enlace Hue",
+            "not_hue_bridge": "No es un puente Hue",
             "unknown": "Error inesperado"
         },
         "error": {
@@ -53,7 +53,7 @@
         },
         "trigger_type": {
             "double_short_release": "Ambos \"{subtype}\" soltados",
-            "initial_press": "Bot\u00f3n \"{subtype}\" presionado inicialmente",
+            "initial_press": "Bot\u00f3n \"{subtype}\" pulsado inicialmente",
             "long_release": "Bot\u00f3n \"{subtype}\" soltado tras una pulsaci\u00f3n larga",
             "remote_button_long_release": "Bot\u00f3n \"{subtype}\" soltado despu\u00e9s de una pulsaci\u00f3n larga",
             "remote_button_short_press": "Bot\u00f3n \"{subtype}\" pulsado",
@@ -68,7 +68,7 @@
         "step": {
             "init": {
                 "data": {
-                    "allow_hue_groups": "Permitir grupos de Hue",
+                    "allow_hue_groups": "Permitir grupos Hue",
                     "allow_hue_scenes": "Permitir escenas Hue",
                     "allow_unreachable": "Permitir que las bombillas inalcanzables informen su estado correctamente",
                     "ignore_availability": "Ignorar el estado de conectividad de los siguientes dispositivos"

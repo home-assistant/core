@@ -5,7 +5,7 @@
             "unknown": "Error inesperado"
         },
         "error": {
-            "cannot_connect": "Error al conectar"
+            "cannot_connect": "No se pudo conectar"
         },
         "flow_title": "{name}",
         "step": {

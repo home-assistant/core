@@ -7,8 +7,8 @@
         "error": {
             "cannot_connect": "No se pudo conectar",
             "invalid_host": "Nombre de host o direcci\u00f3n IP no v\u00e1lidos",
-            "pwd_and_ssh": "S\u00f3lo proporcionar la contrase\u00f1a o el archivo de clave SSH",
-            "pwd_or_ssh": "Por favor, proporcione la contrase\u00f1a o el archivo de clave SSH",
+            "pwd_and_ssh": "Proporciona solo la contrase\u00f1a o el archivo de clave SSH",
+            "pwd_or_ssh": "Por favor, proporciona la contrase\u00f1a o el archivo de clave SSH",
             "ssh_not_file": "Archivo de clave SSH no encontrado",
             "unknown": "Error inesperado"
         },
