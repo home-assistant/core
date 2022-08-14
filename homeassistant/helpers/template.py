@@ -374,8 +374,8 @@ class Template:
                 return
 
             try:
-                self._compiled_env = self._env
                 self._compiled_code = self._env.compile(self.template)
+                self._compiled_env = self._env
             except jinja2.TemplateError as err:
                 raise TemplateError(err) from err
 
@@ -1989,7 +1989,7 @@ class LoggingUndefined(jinja2.Undefined):
 
 @dataclass
 class Ext:
-    """Inner class for Jinja extension definition."""
+    """Jinja extension definition."""
 
     # name of the global/filter/test
     name: str
