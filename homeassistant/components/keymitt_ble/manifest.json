@@ -1,5 +1,5 @@
 {
-  "domain": "microbot_push",
+  "domain": "keymitt_ble",
   "name": "MicroBot Push",
   "documentation": "https://www.home-assistant.io/integrations/keymitt_ble",
   "config_flow": true,
@@ -18,5 +18,5 @@
   "requirements": ["PyMicroBot==0.0.1"],
   "iot_class": "assumed_state",
   "dependencies": ["bluetooth"],
-  "loggers": ["microbot_push"]
+  "loggers": ["keymitt_ble"]
 }
