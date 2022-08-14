@@ -88,6 +88,7 @@ SUPPORT_LANGUAGES = [
     "en-tz",
     "fr-ca",
     "fr-fr",
+    "nl-be",
     "pt-br",
     "pt-pt",
     "es-es",
