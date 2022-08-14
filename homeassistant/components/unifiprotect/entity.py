@@ -38,9 +38,10 @@ def _async_device_entities(
     klass: type[ProtectDeviceEntity],
     model_type: ModelType,
     descs: Sequence[ProtectRequiredKeysMixin],
+    unadopted_descs: Sequence[ProtectRequiredKeysMixin],
     ufp_device: ProtectAdoptableDeviceModel | None = None,
 ) -> list[ProtectDeviceEntity]:
-    if len(descs) == 0:
+    if len(descs) + len(unadopted_descs) == 0:
         return []
 
     entities: list[ProtectDeviceEntity] = []
@@ -48,16 +49,35 @@ def _async_device_entities(
         [ufp_device] if ufp_device is not None else data.get_by_types({model_type})
     )
     for device in devices:
+        assert isinstance(device, (Camera, Light, Sensor, Viewer, Doorlock, Chime))
         if not device.is_adopted_by_us:
+            for description in unadopted_descs:
+                entities.append(
+                    klass(
+                        data,
+                        device=device,
+                        description=description,
+                    )
+                )
+                _LOGGER.debug(
+                    "Adding %s entity %s for %s",
+                    klass.__name__,
+                    description.name,
+                    device.display_name,
+                )
             continue
 
-        assert isinstance(device, (Camera, Light, Sensor, Viewer, Doorlock, Chime))
+        can_write = device.can_write(data.api.bootstrap.auth_user)
         for description in descs:
             if description.ufp_perm is not None:
-                can_write = device.can_write(data.api.bootstrap.auth_user)
                 if description.ufp_perm == PermRequired.WRITE and not can_write:
                     continue
                 if description.ufp_perm == PermRequired.NO_WRITE and can_write:
+                    continue
+                if (
+                    description.ufp_perm == PermRequired.DELETE
+                    and not device.can_delete(data.api.bootstrap.auth_user)
+                ):
                     continue
 
             if description.ufp_required_field:
@@ -93,10 +113,12 @@ def async_all_device_entities(
     lock_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
     chime_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
     all_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
+    unadopted_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
     ufp_device: ProtectAdoptableDeviceModel | None = None,
 ) -> list[ProtectDeviceEntity]:
     """Generate a list of all the device entities."""
     all_descs = list(all_descs or [])
+    unadopted_descs = list(unadopted_descs or [])
     camera_descs = list(camera_descs or []) + all_descs
     light_descs = list(light_descs or []) + all_descs
     sense_descs = list(sense_descs or []) + all_descs
@@ -106,12 +128,24 @@ def async_all_device_entities(
 
     if ufp_device is None:
         return (
-            _async_device_entities(data, klass, ModelType.CAMERA, camera_descs)
-            + _async_device_entities(data, klass, ModelType.LIGHT, light_descs)
-            + _async_device_entities(data, klass, ModelType.SENSOR, sense_descs)
-            + _async_device_entities(data, klass, ModelType.VIEWPORT, viewer_descs)
-            + _async_device_entities(data, klass, ModelType.DOORLOCK, lock_descs)
-            + _async_device_entities(data, klass, ModelType.CHIME, chime_descs)
+            _async_device_entities(
+                data, klass, ModelType.CAMERA, camera_descs, unadopted_descs
+            )
+            + _async_device_entities(
+                data, klass, ModelType.LIGHT, light_descs, unadopted_descs
+            )
+            + _async_device_entities(
+                data, klass, ModelType.SENSOR, sense_descs, unadopted_descs
+            )
+            + _async_device_entities(
+                data, klass, ModelType.VIEWPORT, viewer_descs, unadopted_descs
+            )
+            + _async_device_entities(
+                data, klass, ModelType.DOORLOCK, lock_descs, unadopted_descs
+            )
+            + _async_device_entities(
+                data, klass, ModelType.CHIME, chime_descs, unadopted_descs
+            )
         )
 
     descs = []
@@ -128,9 +162,11 @@ def async_all_device_entities(
     elif ufp_device.model == ModelType.CHIME:
         descs = chime_descs
 
-    if len(descs) == 0 or ufp_device.model is None:
+    if len(descs) + len(unadopted_descs) == 0 or ufp_device.model is None:
         return []
-    return _async_device_entities(data, klass, ufp_device.model, descs, ufp_device)
+    return _async_device_entities(
+        data, klass, ufp_device.model, descs, unadopted_descs, ufp_device
+    )
 
 
 class ProtectDeviceEntity(Entity):
@@ -190,8 +226,9 @@ class ProtectDeviceEntity(Entity):
             assert isinstance(device, ProtectAdoptableDeviceModel)
             self.device = device
 
-        is_connected = (
-            self.data.last_update_success and self.device.state == StateType.CONNECTED
+        is_connected = self.data.last_update_success and (
+            self.device.state == StateType.CONNECTED
+            or (not self.device.is_adopted_by_us and self.device.can_adopt)
         )
         if (
             hasattr(self, "entity_description")

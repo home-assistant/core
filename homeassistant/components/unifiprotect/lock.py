@@ -34,9 +34,6 @@ async def async_setup_entry(
     data: ProtectData = hass.data[DOMAIN][entry.entry_id]
 
     async def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
-        if not device.is_adopted_by_us:
-            return
-
         if isinstance(device, Doorlock):
             async_add_entities([ProtectLock(data, device)])
 
