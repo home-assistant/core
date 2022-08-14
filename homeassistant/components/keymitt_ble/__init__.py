@@ -39,8 +39,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     token: str = entry.data[CONF_ACCESS_TOKEN]
     bdaddr: str = entry.data[CONF_BDADDR]
-    assert bdaddr is not None
-    assert token is not None
     ble_device: BLEDevice | None = bluetooth.async_ble_device_from_address(
         hass, bdaddr.upper()
     )
