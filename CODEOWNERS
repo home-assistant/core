@@ -844,6 +844,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/pvpc_hourly_pricing/ @azogue
 /tests/components/pvpc_hourly_pricing/ @azogue
 /homeassistant/components/qbittorrent/ @geoffreylagaisse
+/homeassistant/components/qingping/ @bdraco
+/tests/components/qingping/ @bdraco
 /homeassistant/components/qld_bushfire/ @exxamalte
 /tests/components/qld_bushfire/ @exxamalte
 /homeassistant/components/qnap_qsw/ @Noltari
