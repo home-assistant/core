@@ -65,6 +65,12 @@ def render_to_info(hass, template_str, variables=None):
     return tmp.async_render_to_info(variables)
 
 
+def validate_no_hass(template_str, variables=None):
+    """Create render info from template."""
+    tmp = template.Template(template_str, None)
+    tmp.ensure_valid()
+
+
 def extract_entities(hass, template_str, variables=None):
     """Extract entities from a template."""
     info = render_to_info(hass, template_str, variables)
@@ -2229,6 +2235,9 @@ async def test_expand(hass):
     )
     assert info.rate_limit is None
 
+    # test with no hass instance
+    validate_no_hass("{{ states.group.power_sensors.attributes.entity_id | expand }}")
+
     # With group entities
     hass.states.async_set("light.first", "on")
     hass.states.async_set("light.second", "off")
@@ -2348,6 +2357,16 @@ async def test_device_entities(hass):
         f"{{{{ device_entities('{device_entry.id}') | expand | map(attribute='entity_id') | join(', ') }}}}",
     )
     assert_result_info(info, "", ["light.hue_5678"])
+
+    info = render_to_info(
+        hass,
+        f"{{{{ '{device_entry.id}' | device_entities | expand | map(attribute='entity_id') | join(', ') }}}}",
+    )
+    assert_result_info(info, "", ["light.hue_5678"])
+
+    # test with no hass instance
+    validate_no_hass(f"{{ '{device_entry.id}' | device_entities }}")
+
     assert info.rate_limit is None
 
     # Test device with single entity, with state
@@ -2413,10 +2432,16 @@ async def test_integration_entities(hass):
     assert_result_info(info, ["light.test_entity"])
     assert info.rate_limit is None
 
+    info = render_to_info(hass, "{{ 'entryless_integration' | integration_entities }}")
+    assert_result_info(info, ["light.test_entity"])
+    assert info.rate_limit is None
+
     # Test non existing integration/entry title
     info = render_to_info(hass, "{{ integration_entities('abc123') }}")
     assert_result_info(info, [])
     assert info.rate_limit is None
+
+    validate_no_hass("{{ 'entryless_integration' | integration_entities }}")
 
 
 async def test_device_id(hass):
@@ -2443,6 +2468,8 @@ async def test_device_id(hass):
 
     info = render_to_info(hass, "{{ 56 | device_id }}")
     assert_result_info(info, None)
+
+    validate_no_hass("{{ 56 | device_id }}")
 
     info = render_to_info(hass, "{{ 'not_a_real_entity_id' | device_id }}")
     assert_result_info(info, None)
@@ -2630,6 +2657,8 @@ async def test_area_id(hass):
     assert_result_info(info, area_entry_hex.id)
     assert info.rate_limit is None
 
+    validate_no_hass(f"{{{{ '{device_entry.id}' | area_id }}}}")
+
     info = render_to_info(hass, f"{{{{ area_id('{entity_entry.entity_id}') }}}}")
     assert_result_info(info, area_entry_hex.id)
     assert info.rate_limit is None
@@ -2731,6 +2760,8 @@ async def test_area_name(hass):
     assert_result_info(info, area_entry.name)
     assert info.rate_limit is None
 
+    validate_no_hass(f"{{{{ '{device_entry.id}' | area_name }}}}")
+
     info = render_to_info(hass, f"{{{{ area_name('{entity_entry.entity_id}') }}}}")
     assert_result_info(info, area_entry.name)
     assert info.rate_limit is None
@@ -2784,6 +2815,8 @@ async def test_area_entities(hass):
     assert_result_info(info, ["light.hue_5678"])
     assert info.rate_limit is None
 
+    validate_no_hass(f"{{{{ '{area_entry.name}' | area_entities }}}}")
+
     # Test for entities that inherit area from device
     device_entry = device_registry.async_get_or_create(
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
@@ -2834,6 +2867,8 @@ async def test_area_devices(hass):
     assert_result_info(info, [device_entry.id])
     assert info.rate_limit is None
 
+    validate_no_hass(f"{{{{ '{area_entry.name}' | area_devices }}}}")
+
 
 def test_closest_function_to_coord(hass):
     """Test closest function to coord."""
@@ -2876,6 +2911,11 @@ def test_closest_function_to_coord(hass):
         '{{ (states.test_domain | closest("%s", %s)).entity_id }}'
         % (hass.config.latitude + 0.3, hass.config.longitude + 0.3),
         hass,
+    )
+
+    validate_no_hass(
+        '{{ (states.test_domain | closest("%s", %s)).entity_id }}'
+        % (hass.config.latitude + 0.3, hass.config.longitude + 0.3)
     )
 
     assert tpl.async_render() == "test_domain.closest_zone"
