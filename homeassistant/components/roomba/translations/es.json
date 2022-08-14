@@ -12,15 +12,15 @@
         "flow_title": "{name} ({host})",
         "step": {
             "link": {
-                "description": "Mant\u00e9n presionado el bot\u00f3n Inicio en {name} hasta que el dispositivo genere un sonido (alrededor de dos segundos), luego haz clic en enviar en los siguientes 30 segundos.",
+                "description": "Mant\u00e9n pulsado el bot\u00f3n Inicio en {name} hasta que el dispositivo genere un sonido (alrededor de dos segundos), luego haz clic en enviar en los siguientes 30 segundos.",
                 "title": "Recuperar Contrase\u00f1a"
             },
             "link_manual": {
                 "data": {
                     "password": "Contrase\u00f1a"
                 },
-                "description": "La contrase\u00f1a no se pudo recuperar del dispositivo autom\u00e1ticamente. Sigue los pasos descritos en la documentaci\u00f3n en: {auth_help_url}",
-                "title": "Escribe la contrase\u00f1a"
+                "description": "La contrase\u00f1a no se pudo recuperar del dispositivo autom\u00e1ticamente. Por favor, sigue los pasos descritos en la documentaci\u00f3n en: {auth_help_url}",
+                "title": "Introduce la contrase\u00f1a"
             },
             "manual": {
                 "data": {
@@ -33,8 +33,8 @@
                 "data": {
                     "host": "Host"
                 },
-                "description": "Seleccione una Roomba o Braava.",
-                "title": "Conexi\u00f3n autom\u00e1tica con el dispositivo"
+                "description": "Selecciona una Roomba o Braava.",
+                "title": "Conectar autom\u00e1ticamente al dispositivo"
             }
         }
     },

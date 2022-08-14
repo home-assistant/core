@@ -5,7 +5,7 @@
             "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente"
         },
         "error": {
-            "account_locked": "Cuenta bloqueada. Por favor, int\u00e9ntelo de nuevo m\u00e1s tarde.",
+            "account_locked": "Cuenta bloqueada. Por favor, int\u00e9ntalo de nuevo m\u00e1s tarde.",
             "cannot_connect": "No se pudo conectar",
             "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
             "unknown": "Error inesperado"
@@ -13,7 +13,7 @@
         "step": {
             "user": {
                 "data": {
-                    "email": "Correo electronico",
+                    "email": "Correo electr\u00f3nico",
                     "password": "Contrase\u00f1a",
                     "region": "Regi\u00f3n"
                 },
