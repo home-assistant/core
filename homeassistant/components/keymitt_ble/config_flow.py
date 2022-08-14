@@ -23,9 +23,20 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.const import CONF_ACCESS_TOKEN
 
-from .const import CONF_BDADDR, CONF_NAME, DEFAULT_RETRY_COUNT, DOMAIN
+from .const import CONF_BDADDR, DEFAULT_RETRY_COUNT, DOMAIN
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
+
+
+def short_address(address: str) -> str:
+    """Convert a Bluetooth address to a short address."""
+    results = address.replace("-", ":").split(":")
+    return f"{results[0].upper()}{results[1].upper()}"[0:4]
+
+
+def name_from_discovery(discovery: SwitchBotAdvertisement) -> str:
+    """Get the name from a discovery."""
+    return f'{discovery.data["local_name"]} {short_address(discovery.address)}'
 
 
 class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -101,13 +112,12 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
                         address: f"{parsed.data['local_name']} ({address})"
                         for address, parsed in self._discovered_advs.items()
                     }
-                ),
-                vol.Required(CONF_NAME): str,
+                )
             }
         )
 
         if user_input is not None:
-            self._name = user_input[CONF_NAME]
+            self._name = name_from_discovery(discovery)
             self._bdaddr = user_input[CONF_BDADDR]
             await self.async_set_unique_id(
                 self._bdaddr, raise_on_progress=False
