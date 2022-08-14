@@ -68,7 +68,7 @@ class FullyBinarySensor(CoordinatorEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool | None:
         """Return if the binary sensor is on."""
-        return self.coordinator.data.get(self._sensor, None)
+        return self.coordinator.data.get(self._sensor)
 
     async def async_added_to_hass(self) -> None:
         """Connect to dispatcher listening for entity data notifications."""
