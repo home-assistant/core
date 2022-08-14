@@ -9,7 +9,6 @@ MANUFACTURER = "Naran/Keymitt"
 ICON = "mdi:toggle-switch-variant"
 
 # Configuration and options
-CONF_NAME = "name"
 CONF_BDADDR = "bdaddr"
 DEFAULT_RETRY_COUNT = 5
 
