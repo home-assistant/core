@@ -3,7 +3,14 @@ from __future__ import annotations
 
 from typing import TypedDict
 
-from p1monitor import P1Monitor, Phases, Settings, SmartMeter, WaterMeter
+from p1monitor import (
+    P1Monitor,
+    P1MonitorNoDataError,
+    Phases,
+    Settings,
+    SmartMeter,
+    WaterMeter,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
@@ -13,7 +20,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
-    CONF_WATERMETER,
     DOMAIN,
     LOGGER,
     SCAN_INTERVAL,
@@ -89,7 +95,9 @@ class P1MonitorDataUpdateCoordinator(DataUpdateCoordinator[P1MonitorData]):
             SERVICE_SETTINGS: await self.p1monitor.settings(),
             SERVICE_WATERMETER: None,
         }
-        if self.config_entry.data[CONF_WATERMETER]:
+        try:
             data[SERVICE_WATERMETER] = await self.p1monitor.watermeter()
+        except P1MonitorNoDataError:
+            LOGGER.debug("No watermeter data received from P1 Monitor")
 
         return data

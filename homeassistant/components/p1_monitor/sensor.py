@@ -30,7 +30,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import P1MonitorDataUpdateCoordinator
 from .const import (
-    CONF_WATERMETER,
     DOMAIN,
     SERVICE_PHASES,
     SERVICE_SETTINGS,
@@ -273,7 +272,7 @@ async def async_setup_entry(
         )
         for description in SENSORS_SETTINGS
     )
-    if entry.data[CONF_WATERMETER]:
+    if coordinator.data[SERVICE_WATERMETER]:
         entities.extend(
             P1MonitorSensorEntity(
                 coordinator=coordinator,
