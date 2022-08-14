@@ -6,10 +6,11 @@ import re
 from typing import Any
 
 from bleak.backends.device import BLEDevice
-from microbot import (  # pylint: disable=import-error
+from microbot import (
     MicroBotAdvertisement,
     MicroBotApiClient,
     parse_advertisement_data,
+    randomid,
 )
 import voluptuous as vol
 
@@ -21,6 +22,7 @@ from homeassistant.components.bluetooth import (
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.const import CONF_ACCESS_TOKEN
 
 from .const import CONF_BDADDR, CONF_NAME, DEFAULT_RETRY_COUNT, DOMAIN
 
@@ -118,21 +120,7 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
                 raise ConfigEntryNotReady(
                     f"Could not find MicroBot with address {self._bdaddr}"
                 )
-            conf = (
-                self.hass.config.path()
-                + "/.storage/microbot-"
-                + re.sub("[^a-f0-9]", "", self._bdaddr.lower())
-                + ".conf"
-            )
-            self._client = MicroBotApiClient(
-                device=self._ble_device,
-                config=conf,
-                retry_count=DEFAULT_RETRY_COUNT,
-            )
-            token = self._client.hasToken()
-            if not token:
-                return await self.async_step_link()
-            return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
+            return await self.async_step_link()
 
         return self.async_show_form(
             step_id="init", data_schema=data_schema, errors=errors
@@ -143,8 +131,13 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Given a configured host, will ask the user to press the button to pair."""
         errors: dict[str, str] = {}
+        token = randomid(32)
+        self._client = MicroBotApiClient(
+            device=self._ble_device,
+            token=token,
+            retry_count=DEFAULT_RETRY_COUNT,
+        )
         assert self._client is not None
-        token = self._client.hasToken()
         if user_input is None:
             try:
                 await self._client.connect(init=True)
@@ -153,12 +146,13 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "linking"
             return self.async_show_form(step_id="link")
 
-        if not token:
+        if not self._client.is_connected():
             errors["base"] = "linking"
 
         if errors:
             return self.async_show_form(step_id="link", errors=errors)
 
         user_input[CONF_BDADDR] = self._bdaddr
+        user_input[CONF_ACCESS_TOKEN] = token
 
         return self.async_create_entry(title=self._name, data=user_input)
