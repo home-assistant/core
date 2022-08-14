@@ -150,11 +150,7 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         assert self._client is not None
         if user_input is None:
-            try:
-                await self._client.connect(init=True)
-            except Exception as e:
-                _LOGGER.exception("Error connecting with MicroBot: %s", e)
-                errors["base"] = "linking"
+            await self._client.connect(init=True)
             return self.async_show_form(step_id="link")
 
         if not self._client.is_connected():
