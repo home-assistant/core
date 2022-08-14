@@ -97,7 +97,7 @@ async def _remove_adopt_button(
     hass: HomeAssistant, device: ProtectAdoptableDeviceModel
 ) -> None:
 
-    entity_registry = await er.async_get_registry(hass)
+    entity_registry = er.async_get(hass)
     if device.is_adopted_by_us and (
         entity_id := entity_registry.async_get_entity_id(
             Platform.BUTTON, DOMAIN, f"{device.mac}_adopt"
