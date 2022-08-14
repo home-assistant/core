@@ -2172,13 +2172,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 require_hass=True,
             ),
             Ext(
-                "expand",
-                filt=pass_context(hassfunction(expand)),
-                glob=hassfunction(expand),
-                support_limited=False,
-                require_hass=True,
-            ),
-            Ext(
                 "is_state",
                 glob=hassfunction(is_state),
                 support_limited=False,
@@ -2237,9 +2230,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         # When hass is None, populate all functions & filters that can be used later to pass validation
         def dummy_func(name):
             def warn_dummy(*args, **kwargs):
-                raise TemplateError(
-                    f"Use of '{name}' is not supported without a valid hass instance"
-                )
+                pass
 
             return warn_dummy
 
