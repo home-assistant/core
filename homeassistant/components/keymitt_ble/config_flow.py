@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-import re
 from typing import Any
 
 from bleak.backends.device import BLEDevice
@@ -27,6 +26,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN
 from .const import CONF_BDADDR, CONF_NAME, DEFAULT_RETRY_COUNT, DOMAIN
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
+
 
 class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for MicroBot."""
