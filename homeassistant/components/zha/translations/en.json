@@ -11,12 +11,6 @@
         "flow_title": "{name}",
         "step": {
             "choose_formation_strategy": {
-                "data": {
-                    "form_new_network": "Form a new network",
-                    "keep_current_settings": "Keep current network settings",
-                    "restore_automatic_backup": "Restore an automatic backup",
-                    "restore_manual_backup": "Restore a manual backup"
-                },
                 "description": "Choose the network settings for your coordinator",
                 "title": "Network Formation"
             },

@@ -48,10 +48,10 @@ AUTOPROBE_RADIOS = (
 )
 
 FORMATION_STRATEGY = "formation_strategy"
-FORMATION_FORM_NEW_NETWORK = "form_new_network"
-FORMATION_REUSE_SETTINGS = "keep_current_settings"
-FORMATION_RESTORE_AUTOMATIC_BACKUP = "restore_automatic_backup"
-FORMATION_RESTORE_MANUAL_BACKUP = "restore_manual_backup"
+FORMATION_FORM_NEW_NETWORK = "Form a new network"
+FORMATION_REUSE_SETTINGS = "Keep current network settings"
+FORMATION_RESTORE_AUTOMATIC_BACKUP = "Restore an automatic backup"
+FORMATION_RESTORE_MANUAL_BACKUP = "Restore a manual backup"
 
 CHOOSE_AUTOMATIC_BACKUP = "choose_automatic_backup"
 OVERWRITE_COORDINATOR_IEEE = "overwrite_coordinator_ieee"
