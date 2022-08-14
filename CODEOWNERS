@@ -565,6 +565,7 @@ build.json @home-assistant/supervisor
 /tests/components/keenetic_ndms2/ @foxel
 /homeassistant/components/kef/ @basnijholt
 /homeassistant/components/keyboard_remote/ @bendavid @lanrat
+/homeassistant/components/keymitt_ble/ @spycle
 /homeassistant/components/kmtronic/ @dgomes
 /tests/components/kmtronic/ @dgomes
 /homeassistant/components/knx/ @Julius2342 @farmio @marvin-w
@@ -649,7 +650,6 @@ build.json @home-assistant/supervisor
 /tests/components/meteoclimatic/ @adrianmo
 /homeassistant/components/metoffice/ @MrHarcombe @avee87
 /tests/components/metoffice/ @MrHarcombe @avee87
-/homeassistant/components/microbot_push/ @spycle
 /homeassistant/components/miflora/ @danielhiversen @basnijholt
 /homeassistant/components/mikrotik/ @engrbm87
 /tests/components/mikrotik/ @engrbm87
