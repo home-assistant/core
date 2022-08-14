@@ -286,7 +286,10 @@ class _BaseVacuum(Entity):
         )
 
     def send_command(
-        self, command: str, params: dict | list | None = None, **kwargs: Any
+        self,
+        command: str,
+        params: dict[str, Any] | list[Any] | None = None,
+        **kwargs: Any,
     ) -> None:
         """Send a command to a vacuum cleaner."""
         raise NotImplementedError()
