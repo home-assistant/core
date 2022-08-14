@@ -50,12 +50,12 @@ def get_thumbnail_url_full(
 ) -> str | None:
     """Get thumbnail URL."""
     if is_internal:
-        item = get_media(  # type: ignore[no-untyped-call]
+        item = get_media(
             media.library,
             media_content_id,
             media_content_type,
         )
-        return getattr(item, "album_art_uri", None)  # type: ignore[no-any-return]
+        return getattr(item, "album_art_uri", None)
 
     return get_browse_image_url(
         media_content_type,
