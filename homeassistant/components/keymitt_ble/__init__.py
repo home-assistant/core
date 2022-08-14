@@ -67,10 +67,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry, PLATFORMS
     )
 
-    async def generate_token(call: ServiceCall) -> None:
-        _LOGGER.debug("Token service called")
-        await coordinator.api.connect(init=True)
-
     async def calibrate(call: ServiceCall) -> None:
         _LOGGER.debug("Calibrate service called")
         depth = call.data["depth"]
@@ -78,8 +74,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         mode = call.data["mode"]
         await coordinator.api.calibrate(depth, duration, mode)
 
-
-    hass.services.async_register(DOMAIN, "generate_token", generate_token)
     hass.services.async_register(DOMAIN, "calibrate", calibrate)
     return True
 
