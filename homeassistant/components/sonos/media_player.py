@@ -239,8 +239,8 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         """Return if the media_player is available."""
         return (
             self.speaker.available
-            and self.speaker.sonos_group_entities
-            and self.media.playback_status
+            and bool(self.speaker.sonos_group_entities)
+            and self.media.playback_status is not None
         )
 
     @property
@@ -301,9 +301,9 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         return self.speaker.muted
 
     @property
-    def shuffle(self) -> str | None:
+    def shuffle(self) -> bool | None:
         """Shuffling state."""
-        shuffle: str = PLAY_MODES[self.media.play_mode][0]
+        shuffle = PLAY_MODES[self.media.play_mode][0]
         return shuffle
 
     @property
@@ -323,14 +323,14 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         return self.media.uri
 
     @property
-    def media_duration(self) -> float | None:
+    def media_duration(self) -> int | None:
         """Duration of current playing media in seconds."""
-        return self.media.duration
+        return int(self.media.duration) if self.media.duration else None
 
     @property
-    def media_position(self) -> float | None:
+    def media_position(self) -> int | None:
         """Position of current playing media in seconds."""
-        return self.media.position
+        return int(self.media.position) if self.media.position else None
 
     @property
     def media_position_updated_at(self) -> datetime.datetime | None:
@@ -388,7 +388,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         self.soco.volume = str(int(volume * 100))
 
     @soco_error(UPNP_ERRORS_TO_IGNORE)
-    def set_shuffle(self, shuffle: str) -> None:
+    def set_shuffle(self, shuffle: bool) -> None:
         """Enable/Disable shuffle mode."""
         sonos_shuffle = shuffle
         sonos_repeat = PLAY_MODES[self.media.play_mode][1]

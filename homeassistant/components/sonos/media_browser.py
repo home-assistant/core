@@ -70,7 +70,7 @@ def media_source_filter(item: BrowseMedia):
 
 
 async def async_browse_media(
-    hass,
+    hass: HomeAssistant,
     speaker: SonosSpeaker,
     media: SonosMedia,
     get_browse_image_url: GetBrowseImageUrlType,
@@ -86,6 +86,7 @@ async def async_browse_media(
             media,
             get_browse_image_url,
         )
+    assert media_content_type is not None
 
     if media_source.is_media_source_id(media_content_id):
         return await media_source.async_browse_media(
@@ -258,7 +259,7 @@ async def root_payload(
     get_browse_image_url: GetBrowseImageUrlType,
 ):
     """Return root payload for Sonos."""
-    children = []
+    children: list[BrowseMedia] = []
 
     if speaker.favorites:
         children.append(
@@ -303,14 +304,15 @@ async def root_payload(
 
     if "spotify" in hass.config.components:
         result = await spotify.async_browse_media(hass, None, None)
-        children.extend(result.children)
+        if result.children is not None:
+            children.extend(result.children)
 
     try:
         item = await media_source.async_browse_media(
             hass, None, content_filter=media_source_filter
         )
         # If domain is None, it's overview of available sources
-        if item.domain is None:
+        if item.domain is None and item.children is not None:
             children.extend(item.children)
         else:
             children.append(item)

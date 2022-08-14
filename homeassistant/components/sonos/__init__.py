@@ -8,6 +8,7 @@ import datetime
 from functools import partial
 import logging
 import socket
+from typing import TYPE_CHECKING, Any, cast
 from urllib.parse import urlparse
 
 from soco import events_asyncio
@@ -21,7 +22,7 @@ from homeassistant.components import ssdp
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOSTS, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval, call_later
@@ -93,7 +94,7 @@ class SonosData:
         self.favorites: dict[str, SonosFavorites] = {}
         self.alarms: dict[str, SonosAlarms] = {}
         self.topology_condition = asyncio.Condition()
-        self.hosts_heartbeat = None
+        self.hosts_heartbeat: CALLBACK_TYPE | None = None
         self.discovery_known: set[str] = set()
         self.boot_counts: dict[str, int] = {}
         self.mdns_names: dict[str, str] = {}
@@ -168,7 +169,7 @@ class SonosDiscoveryManager:
         self.data = data
         self.hosts = set(hosts)
         self.discovery_lock = asyncio.Lock()
-        self._known_invisible = set()
+        self._known_invisible: set[SoCo] = set()
         self._manual_config_required = bool(hosts)
 
     async def async_shutdown(self):
@@ -236,6 +237,8 @@ class SonosDiscoveryManager:
                 (SonosAlarms, self.data.alarms),
                 (SonosFavorites, self.data.favorites),
             ):
+                if TYPE_CHECKING:
+                    coord_dict = cast(dict[str, Any], coord_dict)
                 if soco.household_id not in coord_dict:
                     new_coordinator = coordinator(self.hass, soco.household_id)
                     new_coordinator.setup(soco)

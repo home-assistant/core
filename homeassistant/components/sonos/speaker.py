@@ -8,7 +8,7 @@ import datetime
 from functools import partial
 import logging
 import time
-from typing import Any
+from typing import Any, cast
 
 import async_timeout
 import defusedxml.ElementTree as ET
@@ -165,7 +165,7 @@ class SonosSpeaker:
 
     async def async_setup_dispatchers(self, entry: ConfigEntry) -> None:
         """Connect dispatchers in async context during setup."""
-        dispatch_pairs = (
+        dispatch_pairs: tuple[tuple[str, Callable[..., Any]], ...] = (
             (SONOS_CHECK_ACTIVITY, self.async_check_activity),
             (SONOS_SPEAKER_ADDED, self.update_group_for_uid),
             (f"{SONOS_REBOOTED}-{self.soco.uid}", self.async_rebooted),
@@ -294,7 +294,7 @@ class SonosSpeaker:
     # Subscription handling and event dispatchers
     #
     def log_subscription_result(
-        self, result: Any, event: str, level: str = logging.DEBUG
+        self, result: Any, event: str, level: int = logging.DEBUG
     ) -> None:
         """Log a message if a subscription action (create/renew/stop) results in an exception."""
         if not isinstance(result, Exception):
@@ -304,7 +304,7 @@ class SonosSpeaker:
             message = "Request timed out"
             exc_info = None
         else:
-            message = result
+            message = str(result)
             exc_info = result if not str(result) else None
 
         _LOGGER.log(
@@ -593,6 +593,7 @@ class SonosSpeaker:
 
     async def async_offline(self) -> None:
         """Handle removal of speaker when unavailable."""
+        assert self._subscription_lock is not None
         async with self._subscription_lock:
             await self._async_offline()
 
@@ -826,8 +827,8 @@ class SonosSpeaker:
                 if speaker:
                     self._group_members_missing.discard(uid)
                     sonos_group.append(speaker)
-                    entity_id = entity_registry.async_get_entity_id(
-                        MP_DOMAIN, DOMAIN, uid
+                    entity_id = cast(
+                        str, entity_registry.async_get_entity_id(MP_DOMAIN, DOMAIN, uid)
                     )
                     sonos_group_entities.append(entity_id)
                 else:
@@ -996,7 +997,7 @@ class SonosSpeaker:
                             exc_info=exc,
                         )
 
-            groups = []
+            groups: list[list[SonosSpeaker]] = []
             if not with_group:
                 return groups
 
@@ -1013,7 +1014,8 @@ class SonosSpeaker:
                     {
                         s
                         for s in speaker.sonos_group[1:]
-                        if s not in speaker.snapshot_group
+                        if speaker.snapshot_group is not None
+                        and s not in speaker.snapshot_group
                     }
                 )
 
