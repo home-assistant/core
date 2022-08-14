@@ -19,7 +19,7 @@
                     "username": "Nombre de usuario",
                     "verify_ssl": "Verificar el certificado SSL"
                 },
-                "title": "Conectarse a NZBGet"
+                "title": "Conectar a NZBGet"
             }
         }
     },

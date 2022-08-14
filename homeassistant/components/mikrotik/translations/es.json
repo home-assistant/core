@@ -6,7 +6,7 @@
         "error": {
             "cannot_connect": "No se pudo conectar",
             "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
-            "name_exists": "El nombre ya existe"
+            "name_exists": "El nombre existe"
         },
         "step": {
             "user": {
@@ -18,7 +18,7 @@
                     "username": "Nombre de usuario",
                     "verify_ssl": "Usar ssl"
                 },
-                "title": "Configurar el router Mikrotik"
+                "title": "Configurar router Mikrotik"
             }
         }
     },
@@ -27,8 +27,8 @@
             "device_tracker": {
                 "data": {
                     "arp_ping": "Habilitar ping ARP",
-                    "detection_time": "Considere el intervalo de inicio",
-                    "force_dhcp": "Forzar el escaneo usando DHCP"
+                    "detection_time": "Considerar el intervalo de inicio",
+                    "force_dhcp": "Forzar escaneo usando DHCP"
                 }
             }
         }

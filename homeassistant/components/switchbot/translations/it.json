@@ -13,6 +13,15 @@
         },
         "flow_title": "{name} ({address})",
         "step": {
+            "confirm": {
+                "description": "Vuoi configurare {name}?"
+            },
+            "password": {
+                "data": {
+                    "password": "Password"
+                },
+                "description": "Il dispositivo {name} richiede una password"
+            },
             "user": {
                 "data": {
                     "address": "Indirizzo del dispositivo",

@@ -15,7 +15,7 @@
                     "password": "Contrase\u00f1a",
                     "username": "Nombre de usuario"
                 },
-                "title": "Conectar con tu cuenta de Tado"
+                "title": "Conectar con tu cuenta Tado"
             }
         }
     },
@@ -23,7 +23,7 @@
         "step": {
             "init": {
                 "data": {
-                    "fallback": "Elige el modo alternativo."
+                    "fallback": "Elige el modo de respaldo."
                 },
                 "description": "El modo de respaldo te permite elegir cu\u00e1ndo retroceder a Smart Schedule desde tu superposici\u00f3n de zona manual. (NEXT_TIME_BLOCK:= Cambiar en el pr\u00f3ximo cambio de Smart Schedule; MANUAL:= No cambiar hasta que canceles; TADO_DEFAULT:= Cambiar seg\u00fan tu configuraci\u00f3n en la aplicaci\u00f3n Tado).",
                 "title": "Ajustar las opciones de Tado"

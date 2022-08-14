@@ -7,7 +7,7 @@
             "disk_used": "Disco usado",
             "docker_version": "Versi\u00f3n de Docker",
             "healthy": "Saludable",
-            "host_os": "Sistema operativo del Host",
+            "host_os": "Sistema Operativo del Host",
             "installed_addons": "Complementos instalados",
             "supervisor_api": "API del Supervisor",
             "supervisor_version": "Versi\u00f3n del Supervisor",

@@ -4,8 +4,8 @@
             "already_configured": "El dispositivo ya est\u00e1 configurado"
         },
         "error": {
-            "cannot_connect": "Fallo al conectar",
-            "invalid_auth": "Autentificaci\u00f3n invalida",
+            "cannot_connect": "No se pudo conectar",
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
             "unknown": "Error inesperado"
         },
         "step": {
@@ -13,9 +13,9 @@
                 "data": {
                     "host": "Direcci\u00f3n IP",
                     "password": "Contrase\u00f1a",
-                    "username": "Usuario"
+                    "username": "Volver a autenticar la integraci\u00f3n"
                 },
-                "description": "Por favor, introduzca su cuenta de Control4 y la direcci\u00f3n IP de su controlador local."
+                "description": "Por favor, introduce los detalles de tu cuenta Control4 y la direcci\u00f3n IP de tu controlador local."
             }
         }
     },

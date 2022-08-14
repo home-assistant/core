@@ -9,7 +9,7 @@
             "cannot_connect": "No se pudo conectar",
             "code_expired": "El c\u00f3digo de autenticaci\u00f3n caduc\u00f3 o la configuraci\u00f3n de la credencial no es v\u00e1lida, por favor, int\u00e9ntalo de nuevo.",
             "invalid_access_token": "Token de acceso no v\u00e1lido",
-            "missing_configuration": "El componente no est\u00e1 configurado. Consulta la documentaci\u00f3n.",
+            "missing_configuration": "El componente no est\u00e1 configurado. Por favor, sigue la documentaci\u00f3n.",
             "oauth_error": "Se han recibido datos de token no v\u00e1lidos.",
             "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente",
             "timeout_connect": "Tiempo de espera agotado para establecer la conexi\u00f3n"
