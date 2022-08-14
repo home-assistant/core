@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import logging
-import re
 from typing import TYPE_CHECKING, Any
 import async_timeout
 
@@ -20,6 +19,7 @@ from homeassistant.components.bluetooth.passive_update_coordinator import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.const import CONF_ACCESS_TOKEN
 
 from .const import (
     CONF_BDADDR,
@@ -37,24 +37,18 @@ PLATFORMS: list[str] = ["switch"]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up this integration using UI."""
     hass.data.setdefault(DOMAIN, {})
-
+    token: Any | None = entry.data.get(CONF_ACCESS_TOKEN)
     bdaddr: Any | None = entry.data.get(CONF_BDADDR)
     assert bdaddr is not None
+    assert token is not None
     ble_device: BLEDevice | None = bluetooth.async_ble_device_from_address(
         hass, bdaddr.upper()
     )
     if not ble_device:
         raise ConfigEntryNotReady(f"Could not find MicroBot with address {bdaddr}")
-    conf_dir = hass.config.path()
-    conf = (
-        conf_dir
-        + "/.storage/microbot-"
-        + re.sub("[^a-f0-9]", "", bdaddr.lower())
-        + ".conf"
-    )
     client = MicroBotApiClient(
         device=ble_device,
-        config=conf,
+        token=token,
         retry_count=DEFAULT_RETRY_COUNT,
     )
     coordinator = MicroBotDataUpdateCoordinator(
@@ -123,7 +117,7 @@ class MicroBotDataUpdateCoordinator(PassiveBluetoothDataUpdateCoordinator):
                 await self._ready_event.wait()
                 return True
         return False
-    
+
     @property
     def available(self) -> bool:
         """Return true if the switch is available."""
