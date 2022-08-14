@@ -16,6 +16,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
 class MicroBotBinarySwitch(MicroBotEntity, SwitchEntity):
     """MicroBot switch class."""
+
     _attr_icon = ICON
     _attr_name = f"{DEFAULT_NAME}"
 
