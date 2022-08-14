@@ -1,6 +1,8 @@
 """MicroBot class."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.bluetooth.passive_update_coordinator import (
     PassiveBluetoothCoordinatorEntity,
 )
@@ -29,3 +31,8 @@ class MicroBotEntity(PassiveBluetoothCoordinatorEntity):
     def unique_id(self):
         """Return a unique ID to use for this entity."""
         return self._address
+
+    @property
+    def data(self) -> dict[str, Any]:
+        """Return coordinator data for this entity."""
+        return self.coordinator.data
