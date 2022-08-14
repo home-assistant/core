@@ -15,7 +15,7 @@
     }
   ],
   "codeowners": ["@spycle"],
-  "requirements": ["PyMicroBot==0.0.1"],
+  "requirements": ["PyMicroBot==0.0.2"],
   "iot_class": "assumed_state",
   "dependencies": ["bluetooth"],
   "loggers": ["keymitt_ble"]
