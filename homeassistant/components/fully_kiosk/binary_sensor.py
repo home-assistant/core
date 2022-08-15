@@ -80,13 +80,3 @@ class FullyBinarySensor(
     def is_on(self) -> bool | None:
         """Return if the binary sensor is on."""
         return self.coordinator.data.get(self._sensor)
-
-    async def async_added_to_hass(self) -> None:
-        """Connect to dispatcher listening for entity data notifications."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
-        )
-
-    async def async_update(self) -> None:
-        """Update Fully Kiosk Browser entity."""
-        await self.coordinator.async_request_refresh()
