@@ -337,8 +337,8 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             arg_types={
                 0: "HomeAssistant",
                 1: "ConfigType",
-                2: "AutomationActionType",
-                3: "AutomationTriggerInfo",
+                # 2: "AutomationActionType",  # AutomationActionType is deprecated -> TriggerActionType
+                # 3: "AutomationTriggerInfo",  # AutomationTriggerInfo is deprecated -> TriggerInfo
             },
             return_type="CALLBACK_TYPE",
         ),
