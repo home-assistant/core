@@ -28,11 +28,6 @@ class MicroBotEntity(PassiveBluetoothCoordinatorEntity):
         )
 
     @property
-    def unique_id(self):
-        """Return a unique ID to use for this entity."""
-        return self._address
-
-    @property
     def data(self) -> dict[str, Any]:
         """Return coordinator data for this entity."""
         return self.coordinator.data
