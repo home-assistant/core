@@ -5,7 +5,7 @@
         },
         "step": {
             "user": {
-                "description": "\u00bfEst\u00e1s seguro de que quieres configurar SpeedTest?"
+                "description": "\u00bfQuieres iniciar la configuraci\u00f3n?"
             }
         }
     },
@@ -15,7 +15,7 @@
                 "data": {
                     "manual": "Desactivar actualizaci\u00f3n autom\u00e1tica",
                     "scan_interval": "Frecuencia de actualizaci\u00f3n (minutos)",
-                    "server_name": "Seleccione el servidor de prueba"
+                    "server_name": "Selecciona el servidor de prueba"
                 }
             }
         }

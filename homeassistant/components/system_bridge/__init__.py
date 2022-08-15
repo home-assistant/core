@@ -10,6 +10,10 @@ from systembridgeconnector.exceptions import (
     ConnectionClosedException,
     ConnectionErrorException,
 )
+from systembridgeconnector.models.keyboard_key import KeyboardKey
+from systembridgeconnector.models.keyboard_text import KeyboardText
+from systembridgeconnector.models.open_path import OpenPath
+from systembridgeconnector.models.open_url import OpenUrl
 from systembridgeconnector.version import SUPPORTED_VERSION, Version
 import voluptuous as vol
 
@@ -149,7 +153,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
             call.data[CONF_BRIDGE]
         ]
-        await coordinator.websocket_client.open_path(call.data[CONF_PATH])
+        await coordinator.websocket_client.open_path(
+            OpenPath(path=call.data[CONF_PATH])
+        )
 
     async def handle_open_url(call: ServiceCall) -> None:
         """Handle the open url service call."""
@@ -157,21 +163,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
             call.data[CONF_BRIDGE]
         ]
-        await coordinator.websocket_client.open_url(call.data[CONF_URL])
+        await coordinator.websocket_client.open_url(OpenUrl(url=call.data[CONF_URL]))
 
     async def handle_send_keypress(call: ServiceCall) -> None:
         """Handle the send_keypress service call."""
         coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
             call.data[CONF_BRIDGE]
         ]
-        await coordinator.websocket_client.keyboard_keypress(call.data[CONF_KEY])
+        await coordinator.websocket_client.keyboard_keypress(
+            KeyboardKey(key=call.data[CONF_KEY])
+        )
 
     async def handle_send_text(call: ServiceCall) -> None:
         """Handle the send_keypress service call."""
         coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
             call.data[CONF_BRIDGE]
         ]
-        await coordinator.websocket_client.keyboard_text(call.data[CONF_TEXT])
+        await coordinator.websocket_client.keyboard_text(
+            KeyboardText(text=call.data[CONF_TEXT])
+        )
 
     hass.services.async_register(
         DOMAIN,

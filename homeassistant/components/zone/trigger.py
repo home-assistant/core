@@ -3,10 +3,6 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.automation import (
-    AutomationActionType,
-    AutomationTriggerInfo,
-)
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     CONF_ENTITY_ID,
@@ -22,6 +18,7 @@ from homeassistant.helpers import (
     location,
 )
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 # mypy: allow-incomplete-defs, allow-untyped-defs
@@ -62,13 +59,13 @@ async def async_validate_trigger_config(
 async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
-    action: AutomationActionType,
-    automation_info: AutomationTriggerInfo,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
     *,
     platform_type: str = "zone",
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
-    trigger_data = automation_info["trigger_data"]
+    trigger_data = trigger_info["trigger_data"]
     entity_id: list[str] = config[CONF_ENTITY_ID]
     zone_entity_id = config.get(CONF_ZONE)
     event = config.get(CONF_EVENT)
@@ -91,7 +88,7 @@ async def async_attach_trigger(
         if not (zone_state := hass.states.get(zone_entity_id)):
             _LOGGER.warning(
                 "Automation '%s' is referencing non-existing zone '%s' in a zone trigger",
-                automation_info["name"],
+                trigger_info["name"],
                 zone_entity_id,
             )
             return

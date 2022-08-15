@@ -7,14 +7,14 @@
         },
         "error": {
             "cannot_connect": "No se pudo conectar",
-            "invalid_pin_code": "El c\u00f3digo PIN que has introducido no es v\u00e1lido"
+            "invalid_pin_code": "El C\u00f3digo PIN que has introducido no es v\u00e1lido"
         },
         "step": {
             "pairing": {
                 "data": {
                     "pin": "C\u00f3digo PIN"
                 },
-                "description": "Introduce el PIN que aparece en tu Televisor",
+                "description": "Introduce el C\u00f3digo PIN que se muestra en tu TV",
                 "title": "Emparejamiento"
             },
             "user": {
@@ -22,8 +22,8 @@
                     "host": "Direcci\u00f3n IP",
                     "name": "Nombre"
                 },
-                "description": "Introduce la direcci\u00f3n IP de tu Panasonic Viera TV",
-                "title": "Configura tu televisi\u00f3n"
+                "description": "Introduce la Direcci\u00f3n IP de tu Panasonic Viera TV",
+                "title": "Configura tu TV"
             }
         }
     }

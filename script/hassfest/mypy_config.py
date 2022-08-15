@@ -54,6 +54,7 @@ GENERAL_SETTINGS: Final[dict[str, str]] = {
     # Enable some checks globally.
     "ignore_missing_imports": "true",
     "strict_equality": "true",
+    "no_implicit_optional": "true",
     "warn_incomplete_stub": "true",
     "warn_redundant_casts": "true",
     "warn_unused_configs": "true",
@@ -74,7 +75,6 @@ STRICT_SETTINGS: Final[list[str]] = [
     "disallow_untyped_calls",
     "disallow_untyped_decorators",
     "disallow_untyped_defs",
-    "no_implicit_optional",
     "warn_return_any",
     "warn_unreachable",
     # TODO: turn these on, address issues

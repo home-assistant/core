@@ -448,7 +448,7 @@ class DenonDevice(MediaPlayerEntity):
         await self._receiver.async_volume_down()
 
     @async_log_errors
-    async def async_set_volume_level(self, volume: int):
+    async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         # Volume has to be sent in a format like -50.0. Minimum is -80.0,
         # maximum is 18.0

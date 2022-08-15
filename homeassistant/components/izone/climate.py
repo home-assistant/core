@@ -216,7 +216,7 @@ class ControllerDevice(ClimateEntity):
         return self._available
 
     @callback
-    def set_available(self, available: bool, ex: Exception = None) -> None:
+    def set_available(self, available: bool, ex: Exception | None = None) -> None:
         """
         Set availability for the controller.
 
