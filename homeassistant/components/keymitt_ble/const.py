@@ -4,9 +4,6 @@ NAME = "MicroBot Push"
 DOMAIN = "keymitt_ble"
 MANUFACTURER = "Naran/Keymitt"
 
-# Icons
-ICON = "mdi:toggle-switch-variant"
-
 # Configuration and options
 CONF_BDADDR = "bdaddr"
 
