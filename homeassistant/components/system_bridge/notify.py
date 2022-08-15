@@ -1,11 +1,9 @@
 """Support for System Bridge notification service."""
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Any
 
-import async_timeout
 from systembridgeconnector.exceptions import (
     AuthenticationException,
     ConnectionClosedException,
@@ -109,11 +107,10 @@ class SystemBridgeNotificationService(BaseNotificationService):
                 entry.data[CONF_API_KEY],
             )
             try:
-                async with async_timeout.timeout(30):
-                    await websocket_client.connect(
-                        session=async_get_clientsession(self.hass)
-                    )
-                    await websocket_client.send_notification(notification)
+                await websocket_client.connect(
+                    session=async_get_clientsession(self.hass)
+                )
+                await websocket_client.send_notification(notification)
             except AuthenticationException as exception:
                 raise HomeAssistantError(
                     f"Authentication error when connecting to {entry.data[CONF_HOST]}"
@@ -124,8 +121,4 @@ class SystemBridgeNotificationService(BaseNotificationService):
             ) as exception:
                 raise HomeAssistantError(
                     f"Connection error when connecting to {entry.data[CONF_HOST]}"
-                ) from exception
-            except asyncio.TimeoutError as exception:
-                raise HomeAssistantError(
-                    f"Timed out connecting to {entry.data[CONF_HOST]}"
                 ) from exception
