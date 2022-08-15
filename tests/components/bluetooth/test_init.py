@@ -164,6 +164,43 @@ async def test_setup_and_retry_adapter_not_yet_available(hass, caplog):
         await hass.async_block_till_done()
 
 
+async def test_no_race_during_manual_reload_in_retry_state(hass, caplog):
+    """Test we can successfully reload when the entry is in a retry state."""
+    mock_bt = []
+    with patch("homeassistant.components.bluetooth.HaBleakScanner.async_setup"), patch(
+        "homeassistant.components.bluetooth.HaBleakScanner.start",
+        side_effect=BleakError,
+    ), patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
+    ):
+        assert await async_setup_component(
+            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
+        )
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    entry = hass.config_entries.async_entries(bluetooth.DOMAIN)[0]
+
+    assert "Failed to start Bluetooth" in caplog.text
+    assert len(bluetooth.async_discovered_service_info(hass)) == 0
+    assert entry.state == ConfigEntryState.SETUP_RETRY
+
+    with patch(
+        "homeassistant.components.bluetooth.HaBleakScanner.start",
+    ):
+        await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state == ConfigEntryState.LOADED
+
+    with patch(
+        "homeassistant.components.bluetooth.HaBleakScanner.stop",
+    ):
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        await hass.async_block_till_done()
+
+
 async def test_calling_async_discovered_devices_no_bluetooth(hass, caplog):
     """Test we fail gracefully when asking for discovered devices and there is no blueooth."""
     mock_bt = []
@@ -826,6 +863,66 @@ async def test_register_callback_by_address(
         assert service_info.name == "wohand"
         assert service_info.manufacturer == "Nordic Semiconductor ASA"
         assert service_info.manufacturer_id == 89
+
+
+async def test_register_callback_survives_reload(
+    hass, mock_bleak_scanner_start, enable_bluetooth
+):
+    """Test registering a callback by address survives bluetooth being reloaded."""
+    mock_bt = []
+    callbacks = []
+
+    def _fake_subscriber(
+        service_info: BluetoothServiceInfo, change: BluetoothChange
+    ) -> None:
+        """Fake subscriber for the BleakScanner."""
+        callbacks.append((service_info, change))
+
+    with patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
+    ):
+        assert await async_setup_component(
+            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
+        )
+        await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    bluetooth.async_register_callback(
+        hass,
+        _fake_subscriber,
+        {"address": "44:44:33:11:23:45"},
+        BluetoothScanningMode.ACTIVE,
+    )
+
+    assert len(mock_bleak_scanner_start.mock_calls) == 1
+
+    switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
+    switchbot_adv = AdvertisementData(
+        local_name="wohand",
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+        manufacturer_data={89: b"\xd8.\xad\xcd\r\x85"},
+        service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"H\x10c"},
+    )
+
+    _get_underlying_scanner()._callback(switchbot_device, switchbot_adv)
+    assert len(callbacks) == 1
+    service_info: BluetoothServiceInfo = callbacks[0][0]
+    assert service_info.name == "wohand"
+    assert service_info.manufacturer == "Nordic Semiconductor ASA"
+    assert service_info.manufacturer_id == 89
+
+    entry = hass.config_entries.async_entries(bluetooth.DOMAIN)[0]
+    await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    _get_underlying_scanner()._callback(switchbot_device, switchbot_adv)
+    assert len(callbacks) == 2
+    service_info: BluetoothServiceInfo = callbacks[1][0]
+    assert service_info.name == "wohand"
+    assert service_info.manufacturer == "Nordic Semiconductor ASA"
+    assert service_info.manufacturer_id == 89
 
 
 async def test_process_advertisements_bail_on_good_advertisement(
