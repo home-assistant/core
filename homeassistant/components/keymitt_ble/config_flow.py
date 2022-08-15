@@ -125,10 +125,10 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             self._abort_if_unique_id_configured()
             self._ble_device = bluetooth.async_ble_device_from_address(
-                self.hass, self._bdaddr.upper()
+                self.hass, self._bdaddr
             )
             if not self._ble_device:
-                raise ConfigEntryNotReady(
+                raise IntegrationError(
                     f"Could not find MicroBot with address {self._bdaddr}"
                 )
             return await self.async_step_link()
