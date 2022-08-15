@@ -19,12 +19,9 @@ from homeassistant.components.bluetooth.passive_update_coordinator import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_DEVICE
 
-from .const import (
-    CONF_BDADDR,
-    DOMAIN,
-)
+from .const import DOMAIN
 
 if TYPE_CHECKING:
     from bleak.backends.device import BLEDevice
@@ -37,7 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up this integration using UI."""
     hass.data.setdefault(DOMAIN, {})
     token: str = entry.data[CONF_ACCESS_TOKEN]
-    ble_device: BLEDevice | None = entry.data[CONF_BDADDR]
+    ble_device: BLEDevice | None = entry.data[CONF_DEVICE]
     client = MicroBotApiClient(
         device=ble_device,
         token=token,
