@@ -241,9 +241,24 @@ class HomeAssistant:
     auth: AuthManager
     http: HomeAssistantHTTP = None  # type: ignore[assignment]
     config_entries: ConfigEntries = None  # type: ignore[assignment]
+    _initialized: bool = False
+    _instance: HomeAssistant | None = None
+
+    def __new__(cls) -> HomeAssistant:
+        """Return the existing HA instance if it exists, otherwise create one.
+
+        The implementation is not thread safe, and relies on HomeAssistant being created
+        during bootstrapping.
+        """
+        if not cls._instance:
+            cls._instance = super().__new__(cls)
+        return cls._instance
 
     def __init__(self) -> None:
         """Initialize new Home Assistant object."""
+        if self._initialized:
+            return
+        self._initialized = True
         self.loop = asyncio.get_running_loop()
         self._pending_tasks: list[asyncio.Future[Any]] = []
         self._track_task = True

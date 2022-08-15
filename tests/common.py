@@ -159,6 +159,7 @@ def get_test_home_assistant():
 # pylint: disable=protected-access
 async def async_test_home_assistant(loop, load_registries=True):
     """Return a Home Assistant object pointing at test config dir."""
+    ha.HomeAssistant._instance = None
     hass = ha.HomeAssistant()
     store = auth_store.AuthStore(hass)
     hass.auth = auth.AuthManager(hass, store, {}, {})
