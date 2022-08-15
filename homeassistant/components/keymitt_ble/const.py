@@ -10,7 +10,6 @@ ICON = "mdi:toggle-switch-variant"
 
 # Configuration and options
 CONF_BDADDR = "bdaddr"
-DEFAULT_RETRY_COUNT = 5
 
 # Defaults
 DEFAULT_NAME = "Microbot"
