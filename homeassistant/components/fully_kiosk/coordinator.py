@@ -2,6 +2,7 @@
 import asyncio
 from datetime import timedelta
 import logging
+from typing import Any
 
 from aiohttp.client_exceptions import ClientConnectorError
 from async_timeout import timeout
@@ -37,7 +38,7 @@ class FullyKioskDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(seconds=UPDATE_INTERVAL),
         )
 
-    async def _async_update_data(self) -> dict:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
         try:
             with timeout(15):
