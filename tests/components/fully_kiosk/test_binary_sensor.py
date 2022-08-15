@@ -3,13 +3,13 @@ from datetime import timedelta
 
 from asynctest import patch
 
-from homeassistant.components.fullykiosk.const import UPDATE_INTERVAL
+from homeassistant.components.fully_kiosk.const import UPDATE_INTERVAL
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt
 
 from tests.common import async_fire_time_changed
-from tests.components.fullykiosk import init_integration
+from tests.components.fully_kiosk import init_integration
 
 
 async def test_binary_sensors(hass):
@@ -30,7 +30,7 @@ async def test_binary_sensors(hass):
 
     # Test failed update
     with patch(
-        "homeassistant.components.fullykiosk.FullyKioskDataUpdateCoordinator._async_update_data",
+        "homeassistant.components.fully_kiosk.FullyKioskDataUpdateCoordinator._async_update_data",
         side_effect=ConnectionError,
     ):
         async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=UPDATE_INTERVAL))

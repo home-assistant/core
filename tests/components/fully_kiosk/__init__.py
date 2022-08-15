@@ -18,10 +18,10 @@ async def init_integration(hass) -> MockConfigEntry:
         },
     )
 
-    deviceinfo = json.loads(load_fixture("fullykiosk/deviceinfo.json"))
+    deviceinfo = json.loads(load_fixture("fully_kiosk/deviceinfo.json"))
 
     with patch(
-        "homeassistant.components.fullykiosk.coordinator.FullyKioskDataUpdateCoordinator._async_update_data",
+        "homeassistant.components.fully_kiosk.coordinator.FullyKioskDataUpdateCoordinator._async_update_data",
         return_value=deviceinfo,
     ):
         entry.add_to_hass(hass)
