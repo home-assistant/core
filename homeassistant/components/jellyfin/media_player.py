@@ -6,6 +6,7 @@ from datetime import timedelta
 from functools import wraps
 import logging
 from typing import Any, TypeVar
+from xml.dom import NotFoundErr
 
 from jellyfin_apiclient_python import JellyfinClient
 from typing_extensions import Concatenate, ParamSpec
@@ -15,7 +16,9 @@ from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.browse_media import BrowseMedia
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_DIRECTORY,
+    MEDIA_CLASS_EPISODE,
     MEDIA_CLASS_MOVIE,
+    MEDIA_CLASS_SEASON,
     MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_TVSHOW,
     MediaPlayerEntityFeature,
@@ -65,8 +68,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up Jellyfin media_player from a config entry."""
     client: JellyfinClient = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
+    user = await hass.async_add_executor_job(client.jellyfin.get_user)
 
-    coord = JellyfinMediaPlayerCoordinator(hass, client, async_add_entities)
+    coord = JellyfinMediaPlayerCoordinator(hass, client, user, async_add_entities)
     await coord.async_config_entry_first_refresh()
     _LOGGER.debug("New entity listener created")
 
@@ -78,6 +82,7 @@ class JellyfinMediaPlayerCoordinator(DataUpdateCoordinator):
         self,
         hass: HomeAssistant,
         client: JellyfinClient,
+        user: str,
         async_add_entities: AddEntitiesCallback,
     ) -> None:
         """Initialize the UpdateCoordinator."""
@@ -87,6 +92,7 @@ class JellyfinMediaPlayerCoordinator(DataUpdateCoordinator):
 
         self._client = client
         self._hass = hass
+        self.user = user
         self.sessions: Any | None = None
 
         self._known: set[str] = set()
@@ -379,16 +385,74 @@ class JellyfinMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         The BrowseMedia instance will be used by the "media_player/browse_media" websocket command.
 
         """
-        if media_content_id is None or media_content_id == "root":
-            items = await self._hass.async_add_executor_job(
-                self._client.jellyfin.get_media_folders
+
+        def browse_media_from_item(media: Any) -> BrowseMedia:
+            content_type_map = {
+                "Series": MEDIA_TYPE_TVSHOW,
+                "Movie": MEDIA_TYPE_MOVIE,
+                "CollectionFolder": "collection",
+                "Folder": "library",
+                "BoxSet": "boxset",
+            }
+            media_class_map = {
+                "Series": MEDIA_CLASS_DIRECTORY,
+                "Movie": MEDIA_CLASS_MOVIE,
+                "CollectionFolder": MEDIA_CLASS_DIRECTORY,
+                "Folder": MEDIA_CLASS_DIRECTORY,
+                "BoxSet": MEDIA_CLASS_DIRECTORY,
+                "Episode": MEDIA_CLASS_EPISODE,
+                "Seaoson": MEDIA_CLASS_SEASON,
+            }
+            return BrowseMedia(
+                title=media["Name"],
+                media_content_id=media["Id"],
+                media_content_type=content_type_map.get(media["Type"], MEDIA_TYPE_NONE),
+                media_class=media_class_map.get(media["Type"], MEDIA_CLASS_DIRECTORY),
+                can_play=True,
+                can_expand=media["Type"] not in ["Movie", "Episode"],
+                children_media_class="",
+                thumbnail=str(
+                    self._client.jellyfin.artwork(media["Id"], "Primary", 500)
+                ),
+                children=[],
             )
 
-            children = []
-            for item in items["Items"]:
-                children.append(
-                    await self.async_browse_media(media_content_id=item["Id"])
+        async def create_item_children(
+            hass: HomeAssistant, client: JellyfinClient, user: str, itemid: str
+        ) -> list[BrowseMedia]:
+            children = await hass.async_add_executor_job(
+                lambda: dict(
+                    client.jellyfin.items(params={"parentId": itemid, "userId": user})
                 )
+            )
+
+            return [browse_media_from_item(item) for item in children["Items"]]
+
+        async def create_item_response(
+            hass: HomeAssistant, client: JellyfinClient, user: str, itemid: str
+        ) -> BrowseMedia:
+            items = await hass.async_add_executor_job(
+                lambda: dict(
+                    client.jellyfin.items(params={"ids": [itemid], "userId": user})
+                )
+            )
+
+            if not items or "Items" not in items or len(items["Items"]) < 1:
+                raise NotFoundErr()
+
+            return browse_media_from_item(items["Items"][0])
+
+        async def create_root_response(
+            hass: HomeAssistant, client: JellyfinClient, user: str
+        ) -> BrowseMedia:
+            folders = await hass.async_add_executor_job(
+                client.jellyfin.get_media_folders
+            )
+
+            children = [
+                await create_item_response(hass, client, user, folder["Id"])
+                for folder in folders["Items"]
+            ]
 
             ret = BrowseMedia(
                 media_content_id="root",
@@ -402,79 +466,24 @@ class JellyfinMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
             )
 
             return ret
-        user = await self._hass.async_add_executor_job(self._client.jellyfin.get_user)
 
-        items = await self._hass.async_add_executor_job(
-            lambda: self._client.jellyfin.items(
-                params={"ids": [media_content_id], "userId": user["Id"]}
-            )
-        )
-
-        item = items["Items"][0]
-
-        items = await self._hass.async_add_executor_job(
-            lambda: self._client.jellyfin.items(
-                params={"parentId": media_content_id, "userId": user["Id"]}
-            )
-        )
-
-        def type_to_content_type(jf_type: str) -> str:
-            if jf_type == "Series":
-                return MEDIA_TYPE_TVSHOW
-
-            if jf_type == "Movie":
-                return MEDIA_TYPE_MOVIE
-
-            if jf_type == "CollectionFolder":
-                return "collection"
-
-            if jf_type == "Folder":
-                return "library"
-
-            if jf_type == "BoxSet":
-                return "boxset"
-
-            return MEDIA_TYPE_NONE
-
-        def type_to_media_class(jf_type: str) -> str:
-            if jf_type == "Series":
-                return MEDIA_CLASS_DIRECTORY
-
-            if jf_type == "Movie":
-                return MEDIA_CLASS_MOVIE
-
-            if jf_type == "CollectionFolder":
-                return MEDIA_CLASS_DIRECTORY
-
-            if jf_type == "Folder":
-                return MEDIA_CLASS_DIRECTORY
-
-            if jf_type == "BoxSet":
-                return MEDIA_CLASS_DIRECTORY
-
-            return MEDIA_CLASS_DIRECTORY
-
-        def browse_media_from_data(
-            media: Any, children: list[BrowseMedia] | None = None
+        async def create_single_response(
+            hass: HomeAssistant, client: JellyfinClient, user: str, itemid: str
         ) -> BrowseMedia:
-            return BrowseMedia(
-                title=media["Name"],
-                media_content_id=media["Id"],
-                # media_content_type=item["Type"],
-                media_content_type=type_to_content_type(media["Type"]),
-                media_class=type_to_media_class(media["Type"]),
-                can_play=True,
-                # can_expand=media.get("isFolder", False),
-                can_expand=media["Type"] not in ["Movie", "Episode"],
-                children_media_class="",
-                thumbnail=str(
-                    self._client.jellyfin.artwork(media["Id"], "Primary", 500)
-                ),
-                children=children or [],
+            item = await create_item_response(hass, client, user, itemid)
+            item.children = await create_item_children(hass, client, user, itemid)
+
+            return item
+
+        if media_content_id is None or media_content_id == "root":
+            _LOGGER.debug("Creating root instance in browse_media")
+            return await create_root_response(
+                self.hass, self._client, self.coordinator.user["Id"]
             )
 
-        children = []
-        for child in items["Items"]:
-            children.append(browse_media_from_data(child))
-
-        return browse_media_from_data(item, children)
+        _LOGGER.debug(  # pylint: disable=logging-not-lazy
+            "Creating item instance in browse_media for %s" % media_content_id
+        )
+        return await create_single_response(
+            self._hass, self._client, self.coordinator.user["Id"], media_content_id
+        )
