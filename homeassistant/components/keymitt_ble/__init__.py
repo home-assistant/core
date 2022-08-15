@@ -23,7 +23,6 @@ from homeassistant.const import CONF_ACCESS_TOKEN
 
 from .const import (
     CONF_BDADDR,
-    DEFAULT_RETRY_COUNT,
     DOMAIN,
 )
 
@@ -47,7 +46,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     client = MicroBotApiClient(
         device=ble_device,
         token=token,
-        retry_count=DEFAULT_RETRY_COUNT,
     )
     coordinator = MicroBotDataUpdateCoordinator(
         hass, client=client, ble_device=ble_device
