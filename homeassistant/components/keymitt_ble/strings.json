@@ -25,13 +25,4 @@
       "microbot_unsupported_type": "Unsupported MicroBot Type."
     }
   },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "retry_count": "Retry count"
-        }
-      }
-    }
-  }
 }
