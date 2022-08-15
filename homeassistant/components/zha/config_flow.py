@@ -53,7 +53,7 @@ AUTOPROBE_RADIOS = (
 
 FORMATION_STRATEGY = "formation_strategy"
 FORMATION_FORM_NEW_NETWORK = "Erase network settings and form a new network"
-FORMATION_REUSE_SETTINGS = "Keep current network settings"
+FORMATION_REUSE_SETTINGS = "Keep radio network settings"
 FORMATION_RESTORE_AUTOMATIC_BACKUP = "Restore an automatic backup"
 FORMATION_RESTORE_MANUAL_BACKUP = "Upload a manual backup"
 
@@ -261,34 +261,48 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             return await self._async_create_radio_entity()
 
-        suggested_strategy = FORMATION_FORM_NEW_NETWORK
-
         async with self._connect_zigpy_app() as app:
-            strategies = [
-                FORMATION_FORM_NEW_NETWORK,
-            ]
-
-            # Check if the stick has any settings
+            # Check if the stick has any settings and load them
             try:
                 await app.load_network_info()
             except NetworkNotFormed:
                 pass
             else:
-                # Load the current info while were'c onnected, to save time
+                # Load the current info while we're connected, to save time
                 self._backups = app.backups.backups.copy()
                 self._current_settings = zigpy.backups.NetworkBackup(
                     network_info=app.state.network_info,
                     node_info=app.state.node_info,
                 )
-                strategies.append(FORMATION_REUSE_SETTINGS)
-                suggested_strategy = FORMATION_REUSE_SETTINGS
 
-            strategies.append(FORMATION_RESTORE_MANUAL_BACKUP)
+        strategies = []
 
-            # Check if we have any automatic backups
-            if app.backups.backups:
-                strategies.append(FORMATION_RESTORE_AUTOMATIC_BACKUP)
-                suggested_strategy = FORMATION_RESTORE_AUTOMATIC_BACKUP
+        # Check if we have any automatic backups *and* if the backups differ from
+        # the current radio settings (since restoring would be redundant)
+        if self._backups and any(
+            not backup.is_compatible_with(self._current_settings)
+            for backup in self._backups
+        ):
+            strategies.append(FORMATION_RESTORE_AUTOMATIC_BACKUP)
+
+        if self._current_settings is not None:
+            strategies.append(FORMATION_REUSE_SETTINGS)
+
+        strategies.append(FORMATION_RESTORE_MANUAL_BACKUP)
+        strategies.append(FORMATION_FORM_NEW_NETWORK)
+
+        # Pick a default. Forming a new network will always be an option but we would
+        # prefer to suggest something non-destructive if it's available.
+        suggested_strategy = [
+            strategy
+            for strategy in strategies
+            if strategy
+            in (
+                FORMATION_RESTORE_AUTOMATIC_BACKUP,
+                FORMATION_REUSE_SETTINGS,
+                FORMATION_FORM_NEW_NETWORK,
+            )
+        ][0]
 
         schema = {
             vol.Required(FORMATION_STRATEGY, default=suggested_strategy): vol.In(
