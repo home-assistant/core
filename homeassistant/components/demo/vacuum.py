@@ -241,7 +241,10 @@ class DemoVacuum(VacuumEntity):
         self.schedule_update_ha_state()
 
     def send_command(
-        self, command: str, params: dict | list | None = None, **kwargs: Any
+        self, 
+        command: str, 
+        params:  dict[str, Any] | list[Any] | None = None, 
+        **kwargs: Any,
     ) -> None:
         """Send a command to the vacuum."""
         if self.supported_features & VacuumEntityFeature.SEND_COMMAND == 0:
