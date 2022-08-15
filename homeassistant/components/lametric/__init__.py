@@ -39,6 +39,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the LaMetric integration."""
+    hass.data[DOMAIN] = {"hass_config": config}
     if DOMAIN in config:
         async_create_issue(
             hass,
