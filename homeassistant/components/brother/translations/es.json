@@ -22,7 +22,7 @@
                     "type": "Tipo de impresora"
                 },
                 "description": "\u00bfQuieres a\u00f1adir la impresora {model} con n\u00famero de serie `{serial_number}` a Home Assistant?",
-                "title": "Impresora Brother encontrada"
+                "title": "Impresora Brother descubierta"
             }
         }
     }

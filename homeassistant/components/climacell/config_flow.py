@@ -19,7 +19,9 @@ class ClimaCellOptionsConfigFlow(config_entries.OptionsFlow):
         """Initialize ClimaCell options flow."""
         self._config_entry = config_entry
 
-    async def async_step_init(self, user_input: dict[str, Any] = None) -> FlowResult:
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Manage the ClimaCell options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)

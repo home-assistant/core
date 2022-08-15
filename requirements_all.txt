@@ -37,7 +37,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.18.6
+PySwitchbot==0.18.10
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -168,7 +168,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==1.2.9
+aiohomekit==1.2.10
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -1055,7 +1055,7 @@ moat-ble==0.1.1
 moehlenhoff-alpha2==1.2.1
 
 # homeassistant.components.motion_blinds
-motionblinds==0.6.11
+motionblinds==0.6.12
 
 # homeassistant.components.motioneye
 motioneye-client==0.3.12
@@ -1091,7 +1091,7 @@ netdisco==3.0.0
 netmap==0.7.0.2
 
 # homeassistant.components.nam
-nettigo-air-monitor==1.3.0
+nettigo-air-monitor==1.4.2
 
 # homeassistant.components.neurio_energy
 neurio==0.3.1
@@ -1742,7 +1742,7 @@ pyotgw==2.0.2
 pyotp==2.6.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.4.2
+pyoverkiz==1.5.0
 
 # homeassistant.components.openweathermap
 pyowm==3.2.0
@@ -2062,6 +2062,9 @@ pyzbar==0.1.7
 
 # homeassistant.components.zerproc
 pyzerproc==0.4.8
+
+# homeassistant.components.qingping
+qingping-ble==0.2.3
 
 # homeassistant.components.qnap
 qnapstats==0.4.0
@@ -2483,7 +2486,7 @@ xboxapi==2.0.1
 xiaomi-ble==0.9.0
 
 # homeassistant.components.knx
-xknx==0.22.1
+xknx==1.0.0
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz
@@ -2500,7 +2503,7 @@ xs1-api-client==3.0.0
 yalesmartalarmclient==0.3.8
 
 # homeassistant.components.yalexs_ble
-yalexs-ble==1.3.1
+yalexs-ble==1.4.0
 
 # homeassistant.components.august
 yalexs==1.2.1

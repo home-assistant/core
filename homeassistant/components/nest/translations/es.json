@@ -5,16 +5,16 @@
     "config": {
         "abort": {
             "already_configured": "La cuenta ya est\u00e1 configurada",
-            "authorize_url_timeout": "Tiempo de espera agotado generando la url de autorizaci\u00f3n.",
+            "authorize_url_timeout": "Se agot\u00f3 el tiempo de espera para generar la URL de autorizaci\u00f3n.",
             "invalid_access_token": "Token de acceso no v\u00e1lido",
-            "missing_configuration": "El componente no est\u00e1 configurado. Consulta la documentaci\u00f3n.",
+            "missing_configuration": "El componente no est\u00e1 configurado. Por favor, sigue la documentaci\u00f3n.",
             "no_url_available": "No hay URL disponible. Para obtener informaci\u00f3n sobre este error, [consulta la secci\u00f3n de ayuda]({docs_url})",
             "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente",
             "single_instance_allowed": "Ya est\u00e1 configurado. Solo es posible una \u00fanica configuraci\u00f3n.",
             "unknown_authorize_url_generation": "Error desconocido al generar una URL de autorizaci\u00f3n."
         },
         "create_entry": {
-            "default": "Autenticado con \u00e9xito"
+            "default": "Autenticado correctamente"
         },
         "error": {
             "bad_project_id": "Por favor introduce un ID de proyecto en la nube v\u00e1lido (verifica la Cloud Console)",
@@ -70,11 +70,11 @@
                 "data": {
                     "code": "C\u00f3digo PIN"
                 },
-                "description": "Para vincular tu cuenta de Nest, [autoriza tu cuenta]({url}).\n\nDespu\u00e9s de la autorizaci\u00f3n, copia y pega el c\u00f3digo pin a continuaci\u00f3n.",
+                "description": "Para vincular tu cuenta Nest, [autoriza tu cuenta]({url}). \n\nDespu\u00e9s de la autorizaci\u00f3n, copia y pega el c\u00f3digo PIN proporcionado a continuaci\u00f3n.",
                 "title": "Vincular cuenta de Nest"
             },
             "pick_implementation": {
-                "title": "Elija el m\u00e9todo de autenticaci\u00f3n"
+                "title": "Selecciona el m\u00e9todo de autenticaci\u00f3n"
             },
             "pubsub": {
                 "data": {
@@ -84,7 +84,7 @@
                 "title": "Configurar Google Cloud"
             },
             "reauth_confirm": {
-                "description": "La integraci\u00f3n de Nest necesita volver a autenticar tu cuenta",
+                "description": "La integraci\u00f3n Nest necesita volver a autenticar tu cuenta",
                 "title": "Volver a autenticar la integraci\u00f3n"
             }
         }
@@ -103,7 +103,7 @@
             "title": "Se va a eliminar la configuraci\u00f3n YAML de Nest"
         },
         "removed_app_auth": {
-            "description": "Para mejorar la seguridad y reducir el riesgo de phishing, Google ha dejado de utilizar el m\u00e9todo de autenticaci\u00f3n utilizado por Home Assistant. \n\n **Esto requiere una acci\u00f3n de su parte para resolverlo** ([m\u00e1s informaci\u00f3n]({more_info_url})) \n\n 1. Visita la p\u00e1gina de integraciones\n 1. Haz clic en Reconfigurar en la integraci\u00f3n de Nest.\n 1. Home Assistant te guiar\u00e1 a trav\u00e9s de los pasos para actualizar a la autenticaci\u00f3n web. \n\nConsulta las [instrucciones de integraci\u00f3n]({documentation_url})  de Nest para obtener informaci\u00f3n sobre la soluci\u00f3n de problemas.",
+            "description": "Para mejorar la seguridad y reducir el riesgo de phishing, Google ha dejado de utilizar el m\u00e9todo de autenticaci\u00f3n utilizado por Home Assistant. \n\n **Esto requiere una acci\u00f3n por tu parte para resolverlo** ([m\u00e1s informaci\u00f3n]({more_info_url})) \n\n 1. Visita la p\u00e1gina de integraciones\n 1. Haz clic en Reconfigurar en la integraci\u00f3n de Nest.\n 1. Home Assistant te guiar\u00e1 a trav\u00e9s de los pasos para actualizar a la autenticaci\u00f3n web. \n\nConsulta las [instrucciones de integraci\u00f3n]({documentation_url})  de Nest para obtener informaci\u00f3n sobre la soluci\u00f3n de problemas.",
             "title": "Las credenciales de autenticaci\u00f3n de Nest deben actualizarse"
         }
     }
