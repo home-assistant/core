@@ -2,6 +2,8 @@
 
 from typing import Final
 
+from ...const import Platform
+
 DOMAIN: Final = "jellyfin"
 
 CLIENT_VERSION: Final = "1.0"
@@ -39,3 +41,5 @@ SUPPORTED_COLLECTION_TYPES: Final = [COLLECTION_TYPE_MUSIC, COLLECTION_TYPE_MOVI
 
 USER_APP_NAME: Final = "Home Assistant"
 USER_AGENT: Final = f"Home-Assistant/{CLIENT_VERSION}"
+
+PLATFORMS = frozenset([Platform.MEDIA_PLAYER])
