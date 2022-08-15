@@ -47,20 +47,3 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
 
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert DOMAIN not in hass.data
-
-
-# async def test_update_failed(hass: HomeAssistant, mock_api: MagicMock) -> None:
-#     """Test Glances failed due to connection error."""
-
-#     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG_DATA)
-#     entry.add_to_hass(hass)
-
-#     await hass.config_entries.async_setup(entry.entry_id)
-#     await hass.async_block_till_done()
-
-#     mock_api.return_value.get_data.side_effect = GlancesApiConnectionError
-#     coordinator = hass.data[DOMAIN][entry.entry_id]
-#     await coordinator.async_refresh()
-#     await hass.async_block_till_done()
-
-#     assert not coordinator.last_update_success
