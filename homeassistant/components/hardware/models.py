@@ -18,11 +18,23 @@ class BoardInfo:
 
 
 @dataclass
+class USBInfo:
+    """USB info type."""
+
+    vid: str
+    pid: str
+    serial_number: str | None
+    manufacturer: str | None
+    description: str | None
+
+
+@dataclass
 class HardwareInfo:
     """Hardware info type."""
 
     name: str | None
     board: BoardInfo | None
+    dongles: list[USBInfo] | None
     url: str | None
 
 
