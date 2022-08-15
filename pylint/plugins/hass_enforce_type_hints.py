@@ -2170,7 +2170,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     function_name="send_command",
                     named_arg_types={
                         "command": "str",
-                        "params": "dict | list | None",
+                        "params": "dict[str, Any] | list[Any] | None",
                     },
                     kwargs_type="Any",
                     return_type=None,
