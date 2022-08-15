@@ -104,17 +104,6 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
         if not self._discovered_advs:
             return self.async_abort(reason="no_unconfigured_devices")
 
-        data_schema = vol.Schema(
-            {
-                vol.Required(CONF_BDADDR): vol.In(
-                    {
-                        address: f"{parsed.data['local_name']} ({address})"
-                        for address, parsed in self._discovered_advs.items()
-                    }
-                )
-            }
-        )
-
         if user_input is not None:
             self._name = name_from_discovery(self._discovered_adv)
             self._bdaddr = user_input[CONF_BDADDR]
@@ -125,7 +114,18 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self.async_step_link()
 
         return self.async_show_form(
-            step_id="init", data_schema=data_schema, errors=errors
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_BDADDR): vol.In(
+                        {
+                            address: f"{parsed.data['local_name']} ({address})"
+                            for address, parsed in self._discovered_advs.items()
+                        }
+                    )
+                }
+            ),
+            errors=errors
         )
 
     async def async_step_link(
