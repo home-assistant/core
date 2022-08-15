@@ -36,6 +36,7 @@ from homeassistant.core import (
     HomeAssistant,
     callback,
     split_entity_id,
+    valid_entity_id,
 )
 from homeassistant.exceptions import (
     ConditionError,
@@ -371,7 +372,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
                 referenced |= condition.async_extract_devices(conf)
 
         for conf in self._trigger_config:
-            referenced |= set(_trigger_extract_device(conf))
+            referenced |= set(_trigger_extract_devices(conf))
 
         self._referenced_devices = referenced
         return referenced
@@ -778,7 +779,7 @@ async def _async_process_if(hass, name, config, p_config):
 
 
 @callback
-def _trigger_extract_device(trigger_conf: dict) -> list[str]:
+def _trigger_extract_devices(trigger_conf: dict) -> list[str]:
     """Extract devices from a trigger config."""
     if trigger_conf[CONF_PLATFORM] == "device":
         return [trigger_conf[CONF_DEVICE_ID]]
@@ -787,6 +788,7 @@ def _trigger_extract_device(trigger_conf: dict) -> list[str]:
         trigger_conf[CONF_PLATFORM] == "event"
         and CONF_EVENT_DATA in trigger_conf
         and CONF_DEVICE_ID in trigger_conf[CONF_EVENT_DATA]
+        and isinstance(trigger_conf[CONF_EVENT_DATA][CONF_DEVICE_ID], str)
     ):
         return [trigger_conf[CONF_EVENT_DATA][CONF_DEVICE_ID]]
 
@@ -818,6 +820,8 @@ def _trigger_extract_entities(trigger_conf: dict) -> list[str]:
         trigger_conf[CONF_PLATFORM] == "event"
         and CONF_EVENT_DATA in trigger_conf
         and CONF_ENTITY_ID in trigger_conf[CONF_EVENT_DATA]
+        and isinstance(trigger_conf[CONF_EVENT_DATA][CONF_ENTITY_ID], str)
+        and valid_entity_id(trigger_conf[CONF_EVENT_DATA][CONF_ENTITY_ID])
     ):
         return [trigger_conf[CONF_EVENT_DATA][CONF_ENTITY_ID]]
 
