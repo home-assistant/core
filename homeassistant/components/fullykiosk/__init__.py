@@ -2,53 +2,33 @@
 import asyncio
 import logging
 
-import voluptuous as vol
-
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import ConfigType
 
 from .const import DEFAULT_PORT, DOMAIN
 from .coordinator import FullyKioskDataUpdateCoordinator
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
-
-PLATFORMS = [
-    "binary_sensor",
-    "sensor",
-]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Fully Kiosk Browser component."""
-
-    hass.data.setdefault(DOMAIN, {})
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Fully Kiosk Browser from a config entry."""
 
-    entry_data = entry.data
     coordinator = FullyKioskDataUpdateCoordinator(
         hass,
         async_get_clientsession(hass),
-        entry_data[CONF_HOST],
+        entry.data[CONF_HOST],
         DEFAULT_PORT,
-        entry_data[CONF_PASSWORD],
+        entry.data[CONF_PASSWORD],
     )
 
-    await coordinator.async_refresh()
+    await coordinator.async_config_entry_first_refresh()
 
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
-
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
     for component in PLATFORMS:
         hass.async_create_task(
