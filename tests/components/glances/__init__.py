@@ -2,7 +2,6 @@
 """Glances integration init."""
 
 MOCK_CONFIG_DATA = {
-    "name": "Glances",
     "host": "0.0.0.0",
     "username": "username",
     "password": "password",

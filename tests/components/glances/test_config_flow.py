@@ -1,19 +1,26 @@
 """Tests for Glances config flow."""
-from glances_api.exceptions import GlancesApiConnectionError
+from unittest.mock import MagicMock
 
-from homeassistant import config_entries, data_entry_flow
+from glances_api.exceptions import GlancesApiConnectionError
+import pytest
+
+from homeassistant import config_entries
 from homeassistant.components import glances
-from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import (
+    RESULT_TYPE_ABORT,
+    RESULT_TYPE_FORM,
+    FlowResultType,
+)
 
 from . import MOCK_CONFIG_DATA
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, patch
 
 
 @pytest.fixture(autouse=True)
 def glances_setup_fixture():
-    """Mock transmission entry setup."""
+    """Mock glances entry setup."""
     with patch("homeassistant.components.glances.async_setup_entry", return_value=True):
         yield
 
@@ -24,19 +31,19 @@ async def test_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         glances.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=MOCK_CONFIG_DATA
     )
 
-    assert result["type"] == "create_entry"
-    assert result["title"] == HOST
-    assert result["data"] == DEMO_USER_INPUT
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "0.0.0.0"
+    assert result["data"] == MOCK_CONFIG_DATA
 
 
-async def test_form_cannot_connect(hass: HomeAssistant, mock_api):
+async def test_form_cannot_connect(hass: HomeAssistant, mock_api: MagicMock) -> None:
     """Test to return error if we cannot connect."""
 
     mock_api.return_value.get_data.side_effect = GlancesApiConnectionError
@@ -47,15 +54,13 @@ async def test_form_cannot_connect(hass: HomeAssistant, mock_api):
         result["flow_id"], user_input=MOCK_CONFIG_DATA
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_form_already_configured(hass: HomeAssistant) -> None:
     """Test host is already configured."""
-    entry = MockConfigEntry(
-        domain=glances.DOMAIN, data=MOCK_CONFIG_DATA, options={CONF_SCAN_INTERVAL: 60}
-    )
+    entry = MockConfigEntry(domain=glances.DOMAIN, data=MOCK_CONFIG_DATA)
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -64,5 +69,5 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=MOCK_CONFIG_DATA
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"

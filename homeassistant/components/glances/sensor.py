@@ -8,6 +8,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
+    StateType,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -320,7 +321,6 @@ class GlancesSensor(CoordinatorEntity[GlancesDataUpdateCoordinator], SensorEntit
 
     entity_description: GlancesSensorEntityDescription
     _attr_has_entity_name = True
-    _attr_should_poll = False
 
     def __init__(
         self,
@@ -332,7 +332,7 @@ class GlancesSensor(CoordinatorEntity[GlancesDataUpdateCoordinator], SensorEntit
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._sensor_name_prefix = sensor_name_prefix
-        self._state = None
+        self._state: StateType = None
 
         self.entity_description = description
         self._attr_name = f"{sensor_name_prefix} {description.name_suffix}"
@@ -344,7 +344,7 @@ class GlancesSensor(CoordinatorEntity[GlancesDataUpdateCoordinator], SensorEntit
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}-{sensor_name_prefix}-{description.key}"
 
     @property
-    def native_value(self):  # noqa: C901
+    def native_value(self) -> StateType:  # noqa: C901
         """Return the state of the resources."""
         if (value := self.coordinator.data) is None:
             return None
