@@ -80,7 +80,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if self._reauth_data["id"] is not None:
                 existing_entry = await self.async_set_unique_id(self._reauth_data["id"])
                 if not existing_entry:
-                    return await self.async_step_location()  # Make mypy happy
+                    raise NonExistentEntry(
+                        "Trying to reauthenticate a non-existent entry"
+                    )
                 data = {
                     "id": self._reauth_data["id"],
                     "name": self._reauth_data["name"],
@@ -157,3 +159,7 @@ class InvalidAuth(HomeAssistantError):
 
 class NoLocations(HomeAssistantError):
     """Error to indicate there are no locations."""
+
+
+class NonExistentEntry(HomeAssistantError):
+    """Error to indicate that the entry does not exist when it should."""
