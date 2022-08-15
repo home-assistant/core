@@ -128,7 +128,7 @@ def async_get_triggers(
                     }
                 )
         # relative_rotary triggers
-        if resource.type == ResourceTypes.RELATIVE_ROTARY:
+        elif resource.type == ResourceTypes.RELATIVE_ROTARY:
             for event_type in DEFAULT_ROTARY_EVENT_TYPES:
                 for sub_type in DEFAULT_ROTARY_EVENT_SUBTYPES:
                     triggers.append(
