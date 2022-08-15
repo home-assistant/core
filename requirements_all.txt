@@ -2160,7 +2160,7 @@ sendgrid==6.8.2
 sense_energy==0.10.4
 
 # homeassistant.components.sensorpush
-sensorpush-ble==1.5.1
+sensorpush-ble==1.5.2
 
 # homeassistant.components.sentry
 sentry-sdk==1.8.0
