@@ -601,6 +601,7 @@ omit =
     homeassistant/components/itunes/media_player.py
     homeassistant/components/jellyfin/__init__.py
     homeassistant/components/jellyfin/media_source.py
+    homeassistant/components/jellyfin/media_player.py
     homeassistant/components/joaoapps_join/*
     homeassistant/components/juicenet/__init__.py
     homeassistant/components/juicenet/const.py
