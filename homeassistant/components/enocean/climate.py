@@ -23,12 +23,14 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from homeassistant.core import HomeAssistant
 
-MAX_TARGET_TEMP = 40
-MIN_TARGET_TEMP = 0
+MAX_TARGET_TEMP = 40.0
+MIN_TARGET_TEMP = 0.0
 TEMPERATURE_STEP = 1
 
-BASE_ID_TO_USE = "sender_base_id"
-DEFAULT_SET_POINT = 20
+# BASE_ID_TO_USE = "sender_base_id"
+DEFAULT_SET_POINT = 20.0
+
+CONF_SET_POINT_INVERSE = "inverse"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,8 +46,9 @@ def setup_platform(
     dev_name = config.get(CONF_NAME, "EnOcean Thermostat A5-20-01")
     dev_id = config.get(CONF_ID, [0x0, 0x0, 0x0, 0x0])
     base_id_to_use = sender_id
+    set_point_inverse = config.get(CONF_SET_POINT_INVERSE, False)
 
-    add_entities([EnOceanThermostat(base_id_to_use, dev_id, dev_name)])
+    add_entities([EnOceanThermostat(base_id_to_use, dev_id, dev_name, set_point_inverse)])
 
 
 def to_degrees(temperature: int) -> float:
@@ -57,8 +60,8 @@ def to_degrees(temperature: int) -> float:
 
 def translate(
     value_to_translate: str | int,
-    max_value=40,
-    min_value=0,
+    max_value=40.0,
+    min_value=0.0,
     target_max=255,
     target_min=0,
 ) -> int:
@@ -73,7 +76,7 @@ def translate(
     :param value_to_translate
     :rtype int
     """
-    if not isinstance(value_to_translate, int):
+    if not isinstance(value_to_translate, float):
         value_to_translate = max_value / 2
         _LOGGER.warning(
             "Value to normalize is not a digit. Using %s instead", value_to_translate
@@ -83,14 +86,15 @@ def translate(
 
     quotient = value_to_translate / max_value
 
-    target_value = int(target_max * quotient)
-    target_value = max(target_value, target_min)
-    _LOGGER.info("New target temp. value %s", str(target_value))
-    return target_value
+    translated_value = int(target_max * quotient)
+    translated_value = max(translated_value, target_min)
+    # _LOGGER.info("New target temp. value %s", str(target_value))
+    return translated_value
 
 
 class PacketPreparator:
     """Prepares radio packets which will be sent."""
+
     def __init__(self, base_id_to_use=None):
         if base_id_to_use is None:
             base_id_to_use = [0x0, 0x0, 0x0, 0x0]
@@ -98,7 +102,7 @@ class PacketPreparator:
         self._base_id_to_use = base_id_to_use
         self._optional = None
         self._command = None
-        self._set_point_temp = 20
+        self._set_point_temp = DEFAULT_SET_POINT
         self._run_init_sequence = False
         self._lift_set = False
         self._valve_open = False
@@ -131,16 +135,17 @@ class PacketPreparator:
         """Update the value of the packet which gets sent next."""
         new_temp_within_255 = translate(new_temp)
 
-        if translate(MIN_TARGET_TEMP) >= new_temp_within_255 \
-                or new_temp_within_255 >= translate(MAX_TARGET_TEMP):
+        if translate(
+            MIN_TARGET_TEMP
+        ) > new_temp_within_255 or new_temp_within_255 > translate(MAX_TARGET_TEMP):
             _LOGGER.warning(
                 "Desired target temperature %s is not within the allowed range of %s..%s",
                 new_temp,
                 MIN_TARGET_TEMP,
-                MAX_TARGET_TEMP,
+                MAX_TARGET_TEMP,        # self._current_valve_value = 0
             )
         else:
-            self._next_command[1] = hex(new_temp_within_255)
+            self._next_command[1] = new_temp_within_255
 
     def init_packet(self) -> None:
         """Initializes the packet which will be sent."""
@@ -149,11 +154,11 @@ class PacketPreparator:
         temp_translated = translate(
             self._set_point_temp
         )  # valve set point in celsius degrees
-        packet[1] = hex(temp_translated)  # target temperature / set point temp
-        packet[2] = hex(translate(20))  # current temp from RCU / thermostat
+        packet[1] = temp_translated  # target temperature / set point temp
+        packet[2] = translate(DEFAULT_SET_POINT)  # current temp from RCU / thermostat
 
-        packet[3] = hex(self.build_databyte_one())
-        packet[4] = hex(self.build_databyte_two())
+        packet[3] = self.build_databyte_one()
+        packet[4] = self.build_databyte_two()
 
         self._next_command = packet
 
@@ -196,18 +201,23 @@ class PacketPreparator:
 
         return databyte
 
+    def update_set_point_inverse(self, set_point_inverse):
+        """Update the value if the set point shall be interpreted inverse."""
+        self._set_point_inverse = set_point_inverse
+        self._next_command[3] = self.build_databyte_one()
+
 
 class EnOceanThermostat(EnOceanEntity, ClimateEntity, ABC):
     """Representation of an EnOcean Thermostat."""
 
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
 
-    def __init__(self, base_id_to_use, dev_id, dev_name):
+    def __init__(self, base_id_to_use, dev_id, dev_name, set_point_inverse=False):
         """Initialize the EnOcean Thermostat source."""
         super().__init__(dev_id, dev_name)
         self._base_id_to_use = base_id_to_use
         self._set_point_temp = DEFAULT_SET_POINT
-        self._current_temp: float = 0
+        self._current_temp: float = DEFAULT_SET_POINT
         self._off_value = 0
         self._attr_unique_id = f"{combine_hex(dev_id)}"
         self.entity_description = ClimateEntityDescription(
@@ -217,6 +227,7 @@ class EnOceanThermostat(EnOceanEntity, ClimateEntity, ABC):
         self._packet_preparator = (
             PacketPreparator()
         )  # initializes the packet / command to send
+        self._packet_preparator.update_set_point_inverse(set_point_inverse)
 
     def value_changed(self, packet: Packet):
         """Update the internal state of the device.
@@ -230,18 +241,19 @@ class EnOceanThermostat(EnOceanEntity, ClimateEntity, ABC):
                 # this packet is for the current device
 
                 # data could be sth. like: A5:00:90:95:08:01:01:DE:B0:00
-                _LOGGER.info("data from thermo arrived: %s", utils.to_hex_string(packet.data))
-                current_temp_value = packet.data[
+                _LOGGER.info(
+                    "data from thermo arrived: %s", utils.to_hex_string(packet.data)
+                )
+                current_vale_value = packet.data[
                     1
                 ]  # current value 0..100%, linear n=0..100
-                _LOGGER.info("Current temp value: %s", str(current_temp_value))
+                _LOGGER.info("Current valve value: %s", str(current_vale_value))
                 status = packet.data[2]
                 _LOGGER.info("Status: %s", str(status))
                 temperature = packet.data[3]  # Temperature 0..40°C, linear n=0..255
                 self._current_temp = to_degrees(
                     temperature
                 )  # update the internal state
-
 
         # send reply
         # if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is not None:
@@ -334,7 +346,7 @@ class EnOceanThermostat(EnOceanEntity, ClimateEntity, ABC):
         """Return the step width in which the temp. can be set."""
         return TEMPERATURE_STEP
 
-    async def set_temperature(self, **kwargs) -> None:
+    def set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
@@ -359,21 +371,3 @@ class EnOceanThermostat(EnOceanEntity, ClimateEntity, ABC):
     @property
     def min_temp(self) -> float:
         return MIN_TARGET_TEMP
-
-    # def turn_off(self):
-    #     # TODO: do sth.
-    #     pass
-    #
-    # def turn_on(self):
-    #     """Turn the light source on or sets a specific dimmer value."""
-    #     if (brightness := kwargs.get(ATTR_TEMPERATURE)) is not None:
-    #         self._brightness = brightness
-    #
-    #     bval = math.floor(self._brightness / 256.0 * 100.0)
-    #     if bval == 0:
-    #         bval = 1
-    #     command = [0xA5, 0x02, bval, 0x01, 0x09]
-    #     command.extend(self._sender_id)
-    #     command.extend([0x00])
-    #     self.send_command(command, [], 0x01)
-    #     self._on_state = True
