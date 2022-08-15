@@ -23,7 +23,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.const import CONF_ACCESS_TOKEN
 
-from .const import CONF_BDADDR, DEFAULT_RETRY_COUNT, DOMAIN, DEFAULT_NAME
+from .const import CONF_BDADDR, DOMAIN, DEFAULT_NAME
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
@@ -146,7 +146,6 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
         self._client = MicroBotApiClient(
             device=self._ble_device,
             token=token,
-            retry_count=DEFAULT_RETRY_COUNT,
         )
         assert self._client is not None
         if user_input is None:
