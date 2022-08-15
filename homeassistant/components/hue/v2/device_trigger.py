@@ -4,10 +4,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from aiohue.v2.models.button import ButtonEvent
+from aiohue.v2.models.relative_rotary import (
+    RelativeRotaryAction,
+    RelativeRotaryDirection,
+)
 from aiohue.v2.models.resource import ResourceTypes
 import voluptuous as vol
 
-from homeassistant.components import persistent_notification
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.homeassistant.triggers import event as event_trigger
 from homeassistant.const import (
@@ -49,37 +52,16 @@ DEFAULT_BUTTON_EVENT_TYPES = (
     ButtonEvent.LONG_RELEASE,
 )
 
+DEFAULT_ROTARY_EVENT_TYPES = (RelativeRotaryAction.START, RelativeRotaryAction.REPEAT)
+DEFAULT_ROTARY_EVENT_SUBTYPES = (
+    RelativeRotaryDirection.CLOCK_WISE,
+    RelativeRotaryDirection.COUNTER_CLOCK_WISE,
+)
+
 DEVICE_SPECIFIC_EVENT_TYPES = {
     # device specific overrides of specific supported button events
     "Hue tap switch": (ButtonEvent.INITIAL_PRESS,),
 }
-
-
-def check_invalid_device_trigger(
-    bridge: HueBridge,
-    config: ConfigType,
-    device_entry: DeviceEntry,
-    automation_info: AutomationTriggerInfo | None = None,
-):
-    """Check automation config for deprecated format."""
-    # NOTE: Remove this check after 2022.6
-    if isinstance(config["subtype"], int):
-        return
-    # found deprecated V1 style trigger, notify the user that it should be adjusted
-    msg = (
-        f"Incompatible device trigger detected for "
-        f"[{device_entry.name}](/config/devices/device/{device_entry.id}) "
-        "Please manually fix the outdated automation(s) once to fix this issue."
-    )
-    if automation_info:
-        automation_id = automation_info["variables"]["this"]["attributes"]["id"]  # type: ignore[index]
-        msg += f"\n\n[Check it out](/config/automation/edit/{automation_id})."
-    persistent_notification.async_create(
-        bridge.hass,
-        msg,
-        title="Outdated device trigger found",
-        notification_id=f"hue_trigger_{device_entry.id}",
-    )
 
 
 async def async_validate_trigger_config(
@@ -88,9 +70,7 @@ async def async_validate_trigger_config(
     config: ConfigType,
 ) -> ConfigType:
     """Validate config."""
-    config = TRIGGER_SCHEMA(config)
-    check_invalid_device_trigger(bridge, config, device_entry)
-    return config
+    return TRIGGER_SCHEMA(config)
 
 
 async def async_attach_trigger(
@@ -113,7 +93,6 @@ async def async_attach_trigger(
             },
         }
     )
-    check_invalid_device_trigger(bridge, config, device_entry, automation_info)
     return await event_trigger.async_attach_trigger(
         hass, event_config, action, automation_info, platform_type="device"
     )
@@ -131,22 +110,37 @@ def async_get_triggers(
     # extract triggers from all button resources of this Hue device
     triggers = []
     model_id = api.devices[hue_dev_id].product_data.product_name
+
     for resource in api.devices.get_sensors(hue_dev_id):
-        if resource.type != ResourceTypes.BUTTON:
-            continue
-        for event_type in DEVICE_SPECIFIC_EVENT_TYPES.get(
-            model_id, DEFAULT_BUTTON_EVENT_TYPES
-        ):
-            triggers.append(
-                {
-                    CONF_DEVICE_ID: device_entry.id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_PLATFORM: "device",
-                    CONF_TYPE: event_type.value,
-                    CONF_SUBTYPE: resource.metadata.control_id,
-                    CONF_UNIQUE_ID: resource.id,
-                }
-            )
+        # button triggers
+        if resource.type == ResourceTypes.BUTTON:
+            for event_type in DEVICE_SPECIFIC_EVENT_TYPES.get(
+                model_id, DEFAULT_BUTTON_EVENT_TYPES
+            ):
+                triggers.append(
+                    {
+                        CONF_DEVICE_ID: device_entry.id,
+                        CONF_DOMAIN: DOMAIN,
+                        CONF_PLATFORM: "device",
+                        CONF_TYPE: event_type.value,
+                        CONF_SUBTYPE: resource.metadata.control_id,
+                        CONF_UNIQUE_ID: resource.id,
+                    }
+                )
+        # relative_rotary triggers
+        elif resource.type == ResourceTypes.RELATIVE_ROTARY:
+            for event_type in DEFAULT_ROTARY_EVENT_TYPES:
+                for sub_type in DEFAULT_ROTARY_EVENT_SUBTYPES:
+                    triggers.append(
+                        {
+                            CONF_DEVICE_ID: device_entry.id,
+                            CONF_DOMAIN: DOMAIN,
+                            CONF_PLATFORM: "device",
+                            CONF_TYPE: event_type.value,
+                            CONF_SUBTYPE: sub_type.value,
+                            CONF_UNIQUE_ID: resource.id,
+                        }
+                    )
     return triggers
 
 
