@@ -7,12 +7,11 @@ from typing import Final
 from aioqsw.const import (
     QSD_ANOMALY,
     QSD_FIRMWARE_CONDITION,
+    QSD_LACP_PORTS,
     QSD_LINK,
     QSD_MESSAGE,
-    QSD_PORT_NUM,
     QSD_PORTS,
     QSD_PORTS_STATUS,
-    QSD_SYSTEM_BOARD,
 )
 
 from homeassistant.components.binary_sensor import (
@@ -27,7 +26,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ATTR_MESSAGE, DOMAIN, QSW_COORD_DATA
 from .coordinator import QswDataCoordinator
-from .entity import QswEntityDescription, QswSensorEntity
+from .entity import QswEntityDescription, QswEntityType, QswSensorEntity
 
 
 @dataclass
@@ -37,7 +36,7 @@ class QswBinarySensorEntityDescription(
     """A class that describes QNAP QSW binary sensor entities."""
 
     attributes: dict[str, list[str]] | None = None
-    port: bool = False
+    qsw_type: QswEntityType | None = None
 
 
 BINARY_SENSOR_TYPES: Final[tuple[QswBinarySensorEntityDescription, ...]] = (
@@ -53,12 +52,23 @@ BINARY_SENSOR_TYPES: Final[tuple[QswBinarySensorEntityDescription, ...]] = (
     ),
 )
 
+LACP_PORT_BINARY_SENSOR_TYPES: Final[tuple[QswBinarySensorEntityDescription, ...]] = (
+    QswBinarySensorEntityDescription(
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        entity_registry_enabled_default=False,
+        key=QSD_PORTS_STATUS,
+        qsw_type=QswEntityType.LACP_PORT,
+        name="Link",
+        subkey=QSD_LINK,
+    ),
+)
+
 PORT_BINARY_SENSOR_TYPES: Final[tuple[QswBinarySensorEntityDescription, ...]] = (
     QswBinarySensorEntityDescription(
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_registry_enabled_default=False,
         key=QSD_PORTS_STATUS,
-        port=True,
+        qsw_type=QswEntityType.PORT,
         name="Link",
         subkey=QSD_LINK,
     ),
@@ -80,24 +90,31 @@ async def async_setup_entry(
         ):
             entities.append(QswBinarySensor(coordinator, description, entry))
 
-    if (
-        QSD_SYSTEM_BOARD in coordinator.data
-        and QSD_PORT_NUM in coordinator.data[QSD_SYSTEM_BOARD]
-    ):
-        port_num = coordinator.data[QSD_SYSTEM_BOARD][QSD_PORT_NUM]
+    for description in LACP_PORT_BINARY_SENSOR_TYPES:
+        if (
+            description.key in coordinator.data
+            and QSD_LACP_PORTS in coordinator.data[description.key]
+        ):
+            for port_id, port_values in coordinator.data[description.key][
+                QSD_LACP_PORTS
+            ].items():
+                if description.subkey in port_values:
+                    entities.append(
+                        QswBinarySensor(coordinator, description, entry, port_id)
+                    )
 
-        for description in PORT_BINARY_SENSOR_TYPES:
-            if (
-                description.key in coordinator.data
-                and QSD_PORTS in coordinator.data[description.key]
-            ):
-                for port_id, port_values in coordinator.data[description.key][
-                    QSD_PORTS
-                ].items():
-                    if port_id <= port_num and description.subkey in port_values:
-                        entities.append(
-                            QswBinarySensor(coordinator, description, entry, port_id)
-                        )
+    for description in PORT_BINARY_SENSOR_TYPES:
+        if (
+            description.key in coordinator.data
+            and QSD_PORTS in coordinator.data[description.key]
+        ):
+            for port_id, port_values in coordinator.data[description.key][
+                QSD_PORTS
+            ].items():
+                if description.subkey in port_values:
+                    entities.append(
+                        QswBinarySensor(coordinator, description, entry, port_id)
+                    )
 
     async_add_entities(entities)
 
@@ -112,18 +129,23 @@ class QswBinarySensor(QswSensorEntity, BinarySensorEntity):
         coordinator: QswDataCoordinator,
         description: QswBinarySensorEntityDescription,
         entry: ConfigEntry,
-        port_id: int | None = None,
+        type_id: int | None = None,
     ) -> None:
         """Initialize."""
-        super().__init__(coordinator, entry, port_id)
-        if port_id is not None:
-            self._attr_name = f"{self.product} Port {port_id} {description.name}"
-            self._attr_unique_id = f"{entry.unique_id}_{description.key}_port_{port_id}_{description.subkey}"
+        super().__init__(coordinator, entry, type_id)
+        if type_id is not None:
+            if description.qsw_type == QswEntityType.LACP_PORT:
+                entity_str = f" LACP Port {type_id} "
+            else:
+                entity_str = f" Port {type_id} "
         else:
-            self._attr_name = f"{self.product} {description.name}"
-            self._attr_unique_id = (
-                f"{entry.unique_id}_{description.key}_{description.subkey}"
-            )
+            entity_str = " "
+
+        self._attr_name = f"{self.product}{entity_str}{description.name}"
+        entity_str = entity_str.lower().replace(" ", "_")
+        self._attr_unique_id = (
+            f"{entry.unique_id}_{description.key}{entity_str}{description.subkey}"
+        )
         self.entity_description = description
         self._async_update_attrs()
 
@@ -133,6 +155,6 @@ class QswBinarySensor(QswSensorEntity, BinarySensorEntity):
         self._attr_is_on = self.get_device_value(
             self.entity_description.key,
             self.entity_description.subkey,
-            self.entity_description.port,
+            self.entity_description.qsw_type,
         )
         super()._async_update_attrs()

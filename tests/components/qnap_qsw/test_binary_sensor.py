@@ -20,6 +20,24 @@ async def test_qnap_qsw_create_binary_sensors(
     assert state.state == STATE_OFF
     assert state.attributes.get(ATTR_MESSAGE) is None
 
+    state = hass.states.get("binary_sensor.qsw_m408_4c_lacp_port_1_link")
+    assert state.state == STATE_OFF
+
+    state = hass.states.get("binary_sensor.qsw_m408_4c_lacp_port_2_link")
+    assert state.state == STATE_OFF
+
+    state = hass.states.get("binary_sensor.qsw_m408_4c_lacp_port_3_link")
+    assert state.state == STATE_OFF
+
+    state = hass.states.get("binary_sensor.qsw_m408_4c_lacp_port_4_link")
+    assert state.state == STATE_OFF
+
+    state = hass.states.get("binary_sensor.qsw_m408_4c_lacp_port_5_link")
+    assert state.state == STATE_OFF
+
+    state = hass.states.get("binary_sensor.qsw_m408_4c_lacp_port_6_link")
+    assert state.state == STATE_OFF
+
     state = hass.states.get("binary_sensor.qsw_m408_4c_port_1_link")
     assert state.state == STATE_ON
 
