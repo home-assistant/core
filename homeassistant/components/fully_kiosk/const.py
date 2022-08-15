@@ -1,6 +1,6 @@
 """Constants for the Fully Kiosk Browser integration."""
 
-DOMAIN = "fullykiosk"
+DOMAIN = "fully_kiosk"
 
 DEFAULT_PORT = 2323
 

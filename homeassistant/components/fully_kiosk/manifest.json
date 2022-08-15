@@ -1,5 +1,5 @@
 {
-  "domain": "fullykiosk",
+  "domain": "fully_kiosk",
   "name": "Fully Kiosk Browser",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/fullykiosk",
