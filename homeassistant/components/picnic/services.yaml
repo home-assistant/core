@@ -1,9 +1,8 @@
 add_product:
-  name: Add product to the cart
+  name: Add a product to the cart
   description: >-
     Adds a product to the cart based on a search string or product ID.
-    The search string is ignored if a product ID is given.
-    A product ID can be found by using the picnic.search service.
+    The search string and product ID are exclusive.
 
   fields:
     # Device/service selector
@@ -34,31 +33,9 @@ add_product:
     amount:
       name: Amount
       description: Amount to add of the selected product
-      required: true
+      required: false
       default: 1
       selector:
         number:
           min: 1
           max: 50
-
-search:
-  name: Search for a product
-  description: Fires a 'picnic_search_result' event containing the first 5 search results for the product name.
-
-  fields:
-    # Device/service selector
-    device_id:
-      name: Picnic service
-      description: The Picnic service to search against, defaults to the first registered one.
-      required: false
-      selector:
-        device:
-          integration: picnic
-    # Input product_name is a text string
-    product_name:
-      name: Product name
-      description: The product name to search for
-      required: true
-      example: "Yoghurt"
-      selector:
-        text:

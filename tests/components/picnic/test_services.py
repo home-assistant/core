@@ -5,14 +5,10 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from homeassistant.components.picnic import CONF_COUNTRY_CODE, DOMAIN
-from homeassistant.components.picnic.const import (
-    CONF_API,
-    SERVICE_ADD_PRODUCT_TO_CART,
-    SERVICE_SEARCH_PRODUCT,
-)
+from homeassistant.components.picnic.const import CONF_API, SERVICE_ADD_PRODUCT_TO_CART
 from homeassistant.components.picnic.services import PicnicServiceException
 from homeassistant.const import CONF_ACCESS_TOKEN
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -154,7 +150,7 @@ async def test_add_product_multiple_config_entries(
     config_entry_1 = await generate_config_entry("158g-ahf7-aks")
     config_entry_2 = await generate_config_entry("3fj9-9gju-236")
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = hass.helpers.device_registry.async_get(hass)
     picnic_service = device_registry.async_get_device(
         identifiers={(DOMAIN, "3fj9-9gju-236")}
     )
@@ -172,84 +168,3 @@ async def test_add_product_multiple_config_entries(
     _get_picnic_api_mock(hass, config_entry_2).add_product.assert_called_with(
         "5109348572", 1
     )
-
-
-async def test_search(hass: HomeAssistant, generate_config_entry):
-    """Test the search service."""
-    config_entry = await generate_config_entry()
-    picnic_api = _get_picnic_api_mock(hass, config_entry)
-
-    # Set the return value of the search api endpoint
-    picnic_api.search.return_value = [
-        {
-            "items": [
-                {
-                    "id": "22510201",
-                    "name": "Kanis & Gunnink koffiebonen",
-                    "display_price": 549,
-                    "unit_quantity": "1 kilo",
-                },
-                {
-                    "id": "22407428",
-                    "decorators": [
-                        {"type": "LABEL", "text": "20% KORTING"},
-                        {"type": "PRICE", "display_price": 295},
-                        {"type": "VALIDITY_LABEL", "valid_until": "2021-03-07"},
-                    ],
-                    "name": "Douwe Egberts filterkoffie",
-                    "display_price": 495,
-                    "unit_quantity": "500 gram",
-                },
-            ]
-        }
-    ]
-
-    events = []
-
-    @callback
-    def picnic_search_result_published(event):
-        events.append(event)
-
-    hass.bus.async_listen("picnic_search_result", picnic_search_result_published)
-
-    # Create/setup a config entry
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_ACCESS_TOKEN: "x-original-picnic-auth-token",
-            CONF_COUNTRY_CODE: "NL",
-        },
-        unique_id="295-6y3-1nf4",
-    )
-    config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Call the search service
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SEARCH_PRODUCT,
-        {"product_name": "coffee"},
-        blocking=True,
-    )
-
-    # Check that the search method is called
-    picnic_api.search.assert_called_with("coffee")
-
-    # Check that the search results event is published
-    assert len(events) == 1
-    assert events[0].data["22510201"] == {
-        "id": "22510201",
-        "name": "Kanis & Gunnink koffiebonen",
-        "price": 5.49,
-        "quantity": "1 kilo",
-    }
-    assert events[0].data["22407428"] == {
-        "id": "22407428",
-        "name": "Douwe Egberts filterkoffie",
-        "price": 4.95,
-        "quantity": "500 gram",
-        "discount_price": 2.95,
-        "discount_label": "20% korting",
-        "discount_validity": "2021-03-07",
-    }

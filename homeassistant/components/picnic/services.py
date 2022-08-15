@@ -1,4 +1,5 @@
 """Services for the Picnic integration."""
+from typing import Any, Optional
 
 from python_picnic_api import PicnicAPI
 import voluptuous as vol
@@ -11,6 +12,7 @@ from .const import (
     ATTR_AMOUNT,
     ATTR_DEVICE_ID,
     ATTR_PRODUCT_ID,
+    ATTR_PRODUCT_IDENTIFIERS,
     ATTR_PRODUCT_NAME,
     CONF_API,
     DOMAIN,
@@ -19,7 +21,6 @@ from .const import (
     PRODUCT_DECORATOR_PRICE,
     PRODUCT_DECORATOR_VALIDITY,
     SERVICE_ADD_PRODUCT_TO_CART,
-    SERVICE_SEARCH_PRODUCT,
 )
 
 
@@ -47,37 +48,21 @@ async def async_register_services(hass: HomeAssistant) -> None:
             schema=vol.Schema(
                 {
                     vol.Optional(ATTR_DEVICE_ID): cv.string,
-                    vol.Optional(ATTR_PRODUCT_ID): cv.positive_int,
-                    vol.Optional(ATTR_PRODUCT_NAME): cv.string,
-                    vol.Optional(ATTR_AMOUNT): cv.positive_int,
-                }
-            ),
-        )
-
-    # Register the search service
-    if not hass.services.has_service(DOMAIN, SERVICE_SEARCH_PRODUCT):
-
-        async def async_search_product_service(call: ServiceCall):
-            # Get the picnic API client and call the handler with api client and hass
-            api_client: PicnicAPI = await get_api_client(
-                hass, call.data.get("device_id")
-            )
-            await handle_search(hass, api_client, call)
-
-        hass.services.async_register(
-            DOMAIN,
-            SERVICE_SEARCH_PRODUCT,
-            async_search_product_service,
-            schema=vol.Schema(
-                {
-                    vol.Optional(ATTR_DEVICE_ID): cv.string,
-                    vol.Required(ATTR_PRODUCT_NAME): cv.string,
+                    vol.Exclusive(
+                        ATTR_PRODUCT_ID, ATTR_PRODUCT_IDENTIFIERS
+                    ): cv.positive_int,
+                    vol.Exclusive(
+                        ATTR_PRODUCT_NAME, ATTR_PRODUCT_IDENTIFIERS
+                    ): cv.string,
+                    vol.Optional(ATTR_AMOUNT): vol.All(
+                        vol.Coerce(int), vol.Range(min=1)
+                    ),
                 }
             ),
         )
 
 
-async def get_api_client(hass, device_id: str = None):
+async def get_api_client(hass: HomeAssistant, device_id: Optional[Any] = None):
     """Get the right Picnic API client based on the device id, else get the default one."""
     if device_id is None:
         default_config_id = list(hass.data[DOMAIN].keys())[0]
@@ -120,18 +105,6 @@ async def handle_add_product(
     await hass.async_add_executor_job(
         api_client.add_product, str(product_id), call.data.get("amount", 1)
     )
-
-
-async def handle_search(
-    hass: HomeAssistant, api_client: PicnicAPI, call: ServiceCall
-) -> None:
-    """Handle the call for the search service."""
-    products = await hass.async_add_executor_job(
-        _product_search, api_client, call.data.get("product_name")
-    )
-
-    products_dict = {p["id"]: p for p in products[:5]}
-    hass.bus.async_fire("picnic_search_result", products_dict)
 
 
 def _product_search(api_client: PicnicAPI, product_name: str):

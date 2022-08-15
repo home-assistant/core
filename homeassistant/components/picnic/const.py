@@ -18,12 +18,12 @@ CONF_COORDINATOR = "coordinator"
 CONF_COUNTRY_CODE = "country_code"
 
 SERVICE_ADD_PRODUCT_TO_CART = "add_product"
-SERVICE_SEARCH_PRODUCT = "search"
 
 ATTR_DEVICE_ID = "device_id"
 ATTR_PRODUCT_ID = "product_id"
 ATTR_PRODUCT_NAME = "product_name"
 ATTR_AMOUNT = "amount"
+ATTR_PRODUCT_IDENTIFIERS = "product_identifiers"
 
 COUNTRY_CODES = ["NL", "DE", "BE"]
 ATTRIBUTION = "Data provided by Picnic"
