@@ -11,7 +11,7 @@
       },
       "link": {
         "title": "Pairing",
-        "description": "Press the button on the MicroBot Push when the LED is purple to register with Home Assistant."
+        "description": "Press the button on the MicroBot Push when the LED is solid pink or green to register with Home Assistant."
       }
     },
     "error": {
