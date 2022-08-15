@@ -1,10 +1,9 @@
 """The Fully Kiosk Browser integration."""
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DEFAULT_PORT, DOMAIN
+from .const import DOMAIN
 from .coordinator import FullyKioskDataUpdateCoordinator
 
 PLATFORMS = [Platform.BINARY_SENSOR]
@@ -13,14 +12,7 @@ PLATFORMS = [Platform.BINARY_SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Fully Kiosk Browser from a config entry."""
 
-    coordinator = FullyKioskDataUpdateCoordinator(
-        hass,
-        async_get_clientsession(hass),
-        entry.data[CONF_HOST],
-        DEFAULT_PORT,
-        entry.data[CONF_PASSWORD],
-    )
-
+    coordinator = FullyKioskDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator

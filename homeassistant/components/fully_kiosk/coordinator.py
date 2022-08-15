@@ -3,16 +3,18 @@ import asyncio
 from datetime import timedelta
 import logging
 
-from aiohttp import ClientSession
 from aiohttp.client_exceptions import ClientConnectorError
 from async_timeout import timeout
 from fullykiosk import FullyKiosk
 from fullykiosk.exceptions import FullyKioskError
 
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PASSWORD
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import UPDATE_INTERVAL
+from .const import DEFAULT_PORT, UPDATE_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,16 +22,18 @@ _LOGGER = logging.getLogger(__name__)
 class FullyKioskDataUpdateCoordinator(DataUpdateCoordinator):
     """Define an object to hold Fully Kiosk Browser data."""
 
-    def __init__(
-        self, hass: HomeAssistantType, session: ClientSession, host, port, password
-    ):
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize."""
-        self.fully = FullyKiosk(session, host, port, password)
-
+        self.fully = FullyKiosk(
+            async_get_clientsession(hass),
+            entry.data[CONF_HOST],
+            DEFAULT_PORT,
+            entry.data[CONF_PASSWORD],
+        )
         super().__init__(
             hass,
             _LOGGER,
-            name=f"{host} deviceInfo",
+            name=f"{entry.data[CONF_HOST]} deviceInfo",
             update_interval=timedelta(seconds=UPDATE_INTERVAL),
         )
 
