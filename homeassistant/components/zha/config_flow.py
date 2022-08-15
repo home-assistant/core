@@ -324,12 +324,16 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Required(CHOOSE_AUTOMATIC_BACKUP, default=choices[0]): vol.In(choices),
         }
 
-        # Only allow the IEEE to be written when the radio type is EZSP
         if self._radio_type == RadioType.ezsp and (
             self._current_settings is None
-            or any(
-                backup.node_info.ieee != self._current_settings.node_info.ieee
-                for backup in self._backups
+            or (
+                self._current_settings.network_info.metadata["ezsp"][
+                    "can_write_custom_eui64"
+                ]
+                and any(
+                    backup.node_info.ieee != self._current_settings.node_info.ieee
+                    for backup in self._backups
+                )
             )
         ):
             data_schema[vol.Required(OVERWRITE_COORDINATOR_IEEE, default=True)] = bool
