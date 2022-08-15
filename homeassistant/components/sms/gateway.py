@@ -26,7 +26,7 @@ class Gateway:
         self.firmware = None
 
     async def init_async(self):
-        """Initialize the sms gateway asynchronously."""
+        """Initialize the sms gateway asynchronously. This method is also called in config flow to verify connection."""
         await self._worker.init_async()
         self.manufacturer = await self.get_manufacturer_async()
         self.model = await self.get_model_async()
