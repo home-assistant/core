@@ -6,6 +6,3 @@ MANUFACTURER = "Naran/Keymitt"
 
 # Configuration and options
 CONF_BDADDR = "bdaddr"
-
-# Defaults
-DEFAULT_NAME = "Microbot"
