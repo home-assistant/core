@@ -20,7 +20,6 @@ from homeassistant.components.bluetooth import (
 )
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.const import CONF_ACCESS_TOKEN
 
 from .const import CONF_BDADDR, DOMAIN, DEFAULT_NAME
