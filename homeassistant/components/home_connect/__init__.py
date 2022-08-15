@@ -143,7 +143,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         option_key = call.data.get(ATTR_KEY)
         if option_key is not None:
-            option = {ATTR_KEY: option_key, ATTR_VALUE: call.data.get(ATTR_VALUE)}
+            option = {ATTR_KEY: option_key, ATTR_VALUE: call.data[ATTR_VALUE]}
 
             option_unit = call.data.get(ATTR_UNIT)
             if option_unit is not None:
