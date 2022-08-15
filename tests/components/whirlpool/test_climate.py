@@ -1,7 +1,6 @@
 """Test the Whirlpool Sixth Sense climate domain."""
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
-import aiohttp
 from attr import dataclass
 import pytest
 import whirlpool
@@ -58,28 +57,19 @@ async def update_ac_state(
     """Simulate an update trigger from the API."""
     update_ha_state_cb = mock_aircon_api_instances.call_args_list[
         mock_instance_idx
-    ].args[2]
+    ].args[3]
     update_ha_state_cb()
     await hass.async_block_till_done()
     return hass.states.get(entity_id)
 
 
-async def test_no_appliances(hass: HomeAssistant, mock_auth_api: MagicMock):
+async def test_no_appliances(
+    hass: HomeAssistant, mock_appliances_manager_api: MagicMock
+):
     """Test the setup of the climate entities when there are no appliances available."""
-    mock_auth_api.return_value.get_said_list.return_value = []
+    mock_appliances_manager_api.return_value.aircons = []
     await init_integration(hass)
     assert len(hass.states.async_all()) == 0
-
-
-async def test_name_fallback_on_exception(
-    hass: HomeAssistant, mock_aircon1_api: MagicMock
-):
-    """Test name property."""
-    mock_aircon1_api.fetch_name = AsyncMock(side_effect=aiohttp.ClientError())
-
-    await init_integration(hass)
-    state = hass.states.get("climate.said1")
-    assert state.attributes[ATTR_FRIENDLY_NAME] == "said1"
 
 
 async def test_static_attributes(hass: HomeAssistant, mock_aircon1_api: MagicMock):
