@@ -47,27 +47,24 @@ class LaMetricNotificationService(BaseNotificationService):
         if not (data := kwargs.get(ATTR_DATA)):
             data = {}
 
-        try:
-            sound = None
-            if CONF_SOUND in data:
-                sound = Sound(id=data[CONF_SOUND], category=None)
+        sound = None
+        if CONF_SOUND in data:
+            sound = Sound(id=data[CONF_SOUND], category=None)
 
-            notification = Notification(
-                icon_type=NotificationIconType(data.get(CONF_ICON_TYPE, "none")),
-                priority=NotificationPriority(data.get(CONF_PRIORITY, "info")),
-                model=Model(
-                    frames=[
-                        Simple(
-                            icon=data.get(CONF_ICON, "a7956"),
-                            text=message,
-                        )
-                    ],
-                    cycles=int(data.get(CONF_CYCLES, 1)),
-                    sound=sound,
-                ),
-            )
-        except ValueError as ex:
-            raise HomeAssistantError(ex) from ex
+        notification = Notification(
+            icon_type=NotificationIconType(data.get(CONF_ICON_TYPE, "none")),
+            priority=NotificationPriority(data.get(CONF_PRIORITY, "info")),
+            model=Model(
+                frames=[
+                    Simple(
+                        icon=data.get(CONF_ICON, "a7956"),
+                        text=message,
+                    )
+                ],
+                cycles=int(data.get(CONF_CYCLES, 1)),
+                sound=sound,
+            ),
+        )
 
         try:
             await self.lametric.notify(notification=notification)
