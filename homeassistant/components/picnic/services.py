@@ -1,5 +1,7 @@
 """Services for the Picnic integration."""
-from typing import Any, Optional
+from __future__ import annotations
+
+from typing import Any
 
 from python_picnic_api import PicnicAPI
 import voluptuous as vol
@@ -62,7 +64,7 @@ async def async_register_services(hass: HomeAssistant) -> None:
         )
 
 
-async def get_api_client(hass: HomeAssistant, device_id: Optional[Any] = None):
+async def get_api_client(hass: HomeAssistant, device_id: Any | None = None):
     """Get the right Picnic API client based on the device id, else get the default one."""
     if device_id is None:
         default_config_id = list(hass.data[DOMAIN].keys())[0]
