@@ -65,7 +65,6 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
             discovery_info.device, discovery_info.advertisement
         )
         self._discovered_adv = parsed
-        data = parsed.data
         self.context["title_placeholders"] = {
             "name": name_from_discovery(self._discovered_adv),
         }
