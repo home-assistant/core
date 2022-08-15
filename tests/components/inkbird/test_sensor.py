@@ -39,10 +39,10 @@ async def test_sensors(hass):
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 3
 
-    temp_sensor = hass.states.get("sensor.ibs_th_75bbe1738105_battery")
+    temp_sensor = hass.states.get("sensor.ibs_th_8105_battery")
     temp_sensor_attribtes = temp_sensor.attributes
     assert temp_sensor.state == "87"
-    assert temp_sensor_attribtes[ATTR_FRIENDLY_NAME] == "IBS-TH 75BBE1738105 Battery"
+    assert temp_sensor_attribtes[ATTR_FRIENDLY_NAME] == "IBS-TH 8105 Battery"
     assert temp_sensor_attribtes[ATTR_UNIT_OF_MEASUREMENT] == "%"
     assert temp_sensor_attribtes[ATTR_STATE_CLASS] == "measurement"
 
