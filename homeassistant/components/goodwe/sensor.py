@@ -1,6 +1,7 @@
 """Support for GoodWe inverter via UDP."""
 from __future__ import annotations
 
+from datetime import timedelta
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, cast
@@ -26,15 +27,20 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import async_track_point_in_time
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
+import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN, KEY_COORDINATOR, KEY_DEVICE_INFO, KEY_INVERTER
 
 # Sensor name of battery SoC
 BATTERY_SOC = "battery_soc"
+
+# Sensors that are reset to 0 at midnight.
+DAILY_RESET = ["e_day", "e_load_day"]
 
 _MAIN_SENSORS = (
     "ppv",
@@ -167,6 +173,7 @@ class InverterSensor(CoordinatorEntity, SensorEntity):
             self._attr_device_class = SensorDeviceClass.BATTERY
         self._sensor = sensor
         self._previous_value = None
+        self._stop_reset = None
 
     @property
     def native_value(self):
@@ -190,3 +197,24 @@ class InverterSensor(CoordinatorEntity, SensorEntity):
         return cast(GoodweSensorEntityDescription, self.entity_description).available(
             self
         )
+
+    async def async_reset(self):
+        """Reset the value back to 0 at midnight."""
+        self._previous_value = 0
+        self.coordinator.data[self._sensor.id_] = 0
+        self.async_write_ha_state()
+        next_midnight = dt_util.start_of_local_day(dt_util.utcnow() + timedelta(days=1))
+        self._stop_reset = async_track_point_in_time(self.hass, self.async_reset, next_midnight)
+
+    async def async_added_to_hass(self):
+        """Schedule reset task at midnight."""
+        if self._sensor.id_ in DAILY_RESET:
+            next_midnight = dt_util.start_of_local_day(dt_util.utcnow() + timedelta(days=1))
+            self._stop_reset = async_track_point_in_time(self.hass, self.async_reset, next_midnight)
+        await super().async_added_to_hass()
+
+    async def async_will_remove_from_hass(self):
+        """Remove reset task at midnight."""
+        if self._sensor.id_ in DAILY_RESET and self._stop_reset is not None:
+            self. ()
+        await super().async_will_remove_from_hass()
