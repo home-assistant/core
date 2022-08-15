@@ -26,10 +26,7 @@ from ..const import ATTR_HUE_EVENT, CONF_SUBTYPE, DOMAIN
 if TYPE_CHECKING:
     from aiohue.v2 import HueBridgeV2
 
-    from homeassistant.components.automation import (
-        AutomationActionType,
-        AutomationTriggerInfo,
-    )
+    from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 
     from ..bridge import HueBridge
 
@@ -59,7 +56,7 @@ def check_invalid_device_trigger(
     bridge: HueBridge,
     config: ConfigType,
     device_entry: DeviceEntry,
-    automation_info: AutomationTriggerInfo | None = None,
+    trigger_info: TriggerInfo | None = None,
 ):
     """Check automation config for deprecated format."""
     # NOTE: Remove this check after 2022.6
@@ -71,8 +68,8 @@ def check_invalid_device_trigger(
         f"[{device_entry.name}](/config/devices/device/{device_entry.id}) "
         "Please manually fix the outdated automation(s) once to fix this issue."
     )
-    if automation_info:
-        automation_id = automation_info["variables"]["this"]["attributes"]["id"]  # type: ignore[index]
+    if trigger_info:
+        automation_id = trigger_info["variables"]["this"]["attributes"]["id"]  # type: ignore[index]
         msg += f"\n\n[Check it out](/config/automation/edit/{automation_id})."
     persistent_notification.async_create(
         bridge.hass,
@@ -97,8 +94,8 @@ async def async_attach_trigger(
     bridge: "HueBridge",
     device_entry: DeviceEntry,
     config: ConfigType,
-    action: AutomationActionType,
-    automation_info: AutomationTriggerInfo,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
     hass = bridge.hass
@@ -113,9 +110,9 @@ async def async_attach_trigger(
             },
         }
     )
-    check_invalid_device_trigger(bridge, config, device_entry, automation_info)
+    check_invalid_device_trigger(bridge, config, device_entry, trigger_info)
     return await event_trigger.async_attach_trigger(
-        hass, event_config, action, automation_info, platform_type="device"
+        hass, event_config, action, trigger_info, platform_type="device"
     )
 
 
