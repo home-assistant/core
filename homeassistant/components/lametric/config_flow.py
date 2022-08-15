@@ -25,13 +25,7 @@ from homeassistant.components.ssdp import (
     ATTR_UPNP_SERIAL,
     SsdpServiceInfo,
 )
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_DEVICE,
-    CONF_HOST,
-    CONF_MAC,
-    CONF_METHOD,
-)
+from homeassistant.const import CONF_API_KEY, CONF_DEVICE, CONF_HOST, CONF_MAC
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
@@ -110,31 +104,9 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the user's choice of entering the manual credentials or fetching the cloud credentials."""
-        if user_input is not None:
-
-            if user_input[CONF_METHOD] == "cloud":
-                return await self.async_step_pick_implementation()
-            return await self.async_step_manual_entry()
-
-        return self.async_show_form(
+        return self.async_show_menu(
             step_id="choice_enter_manual_or_fetch_cloud",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_METHOD, default="cloud"): SelectSelector(
-                        SelectSelectorConfig(
-                            options=[
-                                SelectOptionDict(
-                                    value="cloud",
-                                    label="Import from LaMetric.com (recommended)",
-                                ),
-                                SelectOptionDict(
-                                    value="manual", label="Enter manually"
-                                ),
-                            ]
-                        )
-                    ),
-                }
-            ),
+            menu_options=["pick_implementation", "manual_entry"],
         )
 
     async def async_step_manual_entry(

@@ -18,13 +18,7 @@ from homeassistant.components.ssdp import (
     SsdpServiceInfo,
 )
 from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_DEVICE,
-    CONF_HOST,
-    CONF_MAC,
-    CONF_METHOD,
-)
+from homeassistant.const import CONF_API_KEY, CONF_DEVICE, CONF_HOST, CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -57,13 +51,14 @@ async def test_full_cloud_import_flow_multiple_devices(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") == FlowResultType.MENU
     assert result.get("step_id") == "choice_enter_manual_or_fetch_cloud"
+    assert result.get("menu_options") == ["pick_implementation", "manual_entry"]
     assert "flow_id" in result
     flow_id = result["flow_id"]
 
     result2 = await hass.config_entries.flow.async_configure(
-        flow_id, user_input={CONF_METHOD: "cloud"}
+        flow_id, user_input={"next_step_id": "pick_implementation"}
     )
 
     # pylint: disable=protected-access
@@ -138,13 +133,14 @@ async def test_full_cloud_import_flow_single_device(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") == FlowResultType.MENU
     assert result.get("step_id") == "choice_enter_manual_or_fetch_cloud"
+    assert result.get("menu_options") == ["pick_implementation", "manual_entry"]
     assert "flow_id" in result
     flow_id = result["flow_id"]
 
     result2 = await hass.config_entries.flow.async_configure(
-        flow_id, user_input={CONF_METHOD: "cloud"}
+        flow_id, user_input={"next_step_id": "pick_implementation"}
     )
 
     # pylint: disable=protected-access
@@ -213,13 +209,14 @@ async def test_full_manual(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") == FlowResultType.MENU
     assert result.get("step_id") == "choice_enter_manual_or_fetch_cloud"
+    assert result.get("menu_options") == ["pick_implementation", "manual_entry"]
     assert "flow_id" in result
     flow_id = result["flow_id"]
 
     result2 = await hass.config_entries.flow.async_configure(
-        flow_id, user_input={CONF_METHOD: "manual"}
+        flow_id, user_input={"next_step_id": "manual_entry"}
     )
 
     assert result2.get("type") == FlowResultType.FORM
@@ -258,13 +255,14 @@ async def test_full_ssdp_with_cloud_import(
         DOMAIN, context={"source": SOURCE_SSDP}, data=SSDP_DISCOVERY_INFO
     )
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") == FlowResultType.MENU
     assert result.get("step_id") == "choice_enter_manual_or_fetch_cloud"
+    assert result.get("menu_options") == ["pick_implementation", "manual_entry"]
     assert "flow_id" in result
     flow_id = result["flow_id"]
 
     result2 = await hass.config_entries.flow.async_configure(
-        flow_id, user_input={CONF_METHOD: "cloud"}
+        flow_id, user_input={"next_step_id": "pick_implementation"}
     )
 
     # pylint: disable=protected-access
@@ -328,13 +326,14 @@ async def test_full_ssdp_manual_entry(
         DOMAIN, context={"source": SOURCE_SSDP}, data=SSDP_DISCOVERY_INFO
     )
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") == FlowResultType.MENU
     assert result.get("step_id") == "choice_enter_manual_or_fetch_cloud"
+    assert result.get("menu_options") == ["pick_implementation", "manual_entry"]
     assert "flow_id" in result
     flow_id = result["flow_id"]
 
     result2 = await hass.config_entries.flow.async_configure(
-        flow_id, user_input={CONF_METHOD: "manual"}
+        flow_id, user_input={"next_step_id": "manual_entry"}
     )
 
     assert result2.get("type") == FlowResultType.FORM
@@ -409,7 +408,7 @@ async def test_cloud_import_updates_existing_entry(
     flow_id = result["flow_id"]
 
     await hass.config_entries.flow.async_configure(
-        flow_id, user_input={CONF_METHOD: "cloud"}
+        flow_id, user_input={"next_step_id": "pick_implementation"}
     )
 
     # pylint: disable=protected-access
@@ -465,7 +464,7 @@ async def test_manual_updates_existing_entry(
     flow_id = result["flow_id"]
 
     await hass.config_entries.flow.async_configure(
-        flow_id, user_input={CONF_METHOD: "manual"}
+        flow_id, user_input={"next_step_id": "manual_entry"}
     )
 
     result3 = await hass.config_entries.flow.async_configure(
@@ -518,7 +517,7 @@ async def test_cloud_abort_no_devices(
     flow_id = result["flow_id"]
 
     await hass.config_entries.flow.async_configure(
-        flow_id, user_input={CONF_METHOD: "cloud"}
+        flow_id, user_input={"next_step_id": "pick_implementation"}
     )
 
     # pylint: disable=protected-access
@@ -575,7 +574,7 @@ async def test_manual_errors(
     flow_id = result["flow_id"]
 
     await hass.config_entries.flow.async_configure(
-        flow_id, user_input={CONF_METHOD: "manual"}
+        flow_id, user_input={"next_step_id": "manual_entry"}
     )
 
     mock_lametric_config_flow.device.side_effect = side_effect
@@ -639,7 +638,7 @@ async def test_cloud_errors(
     flow_id = result["flow_id"]
 
     await hass.config_entries.flow.async_configure(
-        flow_id, user_input={CONF_METHOD: "cloud"}
+        flow_id, user_input={"next_step_id": "pick_implementation"}
     )
 
     # pylint: disable=protected-access
