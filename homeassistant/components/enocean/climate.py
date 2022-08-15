@@ -1,27 +1,26 @@
+"""A representation of a Kieback & Peter MD15-FTL or a compatible device speaking EEP A5-20-01."""
 from __future__ import annotations
 
 from abc import ABC
 import logging
 
+from components.climate import HVACAction
+from components.enocean.device import EnOceanEntity
 from enocean import utils
-from enocean.utils import combine_hex
 from enocean.protocol.constants import PACKET, RORG
 from enocean.protocol.packet import Packet
+from enocean.utils import combine_hex
 
-from components.climate import HVACAction
 from homeassistant.components.climate import (
     ClimateEntity,
+    ClimateEntityDescription,
     ClimateEntityFeature,
     HVACMode,
-    ClimateEntityDescription,
 )
-from homeassistant.components.enocean.device import EnOceanEntity
-from homeassistant.components.enocean.light import CONF_SENDER_ID
-from homeassistant.const import CONF_ID, CONF_NAME, TEMP_CELSIUS, ATTR_TEMPERATURE
+from homeassistant.const import ATTR_TEMPERATURE, CONF_ID, CONF_NAME, TEMP_CELSIUS
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-
-from homeassistant.core import HomeAssistant
 
 MAX_TARGET_TEMP = 40.0
 MIN_TARGET_TEMP = 0.0
@@ -31,6 +30,7 @@ TEMPERATURE_STEP = 1
 DEFAULT_SET_POINT = 20.0
 
 CONF_SET_POINT_INVERSE = "inverse"
+CONF_SENDER_ID = "sender_id"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,7 +54,7 @@ def setup_platform(
 
 
 def to_degrees(temperature: int) -> float:
-    """Translates temperature value from 0..255 to 0..40."""
+    """Translate temperature value from 0..255 to 0..40."""
     quotient = temperature / 255
     temperature_celsius = quotient * MAX_TARGET_TEMP
     return temperature_celsius
@@ -67,9 +67,9 @@ def translate(
     target_max=255,
     target_min=0,
 ) -> int:
-    """Translates value in celsius degrees to a value in the target range.
+    """Translate value in celsius degrees to a value in the target range.
 
-    If the value exceeds the lower or upper bound, it get's adjusted. If it's not a digit,
+    If the value exceeds the lower or upper bound, it gets adjusted. If it's not a digit,
     a default value will be set.
     :param target_min: The minimal value which can be returned
     :param target_max: The maximal value which can be returned
@@ -97,6 +97,7 @@ class PacketPreparator:
     """Prepares radio packets which will be sent."""
 
     def __init__(self, base_id_to_use=None):
+        """Additionally to basic init, the initialization of the packet to sent, will be done."""
         if base_id_to_use is None:
             base_id_to_use = [0x0, 0x0, 0x0, 0x0]
         self._next_command = None
@@ -125,7 +126,7 @@ class PacketPreparator:
 
     @property
     def command(self):
-        """Returns the next command that shall be sent.
+        """Return the next command that shall be sent.
 
         It gets sent via the communicator right after receiving
         a packet from the thermostat.
@@ -149,7 +150,7 @@ class PacketPreparator:
             self._next_command[1] = new_temp_within_255
 
     def init_packet(self) -> None:
-        """Initializes the packet which will be sent."""
+        """Initialize the packet which will be sent."""
         packet = [0xA5, 0x00, 0x00, 0x00, 0x00]
 
         temp_translated = translate(
@@ -242,8 +243,8 @@ class EnOceanThermostat(EnOceanEntity, ClimateEntity, ABC):
                 # this packet is for the current device
 
                 # data could be sth. like: A5:00:90:95:08:01:01:DE:B0:00
-                _LOGGER.info(
-                    "data from thermo arrived: %s", utils.to_hex_string(packet.data)
+                _LOGGER.debug(
+                    "Data from thermo arrived: %s", utils.to_hex_string(packet.data)
                 )
                 current_vale_value = packet.data[
                     1
@@ -259,32 +260,7 @@ class EnOceanThermostat(EnOceanEntity, ClimateEntity, ABC):
                     temperature
                 )  # update the internal state
 
-        # send reply
-        # if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is not None:
-        #     self._brightness = brightness
-        # response_packet: Packet = Packet.create(PACKET.RADIO_ERP1, rorg=RORG.BS4, rorg_func=0x20,
-        #                              rorg_type=0x01,
-        #                              sender=self._base_id_to_use,
-        #                              learn=False)
-
-        # temp_translated = translate(
-        #     self._set_point_temp
-        # )  # valve set point in celsius degrees
-
         self._packet_preparator.update_target_temperature(self._set_point_temp)
-
-        # byte_three_temp_set_point = hex(
-        #     temp_translated
-        # )  # value has to be in range 0..255
-        # response_packet.optional[0] = [0x3]     # send case sub-telegram number
-        # response_packet.optional[1:5] = self.dev_id  # destination
-        # response_packet.optional[5] = 0xFF  # dBm send case
-        # response_packet.data[1] = byte_three_temp_set_point
-        # response_packet.sender = self._base_id_to_use
-
-        # rorg_func = 0x20
-        # rorg_type = 0x01
-        # learn = False
 
         command = self._packet_preparator.command
         command.extend(
@@ -363,6 +339,7 @@ class EnOceanThermostat(EnOceanEntity, ClimateEntity, ABC):
 
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode.
+
         :type hvac_mode: HVACMode
         """
         if hvac_mode == HVACMode.HEAT:
@@ -377,5 +354,5 @@ class EnOceanThermostat(EnOceanEntity, ClimateEntity, ABC):
 
     @property
     def min_temp(self) -> float:
-        """Return the minimun value to set."""
+        """Return the minimum value to set."""
         return MIN_TARGET_TEMP
