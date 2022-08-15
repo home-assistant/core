@@ -3,11 +3,12 @@ from __future__ import annotations
 from abc import ABC
 import logging
 
+from enocean import utils
 from enocean.utils import combine_hex
 from enocean.protocol.constants import PACKET, RORG
 from enocean.protocol.packet import Packet
 
-
+from components.climate import HVACAction
 from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
@@ -89,6 +90,7 @@ def translate(
 
 
 class PacketPreparator:
+    """Prepares radio packets which will be sent."""
     def __init__(self, base_id_to_use=None):
         if base_id_to_use is None:
             base_id_to_use = [0x0, 0x0, 0x0, 0x0]
@@ -102,32 +104,43 @@ class PacketPreparator:
         self._valve_open = False
         self._valve_closed = False
         self._summer_bit = False
-        self._set_point_selection = True    # set point selection (True=1=temp (0..40), False=0= percent (0..100)
+        self._set_point_selection = (
+            True  # set point selection (True=1=temp (0..40), False=0= percent (0..100)
+        )
         self._set_point_inverse = True
-        self._service_on = True             # True = 1 = service on, False = 0 = via RCU (room control unit)
-        self._data_telegram = True          # True = 1 = data telegram, False = 0 = Teach-In-Telegram
+        self._service_on = (
+            True  # True = 1 = service on, False = 0 = via RCU (room control unit)
+        )
+        self._data_telegram = (
+            True  # True = 1 = data telegram, False = 0 = Teach-In-Telegram
+        )
+        self._is_heating = False
 
         self.init_packet()
 
     @property
     def command(self):
-        return self._command
+        """Returns the next command that shall be sent.
+
+        It gets sent via the communicator right after receiving
+        a packet from the thermostat.
+        """
+        return self._next_command
 
     def update_target_temperature(self, new_temp):
         """Update the value of the packet which gets sent next."""
         new_temp_within_255 = translate(new_temp)
 
-        if (translate(MIN_TARGET_TEMP) < new_temp_within_255) and (new_temp_within_255 < translate(MAX_TARGET_TEMP)):
-            self._next_command[1] = hex(new_temp_within_255)
+        if translate(MIN_TARGET_TEMP) >= new_temp_within_255 \
+                or new_temp_within_255 >= translate(MAX_TARGET_TEMP):
+            _LOGGER.warning(
+                "Desired target temperature %s is not within the allowed range of %s..%s",
+                new_temp,
+                MIN_TARGET_TEMP,
+                MAX_TARGET_TEMP,
+            )
         else:
-            _LOGGER.warning("Desired target temperature %s is not within the allowed range of %s..%s",
-                            new_temp, MIN_TARGET_TEMP, MAX_TARGET_TEMP)
-
-    def prepare_optional(self, optional=None) -> None:
-        """Set the optional data for the packet."""
-        if optional is None:
-            optional = []
-        self._optional = optional
+            self._next_command[1] = hex(new_temp_within_255)
 
     def init_packet(self) -> None:
         """Initializes the packet which will be sent."""
@@ -136,8 +149,8 @@ class PacketPreparator:
         temp_translated = translate(
             self._set_point_temp
         )  # valve set point in celsius degrees
-        packet[1] = hex(temp_translated)        # target temperature / set point temp
-        packet[2] = hex(translate(20))          # current temp from RCU / thermostat
+        packet[1] = hex(temp_translated)  # target temperature / set point temp
+        packet[2] = hex(translate(20))  # current temp from RCU / thermostat
 
         packet[3] = hex(self.build_databyte_one())
         packet[4] = hex(self.build_databyte_two())
@@ -148,27 +161,27 @@ class PacketPreparator:
         """Build the contents for DB1."""
         databyte = 0x00
         run_init = 1 if self._run_init_sequence else 0
-        databyte |= (run_init << 7)
+        databyte |= run_init << 7
 
         lift_set = 1 if self._lift_set else 0
-        databyte |= (lift_set << 6)
+        databyte |= lift_set << 6
 
         valve_open = 1 if self._valve_open else 0
-        databyte |= (valve_open << 5)   # works only if service is on
+        databyte |= valve_open << 5  # works only if service is on
         if self._valve_open:
             self._valve_closed = False
 
         valve_closed = 1 if self._valve_closed else 0
-        databyte |= (valve_closed << 4)   # works only if service is on
+        databyte |= valve_closed << 4  # works only if service is on
 
         summer_bit = 1 if self._summer_bit else 0
-        databyte |= (summer_bit << 3)
+        databyte |= summer_bit << 3
 
         sp_selection = 1 if self._set_point_selection else 0
-        databyte |= (sp_selection << 2)
+        databyte |= sp_selection << 2
 
         sp_inverse = 1 if self._set_point_inverse else 0
-        databyte |= (sp_inverse << 1)
+        databyte |= sp_inverse << 1
 
         service_on = 1 if self._service_on else 0
         databyte |= service_on
@@ -179,7 +192,7 @@ class PacketPreparator:
         """Build the contents for DB2."""
         databyte = 0x00
         data_telegram = 1 if self._data_telegram else 0
-        databyte |= (data_telegram << 3)
+        databyte |= data_telegram << 3
 
         return databyte
 
@@ -196,13 +209,14 @@ class EnOceanThermostat(EnOceanEntity, ClimateEntity, ABC):
         self._set_point_temp = DEFAULT_SET_POINT
         self._current_temp: float = 0
         self._off_value = 0
-        self._current_valve_value = 0
         self._attr_unique_id = f"{combine_hex(dev_id)}"
         self.entity_description = ClimateEntityDescription(
             key="thermostat",
             name=dev_name,
         )
-        self._packet_preparator = PacketPreparator()  # initializes the packet / command to send
+        self._packet_preparator = (
+            PacketPreparator()
+        )  # initializes the packet / command to send
 
     def value_changed(self, packet: Packet):
         """Update the internal state of the device.
@@ -216,16 +230,18 @@ class EnOceanThermostat(EnOceanEntity, ClimateEntity, ABC):
                 # this packet is for the current device
 
                 # data could be sth. like: A5:00:90:95:08:01:01:DE:B0:00
-                current_valve_value = packet.data[
+                _LOGGER.info("data from thermo arrived: %s", utils.to_hex_string(packet.data))
+                current_temp_value = packet.data[
                     1
                 ]  # current value 0..100%, linear n=0..100
-                _LOGGER.info("Current value: %s", str(current_valve_value))
+                _LOGGER.info("Current temp value: %s", str(current_temp_value))
                 status = packet.data[2]
                 _LOGGER.info("Status: %s", str(status))
                 temperature = packet.data[3]  # Temperature 0..40°C, linear n=0..255
                 self._current_temp = to_degrees(
                     temperature
                 )  # update the internal state
+
 
         # send reply
         # if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is not None:
@@ -271,7 +287,7 @@ class EnOceanThermostat(EnOceanEntity, ClimateEntity, ABC):
         """Return the current HVAC mode."""
         if self.target_temperature <= self._off_value:
             return HVACMode.OFF
-        if self.target_temperature > self._current_valve_value:
+        if self.target_temperature > self._set_point_temp:
             return HVACMode.HEAT
         return HVACMode.HEAT
 
@@ -279,6 +295,19 @@ class EnOceanThermostat(EnOceanEntity, ClimateEntity, ABC):
     def hvac_modes(self) -> list[HVACMode] | list[str]:
         """Return the list of supported modes."""
         return [HVACMode.HEAT, HVACMode.OFF]
+
+    @property
+    def supported_features(self) -> int:
+        """Return the feature set."""
+        return ClimateEntityFeature.TARGET_TEMPERATURE
+
+    @property
+    def hvac_action(self) -> HVACAction | str | None:
+        """Return the current HVAC Action."""
+        if self._current_temp > self._set_point_temp:
+            return HVACAction.OFF
+        if self._current_temp <= self._set_point_temp:
+            return HVACAction.HEATING
 
     @property
     def current_temperature(self) -> float | None:
@@ -319,14 +348,32 @@ class EnOceanThermostat(EnOceanEntity, ClimateEntity, ABC):
         :type hvac_mode: HVACMode
         """
         if hvac_mode == HVACMode.HEAT:
-            self.turn_on()
+            self._set_point_temp = MAX_TARGET_TEMP
         if hvac_mode == HVACMode.OFF:
-            self.turn_off()
+            self._set_point_temp = MIN_TARGET_TEMP
 
-    def turn_off(self):
-        # TODO: do sth.
-        pass
+    @property
+    def max_temp(self) -> float:
+        return MAX_TARGET_TEMP
 
-    def turn_on(self):
-        # TODO: do sth.
-        pass
+    @property
+    def min_temp(self) -> float:
+        return MIN_TARGET_TEMP
+
+    # def turn_off(self):
+    #     # TODO: do sth.
+    #     pass
+    #
+    # def turn_on(self):
+    #     """Turn the light source on or sets a specific dimmer value."""
+    #     if (brightness := kwargs.get(ATTR_TEMPERATURE)) is not None:
+    #         self._brightness = brightness
+    #
+    #     bval = math.floor(self._brightness / 256.0 * 100.0)
+    #     if bval == 0:
+    #         bval = 1
+    #     command = [0xA5, 0x02, bval, 0x01, 0x09]
+    #     command.extend(self._sender_id)
+    #     command.extend([0x00])
+    #     self.send_command(command, [], 0x01)
+    #     self._on_state = True
