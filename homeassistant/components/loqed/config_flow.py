@@ -81,7 +81,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Check if already exists
         await self.async_set_unique_id(lock_data["bridge_mac_wifi"])
-        self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured({CONF_HOST: self._host})
         return await self.async_step_user()
 
     async def async_step_user(
@@ -93,7 +93,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required("config"): str,
             }
         )
-        self.context["title_placeholders"] = {CONF_HOST: self._host}
         if user_input is None:
             return self.async_show_form(
                 step_id="user",

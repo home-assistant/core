@@ -8,7 +8,7 @@ from loqedAPI import loqed
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.components.loqed.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_WEBHOOK_ID
+from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
 
@@ -133,13 +133,6 @@ async def test_zeroconf_wrong_config(hass: HomeAssistant) -> None:
 
     assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] is None
-
-    context = next(
-        flow["context"]
-        for flow in hass.config_entries.flow.async_progress()
-        if flow["flow_id"] == result["flow_id"]
-    )
-    assert context["title_placeholders"][CONF_HOST] == "LOQED-ffeeddccbbaa.local"
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],

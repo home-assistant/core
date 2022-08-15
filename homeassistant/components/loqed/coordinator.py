@@ -1,5 +1,6 @@
 """Provides the coordinator for a LOQED lock."""
 import logging
+from typing import TypedDict
 
 from aiohttp.web import Request
 import async_timeout
@@ -16,7 +17,57 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class LoqedDataCoordinator(DataUpdateCoordinator[dict[str, str]]):
+class BatteryMessage(TypedDict):
+    """Properties in a battery update message."""
+
+    mac_wifi: str
+    mac_ble: str
+    battery_type: str
+    battery_percentage: int
+
+
+class StateReachedMessage(TypedDict):
+    """Properties in a battery update message."""
+
+    requested_state: str
+    requested_state_numeric: int
+    event_type: str
+    key_local_id: int
+    mac_wifi: str
+    mac_ble: str
+
+
+class TransitionMessage(TypedDict):
+    """Properties in a battery update message."""
+
+    go_to_state: str
+    go_to_state_numeric: int
+    event_type: str
+    key_local_id: int
+    mac_wifi: str
+    mac_ble: str
+
+
+class StatusMessage(TypedDict):
+    """Properties returned by the status endpoint of the bridhge."""
+
+    battery_percentage: int
+    battery_type: str
+    battery_type_numeric: int
+    battery_voltage: float
+    bolt_state: str
+    bolt_state_numeric: int
+    bridge_mac_wifi: str
+    bridge_mac_ble: str
+    lock_online: int
+    webhooks_number: int
+    ip_address: str
+    up_timestamp: int
+    wifi_strength: int
+    ble_strength: int
+
+
+class LoqedDataCoordinator(DataUpdateCoordinator[StatusMessage]):
     """Data update coordinator for the loqed platform."""
 
     def __init__(
@@ -33,7 +84,7 @@ class LoqedDataCoordinator(DataUpdateCoordinator[dict[str, str]]):
         self._entry = entry
         self.lock = lock
 
-    async def _async_update_data(self) -> dict[str, str]:
+    async def _async_update_data(self) -> StatusMessage:
         """Fetch data from API endpoint."""
         async with async_timeout.timeout(10):
             return await self._api.async_get_lock_details()
@@ -55,7 +106,7 @@ class LoqedDataCoordinator(DataUpdateCoordinator[dict[str, str]]):
             _LOGGER.warning("Incorrect callback received:: %s", event_data)
             return
 
-        self.async_set_updated_data(event_data)
+        self.async_update_listeners()
 
     async def ensure_webhooks(self) -> None:
         """Register webhook on LOQED bridge."""
