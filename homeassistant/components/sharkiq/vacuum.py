@@ -95,7 +95,10 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
         raise NotImplementedError()
 
     def send_command(
-        self, command: str, params: dict | list | None = None, **kwargs: Any
+        self, 
+        command: str, 
+        params:  dict[str, Any] | list[Any] | None = None, 
+        **kwargs: Any,
     ) -> None:
         """Send a command to the vacuum. Not yet implemented."""
         raise NotImplementedError()
