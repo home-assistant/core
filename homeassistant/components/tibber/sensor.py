@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
+import datetime
 import logging
 from random import randrange
 
@@ -343,6 +344,11 @@ class TibberSensorElPrice(TibberSensor):
             "peak": None,
             "off_peak_2": None,
         }
+        for h in range(24):
+            self._attr_extra_state_attributes["Today hour " + str(h)] = None
+        for h in range(24):
+            self._attr_extra_state_attributes["Tomorrow hour " + str(h)] = None
+
         self._attr_icon = ICON
         self._attr_name = f"Electricity price {self._home_name}"
         self._attr_unique_id = self._tibber_home.home_id
@@ -378,6 +384,22 @@ class TibberSensorElPrice(TibberSensor):
         self._attr_extra_state_attributes.update(attrs)
         self._attr_available = self._attr_native_value is not None
         self._attr_native_unit_of_measurement = self._tibber_home.price_unit
+
+        prices = self._tibber_home.price_total
+        today = datetime.date.today()
+        tomorrow = today + timedelta(days=1)
+        pricelist_today = [value for key, value in prices.items() if str(today) in key.lower()]
+        pricelist_tomorrow = [value for key, value in prices.items() if str(tomorrow) in key.lower()]
+        for h in range(24):
+            if len(pricelist_today) == 24:
+                self._attr_extra_state_attributes["Today hour " + str(h)] = pricelist_today[h]
+            else:
+                self._attr_extra_state_attributes["Today hour " + str(h)] = None
+            if len(pricelist_tomorrow) == 24:
+                self._attr_extra_state_attributes["Tomorrow hour " + str(h)] = pricelist_tomorrow[h]
+            else:
+                self._attr_extra_state_attributes["Tomorrow hour " + str(h)] = "Unknown"
+
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def _fetch_data(self):
