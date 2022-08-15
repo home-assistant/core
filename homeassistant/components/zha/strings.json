@@ -5,7 +5,7 @@
       "user": {
         "title": "ZHA",
         "data": { "path": "Serial Device Path" },
-        "description": "Select serial port for Zigbee radio"
+        "description": "Select the serial port for your Zigbee radio"
       },
       "confirm": {
         "description": "Do you want to setup {name}?"
@@ -20,7 +20,7 @@
       },
       "manual_port_config": {
         "title": "Serial Port Settings",
-        "description": "Enter serial port settings",
+        "description": "Enter the serial port settings",
         "data": {
           "path": "Serial device path",
           "baudrate": "port speed",
@@ -29,14 +29,14 @@
       },
       "choose_formation_strategy": {
         "title": "Network Formation",
-        "description": "Choose the network settings for your coordinator"
+        "description": "Choose the network settings for your radio"
       },
       "restore_automatic_backup": {
         "title": "Restore Automatic Backup",
         "description": "Restore your network settings from an automatic backup",
         "data": {
           "choose_automatic_backup": "Choose an automatic backup",
-          "overwrite_coordinator_ieee": "Overwrite the coordinator IEEE address (permanent)"
+          "overwrite_coordinator_ieee": "Overwrite the radio IEEE address (permanent)"
         }
       }
     },
