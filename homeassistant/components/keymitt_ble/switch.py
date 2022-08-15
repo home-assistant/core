@@ -4,7 +4,7 @@ from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
 
-from .const import DEFAULT_NAME, DOMAIN, ICON
+from .const import DEFAULT_NAME, DOMAIN
 from .entity import MicroBotEntity
 
 
