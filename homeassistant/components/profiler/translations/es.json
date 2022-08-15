@@ -5,7 +5,7 @@
         },
         "step": {
             "user": {
-                "description": "\u00bfEst\u00e1s seguro de que quieres configurar el Profiler?"
+                "description": "\u00bfQuieres iniciar la configuraci\u00f3n?"
             }
         }
     }

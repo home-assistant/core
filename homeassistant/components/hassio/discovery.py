@@ -14,6 +14,7 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import ATTR_NAME, ATTR_SERVICE, EVENT_HOMEASSISTANT_START
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import BaseServiceInfo
+from homeassistant.helpers import discovery_flow
 
 from .const import ATTR_ADDON, ATTR_CONFIG, ATTR_DISCOVERY, ATTR_UUID
 from .handler import HassioAPIError
@@ -99,7 +100,8 @@ class HassIODiscovery(HomeAssistantView):
         config_data[ATTR_ADDON] = addon_info[ATTR_NAME]
 
         # Use config flow
-        await self.hass.config_entries.flow.async_init(
+        discovery_flow.async_create_flow(
+            self.hass,
             service,
             context={"source": config_entries.SOURCE_HASSIO},
             data=HassioServiceInfo(config=config_data),

@@ -16,5 +16,11 @@
                 "title": "Vali tuvastusmeetod"
             }
         }
+    },
+    "issues": {
+        "removed_yaml": {
+            "description": "nVent RAYCHEM SENZi konfigureerimine YAMLi abil on eemaldatud.\n\nTeie olemasolevat YAML-konfiguratsiooni ei kasuta Home Assistant.\n\nProbleemi lahendamiseks eemaldage YAML-konfiguratsioon oma configuration.yaml-failist ja k\u00e4ivitage Home Assistant uuesti.",
+            "title": "NVent RAYCHEM SENZ YAML konfiguratsioon on eemaldatud"
+        }
     }
 }

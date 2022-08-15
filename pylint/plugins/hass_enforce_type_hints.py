@@ -612,10 +612,6 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             base_class="AlarmControlPanelEntity",
             matches=[
                 TypeHintMatch(
-                    function_name="device_class",
-                    return_type=["str", None],
-                ),
-                TypeHintMatch(
                     function_name="code_format",
                     return_type=["CodeFormat", None],
                 ),
@@ -1221,10 +1217,6 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             base_class="FanEntity",
             matches=[
                 TypeHintMatch(
-                    function_name="device_class",
-                    return_type=["str", None],
-                ),
-                TypeHintMatch(
                     function_name="percentage",
                     return_type=["int", None],
                 ),
@@ -1429,10 +1421,6 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             base_class="LockEntity",
             matches=[
                 TypeHintMatch(
-                    function_name="device_class",
-                    return_type=["str", None],
-                ),
-                TypeHintMatch(
                     function_name="changed_by",
                     return_type=["str", None],
                 ),
@@ -1473,6 +1461,107 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     kwargs_type="Any",
                     return_type=None,
                     has_async_counterpart=True,
+                ),
+            ],
+        ),
+    ],
+    "number": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="NumberEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="device_class",
+                    return_type=["NumberDeviceClass", "str", None],
+                ),
+                TypeHintMatch(
+                    function_name="capability_attributes",
+                    return_type="dict[str, Any]",
+                ),
+                TypeHintMatch(
+                    function_name="native_min_value",
+                    return_type="float",
+                ),
+                TypeHintMatch(
+                    function_name="native_max_value",
+                    return_type="float",
+                ),
+                TypeHintMatch(
+                    function_name="native_step",
+                    return_type=["float", None],
+                ),
+                TypeHintMatch(
+                    function_name="mode",
+                    return_type="NumberMode",
+                ),
+                TypeHintMatch(
+                    function_name="native_unit_of_measurement",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="native_value",
+                    return_type=["float", None],
+                ),
+                TypeHintMatch(
+                    function_name="set_native_value",
+                    arg_types={1: "float"},
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+            ],
+        ),
+    ],
+    "select": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="SelectEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="capability_attributes",
+                    return_type="dict[str, Any]",
+                ),
+                TypeHintMatch(
+                    function_name="options",
+                    return_type="list[str]",
+                ),
+                TypeHintMatch(
+                    function_name="current_option",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="select_option",
+                    return_type=None,
+                ),
+                TypeHintMatch(
+                    function_name="select_option",
+                    arg_types={1: "str"},
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+            ],
+        ),
+    ],
+    "siren": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="ToggleEntity",
+            matches=_TOGGLE_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="SirenEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="available_tones",
+                    return_type=["dict[int, str]", "list[int | str]", None],
                 ),
             ],
         ),
@@ -1558,6 +1647,15 @@ def _is_valid_type(
             and _is_valid_type(match.group(1), node.value)
             and _is_valid_type(match.group(2), node.slice)
         )
+
+    # Special case for float in return type
+    if (
+        expected_type == "float"
+        and in_return
+        and isinstance(node, nodes.Name)
+        and node.name in ("float", "int")
+    ):
+        return True
 
     # Name occurs when a namespace is not used, eg. "HomeAssistant"
     if isinstance(node, nodes.Name) and node.name == expected_type:
@@ -1697,12 +1795,15 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
         ):
             self._class_matchers.extend(property_matches)
 
+        self._class_matchers.reverse()
+
     def visit_classdef(self, node: nodes.ClassDef) -> None:
         """Called when a ClassDef node is visited."""
         ancestor: nodes.ClassDef
         checked_class_methods: set[str] = set()
-        for ancestor in node.ancestors():
-            for class_matches in self._class_matchers:
+        ancestors = list(node.ancestors())  # cache result for inside loop
+        for class_matches in self._class_matchers:
+            for ancestor in ancestors:
                 if ancestor.name == class_matches.base_class:
                     self._visit_class_functions(
                         node, class_matches.matches, checked_class_methods

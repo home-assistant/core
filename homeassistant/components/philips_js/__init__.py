@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Coroutine, Mapping
 from datetime import timedelta
 import logging
 from typing import Any
@@ -84,7 +84,9 @@ class PluggableAction:
     def __init__(self, update: Callable[[], None]) -> None:
         """Initialize."""
         self._update = update
-        self._actions: dict[Any, tuple[HassJob, dict[str, Any]]] = {}
+        self._actions: dict[
+            Any, tuple[HassJob[..., Coroutine[Any, Any, None]], dict[str, Any]]
+        ] = {}
 
     def __bool__(self):
         """Return if we have something attached."""

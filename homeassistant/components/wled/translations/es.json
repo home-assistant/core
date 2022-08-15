@@ -1,9 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Este dispositivo WLED ya est\u00e1 configurado.",
+            "already_configured": "El dispositivo ya est\u00e1 configurado",
             "cannot_connect": "No se pudo conectar",
-            "cct_unsupported": "Este dispositivo WLED utiliza canales CCT, que no son compatibles con esta integraci\u00f3n."
+            "cct_unsupported": "Este dispositivo WLED utiliza canales CCT, que no son compatibles con esta integraci\u00f3n"
         },
         "error": {
             "cannot_connect": "No se pudo conectar"
@@ -18,7 +18,7 @@
             },
             "zeroconf_confirm": {
                 "description": "\u00bfQuieres a\u00f1adir el WLED `{name}` a Home Assistant?",
-                "title": "Dispositivo WLED detectado"
+                "title": "Dispositivo WLED descubierto"
             }
         }
     },
@@ -26,7 +26,7 @@
         "step": {
             "init": {
                 "data": {
-                    "keep_master_light": "Mantenga la luz principal, incluso con 1 segmento de LED."
+                    "keep_master_light": "Mantener la luz principal, incluso con 1 segmento LED."
                 }
             }
         }
