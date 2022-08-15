@@ -20,7 +20,7 @@ from homeassistant.components.bluetooth import (
 )
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_DEVICE
 
 from .const import CONF_BDADDR, DOMAIN, DEFAULT_NAME
 
@@ -150,7 +150,8 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
         if errors:
             return self.async_show_form(step_id="link", errors=errors)
 
-        user_input[CONF_BDADDR] = self._ble_device
+        user_input[CONF_BDADDR] = self._ble_device.address
+        user_input[CONF_DEVICE] = self._ble_device
         user_input[CONF_ACCESS_TOKEN] = token
 
         return self.async_create_entry(title=self._name, data=user_input)
