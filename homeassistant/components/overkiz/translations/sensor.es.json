@@ -1,10 +1,10 @@
 {
     "state": {
         "overkiz__battery": {
-            "full": "Completo",
-            "low": "Bajo",
+            "full": "Completa",
+            "low": "Baja",
             "normal": "Normal",
-            "verylow": "Muy bajo"
+            "verylow": "Muy baja"
         },
         "overkiz__discrete_rssi_level": {
             "good": "Bien",
@@ -30,12 +30,17 @@
         "overkiz__sensor_defect": {
             "dead": "Muerto",
             "low_battery": "Bater\u00eda baja",
-            "maintenance_required": "Mantenimiento necesario",
-            "no_defect": "Ning\u00fan defecto"
+            "maintenance_required": "Requiere mantenimiento",
+            "no_defect": "Sin defectos"
         },
         "overkiz__sensor_room": {
-            "clean": "Limpiar",
+            "clean": "Limpio",
             "dirty": "Sucio"
+        },
+        "overkiz__three_way_handle_direction": {
+            "closed": "Cerrado",
+            "open": "Abierto",
+            "tilt": "Inclinaci\u00f3n"
         }
     }
 }

@@ -42,7 +42,7 @@ class HuisbaasjeSensor(CoordinatorEntity, SensorEntity):
         user_id: str,
         name: str,
         source_type: str,
-        device_class: str = None,
+        device_class: str | None = None,
         sensor_type: str = SENSOR_TYPE_RATE,
         unit_of_measurement: str = POWER_WATT,
         icon: str = "mdi:lightning-bolt",

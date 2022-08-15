@@ -13,7 +13,7 @@
                     "host": "Host",
                     "port": "Puerto"
                 },
-                "description": "No se ha podrido descubrir el servidor Roon, introduce el anfitri\u00f3n y el puerto."
+                "description": "No se pudo descubrir el servidor Roon, por favor, introduce su nombre de host y el puerto."
             },
             "link": {
                 "description": "Debes autorizar Home Assistant en Roon. Despu\u00e9s de pulsar en Enviar, ve a la aplicaci\u00f3n Roon Core, abre Configuraci\u00f3n y activa HomeAssistant en la pesta\u00f1a Extensiones.",

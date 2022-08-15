@@ -59,7 +59,7 @@ _TYPE_HINT_MATCHERS: dict[str, re.Pattern[str]] = {
     # a_or_b matches items such as "DiscoveryInfoType | None"
     "a_or_b": re.compile(r"^(\w+) \| (\w+)$"),
 }
-_INNER_MATCH = r"((?:\w+)|(?:\.{3})|(?:\w+\[.+\]))"
+_INNER_MATCH = r"((?:[\w\| ]+)|(?:\.{3})|(?:\w+\[.+\]))"
 _INNER_MATCH_POSSIBILITIES = [i + 1 for i in range(5)]
 _TYPE_HINT_MATCHERS.update(
     {
@@ -611,10 +611,6 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
         ClassTypeHintMatch(
             base_class="AlarmControlPanelEntity",
             matches=[
-                TypeHintMatch(
-                    function_name="device_class",
-                    return_type=["str", None],
-                ),
                 TypeHintMatch(
                     function_name="code_format",
                     return_type=["CodeFormat", None],
@@ -1221,10 +1217,6 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             base_class="FanEntity",
             matches=[
                 TypeHintMatch(
-                    function_name="device_class",
-                    return_type=["str", None],
-                ),
-                TypeHintMatch(
                     function_name="percentage",
                     return_type=["int", None],
                 ),
@@ -1429,10 +1421,6 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             base_class="LockEntity",
             matches=[
                 TypeHintMatch(
-                    function_name="device_class",
-                    return_type=["str", None],
-                ),
-                TypeHintMatch(
                     function_name="changed_by",
                     return_type=["str", None],
                 ),
@@ -1473,6 +1461,423 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     kwargs_type="Any",
                     return_type=None,
                     has_async_counterpart=True,
+                ),
+            ],
+        ),
+    ],
+    "media_player": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="MediaPlayerEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="device_class",
+                    return_type=["MediaPlayerDeviceClass", "str", None],
+                ),
+                TypeHintMatch(
+                    function_name="state",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="access_token",
+                    return_type="str",
+                ),
+                TypeHintMatch(
+                    function_name="volume_level",
+                    return_type=["float", None],
+                ),
+                TypeHintMatch(
+                    function_name="is_volume_muted",
+                    return_type=["bool", None],
+                ),
+                TypeHintMatch(
+                    function_name="media_content_id",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="media_content_type",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="media_duration",
+                    return_type=["int", None],
+                ),
+                TypeHintMatch(
+                    function_name="media_position",
+                    return_type=["int", None],
+                ),
+                TypeHintMatch(
+                    function_name="media_position_updated_at",
+                    return_type=["datetime", None],
+                ),
+                TypeHintMatch(
+                    function_name="media_image_url",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="media_image_remotely_accessible",
+                    return_type="bool",
+                ),
+                TypeHintMatch(
+                    function_name="media_image_hash",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="async_get_media_image",
+                    return_type="tuple[bytes | None, str | None]",
+                ),
+                TypeHintMatch(
+                    function_name="async_get_browse_image",
+                    arg_types={
+                        1: "str",
+                        2: "str",
+                        3: "str | None",
+                    },
+                    return_type="tuple[bytes | None, str | None]",
+                ),
+                TypeHintMatch(
+                    function_name="media_title",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="media_artist",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="media_album_name",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="media_album_artist",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="media_track",
+                    return_type=["int", None],
+                ),
+                TypeHintMatch(
+                    function_name="media_series_title",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="media_season",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="media_episode",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="media_channel",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="media_playlist",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="app_id",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="app_name",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="source",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="source_list",
+                    return_type=["list[str]", None],
+                ),
+                TypeHintMatch(
+                    function_name="sound_mode",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="sound_mode_list",
+                    return_type=["list[str]", None],
+                ),
+                TypeHintMatch(
+                    function_name="shuffle",
+                    return_type=["bool", None],
+                ),
+                TypeHintMatch(
+                    function_name="repeat",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="group_members",
+                    return_type=["list[str]", None],
+                ),
+                TypeHintMatch(
+                    function_name="turn_on",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="turn_off",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="mute_volume",
+                    arg_types={
+                        1: "bool",
+                    },
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="set_volume_level",
+                    arg_types={
+                        1: "float",
+                    },
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="media_play",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="media_pause",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="media_stop",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="media_previous_track",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="media_next_track",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="media_seek",
+                    arg_types={
+                        1: "float",
+                    },
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="play_media",
+                    arg_types={
+                        1: "str",
+                        2: "str",
+                    },
+                    kwargs_type="Any",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="select_source",
+                    arg_types={
+                        1: "str",
+                    },
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="select_sound_mode",
+                    arg_types={
+                        1: "str",
+                    },
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="clear_playlist",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="set_shuffle",
+                    arg_types={
+                        1: "bool",
+                    },
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="set_repeat",
+                    arg_types={
+                        1: "str",
+                    },
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="toggle",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="volume_up",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="volume_down",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="media_play_pause",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="media_image_local",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="capability_attributes",
+                    return_type="dict[str, Any]",
+                ),
+                TypeHintMatch(
+                    function_name="async_browse_media",
+                    arg_types={
+                        1: "str | None",
+                        2: "str | None",
+                    },
+                    return_type="BrowseMedia",
+                ),
+                TypeHintMatch(
+                    function_name="join_players",
+                    arg_types={
+                        1: "list[str]",
+                    },
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="unjoin_player",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="get_browse_image_url",
+                    arg_types={
+                        1: "str",
+                        2: "str",
+                        3: "str | None",
+                    },
+                    return_type="str",
+                ),
+            ],
+        ),
+    ],
+    "number": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="NumberEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="device_class",
+                    return_type=["NumberDeviceClass", "str", None],
+                ),
+                TypeHintMatch(
+                    function_name="capability_attributes",
+                    return_type="dict[str, Any]",
+                ),
+                TypeHintMatch(
+                    function_name="native_min_value",
+                    return_type="float",
+                ),
+                TypeHintMatch(
+                    function_name="native_max_value",
+                    return_type="float",
+                ),
+                TypeHintMatch(
+                    function_name="native_step",
+                    return_type=["float", None],
+                ),
+                TypeHintMatch(
+                    function_name="mode",
+                    return_type="NumberMode",
+                ),
+                TypeHintMatch(
+                    function_name="native_unit_of_measurement",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="native_value",
+                    return_type=["float", None],
+                ),
+                TypeHintMatch(
+                    function_name="set_native_value",
+                    arg_types={1: "float"},
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+            ],
+        ),
+    ],
+    "select": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="SelectEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="capability_attributes",
+                    return_type="dict[str, Any]",
+                ),
+                TypeHintMatch(
+                    function_name="options",
+                    return_type="list[str]",
+                ),
+                TypeHintMatch(
+                    function_name="current_option",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="select_option",
+                    return_type=None,
+                ),
+                TypeHintMatch(
+                    function_name="select_option",
+                    arg_types={1: "str"},
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+            ],
+        ),
+    ],
+    "siren": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="ToggleEntity",
+            matches=_TOGGLE_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="SirenEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="available_tones",
+                    return_type=["dict[int, str]", "list[int | str]", None],
                 ),
             ],
         ),
@@ -1558,6 +1963,15 @@ def _is_valid_type(
             and _is_valid_type(match.group(1), node.value)
             and _is_valid_type(match.group(2), node.slice)
         )
+
+    # Special case for float in return type
+    if (
+        expected_type == "float"
+        and in_return
+        and isinstance(node, nodes.Name)
+        and node.name in ("float", "int")
+    ):
+        return True
 
     # Name occurs when a namespace is not used, eg. "HomeAssistant"
     if isinstance(node, nodes.Name) and node.name == expected_type:
@@ -1697,12 +2111,15 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
         ):
             self._class_matchers.extend(property_matches)
 
+        self._class_matchers.reverse()
+
     def visit_classdef(self, node: nodes.ClassDef) -> None:
         """Called when a ClassDef node is visited."""
         ancestor: nodes.ClassDef
         checked_class_methods: set[str] = set()
-        for ancestor in node.ancestors():
-            for class_matches in self._class_matchers:
+        ancestors = list(node.ancestors())  # cache result for inside loop
+        for class_matches in self._class_matchers:
+            for ancestor in ancestors:
                 if ancestor.name == class_matches.base_class:
                     self._visit_class_functions(
                         node, class_matches.matches, checked_class_methods

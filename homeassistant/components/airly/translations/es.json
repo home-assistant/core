@@ -5,7 +5,7 @@
         },
         "error": {
             "invalid_api_key": "Clave API no v\u00e1lida",
-            "wrong_location": "No hay estaciones de medici\u00f3n Airly en esta zona."
+            "wrong_location": "No hay estaciones de medici\u00f3n Airly en esta \u00e1rea."
         },
         "step": {
             "user": {
@@ -15,13 +15,13 @@
                     "longitude": "Longitud",
                     "name": "Nombre"
                 },
-                "description": "Establecer la integraci\u00f3n de la calidad del aire de Airly. Para generar la clave de la API vaya a https://developer.airly.eu/register"
+                "description": "Para generar la clave API, ve a https://developer.airly.eu/register"
             }
         }
     },
     "system_health": {
         "info": {
-            "can_reach_server": "Alcanzar el servidor Airly",
+            "can_reach_server": "Se puede llegar al servidor Airly",
             "requests_per_day": "Solicitudes permitidas por d\u00eda",
             "requests_remaining": "Solicitudes permitidas restantes"
         }

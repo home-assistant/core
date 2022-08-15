@@ -192,8 +192,10 @@ class EmonCmsSensor(SensorEntity):
             self._state = self._value_template.render_with_possible_json_value(
                 elem["value"], STATE_UNKNOWN
             )
-        else:
+        elif elem["value"] is not None:
             self._state = round(float(elem["value"]), DECIMALS)
+        else:
+            self._state = None
 
     @property
     def name(self):
@@ -255,8 +257,10 @@ class EmonCmsSensor(SensorEntity):
             self._state = self._value_template.render_with_possible_json_value(
                 elem["value"], STATE_UNKNOWN
             )
-        else:
+        elif elem["value"] is not None:
             self._state = round(float(elem["value"]), DECIMALS)
+        else:
+            self._state = None
 
 
 class EmonCmsData:

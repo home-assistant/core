@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il servizio \u00e8 gi\u00e0 configurato",
+            "cannot_connect": "Impossibile connettersi",
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente",
+            "timeout_connect": "Tempo scaduto per stabile la connessione."
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_auth": "Autenticazione non valida",
+            "timeout_connect": "Tempo scaduto per stabile la connessione.",
+            "unknown": "Errore imprevisto"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Chiave API",
+                    "base": "Valuta di base"
+                },
+                "data_description": {
+                    "base": "L'utilizzo di una valuta di base diversa da USD richiede un [piano a pagamento]({signup})."
+                }
+            }
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "La configurazione di Open Exchange Rates tramite YAML sar\u00e0 rimossa.\n\nLa configurazione YAML esistente \u00e8 stata importata automaticamente nell'interfaccia utente.\n\nRimuovi la configurazione YAML di Open Exchange Rates dal file configuration.yaml e riavvia Home Assistant per risolvere questo problema.",
+            "title": "La configurazione YAML di Open Exchange Rates sar\u00e0 rimossa"
+        }
+    }
+}

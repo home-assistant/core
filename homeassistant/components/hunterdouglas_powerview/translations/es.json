@@ -4,20 +4,20 @@
             "already_configured": "El dispositivo ya est\u00e1 configurado"
         },
         "error": {
-            "cannot_connect": "No se pudo conectar, por favor, int\u00e9ntalo de nuevo",
+            "cannot_connect": "No se pudo conectar",
             "unknown": "Error inesperado"
         },
-        "flow_title": "{name} ( {host} )",
+        "flow_title": "{name} ({host})",
         "step": {
             "link": {
                 "description": "\u00bfQuieres configurar {name} ({host})?",
-                "title": "Conectar con el PowerView Hub"
+                "title": "Conectar al PowerView Hub"
             },
             "user": {
                 "data": {
                     "host": "Direcci\u00f3n IP"
                 },
-                "title": "Conectar con el PowerView Hub"
+                "title": "Conectar al PowerView Hub"
             }
         }
     }

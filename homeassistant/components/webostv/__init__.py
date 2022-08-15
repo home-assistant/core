@@ -1,7 +1,7 @@
 """Support for LG webOS Smart TV."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
 from contextlib import suppress
 import logging
 from typing import Any
@@ -170,7 +170,10 @@ class PluggableAction:
 
     def __init__(self) -> None:
         """Initialize."""
-        self._actions: dict[Callable[[], None], tuple[HassJob, dict[str, Any]]] = {}
+        self._actions: dict[
+            Callable[[], None],
+            tuple[HassJob[..., Coroutine[Any, Any, None]], dict[str, Any]],
+        ] = {}
 
     def __bool__(self) -> bool:
         """Return if we have something attached."""
