@@ -159,7 +159,7 @@ aiohomekit==1.2.11
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==4.4.2
+aiohue==4.5.0
 
 # homeassistant.components.apache_kafka
 aiokafka==0.7.2
@@ -207,7 +207,7 @@ aiopvpc==3.0.0
 aiopyarr==22.7.0
 
 # homeassistant.components.qnap_qsw
-aioqsw==0.2.0
+aioqsw==0.2.2
 
 # homeassistant.components.recollect_waste
 aiorecollect==1.0.8
@@ -323,7 +323,7 @@ beautifulsoup4==4.11.1
 bellows==0.32.0
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.10.1
+bimmer_connected==0.10.2
 
 # homeassistant.components.bluetooth
 bleak==0.15.1
@@ -619,7 +619,7 @@ holidays==0.14.2
 home-assistant-frontend==20220802.0
 
 # homeassistant.components.home_connect
-homeconnect==0.7.1
+homeconnect==0.7.2
 
 # homeassistant.components.homematicip_cloud
 homematicip==1.0.7
@@ -1561,7 +1561,7 @@ sunwatcher==0.2.1
 surepy==0.7.2
 
 # homeassistant.components.system_bridge
-systembridgeconnector==3.3.2
+systembridgeconnector==3.4.4
 
 # homeassistant.components.tailscale
 tailscale==0.2.0

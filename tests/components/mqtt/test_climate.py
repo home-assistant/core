@@ -13,15 +13,12 @@ from homeassistant.components.climate.const import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
     ATTR_HVAC_ACTION,
-    ATTR_PRESET_MODE,
     ATTR_SWING_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     CURRENT_HVAC_ACTIONS,
     DOMAIN as CLIMATE_DOMAIN,
-    PRESET_AWAY,
     PRESET_ECO,
-    PRESET_NONE,
     ClimateEntityFeature,
     HVACMode,
 )
@@ -86,23 +83,6 @@ DEFAULT_CONFIG = {
             "sleep",
             "activity",
         ],
-    }
-}
-
-# AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.9
-DEFAULT_LEGACY_CONFIG = {
-    CLIMATE_DOMAIN: {
-        "platform": "mqtt",
-        "name": "test",
-        "mode_command_topic": "mode-topic",
-        "temperature_command_topic": "temperature-topic",
-        "temperature_low_command_topic": "temperature-low-topic",
-        "temperature_high_command_topic": "temperature-high-topic",
-        "fan_mode_command_topic": "fan-mode-topic",
-        "swing_mode_command_topic": "swing-mode-topic",
-        "aux_command_topic": "aux-topic",
-        "away_mode_command_topic": "away-mode-topic",
-        "hold_command_topic": "hold-topic",
     }
 }
 
@@ -654,241 +634,6 @@ async def test_set_preset_mode_pessimistic(
     assert state.attributes.get("preset_mode") == "home"
 
 
-# AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.9
-async def test_set_away_mode_pessimistic(hass, mqtt_mock_entry_with_yaml_config):
-    """Test setting of the away mode."""
-    config = copy.deepcopy(DEFAULT_LEGACY_CONFIG)
-    config["climate"]["away_mode_state_topic"] = "away-state"
-    assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
-
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("preset_mode") == "none"
-
-    await common.async_set_preset_mode(hass, "away", ENTITY_CLIMATE)
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("preset_mode") == "none"
-
-    async_fire_mqtt_message(hass, "away-state", "ON")
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("preset_mode") == "away"
-
-    async_fire_mqtt_message(hass, "away-state", "OFF")
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("preset_mode") == "none"
-
-    async_fire_mqtt_message(hass, "away-state", "nonsense")
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("preset_mode") == "none"
-
-
-# AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.9
-async def test_set_away_mode(hass, mqtt_mock_entry_with_yaml_config):
-    """Test setting of the away mode."""
-    config = copy.deepcopy(DEFAULT_LEGACY_CONFIG)
-    config["climate"]["payload_on"] = "AN"
-    config["climate"]["payload_off"] = "AUS"
-
-    assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
-
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("preset_mode") == "none"
-
-    mqtt_mock.async_publish.reset_mock()
-    await common.async_set_preset_mode(hass, "away", ENTITY_CLIMATE)
-    assert mqtt_mock.async_publish.call_count == 2
-    mqtt_mock.async_publish.assert_any_call("away-mode-topic", "AN", 0, False)
-    mqtt_mock.async_publish.assert_any_call("hold-topic", "off", 0, False)
-    mqtt_mock.async_publish.reset_mock()
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("preset_mode") == "away"
-
-    await common.async_set_preset_mode(hass, PRESET_NONE, ENTITY_CLIMATE)
-    assert mqtt_mock.async_publish.call_count == 2
-    mqtt_mock.async_publish.assert_any_call("away-mode-topic", "AUS", 0, False)
-    mqtt_mock.async_publish.assert_any_call("hold-topic", "off", 0, False)
-    mqtt_mock.async_publish.reset_mock()
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("preset_mode") == "none"
-
-    await common.async_set_preset_mode(hass, "hold-on", ENTITY_CLIMATE)
-    mqtt_mock.async_publish.reset_mock()
-
-    await common.async_set_preset_mode(hass, "away", ENTITY_CLIMATE)
-    assert mqtt_mock.async_publish.call_count == 2
-    mqtt_mock.async_publish.assert_any_call("away-mode-topic", "AN", 0, False)
-    mqtt_mock.async_publish.assert_any_call("hold-topic", "off", 0, False)
-    mqtt_mock.async_publish.reset_mock()
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("preset_mode") == "away"
-
-
-# AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.9
-async def test_set_hold_pessimistic(hass, mqtt_mock_entry_with_yaml_config):
-    """Test setting the hold mode in pessimistic mode."""
-    config = copy.deepcopy(DEFAULT_LEGACY_CONFIG)
-    config["climate"]["hold_state_topic"] = "hold-state"
-    assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
-
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("hold_mode") is None
-
-    await common.async_set_preset_mode(hass, "hold", ENTITY_CLIMATE)
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("hold_mode") is None
-
-    async_fire_mqtt_message(hass, "hold-state", "on")
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("preset_mode") == "on"
-
-    async_fire_mqtt_message(hass, "hold-state", "off")
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("preset_mode") == "none"
-
-
-# AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.9
-async def test_set_hold(hass, mqtt_mock_entry_with_yaml_config):
-    """Test setting the hold mode."""
-    assert await async_setup_component(hass, CLIMATE_DOMAIN, DEFAULT_LEGACY_CONFIG)
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
-
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("preset_mode") == "none"
-    await common.async_set_preset_mode(hass, "hold-on", ENTITY_CLIMATE)
-    mqtt_mock.async_publish.call_count == 2
-    mqtt_mock.async_publish.assert_any_call("away-mode-topic", "OFF", 0, False)
-    mqtt_mock.async_publish.assert_any_call("hold-topic", "hold-on", 0, False)
-    mqtt_mock.async_publish.reset_mock()
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("preset_mode") == "hold-on"
-
-    await common.async_set_preset_mode(hass, PRESET_ECO, ENTITY_CLIMATE)
-    mqtt_mock.async_publish.call_count == 2
-    mqtt_mock.async_publish.assert_any_call("away-mode-topic", "OFF", 0, False)
-    mqtt_mock.async_publish.assert_any_call("hold-topic", "eco", 0, False)
-    mqtt_mock.async_publish.reset_mock()
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("preset_mode") == PRESET_ECO
-
-    await common.async_set_preset_mode(hass, PRESET_NONE, ENTITY_CLIMATE)
-    mqtt_mock.async_publish.call_count == 2
-    mqtt_mock.async_publish.assert_any_call("away-mode-topic", "OFF", 0, False)
-    mqtt_mock.async_publish.assert_any_call("hold-topic", "off", 0, False)
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("preset_mode") == "none"
-
-
-# AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.9
-async def test_set_preset_away(hass, mqtt_mock_entry_with_yaml_config):
-    """Test setting the hold mode and away mode."""
-    assert await async_setup_component(hass, CLIMATE_DOMAIN, DEFAULT_LEGACY_CONFIG)
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
-
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("preset_mode") == PRESET_NONE
-
-    await common.async_set_preset_mode(hass, "hold-on", ENTITY_CLIMATE)
-    mqtt_mock.async_publish.call_count == 2
-    mqtt_mock.async_publish.assert_any_call("away-mode-topic", "OFF", 0, False)
-    mqtt_mock.async_publish.assert_any_call("hold-topic", "hold-on", 0, False)
-    mqtt_mock.async_publish.reset_mock()
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("preset_mode") == "hold-on"
-
-    await common.async_set_preset_mode(hass, PRESET_AWAY, ENTITY_CLIMATE)
-    assert mqtt_mock.async_publish.call_count == 2
-    mqtt_mock.async_publish.assert_any_call("away-mode-topic", "ON", 0, False)
-    mqtt_mock.async_publish.assert_any_call("hold-topic", "off", 0, False)
-    mqtt_mock.async_publish.reset_mock()
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("preset_mode") == PRESET_AWAY
-
-    await common.async_set_preset_mode(hass, "hold-on-again", ENTITY_CLIMATE)
-    assert mqtt_mock.async_publish.call_count == 2
-    mqtt_mock.async_publish.assert_any_call("hold-topic", "hold-on-again", 0, False)
-    mqtt_mock.async_publish.assert_any_call("away-mode-topic", "OFF", 0, False)
-    mqtt_mock.async_publish.reset_mock()
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("preset_mode") == "hold-on-again"
-
-
-# AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.9
-async def test_set_preset_away_pessimistic(hass, mqtt_mock_entry_with_yaml_config):
-    """Test setting the hold mode and away mode in pessimistic mode."""
-    config = copy.deepcopy(DEFAULT_LEGACY_CONFIG)
-    config["climate"]["hold_state_topic"] = "hold-state"
-    config["climate"]["away_mode_state_topic"] = "away-state"
-    assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
-
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("preset_mode") == PRESET_NONE
-
-    await common.async_set_preset_mode(hass, "hold-on", ENTITY_CLIMATE)
-    mqtt_mock.async_publish.call_count == 2
-    mqtt_mock.async_publish.assert_any_call("away-mode-topic", "OFF", 0, False)
-    mqtt_mock.async_publish.assert_any_call("hold-topic", "hold-on", 0, False)
-    mqtt_mock.async_publish.reset_mock()
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("preset_mode") == PRESET_NONE
-
-    async_fire_mqtt_message(hass, "hold-state", "hold-on")
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("preset_mode") == "hold-on"
-
-    await common.async_set_preset_mode(hass, PRESET_AWAY, ENTITY_CLIMATE)
-    assert mqtt_mock.async_publish.call_count == 2
-    mqtt_mock.async_publish.assert_any_call("away-mode-topic", "ON", 0, False)
-    mqtt_mock.async_publish.assert_any_call("hold-topic", "off", 0, False)
-    mqtt_mock.async_publish.reset_mock()
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("preset_mode") == "hold-on"
-
-    async_fire_mqtt_message(hass, "away-state", "ON")
-    async_fire_mqtt_message(hass, "hold-state", "off")
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("preset_mode") == PRESET_AWAY
-
-    await common.async_set_preset_mode(hass, "hold-on-again", ENTITY_CLIMATE)
-    assert mqtt_mock.async_publish.call_count == 2
-    mqtt_mock.async_publish.assert_any_call("hold-topic", "hold-on-again", 0, False)
-    mqtt_mock.async_publish.assert_any_call("away-mode-topic", "OFF", 0, False)
-    mqtt_mock.async_publish.reset_mock()
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("preset_mode") == PRESET_AWAY
-
-    async_fire_mqtt_message(hass, "hold-state", "hold-on-again")
-    async_fire_mqtt_message(hass, "away-state", "OFF")
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("preset_mode") == "hold-on-again"
-
-
-# AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.9
-async def test_set_preset_mode_twice(hass, mqtt_mock_entry_with_yaml_config):
-    """Test setting of the same mode twice only publishes once."""
-    assert await async_setup_component(hass, CLIMATE_DOMAIN, DEFAULT_LEGACY_CONFIG)
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
-
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("preset_mode") == "none"
-    await common.async_set_preset_mode(hass, "hold-on", ENTITY_CLIMATE)
-    mqtt_mock.async_publish.call_count == 2
-    mqtt_mock.async_publish.assert_any_call("away-mode-topic", "OFF", 0, False)
-    mqtt_mock.async_publish.assert_any_call("hold-topic", "hold-on", 0, False)
-    mqtt_mock.async_publish.reset_mock()
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("preset_mode") == "hold-on"
-
-
 async def test_set_aux_pessimistic(hass, mqtt_mock_entry_with_yaml_config):
     """Test setting of the aux heating in pessimistic mode."""
     config = copy.deepcopy(DEFAULT_CONFIG)
@@ -1103,57 +848,6 @@ async def test_get_with_templates(hass, mqtt_mock_entry_with_yaml_config, caplog
     )
 
 
-# AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.9
-async def test_get_with_hold_and_away_mode_and_templates(
-    hass, mqtt_mock_entry_with_yaml_config, caplog
-):
-    """Test getting various for hold and away mode attributes with templates."""
-    config = copy.deepcopy(DEFAULT_LEGACY_CONFIG)
-    config["climate"]["mode_state_topic"] = "mode-state"
-    # By default, just unquote the JSON-strings
-    config["climate"]["value_template"] = "{{ value_json }}"
-    # Something more complicated for hold mode
-    config["climate"]["hold_state_template"] = "{{ value_json.attribute }}"
-    config["climate"]["away_mode_state_topic"] = "away-state"
-    config["climate"]["hold_state_topic"] = "hold-state"
-
-    assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
-    await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
-
-    # Operation Mode
-    state = hass.states.get(ENTITY_CLIMATE)
-    async_fire_mqtt_message(hass, "mode-state", '"cool"')
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.state == "cool"
-
-    # Away Mode
-    assert state.attributes.get("preset_mode") == "none"
-    async_fire_mqtt_message(hass, "away-state", '"ON"')
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("preset_mode") == "away"
-
-    # Away Mode with JSON values
-    async_fire_mqtt_message(hass, "away-state", "false")
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("preset_mode") == "none"
-
-    async_fire_mqtt_message(hass, "away-state", "true")
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("preset_mode") == "away"
-
-    # Hold Mode
-    async_fire_mqtt_message(
-        hass,
-        "hold-state",
-        """
-        { "attribute": "somemode" }
-    """,
-    )
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("preset_mode") == "somemode"
-
-
 async def test_set_and_templates(hass, mqtt_mock_entry_with_yaml_config, caplog):
     """Test setting various attributes with templates."""
     config = copy.deepcopy(DEFAULT_CONFIG)
@@ -1230,29 +924,6 @@ async def test_set_and_templates(hass, mqtt_mock_entry_with_yaml_config, caplog)
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("target_temp_low") == 20
     assert state.attributes.get("target_temp_high") == 23
-
-
-# AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.9
-async def test_set_with_away_and_hold_modes_and_templates(
-    hass, mqtt_mock_entry_with_yaml_config, caplog
-):
-    """Test setting various attributes on hold and away mode with templates."""
-    config = copy.deepcopy(DEFAULT_LEGACY_CONFIG)
-    # Create simple templates
-    config["climate"]["hold_command_template"] = "hold: {{ value }}"
-
-    assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
-    await hass.async_block_till_done()
-    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
-
-    # Hold Mode
-    await common.async_set_preset_mode(hass, PRESET_ECO, ENTITY_CLIMATE)
-    mqtt_mock.async_publish.call_count == 2
-    mqtt_mock.async_publish.assert_any_call("away-mode-topic", "OFF", 0, False)
-    mqtt_mock.async_publish.assert_any_call("hold-topic", "hold: eco", 0, False)
-    mqtt_mock.async_publish.reset_mock()
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("preset_mode") == PRESET_ECO
 
 
 async def test_min_temp_custom(hass, mqtt_mock_entry_with_yaml_config):
@@ -1404,12 +1075,8 @@ async def test_unique_id(hass, mqtt_mock_entry_with_yaml_config):
         ("action_topic", "heating", ATTR_HVAC_ACTION, "heating"),
         ("action_topic", "cooling", ATTR_HVAC_ACTION, "cooling"),
         ("aux_state_topic", "ON", ATTR_AUX_HEAT, "on"),
-        # AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.9
-        ("away_mode_state_topic", "ON", ATTR_PRESET_MODE, "away"),
         ("current_temperature_topic", "22.1", ATTR_CURRENT_TEMPERATURE, 22.1),
         ("fan_mode_state_topic", "low", ATTR_FAN_MODE, "low"),
-        # AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.9
-        ("hold_state_topic", "mode1", ATTR_PRESET_MODE, "mode1"),
         ("mode_state_topic", "cool", None, None),
         ("mode_state_topic", "fan_only", None, None),
         ("swing_mode_state_topic", "on", ATTR_SWING_MODE, "on"),
@@ -1429,11 +1096,6 @@ async def test_encoding_subscribable_topics(
 ):
     """Test handling of incoming encoded payload."""
     config = copy.deepcopy(DEFAULT_CONFIG[CLIMATE_DOMAIN])
-    # AWAY and HOLD mode topics and templates are deprecated, support will be removed with release 2022.9
-    if topic in ["hold_state_topic", "away_mode_state_topic"]:
-        config["hold_modes"] = ["mode1", "mode2"]
-        del config["preset_modes"]
-        del config["preset_mode_command_topic"]
     await help_test_encoding_subscribable_topics(
         hass,
         mqtt_mock_entry_with_yaml_config,
@@ -1637,27 +1299,6 @@ async def test_precision_whole(hass, mqtt_mock_entry_with_yaml_config):
             {"preset_mode": "sleep"},
             "sleep",
             "preset_mode_command_template",
-        ),
-        (
-            climate.SERVICE_SET_PRESET_MODE,
-            "away_mode_command_topic",
-            {"preset_mode": "away"},
-            "ON",
-            None,
-        ),
-        (
-            climate.SERVICE_SET_PRESET_MODE,
-            "hold_command_topic",
-            {"preset_mode": "eco"},
-            "eco",
-            "hold_command_template",
-        ),
-        (
-            climate.SERVICE_SET_PRESET_MODE,
-            "hold_command_topic",
-            {"preset_mode": "comfort"},
-            "comfort",
-            "hold_command_template",
         ),
         (
             climate.SERVICE_SET_FAN_MODE,
