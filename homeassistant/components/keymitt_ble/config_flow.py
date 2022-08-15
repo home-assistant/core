@@ -67,8 +67,7 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_adv = parsed
         data = parsed.data
         self.context["title_placeholders"] = {
-            "name": data["local_name"],
-            "address": discovery_info.address,
+            "name": name_from_discovery(self._discovered_adv),
         }
         return await self.async_step_init()
 
