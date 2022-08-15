@@ -190,7 +190,7 @@ async def async_attach_trigger(
             call_action()
             return
 
-        trigger_info = {
+        data = {
             "trigger": {
                 "platform": "state",
                 "entity_id": entity,
@@ -198,7 +198,7 @@ async def async_attach_trigger(
                 "to_state": to_s,
             }
         }
-        variables = {**_variables, **trigger_info}
+        variables = {**_variables, **data}
 
         try:
             period[entity] = cv.positive_time_period(
