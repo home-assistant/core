@@ -7,7 +7,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import DEFAULT_PORT, DOMAIN
 from .coordinator import FullyKioskDataUpdateCoordinator
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
