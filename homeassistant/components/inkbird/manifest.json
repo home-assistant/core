@@ -10,7 +10,7 @@
     { "local_name": "xBBQ*" },
     { "local_name": "tps" }
   ],
-  "requirements": ["inkbird-ble==0.5.2"],
+  "requirements": ["inkbird-ble==0.5.5"],
   "dependencies": ["bluetooth"],
   "codeowners": ["@bdraco"],
   "iot_class": "local_push"
