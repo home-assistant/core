@@ -28,7 +28,7 @@ async def uploaded_file_dir(hass: HomeAssistant, hass_client) -> Path:
     assert res.status == 200
     response = await res.json()
 
-    file_dir = hass.data[file_upload.DOMAIN] / response["file_id"]
+    file_dir = hass.data[file_upload.DOMAIN].file_dir(response["file_id"])
     assert file_dir.is_dir()
     return file_dir
 

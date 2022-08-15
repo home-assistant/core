@@ -4,10 +4,10 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Iterator
 from contextlib import contextmanager
+from dataclasses import dataclass
 from pathlib import Path
 import shutil
 import tempfile
-from uuid import UUID
 
 from aiohttp import web
 import voluptuous as vol
@@ -36,17 +36,16 @@ def process_uploaded_file(hass: HomeAssistant, file_id: str) -> Iterator[Path]:
     if DOMAIN not in hass.data:
         raise ValueError("File does not exist")
 
-    # Validate file_id
-    UUID(file_id)
+    file_upload_data: FileUploadData = hass.data[DOMAIN]
 
-    temp_dir: Path = hass.data[DOMAIN]
-    source_dir = temp_dir / file_id
-    source_file = list(source_dir.iterdir())[0]
+    if not file_upload_data.has_file(file_id):
+        raise ValueError("File does not exist")
 
     try:
-        yield source_file
+        yield file_upload_data.file_path(file_id)
     finally:
-        shutil.rmtree(source_dir)
+        file_upload_data.files.pop(file_id)
+        shutil.rmtree(file_upload_data.file_dir(file_id))
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -55,29 +54,49 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def _get_temp_dir(hass: HomeAssistant) -> Path:
-    """Return the temporary directory."""
+@dataclass(frozen=True)
+class FileUploadData:
+    """File upload data."""
 
-    def _create_temp_dir() -> Path:
-        """Create temporary directory."""
-        temp_dir = Path(tempfile.gettempdir()) / TEMP_DIR_NAME
+    temp_dir: Path
+    files: dict[str, str]
 
-        # If it exists, it's an old one and Home Assistant didn't shut down correctly.
-        if temp_dir.exists():
+    @classmethod
+    async def create(cls, hass: HomeAssistant) -> FileUploadData:
+        """Initialize the file upload data."""
+
+        def _create_temp_dir() -> Path:
+            """Create temporary directory."""
+            temp_dir = Path(tempfile.gettempdir()) / TEMP_DIR_NAME
+
+            # If it exists, it's an old one and Home Assistant didn't shut down correctly.
+            if temp_dir.exists():
+                shutil.rmtree(temp_dir)
+
+            temp_dir.mkdir()
+            return temp_dir
+
+        temp_dir = Path(await hass.async_add_executor_job(_create_temp_dir))
+
+        def cleanup_unused_files(ev: Event) -> None:
+            """Clean up unused files."""
             shutil.rmtree(temp_dir)
 
-        temp_dir.mkdir()
-        return temp_dir
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, cleanup_unused_files)
 
-    temp_dir = Path(await hass.async_add_executor_job(_create_temp_dir))
+        return cls(temp_dir, {})
 
-    def cleanup_unused_files(ev: Event) -> None:
-        """Clean up unused files."""
-        shutil.rmtree(temp_dir)
+    def has_file(self, file_id: str) -> bool:
+        """Return if file exists."""
+        return file_id in self.files
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, cleanup_unused_files)
+    def file_dir(self, file_id: str) -> Path:
+        """Return the file directory."""
+        return self.temp_dir / file_id
 
-    return temp_dir
+    def file_path(self, file_id: str) -> Path:
+        """Return the file path."""
+        return self.file_dir(file_id) / self.files[file_id]
 
 
 class FileUploadView(HomeAssistantView):
@@ -116,21 +135,23 @@ class FileUploadView(HomeAssistantView):
         file_id = ulid_hex()
 
         if DOMAIN not in hass.data:
-            hass.data[DOMAIN] = await _get_temp_dir(hass)
+            hass.data[DOMAIN] = await FileUploadData.create(hass)
 
-        temp_dir: Path = hass.data[DOMAIN]
-
-        target_dir = temp_dir / file_id
-        target_file = target_dir / file_field.filename
+        file_upload_data: FileUploadData = hass.data[DOMAIN]
+        file_dir = file_upload_data.file_dir(file_id)
 
         def _sync_work() -> None:
-            target_dir.mkdir()
+            file_dir.mkdir()
 
-            with target_file.open("wb") as target_fileobj:
-                # MyPy forgets about the isinstance check because we're in a function scope
-                shutil.copyfileobj(file_field.file, target_fileobj)  # type: ignore[union-attr]
+            # MyPy forgets about the isinstance check because we're in a function scope
+            assert isinstance(file_field, web.FileField)
+
+            with (file_dir / file_field.filename).open("wb") as target_fileobj:
+                shutil.copyfileobj(file_field.file, target_fileobj)
 
         await hass.async_add_executor_job(_sync_work)
+
+        file_upload_data.files[file_id] = file_field.filename
 
         return self.json({"file_id": file_id})
 
@@ -139,24 +160,17 @@ class FileUploadView(HomeAssistantView):
         """Delete a file."""
         hass: HomeAssistant = request.app["hass"]
 
+        if DOMAIN not in hass.data:
+            raise web.HTTPNotFound()
+
         file_id = data["file_id"]
+        file_upload_data: FileUploadData = hass.data[DOMAIN]
 
-        # Validate file_id
-        try:
-            UUID(file_id)
-        except ValueError as err:
-            raise web.HTTPBadRequest() from err
+        if file_upload_data.files.pop(file_id, None) is None:
+            raise web.HTTPNotFound()
 
-        if DOMAIN in hass.data:
-            temp_dir: Path = hass.data[DOMAIN]
-        else:
-            temp_dir = await _get_temp_dir(hass)
-
-        source_dir = temp_dir / file_id
-
-        try:
-            await hass.async_add_executor_job(lambda: shutil.rmtree(source_dir))
-        except FileNotFoundError as err:
-            raise web.HTTPNotFound() from err
+        await hass.async_add_executor_job(
+            lambda: shutil.rmtree(file_upload_data.file_dir(file_id))
+        )
 
         return self.json_message("File deleted")
