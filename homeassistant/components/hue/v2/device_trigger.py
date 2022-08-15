@@ -29,10 +29,7 @@ from ..const import ATTR_HUE_EVENT, CONF_SUBTYPE, DOMAIN
 if TYPE_CHECKING:
     from aiohue.v2 import HueBridgeV2
 
-    from homeassistant.components.automation import (
-        AutomationActionType,
-        AutomationTriggerInfo,
-    )
+    from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 
     from ..bridge import HueBridge
 
@@ -77,8 +74,8 @@ async def async_attach_trigger(
     bridge: "HueBridge",
     device_entry: DeviceEntry,
     config: ConfigType,
-    action: AutomationActionType,
-    automation_info: AutomationTriggerInfo,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
     hass = bridge.hass
@@ -94,7 +91,7 @@ async def async_attach_trigger(
         }
     )
     return await event_trigger.async_attach_trigger(
-        hass, event_config, action, automation_info, platform_type="device"
+        hass, event_config, action, trigger_info, platform_type="device"
     )
 
 
