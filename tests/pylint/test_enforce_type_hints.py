@@ -76,6 +76,7 @@ def test_regex_x_of_y_i(
     [
         ("DiscoveryInfoType | None", "DiscoveryInfoType", "None"),
         ("dict | list | None", "dict | list", "None"),
+        ("dict[str, Any] | list[Any] | None", "dict[str, Any] | list[Any]", "None")
     ],
 )
 def test_regex_a_or_b(
@@ -996,7 +997,10 @@ def test_vacuum_entity(linter: UnittestLinter, type_hint_checker: BaseChecker) -
         VacuumEntity
     ):
         def send_command(
-            self, command: str, params: dict | list | None = None, **kwargs: Any
+            self,
+            command: str,
+            params: dict[str, Any] | list[Any] | None = None,
+            **kwargs: Any,
         ) -> None:
             pass
     """,
