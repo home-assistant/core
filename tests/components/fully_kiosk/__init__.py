@@ -3,7 +3,7 @@ import json
 
 from asynctest import patch
 
-from homeassistant.components.fullykiosk.const import DOMAIN
+from homeassistant.components.fully_kiosk.const import DOMAIN
 
 from tests.common import MockConfigEntry, load_fixture
 

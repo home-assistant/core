@@ -3,7 +3,7 @@ from asynctest import patch
 from fullykiosk import FullyKioskError
 
 from homeassistant import config_entries, setup
-from homeassistant.components.fullykiosk.const import DOMAIN
+from homeassistant.components.fully_kiosk.const import DOMAIN
 
 DEVICE_INFO = {
     "deviceName": "Test device",
