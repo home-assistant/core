@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import logging
-from typing import Any, Protocol, TypedDict, cast
+from typing import Any, cast
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -72,8 +72,13 @@ from homeassistant.helpers.trace import (
     trace_get,
     trace_path,
 )
-from homeassistant.helpers.trigger import async_initialize_triggers
-from homeassistant.helpers.typing import ConfigType, TemplateVarsType
+from homeassistant.helpers.trigger import (
+    TriggerActionType,
+    TriggerData,
+    TriggerInfo,
+    async_initialize_triggers,
+)
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.dt import parse_datetime
 
@@ -112,32 +117,11 @@ SERVICE_TRIGGER = "trigger"
 _LOGGER = logging.getLogger(__name__)
 
 
-class AutomationActionType(Protocol):
-    """Protocol type for automation action callback."""
-
-    async def __call__(
-        self,
-        run_variables: dict[str, Any],
-        context: Context | None = None,
-    ) -> None:
-        """Define action callback type."""
-
-
-class AutomationTriggerData(TypedDict):
-    """Automation trigger data."""
-
-    id: str
-    idx: str
-
-
-class AutomationTriggerInfo(TypedDict):
-    """Information about automation trigger."""
-
-    domain: str
-    name: str
-    home_assistant_start: bool
-    variables: TemplateVarsType
-    trigger_data: AutomationTriggerData
+# AutomationActionType, AutomationTriggerData,
+# and AutomationTriggerInfo are deprecated as of 2022.9.
+AutomationActionType = TriggerActionType
+AutomationTriggerData = TriggerData
+AutomationTriggerInfo = TriggerInfo
 
 
 @bind_hass
