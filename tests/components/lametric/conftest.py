@@ -54,7 +54,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_lametric_config_flow() -> Generator[None, MagicMock, None]:
+def mock_lametric_config_flow() -> Generator[MagicMock, None, None]:
     """Return a mocked LaMetric client."""
     with patch(
         "homeassistant.components.lametric.config_flow.LaMetricDevice", autospec=True
