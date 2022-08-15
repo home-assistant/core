@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import contextlib
+import copy
+import json
 import logging
 from typing import Any
 
@@ -14,8 +16,10 @@ from zigpy.exceptions import NetworkNotFormed
 
 from homeassistant import config_entries
 from homeassistant.components import onboarding, usb, zeroconf
+from homeassistant.components.file_upload import process_uploaded_file
 from homeassistant.const import CONF_NAME
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.selector import FileSelector, FileSelectorConfig
 
 from .core.const import (
     CONF_BAUDRATE,
@@ -48,13 +52,15 @@ AUTOPROBE_RADIOS = (
 )
 
 FORMATION_STRATEGY = "formation_strategy"
-FORMATION_FORM_NEW_NETWORK = "Form a new network"
+FORMATION_FORM_NEW_NETWORK = "Erase network settings and form a new network"
 FORMATION_REUSE_SETTINGS = "Keep current network settings"
 FORMATION_RESTORE_AUTOMATIC_BACKUP = "Restore an automatic backup"
-FORMATION_RESTORE_MANUAL_BACKUP = "Restore a manual backup"
+FORMATION_RESTORE_MANUAL_BACKUP = "Upload a manual backup"
 
 CHOOSE_AUTOMATIC_BACKUP = "choose_automatic_backup"
 OVERWRITE_COORDINATOR_IEEE = "overwrite_coordinator_ieee"
+
+UPLOADED_BACKUP_FILE = "uploaded_backup_file"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -121,6 +127,18 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return True
 
         return False
+
+    def _allow_overwrite_ezsp_ieee(
+        self, backup: zigpy.backups.NetworkBackup
+    ) -> zigpy.backups.NetworkBackup:
+        new_stack_specific = copy.deepcopy(backup.network_info.stack_specific)
+        new_stack_specific.setdefault("ezsp", {})[
+            "i_understand_i_can_update_eui64_only_once_and_i_still_want_to_do_it"
+        ] = True
+
+        return backup.replace(
+            network_info=backup.network_info.replace(stack_specific=new_stack_specific)
+        )
 
     async def _async_create_radio_entity(self):
         device_settings = self._device_settings.copy()
@@ -237,7 +255,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             elif strategy == FORMATION_REUSE_SETTINGS:
                 pass
             elif strategy == FORMATION_RESTORE_MANUAL_BACKUP:
-                raise NotImplementedError("Not implemented yet :(")
+                return await self.async_step_upload_manual_backup()
             elif strategy == FORMATION_RESTORE_AUTOMATIC_BACKUP:
                 return await self.async_step_restore_automatic_backup()
 
@@ -283,6 +301,66 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(schema),
         )
 
+    async def async_step_upload_manual_backup(self, user_input=None):
+        """Upload and restore a coordinator backup JSON file."""
+        errors = {}
+
+        if user_input is not None:
+            uploaded_file_id = user_input[UPLOADED_BACKUP_FILE]
+
+            with process_uploaded_file(self.hass, uploaded_file_id) as file_path:
+                backup_json = await self.hass.async_add_executor_job(
+                    file_path.read_text
+                )
+
+                try:
+                    backup_obj = json.loads(backup_json)
+                    backup = zigpy.backups.NetworkBackup.from_dict(backup_obj)
+                except ValueError:
+                    errors["base"] = "invalid_backup_json"
+                else:
+                    if user_input.get(OVERWRITE_COORDINATOR_IEEE):
+                        backup = self._allow_overwrite_ezsp_ieee(backup)
+
+                    async with self._connect_zigpy_app() as app:
+                        await app.backups.restore_backup(backup)
+
+                    return await self._async_create_radio_entity()
+
+        data_schema = {
+            vol.Required(UPLOADED_BACKUP_FILE): FileSelector(
+                FileSelectorConfig(accept=".json,application/json")
+            )
+        }
+
+        if self._radio_type == RadioType.ezsp and (
+            self._current_settings is None
+            or (
+                self._current_settings.network_info.metadata["ezsp"][
+                    "can_write_custom_eui64"
+                ]
+            )
+        ):
+            data_schema[vol.Required(OVERWRITE_COORDINATOR_IEEE, default=True)] = bool
+
+        return self.async_show_form(
+            step_id="upload_manual_backup",
+            data_schema=vol.Schema(data_schema),
+            errors=errors,
+        )
+
+    def _format_backup_choice(self, backup: zigpy.backups.NetworkBackup) -> str:
+        """Format network backup info into a short piece of text."""
+
+        identifier = (
+            # PAN ID
+            f"{str(backup.network_info.pan_id)[2:]}"
+            # EPID
+            f":{backup.network_info.extended_pan_id.serialize().hex()}"
+        ).lower()
+
+        return f"{backup.backup_time.strftime('%c')} ({identifier})"
+
     async def async_step_restore_automatic_backup(self, user_input=None):
         """Select and restore an automatic backup."""
 
@@ -297,23 +375,13 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
                 self._backups = app.backups.backups
 
-        choices = [
-            (
-                f"{b.backup_time.strftime('%c')}"
-                f" (PAN ID: {b.network_info.pan_id}"
-                f", EPID: {b.network_info.extended_pan_id})"
-            )
-            for b in self._backups
-        ]
+        choices = [self._format_backup_choice(backup) for backup in self._backups]
 
         if user_input is not None:
             backup = self._backups[choices.index(user_input[CHOOSE_AUTOMATIC_BACKUP])]
 
             if user_input.get(OVERWRITE_COORDINATOR_IEEE):
-                backup.network_info.stack_specific.setdefault("ezsp", {})[
-                    "i_understand_i_can_update_eui64_only_once"
-                    "_and_i_still_want_to_do_it"
-                ] = True
+                backup = self._allow_overwrite_ezsp_ieee(backup)
 
             async with self._connect_zigpy_app() as app:
                 app.backups.restore_backup(backup)

@@ -38,10 +38,18 @@
           "choose_automatic_backup": "Choose an automatic backup",
           "overwrite_coordinator_ieee": "Overwrite the radio IEEE address (permanent)"
         }
+      },
+      "upload_manual_backup": {
+        "title": "Upload a Manual Backup",
+        "description": "Restore your network settings from an uploaded backup JSON file. You can download one from a different ZHA installation from \"Diagnostics\".",
+        "data": {
+          "overwrite_coordinator_ieee": "Overwrite the radio IEEE address (permanent)"
+        }
       }
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_backup_json": "Invalid backup JSON"
     },
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
