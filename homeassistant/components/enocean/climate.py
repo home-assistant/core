@@ -48,7 +48,9 @@ def setup_platform(
     base_id_to_use = sender_id
     set_point_inverse = config.get(CONF_SET_POINT_INVERSE, False)
 
-    add_entities([EnOceanThermostat(base_id_to_use, dev_id, dev_name, set_point_inverse)])
+    add_entities(
+        [EnOceanThermostat(base_id_to_use, dev_id, dev_name, set_point_inverse)]
+    )
 
 
 def to_degrees(temperature: int) -> float:
@@ -59,7 +61,7 @@ def to_degrees(temperature: int) -> float:
 
 
 def translate(
-    value_to_translate: str | int,
+    value_to_translate: str | float | int,
     max_value=40.0,
     min_value=0.0,
     target_max=255,
@@ -88,7 +90,6 @@ def translate(
 
     translated_value = int(target_max * quotient)
     translated_value = max(translated_value, target_min)
-    # _LOGGER.info("New target temp. value %s", str(target_value))
     return translated_value
 
 
@@ -142,7 +143,7 @@ class PacketPreparator:
                 "Desired target temperature %s is not within the allowed range of %s..%s",
                 new_temp,
                 MIN_TARGET_TEMP,
-                MAX_TARGET_TEMP,        # self._current_valve_value = 0
+                MAX_TARGET_TEMP,  # self._current_valve_value = 0
             )
         else:
             self._next_command[1] = new_temp_within_255
@@ -247,9 +248,12 @@ class EnOceanThermostat(EnOceanEntity, ClimateEntity, ABC):
                 current_vale_value = packet.data[
                     1
                 ]  # current value 0..100%, linear n=0..100
-                _LOGGER.info("Current valve value: %s", str(current_vale_value))
+                _LOGGER.debug(
+                    "Current valve value in percent (0=closed): %s",
+                    str(current_vale_value),
+                )
                 status = packet.data[2]
-                _LOGGER.info("Status: %s", str(status))
+                _LOGGER.debug("Status as int: %s", str(status))
                 temperature = packet.data[3]  # Temperature 0..40°C, linear n=0..255
                 self._current_temp = to_degrees(
                     temperature
@@ -287,6 +291,7 @@ class EnOceanThermostat(EnOceanEntity, ClimateEntity, ABC):
             self._base_id_to_use
         )  # e.g. [0xDE, 0xAD, 0xBE, 0xEF] / sender_id
         command.extend([0x00])  # status
+        _LOGGER.debug("Packet sent: %s", str(command))
         self.send_command(command, [], PACKET.RADIO_ERP1)  # no optional values
 
     @property
@@ -320,6 +325,7 @@ class EnOceanThermostat(EnOceanEntity, ClimateEntity, ABC):
             return HVACAction.OFF
         if self._current_temp <= self._set_point_temp:
             return HVACAction.HEATING
+        return None
 
     @property
     def current_temperature(self) -> float | None:
@@ -366,8 +372,10 @@ class EnOceanThermostat(EnOceanEntity, ClimateEntity, ABC):
 
     @property
     def max_temp(self) -> float:
+        """Return the maximum value to set."""
         return MAX_TARGET_TEMP
 
     @property
     def min_temp(self) -> float:
+        """Return the minimun value to set."""
         return MIN_TARGET_TEMP
