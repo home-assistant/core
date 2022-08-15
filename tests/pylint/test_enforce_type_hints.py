@@ -903,6 +903,35 @@ def test_invalid_device_class(
         type_hint_checker.visit_classdef(class_node)
 
 
+def test_media_player_entity(
+    linter: UnittestLinter, type_hint_checker: BaseChecker
+) -> None:
+    """Ensure valid hints are accepted for media_player entity."""
+    # Set bypass option
+    type_hint_checker.config.ignore_missing_annotations = False
+
+    class_node = astroid.extract_node(
+        """
+    class Entity():
+        pass
+
+    class MediaPlayerEntity(Entity):
+        pass
+
+    class MyMediaPlayer( #@
+        MediaPlayerEntity
+    ):
+        async def async_get_media_image(self) -> tuple[bytes | None, str | None]:
+            pass
+    """,
+        "homeassistant.components.pylint_test.media_player",
+    )
+    type_hint_checker.visit_module(class_node.parent)
+
+    with assert_no_messages(linter):
+        type_hint_checker.visit_classdef(class_node)
+
+
 def test_number_entity(linter: UnittestLinter, type_hint_checker: BaseChecker) -> None:
     """Ensure valid hints are accepted for number entity."""
     # Set bypass option
@@ -933,35 +962,6 @@ def test_number_entity(linter: UnittestLinter, type_hint_checker: BaseChecker) -
             pass
     """,
         "homeassistant.components.pylint_test.number",
-    )
-    type_hint_checker.visit_module(class_node.parent)
-
-    with assert_no_messages(linter):
-        type_hint_checker.visit_classdef(class_node)
-
-
-def test_media_player_entity(
-    linter: UnittestLinter, type_hint_checker: BaseChecker
-) -> None:
-    """Ensure valid hints are accepted for media_player entity."""
-    # Set bypass option
-    type_hint_checker.config.ignore_missing_annotations = False
-
-    class_node = astroid.extract_node(
-        """
-    class Entity():
-        pass
-
-    class MediaPlayerEntity(Entity):
-        pass
-
-    class MyMediaPlayer( #@
-        MediaPlayerEntity
-    ):
-        async def async_get_media_image(self) -> tuple[bytes | None, str | None]:
-            pass
-    """,
-        "homeassistant.components.pylint_test.media_player",
     )
     type_hint_checker.visit_module(class_node.parent)
 
