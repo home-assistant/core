@@ -164,7 +164,10 @@ class EcovacsVacuum(VacuumEntity):
             self.device.run(sucks.Clean(mode=self.device.clean_status, speed=fan_speed))
 
     def send_command(
-        self, command: str, params: dict | list | None = None, **kwargs: Any
+        self, 
+        command: str, 
+        params:  dict[str, Any] | list[Any] | None = None, 
+        **kwargs: Any,
     ) -> None:
         """Send a command to a vacuum cleaner."""
         self.device.run(sucks.VacBotCommand(command, params))
