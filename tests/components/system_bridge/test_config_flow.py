@@ -2,7 +2,7 @@
 import asyncio
 from unittest.mock import patch
 
-from systembridgeconnector.const import TYPE_DATA_UPDATE
+from systembridgeconnector.const import MODEL_SYSTEM, TYPE_DATA_UPDATE
 from systembridgeconnector.exceptions import (
     AuthenticationException,
     ConnectionClosedException,
@@ -68,6 +68,7 @@ FIXTURE_ZEROCONF_BAD = zeroconf.ZeroconfServiceInfo(
 
 
 FIXTURE_SYSTEM = System(
+    id=FIXTURE_UUID,
     boot_time=1,
     fqdn="",
     hostname="1.1.1.1",
@@ -99,14 +100,27 @@ FIXTURE_SYSTEM = System(
 FIXTURE_DATA_RESPONSE = Response(
     id="1234",
     type=TYPE_DATA_UPDATE,
+    subtype=None,
     message="Data received",
-    data=FIXTURE_SYSTEM.dict(),
+    module=MODEL_SYSTEM,
+    data=FIXTURE_SYSTEM,
 )
 
 FIXTURE_DATA_RESPONSE_BAD = Response(
     id="1234",
     type=TYPE_DATA_UPDATE,
+    subtype=None,
     message="Data received",
+    module=MODEL_SYSTEM,
+    data={},
+)
+
+FIXTURE_DATA_RESPONSE_BAD = Response(
+    id="1234",
+    type=TYPE_DATA_UPDATE,
+    subtype=None,
+    message="Data received",
+    module=MODEL_SYSTEM,
     data={},
 )
 
@@ -191,8 +205,6 @@ async def test_form_connection_closed_cannot_connect(hass: HomeAssistant) -> Non
         side_effect=ConnectionClosedException,
     ), patch(
         "systembridgeconnector.websocket_client.WebSocketClient.listen",
-    ), patch(
-        "systembridgeconnector.websocket_client.WebSocketClient.listen",
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], FIXTURE_USER_INPUT
@@ -218,8 +230,6 @@ async def test_form_timeout_cannot_connect(hass: HomeAssistant) -> None:
     ), patch(
         "systembridgeconnector.websocket_client.WebSocketClient.get_data",
         side_effect=asyncio.TimeoutError,
-    ), patch(
-        "systembridgeconnector.websocket_client.WebSocketClient.listen",
     ), patch(
         "systembridgeconnector.websocket_client.WebSocketClient.listen",
     ):
@@ -249,8 +259,6 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
         side_effect=AuthenticationException,
     ), patch(
         "systembridgeconnector.websocket_client.WebSocketClient.listen",
-    ), patch(
-        "systembridgeconnector.websocket_client.WebSocketClient.listen",
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], FIXTURE_USER_INPUT
@@ -264,6 +272,33 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
 
 async def test_form_uuid_error(hass: HomeAssistant) -> None:
     """Test we handle error from bad uuid."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["errors"] is None
+
+    with patch(
+        "homeassistant.components.system_bridge.config_flow.WebSocketClient.connect"
+    ), patch(
+        "systembridgeconnector.websocket_client.WebSocketClient.get_data",
+        side_effect=ValueError,
+    ), patch(
+        "systembridgeconnector.websocket_client.WebSocketClient.listen",
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_USER_INPUT
+        )
+    await hass.async_block_till_done()
+
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["step_id"] == "user"
+    assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_value_error(hass: HomeAssistant) -> None:
+    """Test we handle error from bad value."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -305,8 +340,6 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
         side_effect=Exception,
     ), patch(
         "systembridgeconnector.websocket_client.WebSocketClient.listen",
-    ), patch(
-        "systembridgeconnector.websocket_client.WebSocketClient.listen",
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], FIXTURE_USER_INPUT
@@ -332,8 +365,6 @@ async def test_reauth_authorization_error(hass: HomeAssistant) -> None:
     ), patch(
         "systembridgeconnector.websocket_client.WebSocketClient.get_data",
         side_effect=AuthenticationException,
-    ), patch(
-        "systembridgeconnector.websocket_client.WebSocketClient.listen",
     ), patch(
         "systembridgeconnector.websocket_client.WebSocketClient.listen",
     ):
@@ -384,8 +415,6 @@ async def test_reauth_connection_closed_error(hass: HomeAssistant) -> None:
     ), patch(
         "systembridgeconnector.websocket_client.WebSocketClient.get_data",
         side_effect=ConnectionClosedException,
-    ), patch(
-        "systembridgeconnector.websocket_client.WebSocketClient.listen",
     ), patch(
         "systembridgeconnector.websocket_client.WebSocketClient.listen",
     ):

@@ -39,7 +39,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def __validate_input(
+async def _validate_input(
     hass: HomeAssistant,
     data: dict[str, Any],
 ) -> dict[str, str]:
@@ -59,11 +59,10 @@ async def __validate_input(
             await websocket_client.connect(session=async_get_clientsession(hass))
             hass.async_create_task(websocket_client.listen())
             response = await websocket_client.get_data(GetData(modules=["system"]))
-            _LOGGER.info("Got response: %s", response.json())
-            try:
-                system = System(**response.data)
-            except ValueError as err:
-                raise CannotConnect from err
+            _LOGGER.debug("Got response: %s", response.json())
+            if response.data is None or not isinstance(response.data, System):
+                raise CannotConnect("No data received")
+            system: System = response.data
     except AuthenticationException as exception:
         _LOGGER.warning(
             "Authentication error when connecting to %s: %s", data[CONF_HOST], exception
@@ -80,6 +79,8 @@ async def __validate_input(
     except asyncio.TimeoutError as exception:
         _LOGGER.warning("Timed out connecting to %s: %s", data[CONF_HOST], exception)
         raise CannotConnect from exception
+    except ValueError as exception:
+        raise CannotConnect from exception
 
     _LOGGER.debug("Got System data: %s", system.json())
 
@@ -93,7 +94,7 @@ async def _async_get_info(
     errors = {}
 
     try:
-        info = await __validate_input(hass, user_input)
+        info = await _validate_input(hass, user_input)
     except CannotConnect:
         errors["base"] = "cannot_connect"
     except InvalidAuth:
