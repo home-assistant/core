@@ -61,6 +61,7 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("Discovered bluetooth device: %s", discovery_info)
         await self.async_set_unique_id(discovery_info.address)
         self._abort_if_unique_id_configured()
+        self._ble_device = discovery_info.device
         parsed = parse_advertisement_data(
             discovery_info.device, discovery_info.advertisement
         )
@@ -91,6 +92,7 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
             self._name = DEFAULT_NAME
             current_addresses = self._async_current_ids()
             for discovery_info in async_discovered_service_info(self.hass):
+                self._ble_device = discovery_info.device
                 address = discovery_info.address
                 if (
                     address in current_addresses
@@ -123,13 +125,6 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._bdaddr, raise_on_progress=False
             )
             self._abort_if_unique_id_configured()
-            self._ble_device = bluetooth.async_ble_device_from_address(
-                self.hass, self._bdaddr
-            )
-            if not self._ble_device:
-                raise IntegrationError(
-                    f"Could not find MicroBot with address {self._bdaddr}"
-                )
             return await self.async_step_link()
 
         return self.async_show_form(
