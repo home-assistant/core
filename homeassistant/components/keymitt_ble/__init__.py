@@ -37,12 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up this integration using UI."""
     hass.data.setdefault(DOMAIN, {})
     token: str = entry.data[CONF_ACCESS_TOKEN]
-    bdaddr: str = entry.data[CONF_BDADDR]
-    ble_device: BLEDevice | None = bluetooth.async_ble_device_from_address(
-        hass, bdaddr
-    )
-    if not ble_device:
-        raise ConfigEntryNotReady(f"Could not find MicroBot with address {bdaddr}")
+    ble_device: BLEDevice | None = entry.data[CONF_BDADDR]
     client = MicroBotApiClient(
         device=ble_device,
         token=token,
