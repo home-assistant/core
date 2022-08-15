@@ -69,7 +69,7 @@ def mock_lametric_config_flow() -> Generator[MagicMock, None, None]:
 
 
 @pytest.fixture
-def mock_lametric_cloud_config_flow() -> Generator[None, MagicMock, None]:
+def mock_lametric_cloud_config_flow() -> Generator[MagicMock, None, None]:
     """Return a mocked LaMetric Cloud client."""
     with patch(
         "homeassistant.components.lametric.config_flow.LaMetricCloud", autospec=True
