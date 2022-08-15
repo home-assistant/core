@@ -1,9 +1,9 @@
 """Support for GoodWe inverter via UDP."""
 from __future__ import annotations
 
-from datetime import timedelta
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import timedelta
 from typing import Any, cast
 
 from goodwe import Inverter, Sensor, SensorKind
@@ -204,17 +204,23 @@ class InverterSensor(CoordinatorEntity, SensorEntity):
         self.coordinator.data[self._sensor.id_] = 0
         self.async_write_ha_state()
         next_midnight = dt_util.start_of_local_day(dt_util.utcnow() + timedelta(days=1))
-        self._stop_reset = async_track_point_in_time(self.hass, self.async_reset, next_midnight)
+        self._stop_reset = async_track_point_in_time(
+            self.hass, self.async_reset, next_midnight
+        )
 
     async def async_added_to_hass(self):
         """Schedule reset task at midnight."""
         if self._sensor.id_ in DAILY_RESET:
-            next_midnight = dt_util.start_of_local_day(dt_util.utcnow() + timedelta(days=1))
-            self._stop_reset = async_track_point_in_time(self.hass, self.async_reset, next_midnight)
+            next_midnight = dt_util.start_of_local_day(
+                dt_util.utcnow() + timedelta(days=1)
+            )
+            self._stop_reset = async_track_point_in_time(
+                self.hass, self.async_reset, next_midnight
+            )
         await super().async_added_to_hass()
 
     async def async_will_remove_from_hass(self):
         """Remove reset task at midnight."""
         if self._sensor.id_ in DAILY_RESET and self._stop_reset is not None:
-            self. ()
+            self._stop_reset()
         await super().async_will_remove_from_hass()
