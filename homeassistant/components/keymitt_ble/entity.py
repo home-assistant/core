@@ -20,6 +20,7 @@ class MicroBotEntity(PassiveBluetoothCoordinatorEntity):
         super().__init__(coordinator)
         self._address = self.coordinator.ble_device.address
         self._attr_name = "MicroBot Push"
+        self._attr_unique_id = self._address
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_BLUETOOTH, self._address)},
             manufacturer=MANUFACTURER,
