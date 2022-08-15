@@ -76,7 +76,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             Platform.NOTIFY,
             DOMAIN,
             {CONF_NAME: device.name, "entry_id": entry.entry_id},
-            {},
+            hass.data[DOMAIN]["hass_config"],
         )
     )
     return True
