@@ -2,7 +2,6 @@
 # Base component constants
 NAME = "MicroBot Push"
 DOMAIN = "keymitt_ble"
-DOMAIN_DATA = f"{DOMAIN}_data"
 MANUFACTURER = "Naran/Keymitt"
 
 # Icons
