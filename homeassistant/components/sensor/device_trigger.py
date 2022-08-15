@@ -1,10 +1,6 @@
 """Provides device triggers for sensors."""
 import voluptuous as vol
 
-from homeassistant.components.automation import (
-    AutomationActionType,
-    AutomationTriggerInfo,
-)
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
@@ -27,6 +23,7 @@ from homeassistant.helpers.entity import (
     get_device_class,
     get_unit_of_measurement,
 )
+from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 from . import ATTR_STATE_CLASS, DOMAIN, SensorDeviceClass
@@ -143,8 +140,8 @@ TRIGGER_SCHEMA = vol.All(
 async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
-    action: AutomationActionType,
-    automation_info: AutomationTriggerInfo,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
     numeric_state_config = {
@@ -162,7 +159,7 @@ async def async_attach_trigger(
         hass, numeric_state_config
     )
     return await numeric_state_trigger.async_attach_trigger(
-        hass, numeric_state_config, action, automation_info, platform_type="device"
+        hass, numeric_state_config, action, trigger_info, platform_type="device"
     )
 
 
