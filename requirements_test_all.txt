@@ -619,7 +619,7 @@ holidays==0.14.2
 home-assistant-frontend==20220802.0
 
 # homeassistant.components.home_connect
-homeconnect==0.7.1
+homeconnect==0.7.2
 
 # homeassistant.components.homematicip_cloud
 homematicip==1.0.7
