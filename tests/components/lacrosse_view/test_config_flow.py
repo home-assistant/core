@@ -22,6 +22,8 @@ async def test_form(hass: HomeAssistant) -> None:
     with patch("lacrosse_view.LaCrosse.login", return_value=True,), patch(
         "lacrosse_view.LaCrosse.get_locations",
         return_value=[Location(id=1, name="Test")],
+    ), patch(
+        "homeassistant.components.lacrosse_view.async_setup_entry", return_value=True
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

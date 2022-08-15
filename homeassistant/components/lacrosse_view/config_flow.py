@@ -76,10 +76,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.data = user_input
             self.locations = info
 
-            existing_entry = await self.async_set_unique_id(self._reauth_data["id"])
-
             # Check if we are reauthenticating
-            if self._reauth_data and existing_entry:
+            if self._reauth_data["id"] is not None:
+                existing_entry = await self.async_set_unique_id(self._reauth_data["id"])
+                if not existing_entry:
+                    return await self.async_step_location()  # Make mypy happy
                 data = {
                     "id": self._reauth_data["id"],
                     "name": self._reauth_data["name"],

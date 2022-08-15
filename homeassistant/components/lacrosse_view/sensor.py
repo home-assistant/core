@@ -110,9 +110,9 @@ async def async_setup_entry(
             if description is None:
                 message = (
                     f"Unsupported sensor field: {field}\nPlease create an issue on "
-                    f"GitHub. https://github.com/home-assistant/core/issues/new?assignees=&la"
-                    f"bels=&template=bug_report.yml&integration_name=LaCrosse%20View&integrat"
-                    f"ion_link=https://www.home-assistant.io/integrations/lacrosse_view/&addi"
+                    "GitHub. https://github.com/home-assistant/core/issues/new?assignees=&la"
+                    "bels=&template=bug_report.yml&integration_name=LaCrosse%20View&integrat"
+                    "ion_link=https://www.home-assistant.io/integrations/lacrosse_view/&addi"
                     f"tional_information=Field:%20{field}%0ASensor%20Model:%20{sensor.model}&"
                     f"title=LaCrosse%20View%20Unsupported%20sensor%20field:%20{field}"
                 )
@@ -136,7 +136,6 @@ class LaCrosseViewSensor(
     """LaCrosse View sensor."""
 
     entity_description: LaCrosseSensorEntityDescription
-    _sensor: Sensor
 
     def __init__(
         self,

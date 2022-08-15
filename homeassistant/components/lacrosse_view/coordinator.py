@@ -16,8 +16,6 @@ from .const import LOGGER, SCAN_INTERVAL
 class LaCrosseUpdateCoordinator(DataUpdateCoordinator[list[Sensor]]):
     """DataUpdateCoordinator for LaCrosse View."""
 
-    last_update: datetime
-    api: LaCrosse
     username: str
     password: str
     name: str
@@ -42,11 +40,10 @@ class LaCrosseUpdateCoordinator(DataUpdateCoordinator[list[Sensor]]):
             hass,
             LOGGER,
             name="LaCrosse View",
-            update_method=self.async_update,
             update_interval=timedelta(seconds=SCAN_INTERVAL),
         )
 
-    async def async_update(self) -> list[Sensor]:
+    async def _async_update_data(self) -> list[Sensor]:
         """Get the data for LaCrosse View."""
         now = datetime.utcnow()
 
