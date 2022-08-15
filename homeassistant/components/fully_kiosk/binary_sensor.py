@@ -23,6 +23,7 @@ SENSORS: tuple[BinarySensorEntityDescription, ...] = (
         key="plugged",
         name="Plugged in",
         device_class=BinarySensorDeviceClass.PLUG,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     BinarySensorEntityDescription(
         key="isDeviceAdmin",

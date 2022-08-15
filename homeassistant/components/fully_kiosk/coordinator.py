@@ -37,7 +37,7 @@ class FullyKioskDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(seconds=UPDATE_INTERVAL),
         )
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> dict:
         """Update data via library."""
         try:
             with timeout(15):
