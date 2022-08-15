@@ -11,7 +11,7 @@ from .entity import MicroBotEntity
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up MicroBot based on a config entry."""
-    coordinator: MicroBotDataUpdateCoordinator | None = hass.data[DOMAIN][entry.entry_id]
+    coordinator: MicroBotDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities([MicroBotBinarySwitch(coordinator, entry)])
 
 
