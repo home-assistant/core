@@ -1,6 +1,7 @@
 """Support for Dynalite channels as lights."""
 
 from typing import Any
+
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
