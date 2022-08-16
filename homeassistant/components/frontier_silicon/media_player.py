@@ -123,11 +123,7 @@ class AFSAPIDevice(MediaPlayerEntity):
         self.__modes_by_label: dict[str, str] | None = None
         self.__sound_modes_by_label: dict[str, str] | None = None
 
-    @property
-    def _supports_sound_mode(self) -> bool:
-        return bool(
-            self._attr_supported_features & MediaPlayerEntityFeature.SELECT_SOUND_MODE
-        )
+        self._supports_sound_mode: bool = True
 
     async def async_update(self):
         """Get the latest date and update device state."""
@@ -177,6 +173,7 @@ class AFSAPIDevice(MediaPlayerEntity):
                 }
                 self._attr_sound_mode_list = list(self.__sound_modes_by_label)
             except FSNotImplementedException:
+                self._supports_sound_mode = False
                 # Remove SELECT_SOUND_MODE from the advertised supported features
                 self._attr_supported_features ^= (
                     MediaPlayerEntityFeature.SELECT_SOUND_MODE
@@ -210,6 +207,7 @@ class AFSAPIDevice(MediaPlayerEntity):
                     )
 
                 except FSNotImplementedException:
+                    self._supports_sound_mode = False
                     # Remove SELECT_SOUND_MODE from the advertised supported features
                     self._attr_supported_features ^= (
                         MediaPlayerEntityFeature.SELECT_SOUND_MODE
