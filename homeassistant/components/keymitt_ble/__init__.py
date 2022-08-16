@@ -33,8 +33,8 @@ PLATFORMS: list[str] = [Platform.SWITCH]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up this integration using UI."""
     hass.data.setdefault(DOMAIN, {})
-    token: str | None = entry.data[CONF_ACCESS_TOKEN]
-    bdaddr: str | None = entry.data[CONF_ADDRESS]
+    token: str = entry.data[CONF_ACCESS_TOKEN]
+    bdaddr: str = entry.data[CONF_ADDRESS]
     ble_device: BLEDevice | None = bluetooth.async_ble_device_from_address(
         hass, bdaddr
     )
