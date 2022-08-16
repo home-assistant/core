@@ -8,7 +8,7 @@ from homeassistant.util.unit_system import (
     UnitSystem,
 )
 
-from . import setup_mocked_config_entry
+from . import setup_mocked_integration
 
 
 @pytest.mark.parametrize(
@@ -44,7 +44,7 @@ async def test_unit_conversion(
     hass.config.units = unit_system
 
     # Setup component
-    assert await setup_mocked_config_entry(hass)
+    assert await setup_mocked_integration(hass)
 
     # Test
     entity = hass.states.get(entity_id)
