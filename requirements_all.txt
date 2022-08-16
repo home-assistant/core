@@ -1692,7 +1692,7 @@ pymyq==3.1.4
 pymysensors==0.22.1
 
 # homeassistant.components.netgear
-pynetgear==0.10.6
+pynetgear==0.10.7
 
 # homeassistant.components.netio
 pynetio==0.1.9.1
@@ -1914,6 +1914,9 @@ python-family-hub-local==0.0.2
 # homeassistant.components.darksky
 python-forecastio==1.4.0
 
+# homeassistant.components.fully_kiosk
+python-fullykiosk==0.0.11
+
 # homeassistant.components.sms
 # python-gammu==3.2.4
 
@@ -1981,7 +1984,7 @@ python-telegram-bot==13.1
 python-vlc==1.1.2
 
 # homeassistant.components.awair
-python_awair==0.2.3
+python_awair==0.2.4
 
 # homeassistant.components.swiss_public_transport
 python_opendata_transport==0.3.0
