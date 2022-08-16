@@ -1,20 +1,20 @@
 """Tests for the for the BMW Connected Drive integration."""
 
-import datetime
 import json
 from pathlib import Path
-from unittest.mock import patch
 
 from bimmer_connected.account import MyBMWAccount
-from bimmer_connected.vehicle import MyBMWVehicle
+from bimmer_connected.api.utils import log_to_to_file
 
 from homeassistant import config_entries
 from homeassistant.components.bmw_connected_drive.const import (
     CONF_READ_ONLY,
+    CONF_REFRESH_TOKEN,
     DOMAIN as BMW_DOMAIN,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.util.dt import utcnow
 
 from tests.common import MockConfigEntry, get_fixture_path, load_fixture
 
@@ -23,6 +23,7 @@ FIXTURE_USER_INPUT = {
     CONF_PASSWORD: "p4ssw0rd",
     CONF_REGION: "rest_of_world",
 }
+FIXTURE_REFRESH_TOKEN = "SOME_REFRESH_TOKEN"
 
 FIXTURE_CONFIG_ENTRY = {
     "entry_id": "1",
@@ -32,6 +33,7 @@ FIXTURE_CONFIG_ENTRY = {
         CONF_USERNAME: FIXTURE_USER_INPUT[CONF_USERNAME],
         CONF_PASSWORD: FIXTURE_USER_INPUT[CONF_PASSWORD],
         CONF_REGION: FIXTURE_USER_INPUT[CONF_REGION],
+        CONF_REFRESH_TOKEN: FIXTURE_REFRESH_TOKEN,
     },
     "options": {CONF_READ_ONLY: False},
     "source": config_entries.SOURCE_USER,
@@ -39,60 +41,74 @@ FIXTURE_CONFIG_ENTRY = {
 }
 
 
-def mock_get_vehicles_from_fixture(account: MyBMWAccount) -> None:
-    """Load MyBMWVehicles from fixtures and add them to the account."""
+async def mock_vehicles_from_fixture(account: MyBMWAccount) -> None:
+    """Load MyBMWVehicle from fixtures and add them to the account."""
+
     fixture_path = Path(get_fixture_path("", integration=BMW_DOMAIN))
-    fixture_vehicles_v2 = list(fixture_path.rglob("vehicles_v2_*.json"))
 
-    # Creating vehicles is currently a bit of a workaround due to the way it is
-    # implemented in the library. Once the library has an improved way of handling,
-    # this can be updated as well.
+    fixture_vehicles_bmw = list(fixture_path.rglob("vehicles_v2_bmw_*.json"))
+    fixture_vehicles_mini = list(fixture_path.rglob("vehicles_v2_mini_*.json"))
 
-    fetched_at = datetime.datetime.now(datetime.timezone.utc)
-    vehicles: list[dict] = []
+    # Load vehicle base lists as provided by vehicles/v2 API
+    vehicles = {
+        "bmw": [
+            vehicle
+            for bmw_file in fixture_vehicles_bmw
+            for vehicle in json.loads(load_fixture(bmw_file, integration=BMW_DOMAIN))
+        ],
+        "mini": [
+            vehicle
+            for mini_file in fixture_vehicles_mini
+            for vehicle in json.loads(load_fixture(mini_file, integration=BMW_DOMAIN))
+        ],
+    }
+    fetched_at = utcnow()
 
-    # First, load vehicle basee data as provided by vehicles/v2 API
-    for f in fixture_vehicles_v2:
-        vehicles.extend(
-            json.loads(
-                load_fixture(f.relative_to(fixture_path), integration=BMW_DOMAIN)
+    # simulate storing fingerprints
+    if account.config.log_response_path:
+        for brand in ["bmw", "mini"]:
+            log_to_to_file(
+                json.dumps(vehicles[brand]),
+                account.config.log_response_path,
+                f"vehicles_v2_{brand}",
+            )
+
+    # Create a vehicle with base + specific state as provided by state/VIN API
+    for vehicle_base in [vehicle for brand in vehicles.values() for vehicle in brand]:
+        vehicle_state_path = (
+            Path("vehicles")
+            / vehicle_base["attributes"]["bodyType"]
+            / f"state_{vehicle_base['vin']}_0.json"
+        )
+        vehicle_state = json.loads(
+            load_fixture(
+                vehicle_state_path,
+                integration=BMW_DOMAIN,
             )
         )
 
-    # Then, add vehicle specific state as provided by state/VIN API
-    for vehicle_dict in vehicles:
-        vehicle_dict.update(
-            json.loads(
-                load_fixture(
-                    f"{vehicle_dict['attributes']['bodyType']}/state_{vehicle_dict['vin']}_0.json",
-                    integration=BMW_DOMAIN,
-                )
-            )
+        account.add_vehicle(
+            vehicle_base,
+            vehicle_state,
+            fetched_at,
         )
-        # Add unit information
-        vehicle_dict["is_metric"] = account.config.use_metric_units
-        vehicle_dict["fetched_at"] = fetched_at
 
-        # If vehicle already exists, just update it's state
-        existing_vehicle = account.get_vehicle(vehicle_dict["vin"])
-        if existing_vehicle:
-            existing_vehicle.update_state(vehicle_dict)
-        else:
-            account.vehicles.append(MyBMWVehicle(account, vehicle_dict))
+        # simulate storing fingerprints
+        if account.config.log_response_path:
+            log_to_to_file(
+                json.dumps(vehicle_state),
+                account.config.log_response_path,
+                f"state_{vehicle_base['vin']}",
+            )
 
 
-async def setup_mock_component(hass: HomeAssistant) -> MockConfigEntry:
+async def setup_mocked_integration(hass: HomeAssistant) -> MockConfigEntry:
     """Mock a fully setup config entry and all components based on fixtures."""
 
     mock_config_entry = MockConfigEntry(**FIXTURE_CONFIG_ENTRY)
     mock_config_entry.add_to_hass(hass)
 
-    with patch(
-        "bimmer_connected.account.MyBMWAccount.get_vehicles",
-        side_effect=mock_get_vehicles_from_fixture,
-        autospec=True,
-    ):
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     return mock_config_entry
