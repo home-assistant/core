@@ -269,10 +269,9 @@ async def test_well_known_auth_info(hass, aiohttp_client):
     )
     assert resp.status == 200
     assert await resp.json() == {
-        "issuer": "http://127.0.0.1:8123",
-        "authorization_endpoint": "http://127.0.0.1:8123/auth/authorize",
-        "token_endpoint": "http://127.0.0.1:8123/token",
-        "revocation_endpoint": "http://127.0.0.1:8123/revoke",
+        "authorization_endpoint": "/auth/authorize",
+        "token_endpoint": "/auth/token",
+        "revocation_endpoint": "/auth/revoke",
         "response_types_supported": ["code"],
         "service_documentation": "https://developers.home-assistant.io/docs/auth_api",
     }

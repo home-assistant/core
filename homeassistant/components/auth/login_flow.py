@@ -90,7 +90,6 @@ from homeassistant.components.http.ban import (
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import network
 
 from . import indieauth
 
@@ -117,19 +116,11 @@ class WellKnownOAuthInfoView(HomeAssistantView):
 
     async def get(self, request: web.Request) -> web.Response:
         """Return the well known OAuth2 authorization info."""
-        hass: HomeAssistant = request.app["hass"]
-
-        try:
-            base_url = network.get_url(hass, require_current_request=True)
-        except network.NoURLAvailableError:
-            base_url = network.get_url(hass, prefer_external=True)
-
         return self.json(
             {
-                "issuer": base_url,
-                "authorization_endpoint": f"{base_url}/auth/authorize",
-                "token_endpoint": f"{base_url}/token",
-                "revocation_endpoint": f"{base_url}/revoke",
+                "authorization_endpoint": "/auth/authorize",
+                "token_endpoint": "/auth/token",
+                "revocation_endpoint": "/auth/revoke",
                 "response_types_supported": ["code"],
                 "service_documentation": "https://developers.home-assistant.io/docs/auth_api",
             }
