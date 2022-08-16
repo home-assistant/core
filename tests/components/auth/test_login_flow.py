@@ -82,6 +82,7 @@ async def test_invalid_username_password(hass, aiohttp_client):
             f"/auth/login_flow/{step['flow_id']}",
             json={
                 "client_id": CLIENT_ID,
+                "redirect_uri": CLIENT_REDIRECT_URI,
                 "username": "test-user",
                 "password": "wrong-pass",
             },
@@ -93,28 +94,6 @@ async def test_invalid_username_password(hass, aiohttp_client):
 
     assert step["step_id"] == "init"
     assert step["errors"]["base"] == "invalid_auth"
-
-    # Incorrect redirect URI
-    with patch(
-        "homeassistant.components.auth.indieauth.fetch_redirect_uris", return_value=[]
-    ), patch(
-        "homeassistant.components.auth.login_flow.process_wrong_login"
-    ) as mock_process_wrong_login:
-        resp = await client.post(
-            f"/auth/login_flow/{step['flow_id']}",
-            json={
-                "client_id": CLIENT_ID,
-                "redirect_uri": "http://some-other-domain.com",
-                "username": "test-user",
-                "password": "test-pass",
-            },
-        )
-
-    assert resp.status == HTTPStatus.FORBIDDEN
-    data = await resp.json()
-    assert len(mock_process_wrong_login.mock_calls) == 1
-
-    assert data["message"] == "Invalid redirect URI"
 
     # Incorrect username and invalid redirect URI fails on wrong login
     with patch(
@@ -136,6 +115,28 @@ async def test_invalid_username_password(hass, aiohttp_client):
 
     assert step["step_id"] == "init"
     assert step["errors"]["base"] == "invalid_auth"
+
+    # Incorrect redirect URI
+    with patch(
+        "homeassistant.components.auth.indieauth.fetch_redirect_uris", return_value=[]
+    ), patch(
+        "homeassistant.components.http.ban.process_wrong_login"
+    ) as mock_process_wrong_login:
+        resp = await client.post(
+            f"/auth/login_flow/{step['flow_id']}",
+            json={
+                "client_id": CLIENT_ID,
+                "redirect_uri": "http://some-other-domain.com",
+                "username": "test-user",
+                "password": "test-pass",
+            },
+        )
+
+    assert resp.status == HTTPStatus.FORBIDDEN
+    data = await resp.json()
+    assert len(mock_process_wrong_login.mock_calls) == 1
+
+    assert data["message"] == "Invalid redirect URI"
 
 
 async def test_login_exist_user(hass, aiohttp_client):
