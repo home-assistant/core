@@ -4,7 +4,11 @@ from unittest.mock import MagicMock
 from fullykiosk import FullyKioskError
 
 from homeassistant.components.fully_kiosk.const import DOMAIN, UPDATE_INTERVAL
-from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
+    SensorDeviceClass,
+    SensorStateClass,
+)
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
@@ -28,20 +32,21 @@ async def test_sensors_sensors(
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
 
-    state = hass.states.get("sensor.amazon_fire_battery_level")
+    state = hass.states.get("sensor.amazon_fire_battery")
     assert state
     assert state.state == "100"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.BATTERY
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Amazon Fire Battery Level"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Amazon Fire Battery"
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
-    entry = entity_registry.async_get("sensor.amazon_fire_battery_level")
+    entry = entity_registry.async_get("sensor.amazon_fire_battery")
     assert entry
     assert entry.unique_id == "abcdef-123456-batteryLevel"
 
     state = hass.states.get("sensor.amazon_fire_screen_orientation")
     assert state
     assert state.state == "90"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Amazon Fire Screen Orientation"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Amazon Fire Screen orientation"
 
     entry = entity_registry.async_get("sensor.amazon_fire_screen_orientation")
     assert entry
@@ -50,7 +55,7 @@ async def test_sensors_sensors(
     state = hass.states.get("sensor.amazon_fire_foreground_app")
     assert state
     assert state.state == "de.ozerov.fully"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Amazon Fire Foreground App"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Amazon Fire Foreground app"
 
     entry = entity_registry.async_get("sensor.amazon_fire_foreground_app")
     assert entry
@@ -60,22 +65,11 @@ async def test_sensors_sensors(
     assert state
     assert state.state == "https://homeassistant.local"
     assert state.attributes.get(ATTR_DEVICE_CLASS) is None
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Amazon Fire Current Page"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Amazon Fire Current page"
 
     entry = entity_registry.async_get("sensor.amazon_fire_current_page")
     assert entry
     assert entry.unique_id == "abcdef-123456-currentPage"
-
-    state = hass.states.get("sensor.amazon_fire_wifi_signal_level")
-    assert state
-    assert state.state == "7"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.SIGNAL_STRENGTH
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Amazon Fire WiFi Signal Level"
-
-    entry = entity_registry.async_get("sensor.amazon_fire_wifi_signal_level")
-    assert entry
-    assert entry.unique_id == "abcdef-123456-wifiSignalLevel"
-    assert entry.entity_category == EntityCategory.DIAGNOSTIC
 
     state = hass.states.get("sensor.amazon_fire_internal_storage_free_space")
     assert state
@@ -83,8 +77,9 @@ async def test_sensors_sensors(
     assert state.attributes.get(ATTR_DEVICE_CLASS) is None
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
-        == "Amazon Fire Internal Storage Free Space"
+        == "Amazon Fire Internal storage free space"
     )
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
     entry = entity_registry.async_get("sensor.amazon_fire_internal_storage_free_space")
     assert entry
@@ -97,32 +92,35 @@ async def test_sensors_sensors(
     assert state.attributes.get(ATTR_DEVICE_CLASS) is None
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
-        == "Amazon Fire Internal Storage Total Space"
+        == "Amazon Fire Internal storage total space"
     )
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
     entry = entity_registry.async_get("sensor.amazon_fire_internal_storage_total_space")
     assert entry
     assert entry.unique_id == "abcdef-123456-internalStorageTotalSpace"
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
 
-    state = hass.states.get("sensor.amazon_fire_ram_free_memory")
+    state = hass.states.get("sensor.amazon_fire_free_memory")
     assert state
     assert state.state == "362.4"
     assert state.attributes.get(ATTR_DEVICE_CLASS) is None
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Amazon Fire RAM Free Memory"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Amazon Fire Free memory"
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
-    entry = entity_registry.async_get("sensor.amazon_fire_ram_free_memory")
+    entry = entity_registry.async_get("sensor.amazon_fire_free_memory")
     assert entry
     assert entry.unique_id == "abcdef-123456-ramFreeMemory"
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
 
-    state = hass.states.get("sensor.amazon_fire_ram_total_memory")
+    state = hass.states.get("sensor.amazon_fire_total_memory")
     assert state
     assert state.state == "1440.1"
     assert state.attributes.get(ATTR_DEVICE_CLASS) is None
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Amazon Fire RAM Total Memory"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Amazon Fire Total memory"
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
-    entry = entity_registry.async_get("sensor.amazon_fire_ram_total_memory")
+    entry = entity_registry.async_get("sensor.amazon_fire_total_memory")
     assert entry
     assert entry.unique_id == "abcdef-123456-ramTotalMemory"
     assert entry.entity_category == EntityCategory.DIAGNOSTIC

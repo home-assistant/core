@@ -7,6 +7,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DATA_MEGABYTES, PERCENTAGE
@@ -21,45 +22,54 @@ from .entity import FullyKioskEntity
 SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="batteryLevel",
-        name="Battery Level",
+        name="Battery",
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    SensorEntityDescription(key="screenOrientation", name="Screen Orientation"),
+    SensorEntityDescription(
+        key="screenOrientation",
+        name="Screen orientation",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
     SensorEntityDescription(
         key="foregroundApp",
-        name="Foreground App",
-    ),
-    SensorEntityDescription(key="currentPage", name="Current Page"),
-    SensorEntityDescription(
-        key="wifiSignalLevel",
-        name="WiFi Signal Level",
+        name="Foreground app",
         entity_category=EntityCategory.DIAGNOSTIC,
-        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+    ),
+    SensorEntityDescription(
+        key="currentPage",
+        name="Current page",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="internalStorageFreeSpace",
-        name="Internal Storage Free Space",
+        name="Internal storage free space",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=DATA_MEGABYTES,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="internalStorageTotalSpace",
-        name="Internal Storage Total Space",
+        name="Internal storage total space",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=DATA_MEGABYTES,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="ramFreeMemory",
-        name="RAM Free Memory",
+        name="Free memory",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=DATA_MEGABYTES,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="ramTotalMemory",
-        name="RAM Total Memory",
+        name="Total memory",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=DATA_MEGABYTES,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 
@@ -97,7 +107,6 @@ class FullySensor(FullyKioskEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor entity."""
         self.entity_description = sensor
-        self.coordinator = coordinator
 
         self._attr_unique_id = f"{coordinator.data['deviceID']}-{sensor.key}"
 
