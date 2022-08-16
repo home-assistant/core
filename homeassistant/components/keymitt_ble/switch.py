@@ -19,6 +19,18 @@ class MicroBotBinarySwitch(MicroBotEntity, SwitchEntity):
     """MicroBot switch class."""
 
     _attr_name = DEFAULT_NAME
+    
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added."""
+        await super().async_added_to_hass()
+        if not self.coordinator.api.is_connected():
+            await self.coordinator.api.connect()
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Run when entity about to be removed."""
+        await super().async_will_remove_from_hass()
+        if self.coordinator.api.is_connected():
+            await self.coordinator.api.disconnect()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
