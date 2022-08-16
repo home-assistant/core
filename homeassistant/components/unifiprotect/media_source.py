@@ -528,7 +528,7 @@ class ProtectMediaSource(MediaSource):
             args["camera_id"] = camera_id
 
         events = await self._build_events(**args)  # type: ignore[arg-type]
-        source.children = events  # type: ignore[assignment]
+        source.children = events
         source.title = self._breadcrumb(
             data,
             title,
@@ -653,7 +653,7 @@ class ProtectMediaSource(MediaSource):
 
         title = f"{start.strftime('%B %Y')} > {title}"
         events = await self._build_events(**args)  # type: ignore[arg-type]
-        source.children = events  # type: ignore[assignment]
+        source.children = events
         source.title = self._breadcrumb(
             data,
             title,
