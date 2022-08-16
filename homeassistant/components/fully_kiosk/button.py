@@ -1,5 +1,6 @@
 """Fully Kiosk Browser button."""
 from __future__ import annotations
+
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -14,10 +15,17 @@ from .entity import FullyKioskEntity
 
 
 @dataclass
-class FullyButtonEntityDescription(ButtonEntityDescription):
-    """Fully Kiosk Browser button description."""
+class FullyButtonEntityDescriptionMixin:
+    """Mixin to describe a Fully Kiosk Browser button entity."""
 
-    press_action: Callable | None = None
+    press_action: Callable
+
+
+@dataclass
+class FullyButtonEntityDescription(
+    ButtonEntityDescription, FullyButtonEntityDescriptionMixin
+):
+    """Fully Kiosk Browser button description."""
 
 
 BUTTONS: tuple[FullyButtonEntityDescription, ...] = (
@@ -66,6 +74,8 @@ async def async_setup_entry(
 
 class FullyButtonEntity(FullyKioskEntity, ButtonEntity):
     """Representation of a Fully Kiosk Browser button."""
+
+    entity_description: FullyButtonEntityDescription
 
     def __init__(
         self,
