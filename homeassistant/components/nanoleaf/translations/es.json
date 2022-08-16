@@ -15,7 +15,7 @@
         "flow_title": "{name}",
         "step": {
             "link": {
-                "description": "Mant\u00e9n presionado el bot\u00f3n de encendido de tu Nanoleaf durante 5 segundos hasta que los LED del bot\u00f3n comiencen a parpadear, luego haz clic en **ENVIAR** en los siguientes 30 segundos.",
+                "description": "Mant\u00e9n pulsado el bot\u00f3n de encendido de tu Nanoleaf durante 5 segundos hasta que los LED del bot\u00f3n comiencen a parpadear, luego haz clic en **ENVIAR** en los siguientes 30 segundos.",
                 "title": "Vincular Nanoleaf"
             },
             "user": {

@@ -85,7 +85,7 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator):
 
     def initialize(self) -> None:
         """Initialize speedtest api."""
-        self.api = speedtest.Speedtest()
+        self.api = speedtest.Speedtest(secure=True)
         self.update_servers()
 
     def update_servers(self):

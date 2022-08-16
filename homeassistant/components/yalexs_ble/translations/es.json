@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "El dispositivo ya est\u00e1 configurado",
+            "already_in_progress": "El flujo de configuraci\u00f3n ya est\u00e1 en curso",
             "no_devices_found": "No se encontraron dispositivos en la red",
             "no_unconfigured_devices": "No se encontraron dispositivos no configurados."
         },
@@ -23,7 +24,7 @@
                     "key": "Clave sin conexi\u00f3n (cadena hexadecimal de 32 bytes)",
                     "slot": "Ranura de clave sin conexi\u00f3n (entero entre 0 y 255)"
                 },
-                "description": "Consulta la documentaci\u00f3n en {docs_url} para saber c\u00f3mo encontrar la clave sin conexi\u00f3n."
+                "description": "Revisa la documentaci\u00f3n para saber c\u00f3mo encontrar la clave sin conexi\u00f3n."
             }
         }
     }

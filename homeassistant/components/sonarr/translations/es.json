@@ -12,8 +12,8 @@
         "flow_title": "{name}",
         "step": {
             "reauth_confirm": {
-                "description": "La integraci\u00f3n de Sonarr debe volver a autenticarse manualmente con la API de Sonarr alojada en: {url}",
-                "title": "Reautenticaci\u00f3n de la integraci\u00f3n"
+                "description": "La integraci\u00f3n Sonarr debe volver a autenticarse manualmente con la API de Sonarr alojada en: {url}",
+                "title": "Volver a autenticar la integraci\u00f3n"
             },
             "user": {
                 "data": {

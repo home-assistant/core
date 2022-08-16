@@ -19,7 +19,7 @@
             },
             "user": {
                 "data": {
-                    "api_version": "Versi\u00f3n del API",
+                    "api_version": "Versi\u00f3n de la API",
                     "host": "Host"
                 }
             }
@@ -27,7 +27,7 @@
     },
     "device_automation": {
         "trigger_type": {
-            "turn_on": "Se solicita al dispositivo que se encienda"
+            "turn_on": "Se solicita que el dispositivo se encienda"
         }
     },
     "options": {

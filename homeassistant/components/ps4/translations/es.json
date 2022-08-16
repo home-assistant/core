@@ -9,13 +9,13 @@
         },
         "error": {
             "cannot_connect": "No se pudo conectar",
-            "credential_timeout": "Se agot\u00f3 el tiempo de espera del servicio de credenciales. Presiona enviar para reiniciar.",
+            "credential_timeout": "Se agot\u00f3 el tiempo de espera del servicio de credenciales. Pulsa enviar para reiniciar.",
             "login_failed": "No se pudo emparejar con PlayStation 4. Verifica que el C\u00f3digo PIN sea correcto.",
             "no_ipaddress": "Introduce la Direcci\u00f3n IP de la PlayStation 4 que deseas configurar."
         },
         "step": {
             "creds": {
-                "description": "Credenciales necesarias. Presiona 'Enviar' y luego en la aplicaci\u00f3n PS4 Second Screen, actualiza los dispositivos y selecciona el dispositivo 'Home-Assistant' para continuar."
+                "description": "Credenciales necesarias. Pulsa 'Enviar' y luego en la aplicaci\u00f3n PS4 Second Screen, actualiza los dispositivos y selecciona el dispositivo 'Home-Assistant' para continuar."
             },
             "link": {
                 "data": {
