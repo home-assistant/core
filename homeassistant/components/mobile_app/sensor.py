@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor import RestoreSensor, SensorDeviceClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_WEBHOOK_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, callback
@@ -73,8 +73,19 @@ async def async_setup_entry(
     )
 
 
-class MobileAppSensor(MobileAppEntity, SensorEntity):
+class MobileAppSensor(MobileAppEntity, RestoreSensor):
     """Representation of an mobile app sensor."""
+
+    async def async_restore_last_state(self, last_state):
+        """Restore previous state."""
+
+        await super().async_restore_last_state(last_state)
+
+        if not (last_sensor_data := await self.async_get_last_sensor_data()):
+            self._config[ATTR_SENSOR_STATE] = None
+            return None
+
+        self._config[ATTR_SENSOR_STATE] = last_sensor_data.native_value
 
     @property
     def native_value(self):
