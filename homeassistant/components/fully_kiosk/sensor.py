@@ -1,6 +1,8 @@
 """Fully Kiosk Browser sensor."""
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
 from typing import Any
 
 from homeassistant.components.sensor import (
@@ -19,8 +21,21 @@ from .const import DOMAIN
 from .coordinator import FullyKioskDataUpdateCoordinator
 from .entity import FullyKioskEntity
 
-SENSORS: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
+
+def round_storage(value: int) -> float:
+    """Convert storage values from bytes to megabytes."""
+    return round(value * 0.000001, 1)
+
+
+@dataclass
+class FullySensorEntityDescription(SensorEntityDescription):
+    """Fully Kiosk Browser sensor description."""
+
+    state_fn: Callable | None = None
+
+
+SENSORS: tuple[FullySensorEntityDescription, ...] = (
+    FullySensorEntityDescription(
         key="batteryLevel",
         name="Battery",
         device_class=SensorDeviceClass.BATTERY,
@@ -28,57 +43,54 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    SensorEntityDescription(
+    FullySensorEntityDescription(
         key="screenOrientation",
         name="Screen orientation",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    SensorEntityDescription(
+    FullySensorEntityDescription(
         key="foregroundApp",
         name="Foreground app",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    SensorEntityDescription(
+    FullySensorEntityDescription(
         key="currentPage",
         name="Current page",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    SensorEntityDescription(
+    FullySensorEntityDescription(
         key="internalStorageFreeSpace",
         name="Internal storage free space",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=DATA_MEGABYTES,
         state_class=SensorStateClass.MEASUREMENT,
+        state_fn=round_storage,
     ),
-    SensorEntityDescription(
+    FullySensorEntityDescription(
         key="internalStorageTotalSpace",
         name="Internal storage total space",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=DATA_MEGABYTES,
         state_class=SensorStateClass.MEASUREMENT,
+        state_fn=round_storage,
     ),
-    SensorEntityDescription(
+    FullySensorEntityDescription(
         key="ramFreeMemory",
         name="Free memory",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=DATA_MEGABYTES,
         state_class=SensorStateClass.MEASUREMENT,
+        state_fn=round_storage,
     ),
-    SensorEntityDescription(
+    FullySensorEntityDescription(
         key="ramTotalMemory",
         name="Total memory",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=DATA_MEGABYTES,
         state_class=SensorStateClass.MEASUREMENT,
+        state_fn=round_storage,
     ),
 )
-
-STORAGE_SENSORS = [
-    "internalStorageFreeSpace",
-    "internalStorageTotalSpace",
-    "ramFreeMemory",
-    "ramTotalMemory",
-]
 
 
 async def async_setup_entry(
@@ -100,10 +112,12 @@ async def async_setup_entry(
 class FullySensor(FullyKioskEntity, SensorEntity):
     """Representation of a Fully Kiosk Browser sensor."""
 
+    entity_description: FullySensorEntityDescription
+
     def __init__(
         self,
         coordinator: FullyKioskDataUpdateCoordinator,
-        sensor: SensorEntityDescription,
+        sensor: FullySensorEntityDescription,
     ) -> None:
         """Initialize the sensor entity."""
         self.entity_description = sensor
@@ -118,7 +132,7 @@ class FullySensor(FullyKioskEntity, SensorEntity):
         if (value := self.coordinator.data.get(self.entity_description.key)) is None:
             return None
 
-        if self.entity_description.key in STORAGE_SENSORS:
-            return round(value * 0.000001, 1)
+        if self.entity_description.state_fn is not None:
+            return self.entity_description.state_fn(value)
 
         return value
