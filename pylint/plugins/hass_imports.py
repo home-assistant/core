@@ -108,6 +108,18 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
             constant=re.compile(r"^SUPPORT_(\w*)$"),
         ),
     ],
+    "homeassistant.components.device_tracker": [
+        ObsoleteImportMatch(
+            reason="replaced by SourceType enum",
+            constant=re.compile(r"^SOURCE_TYPE_\w+$")
+        ),
+    ],
+    "homeassistant.components.device_tracker.const": [
+        ObsoleteImportMatch(
+            reason="replaced by SourceType enum",
+            constant=re.compile(r"^SOURCE_TYPE_\w+$")
+        ),
+    ],
     "homeassistant.components.fan": [
         ObsoleteImportMatch(
             reason="replaced by FanEntityFeature enum",
