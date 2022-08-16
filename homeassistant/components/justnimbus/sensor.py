@@ -7,6 +7,7 @@ from typing import Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
+    SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
@@ -168,9 +169,7 @@ async def async_setup_entry(
     )
 
 
-class JustNimbusSensor(
-    JustNimbusEntity,
-):
+class JustNimbusSensor(JustNimbusEntity, SensorEntity):
     """Implementation of the JustNimbus sensor."""
 
     def __init__(
