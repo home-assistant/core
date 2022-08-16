@@ -292,7 +292,6 @@ async def test_create_local_entry_from_discovery(hass: HomeAssistant, local_devi
             {"device": LOCAL_CONFIG[CONF_HOST]},
         )
 
-    print(result)
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == "Awair Element (24947)"
     assert result["data"][CONF_HOST] == LOCAL_CONFIG[CONF_HOST]
