@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El dispositivo ya est\u00e1 configurado.",
+            "already_configured": "El dispositivo ya est\u00e1 configurado",
             "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente"
         },
         "error": {
@@ -25,7 +25,7 @@
                     "port": "Puerto",
                     "username": "Nombre de usuario"
                 },
-                "title": "Configuraci\u00f3n del cliente de transmisi\u00f3n"
+                "title": "Configuraci\u00f3n del cliente Transmission"
             }
         }
     },
@@ -34,10 +34,10 @@
             "init": {
                 "data": {
                     "limit": "L\u00edmite",
-                    "order": "Pedido",
+                    "order": "Ordenar",
                     "scan_interval": "Frecuencia de actualizaci\u00f3n"
                 },
-                "title": "Configurar opciones para la transmisi\u00f3n"
+                "title": "Configurar opciones para Transmission"
             }
         }
     }

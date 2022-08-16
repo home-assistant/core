@@ -13,6 +13,7 @@ from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import discovery_flow
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_discover, async_load_platform
 from homeassistant.helpers.event import async_track_point_in_utc_time
@@ -173,7 +174,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         already_discovered.add(discovery_hash)
 
         if service in CONFIG_ENTRY_HANDLERS:
-            await hass.config_entries.flow.async_init(
+            discovery_flow.async_create_flow(
+                hass,
                 CONFIG_ENTRY_HANDLERS[service],
                 context={"source": config_entries.SOURCE_DISCOVERY},
                 data=info,

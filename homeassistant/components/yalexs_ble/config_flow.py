@@ -16,7 +16,7 @@ from yalexs_ble import (
 )
 from yalexs_ble.const import YALE_MFR_ID
 
-from homeassistant import config_entries
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
@@ -25,7 +25,6 @@ from homeassistant.const import CONF_ADDRESS
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import DiscoveryInfoType
-from homeassistant.loader import async_get_integration
 
 from .const import CONF_KEY, CONF_LOCAL_NAME, CONF_SLOT, DOMAIN
 from .util import async_get_service_info, human_readable_name
@@ -85,39 +84,52 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             discovery_info["key"],
             discovery_info["slot"],
         )
+
+        address = lock_cfg.address
+        local_name = lock_cfg.local_name
+        hass = self.hass
+
         # We do not want to raise on progress as integration_discovery takes
         # precedence over other discovery flows since we already have the keys.
-        await self.async_set_unique_id(lock_cfg.address, raise_on_progress=False)
+        #
+        # After we do discovery we will abort the flows that do not have the keys
+        # below unless the user is already setting them up.
+        await self.async_set_unique_id(address, raise_on_progress=False)
         new_data = {CONF_KEY: lock_cfg.key, CONF_SLOT: lock_cfg.slot}
         self._abort_if_unique_id_configured(updates=new_data)
         for entry in self._async_current_entries():
             if entry.data.get(CONF_LOCAL_NAME) == lock_cfg.local_name:
-                if self.hass.config_entries.async_update_entry(
+                if hass.config_entries.async_update_entry(
                     entry, data={**entry.data, **new_data}
                 ):
-                    self.hass.async_create_task(
-                        self.hass.config_entries.async_reload(entry.entry_id)
+                    hass.async_create_task(
+                        hass.config_entries.async_reload(entry.entry_id)
                     )
                 raise AbortFlow(reason="already_configured")
 
         try:
             self._discovery_info = await async_get_service_info(
-                self.hass, lock_cfg.local_name, lock_cfg.address
+                hass, local_name, address
             )
         except asyncio.TimeoutError:
             return self.async_abort(reason="no_devices_found")
 
+        # Integration discovery should abort other flows unless they
+        # are already in the process of being set up since this discovery
+        # will already have all the keys and the user can simply confirm.
         for progress in self._async_in_progress(include_uninitialized=True):
-            # Integration discovery should abort other discovery types
-            # since it already has the keys and slots, and the other
-            # discovery types do not.
             context = progress["context"]
             if (
-                not context.get("active")
-                and context.get("local_name") == lock_cfg.local_name
-                or context.get("unique_id") == lock_cfg.address
-            ):
-                self.hass.config_entries.flow.async_abort(progress["flow_id"])
+                local_name_is_unique(local_name)
+                and context.get("local_name") == local_name
+            ) or context.get("unique_id") == address:
+                if context.get("active"):
+                    # The user has already started interacting with this flow
+                    # and entered the keys. We abort the discovery flow since
+                    # we assume they do not want to use the discovered keys for
+                    # some reason.
+                    raise data_entry_flow.AbortFlow("already_in_progress")
+                hass.config_entries.flow.async_abort(progress["flow_id"])
 
         self._lock_cfg = lock_cfg
         self.context["title_placeholders"] = {
@@ -228,12 +240,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_SLOT): int,
             }
         )
-        integration = await async_get_integration(self.hass, DOMAIN)
         return self.async_show_form(
             step_id="user",
             data_schema=data_schema,
             errors=errors,
-            description_placeholders={"docs_url": integration.documentation},
         )
 
 

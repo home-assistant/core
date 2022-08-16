@@ -9,11 +9,11 @@
                 "data": {
                     "access_id": "ID de acceso a Tuya IoT",
                     "access_secret": "Secreto de acceso a Tuya IoT",
-                    "country_code": "C\u00f3digo de pais de tu cuenta (por ejemplo, 1 para USA o 86 para China)",
+                    "country_code": "Pa\u00eds",
                     "password": "Contrase\u00f1a",
-                    "username": "Nombre de usuario"
+                    "username": "Cuenta"
                 },
-                "description": "Introduce tus credencial de Tuya"
+                "description": "Introduce tus credenciales Tuya"
             }
         }
     }

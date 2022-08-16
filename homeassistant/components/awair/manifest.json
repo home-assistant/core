@@ -12,5 +12,10 @@
       "type": "_http._tcp.local.",
       "name": "awair*"
     }
+  ],
+  "dhcp": [
+    {
+      "macaddress": "70886B1*"
+    }
   ]
 }

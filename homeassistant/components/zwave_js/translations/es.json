@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "addon_get_discovery_info_failed": "Fallo en la obtenci\u00f3n de la informaci\u00f3n de descubrimiento del complemento Z-Wave JS.",
+            "addon_get_discovery_info_failed": "No se pudo obtener la informaci\u00f3n de descubrimiento del complemento Z-Wave JS.",
             "addon_info_failed": "No se pudo obtener la informaci\u00f3n del complemento Z-Wave JS.",
-            "addon_install_failed": "No se ha podido instalar el complemento Z-Wave JS.",
-            "addon_set_config_failed": "Fallo en la configuraci\u00f3n de Z-Wave JS.",
+            "addon_install_failed": "No se pudo instalar el complemento Z-Wave JS.",
+            "addon_set_config_failed": "No se pudo establecer la configuraci\u00f3n de Z-Wave JS.",
             "addon_start_failed": "No se pudo iniciar el complemento Z-Wave JS.",
             "already_configured": "El dispositivo ya est\u00e1 configurado",
             "already_in_progress": "El flujo de configuraci\u00f3n ya est\u00e1 en curso",
@@ -20,7 +20,7 @@
         },
         "flow_title": "{name}",
         "progress": {
-            "install_addon": "Espera mientras termina la instalaci\u00f3n del complemento Z-Wave JS. Puede tardar varios minutos.",
+            "install_addon": "Por favor, espera mientras finaliza la instalaci\u00f3n del complemento Z-Wave JS. Esto puede tardar varios minutos.",
             "start_addon": "Por favor, espera mientras se completa el inicio del complemento Z-Wave JS. Esto puede tardar unos segundos."
         },
         "step": {
@@ -33,7 +33,7 @@
                     "usb_path": "Ruta del dispositivo USB"
                 },
                 "description": "El complemento generar\u00e1 claves de seguridad si esos campos se dejan vac\u00edos.",
-                "title": "Introduzca la configuraci\u00f3n del complemento Z-Wave JS"
+                "title": "Introduce la configuraci\u00f3n del complemento Z-Wave JS"
             },
             "hassio_confirm": {
                 "title": "Configurar la integraci\u00f3n de Z-Wave JS con el complemento Z-Wave JS"
@@ -48,9 +48,9 @@
             },
             "on_supervisor": {
                 "data": {
-                    "use_addon": "Usar el complemento Z-Wave JS Supervisor"
+                    "use_addon": "Utilizar el complemento del Supervisor Z-Wave JS"
                 },
-                "description": "\u00bfQuieres utilizar el complemento Z-Wave JS Supervisor?",
+                "description": "\u00bfQuieres usar el complemento del Supervisor Z-Wave JS?",
                 "title": "Selecciona el m\u00e9todo de conexi\u00f3n"
             },
             "start_addon": {
@@ -135,9 +135,9 @@
             },
             "on_supervisor": {
                 "data": {
-                    "use_addon": "Usar el complemento Supervisor Z-Wave JS"
+                    "use_addon": "Utilizar el complemento del Supervisor Z-Wave JS"
                 },
-                "description": "\u00bfQuieres utilizar el complemento Supervisor Z-Wave JS ?",
+                "description": "\u00bfQuieres usar el complemento del Supervisor Z-Wave JS?",
                 "title": "Selecciona el m\u00e9todo de conexi\u00f3n"
             },
             "start_addon": {

@@ -12,6 +12,7 @@ from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY, ConfigEnt
 from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import discovery_flow
 
 from .const import CONF_KEY, CONF_LOCAL_NAME, CONF_SLOT, DEVICE_TIMEOUT, DOMAIN
 from .models import YaleXSBLEData
@@ -33,12 +34,11 @@ class YaleXSBLEDiscovery(TypedDict):
 @callback
 def async_discovery(hass: HomeAssistant, discovery: YaleXSBLEDiscovery) -> None:
     """Update keys for the yalexs-ble integration if available."""
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            "yalexs_ble",
-            context={"source": SOURCE_INTEGRATION_DISCOVERY},
-            data=discovery,
-        )
+    discovery_flow.async_create_flow(
+        hass,
+        DOMAIN,
+        context={"source": SOURCE_INTEGRATION_DISCOVERY},
+        data=discovery,
     )
 
 

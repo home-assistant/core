@@ -28,13 +28,13 @@
                 "data": {
                     "forecast": "Pron\u00f3stico del tiempo"
                 },
-                "description": "Debido a las limitaciones de la versi\u00f3n gratuita de la clave API de AccuWeather, cuando habilitas el pron\u00f3stico del tiempo, las actualizaciones de datos se realizar\u00e1n cada 64 minutos en lugar de cada 32 minutos."
+                "description": "Debido a las limitaciones de la versi\u00f3n gratuita de la clave API de AccuWeather, cuando habilitas el pron\u00f3stico del tiempo, las actualizaciones de datos se realizar\u00e1n cada 80 minutos en lugar de cada 40 minutos."
             }
         }
     },
     "system_health": {
         "info": {
-            "can_reach_server": "Alcanzar el servidor AccuWeather",
+            "can_reach_server": "Se puede llegar al servidor AccuWeather",
             "remaining_requests": "Solicitudes permitidas restantes"
         }
     }

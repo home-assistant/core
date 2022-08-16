@@ -94,7 +94,9 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_confirm(self, user_input: dict[str, Any] = None) -> FlowResult:
+    async def async_step_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Confirm a single device."""
         assert self._discovered_adv is not None
         if user_input is not None:

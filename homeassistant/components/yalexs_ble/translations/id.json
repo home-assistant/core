@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Perangkat sudah dikonfigurasi",
+            "already_in_progress": "Alur konfigurasi sedang berlangsung",
             "no_devices_found": "Tidak ada perangkat yang ditemukan di jaringan",
             "no_unconfigured_devices": "Tidak ditemukan perangkat yang tidak dikonfigurasi."
         },
@@ -23,7 +24,7 @@
                     "key": "Kunci Offline (string heksadesimal 32 byte)",
                     "slot": "Slot Kunci Offline (Bilangan Bulat antara 0 dan 255)"
                 },
-                "description": "Lihat dokumentasi di {docs_url} untuk mengetahui cara menemukan kunci offline."
+                "description": "Lihat dokumentasi untuk mengetahui cara menemukan kunci offline."
             }
         }
     }
