@@ -13,6 +13,10 @@ SERVER_URLS = [
     "http://server.smten.com/",
 ]
 
+DEPRECATED_URLS = [
+    "https://server.growatt.com/",
+]
+
 DEFAULT_URL = SERVER_URLS[0]
 
 DOMAIN = "growatt_server"
