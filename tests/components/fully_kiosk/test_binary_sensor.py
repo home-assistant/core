@@ -1,5 +1,6 @@
 """Test the Fully Kiosk Browser binary sensors."""
-from asynctest import MagicMock
+from unittest.mock import MagicMock
+
 from fullykiosk import FullyKioskError
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
