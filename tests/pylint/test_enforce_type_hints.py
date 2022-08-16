@@ -77,6 +77,7 @@ def test_regex_x_of_y_i(
         ("DiscoveryInfoType | None", "DiscoveryInfoType", "None"),
         ("dict | list | None", "dict | list", "None"),
         ("dict[str, Any] | list[Any] | None", "dict[str, Any] | list[Any]", "None"),
+        ("dict[str, Any] | list[Any]", "dict[str, Any]", "list[Any]"),
     ],
 )
 def test_regex_a_or_b(

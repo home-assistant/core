@@ -55,12 +55,12 @@ class ClassTypeHintMatch:
     matches: list[TypeHintMatch]
 
 
+_INNER_MATCH = r"((?:[\w\| ]+)|(?:\.{3})|(?:\w+\[.+\]))"
 _TYPE_HINT_MATCHERS: dict[str, re.Pattern[str]] = {
     # a_or_b matches items such as "DiscoveryInfoType | None"
     # or "dict | list | None"
-    "a_or_b": re.compile(r"^([\w\| ]+) \| (\w+)$"),
+    "a_or_b": re.compile(rf"^(.+) \| {_INNER_MATCH}$"),
 }
-_INNER_MATCH = r"((?:[\w\| ]+)|(?:\.{3})|(?:\w+\[.+\]))"
 _INNER_MATCH_POSSIBILITIES = [i + 1 for i in range(5)]
 _TYPE_HINT_MATCHERS.update(
     {
