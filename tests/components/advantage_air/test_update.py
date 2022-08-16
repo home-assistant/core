@@ -18,8 +18,6 @@ async def test_update_platform(hass, aioclient_mock):
 
     registry = er.async_get(hass)
 
-    # assert len(aioclient_mock.mock_calls) == 1
-
     entity_id = "update.testname_app"
     state = hass.states.get(entity_id)
     assert state
