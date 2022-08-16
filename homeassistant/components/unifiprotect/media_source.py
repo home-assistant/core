@@ -344,11 +344,11 @@ class ProtectMediaSource(MediaSource):
 
         return await self._build_event(data, event, thumbnail_only)
 
-    async def get_registry(self) -> er.EntityRegistry:
+    @callback
+    def async_get_registry(self) -> er.EntityRegistry:
         """Get or return Entity Registry."""
-
         if self._registry is None:
-            self._registry = await er.async_get_registry(self.hass)
+            self._registry = er.async_get(self.hass)
         return self._registry
 
     def _breadcrumb(
@@ -473,9 +473,8 @@ class ProtectMediaSource(MediaSource):
                 continue
 
             # smart detect events have a paired motion event
-            if (
-                event.get("type") == EventType.MOTION.value
-                and len(event.get("smartDetectEvents", [])) > 0
+            if event.get("type") == EventType.MOTION.value and event.get(
+                "smartDetectEvents"
             ):
                 continue
 
@@ -717,7 +716,7 @@ class ProtectMediaSource(MediaSource):
             return None
 
         entity_id: str | None = None
-        entity_registry = await self.get_registry()
+        entity_registry = self.async_get_registry()
         for channel in camera.channels:
             # do not use the package camera
             if channel.id == 3:
