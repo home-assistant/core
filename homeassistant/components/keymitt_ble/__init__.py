@@ -19,7 +19,7 @@ from homeassistant.components.bluetooth.passive_update_coordinator import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_ADDRESS
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_ADDRESS, Platform
 
 from .const import DOMAIN
 
