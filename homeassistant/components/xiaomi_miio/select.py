@@ -248,7 +248,7 @@ class XiaomiGenericSelector(XiaomiSelector):
             self.async_write_ha_state()
 
     @property
-    def current_option(self):
+    def current_option(self) -> str | None:
         """Return the current option."""
         option = self._reverse_map.get(self._current_attr)
         if option is not None:
