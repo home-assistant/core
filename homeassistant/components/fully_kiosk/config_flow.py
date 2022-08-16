@@ -37,7 +37,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
             try:
-                with timeout(15):
+                async with timeout(15):
                     device_info = await fully.getDeviceInfo()
             except (ClientConnectorError, FullyKioskError, asyncio.TimeoutError):
                 errors["base"] = "cannot_connect"

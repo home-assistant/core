@@ -36,7 +36,7 @@ class FullyKioskDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
         try:
-            with timeout(15):
+            async with timeout(15):
                 # Get device info and settings in parallel
                 result = await asyncio.gather(
                     self.fully.getDeviceInfo(), self.fully.getSettings()
