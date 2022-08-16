@@ -8,22 +8,22 @@ from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationSer
 from homeassistant.const import CONF_NAME, CONF_RECIPIENT, CONF_TARGET
 import homeassistant.helpers.config_validation as cv
 
-from .const import DOMAIN, GATEWAY, SMS_GATEWAY
+from .const import CONF_UNICODE, DOMAIN, GATEWAY, SMS_GATEWAY
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Optional(CONF_RECIPIENT): cv.string, vol.Optional(CONF_NAME): cv.string}
+    {vol.Required(CONF_RECIPIENT): cv.string, vol.Optional(CONF_NAME): cv.string}
 )
 
 
-async def async_get_service(hass, config, discovery_info=None):
+def get_service(hass, config, discovery_info=None):
     """Get the SMS notification service."""
 
     if discovery_info is None:
-        number = config.get(CONF_RECIPIENT, None)
+        number = config[CONF_RECIPIENT]
     else:
-        number = discovery_info.get(CONF_RECIPIENT, None)
+        number = discovery_info[CONF_RECIPIENT]
 
     return SMSNotificationService(hass, number)
 
@@ -31,7 +31,7 @@ async def async_get_service(hass, config, discovery_info=None):
 class SMSNotificationService(BaseNotificationService):
     """Implement the notification service for SMS."""
 
-    def __init__(self, hass, number=None):
+    def __init__(self, hass, number):
         """Initialize the service."""
 
         self.hass = hass
@@ -47,13 +47,10 @@ class SMSNotificationService(BaseNotificationService):
         gateway = self.hass.data[DOMAIN][SMS_GATEWAY][GATEWAY]
 
         targets = kwargs.get(CONF_TARGET, [self.number])
-        if targets == [None]:
-            _LOGGER.error("No target number specified, cannot send message")
-            return
-
+        is_unicode = kwargs.get(CONF_UNICODE, True)
         smsinfo = {
             "Class": -1,
-            "Unicode": True,
+            "Unicode": is_unicode,
             "Entries": [{"ID": "ConcatenatedTextLong", "Buffer": message}],
         }
         try:

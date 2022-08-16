@@ -7,13 +7,13 @@ from homeassistant.helpers.entity import EntityCategory
 
 DOMAIN = "sms"
 SMS_GATEWAY = "SMS_GATEWAY"
-SMS_CONFIG = "SMS_CONFIG"
 SMS_STATE_UNREAD = "UnRead"
 SIGNAL_COORDINATOR = "signal_coordinator"
 NETWORK_COORDINATOR = "network_coordinator"
 GATEWAY = "gateway"
 DEFAULT_SCAN_INTERVAL = 30
 CONF_BAUD_SPEED = "baud_speed"
+CONF_UNICODE = "unicode"
 DEFAULT_BAUD_SPEED = "0"
 DEFAULT_BAUD_SPEEDS = [
     {"value": DEFAULT_BAUD_SPEED, "label": "Auto"},

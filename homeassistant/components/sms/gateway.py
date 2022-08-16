@@ -167,13 +167,8 @@ async def create_sms_gateway(config, hass):
     """Create the sms gateway."""
     try:
         gateway = Gateway(config, hass)
-        try:
-            await gateway.init_async()
-        except gammu.GSMError as exc:
-            _LOGGER.error("Failed to initialize, error %s", exc)
-            await gateway.terminate_async()
-            return None
+        await gateway.init_async()
         return gateway
     except gammu.GSMError as exc:
-        _LOGGER.error("Failed to create async worker, error %s", exc)
+        _LOGGER.error("Failed to initialize, error %s", exc)
         return None
