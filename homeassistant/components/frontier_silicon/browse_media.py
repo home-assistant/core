@@ -136,10 +136,8 @@ async def browse_node(
                 async for key, item in await afsapi.nav_list()
             ]
     except OutOfRangeException as err:
-        _LOGGER.exception(err)
         raise BrowseError("The requested item is out of range") from err
     except FSApiException as err:
-        _LOGGER.exception(err)
         raise BrowseError(str(err)) from err
 
     return BrowseMedia(

@@ -31,7 +31,14 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .browse_media import browse_node, browse_top_level
-from .const import DEFAULT_PIN, DEFAULT_PORT, DOMAIN, MEDIA_TYPE_PRESET
+from .const import (
+    DEFAULT_PIN,
+    DEFAULT_PORT,
+    DOMAIN,
+    MEDIA_TYPE_LIBRARY,
+    MEDIA_TYPE_PRESET,
+    SUPPORTED_MEDIA_TYPES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -279,20 +286,18 @@ class AFSAPIDevice(MediaPlayerEntity):
 
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
         """Browse media library and preset stations."""
-        if media_content_type in (None, "library"):
+        if media_content_type in (None, MEDIA_TYPE_LIBRARY):
             return await browse_top_level(self._attr_source, self.fs_device)
 
         return await browse_node(self.fs_device, media_content_type, media_content_id)
 
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Play selected media or channel."""
-        supported_media_types = [MEDIA_TYPE_CHANNEL, MEDIA_TYPE_PRESET]
-
-        if media_type not in supported_media_types:
+        if media_type not in SUPPORTED_MEDIA_TYPES:
             _LOGGER.error(
                 "Got %s, but frontier_silicon only supports playing media types: %s",
                 media_type,
-                supported_media_types,
+                SUPPORTED_MEDIA_TYPES,
             )
             return
 
@@ -306,7 +311,7 @@ class AFSAPIDevice(MediaPlayerEntity):
                 raise BrowseError("Presets can only have 1 level")
 
             # Keys of presets are 0-based, while the list shown on the device starts from 1
-            preset = int(keys[-1]) - 1
+            preset = int(keys[1]) - 1
 
             result = await self.fs_device.select_preset(preset)
         else:
