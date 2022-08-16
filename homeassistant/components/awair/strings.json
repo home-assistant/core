@@ -48,5 +48,11 @@
       "unreachable": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "flow_title": "{model} ({device_id})"
+  },
+  "issues": {
+    "prefer_local": {
+      "title": "Awair Local integration available",
+      "description": "Awair is currently configured to use the Cloud API. This is only recommended when the device is not connected to the same network as Home Assistant, or if you have a legacy device. Consider enabling the Local API on your device, deleting this integration, and reconfiguring the integration locally."
+    }
   }
 }

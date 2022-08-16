@@ -7,6 +7,7 @@
   "config_flow": true,
   "iot_class": "local_polling",
   "loggers": ["python_awair"],
+  "dependencies": ["repairs"],
   "zeroconf": [
     {
       "type": "_http._tcp.local.",

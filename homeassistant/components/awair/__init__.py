@@ -10,6 +10,7 @@ from python_awair import Awair, AwairLocal
 from python_awair.devices import AwairBaseDevice, AwairLocalDevice
 from python_awair.exceptions import AuthError, AwairError
 
+from homeassistant.components.repairs import IssueSeverity, async_create_issue
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
@@ -31,6 +32,17 @@ PLATFORMS = [Platform.SENSOR]
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up Awair integration from a config entry."""
+
+    if CONF_ACCESS_TOKEN in config_entry.data:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "prefer_local",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="prefer_local",
+        )
+
     session = async_get_clientsession(hass)
 
     coordinator: AwairDataUpdateCoordinator
