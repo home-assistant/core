@@ -22,7 +22,7 @@
             "fix_flow": {
                 "step": {
                     "confirm": {
-                        "description": "La fuente de datos externa que alimenta la integraci\u00f3n Flu Near You ya no est\u00e1 disponible; por lo tanto, la integraci\u00f3n ya no funciona. \n\nPulsar ENVIAR para eliminar Flu Near You de tu instancia Home Assistant.",
+                        "description": "La fuente de datos externa que alimenta la integraci\u00f3n Flu Near You ya no est\u00e1 disponible; por lo tanto, la integraci\u00f3n ya no funciona. \n\nPulsa ENVIAR para eliminar Flu Near You de tu instancia Home Assistant.",
                         "title": "Eliminar Flu Near You"
                     }
                 }

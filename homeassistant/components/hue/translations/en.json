@@ -44,14 +44,14 @@
             "button_2": "Second button",
             "button_3": "Third button",
             "button_4": "Fourth button",
+            "clock_wise": "Rotation clockwise",
+            "counter_clock_wise": "Rotation counter-clockwise",
             "dim_down": "Dim down",
             "dim_up": "Dim up",
             "double_buttons_1_3": "First and Third buttons",
             "double_buttons_2_4": "Second and Fourth buttons",
             "turn_off": "Turn off",
-            "turn_on": "Turn on",
-            "clock_wise": "Rotation clockwise",
-            "counter_clock_wise": "Rotation counter-clockwise"
+            "turn_on": "Turn on"
         },
         "trigger_type": {
             "double_short_release": "Both \"{subtype}\" released",

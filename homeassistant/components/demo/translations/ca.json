@@ -15,7 +15,7 @@
             "fix_flow": {
                 "step": {
                     "confirm": {
-                        "description": "Prem D'acord quan s'hagi omplert el l\u00edquid d'intermitents",
+                        "description": "Prem ENVIA quan s'hagi omplert el l\u00edquid d'intermitents",
                         "title": "Cal omplir el l\u00edquid d'intermitents"
                     }
                 }

@@ -524,7 +524,6 @@ async def test_discovery_already_configured_update_csharp(hass, controller):
     entry.add_to_hass(hass)
 
     connection_mock = AsyncMock()
-    connection_mock.pairing.connect.reconnect_soon = AsyncMock()
     connection_mock.async_notify_config_changed = MagicMock()
     hass.data[KNOWN_DEVICES] = {"AA:BB:CC:DD:EE:FF": connection_mock}
 

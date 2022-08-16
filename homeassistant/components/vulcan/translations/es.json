@@ -3,7 +3,7 @@
         "abort": {
             "all_student_already_configured": "Todos los estudiantes ya han sido a\u00f1adidos.",
             "already_configured": "Ese estudiante ya ha sido a\u00f1adido.",
-            "no_matching_entries": "No se encontraron entradas que coincidan, usa una cuenta diferente o elimina la integraci\u00f3n con el estudiante obsoleto.",
+            "no_matching_entries": "No se encontraron entradas que coincidan, por favor, usa una cuenta diferente o elimina la integraci\u00f3n con el estudiante obsoleto.",
             "reauth_successful": "Re-autenticaci\u00f3n exitosa"
         },
         "error": {
