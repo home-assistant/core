@@ -1,12 +1,15 @@
 """Test OpenUV diagnostics."""
 from homeassistant.components.diagnostics import REDACTED
+from homeassistant.const import CONF_DEVICE_ID
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 
 
 async def test_entry_diagnostics(hass, config_entry, hass_client, setup_openuv):
     """Test config entry diagnostics."""
-    await hass.services.async_call("openuv", "update_data")
+    await hass.services.async_call(
+        "openuv", "update_data", service_data={CONF_DEVICE_ID: "test_device_id"}
+    )
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
         "entry": {
             "data": {
