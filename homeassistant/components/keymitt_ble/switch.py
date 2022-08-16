@@ -5,7 +5,7 @@ from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
 
-from .const import DEFAULT_NAME, DOMAIN
+from .const import DOMAIN
 from .entity import MicroBotEntity
 
 
@@ -17,8 +17,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
 class MicroBotBinarySwitch(MicroBotEntity, SwitchEntity):
     """MicroBot switch class."""
-
-    _attr_name = DEFAULT_NAME
     
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added."""
