@@ -9,9 +9,9 @@
             "is_preset_mode": "{entity_name} se establece en un modo preestablecido espec\u00edfico"
         },
         "trigger_type": {
-            "current_humidity_changed": "{entity_name} cambi\u00f3 la humedad medida",
-            "current_temperature_changed": "{entity_name} cambi\u00f3 la temperatura medida",
-            "hvac_mode_changed": "{entity_name} cambi\u00f3 el modo HVAC"
+            "current_humidity_changed": "La humedad medida por {entity_name} cambi\u00f3",
+            "current_temperature_changed": "La temperatura medida por {entity_name} cambi\u00f3",
+            "hvac_mode_changed": "El modo HVAC de {entity_name} cambi\u00f3"
         }
     },
     "state": {

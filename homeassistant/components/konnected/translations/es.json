@@ -89,7 +89,7 @@
                     "discovery": "Responder a las solicitudes de descubrimiento en tu red",
                     "override_api_host": "Anular la URL predeterminada del panel de host de la API de Home Assistant"
                 },
-                "description": "Selecciona el comportamiento deseado para tu panel",
+                "description": "Por favor, selecciona el comportamiento deseado para tu panel",
                 "title": "Configurar miscel\u00e1neos"
             },
             "options_switch": {

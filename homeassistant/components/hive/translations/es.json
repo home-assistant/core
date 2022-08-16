@@ -7,7 +7,7 @@
         },
         "error": {
             "invalid_code": "Error al iniciar sesi\u00f3n en Hive. Tu c\u00f3digo de autenticaci\u00f3n de dos factores era incorrecto.",
-            "invalid_password": "Error al iniciar sesi\u00f3n en Hive. Contrase\u00f1a incorrecta, por favor, prueba de nuevo.",
+            "invalid_password": "Error al iniciar sesi\u00f3n en Hive. Contrase\u00f1a incorrecta, por favor, int\u00e9ntalo de nuevo.",
             "invalid_username": "Error al iniciar sesi\u00f3n en Hive. No se reconoce tu direcci\u00f3n de correo electr\u00f3nico.",
             "no_internet_available": "Se requiere una conexi\u00f3n a Internet para conectarse a Hive.",
             "unknown": "Error inesperado"

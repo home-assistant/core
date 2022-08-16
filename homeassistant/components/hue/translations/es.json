@@ -13,7 +13,7 @@
         },
         "error": {
             "linking": "Error inesperado",
-            "register_failed": "No se pudo registrar, int\u00e9ntalo de nuevo"
+            "register_failed": "No se pudo registrar, por favor, int\u00e9ntalo de nuevo"
         },
         "step": {
             "init": {
@@ -24,7 +24,7 @@
             },
             "link": {
                 "description": "Presiona el bot\u00f3n en la pasarela para registrar Philips Hue con Home Assistant. \n\n![Ubicaci\u00f3n del bot\u00f3n en la pasarela](/static/images/config_philips_hue.jpg)",
-                "title": "Vincular pasarela"
+                "title": "Vincular concentrador"
             },
             "manual": {
                 "data": {
