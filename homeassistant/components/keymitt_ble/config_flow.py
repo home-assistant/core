@@ -20,9 +20,10 @@ from homeassistant.components.bluetooth import (
 )
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_DEVICE
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_ADDRESS
 
-from .const import CONF_BDADDR, DOMAIN
+from .const import DOMAIN
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
@@ -106,7 +107,7 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             self._name = name_from_discovery(self._discovered_adv)
-            self._bdaddr = user_input[CONF_BDADDR]
+            self._bdaddr = user_input[CONF_ADDRESS]
             await self.async_set_unique_id(
                 self._bdaddr, raise_on_progress=False
             )
@@ -117,7 +118,7 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="init",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_BDADDR): vol.In(
+                    vol.Required(CONF_ADDRESS): vol.In(
                         {
                             address: f"{parsed.data['local_name']} ({address})"
                             for address, parsed in self._discovered_advs.items()
@@ -125,7 +126,7 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
                 }
             ),
-            errors=errors
+            errors=errors,
         )
 
     async def async_step_link(
@@ -149,8 +150,7 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
         if errors:
             return self.async_show_form(step_id="link", errors=errors)
 
-        user_input[CONF_BDADDR] = self._ble_device.address
-        user_input[CONF_DEVICE] = self._ble_device
+        user_input[CONF_ADDRESS] = self._ble_device.address
         user_input[CONF_ACCESS_TOKEN] = token
 
         return self.async_create_entry(title=self._name, data=user_input)
