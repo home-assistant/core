@@ -8,7 +8,7 @@ from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationSer
 from homeassistant.const import CONF_NAME, CONF_RECIPIENT, CONF_TARGET
 import homeassistant.helpers.config_validation as cv
 
-from .const import DOMAIN, GATEWAY, SMS_GATEWAY
+from .const import CONF_UNICODE, DOMAIN, GATEWAY, SMS_GATEWAY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,9 +47,10 @@ class SMSNotificationService(BaseNotificationService):
         gateway = self.hass.data[DOMAIN][SMS_GATEWAY][GATEWAY]
 
         targets = kwargs.get(CONF_TARGET, [self.number])
+        is_unicode = kwargs.get(CONF_UNICODE, True)
         smsinfo = {
             "Class": -1,
-            "Unicode": True,
+            "Unicode": is_unicode,
             "Entries": [{"ID": "ConcatenatedTextLong", "Buffer": message}],
         }
         try:
