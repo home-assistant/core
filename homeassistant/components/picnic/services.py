@@ -18,10 +18,6 @@ from .const import (
     ATTR_PRODUCT_NAME,
     CONF_API,
     DOMAIN,
-    PRODUCT_DECORATOR_LABEL,
-    PRODUCT_DECORATOR_MAPPING,
-    PRODUCT_DECORATOR_PRICE,
-    PRODUCT_DECORATOR_VALIDITY,
     SERVICE_ADD_PRODUCT_TO_CART,
 )
 
@@ -71,7 +67,7 @@ async def get_api_client(hass: HomeAssistant, device_id: Any | None = None):
         return hass.data[DOMAIN][default_config_id][CONF_API]
 
     # Get device from registry
-    registry = await device_registry.async_get_registry(hass)
+    registry = device_registry.async_get(hass)
     device = registry.async_get(device_id)
 
     if device is None:
@@ -123,28 +119,13 @@ def _product_search(api_client: PicnicAPI, product_name: str):
     for item in search_result[0]["items"]:
         if "name" in item:
             # Set the base values
-            product = {
-                "id": item["id"],
-                "name": item["name"],
-                "price": item["display_price"] / 100,
-                "quantity": item["unit_quantity"],
-            }
-            # Get the known decorators based on the mapping
-            decorators = {
-                d["type"]: d[PRODUCT_DECORATOR_MAPPING[d["type"]]]
-                for d in item.get("decorators", [])
-                if d["type"] in PRODUCT_DECORATOR_MAPPING
-            }
-            # If a price decorator is present, then the item has a discount. Add this to the product
-            if PRODUCT_DECORATOR_PRICE in decorators:
-                product["discount_price"] = decorators[PRODUCT_DECORATOR_PRICE] / 100
-                product["discount_label"] = decorators.get(
-                    PRODUCT_DECORATOR_LABEL, ""
-                ).lower()
-                product["discount_validity"] = decorators.get(
-                    PRODUCT_DECORATOR_VALIDITY
-                )
-
-            products += [product]
+            products += [
+                {
+                    "id": item["id"],
+                    "name": item["name"],
+                    "price": item["display_price"] / 100,
+                    "quantity": item["unit_quantity"],
+                }
+            ]
 
     return products

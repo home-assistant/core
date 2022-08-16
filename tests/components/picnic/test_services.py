@@ -168,3 +168,42 @@ async def test_add_product_multiple_config_entries(
     _get_picnic_api_mock(hass, config_entry_2).add_product.assert_called_with(
         "5109348572", 1
     )
+
+
+async def test_add_product_config_entry_doesnt_exist(
+    hass: HomeAssistant, generate_config_entry
+):
+    """Test adding a product for a specific Picnic service, which doesn't exist."""
+    config_entry = await generate_config_entry("158g-ahf7-aks")
+
+    with pytest.raises(PicnicServiceException):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_ADD_PRODUCT_TO_CART,
+            {"product_id": "5109348572", "device_id": 12345},
+            blocking=True,
+        )
+
+    # Check that the right method is called on the api
+    _get_picnic_api_mock(hass, config_entry).add_product.assert_not_called()
+
+
+async def test_add_product_config_entry_malformed(
+    hass: HomeAssistant, generate_config_entry
+):
+    """Test adding a product for a specific Picnic service, which has no data set."""
+    config_entry = await generate_config_entry("158g-ahf7-aks")
+    device_registry = hass.helpers.device_registry.async_get(hass)
+    picnic_service = device_registry.async_get_device(
+        identifiers={(DOMAIN, config_entry.unique_id)}
+    )
+
+    hass.data[DOMAIN][config_entry.entry_id] = {}
+
+    with pytest.raises(PicnicServiceException):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_ADD_PRODUCT_TO_CART,
+            {"product_id": "5109348572", "device_id": picnic_service.id},
+            blocking=True,
+        )
