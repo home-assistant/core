@@ -20,7 +20,7 @@
                     "account": "ID de la cuenta de Steam",
                     "api_key": "Clave API"
                 },
-                "description": "Utiliza {account_id_url} para encontrar el ID de tu cuenta de Steam"
+                "description": "Usa {account_id_url} para encontrar el ID de tu cuenta de Steam"
             }
         }
     },
