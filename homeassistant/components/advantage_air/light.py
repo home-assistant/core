@@ -41,7 +41,7 @@ class AdvantageAirLight(AdvantageAirEntity, LightEntity):
 
     def __init__(self, instance, light):
         """Initialize an Advantage Air Light."""
-        super().__init__(instance["coordinator"])
+        super().__init__(instance)
         self.async_set_light = instance["async_set_light"]
         self._id = light["id"]
         self._attr_unique_id += f"-{self._id}"
