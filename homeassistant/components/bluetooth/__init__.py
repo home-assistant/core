@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant, callback as hass_callback
 from homeassistant.helpers import discovery_flow
 from homeassistant.loader import async_get_bluetooth
 
-from .const import CONF_ADAPTER, DOMAIN
+from .const import CONF_ADAPTER, DOMAIN, SOURCE_LOCAL
 from .manager import BluetoothManager
 from .match import BluetoothCallbackMatcher, IntegrationMatcher
 from .models import (
@@ -44,6 +44,7 @@ __all__ = [
     "BluetoothServiceInfoBleak",
     "BluetoothScanningMode",
     "BluetoothCallback",
+    "SOURCE_LOCAL",
 ]
 
 
