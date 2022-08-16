@@ -251,7 +251,7 @@ class XiaomiGenericSelector(XiaomiSelector):
     def current_option(self):
         """Return the current option."""
         option = self._reverse_map.get(self._current_attr)
-        if option:
+        if option is not None:
             return option.lower()
         return None
 
