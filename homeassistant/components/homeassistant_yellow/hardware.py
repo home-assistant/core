@@ -29,6 +29,7 @@ def async_info(hass: HomeAssistant) -> HardwareInfo:
             model=MODEL,
             revision=None,
         ),
+        dongles=None,
         name=BOARD_NAME,
         url=None,
     )
