@@ -635,6 +635,8 @@ build.json @home-assistant/supervisor
 /tests/components/litejet/ @joncar
 /homeassistant/components/litterrobot/ @natekspencer @tkdrob
 /tests/components/litterrobot/ @natekspencer @tkdrob
+/homeassistant/components/livisi/ @StefanIacobLivisi
+/tests/components/livisi/ @StefanIacobLivisi
 /homeassistant/components/local_ip/ @issacg
 /tests/components/local_ip/ @issacg
 /homeassistant/components/lock/ @home-assistant/core
