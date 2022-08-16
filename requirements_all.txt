@@ -757,7 +757,7 @@ googlemaps==2.5.1
 goslide-api==0.5.1
 
 # homeassistant.components.govee_ble
-govee-ble==0.14.1
+govee-ble==0.16.0
 
 # homeassistant.components.remote_rpi_gpio
 gpiozero==1.6.2
