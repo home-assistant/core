@@ -1863,6 +1863,46 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             ],
         ),
     ],
+    "sensor": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="SensorEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="device_class",
+                    return_type=["SensorDeviceClass", "str", None],
+                ),
+                TypeHintMatch(
+                    function_name="state_class",
+                    return_type=["SensorStateClass", "str", None],
+                ),
+                TypeHintMatch(
+                    function_name="last_reset",
+                    return_type=["datetime", None],
+                ),
+                TypeHintMatch(
+                    function_name="native_value",
+                    return_type=[
+                        "StateType",
+                        "str",
+                        "int",
+                        "float",
+                        None,
+                        "date",
+                        "datetime",
+                        "Decimal",
+                    ],
+                ),
+                TypeHintMatch(
+                    function_name="native_unit_of_measurement",
+                    return_type=["str", None],
+                ),
+            ],
+        ),
+    ],
     "siren": [
         ClassTypeHintMatch(
             base_class="Entity",
