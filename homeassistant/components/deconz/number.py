@@ -6,7 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from pydeconz.models.event import EventType
-from pydeconz.models.sensor.presence import PRESENCE_DELAY, Presence
+from pydeconz.models.sensor.presence import Presence
 
 from homeassistant.components.number import (
     DOMAIN,
@@ -42,7 +42,7 @@ ENTITY_DESCRIPTIONS = {
             key="delay",
             value_fn=lambda device: device.delay,
             suffix="Delay",
-            update_key=PRESENCE_DELAY,
+            update_key="delay",
             native_max_value=65535,
             native_min_value=0,
             native_step=1,
@@ -81,11 +81,10 @@ async def async_setup_entry(
     )
 
 
-class DeconzNumber(DeconzDevice, NumberEntity):
+class DeconzNumber(DeconzDevice[Presence], NumberEntity):
     """Representation of a deCONZ number entity."""
 
     TYPE = DOMAIN
-    _device: Presence
 
     def __init__(
         self,

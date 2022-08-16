@@ -5,7 +5,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN as ADVANTAGE_AIR_DOMAIN
-from .entity import AdvantageAirEntity
+from .entity import AdvantageAirAcEntity
 
 ADVANTAGE_AIR_INACTIVE = "Inactive"
 
@@ -25,7 +25,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class AdvantageAirMyZone(AdvantageAirEntity, SelectEntity):
+class AdvantageAirMyZone(AdvantageAirAcEntity, SelectEntity):
     """Representation of Advantage Air MyZone control."""
 
     _attr_icon = "mdi:home-thermometer"
@@ -37,9 +37,7 @@ class AdvantageAirMyZone(AdvantageAirEntity, SelectEntity):
     def __init__(self, instance, ac_key):
         """Initialize an Advantage Air MyZone control."""
         super().__init__(instance, ac_key)
-        self._attr_unique_id = (
-            f'{self.coordinator.data["system"]["rid"]}-{ac_key}-myzone'
-        )
+        self._attr_unique_id += "-myzone"
 
         for zone in instance["coordinator"].data["aircons"][ac_key]["zones"].values():
             if zone["type"] > 0:
@@ -48,11 +46,11 @@ class AdvantageAirMyZone(AdvantageAirEntity, SelectEntity):
                 self._attr_options.append(zone["name"])
 
     @property
-    def current_option(self):
+    def current_option(self) -> str:
         """Return the current MyZone."""
         return self._number_to_name[self._ac["myZone"]]
 
-    async def async_select_option(self, option):
+    async def async_select_option(self, option: str) -> None:
         """Set the MyZone."""
         await self.async_change(
             {self.ac_key: {"info": {"myZone": self._name_to_number[option]}}}

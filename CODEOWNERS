@@ -72,6 +72,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/amcrest/ @flacjacket
 /homeassistant/components/analytics/ @home-assistant/core @ludeeus
 /tests/components/analytics/ @home-assistant/core @ludeeus
+/homeassistant/components/android_ip_webcam/ @engrbm87
+/tests/components/android_ip_webcam/ @engrbm87
 /homeassistant/components/androidtv/ @JeffLIrion @ollo69
 /tests/components/androidtv/ @JeffLIrion @ollo69
 /homeassistant/components/anthemav/ @hyralex
@@ -309,6 +311,8 @@ build.json @home-assistant/supervisor
 /tests/components/epson/ @pszafer
 /homeassistant/components/epsonworkforce/ @ThaStealth
 /homeassistant/components/eq3btsmart/ @rytilahti
+/homeassistant/components/escea/ @lazdavila
+/tests/components/escea/ @lazdavila
 /homeassistant/components/esphome/ @OttoWinter @jesserockz
 /tests/components/esphome/ @OttoWinter @jesserockz
 /homeassistant/components/evil_genius_labs/ @balloob
@@ -434,6 +438,8 @@ build.json @home-assistant/supervisor
 /tests/components/harmony/ @ehendrix23 @bramkragten @bdraco @mkeesey @Aohzan
 /homeassistant/components/hassio/ @home-assistant/supervisor
 /tests/components/hassio/ @home-assistant/supervisor
+/homeassistant/components/hdmi_cec/ @inytar
+/tests/components/hdmi_cec/ @inytar
 /homeassistant/components/heatmiser/ @andylockran
 /homeassistant/components/heos/ @andrewsayre
 /tests/components/heos/ @andrewsayre
@@ -455,6 +461,8 @@ build.json @home-assistant/supervisor
 /tests/components/home_plus_control/ @chemaaa
 /homeassistant/components/homeassistant/ @home-assistant/core
 /tests/components/homeassistant/ @home-assistant/core
+/homeassistant/components/homeassistant_alerts/ @home-assistant/core
+/tests/components/homeassistant_alerts/ @home-assistant/core
 /homeassistant/components/homeassistant_yellow/ @home-assistant/core
 /tests/components/homeassistant_yellow/ @home-assistant/core
 /homeassistant/components/homekit/ @bdraco
@@ -549,6 +557,8 @@ build.json @home-assistant/supervisor
 /tests/components/jewish_calendar/ @tsvi
 /homeassistant/components/juicenet/ @jesserockz
 /tests/components/juicenet/ @jesserockz
+/homeassistant/components/justnimbus/ @kvanzuijlen
+/tests/components/justnimbus/ @kvanzuijlen
 /homeassistant/components/kaiterra/ @Michsior14
 /homeassistant/components/kaleidescape/ @SteveEasley
 /tests/components/kaleidescape/ @SteveEasley
@@ -571,6 +581,8 @@ build.json @home-assistant/supervisor
 /tests/components/kraken/ @eifinger
 /homeassistant/components/kulersky/ @emlove
 /tests/components/kulersky/ @emlove
+/homeassistant/components/lacrosse_view/ @IceBotYT
+/tests/components/lacrosse_view/ @IceBotYT
 /homeassistant/components/lametric/ @robbiet480 @frenck
 /homeassistant/components/launch_library/ @ludeeus @DurgNomis-drol
 /tests/components/launch_library/ @ludeeus @DurgNomis-drol
@@ -762,6 +774,8 @@ build.json @home-assistant/supervisor
 /tests/components/open_meteo/ @frenck
 /homeassistant/components/openerz/ @misialq
 /tests/components/openerz/ @misialq
+/homeassistant/components/openexchangerates/ @MartinHjelmare
+/tests/components/openexchangerates/ @MartinHjelmare
 /homeassistant/components/opengarage/ @danielhiversen
 /tests/components/opengarage/ @danielhiversen
 /homeassistant/components/openhome/ @bazwilliams
@@ -830,6 +844,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/pvpc_hourly_pricing/ @azogue
 /tests/components/pvpc_hourly_pricing/ @azogue
 /homeassistant/components/qbittorrent/ @geoffreylagaisse
+/homeassistant/components/qingping/ @bdraco
+/tests/components/qingping/ @bdraco
 /homeassistant/components/qld_bushfire/ @exxamalte
 /tests/components/qld_bushfire/ @exxamalte
 /homeassistant/components/qnap_qsw/ @Noltari
@@ -907,6 +923,8 @@ build.json @home-assistant/supervisor
 /tests/components/samsungtv/ @chemelli74 @epenet
 /homeassistant/components/scene/ @home-assistant/core
 /tests/components/scene/ @home-assistant/core
+/homeassistant/components/schedule/ @home-assistant/core
+/tests/components/schedule/ @home-assistant/core
 /homeassistant/components/schluter/ @prairieapps
 /homeassistant/components/scrape/ @fabaff
 /tests/components/scrape/ @fabaff
@@ -1042,11 +1060,11 @@ build.json @home-assistant/supervisor
 /tests/components/switch/ @home-assistant/core
 /homeassistant/components/switch_as_x/ @home-assistant/core
 /tests/components/switch_as_x/ @home-assistant/core
-/homeassistant/components/switchbot/ @danielhiversen @RenierM26 @murtas
-/tests/components/switchbot/ @danielhiversen @RenierM26 @murtas
+/homeassistant/components/switchbot/ @bdraco @danielhiversen @RenierM26 @murtas @Eloston
+/tests/components/switchbot/ @bdraco @danielhiversen @RenierM26 @murtas @Eloston
 /homeassistant/components/switcher_kis/ @tomerfi @thecode
 /tests/components/switcher_kis/ @tomerfi @thecode
-/homeassistant/components/switchmate/ @danielhiversen
+/homeassistant/components/switchmate/ @danielhiversen @qiz-li
 /homeassistant/components/syncthing/ @zhulik
 /tests/components/syncthing/ @zhulik
 /homeassistant/components/syncthru/ @nielstron
@@ -1171,7 +1189,7 @@ build.json @home-assistant/supervisor
 /tests/components/vlc_telnet/ @rodripf @MartinHjelmare
 /homeassistant/components/volumio/ @OnFreund
 /tests/components/volumio/ @OnFreund
-/homeassistant/components/volvooncall/ @molobrakos @decompil3d
+/homeassistant/components/volvooncall/ @molobrakos
 /homeassistant/components/vulcan/ @Antoni-Czaplicki
 /tests/components/vulcan/ @Antoni-Czaplicki
 /homeassistant/components/wake_on_lan/ @ntilley905
@@ -1232,6 +1250,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/xmpp/ @fabaff @flowolf
 /homeassistant/components/yale_smart_alarm/ @gjohansson-ST
 /tests/components/yale_smart_alarm/ @gjohansson-ST
+/homeassistant/components/yalexs_ble/ @bdraco
+/tests/components/yalexs_ble/ @bdraco
 /homeassistant/components/yamaha_musiccast/ @vigonotion @micha91
 /tests/components/yamaha_musiccast/ @vigonotion @micha91
 /homeassistant/components/yandex_transport/ @rishatik92 @devbis

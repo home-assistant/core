@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import voluptuous as vol
 from zengge import zengge
@@ -52,49 +53,28 @@ def setup_platform(
 class ZenggeLight(LightEntity):
     """Representation of a Zengge light."""
 
+    _attr_supported_color_modes = {ColorMode.HS, ColorMode.WHITE}
+
     def __init__(self, device):
         """Initialize the light."""
 
-        self._name = device["name"]
-        self._address = device["address"]
+        self._attr_name = device["name"]
+        self._attr_unique_id = device["address"]
         self.is_valid = True
-        self._bulb = zengge(self._address)
+        self._bulb = zengge(device["address"])
         self._white = 0
-        self._brightness = 0
-        self._hs_color = (0, 0)
-        self._state = False
+        self._attr_brightness = 0
+        self._attr_hs_color = (0, 0)
+        self._attr_is_on = False
         if self._bulb.connect() is False:
             self.is_valid = False
-            _LOGGER.error("Failed to connect to bulb %s, %s", self._address, self._name)
+            _LOGGER.error(
+                "Failed to connect to bulb %s, %s", device["address"], device["name"]
+            )
             return
 
     @property
-    def unique_id(self):
-        """Return the ID of this light."""
-        return self._address
-
-    @property
-    def name(self):
-        """Return the name of the device if any."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return true if device is on."""
-        return self._state
-
-    @property
-    def brightness(self):
-        """Return the brightness property."""
-        return self._brightness
-
-    @property
-    def hs_color(self):
-        """Return the color property."""
-        return self._hs_color
-
-    @property
-    def white_value(self):
+    def white_value(self) -> int:
         """Return the white property."""
         return self._white
 
@@ -105,27 +85,17 @@ class ZenggeLight(LightEntity):
             return ColorMode.WHITE
         return ColorMode.HS
 
-    @property
-    def supported_color_modes(self) -> set[ColorMode | str]:
-        """Flag supported color modes."""
-        return {ColorMode.HS, ColorMode.WHITE}
-
-    @property
-    def assumed_state(self):
-        """We can report the actual state."""
-        return False
-
-    def _set_rgb(self, red, green, blue):
+    def _set_rgb(self, red: int, green: int, blue: int) -> None:
         """Set the rgb state."""
-        return self._bulb.set_rgb(red, green, blue)
+        self._bulb.set_rgb(red, green, blue)
 
     def _set_white(self, white):
         """Set the white state."""
         return self._bulb.set_white(white)
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the specified light on."""
-        self._state = True
+        self._attr_is_on = True
         self._bulb.on()
 
         hs_color = kwargs.get(ATTR_HS_COLOR)
@@ -134,37 +104,40 @@ class ZenggeLight(LightEntity):
 
         if white is not None:
             # Change the bulb to white
-            self._brightness = self._white = white
-            self._hs_color = (0, 0)
+            self._attr_brightness = white
+            self._white = white
+            self._attr_hs_color = (0, 0)
 
         if hs_color is not None:
             # Change the bulb to hs
             self._white = 0
-            self._hs_color = hs_color
+            self._attr_hs_color = hs_color
 
         if brightness is not None:
-            self._brightness = brightness
+            self._attr_brightness = brightness
 
         if self._white != 0:
-            self._set_white(self._brightness)
+            self._set_white(self.brightness)
         else:
+            assert self.hs_color is not None
+            assert self.brightness is not None
             rgb = color_util.color_hsv_to_RGB(
-                self._hs_color[0], self._hs_color[1], self._brightness / 255 * 100
+                self.hs_color[0], self.hs_color[1], self.brightness / 255 * 100
             )
             self._set_rgb(*rgb)
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the specified light off."""
-        self._state = False
+        self._attr_is_on = False
         self._bulb.off()
 
-    def update(self):
+    def update(self) -> None:
         """Synchronise internal state with the actual light state."""
         rgb = self._bulb.get_colour()
         hsv = color_util.color_RGB_to_hsv(*rgb)
-        self._hs_color = hsv[:2]
-        self._brightness = (hsv[2] / 100) * 255
+        self._attr_hs_color = hsv[:2]
+        self._attr_brightness = int((hsv[2] / 100) * 255)
         self._white = self._bulb.get_white()
         if self._white:
-            self._brightness = self._white
-        self._state = self._bulb.get_on()
+            self._attr_brightness = self._white
+        self._attr_is_on = self._bulb.get_on()

@@ -7,12 +7,12 @@
         },
         "condition_type": {
             "is_off": "{entity_name} est\u00e1 apagado",
-            "is_on": "{entity_name} est\u00e1 activado"
+            "is_on": "{entity_name} est\u00e1 encendido"
         },
         "trigger_type": {
-            "changed_states": "{entity_name} activado o desactivado",
-            "turned_off": "{entity_name} desactivado",
-            "turned_on": "{entity_name} activado"
+            "changed_states": "{entity_name} se encendi\u00f3 o apag\u00f3",
+            "turned_off": "{entity_name} apagado",
+            "turned_on": "{entity_name} encendido"
         }
     },
     "state": {

@@ -3,7 +3,11 @@
 from unittest.mock import patch
 
 from homeassistant import config_entries
-from homeassistant.components.bluetooth.const import DOMAIN
+from homeassistant.components.bluetooth.const import (
+    CONF_ADAPTER,
+    DOMAIN,
+    MACOS_DEFAULT_BLUETOOTH_ADAPTER,
+)
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
@@ -125,3 +129,112 @@ async def test_async_step_import_already_exists(hass):
     )
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@patch("homeassistant.components.bluetooth.util.platform.system", return_value="Linux")
+async def test_options_flow_linux(mock_system, hass, mock_bleak_scanner_start):
+    """Test options on Linux."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        options={},
+        unique_id="DOMAIN",
+    )
+    entry.add_to_hass(hass)
+
+    # Verify we can keep it as hci0
+    with patch(
+        "bluetooth_adapters.get_bluetooth_adapters", return_value=["hci0", "hci1"]
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "init"
+        assert result["errors"] is None
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_ADAPTER: "hci0",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_ADAPTER] == "hci0"
+
+    # Verify we can change it to hci1
+    with patch(
+        "bluetooth_adapters.get_bluetooth_adapters", return_value=["hci0", "hci1"]
+    ):
+        await hass.async_block_till_done()
+
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "init"
+        assert result["errors"] is None
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_ADAPTER: "hci1",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_ADAPTER] == "hci1"
+
+
+@patch("homeassistant.components.bluetooth.util.platform.system", return_value="Darwin")
+async def test_options_flow_macos(mock_system, hass, mock_bleak_scanner_start):
+    """Test options on MacOS."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        options={},
+        unique_id="DOMAIN",
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["errors"] is None
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_ADAPTER: MACOS_DEFAULT_BLUETOOTH_ADAPTER,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_ADAPTER] == MACOS_DEFAULT_BLUETOOTH_ADAPTER
+
+
+@patch(
+    "homeassistant.components.bluetooth.util.platform.system", return_value="Windows"
+)
+async def test_options_flow_windows(mock_system, hass, mock_bleak_scanner_start):
+    """Test options on Windows."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        options={},
+        unique_id="DOMAIN",
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "no_adapters"

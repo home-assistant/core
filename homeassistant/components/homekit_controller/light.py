@@ -17,7 +17,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import KNOWN_DEVICES, HomeKitEntity
+from . import KNOWN_DEVICES
+from .entity import HomeKitEntity
 
 
 async def async_setup_entry(
@@ -72,6 +73,18 @@ class HomeKitLight(HomeKitEntity, LightEntity):
         )
 
     @property
+    def min_mireds(self) -> int:
+        """Return minimum supported color temperature."""
+        min_value = self.service[CharacteristicsTypes.COLOR_TEMPERATURE].minValue
+        return int(min_value) if min_value else super().min_mireds
+
+    @property
+    def max_mireds(self) -> int:
+        """Return the maximum color temperature."""
+        max_value = self.service[CharacteristicsTypes.COLOR_TEMPERATURE].maxValue
+        return int(max_value) if max_value else super().max_mireds
+
+    @property
     def color_temp(self) -> int:
         """Return the color temperature."""
         return self.service.value(CharacteristicsTypes.COLOR_TEMPERATURE)
@@ -95,9 +108,9 @@ class HomeKitLight(HomeKitEntity, LightEntity):
         return ColorMode.ONOFF
 
     @property
-    def supported_color_modes(self) -> set[ColorMode | str] | None:
+    def supported_color_modes(self) -> set[ColorMode]:
         """Flag supported color modes."""
-        color_modes: set[ColorMode | str] = set()
+        color_modes: set[ColorMode] = set()
 
         if self.service.has(CharacteristicsTypes.HUE) or self.service.has(
             CharacteristicsTypes.SATURATION

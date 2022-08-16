@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dienst is al geconfigureerd",
+            "no_adapters": "Geen Bluetooth-adapters gevonden"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "bluetooth_confirm": {
+                "description": "Wilt u {name} instellen?"
+            },
+            "enable_bluetooth": {
+                "description": "Wilt u Bluetooth instellen?"
+            },
+            "user": {
+                "data": {
+                    "address": "Apparaat"
+                },
+                "description": "Kies een apparaat om in te stellen"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "adapter": "De Bluetooth-adapter die gebruikt moet worden voor het scannen."
+                }
+            }
+        }
+    }
+}

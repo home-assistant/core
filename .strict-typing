@@ -56,8 +56,10 @@ homeassistant.components.ambee.*
 homeassistant.components.ambient_station.*
 homeassistant.components.amcrest.*
 homeassistant.components.ampio.*
+homeassistant.components.anthemav.*
 homeassistant.components.aseko_pool_live.*
 homeassistant.components.asuswrt.*
+homeassistant.components.auth.*
 homeassistant.components.automation.*
 homeassistant.components.backup.*
 homeassistant.components.baf.*
@@ -115,6 +117,7 @@ homeassistant.components.group.*
 homeassistant.components.guardian.*
 homeassistant.components.history.*
 homeassistant.components.homeassistant.triggers.event
+homeassistant.components.homeassistant_alerts.*
 homeassistant.components.homekit
 homeassistant.components.homekit.accessories
 homeassistant.components.homekit.aidmanager
@@ -127,6 +130,7 @@ homeassistant.components.homekit.util
 homeassistant.components.homekit_controller
 homeassistant.components.homekit_controller.alarm_control_panel
 homeassistant.components.homekit_controller.button
+homeassistant.components.homekit_controller.config_flow
 homeassistant.components.homekit_controller.const
 homeassistant.components.homekit_controller.lock
 homeassistant.components.homekit_controller.select
@@ -147,11 +151,13 @@ homeassistant.components.jewish_calendar.*
 homeassistant.components.kaleidescape.*
 homeassistant.components.knx.*
 homeassistant.components.kraken.*
+homeassistant.components.lacrosse_view.*
 homeassistant.components.lametric.*
 homeassistant.components.laundrify.*
 homeassistant.components.lcn.*
 homeassistant.components.light.*
 homeassistant.components.lifx.*
+homeassistant.components.litterrobot.*
 homeassistant.components.local_ip.*
 homeassistant.components.lock.*
 homeassistant.components.logbook.*
@@ -182,6 +188,7 @@ homeassistant.components.nut.*
 homeassistant.components.oncue.*
 homeassistant.components.onewire.*
 homeassistant.components.open_meteo.*
+homeassistant.components.openexchangerates.*
 homeassistant.components.openuv.*
 homeassistant.components.peco.*
 homeassistant.components.overkiz.*
@@ -207,6 +214,7 @@ homeassistant.components.rpi_power.*
 homeassistant.components.rtsp_to_webrtc.*
 homeassistant.components.samsungtv.*
 homeassistant.components.scene.*
+homeassistant.components.schedule.*
 homeassistant.components.select.*
 homeassistant.components.sensibo.*
 homeassistant.components.sensor.*

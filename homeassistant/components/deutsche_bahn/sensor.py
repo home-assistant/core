@@ -2,10 +2,12 @@
 from __future__ import annotations
 
 from datetime import timedelta
+import logging
 
 import schiene
 import voluptuous as vol
 
+from homeassistant.components.repairs import IssueSeverity, create_issue
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_OFFSET
 from homeassistant.core import HomeAssistant
@@ -33,6 +35,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
+_LOGGER = logging.getLogger(__name__)
+
 
 def setup_platform(
     hass: HomeAssistant,
@@ -45,7 +49,18 @@ def setup_platform(
     destination = config[CONF_DESTINATION]
     offset = config[CONF_OFFSET]
     only_direct = config[CONF_ONLY_DIRECT]
-
+    create_issue(
+        hass,
+        "deutsche_bahn",
+        "pending_removal",
+        breaks_in_ha_version="2022.11.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="pending_removal",
+    )
+    _LOGGER.warning(
+        "The Deutsche Bahn sensor component is deprecated and will be removed in Home Assistant 2022.11"
+    )
     add_entities([DeutscheBahnSensor(start, destination, offset, only_direct)], True)
 
 

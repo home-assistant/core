@@ -1,9 +1,6 @@
 """Support for Switchbot devices."""
 
-from collections.abc import Mapping
 import logging
-from types import MappingProxyType
-from typing import Any
 
 import switchbot
 
@@ -12,6 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_MAC,
+    CONF_NAME,
     CONF_PASSWORD,
     CONF_SENSOR_TYPE,
     Platform,
@@ -20,27 +18,26 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
-from .const import (
-    ATTR_BOT,
-    ATTR_CURTAIN,
-    ATTR_HYGROMETER,
-    COMMON_OPTIONS,
-    CONF_RETRY_COUNT,
-    CONF_RETRY_TIMEOUT,
-    DEFAULT_RETRY_COUNT,
-    DEFAULT_RETRY_TIMEOUT,
-    DOMAIN,
-)
+from .const import CONF_RETRY_COUNT, DEFAULT_RETRY_COUNT, DOMAIN, SupportedModels
 from .coordinator import SwitchbotDataUpdateCoordinator
 
 PLATFORMS_BY_TYPE = {
-    ATTR_BOT: [Platform.SWITCH, Platform.SENSOR],
-    ATTR_CURTAIN: [Platform.COVER, Platform.BINARY_SENSOR, Platform.SENSOR],
-    ATTR_HYGROMETER: [Platform.SENSOR],
+    SupportedModels.BULB.value: [Platform.SENSOR],
+    SupportedModels.BOT.value: [Platform.SWITCH, Platform.SENSOR],
+    SupportedModels.PLUG.value: [Platform.SWITCH, Platform.SENSOR],
+    SupportedModels.CURTAIN.value: [
+        Platform.COVER,
+        Platform.BINARY_SENSOR,
+        Platform.SENSOR,
+    ],
+    SupportedModels.HYGROMETER.value: [Platform.SENSOR],
+    SupportedModels.CONTACT.value: [Platform.BINARY_SENSOR, Platform.SENSOR],
+    SupportedModels.MOTION.value: [Platform.BINARY_SENSOR, Platform.SENSOR],
 }
 CLASS_BY_DEVICE = {
-    ATTR_CURTAIN: switchbot.SwitchbotCurtain,
-    ATTR_BOT: switchbot.Switchbot,
+    SupportedModels.CURTAIN.value: switchbot.SwitchbotCurtain,
+    SupportedModels.BOT.value: switchbot.Switchbot,
+    SupportedModels.PLUG.value: switchbot.SwitchbotPlugMini,
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -48,9 +45,8 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Switchbot from a config entry."""
+    assert entry.unique_id is not None
     hass.data.setdefault(DOMAIN, {})
-    domain_data = hass.data[DOMAIN]
-
     if CONF_ADDRESS not in entry.data and CONF_MAC in entry.data:
         # Bleak uses addresses not mac addresses which are are actually
         # UUIDs on some platforms (MacOS).
@@ -65,10 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not entry.options:
         hass.config_entries.async_update_entry(
             entry,
-            options={
-                CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT,
-                CONF_RETRY_TIMEOUT: DEFAULT_RETRY_TIMEOUT,
-            },
+            options={CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT},
         )
 
     sensor_type: str = entry.data[CONF_SENSOR_TYPE]
@@ -78,13 +71,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(
             f"Could not find Switchbot {sensor_type} with address {address}"
         )
-
-    if COMMON_OPTIONS not in domain_data:
-        domain_data[COMMON_OPTIONS] = entry.options
-
-    common_options: Mapping[str, int] = domain_data[COMMON_OPTIONS]
-    switchbot.DEFAULT_RETRY_TIMEOUT = common_options[CONF_RETRY_TIMEOUT]
-
     cls = CLASS_BY_DEVICE.get(sensor_type, switchbot.SwitchbotDevice)
     device = cls(
         device=ble_device,
@@ -92,7 +78,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         retry_count=entry.options[CONF_RETRY_COUNT],
     )
     coordinator = hass.data[DOMAIN][entry.entry_id] = SwitchbotDataUpdateCoordinator(
-        hass, _LOGGER, ble_device, device, common_options
+        hass,
+        _LOGGER,
+        ble_device,
+        device,
+        entry.unique_id,
+        entry.data.get(CONF_NAME, entry.title),
     )
     entry.async_on_unload(coordinator.async_start())
     if not await coordinator.async_wait_ready():
@@ -104,6 +95,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     return True
+
+
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -119,11 +115,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass.data.pop(DOMAIN)
 
     return unload_ok
-
-
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Handle options update."""
-    # Update entity options stored in hass.
-    common_options: MappingProxyType[str, Any] = hass.data[DOMAIN][COMMON_OPTIONS]
-    if entry.options != common_options:
-        await hass.config_entries.async_reload(entry.entry_id)

@@ -9,7 +9,7 @@ from .const import (
     ADVANTAGE_AIR_STATE_ON,
     DOMAIN as ADVANTAGE_AIR_DOMAIN,
 )
-from .entity import AdvantageAirEntity
+from .entity import AdvantageAirAcEntity
 
 
 async def async_setup_entry(
@@ -28,7 +28,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class AdvantageAirFreshAir(AdvantageAirEntity, SwitchEntity):
+class AdvantageAirFreshAir(AdvantageAirAcEntity, SwitchEntity):
     """Representation of Advantage Air fresh air control."""
 
     _attr_icon = "mdi:air-filter"
@@ -37,9 +37,7 @@ class AdvantageAirFreshAir(AdvantageAirEntity, SwitchEntity):
     def __init__(self, instance, ac_key):
         """Initialize an Advantage Air fresh air control."""
         super().__init__(instance, ac_key)
-        self._attr_unique_id = (
-            f'{self.coordinator.data["system"]["rid"]}-{ac_key}-freshair'
-        )
+        self._attr_unique_id += "-freshair"
 
     @property
     def is_on(self):

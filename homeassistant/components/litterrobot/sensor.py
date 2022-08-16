@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
+from typing import Any, Union, cast
 
 from pylitterbot.robot import Robot
 
@@ -12,7 +12,6 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
-    StateType,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
@@ -61,12 +60,12 @@ class LitterRobotSensorEntity(LitterRobotEntity, SensorEntity):
         self.entity_description = description
 
     @property
-    def native_value(self) -> StateType | datetime:
+    def native_value(self) -> float | datetime | str | None:
         """Return the state."""
         if self.entity_description.should_report(self.robot):
             if isinstance(val := getattr(self.robot, self.entity_description.key), str):
                 return val.lower()
-            return val
+            return cast(Union[float, datetime, None], val)
         return None
 
     @property
@@ -88,13 +87,13 @@ ROBOT_SENSORS = [
         name="Sleep Mode Start Time",
         key="sleep_mode_start_time",
         device_class=SensorDeviceClass.TIMESTAMP,
-        should_report=lambda robot: robot.sleep_mode_enabled,
+        should_report=lambda robot: robot.sleep_mode_enabled,  # type: ignore[no-any-return]
     ),
     LitterRobotSensorEntityDescription(
         name="Sleep Mode End Time",
         key="sleep_mode_end_time",
         device_class=SensorDeviceClass.TIMESTAMP,
-        should_report=lambda robot: robot.sleep_mode_enabled,
+        should_report=lambda robot: robot.sleep_mode_enabled,  # type: ignore[no-any-return]
     ),
     LitterRobotSensorEntityDescription(
         name="Last Seen",
