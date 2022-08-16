@@ -51,7 +51,7 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_advs: dict[str, MicroBotAdvertisement] = {}
         self._client: MicroBotApiClient | None = None
         self._ble_device: BLEDevice | None = None
-        self._name = str | None = None
+        self._name: str | None = None
         self._bdaddr: str | None = None
 
     async def async_step_bluetooth(
