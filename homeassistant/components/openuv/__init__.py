@@ -2,15 +2,19 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any
+from collections.abc import Callable
+from typing import Any, cast
 
 from pyopenuv import Client
 from pyopenuv.errors import OpenUvError
+import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.repairs import IssueSeverity, async_create_issue
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_BINARY_SENSORS,
+    CONF_DEVICE_ID,
     CONF_ELEVATION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -19,12 +23,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
-from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers import aiohttp_client, config_validation as cv
+import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import Entity, EntityDescription
+from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 from homeassistant.helpers.service import verify_domain_control
 
 from .const import (
@@ -46,6 +51,75 @@ NOTIFICATION_TITLE = "OpenUV Component Setup"
 TOPIC_UPDATE = f"{DOMAIN}_data_update"
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
+
+SERVICE_NAME_UPDATE_DATA = "update_data"
+SERVICE_NAME_UPDATE_PROTECTION_DATA = "update_protection_data"
+SERVICE_NAME_UPDATE_UV_INDEX_DATA = "update_uv_index_data"
+
+SERVICES = (
+    SERVICE_NAME_UPDATE_DATA,
+    SERVICE_NAME_UPDATE_PROTECTION_DATA,
+    SERVICE_NAME_UPDATE_UV_INDEX_DATA,
+)
+
+SERVICE_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_DEVICE_ID): cv.string,
+    }
+)
+
+
+@callback
+def async_get_openuv_for_service_call(hass: HomeAssistant, call: ServiceCall) -> OpenUV:
+    """Get the controller related to a service call (by device ID)."""
+    device_id = call.data[CONF_DEVICE_ID]
+    device_registry = dr.async_get(hass)
+
+    if device_entry := device_registry.async_get(device_id):
+        for entry in hass.config_entries.async_entries(DOMAIN):
+            if entry.entry_id in device_entry.config_entries:
+                return cast(OpenUV, hass.data[DOMAIN][entry.entry_id])
+
+    raise ValueError(f"No OpenUV object for service ID: {device_id}")
+
+
+@callback
+def async_log_deprecated_service_call(
+    hass: HomeAssistant,
+    call: ServiceCall,
+    alternate_service: str,
+    alternate_target: str,
+    breaks_in_ha_version: str,
+) -> None:
+    """Log a warning about a deprecated service call."""
+    deprecated_service = f"{call.domain}.{call.service}"
+
+    async_create_issue(
+        hass,
+        DOMAIN,
+        f"deprecated_service_{deprecated_service}",
+        breaks_in_ha_version=breaks_in_ha_version,
+        is_fixable=True,
+        is_persistent=True,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_service",
+        translation_placeholders={
+            "alternate_service": alternate_service,
+            "alternate_target": alternate_target,
+            "deprecated_service": deprecated_service,
+        },
+    )
+
+    LOGGER.warning(
+        (
+            'The "%s" service is deprecated and will be removed in %s; use the "%s" '
+            'service and pass it a target entity ID of "%s"'
+        ),
+        deprecated_service,
+        breaks_in_ha_version,
+        alternate_service,
+        alternate_target,
+    )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -82,33 +156,55 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    @callback
+    def extract_openuv(func: Callable) -> Callable:
+        """Define a decorator to get the correct OpenUV object for a service call."""
+
+        async def wrapper(call: ServiceCall) -> None:
+            """Wrap the service function."""
+            openuv = async_get_openuv_for_service_call(hass, call)
+
+            try:
+                await func(call, openuv)
+            except OpenUvError as err:
+                raise HomeAssistantError(
+                    f'Error while executing "{call.service}": {err}'
+                ) from err
+
+        return wrapper
+
     @_verify_domain_control
-    async def update_data(_: ServiceCall) -> None:
+    @extract_openuv
+    async def update_data(call: ServiceCall, openuv: OpenUV) -> None:
         """Refresh all OpenUV data."""
         LOGGER.debug("Refreshing all OpenUV data")
         await openuv.async_update()
         async_dispatcher_send(hass, TOPIC_UPDATE)
 
     @_verify_domain_control
-    async def update_uv_index_data(_: ServiceCall) -> None:
+    @extract_openuv
+    async def update_uv_index_data(call: ServiceCall, openuv: OpenUV) -> None:
         """Refresh OpenUV UV index data."""
         LOGGER.debug("Refreshing OpenUV UV index data")
         await openuv.async_update_uv_index_data()
         async_dispatcher_send(hass, TOPIC_UPDATE)
 
     @_verify_domain_control
-    async def update_protection_data(_: ServiceCall) -> None:
+    @extract_openuv
+    async def update_protection_data(call: ServiceCall, openuv: OpenUV) -> None:
         """Refresh OpenUV protection window data."""
         LOGGER.debug("Refreshing OpenUV protection window data")
         await openuv.async_update_protection_data()
         async_dispatcher_send(hass, TOPIC_UPDATE)
 
     for service, method in (
-        ("update_data", update_data),
-        ("update_uv_index_data", update_uv_index_data),
-        ("update_protection_data", update_protection_data),
+        (SERVICE_NAME_UPDATE_DATA, update_data),
+        (SERVICE_NAME_UPDATE_UV_INDEX_DATA, update_uv_index_data),
+        (SERVICE_NAME_UPDATE_PROTECTION_DATA, update_protection_data),
     ):
-        hass.services.async_register(DOMAIN, service, method)
+        if hass.services.has_service(DOMAIN, service):
+            continue
+        hass.services.async_register(DOMAIN, service, method, schema=SERVICE_SCHEMA)
 
     return True
 
@@ -118,6 +214,17 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
+
+    loaded_entries = [
+        entry
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        if entry.state == ConfigEntryState.LOADED
+    ]
+    if len(loaded_entries) == 1:
+        # If this is the last loaded instance of OpenUV, deregister any services
+        # defined during integration setup:
+        for service_name in SERVICES:
+            hass.services.async_remove(DOMAIN, service_name)
 
     return unload_ok
 
@@ -187,11 +294,16 @@ class OpenUvEntity(Entity):
 
     def __init__(self, openuv: OpenUV, description: EntityDescription) -> None:
         """Initialize."""
+        coordinates = f"{openuv.client.latitude}, {openuv.client.longitude}"
+        self._attr_device_info = DeviceInfo(
+            entry_type=dr.DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, coordinates)},
+            manufacturer="OpenUV Team",
+            name=coordinates,
+        )
         self._attr_extra_state_attributes = {}
         self._attr_should_poll = False
-        self._attr_unique_id = (
-            f"{openuv.client.latitude}_{openuv.client.longitude}_{description.key}"
-        )
+        self._attr_unique_id = f"{coordinates}_{description.key}"
         self.entity_description = description
         self.openuv = openuv
 
