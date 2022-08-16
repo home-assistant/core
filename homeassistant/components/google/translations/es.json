@@ -39,8 +39,8 @@
             "title": "Se va a eliminar la configuraci\u00f3n YAML de Google Calendar"
         },
         "removed_track_new_yaml": {
-            "description": "Has inhabilitado el seguimiento de entidades para Google Calendar en configuration.yaml, que ya no es compatible. Debes cambiar manualmente las opciones del sistema de integraci\u00f3n en la IU para deshabilitar las entidades reci\u00e9n descubiertas en el futuro. Elimina la configuraci\u00f3n track_new de configuration.yaml y reinicia Home Assistant para solucionar este problema.",
-            "title": "El seguimiento de entidades de Google Calendar ha cambiado"
+            "description": "Has deshabilitado el rastreo de entidades para Google Calendar en configuration.yaml, que ya no es compatible. Debes cambiar manualmente las opciones de sistema de la integraci\u00f3n en la IU para deshabilitar las entidades reci\u00e9n descubiertas en el futuro. Elimina la configuraci\u00f3n track_new de configuration.yaml y reinicia Home Assistant para solucionar este problema.",
+            "title": "El rastreo de entidades de Google Calendar ha cambiado"
         }
     },
     "options": {

@@ -7,7 +7,7 @@
         "error": {
             "cannot_connect": "No se pudo conectar",
             "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
-            "protect_version": "La versi\u00f3n m\u00ednima requerida es v1.20.0. Actualiza UniFi Protect y vuelve a intentarlo."
+            "protect_version": "La versi\u00f3n m\u00ednima requerida es v1.20.0. Por favor, actualiza UniFi Protect y vuelve a intentarlo."
         },
         "flow_title": "{name} ({ip_address})",
         "step": {
