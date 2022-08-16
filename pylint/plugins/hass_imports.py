@@ -38,6 +38,20 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
             constant=re.compile(r"^FORMAT_(\w*)$"),
         ),
     ],
+    "homeassistant.components.automation": [
+        ObsoleteImportMatch(
+            reason="replaced by TriggerActionType from helpers.trigger",
+            constant=re.compile(r"^AutomationActionType$")
+        ),
+        ObsoleteImportMatch(
+            reason="replaced by TriggerData from helpers.trigger",
+            constant=re.compile(r"^AutomationTriggerData$")
+        ),
+        ObsoleteImportMatch(
+            reason="replaced by TriggerInfo from helpers.trigger",
+            constant=re.compile(r"^AutomationTriggerInfo$")
+        ),
+    ],
     "homeassistant.components.binary_sensor": [
         ObsoleteImportMatch(
             reason="replaced by BinarySensorDeviceClass enum",
