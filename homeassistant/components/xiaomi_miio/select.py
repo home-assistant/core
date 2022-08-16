@@ -250,16 +250,14 @@ class XiaomiGenericSelector(XiaomiSelector):
     @property
     def current_option(self):
         """Return the current option."""
-        return self.attr.lower()
+        option = self._reverse_map.get(self._current_attr)
+        if option:
+            return option.lower()
+        return None
 
     async def async_select_option(self, option: str) -> None:
         """Set an option of the miio device."""
         await self.async_set_attr(option.title())
-
-    @property
-    def attr(self):
-        """Return the current ptc level."""
-        return self._reverse_map.get(self._current_attr)
 
     async def async_set_attr(self, attr_value: str):
         """Set attr."""
