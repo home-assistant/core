@@ -13,17 +13,17 @@ from .const import DOMAIN, GATEWAY, SMS_GATEWAY
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_RECIPIENT): cv.string, vol.Optional(CONF_NAME): cv.string}
+    {vol.Optional(CONF_RECIPIENT): cv.string, vol.Optional(CONF_NAME): cv.string}
 )
 
 
-def get_service(hass, config, discovery_info=None):
+async def async_get_service(hass, config, discovery_info=None):
     """Get the SMS notification service."""
 
     if discovery_info is None:
-        number = config[CONF_RECIPIENT]
+        number = config.get(CONF_RECIPIENT, None)
     else:
-        number = discovery_info[CONF_RECIPIENT]
+        number = discovery_info.get(CONF_RECIPIENT, None)
 
     return SMSNotificationService(hass, number)
 
@@ -31,7 +31,7 @@ def get_service(hass, config, discovery_info=None):
 class SMSNotificationService(BaseNotificationService):
     """Implement the notification service for SMS."""
 
-    def __init__(self, hass, number):
+    def __init__(self, hass, number=None):
         """Initialize the service."""
 
         self.hass = hass
@@ -47,6 +47,10 @@ class SMSNotificationService(BaseNotificationService):
         gateway = self.hass.data[DOMAIN][SMS_GATEWAY][GATEWAY]
 
         targets = kwargs.get(CONF_TARGET, [self.number])
+        if targets == [None]:
+            _LOGGER.error("No target number specified, cannot send message")
+            return
+
         smsinfo = {
             "Class": -1,
             "Unicode": True,
