@@ -24,11 +24,9 @@ async def async_setup_entry(
     coordinator = hass.data[FRITZBOX_DOMAIN][entry.entry_id][CONF_COORDINATOR]
 
     async_add_entities(
-        [
-            FritzboxCover(coordinator, ain)
-            for ain, device in coordinator.data.items()
-            if device.has_blind
-        ]
+        FritzboxCover(coordinator, ain)
+        for ain, device in coordinator.data.items()
+        if device.has_blind
     )
 
 
