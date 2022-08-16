@@ -358,13 +358,13 @@ class BluetoothManager:
             async with async_timeout.timeout(START_TIMEOUT):
                 await self.scanner.start()  # type: ignore[no-untyped-call]
         except InvalidMessageError as ex:
-            self._cancel_device_detected()
+            self._async_cancel_scanner_callback()
             _LOGGER.debug("Invalid DBus message received: %s", ex, exc_info=True)
             raise ConfigEntryNotReady(
                 f"Invalid DBus message received: {ex}; try restarting `dbus`"
             ) from ex
         except BrokenPipeError as ex:
-            self._cancel_device_detected()
+            self._async_cancel_scanner_callback()
             _LOGGER.debug("DBus connection broken: %s", ex, exc_info=True)
             if is_docker_env():
                 raise ConfigEntryNotReady(
@@ -374,7 +374,7 @@ class BluetoothManager:
                 f"DBus connection broken: {ex}; try restarting `bluetooth` and `dbus`"
             ) from ex
         except FileNotFoundError as ex:
-            self._cancel_device_detected()
+            self._async_cancel_scanner_callback()
             _LOGGER.debug(
                 "FileNotFoundError while starting bluetooth: %s", ex, exc_info=True
             )
@@ -386,12 +386,12 @@ class BluetoothManager:
                 f"DBus service not found; make sure the DBus socket is available to Home Assistant: {ex}"
             ) from ex
         except asyncio.TimeoutError as ex:
-            self._cancel_device_detected()
+            self._async_cancel_scanner_callback()
             raise ConfigEntryNotReady(
                 f"Timed out starting Bluetooth after {START_TIMEOUT} seconds"
             ) from ex
         except BleakError as ex:
-            self._cancel_device_detected()
+            self._async_cancel_scanner_callback()
             _LOGGER.debug("BleakError while starting bluetooth: %s", ex, exc_info=True)
             raise ConfigEntryNotReady(f"Failed to start Bluetooth: {ex}") from ex
         self.async_setup_unavailable_tracking()
@@ -573,15 +573,20 @@ class BluetoothManager:
         self._cancel_stop = None
         await self.async_stop()
 
+    @hass_callback
+    def _async_cancel_scanner_callback(self) -> None:
+        """Cancel the scanner callback."""
+        if self._cancel_device_detected:
+            self._cancel_device_detected()
+            self._cancel_device_detected = None
+
     async def async_stop(self) -> None:
         """Stop bluetooth discovery."""
         _LOGGER.debug("Stopping bluetooth discovery")
         if self._cancel_watchdog:
             self._cancel_watchdog()
             self._cancel_watchdog = None
-        if self._cancel_device_detected:
-            self._cancel_device_detected()
-            self._cancel_device_detected = None
+        self._async_cancel_scanner_callback()
         if self._cancel_unavailable_tracking:
             self._cancel_unavailable_tracking()
             self._cancel_unavailable_tracking = None
