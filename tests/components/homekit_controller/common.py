@@ -11,10 +11,9 @@ from unittest import mock
 
 from aiohomekit.model import Accessories, AccessoriesState, Accessory
 from aiohomekit.testing import FakeController, FakePairing
+from aiohomekit.zeroconf import HomeKitService
 
-from homeassistant.components import zeroconf
 from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.homekit_controller import config_flow
 from homeassistant.components.homekit_controller.const import (
     CONTROLLER,
     DOMAIN,
@@ -228,30 +227,40 @@ async def device_config_changed(hass, accessories):
     pairing._accessories_state = AccessoriesState(
         accessories_obj, pairing.config_num + 1
     )
-
-    discovery_info = zeroconf.ZeroconfServiceInfo(
-        host="127.0.0.1",
-        addresses=["127.0.0.1"],
-        hostname="mock_hostname",
-        name="TestDevice._hap._tcp.local.",
-        port=8080,
-        properties={
-            "md": "TestDevice",
-            "id": "00:00:00:00:00:00",
-            "c#": "2",
-            "sf": "0",
-        },
-        type="mock_type",
+    pairing._async_description_update(
+        HomeKitService(
+            name="TestDevice.local",
+            id="00:00:00:00:00:00",
+            model="",
+            config_num=2,
+            state_num=3,
+            feature_flags=0,
+            status_flags=0,
+            category=1,
+            protocol_version="1.0",
+            type="_hap._tcp.local.",
+            address="127.0.0.1",
+            addresses=["127.0.0.1"],
+            port=8080,
+        )
     )
-
-    # Config Flow will abort and notify us if the discovery event is of
-    # interest - in this case c# has incremented
-    flow = config_flow.HomekitControllerFlowHandler()
-    flow.hass = hass
-    flow.context = {}
-    result = await flow.async_step_zeroconf(discovery_info)
-    assert result["type"] == "abort"
-    assert result["reason"] == "already_configured"
+    pairing._async_description_update(
+        HomeKitService(
+            name="TestDevice.local",
+            id="00:00:00:00:00:00",
+            model="",
+            config_num=3,
+            state_num=3,
+            feature_flags=0,
+            status_flags=0,
+            category=1,
+            protocol_version="1.0",
+            type="_hap._tcp.local.",
+            address="127.0.0.1",
+            addresses=["127.0.0.1"],
+            port=8080,
+        )
+    )
 
     # Wait for services to reconfigure
     await hass.async_block_till_done()

@@ -438,10 +438,6 @@ class HKDevice:
             self.config_entry, self.platforms
         )
 
-    def async_notify_config_changed(self, config_num: int) -> None:
-        """Notify the pairing of a config change."""
-        self.pairing.notify_config_changed(config_num)
-
     def process_config_changed(self, config_num: int) -> None:
         """Handle a config change notification from the pairing."""
         self.hass.async_create_task(self.async_update_new_accessories_state())
