@@ -1,41 +1,92 @@
 """Test the Fully Kiosk Browser binary sensors."""
-from datetime import timedelta
+from asynctest import MagicMock
+from fullykiosk import FullyKioskError
 
-from asynctest import patch
-
-from homeassistant.components.fully_kiosk.const import UPDATE_INTERVAL
-from homeassistant.const import STATE_UNAVAILABLE
-from homeassistant.helpers import entity_registry as er
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.fully_kiosk.const import DOMAIN, UPDATE_INTERVAL
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_FRIENDLY_NAME,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.util import dt
 
-from tests.common import async_fire_time_changed
-from tests.components.fully_kiosk import init_integration
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_binary_sensors(hass):
+async def test_binary_sensors(
+    hass: HomeAssistant,
+    mock_fully_kiosk: MagicMock,
+    init_integration: MockConfigEntry,
+) -> None:
     """Test standard Fully Kiosk binary sensors."""
-    await init_integration(hass)
-    registry = er.async_get(hass)
+    entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
 
     state = hass.states.get("binary_sensor.amazon_fire_plugged_in")
     assert state
-    assert state.state == "on"
-    entry = registry.async_get("binary_sensor.amazon_fire_plugged_in")
+    assert state.state == STATE_ON
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.PLUG
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Amazon Fire Plugged in"
+
+    entry = entity_registry.async_get("binary_sensor.amazon_fire_plugged_in")
     assert entry
     assert entry.unique_id == "abcdef-123456-plugged"
+    assert entry.entity_category == EntityCategory.DIAGNOSTIC
 
     state = hass.states.get("binary_sensor.amazon_fire_kiosk_mode")
     assert state
-    assert state.state == "on"
+    assert state.state == STATE_ON
+    assert state.attributes.get(ATTR_DEVICE_CLASS) is None
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Amazon Fire Kiosk mode"
+
+    entry = entity_registry.async_get("binary_sensor.amazon_fire_kiosk_mode")
+    assert entry
+    assert entry.unique_id == "abcdef-123456-kioskMode"
+    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+
+    state = hass.states.get("binary_sensor.amazon_fire_device_admin")
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes.get(ATTR_DEVICE_CLASS) is None
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Amazon Fire Device admin"
+
+    entry = entity_registry.async_get("binary_sensor.amazon_fire_device_admin")
+    assert entry
+    assert entry.unique_id == "abcdef-123456-isDeviceAdmin"
+    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+
+    assert entry.device_id
+    device_entry = device_registry.async_get(entry.device_id)
+    assert device_entry
+    assert device_entry.configuration_url == "http://192.168.1.234:2323"
+    assert device_entry.entry_type is None
+    assert device_entry.hw_version is None
+    assert device_entry.identifiers == {(DOMAIN, "abcdef-123456")}
+    assert device_entry.manufacturer == "amzn"
+    assert device_entry.model == "KFDOWI"
+    assert device_entry.name == "Amazon Fire"
+    assert device_entry.sw_version == "1.42.5"
+
+    # Test unknown/missing data
+    mock_fully_kiosk.getDeviceInfo.return_value = {}
+    async_fire_time_changed(hass, dt.utcnow() + UPDATE_INTERVAL)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.amazon_fire_plugged_in")
+    assert state
+    assert state.state == STATE_UNKNOWN
 
     # Test failed update
-    with patch(
-        "homeassistant.components.fully_kiosk.FullyKioskDataUpdateCoordinator._async_update_data",
-        side_effect=ConnectionError,
-    ):
-        async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=UPDATE_INTERVAL))
-        await hass.async_block_till_done()
+    mock_fully_kiosk.getDeviceInfo.side_effect = FullyKioskError("error", "status")
+    async_fire_time_changed(hass, dt.utcnow() + UPDATE_INTERVAL)
+    await hass.async_block_till_done()
 
-        state = hass.states.get("binary_sensor.amazon_fire_plugged_in")
-        assert state
-        assert state.state == STATE_UNAVAILABLE
+    state = hass.states.get("binary_sensor.amazon_fire_plugged_in")
+    assert state
+    assert state.state == STATE_UNAVAILABLE

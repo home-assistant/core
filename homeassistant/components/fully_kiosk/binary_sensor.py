@@ -10,14 +10,16 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import FullyKioskDataUpdateCoordinator
+from .entity import FullyKioskEntity
 
 SENSORS: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
-        key="kioskMode", name="Kiosk mode", entity_category=EntityCategory.DIAGNOSTIC
+        key="kioskMode",
+        name="Kiosk mode",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     BinarySensorEntityDescription(
         key="plugged",
@@ -50,12 +52,8 @@ async def async_setup_entry(
     )
 
 
-class FullyBinarySensor(
-    CoordinatorEntity[FullyKioskDataUpdateCoordinator], BinarySensorEntity
-):
+class FullyBinarySensor(FullyKioskEntity, BinarySensorEntity):
     """Representation of a Fully Kiosk Browser binary sensor."""
-
-    _attr_has_entity_name: bool = True
 
     def __init__(
         self,
@@ -63,21 +61,13 @@ class FullyBinarySensor(
         description: BinarySensorEntityDescription,
     ) -> None:
         """Initialize the binary sensor."""
-        self.entity_description = description
-        self._sensor = description.key
-
-        self._attr_unique_id = f"{coordinator.data['deviceID']}-{description.key}"
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, coordinator.data["deviceID"])},
-            "name": coordinator.data["deviceName"],
-            "manufacturer": coordinator.data["deviceManufacturer"],
-            "model": coordinator.data["deviceModel"],
-            "sw_version": coordinator.data["appVersionName"],
-            "configuration_url": f"http://{coordinator.data['ip4']}:2323",
-        }
         super().__init__(coordinator)
+        self.entity_description = description
+        self._attr_unique_id = f"{coordinator.data['deviceID']}-{description.key}"
 
     @property
     def is_on(self) -> bool | None:
         """Return if the binary sensor is on."""
-        return self.coordinator.data.get(self._sensor)
+        if (value := self.coordinator.data.get(self.entity_description.key)) is None:
+            return None
+        return bool(value)
