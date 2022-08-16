@@ -11,13 +11,13 @@
         "step": {
             "link": {
                 "description": "\u00bfQuieres configurar {name} ({host})?",
-                "title": "Conectar con el PowerView Hub"
+                "title": "Conectar al PowerView Hub"
             },
             "user": {
                 "data": {
                     "host": "Direcci\u00f3n IP"
                 },
-                "title": "Conectar con el PowerView Hub"
+                "title": "Conectar al PowerView Hub"
             }
         }
     }

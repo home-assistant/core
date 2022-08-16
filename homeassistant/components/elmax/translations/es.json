@@ -17,7 +17,7 @@
                     "panel_name": "Nombre del panel",
                     "panel_pin": "C\u00f3digo PIN"
                 },
-                "description": "Selecciona qu\u00e9 panel te gustar\u00eda controlar con esta integraci\u00f3n. Ten en cuenta que el panel debe estar ENCENDIDO para poder configurarlo."
+                "description": "Selecciona qu\u00e9 panel te gustar\u00eda controlar con esta integraci\u00f3n. Por favor, ten en cuenta que el panel debe estar ENCENDIDO para poder configurarlo."
             },
             "user": {
                 "data": {
