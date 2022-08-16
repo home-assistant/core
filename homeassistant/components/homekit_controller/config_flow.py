@@ -281,11 +281,6 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     existing_entry, data={**existing_entry.data, **updated_ip_port}
                 )
             conn: HKDevice = self.hass.data[KNOWN_DEVICES][hkid]
-            # When we rediscover the device, let aiohomekit know
-            # that the device is available and we should not wait
-            # to retry connecting any longer. reconnect_soon
-            # will do nothing if the device is already connected
-            await conn.pairing.reconnect_soon()
             if config_num and conn.config_num != config_num:
                 _LOGGER.debug(
                     "HomeKit info %s: c# incremented, refreshing entities", hkid
