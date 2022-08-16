@@ -71,7 +71,7 @@ SERVICE_SCHEMA = vol.Schema(
 
 @callback
 def async_get_openuv_for_service_call(hass: HomeAssistant, call: ServiceCall) -> OpenUV:
-    """Get the controller related to a service call (by device ID)."""
+    """Get the OpenUV object related to a service call (by device ID)."""
     device_id = call.data[CONF_DEVICE_ID]
     device_registry = dr.async_get(hass)
 
