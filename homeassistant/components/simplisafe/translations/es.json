@@ -35,7 +35,7 @@
                     "password": "Contrase\u00f1a",
                     "username": "Nombre de usuario"
                 },
-                "description": "SimpliSafe autentica a los usuarios a trav\u00e9s de su aplicaci\u00f3n web. Debido a limitaciones t\u00e9cnicas, existe un paso manual al final de este proceso; aseg\u00farate de leer la [documentaci\u00f3n](http://home-assistant.io/integrations/simplisafe#getting-an-authorization-code) antes de comenzar. \n\nCuando est\u00e9s listo, haz clic [aqu\u00ed]({url}) para abrir la aplicaci\u00f3n web SimpliSafe e introduce tus credenciales. Si ya iniciaste sesi\u00f3n en SimpliSafe en tu navegador, es posible que desees abrir una nueva pesta\u00f1a y luego copiar/pegar la URL anterior en esa pesta\u00f1a. \n\nCuando se complete el proceso, regresa aqu\u00ed e introduce el c\u00f3digo de autorizaci\u00f3n de la URL `com.simplisafe.mobile`."
+                "description": "SimpliSafe autentica a los usuarios a trav\u00e9s de su aplicaci\u00f3n web. Debido a limitaciones t\u00e9cnicas, existe un paso manual al final de este proceso; por favor, aseg\u00farate de leer la [documentaci\u00f3n](http://home-assistant.io/integrations/simplisafe#getting-an-authorization-code) antes de comenzar. \n\nCuando est\u00e9s listo, haz clic [aqu\u00ed]({url}) para abrir la aplicaci\u00f3n web SimpliSafe e introduce tus credenciales. Si ya iniciaste sesi\u00f3n en SimpliSafe en tu navegador, es posible que desees abrir una nueva pesta\u00f1a y luego copiar/pegar la URL anterior en esa pesta\u00f1a. \n\nCuando se complete el proceso, regresa aqu\u00ed e introduce el c\u00f3digo de autorizaci\u00f3n de la URL `com.simplisafe.mobile`."
             }
         }
     },

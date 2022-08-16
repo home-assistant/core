@@ -13,7 +13,7 @@
             "not_zwave_device": "El dispositivo descubierto no es un dispositivo Z-Wave."
         },
         "error": {
-            "addon_start_failed": "No se pudo iniciar el complemento Z-Wave JS. Verifica la configuraci\u00f3n.",
+            "addon_start_failed": "No se pudo iniciar el complemento Z-Wave JS. Comprueba la configuraci\u00f3n.",
             "cannot_connect": "No se pudo conectar",
             "invalid_ws_url": "URL de websocket no v\u00e1lida",
             "unknown": "Error inesperado"
@@ -48,9 +48,9 @@
             },
             "on_supervisor": {
                 "data": {
-                    "use_addon": "Usar el complemento Z-Wave JS Supervisor"
+                    "use_addon": "Utilizar el complemento del Supervisor Z-Wave JS"
                 },
-                "description": "\u00bfQuieres usar el complemento Z-Wave JS Supervisor?",
+                "description": "\u00bfQuieres usar el complemento del Supervisor Z-Wave JS?",
                 "title": "Selecciona el m\u00e9todo de conexi\u00f3n"
             },
             "start_addon": {
@@ -135,9 +135,9 @@
             },
             "on_supervisor": {
                 "data": {
-                    "use_addon": "Usar el complemento Supervisor Z-Wave JS"
+                    "use_addon": "Utilizar el complemento del Supervisor Z-Wave JS"
                 },
-                "description": "\u00bfQuieres utilizar el complemento Supervisor Z-Wave JS ?",
+                "description": "\u00bfQuieres usar el complemento del Supervisor Z-Wave JS?",
                 "title": "Selecciona el m\u00e9todo de conexi\u00f3n"
             },
             "start_addon": {

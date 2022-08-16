@@ -19,7 +19,8 @@
                 "data": {
                     "access_token": "Token d'acc\u00e9s",
                     "email": "Correu electr\u00f2nic"
-                }
+                },
+                "description": "T'has de registrar a Awair per a obtenir un token d'acc\u00e9s de desenvolupador a: {url}"
             },
             "discovery_confirm": {
                 "description": "Vols configurar {model} ({device_id})?"
@@ -27,7 +28,8 @@
             "local": {
                 "data": {
                     "host": "Adre\u00e7a IP"
-                }
+                },
+                "description": "L'API local d'Awair s'ha d'activar seguint aquests passos: {url}"
             },
             "reauth": {
                 "data": {
@@ -48,8 +50,9 @@
                     "access_token": "Token d'acc\u00e9s",
                     "email": "Correu electr\u00f2nic"
                 },
-                "description": "T'has de registrar a Awair per a obtenir un token d'acc\u00e9s de desenvolupador a trav\u00e9s de l'enlla\u00e7 seg\u00fcent: https://developer.getawair.com/onboard/login",
+                "description": "Tria local per a la millor experi\u00e8ncia. Utilitza 'al n\u00favol' si el teu dispositiu no est\u00e0 connectat a la mateixa xarxa que Home Assistant, o si tens un dispositiu antic.",
                 "menu_options": {
+                    "cloud": "Connecta't a trav\u00e9s del n\u00favol",
                     "local": "Connecta't localment (preferit)"
                 }
             }

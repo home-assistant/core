@@ -6,7 +6,7 @@
             "error_pairing": "Conectado a LG webOS TV pero no emparejado"
         },
         "error": {
-            "cannot_connect": "No se pudo conectar, por favor, enciende tu televisor o verifica la direcci\u00f3n IP"
+            "cannot_connect": "No se pudo conectar, por favor, enciende tu TV o comprueba la direcci\u00f3n IP"
         },
         "flow_title": "LG webOS Smart TV",
         "step": {

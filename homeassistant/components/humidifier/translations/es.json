@@ -14,7 +14,7 @@
         },
         "trigger_type": {
             "changed_states": "{entity_name} se encendi\u00f3 o apag\u00f3",
-            "target_humidity_changed": "{entity_name} cambi\u00f3 su humedad objetivo",
+            "target_humidity_changed": "La humedad objetivo de {entity_name} cambi\u00f3",
             "turned_off": "{entity_name} apagado",
             "turned_on": "{entity_name} encendido"
         }
