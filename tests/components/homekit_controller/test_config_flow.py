@@ -14,11 +14,8 @@ from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.components.homekit_controller import config_flow
 from homeassistant.components.homekit_controller.const import KNOWN_DEVICES
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_FORM,
-    FlowResultType,
-)
+from homeassistant.components.homekit_controller.storage import async_get_entity_storage
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
@@ -1016,7 +1013,7 @@ async def test_discovery_no_bluetooth_support(hass, controller):
             context={"source": config_entries.SOURCE_BLUETOOTH},
             data=HK_BLUETOOTH_SERVICE_INFO_NOT_DISCOVERED,
         )
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "ignored_model"
 
 
@@ -1031,7 +1028,7 @@ async def test_bluetooth_not_homekit(hass, controller):
             context={"source": config_entries.SOURCE_BLUETOOTH},
             data=NOT_HK_BLUETOOTH_SERVICE_INFO,
         )
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "ignored_model"
 
 
@@ -1046,7 +1043,7 @@ async def test_bluetooth_valid_device_no_discovery(hass, controller):
             context={"source": config_entries.SOURCE_BLUETOOTH},
             data=HK_BLUETOOTH_SERVICE_INFO_NOT_DISCOVERED,
         )
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "accessory_not_found_error"
 
 
@@ -1064,13 +1061,15 @@ async def test_bluetooth_valid_device_discovery_paired(hass, controller):
             data=HK_BLUETOOTH_SERVICE_INFO_DISCOVERED_PAIRED,
         )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_paired"
 
 
 async def test_bluetooth_valid_device_discovery_unpaired(hass, controller):
     """Test bluetooth discovery with a homekit device and discovery works."""
     setup_mock_accessory(controller)
+    storage = await async_get_entity_storage(hass)
+
     with patch(
         "homeassistant.components.homekit_controller.config_flow.aiohomekit_const.BLE_TRANSPORT_SUPPORTED",
         True,
@@ -1081,8 +1080,9 @@ async def test_bluetooth_valid_device_discovery_unpaired(hass, controller):
             data=HK_BLUETOOTH_SERVICE_INFO_DISCOVERED_UNPAIRED,
         )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "pair"
+    assert storage.get_map("00:00:00:00:00:00") is None
 
     assert get_flow_context(hass, result) == {
         "source": config_entries.SOURCE_BLUETOOTH,
@@ -1091,10 +1091,12 @@ async def test_bluetooth_valid_device_discovery_unpaired(hass, controller):
     }
 
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     result3 = await hass.config_entries.flow.async_configure(
         result2["flow_id"], user_input={"pairing_code": "111-22-333"}
     )
     assert result3["type"] == FlowResultType.CREATE_ENTRY
     assert result3["title"] == "Koogeek-LS1-20833F"
     assert result3["data"] == {}
+
+    assert storage.get_map("00:00:00:00:00:00") is not None

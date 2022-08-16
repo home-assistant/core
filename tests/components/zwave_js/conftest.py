@@ -38,18 +38,56 @@ def mock_addon_info(addon_info_side_effect):
         yield addon_info
 
 
+@pytest.fixture(name="addon_store_info_side_effect")
+def addon_store_info_side_effect_fixture():
+    """Return the add-on store info side effect."""
+    return None
+
+
+@pytest.fixture(name="addon_store_info")
+def mock_addon_store_info(addon_store_info_side_effect):
+    """Mock Supervisor add-on info."""
+    with patch(
+        "homeassistant.components.zwave_js.addon.async_get_addon_store_info",
+        side_effect=addon_store_info_side_effect,
+    ) as addon_store_info:
+        addon_store_info.return_value = {
+            "installed": None,
+            "state": None,
+            "version": "1.0.0",
+        }
+        yield addon_store_info
+
+
 @pytest.fixture(name="addon_running")
-def mock_addon_running(addon_info):
+def mock_addon_running(addon_store_info, addon_info):
     """Mock add-on already running."""
+    addon_store_info.return_value = {
+        "installed": "1.0.0",
+        "state": "started",
+        "version": "1.0.0",
+    }
     addon_info.return_value["state"] = "started"
+    addon_info.return_value["version"] = "1.0.0"
     return addon_info
 
 
 @pytest.fixture(name="addon_installed")
-def mock_addon_installed(addon_info):
+def mock_addon_installed(addon_store_info, addon_info):
     """Mock add-on already installed but not running."""
+    addon_store_info.return_value = {
+        "installed": "1.0.0",
+        "state": "stopped",
+        "version": "1.0.0",
+    }
     addon_info.return_value["state"] = "stopped"
-    addon_info.return_value["version"] = "1.0"
+    addon_info.return_value["version"] = "1.0.0"
+    return addon_info
+
+
+@pytest.fixture(name="addon_not_installed")
+def mock_addon_not_installed(addon_store_info, addon_info):
+    """Mock add-on not installed."""
     return addon_info
 
 
@@ -81,13 +119,18 @@ def mock_set_addon_options(set_addon_options_side_effect):
 
 
 @pytest.fixture(name="install_addon_side_effect")
-def install_addon_side_effect_fixture(addon_info):
+def install_addon_side_effect_fixture(addon_store_info, addon_info):
     """Return the install add-on side effect."""
 
     async def install_addon(hass, slug):
         """Mock install add-on."""
+        addon_store_info.return_value = {
+            "installed": "1.0.0",
+            "state": "stopped",
+            "version": "1.0.0",
+        }
         addon_info.return_value["state"] = "stopped"
-        addon_info.return_value["version"] = "1.0"
+        addon_info.return_value["version"] = "1.0.0"
 
     return install_addon
 
@@ -112,11 +155,16 @@ def mock_update_addon():
 
 
 @pytest.fixture(name="start_addon_side_effect")
-def start_addon_side_effect_fixture(addon_info):
+def start_addon_side_effect_fixture(addon_store_info, addon_info):
     """Return the start add-on options side effect."""
 
     async def start_addon(hass, slug):
         """Mock start add-on."""
+        addon_store_info.return_value = {
+            "installed": "1.0.0",
+            "state": "started",
+            "version": "1.0.0",
+        }
         addon_info.return_value["state"] = "started"
 
     return start_addon

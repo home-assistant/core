@@ -26,7 +26,7 @@ async def async_get_config_entry_diagnostics(
         gateway.api.config.raw, REDACT_DECONZ_CONFIG
     )
     diag["websocket_state"] = (
-        gateway.api.websocket.state if gateway.api.websocket else "Unknown"
+        gateway.api.websocket.state.value if gateway.api.websocket else "Unknown"
     )
     diag["deconz_ids"] = gateway.deconz_ids
     diag["entities"] = gateway.entities
@@ -37,7 +37,7 @@ async def async_get_config_entry_diagnostics(
         }
         for event in gateway.events
     }
-    diag["alarm_systems"] = {k: v.raw for k, v in gateway.api.alarmsystems.items()}
+    diag["alarm_systems"] = {k: v.raw for k, v in gateway.api.alarm_systems.items()}
     diag["groups"] = {k: v.raw for k, v in gateway.api.groups.items()}
     diag["lights"] = {k: v.raw for k, v in gateway.api.lights.items()}
     diag["scenes"] = {k: v.raw for k, v in gateway.api.scenes.items()}

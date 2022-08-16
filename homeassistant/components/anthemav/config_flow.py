@@ -15,9 +15,13 @@ from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 
-from .const import CONF_MODEL, DEFAULT_NAME, DEFAULT_PORT, DOMAIN
-
-DEVICE_TIMEOUT_SECONDS = 4.0
+from .const import (
+    CONF_MODEL,
+    DEFAULT_NAME,
+    DEFAULT_PORT,
+    DEVICE_TIMEOUT_SECONDS,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 

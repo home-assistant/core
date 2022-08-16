@@ -10,6 +10,7 @@ from homeassistant.components.bluetooth import (
     DOMAIN,
     UNAVAILABLE_TRACK_SECONDS,
     BluetoothChange,
+    BluetoothScanningMode,
 )
 from homeassistant.components.bluetooth.passive_update_coordinator import (
     PassiveBluetoothCoordinatorEntity,
@@ -42,9 +43,9 @@ GENERIC_BLUETOOTH_SERVICE_INFO = BluetoothServiceInfo(
 class MyCoordinator(PassiveBluetoothDataUpdateCoordinator):
     """An example coordinator that subclasses PassiveBluetoothDataUpdateCoordinator."""
 
-    def __init__(self, hass, logger, device_id) -> None:
+    def __init__(self, hass, logger, device_id, mode) -> None:
         """Initialize the coordinator."""
-        super().__init__(hass, logger, device_id)
+        super().__init__(hass, logger, device_id, mode)
         self.data: dict[str, Any] = {}
 
     def _async_handle_bluetooth_event(
@@ -60,11 +61,13 @@ class MyCoordinator(PassiveBluetoothDataUpdateCoordinator):
 async def test_basic_usage(hass, mock_bleak_scanner_start):
     """Test basic usage of the PassiveBluetoothDataUpdateCoordinator."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
-    coordinator = MyCoordinator(hass, _LOGGER, "aa:bb:cc:dd:ee:ff")
+    coordinator = MyCoordinator(
+        hass, _LOGGER, "aa:bb:cc:dd:ee:ff", BluetoothScanningMode.ACTIVE
+    )
     assert coordinator.available is False  # no data yet
     saved_callback = None
 
-    def _async_register_callback(_hass, _callback, _matcher):
+    def _async_register_callback(_hass, _callback, _matcher, _mode):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None
@@ -100,11 +103,13 @@ async def test_context_compatiblity_with_data_update_coordinator(
 ):
     """Test contexts can be passed for compatibility with DataUpdateCoordinator."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
-    coordinator = MyCoordinator(hass, _LOGGER, "aa:bb:cc:dd:ee:ff")
+    coordinator = MyCoordinator(
+        hass, _LOGGER, "aa:bb:cc:dd:ee:ff", BluetoothScanningMode.ACTIVE
+    )
     assert coordinator.available is False  # no data yet
     saved_callback = None
 
-    def _async_register_callback(_hass, _callback, _matcher):
+    def _async_register_callback(_hass, _callback, _matcher, _mode):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None
@@ -149,11 +154,13 @@ async def test_unavailable_callbacks_mark_the_coordinator_unavailable(
     ):
         await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
-    coordinator = MyCoordinator(hass, _LOGGER, "aa:bb:cc:dd:ee:ff")
+    coordinator = MyCoordinator(
+        hass, _LOGGER, "aa:bb:cc:dd:ee:ff", BluetoothScanningMode.PASSIVE
+    )
     assert coordinator.available is False  # no data yet
     saved_callback = None
 
-    def _async_register_callback(_hass, _callback, _matcher):
+    def _async_register_callback(_hass, _callback, _matcher, _mode):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None
@@ -208,13 +215,15 @@ async def test_unavailable_callbacks_mark_the_coordinator_unavailable(
 async def test_passive_bluetooth_coordinator_entity(hass, mock_bleak_scanner_start):
     """Test integration of PassiveBluetoothDataUpdateCoordinator with PassiveBluetoothCoordinatorEntity."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
-    coordinator = MyCoordinator(hass, _LOGGER, "aa:bb:cc:dd:ee:ff")
+    coordinator = MyCoordinator(
+        hass, _LOGGER, "aa:bb:cc:dd:ee:ff", BluetoothScanningMode.ACTIVE
+    )
     entity = PassiveBluetoothCoordinatorEntity(coordinator)
     assert entity.available is False
 
     saved_callback = None
 
-    def _async_register_callback(_hass, _callback, _matcher):
+    def _async_register_callback(_hass, _callback, _matcher, _mode):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None

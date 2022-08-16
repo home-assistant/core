@@ -7,10 +7,20 @@
             "switchbot_unsupported_type": "Tipo de Switchbot no compatible.",
             "unknown": "Error inesperado"
         },
-        "flow_title": "{name}",
+        "flow_title": "{name} ({address})",
         "step": {
+            "confirm": {
+                "description": "\u00bfQuieres configurar {name}?"
+            },
+            "password": {
+                "data": {
+                    "password": "Contrase\u00f1a"
+                },
+                "description": "El dispositivo {name} requiere una contrase\u00f1a"
+            },
             "user": {
                 "data": {
+                    "address": "Direcci\u00f3n del dispositivo",
                     "mac": "Direcci\u00f3n MAC del dispositivo",
                     "name": "Nombre",
                     "password": "Contrase\u00f1a"
@@ -25,7 +35,7 @@
                 "data": {
                     "retry_count": "Recuento de reintentos",
                     "retry_timeout": "Tiempo de espera entre reintentos",
-                    "scan_timeout": "Cu\u00e1nto tiempo se debe buscar datos de anuncio",
+                    "scan_timeout": "Cu\u00e1nto tiempo escanear en busca de datos de anuncio",
                     "update_time": "Tiempo entre actualizaciones (segundos)"
                 }
             }

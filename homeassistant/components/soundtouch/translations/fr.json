@@ -17,5 +17,10 @@
                 "title": "Confirmer l'ajout de l'appareil Bose SoundTouch"
             }
         }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "title": "La configuration YAML pour Bose SoundTouch est en cours de suppression"
+        }
     }
 }

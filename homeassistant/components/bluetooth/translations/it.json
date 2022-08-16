@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Il servizio \u00e8 gi\u00e0 configurato"
+            "already_configured": "Il servizio \u00e8 gi\u00e0 configurato",
+            "no_adapters": "Nessun adattatore Bluetooth trovato"
         },
         "flow_title": "{name}",
         "step": {
@@ -16,6 +17,15 @@
                     "address": "Dispositivo"
                 },
                 "description": "Seleziona un dispositivo da configurare"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "adapter": "L'adattatore Bluetooth da utilizzare per la scansione"
+                }
             }
         }
     }

@@ -16,5 +16,11 @@
                 "title": "V\u00e1lasszon egy hiteles\u00edt\u00e9si m\u00f3dszert"
             }
         }
+    },
+    "issues": {
+        "removed_yaml": {
+            "description": "Az nVent RAYCHEM SENZ YAML-ben megadott konfigur\u00e1ci\u00f3ja elt\u00e1vol\u00edt\u00e1sra ker\u00fclt.\n\nA megl\u00e9v\u0151 YAML konfigur\u00e1ci\u00f3j\u00e1t a Home Assistant nem haszn\u00e1lja.\n\nK\u00e9rem, t\u00e1vol\u00edtsa el a YAML konfigur\u00e1ci\u00f3t a configuration.yaml f\u00e1jlb\u00f3l, \u00e9s ind\u00edtsa \u00fajra a Home Assistantot.",
+            "title": "Az nVent RAYCHEM SENZ YAML konfigur\u00e1ci\u00f3 elt\u00e1vol\u00edt\u00e1sra ker\u00fcl"
+        }
     }
 }
