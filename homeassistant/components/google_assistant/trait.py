@@ -68,6 +68,10 @@ from homeassistant.const import (
 from homeassistant.core import DOMAIN as HA_DOMAIN
 from homeassistant.helpers.network import get_url
 from homeassistant.util import color as color_util, dt, temperature as temp_util
+from homeassistant.util.percentage import (
+    ordered_list_item_to_percentage,
+    percentage_to_ordered_list_item,
+)
 
 from .const import (
     CHALLENGE_ACK_NEEDED,
@@ -156,6 +160,8 @@ COMMAND_LOCATE = f"{PREFIX_COMMANDS}Locate"
 COMMAND_CHARGE = f"{PREFIX_COMMANDS}Charge"
 
 TRAITS = []
+
+FAN_SPEED_MAX_SPEED_COUNT = 5
 
 
 def register_trait(trait):
@@ -1369,6 +1375,16 @@ class FanSpeedTrait(_Trait):
     name = TRAIT_FANSPEED
     commands = [COMMAND_FANSPEED, COMMAND_REVERSE]
 
+    def __init__(self, hass, state, config):
+        """Initialize a trait for a state."""
+        super().__init__(hass, state, config)
+        if state.domain == fan.DOMAIN:
+            speed_count = min(
+                FAN_SPEED_MAX_SPEED_COUNT,
+                round(100 / self.state.attributes.get(fan.ATTR_PERCENTAGE_STEP) or 1.0),
+            )
+            self._ordered_speed = [str(speed) for speed in range(1, speed_count + 1)]
+
     @staticmethod
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
@@ -1396,6 +1412,30 @@ class FanSpeedTrait(_Trait):
                     "supportsFanSpeedPercent": True,
                 }
             )
+
+            if self._ordered_speed:
+                result.update(
+                    {
+                        "availableFanSpeeds": {
+                            "speeds": [
+                                {
+                                    "speed_name": speed,
+                                    "speed_values": [
+                                        {
+                                            "speed_synonym": [
+                                                f"Speed {speed}",
+                                                f"{speed}",
+                                            ],
+                                            "lang": "en",
+                                        }
+                                    ],
+                                }
+                                for speed in self._ordered_speed
+                            ],
+                            "ordered": True,
+                        },
+                    }
+                )
 
         elif domain == climate.DOMAIN:
             modes = self.state.attributes.get(climate.ATTR_FAN_MODES) or []
@@ -1428,6 +1468,9 @@ class FanSpeedTrait(_Trait):
         if domain == fan.DOMAIN:
             percent = attrs.get(fan.ATTR_PERCENTAGE) or 0
             response["currentFanSpeedPercent"] = percent
+            response["currentFanSpeedSetting"] = percentage_to_ordered_list_item(
+                self._ordered_speed, percent
+            )
 
         return response
 
@@ -1447,12 +1490,19 @@ class FanSpeedTrait(_Trait):
             )
 
         if domain == fan.DOMAIN:
+            if fan_speed := params.get("fanSpeed"):
+                fan_speed_percent = ordered_list_item_to_percentage(
+                    self._ordered_speed, fan_speed
+                )
+            else:
+                fan_speed_percent = params.get("fanSpeedPercent")
+
             await self.hass.services.async_call(
                 fan.DOMAIN,
                 fan.SERVICE_SET_PERCENTAGE,
                 {
                     ATTR_ENTITY_ID: self.state.entity_id,
-                    fan.ATTR_PERCENTAGE: params["fanSpeedPercent"],
+                    fan.ATTR_PERCENTAGE: fan_speed_percent,
                 },
                 blocking=not self.config.should_report_state,
                 context=data.context,
