@@ -1,0 +1,8 @@
+{
+  "success": true,
+  "hasEnoughHistory": true,
+  "numMonthsOfData": 36,
+  "ratePlanIsEligible": true,
+  "solarChoiceURL": "https://srp.wattplan.com/rc/",
+  "solarEstimatorURL": "https://srp.wattplan.com/pv/"
+}

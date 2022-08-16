@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Account is already configured",
             "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
         "error": {

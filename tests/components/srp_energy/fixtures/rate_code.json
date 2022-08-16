@@ -1,0 +1,20 @@
+{
+  "description": "Basic Plan",
+  "shortDescription": "Basic",
+  "displayUrl": "https://www.srpnet.com/price-plans/residential-electric/basic",
+  "rateCode": 8,
+  "isPrepay": false,
+  "isTimeOfUse": false,
+  "isFinalAccount": false,
+  "shouldDisplayOnHomePayment": true,
+  "shouldDisplayOnPaymentsNextSched": true,
+  "shouldDisplayOnMakePayments": true,
+  "shouldDisplayOnBankAccounts": true,
+  "shouldDisplayCharts": true,
+  "shouldDisplayHourlyChart": true,
+  "shouldDisplayDailyChart": true,
+  "shouldDisplayMonthlyChart": true,
+  "shouldDisplayAllUsage": true,
+  "shouldDisplayCost": true,
+  "isSolar": false
+}
