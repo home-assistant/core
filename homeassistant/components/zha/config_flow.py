@@ -1,6 +1,7 @@
 """Config flow for ZHA."""
 from __future__ import annotations
 
+import collections
 import contextlib
 import copy
 import json
@@ -363,8 +364,13 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    def _format_backup_choice(self, backup: zigpy.backups.NetworkBackup) -> str:
+    def _format_backup_choice(
+        self, backup: zigpy.backups.NetworkBackup, *, pan_ids: bool = True
+    ) -> str:
         """Format network backup info into a short piece of text."""
+
+        if not pan_ids:
+            return backup.backup_time.strftime("%c")
 
         identifier = (
             # PAN ID
@@ -389,7 +395,23 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
                 self._backups = app.backups.backups
 
-        choices = [self._format_backup_choice(backup) for backup in self._backups]
+        if self.show_advanced_options:
+            # Always show the PAN IDs when in advanced mode
+            choices = [
+                self._format_backup_choice(backup, pan_ids=True)
+                for backup in self._backups
+            ]
+        else:
+            # Only show the PAN IDs for multiple backups taken on the same day
+            num_backups_on_date = collections.Counter(
+                backup.backup_time.date() for backup in self._backups
+            )
+            choices = [
+                self._format_backup_choice(
+                    backup, pan_ids=(num_backups_on_date[backup.backup_time.date()] > 1)
+                )
+                for backup in self._backups
+            ]
 
         if user_input is not None:
             backup = self._backups[choices.index(user_input[CHOOSE_AUTOMATIC_BACKUP])]
