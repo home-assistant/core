@@ -2,10 +2,8 @@
 from unittest.mock import patch
 
 from lacrosse_view import Location, LoginError
-from pytest import raises
 
 from homeassistant import config_entries
-from homeassistant.components.lacrosse_view.config_flow import NonExistentEntry
 from homeassistant.components.lacrosse_view.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -242,18 +240,22 @@ async def test_reauth(hass: HomeAssistant) -> None:
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=data
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": mock_config_entry.entry_id,
+            "title_placeholders": {"name": mock_config_entry.title},
+            "unique_id": mock_config_entry.unique_id,
+        },
+        data=data,
     )
-    assert result["step_id"] == "reauth_confirm"
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
 
     new_username = "new-username"
     new_password = "new-password"
 
-    with patch("lacrosse_view.LaCrosse.login", return_value=True,), patch(
+    with patch("lacrosse_view.LaCrosse.login", return_value=True), patch(
         "lacrosse_view.LaCrosse.get_locations",
         return_value=[Location(id=1, name="Test")],
     ):
@@ -276,37 +278,3 @@ async def test_reauth(hass: HomeAssistant) -> None:
         "id": "1",
         "name": "Test",
     }
-
-
-async def test_reauth_nonexistent_entry(hass: HomeAssistant) -> None:
-    """Test that an error is raised if the entry does not exist during reauth."""
-    data = {
-        "username": "test-username",
-        "password": "test-password",
-        "id": "1",
-        "name": "Test",
-    }
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=data
-    )
-    assert result["step_id"] == "reauth_confirm"
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-    new_username = "new-username"
-    new_password = "new-password"
-
-    with patch("lacrosse_view.LaCrosse.login", return_value=True,), patch(
-        "lacrosse_view.LaCrosse.get_locations",
-        return_value=[Location(id=1, name="Test")],
-    ), raises(NonExistentEntry):
-        await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "username": new_username,
-                "password": new_password,
-            },
-        )
-        await hass.async_block_till_done()

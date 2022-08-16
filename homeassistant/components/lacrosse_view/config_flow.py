@@ -50,7 +50,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self.data: dict[str, str] = {}
         self.locations: list[Location] = []
-        self._reauth_data: Mapping[str, Any] = {"id": None}
+        self._reauth_entry: config_entries.ConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -77,20 +77,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.locations = info
 
             # Check if we are reauthenticating
-            if self._reauth_data["id"] is not None:
-                existing_entry = await self.async_set_unique_id(self._reauth_data["id"])
-                if not existing_entry:
-                    raise NonExistentEntry(
-                        "Trying to reauthenticate a non-existent entry"
-                    )
-                data = {
-                    "id": self._reauth_data["id"],
-                    "name": self._reauth_data["name"],
-                    "username": self.data["username"],
-                    "password": self.data["password"],
-                }
-                self.hass.config_entries.async_update_entry(existing_entry, data=data)
-                await self.hass.config_entries.async_reload(existing_entry.entry_id)
+            if self._reauth_entry is not None:
+                self.hass.config_entries.async_update_entry(
+                    self._reauth_entry, data=self._reauth_entry.data | self.data
+                )
+                await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
                 return self.async_abort(reason="reauth_successful")
             return await self.async_step_location()
 
@@ -137,19 +128,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Reauth in case of a password change or other error."""
-        self._reauth_data = entry_data
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Inform the user of the reauthentication."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="reauth_confirm",
-                data_schema=vol.Schema({}),
-            )
-
+        self._reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
         return await self.async_step_user()
 
 

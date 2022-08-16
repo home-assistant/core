@@ -10,10 +10,6 @@
             "unknown": "Unexpected error"
         },
         "step": {
-            "reauth_confirm": {
-                "description": "The LaCrosse View integration needs to re-authenticate your account",
-                "title": "Reauthenticate Integration"
-            },
             "user": {
                 "data": {
                     "password": "Password",
