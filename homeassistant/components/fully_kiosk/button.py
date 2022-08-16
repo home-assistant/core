@@ -1,12 +1,19 @@
 """Fully Kiosk Browser button."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
-from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
+from fullykiosk import FullyKiosk
+
+from homeassistant.components.button import (
+    ButtonDeviceClass,
+    ButtonEntity,
+    ButtonEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -18,7 +25,7 @@ from .entity import FullyKioskEntity
 class FullyButtonEntityDescriptionMixin:
     """Mixin to describe a Fully Kiosk Browser button entity."""
 
-    press_action: Callable
+    press_action: Callable[[FullyKiosk], Awaitable[None]]
 
 
 @dataclass
@@ -32,11 +39,15 @@ BUTTONS: tuple[FullyButtonEntityDescription, ...] = (
     FullyButtonEntityDescription(
         key="restartApp",
         name="Restart Browser",
+        device_class=ButtonDeviceClass.RESTART,
+        entity_category=EntityCategory.CONFIG,
         press_action=lambda fully: fully.restartApp(),
     ),
     FullyButtonEntityDescription(
         key="rebootDevice",
         name="Reboot Device",
+        device_class=ButtonDeviceClass.RESTART,
+        entity_category=EntityCategory.CONFIG,
         press_action=lambda fully: fully.rebootDevice(),
     ),
     FullyButtonEntityDescription(
