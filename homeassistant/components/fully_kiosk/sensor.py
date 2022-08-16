@@ -97,7 +97,6 @@ class FullySensor(FullyKioskEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor entity."""
         self.entity_description = sensor
-        self._sensor = sensor.key
         self.coordinator = coordinator
 
         self._attr_unique_id = f"{coordinator.data['deviceID']}-{sensor.key}"
@@ -107,10 +106,10 @@ class FullySensor(FullyKioskEntity, SensorEntity):
     @property
     def native_value(self) -> Any:
         """Return the state of the sensor."""
-        if not self.coordinator.data:
+        if (value := self.coordinator.data.get(self.entity_description.key)) is None:
             return None
 
-        if self._sensor in STORAGE_SENSORS:
-            return round(self.coordinator.data[self._sensor] * 0.000001, 1)
+        if self.entity_description.key in STORAGE_SENSORS:
+            return round(value * 0.000001, 1)
 
-        return self.coordinator.data.get(self._sensor)
+        return value
