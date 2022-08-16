@@ -2,7 +2,10 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 import contextlib
+from dataclasses import dataclass
+from enum import Enum
 import logging
 from typing import TYPE_CHECKING, Any, Final
 
@@ -14,6 +17,7 @@ from bleak.backends.scanner import (
 )
 
 from homeassistant.core import CALLBACK_TYPE, callback as hass_callback
+from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
 if TYPE_CHECKING:
     from bleak.backends.device import BLEDevice
@@ -24,6 +28,49 @@ _LOGGER = logging.getLogger(__name__)
 FILTER_UUIDS: Final = "UUIDs"
 
 HA_BLEAK_SCANNER: HaBleakScanner | None = None
+
+
+@dataclass
+class BluetoothServiceInfoBleak(BluetoothServiceInfo):
+    """BluetoothServiceInfo with bleak data.
+
+    Integrations may need BLEDevice and AdvertisementData
+    to connect to the device without having bleak trigger
+    another scan to translate the address to the system's
+    internal details.
+    """
+
+    device: BLEDevice
+    advertisement: AdvertisementData
+
+    @classmethod
+    def from_advertisement(
+        cls, device: BLEDevice, advertisement_data: AdvertisementData, source: str
+    ) -> BluetoothServiceInfoBleak:
+        """Create a BluetoothServiceInfoBleak from an advertisement."""
+        return cls(
+            name=advertisement_data.local_name or device.name or device.address,
+            address=device.address,
+            rssi=device.rssi,
+            manufacturer_data=advertisement_data.manufacturer_data,
+            service_data=advertisement_data.service_data,
+            service_uuids=advertisement_data.service_uuids,
+            source=source,
+            device=device,
+            advertisement=advertisement_data,
+        )
+
+
+class BluetoothScanningMode(Enum):
+    """The mode of scanning for bluetooth devices."""
+
+    PASSIVE = "passive"
+    ACTIVE = "active"
+
+
+BluetoothChange = Enum("BluetoothChange", "ADVERTISEMENT")
+BluetoothCallback = Callable[[BluetoothServiceInfoBleak, BluetoothChange], None]
+ProcessAdvertisementCallback = Callable[[BluetoothServiceInfoBleak], bool]
 
 
 def _dispatch_callback(
