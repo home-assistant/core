@@ -10,14 +10,11 @@ from aiohomekit.model.services import ServicesTypes
 from aiohomekit.utils import clamp_enum_to_char
 import voluptuous as vol
 
-from homeassistant.components.automation import (
-    AutomationActionType,
-    AutomationTriggerInfo,
-)
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
+from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, KNOWN_DEVICES, TRIGGERS
@@ -84,11 +81,11 @@ class TriggerSource:
     async def async_attach_trigger(
         self,
         config: ConfigType,
-        action: AutomationActionType,
-        automation_info: AutomationTriggerInfo,
+        action: TriggerActionType,
+        trigger_info: TriggerInfo,
     ) -> CALLBACK_TYPE:
         """Attach a trigger."""
-        trigger_data = automation_info["trigger_data"]
+        trigger_data = trigger_info["trigger_data"]
         job = HassJob(action)
 
         @callback
@@ -269,10 +266,10 @@ async def async_get_triggers(
 async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
-    action: AutomationActionType,
-    automation_info: AutomationTriggerInfo,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
     device_id = config[CONF_DEVICE_ID]
     device = hass.data[TRIGGERS][device_id]
-    return await device.async_attach_trigger(config, action, automation_info)
+    return await device.async_attach_trigger(config, action, trigger_info)

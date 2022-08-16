@@ -1,16 +1,18 @@
 """Passive update coordinator for the Bluetooth integration."""
 from __future__ import annotations
 
-from collections.abc import Callable, Generator
-import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import BluetoothChange
 from .update_coordinator import BasePassiveBluetoothCoordinator
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Generator
+    import logging
+
+    from . import BluetoothChange, BluetoothScanningMode, BluetoothServiceInfoBleak
 
 
 class PassiveBluetoothDataUpdateCoordinator(BasePassiveBluetoothCoordinator):
@@ -25,9 +27,10 @@ class PassiveBluetoothDataUpdateCoordinator(BasePassiveBluetoothCoordinator):
         hass: HomeAssistant,
         logger: logging.Logger,
         address: str,
+        mode: BluetoothScanningMode,
     ) -> None:
         """Initialize PassiveBluetoothDataUpdateCoordinator."""
-        super().__init__(hass, logger, address)
+        super().__init__(hass, logger, address, mode)
         self._listeners: dict[CALLBACK_TYPE, tuple[CALLBACK_TYPE, object | None]] = {}
 
     @callback
@@ -41,17 +44,6 @@ class PassiveBluetoothDataUpdateCoordinator(BasePassiveBluetoothCoordinator):
         """Handle the device going unavailable."""
         super()._async_handle_unavailable(address)
         self.async_update_listeners()
-
-    @callback
-    def async_start(self) -> CALLBACK_TYPE:
-        """Start the data updater."""
-        self._async_start()
-
-        @callback
-        def _async_cancel() -> None:
-            self._async_stop()
-
-        return _async_cancel
 
     @callback
     def async_add_listener(
@@ -76,7 +68,7 @@ class PassiveBluetoothDataUpdateCoordinator(BasePassiveBluetoothCoordinator):
     @callback
     def _async_handle_bluetooth_event(
         self,
-        service_info: BluetoothServiceInfo,
+        service_info: BluetoothServiceInfoBleak,
         change: BluetoothChange,
     ) -> None:
         """Handle a Bluetooth event."""

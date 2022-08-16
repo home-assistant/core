@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from python_awair.air_data import AirData
-from python_awair.devices import AwairDevice
+from python_awair.devices import AwairBaseDevice
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -76,7 +76,7 @@ class AwairSensor(CoordinatorEntity[AwairDataUpdateCoordinator], SensorEntity):
 
     def __init__(
         self,
-        device: AwairDevice,
+        device: AwairBaseDevice,
         coordinator: AwairDataUpdateCoordinator,
         description: AwairSensorEntityDescription,
     ) -> None:

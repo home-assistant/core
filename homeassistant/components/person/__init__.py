@@ -11,7 +11,7 @@ from homeassistant.components import persistent_notification, websocket_api
 from homeassistant.components.device_tracker import (
     ATTR_SOURCE_TYPE,
     DOMAIN as DEVICE_TRACKER_DOMAIN,
-    SOURCE_TYPE_GPS,
+    SourceType,
 )
 from homeassistant.const import (
     ATTR_EDITABLE,
@@ -469,7 +469,7 @@ class Person(RestoreEntity):
             if not state or state.state in IGNORE_STATES:
                 continue
 
-            if state.attributes.get(ATTR_SOURCE_TYPE) == SOURCE_TYPE_GPS:
+            if state.attributes.get(ATTR_SOURCE_TYPE) == SourceType.GPS:
                 latest_gps = _get_latest(latest_gps, state)
             elif state.state == STATE_HOME:
                 latest_non_gps_home = _get_latest(latest_non_gps_home, state)

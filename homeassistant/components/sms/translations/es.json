@@ -11,7 +11,7 @@
         "step": {
             "user": {
                 "data": {
-                    "baud_speed": "Velocidad en Baudis",
+                    "baud_speed": "Velocidad en baudios",
                     "device": "Dispositivo"
                 },
                 "title": "Conectar con el m\u00f3dem"

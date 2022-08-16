@@ -40,7 +40,7 @@ from .util import fetch_image_url
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(minutes=1)
+SCAN_INTERVAL = timedelta(seconds=30)
 
 SUPPORT_SPOTIFY = (
     MediaPlayerEntityFeature.BROWSE_MEDIA
@@ -107,7 +107,6 @@ def spotify_exception_handler(func):
 class SpotifyMediaPlayer(MediaPlayerEntity):
     """Representation of a Spotify controller."""
 
-    _attr_entity_registry_enabled_default = False
     _attr_has_entity_name = True
     _attr_icon = "mdi:spotify"
     _attr_media_content_type = MEDIA_TYPE_MUSIC
@@ -180,7 +179,10 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
     @property
     def media_position(self) -> int | None:
         """Position of current playing media in seconds."""
-        if not self._currently_playing:
+        if (
+            not self._currently_playing
+            or self._currently_playing.get("progress_ms") is None
+        ):
             return None
         return self._currently_playing["progress_ms"] / 1000
 

@@ -21,6 +21,7 @@ from xbox.webapi.api.provider.smartglass.models import (
 )
 
 from homeassistant.components import application_credentials
+from homeassistant.components.repairs import IssueSeverity, async_create_issue
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, Platform
 from homeassistant.core import HomeAssistant
@@ -74,9 +75,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             config[DOMAIN][CONF_CLIENT_ID], config[DOMAIN][CONF_CLIENT_SECRET]
         ),
     )
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2022.9.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+    )
     _LOGGER.warning(
         "Configuration of Xbox integration in YAML is deprecated and "
-        "will be removed in a future release; Your existing configuration "
+        "will be removed in Home Assistant 2022.9.; Your existing configuration "
         "(including OAuth Application Credentials) has been imported into "
         "the UI automatically and can be safely removed from your "
         "configuration.yaml file"

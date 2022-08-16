@@ -1,0 +1,10 @@
+{
+    "state": {
+        "tractive__tracker_state": {
+            "not_reporting": "Rapporterar inte",
+            "operational": "Operativ",
+            "system_shutdown_user": "Anv\u00e4ndare av systemavst\u00e4ngning",
+            "system_startup": "Systemstart"
+        }
+    }
+}

@@ -6,7 +6,7 @@ from datetime import timedelta
 import logging
 
 from python_awair.air_data import AirData
-from python_awair.devices import AwairDevice
+from python_awair.devices import AwairBaseDevice
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
 from homeassistant.const import (
@@ -39,7 +39,8 @@ DUST_ALIASES = [API_PM25, API_PM10]
 
 LOGGER = logging.getLogger(__package__)
 
-UPDATE_INTERVAL = timedelta(minutes=5)
+UPDATE_INTERVAL_CLOUD = timedelta(minutes=5)
+UPDATE_INTERVAL_LOCAL = timedelta(seconds=30)
 
 
 @dataclass
@@ -129,5 +130,5 @@ SENSOR_TYPES_DUST: tuple[AwairSensorEntityDescription, ...] = (
 class AwairResult:
     """Wrapper class to hold an awair device and set of air data."""
 
-    device: AwairDevice
+    device: AwairBaseDevice
     air_data: AirData

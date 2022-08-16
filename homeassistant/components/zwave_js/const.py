@@ -56,6 +56,8 @@ ATTR_OPTIONS = "options"
 ATTR_TEST_NODE_ID = "test_node_id"
 ATTR_STATUS = "status"
 ATTR_ACKNOWLEDGED_FRAMES = "acknowledged_frames"
+ATTR_EVENT_TYPE_LABEL = "event_type_label"
+ATTR_DATA_TYPE_LABEL = "data_type_label"
 
 ATTR_NODE = "node"
 ATTR_ZWAVE_VALUE = "zwave_value"

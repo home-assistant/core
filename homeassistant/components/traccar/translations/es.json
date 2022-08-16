@@ -1,17 +1,17 @@
 {
     "config": {
         "abort": {
-            "cloud_not_connected": "No est\u00e1 conectado a Home Assistant Cloud.",
+            "cloud_not_connected": "No conectado a Home Assistant Cloud.",
             "single_instance_allowed": "Ya est\u00e1 configurado. Solo es posible una \u00fanica configuraci\u00f3n.",
             "webhook_not_internet_accessible": "Tu instancia de Home Assistant debe estar accesible desde Internet para recibir mensajes webhook."
         },
         "create_entry": {
-            "default": "Para enviar eventos a Home Assistant, tendr\u00e1s que configurar la opci\u00f3n webhook de Traccar.\n\nUtilice la siguiente url: `{webhook_url}`\n\nConsulte la [documentaci\u00f3n]({docs_url}) para m\u00e1s detalles."
+            "default": "Para enviar eventos a Home Assistant, deber\u00e1s configurar la funci\u00f3n de webhook en Traccar. \n\nUsa la siguiente URL: `{webhook_url}` \n\nConsulta [la documentaci\u00f3n]({docs_url}) para obtener m\u00e1s detalles."
         },
         "step": {
             "user": {
                 "description": "\u00bfEst\u00e1s seguro de que quieres configurar Traccar?",
-                "title": "Configura Traccar"
+                "title": "Configurar Traccar"
             }
         }
     }

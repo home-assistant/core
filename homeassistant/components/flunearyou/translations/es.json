@@ -12,9 +12,22 @@
                     "latitude": "Latitud",
                     "longitude": "Longitud"
                 },
-                "description": "Monitorizar reportes de usuarios y del CDC para un par de coordenadas",
+                "description": "Supervisa los informes del CDC y los basados en los usuarios para un par de coordenadas.",
                 "title": "Configurar Flu Near You"
             }
+        }
+    },
+    "issues": {
+        "integration_removal": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "La fuente de datos externa que alimenta la integraci\u00f3n Flu Near You ya no est\u00e1 disponible; por lo tanto, la integraci\u00f3n ya no funciona. \n\nPulsa ENVIAR para eliminar Flu Near You de tu instancia Home Assistant.",
+                        "title": "Eliminar Flu Near You"
+                    }
+                }
+            },
+            "title": "Flu Near You ya no est\u00e1 disponible"
         }
     }
 }
