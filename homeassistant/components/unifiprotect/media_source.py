@@ -839,7 +839,6 @@ class ProtectMediaSource(MediaSource):
         """Return all media source for all UniFi Protect NVRs."""
 
         consoles: list[BrowseMediaSource] = []
-        print(len(self.data_sources.values()))
         for data_source in self.data_sources.values():
             if not data_source.api.bootstrap.has_media:
                 continue
