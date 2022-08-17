@@ -617,6 +617,11 @@ omit =
     homeassistant/components/kef/*
     homeassistant/components/keyboard/*
     homeassistant/components/keyboard_remote/*
+    homeassistant/components/keymitt_ble/__init__.py
+    homeassistant/components/keymitt_ble/const.py
+    homeassistant/components/keymitt_ble/entity.py
+    homeassistant/components/keymitt_ble/services.py
+    homeassistant/components/keymitt_ble/switch.py
     homeassistant/components/kira/*
     homeassistant/components/kiwi/lock.py
     homeassistant/components/kodi/__init__.py
