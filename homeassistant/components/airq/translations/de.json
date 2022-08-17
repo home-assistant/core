@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dieses Gerät ist bereits vorhanden und steht Home Assistant zur Verfügung"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_auth": "Passwort falsch",
+            "unknown": "Unvorhergesehener Fehler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "Geräte-IP oder mDNS (z.B. '123ab_air-q.local')",
+                    "password": "Passwort"
+                },
+                "description": "Netzwerk-Adresse (IP oder mDNS) des Gerätes und Geräte-Passwort",
+                "title": "Identifikation des Gerätes"
+            }
+        }
+    }
+}
+
