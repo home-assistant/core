@@ -272,7 +272,7 @@ class MqttNumber(MqttEntity, RestoreNumber):
         return self._config.get(CONF_UNIT_OF_MEASUREMENT)
 
     @property
-    def native_value(self):
+    def native_value(self) -> float | None:
         """Return the current value."""
         return self._current_number
 

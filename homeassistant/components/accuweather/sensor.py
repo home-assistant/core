@@ -320,19 +320,19 @@ async def async_setup_entry(
 
     coordinator: AccuWeatherDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    sensors: list[AccuWeatherSensor] = []
-    for description in SENSOR_TYPES:
-        sensors.append(AccuWeatherSensor(coordinator, description))
+    sensors = [
+        AccuWeatherSensor(coordinator, description) for description in SENSOR_TYPES
+    ]
 
     if coordinator.forecast:
-        for description in FORECAST_SENSOR_TYPES:
-            for day in range(MAX_FORECAST_DAYS + 1):
-                # Some air quality/allergy sensors are only available for certain
-                # locations.
-                if description.key in coordinator.data[ATTR_FORECAST][0]:
-                    sensors.append(
-                        AccuWeatherSensor(coordinator, description, forecast_day=day)
-                    )
+        # Some air quality/allergy sensors are only available for certain
+        # locations.
+        sensors.extend(
+            AccuWeatherSensor(coordinator, description, forecast_day=day)
+            for description in FORECAST_SENSOR_TYPES
+            for day in range(MAX_FORECAST_DAYS + 1)
+            if description.key in coordinator.data[ATTR_FORECAST][0]
+        )
 
     async_add_entities(sensors)
 

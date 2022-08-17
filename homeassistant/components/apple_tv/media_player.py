@@ -422,7 +422,7 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
             return cur_item
 
         # Add app item if we have one
-        if self._app_list and cur_item.children:
+        if self._app_list and cur_item.children and isinstance(cur_item.children, list):
             cur_item.children.insert(0, build_app_list(self._app_list))
 
         return cur_item

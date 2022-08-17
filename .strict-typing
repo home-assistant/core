@@ -56,9 +56,12 @@ homeassistant.components.ambee.*
 homeassistant.components.ambient_station.*
 homeassistant.components.amcrest.*
 homeassistant.components.ampio.*
+homeassistant.components.anthemav.*
 homeassistant.components.aseko_pool_live.*
 homeassistant.components.asuswrt.*
+homeassistant.components.auth.*
 homeassistant.components.automation.*
+homeassistant.components.awair.*
 homeassistant.components.backup.*
 homeassistant.components.baf.*
 homeassistant.components.binary_sensor.*
@@ -105,6 +108,7 @@ homeassistant.components.fritzbox_callmonitor.*
 homeassistant.components.fronius.*
 homeassistant.components.frontend.*
 homeassistant.components.fritz.*
+homeassistant.components.fully_kiosk.*
 homeassistant.components.geo_location.*
 homeassistant.components.geocaching.*
 homeassistant.components.gios.*
@@ -128,6 +132,7 @@ homeassistant.components.homekit.util
 homeassistant.components.homekit_controller
 homeassistant.components.homekit_controller.alarm_control_panel
 homeassistant.components.homekit_controller.button
+homeassistant.components.homekit_controller.config_flow
 homeassistant.components.homekit_controller.const
 homeassistant.components.homekit_controller.lock
 homeassistant.components.homekit_controller.select
@@ -185,6 +190,7 @@ homeassistant.components.nut.*
 homeassistant.components.oncue.*
 homeassistant.components.onewire.*
 homeassistant.components.open_meteo.*
+homeassistant.components.openexchangerates.*
 homeassistant.components.openuv.*
 homeassistant.components.peco.*
 homeassistant.components.overkiz.*
@@ -210,6 +216,7 @@ homeassistant.components.rpi_power.*
 homeassistant.components.rtsp_to_webrtc.*
 homeassistant.components.samsungtv.*
 homeassistant.components.scene.*
+homeassistant.components.schedule.*
 homeassistant.components.select.*
 homeassistant.components.sensibo.*
 homeassistant.components.sensor.*

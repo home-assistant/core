@@ -1,0 +1,8 @@
+{
+    "issues": {
+        "replaced": {
+            "description": "Integrasi Sensor Temperatur dan Kelembaban Xiaomi Mijia BLE berhenti bekerja di Home Assistant 2022.7 dan digantikan oleh integrasi Xiaomi BLE dalam rilis 2022.8.\n\nTidak ada jalur migrasi yang bisa dilakukan, oleh karena itu, Anda harus menambahkan perangkat Mi Flora Anda menggunakan integrasi baru secara manual.\n\nKonfigurasi Sensor Temperatur dan Kelembaban Xiaomi Mijia BLE Anda yang ada tidak lagi digunakan oleh Home Assistant. Hapus konfigurasi YAML dari file configuration.yaml Anda dan mulai ulang Home Assistant untuk memperbaiki masalah ini.",
+            "title": "Integrasi Sensor Temperatur dan Kelembaban BLE Xiaomi Mijia telah diganti"
+        }
+    }
+}

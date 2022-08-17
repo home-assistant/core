@@ -126,7 +126,7 @@ async def test_air_quality(hass, hk_driver):
     hass.states.async_set(entity_id, "34")
     await hass.async_block_till_done()
     assert acc.char_density.value == 34
-    assert acc.char_quality.value == 1
+    assert acc.char_quality.value == 2
 
     hass.states.async_set(entity_id, "200")
     await hass.async_block_till_done()
@@ -205,7 +205,7 @@ async def test_pm25(hass, hk_driver):
     hass.states.async_set(entity_id, "23")
     await hass.async_block_till_done()
     assert acc.char_density.value == 23
-    assert acc.char_quality.value == 1
+    assert acc.char_quality.value == 2
 
     hass.states.async_set(entity_id, "34")
     await hass.async_block_till_done()
@@ -215,12 +215,12 @@ async def test_pm25(hass, hk_driver):
     hass.states.async_set(entity_id, "90")
     await hass.async_block_till_done()
     assert acc.char_density.value == 90
-    assert acc.char_quality.value == 3
+    assert acc.char_quality.value == 4
 
     hass.states.async_set(entity_id, "200")
     await hass.async_block_till_done()
     assert acc.char_density.value == 200
-    assert acc.char_quality.value == 4
+    assert acc.char_quality.value == 5
 
     hass.states.async_set(entity_id, "400")
     await hass.async_block_till_done()

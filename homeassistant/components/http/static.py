@@ -33,7 +33,7 @@ def _get_file_path(
         return None
     if filepath.is_file():
         return filepath
-    raise HTTPNotFound
+    raise FileNotFoundError
 
 
 class CachingStaticResource(StaticResource):

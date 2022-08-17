@@ -1,5 +1,16 @@
 {
     "issues": {
+        "bad_psu": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "SUBMIT(\u9001\u4fe1)\u3092\u62bc\u3057\u3066\u3001\u96fb\u6e90\u304c\u4ea4\u63db\u3055\u308c\u305f\u3053\u3068\u3092\u78ba\u8a8d\u3057\u307e\u3059",
+                        "title": "\u96fb\u6e90\u3092\u4ea4\u63db\u3059\u308b\u5fc5\u8981\u304c\u3042\u308a\u307e\u3059"
+                    }
+                }
+            },
+            "title": "\u96fb\u6e90\u304c\u4e0d\u5b89\u5b9a"
+        },
         "out_of_blinker_fluid": {
             "fix_flow": {
                 "step": {

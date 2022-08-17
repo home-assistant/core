@@ -9,7 +9,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import KNOWN_DEVICES, AccessoryEntity
+from . import KNOWN_DEVICES
+from .entity import AccessoryEntity
 
 
 class HomeKitCamera(AccessoryEntity, Camera):

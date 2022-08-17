@@ -5,6 +5,7 @@ import functools as ft
 from typing import Any
 
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
+import voluptuous as vol
 
 from homeassistant import data_entry_flow
 from homeassistant.core import HomeAssistant, callback
@@ -19,6 +20,34 @@ from .issue_registry import async_get as async_get_issue_registry
 from .models import IssueSeverity, RepairsFlow, RepairsProtocol
 
 
+class ConfirmRepairFlow(RepairsFlow):
+    """Handler for an issue fixing flow without any side effects."""
+
+    async def async_step_init(
+        self, user_input: dict[str, str] | None = None
+    ) -> data_entry_flow.FlowResult:
+        """Handle the first step of a fix flow."""
+        return await (self.async_step_confirm())
+
+    async def async_step_confirm(
+        self, user_input: dict[str, str] | None = None
+    ) -> data_entry_flow.FlowResult:
+        """Handle the confirm step of a fix flow."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data={})
+
+        issue_registry = async_get_issue_registry(self.hass)
+        description_placeholders = None
+        if issue := issue_registry.async_get_issue(self.handler, self.issue_id):
+            description_placeholders = issue.translation_placeholders
+
+        return self.async_show_form(
+            step_id="confirm",
+            data_schema=vol.Schema({}),
+            description_placeholders=description_placeholders,
+        )
+
+
 class RepairsFlowManager(data_entry_flow.FlowManager):
     """Manage repairs flows."""
 
@@ -30,14 +59,6 @@ class RepairsFlowManager(data_entry_flow.FlowManager):
         data: dict[str, Any] | None = None,
     ) -> RepairsFlow:
         """Create a flow. platform is a repairs module."""
-        if "platforms" not in self.hass.data[DOMAIN]:
-            await async_process_repairs_platforms(self.hass)
-
-        platforms: dict[str, RepairsProtocol] = self.hass.data[DOMAIN]["platforms"]
-        if handler_key not in platforms:
-            raise data_entry_flow.UnknownHandler
-        platform = platforms[handler_key]
-
         assert data and "issue_id" in data
         issue_id = data["issue_id"]
 
@@ -46,7 +67,19 @@ class RepairsFlowManager(data_entry_flow.FlowManager):
         if issue is None or not issue.is_fixable:
             raise data_entry_flow.UnknownStep
 
-        return await platform.async_create_fix_flow(self.hass, issue_id)
+        if "platforms" not in self.hass.data[DOMAIN]:
+            await async_process_repairs_platforms(self.hass)
+
+        platforms: dict[str, RepairsProtocol] = self.hass.data[DOMAIN]["platforms"]
+        if handler_key not in platforms:
+            flow: RepairsFlow = ConfirmRepairFlow()
+        else:
+            platform = platforms[handler_key]
+            flow = await platform.async_create_fix_flow(self.hass, issue_id, issue.data)
+
+        flow.issue_id = issue_id
+        flow.data = issue.data
+        return flow
 
     async def async_finish_flow(
         self, flow: data_entry_flow.FlowHandler, result: data_entry_flow.FlowResult
@@ -88,7 +121,9 @@ def async_create_issue(
     *,
     issue_domain: str | None = None,
     breaks_in_ha_version: str | None = None,
+    data: dict[str, str | int | float | None] | None = None,
     is_fixable: bool,
+    is_persistent: bool = False,
     learn_more_url: str | None = None,
     severity: IssueSeverity,
     translation_key: str,
@@ -109,7 +144,9 @@ def async_create_issue(
         issue_id,
         issue_domain=issue_domain,
         breaks_in_ha_version=breaks_in_ha_version,
+        data=data,
         is_fixable=is_fixable,
+        is_persistent=is_persistent,
         learn_more_url=learn_more_url,
         severity=severity,
         translation_key=translation_key,
@@ -123,7 +160,9 @@ def create_issue(
     issue_id: str,
     *,
     breaks_in_ha_version: str | None = None,
+    data: dict[str, str | int | float | None] | None = None,
     is_fixable: bool,
+    is_persistent: bool = False,
     learn_more_url: str | None = None,
     severity: IssueSeverity,
     translation_key: str,
@@ -138,7 +177,9 @@ def create_issue(
             domain,
             issue_id,
             breaks_in_ha_version=breaks_in_ha_version,
+            data=data,
             is_fixable=is_fixable,
+            is_persistent=is_persistent,
             learn_more_url=learn_more_url,
             severity=severity,
             translation_key=translation_key,

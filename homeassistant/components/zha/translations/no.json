@@ -46,10 +46,13 @@
             "title": "Alternativer for alarmkontrollpanel"
         },
         "zha_options": {
+            "always_prefer_xy_color_mode": "Foretrekker alltid XY-fargemodus",
             "consider_unavailable_battery": "Vurder batteridrevne enheter som utilgjengelige etter (sekunder)",
             "consider_unavailable_mains": "Tenk p\u00e5 str\u00f8mnettet som ikke er tilgjengelig etter (sekunder)",
             "default_light_transition": "Standard lysovergangstid (sekunder)",
             "enable_identify_on_join": "Aktiver identifiseringseffekt n\u00e5r enheter blir med i nettverket",
+            "enhanced_light_transition": "Aktiver forbedret lysfarge/temperaturovergang fra en off-tilstand",
+            "light_transitioning_flag": "Aktiver skyveknappen for forbedret lysstyrke under lysovergang",
             "title": "Globale alternativer"
         }
     },

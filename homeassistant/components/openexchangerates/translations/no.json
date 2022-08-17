@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Tjenesten er allerede konfigurert",
+            "cannot_connect": "Tilkobling mislyktes",
+            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket",
+            "timeout_connect": "Tidsavbrudd oppretter forbindelse"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_auth": "Ugyldig godkjenning",
+            "timeout_connect": "Tidsavbrudd oppretter forbindelse",
+            "unknown": "Uventet feil"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API-n\u00f8kkel",
+                    "base": "Grunnvaluta"
+                },
+                "data_description": {
+                    "base": "Bruk av en annen basisvaluta enn USD krever en [betalt plan]( {signup} )."
+                }
+            }
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Konfigurering av \u00e5pne valutakurser ved hjelp av YAML blir fjernet. \n\n Din eksisterende YAML-konfigurasjon har blitt importert til brukergrensesnittet automatisk. \n\n Fjern Open Exchange Rates YAML-konfigurasjonen fra configuration.yaml-filen og start Home Assistant p\u00e5 nytt for \u00e5 fikse dette problemet.",
+            "title": "Open Exchange Rates YAML-konfigurasjonen blir fjernet"
+        }
+    }
+}

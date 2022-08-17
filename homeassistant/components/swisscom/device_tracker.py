@@ -4,7 +4,6 @@ from __future__ import annotations
 from contextlib import suppress
 import logging
 
-from aiohttp.hdrs import CONTENT_TYPE
 import requests
 import voluptuous as vol
 
@@ -79,7 +78,7 @@ class SwisscomDeviceScanner(DeviceScanner):
     def get_swisscom_data(self):
         """Retrieve data from Swisscom and return parsed result."""
         url = f"http://{self.host}/ws"
-        headers = {CONTENT_TYPE: "application/x-sah-ws-4-call+json"}
+        headers = {"Content-Type": "application/x-sah-ws-4-call+json"}
         data = """
         {"service":"Devices", "method":"get",
         "parameters":{"expression":"lan and not self"}}"""
