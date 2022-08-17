@@ -205,12 +205,13 @@ class HaScanner:
         if time_since_last_detection < SCANNER_WATCHDOG_TIMEOUT:
             return
         _LOGGER.info(
-            "Bluetooth scanner has gone quiet for %s, restarting",
+            "%s: Bluetooth scanner has gone quiet for %s, restarting",
+            self.name,
             SCANNER_WATCHDOG_INTERVAL,
         )
         async with self._start_stop_lock:
-            await self.async_stop()
-            await self.async_start()
+            await self._async_stop()
+            await self._async_start()
 
     async def _async_hass_stopping(self, event: Event) -> None:
         """Stop the Bluetooth integration at shutdown."""
