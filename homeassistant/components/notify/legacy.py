@@ -33,7 +33,8 @@ NOTIFY_SERVICES = "notify_services"
 NOTIFY_DISCOVERY_DISPATCHER = "notify_discovery_dispatcher"
 
 
-async def async_setup_legacy(
+@callback
+def async_setup_legacy(
     hass: HomeAssistant, config: ConfigType
 ) -> list[Coroutine[Any, Any, None]]:
     """Set up legacy notify services."""

@@ -42,7 +42,7 @@ PLATFORM_SCHEMA = vol.Schema(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the notify services."""
 
-    platform_setups = await async_setup_legacy(hass, config)
+    platform_setups = async_setup_legacy(hass, config)
 
     # We need to add the component here break the deadlock
     # when setting up integrations from config entries as
