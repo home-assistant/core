@@ -51,7 +51,7 @@ def _dispatch_bleak_callback(
     """Dispatch the callback."""
     if not callback:
         # Callback destroyed right before being called, ignore
-        return  # type: ignore[unreachable]
+        return  # type: ignore[unreachable] # pragma: no cover
 
     if (uuids := filters.get(FILTER_UUIDS)) and not uuids.intersection(
         advertisement_data.service_uuids
