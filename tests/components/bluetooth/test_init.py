@@ -10,20 +10,21 @@ import pytest
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
-    SCANNER_WATCHDOG_INTERVAL,
-    SCANNER_WATCHDOG_TIMEOUT,
-    SOURCE_LOCAL,
-    UNAVAILABLE_TRACK_SECONDS,
     BluetoothChange,
     BluetoothScanningMode,
     BluetoothServiceInfo,
     async_process_advertisements,
     async_rediscover_address,
     async_track_unavailable,
+    manager,
     models,
 )
 from homeassistant.components.bluetooth.const import (
     CONF_ADAPTER,
+    SCANNER_WATCHDOG_INTERVAL,
+    SCANNER_WATCHDOG_TIMEOUT,
+    SOURCE_LOCAL,
+    UNAVAILABLE_TRACK_SECONDS,
     UNIX_DEFAULT_BLUETOOTH_ADAPTER,
 )
 from homeassistant.config_entries import ConfigEntryState
@@ -62,7 +63,7 @@ async def test_setup_and_stop_no_bluetooth(hass, caplog):
         {"domain": "switchbot", "service_uuid": "cba20d00-224d-11e6-9fb8-0002a5d5c51b"}
     ]
     with patch(
-        "homeassistant.components.bluetooth.HaBleakScanner.async_setup",
+        "homeassistant.components.bluetooth.models.HaBleakScanner.async_setup",
         side_effect=BleakError,
     ) as mock_ha_bleak_scanner, patch(
         "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
@@ -83,8 +84,10 @@ async def test_setup_and_stop_no_bluetooth(hass, caplog):
 async def test_setup_and_stop_broken_bluetooth(hass, caplog):
     """Test we fail gracefully when bluetooth/dbus is broken."""
     mock_bt = []
-    with patch("homeassistant.components.bluetooth.HaBleakScanner.async_setup"), patch(
-        "homeassistant.components.bluetooth.HaBleakScanner.start",
+    with patch(
+        "homeassistant.components.bluetooth.models.HaBleakScanner.async_setup"
+    ), patch(
+        "homeassistant.components.bluetooth.models.HaBleakScanner.start",
         side_effect=BleakError,
     ), patch(
         "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
@@ -109,10 +112,10 @@ async def test_setup_and_stop_broken_bluetooth_hanging(hass, caplog):
     async def _mock_hang():
         await asyncio.sleep(1)
 
-    with patch.object(bluetooth, "START_TIMEOUT", 0), patch(
-        "homeassistant.components.bluetooth.HaBleakScanner.async_setup"
+    with patch.object(manager, "START_TIMEOUT", 0), patch(
+        "homeassistant.components.bluetooth.models.HaBleakScanner.async_setup"
     ), patch(
-        "homeassistant.components.bluetooth.HaBleakScanner.start",
+        "homeassistant.components.bluetooth.models.HaBleakScanner.start",
         side_effect=_mock_hang,
     ), patch(
         "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
@@ -132,8 +135,10 @@ async def test_setup_and_stop_broken_bluetooth_hanging(hass, caplog):
 async def test_setup_and_retry_adapter_not_yet_available(hass, caplog):
     """Test we retry if the adapter is not yet available."""
     mock_bt = []
-    with patch("homeassistant.components.bluetooth.HaBleakScanner.async_setup"), patch(
-        "homeassistant.components.bluetooth.HaBleakScanner.start",
+    with patch(
+        "homeassistant.components.bluetooth.models.HaBleakScanner.async_setup"
+    ), patch(
+        "homeassistant.components.bluetooth.models.HaBleakScanner.start",
         side_effect=BleakError,
     ), patch(
         "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
@@ -152,14 +157,53 @@ async def test_setup_and_retry_adapter_not_yet_available(hass, caplog):
     assert entry.state == ConfigEntryState.SETUP_RETRY
 
     with patch(
-        "homeassistant.components.bluetooth.HaBleakScanner.start",
+        "homeassistant.components.bluetooth.models.HaBleakScanner.start",
     ):
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
         await hass.async_block_till_done()
     assert entry.state == ConfigEntryState.LOADED
 
     with patch(
-        "homeassistant.components.bluetooth.HaBleakScanner.stop",
+        "homeassistant.components.bluetooth.models.HaBleakScanner.stop",
+    ):
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        await hass.async_block_till_done()
+
+
+async def test_no_race_during_manual_reload_in_retry_state(hass, caplog):
+    """Test we can successfully reload when the entry is in a retry state."""
+    mock_bt = []
+    with patch(
+        "homeassistant.components.bluetooth.models.HaBleakScanner.async_setup"
+    ), patch(
+        "homeassistant.components.bluetooth.models.HaBleakScanner.start",
+        side_effect=BleakError,
+    ), patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
+    ):
+        assert await async_setup_component(
+            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
+        )
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    entry = hass.config_entries.async_entries(bluetooth.DOMAIN)[0]
+
+    assert "Failed to start Bluetooth" in caplog.text
+    assert len(bluetooth.async_discovered_service_info(hass)) == 0
+    assert entry.state == ConfigEntryState.SETUP_RETRY
+
+    with patch(
+        "homeassistant.components.bluetooth.models.HaBleakScanner.start",
+    ):
+        await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state == ConfigEntryState.LOADED
+
+    with patch(
+        "homeassistant.components.bluetooth.models.HaBleakScanner.stop",
     ):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         await hass.async_block_till_done()
@@ -169,7 +213,7 @@ async def test_calling_async_discovered_devices_no_bluetooth(hass, caplog):
     """Test we fail gracefully when asking for discovered devices and there is no blueooth."""
     mock_bt = []
     with patch(
-        "homeassistant.components.bluetooth.HaBleakScanner.async_setup",
+        "homeassistant.components.bluetooth.models.HaBleakScanner.async_setup",
         side_effect=FileNotFoundError,
     ), patch(
         "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
@@ -868,6 +912,66 @@ async def test_register_callback_by_address(
         assert service_info.manufacturer_id == 89
 
 
+async def test_register_callback_survives_reload(
+    hass, mock_bleak_scanner_start, enable_bluetooth
+):
+    """Test registering a callback by address survives bluetooth being reloaded."""
+    mock_bt = []
+    callbacks = []
+
+    def _fake_subscriber(
+        service_info: BluetoothServiceInfo, change: BluetoothChange
+    ) -> None:
+        """Fake subscriber for the BleakScanner."""
+        callbacks.append((service_info, change))
+
+    with patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
+    ):
+        assert await async_setup_component(
+            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
+        )
+        await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    bluetooth.async_register_callback(
+        hass,
+        _fake_subscriber,
+        {"address": "44:44:33:11:23:45"},
+        BluetoothScanningMode.ACTIVE,
+    )
+
+    assert len(mock_bleak_scanner_start.mock_calls) == 1
+
+    switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
+    switchbot_adv = AdvertisementData(
+        local_name="wohand",
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+        manufacturer_data={89: b"\xd8.\xad\xcd\r\x85"},
+        service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"H\x10c"},
+    )
+
+    _get_underlying_scanner()._callback(switchbot_device, switchbot_adv)
+    assert len(callbacks) == 1
+    service_info: BluetoothServiceInfo = callbacks[0][0]
+    assert service_info.name == "wohand"
+    assert service_info.manufacturer == "Nordic Semiconductor ASA"
+    assert service_info.manufacturer_id == 89
+
+    entry = hass.config_entries.async_entries(bluetooth.DOMAIN)[0]
+    await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    _get_underlying_scanner()._callback(switchbot_device, switchbot_adv)
+    assert len(callbacks) == 2
+    service_info: BluetoothServiceInfo = callbacks[1][0]
+    assert service_info.name == "wohand"
+    assert service_info.manufacturer == "Nordic Semiconductor ASA"
+    assert service_info.manufacturer_id == 89
+
+
 async def test_process_advertisements_bail_on_good_advertisement(
     hass: HomeAssistant, mock_bleak_scanner_start, enable_bluetooth
 ):
@@ -1417,7 +1521,8 @@ async def test_config_entry_can_be_reloaded_when_stop_raises(
     assert entry.state == ConfigEntryState.LOADED
 
     with patch(
-        "homeassistant.components.bluetooth.HaBleakScanner.stop", side_effect=BleakError
+        "homeassistant.components.bluetooth.models.HaBleakScanner.stop",
+        side_effect=BleakError,
     ):
         await hass.config_entries.async_reload(entry.entry_id)
         await hass.async_block_till_done()
@@ -1436,11 +1541,11 @@ async def test_changing_the_adapter_at_runtime(hass):
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.bluetooth.HaBleakScanner.async_setup"
+        "homeassistant.components.bluetooth.models.HaBleakScanner.async_setup"
     ) as mock_setup, patch(
-        "homeassistant.components.bluetooth.HaBleakScanner.start"
+        "homeassistant.components.bluetooth.models.HaBleakScanner.start"
     ), patch(
-        "homeassistant.components.bluetooth.HaBleakScanner.stop"
+        "homeassistant.components.bluetooth.models.HaBleakScanner.stop"
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -1461,9 +1566,11 @@ async def test_dbus_socket_missing_in_container(hass, caplog):
     """Test we handle dbus being missing in the container."""
 
     with patch(
-        "homeassistant.components.bluetooth.is_docker_env", return_value=True
-    ), patch("homeassistant.components.bluetooth.HaBleakScanner.async_setup"), patch(
-        "homeassistant.components.bluetooth.HaBleakScanner.start",
+        "homeassistant.components.bluetooth.manager.is_docker_env", return_value=True
+    ), patch(
+        "homeassistant.components.bluetooth.models.HaBleakScanner.async_setup"
+    ), patch(
+        "homeassistant.components.bluetooth.models.HaBleakScanner.start",
         side_effect=FileNotFoundError,
     ):
         assert await async_setup_component(
@@ -1483,9 +1590,11 @@ async def test_dbus_socket_missing(hass, caplog):
     """Test we handle dbus being missing."""
 
     with patch(
-        "homeassistant.components.bluetooth.is_docker_env", return_value=False
-    ), patch("homeassistant.components.bluetooth.HaBleakScanner.async_setup"), patch(
-        "homeassistant.components.bluetooth.HaBleakScanner.start",
+        "homeassistant.components.bluetooth.manager.is_docker_env", return_value=False
+    ), patch(
+        "homeassistant.components.bluetooth.models.HaBleakScanner.async_setup"
+    ), patch(
+        "homeassistant.components.bluetooth.models.HaBleakScanner.start",
         side_effect=FileNotFoundError,
     ):
         assert await async_setup_component(
@@ -1505,9 +1614,11 @@ async def test_dbus_broken_pipe_in_container(hass, caplog):
     """Test we handle dbus broken pipe in the container."""
 
     with patch(
-        "homeassistant.components.bluetooth.is_docker_env", return_value=True
-    ), patch("homeassistant.components.bluetooth.HaBleakScanner.async_setup"), patch(
-        "homeassistant.components.bluetooth.HaBleakScanner.start",
+        "homeassistant.components.bluetooth.manager.is_docker_env", return_value=True
+    ), patch(
+        "homeassistant.components.bluetooth.models.HaBleakScanner.async_setup"
+    ), patch(
+        "homeassistant.components.bluetooth.models.HaBleakScanner.start",
         side_effect=BrokenPipeError,
     ):
         assert await async_setup_component(
@@ -1528,9 +1639,11 @@ async def test_dbus_broken_pipe(hass, caplog):
     """Test we handle dbus broken pipe."""
 
     with patch(
-        "homeassistant.components.bluetooth.is_docker_env", return_value=False
-    ), patch("homeassistant.components.bluetooth.HaBleakScanner.async_setup"), patch(
-        "homeassistant.components.bluetooth.HaBleakScanner.start",
+        "homeassistant.components.bluetooth.manager.is_docker_env", return_value=False
+    ), patch(
+        "homeassistant.components.bluetooth.models.HaBleakScanner.async_setup"
+    ), patch(
+        "homeassistant.components.bluetooth.models.HaBleakScanner.start",
         side_effect=BrokenPipeError,
     ):
         assert await async_setup_component(
@@ -1550,8 +1663,10 @@ async def test_dbus_broken_pipe(hass, caplog):
 async def test_invalid_dbus_message(hass, caplog):
     """Test we handle invalid dbus message."""
 
-    with patch("homeassistant.components.bluetooth.HaBleakScanner.async_setup"), patch(
-        "homeassistant.components.bluetooth.HaBleakScanner.start",
+    with patch(
+        "homeassistant.components.bluetooth.models.HaBleakScanner.async_setup"
+    ), patch(
+        "homeassistant.components.bluetooth.models.HaBleakScanner.start",
         side_effect=InvalidMessageError,
     ):
         assert await async_setup_component(
@@ -1581,7 +1696,7 @@ async def test_recovery_from_dbus_restart(
 
     # Ensure we don't restart the scanner if we don't need to
     with patch(
-        "homeassistant.components.bluetooth.MONOTONIC_TIME",
+        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
         return_value=start_time_monotonic + 10,
     ):
         async_fire_time_changed(hass, dt_util.utcnow() + SCANNER_WATCHDOG_INTERVAL)
@@ -1591,7 +1706,7 @@ async def test_recovery_from_dbus_restart(
 
     # Fire a callback to reset the timer
     with patch(
-        "homeassistant.components.bluetooth.MONOTONIC_TIME",
+        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
         return_value=start_time_monotonic,
     ):
         scanner._callback(
@@ -1601,7 +1716,7 @@ async def test_recovery_from_dbus_restart(
 
     # Ensure we don't restart the scanner if we don't need to
     with patch(
-        "homeassistant.components.bluetooth.MONOTONIC_TIME",
+        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
         return_value=start_time_monotonic + 20,
     ):
         async_fire_time_changed(hass, dt_util.utcnow() + SCANNER_WATCHDOG_INTERVAL)
@@ -1611,7 +1726,7 @@ async def test_recovery_from_dbus_restart(
 
     # We hit the timer, so we restart the scanner
     with patch(
-        "homeassistant.components.bluetooth.MONOTONIC_TIME",
+        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
         return_value=start_time_monotonic + SCANNER_WATCHDOG_TIMEOUT,
     ):
         async_fire_time_changed(hass, dt_util.utcnow() + SCANNER_WATCHDOG_INTERVAL)

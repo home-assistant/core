@@ -20,24 +20,19 @@ class SwitchbotEntity(PassiveBluetoothCoordinatorEntity):
 
     coordinator: SwitchbotDataUpdateCoordinator
 
-    def __init__(
-        self,
-        coordinator: SwitchbotDataUpdateCoordinator,
-        unique_id: str,
-        address: str,
-        name: str,
-    ) -> None:
+    def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
+        self._device = coordinator.device
         self._last_run_success: bool | None = None
-        self._unique_id = unique_id
-        self._address = address
-        self._attr_name = name
+        self._address = coordinator.ble_device.address
+        self._attr_unique_id = coordinator.base_unique_id
+        self._attr_name = coordinator.device_name
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_BLUETOOTH, self._address)},
             manufacturer=MANUFACTURER,
             model=self.data["modelName"],
-            name=name,
+            name=coordinator.device_name,
         )
         if ":" not in self._address:
             # MacOS Bluetooth addresses are not mac addresses

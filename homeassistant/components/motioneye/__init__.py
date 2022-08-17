@@ -544,7 +544,7 @@ class MotionEyeEntity(CoordinatorEntity):
         client: MotionEyeClient,
         coordinator: DataUpdateCoordinator,
         options: MappingProxyType[str, Any],
-        entity_description: EntityDescription = None,
+        entity_description: EntityDescription | None = None,
     ) -> None:
         """Initialize a motionEye entity."""
         self._camera_id = camera[KEY_ID]

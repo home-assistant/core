@@ -13,6 +13,15 @@
         },
         "flow_title": "{name} ({address})",
         "step": {
+            "confirm": {
+                "description": "Szeretn\u00e9 be\u00e1ll\u00edtani: {name}?"
+            },
+            "password": {
+                "data": {
+                    "password": "Jelsz\u00f3"
+                },
+                "description": "A {name} eszk\u00f6z jelsz\u00f3t k\u00e9r"
+            },
             "user": {
                 "data": {
                     "address": "Eszk\u00f6z c\u00edme",

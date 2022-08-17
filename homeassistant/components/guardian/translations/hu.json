@@ -17,5 +17,18 @@
                 "description": "Konfigur\u00e1lja a helyi Elexa Guardian eszk\u00f6zt."
             }
         }
+    },
+    "issues": {
+        "deprecated_service": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Friss\u00edtsen minden olyan automatiz\u00e1l\u00e1st vagy szkriptet, amely ezt a szolg\u00e1ltat\u00e1st haszn\u00e1lja, hogy helyette a(z) `{alternate_service}` szolg\u00e1ltat\u00e1st haszn\u00e1lja a(z) `{alternate_target}` entit\u00e1ssal. Ezut\u00e1n kattintson az al\u00e1bbi MEHET gombra a probl\u00e9ma megoldottk\u00e9nt val\u00f3 megjel\u00f6l\u00e9s\u00e9hez.",
+                        "title": "{deprecated_service} szolg\u00e1ltat\u00e1s elt\u00e1vol\u00edt\u00e1sra ker\u00fcl"
+                    }
+                }
+            },
+            "title": "{deprecated_service} szolg\u00e1ltat\u00e1s elt\u00e1vol\u00edt\u00e1sra ker\u00fcl"
+        }
     }
 }

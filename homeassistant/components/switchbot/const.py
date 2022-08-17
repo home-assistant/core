@@ -1,24 +1,38 @@
 """Constants for the switchbot integration."""
+from switchbot import SwitchbotModel
+
+from homeassistant.backports.enum import StrEnum
+
 DOMAIN = "switchbot"
 MANUFACTURER = "switchbot"
 
 # Config Attributes
-ATTR_BOT = "bot"
-ATTR_CURTAIN = "curtain"
-ATTR_HYGROMETER = "hygrometer"
-ATTR_CONTACT = "contact"
-ATTR_PLUG = "plug"
-ATTR_MOTION = "motion"
+
 DEFAULT_NAME = "Switchbot"
 
+
+class SupportedModels(StrEnum):
+    """Supported Switchbot models."""
+
+    BOT = "bot"
+    BULB = "bulb"
+    CURTAIN = "curtain"
+    HYGROMETER = "hygrometer"
+    CONTACT = "contact"
+    PLUG = "plug"
+    MOTION = "motion"
+
+
 SUPPORTED_MODEL_TYPES = {
-    "WoHand": ATTR_BOT,
-    "WoCurtain": ATTR_CURTAIN,
-    "WoSensorTH": ATTR_HYGROMETER,
-    "WoContact": ATTR_CONTACT,
-    "WoPlug": ATTR_PLUG,
-    "WoPresence": ATTR_MOTION,
+    SwitchbotModel.BOT: SupportedModels.BOT,
+    SwitchbotModel.CURTAIN: SupportedModels.CURTAIN,
+    SwitchbotModel.METER: SupportedModels.HYGROMETER,
+    SwitchbotModel.CONTACT_SENSOR: SupportedModels.CONTACT,
+    SwitchbotModel.PLUG_MINI: SupportedModels.PLUG,
+    SwitchbotModel.MOTION_SENSOR: SupportedModels.MOTION,
+    SwitchbotModel.COLOR_BULB: SupportedModels.BULB,
 }
+
 
 # Config Defaults
 DEFAULT_RETRY_COUNT = 3

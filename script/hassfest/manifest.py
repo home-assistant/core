@@ -83,6 +83,7 @@ NO_IOT_CLASS = [
     "raspberry_pi",
     "repairs",
     "safe_mode",
+    "schedule",
     "script",
     "search",
     "system_health",

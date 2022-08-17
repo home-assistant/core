@@ -139,6 +139,7 @@ omit =
     homeassistant/components/bosch_shc/switch.py
     homeassistant/components/braviatv/__init__.py
     homeassistant/components/braviatv/const.py
+    homeassistant/components/braviatv/coordinator.py
     homeassistant/components/braviatv/entity.py
     homeassistant/components/braviatv/media_player.py
     homeassistant/components/braviatv/remote.py
@@ -1222,6 +1223,7 @@ omit =
     homeassistant/components/system_bridge/binary_sensor.py
     homeassistant/components/system_bridge/const.py
     homeassistant/components/system_bridge/coordinator.py
+    homeassistant/components/system_bridge/media_source.py
     homeassistant/components/system_bridge/sensor.py
     homeassistant/components/systemmonitor/sensor.py
     homeassistant/components/tado/__init__.py
@@ -1476,12 +1478,17 @@ omit =
     homeassistant/components/xiaomi_miio/light.py
     homeassistant/components/xiaomi_miio/number.py
     homeassistant/components/xiaomi_miio/remote.py
-    homeassistant/components/xiaomi_miio/select.py
     homeassistant/components/xiaomi_miio/sensor.py
     homeassistant/components/xiaomi_miio/switch.py
     homeassistant/components/xiaomi_tv/media_player.py
     homeassistant/components/xmpp/notify.py
     homeassistant/components/xs1/*
+    homeassistant/components/yalexs_ble/__init__.py
+    homeassistant/components/yalexs_ble/binary_sensor.py
+    homeassistant/components/yalexs_ble/entity.py
+    homeassistant/components/yalexs_ble/lock.py
+    homeassistant/components/yalexs_ble/sensor.py
+    homeassistant/components/yalexs_ble/util.py
     homeassistant/components/yale_smart_alarm/__init__.py
     homeassistant/components/yale_smart_alarm/alarm_control_panel.py
     homeassistant/components/yale_smart_alarm/binary_sensor.py
@@ -1531,7 +1538,6 @@ omit =
     homeassistant/components/zha/core/registries.py
     homeassistant/components/zha/entity.py
     homeassistant/components/zha/light.py
-    homeassistant/components/zha/sensor.py
     homeassistant/components/zhong_hong/climate.py
     homeassistant/components/ziggo_mediabox_xl/media_player.py
     homeassistant/components/zoneminder/*

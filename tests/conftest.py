@@ -904,8 +904,8 @@ def mock_bleak_scanner_start():
     scanner = bleak.BleakScanner
     bluetooth_models.HA_BLEAK_SCANNER = None
 
-    with patch("homeassistant.components.bluetooth.HaBleakScanner.stop"), patch(
-        "homeassistant.components.bluetooth.HaBleakScanner.start",
+    with patch("homeassistant.components.bluetooth.models.HaBleakScanner.stop"), patch(
+        "homeassistant.components.bluetooth.models.HaBleakScanner.start",
     ) as mock_bleak_scanner_start:
         yield mock_bleak_scanner_start
 
