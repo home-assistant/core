@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 import itertools
 import logging
@@ -39,7 +40,52 @@ if TYPE_CHECKING:
 FILTER_UUIDS: Final = "UUIDs"
 
 
+RSSI_SWITCH_THRESHOLD = 10
+STALE_ADVERTISEMENT_SECONDS = 180
+
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class AdvertisementHistory:
+    """Bluetooth advertisement history."""
+
+    ble_device: BLEDevice
+    advertisement_data: AdvertisementData
+    time: float
+    source: str
+
+
+def _prefer_previous_adv(old: AdvertisementHistory, new: AdvertisementHistory) -> bool:
+    """Prefer previous advertisement if it is better."""
+    if new.time - old.time > STALE_ADVERTISEMENT_SECONDS:
+        # If the old advertisement is stale, any new advertisement is preferred
+        if new.source != old.source:
+            _LOGGER.debug(
+                "%s: Switching from %s to %s (%s > %s)",
+                new.ble_device.address,
+                old.source,
+                new.source,
+                new.time - old.time,
+                STALE_ADVERTISEMENT_SECONDS,
+            )
+        return False
+    if new.ble_device.rssi - RSSI_SWITCH_THRESHOLD > old.ble_device.rssi:
+        # If new advertisement is RSSI_SWITCH_THRESHOLD more, the new one is preferred
+        if new.source != old.source:
+            _LOGGER.debug(
+                "%s: Switching from %s to %s (%s - %s > %s)",
+                new.ble_device.address,
+                old.source,
+                new.source,
+                new.ble_device.rssi,
+                RSSI_SWITCH_THRESHOLD,
+                old.ble_device.rssi,
+            )
+        return False
+    # If the source is the different, the old one is preferred because its
+    # not stale and its RSSI_SWITCH_THRESHOLD less than the new one
+    return old.source != new.source
 
 
 def _dispatch_bleak_callback(
@@ -84,7 +130,7 @@ class BluetoothManager:
         self._bleak_callbacks: list[
             tuple[AdvertisementDataCallback, dict[str, set[str]]]
         ] = []
-        self.history: dict[str, tuple[BLEDevice, AdvertisementData, float, str]] = {}
+        self.history: dict[str, AdvertisementHistory] = {}
         self._scanners: list[HaScanner] = []
 
     @hass_callback
@@ -106,7 +152,7 @@ class BluetoothManager:
     @hass_callback
     def async_discovered_devices(self) -> list[BLEDevice]:
         """Return all of combined best path to discovered from all the scanners."""
-        return [history[0] for history in self.history.values()]
+        return [history.ble_device for history in self.history.values()]
 
     @hass_callback
     def async_setup_unavailable_tracking(self) -> None:
@@ -155,12 +201,15 @@ class BluetoothManager:
           than the source from the history or the timestamp
           in the history is older than 180s
         """
-        self.history[device.address] = (
-            device,
-            advertisement_data,
-            monotonic_time,
-            source,
+        new_history = AdvertisementHistory(
+            device, advertisement_data, monotonic_time, source
         )
+        if (old_history := self.history.get(device.address)) and _prefer_previous_adv(
+            old_history, new_history
+        ):
+            return
+
+        self.history[device.address] = new_history
 
         for callback_filters in self._bleak_callbacks:
             _dispatch_bleak_callback(*callback_filters, device, advertisement_data)
@@ -242,13 +291,12 @@ class BluetoothManager:
         if (
             matcher
             and (address := matcher.get(ADDRESS))
-            and (device_adv_data := self.history.get(address))
+            and (history := self.history.get(address))
         ):
-            ble_device, adv_data, _, _ = device_adv_data
             try:
                 callback(
                     BluetoothServiceInfoBleak.from_advertisement(
-                        ble_device, adv_data, SOURCE_LOCAL
+                        history.ble_device, history.advertisement_data, SOURCE_LOCAL
                     ),
                     BluetoothChange.ADVERTISEMENT,
                 )
@@ -260,8 +308,8 @@ class BluetoothManager:
     @hass_callback
     def async_ble_device_from_address(self, address: str) -> BLEDevice | None:
         """Return the BLEDevice if present."""
-        if ble_adv := self.history.get(address):
-            return ble_adv[0]
+        if history := self.history.get(address):
+            return history.ble_device
         return None
 
     @hass_callback
@@ -274,9 +322,9 @@ class BluetoothManager:
         """Return if the address is present."""
         return [
             BluetoothServiceInfoBleak.from_advertisement(
-                device_adv[0], device_adv[1], SOURCE_LOCAL
+                history.ble_device, history.advertisement_data, SOURCE_LOCAL
             )
-            for device_adv in self.history.values()
+            for history in self.history.values()
         ]
 
     async def _async_hass_stopping(self, event: Event) -> None:
@@ -319,7 +367,9 @@ class BluetoothManager:
         # Replay the history since otherwise we miss devices
         # that were already discovered before the callback was registered
         # or we are in passive mode
-        for device, advertisement_data, _, _ in self.history.values():
-            _dispatch_bleak_callback(callback, filters, device, advertisement_data)
+        for history in self.history.values():
+            _dispatch_bleak_callback(
+                callback, filters, history.ble_device, history.advertisement_data
+            )
 
         return _remove_callback
