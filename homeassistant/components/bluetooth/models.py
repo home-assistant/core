@@ -9,25 +9,26 @@ from enum import Enum
 import logging
 from typing import TYPE_CHECKING, Any, Final
 
-from bleak import BleakScanner
 from bleak.backends.scanner import (
     AdvertisementData,
     AdvertisementDataCallback,
     BaseBleakScanner,
 )
 
-from homeassistant.core import CALLBACK_TYPE, callback as hass_callback
+from homeassistant.core import CALLBACK_TYPE
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
 if TYPE_CHECKING:
     from bleak.backends.device import BLEDevice
+
+    from .manager import BluetoothManager
 
 
 _LOGGER = logging.getLogger(__name__)
 
 FILTER_UUIDS: Final = "UUIDs"
 
-HA_BLEAK_SCANNER: HaBleakScanner | None = None
+MANAGER: BluetoothManager | None = None
 
 
 @dataclass
@@ -71,89 +72,6 @@ class BluetoothScanningMode(Enum):
 BluetoothChange = Enum("BluetoothChange", "ADVERTISEMENT")
 BluetoothCallback = Callable[[BluetoothServiceInfoBleak, BluetoothChange], None]
 ProcessAdvertisementCallback = Callable[[BluetoothServiceInfoBleak], bool]
-
-
-def _dispatch_callback(
-    callback: AdvertisementDataCallback,
-    filters: dict[str, set[str]],
-    device: BLEDevice,
-    advertisement_data: AdvertisementData,
-) -> None:
-    """Dispatch the callback."""
-    if not callback:
-        # Callback destroyed right before being called, ignore
-        return  # type: ignore[unreachable]
-
-    if (uuids := filters.get(FILTER_UUIDS)) and not uuids.intersection(
-        advertisement_data.service_uuids
-    ):
-        return
-
-    try:
-        callback(device, advertisement_data)
-    except Exception:  # pylint: disable=broad-except
-        _LOGGER.exception("Error in callback: %s", callback)
-
-
-class HaBleakScanner(BleakScanner):
-    """BleakScanner that cannot be stopped."""
-
-    def __init__(  # pylint: disable=super-init-not-called
-        self, *args: Any, **kwargs: Any
-    ) -> None:
-        """Initialize the BleakScanner."""
-        self._callbacks: list[
-            tuple[AdvertisementDataCallback, dict[str, set[str]]]
-        ] = []
-        self.history: dict[str, tuple[BLEDevice, AdvertisementData]] = {}
-        # Init called later in async_setup if we are enabling the scanner
-        # since init has side effects that can throw exceptions
-        self._setup = False
-
-    @hass_callback
-    def async_setup(self, *args: Any, **kwargs: Any) -> None:
-        """Deferred setup of the BleakScanner since __init__ has side effects."""
-        if not self._setup:
-            super().__init__(*args, **kwargs)
-            self._setup = True
-
-    @hass_callback
-    def async_reset(self) -> None:
-        """Reset the scanner so it can be setup again."""
-        self.history = {}
-        self._setup = False
-
-    @hass_callback
-    def async_register_callback(
-        self, callback: AdvertisementDataCallback, filters: dict[str, set[str]]
-    ) -> CALLBACK_TYPE:
-        """Register a callback."""
-        callback_entry = (callback, filters)
-        self._callbacks.append(callback_entry)
-
-        @hass_callback
-        def _remove_callback() -> None:
-            self._callbacks.remove(callback_entry)
-
-        # Replay the history since otherwise we miss devices
-        # that were already discovered before the callback was registered
-        # or we are in passive mode
-        for device, advertisement_data in self.history.values():
-            _dispatch_callback(callback, filters, device, advertisement_data)
-
-        return _remove_callback
-
-    def async_callback_dispatcher(
-        self, device: BLEDevice, advertisement_data: AdvertisementData
-    ) -> None:
-        """Dispatch the callback.
-
-        Here we get the actual callback from bleak and dispatch
-        it to all the wrapped HaBleakScannerWrapper classes
-        """
-        self.history[device.address] = (device, advertisement_data)
-        for callback_filters in self._callbacks:
-            _dispatch_callback(*callback_filters, device, advertisement_data)
 
 
 class HaBleakScannerWrapper(BaseBleakScanner):
@@ -215,8 +133,8 @@ class HaBleakScannerWrapper(BaseBleakScanner):
     @property
     def discovered_devices(self) -> list[BLEDevice]:
         """Return a list of discovered devices."""
-        assert HA_BLEAK_SCANNER is not None
-        return HA_BLEAK_SCANNER.discovered_devices
+        assert MANAGER is not None
+        return list(MANAGER.async_discovered_devices())
 
     def register_detection_callback(
         self, callback: AdvertisementDataCallback | None
@@ -235,9 +153,9 @@ class HaBleakScannerWrapper(BaseBleakScanner):
             return
         self._cancel_callback()
         super().register_detection_callback(self._adv_data_callback)
-        assert HA_BLEAK_SCANNER is not None
+        assert MANAGER is not None
         assert self._callback is not None
-        self._detection_cancel = HA_BLEAK_SCANNER.async_register_callback(
+        self._detection_cancel = MANAGER.async_register_bleak_callback(
             self._callback, self._mapped_filters
         )
 
