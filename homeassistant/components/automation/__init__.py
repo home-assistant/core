@@ -527,7 +527,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
                     await self.action_script.async_run(
                         variables, trigger_context, started_action
                     )
-            except (ServiceNotFound) as err:
+            except ServiceNotFound as err:
                 async_create_issue(
                     self.hass,
                     DOMAIN,
