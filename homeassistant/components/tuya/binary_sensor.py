@@ -187,8 +187,9 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
     # https://developer.tuya.com/en/docs/iot/s?id=K9gf48r5zjsy9
     "mc": (
         TuyaBinarySensorEntityDescription(
-            key=DPCode.DOORCONTACT_STATE,
+            key=DPCode.STATUS,
             device_class=BinarySensorDeviceClass.DOOR,
+            on_value="open",
         ),
     ),
     # Door Window Sensor
