@@ -7,6 +7,7 @@ from typing import Any
 from aiohttp.client_exceptions import ClientError
 from python_awair import Awair, AwairLocal, AwairLocalDevice
 from python_awair.exceptions import AuthError, AwairError
+from python_awair.user import AwairUser
 import voluptuous as vol
 
 from homeassistant.components import zeroconf
@@ -97,7 +98,7 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
                 title = user.email
                 return self.async_create_entry(title=title, data=user_input)
 
-            if error != "invalid_access_token":
+            if error and error != "invalid_access_token":
                 return self.async_abort(reason=error)
 
             errors = {CONF_ACCESS_TOKEN: "invalid_access_token"}
@@ -215,7 +216,9 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def _check_local_connection(self, device_address: str):
+    async def _check_local_connection(
+        self, device_address: str
+    ) -> tuple[AwairLocalDevice | None, str | None]:
         """Check the access token is valid."""
         session = async_get_clientsession(self.hass)
         awair = AwairLocal(session=session, device_addrs=[device_address])
@@ -232,7 +235,9 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
             LOGGER.error("Unexpected API error: %s", err)
             return (None, "unknown")
 
-    async def _check_cloud_connection(self, access_token: str):
+    async def _check_cloud_connection(
+        self, access_token: str
+    ) -> tuple[AwairUser | None, str | None]:
         """Check the access token is valid."""
         session = async_get_clientsession(self.hass)
         awair = Awair(access_token=access_token, session=session)
