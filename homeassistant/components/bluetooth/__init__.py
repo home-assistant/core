@@ -9,10 +9,12 @@ import async_timeout
 
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant, callback as hass_callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import discovery_flow
 from homeassistant.loader import async_get_bluetooth
 
-from .const import CONF_ADAPTER, DOMAIN, SOURCE_LOCAL
+from . import models
+from .const import CONF_ADAPTER, DATA_MANAGER, DOMAIN, SOURCE_LOCAL
 from .manager import BluetoothManager
 from .match import BluetoothCallbackMatcher, IntegrationMatcher
 from .models import (
@@ -24,6 +26,7 @@ from .models import (
     HaBleakScannerWrapper,
     ProcessAdvertisementCallback,
 )
+from .scanner import HaScanner, create_bleak_scanner
 from .util import async_get_bluetooth_adapters
 
 if TYPE_CHECKING:
@@ -55,10 +58,7 @@ def async_get_scanner(hass: HomeAssistant) -> HaBleakScannerWrapper:
     This is a wrapper around our BleakScanner singleton that allows
     multiple integrations to share the same BleakScanner.
     """
-    if DOMAIN not in hass.data:
-        raise RuntimeError("Bluetooth integration not loaded")
-    manager: BluetoothManager = hass.data[DOMAIN]
-    return manager.async_get_scanner()
+    return HaBleakScannerWrapper()
 
 
 @hass_callback
@@ -66,9 +66,9 @@ def async_discovered_service_info(
     hass: HomeAssistant,
 ) -> list[BluetoothServiceInfoBleak]:
     """Return the discovered devices list."""
-    if DOMAIN not in hass.data:
+    if DATA_MANAGER not in hass.data:
         return []
-    manager: BluetoothManager = hass.data[DOMAIN]
+    manager: BluetoothManager = hass.data[DATA_MANAGER]
     return manager.async_discovered_service_info()
 
 
@@ -78,9 +78,9 @@ def async_ble_device_from_address(
     address: str,
 ) -> BLEDevice | None:
     """Return BLEDevice for an address if its present."""
-    if DOMAIN not in hass.data:
+    if DATA_MANAGER not in hass.data:
         return None
-    manager: BluetoothManager = hass.data[DOMAIN]
+    manager: BluetoothManager = hass.data[DATA_MANAGER]
     return manager.async_ble_device_from_address(address)
 
 
@@ -90,9 +90,9 @@ def async_address_present(
     address: str,
 ) -> bool:
     """Check if an address is present in the bluetooth device list."""
-    if DOMAIN not in hass.data:
+    if DATA_MANAGER not in hass.data:
         return False
-    manager: BluetoothManager = hass.data[DOMAIN]
+    manager: BluetoothManager = hass.data[DATA_MANAGER]
     return manager.async_address_present(address)
 
 
@@ -112,7 +112,7 @@ def async_register_callback(
 
     Returns a callback that can be used to cancel the registration.
     """
-    manager: BluetoothManager = hass.data[DOMAIN]
+    manager: BluetoothManager = hass.data[DATA_MANAGER]
     return manager.async_register_callback(callback, match_dict)
 
 
@@ -152,14 +152,14 @@ def async_track_unavailable(
 
     Returns a callback that can be used to cancel the registration.
     """
-    manager: BluetoothManager = hass.data[DOMAIN]
+    manager: BluetoothManager = hass.data[DATA_MANAGER]
     return manager.async_track_unavailable(callback, address)
 
 
 @hass_callback
 def async_rediscover_address(hass: HomeAssistant, address: str) -> None:
     """Trigger discovery of devices which have already been seen."""
-    manager: BluetoothManager = hass.data[DOMAIN]
+    manager: BluetoothManager = hass.data[DATA_MANAGER]
     manager.async_rediscover_address(address)
 
 
@@ -173,7 +173,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     integration_matcher = IntegrationMatcher(await async_get_bluetooth(hass))
     manager = BluetoothManager(hass, integration_matcher)
     manager.async_setup()
-    hass.data[DOMAIN] = manager
+    hass.data[DATA_MANAGER] = models.MANAGER = manager
     # The config entry is responsible for starting the manager
     # if its enabled
 
@@ -198,13 +198,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(
     hass: HomeAssistant, entry: config_entries.ConfigEntry
 ) -> bool:
-    """Set up the bluetooth integration from a config entry."""
-    manager: BluetoothManager = hass.data[DOMAIN]
-    async with manager.start_stop_lock:
-        await manager.async_start(
-            BluetoothScanningMode.ACTIVE, entry.options.get(CONF_ADAPTER)
-        )
+    """Set up a config entry for a bluetooth scanner."""
+    manager: BluetoothManager = hass.data[DATA_MANAGER]
+    adapter: str | None = entry.options.get(CONF_ADAPTER)
+    try:
+        bleak_scanner = create_bleak_scanner(BluetoothScanningMode.ACTIVE, adapter)
+    except RuntimeError as err:
+        raise ConfigEntryNotReady from err
+    scanner = HaScanner(hass, bleak_scanner, adapter)
+    entry.async_on_unload(scanner.async_register_callback(manager.scanner_adv_received))
+    await scanner.async_start()
+    entry.async_on_unload(manager.async_register_scanner(scanner))
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = scanner
     return True
 
 
@@ -219,8 +225,6 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: config_entries.ConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    manager: BluetoothManager = hass.data[DOMAIN]
-    async with manager.start_stop_lock:
-        manager.async_start_reload()
-        await manager.async_stop()
+    scanner: HaScanner = hass.data[DOMAIN].pop(entry.entry_id)
+    await scanner.async_stop()
     return True
