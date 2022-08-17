@@ -11,7 +11,6 @@ from typing import TYPE_CHECKING, Final
 from bleak.backends.scanner import AdvertisementDataCallback
 
 from homeassistant import config_entries
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
@@ -120,11 +119,10 @@ class BluetoothManager:
         hass: HomeAssistant,
         integration_matcher: IntegrationMatcher,
     ) -> None:
-        """Init bluetooth discovery."""
+        """Init bluetooth manager."""
         self.hass = hass
         self._integration_matcher = integration_matcher
         self._cancel_unavailable_tracking: CALLBACK_TYPE | None = None
-        self._cancel_stop: CALLBACK_TYPE | None = None
         self._unavailable_callbacks: dict[str, list[Callable[[str], None]]] = {}
         self._callbacks: list[
             tuple[BluetoothCallback, BluetoothCallbackMatcher | None]
@@ -140,9 +138,15 @@ class BluetoothManager:
         """Set up the bluetooth manager."""
         install_multiple_bleak_catcher()
         self.async_setup_unavailable_tracking()
-        self._cancel_stop = self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, self._async_hass_stopping
-        )
+
+    @hass_callback
+    def async_stop(self, event: Event) -> None:
+        """Stop the Bluetooth integration at shutdown."""
+        _LOGGER.debug("Stopping bluetooth manager")
+        if self._cancel_unavailable_tracking:
+            self._cancel_unavailable_tracking()
+            self._cancel_unavailable_tracking = None
+        uninstall_multiple_bleak_catcher()
 
     @hass_callback
     def async_all_discovered_devices(self) -> Iterable[BLEDevice]:
@@ -328,17 +332,6 @@ class BluetoothManager:
             )
             for history in self.history.values()
         ]
-
-    async def _async_hass_stopping(self, event: Event) -> None:
-        """Stop the Bluetooth integration at shutdown."""
-        _LOGGER.debug("Stopping bluetooth manager")
-        if self._cancel_unavailable_tracking:
-            self._cancel_unavailable_tracking()
-            self._cancel_unavailable_tracking = None
-        if self._cancel_stop:
-            self._cancel_stop()
-            self._cancel_stop = None
-        uninstall_multiple_bleak_catcher()
 
     @hass_callback
     def async_rediscover_address(self, address: str) -> None:

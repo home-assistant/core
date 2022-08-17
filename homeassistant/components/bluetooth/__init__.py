@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 import async_timeout
 
 from homeassistant import config_entries
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback as hass_callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import discovery_flow
@@ -173,6 +174,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     integration_matcher = IntegrationMatcher(await async_get_bluetooth(hass))
     manager = BluetoothManager(hass, integration_matcher)
     manager.async_setup()
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, manager.async_stop)
     hass.data[DATA_MANAGER] = models.MANAGER = manager
     # The config entry is responsible for starting the manager
     # if its enabled
