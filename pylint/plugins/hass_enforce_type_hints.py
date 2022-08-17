@@ -1946,6 +1946,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             matches=_ENTITY_MATCH,
         ),
         ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
             base_class="SensorEntity",
             matches=[
                 TypeHintMatch(
@@ -1976,6 +1980,19 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="native_unit_of_measurement",
                     return_type=["str", None],
+                ),
+            ],
+        ),
+        ClassTypeHintMatch(
+            base_class="RestoreSensor",
+            matches=[
+                TypeHintMatch(
+                    function_name="extra_restore_state_data",
+                    return_type="SensorExtraStoredData",
+                ),
+                TypeHintMatch(
+                    function_name="async_get_last_sensor_data",
+                    return_type=["SensorExtraStoredData", None],
                 ),
             ],
         ),
