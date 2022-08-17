@@ -84,7 +84,7 @@ class BluetoothManager:
         self._bleak_callbacks: list[
             tuple[AdvertisementDataCallback, dict[str, set[str]]]
         ] = []
-        self.history: dict[str, tuple[BLEDevice, AdvertisementData, float]] = {}
+        self.history: dict[str, tuple[BLEDevice, AdvertisementData, float, str]] = {}
         self._scanners: list[HaScanner] = []
 
     @hass_callback
@@ -99,7 +99,7 @@ class BluetoothManager:
     @property
     def discovered_devices(self) -> list[BLEDevice]:
         """Return a list of discovered devices."""
-        return [device for device, _, _ in self.history.values()]
+        return [history[0] for history in self.history.values()]
 
     @hass_callback
     def async_setup_unavailable_tracking(self) -> None:
@@ -138,6 +138,7 @@ class BluetoothManager:
         device: BLEDevice,
         advertisement_data: AdvertisementData,
         monotonic_time: float,
+        source: str,
     ) -> None:
         """Handle a new advertisement from any scanner.
 
@@ -150,7 +151,12 @@ class BluetoothManager:
           than the source from the history or the timestamp
           in the history is older than 180s
         """
-        self.history[device.address] = (device, advertisement_data, monotonic_time)
+        self.history[device.address] = (
+            device,
+            advertisement_data,
+            monotonic_time,
+            source,
+        )
 
         for callback_filters in self._bleak_callbacks:
             _dispatch_bleak_callback(*callback_filters, device, advertisement_data)
@@ -159,7 +165,8 @@ class BluetoothManager:
             device, advertisement_data
         )
         _LOGGER.debug(
-            "Device detected: %s with advertisement_data: %s matched domains: %s",
+            "%s: %s %s match: %s",
+            source,
             device.address,
             advertisement_data,
             matched_domains,
@@ -175,7 +182,7 @@ class BluetoothManager:
             ):
                 if service_info is None:
                     service_info = BluetoothServiceInfoBleak.from_advertisement(
-                        device, advertisement_data, SOURCE_LOCAL
+                        device, advertisement_data, source
                     )
                 try:
                     callback(service_info, BluetoothChange.ADVERTISEMENT)
@@ -186,7 +193,7 @@ class BluetoothManager:
             return
         if service_info is None:
             service_info = BluetoothServiceInfoBleak.from_advertisement(
-                device, advertisement_data, SOURCE_LOCAL
+                device, advertisement_data, source
             )
         for domain in matched_domains:
             discovery_flow.async_create_flow(
@@ -233,7 +240,7 @@ class BluetoothManager:
             and (address := matcher.get(ADDRESS))
             and (device_adv_data := self.history.get(address))
         ):
-            ble_device, adv_data, _ = device_adv_data
+            ble_device, adv_data, _, _ = device_adv_data
             try:
                 callback(
                     BluetoothServiceInfoBleak.from_advertisement(
@@ -308,7 +315,7 @@ class BluetoothManager:
         # Replay the history since otherwise we miss devices
         # that were already discovered before the callback was registered
         # or we are in passive mode
-        for device, advertisement_data, _ in self.history.values():
+        for device, advertisement_data, _, _ in self.history.values():
             _dispatch_bleak_callback(callback, filters, device, advertisement_data)
 
         return _remove_callback

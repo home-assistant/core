@@ -29,6 +29,7 @@ from .const import (
     DEFAULT_ADAPTERS,
     SCANNER_WATCHDOG_INTERVAL,
     SCANNER_WATCHDOG_TIMEOUT,
+    SOURCE_LOCAL,
     START_TIMEOUT,
 )
 from .models import BluetoothScanningMode
@@ -86,13 +87,10 @@ class HaScanner:
         self._cancel_watchdog: CALLBACK_TYPE | None = None
         self._last_detection = 0.0
         self._callbacks: list[
-            Callable[[BLEDevice, AdvertisementData, float], None]
+            Callable[[BLEDevice, AdvertisementData, float, str], None]
         ] = []
-
-    @property
-    def name(self) -> str:
-        """Return the name of the scanner."""
-        return self.adapter or "default"
+        self.name = self.adapter or "default"
+        self.source = self.adapter or SOURCE_LOCAL
 
     @property
     def discovered_devices(self) -> list[BLEDevice]:
@@ -101,7 +99,7 @@ class HaScanner:
 
     @hass_callback
     def async_register_callback(
-        self, callback: Callable[[BLEDevice, AdvertisementData, float], None]
+        self, callback: Callable[[BLEDevice, AdvertisementData, float, str], None]
     ) -> CALLBACK_TYPE:
         """Register a callback.
 
@@ -128,7 +126,7 @@ class HaScanner:
         """
         self._last_detection = MONOTONIC_TIME()
         for callback in self._callbacks:
-            callback(ble_device, advertisement_data, self._last_detection)
+            callback(ble_device, advertisement_data, self._last_detection, self.source)
 
     async def async_start(self) -> None:
         """Start bluetooth scanner."""
