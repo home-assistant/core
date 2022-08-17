@@ -9,7 +9,7 @@
                     }
                 }
             },
-            "title": "{name} uses unknown service"
+            "title": "{name} uses an unknown service"
         }
     },
     "state": {

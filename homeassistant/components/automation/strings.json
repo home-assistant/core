@@ -8,7 +8,7 @@
   },
   "issues": {
     "service_not_found": {
-      "title": "{name} uses unknown service",
+      "title": "{name} uses an unknown service",
       "fix_flow": {
         "step": {
           "confirm": {
