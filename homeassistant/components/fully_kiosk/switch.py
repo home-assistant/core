@@ -24,7 +24,7 @@ class FullySwitchEntityDescriptionMixin:
 
     on_action: Callable[[FullyKiosk], Any]
     off_action: Callable[[FullyKiosk], Any]
-    is_on_fn: Callable[[FullyKioskDataUpdateCoordinator], Any]
+    is_on_fn: Callable[[dict[str, Any]], Any]
 
 
 @dataclass
@@ -40,7 +40,7 @@ SWITCHES: tuple[FullySwitchEntityDescription, ...] = (
         name="Screensaver",
         on_action=lambda fully: fully.startScreensaver(),
         off_action=lambda fully: fully.stopScreensaver(),
-        is_on_fn=lambda coordinator: coordinator.data.get("isInScreensaver"),
+        is_on_fn=lambda data: data.get("isInScreensaver"),
     ),
     FullySwitchEntityDescription(
         key="maintenance",
@@ -48,7 +48,7 @@ SWITCHES: tuple[FullySwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         on_action=lambda fully: fully.enableLockedMode(),
         off_action=lambda fully: fully.disableLockedMode(),
-        is_on_fn=lambda coordinator: coordinator.data.get("maintenanceMode"),
+        is_on_fn=lambda data: data.get("maintenanceMode"),
     ),
     FullySwitchEntityDescription(
         key="kiosk",
@@ -56,7 +56,7 @@ SWITCHES: tuple[FullySwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         on_action=lambda fully: fully.lockKiosk(),
         off_action=lambda fully: fully.unlockKiosk(),
-        is_on_fn=lambda coordinator: coordinator.data.get("kioskLocked"),
+        is_on_fn=lambda data: data.get("kioskLocked"),
     ),
     FullySwitchEntityDescription(
         key="motion-detection",
@@ -64,9 +64,7 @@ SWITCHES: tuple[FullySwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         on_action=lambda fully: fully.enableMotionDetection(),
         off_action=lambda fully: fully.disableMotionDetection(),
-        is_on_fn=lambda coordinator: coordinator.data["settings"].get(
-            "motionDetection"
-        ),
+        is_on_fn=lambda data: data["settings"].get("motionDetection"),
     ),
 )
 
@@ -104,8 +102,8 @@ class FullySwitchEntity(FullyKioskEntity, SwitchEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if the entity is on."""
-        if self.entity_description.is_on_fn(self.coordinator) is not None:
-            return bool(self.entity_description.is_on_fn(self.coordinator))
+        if self.entity_description.is_on_fn(self.coordinator.data) is not None:
+            return bool(self.entity_description.is_on_fn(self.coordinator.data))
         return None
 
     async def async_turn_on(self, **kwargs: Any) -> None:
