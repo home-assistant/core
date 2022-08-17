@@ -32,16 +32,12 @@ from .const import (
 )
 from .coordinator import SteamDataUpdateCoordinator
 
-PARALLEL_UPDATES = 1
-
 
 def _get_game_icon(data: profile, icons: dict[int, str]) -> str | None:
     """Get game icon."""
-    if (gid := data.current_game[0]) is None:
-        return None
-    if image_id := icons.get(gid):
+    if (gid := data.current_game[0]) and (image_id := icons.get(gid)):
         return f"{STEAM_ICON_URL}{gid}/{image_id}.jpg"
-    return ""
+    return None
 
 
 @dataclass
@@ -49,12 +45,15 @@ class SteamSensorEntityMixin:
     """Mixin for Steam sensor."""
 
     value_fn: Callable[[profile], StateType | datetime]
-    entity_picture_fn: Callable[[profile, dict[int, str]], str | None]
 
 
 @dataclass
 class SteamSensorEntityDescription(SensorEntityDescription, SteamSensorEntityMixin):
     """Describes a Steam sensor."""
+
+    entity_picture_fn: Callable[
+        [profile, dict[int, str]], str | None
+    ] = lambda val, _: None
 
 
 SENSOR_TYPES: tuple[SteamSensorEntityDescription, ...] = (
@@ -93,7 +92,6 @@ SENSOR_TYPES: tuple[SteamSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda data: utc(mktime(data.last_online)),
-        entity_picture_fn=lambda _, __: None,
     ),
     SteamSensorEntityDescription(
         key="level",
@@ -102,7 +100,6 @@ SENSOR_TYPES: tuple[SteamSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda data: data.level,
-        entity_picture_fn=lambda _, __: None,
     ),
 )
 
@@ -140,8 +137,7 @@ class SteamSensor(SteamEntity, SensorEntity):
             res := self.entity_description.entity_picture_fn(
                 self.coordinator.data.get(self._account), self.coordinator.game_icons
             )
-        ) and res == "":
+        ) is None:
             # Reset game icons to have coordinator get id for new game
             self.coordinator.game_icons = {}
-            return None
         return res
