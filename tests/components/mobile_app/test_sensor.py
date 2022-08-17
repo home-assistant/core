@@ -121,16 +121,25 @@ async def test_sensor(
 
 
 @pytest.mark.parametrize(
-    "unit_system, state_unit, state1, state2",
+    "unique_id, unit_system, state_unit, state1, state2",
     (
-        (METRIC_SYSTEM, TEMP_CELSIUS, "100", "123"),
-        (IMPERIAL_SYSTEM, TEMP_FAHRENHEIT, "212", "253"),
+        ("battery_temperature", METRIC_SYSTEM, TEMP_CELSIUS, "100", "123"),
+        ("battery_temperature", IMPERIAL_SYSTEM, TEMP_FAHRENHEIT, "212", "253"),
+        # The unique_id doesn't match that of the mobile app's battery temperature sensor
+        ("battery_temp", IMPERIAL_SYSTEM, TEMP_FAHRENHEIT, "212", "123"),
     ),
 )
 async def test_sensor_migration(
-    hass, create_registrations, webhook_client, unit_system, state_unit, state1, state2
+    hass,
+    create_registrations,
+    webhook_client,
+    unique_id,
+    unit_system,
+    state_unit,
+    state1,
+    state2,
 ):
-    """Test that migration to RestoreSensor."""
+    """Test migration to RestoreSensor."""
     hass.config.units = unit_system
 
     webhook_id = create_registrations[1]["webhook_id"]
@@ -148,7 +157,7 @@ async def test_sensor_migration(
                 "state": 100,
                 "type": "sensor",
                 "entity_category": "diagnostic",
-                "unique_id": "battery_temp",
+                "unique_id": unique_id,
                 "state_class": "total",
                 "unit_of_measurement": TEMP_CELSIUS,
             },
@@ -202,7 +211,7 @@ async def test_sensor_migration(
                     "icon": "mdi:battery-unknown",
                     "state": 123,
                     "type": "sensor",
-                    "unique_id": "battery_temp",
+                    "unique_id": unique_id,
                 },
             ],
         },

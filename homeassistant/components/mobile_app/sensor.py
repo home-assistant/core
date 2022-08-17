@@ -27,6 +27,7 @@ from .const import (
     DOMAIN,
 )
 from .entity import MobileAppEntity
+from .webhook import _extract_sensor_unique_id
 
 
 async def async_setup_entry(
@@ -85,7 +86,12 @@ class MobileAppSensor(MobileAppEntity, RestoreSensor):
             # Workaround to handle migration to RestoreSensor, can be removed
             # in HA Core 2023.4
             self._config[ATTR_SENSOR_STATE] = None
-            if self.device_class == SensorDeviceClass.TEMPERATURE:
+            webhook_id = self._entry.data[CONF_WEBHOOK_ID]
+            sensor_unique_id = _extract_sensor_unique_id(webhook_id, self.unique_id)
+            if (
+                self.device_class == SensorDeviceClass.TEMPERATURE
+                and sensor_unique_id == "battery_temperature"
+            ):
                 self._config[ATTR_SENSOR_UOM] = TEMP_CELSIUS
             return
 
