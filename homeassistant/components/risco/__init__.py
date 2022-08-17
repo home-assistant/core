@@ -12,6 +12,7 @@ from pyrisco import (
     RiscoLocal,
     UnauthorizedError,
 )
+from pyrisco.common import Partition, Zone
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -92,7 +93,7 @@ async def _async_setup_local_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
 
     local_data = LocalData(risco)
 
-    async def _zone(zone_id: int, zone):
+    async def _zone(zone_id: int, zone: Zone):
         _LOGGER.debug("Risco zone update for %d", zone_id)
         callback = local_data.zone_updates.get(zone_id)
         if callback:
@@ -100,7 +101,7 @@ async def _async_setup_local_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
 
     entry.async_on_unload(risco.add_zone_handler(_zone))
 
-    async def _partition(partition_id: int, partition):
+    async def _partition(partition_id: int, partition: Partition):
         _LOGGER.debug("Risco partition update for %d", partition_id)
         callback = local_data.partition_updates.get(partition_id)
         if callback:
