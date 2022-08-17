@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "O servi\u00e7o j\u00e1 est\u00e1 configurado",
+            "no_adapters": "Nenhum adaptador Bluetooth encontrado"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "bluetooth_confirm": {
+                "description": "Deseja configurar {name}?"
+            },
+            "enable_bluetooth": {
+                "description": "Deseja configurar o Bluetooth?"
+            },
+            "user": {
+                "data": {
+                    "address": "Dispositivo"
+                },
+                "description": "Escolha um dispositivo para configurar"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "adapter": "O adaptador Bluetooth a ser usado para escaneamento"
+                }
+            }
+        }
+    }
+}

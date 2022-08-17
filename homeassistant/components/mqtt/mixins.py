@@ -287,7 +287,7 @@ async def async_discover_yaml_entities(
 async def async_get_platform_config_from_yaml(
     hass: HomeAssistant,
     platform_domain: str,
-    config_yaml: ConfigType = None,
+    config_yaml: ConfigType | None = None,
 ) -> list[ConfigType]:
     """Return a list of validated configurations for the domain."""
 
@@ -674,7 +674,7 @@ class MqttDiscoveryDeviceUpdate:
         stop_discovery_updates(
             self.hass, self._discovery_data, self._remove_discovery_updated
         )
-        self.hass.async_add_job(self.async_tear_down())
+        self._config_entry.async_create_task(self.hass, self.async_tear_down())
 
     async def async_discovery_update(
         self,

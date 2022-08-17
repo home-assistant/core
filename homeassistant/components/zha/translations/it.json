@@ -46,10 +46,13 @@
             "title": "Opzioni del pannello di controllo degli allarmi"
         },
         "zha_options": {
+            "always_prefer_xy_color_mode": "Preferisci sempre la modalit\u00e0 colore XY",
             "consider_unavailable_battery": "Considera i dispositivi alimentati a batteria non disponibili dopo (secondi)",
             "consider_unavailable_mains": "Considera i dispositivi alimentati dalla rete non disponibili dopo (secondi)",
             "default_light_transition": "Tempo di transizione della luce predefinito (secondi)",
             "enable_identify_on_join": "Abilita l'effetto di identificazione quando i dispositivi si uniscono alla rete",
+            "enhanced_light_transition": "Abilita una transizione migliorata del colore/temperatura della luce da uno stato spento",
+            "light_transitioning_flag": "Abilita il cursore della luminosit\u00e0 avanzata durante la transizione della luce",
             "title": "Opzioni globali"
         }
     },

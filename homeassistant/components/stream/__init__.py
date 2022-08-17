@@ -187,14 +187,15 @@ def filter_libav_logging() -> None:
         return logging.getLogger(__name__).isEnabledFor(logging.DEBUG)
 
     for logging_namespace in (
-        "libav.mp4",
+        "libav.NULL",
         "libav.h264",
         "libav.hevc",
+        "libav.hls",
+        "libav.mp4",
+        "libav.mpegts",
         "libav.rtsp",
         "libav.tcp",
         "libav.tls",
-        "libav.mpegts",
-        "libav.NULL",
     ):
         logging.getLogger(logging_namespace).addFilter(libav_filter)
 
@@ -502,15 +503,16 @@ class Stream:
 
         await self.start()
 
+        self._logger.debug("Started a stream recording of %s seconds", duration)
+
         # Take advantage of lookback
         hls: HlsStreamOutput = cast(HlsStreamOutput, self.outputs().get(HLS_PROVIDER))
-        if lookback > 0 and hls:
-            num_segments = min(int(lookback // hls.target_duration), MAX_SEGMENTS)
+        if hls:
+            num_segments = min(int(lookback / hls.target_duration) + 1, MAX_SEGMENTS)
             # Wait for latest segment, then add the lookback
             await hls.recv()
             recorder.prepend(list(hls.get_segments())[-num_segments - 1 : -1])
 
-        self._logger.debug("Started a stream recording of %s seconds", duration)
         await recorder.async_record()
 
     async def async_get_image(

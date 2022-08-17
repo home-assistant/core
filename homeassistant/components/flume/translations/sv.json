@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Det h\u00e4r kontot har redan konfigurerats."
+            "already_configured": "Det h\u00e4r kontot har redan konfigurerats.",
+            "reauth_successful": "\u00c5terautentisering lyckades"
         },
         "error": {
             "cannot_connect": "Det gick inte att ansluta, f\u00f6rs\u00f6k igen",
@@ -9,6 +10,13 @@
             "unknown": "Ov\u00e4ntat fel"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "L\u00f6senord"
+                },
+                "description": "L\u00f6senordet f\u00f6r {username} \u00e4r inte l\u00e4ngre giltigt.",
+                "title": "Autentisera ditt Flume-konto igen"
+            },
             "user": {
                 "data": {
                     "client_id": "Klient ID",

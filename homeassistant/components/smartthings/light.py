@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Sequence
+from typing import Any
 
 from pysmartthings import Capability
 
@@ -96,7 +97,7 @@ class SmartThingsLight(SmartThingsEntity, LightEntity):
 
         return features
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         tasks = []
         # Color temperature
@@ -121,7 +122,7 @@ class SmartThingsLight(SmartThingsEntity, LightEntity):
         # the entity state ahead of receiving the confirming push updates
         self.async_schedule_update_ha_state(True)
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         # Switch/transition
         if (
@@ -136,7 +137,7 @@ class SmartThingsLight(SmartThingsEntity, LightEntity):
         # the entity state ahead of receiving the confirming push updates
         self.async_schedule_update_ha_state(True)
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update entity attributes when the device status has changed."""
         # Brightness and transition
         if self._supported_features & SUPPORT_BRIGHTNESS:

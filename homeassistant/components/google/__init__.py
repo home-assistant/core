@@ -20,6 +20,7 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
+from homeassistant.components.repairs import IssueSeverity, async_create_issue
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_CLIENT_ID,
@@ -203,21 +204,27 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 },
             )
         )
-
-    _LOGGER.warning(
-        "Configuration of Google Calendar in YAML in configuration.yaml is "
-        "is deprecated and will be removed in a future release; Your existing "
-        "OAuth Application Credentials and access settings have been imported "
-        "into the UI automatically and can be safely removed from your "
-        "configuration.yaml file"
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2022.9.0",  # Warning first added in 2022.6.0
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
     )
     if conf.get(CONF_TRACK_NEW) is False:
         # The track_new as False would previously result in new entries
-        # in google_calendars.yaml with track set to Fasle which is
+        # in google_calendars.yaml with track set to False which is
         # handled at calendar entity creation time.
-        _LOGGER.warning(
-            "You must manually set the integration System Options in the "
-            "UI to disable newly discovered entities going forward"
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "removed_track_new_yaml",
+            breaks_in_ha_version="2022.6.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="removed_track_new_yaml",
         )
     return True
 

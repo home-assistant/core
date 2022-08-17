@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured",
+            "no_adapters": "No Bluetooth adapters found"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "bluetooth_confirm": {
+                "description": "Do you want to setup {name}?"
+            },
+            "enable_bluetooth": {
+                "description": "Do you want to setup Bluetooth?"
+            },
+            "user": {
+                "data": {
+                    "address": "Device"
+                },
+                "description": "Choose a device to setup"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "adapter": "The Bluetooth Adapter to use for scanning"
+                }
+            }
+        }
+    }
+}

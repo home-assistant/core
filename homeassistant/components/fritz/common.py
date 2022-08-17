@@ -240,7 +240,6 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
                     self.device_conn_type, "GetInfo"
                 ).get("NewEnable")
 
-    @callback
     async def _async_update_data(self) -> None:
         """Update FritzboxTools data."""
         try:

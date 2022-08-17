@@ -1,10 +1,9 @@
 """Support for tracking for iCloud devices."""
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
 from typing import Any
 
-from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
+from homeassistant.components.device_tracker import AsyncSeeCallback, SourceType
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -25,7 +24,7 @@ from .const import (
 async def async_setup_scanner(
     hass: HomeAssistant,
     config: ConfigType,
-    see: Callable[..., Awaitable[None]],
+    async_see: AsyncSeeCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> bool:
     """Old way of setting up the iCloud tracker."""
@@ -35,7 +34,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up device tracker for iCloud component."""
-    account = hass.data[DOMAIN][entry.unique_id]
+    account: IcloudAccount = hass.data[DOMAIN][entry.unique_id]
     tracked = set[str]()
 
     @callback
@@ -106,9 +105,9 @@ class IcloudTrackerEntity(TrackerEntity):
         return self._device.battery_level
 
     @property
-    def source_type(self) -> str:
+    def source_type(self) -> SourceType:
         """Return the source type, eg gps or router, of the device."""
-        return SOURCE_TYPE_GPS
+        return SourceType.GPS
 
     @property
     def icon(self) -> str:
@@ -148,7 +147,7 @@ def icon_for_icloud_device(icloud_device: IcloudDevice) -> str:
         "iPad": "mdi:tablet",
         "iPhone": "mdi:cellphone",
         "iPod": "mdi:ipod",
-        "iMac": "mdi:desktop-mac",
+        "iMac": "mdi:monitor",
         "MacBookPro": "mdi:laptop",
     }
 

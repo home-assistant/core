@@ -335,7 +335,11 @@ class ClearCompletedItemsView(http.HomeAssistantView):
 
 
 @callback
-def websocket_handle_items(hass, connection, msg):
+def websocket_handle_items(
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict,
+) -> None:
     """Handle get shopping_list items."""
     connection.send_message(
         websocket_api.result_message(msg["id"], hass.data[DOMAIN].items)
@@ -343,15 +347,25 @@ def websocket_handle_items(hass, connection, msg):
 
 
 @websocket_api.async_response
-async def websocket_handle_add(hass, connection, msg):
+async def websocket_handle_add(
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict,
+) -> None:
     """Handle add item to shopping_list."""
     item = await hass.data[DOMAIN].async_add(msg["name"])
-    hass.bus.async_fire(EVENT, {"action": "add", "item": item})
+    hass.bus.async_fire(
+        EVENT, {"action": "add", "item": item}, context=connection.context(msg)
+    )
     connection.send_message(websocket_api.result_message(msg["id"], item))
 
 
 @websocket_api.async_response
-async def websocket_handle_update(hass, connection, msg):
+async def websocket_handle_update(
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict,
+) -> None:
     """Handle update shopping_list item."""
     msg_id = msg.pop("id")
     item_id = msg.pop("item_id")
@@ -360,7 +374,9 @@ async def websocket_handle_update(hass, connection, msg):
 
     try:
         item = await hass.data[DOMAIN].async_update(item_id, data)
-        hass.bus.async_fire(EVENT, {"action": "update", "item": item})
+        hass.bus.async_fire(
+            EVENT, {"action": "update", "item": item}, context=connection.context(msg)
+        )
         connection.send_message(websocket_api.result_message(msg_id, item))
     except KeyError:
         connection.send_message(
@@ -369,10 +385,14 @@ async def websocket_handle_update(hass, connection, msg):
 
 
 @websocket_api.async_response
-async def websocket_handle_clear(hass, connection, msg):
+async def websocket_handle_clear(
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict,
+) -> None:
     """Handle clearing shopping_list items."""
     await hass.data[DOMAIN].async_clear_completed()
-    hass.bus.async_fire(EVENT, {"action": "clear"})
+    hass.bus.async_fire(EVENT, {"action": "clear"}, context=connection.context(msg))
     connection.send_message(websocket_api.result_message(msg["id"]))
 
 
@@ -382,12 +402,18 @@ async def websocket_handle_clear(hass, connection, msg):
         vol.Required("item_ids"): [str],
     }
 )
-def websocket_handle_reorder(hass, connection, msg):
+def websocket_handle_reorder(
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict,
+) -> None:
     """Handle reordering shopping_list items."""
     msg_id = msg.pop("id")
     try:
         hass.data[DOMAIN].async_reorder(msg.pop("item_ids"))
-        hass.bus.async_fire(EVENT, {"action": "reorder"})
+        hass.bus.async_fire(
+            EVENT, {"action": "reorder"}, context=connection.context(msg)
+        )
         connection.send_result(msg_id)
     except KeyError:
         connection.send_error(

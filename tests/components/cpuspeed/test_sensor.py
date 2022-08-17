@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock
 
+from homeassistant.components.cpuspeed.const import DOMAIN
 from homeassistant.components.cpuspeed.sensor import ATTR_ARCH, ATTR_BRAND, ATTR_HZ
 from homeassistant.components.homeassistant import (
     DOMAIN as HOME_ASSISTANT_DOMAIN,
@@ -15,7 +16,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -29,6 +30,7 @@ async def test_sensor(
     """Test the CPU Speed sensor."""
     await async_setup_component(hass, "homeassistant", {})
     entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
 
     entry = entity_registry.async_get("sensor.cpu_speed")
     assert entry
@@ -61,6 +63,12 @@ async def test_sensor(
     assert state.attributes.get(ATTR_ARCH) == "aargh"
     assert state.attributes.get(ATTR_BRAND) == "Intel Ryzen 7"
     assert state.attributes.get(ATTR_HZ) == 3.6
+
+    assert entry.device_id
+    device_entry = device_registry.async_get(entry.device_id)
+    assert device_entry
+    assert device_entry.identifiers == {(DOMAIN, entry.config_entry_id)}
+    assert device_entry.name == "CPU Speed"
 
 
 async def test_sensor_partial_info(

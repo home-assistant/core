@@ -41,7 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 CAMERA_TYPES: tuple[CameraEntityDescription, ...] = (
-    CameraEntityDescription(key="activity", name="Last Activity"),
+    CameraEntityDescription(key="activity", name="Last activity"),
     CameraEntityDescription(key="avatar", name="Camera"),
 )
 

@@ -299,7 +299,7 @@ class WeatherEntity(Entity):
                     and module.__file__
                     and "custom_components" in module.__file__
                 ):
-                    report_issue = "report it to the custom component author."
+                    report_issue = "report it to the custom integration author."
                 else:
                     report_issue = (
                         "create a bug report at "

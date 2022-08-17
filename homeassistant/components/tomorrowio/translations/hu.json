@@ -3,7 +3,7 @@
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
             "invalid_api_key": "\u00c9rv\u00e9nytelen API kulcs",
-            "rate_limited": "Jelenleg korl\u00e1tozott a hozz\u00e1f\u00e9r\u00e9s, k\u00e9rj\u00fck, pr\u00f3b\u00e1lja meg k\u00e9s\u0151bb \u00fajra.",
+            "rate_limited": "Jelenleg korl\u00e1tozott a hozz\u00e1f\u00e9r\u00e9s, k\u00e9rem, pr\u00f3b\u00e1lja meg k\u00e9s\u0151bb \u00fajra.",
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
         "step": {

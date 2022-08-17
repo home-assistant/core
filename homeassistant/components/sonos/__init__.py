@@ -202,7 +202,11 @@ class SonosDiscoveryManager:
             speaker.activity_stats.log_report()
             speaker.event_stats.log_report()
         if zgs := next(
-            speaker.soco.zone_group_state for speaker in self.data.discovered.values()
+            (
+                speaker.soco.zone_group_state
+                for speaker in self.data.discovered.values()
+            ),
+            None,
         ):
             _LOGGER.debug(
                 "ZoneGroupState stats: (%s/%s) processed",
