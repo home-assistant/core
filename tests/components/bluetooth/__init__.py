@@ -11,7 +11,7 @@ from homeassistant.components.bluetooth.manager import BluetoothManager
 
 
 def _get_manager() -> BluetoothManager:
-    """Return the underlying scanner that has been wrapped."""
+    """Return the bluetooth manager."""
     return models.MANAGER
 
 
