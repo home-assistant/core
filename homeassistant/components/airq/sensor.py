@@ -24,18 +24,16 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from . import AirQCoordinator
+from .const import DOMAIN, MANUFACTURER
 
 _LOGGER = logging.getLogger(__name__)
 
-# Consider making key & name constants
-# NOTE: keys must match those in the data dictionary
+# Keys must match those in the data dictionary
 SENSOR_TYPES: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="co",
@@ -72,7 +70,8 @@ SENSOR_TYPES: list[SensorEntityDescription] = [
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    # TODO: check the definition in SensorDeviceClass.PM1. It says <= 0.1µm, not 1µm
+    # The definition in SensorDeviceClass.PM1 says <= 0.1µm, not 1µm.
+    # Its documentation, however, says < 1µm
     SensorEntityDescription(
         key="pm1",
         name="PM1",
@@ -82,7 +81,7 @@ SENSOR_TYPES: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="pm2_5",
-        name="PM25",
+        name="PM2.5",
         device_class=SensorDeviceClass.PM25,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -171,15 +170,6 @@ async def async_setup_entry(
         ", ".join([sensor.key for sensor in available_sensors]),
     )
 
-    # A potential nicer alternative to the iteration above is to fetch the list
-    # of sensors from AirQ.sensors dynamic property. The issue with it is that I
-    # only have access to them in __init__.async_setup_entry. The only way I see
-    # to pass this info is to either define a custom coordinator (which can hold
-    # both the AirQ instance, and the queried list of sensors, and anything else,
-    # or to pass the list in the config entry, which I do not feel very comfortable
-    # modifying (Should its .data field remain consistent with the STEP_USER_DATA_SCHEMA
-    # defined in config_flow.py?
-
     entities = [
         AirQSensor(coordinator, description) for description in available_sensors
     ]
@@ -189,20 +179,30 @@ async def async_setup_entry(
 class AirQSensor(CoordinatorEntity, SensorEntity):
     """Representation of a Sensor."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: AirQCoordinator,
         description: SensorEntityDescription,
     ) -> None:
         """Initialize a single sensor."""
         super().__init__(coordinator)
         self.entity_description = description
 
-        # TODO: check the requirements for these two fields
-        self._attr_name = f"AirQ {description.name}"
-        self._attr_unique_id = f"airq_{description.key}"
+        self._attr_device_info = DeviceInfo(
+            # name: ABCDE -- will be prepended to description.name, e.g.: 'ABCDE NO2'
+            name=coordinator.config["name"],
+            model=coordinator.config["model"],
+            sw_version=coordinator.config["sw_version"],
+            hw_version=coordinator.config["hw_version"],
+            identifiers={(DOMAIN, coordinator.config["id"])},
+            manufacturer=MANUFACTURER,
+            suggested_area=coordinator.config["room_type"],
+        )
+        self._attr_name = description.name
+        self._attr_unique_id = f"{coordinator.config['id']}_{description.key}"
 
-    # TODO: check the guidelines on properties vs attributes...
     @property
     def native_value(self) -> float | int | None:
         """Return the value reported by the sensor."""

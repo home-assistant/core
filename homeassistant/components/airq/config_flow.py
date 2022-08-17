@@ -48,7 +48,7 @@ async def validate_input(_: HomeAssistant, data: dict[str, Any]) -> tuple[str, s
 
     config = await airq.get("config")
     device_id: str = config["id"]
-    device_name: str = config["devicename"]
+    device_name: str = config["devicename"][-5:]
     return device_name, device_id
 
 
@@ -56,7 +56,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for air-Q."""
 
     VERSION = 1
-    _title: str = "Air-Q "
+    _title: str = "air-Q device "
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
