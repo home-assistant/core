@@ -18,6 +18,30 @@
             }
         }
     },
+    "issues": {
+        "deprecated_service_with_alternate_instructions": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "{alternate_instructions} Then, click SUBMIT below to mark this issue as resolved.",
+                        "title": "The {deprecated_service} service is being removed"
+                    }
+                }
+            },
+            "title": "The {deprecated_service} service is being removed"
+        },
+        "deprecated_service_with_alternate_target": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Update any automations or scripts that use this service to instead use the `{alternate_service}` service with a target entity ID of `{alternate_target}`. Then, click SUBMIT below to mark this issue as resolved.",
+                        "title": "The {deprecated_service} service is being removed"
+                    }
+                }
+            },
+            "title": "The {deprecated_service} service is being removed"
+        }
+    },
     "options": {
         "step": {
             "init": {

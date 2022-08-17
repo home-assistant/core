@@ -9,6 +9,7 @@ from pyopenuv import Client
 from pyopenuv.errors import OpenUvError
 import voluptuous as vol
 
+from homeassistant.components.repairs import IssueSeverity, async_create_issue
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     CONF_API_KEY,
@@ -24,10 +25,6 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 import homeassistant.helpers.device_registry as dr
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 from homeassistant.helpers.service import verify_domain_control
 
@@ -46,8 +43,6 @@ DEFAULT_ATTRIBUTION = "Data provided by OpenUV"
 
 NOTIFICATION_ID = "openuv_notification"
 NOTIFICATION_TITLE = "OpenUV Component Setup"
-
-TOPIC_UPDATE = f"{DOMAIN}_data_update"
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
@@ -84,6 +79,51 @@ def async_get_openuv_for_service_call(hass: HomeAssistant, call: ServiceCall) ->
             return cast(OpenUV, hass.data[DOMAIN][entry_id])
 
     raise ValueError(f"No OpenUV object for service ID: {device_id}")
+
+
+@callback
+def async_log_deprecated_service_call(
+    hass: HomeAssistant,
+    call: ServiceCall,
+    breaks_in_ha_version: str,
+    *,
+    alternate_service: str | None = None,
+    alternate_target: str | None = None,
+    alternate_instructions: str | None = None,
+) -> None:
+    """Log a warning about a deprecated service call."""
+    deprecated_service = f"{call.domain}.{call.service}"
+
+    translation_placeholders = {"deprecated_service": deprecated_service}
+    if alternate_service and alternate_target:
+        translation_key = "deprecated_service_with_alternate_target"
+        translation_placeholders["alternate_service"] = alternate_service
+        translation_placeholders["alternate_target"] = alternate_target
+    else:
+        translation_key = "deprecated_service_with_alternate_instructions"
+        if alternate_instructions:
+            translation_placeholders["alternate_instructions"] = alternate_instructions
+
+    async_create_issue(
+        hass,
+        DOMAIN,
+        f"deprecated_service_{deprecated_service}",
+        breaks_in_ha_version=breaks_in_ha_version,
+        is_fixable=True,
+        is_persistent=True,
+        severity=IssueSeverity.WARNING,
+        translation_key=translation_key,
+        translation_placeholders=translation_placeholders,
+    )
+
+    LOGGER.warning(
+        (
+            'The "%s" service is deprecated and will be removed in %s; review the '
+            "Repairs item in the UI for more information"
+        ),
+        deprecated_service,
+        breaks_in_ha_version,
+    )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -141,25 +181,42 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     @extract_openuv
     async def update_data(call: ServiceCall, openuv: OpenUV) -> None:
         """Refresh all OpenUV data."""
-        LOGGER.debug("Refreshing all OpenUV data")
+        async_log_deprecated_service_call(
+            hass,
+            call,
+            "2022.11.0",
+            alternate_instructions=(
+                "Instead, use the `homeassistant.update_entity` service on the entity "
+                "whose data you would like to update."
+            ),
+        )
         await openuv.async_update()
-        async_dispatcher_send(hass, TOPIC_UPDATE)
 
     @_verify_domain_control
     @extract_openuv
     async def update_uv_index_data(call: ServiceCall, openuv: OpenUV) -> None:
         """Refresh OpenUV UV index data."""
-        LOGGER.debug("Refreshing OpenUV UV index data")
+        async_log_deprecated_service_call(
+            hass,
+            call,
+            "2022.11.0",
+            alternate_service="homeassistant.update_entity",
+            alternate_target="sensor.current_uv_index",
+        )
         await openuv.async_update_uv_index_data()
-        async_dispatcher_send(hass, TOPIC_UPDATE)
 
     @_verify_domain_control
     @extract_openuv
     async def update_protection_data(call: ServiceCall, openuv: OpenUV) -> None:
         """Refresh OpenUV protection window data."""
-        LOGGER.debug("Refreshing OpenUV protection window data")
+        async_log_deprecated_service_call(
+            hass,
+            call,
+            "2022.11.0",
+            alternate_service="homeassistant.update_entity",
+            alternate_target="binary_sensor.protection_window",
+        )
         await openuv.async_update_protection_data()
-        async_dispatcher_send(hass, TOPIC_UPDATE)
 
     for service, method in (
         (SERVICE_NAME_UPDATE_DATA, update_data),
@@ -271,18 +328,23 @@ class OpenUvEntity(Entity):
         self.entity_description = description
         self.openuv = openuv
 
+    @callback
+    def async_update_state(self) -> None:
+        """Update the state."""
+        self.update_from_latest_data()
+        self.async_write_ha_state()
+
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
-
-        @callback
-        def update() -> None:
-            """Update the state."""
-            self.update_from_latest_data()
-            self.async_write_ha_state()
-
-        self.async_on_remove(async_dispatcher_connect(self.hass, TOPIC_UPDATE, update))
-
         self.update_from_latest_data()
+
+    async def async_update(self) -> None:
+        """Update the entity.
+
+        Only used by the generic entity update service. Should be implemented by each
+        OpenUV platform.
+        """
+        raise NotImplementedError
 
     def update_from_latest_data(self) -> None:
         """Update the sensor using the latest data."""
