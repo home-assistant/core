@@ -60,7 +60,7 @@ async def async_setup_entry(
     if is_local(config_entry):
         partition_updates = hass.data[DOMAIN][config_entry.entry_id][PARTITION_UPDATES]
         system = hass.data[DOMAIN][config_entry.entry_id][SYSTEM]
-        local_entities = [
+        async_add_entities(
             RiscoLocalAlarm(
                 system.id,
                 partition_id,
@@ -70,17 +70,15 @@ async def async_setup_entry(
                 options,
             )
             for partition_id, partition in system.partitions.items()
-        ]
-        async_add_entities(local_entities, False)
+        )
     else:
         coordinator = hass.data[DOMAIN][config_entry.entry_id][DATA_COORDINATOR]
-        cloud_entities = [
+        async_add_entities(
             RiscoCloudAlarm(
                 coordinator, partition_id, config_entry.data[CONF_PIN], options
             )
             for partition_id in coordinator.data.partitions
-        ]
-        async_add_entities(cloud_entities, False)
+        )
 
 
 class RiscoAlarm(AlarmControlPanelEntity):

@@ -72,7 +72,7 @@ async def _async_setup_local_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
         _LOGGER.exception("Failed to login to Risco cloud")
         return False
 
-    async def _error(error):
+    async def _error(error: Exception) -> None:
         _LOGGER.error("Error in Risco library: %s", error)
 
     remove_error = risco.add_error_handler(_error)
@@ -104,13 +104,13 @@ async def _async_setup_local_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
 
     remove_partition = risco.add_partition_handler(_partition)
 
-    listenrs = [remove_error, remove_default, remove_zone, remove_partition]
+    listeners = [remove_error, remove_default, remove_zone, remove_partition]
 
-    listenrs.append(entry.add_update_listener(_update_listener))
+    listeners.append(entry.add_update_listener(_update_listener))
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
-        UNDO_LISTENERS: listenrs,
+        UNDO_LISTENERS: listeners,
         ZONE_UPDATES: zone_updates,
         PARTITION_UPDATES: partition_updates,
         SYSTEM: risco,
