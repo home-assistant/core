@@ -9,6 +9,8 @@ from enum import Enum
 import logging
 from typing import TYPE_CHECKING, Any, Final
 
+from bleak import BleakClient, BleakError
+from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import (
     AdvertisementData,
     AdvertisementDataCallback,
@@ -16,10 +18,10 @@ from bleak.backends.scanner import (
 )
 
 from homeassistant.core import CALLBACK_TYPE
+from homeassistant.helpers.frame import report
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
 if TYPE_CHECKING:
-    from bleak.backends.device import BLEDevice
 
     from .manager import BluetoothManager
 
@@ -165,3 +167,33 @@ class HaBleakScannerWrapper(BaseBleakScanner):
             # Nothing to do if event loop is already closed
             with contextlib.suppress(RuntimeError):
                 asyncio.get_running_loop().call_soon_threadsafe(self._detection_cancel)
+
+
+class HaBleakClientWrapper(BleakClient):
+    """Wrap the BleakClient to ensure it does not shutdown our scanner.
+
+    If an address is passed into BleakClient instead of a BLEDevice,
+    bleak will quietly start a new scanner under the hood to resolve
+    the address. This can cause a conflict with our scanner. We need
+    to handle translating the address to the BLEDevice in this case
+    to avoid the whole stack from getting stuck in an in progress state
+    when an integration does this.
+    """
+
+    def __init__(
+        self, address_or_ble_device: str | BLEDevice, *args: Any, **kwargs: Any
+    ) -> None:
+        """Initialize the BleakClient."""
+        if isinstance(address_or_ble_device, BLEDevice):
+            super().__init__(address_or_ble_device, *args, **kwargs)
+            return
+        report(
+            "attempted to call BleakClient with an address instead of a BLEDevice",
+            exclude_integrations={"bluetooth"},
+            error_if_core=False,
+        )
+        assert MANAGER is not None
+        ble_device = MANAGER.async_ble_device_from_address(address_or_ble_device)
+        if ble_device is None:
+            raise BleakError(f"No device found for address {address_or_ble_device}")
+        super().__init__(ble_device, *args, **kwargs)
