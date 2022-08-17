@@ -18,6 +18,7 @@ FLOWS = {
         "airly",
         "airnow",
         "airthings",
+        "airthings_ble",
         "airtouch4",
         "airvisual",
         "airzone",

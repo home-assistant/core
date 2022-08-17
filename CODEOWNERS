@@ -45,6 +45,8 @@ build.json @home-assistant/supervisor
 /tests/components/airnow/ @asymworks
 /homeassistant/components/airthings/ @danielhiversen
 /tests/components/airthings/ @danielhiversen
+/homeassistant/components/airthings_ble/ @vincegio
+/tests/components/airthings_ble/ @vincegio
 /homeassistant/components/airtouch4/ @LonePurpleWolf
 /tests/components/airtouch4/ @LonePurpleWolf
 /homeassistant/components/airvisual/ @bachya
