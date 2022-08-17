@@ -96,12 +96,17 @@ class BluetoothManager:
             EVENT_HOMEASSISTANT_STOP, self._async_hass_stopping
         )
 
-    @property
-    def discovered_devices(self) -> Iterable[BLEDevice]:
-        """Return all of discovered devices from all the scanners."""
+    @hass_callback
+    def async_all_discovered_devices(self) -> Iterable[BLEDevice]:
+        """Return all of discovered devices from all the scanners including duplicates."""
         return itertools.chain.from_iterable(
             scanner.discovered_devices for scanner in self._scanners
         )
+
+    @hass_callback
+    def async_discovered_devices(self) -> list[BLEDevice]:
+        """Return all of combined best path to discovered from all the scanners."""
+        return [history[0] for history in self.history.values()]
 
     @hass_callback
     def async_setup_unavailable_tracking(self) -> None:
@@ -111,7 +116,9 @@ class BluetoothManager:
         def _async_check_unavailable(now: datetime) -> None:
             """Watch for unavailable devices."""
             history_set = set(self.history)
-            active_addresses = {device.address for device in self.discovered_devices}
+            active_addresses = {
+                device.address for device in self.async_all_discovered_devices()
+            }
             disappeared = history_set.difference(active_addresses)
             for address in disappeared:
                 del self.history[address]

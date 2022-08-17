@@ -21,7 +21,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from . import _get_manager, mock_discovered_devices
+from . import _get_manager
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -183,6 +183,7 @@ async def test_recovery_from_dbus_restart(hass):
     called_start = 0
     called_stop = 0
     _callback = None
+    mock_discovered = []
 
     class MockBleakScanner:
         async def start(self, *args, **kwargs):
@@ -194,6 +195,12 @@ async def test_recovery_from_dbus_restart(hass):
             """Mock Start."""
             nonlocal called_stop
             called_stop += 1
+
+        @property
+        def discovered_devices(self):
+            """Mock discovered_devices."""
+            nonlocal mock_discovered
+            return mock_discovered
 
         def register_detection_callback(self, callback: AdvertisementDataCallback):
             """Mock Register Detection Callback."""
@@ -215,7 +222,6 @@ async def test_recovery_from_dbus_restart(hass):
     start_time_monotonic = 1000
     scanner = _get_manager()
     mock_discovered = [MagicMock()]
-    mock_discovered_devices(mock_discovered)
 
     # Ensure we don't restart the scanner if we don't need to
     with patch(

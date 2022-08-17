@@ -28,7 +28,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from . import _get_manager, inject_advertisement, mock_discovered_devices
+from . import _get_manager, inject_advertisement, patch_discovered_devices
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -1096,14 +1096,12 @@ async def test_wrapped_instance_with_filter(
         )
         scanner.register_detection_callback(_device_detected)
 
-        mock_discovered = [MagicMock()]
-        mock_discovered_devices(mock_discovered)
         inject_advertisement(switchbot_device, switchbot_adv)
         await hass.async_block_till_done()
 
         discovered = await scanner.discover(timeout=0)
         assert len(discovered) == 1
-        assert discovered == mock_discovered
+        assert discovered == [switchbot_device]
         assert len(detected) == 1
 
         scanner.register_detection_callback(_device_detected)
@@ -1113,10 +1111,10 @@ async def test_wrapped_instance_with_filter(
         # We should get a reply from the history when we register again
         assert len(detected) == 3
 
-        mock_discovered_devices([])
-        discovered = await scanner.discover(timeout=0)
-        assert len(discovered) == 0
-        assert discovered == []
+        with patch_discovered_devices([]):
+            discovered = await scanner.discover(timeout=0)
+            assert len(discovered) == 0
+            assert discovered == []
 
         inject_advertisement(switchbot_device, switchbot_adv)
         assert len(detected) == 4
@@ -1167,7 +1165,6 @@ async def test_wrapped_instance_with_service_uuids(
         )
         scanner.register_detection_callback(_device_detected)
 
-        mock_discovered_devices([MagicMock()])
         for _ in range(2):
             inject_advertisement(switchbot_device, switchbot_adv)
             await hass.async_block_till_done()
@@ -1267,7 +1264,6 @@ async def test_wrapped_instance_changes_uuids(
         )
         scanner.register_detection_callback(_device_detected)
 
-        mock_discovered_devices([MagicMock()])
         for _ in range(2):
             inject_advertisement(switchbot_device, switchbot_adv)
             await hass.async_block_till_done()
@@ -1320,7 +1316,6 @@ async def test_wrapped_instance_changes_filters(
         )
         scanner.register_detection_callback(_device_detected)
 
-        mock_discovered_devices([MagicMock()])
         for _ in range(2):
             inject_advertisement(switchbot_device, switchbot_adv)
             await hass.async_block_till_done()
