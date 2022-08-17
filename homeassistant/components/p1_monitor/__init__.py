@@ -70,6 +70,7 @@ class P1MonitorDataUpdateCoordinator(DataUpdateCoordinator[P1MonitorData]):
     """Class to manage fetching P1 Monitor data from single endpoint."""
 
     config_entry: ConfigEntry
+    has_water_meter: bool | None = None
 
     def __init__(
         self,
@@ -95,9 +96,13 @@ class P1MonitorDataUpdateCoordinator(DataUpdateCoordinator[P1MonitorData]):
             SERVICE_SETTINGS: await self.p1monitor.settings(),
             SERVICE_WATERMETER: None,
         }
-        try:
-            data[SERVICE_WATERMETER] = await self.p1monitor.watermeter()
-        except P1MonitorNoDataError:
-            LOGGER.debug("No watermeter data received from P1 Monitor")
+
+        if self.has_water_meter or self.has_water_meter is None:
+            try:
+                data[SERVICE_WATERMETER] = await self.p1monitor.watermeter()
+            except P1MonitorNoDataError:
+                LOGGER.debug("No watermeter data received from P1 Monitor")
+                if self.has_water_meter is None:
+                    self.has_water_meter = False
 
         return data
