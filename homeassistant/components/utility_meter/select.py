@@ -23,7 +23,7 @@ async def async_setup_entry(
 ) -> None:
     """Initialize Utility Meter config entry."""
     name = config_entry.title
-    tariffs = config_entry.options[CONF_TARIFFS]
+    tariffs: list[str] = config_entry.options[CONF_TARIFFS]
 
     unique_id = config_entry.entry_id
     tariff_select = TariffSelect(name, tariffs, unique_id)
@@ -52,7 +52,7 @@ async def async_setup_platform(
     async_add_entities(
         [
             TariffSelect(
-                discovery_info[CONF_METER],
+                meter,
                 discovery_info[CONF_TARIFFS],
                 conf_meter_unique_id,
             )
@@ -67,22 +67,22 @@ class TariffSelect(SelectEntity, RestoreEntity):
         """Initialize a tariff selector."""
         self._attr_name = name
         self._attr_unique_id = unique_id
-        self._current_tariff = None
+        self._current_tariff: str | None = None
         self._tariffs = tariffs
         self._attr_icon = TARIFF_ICON
         self._attr_should_poll = False
 
     @property
-    def options(self):
+    def options(self) -> list[str]:
         """Return the available tariffs."""
         return self._tariffs
 
     @property
-    def current_option(self):
+    def current_option(self) -> str | None:
         """Return current tariff."""
         return self._current_tariff
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when entity about to be added."""
         await super().async_added_to_hass()
 
