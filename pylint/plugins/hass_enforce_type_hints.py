@@ -1907,6 +1907,27 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             ],
         ),
     ],
+    "scene": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="Scene",
+            matches=[
+                TypeHintMatch(
+                    function_name="activate",
+                    kwargs_type="Any",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+            ],
+        ),
+    ],
     "select": [
         ClassTypeHintMatch(
             base_class="Entity",
