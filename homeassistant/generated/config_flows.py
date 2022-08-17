@@ -196,6 +196,7 @@ FLOWS = {
         "kraken",
         "kulersky",
         "lacrosse_view",
+        "lametric",
         "launch_library",
         "laundrify",
         "lg_soundbar",
