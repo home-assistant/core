@@ -31,6 +31,12 @@
                 },
                 "description": "Awair Local API m\u00e5 aktiveres ved \u00e5 f\u00f8lge disse trinnene: {url}"
             },
+            "local_pick": {
+                "data": {
+                    "device": "Enhet",
+                    "host": "IP adresse"
+                }
+            },
             "reauth": {
                 "data": {
                     "access_token": "Tilgangstoken",

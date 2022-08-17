@@ -44,6 +44,8 @@
             "button_2": "2\u756a\u76ee\u306e\u30dc\u30bf\u30f3",
             "button_3": "3\u756a\u76ee\u306e\u30dc\u30bf\u30f3",
             "button_4": "4\u756a\u76ee\u306e\u30dc\u30bf\u30f3",
+            "clock_wise": "\u6642\u8a08\u56de\u308a\u306b\u56de\u8ee2",
+            "counter_clock_wise": "\u53cd\u6642\u8a08\u56de\u308a\u306b\u56de\u8ee2",
             "dim_down": "\u8584\u6697\u304f\u3059\u308b",
             "dim_up": "\u5fae\u304b\u306b\u660e\u308b\u304f\u3059\u308b",
             "double_buttons_1_3": "1\u756a\u76ee\u30683\u756a\u76ee\u306e\u30dc\u30bf\u30f3",
