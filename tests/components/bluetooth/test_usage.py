@@ -18,6 +18,10 @@ from homeassistant.components.bluetooth.usage import (
 
 from . import _get_manager
 
+MOCK_BLE_DEVICE = BLEDevice(
+    "00:00:00:00:00:00", "any", delegate="", details={"path": "/dev/hci0/device"}
+)
+
 
 async def test_multiple_bleak_scanner_instances(hass):
     """Test creating multiple BleakScanners without an integration."""
@@ -38,13 +42,13 @@ async def test_wrapping_bleak_client(hass, enable_bluetooth):
     """Test we wrap BleakClient."""
     install_multiple_bleak_catcher()
 
-    instance = bleak.BleakClient(BLEDevice("00:00:00:00:00:00", "any", delegate=""))
+    instance = bleak.BleakClient(MOCK_BLE_DEVICE)
 
     assert isinstance(instance, HaBleakClientWrapper)
 
     uninstall_multiple_bleak_catcher()
 
-    instance = bleak.BleakClient(BLEDevice("00:00:00:00:00:00", "any", delegate=""))
+    instance = bleak.BleakClient(MOCK_BLE_DEVICE)
 
     assert not isinstance(instance, HaBleakClientWrapper)
 
@@ -59,7 +63,7 @@ async def test_bleak_client_reports_with_address(hass, enable_bluetooth, caplog)
     with patch.object(
         _get_manager(),
         "async_ble_device_from_address",
-        return_value=BLEDevice("00:00:00:00:00:00", "any", delegate=""),
+        return_value=MOCK_BLE_DEVICE,
     ):
         instance = bleak.BleakClient("00:00:00:00:00:00")
 
