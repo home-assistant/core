@@ -74,10 +74,14 @@ def async_get_openuv_for_service_call(hass: HomeAssistant, call: ServiceCall) ->
     device_id = call.data[CONF_DEVICE_ID]
     device_registry = dr.async_get(hass)
 
-    if device_entry := device_registry.async_get(device_id):
-        for entry in hass.config_entries.async_entries(DOMAIN):
-            if entry.entry_id in device_entry.config_entries:
-                return cast(OpenUV, hass.data[DOMAIN][entry.entry_id])
+    if (device_entry := device_registry.async_get(device_id)) is None:
+        raise ValueError(f"Invalid OpenUV service ID: {device_id}")
+
+    for entry_id in device_entry.config_entries:
+        if (entry := hass.config_entries.async_get_entry(entry_id)) is None:
+            continue
+        if entry.domain == DOMAIN:
+            return cast(OpenUV, hass.data[DOMAIN][entry_id])
 
     raise ValueError(f"No OpenUV object for service ID: {device_id}")
 
