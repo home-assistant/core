@@ -1,8 +1,9 @@
 """Fully Kiosk Browser button."""
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Any
 
 from fullykiosk import FullyKiosk
 
@@ -25,7 +26,7 @@ from .entity import FullyKioskEntity
 class FullyButtonEntityDescriptionMixin:
     """Mixin to describe a Fully Kiosk Browser button entity."""
 
-    press_action: Callable[[FullyKiosk], Awaitable[None]]
+    press_action: Callable[[FullyKiosk], Any]
 
 
 @dataclass
