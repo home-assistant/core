@@ -3,11 +3,12 @@ from __future__ import annotations
 
 import logging
 
-from pushbullet import InvalidKeyError, PushBullet
+from pushbullet import InvalidKeyError, PushBullet, PushbulletError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import discovery
 from homeassistant.helpers.typing import ConfigType
 
@@ -33,12 +34,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             PushBullet, entry.data[CONF_API_KEY]
         )
     except InvalidKeyError:
-        _LOGGER.error("Wrong API key for Pushbullet supplied")
+        _LOGGER.error("Invalid API key for Pushbullet")
         return False
+    except PushbulletError as err:
+        raise ConfigEntryNotReady from err
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = pushbullet
-
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     hass.async_create_task(
         discovery.async_load_platform(
@@ -49,6 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass.data[DATA_HASS_CONFIG],
         )
     )
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

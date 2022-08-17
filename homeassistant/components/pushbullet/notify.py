@@ -23,6 +23,7 @@ from homeassistant.components.repairs.models import IssueSeverity
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -33,7 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_API_KEY): cv.string})
 
 
-def get_service(
+async def async_get_service(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
@@ -49,7 +50,7 @@ def get_service(
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_yaml",
         )
-        hass.create_task(
+        hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
                 context={"source": SOURCE_IMPORT},
@@ -69,8 +70,12 @@ class PushBulletNotificationService(BaseNotificationService):
         """Initialize the service."""
         self.hass = hass
         self.pushbullet = pushbullet
-        self.pbtargets: dict[str, dict[str, Device | Channel]] = {}
-        self.refresh()
+        self.pbtargets: dict[str, dict[str, Device | Channel]] = {
+            "device": {tgt.nickname.lower(): tgt for tgt in self.pushbullet.devices},
+            "channel": {
+                tgt.channel_tag.lower(): tgt for tgt in self.pushbullet.channels
+            },
+        }
 
     def refresh(self):
         """Refresh devices, contacts, etc.
@@ -83,7 +88,7 @@ class PushBulletNotificationService(BaseNotificationService):
         implemented in the module yet.
         """
         self.pushbullet.refresh()
-        self.pbtargets = {
+        self.pbtargets: dict[str, dict[str, Device | Channel]] = {
             "device": {tgt.nickname.lower(): tgt for tgt in self.pushbullet.devices},
             "channel": {
                 tgt.channel_tag.lower(): tgt for tgt in self.pushbullet.channels
@@ -113,9 +118,8 @@ class PushBulletNotificationService(BaseNotificationService):
         for target in targets:
             try:
                 ttype, tname = target.split("/", 1)
-            except ValueError:
-                _LOGGER.error("Invalid target syntax: %s", target)
-                continue
+            except ValueError as err:
+                raise ValueError(f"Invalid target syntax: '{target}'") from err
 
             # Target is email, send directly, don't use a target object.
             # This also seems to work to send to all devices in own account.
@@ -135,8 +139,7 @@ class PushBulletNotificationService(BaseNotificationService):
             # Refresh if name not found. While awaiting periodic refresh
             # solution in component, poor mans refresh.
             if ttype not in self.pbtargets:
-                _LOGGER.error("Invalid target syntax: %s", target)
-                continue
+                raise ValueError(f"Invalid target syntax: {target}")
 
             tname = tname.lower()
 
@@ -207,4 +210,4 @@ class PushBulletNotificationService(BaseNotificationService):
             else:
                 pusher.push_note(title, message, **email_kwargs)
         except PushError as err:
-            _LOGGER.error("Notify failed: %s", err)
+            raise HomeAssistantError(f"Notify failed: {err}") from err

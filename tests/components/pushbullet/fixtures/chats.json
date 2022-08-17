@@ -1,0 +1,18 @@
+{
+  "chats": [
+    {
+      "active": true,
+      "created": 1412047948.579029,
+      "iden": "ujpah72o0sjAoRtnM0jc",
+      "modified": 1412047948.579031,
+      "with": {
+        "email": "carmack@idsoftware.com",
+        "email_normalized": "carmack@idsoftware.com",
+        "iden": "ujlMns72k",
+        "image_url": "https://dl.pushbulletusercontent.com/foGfub1jtC6yYcOMACk1AbHwTrTKvrDc/john.jpg",
+        "name": "John Carmack",
+        "type": "user"
+      }
+    }
+  ]
+}

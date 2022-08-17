@@ -1,0 +1,14 @@
+{
+  "channels": [
+    {
+      "active": true,
+      "created": 1412047948.579029,
+      "description": "News about Elon Musk.",
+      "iden": "ujxPklLhvyKsjAvkMyTVh6",
+      "image_url": "https://dl.pushbulletusercontent.com/StzRmwdkIe8gluBH3XoJ9HjRqjlUYSf4/musk.jpg",
+      "modified": 1412047948.579031,
+      "name": "Elon Musk News",
+      "tag": "elonmusknews"
+    }
+  ]
+}

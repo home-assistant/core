@@ -151,7 +151,7 @@ class PushBulletNotificationSensor(SensorEntity):
         self.pb_provider = pb_provider
         self._attr_unique_id = f"{entry.entry_id}-{description.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.data[CONF_API_KEY])},
+            identifiers={(DOMAIN, self.pb_provider.pushbullet.user_info["iden"])},
             name=entry.data[CONF_NAME],
             entry_type=DeviceEntryType.SERVICE,
         )

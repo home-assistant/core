@@ -1,7 +1,7 @@
 """Test pushbullet config flow."""
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
-from pushbullet import InvalidKeyError
+from pushbullet import InvalidKeyError, PushbulletError
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
@@ -23,7 +23,7 @@ def pushbullet_setup_fixture():
         yield
 
 
-async def test_flow_user(hass: HomeAssistant) -> None:
+async def test_flow_user(hass: HomeAssistant, requests_mock_fixture) -> None:
     """Test user initialized flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -38,12 +38,14 @@ async def test_flow_user(hass: HomeAssistant) -> None:
     assert result["data"] == MOCK_CONFIG
 
 
-async def test_flow_api_key_already_configured(hass: HomeAssistant) -> None:
+async def test_flow_user_already_configured(
+    hass: HomeAssistant, requests_mock_fixture
+) -> None:
     """Test user initialized flow with duplicate server."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=MOCK_CONFIG,
-        unique_id="MYAPIKEY",
+        unique_id="ujpah72o0",
     )
 
     entry.add_to_hass(hass)
@@ -85,23 +87,41 @@ async def test_flow_name_already_configured(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-async def test_flow_invalid_key(
-    hass: HomeAssistant, mock_pushbullet: MagicMock
-) -> None:
-    """Test user initialized flow with unreachable server."""
+async def test_flow_invalid_key(hass: HomeAssistant) -> None:
+    """Test user initialized flow with invalid api key."""
 
-    mock_pushbullet.side_effect = InvalidKeyError
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data=MOCK_CONFIG,
-    )
+    with patch(
+        "homeassistant.components.pushbullet.config_flow.PushBullet",
+        side_effect=InvalidKeyError,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data=MOCK_CONFIG,
+        )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {CONF_API_KEY: "invalid_api_key"}
 
 
-async def test_import(hass: HomeAssistant) -> None:
+async def test_flow_conn_error(hass: HomeAssistant) -> None:
+    """Test user initialized flow with conn error."""
+
+    with patch(
+        "homeassistant.components.pushbullet.config_flow.PushBullet",
+        side_effect=PushbulletError,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data=MOCK_CONFIG,
+        )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_import(hass: HomeAssistant, requests_mock_fixture) -> None:
     """Test user initialized flow with unreachable server."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
