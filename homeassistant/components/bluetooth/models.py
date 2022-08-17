@@ -134,7 +134,7 @@ class HaBleakScannerWrapper(BaseBleakScanner):
     def discovered_devices(self) -> list[BLEDevice]:
         """Return a list of discovered devices."""
         assert MANAGER is not None
-        return MANAGER.discovered_devices
+        return list(MANAGER.discovered_devices)
 
     def register_detection_callback(
         self, callback: AdvertisementDataCallback | None
