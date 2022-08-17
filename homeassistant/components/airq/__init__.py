@@ -72,7 +72,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     config = await coordinator.airq.get("config")
     coordinator.config = {
         "id": config["id"],
-        "name": config["devicename"][-5:],
+        "name": config["devicename"],
         "model": config["type"],
         "room_type": config["RoomType"].replace("-", " ").title(),
         "sw_version": config["air-Q-Software-Version"],
