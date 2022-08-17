@@ -11,8 +11,6 @@ from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 
 from .const import CONF_REFRESH_TOKEN, DOMAIN
 
-# Limit to one platform for the first PR
-# PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.BUTTON]
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
