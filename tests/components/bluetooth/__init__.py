@@ -16,10 +16,22 @@ def _get_manager() -> BluetoothManager:
 
 
 def inject_advertisement(device: BLEDevice, adv: AdvertisementData) -> None:
-    """Return the underlying scanner that has been wrapped."""
-    return _get_manager().scanner_adv_received(
-        device, adv, time.monotonic(), SOURCE_LOCAL
-    )
+    """Inject an advertisement into the manager."""
+    return inject_advertisement_with_source(device, adv, SOURCE_LOCAL)
+
+
+def inject_advertisement_with_source(
+    device: BLEDevice, adv: AdvertisementData, source: str
+) -> None:
+    """Inject an advertisement into the manager from a specific source."""
+    inject_advertisement_with_time_and_source(device, adv, time.monotonic(), source)
+
+
+def inject_advertisement_with_time_and_source(
+    device: BLEDevice, adv: AdvertisementData, time: float, source: str
+) -> None:
+    """Inject an advertisement into the manager from a specific source at a time."""
+    return _get_manager().scanner_adv_received(device, adv, time, source)
 
 
 def patch_all_discovered_devices(mock_discovered: list[BLEDevice]) -> None:
