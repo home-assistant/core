@@ -1,7 +1,7 @@
 """The bluetooth integration."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from datetime import datetime, timedelta
 import itertools
 import logging
@@ -97,9 +97,11 @@ class BluetoothManager:
         )
 
     @property
-    def discovered_devices(self) -> list[BLEDevice]:
+    def discovered_devices(self) -> Iterable[BLEDevice]:
         """Return a list of discovered devices."""
-        return [history[0] for history in self.history.values()]
+        return itertools.chain.from_iterable(
+            scanner.discovered_devices for scanner in self._scanners
+        )
 
     @hass_callback
     def async_setup_unavailable_tracking(self) -> None:
@@ -109,12 +111,7 @@ class BluetoothManager:
         def _async_check_unavailable(now: datetime) -> None:
             """Watch for unavailable devices."""
             history_set = set(self.history)
-            active_addresses = {
-                device.address
-                for device in itertools.chain.from_iterable(
-                    scanner.discovered_devices for scanner in self._scanners
-                )
-            }
+            active_addresses = {device.address for device in self.discovered_devices}
             disappeared = history_set.difference(active_addresses)
             for address in disappeared:
                 del self.history[address]

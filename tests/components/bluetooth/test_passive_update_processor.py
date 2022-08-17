@@ -32,7 +32,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from . import _get_underlying_scanner
+from . import _get_manager, mock_discovered_devices
 
 from tests.common import MockEntityPlatform, async_fire_time_changed
 
@@ -246,12 +246,10 @@ async def test_unavailable_after_no_data(hass, mock_bleak_scanner_start):
     assert len(mock_add_entities.mock_calls) == 1
     assert coordinator.available is True
     assert processor.available is True
-    scanner = _get_underlying_scanner()
+    scanner = _get_manager()
+    mock_discovered_devices([MagicMock(address="44:44:33:11:23:45")])
 
-    with patch(
-        "homeassistant.components.bluetooth.models.HaBleakScanner.discovered_devices",
-        [MagicMock(address="44:44:33:11:23:45")],
-    ), patch.object(
+    with patch.object(
         scanner,
         "history",
         {"aa:bb:cc:dd:ee:ff": MagicMock()},
@@ -268,10 +266,8 @@ async def test_unavailable_after_no_data(hass, mock_bleak_scanner_start):
     assert coordinator.available is True
     assert processor.available is True
 
-    with patch(
-        "homeassistant.components.bluetooth.models.HaBleakScanner.discovered_devices",
-        [MagicMock(address="44:44:33:11:23:45")],
-    ), patch.object(
+    mock_discovered_devices([MagicMock(address="44:44:33:11:23:45")])
+    with patch.object(
         scanner,
         "history",
         {"aa:bb:cc:dd:ee:ff": MagicMock()},
