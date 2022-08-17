@@ -155,6 +155,11 @@ class SensorManager:
                     continue
 
                 for flow in energy_source[adapter.flow_type]:  # type: ignore[typeddict-item]
+
+                    # Add child devices for flows from different devices
+                    if adapter.flow_type == "flow_from":
+                        self._add_child_devices(adapter, dict(flow), to_add, to_remove)
+
                     self._process_sensor_data(
                         adapter,
                         # Opting out of the type complexity because can't get it to work
@@ -164,6 +169,43 @@ class SensorManager:
                     )
 
         await finish()
+
+    @callback
+    def _add_child_devices(
+        self,
+        adapter: SourceAdapter,
+        parent: dict,
+        to_add: list[EnergyCostSensor],
+        to_remove: dict[tuple[str, str | None, str], EnergyCostSensor],
+    ) -> None:
+        """Add all related child devices with their parents costs."""
+
+        if not self.manager.data:
+            return
+
+        for device in self.manager.data["device_consumption"]:
+            if device["entity_parent_source"] == parent["stat_energy_from"]:
+
+                fake_adapter = SourceAdapter(
+                    adapter.source_type,
+                    adapter.flow_type,
+                    adapter.stat_energy_key,
+                    adapter.entity_energy_key,
+                    adapter.total_money_key,
+                    "partial Cost",
+                    adapter.entity_id_suffix,
+                )
+
+                fake_flow = parent.copy()
+                fake_flow["stat_energy_from"] = device["stat_consumption"]
+                fake_flow["entity_energy_from"] = device["stat_consumption"]
+                self._process_sensor_data(
+                    fake_adapter,
+                    # Opting out of the type complexity because can't get it to work
+                    fake_flow,
+                    to_add,
+                    to_remove,
+                )
 
     @callback
     def _process_sensor_data(
