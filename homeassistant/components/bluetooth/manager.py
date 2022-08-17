@@ -98,7 +98,7 @@ class BluetoothManager:
 
     @property
     def discovered_devices(self) -> Iterable[BLEDevice]:
-        """Return a list of discovered devices."""
+        """Return all of discovered devices from all the scanners."""
         return itertools.chain.from_iterable(
             scanner.discovered_devices for scanner in self._scanners
         )
