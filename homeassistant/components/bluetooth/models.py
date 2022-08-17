@@ -25,8 +25,6 @@ if TYPE_CHECKING:
 
     from .manager import BluetoothManager
 
-    from .manager import BluetoothManager
-
 
 _LOGGER = logging.getLogger(__name__)
 
