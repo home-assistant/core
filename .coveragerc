@@ -391,8 +391,11 @@ omit =
     homeassistant/components/flick_electric/const.py
     homeassistant/components/flick_electric/sensor.py
     homeassistant/components/flock/notify.py
-    homeassistant/components/flume/__init__.py
+    homeassistant/components/flume/binary_sensor.py
+    homeassistant/components/flume/coordinator.py
+    homeassistant/components/flume/entity.py
     homeassistant/components/flume/sensor.py
+    homeassistant/components/flume/__init__.py
     homeassistant/components/flunearyou/__init__.py
     homeassistant/components/flunearyou/repairs.py
     homeassistant/components/flunearyou/sensor.py
