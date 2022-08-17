@@ -43,7 +43,7 @@ class FullyLightEntity(FullyKioskEntity, LightEntity):
     @property
     def is_on(self) -> bool | None:
         """Return if the screen is on."""
-        if self.coordinator.data:
+        if self.coordinator.data.get("screenOn") is not None:
             return bool(self.coordinator.data["screenOn"])
         return None
 
