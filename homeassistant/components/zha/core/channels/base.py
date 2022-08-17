@@ -74,6 +74,8 @@ def decorate_command(channel, command):
 
     @wraps(command)
     async def wrapper(*args, **kwds):
+        if "tries" not in kwds:
+            kwds["tries"] = 3
         try:
             result = await command(*args, **kwds)
             channel.debug(
