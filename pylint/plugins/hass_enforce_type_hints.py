@@ -577,6 +577,20 @@ _ENTITY_MATCH: list[TypeHintMatch] = [
         has_async_counterpart=True,
     ),
 ]
+_RESTORE_ENTITY_MATCH: list[TypeHintMatch] = [
+    TypeHintMatch(
+        function_name="async_get_last_state",
+        return_type=["State", None],
+    ),
+    TypeHintMatch(
+        function_name="async_get_last_extra_data",
+        return_type=["ExtraStoredData", None],
+    ),
+    TypeHintMatch(
+        function_name="extra_restore_state_data",
+        return_type=["ExtraStoredData", None],
+    ),
+]
 _TOGGLE_ENTITY_MATCH: list[TypeHintMatch] = [
     TypeHintMatch(
         function_name="is_on",
@@ -1787,6 +1801,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             matches=_ENTITY_MATCH,
         ),
         ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
             base_class="NumberEntity",
             matches=[
                 TypeHintMatch(
@@ -1826,6 +1844,19 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     arg_types={1: "float"},
                     return_type=None,
                     has_async_counterpart=True,
+                ),
+            ],
+        ),
+        ClassTypeHintMatch(
+            base_class="RestoreNumber",
+            matches=[
+                TypeHintMatch(
+                    function_name="extra_restore_state_data",
+                    return_type="NumberExtraStoredData",
+                ),
+                TypeHintMatch(
+                    function_name="async_get_last_number_data",
+                    return_type=["NumberExtraStoredData", None],
                 ),
             ],
         ),
