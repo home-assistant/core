@@ -5,7 +5,7 @@ from typing import Any
 
 from homeassistant.components.sensor import RestoreSensor, SensorDeviceClass
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_WEBHOOK_ID, STATE_UNKNOWN
+from homeassistant.const import CONF_WEBHOOK_ID, STATE_UNKNOWN, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -82,10 +82,15 @@ class MobileAppSensor(MobileAppEntity, RestoreSensor):
         await super().async_restore_last_state(last_state)
 
         if not (last_sensor_data := await self.async_get_last_sensor_data()):
+            # Workaround to handle migration to RestoreSensor, can be removed
+            # in HA Core 2023.4
             self._config[ATTR_SENSOR_STATE] = None
-            return None
+            if self.device_class == SensorDeviceClass.TEMPERATURE:
+                self._config[ATTR_SENSOR_UOM] = TEMP_CELSIUS
+            return
 
         self._config[ATTR_SENSOR_STATE] = last_sensor_data.native_value
+        self._config[ATTR_SENSOR_UOM] = last_sensor_data.native_unit_of_measurement
 
     @property
     def native_value(self):
