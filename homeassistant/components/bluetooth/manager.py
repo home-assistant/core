@@ -72,7 +72,7 @@ class BluetoothManager:
         hass: HomeAssistant,
         integration_matcher: IntegrationMatcher,
     ) -> None:
-        """Init bluetooth discovery."""
+        """Init bluetooth manager."""
         self.hass = hass
         self._integration_matcher = integration_matcher
         self._cancel_unavailable_tracking: CALLBACK_TYPE | None = None
