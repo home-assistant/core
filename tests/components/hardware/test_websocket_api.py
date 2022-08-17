@@ -6,6 +6,7 @@ from unittest.mock import patch
 from homeassistant.components.hardware.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+import homeassistant.util.dt as dt_util
 
 
 async def test_board_info(hass: HomeAssistant, hass_ws_client) -> None:
@@ -25,8 +26,8 @@ async def test_board_info(hass: HomeAssistant, hass_ws_client) -> None:
 TEST_TIME_ADVANCE_INTERVAL = datetime.timedelta(seconds=5 + 1)
 
 
-async def test_mqtt_ws_subscription(hass: HomeAssistant, hass_ws_client, freezer):
-    """Test websocket system stateus subscription."""
+async def test_system_status_subscription(hass: HomeAssistant, hass_ws_client, freezer):
+    """Test websocket system status subscription."""
     assert await async_setup_component(hass, DOMAIN, {})
 
     client = await hass_ws_client(hass)
@@ -48,10 +49,11 @@ async def test_mqtt_ws_subscription(hass: HomeAssistant, hass_ws_client, freezer
 
     response = await client.receive_json()
     assert response["event"] == {
-        "cpu_percentage": 123,
-        "memory_free": 10.0,
-        "memory_use": 20.0,
-        "memory_use_percent": 50,
+        "cpu_percent": 123,
+        "memory_free_mb": 10.0,
+        "memory_used_mb": 20.0,
+        "memory_used_percent": 50,
+        "timestamp": dt_util.utcnow().isoformat(),
     }
 
     # Unsubscribe

@@ -13,6 +13,7 @@ from homeassistant.components import websocket_api
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.event import async_track_time_interval
+import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
 from .hardware import async_process_hardware_platforms
@@ -90,12 +91,13 @@ async def ws_subscribe_system_status(hass, connection, msg):
         cpu_percentage = round(system_status.psutil.cpu_percent(interval=None))
         virtual_memory = system_status.psutil.virtual_memory()
         json_msg = {
-            "cpu_percentage": cpu_percentage,
-            "memory_use_percent": virtual_memory.percent,
-            "memory_use": round(
+            "cpu_percent": cpu_percentage,
+            "memory_used_percent": virtual_memory.percent,
+            "memory_used_mb": round(
                 (virtual_memory.total - virtual_memory.available) / 1024**2, 1
             ),
-            "memory_free": round(virtual_memory.available / 1024**2, 1),
+            "memory_free_mb": round(virtual_memory.available / 1024**2, 1),
+            "timestamp": dt_util.utcnow().isoformat(),
         }
         for connection, msg_id in system_status.subscribers:
             connection.send_message(websocket_api.event_message(msg_id, json_msg))
