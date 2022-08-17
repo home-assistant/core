@@ -1621,10 +1621,55 @@ async def test_fan_speed(hass):
 @pytest.mark.parametrize(
     "percentage,percentage_step, speed, speeds, percentage_result",
     [
-        (33, 1.0, "2", ["1", "2", "3", "4", "5"], 40),
-        (40, 1.0, "2", ["1", "2", "3", "4", "5"], 40),
-        (33, 100 / 3, "1", ["1", "2", "3"], 33),
-        (20, 100 / 4, "1", ["1", "2", "3", "4"], 25),
+        (
+            33,
+            1.0,
+            "2/5",
+            [
+                ["Low", "Min", "Slow", "1"],
+                ["Medium Low", "2"],
+                ["Medium", "3"],
+                ["Medium High", "4"],
+                ["High", "Max", "Fast", "5"],
+            ],
+            40,
+        ),
+        (
+            40,
+            1.0,
+            "2/5",
+            [
+                ["Low", "Min", "Slow", "1"],
+                ["Medium Low", "2"],
+                ["Medium", "3"],
+                ["Medium High", "4"],
+                ["High", "Max", "Fast", "5"],
+            ],
+            40,
+        ),
+        (
+            33,
+            100 / 3,
+            "1/3",
+            [
+                ["Low", "Min", "Slow", "1"],
+                ["Medium", "2"],
+                ["High", "Max", "Fast", "3"],
+            ],
+            33,
+        ),
+        (
+            20,
+            100 / 4,
+            "1/4",
+            [
+                ["Low", "Min", "Slow", "1"],
+                ["Medium Low", "2"],
+                ["Medium High", "3"],
+                ["High", "Max", "Fast", "4"],
+            ],
+            25,
+        ),
     ],
 )
 async def test_fan_speed_ordered(
@@ -1632,7 +1677,7 @@ async def test_fan_speed_ordered(
     percentage: int,
     percentage_step: float,
     speed: str,
-    speeds: list[str],
+    speeds: list[list[str]],
     percentage_result: int,
 ):
     """Test FanSpeed trait speed control support for fan domain."""
@@ -1659,12 +1704,10 @@ async def test_fan_speed_ordered(
             "ordered": True,
             "speeds": [
                 {
-                    "speed_name": f"{x}",
-                    "speed_values": [
-                        {"lang": "en", "speed_synonym": [f"Speed {x}", f"{x}"]}
-                    ],
+                    "speed_name": f"{idx+1}/{len(speeds)}",
+                    "speed_values": [{"lang": "en", "speed_synonym": x}],
                 }
-                for x in speeds
+                for idx, x in enumerate(speeds)
             ],
         },
     }

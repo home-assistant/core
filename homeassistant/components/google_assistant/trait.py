@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from homeassistant.components import (
     alarm_control_panel,
@@ -86,6 +87,7 @@ from .const import (
     ERR_NOT_SUPPORTED,
     ERR_UNSUPPORTED_INPUT,
     ERR_VALUE_OUT_OF_RANGE,
+    FAN_SPEEDS,
 )
 from .error import ChallengeNeeded, SmartHomeError
 
@@ -1365,6 +1367,20 @@ class ArmDisArmTrait(_Trait):
         )
 
 
+def _get_fan_speed(speed_name: str) -> dict[str, Any]:
+    """Return a fan speed synonyms for a speed name."""
+    speed_synonyms = FAN_SPEEDS.get(speed_name, [f"{speed_name}"])
+    return {
+        "speed_name": speed_name,
+        "speed_values": [
+            {
+                "speed_synonym": speed_synonyms,
+                "lang": "en",
+            }
+        ],
+    }
+
+
 @register_trait
 class FanSpeedTrait(_Trait):
     """Trait to control speed of Fan.
@@ -1383,7 +1399,9 @@ class FanSpeedTrait(_Trait):
                 FAN_SPEED_MAX_SPEED_COUNT,
                 round(100 / self.state.attributes.get(fan.ATTR_PERCENTAGE_STEP) or 1.0),
             )
-            self._ordered_speed = [str(speed) for speed in range(1, speed_count + 1)]
+            self._ordered_speed = [
+                f"{speed}/{speed_count}" for speed in range(1, speed_count + 1)
+            ]
 
     @staticmethod
     def supported(domain, features, device_class, _):
@@ -1418,19 +1436,7 @@ class FanSpeedTrait(_Trait):
                     {
                         "availableFanSpeeds": {
                             "speeds": [
-                                {
-                                    "speed_name": speed,
-                                    "speed_values": [
-                                        {
-                                            "speed_synonym": [
-                                                f"Speed {speed}",
-                                                f"{speed}",
-                                            ],
-                                            "lang": "en",
-                                        }
-                                    ],
-                                }
-                                for speed in self._ordered_speed
+                                _get_fan_speed(speed) for speed in self._ordered_speed
                             ],
                             "ordered": True,
                         },
