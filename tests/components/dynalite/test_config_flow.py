@@ -6,6 +6,7 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components import dynalite
 from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_PORT
 
 from tests.common import MockConfigEntry
 
@@ -66,7 +67,7 @@ async def test_existing_update(hass: HomeAssistant) -> None:
     port2 = 8888
     entry = MockConfigEntry(
         domain=dynalite.DOMAIN,
-        data={dynalite.CONF_HOST: host, dynalite.CONF_PORT: port1},
+        data={dynalite.CONF_HOST: host, CONF_PORT: port1},
     )
     entry.add_to_hass(hass)
     with patch(
@@ -80,7 +81,7 @@ async def test_existing_update(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             dynalite.DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
-            data={dynalite.CONF_HOST: host, dynalite.CONF_PORT: port2},
+            data={dynalite.CONF_HOST: host, CONF_PORT: port2},
         )
         await hass.async_block_till_done()
         assert mock_dyn_dev().configure.call_count == 2
