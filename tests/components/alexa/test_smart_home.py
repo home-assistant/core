@@ -26,10 +26,11 @@ from homeassistant.components.media_player.const import (
 )
 import homeassistant.components.vacuum as vacuum
 from homeassistant.config import async_process_ha_core_config
-from homeassistant.const import STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import STATE_UNKNOWN, TEMP_FAHRENHEIT
 from homeassistant.core import Context
 from homeassistant.helpers import entityfilter
 from homeassistant.setup import async_setup_component
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
 from .test_common import (
     MockConfig,
@@ -2019,7 +2020,7 @@ async def test_unknown_sensor(hass):
 
 async def test_thermostat(hass):
     """Test thermostat discovery."""
-    hass.config.units.temperature_unit = TEMP_FAHRENHEIT
+    hass.config.units = IMPERIAL_SYSTEM
     device = (
         "climate.test_thermostat",
         "cool",
@@ -2286,9 +2287,6 @@ async def test_thermostat(hass):
         payload={"thermostatMode": "ECO"},
     )
     assert call.data["preset_mode"] == "eco"
-
-    # Reset config temperature_unit back to CELSIUS, required for additional tests outside this component.
-    hass.config.units.temperature_unit = TEMP_CELSIUS
 
 
 async def test_exclude_filters(hass):

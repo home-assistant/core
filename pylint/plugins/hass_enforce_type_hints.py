@@ -577,6 +577,20 @@ _ENTITY_MATCH: list[TypeHintMatch] = [
         has_async_counterpart=True,
     ),
 ]
+_RESTORE_ENTITY_MATCH: list[TypeHintMatch] = [
+    TypeHintMatch(
+        function_name="async_get_last_state",
+        return_type=["State", None],
+    ),
+    TypeHintMatch(
+        function_name="async_get_last_extra_data",
+        return_type=["ExtraStoredData", None],
+    ),
+    TypeHintMatch(
+        function_name="extra_restore_state_data",
+        return_type=["ExtraStoredData", None],
+    ),
+]
 _TOGGLE_ENTITY_MATCH: list[TypeHintMatch] = [
     TypeHintMatch(
         function_name="is_on",
@@ -709,6 +723,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
         ClassTypeHintMatch(
             base_class="Entity",
             matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
         ),
         ClassTypeHintMatch(
             base_class="ButtonEntity",
@@ -1787,6 +1805,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             matches=_ENTITY_MATCH,
         ),
         ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
             base_class="NumberEntity",
             matches=[
                 TypeHintMatch(
@@ -1826,6 +1848,19 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     arg_types={1: "float"},
                     return_type=None,
                     has_async_counterpart=True,
+                ),
+            ],
+        ),
+        ClassTypeHintMatch(
+            base_class="RestoreNumber",
+            matches=[
+                TypeHintMatch(
+                    function_name="extra_restore_state_data",
+                    return_type="NumberExtraStoredData",
+                ),
+                TypeHintMatch(
+                    function_name="async_get_last_number_data",
+                    return_type=["NumberExtraStoredData", None],
                 ),
             ],
         ),
@@ -1876,6 +1911,27 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             ],
         ),
     ],
+    "scene": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="Scene",
+            matches=[
+                TypeHintMatch(
+                    function_name="activate",
+                    kwargs_type="Any",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+            ],
+        ),
+    ],
     "select": [
         ClassTypeHintMatch(
             base_class="Entity",
@@ -1915,6 +1971,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             matches=_ENTITY_MATCH,
         ),
         ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
             base_class="SensorEntity",
             matches=[
                 TypeHintMatch(
@@ -1948,6 +2008,19 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
             ],
         ),
+        ClassTypeHintMatch(
+            base_class="RestoreSensor",
+            matches=[
+                TypeHintMatch(
+                    function_name="extra_restore_state_data",
+                    return_type="SensorExtraStoredData",
+                ),
+                TypeHintMatch(
+                    function_name="async_get_last_sensor_data",
+                    return_type=["SensorExtraStoredData", None],
+                ),
+            ],
+        ),
     ],
     "siren": [
         ClassTypeHintMatch(
@@ -1964,6 +2037,154 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="available_tones",
                     return_type=["dict[int, str]", "list[int | str]", None],
+                ),
+            ],
+        ),
+    ],
+    "water_heater": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="WaterHeaterEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="precision",
+                    return_type="float",
+                ),
+                TypeHintMatch(
+                    function_name="temperature_unit",
+                    return_type="str",
+                ),
+                TypeHintMatch(
+                    function_name="current_operation",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="operation_list",
+                    return_type=["list[str]", None],
+                ),
+                TypeHintMatch(
+                    function_name="current_temperature",
+                    return_type=["float", None],
+                ),
+                TypeHintMatch(
+                    function_name="target_temperature",
+                    return_type=["float", None],
+                ),
+                TypeHintMatch(
+                    function_name="target_temperature_high",
+                    return_type=["float", None],
+                ),
+                TypeHintMatch(
+                    function_name="target_temperature_low",
+                    return_type=["float", None],
+                ),
+                TypeHintMatch(
+                    function_name="is_away_mode_on",
+                    return_type=["bool", None],
+                ),
+                TypeHintMatch(
+                    function_name="set_temperature",
+                    kwargs_type="Any",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="set_operation_mode",
+                    arg_types={1: "str"},
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="turn_away_mode_on",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="turn_away_mode_off",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="min_temp",
+                    return_type="float",
+                ),
+                TypeHintMatch(
+                    function_name="max_temp",
+                    return_type="float",
+                ),
+            ],
+        ),
+    ],
+    "weather": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="WeatherEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="native_temperature",
+                    return_type=["float", None],
+                ),
+                TypeHintMatch(
+                    function_name="native_temperature_unit",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="native_pressure",
+                    return_type=["float", None],
+                ),
+                TypeHintMatch(
+                    function_name="native_pressure_unit",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="humidity",
+                    return_type=["float", None],
+                ),
+                TypeHintMatch(
+                    function_name="native_wind_speed",
+                    return_type=["float", None],
+                ),
+                TypeHintMatch(
+                    function_name="native_wind_speed_unit",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="wind_bearing",
+                    return_type=["float", "str", None],
+                ),
+                TypeHintMatch(
+                    function_name="ozone",
+                    return_type=["float", None],
+                ),
+                TypeHintMatch(
+                    function_name="native_visibility",
+                    return_type=["float", None],
+                ),
+                TypeHintMatch(
+                    function_name="native_visibility_unit",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="forecast",
+                    return_type=["list[Forecast]", None],
+                ),
+                TypeHintMatch(
+                    function_name="native_precipitation_unit",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="precision",
+                    return_type="float",
+                ),
+                TypeHintMatch(
+                    function_name="condition",
+                    return_type=["str", None],
                 ),
             ],
         ),
