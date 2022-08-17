@@ -43,6 +43,13 @@ async def test_numbers(
     assert entry
     assert entry.unique_id == "abcdef-123456-timeToScreenOffV2"
 
+    state = hass.states.get("number.amazon_fire_screen_brightness")
+    assert state
+    assert state.state == "9"
+    entry = entity_registry.async_get("number.amazon_fire_screen_brightness")
+    assert entry
+    assert entry.unique_id == "abcdef-123456-screenBrightness"
+
     # Test unknown/missing data
     mock_fully_kiosk.getSettings.return_value = {}
     async_fire_time_changed(hass, dt.utcnow() + UPDATE_INTERVAL)

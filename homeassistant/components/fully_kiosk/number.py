@@ -39,6 +39,13 @@ ENTITY_TYPES: tuple[NumberEntityDescription, ...] = (
         native_unit_of_measurement=TIME_SECONDS,
         entity_category=EntityCategory.CONFIG,
     ),
+    NumberEntityDescription(
+        key="screenBrightness",
+        name="Screen brightness",
+        native_max_value=255,
+        native_step=1,
+        native_min_value=0,
+    ),
 )
 
 
