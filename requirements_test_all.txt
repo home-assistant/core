@@ -558,7 +558,7 @@ google-nest-sdm==2.0.0
 googlemaps==2.5.1
 
 # homeassistant.components.govee_ble
-govee-ble==0.14.1
+govee-ble==0.16.0
 
 # homeassistant.components.gree
 greeclimate==1.3.0
@@ -592,7 +592,7 @@ habitipy==0.2.0
 hangups==0.4.18
 
 # homeassistant.components.cloud
-hass-nabucasa==0.54.1
+hass-nabucasa==0.55.0
 
 # homeassistant.components.tasmota
 hatasmota==0.5.1

@@ -7,9 +7,10 @@ from aiohttp.client_exceptions import ClientConnectorError
 from fullykiosk import FullyKioskError
 import pytest
 
+from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.components.fully_kiosk.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_PASSWORD
+from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -42,6 +43,7 @@ async def test_full_flow(
     assert result2.get("data") == {
         CONF_HOST: "1.1.1.1",
         CONF_PASSWORD: "test-password",
+        CONF_MAC: "aa:bb:cc:dd:ee:ff",
     }
     assert "result" in result2
     assert result2["result"].unique_id == "12345"
@@ -95,6 +97,7 @@ async def test_errors(
     assert result3.get("data") == {
         CONF_HOST: "1.1.1.1",
         CONF_PASSWORD: "test-password",
+        CONF_MAC: "aa:bb:cc:dd:ee:ff",
     }
     assert "result" in result3
     assert result3["result"].unique_id == "12345"
@@ -131,6 +134,54 @@ async def test_duplicate_updates_existing_entry(
     assert mock_config_entry.data == {
         CONF_HOST: "1.1.1.1",
         CONF_PASSWORD: "test-password",
+        CONF_MAC: "aa:bb:cc:dd:ee:ff",
     }
 
     assert len(mock_fully_kiosk_config_flow.getDeviceInfo.mock_calls) == 1
+
+
+async def test_dhcp_discovery_updates_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test DHCP discovery updates config entries."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            hostname="tablet",
+            ip="127.0.0.2",
+            macaddress="aa:bb:cc:dd:ee:ff",
+        ),
+    )
+
+    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("reason") == "already_configured"
+    assert mock_config_entry.data == {
+        CONF_HOST: "127.0.0.2",
+        CONF_PASSWORD: "mocked-password",
+        CONF_MAC: "aa:bb:cc:dd:ee:ff",
+    }
+
+
+async def test_dhcp_unknown_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test unknown DHCP discovery aborts flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            hostname="tablet",
+            ip="127.0.0.2",
+            macaddress="aa:bb:cc:dd:ee:00",
+        ),
+    )
+
+    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("reason") == "unknown"

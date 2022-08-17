@@ -43,6 +43,7 @@ DHCP: list[dict[str, str | bool]] = [
     {'domain': 'flux_led', 'hostname': 'zengge_[0-9a-f][0-9a-f]_*'},
     {'domain': 'flux_led', 'hostname': 'sta*', 'macaddress': 'C82E47*'},
     {'domain': 'fronius', 'macaddress': '0003AC*'},
+    {'domain': 'fully_kiosk', 'registered_devices': True},
     {'domain': 'goalzero', 'registered_devices': True},
     {'domain': 'goalzero', 'hostname': 'yeti*'},
     {'domain': 'gogogate2', 'hostname': 'ismartgate*'},
