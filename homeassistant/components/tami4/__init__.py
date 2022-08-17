@@ -39,9 +39,6 @@ class Tami4EdgeBaseEntity(Entity):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up edge from a config entry."""
-    if hass.data.get(DOMAIN) is None:
-        hass.data.setdefault(DOMAIN, {})
-
     refresh_token = entry.data.get(CONF_REFRESH_TOKEN)
 
     try:
@@ -49,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except Exception as ex:
         raise PlatformNotReady(f"CError connecting to API : {ex}") from ex
 
-    hass.data[DOMAIN][entry.entry_id] = edge
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = edge
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
