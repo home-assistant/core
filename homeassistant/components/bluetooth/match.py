@@ -74,10 +74,6 @@ class IntegrationMatcher:
             MAX_REMEMBER_ADDRESSES
         )
 
-    def async_clear_history(self) -> None:
-        """Clear the history."""
-        self._matched = {}
-
     def async_clear_address(self, address: str) -> None:
         """Clear the history matches for a set of domains."""
         self._matched.pop(address, None)
