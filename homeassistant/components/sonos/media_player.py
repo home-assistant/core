@@ -382,7 +382,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         self.soco.volume -= VOLUME_INCREMENT
 
     @soco_error()
-    def set_volume_level(self, volume: str) -> None:
+    def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         self.soco.volume = str(int(volume * 100))
 
@@ -485,7 +485,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         self.coordinator.soco.previous()
 
     @soco_error(UPNP_ERRORS_TO_IGNORE)
-    def media_seek(self, position: str) -> None:
+    def media_seek(self, position: float) -> None:
         """Send seek command."""
         self.coordinator.soco.seek(str(datetime.timedelta(seconds=int(position))))
 
