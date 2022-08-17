@@ -9,6 +9,7 @@
         "error": {
             "identifier_exists": "Account gi\u00e0 registrato",
             "invalid_auth": "Autenticazione non valida",
+            "invalid_auth_code_length": "I codici di autorizzazione SimpliSafe sono lunghi 45 caratteri",
             "unknown": "Errore imprevisto"
         },
         "progress": {
@@ -34,7 +35,7 @@
                     "password": "Password",
                     "username": "Nome utente"
                 },
-                "description": "SimpliSafe autentica gli utenti tramite la sua app web. A causa di limitazioni tecniche, alla fine di questo processo \u00e8 previsto un passaggio manuale; assicurati, prima di iniziare, di leggere la [documentazione](http://home-assistant.io/integrations/simplisafe#getting-an-authorization-code). \n\nQuando sei pronto, fai clic [qui]({url}) per aprire l'app Web SimpliSafe e inserire le tue credenziali. Al termine del processo, ritorna qui e inserisci il codice di autorizzazione dall'URL dell'app Web SimpliSafe."
+                "description": "SimpliSafe autentica gli utenti tramite la sua app web. A causa di limitazioni tecniche, alla fine di questo processo \u00e8 previsto un passaggio manuale; assicurati, prima di iniziare, di leggere la [documentazione](http://home-assistant.io/integrations/simplisafe#getting-an-authorization-code). \n\nQuando sei pronto, fai clic [qui]({url}) per aprire l'app web di SimpliSafe e inserisci le tue credenziali. Se hai gi\u00e0 effettuato l'accesso a SimpliSafe nel tuo browser, puoi aprire una nuova scheda e copiare/incollare l'URL sopra indicato in quella nuova scheda.\n\nAl termine del processo, ritorna qui e inserisci il codice di autorizzazione dall'URL `com.simplisafe.mobile`."
             }
         }
     },

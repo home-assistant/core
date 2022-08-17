@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Kunde inte ansluta till kontrollern med URL {base_url}"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "exclude": "Vera enhets-id att utesluta fr\u00e5n Home Assistant.",
+                    "lights": "Vera switch enhets-ID att behandla som lampor i Home Assistant.",
+                    "vera_controller_url": "Controller-URL"
+                },
+                "data_description": {
+                    "vera_controller_url": "Det ska se ut s\u00e5 h\u00e4r: http://192.168.1.161:3480"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "exclude": "Vera enhets-id att utesluta fr\u00e5n Home Assistant.",
+                    "lights": "Vera switch enhets-ID att behandla som lampor i Home Assistant."
+                },
+                "description": "Se dokumentationen om vera f\u00f6r mer information om valfria parametrar: https://www.home-assistant.io/integrations/vera/. Observera: Alla \u00e4ndringar h\u00e4r kr\u00e4ver en omstart av Home Assistant-servern. Om du vill radera v\u00e4rden anger du ett mellanslag.",
+                "title": "Alternativ f\u00f6r Vera-kontroller"
+            }
+        }
+    }
+}

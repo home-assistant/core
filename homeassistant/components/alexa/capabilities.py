@@ -379,7 +379,7 @@ class AlexaPowerController(AlexaCapability):
             raise UnsupportedProperty(name)
 
         if self.entity.domain == climate.DOMAIN:
-            is_on = self.entity.state != climate.HVAC_MODE_OFF
+            is_on = self.entity.state != climate.HVACMode.OFF
         elif self.entity.domain == fan.DOMAIN:
             is_on = self.entity.state == fan.STATE_ON
         elif self.entity.domain == vacuum.DOMAIN:

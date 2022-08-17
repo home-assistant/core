@@ -14,6 +14,7 @@ from homeassistant.components.repairs.models import IssueSeverity
 from homeassistant.const import __version__
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.yaml import parse_yaml
@@ -100,7 +101,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     coordinator = AlertUpdateCoordinator(hass)
     coordinator.async_add_listener(async_schedule_update_alerts)
-    await coordinator.async_refresh()
+
+    async def initial_refresh(hass: HomeAssistant) -> None:
+        await coordinator.async_refresh()
+
+    async_at_start(hass, initial_refresh)
 
     return True
 

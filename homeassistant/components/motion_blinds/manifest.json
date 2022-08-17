@@ -3,7 +3,7 @@
   "name": "Motion Blinds",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/motion_blinds",
-  "requirements": ["motionblinds==0.6.11"],
+  "requirements": ["motionblinds==0.6.12"],
   "dependencies": ["network"],
   "dhcp": [
     { "registered_devices": true },

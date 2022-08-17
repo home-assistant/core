@@ -15,7 +15,6 @@ from homeassistant.components.light import (
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
     ATTR_TRANSITION,
-    ATTR_WHITE_VALUE,
     ATTR_XY_COLOR,
     ENTITY_ID_FORMAT,
     FLASH_LONG,
@@ -23,7 +22,6 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
-    SUPPORT_WHITE_VALUE,
     VALID_COLOR_MODES,
     ColorMode,
     LightEntity,
@@ -78,7 +76,6 @@ DEFAULT_FLASH_TIME_SHORT = 2
 DEFAULT_NAME = "MQTT JSON Light"
 DEFAULT_OPTIMISTIC = False
 DEFAULT_RGB = False
-DEFAULT_WHITE_VALUE = False
 DEFAULT_XY = False
 DEFAULT_HS = False
 DEFAULT_BRIGHTNESS_SCALE = 255
@@ -97,7 +94,7 @@ CONF_MIN_MIREDS = "min_mireds"
 
 def valid_color_configuration(config):
     """Test color_mode is not combined with deprecated config."""
-    deprecated = {CONF_COLOR_TEMP, CONF_HS, CONF_RGB, CONF_WHITE_VALUE, CONF_XY}
+    deprecated = {CONF_COLOR_TEMP, CONF_HS, CONF_RGB, CONF_XY}
     if config[CONF_COLOR_MODE] and any(config.get(key) for key in deprecated):
         raise vol.Invalid(f"color_mode must not be combined with any of {deprecated}")
     return config
@@ -139,7 +136,6 @@ _PLATFORM_SCHEMA_BASE = (
                 vol.Unique(),
                 valid_supported_color_modes,
             ),
-            vol.Optional(CONF_WHITE_VALUE, default=DEFAULT_WHITE_VALUE): cv.boolean,
             vol.Optional(CONF_XY, default=DEFAULT_XY): cv.boolean,
         },
     )
@@ -149,15 +145,13 @@ _PLATFORM_SCHEMA_BASE = (
 
 # Configuring MQTT Lights under the light platform key is deprecated in HA Core 2022.6
 PLATFORM_SCHEMA_JSON = vol.All(
-    # CONF_WHITE_VALUE is deprecated, support will be removed in release 2022.9
-    cv.deprecated(CONF_WHITE_VALUE),
     cv.PLATFORM_SCHEMA.extend(_PLATFORM_SCHEMA_BASE.schema),
     valid_color_configuration,
 )
 
 DISCOVERY_SCHEMA_JSON = vol.All(
-    # CONF_WHITE_VALUE is deprecated, support will be removed in release 2022.9
-    cv.deprecated(CONF_WHITE_VALUE),
+    # CONF_WHITE_VALUE is no longer supported, support was removed in 2022.9
+    cv.removed(CONF_WHITE_VALUE),
     _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
     valid_color_configuration,
 )
@@ -197,7 +191,6 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
         self._rgb = None
         self._rgbw = None
         self._rgbww = None
-        self._white_value = None
         self._xy = None
 
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
@@ -231,7 +224,6 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             self._supported_features |= config[CONF_RGB] and (
                 SUPPORT_COLOR | SUPPORT_BRIGHTNESS
             )
-            self._supported_features |= config[CONF_WHITE_VALUE] and SUPPORT_WHITE_VALUE
             self._supported_features |= config[CONF_XY] and SUPPORT_COLOR
 
     def _update_color(self, values):
@@ -366,14 +358,6 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 with suppress(KeyError):
                     self._effect = values["effect"]
 
-            if self._supported_features and SUPPORT_WHITE_VALUE:
-                try:
-                    self._white_value = int(values["white_value"])
-                except KeyError:
-                    pass
-                except ValueError:
-                    _LOGGER.warning("Invalid white value received")
-
             self.async_write_ha_state()
 
         if self._topic[CONF_STATE_TOPIC] is not None:
@@ -406,7 +390,6 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             self._rgb = last_attributes.get(ATTR_RGB_COLOR, self._rgb)
             self._rgbw = last_attributes.get(ATTR_RGBW_COLOR, self._rgbw)
             self._rgbww = last_attributes.get(ATTR_RGBWW_COLOR, self._rgbww)
-            self._white_value = last_attributes.get(ATTR_WHITE_VALUE, self._white_value)
             self._xy = last_attributes.get(ATTR_XY_COLOR, self._xy)
 
     @property
@@ -465,11 +448,6 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
         return self._xy
 
     @property
-    def white_value(self):
-        """Return the white property."""
-        return self._white_value
-
-    @property
     def is_on(self):
         """Return true if device is on."""
         return self._state
@@ -520,7 +498,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
     def _supports_color_mode(self, color_mode):
         return self.supported_color_modes and color_mode in self.supported_color_modes
 
-    async def async_turn_on(self, **kwargs):  # noqa: C901
+    async def async_turn_on(self, **kwargs):
         """Turn the device on.
 
         This method is a coroutine.
@@ -633,13 +611,6 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
 
             if self._optimistic:
                 self._effect = kwargs[ATTR_EFFECT]
-                should_update = True
-
-        if ATTR_WHITE_VALUE in kwargs:
-            message["white_value"] = int(kwargs[ATTR_WHITE_VALUE])
-
-            if self._optimistic:
-                self._white_value = kwargs[ATTR_WHITE_VALUE]
                 should_update = True
 
         await self.async_publish(

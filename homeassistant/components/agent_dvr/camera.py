@@ -7,7 +7,6 @@ from agent import AgentError
 from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.components.mjpeg import MjpegCamera, filter_urllib3_logging
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import (
@@ -70,6 +69,7 @@ async def async_setup_entry(
 class AgentCamera(MjpegCamera):
     """Representation of an Agent Device Stream."""
 
+    _attr_attribution = ATTRIBUTION
     _attr_supported_features = CameraEntityFeature.ON_OFF
 
     def __init__(self, device):
@@ -108,7 +108,6 @@ class AgentCamera(MjpegCamera):
             self._attr_icon = "mdi:camcorder"
         self._attr_available = self.device.client.is_available
         self._attr_extra_state_attributes = {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
             "editable": False,
             "enabled": self.is_on,
             "connected": self.connected,

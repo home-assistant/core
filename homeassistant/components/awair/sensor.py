@@ -2,11 +2,16 @@
 from __future__ import annotations
 
 from python_awair.air_data import AirData
-from python_awair.devices import AwairDevice
+from python_awair.devices import AwairBaseDevice, AwairLocalDevice
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION, ATTR_CONNECTIONS, ATTR_NAME
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    ATTR_CONNECTIONS,
+    ATTR_NAME,
+    ATTR_SW_VERSION,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo
@@ -76,7 +81,7 @@ class AwairSensor(CoordinatorEntity[AwairDataUpdateCoordinator], SensorEntity):
 
     def __init__(
         self,
-        device: AwairDevice,
+        device: AwairBaseDevice,
         coordinator: AwairDataUpdateCoordinator,
         description: AwairSensorEntityDescription,
     ) -> None:
@@ -208,6 +213,9 @@ class AwairSensor(CoordinatorEntity[AwairDataUpdateCoordinator], SensorEntity):
             info[ATTR_CONNECTIONS] = {
                 (dr.CONNECTION_NETWORK_MAC, self._device.mac_address)
             }
+
+        if isinstance(self._device, AwairLocalDevice):
+            info[ATTR_SW_VERSION] = self._device.fw_version
 
         return info
 

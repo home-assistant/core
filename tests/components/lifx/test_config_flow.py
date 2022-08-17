@@ -10,7 +10,7 @@ from homeassistant.components.lifx import DOMAIN
 from homeassistant.components.lifx.const import CONF_SERIAL
 from homeassistant.const import CONF_DEVICE, CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_FORM
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
     DEFAULT_ENTRY_TITLE,
@@ -332,7 +332,7 @@ async def test_discovered_by_discovery_and_dhcp(hass):
             data={CONF_HOST: IP_ADDRESS, CONF_SERIAL: SERIAL},
         )
         await hass.async_block_till_done()
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
     with _patch_discovery(), _patch_config_flow_try_connect():
@@ -344,7 +344,7 @@ async def test_discovered_by_discovery_and_dhcp(hass):
             ),
         )
         await hass.async_block_till_done()
-    assert result2["type"] == RESULT_TYPE_ABORT
+    assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "already_in_progress"
 
     with _patch_discovery(), _patch_config_flow_try_connect():
@@ -356,7 +356,7 @@ async def test_discovered_by_discovery_and_dhcp(hass):
             ),
         )
         await hass.async_block_till_done()
-    assert result3["type"] == RESULT_TYPE_ABORT
+    assert result3["type"] == FlowResultType.ABORT
     assert result3["reason"] == "already_in_progress"
 
     with _patch_discovery(no_device=True), _patch_config_flow_try_connect(
@@ -370,7 +370,7 @@ async def test_discovered_by_discovery_and_dhcp(hass):
             ),
         )
         await hass.async_block_till_done()
-    assert result3["type"] == RESULT_TYPE_ABORT
+    assert result3["type"] == FlowResultType.ABORT
     assert result3["reason"] == "cannot_connect"
 
 
@@ -408,7 +408,7 @@ async def test_discovered_by_dhcp_or_discovery(hass, source, data):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
     with _patch_discovery(), _patch_config_flow_try_connect(), patch(
@@ -462,28 +462,45 @@ async def test_discovered_by_dhcp_or_discovery_failed_to_get_device(hass, source
             DOMAIN, context={"source": source}, data=data
         )
         await hass.async_block_till_done()
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
 
-async def test_discovered_by_dhcp_updates_ip(hass):
+@pytest.mark.parametrize(
+    "source, data",
+    [
+        (
+            config_entries.SOURCE_DHCP,
+            dhcp.DhcpServiceInfo(ip=IP_ADDRESS, macaddress=MAC_ADDRESS, hostname=LABEL),
+        ),
+        (
+            config_entries.SOURCE_HOMEKIT,
+            zeroconf.ZeroconfServiceInfo(
+                host=IP_ADDRESS,
+                addresses=[IP_ADDRESS],
+                hostname=LABEL,
+                name=LABEL,
+                port=None,
+                properties={zeroconf.ATTR_PROPERTIES_ID: "any"},
+                type="mock_type",
+            ),
+        ),
+    ],
+)
+async def test_discovered_by_dhcp_or_homekit_updates_ip(hass, source, data):
     """Update host from dhcp."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "127.0.0.2"}, unique_id=SERIAL
     )
     config_entry.add_to_hass(hass)
-    with _patch_discovery(no_device=True), _patch_config_flow_try_connect(
-        no_device=True
-    ):
+    with _patch_discovery(), _patch_config_flow_try_connect():
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
-                ip=IP_ADDRESS, macaddress=MAC_ADDRESS, hostname=LABEL
-            ),
+            context={"source": source},
+            data=data,
         )
         await hass.async_block_till_done()
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert config_entry.data[CONF_HOST] == IP_ADDRESS
 

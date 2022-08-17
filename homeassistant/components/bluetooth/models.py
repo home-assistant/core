@@ -2,12 +2,14 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 import contextlib
+from dataclasses import dataclass
+from enum import Enum
 import logging
-from typing import Any, Final, cast
+from typing import TYPE_CHECKING, Any, Final
 
 from bleak import BleakScanner
-from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import (
     AdvertisementData,
     AdvertisementDataCallback,
@@ -15,12 +17,60 @@ from bleak.backends.scanner import (
 )
 
 from homeassistant.core import CALLBACK_TYPE, callback as hass_callback
+from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
+
+if TYPE_CHECKING:
+    from bleak.backends.device import BLEDevice
+
 
 _LOGGER = logging.getLogger(__name__)
 
 FILTER_UUIDS: Final = "UUIDs"
 
 HA_BLEAK_SCANNER: HaBleakScanner | None = None
+
+
+@dataclass
+class BluetoothServiceInfoBleak(BluetoothServiceInfo):
+    """BluetoothServiceInfo with bleak data.
+
+    Integrations may need BLEDevice and AdvertisementData
+    to connect to the device without having bleak trigger
+    another scan to translate the address to the system's
+    internal details.
+    """
+
+    device: BLEDevice
+    advertisement: AdvertisementData
+
+    @classmethod
+    def from_advertisement(
+        cls, device: BLEDevice, advertisement_data: AdvertisementData, source: str
+    ) -> BluetoothServiceInfoBleak:
+        """Create a BluetoothServiceInfoBleak from an advertisement."""
+        return cls(
+            name=advertisement_data.local_name or device.name or device.address,
+            address=device.address,
+            rssi=device.rssi,
+            manufacturer_data=advertisement_data.manufacturer_data,
+            service_data=advertisement_data.service_data,
+            service_uuids=advertisement_data.service_uuids,
+            source=source,
+            device=device,
+            advertisement=advertisement_data,
+        )
+
+
+class BluetoothScanningMode(Enum):
+    """The mode of scanning for bluetooth devices."""
+
+    PASSIVE = "passive"
+    ACTIVE = "active"
+
+
+BluetoothChange = Enum("BluetoothChange", "ADVERTISEMENT")
+BluetoothCallback = Callable[[BluetoothServiceInfoBleak, BluetoothChange], None]
+ProcessAdvertisementCallback = Callable[[BluetoothServiceInfoBleak], bool]
 
 
 def _dispatch_callback(
@@ -32,7 +82,7 @@ def _dispatch_callback(
     """Dispatch the callback."""
     if not callback:
         # Callback destroyed right before being called, ignore
-        return
+        return  # type: ignore[unreachable]
 
     if (uuids := filters.get(FILTER_UUIDS)) and not uuids.intersection(
         advertisement_data.service_uuids
@@ -45,7 +95,7 @@ def _dispatch_callback(
         _LOGGER.exception("Error in callback: %s", callback)
 
 
-class HaBleakScanner(BleakScanner):  # type: ignore[misc]
+class HaBleakScanner(BleakScanner):
     """BleakScanner that cannot be stopped."""
 
     def __init__(  # pylint: disable=super-init-not-called
@@ -106,16 +156,29 @@ class HaBleakScanner(BleakScanner):  # type: ignore[misc]
             _dispatch_callback(*callback_filters, device, advertisement_data)
 
 
-class HaBleakScannerWrapper(BaseBleakScanner):  # type: ignore[misc]
+class HaBleakScannerWrapper(BaseBleakScanner):
     """A wrapper that uses the single instance."""
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        *args: Any,
+        detection_callback: AdvertisementDataCallback | None = None,
+        service_uuids: list[str] | None = None,
+        **kwargs: Any,
+    ) -> None:
         """Initialize the BleakScanner."""
         self._detection_cancel: CALLBACK_TYPE | None = None
         self._mapped_filters: dict[str, set[str]] = {}
         self._adv_data_callback: AdvertisementDataCallback | None = None
-        self._map_filters(*args, **kwargs)
-        super().__init__(*args, **kwargs)
+        remapped_kwargs = {
+            "detection_callback": detection_callback,
+            "service_uuids": service_uuids or [],
+            **kwargs,
+        }
+        self._map_filters(*args, **remapped_kwargs)
+        super().__init__(
+            detection_callback=detection_callback, service_uuids=service_uuids or []
+        )
 
     async def stop(self, *args: Any, **kwargs: Any) -> None:
         """Stop scanning for devices."""
@@ -153,9 +216,11 @@ class HaBleakScannerWrapper(BaseBleakScanner):  # type: ignore[misc]
     def discovered_devices(self) -> list[BLEDevice]:
         """Return a list of discovered devices."""
         assert HA_BLEAK_SCANNER is not None
-        return cast(list[BLEDevice], HA_BLEAK_SCANNER.discovered_devices)
+        return HA_BLEAK_SCANNER.discovered_devices
 
-    def register_detection_callback(self, callback: AdvertisementDataCallback) -> None:
+    def register_detection_callback(
+        self, callback: AdvertisementDataCallback | None
+    ) -> None:
         """Register a callback that is called when a device is discovered or has a property changed.
 
         This method takes the callback and registers it with the long running
@@ -171,6 +236,7 @@ class HaBleakScannerWrapper(BaseBleakScanner):  # type: ignore[misc]
         self._cancel_callback()
         super().register_detection_callback(self._adv_data_callback)
         assert HA_BLEAK_SCANNER is not None
+        assert self._callback is not None
         self._detection_cancel = HA_BLEAK_SCANNER.async_register_callback(
             self._callback, self._mapped_filters
         )

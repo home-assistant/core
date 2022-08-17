@@ -13,7 +13,7 @@ from RMVtransport.rmvtransport import (
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, CONF_TIMEOUT, TIME_MINUTES
+from homeassistant.const import CONF_NAME, CONF_TIMEOUT, TIME_MINUTES
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
@@ -116,6 +116,8 @@ async def async_setup_platform(
 class RMVDepartureSensor(SensorEntity):
     """Implementation of an RMV departure sensor."""
 
+    _attr_attribution = ATTRIBUTION
+
     def __init__(
         self,
         station,
@@ -170,7 +172,6 @@ class RMVDepartureSensor(SensorEntity):
                 "minutes": self.data.departures[0].get("minutes"),
                 "departure_time": self.data.departures[0].get("departure_time"),
                 "product": self.data.departures[0].get("product"),
-                ATTR_ATTRIBUTION: ATTRIBUTION,
             }
         except IndexError:
             return {}

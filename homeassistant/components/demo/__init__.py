@@ -211,6 +211,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         translation_key="unfixable_problem",
     )
 
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "bad_psu",
+        is_fixable=True,
+        learn_more_url="https://www.youtube.com/watch?v=b9rntRxLlbU",
+        severity=IssueSeverity.CRITICAL,
+        translation_key="bad_psu",
+    )
+
     return True
 
 

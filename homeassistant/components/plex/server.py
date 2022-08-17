@@ -462,24 +462,24 @@ class PlexServer:
                     continue
 
                 session_username = next(iter(session.usernames), None)
-                for player in session.players:
-                    unique_id = f"{self.machine_identifier}:{player.machineIdentifier}"
-                    if unique_id not in self.active_sessions:
-                        _LOGGER.debug("Creating new Plex session: %s", session)
-                        self.active_sessions[unique_id] = PlexSession(self, session)
-                    if session_username and session_username not in monitored_users:
-                        ignored_clients.add(player.machineIdentifier)
-                        _LOGGER.debug(
-                            "Ignoring %s client owned by '%s'",
-                            player.product,
-                            session_username,
-                        )
-                        continue
+                player = session.player
+                unique_id = f"{self.machine_identifier}:{player.machineIdentifier}"
+                if unique_id not in self.active_sessions:
+                    _LOGGER.debug("Creating new Plex session: %s", session)
+                    self.active_sessions[unique_id] = PlexSession(self, session)
+                if session_username and session_username not in monitored_users:
+                    ignored_clients.add(player.machineIdentifier)
+                    _LOGGER.debug(
+                        "Ignoring %s client owned by '%s'",
+                        player.product,
+                        session_username,
+                    )
+                    continue
 
-                    process_device("session", player)
-                    available_clients[player.machineIdentifier][
-                        "session"
-                    ] = self.active_sessions[unique_id]
+                process_device("session", player)
+                available_clients[player.machineIdentifier][
+                    "session"
+                ] = self.active_sessions[unique_id]
 
         for device in devices:
             process_device("PMS", device)
