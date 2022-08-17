@@ -85,24 +85,12 @@ def async_get_openuv_for_service_call(hass: HomeAssistant, call: ServiceCall) ->
 def async_log_deprecated_service_call(
     hass: HomeAssistant,
     call: ServiceCall,
+    alternate_service: str,
+    alternate_target: str,
     breaks_in_ha_version: str,
-    *,
-    alternate_service: str | None = None,
-    alternate_target: str | None = None,
-    alternate_instructions: str | None = None,
 ) -> None:
     """Log a warning about a deprecated service call."""
     deprecated_service = f"{call.domain}.{call.service}"
-
-    translation_placeholders = {"deprecated_service": deprecated_service}
-    if alternate_service and alternate_target:
-        translation_key = "deprecated_service_with_alternate_target"
-        translation_placeholders["alternate_service"] = alternate_service
-        translation_placeholders["alternate_target"] = alternate_target
-    else:
-        translation_key = "deprecated_service_with_alternate_instructions"
-        if alternate_instructions:
-            translation_placeholders["alternate_instructions"] = alternate_instructions
 
     async_create_issue(
         hass,
@@ -112,8 +100,12 @@ def async_log_deprecated_service_call(
         is_fixable=True,
         is_persistent=True,
         severity=IssueSeverity.WARNING,
-        translation_key=translation_key,
-        translation_placeholders=translation_placeholders,
+        translation_key="deprecated_service",
+        translation_placeholders={
+            "alternate_service": alternate_service,
+            "alternate_target": alternate_target,
+            "deprecated_service": deprecated_service,
+        },
     )
 
     LOGGER.warning(
@@ -184,11 +176,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         async_log_deprecated_service_call(
             hass,
             call,
+            "homeassistant.update_entity",
+            "binary_sensor.protection_window, sensor.current_uv_index",
             "2022.11.0",
-            alternate_instructions=(
-                "Instead, use the `homeassistant.update_entity` service on the entity "
-                "whose data you would like to update."
-            ),
         )
         await openuv.async_update()
 
@@ -199,9 +189,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         async_log_deprecated_service_call(
             hass,
             call,
+            "homeassistant.update_entity",
+            "sensor.current_uv_index",
             "2022.11.0",
-            alternate_service="homeassistant.update_entity",
-            alternate_target="sensor.current_uv_index",
         )
         await openuv.async_update_uv_index_data()
 
@@ -212,9 +202,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         async_log_deprecated_service_call(
             hass,
             call,
+            "homeassistant.update_entity",
+            "binary_sensor.protection_window",
             "2022.11.0",
-            alternate_service="homeassistant.update_entity",
-            alternate_target="binary_sensor.protection_window",
         )
         await openuv.async_update_protection_data()
 

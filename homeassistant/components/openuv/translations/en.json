@@ -19,18 +19,7 @@
         }
     },
     "issues": {
-        "deprecated_service_with_alternate_instructions": {
-            "fix_flow": {
-                "step": {
-                    "confirm": {
-                        "description": "{alternate_instructions} Then, click SUBMIT below to mark this issue as resolved.",
-                        "title": "The {deprecated_service} service is being removed"
-                    }
-                }
-            },
-            "title": "The {deprecated_service} service is being removed"
-        },
-        "deprecated_service_with_alternate_target": {
+        "deprecated_service": {
             "fix_flow": {
                 "step": {
                     "confirm": {
