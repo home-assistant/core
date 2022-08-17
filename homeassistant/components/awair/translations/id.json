@@ -31,6 +31,12 @@
                 },
                 "description": "API Awair Local harus diaktifkan dengan mengikuti langkah-langkah berikut: {url}"
             },
+            "local_pick": {
+                "data": {
+                    "device": "Perangkat",
+                    "host": "Alamat IP"
+                }
+            },
             "reauth": {
                 "data": {
                     "access_token": "Token Akses",
