@@ -4,6 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from homeassistant.components.binary_sensor import (
+    DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
@@ -26,7 +27,11 @@ from .const import (
     DOMAIN,
     SIGNAL_PAIRED_SENSOR_COORDINATOR_ADDED,
 )
-from .util import GuardianDataUpdateCoordinator, async_clean_up_old_entities
+from .util import (
+    EntityDomainReplacementStrategy,
+    GuardianDataUpdateCoordinator,
+    async_finish_entity_domain_replacements,
+)
 
 SENSOR_KIND_LEAK_DETECTED = "leak_detected"
 SENSOR_KIND_MOVED = "moved"
@@ -62,16 +67,25 @@ VALVE_CONTROLLER_DESCRIPTIONS = (
     ),
 )
 
-ENTITY_UNIQUE_ID_SUFFIXES_TO_REMOVE = ("ap_enabled",)
-
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Guardian switches based on a config entry."""
-    async_clean_up_old_entities(hass, entry, ENTITY_UNIQUE_ID_SUFFIXES_TO_REMOVE)
-
     data: GuardianData = hass.data[DOMAIN][entry.entry_id]
+    uid = entry.data[CONF_UID]
+
+    async_finish_entity_domain_replacements(
+        hass,
+        entry,
+        (
+            EntityDomainReplacementStrategy(
+                old_domain=BINARY_SENSOR_DOMAIN,
+                old_unique_id=f"{uid}_ap_enabled",
+                replacement_entity_id=f"switch.guardian_valve_controller_{uid}_onboard_ap",
+            ),
+        ),
+    )
 
     @callback
     def add_new_paired_sensor(uid: str) -> None:
