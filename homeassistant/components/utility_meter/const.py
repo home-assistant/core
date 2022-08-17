@@ -47,5 +47,4 @@ SIGNAL_START_PAUSE_METER = "utility_meter_start_pause"
 SIGNAL_RESET_METER = "utility_meter_reset"
 
 SERVICE_RESET = "reset"
-SERVICE_SELECT_TARIFF = "select_tariff"
 SERVICE_CALIBRATE_METER = "calibrate"
