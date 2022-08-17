@@ -239,7 +239,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         """Return if the media_player is available."""
         return (
             self.speaker.available
-            and self.speaker.sonos_group_entities is not None
+            and bool(self.speaker.sonos_group_entities)
             and self.media.playback_status is not None
         )
 
@@ -301,10 +301,9 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         return self.speaker.muted
 
     @property
-    def shuffle(self) -> str | None:  # type: ignore[override]
+    def shuffle(self) -> bool | None:
         """Shuffling state."""
-        shuffle: str = PLAY_MODES[self.media.play_mode][0]
-        return shuffle
+        return PLAY_MODES[self.media.play_mode][0]
 
     @property
     def repeat(self) -> str | None:
@@ -323,14 +322,14 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         return self.media.uri
 
     @property
-    def media_duration(self) -> float | None:  # type: ignore[override]
+    def media_duration(self) -> int | None:
         """Duration of current playing media in seconds."""
-        return self.media.duration
+        return int(self.media.duration) if self.media.duration else None
 
     @property
-    def media_position(self) -> float | None:  # type: ignore[override]
+    def media_position(self) -> int | None:
         """Position of current playing media in seconds."""
-        return self.media.position
+        return int(self.media.position) if self.media.position else None
 
     @property
     def media_position_updated_at(self) -> datetime.datetime | None:

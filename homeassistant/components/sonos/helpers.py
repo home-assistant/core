@@ -31,8 +31,6 @@ _T = TypeVar(
 _R = TypeVar("_R")
 _P = ParamSpec("_P")
 
-SocoFeatures = list[tuple[str, tuple[int, int]]]
-
 
 @overload
 def soco_error(
@@ -82,7 +80,7 @@ def soco_error(
                 message = f"Error calling {function} on {target}: {err}"
                 raise SonosUpdateError(message) from err
 
-            dispatch_soco = args_soco or self.soco  # type:ignore[union-attr]
+            dispatch_soco = args_soco or self.soco  # type: ignore[union-attr]
             dispatcher_send(
                 self.hass,
                 f"{SONOS_SPEAKER_ACTIVITY}-{dispatch_soco.uid}",

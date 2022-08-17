@@ -325,7 +325,7 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
         return self.alarm.enabled
 
     @property
-    def extra_state_attributes(self) -> dict[str, str | bool | float]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return attributes of Sonos alarm switch."""
         return {
             ATTR_ID: str(self.alarm_id),

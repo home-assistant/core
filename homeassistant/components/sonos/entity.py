@@ -57,11 +57,13 @@ class SonosEntity(Entity):
     async def async_fallback_poll(self, now: datetime.datetime) -> None:
         """Poll the entity if subscriptions fail."""
         if not self.speaker.subscriptions_failed:
-            listener_msg = self.speaker.subscription_address
+            listener_msg: str
             if soco_config.EVENT_ADVERTISE_IP:
                 listener_msg = (
                     f"{listener_msg} (advertising as {soco_config.EVENT_ADVERTISE_IP})"
                 )
+            else:
+                listener_msg = self.speaker.subscription_address
             message = f"{self.speaker.zone_name} cannot reach {listener_msg}, falling back to polling, functionality may be limited"
             log_link_msg = f", see {SUB_FAIL_URL} for more details"
             notification_link_msg = f'.\n\nSee <a href="{SUB_FAIL_URL}">Sonos documentation</a> for more details.'

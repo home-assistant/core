@@ -8,7 +8,7 @@ import datetime
 from functools import partial
 import logging
 import time
-from typing import Any
+from typing import Any, cast
 
 import async_timeout
 import defusedxml.ElementTree as ET
@@ -165,7 +165,7 @@ class SonosSpeaker:
 
     async def async_setup_dispatchers(self, entry: ConfigEntry) -> None:
         """Connect dispatchers in async context during setup."""
-        dispatch_pairs = (
+        dispatch_pairs: tuple[tuple[str, Callable[..., Any]], ...] = (
             (SONOS_CHECK_ACTIVITY, self.async_check_activity),
             (SONOS_SPEAKER_ADDED, self.update_group_for_uid),
             (f"{SONOS_REBOOTED}-{self.soco.uid}", self.async_rebooted),
@@ -178,7 +178,7 @@ class SonosSpeaker:
                 async_dispatcher_connect(
                     self.hass,
                     signal,
-                    target,  # type:ignore[arg-type]
+                    target,
                 )
             )
 
@@ -285,6 +285,7 @@ class SonosSpeaker:
     @property
     def subscription_address(self) -> str:
         """Return the current subscription callback address if any."""
+        assert len(self._subscriptions) > 0
         addr, port = self._subscriptions[0].event_listener.address
         return ":".join([addr, str(port)])
 
@@ -299,10 +300,10 @@ class SonosSpeaker:
             return
 
         if isinstance(result, asyncio.exceptions.TimeoutError):
-            message: Exception | str = "Request timed out"
+            message = "Request timed out"
             exc_info = None
         else:
-            message = result
+            message = str(result)
             exc_info = result if not str(result) else None
 
         _LOGGER.log(
@@ -591,9 +592,9 @@ class SonosSpeaker:
 
     async def async_offline(self) -> None:
         """Handle removal of speaker when unavailable."""
-        if self._subscription_lock:
-            async with self._subscription_lock:
-                await self._async_offline()
+        assert self._subscription_lock is not None
+        async with self._subscription_lock:
+            await self._async_offline()
 
     async def _async_offline(self) -> None:
         """Handle removal of speaker when unavailable."""
@@ -818,15 +819,15 @@ class SonosSpeaker:
 
             entity_registry = ent_reg.async_get(self.hass)
             sonos_group = []
-            sonos_group_entities: list = []
+            sonos_group_entities = []
 
             for uid in group:
                 speaker = self.hass.data[DATA_SONOS].discovered.get(uid)
                 if speaker:
                     self._group_members_missing.discard(uid)
                     sonos_group.append(speaker)
-                    entity_id = entity_registry.async_get_entity_id(
-                        MP_DOMAIN, DOMAIN, uid
+                    entity_id = cast(
+                        str, entity_registry.async_get_entity_id(MP_DOMAIN, DOMAIN, uid)
                     )
                     sonos_group_entities.append(entity_id)
                 else:

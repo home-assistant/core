@@ -84,13 +84,14 @@ async def async_browse_media(
 ) -> BrowseMedia:
     """Browse media."""
 
-    if media_content_id is None or media_content_type is None:
+    if media_content_id is None:
         return await root_payload(
             hass,
             speaker,
             media,
             get_browse_image_url,
         )
+    assert media_content_type is not None
 
     if media_source.is_media_source_id(media_content_id):
         return await media_source.async_browse_media(

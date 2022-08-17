@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-from typing import cast
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -101,7 +100,7 @@ class SonosBatteryEntity(SonosEntity, SensorEntity):
     @property
     def available(self) -> bool:
         """Return whether this device is available."""
-        return cast(bool, self.speaker.available and self.speaker.power_source)
+        return self.speaker.available and self.speaker.power_source is not None
 
 
 class SonosAudioInputFormatSensorEntity(SonosPollingEntity, SensorEntity):

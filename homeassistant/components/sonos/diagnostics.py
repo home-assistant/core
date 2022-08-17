@@ -51,7 +51,7 @@ async def async_get_config_entry_diagnostics(
 
     for section in ("discovered", "discovery_known"):
         payload[section] = {}
-        data: dict[str, Any] = getattr(hass.data[DATA_SONOS], section)
+        data: set[Any] | dict[str, Any] = getattr(hass.data[DATA_SONOS], section)
         if isinstance(data, set):
             payload[section] = data
             continue
@@ -84,7 +84,7 @@ async def async_generate_media_info(
     hass: HomeAssistant, speaker: SonosSpeaker
 ) -> dict[str, Any]:
     """Generate a diagnostic payload for current media metadata."""
-    payload = {}
+    payload: dict[str, Any] = {}
 
     for attrib in MEDIA_DIAGNOSTIC_ATTRIBUTES:
         payload[attrib] = getattr(speaker.media, attrib)
@@ -109,7 +109,7 @@ async def async_generate_speaker_info(
     hass: HomeAssistant, speaker: SonosSpeaker
 ) -> dict[str, Any]:
     """Generate the diagnostic payload for a specific speaker."""
-    payload = {}
+    payload: dict[str, Any] = {}
 
     def get_contents(
         item: int | float | str | dict[str, Any]
@@ -129,7 +129,7 @@ async def async_generate_speaker_info(
         value = getattr(speaker, attrib)
         payload[attrib] = get_contents(value)
 
-    payload["enabled_entities"] = {  # type:ignore[assignment]
+    payload["enabled_entities"] = {
         entity_id
         for entity_id, s in hass.data[DATA_SONOS].entity_id_mappings.items()
         if s is speaker

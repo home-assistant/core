@@ -13,7 +13,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import SONOS_CREATE_LEVELS
 from .entity import SonosEntity
-from .helpers import SocoFeatures, soco_error
+from .helpers import soco_error
 from .speaker import SonosSpeaker
 
 LEVEL_TYPES = {
@@ -24,6 +24,8 @@ LEVEL_TYPES = {
     "surround_level": (-15, 15),
     "music_surround_level": (-15, 15),
 }
+
+SocoFeatures = list[tuple[str, tuple[int, int]]]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +38,7 @@ async def async_setup_entry(
     """Set up the Sonos number platform from a config entry."""
 
     def available_soco_attributes(speaker: SonosSpeaker) -> SocoFeatures:
-        features = []
+        features: SocoFeatures = []
         for level_type, valid_range in LEVEL_TYPES.items():
             if (state := getattr(speaker.soco, level_type, None)) is not None:
                 setattr(speaker, level_type, state)

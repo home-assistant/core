@@ -3,13 +3,12 @@ from __future__ import annotations
 
 import asyncio
 from collections import OrderedDict
-from collections.abc import Callable
 from dataclasses import dataclass, field
 import datetime
 from functools import partial
 import logging
 import socket
-from typing import Union, cast
+from typing import TYPE_CHECKING, Any, Optional, cast
 from urllib.parse import urlparse
 
 from soco import events_asyncio
@@ -23,7 +22,7 @@ from homeassistant.components import ssdp
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOSTS, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval, call_later
@@ -95,7 +94,7 @@ class SonosData:
         self.favorites: dict[str, SonosFavorites] = {}
         self.alarms: dict[str, SonosAlarms] = {}
         self.topology_condition = asyncio.Condition()
-        self.hosts_heartbeat: Callable[[], None] | None = None
+        self.hosts_heartbeat: CALLBACK_TYPE | None = None
         self.discovery_known: set[str] = set()
         self.boot_counts: dict[str, int] = {}
         self.mdns_names: dict[str, str] = {}
@@ -234,12 +233,12 @@ class SonosDiscoveryManager:
                 (SonosAlarms, self.data.alarms),
                 (SonosFavorites, self.data.favorites),
             ):
-                if soco.household_id not in coord_dict:  # type:ignore[operator]
+                if TYPE_CHECKING:
+                    coord_dict = cast(dict[str, Any], coord_dict)
+                if soco.household_id not in coord_dict:
                     new_coordinator = coordinator(self.hass, soco.household_id)
                     new_coordinator.setup(soco)
-                    coord_dict[
-                        soco.household_id
-                    ] = new_coordinator  # type:ignore[index]
+                    coord_dict[soco.household_id] = new_coordinator
             speaker.setup(self.entry)
         except (OSError, SoCoException):
             _LOGGER.warning("Failed to add SonosSpeaker using %s", soco, exc_info=True)
@@ -382,7 +381,7 @@ class SonosDiscoveryManager:
             self.data.discovery_known.add(uid)
         asyncio.create_task(
             self._async_handle_discovery_message(
-                uid, discovered_ip, cast(Union[int, None], boot_seqnum)
+                uid, discovered_ip, cast(Optional[int], boot_seqnum)
             )
         )
 
