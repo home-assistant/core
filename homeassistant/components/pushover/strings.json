@@ -5,6 +5,7 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
       "invalid_user_key": "Invalid user key"
     },

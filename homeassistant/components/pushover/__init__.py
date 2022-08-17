@@ -1,8 +1,6 @@
 """The pushover component."""
 from __future__ import annotations
 
-import logging
-
 from pushover_complete import BadAPIRequestError, PushoverAPI
 
 from homeassistant.config_entries import ConfigEntry
@@ -16,8 +14,6 @@ from .const import CONF_USER_KEY, DATA_HASS_CONFIG, DOMAIN
 
 PLATFORMS = [Platform.NOTIFY]
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the pushover component."""
@@ -29,8 +25,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up pushover from a config entry."""
 
+    pushover_api = PushoverAPI(entry.data[CONF_API_KEY])
     try:
-        pushover_api = PushoverAPI(entry.data[CONF_API_KEY])
         await hass.async_add_executor_job(
             pushover_api.validate, entry.data[CONF_USER_KEY]
         )
@@ -38,9 +34,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except BadAPIRequestError as err:
         if "application token is invalid" in str(err):
             raise ConfigEntryAuthFailed(err) from err
-        if "user key is invalid" in str(err):
-            _LOGGER.error(err)
-            return False
         raise ConfigEntryNotReady(err) from err
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = pushover_api

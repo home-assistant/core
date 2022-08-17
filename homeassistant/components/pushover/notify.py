@@ -23,6 +23,7 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from ...exceptions import HomeAssistantError
 from .const import (
     ATTR_ATTACHMENT,
     ATTR_CALLBACK_URL,
@@ -141,7 +142,5 @@ class PushoverNotificationService(BaseNotificationService):
                 sound,
                 html,
             )
-        except ValueError as val_err:
-            _LOGGER.error(val_err)
         except BadAPIRequestError as err:
-            _LOGGER.error(err)
+            raise HomeAssistantError(str(err)) from err

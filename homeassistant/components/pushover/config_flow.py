@@ -11,15 +11,31 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.data_entry_flow import FlowResult
 
+from ...core import HomeAssistant
 from .const import CONF_USER_KEY, DEFAULT_NAME, DOMAIN
 
-CONFIG_SCHEMA = vol.Schema(
+USER_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
         vol.Required(CONF_API_KEY): str,
         vol.Required(CONF_USER_KEY): str,
     }
 )
+
+
+async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, str]:
+    """Validate user input."""
+    errors = {}
+    pushover_api = PushoverAPI(data[CONF_API_KEY])
+    try:
+        await hass.async_add_executor_job(pushover_api.validate, data[CONF_USER_KEY])
+    except BadAPIRequestError as err:
+        if "application token is invalid" in str(err):
+            errors[CONF_API_KEY] = "invalid_api_key"
+        if "user key is invalid" in str(err):
+            errors[CONF_USER_KEY] = "invalid_user_key"
+        errors["base"] = "cannot_connect"
+    return errors
 
 
 class PushBulletConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -45,14 +61,7 @@ class PushBulletConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None and self._reauth_entry:
             user_input = {**self._reauth_entry.data, **user_input}
-            try:
-                pushover_api = PushoverAPI(user_input[CONF_API_KEY])
-                await self.hass.async_add_executor_job(
-                    pushover_api.validate, user_input[CONF_USER_KEY]
-                )
-            except BadAPIRequestError as err:
-                if "application token is invalid" in str(err):
-                    errors[CONF_API_KEY] = "invalid_api_key"
+            errors = await validate_input(self.hass, user_input)
             if not errors:
                 self.hass.config_entries.async_update_entry(
                     self._reauth_entry, data=user_input
@@ -82,18 +91,7 @@ class PushBulletConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             self._async_abort_entries_match({CONF_NAME: user_input[CONF_NAME]})
 
-            try:
-                pushover_api = PushoverAPI(user_input[CONF_API_KEY])
-                await self.hass.async_add_executor_job(
-                    pushover_api.validate, user_input[CONF_USER_KEY]
-                )
-
-            except BadAPIRequestError as err:
-                if "application token is invalid" in str(err):
-                    errors[CONF_API_KEY] = "invalid_api_key"
-                else:
-                    errors[CONF_USER_KEY] = "invalid_user_key"
-
+            errors = await validate_input(self.hass, user_input)
             if not errors:
                 return self.async_create_entry(
                     title=user_input[CONF_NAME],
@@ -102,6 +100,6 @@ class PushBulletConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=CONFIG_SCHEMA,
+            data_schema=USER_SCHEMA,
             errors=errors,
         )
