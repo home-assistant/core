@@ -1361,10 +1361,6 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     return_type="int",
                 ),
                 TypeHintMatch(
-                    function_name="white_value",
-                    return_type=["int", None],
-                ),
-                TypeHintMatch(
                     function_name="effect_list",
                     return_type=["list[str]", None],
                 ),
@@ -1403,7 +1399,6 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                         "transition": "float | None",
                         "xy_color": "tuple[float, float] | None",
                         "white": "int | None",
-                        "white_value": "int | None",
                     },
                     kwargs_type="Any",
                     return_type=None,
