@@ -16,12 +16,11 @@ from tests.common import MockConfigEntry
 
 @pytest.fixture(autouse=True)
 def mock_pushover():
-    """Mock pushbullet."""
+    """Mock pushover."""
     with patch(
-        "homeassistant.components.pushover.config_flow.PushoverAPI"
-    ) as mock_client:
-        mock_client.return_value._generic_post.return_value = True
-        yield mock_client
+        "pushover_complete.PushoverAPI._generic_post", return_value={}
+    ) as mock_generic_post:
+        yield mock_generic_post
 
 
 @pytest.fixture(autouse=True)
@@ -125,6 +124,20 @@ async def test_flow_invalid_api_key(
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {CONF_API_KEY: "invalid_api_key"}
+
+
+async def test_flow_conn_err(hass: HomeAssistant, mock_pushover: MagicMock) -> None:
+    """Test user initialized flow with conn error."""
+
+    mock_pushover.side_effect = BadAPIRequestError
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+        data=MOCK_CONFIG,
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_import(hass: HomeAssistant) -> None:

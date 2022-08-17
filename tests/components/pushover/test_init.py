@@ -4,7 +4,7 @@ from typing import Callable
 from unittest.mock import MagicMock, patch
 
 import aiohttp
-import pushover_complete
+from pushover_complete import BadAPIRequestError
 import pytest
 
 from homeassistant.components.notify.const import DOMAIN as NOTIFY_DOMAIN
@@ -21,12 +21,11 @@ from tests.components.repairs import get_repairs
 
 @pytest.fixture(autouse=True)
 def mock_pushover():
-    """Mock pushbullet."""
-    with patch("homeassistant.components.pushover.PushoverAPI") as mock_client, patch(
-        "homeassistant.components.pushover.config_flow.PushoverAPI"
-    ):
-        mock_client.return_value._generic_post.return_value = True
-        yield mock_client
+    """Mock pushover."""
+    with patch(
+        "pushover_complete.PushoverAPI._generic_post", return_value={}
+    ) as mock_generic_post:
+        yield mock_generic_post
 
 
 async def test_setup(
@@ -50,6 +49,7 @@ async def test_setup(
             ]
         },
     )
+    await hass.async_block_till_done()
     assert hass.config_entries.async_entries(DOMAIN)
     issues = await get_repairs(hass, hass_ws_client)
     assert len(issues) == 1
@@ -77,26 +77,22 @@ async def test_async_setup_entry_failed_invalid_api_key(
         data=MOCK_CONFIG,
     )
     entry.add_to_hass(hass)
-    mock_pushover.side_effect = pushover_complete.BadAPIRequestError(
-        "400: application token is invalid"
-    )
+    mock_pushover.side_effect = BadAPIRequestError("400: application token is invalid")
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.state == ConfigEntryState.SETUP_ERROR
 
 
-async def test_async_setup_entry_failed_invalid_user_key(
+async def test_async_setup_entry_failed_conn_error(
     hass: HomeAssistant, mock_pushover: MagicMock
 ) -> None:
-    """Test pushover failed setup due to invalid user key."""
+    """Test pushover failed setup due to conn error."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=MOCK_CONFIG,
     )
     entry.add_to_hass(hass)
-    mock_pushover.side_effect = pushover_complete.BadAPIRequestError(
-        "400: user key is invalid"
-    )
+    mock_pushover.side_effect = BadAPIRequestError
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    assert entry.state == ConfigEntryState.SETUP_ERROR
+    assert entry.state == ConfigEntryState.SETUP_RETRY

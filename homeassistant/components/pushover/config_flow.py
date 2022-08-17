@@ -9,9 +9,9 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY, CONF_NAME
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 
-from ...core import HomeAssistant
 from .const import CONF_USER_KEY, DEFAULT_NAME, DOMAIN
 
 USER_SCHEMA = vol.Schema(
@@ -32,9 +32,10 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     except BadAPIRequestError as err:
         if "application token is invalid" in str(err):
             errors[CONF_API_KEY] = "invalid_api_key"
-        if "user key is invalid" in str(err):
+        elif "user key is invalid" in str(err):
             errors[CONF_USER_KEY] = "invalid_user_key"
-        errors["base"] = "cannot_connect"
+        else:
+            errors["base"] = "cannot_connect"
     return errors
 
 

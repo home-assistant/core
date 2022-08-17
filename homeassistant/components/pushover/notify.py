@@ -64,7 +64,7 @@ async def async_get_service(
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_yaml",
         )
-        hass.create_task(
+        hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
                 context={"source": SOURCE_IMPORT},
