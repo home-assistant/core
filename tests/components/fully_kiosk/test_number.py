@@ -1,13 +1,14 @@
 """Test the Fully Kiosk Browser number entities."""
 from unittest.mock import MagicMock
 
-from homeassistant.components.fully_kiosk.const import DOMAIN
+from homeassistant.components.fully_kiosk.const import DOMAIN, UPDATE_INTERVAL
 import homeassistant.components.number as number
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.util import dt
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_numbers(
@@ -41,6 +42,15 @@ async def test_numbers(
     entry = entity_registry.async_get("number.amazon_fire_screen_off_timer")
     assert entry
     assert entry.unique_id == "abcdef-123456-timeToScreenOffV2"
+
+    # Test unknown/missing data
+    mock_fully_kiosk.getSettings.return_value = {}
+    async_fire_time_changed(hass, dt.utcnow() + UPDATE_INTERVAL)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("number.amazon_fire_screensaver_timer")
+    assert state
+    assert state.state == STATE_UNKNOWN
 
     assert entry.device_id
     device_entry = device_registry.async_get(entry.device_id)

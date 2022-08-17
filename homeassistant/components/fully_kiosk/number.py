@@ -15,7 +15,7 @@ from .entity import FullyKioskEntity
 ENTITY_TYPES: tuple[NumberEntityDescription, ...] = (
     NumberEntityDescription(
         key="timeToScreensaverV2",
-        name="Screensaver Timer",
+        name="Screensaver timer",
         native_max_value=9999,
         native_step=1,
         native_min_value=0,
@@ -24,7 +24,7 @@ ENTITY_TYPES: tuple[NumberEntityDescription, ...] = (
     ),
     NumberEntityDescription(
         key="screensaverBrightness",
-        name="Screensaver Brightness",
+        name="Screensaver brightness",
         native_max_value=255,
         native_step=1,
         native_min_value=0,
@@ -32,7 +32,7 @@ ENTITY_TYPES: tuple[NumberEntityDescription, ...] = (
     ),
     NumberEntityDescription(
         key="timeToScreenOffV2",
-        name="Screen Off Timer",
+        name="Screen off timer",
         native_max_value=9999,
         native_step=1,
         native_min_value=0,
@@ -73,8 +73,6 @@ class FullyNumberEntity(FullyKioskEntity, NumberEntity):
     @property
     def native_value(self) -> int | None:
         """Return the state of the number entity."""
-        if not self.coordinator.data:
-            return None
         if (
             value := self.coordinator.data["settings"].get(self.entity_description.key)
         ) is None:
