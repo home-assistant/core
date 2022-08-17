@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import DOMAIN, NOTIFICATION_BRIDGE_DISCONNECT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,9 +37,26 @@ class FlumeNotificationDataUpdateCoordinator(DataUpdateCoordinator):
         self.notifications = pyflume.FlumeNotificationList(
             self.auth, read="true"
         ).notification_list
+        _LOGGER.debug("Notifications %s", self.notifications)
+
+        # Add all non-bridge events to the notification list
         self.active_notification_types = list(
-            {x["extra"]["event_rule_name"] for x in self.notifications}
+            {
+                x["extra"]["event_rule_name"]
+                for x in self.notifications
+                if x["extra"]["event_rule_name"] != "Bridge Disconnection"
+            }
         )
+
+        # Multiple bridge exceptions may exist - including a reconnect event. Take the last event and add it to the list
+        bridge_is_connected = [
+            x["extra"]
+            for x in self.notifications
+            if x["extra"]["event_rule_name"] == "Bridge Disconnection"
+        ][-1]["connected"]
+
+        if not bridge_is_connected:
+            self.active_notification_types.append(NOTIFICATION_BRIDGE_DISCONNECT)
         _LOGGER.debug("Active Flume Notifications %s", self.active_notification_types)
 
     async def _async_update_data(self) -> None:

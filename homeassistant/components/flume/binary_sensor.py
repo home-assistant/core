@@ -5,6 +5,7 @@ from dataclasses import dataclass
 import logging
 
 from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -30,6 +31,7 @@ class FlumeBinarySensorRequiredKeysMixin:
     """Mixin for required keys."""
 
     event_rule: str
+    reverse_output: bool
 
 
 @dataclass
@@ -45,18 +47,22 @@ FLUME_BINARY_SENSORS: tuple[FlumeBinarySensorEntityDescription, ...] = (
         name="Leak detected",
         event_rule=NOTIFICATION_LEAK_DETECTED,
         icon="mdi:pipe-leak",
+        reverse_output=False,
     ),
     FlumeBinarySensorEntityDescription(
         key="flow",
         name="High flow",
         event_rule=NOTIFICATION_HIGH_FLOW,
         icon="mdi:waves",
+        reverse_output=False,
     ),
     FlumeBinarySensorEntityDescription(
         key="bridge",
         name="Bridge disconnected",
         event_rule=NOTIFICATION_BRIDGE_DISCONNECT,
         icon="mdi:bridge",
+        reverse_output=True,
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
     ),
 )
 
@@ -90,5 +96,8 @@ class FlumeBinarySensor(FlumeEntity, BinarySensorEntity):
     def is_on(self) -> bool:
         """Return on state."""
         rule = self.entity_description.event_rule
+        value = rule in self.coordinator.active_notification_types
         _LOGGER.debug("Checking value for %s", rule)
-        return rule in self.coordinator.active_notification_types
+        if self.entity_description.reverse_output:
+            return not value
+        return value
