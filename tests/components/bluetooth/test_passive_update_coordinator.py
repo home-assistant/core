@@ -8,10 +8,10 @@ from unittest.mock import MagicMock, patch
 
 from homeassistant.components.bluetooth import (
     DOMAIN,
-    UNAVAILABLE_TRACK_SECONDS,
     BluetoothChange,
     BluetoothScanningMode,
 )
+from homeassistant.components.bluetooth.const import UNAVAILABLE_TRACK_SECONDS
 from homeassistant.components.bluetooth.passive_update_coordinator import (
     PassiveBluetoothCoordinatorEntity,
     PassiveBluetoothDataUpdateCoordinator,
