@@ -1,5 +1,6 @@
 """The Risco integration."""
 from collections.abc import Callable
+from dataclasses import dataclass, field
 from datetime import timedelta
 import logging
 from typing import Any
@@ -34,17 +35,22 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     EVENTS_COORDINATOR,
-    PARTITION_UPDATES,
-    SYSTEM,
     TYPE_LOCAL,
-    ZONE_UPDATES,
 )
 
 PLATFORMS = [Platform.ALARM_CONTROL_PANEL, Platform.BINARY_SENSOR, Platform.SENSOR]
-UNDO_LISTENERS = "undo_listeners"
 LAST_EVENT_STORAGE_VERSION = 1
 LAST_EVENT_TIMESTAMP_KEY = "last_event_timestamp"
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class LocalData:
+    """A data class for local data passed to the platforms."""
+
+    system: RiscoLocal
+    zone_updates: dict[int, Callable[[], Any]] = field(default_factory=dict)
+    partition_updates: dict[int, Callable[[], Any]] = field(default_factory=dict)
 
 
 def is_local(entry: ConfigEntry) -> bool:
@@ -75,46 +81,37 @@ async def _async_setup_local_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
     async def _error(error: Exception) -> None:
         _LOGGER.error("Error in Risco library: %s", error)
 
-    remove_error = risco.add_error_handler(_error)
+    entry.async_on_unload(risco.add_error_handler(_error))
 
-    async def _default(command, result, *params):
+    async def _default(command: str, result: str, *params: list[str]):
         _LOGGER.debug(
             "Unhandled update from Risco library: %s, %s, %s", command, result, params
         )
 
-    remove_default = risco.add_default_handler(_default)
+    entry.async_on_unload(risco.add_default_handler(_default))
 
-    zone_updates: dict[int, Callable[[], Any]] = {}
+    local_data = LocalData(risco)
 
-    async def _zone(zone_id, zone):
+    async def _zone(zone_id: int, zone):
         _LOGGER.debug("Risco zone update for %d", zone_id)
-        callback = zone_updates.get(zone_id)
+        callback = local_data.zone_updates.get(zone_id)
         if callback:
             callback()
 
-    remove_zone = risco.add_zone_handler(_zone)
+    entry.async_on_unload(risco.add_zone_handler(_zone))
 
-    partition_updates: dict[int, Callable[[], Any]] = {}
-
-    async def _partition(partition_id, partition):
+    async def _partition(partition_id: int, partition):
         _LOGGER.debug("Risco partition update for %d", partition_id)
-        callback = partition_updates.get(partition_id)
+        callback = local_data.partition_updates.get(partition_id)
         if callback:
             callback()
 
-    remove_partition = risco.add_partition_handler(_partition)
+    entry.async_on_unload(risco.add_partition_handler(_partition))
 
-    listeners = [remove_error, remove_default, remove_zone, remove_partition]
-
-    listeners.append(entry.add_update_listener(_update_listener))
+    entry.async_on_unload(entry.add_update_listener(_update_listener))
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {
-        UNDO_LISTENERS: listeners,
-        ZONE_UPDATES: zone_updates,
-        PARTITION_UPDATES: partition_updates,
-        SYSTEM: risco,
-    }
+    hass.data[DOMAIN][entry.entry_id] = local_data
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -138,12 +135,11 @@ async def _async_setup_cloud_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
         hass, risco, entry.entry_id, 60
     )
 
-    undo_listener = entry.add_update_listener(_update_listener)
+    entry.async_on_unload(entry.add_update_listener(_update_listener))
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_COORDINATOR: coordinator,
-        UNDO_LISTENERS: [undo_listener],
         EVENTS_COORDINATOR: events_coordinator,
     }
 
@@ -157,8 +153,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        for undo in hass.data[DOMAIN][entry.entry_id][UNDO_LISTENERS]:
-            undo()
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok

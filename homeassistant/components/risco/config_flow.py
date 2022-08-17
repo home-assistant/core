@@ -1,6 +1,8 @@
 """Config flow for Risco integration."""
 from __future__ import annotations
 
+import asyncio
+from collections.abc import Mapping
 import logging
 
 from pyrisco import CannotConnectError, RiscoCloud, RiscoLocal, UnauthorizedError
@@ -30,6 +32,7 @@ from .const import (
     DEFAULT_OPTIONS,
     DOMAIN,
     RISCO_STATES,
+    SLEEP_INTERVAL,
     TYPE_LOCAL,
 )
 
@@ -81,13 +84,10 @@ async def validate_local_input(
     Data has the keys from LOCAL_SCHEMA with values provided by the user.
     """
     risco = RiscoLocal(data[CONF_HOST], data[CONF_PORT], data[CONF_PIN])
-
-    try:
-        await risco.connect()
-    finally:
-        await risco.disconnect()
-
-    return {"title": risco.id}
+    await risco.connect()
+    site_id = risco.id
+    await risco.disconnect()
+    return {"title": site_id}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -137,9 +137,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Configure a local based alarm."""
         errors = {}
         if user_input is not None:
-            await self.async_set_unique_id(user_input[CONF_HOST])
-            self._abort_if_unique_id_configured()
-
             try:
                 info = await validate_local_input(self.hass, user_input)
             except CannotConnectError:
@@ -150,6 +147,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                await self.async_set_unique_id(info["title"])
+                self._abort_if_unique_id_configured()
+
+                # Risco can hang if we don't wait before creating a new connection
+                await asyncio.sleep(SLEEP_INTERVAL)
+
                 return self.async_create_entry(
                     title=info["title"], data={**user_input, **{CONF_TYPE: TYPE_LOCAL}}
                 )
