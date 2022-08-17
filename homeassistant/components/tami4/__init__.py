@@ -6,7 +6,7 @@ from Tami4EdgeAPI import Tami4EdgeAPI
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import CONF_REFRESH_TOKEN, DOMAIN
 
@@ -20,7 +20,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         edge = await hass.async_add_executor_job(Tami4EdgeAPI, refresh_token)
     except Exception as ex:
-        raise PlatformNotReady(f"CError connecting to API : {ex}") from ex
+        raise ConfigEntryNotReady(f"Error connecting to API : {ex}") from ex
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = edge
 
