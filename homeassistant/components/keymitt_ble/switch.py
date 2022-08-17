@@ -17,7 +17,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
 class MicroBotBinarySwitch(MicroBotEntity, SwitchEntity):
     """MicroBot switch class."""
-    
+
+    _attr_has_entity_name = True
+
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added."""
         await super().async_added_to_hass()
