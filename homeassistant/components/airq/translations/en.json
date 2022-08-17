@@ -4,8 +4,8 @@
             "already_configured": "This device is already configured and available to Home Assistant"
         },
         "error": {
-            "cannot_connect": "Failed to connect",
-            "invalid_auth": "Password wrong",
+            "cannot_connect": "Failed to connect, check the IP / mDNS",
+            "invalid_auth": "Wrong password",
             "unknown": "Unexpected error"
         },
         "step": {
