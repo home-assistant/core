@@ -11,9 +11,11 @@ from fullykiosk.exceptions import FullyKioskError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_PASSWORD
+from homeassistant.components.dhcp import DhcpServiceInfo
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PASSWORD
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import format_mac
 
 from .const import DEFAULT_PORT, DOMAIN, LOGGER
 
@@ -48,7 +50,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(device_info["deviceID"])
                 self._abort_if_unique_id_configured(updates=user_input)
                 return self.async_create_entry(
-                    title=device_info["deviceName"], data=user_input
+                    title=device_info["deviceName"],
+                    data=user_input | {CONF_MAC: format_mac(device_info["Mac"])},
                 )
 
         return self.async_show_form(
@@ -61,3 +64,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
+
+    async def async_step_dhcp(self, discovery_info: DhcpServiceInfo) -> FlowResult:
+        """Handle dhcp discovery."""
+        mac = format_mac(discovery_info.macaddress)
+
+        for entry in self._async_current_entries():
+            if entry.data[CONF_MAC] == mac:
+                self.hass.config_entries.async_update_entry(
+                    entry,
+                    data=entry.data | {CONF_HOST: discovery_info.ip},
+                )
+                self.hass.async_create_task(
+                    self.hass.config_entries.async_reload(entry.entry_id)
+                )
+                return self.async_abort(reason="already_configured")
+
+        return self.async_abort(reason="unknown")
