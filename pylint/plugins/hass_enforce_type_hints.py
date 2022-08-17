@@ -725,6 +725,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             matches=_ENTITY_MATCH,
         ),
         ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
             base_class="ButtonEntity",
             matches=[
                 TypeHintMatch(
