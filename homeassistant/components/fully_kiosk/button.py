@@ -39,31 +39,31 @@ class FullyButtonEntityDescription(
 BUTTONS: tuple[FullyButtonEntityDescription, ...] = (
     FullyButtonEntityDescription(
         key="restartApp",
-        name="Restart Browser",
+        name="Restart browser",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
         press_action=lambda fully: fully.restartApp(),
     ),
     FullyButtonEntityDescription(
         key="rebootDevice",
-        name="Reboot Device",
+        name="Reboot device",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
         press_action=lambda fully: fully.rebootDevice(),
     ),
     FullyButtonEntityDescription(
         key="toForeground",
-        name="Bring to Foreground",
+        name="Bring to foreground",
         press_action=lambda fully: fully.toForeground(),
     ),
     FullyButtonEntityDescription(
         key="toBackground",
-        name="Send to Background",
+        name="Send to background",
         press_action=lambda fully: fully.toBackground(),
     ),
     FullyButtonEntityDescription(
         key="loadStartUrl",
-        name="Load Start URL",
+        name="Load start URL",
         press_action=lambda fully: fully.loadStartUrl(),
     ),
 )
