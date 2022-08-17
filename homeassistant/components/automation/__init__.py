@@ -9,6 +9,7 @@ import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
 from homeassistant.components import blueprint
+from homeassistant.components.repairs import IssueSeverity, async_create_issue
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
@@ -43,6 +44,7 @@ from homeassistant.exceptions import (
     ConditionErrorContainer,
     ConditionErrorIndex,
     HomeAssistantError,
+    ServiceNotFound,
     TemplateError,
 )
 from homeassistant.helpers import condition, extract_domain_configs
@@ -525,6 +527,23 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
                     await self.action_script.async_run(
                         variables, trigger_context, started_action
                     )
+            except (ServiceNotFound) as err:
+                async_create_issue(
+                    self.hass,
+                    DOMAIN,
+                    f"{self.entity_id}_service_not_found_{err.domain}.{err.service}",
+                    is_fixable=True,
+                    is_persistent=True,
+                    severity=IssueSeverity.ERROR,
+                    translation_key="service_not_found",
+                    translation_placeholders={
+                        "service": f"{err.domain}.{err.service}",
+                        "entity_id": self.entity_id,
+                        "name": self.name or self.entity_id,
+                        "edit": f"/config/automation/edit/{self.unique_id}",
+                    },
+                )
+                automation_trace.set_error(err)
             except (vol.Invalid, HomeAssistantError) as err:
                 self._logger.error(
                     "Error while executing automation %s: %s",
