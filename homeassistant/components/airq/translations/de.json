@@ -4,7 +4,7 @@
             "already_configured": "Dieses Gerät ist bereits vorhanden und steht Home Assistant zur Verfügung"
         },
         "error": {
-            "cannot_connect": "Verbindung fehlgeschlagen",
+            "cannot_connect": "Verbindung fehlgeschlagen, bitte IP oder mDNS überprüfen",
             "invalid_auth": "Passwort falsch",
             "unknown": "Unvorhergesehener Fehler"
         },

@@ -4,7 +4,7 @@
             "already_configured": "Cet appareil est déjà configuré et disponible pour Home Assistant"
         },
         "error": {
-            "cannot_connect": "Échec de la connexion",
+            "cannot_connect": "Échec de la connexion, veuillez vérifier IP ou mDNS",
             "invalid_auth": "Mot de passe invalide",
             "unknown": "Erreur inattendue"
         },
