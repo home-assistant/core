@@ -13,7 +13,6 @@ from microbot import (
 )
 import voluptuous as vol
 
-from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
