@@ -100,9 +100,24 @@ class HassAqualinkThermostat(AqualinkEntity, ClimateEntity):
         return AQUALINK_TEMP_CELSIUS_HIGH
 
     @property
-    def target_temperature(self) -> float:
+    def target_temperature(self) -> float | None:
         """Return the current target temperature."""
-        return float(self.dev.state)
+        try:
+            return float(self.dev.state)
+        except ValueError:
+            _LOGGER.warning(
+                "Invalid state received for %s (%s). You likely have this device enabled in the iAqualink integration but it is not installed on the Pool Equipment",
+                self.dev.label,
+                self.dev.state,
+            )
+        except TypeError:
+            _LOGGER.warning(
+                "Invalid state received for %s (%s). You likely have this device enabled in the iAqualink integration but it is not installed on the Pool Equipment",
+                self.dev.label,
+                self.dev.state,
+            )
+
+        return None
 
     @refresh_system
     async def async_set_temperature(self, **kwargs) -> None:

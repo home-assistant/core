@@ -1,6 +1,8 @@
 """Support for Aqualink temperature sensors."""
 from __future__ import annotations
 
+import logging
+
 from homeassistant.components.sensor import DOMAIN, SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
@@ -9,6 +11,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AqualinkEntity
 from .const import DOMAIN as AQUALINK_DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
@@ -45,13 +49,28 @@ class HassAqualinkSensor(AqualinkEntity, SensorEntity):
     @property
     def native_value(self) -> int | float | None:
         """Return the state of the sensor."""
-        if self.dev.state == "":
+        if self.dev.state in ("", "absent"):
             return None
 
         try:
             return int(self.dev.state)
         except ValueError:
-            return float(self.dev.state)
+            try:
+                return float(self.dev.state)
+            except ValueError:
+                _LOGGER.warning(
+                    "Invalid state received for %s (%s). You likely have this device enabled in the iAqualink integration but it is not installed on the Pool Equipment",
+                    self.dev.label,
+                    self.dev.state,
+                )
+        except TypeError:
+            _LOGGER.warning(
+                "Invalid state received for %s (%s). You likely have this device enabled in the iAqualink integration but it is not installed on the Pool Equipment",
+                self.dev.label,
+                self.dev.state,
+            )
+
+        return None
 
     @property
     def device_class(self) -> str | None:
