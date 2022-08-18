@@ -237,7 +237,7 @@ async def test_discovery_via_usb(detect_mock, hass):
         await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert "zigbee radio" in result2["title"]
+    assert result2["title"] == "zigbee radio"
     assert result2["data"] == {
         "device": {
             "baudrate": 115200,
@@ -273,10 +273,7 @@ async def test_zigate_discovery_via_usb(detect_mock, hass):
         await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert (
-        "zigate radio - /dev/ttyZIGBEE, s/n: 1234 - test - 6015:0403"
-        in result2["title"]
-    )
+    assert result2["title"] == "zigate radio"
     assert result2["data"] == {
         "device": {
             "path": "/dev/ttyZIGBEE",
