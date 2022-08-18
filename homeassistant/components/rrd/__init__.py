@@ -41,8 +41,8 @@ DS_SCHEMA = vol.Schema(
             ["GAUGE", "COUNTER", "DERIVE", "DCOUNTER", "DDERIVE", "ABSOLUTE"]
         ),
         vol.Required(CONF_HEARTBEAT): rrd_scaled_duration,
-        vol.Optional(CONF_MIN): cv.Number,
-        vol.Optional(CONF_MAX): cv.Number,
+        vol.Optional(CONF_MIN): vol.Coerce(float),
+        vol.Optional(CONF_MAX): vol.Coerce(float),
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -92,7 +92,7 @@ def setup(hass, config):
     for database in conf[CONF_DBS]:
         datasources = []
         rras = []
-        for ds in database[CONF_DS]:
+        for ds in database[CONF_DS]:  # pylint: disable=C0103
             ds_string = f"DS:{ds[CONF_NAME]}:{ds[CONF_CF]}:{ds[CONF_HEARTBEAT]}:{ds.get(CONF_MIN, 'U')}:{ds.get(CONF_MAX, 'U')}"
             datasources.append(ds_string)
             entities[ds[CONF_SENSOR]] = ds[CONF_NAME], 0, None
@@ -118,7 +118,6 @@ def setup(hass, config):
                 _LOGGER.debug("Creating %s", hass.config.path(rrd_dir))
                 os.makedirs(hass.config.path(rrd_dir))
             if not os.path.isfile(rrd_filename):
-                # TODO: Make this a service to overwrite the file afterward only on request
                 _LOGGER.debug("Creating file %s", rrd_filename)
 
                 rrdtool.create(
@@ -170,19 +169,19 @@ def setup(hass, config):
             try:
                 if sensor_state is None:
                     _LOGGER.debug(
-                        "[%s] Skipping sensor %s, because value is unknown.",
+                        "[%s] Skipping sensor %s, because value is unknown",
                         rrd_filename,
                         sensor_id,
                     )
-                    raise Exception("Sensor has no value or not exists.")
+                    raise Exception("Sensor has no value or not exists")
 
                 sensor_value = sensor_state.state
                 # Convert value to integer, when type is COUNTER or DERIVE.
                 if data_source[CONF_CF] in ["COUNTER", "DERIVE"]:
                     sensor_value = round(float(sensor_value))
-            except Exception:
+            except rrdtool.OperationalError:
                 _LOGGER.info(
-                    "[%s] sensor %s value will be stored as NaN.",
+                    "[%s] sensor %s value will be stored as NaN",
                     rrd_filename,
                     sensor_id,
                 )
@@ -221,7 +220,7 @@ def setup(hass, config):
                 # Run each database updating in own thread.
                 schedule_next_update(database)
 
-        except Exception as exc:
+        except rrdtool.OperationalError as exc:
             _LOGGER.error(exc)
 
     # Stop updating all RRD files, because HASS is shutting down
