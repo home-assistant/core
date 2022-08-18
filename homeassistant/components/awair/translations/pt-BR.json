@@ -29,7 +29,13 @@
                 "data": {
                     "host": "Endere\u00e7o IP"
                 },
-                "description": "Awair Local API deve ser ativada seguindo estas etapas: {url}"
+                "description": "Siga [estas instru\u00e7\u00f5es]({url}) sobre como ativar a API local Awair. \n\n Clique em enviar quando terminar."
+            },
+            "local_pick": {
+                "data": {
+                    "device": "Dispositivo",
+                    "host": "Endere\u00e7o IP"
+                }
             },
             "reauth": {
                 "data": {

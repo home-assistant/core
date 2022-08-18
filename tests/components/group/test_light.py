@@ -618,48 +618,6 @@ async def test_color_rgbww(hass, enable_custom_integrations):
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
 
 
-async def test_white_value(hass):
-    """Test white value reporting."""
-    await async_setup_component(
-        hass,
-        LIGHT_DOMAIN,
-        {
-            LIGHT_DOMAIN: {
-                "platform": DOMAIN,
-                "entities": ["light.test1", "light.test2"],
-                "all": "false",
-            }
-        },
-    )
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
-
-    hass.states.async_set(
-        "light.test1", STATE_ON, {ATTR_WHITE_VALUE: 255, ATTR_SUPPORTED_FEATURES: 128}
-    )
-    await hass.async_block_till_done()
-    state = hass.states.get("light.light_group")
-    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 128
-    assert state.attributes[ATTR_WHITE_VALUE] == 255
-
-    hass.states.async_set(
-        "light.test2", STATE_ON, {ATTR_WHITE_VALUE: 100, ATTR_SUPPORTED_FEATURES: 128}
-    )
-    await hass.async_block_till_done()
-    state = hass.states.get("light.light_group")
-    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 128
-    assert state.attributes[ATTR_WHITE_VALUE] == 177
-
-    hass.states.async_set(
-        "light.test1", STATE_OFF, {ATTR_WHITE_VALUE: 255, ATTR_SUPPORTED_FEATURES: 128}
-    )
-    await hass.async_block_till_done()
-    state = hass.states.get("light.light_group")
-    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 128
-    assert state.attributes[ATTR_WHITE_VALUE] == 100
-
-
 async def test_white(hass, enable_custom_integrations):
     """Test white reporting."""
     platform = getattr(hass.components, "test.light")
@@ -1493,7 +1451,6 @@ async def test_invalid_service_calls(hass):
             ATTR_XY_COLOR: (0.5, 0.42),
             ATTR_RGB_COLOR: (80, 120, 50),
             ATTR_COLOR_TEMP: 1234,
-            ATTR_WHITE_VALUE: 1,
             ATTR_EFFECT: "Sunshine",
             ATTR_TRANSITION: 4,
             ATTR_FLASH: "long",

@@ -59,7 +59,9 @@ homeassistant.components.ampio.*
 homeassistant.components.anthemav.*
 homeassistant.components.aseko_pool_live.*
 homeassistant.components.asuswrt.*
+homeassistant.components.auth.*
 homeassistant.components.automation.*
+homeassistant.components.awair.*
 homeassistant.components.backup.*
 homeassistant.components.baf.*
 homeassistant.components.binary_sensor.*
@@ -106,6 +108,7 @@ homeassistant.components.fritzbox_callmonitor.*
 homeassistant.components.fronius.*
 homeassistant.components.frontend.*
 homeassistant.components.fritz.*
+homeassistant.components.fully_kiosk.*
 homeassistant.components.geo_location.*
 homeassistant.components.geocaching.*
 homeassistant.components.gios.*

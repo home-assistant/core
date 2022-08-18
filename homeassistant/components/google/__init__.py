@@ -29,6 +29,7 @@ from homeassistant.const import (
     CONF_ENTITIES,
     CONF_NAME,
     CONF_OFFSET,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import (
@@ -88,7 +89,7 @@ YAML_DEVICES = f"{DOMAIN}_calendars.yaml"
 
 TOKEN_FILE = f".{DOMAIN}.token"
 
-PLATFORMS = ["calendar"]
+PLATFORMS = [Platform.CALENDAR]
 
 
 CONFIG_SCHEMA = vol.Schema(

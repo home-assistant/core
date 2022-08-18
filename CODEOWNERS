@@ -375,6 +375,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/frontend/ @home-assistant/frontend
 /tests/components/frontend/ @home-assistant/frontend
 /homeassistant/components/frontier_silicon/ @wlcrs
+/homeassistant/components/fully_kiosk/ @cgarwood
+/tests/components/fully_kiosk/ @cgarwood
 /homeassistant/components/garages_amsterdam/ @klaasnicolaas
 /tests/components/garages_amsterdam/ @klaasnicolaas
 /homeassistant/components/gdacs/ @exxamalte
@@ -584,6 +586,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/lacrosse_view/ @IceBotYT
 /tests/components/lacrosse_view/ @IceBotYT
 /homeassistant/components/lametric/ @robbiet480 @frenck
+/tests/components/lametric/ @robbiet480 @frenck
 /homeassistant/components/launch_library/ @ludeeus @DurgNomis-drol
 /tests/components/launch_library/ @ludeeus @DurgNomis-drol
 /homeassistant/components/laundrify/ @xLarry
