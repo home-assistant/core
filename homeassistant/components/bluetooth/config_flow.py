@@ -9,15 +9,8 @@ from homeassistant.components import onboarding
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .const import (
-    ADAPTER_ADDRESS,
-    ADAPTER_NAME,
-    CONF_ADAPTER,
-    CONF_DETAILS,
-    DOMAIN,
-    AdapterDetails,
-)
-from .util import adapter_human_name, async_get_bluetooth_adapters
+from .const import ADAPTER_ADDRESS, CONF_ADAPTER, CONF_DETAILS, DOMAIN, AdapterDetails
+from .util import adapter_human_name, adapter_unique_name, async_get_bluetooth_adapters
 
 if TYPE_CHECKING:
     from homeassistant.data_entry_flow import FlowResult
@@ -61,11 +54,14 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
         assert adapter is not None
         assert details is not None
 
-        name = details[ADAPTER_NAME]
         address = details[ADAPTER_ADDRESS]
 
         if user_input is not None or not onboarding.async_is_onboarded(self.hass):
-            return self.async_create_entry(title=name, data={})
+            await self.async_set_unique_id(address, raise_on_progress=False)
+            self._abort_if_unique_id_configured()
+            return self.async_create_entry(
+                title=adapter_unique_name(adapter, address), data={}
+            )
 
         return self.async_show_form(
             step_id="select_adapter",
@@ -82,7 +78,9 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
             address = self._adapters[adapter][ADAPTER_ADDRESS]
             await self.async_set_unique_id(address, raise_on_progress=False)
             self._abort_if_unique_id_configured()
-            return self.async_create_entry(title=adapter, data={})
+            return self.async_create_entry(
+                title=adapter_unique_name(adapter, address), data={}
+            )
 
         configured_addresses = self._async_current_ids()
         self._adapters = await async_get_bluetooth_adapters()
