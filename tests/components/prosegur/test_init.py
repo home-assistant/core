@@ -1,5 +1,5 @@
 """Tests prosegur setup."""
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -20,22 +20,13 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 async def test_setup_entry_fail_retrieve(hass: HomeAssistant, error) -> None:
     """Test loading the Prosegur entry."""
 
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "username": "test-username",
-            "password": "test-password",
-            "country": "PT",
-            "contract": "xpto",
-        },
-    )
-    config_entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
     with patch(
         "pyprosegur.auth.Auth.login",
         side_effect=error,
     ):
-        assert not await hass.config_entries.async_setup(config_entry.entry_id)
+        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
         await hass.async_block_till_done()
 

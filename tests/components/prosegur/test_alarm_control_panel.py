@@ -20,9 +20,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_component, entity_registry as er
 
-from .common import CONTRACT, setup_platform
-
-PROSEGUR_ALARM_ENTITY = f"alarm_control_panel.contract_{CONTRACT}"
+INSTALL_ID = "1234abcd"
+PROSEGUR_ALARM_ENTITY = f"alarm_control_panel.contract_{INSTALL_ID}"
 
 
 @pytest.fixture
@@ -48,12 +47,11 @@ def mock_status(request):
 
 async def test_entity_registry(hass: HomeAssistant, mock_auth, mock_status) -> None:
     """Tests that the devices are registered in the entity registry."""
-    await setup_platform(hass)
     entity_registry = er.async_get(hass)
 
     entry = entity_registry.async_get(PROSEGUR_ALARM_ENTITY)
     # Prosegur alarm device unique_id is the contract id associated to the alarm account
-    assert entry.unique_id == CONTRACT
+    assert entry.unique_id == INSTALL_ID
 
     await hass.async_block_till_done()
 
@@ -106,7 +104,6 @@ async def test_arm(
     install.status = code
 
     with patch("pyprosegur.installation.Installation.retrieve", return_value=install):
-        await setup_platform(hass)
 
         await hass.services.async_call(
             ALARM_DOMAIN,

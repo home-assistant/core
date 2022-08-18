@@ -1,48 +1,61 @@
 """The camera tests for the prosegur platform."""
-from unittest.mock import AsyncMock, patch
+import logging
+from unittest.mock import AsyncMock
 
-from pyprosegur.installation import Camera
+from pyprosegur.exceptions import ProsegurException
 
 from homeassistant.components import camera
 from homeassistant.components.camera import Image
 from homeassistant.components.prosegur.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.exceptions import HomeAssistantError
 
-from .common import setup_platform
 
-
-async def test_camera(hass, mock_prosegur_auth):
+async def test_camera(hass, init_integration):
     """Test prosegur get_image."""
 
-    install = AsyncMock()
-    install.contract = "123"
-    install.installationId = "1234abcd"
-    install.cameras = [Camera("1", "test_cam")]
-    install.get_image = AsyncMock(return_value=b"ABC")
+    image = await camera.async_get_image(hass, "camera.test_cam")
 
-    with patch("pyprosegur.installation.Installation.retrieve", return_value=install):
-
-        await setup_platform(hass)
-
-        await hass.async_block_till_done()
-
-        image = await camera.async_get_image(hass, "camera.test_cam")
-
-        assert image == Image(content_type="image/jpeg", content=b"ABC")
+    assert image == Image(content_type="image/jpeg", content=b"ABC")
 
 
-async def test_request_image(hass, mock_prosegur_auth):
+async def test_camera_fail(hass, init_integration, mock_install, caplog):
+    """Test prosegur get_image fails."""
+
+    mock_install.get_image = AsyncMock(
+        return_value=b"ABC", side_effect=ProsegurException()
+    )
+
+    with caplog.at_level(logging.ERROR, logger="homeassistant.components.prosegur"):
+        try:
+            await camera.async_get_image(hass, "camera.test_cam")
+        except HomeAssistantError as exc:
+            assert str(exc) == "Unable to get image"
+        else:
+            assert False
+
+        assert "Image test_cam doesn't exist" in caplog.text
+
+
+async def test_request_image(hass, init_integration, mock_install):
     """Test the camera request image service."""
 
-    install = AsyncMock()
-    install.contract = "123"
-    install.installationId = "1234abcd"
-    install.cameras = [Camera("1", "test_cam")]
-    install.request_image = AsyncMock()
+    await hass.services.async_call(
+        DOMAIN,
+        "request_image",
+        {ATTR_ENTITY_ID: "camera.test_cam"},
+    )
+    await hass.async_block_till_done()
 
-    with patch("pyprosegur.installation.Installation.retrieve", return_value=install):
+    assert mock_install.request_image.called
 
-        await setup_platform(hass)
+
+async def test_request_image_fail(hass, init_integration, mock_install, caplog):
+    """Test the camera request image service fails."""
+
+    mock_install.request_image = AsyncMock(side_effect=ProsegurException())
+
+    with caplog.at_level(logging.ERROR, logger="homeassistant.components.prosegur"):
 
         await hass.services.async_call(
             DOMAIN,
@@ -51,4 +64,6 @@ async def test_request_image(hass, mock_prosegur_auth):
         )
         await hass.async_block_till_done()
 
-        assert install.request_image.called
+        assert mock_install.request_image.called
+
+        assert "Could not request image from camera test_cam" in caplog.text
