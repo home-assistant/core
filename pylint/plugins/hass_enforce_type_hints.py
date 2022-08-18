@@ -2041,6 +2041,69 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             ],
         ),
     ],
+    "update": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="UpdateEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="auto_update",
+                    return_type="bool",
+                ),
+                TypeHintMatch(
+                    function_name="installed_version",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="device_class",
+                    return_type=["UpdateDeviceClass", "str", None],
+                ),
+                TypeHintMatch(
+                    function_name="in_progress",
+                    return_type=["bool", "int", None],
+                ),
+                TypeHintMatch(
+                    function_name="latest_version",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="release_summary",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="release_url",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="supported_features",
+                    return_type="int",
+                ),
+                TypeHintMatch(
+                    function_name="title",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="install",
+                    arg_types={1: "str | None", 2: "bool"},
+                    kwargs_type="Any",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="release_notes",
+                    return_type=["str", None],
+                    has_async_counterpart=True,
+                ),
+            ],
+        ),
+    ],
     "water_heater": [
         ClassTypeHintMatch(
             base_class="Entity",
