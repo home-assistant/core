@@ -1305,7 +1305,9 @@ async def test_wrapped_instance_unsupported_filter(
         assert "Only UUIDs filters are supported" in caplog.text
 
 
-async def test_async_ble_device_from_address(hass, mock_bleak_scanner_start):
+async def test_async_ble_device_from_address(
+    hass, mock_bleak_scanner_start, macos_adapter
+):
     """Test the async_ble_device_from_address api."""
     mock_bt = []
     with patch(
