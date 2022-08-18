@@ -10,6 +10,9 @@ from typing import TYPE_CHECKING, Final
 
 from bleak.backends.scanner import AdvertisementDataCallback
 
+from build.lib.homeassistant.components.bluetooth.util import (
+    async_get_bluetooth_adapters,
+)
 from homeassistant import config_entries
 from homeassistant.core import (
     CALLBACK_TYPE,
@@ -20,7 +23,12 @@ from homeassistant.core import (
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import SOURCE_LOCAL, UNAVAILABLE_TRACK_SECONDS
+from .const import (
+    ADAPTER_ADDRESS,
+    SOURCE_LOCAL,
+    UNAVAILABLE_TRACK_SECONDS,
+    AdapterDetails,
+)
 from .match import (
     ADDRESS,
     BluetoothCallbackMatcher,
@@ -132,6 +140,26 @@ class BluetoothManager:
         ] = []
         self.history: dict[str, AdvertisementHistory] = {}
         self._scanners: list[HaScanner] = []
+        self._adapters: dict[str, AdapterDetails] = {}
+
+    def _find_adapter_by_address(self, address: str) -> str | None:
+        for adapter, details in self._adapters.items():
+            if details[ADAPTER_ADDRESS] == address:
+                return adapter
+        return None
+
+    async def async_get_bluetooth_adapters(self) -> dict[str, AdapterDetails]:
+        """Get bluetooth adapters."""
+        if not self._adapters:
+            self._adapters = await async_get_bluetooth_adapters()
+        return self._adapters
+
+    async def async_get_adapter_from_address(self, address: str) -> str | None:
+        """Get adapter from address."""
+        if adapter := self._find_adapter_by_address(address):
+            return adapter
+        self._adapters = await async_get_bluetooth_adapters()
+        return self._find_adapter_by_address(address)
 
     @hass_callback
     def async_setup(self) -> None:
