@@ -5,6 +5,9 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The IP address of your Pure Energie Meter on your network."
         }
       },
       "zeroconf_confirm": {
