@@ -17,7 +17,7 @@ class BoardInfo:
     revision: str | None
 
 
-@dataclass(freeze=True)
+@dataclass(frozen=True)
 class USBInfo:
     """USB info type."""
 
@@ -28,7 +28,7 @@ class USBInfo:
     description: str | None
 
 
-@dataclass(freeze=True)
+@dataclass(frozen=True)
 class HardwareInfo:
     """Hardware info type."""
 
