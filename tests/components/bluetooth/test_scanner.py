@@ -18,13 +18,13 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.util import dt as dt_util
 
-from . import _get_manager, async_setup_with_default_adapter
+from . import _get_manager, async_setup_with_one_adapter
 
 from tests.common import async_fire_time_changed
 
 
 async def test_config_entry_can_be_reloaded_when_stop_raises(
-    hass, caplog, enable_bluetooth
+    hass, caplog, enable_bluetooth, macos_adapter
 ):
     """Test we can reload if stopping the scanner raises."""
     entry = hass.config_entries.async_entries(bluetooth.DOMAIN)[0]
@@ -41,7 +41,7 @@ async def test_config_entry_can_be_reloaded_when_stop_raises(
     assert "Error stopping scanner" in caplog.text
 
 
-async def test_dbus_socket_missing_in_container(hass, caplog, enable_bluetooth):
+async def test_dbus_socket_missing_in_container(hass, caplog, one_adapter):
     """Test we handle dbus being missing in the container."""
 
     with patch(
@@ -50,7 +50,7 @@ async def test_dbus_socket_missing_in_container(hass, caplog, enable_bluetooth):
         "homeassistant.components.bluetooth.scanner.OriginalBleakScanner.start",
         side_effect=FileNotFoundError,
     ):
-        await async_setup_with_default_adapter(hass)
+        await async_setup_with_one_adapter(hass)
 
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
@@ -61,7 +61,7 @@ async def test_dbus_socket_missing_in_container(hass, caplog, enable_bluetooth):
     assert "docker" in caplog.text
 
 
-async def test_dbus_socket_missing(hass, caplog, enable_bluetooth):
+async def test_dbus_socket_missing(hass, caplog, one_adapter):
     """Test we handle dbus being missing."""
 
     with patch(
@@ -70,7 +70,7 @@ async def test_dbus_socket_missing(hass, caplog, enable_bluetooth):
         "homeassistant.components.bluetooth.scanner.OriginalBleakScanner.start",
         side_effect=FileNotFoundError,
     ):
-        await async_setup_with_default_adapter(hass)
+        await async_setup_with_one_adapter(hass)
 
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
@@ -81,7 +81,7 @@ async def test_dbus_socket_missing(hass, caplog, enable_bluetooth):
     assert "docker" not in caplog.text
 
 
-async def test_dbus_broken_pipe_in_container(hass, caplog, enable_bluetooth):
+async def test_dbus_broken_pipe_in_container(hass, caplog, one_adapter):
     """Test we handle dbus broken pipe in the container."""
 
     with patch(
@@ -90,7 +90,7 @@ async def test_dbus_broken_pipe_in_container(hass, caplog, enable_bluetooth):
         "homeassistant.components.bluetooth.scanner.OriginalBleakScanner.start",
         side_effect=BrokenPipeError,
     ):
-        await async_setup_with_default_adapter(hass)
+        await async_setup_with_one_adapter(hass)
 
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
@@ -102,7 +102,7 @@ async def test_dbus_broken_pipe_in_container(hass, caplog, enable_bluetooth):
     assert "container" in caplog.text
 
 
-async def test_dbus_broken_pipe(hass, caplog, enable_bluetooth):
+async def test_dbus_broken_pipe(hass, caplog, one_adapter):
     """Test we handle dbus broken pipe."""
 
     with patch(
@@ -111,7 +111,7 @@ async def test_dbus_broken_pipe(hass, caplog, enable_bluetooth):
         "homeassistant.components.bluetooth.scanner.OriginalBleakScanner.start",
         side_effect=BrokenPipeError,
     ):
-        await async_setup_with_default_adapter(hass)
+        await async_setup_with_one_adapter(hass)
 
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
@@ -123,14 +123,14 @@ async def test_dbus_broken_pipe(hass, caplog, enable_bluetooth):
     assert "container" not in caplog.text
 
 
-async def test_invalid_dbus_message(hass, caplog, enable_bluetooth):
+async def test_invalid_dbus_message(hass, caplog, one_adapter):
     """Test we handle invalid dbus message."""
 
     with patch(
         "homeassistant.components.bluetooth.scanner.OriginalBleakScanner.start",
         side_effect=InvalidMessageError,
     ):
-        await async_setup_with_default_adapter(hass)
+        await async_setup_with_one_adapter(hass)
 
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
@@ -140,7 +140,7 @@ async def test_invalid_dbus_message(hass, caplog, enable_bluetooth):
     assert "dbus" in caplog.text
 
 
-async def test_recovery_from_dbus_restart(hass, enable_bluetooth):
+async def test_recovery_from_dbus_restart(hass, one_adapter):
     """Test we can recover when DBus gets restarted out from under us."""
 
     called_start = 0
@@ -176,7 +176,7 @@ async def test_recovery_from_dbus_restart(hass, enable_bluetooth):
         "homeassistant.components.bluetooth.scanner.OriginalBleakScanner",
         return_value=scanner,
     ):
-        await async_setup_with_default_adapter(hass)
+        await async_setup_with_one_adapter(hass)
 
         assert called_start == 1
 
