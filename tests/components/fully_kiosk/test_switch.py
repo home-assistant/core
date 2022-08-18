@@ -61,6 +61,17 @@ async def test_switches(
     await call_service(hass, "turn_off", "switch.amazon_fire_motion_detection")
     assert len(mock_fully_kiosk.disableMotionDetection.mock_calls) == 1
 
+    entity = hass.states.get("switch.amazon_fire_screen")
+    assert entity
+    assert entity.state == "on"
+    entry = entity_registry.async_get("switch.amazon_fire_screen")
+    assert entry
+    assert entry.unique_id == "abcdef-123456-screenOn"
+    await call_service(hass, "turn_off", "switch.amazon_fire_screen")
+    assert len(mock_fully_kiosk.screenOff.mock_calls) == 1
+    await call_service(hass, "turn_on", "switch.amazon_fire_screen")
+    assert len(mock_fully_kiosk.screenOn.mock_calls) == 1
+
     assert entry.device_id
     device_entry = device_registry.async_get(entry.device_id)
     assert device_entry
