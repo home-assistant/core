@@ -20,7 +20,7 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     GATEWAY,
-    HASS_CONFIG
+    HASS_CONFIG,
     NETWORK_COORDINATOR,
     SIGNAL_COORDINATOR,
     SMS_GATEWAY,
@@ -51,7 +51,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Configure Gammu state machine."""
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][SMS_CONFIG] = config
+    hass.data[DOMAIN][HASS_CONFIG] = config
     return True
 
 
@@ -76,7 +76,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await signal_coordinator.async_config_entry_first_refresh()
     await network_coordinator.async_config_entry_first_refresh()
 
-    sms_config = hass.data[DOMAIN].get(SMS_CONFIG, {})
+    hass_config = hass.data[DOMAIN].get(HASS_CONFIG, {})
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][SMS_GATEWAY] = {
@@ -95,7 +95,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             Platform.NOTIFY,
             DOMAIN,
             {CONF_NAME: DOMAIN},
-            sms_config,
+            hass_config,
         )
     )
     return True
