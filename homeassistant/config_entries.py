@@ -1315,7 +1315,7 @@ class ConfigEntries:
         return {"entries": [entry.as_dict() for entry in self._entries.values()]}
 
     async def async_wait_entry(self, entry: ConfigEntry) -> bool:
-        """Wait for an entries component to load and return if the entry is loaded.
+        """Wait for an entry's component to load and return if the entry is loaded.
 
         This is primarily intended for existing config entries which are loaded at
         startup, awaiting this function will block until the component and all its
