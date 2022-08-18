@@ -5,7 +5,6 @@ from typing import Final
 
 DOMAIN: Final = "islamic_prayer_times"
 NAME: Final = "Islamic Prayer Times"
-PRAYER_TIMES_ICON: Final = "mdi:calendar-clock"
 
 CONF_CALC_METHOD: Final = "calculation_method"
 

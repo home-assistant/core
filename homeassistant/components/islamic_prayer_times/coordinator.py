@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 import logging
-from typing import Any, cast
 
 from prayer_times_calculator import PrayerTimesCalculator, exceptions
 from requests.exceptions import ConnectionError as ConnError
@@ -34,7 +33,7 @@ class IslamicPrayerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, datetim
         )
 
     @property
-    def calc_method(self) -> str:
+    def calc_method(self):
         """Return the calculation method."""
         return self.config_entry.options.get(CONF_CALC_METHOD, DEFAULT_CALC_METHOD)
 
@@ -46,7 +45,7 @@ class IslamicPrayerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, datetim
             calculation_method=self.calc_method,
             date=str(dt_util.now().date()),
         )
-        return cast(dict[str, str], calc.fetch_prayer_times())
+        return calc.fetch_prayer_times()
 
     async def async_schedule_future_update(self, midnight_dt: datetime) -> None:
         """Schedule future update for sensors.
@@ -98,7 +97,7 @@ class IslamicPrayerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, datetim
             self.hass, self.async_request_update, next_update_at
         )
 
-    async def async_request_update(self, *_: Any) -> None:
+    async def async_request_update(self, *_) -> None:
         """Request update from coordinator."""
         await self.async_request_refresh()
 
