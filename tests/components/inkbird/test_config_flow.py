@@ -25,7 +25,7 @@ async def test_async_step_bluetooth_valid_device(hass):
             result["flow_id"], user_input={}
         )
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "iBBQ 6AADDD4CAC3D"
+    assert result2["title"] == "iBBQ AC3D"
     assert result2["data"] == {}
     assert result2["result"].unique_id == "4125DDBA-2774-4851-9889-6AADDD4CAC3D"
 
@@ -69,7 +69,7 @@ async def test_async_step_user_with_found_devices(hass):
             user_input={"address": "61DE521B-F0BF-9F44-64D4-75BBE1738105"},
         )
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "IBS-TH 75BBE1738105"
+    assert result2["title"] == "IBS-TH 8105"
     assert result2["data"] == {}
     assert result2["result"].unique_id == "61DE521B-F0BF-9F44-64D4-75BBE1738105"
 
@@ -184,7 +184,7 @@ async def test_async_step_user_takes_precedence_over_discovery(hass):
             user_input={"address": "61DE521B-F0BF-9F44-64D4-75BBE1738105"},
         )
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "IBS-TH 75BBE1738105"
+    assert result2["title"] == "IBS-TH 8105"
     assert result2["data"] == {}
     assert result2["result"].unique_id == "61DE521B-F0BF-9F44-64D4-75BBE1738105"
 

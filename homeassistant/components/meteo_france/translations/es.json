@@ -18,7 +18,7 @@
                 "data": {
                     "city": "Ciudad"
                 },
-                "description": "Introduzca el c\u00f3digo postal (solo para Francia, recomendado) o el nombre de la ciudad"
+                "description": "Introduce el c\u00f3digo postal (solo para Francia, recomendado) o el nombre de la ciudad"
             }
         }
     },

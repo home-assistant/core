@@ -895,26 +895,18 @@ def mock_bleak_scanner_start():
 
     # Late imports to avoid loading bleak unless we need it
 
-    import bleak  # pylint: disable=import-outside-toplevel
-
     from homeassistant.components.bluetooth import (  # pylint: disable=import-outside-toplevel
-        models as bluetooth_models,
+        scanner as bluetooth_scanner,
     )
-
-    scanner = bleak.BleakScanner
-    bluetooth_models.HA_BLEAK_SCANNER = None
-
-    with patch("homeassistant.components.bluetooth.HaBleakScanner.stop"), patch(
-        "homeassistant.components.bluetooth.HaBleakScanner.start",
-    ) as mock_bleak_scanner_start:
-        yield mock_bleak_scanner_start
 
     # We need to drop the stop method from the object since we patched
     # out start and this fixture will expire before the stop method is called
     # when EVENT_HOMEASSISTANT_STOP is fired.
-    if bluetooth_models.HA_BLEAK_SCANNER:
-        bluetooth_models.HA_BLEAK_SCANNER.stop = AsyncMock()
-    bleak.BleakScanner = scanner
+    bluetooth_scanner.OriginalBleakScanner.stop = AsyncMock()
+    with patch(
+        "homeassistant.components.bluetooth.scanner.OriginalBleakScanner.start",
+    ) as mock_bleak_scanner_start:
+        yield mock_bleak_scanner_start
 
 
 @pytest.fixture(name="mock_bluetooth")

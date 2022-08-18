@@ -98,6 +98,10 @@ BLUETOOTH: list[dict[str, str | int | list[int]]] = [
         "local_name": "Moat_S*"
     },
     {
+        "domain": "qingping",
+        "local_name": "Qingping*"
+    },
+    {
         "domain": "sensorpush",
         "local_name": "SensorPush*"
     },

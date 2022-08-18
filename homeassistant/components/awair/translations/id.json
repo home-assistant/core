@@ -31,6 +31,12 @@
                 },
                 "description": "API Awair Local harus diaktifkan dengan mengikuti langkah-langkah berikut: {url}"
             },
+            "local_pick": {
+                "data": {
+                    "device": "Perangkat",
+                    "host": "Alamat IP"
+                }
+            },
             "reauth": {
                 "data": {
                     "access_token": "Token Akses",
@@ -50,7 +56,7 @@
                     "access_token": "Token Akses",
                     "email": "Email"
                 },
-                "description": "Anda harus mendaftar untuk mendapatkan token akses pengembang Awair di: https://developer.getawair.com/onboard/login",
+                "description": "Pilih lokal untuk pengalaman terbaik. Hanya gunakan opsi cloud jika perangkat tidak terhubung ke jaringan yang sama dengan Home Assistant, atau jika Anda memiliki perangkat versi lawas.",
                 "menu_options": {
                     "cloud": "Terhubung melalui cloud",
                     "local": "Terhubung secara lokal (lebih disukai)"
