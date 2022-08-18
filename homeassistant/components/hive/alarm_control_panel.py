@@ -27,6 +27,7 @@ HIVETOHA = {
     "home": STATE_ALARM_DISARMED,
     "asleep": STATE_ALARM_ARMED_NIGHT,
     "away": STATE_ALARM_ARMED_AWAY,
+    "sos": STATE_ALARM_TRIGGERED,
 }
 
 
