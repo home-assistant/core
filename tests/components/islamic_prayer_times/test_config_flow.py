@@ -9,6 +9,8 @@ from homeassistant.components.islamic_prayer_times import config_flow  # noqa: F
 from homeassistant.components.islamic_prayer_times.const import CONF_CALC_METHOD, DOMAIN
 from homeassistant.core import HomeAssistant
 
+from . import PRAYER_TIMES
+
 from tests.common import MockConfigEntry
 
 
@@ -46,6 +48,13 @@ async def test_options(hass: HomeAssistant) -> None:
         options={CONF_CALC_METHOD: "isna"},
     )
     entry.add_to_hass(hass)
+
+    with patch(
+        "prayer_times_calculator.PrayerTimesCalculator.fetch_prayer_times",
+        return_value=PRAYER_TIMES,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 

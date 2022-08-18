@@ -4,7 +4,8 @@ from unittest.mock import patch
 from freezegun import freeze_time
 import pytest
 
-from homeassistant.components.islamic_prayer_times.const import DOMAIN, SENSOR_TYPES
+from homeassistant.components.islamic_prayer_times.const import DOMAIN
+from homeassistant.components.islamic_prayer_times.sensor import SENSOR_TYPES
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
