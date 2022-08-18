@@ -1338,11 +1338,28 @@ async def test_async_ble_device_from_address(hass, mock_bleak_scanner_start):
         )
 
 
-async def test_can_unsetup_bluetooth_single_adapter(
-    hass, mock_bleak_scanner_start, enable_bluetooth
+async def test_can_unsetup_bluetooth_single_adapter_macos(
+    hass, mock_bleak_scanner_start, enable_bluetooth, macos_adapter
 ):
     """Test we can setup and unsetup bluetooth."""
     entry = MockConfigEntry(domain=bluetooth.DOMAIN, data={}, unique_id=DEFAULT_ADDRESS)
+    entry.add_to_hass(hass)
+
+    for _ in range(2):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+
+
+async def test_can_unsetup_bluetooth_single_adapter_linux(
+    hass, mock_bleak_scanner_start, enable_bluetooth, one_adapter
+):
+    """Test we can setup and unsetup bluetooth."""
+    entry = MockConfigEntry(
+        domain=bluetooth.DOMAIN, data={}, unique_id="00:00:00:00:00:01"
+    )
     entry.add_to_hass(hass)
 
     for _ in range(2):

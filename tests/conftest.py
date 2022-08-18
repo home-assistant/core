@@ -876,7 +876,7 @@ async def mock_enable_bluetooth(
     hass, mock_bleak_scanner_start, mock_bluetooth_adapters
 ):
     """Fixture to mock starting the bleak scanner."""
-    entry = MockConfigEntry(domain="bluetooth")
+    entry = MockConfigEntry(domain="bluetooth", unique_id="00:00:00:00:00:00")
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
