@@ -182,13 +182,9 @@ class HKDevice:
 
     async def async_setup(self) -> None:
         """Prepare to use a paired HomeKit device in Home Assistant."""
-        entity_storage: EntityMapStorage = self.hass.data[ENTITY_MAP]
         pairing = self.pairing
         transport = pairing.transport
         entry = self.config_entry
-
-        if cache := entity_storage.get_map(self.unique_id):
-            pairing.restore_accessories_state(cache["accessories"], cache["config_num"])
 
         # We need to force an update here to make sure we have
         # the latest values since the async_update we do in
@@ -203,7 +199,7 @@ class HKDevice:
         try:
             await self.pairing.async_populate_accessories_state(force_update=True)
         except AccessoryNotFoundError:
-            if transport != Transport.BLE or not cache:
+            if transport != Transport.BLE or not pairing.accessories:
                 # BLE devices may sleep and we can't force a connection
                 raise
 
