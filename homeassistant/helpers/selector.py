@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Sequence
 from typing import Any, TypedDict, cast
+from uuid import UUID
 
 import voluptuous as vol
 
@@ -10,7 +11,7 @@ from homeassistant.backports.enum import StrEnum
 from homeassistant.const import CONF_MODE, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.core import split_entity_id, valid_entity_id
 from homeassistant.util import decorator
-from homeassistant.util.yaml.dumper import add_representer, represent_odict
+from homeassistant.util.yaml import dumper
 
 from . import config_validation as cv
 
@@ -888,9 +889,42 @@ class TimeSelector(Selector):
         return cast(str, data)
 
 
-add_representer(
+class FileSelectorConfig(TypedDict):
+    """Class to represent a file selector config."""
+
+    accept: str  # required
+
+
+@SELECTORS.register("file")
+class FileSelector(Selector):
+    """Selector of a file."""
+
+    selector_type = "file"
+
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            # https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/file#accept
+            vol.Required("accept"): str,
+        }
+    )
+
+    def __init__(self, config: FileSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> str:
+        """Validate the passed selection."""
+        if not isinstance(data, str):
+            raise vol.Invalid("Value should be a string")
+
+        UUID(data)
+
+        return data
+
+
+dumper.add_representer(
     Selector,
-    lambda dumper, value: represent_odict(
+    lambda dumper, value: dumper.represent_odict(
         dumper, "tag:yaml.org,2002:map", value.serialize()
     ),
 )
