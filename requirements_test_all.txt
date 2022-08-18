@@ -1076,7 +1076,7 @@ pyfttt==0.3
 pygti==0.9.3
 
 # homeassistant.components.version
-pyhaversion==22.4.1
+pyhaversion==22.8.0
 
 # homeassistant.components.heos
 pyheos==0.7.2
