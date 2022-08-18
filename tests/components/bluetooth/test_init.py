@@ -19,6 +19,7 @@ from homeassistant.components.bluetooth import (
     scanner,
 )
 from homeassistant.components.bluetooth.const import (
+    DEFAULT_ADDRESS,
     SOURCE_LOCAL,
     UNAVAILABLE_TRACK_SECONDS,
 )
@@ -28,7 +29,12 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from . import _get_manager, inject_advertisement, patch_discovered_devices
+from . import (
+    _get_manager,
+    async_setup_with_default_adapter,
+    inject_advertisement,
+    patch_discovered_devices,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -63,10 +69,7 @@ async def test_setup_and_stop_no_bluetooth(hass, caplog):
     ) as mock_ha_bleak_scanner, patch(
         "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
     ):
-        assert await async_setup_component(
-            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
-        )
-        await hass.async_block_till_done()
+        await async_setup_with_default_adapter(hass)
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
@@ -85,10 +88,7 @@ async def test_setup_and_stop_broken_bluetooth(hass, caplog):
     ), patch(
         "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
     ):
-        assert await async_setup_component(
-            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
-        )
-        await hass.async_block_till_done()
+        await async_setup_with_default_adapter(hass)
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
@@ -111,10 +111,7 @@ async def test_setup_and_stop_broken_bluetooth_hanging(hass, caplog):
     ), patch(
         "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
     ):
-        assert await async_setup_component(
-            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
-        )
-        await hass.async_block_till_done()
+        await async_setup_with_default_adapter(hass)
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
@@ -132,10 +129,7 @@ async def test_setup_and_retry_adapter_not_yet_available(hass, caplog):
     ), patch(
         "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
     ):
-        assert await async_setup_component(
-            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
-        )
-        await hass.async_block_till_done()
+        await async_setup_with_default_adapter(hass)
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
@@ -168,10 +162,7 @@ async def test_no_race_during_manual_reload_in_retry_state(hass, caplog):
     ), patch(
         "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
     ):
-        assert await async_setup_component(
-            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
-        )
-        await hass.async_block_till_done()
+        await async_setup_with_default_adapter(hass)
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
@@ -205,9 +196,7 @@ async def test_calling_async_discovered_devices_no_bluetooth(hass, caplog):
     ), patch(
         "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
     ):
-        assert await async_setup_component(
-            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
-        )
+        await async_setup_with_default_adapter(hass)
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
@@ -228,9 +217,7 @@ async def test_discovery_match_by_service_uuid(
     with patch(
         "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
     ), patch.object(hass.config_entries.flow, "async_init") as mock_config_flow:
-        assert await async_setup_component(
-            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
-        )
+        await async_setup_with_default_adapter(hass)
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
@@ -262,10 +249,7 @@ async def test_discovery_match_by_local_name(hass, mock_bleak_scanner_start):
     with patch(
         "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
     ):
-        assert await async_setup_component(
-            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
-        )
-        await hass.async_block_till_done()
+        await async_setup_with_default_adapter(hass)
 
     with patch.object(hass.config_entries.flow, "async_init") as mock_config_flow:
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -305,10 +289,7 @@ async def test_discovery_match_by_manufacturer_id_and_manufacturer_data_start(
     with patch(
         "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
     ):
-        assert await async_setup_component(
-            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
-        )
-        await hass.async_block_till_done()
+        await async_setup_with_default_adapter(hass)
 
     with patch.object(hass.config_entries.flow, "async_init") as mock_config_flow:
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -391,10 +372,7 @@ async def test_discovery_match_by_service_data_uuid_then_others(
     with patch(
         "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
     ):
-        assert await async_setup_component(
-            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
-        )
-        await hass.async_block_till_done()
+        await async_setup_with_default_adapter(hass)
 
     with patch.object(hass.config_entries.flow, "async_init") as mock_config_flow:
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -542,10 +520,7 @@ async def test_discovery_match_first_by_service_uuid_and_then_manufacturer_id(
     with patch(
         "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
     ):
-        assert await async_setup_component(
-            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
-        )
-        await hass.async_block_till_done()
+        await async_setup_with_default_adapter(hass)
 
     with patch.object(hass.config_entries.flow, "async_init") as mock_config_flow:
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -600,9 +575,7 @@ async def test_rediscovery(hass, mock_bleak_scanner_start, enable_bluetooth):
     with patch(
         "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
     ), patch.object(hass.config_entries.flow, "async_init") as mock_config_flow:
-        assert await async_setup_component(
-            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
-        )
+        await async_setup_with_default_adapter(hass)
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
@@ -642,10 +615,7 @@ async def test_async_discovered_device_api(hass, mock_bleak_scanner_start):
     ):
         assert not bluetooth.async_discovered_service_info(hass)
         assert not bluetooth.async_address_present(hass, "44:44:22:22:11:22")
-        assert await async_setup_component(
-            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
-        )
-        await hass.async_block_till_done()
+        await async_setup_with_default_adapter(hass)
 
         with patch.object(hass.config_entries.flow, "async_init"):
             hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -738,9 +708,8 @@ async def test_register_callbacks(hass, mock_bleak_scanner_start, enable_bluetoo
     with patch(
         "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
     ), patch.object(hass.config_entries.flow, "async_init"):
-        assert await async_setup_component(
-            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
-        )
+        await async_setup_with_default_adapter(hass)
+
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
@@ -821,10 +790,7 @@ async def test_register_callback_by_address(
     with patch(
         "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
     ):
-        assert await async_setup_component(
-            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
-        )
-        await hass.async_block_till_done()
+        await async_setup_with_default_adapter(hass)
 
     with patch.object(hass.config_entries.flow, "async_init"):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -913,10 +879,7 @@ async def test_register_callback_survives_reload(
     with patch(
         "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
     ):
-        assert await async_setup_component(
-            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
-        )
-        await hass.async_block_till_done()
+        await async_setup_with_default_adapter(hass)
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
@@ -1063,10 +1026,7 @@ async def test_wrapped_instance_with_filter(
     with patch(
         "homeassistant.components.bluetooth.async_get_bluetooth", return_value=[]
     ):
-        assert await async_setup_component(
-            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
-        )
-        await hass.async_block_till_done()
+        await async_setup_with_default_adapter(hass)
 
     with patch.object(hass.config_entries.flow, "async_init"):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -1132,10 +1092,7 @@ async def test_wrapped_instance_with_service_uuids(
     with patch(
         "homeassistant.components.bluetooth.async_get_bluetooth", return_value=[]
     ):
-        assert await async_setup_component(
-            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
-        )
-        await hass.async_block_till_done()
+        await async_setup_with_default_adapter(hass)
 
     with patch.object(hass.config_entries.flow, "async_init"):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -1184,10 +1141,7 @@ async def test_wrapped_instance_with_broken_callbacks(
     with patch(
         "homeassistant.components.bluetooth.async_get_bluetooth", return_value=[]
     ), patch.object(hass.config_entries.flow, "async_init"):
-        assert await async_setup_component(
-            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
-        )
-        await hass.async_block_till_done()
+        await async_setup_with_default_adapter(hass)
 
     with patch.object(hass.config_entries.flow, "async_init"):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -1231,10 +1185,7 @@ async def test_wrapped_instance_changes_uuids(
     with patch(
         "homeassistant.components.bluetooth.async_get_bluetooth", return_value=[]
     ):
-        assert await async_setup_component(
-            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
-        )
-        await hass.async_block_till_done()
+        await async_setup_with_default_adapter(hass)
 
     with patch.object(hass.config_entries.flow, "async_init"):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -1283,10 +1234,7 @@ async def test_wrapped_instance_changes_filters(
     with patch(
         "homeassistant.components.bluetooth.async_get_bluetooth", return_value=[]
     ):
-        assert await async_setup_component(
-            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
-        )
-        await hass.async_block_till_done()
+        await async_setup_with_default_adapter(hass)
 
     with patch.object(hass.config_entries.flow, "async_init"):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -1335,10 +1283,7 @@ async def test_wrapped_instance_unsupported_filter(
     with patch(
         "homeassistant.components.bluetooth.async_get_bluetooth", return_value=[]
     ):
-        assert await async_setup_component(
-            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
-        )
-        await hass.async_block_till_done()
+        await async_setup_with_default_adapter(hass)
 
     with patch.object(hass.config_entries.flow, "async_init"):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -1369,9 +1314,8 @@ async def test_async_ble_device_from_address(hass, mock_bleak_scanner_start):
             bluetooth.async_ble_device_from_address(hass, "44:44:33:11:23:45") is None
         )
 
-        assert await async_setup_component(
-            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
-        )
+        await async_setup_with_default_adapter(hass)
+
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
@@ -1394,26 +1338,14 @@ async def test_async_ble_device_from_address(hass, mock_bleak_scanner_start):
         )
 
 
-async def test_setup_without_bluetooth_in_configuration_yaml(hass, mock_bluetooth):
-    """Test setting up without bluetooth in configuration.yaml does not create the config entry."""
-    assert await async_setup_component(hass, bluetooth.DOMAIN, {})
-    await hass.async_block_till_done()
-    assert not hass.config_entries.async_entries(bluetooth.DOMAIN)
-
-
-async def test_setup_with_bluetooth_in_configuration_yaml(hass, mock_bluetooth):
-    """Test setting up with bluetooth in configuration.yaml creates the config entry."""
-    assert await async_setup_component(hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}})
-    await hass.async_block_till_done()
-    assert hass.config_entries.async_entries(bluetooth.DOMAIN)
-
-
-async def test_can_unsetup_bluetooth(hass, mock_bleak_scanner_start, enable_bluetooth):
+async def test_can_unsetup_bluetooth_single_adapter(
+    hass, mock_bleak_scanner_start, enable_bluetooth
+):
     """Test we can setup and unsetup bluetooth."""
-    entry = MockConfigEntry(domain=bluetooth.DOMAIN, data={})
+    entry = MockConfigEntry(domain=bluetooth.DOMAIN, data={}, unique_id=DEFAULT_ADDRESS)
     entry.add_to_hass(hass)
-    for _ in range(2):
 
+    for _ in range(2):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -1421,35 +1353,50 @@ async def test_can_unsetup_bluetooth(hass, mock_bleak_scanner_start, enable_blue
         await hass.async_block_till_done()
 
 
-async def test_auto_detect_bluetooth_adapters_linux(hass):
+async def test_can_unsetup_bluetooth_multiple_adapters(
+    hass, mock_bleak_scanner_start, enable_bluetooth, two_adapters
+):
+    """Test we can setup and unsetup bluetooth with multiple adapters."""
+    entry1 = MockConfigEntry(
+        domain=bluetooth.DOMAIN, data={}, unique_id="00:00:00:00:00:01"
+    )
+    entry1.add_to_hass(hass)
+
+    entry2 = MockConfigEntry(
+        domain=bluetooth.DOMAIN, data={}, unique_id="00:00:00:00:00:02"
+    )
+    entry2.add_to_hass(hass)
+
+    for _ in range(2):
+        for entry in (entry1, entry2):
+            assert await hass.config_entries.async_setup(entry.entry_id)
+            await hass.async_block_till_done()
+
+            assert await hass.config_entries.async_unload(entry.entry_id)
+            await hass.async_block_till_done()
+
+
+async def test_auto_detect_bluetooth_adapters_linux(hass, one_adapter):
     """Test we auto detect bluetooth adapters on linux."""
-    with patch(
-        "bluetooth_adapters.get_bluetooth_adapters", return_value=["hci0"]
-    ), patch(
-        "homeassistant.components.bluetooth.util.platform.system", return_value="Linux"
-    ):
-        assert await async_setup_component(hass, bluetooth.DOMAIN, {})
-        await hass.async_block_till_done()
+    assert await async_setup_component(hass, bluetooth.DOMAIN, {})
+    await hass.async_block_till_done()
     assert not hass.config_entries.async_entries(bluetooth.DOMAIN)
     assert len(hass.config_entries.flow.async_progress(bluetooth.DOMAIN)) == 1
 
 
-async def test_auto_detect_bluetooth_adapters_linux_multiple(hass):
+async def test_auto_detect_bluetooth_adapters_linux_multiple(hass, two_adapters):
     """Test we auto detect bluetooth adapters on linux with multiple adapters."""
-    with patch(
-        "bluetooth_adapters.get_bluetooth_adapters", return_value=["hci1", "hci0"]
-    ), patch(
-        "homeassistant.components.bluetooth.util.platform.system", return_value="Linux"
-    ):
-        assert await async_setup_component(hass, bluetooth.DOMAIN, {})
-        await hass.async_block_till_done()
+    assert await async_setup_component(hass, bluetooth.DOMAIN, {})
+    await hass.async_block_till_done()
     assert not hass.config_entries.async_entries(bluetooth.DOMAIN)
-    assert len(hass.config_entries.flow.async_progress(bluetooth.DOMAIN)) == 1
+    assert len(hass.config_entries.flow.async_progress(bluetooth.DOMAIN)) == 2
 
 
 async def test_auto_detect_bluetooth_adapters_linux_none_found(hass):
     """Test we auto detect bluetooth adapters on linux with no adapters found."""
-    with patch("bluetooth_adapters.get_bluetooth_adapters", return_value=set()), patch(
+    with patch(
+        "bluetooth_adapters.get_bluetooth_adapter_details", return_value={}
+    ), patch(
         "homeassistant.components.bluetooth.util.platform.system", return_value="Linux"
     ):
         assert await async_setup_component(hass, bluetooth.DOMAIN, {})

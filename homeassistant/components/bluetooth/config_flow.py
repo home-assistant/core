@@ -1,7 +1,7 @@
 """Config flow to configure the Bluetooth integration."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import voluptuous as vol
 
@@ -31,26 +31,21 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: DiscoveryInfoType
     ) -> FlowResult:
         """Handle a flow initialized by discovery."""
-        adapter: str = discovery_info[CONF_ADAPTER]
-        details: AdapterDetails = discovery_info[CONF_DETAILS]
-        address = details[ADAPTER_ADDRESS]
-
-        await self.async_set_unique_id(address)
+        self._adapter = cast(str, discovery_info[CONF_ADAPTER])
+        self._details = cast(AdapterDetails, discovery_info[CONF_DETAILS])
+        await self.async_set_unique_id(self._details[ADAPTER_ADDRESS])
         self._abort_if_unique_id_configured()
-        self._adapter = adapter
-        self._details = details
         self.context["title_placeholders"] = {
-            "name": adapter_human_name(adapter, address)
+            "name": adapter_human_name(self._adapter, self._details[ADAPTER_ADDRESS])
         }
-        return await self.async_step_select_adapter()
+        return await self.async_step_single_adapter()
 
-    async def async_step_select_adapter(
+    async def async_step_single_adapter(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Select an adapter."""
         adapter = self._adapter
         details = self._details
-
         assert adapter is not None
         assert details is not None
 
@@ -64,7 +59,7 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         return self.async_show_form(
-            step_id="select_adapter",
+            step_id="single_adapter",
             description_placeholders={"name": adapter_human_name(adapter, address)},
         )
 
@@ -94,7 +89,7 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
         if len(unconfigured_adapters) == 1:
             self._adapter = list(self._adapters)[0]
             self._details = self._adapters[self._adapter]
-            return await self.async_step_select_adapter()
+            return await self.async_step_single_adapter()
 
         return self.async_show_form(
             step_id="multiple_adapters",

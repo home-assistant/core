@@ -18,10 +18,9 @@ from homeassistant.components.bluetooth.const import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
-from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from . import _get_manager
+from . import _get_manager, async_setup_with_default_adapter
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -77,10 +76,8 @@ async def test_dbus_socket_missing_in_container(hass, caplog):
         "homeassistant.components.bluetooth.scanner.OriginalBleakScanner.start",
         side_effect=FileNotFoundError,
     ):
-        assert await async_setup_component(
-            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
-        )
-        await hass.async_block_till_done()
+        await async_setup_with_default_adapter(hass)
+
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
@@ -99,10 +96,8 @@ async def test_dbus_socket_missing(hass, caplog):
         "homeassistant.components.bluetooth.scanner.OriginalBleakScanner.start",
         side_effect=FileNotFoundError,
     ):
-        assert await async_setup_component(
-            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
-        )
-        await hass.async_block_till_done()
+        await async_setup_with_default_adapter(hass)
+
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
@@ -121,10 +116,8 @@ async def test_dbus_broken_pipe_in_container(hass, caplog):
         "homeassistant.components.bluetooth.scanner.OriginalBleakScanner.start",
         side_effect=BrokenPipeError,
     ):
-        assert await async_setup_component(
-            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
-        )
-        await hass.async_block_till_done()
+        await async_setup_with_default_adapter(hass)
+
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
@@ -144,10 +137,8 @@ async def test_dbus_broken_pipe(hass, caplog):
         "homeassistant.components.bluetooth.scanner.OriginalBleakScanner.start",
         side_effect=BrokenPipeError,
     ):
-        assert await async_setup_component(
-            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
-        )
-        await hass.async_block_till_done()
+        await async_setup_with_default_adapter(hass)
+
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
@@ -165,10 +156,8 @@ async def test_invalid_dbus_message(hass, caplog):
         "homeassistant.components.bluetooth.scanner.OriginalBleakScanner.start",
         side_effect=InvalidMessageError,
     ):
-        assert await async_setup_component(
-            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
-        )
-        await hass.async_block_till_done()
+        await async_setup_with_default_adapter(hass)
+
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
@@ -213,10 +202,8 @@ async def test_recovery_from_dbus_restart(hass):
         "homeassistant.components.bluetooth.scanner.OriginalBleakScanner",
         return_value=scanner,
     ):
-        assert await async_setup_component(
-            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
-        )
-        await hass.async_block_till_done()
+        await async_setup_with_default_adapter(hass)
+
         assert called_start == 1
 
     start_time_monotonic = 1000

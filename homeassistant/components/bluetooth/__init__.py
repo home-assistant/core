@@ -19,7 +19,6 @@ from . import models
 from .const import (
     ADAPTER_ADDRESS,
     ADAPTER_HW_VERSION,
-    ADAPTER_NAME,
     ADAPTER_SW_VERSION,
     CONF_ADAPTER,
     CONF_DETAILS,
@@ -41,7 +40,7 @@ from .models import (
     ProcessAdvertisementCallback,
 )
 from .scanner import HaScanner, create_bleak_scanner
-from .util import adapter_human_name, async_default_adapter
+from .util import adapter_human_name, adapter_unique_name, async_default_adapter
 
 if TYPE_CHECKING:
     from bleak.backends.device import BLEDevice
@@ -208,13 +207,12 @@ def async_migrate_entries(
             continue
 
         address = DEFAULT_ADDRESS
-        name = default_adapter
         adapter = entry.options.get(CONF_ADAPTER, default_adapter)
-        if details := adapters.get(adapter):
-            address = details[ADAPTER_ADDRESS]
-            name = details[ADAPTER_NAME]
-
-        hass.config_entries.async_update_entry(entry, title=name, unique_id=address)
+        if adapter in adapters:
+            address = adapters[adapter][ADAPTER_ADDRESS]
+        hass.config_entries.async_update_entry(
+            entry, title=adapter_unique_name(adapter, address), unique_id=address
+        )
 
 
 async def async_discover_adapters(
@@ -224,7 +222,8 @@ async def async_discover_adapters(
     """Discover adapters and start flows."""
     if platform.system() == "Windows":
         # We currently do not have a good way to detect if a bluetooth device is
-        # available on Windows. We will just assume that it is not.
+        # available on Windows. We will just assume that it is not unless they
+        # actively add it.
         return
 
     for adapter, details in adapters.items():
@@ -280,17 +279,9 @@ async def async_setup_entry(
     entry.async_on_unload(scanner.async_register_callback(manager.scanner_adv_received))
     await scanner.async_start()
     entry.async_on_unload(manager.async_register_scanner(scanner))
-    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     await async_update_device(entry, manager, adapter, address)
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = scanner
     return True
-
-
-async def _async_update_listener(
-    hass: HomeAssistant, entry: config_entries.ConfigEntry
-) -> None:
-    """Handle options update."""
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(

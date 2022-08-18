@@ -6,8 +6,13 @@ from unittest.mock import patch
 
 from bleak.backends.scanner import AdvertisementData, BLEDevice
 
-from homeassistant.components.bluetooth import SOURCE_LOCAL, models
+from homeassistant.components.bluetooth import DOMAIN, SOURCE_LOCAL, models
+from homeassistant.components.bluetooth.const import DEFAULT_ADDRESS
 from homeassistant.components.bluetooth.manager import BluetoothManager
+from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
+
+from tests.common import MockConfigEntry
 
 
 def _get_manager() -> BluetoothManager:
@@ -48,3 +53,12 @@ def patch_discovered_devices(mock_discovered: list[BLEDevice]) -> None:
     return patch.object(
         manager, "async_discovered_devices", return_value=mock_discovered
     )
+
+
+async def async_setup_with_default_adapter(hass: HomeAssistant) -> MockConfigEntry:
+    """Set up the Bluetooth integration with a default adapter."""
+    entry = MockConfigEntry(domain="bluetooth", unique_id=DEFAULT_ADDRESS)
+    entry.add_to_hass(hass)
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    await hass.async_block_till_done()
+    return entry

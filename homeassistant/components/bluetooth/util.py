@@ -20,7 +20,6 @@ async def async_get_bluetooth_adapters() -> dict[str, AdapterDetails]:
     if platform.system() == "Windows":
         return {
             WINDOWS_DEFAULT_BLUETOOTH_ADAPTER: AdapterDetails(
-                name=WINDOWS_DEFAULT_BLUETOOTH_ADAPTER,
                 address=DEFAULT_ADDRESS,
                 sw_version=platform.release(),
             )
@@ -28,7 +27,6 @@ async def async_get_bluetooth_adapters() -> dict[str, AdapterDetails]:
     if platform.system() == "Darwin":
         return {
             MACOS_DEFAULT_BLUETOOTH_ADAPTER: AdapterDetails(
-                name=MACOS_DEFAULT_BLUETOOTH_ADAPTER,
                 address=DEFAULT_ADDRESS,
                 sw_version=platform.release(),
             )
@@ -42,12 +40,9 @@ async def async_get_bluetooth_adapters() -> dict[str, AdapterDetails]:
     for adapter, details in adapter_details.items():
         adapter1 = details["org.bluez.Adapter1"]
         adapters[adapter] = AdapterDetails(
-            name=adapter1["Address"],
-            address=adapter1["Address"],  # This is the best name we have
-            sw_version=adapter1["Name"],
+            address=adapter1["Address"],
+            sw_version=adapter1["Name"],  # This is actually the BlueZ version
             hw_version=adapter1["Modalias"],
-            powered=adapter1["Powered"],
-            discovering=adapter1["Discovering"],
         )
     return adapters
 
