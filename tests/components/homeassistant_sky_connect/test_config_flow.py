@@ -2,7 +2,7 @@
 import copy
 from unittest.mock import patch
 
-from homeassistant.components import usb
+from homeassistant.components import homeassistant_sky_connect, usb
 from homeassistant.components.homeassistant_sky_connect.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -134,7 +134,7 @@ async def test_config_flow_update_device(hass: HomeAssistant) -> None:
         return_value=True,
     ) as mock_setup_entry, patch(
         "homeassistant.components.homeassistant_sky_connect.async_unload_entry",
-        return_value=True,
+        wraps=homeassistant_sky_connect.async_unload_entry,
     ) as mock_unload_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "usb"}, data=usb_data
