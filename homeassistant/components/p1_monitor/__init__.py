@@ -100,6 +100,7 @@ class P1MonitorDataUpdateCoordinator(DataUpdateCoordinator[P1MonitorData]):
         if self.has_water_meter or self.has_water_meter is None:
             try:
                 data[SERVICE_WATERMETER] = await self.p1monitor.watermeter()
+                self.has_water_meter = True
             except P1MonitorNoDataError:
                 LOGGER.debug("No watermeter data received from P1 Monitor")
                 if self.has_water_meter is None:

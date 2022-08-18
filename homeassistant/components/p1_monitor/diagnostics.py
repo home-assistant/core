@@ -41,7 +41,7 @@ async def async_get_config_entry_diagnostics(
         },
     }
 
-    if coordinator.data[SERVICE_WATERMETER]:
+    if coordinator.has_water_meter:
         data["data"]["watermeter"] = asdict(coordinator.data[SERVICE_WATERMETER])
 
     return data

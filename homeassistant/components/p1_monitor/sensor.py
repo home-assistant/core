@@ -240,7 +240,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up P1 Monitor Sensors based on a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: P1MonitorDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     entities: list[P1MonitorSensorEntity] = []
     entities.extend(
         P1MonitorSensorEntity(
@@ -272,7 +272,7 @@ async def async_setup_entry(
         )
         for description in SENSORS_SETTINGS
     )
-    if coordinator.data[SERVICE_WATERMETER]:
+    if coordinator.has_water_meter:
         entities.extend(
             P1MonitorSensorEntity(
                 coordinator=coordinator,

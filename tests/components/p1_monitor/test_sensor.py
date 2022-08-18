@@ -1,4 +1,7 @@
 """Tests for the sensors provided by the P1 Monitor integration."""
+from unittest.mock import MagicMock
+
+from p1monitor import P1MonitorNoDataError
 import pytest
 
 from homeassistant.components.p1_monitor.const import DOMAIN
@@ -211,6 +214,20 @@ async def test_watermeter(
     assert device_entry.entry_type is dr.DeviceEntryType.SERVICE
     assert not device_entry.model
     assert not device_entry.sw_version
+
+
+async def test_no_watermeter(
+    hass: HomeAssistant, mock_p1monitor: MagicMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test the P1 Monitor - Without WaterMeter sensors."""
+    mock_p1monitor.watermeter.side_effect = P1MonitorNoDataError
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert not hass.states.get("sensor.watermeter_consumption_day")
+    assert not hass.states.get("sensor.consumption_total")
+    assert not hass.states.get("sensor.pulse_count")
 
 
 @pytest.mark.parametrize(

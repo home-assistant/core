@@ -48,7 +48,7 @@ def mock_p1monitor():
                 json.loads(load_fixture("p1_monitor/watermeter.json"))
             )
         )
-        yield p1monitor_mock
+        yield client
 
 
 @pytest.fixture
