@@ -542,6 +542,9 @@ defusedxml==0.7.1
 # homeassistant.components.deluge
 deluge-client==1.7.1
 
+# homeassistant.components.lametric
+demetriek==0.2.2
+
 # homeassistant.components.denonavr
 denonavr==0.10.11
 
@@ -981,9 +984,6 @@ limitlessled==1.1.3
 
 # homeassistant.components.linode
 linode-api==4.1.9b1
-
-# homeassistant.components.lametric
-lmnotify==0.0.4
 
 # homeassistant.components.google_maps
 locationsharinglib==4.1.5
