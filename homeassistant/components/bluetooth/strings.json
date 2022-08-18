@@ -13,20 +13,14 @@
       },
       "bluetooth_confirm": {
         "description": "Do you want to setup {name}?"
+      },
+      "discovered_adapter": {
+        "description": "Do you want to setup {name}?"
       }
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "no_adapters": "No Bluetooth adapters found"
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "adapter": "The Bluetooth Adapter to use for scanning"
-        }
-      }
     }
   }
 }

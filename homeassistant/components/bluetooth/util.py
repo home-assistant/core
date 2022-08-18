@@ -3,7 +3,12 @@ from __future__ import annotations
 
 import platform
 
-from .const import MACOS_DEFAULT_BLUETOOTH_ADAPTER, UNIX_DEFAULT_BLUETOOTH_ADAPTER
+from ...core import callback
+from .const import (
+    DEFAULT_ADAPTER_BY_PLATFORM,
+    MACOS_DEFAULT_BLUETOOTH_ADAPTER,
+    UNIX_DEFAULT_BLUETOOTH_ADAPTER,
+)
 
 
 async def async_get_bluetooth_adapters() -> list[str]:
@@ -25,3 +30,11 @@ async def async_get_bluetooth_adapters() -> list[str]:
         # because that is how bleak works.
         adapters.insert(0, adapters.pop(adapters.index(UNIX_DEFAULT_BLUETOOTH_ADAPTER)))
     return adapters
+
+
+@callback
+def async_default_adapter() -> str:
+    """Return the default adapter for the platform."""
+    return DEFAULT_ADAPTER_BY_PLATFORM.get(
+        platform.system(), UNIX_DEFAULT_BLUETOOTH_ADAPTER
+    )

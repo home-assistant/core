@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 import async_timeout
 
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback as hass_callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -28,7 +29,7 @@ from .models import (
     ProcessAdvertisementCallback,
 )
 from .scanner import HaScanner, create_bleak_scanner
-from .util import async_get_bluetooth_adapters
+from .util import async_default_adapter, async_get_bluetooth_adapters
 
 if TYPE_CHECKING:
     from bleak.backends.device import BLEDevice
@@ -164,37 +165,66 @@ def async_rediscover_address(hass: HomeAssistant, address: str) -> None:
     manager.async_rediscover_address(address)
 
 
-async def _async_has_bluetooth_adapter() -> bool:
-    """Return if the device has a bluetooth adapter."""
-    return bool(await async_get_bluetooth_adapters())
-
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the bluetooth integration."""
     integration_matcher = IntegrationMatcher(await async_get_bluetooth(hass))
+
     manager = BluetoothManager(hass, integration_matcher)
     manager.async_setup()
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, manager.async_stop)
     hass.data[DATA_MANAGER] = models.MANAGER = manager
-    # The config entry is responsible for starting the manager
-    # if its enabled
 
-    if hass.config_entries.async_entries(DOMAIN):
-        return True
-    if DOMAIN in config:
+    current_entries = hass.config_entries.async_entries(DOMAIN)
+    default_adapter = async_default_adapter()
+
+    async_migrate_entries(hass, current_entries, default_adapter)
+
+    await async_discover_adapters(hass, config, current_entries, default_adapter)
+
+    return True
+
+
+@hass_callback
+def async_migrate_entries(
+    hass: HomeAssistant,
+    current_entries: list[ConfigEntry],
+    default_adapter: str,
+) -> None:
+    """Migrate config entries to support multiple."""
+    for entry in current_entries:
+        if not entry.unique_id:
+            adapter = entry.options.get(CONF_ADAPTER, default_adapter)
+            hass.config_entries.async_update_entry(
+                entry, title=adapter, unique_id=adapter
+            )
+
+
+async def async_discover_adapters(
+    hass: HomeAssistant,
+    config: ConfigType,
+    current_entries: list[ConfigEntry],
+    default_adapter: str,
+) -> None:
+    """Discover adapters and start flows."""
+    adapters = await async_get_bluetooth_adapters()
+    imported: str | None = None
+
+    if not current_entries and DOMAIN in config:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data={}
             )
         )
-    elif await _async_has_bluetooth_adapter():
-        discovery_flow.async_create_flow(
-            hass,
-            DOMAIN,
-            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
-            data={},
-        )
-    return True
+        imported = default_adapter
+
+    for adapter in adapters:
+        if adapter != imported:
+            discovery_flow.async_create_flow(
+                hass,
+                DOMAIN,
+                context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+                data={CONF_ADAPTER: adapter},
+            )
 
 
 async def async_setup_entry(
@@ -202,7 +232,7 @@ async def async_setup_entry(
 ) -> bool:
     """Set up a config entry for a bluetooth scanner."""
     manager: BluetoothManager = hass.data[DATA_MANAGER]
-    adapter: str | None = entry.options.get(CONF_ADAPTER)
+    adapter = entry.unique_id
     try:
         bleak_scanner = create_bleak_scanner(BluetoothScanningMode.ACTIVE, adapter)
     except RuntimeError as err:
