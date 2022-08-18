@@ -88,5 +88,5 @@ class LutronCasetaLight(LutronCasetaDeviceUpdatableEntity, LightEntity):
     def unique_id(self):
         """Return a unique identifier if serial number is None."""
         if self.serial is None:
-            return f"light_{self._bridge_unique_id}_{self.device_id}"
+            return f"{self._bridge_unique_id}_{self.device_id}"
         return super().unique_id
