@@ -14,7 +14,6 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
-from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
@@ -30,22 +29,26 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(_: HomeAssistant, data: dict[str, Any]) -> tuple[str, str]:
+async def validate_input(data: dict[str, Any]) -> None:
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
 
-    airq = AirQ(data[CONF_IP_ADDRESS], data[CONF_PASSWORD])
-
     try:
-        auth_success = await airq.test_authentication()
+        auth_success = await AirQ(
+            data[CONF_IP_ADDRESS], data[CONF_PASSWORD]
+        ).test_authentication()
     except ClientConnectionError as exc:
         raise CannotConnect from exc
 
     if not auth_success:
         raise InvalidAuth
 
+
+async def fetch_device_info(data: dict[str, Any]) -> tuple[str, str]:
+    """Fetch device information: name and a unique ID."""
+    airq = AirQ(data[CONF_IP_ADDRESS], data[CONF_PASSWORD])
     config = await airq.get("config")
     device_id: str = config["id"]
     device_name: str = config["devicename"]
@@ -77,7 +80,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         try:
-            device_name, device_id = await validate_input(self.hass, user_input)
+            await validate_input(user_input)
         except CannotConnect:
             # Is it ok to print the IP? Looks so, judging by this
             # https://developers.home-assistant.io/docs/development_guidelines?_highlight=print&_highlight=out#log-messages
@@ -100,6 +103,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
         else:
             _LOGGER.debug("Successfully connected to %s", user_input[CONF_IP_ADDRESS])
+
+            device_name, device_id = await fetch_device_info(user_input)
             await self.async_set_unique_id(device_id)
             self._abort_if_unique_id_configured()
 
