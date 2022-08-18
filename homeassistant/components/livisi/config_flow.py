@@ -31,23 +31,26 @@ class LivisiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             host: str = user_input[CONF_HOST]
             self._host = host
-            return await self.async_step_credentials(user_input)
+            return await self.async_step_credentials(None)
 
         return self.async_show_form(step_id="user", data_schema=HOST_SCHEMA)
 
-    async def async_step_credentials(self, user_input: dict[str, Any]) -> FlowResult:
+    async def async_step_credentials(
+        self, user_input: dict[str, Any] = None
+    ) -> FlowResult:
         """Handle the credentials step."""
         found_errors: dict[str, str] = {}
-        try:
-            if user_input is not None:
+        if user_input is not None:
+            try:
                 return await self._login(user_input)
+            except errors.WrongCredentialException:
+                found_errors["base"] = "wrong_password"
+            except errors.ShcUnreachableException:
+                found_errors["base"] = "shc_unreachable"
+            except errors.IncorrectIpAddressException:
+                found_errors["base"] = "wrong_ip_address"
+        else:
             user_input = {}
-        except errors.WrongCredentialException:
-            found_errors["base"] = "wrong_password"
-        except errors.ShcUnreachableException:
-            found_errors["base"] = "shc_unreachable"
-        except errors.IncorrectIpAddressException:
-            found_errors["base"] = "wrong_ip_address"
 
         schema = vol.Schema(
             {
@@ -63,16 +66,15 @@ class LivisiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Login into Livisi Smart Home and register the controller."""
         web_session = aiohttp_client.async_get_clientsession(self.hass)
         self._aio_livisi = AioLivisi.get_instance()
+        self._aio_livisi.web_session = web_session
         livisi_connection_data = {
             "ip_address": self._host,
             "password": user_input.get(CONF_PASSWORD),
         }
 
-        await self._aio_livisi.async_set_token(web_session, livisi_connection_data)
+        await self._aio_livisi.async_set_token(livisi_connection_data)
 
-        controller_info = await self._aio_livisi.async_get_controller(
-            websession=web_session,
-        )
+        controller_info = await self._aio_livisi.async_get_controller()
 
         if controller_info.get("gateway") is not None:
             controller_data = controller_info.get("gateway")

@@ -4,7 +4,6 @@ from aiolivisi import AioLivisi
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -26,15 +25,15 @@ async def async_setup_entry(
     async def async_add_switch(device) -> None:
         """Add switch."""
         livisi_switch: LivisiSwitch = await create_device(device, hass, shc)
-        LOGGER.info("Include device type: %s", device.get("type"))
+        LOGGER.debug("Include device type: %s", device.get("type"))
         shc.included_devices.append(livisi_switch)
         async_add_entities([livisi_switch])
 
     shc.register_new_device_callback(SWITCH_PLATFORM, async_add_switch)
-    return await async_setup_block_entry(hass, shc, async_add_entities)
+    await async_setup_switch_entry(hass, shc, async_add_entities)
 
 
-async def async_setup_block_entry(
+async def async_setup_switch_entry(
     hass: HomeAssistant,
     shc: SHC,
     async_add_entities: AddEntitiesCallback,
@@ -47,7 +46,7 @@ async def async_setup_block_entry(
             continue
         livisi_switch: LivisiSwitch = await create_device(device, hass, shc)
         livisi_switches.append(livisi_switch)
-        LOGGER.info("Include device type: %s", device.get("type"))
+        LOGGER.debug("Include device type: %s", device.get("type"))
         shc.included_devices.append(livisi_switch)
 
     async_add_entities(livisi_switches)
@@ -62,7 +61,6 @@ async def create_device(device, hass, shc):
     room_name: str = shc.rooms[room_id]
     livisi_switch = LivisiSwitch(
         shc,
-        hass,
         unique_id=device.get("id"),
         manufacturer=device.get("manufacturer"),
         product=device.get("product"),
@@ -82,7 +80,6 @@ class LivisiSwitch(SwitchEntity, Device):
     def __init__(
         self,
         shc,
-        hass,
         unique_id,
         manufacturer,
         product,
@@ -96,8 +93,7 @@ class LivisiSwitch(SwitchEntity, Device):
     ):
         """Initialize the Livisi Switch."""
         self._shc = shc
-        self.hass = hass
-        self._unique_id = unique_id
+        self._attr_unique_id = unique_id
         self._manufacturer = manufacturer
         self._product = product
         self._serial_number = serial_number
@@ -109,20 +105,10 @@ class LivisiSwitch(SwitchEntity, Device):
         self._room = room
         self._version = version
         self.aio_livisi = AioLivisi.get_instance()
-        self.web_session = aiohttp_client.async_get_clientsession(self.hass)
         if is_on is None:
             self._is_available = False
         else:
             self._is_available = True
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID of the device."""
-        return self._unique_id
-
-    @unique_id.setter
-    def unique_id(self, new_value: str):
-        self._unique_id = new_value
 
     @property
     def manufacturer(self) -> str:
@@ -196,13 +182,13 @@ class LivisiSwitch(SwitchEntity, Device):
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
         return DeviceInfo(
-            identifiers={(DOMAIN, self.unique_id)},
+            identifiers={(DOMAIN, str(self._attr_unique_id))},
             manufacturer=self.manufacturer,
             model=self.device_type,
             name=self.name,
             suggested_area=self._room,
             sw_version=self._version,
-            via_device=(DOMAIN, self.unique_id),
+            via_device=(DOMAIN, str(self._attr_unique_id)),
         )
 
     @property
@@ -220,7 +206,7 @@ class LivisiSwitch(SwitchEntity, Device):
         if self.is_on is True:
             return
         response = await self.aio_livisi.async_pss_set_state(
-            self.web_session, self.capability_id, is_on=True
+            self.capability_id, is_on=True
         )
         if response is None:
             self._is_available = False
@@ -230,7 +216,7 @@ class LivisiSwitch(SwitchEntity, Device):
         if self.is_on is False:
             return
         response = await self.aio_livisi.async_pss_set_state(
-            self.web_session, self.capability_id, is_on=False
+            self.capability_id, is_on=False
         )
         if response is None:
             self._is_available = False

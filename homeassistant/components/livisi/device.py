@@ -5,10 +5,6 @@ class Device:
     """Represents the parent class for Livisi devices."""
 
     @property
-    def unique_id(self) -> str:
-        """Return the unique id of the device."""
-
-    @property
     def capability_id(self) -> str:
         """Return the capability id of the device."""
 

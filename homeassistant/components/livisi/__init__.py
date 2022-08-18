@@ -17,15 +17,10 @@ PLATFORMS: Final = [SWITCH_PLATFORM]
 async def async_setup_entry(hass: core.HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Livisi Smart Home from a config entry."""
 
-    controller: SHC = SHC.get_instance()
-    controller.hass = hass
-    controller.config_entry = entry
+    controller: SHC = SHC(hass, entry)
     await controller.async_setup()
     await controller.async_set_devices()
     await controller.async_set_all_rooms()
-
-    if entry.unique_id is None:
-        hass.config_entries.async_update_entry(entry, unique_id=entry.entry_id)
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = controller
     device_registry = dr.async_get(hass)
@@ -44,7 +39,7 @@ async def async_setup_entry(hass: core.HomeAssistant, entry: ConfigEntry) -> boo
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    controller = SHC.get_instance()
+    controller = hass.data[DOMAIN][entry.entry_id]
 
     unload_success = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_success:

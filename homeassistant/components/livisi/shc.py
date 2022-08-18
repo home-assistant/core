@@ -17,15 +17,12 @@ from .const import (
     PSS_DEVICE_TYPE,
     SWITCH_PLATFORM,
 )
-from .device import Device
 
 
 class SHC:
     """Represents the Livisi Smart Home Controller."""
 
-    instance = None
-
-    def __init__(self, hass=None, config_entry=None) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize the Livisi Smart Home Controller."""
         self._hass: HomeAssistant = hass
         self._config_entry: ConfigEntry = config_entry
@@ -34,41 +31,13 @@ class SHC:
         self._controller_type: str = ""
         self._os_version: str = ""
         self._devices: list[dict[str, Any]] = []
-        self.included_devices: list[Device] = []
-        self._switch_devices: list[Device] = []
+        self.included_devices: list = []
+        self._switch_devices: list = []
         self._websocket: Websocket = Websocket()
         self._is_avatar: bool = False
         self._port: str = ""
         self._rooms: dict[str, Any] = {}
         self._subscribers: dict[str, Callable] = {}
-        if SHC.instance is not None:
-            raise Exception("This class is a singleton!")
-        SHC.instance = self
-
-    @staticmethod
-    def get_instance():
-        """Initialize the class."""
-        if SHC.instance is None:
-            SHC()
-        return SHC.instance
-
-    @property
-    def hass(self):
-        """Return the hass."""
-        return self._hass
-
-    @hass.setter
-    def hass(self, new_value):
-        self._hass = new_value
-
-    @property
-    def config_entry(self):
-        """Return the config entry."""
-        return self._config_entry
-
-    @config_entry.setter
-    def config_entry(self, new_value):
-        self._config_entry = new_value
 
     @property
     def serial_number(self) -> str:
@@ -129,24 +98,21 @@ class SHC:
 
     async def async_setup(self) -> None:
         """Set up the Livisi Smart Home Controller."""
-        self.aiolivisi = AioLivisi.get_instance()
         web_session = aiohttp_client.async_get_clientsession(self._hass)
+        self.aiolivisi = AioLivisi.get_instance()
+        self.aiolivisi.web_session = web_session
         if bool(self.aiolivisi.livisi_connection_data) is False:
             livisi_connection_data = {
-                "ip_address": self.config_entry.data["host"],
-                "password": self.config_entry.data["password"],
+                "ip_address": self._config_entry.data["host"],
+                "password": self._config_entry.data["password"],
             }
 
             await self.aiolivisi.async_set_token(
-                web_session=web_session, livisi_connection_data=livisi_connection_data
+                livisi_connection_data=livisi_connection_data
             )
-        controller_info = await self.aiolivisi.async_get_controller(
-            websession=web_session,
-        )
+        controller_info = await self.aiolivisi.async_get_controller()
         if bool(controller_info) is False:
-            controller_info = await self.aiolivisi.async_get_controller(
-                websession=web_session,
-            )
+            controller_info = await self.aiolivisi.async_get_controller()
 
         controller_data = controller_info
         if controller_data.get("controllerType") == "Avatar":
@@ -168,15 +134,9 @@ class SHC:
 
     async def async_set_devices(self) -> None:
         """Set the discovered devices list."""
-        self.aiolivisi = AioLivisi.get_instance()
-        web_session = aiohttp_client.async_get_clientsession(self._hass)
-        shc_devices = await self.aiolivisi.async_get_devices(
-            websession=web_session,
-        )
+        shc_devices = await self.aiolivisi.async_get_devices()
         if bool(shc_devices) is False:
-            shc_devices = await self.aiolivisi.async_get_devices(
-                websession=web_session,
-            )
+            shc_devices = await self.aiolivisi.async_get_devices()
 
         for device in shc_devices:
             if device in self._devices:
@@ -200,9 +160,7 @@ class SHC:
 
     async def async_get_pss_state(self, capability):
         """Set the PSS state."""
-        response = await self.aiolivisi.async_get_pss_state(
-            aiohttp_client.async_get_clientsession(self._hass), capability[1:]
-        )
+        response = await self.aiolivisi.async_get_pss_state(capability[1:])
         if response is None:
             return
         on_state = response.get("onState")
@@ -210,9 +168,7 @@ class SHC:
 
     async def async_set_all_rooms(self):
         """Set the room list."""
-        response = await self.aiolivisi.async_get_all_rooms(
-            aiohttp_client.async_get_clientsession(self._hass),
-        )
+        response = await self.aiolivisi.async_get_all_rooms()
 
         for available_room in response:
             self._rooms[available_room.get("id")] = available_room.get("config").get(
