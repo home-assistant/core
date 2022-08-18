@@ -12,28 +12,28 @@
                     "host": "Host",
                     "port": "Puerto"
                 },
-                "title": "Configurar 1 cable"
+                "title": "Establecer detalles del servidor"
             }
         }
     },
     "options": {
         "error": {
-            "device_not_selected": "Seleccionar los dispositivos a configurar"
+            "device_not_selected": "Selecciona los dispositivos para configurar"
         },
         "step": {
             "configure_device": {
                 "data": {
                     "precision": "Precisi\u00f3n del sensor"
                 },
-                "description": "Selecciona la precisi\u00f3n del sensor {sensor_id}",
+                "description": "Selecciona la precisi\u00f3n del sensor para {sensor_id}",
                 "title": "Precisi\u00f3n del sensor OneWire"
             },
             "device_selection": {
                 "data": {
-                    "clear_device_options": "Borra todas las configuraciones de dispositivo",
-                    "device_selection": "Seleccionar los dispositivos a configurar"
+                    "clear_device_options": "Borrar todas las configuraciones de dispositivo",
+                    "device_selection": "Selecciona los dispositivos para configurar"
                 },
-                "description": "Seleccione los pasos de configuraci\u00f3n a procesar",
+                "description": "Selecciona qu\u00e9 pasos de configuraci\u00f3n procesar",
                 "title": "Opciones de dispositivo OneWire"
             }
         }

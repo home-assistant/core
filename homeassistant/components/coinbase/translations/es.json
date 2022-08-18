@@ -7,7 +7,7 @@
             "cannot_connect": "No se pudo conectar",
             "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
             "invalid_auth_key": "Credenciales de API rechazadas por Coinbase debido a una clave de API no v\u00e1lida.",
-            "invalid_auth_secret": "Credenciales de la API rechazadas por Coinbase debido a un secreto de API no v\u00e1lido.",
+            "invalid_auth_secret": "Credenciales de API rechazadas por Coinbase debido a un secreto de API no v\u00e1lido.",
             "unknown": "Error inesperado"
         },
         "step": {
@@ -23,8 +23,8 @@
     },
     "options": {
         "error": {
-            "currency_unavailable": "La API de Coinbase no proporciona uno o m\u00e1s de los saldos de divisas solicitados.",
-            "exchange_rate_unavailable": "El API de Coinbase no proporciona alguno/s de los tipos de cambio que has solicitado.",
+            "currency_unavailable": "Tu API de Coinbase no proporciona uno o m\u00e1s de los saldos de divisas solicitados.",
+            "exchange_rate_unavailable": "Coinbase no proporciona uno o m\u00e1s de los tipos de cambio solicitados.",
             "unknown": "Error inesperado"
         },
         "step": {
@@ -33,7 +33,7 @@
                     "account_balance_currencies": "Saldos de la cartera para informar.",
                     "exchange_base": "Moneda base para sensores de tipo de cambio.",
                     "exchange_rate_currencies": "Tipos de cambio a informar.",
-                    "exchnage_rate_precision": "N\u00famero de posiciones decimales para los tipos de cambio."
+                    "exchnage_rate_precision": "N\u00famero de decimales para los tipos de cambio."
                 },
                 "description": "Ajustar las opciones de Coinbase"
             }

@@ -35,7 +35,7 @@
                     "password": "Contrasenya",
                     "username": "Nom d'usuari"
                 },
-                "description": "SimpliSafe autentica els seus usuaris a trav\u00e9s de la seva aplicaci\u00f3 web. A causa de les limitacions t\u00e8cniques, hi ha un pas manual al final d'aquest proc\u00e9s; assegura't de llegir la [documentaci\u00f3](http://home-assistant.io/integrations/simplisafe#getting-an-authorization-code) abans de comen\u00e7ar.\n\nQuan ja estiguis, fes clic [aqu\u00ed]({url}) per obrir l'aplicaci\u00f3 web de SimpliSafe i introdueix les teves credencials. Quan el proc\u00e9s s'hagi completat, torna aqu\u00ed i introdueix, a sota, el codi d'autoritzaci\u00f3 de l'URL de l'aplicaci\u00f3 web de SimpliSafe."
+                "description": "SimpliSafe autentica els seus usuaris a trav\u00e9s de la seva aplicaci\u00f3 web. A causa de les limitacions t\u00e8cniques, hi ha un pas manual al final d'aquest proc\u00e9s; assegura't de llegir la [documentaci\u00f3](http://home-assistant.io/integrations/simplisafe#getting-an-authorization-code) abans de comen\u00e7ar.\n\nQuan ja estiguis, fes clic [aqu\u00ed]({url}) per obrir l'aplicaci\u00f3 web de SimpliSafe i introdueix les teves credencials. Si ja has iniciat sessi\u00f3 a SimpliSafe a trav\u00e9s del navegador, potser hauries d'obrir una nova pestanya i copiar-hi l'URL de dalt.\n\nQuan el proc\u00e9s s'hagi completat, torna aqu\u00ed i introdueix, a sota, el codi d'autoritzaci\u00f3 de l'URL `com.simplisafe.mobile`."
             }
         }
     },

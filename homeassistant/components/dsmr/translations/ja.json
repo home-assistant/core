@@ -11,6 +11,7 @@
             "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u307e\u3057\u305f"
         },
         "step": {
+            "other": "\u7a7a",
             "setup_network": {
                 "data": {
                     "dsmr_version": "DSMR\u30d0\u30fc\u30b8\u30e7\u30f3\u3092\u9078\u629e",
