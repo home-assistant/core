@@ -41,7 +41,7 @@ from .models import (
     ProcessAdvertisementCallback,
 )
 from .scanner import HaScanner, create_bleak_scanner
-from .util import adapter_human_name, async_default_adapter
+from .util import async_default_adapter
 
 if TYPE_CHECKING:
     from bleak.backends.device import BLEDevice
@@ -254,7 +254,7 @@ async def async_update_device(
     registry = dr.async_get(manager.hass)
     registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        name=adapter_human_name(adapter, details[ADAPTER_ADDRESS]),
+        name=adapter,
         connections={(dr.CONNECTION_BLUETOOTH, details[ADAPTER_ADDRESS])},
         sw_version=details.get(ADAPTER_SW_VERSION),
         hw_version=details.get(ADAPTER_HW_VERSION),
