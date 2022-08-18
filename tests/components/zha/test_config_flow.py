@@ -1,6 +1,6 @@
 """Tests for ZHA config flow."""
 
-from unittest.mock import AsyncMock, MagicMock, patch, sentinel
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 import serial.tools.list_ports
@@ -29,12 +29,40 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
+PROBE_FUNCTION_PATH = "zigbee.application.ControllerApplication.probe"
+
 
 @pytest.fixture(autouse=True)
 def disable_platform_only():
     """Disable platforms to speed up tests."""
     with patch("homeassistant.components.zha.PLATFORMS", []):
         yield
+
+
+@pytest.fixture(autouse=True)
+def mock_app():
+    """Mock zigpy app interface."""
+    mock_app = AsyncMock()
+    mock_app.backups.backups = []
+
+    with patch(
+        "zigpy.application.ControllerApplication.new", AsyncMock(return_value=mock_app)
+    ):
+        yield
+
+
+def mock_detect_radio_type(radio_type=RadioType.ezsp, ret=True):
+    """Mock `_detect_radio_type` that just sets the appropriate attributes."""
+
+    async def detect(self):
+        self._radio_type = radio_type
+        self._device_settings = radio_type.controller.SCHEMA_DEVICE(
+            {CONF_DEVICE_PATH: self._device_path}
+        )
+
+        return ret
+
+    return detect
 
 
 def com_port():
@@ -49,8 +77,8 @@ def com_port():
 
 
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
-@patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=True)
-async def test_discovery(detect_mock, hass):
+@patch(f"zigpy_znp.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
+async def test_discovery(hass):
     """Test zeroconf flow -- radio detected."""
     service_info = zeroconf.ZeroconfServiceInfo(
         host="192.168.1.200",
@@ -81,8 +109,8 @@ async def test_discovery(detect_mock, hass):
 
 
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
-@patch("zigpy_zigate.zigbee.application.ControllerApplication.probe")
-async def test_zigate_via_zeroconf(probe_mock, hass):
+@patch(f"zigpy_zigate.{PROBE_FUNCTION_PATH}")
+async def test_zigate_via_zeroconf(setup_entry_mock, hass):
     """Test zeroconf flow -- zigate radio detected."""
     service_info = zeroconf.ZeroconfServiceInfo(
         host="192.168.1.200",
@@ -111,8 +139,8 @@ async def test_zigate_via_zeroconf(probe_mock, hass):
 
 
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
-@patch("bellows.zigbee.application.ControllerApplication.probe", return_value=True)
-async def test_efr32_via_zeroconf(probe_mock, hass):
+@patch(f"bellows.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
+async def test_efr32_via_zeroconf(hass):
     """Test zeroconf flow -- efr32 radio detected."""
     service_info = zeroconf.ZeroconfServiceInfo(
         host="192.168.1.200",
@@ -143,8 +171,8 @@ async def test_efr32_via_zeroconf(probe_mock, hass):
 
 
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
-@patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=True)
-async def test_discovery_via_zeroconf_ip_change(detect_mock, hass):
+@patch(f"bellows.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
+async def test_discovery_via_zeroconf_ip_change(hass):
     """Test zeroconf flow -- radio detected."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -182,8 +210,8 @@ async def test_discovery_via_zeroconf_ip_change(detect_mock, hass):
 
 
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
-@patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=True)
-async def test_discovery_via_zeroconf_ip_change_ignored(detect_mock, hass):
+@patch(f"bellows.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
+async def test_discovery_via_zeroconf_ip_change_ignored(hass):
     """Test zeroconf flow that was ignored gets updated."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -212,8 +240,8 @@ async def test_discovery_via_zeroconf_ip_change_ignored(detect_mock, hass):
     }
 
 
-@patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=True)
-async def test_discovery_via_usb(detect_mock, hass):
+@patch(f"bellows.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
+async def test_discovery_via_usb(hass):
     """Test usb flow -- radio detected."""
     discovery_info = usb.UsbServiceInfo(
         device="/dev/ttyZIGBEE",
@@ -230,26 +258,37 @@ async def test_discovery_via_usb(detect_mock, hass):
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "confirm"
 
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["step_id"] == "choose_formation_strategy"
+
     with patch("homeassistant.components.zha.async_setup_entry"):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            user_input={
+                config_flow.FORMATION_STRATEGY: config_flow.FORMATION_REUSE_SETTINGS
+            },
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "zigbee radio"
-    assert result2["data"] == {
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["title"] == "zigbee radio"
+    assert result3["data"] == {
         "device": {
-            "baudrate": 115200,
-            "flow_control": None,
+            "baudrate": 57600,
+            "flow_control": "software",
             "path": "/dev/ttyZIGBEE",
         },
-        CONF_RADIO_TYPE: "znp",
+        CONF_RADIO_TYPE: "ezsp",
     }
 
 
-@patch("zigpy_zigate.zigbee.application.ControllerApplication.probe")
-async def test_zigate_discovery_via_usb(detect_mock, hass):
+@patch(f"zigpy_zigate.{PROBE_FUNCTION_PATH}", return_value=True)
+async def test_zigate_discovery_via_usb(probe_mock, hass):
     """Test zigate usb flow -- radio detected."""
     discovery_info = usb.UsbServiceInfo(
         device="/dev/ttyZIGBEE",
@@ -266,15 +305,26 @@ async def test_zigate_discovery_via_usb(detect_mock, hass):
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "confirm"
 
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["step_id"] == "choose_formation_strategy"
+
     with patch("homeassistant.components.zha.async_setup_entry"):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            user_input={
+                config_flow.FORMATION_STRATEGY: config_flow.FORMATION_REUSE_SETTINGS
+            },
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "zigate radio"
-    assert result2["data"] == {
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["title"] == "zigate radio"
+    assert result3["data"] == {
         "device": {
             "path": "/dev/ttyZIGBEE",
         },
@@ -282,8 +332,8 @@ async def test_zigate_discovery_via_usb(detect_mock, hass):
     }
 
 
-@patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=False)
-async def test_discovery_via_usb_no_radio(detect_mock, hass):
+@patch(f"bellows.{PROBE_FUNCTION_PATH}", return_value=False)
+async def test_discovery_via_usb_no_radio(probe_mock, hass):
     """Test usb flow -- no radio detected."""
     discovery_info = usb.UsbServiceInfo(
         device="/dev/null",
@@ -310,8 +360,8 @@ async def test_discovery_via_usb_no_radio(detect_mock, hass):
     assert result2["reason"] == "usb_probe_failed"
 
 
-@patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=True)
-async def test_discovery_via_usb_already_setup(detect_mock, hass):
+@patch(f"bellows.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
+async def test_discovery_via_usb_already_setup(hass):
     """Test usb flow -- already setup."""
 
     MockConfigEntry(
@@ -374,8 +424,8 @@ async def test_discovery_via_usb_path_changes(hass):
     }
 
 
-@patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=True)
-async def test_discovery_via_usb_deconz_already_discovered(detect_mock, hass):
+@patch(f"bellows.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
+async def test_discovery_via_usb_deconz_already_discovered(hass):
     """Test usb flow -- deconz discovered."""
     result = await hass.config_entries.flow.async_init(
         "deconz",
@@ -408,8 +458,8 @@ async def test_discovery_via_usb_deconz_already_discovered(detect_mock, hass):
     assert result["reason"] == "not_zha_device"
 
 
-@patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=True)
-async def test_discovery_via_usb_deconz_already_setup(detect_mock, hass):
+@patch(f"bellows.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
+async def test_discovery_via_usb_deconz_already_setup(hass):
     """Test usb flow -- deconz setup."""
     MockConfigEntry(domain="deconz", data={}).add_to_hass(hass)
     await hass.async_block_till_done()
@@ -430,8 +480,8 @@ async def test_discovery_via_usb_deconz_already_setup(detect_mock, hass):
     assert result["reason"] == "not_zha_device"
 
 
-@patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=True)
-async def test_discovery_via_usb_deconz_ignored(detect_mock, hass):
+@patch(f"bellows.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
+async def test_discovery_via_usb_deconz_ignored(hass):
     """Test usb flow -- deconz ignored."""
     MockConfigEntry(
         domain="deconz", source=config_entries.SOURCE_IGNORE, data={}
@@ -454,8 +504,8 @@ async def test_discovery_via_usb_deconz_ignored(detect_mock, hass):
     assert result["step_id"] == "confirm"
 
 
-@patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=True)
-async def test_discovery_via_usb_zha_ignored_updates(detect_mock, hass):
+@patch(f"bellows.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
+async def test_discovery_via_usb_zha_ignored_updates(hass):
     """Test usb flow that was ignored gets updated."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -486,8 +536,8 @@ async def test_discovery_via_usb_zha_ignored_updates(detect_mock, hass):
 
 
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
-@patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=True)
-async def test_discovery_already_setup(detect_mock, hass):
+@patch(f"bellows.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
+async def test_discovery_already_setup(hass):
     """Test zeroconf flow -- radio detected."""
     service_info = zeroconf.ZeroconfServiceInfo(
         host="192.168.1.200",
@@ -512,12 +562,12 @@ async def test_discovery_already_setup(detect_mock, hass):
     assert result["reason"] == "single_instance_allowed"
 
 
-@patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
 @patch(
-    "homeassistant.components.zha.config_flow.detect_radios",
-    return_value={CONF_RADIO_TYPE: "test_radio"},
+    "homeassistant.components.zha.config_flow.ZhaFlowHandler._detect_radio_type",
+    mock_detect_radio_type(radio_type=RadioType.deconz),
 )
-async def test_user_flow(detect_mock, hass):
+@patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
+async def test_user_flow(hass):
     """Test user flow -- radio detected."""
 
     port = com_port()
@@ -526,21 +576,38 @@ async def test_user_flow(detect_mock, hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={CONF_SOURCE: SOURCE_USER},
-        data={zigpy.config.CONF_DEVICE_PATH: port_select},
+        data={
+            zigpy.config.CONF_DEVICE_PATH: port_select,
+        },
     )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"].startswith(port.description)
-    assert result["data"] == {CONF_RADIO_TYPE: "test_radio"}
-    assert detect_mock.await_count == 1
-    assert detect_mock.await_args[0][0] == port.device
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "choose_formation_strategy"
+
+    with patch("homeassistant.components.zha.async_setup_entry"):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                config_flow.FORMATION_STRATEGY: config_flow.FORMATION_REUSE_SETTINGS
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["title"].startswith(port.description)
+    assert result2["data"] == {
+        "device": {
+            "path": port.device,
+        },
+        CONF_RADIO_TYPE: "deconz",
+    }
 
 
-@patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
 @patch(
-    "homeassistant.components.zha.config_flow.detect_radios",
-    return_value=None,
+    "homeassistant.components.zha.config_flow.ZhaFlowHandler._detect_radio_type",
+    mock_detect_radio_type(ret=False),
 )
-async def test_user_flow_not_detected(detect_mock, hass):
+@patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
+async def test_user_flow_not_detected(hass):
     """Test user flow, radio not detected."""
 
     port = com_port()
@@ -553,9 +620,7 @@ async def test_user_flow_not_detected(detect_mock, hass):
     )
 
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "pick_radio"
-    assert detect_mock.await_count == 1
-    assert detect_mock.await_args[0][0] == port.device
+    assert result["step_id"] == "manual_pick_radio_type"
 
 
 @patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
@@ -579,7 +644,7 @@ async def test_user_flow_show_manual(hass):
     )
 
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "pick_radio"
+    assert result["step_id"] == "manual_pick_radio_type"
 
 
 async def test_user_flow_manual(hass):
@@ -591,7 +656,7 @@ async def test_user_flow_manual(hass):
         data={zigpy.config.CONF_DEVICE_PATH: config_flow.CONF_MANUAL_PATH},
     )
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "pick_radio"
+    assert result["step_id"] == "manual_pick_radio_type"
 
 
 @pytest.mark.parametrize("radio_type", RadioType.list())
@@ -599,10 +664,12 @@ async def test_pick_radio_flow(hass, radio_type):
     """Test radio picker."""
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: "pick_radio"}, data={CONF_RADIO_TYPE: radio_type}
+        DOMAIN,
+        context={CONF_SOURCE: "manual_pick_radio_type"},
+        data={CONF_RADIO_TYPE: radio_type},
     )
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "port_config"
+    assert result["step_id"] == "manual_port_config"
 
 
 async def test_user_flow_existing_config_entry(hass):
@@ -618,82 +685,62 @@ async def test_user_flow_existing_config_entry(hass):
     assert result["type"] == "abort"
 
 
-@patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=False)
+@patch(f"bellows.{PROBE_FUNCTION_PATH}", return_value=False)
+@patch(f"zigpy_deconz.{PROBE_FUNCTION_PATH}", return_value=False)
+@patch(f"zigpy_zigate.{PROBE_FUNCTION_PATH}", return_value=False)
+@patch(f"zigpy_znp.{PROBE_FUNCTION_PATH}", return_value=True)
+async def test_detect_radio_type_success(
+    znp_probe, zigate_probe, deconz_probe, bellows_probe, hass
+):
+    """Test detect radios successfully."""
+
+    handler = config_flow.ZhaFlowHandler()
+    handler._device_path = "/dev/null"
+
+    await handler._detect_radio_type()
+
+    assert handler._radio_type == RadioType.znp
+    assert handler._device_settings[zigpy.config.CONF_DEVICE_PATH] == "/dev/null"
+
+    assert bellows_probe.await_count == 1
+    assert znp_probe.await_count == 1
+    assert deconz_probe.await_count == 0
+    assert zigate_probe.await_count == 0
+
+
 @patch(
-    "zigpy_deconz.zigbee.application.ControllerApplication.probe", return_value=False
+    f"bellows.{PROBE_FUNCTION_PATH}",
+    return_value={"new_setting": 123, zigpy.config.CONF_DEVICE_PATH: "/dev/null"},
 )
-@patch(
-    "zigpy_zigate.zigbee.application.ControllerApplication.probe", return_value=False
-)
-@patch("zigpy_xbee.zigbee.application.ControllerApplication.probe", return_value=False)
-async def test_probe_radios(xbee_probe, zigate_probe, deconz_probe, znp_probe, hass):
-    """Test detect radios."""
-    app_ctrl_cls = MagicMock()
-    app_ctrl_cls.SCHEMA_DEVICE = zigpy.config.SCHEMA_DEVICE
-    app_ctrl_cls.probe = AsyncMock(side_effect=(True, False))
+@patch(f"zigpy_deconz.{PROBE_FUNCTION_PATH}", return_value=False)
+@patch(f"zigpy_zigate.{PROBE_FUNCTION_PATH}", return_value=False)
+@patch(f"zigpy_znp.{PROBE_FUNCTION_PATH}", return_value=False)
+async def test_detect_radio_type_success_with_settings(
+    znp_probe, zigate_probe, deconz_probe, bellows_probe, hass
+):
+    """Test detect radios successfully but probing returns new settings."""
 
-    p1 = patch(
-        "bellows.zigbee.application.ControllerApplication.probe",
-        side_effect=(True, False),
-    )
-    with p1 as probe_mock:
-        res = await config_flow.detect_radios("/dev/null")
-        assert probe_mock.await_count == 1
-        assert znp_probe.await_count == 1  # ZNP appears earlier in the radio list
-        assert res[CONF_RADIO_TYPE] == "ezsp"
-        assert zigpy.config.CONF_DEVICE in res
-        assert (
-            res[zigpy.config.CONF_DEVICE][zigpy.config.CONF_DEVICE_PATH] == "/dev/null"
-        )
+    handler = config_flow.ZhaFlowHandler()
+    handler._device_path = "/dev/null"
+    await handler._detect_radio_type()
 
-        res = await config_flow.detect_radios("/dev/null")
-        assert res is None
-        assert xbee_probe.await_count == 1
-        assert zigate_probe.await_count == 1
-        assert deconz_probe.await_count == 1
-        assert znp_probe.await_count == 2
+    assert handler._radio_type == RadioType.ezsp
+    assert handler._device_settings["new_setting"] == 123
+    assert handler._device_settings[zigpy.config.CONF_DEVICE_PATH] == "/dev/null"
+
+    assert bellows_probe.await_count == 1
+    assert znp_probe.await_count == 0
+    assert deconz_probe.await_count == 0
+    assert zigate_probe.await_count == 0
 
 
-@patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=False)
-@patch(
-    "zigpy_deconz.zigbee.application.ControllerApplication.probe", return_value=False
-)
-@patch(
-    "zigpy_zigate.zigbee.application.ControllerApplication.probe", return_value=False
-)
-@patch("zigpy_xbee.zigbee.application.ControllerApplication.probe", return_value=False)
-async def test_probe_new_ezsp(xbee_probe, zigate_probe, deconz_probe, znp_probe, hass):
-    """Test detect radios."""
-    app_ctrl_cls = MagicMock()
-    app_ctrl_cls.SCHEMA_DEVICE = zigpy.config.SCHEMA_DEVICE
-    app_ctrl_cls.probe = AsyncMock(side_efferct=(True, False))
-
-    p1 = patch(
-        "bellows.zigbee.application.ControllerApplication.probe",
-        return_value={
-            zigpy.config.CONF_DEVICE_PATH: sentinel.usb_port,
-            "baudrate": 33840,
-        },
-    )
-    with p1 as probe_mock:
-        res = await config_flow.detect_radios("/dev/null")
-        assert probe_mock.await_count == 1
-        assert res[CONF_RADIO_TYPE] == "ezsp"
-        assert zigpy.config.CONF_DEVICE in res
-        assert (
-            res[zigpy.config.CONF_DEVICE][zigpy.config.CONF_DEVICE_PATH]
-            is sentinel.usb_port
-        )
-        assert res[zigpy.config.CONF_DEVICE]["baudrate"] == 33840
-
-
-@patch("bellows.zigbee.application.ControllerApplication.probe", return_value=False)
+@patch(f"bellows.{PROBE_FUNCTION_PATH}", return_value=False)
 async def test_user_port_config_fail(probe_mock, hass):
     """Test port config flow."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={CONF_SOURCE: "pick_radio"},
+        context={CONF_SOURCE: "manual_pick_radio_type"},
         data={CONF_RADIO_TYPE: RadioType.ezsp.description},
     )
 
@@ -702,19 +749,19 @@ async def test_user_port_config_fail(probe_mock, hass):
         user_input={zigpy.config.CONF_DEVICE_PATH: "/dev/ttyUSB33"},
     )
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "port_config"
+    assert result["step_id"] == "manual_port_config"
     assert result["errors"]["base"] == "cannot_connect"
     assert probe_mock.await_count == 1
 
 
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
-@patch("bellows.zigbee.application.ControllerApplication.probe", return_value=True)
+@patch(f"bellows.{PROBE_FUNCTION_PATH}", return_value=True)
 async def test_user_port_config(probe_mock, hass):
     """Test port config."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={CONF_SOURCE: "pick_radio"},
+        context={CONF_SOURCE: "manual_pick_radio_type"},
         data={CONF_RADIO_TYPE: RadioType.ezsp.description},
     )
 
@@ -723,7 +770,7 @@ async def test_user_port_config(probe_mock, hass):
         user_input={zigpy.config.CONF_DEVICE_PATH: "/dev/ttyUSB33"},
     )
 
-    assert result["type"] == "create_entry"
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"].startswith("/dev/ttyUSB33")
     assert (
         result["data"][zigpy.config.CONF_DEVICE][zigpy.config.CONF_DEVICE_PATH]

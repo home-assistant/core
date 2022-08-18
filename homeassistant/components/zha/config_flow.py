@@ -210,17 +210,15 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_manual_port_config(self, user_input=None):
         """Enter port settings specific for this type of radio."""
         errors = {}
-        app_cls = self._radio_type.controller
 
         if user_input is not None:
-            self._device_path = await self.hass.async_add_executor_job(
-                usb.get_serial_by_id, user_input[CONF_DEVICE_PATH]
-            )
+            self._title = user_input[CONF_DEVICE_PATH]
+            self._device_path = user_input[CONF_DEVICE_PATH]
             self._device_settings = {
                 k: v for k, v in user_input.items() if k != CONF_DEVICE_PATH
             }
 
-            if await app_cls.probe(user_input):
+            if await self._radio_type.controller.probe(user_input):
                 return await self._async_create_radio_entity()
 
             errors["base"] = "cannot_connect"
@@ -232,11 +230,12 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         }
 
         source = self.context.get("source")
-        for param, value in app_cls.SCHEMA_DEVICE.schema.items():
+        for param, value in self._radio_type.controller.SCHEMA_DEVICE.schema.items():
             if param in SUPPORTED_PORT_SETTINGS:
-                schema[param] = value
                 if source == config_entries.SOURCE_ZEROCONF and param == CONF_BAUDRATE:
-                    schema[param] = 115200
+                    value = 115200
+
+                schema[param] = value
 
         return self.async_show_form(
             step_id="manual_port_config",
@@ -489,7 +488,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
         self._set_confirm_only()
         self.context["title_placeholders"] = {CONF_NAME: self._title}
-        return await self.async_step_usb_confirm()
+        return await self.async_step_confirm_usb()
 
     async def async_step_confirm_usb(self, user_input=None):
         """Confirm a discovery."""
@@ -537,6 +536,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="single_instance_allowed")
 
         self.context["title_placeholders"] = {CONF_NAME: node_name}
+        self._title = device_path
         self._device_path = device_path
 
         if "efr32" in radio_type:
@@ -572,11 +572,13 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 schema[param] = value
 
         try:
-            self._device_settings = vol.Schema(schema)(data.get("port"))
+            device_settings = vol.Schema(schema)(data.get("port"))
         except vol.Invalid:
             return self.async_abort(reason="invalid_hardware_data")
 
         self._title = data.get("name", data["port"]["path"])
+        self._device_path = device_settings.pop(CONF_DEVICE_PATH)
+        self._device_settings = device_settings
 
         self._set_confirm_only()
         return await self.async_step_confirm_hardware()
