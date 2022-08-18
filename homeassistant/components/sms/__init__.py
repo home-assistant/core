@@ -51,7 +51,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Configure Gammu state machine."""
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][HASS_CONFIG] = config
+    hass.data[HASS_CONFIG] = config
     return True
 
 
