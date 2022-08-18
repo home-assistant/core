@@ -1376,6 +1376,19 @@ async def test_can_unsetup_bluetooth_multiple_adapters(
             await hass.async_block_till_done()
 
 
+async def test_three_adapters_one_missing(
+    hass, mock_bleak_scanner_start, enable_bluetooth, two_adapters
+):
+    """Test three adapters but one is missing results in a retry on setup."""
+    entry = MockConfigEntry(
+        domain=bluetooth.DOMAIN, data={}, unique_id="00:00:00:00:00:03"
+    )
+    entry.add_to_hass(hass)
+    assert not await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.state == ConfigEntryState.SETUP_RETRY
+
+
 async def test_auto_detect_bluetooth_adapters_linux(hass, one_adapter):
     """Test we auto detect bluetooth adapters on linux."""
     assert await async_setup_component(hass, bluetooth.DOMAIN, {})
