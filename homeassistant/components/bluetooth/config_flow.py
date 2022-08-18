@@ -14,19 +14,13 @@ from .const import (
     ADAPTER_NAME,
     CONF_ADAPTER,
     CONF_DETAILS,
-    DEFAULT_ADDRESS,
     DOMAIN,
     AdapterDetails,
 )
-from .util import async_get_bluetooth_adapters
+from .util import adapter_human_name, async_get_bluetooth_adapters
 
 if TYPE_CHECKING:
     from homeassistant.data_entry_flow import FlowResult
-
-
-def adapter_human_name(adapter: str, address: str) -> str:
-    """Return a human readable name for the adapter."""
-    return adapter if address == DEFAULT_ADDRESS else f"{address} ({adapter})"
 
 
 class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):

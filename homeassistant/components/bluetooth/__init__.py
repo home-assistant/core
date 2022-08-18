@@ -12,13 +12,15 @@ from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback as hass_callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import discovery_flow
+from homeassistant.helpers import device_registry as dr, discovery_flow
 from homeassistant.loader import async_get_bluetooth
 
 from . import models
 from .const import (
     ADAPTER_ADDRESS,
+    ADAPTER_HW_VERSION,
     ADAPTER_NAME,
+    ADAPTER_SW_VERSION,
     CONF_ADAPTER,
     CONF_DETAILS,
     DATA_MANAGER,
@@ -39,7 +41,7 @@ from .models import (
     ProcessAdvertisementCallback,
 )
 from .scanner import HaScanner, create_bleak_scanner
-from .util import async_default_adapter
+from .util import adapter_human_name, async_default_adapter
 
 if TYPE_CHECKING:
     from bleak.backends.device import BLEDevice
@@ -234,6 +236,31 @@ async def async_discover_adapters(
         )
 
 
+async def async_update_device(
+    entry: config_entries.ConfigEntry,
+    manager: BluetoothManager,
+    adapter: str,
+    address: str,
+) -> None:
+    """Update device registry entry.
+
+    The physical adapter can change from hci0/hci1 on reboot
+    or if the user moves around the usb sticks so we need to
+    update the device with the new location so they can
+    figure out where the adapter is.
+    """
+    adapters = await manager.async_get_bluetooth_adapters()
+    details = adapters[adapter]
+    registry = dr.async_get(manager.hass)
+    registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        name=adapter_human_name(adapter, details[ADAPTER_ADDRESS]),
+        connections={(dr.CONNECTION_BLUETOOTH, details[ADAPTER_ADDRESS])},
+        sw_version=details.get(ADAPTER_SW_VERSION),
+        hw_version=details.get(ADAPTER_HW_VERSION),
+    )
+
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: config_entries.ConfigEntry
 ) -> bool:
@@ -241,10 +268,8 @@ async def async_setup_entry(
     manager: BluetoothManager = hass.data[DATA_MANAGER]
     address = entry.unique_id
     assert address is not None
-    adapter: str | None = None
-    if address != DEFAULT_ADDRESS and not (
-        adapter := await manager.async_get_adapter_from_address(address)
-    ):
+    adapter = await manager.async_get_adapter_from_address(address)
+    if adapter is None:
         raise ConfigEntryNotReady(f"Bluetooth adapter with address {address} not found")
 
     try:
@@ -256,6 +281,7 @@ async def async_setup_entry(
     await scanner.async_start()
     entry.async_on_unload(manager.async_register_scanner(scanner))
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+    await async_update_device(entry, manager, adapter, address)
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = scanner
     return True
 

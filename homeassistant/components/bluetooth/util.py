@@ -56,3 +56,9 @@ def async_default_adapter() -> str:
     return DEFAULT_ADAPTER_BY_PLATFORM.get(
         platform.system(), UNIX_DEFAULT_BLUETOOTH_ADAPTER
     )
+
+
+@callback
+def adapter_human_name(adapter: str, address: str) -> str:
+    """Return a human readable name for the adapter."""
+    return adapter if address == DEFAULT_ADDRESS else f"{address} ({adapter})"
