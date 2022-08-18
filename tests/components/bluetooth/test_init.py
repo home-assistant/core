@@ -58,7 +58,7 @@ async def test_setup_and_stop(hass, mock_bleak_scanner_start, enable_bluetooth):
     assert len(mock_bleak_scanner_start.mock_calls) == 1
 
 
-async def test_setup_and_stop_no_bluetooth(hass, caplog):
+async def test_setup_and_stop_no_bluetooth(hass, caplog, macos_adapter):
     """Test we fail gracefully when bluetooth is not available."""
     mock_bt = [
         {"domain": "switchbot", "service_uuid": "cba20d00-224d-11e6-9fb8-0002a5d5c51b"}
@@ -79,7 +79,7 @@ async def test_setup_and_stop_no_bluetooth(hass, caplog):
     assert "Failed to initialize Bluetooth" in caplog.text
 
 
-async def test_setup_and_stop_broken_bluetooth(hass, caplog):
+async def test_setup_and_stop_broken_bluetooth(hass, caplog, macos_adapter):
     """Test we fail gracefully when bluetooth/dbus is broken."""
     mock_bt = []
     with patch(
@@ -98,7 +98,7 @@ async def test_setup_and_stop_broken_bluetooth(hass, caplog):
     assert len(bluetooth.async_discovered_service_info(hass)) == 0
 
 
-async def test_setup_and_stop_broken_bluetooth_hanging(hass, caplog):
+async def test_setup_and_stop_broken_bluetooth_hanging(hass, caplog, macos_adapter):
     """Test we fail gracefully when bluetooth/dbus is hanging."""
     mock_bt = []
 
@@ -120,7 +120,7 @@ async def test_setup_and_stop_broken_bluetooth_hanging(hass, caplog):
     assert "Timed out starting Bluetooth" in caplog.text
 
 
-async def test_setup_and_retry_adapter_not_yet_available(hass, caplog):
+async def test_setup_and_retry_adapter_not_yet_available(hass, caplog, macos_adapter):
     """Test we retry if the adapter is not yet available."""
     mock_bt = []
     with patch(
@@ -153,7 +153,7 @@ async def test_setup_and_retry_adapter_not_yet_available(hass, caplog):
         await hass.async_block_till_done()
 
 
-async def test_no_race_during_manual_reload_in_retry_state(hass, caplog):
+async def test_no_race_during_manual_reload_in_retry_state(hass, caplog, macos_adapter):
     """Test we can successfully reload when the entry is in a retry state."""
     mock_bt = []
     with patch(
@@ -187,7 +187,9 @@ async def test_no_race_during_manual_reload_in_retry_state(hass, caplog):
         await hass.async_block_till_done()
 
 
-async def test_calling_async_discovered_devices_no_bluetooth(hass, caplog):
+async def test_calling_async_discovered_devices_no_bluetooth(
+    hass, caplog, macos_adapter
+):
     """Test we fail gracefully when asking for discovered devices and there is no blueooth."""
     mock_bt = []
     with patch(
@@ -243,7 +245,9 @@ async def test_discovery_match_by_service_uuid(
         assert mock_config_flow.mock_calls[0][1][0] == "switchbot"
 
 
-async def test_discovery_match_by_local_name(hass, mock_bleak_scanner_start):
+async def test_discovery_match_by_local_name(
+    hass, mock_bleak_scanner_start, macos_adapter
+):
     """Test bluetooth discovery match by local_name."""
     mock_bt = [{"domain": "switchbot", "local_name": "wohand"}]
     with patch(
@@ -276,7 +280,7 @@ async def test_discovery_match_by_local_name(hass, mock_bleak_scanner_start):
 
 
 async def test_discovery_match_by_manufacturer_id_and_manufacturer_data_start(
-    hass, mock_bleak_scanner_start
+    hass, mock_bleak_scanner_start, macos_adapter
 ):
     """Test bluetooth discovery match by manufacturer_id and manufacturer_data_start."""
     mock_bt = [
@@ -352,7 +356,7 @@ async def test_discovery_match_by_manufacturer_id_and_manufacturer_data_start(
 
 
 async def test_discovery_match_by_service_data_uuid_then_others(
-    hass, mock_bleak_scanner_start
+    hass, mock_bleak_scanner_start, macos_adapter
 ):
     """Test bluetooth discovery match by service_data_uuid and then other fields."""
     mock_bt = [
@@ -504,7 +508,7 @@ async def test_discovery_match_by_service_data_uuid_then_others(
 
 
 async def test_discovery_match_first_by_service_uuid_and_then_manufacturer_id(
-    hass, mock_bleak_scanner_start
+    hass, mock_bleak_scanner_start, macos_adapter
 ):
     """Test bluetooth discovery matches twice for service_uuid and then manufacturer_id."""
     mock_bt = [
@@ -604,7 +608,9 @@ async def test_rediscovery(hass, mock_bleak_scanner_start, enable_bluetooth):
         assert mock_config_flow.mock_calls[1][1][0] == "switchbot"
 
 
-async def test_async_discovered_device_api(hass, mock_bleak_scanner_start):
+async def test_async_discovered_device_api(
+    hass, mock_bleak_scanner_start, macos_adapter
+):
     """Test the async_discovered_device API."""
     mock_bt = []
     with patch(
@@ -896,7 +902,7 @@ async def test_register_callback_survives_reload(
     switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
     switchbot_adv = AdvertisementData(
         local_name="wohand",
-        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+        service_uuids=["zba20d00-224d-11e6-9fb8-0002a5d5c51b"],
         manufacturer_data={89: b"\xd8.\xad\xcd\r\x85"},
         service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"H\x10c"},
     )
@@ -1299,7 +1305,9 @@ async def test_wrapped_instance_unsupported_filter(
         assert "Only UUIDs filters are supported" in caplog.text
 
 
-async def test_async_ble_device_from_address(hass, mock_bleak_scanner_start):
+async def test_async_ble_device_from_address(
+    hass, mock_bleak_scanner_start, macos_adapter
+):
     """Test the async_ble_device_from_address api."""
     mock_bt = []
     with patch(
@@ -1338,11 +1346,28 @@ async def test_async_ble_device_from_address(hass, mock_bleak_scanner_start):
         )
 
 
-async def test_can_unsetup_bluetooth_single_adapter(
-    hass, mock_bleak_scanner_start, enable_bluetooth
+async def test_can_unsetup_bluetooth_single_adapter_macos(
+    hass, mock_bleak_scanner_start, enable_bluetooth, macos_adapter
 ):
     """Test we can setup and unsetup bluetooth."""
     entry = MockConfigEntry(domain=bluetooth.DOMAIN, data={}, unique_id=DEFAULT_ADDRESS)
+    entry.add_to_hass(hass)
+
+    for _ in range(2):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+
+
+async def test_can_unsetup_bluetooth_single_adapter_linux(
+    hass, mock_bleak_scanner_start, enable_bluetooth, one_adapter
+):
+    """Test we can setup and unsetup bluetooth."""
+    entry = MockConfigEntry(
+        domain=bluetooth.DOMAIN, data={}, unique_id="00:00:00:00:00:01"
+    )
     entry.add_to_hass(hass)
 
     for _ in range(2):
@@ -1445,3 +1470,23 @@ async def test_getting_the_scanner_returns_the_wrapped_instance(hass, enable_blu
     """Test getting the scanner returns the wrapped instance."""
     scanner = bluetooth.async_get_scanner(hass)
     assert isinstance(scanner, models.HaBleakScannerWrapper)
+
+
+async def test_migrate_single_entry_macos(
+    hass, mock_bleak_scanner_start, macos_adapter
+):
+    """Test we can migrate a single entry on MacOS."""
+    entry = MockConfigEntry(domain=bluetooth.DOMAIN, data={})
+    entry.add_to_hass(hass)
+    assert await async_setup_component(hass, bluetooth.DOMAIN, {})
+    await hass.async_block_till_done()
+    assert entry.unique_id == DEFAULT_ADDRESS
+
+
+async def test_migrate_single_entry_linux(hass, mock_bleak_scanner_start, one_adapter):
+    """Test we can migrate a single entry on Linux."""
+    entry = MockConfigEntry(domain=bluetooth.DOMAIN, data={})
+    entry.add_to_hass(hass)
+    assert await async_setup_component(hass, bluetooth.DOMAIN, {})
+    await hass.async_block_till_done()
+    assert entry.unique_id == "00:00:00:00:00:01"

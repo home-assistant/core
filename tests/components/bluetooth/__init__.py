@@ -57,7 +57,19 @@ def patch_discovered_devices(mock_discovered: list[BLEDevice]) -> None:
 
 async def async_setup_with_default_adapter(hass: HomeAssistant) -> MockConfigEntry:
     """Set up the Bluetooth integration with a default adapter."""
-    entry = MockConfigEntry(domain="bluetooth", unique_id=DEFAULT_ADDRESS)
+    return await _async_setup_with_adapter(hass, DEFAULT_ADDRESS)
+
+
+async def async_setup_with_one_adapter(hass: HomeAssistant) -> MockConfigEntry:
+    """Set up the Bluetooth integration with one adapter."""
+    return await _async_setup_with_adapter(hass, "00:00:00:00:00:01")
+
+
+async def _async_setup_with_adapter(
+    hass: HomeAssistant, address: str
+) -> MockConfigEntry:
+    """Set up the Bluetooth integration with any adapter."""
+    entry = MockConfigEntry(domain="bluetooth", unique_id=address)
     entry.add_to_hass(hass)
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()
