@@ -329,6 +329,8 @@ build.json @home-assistant/supervisor
 /tests/components/fibaro/ @rappenze
 /homeassistant/components/file/ @fabaff
 /tests/components/file/ @fabaff
+/homeassistant/components/file_upload/ @home-assistant/core
+/tests/components/file_upload/ @home-assistant/core
 /homeassistant/components/filesize/ @gjohansson-ST
 /tests/components/filesize/ @gjohansson-ST
 /homeassistant/components/filter/ @dgomes
