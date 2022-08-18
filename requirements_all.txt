@@ -354,7 +354,7 @@ apprise==1.3.0
 aprslib==0.7.0
 
 # homeassistant.components.aqara
-aqara-iot-py-sdk==1.0.7
+aqara-iot-py-sdk==1.0.9
 
 # homeassistant.components.aqualogic
 aqualogic==2.6
