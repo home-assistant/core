@@ -58,7 +58,7 @@ async def test_setup_and_stop(hass, mock_bleak_scanner_start, enable_bluetooth):
     assert len(mock_bleak_scanner_start.mock_calls) == 1
 
 
-async def test_setup_and_stop_no_bluetooth(hass, caplog):
+async def test_setup_and_stop_no_bluetooth(hass, caplog, mock_bluetooth_adapters):
     """Test we fail gracefully when bluetooth is not available."""
     mock_bt = [
         {"domain": "switchbot", "service_uuid": "cba20d00-224d-11e6-9fb8-0002a5d5c51b"}
@@ -79,7 +79,7 @@ async def test_setup_and_stop_no_bluetooth(hass, caplog):
     assert "Failed to initialize Bluetooth" in caplog.text
 
 
-async def test_setup_and_stop_broken_bluetooth(hass, caplog):
+async def test_setup_and_stop_broken_bluetooth(hass, caplog, mock_bluetooth_adapters):
     """Test we fail gracefully when bluetooth/dbus is broken."""
     mock_bt = []
     with patch(
@@ -120,7 +120,9 @@ async def test_setup_and_stop_broken_bluetooth_hanging(hass, caplog):
     assert "Timed out starting Bluetooth" in caplog.text
 
 
-async def test_setup_and_retry_adapter_not_yet_available(hass, caplog):
+async def test_setup_and_retry_adapter_not_yet_available(
+    hass, caplog, mock_bluetooth_adapters
+):
     """Test we retry if the adapter is not yet available."""
     mock_bt = []
     with patch(
