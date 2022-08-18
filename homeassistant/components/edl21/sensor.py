@@ -17,6 +17,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     CONF_NAME,
+    DEGREE,
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
@@ -250,6 +251,7 @@ SENSOR_UNIT_MAPPING = {
     "W": POWER_WATT,
     "A": ELECTRIC_CURRENT_AMPERE,
     "V": ELECTRIC_POTENTIAL_VOLT,
+    "°": DEGREE,
 }
 
 
@@ -449,7 +451,7 @@ class EDL21Entity(SensorEntity):
     @property
     def native_unit_of_measurement(self):
         """Return the unit of measurement."""
-        if (unit := self._telegram.get("unit")) is None:
+        if (unit := self._telegram.get("unit")) is None or unit == 0:
             return None
 
         return SENSOR_UNIT_MAPPING[unit]

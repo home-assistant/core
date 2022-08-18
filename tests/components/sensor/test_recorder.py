@@ -10,7 +10,6 @@ from pytest import approx
 
 from homeassistant import loader
 from homeassistant.components.recorder import history
-from homeassistant.components.recorder.const import DATA_INSTANCE
 from homeassistant.components.recorder.db_schema import StatisticsMeta
 from homeassistant.components.recorder.models import process_timestamp_to_utc_isoformat
 from homeassistant.components.recorder.statistics import (
@@ -18,7 +17,7 @@ from homeassistant.components.recorder.statistics import (
     list_statistic_ids,
     statistics_during_period,
 )
-from homeassistant.components.recorder.util import session_scope
+from homeassistant.components.recorder.util import get_instance, session_scope
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.setup import async_setup_component, setup_component
 import homeassistant.util.dt as dt_util
@@ -775,7 +774,7 @@ def test_compile_hourly_sum_statistics_nan_inf_state(
         (
             "sensor.custom_sensor",
             "from integration test ",
-            "report it to the custom component author",
+            "report it to the custom integration author",
         ),
     ],
 )
@@ -2290,7 +2289,7 @@ def test_compile_statistics_hourly_daily_monthly_summary(hass_recorder, caplog):
         hass = hass_recorder()
         # Remove this after dropping the use of the hass_recorder fixture
         hass.config.set_time_zone("America/Regina")
-    recorder = hass.data[DATA_INSTANCE]
+    instance = get_instance(hass)
     setup_component(hass, "sensor", {})
     wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
     attributes = {
@@ -2454,7 +2453,7 @@ def test_compile_statistics_hourly_daily_monthly_summary(hass_recorder, caplog):
     sum_adjustement_start = zero + timedelta(minutes=65)
     for i in range(13, 24):
         expected_sums["sensor.test4"][i] += sum_adjustment
-    recorder.async_adjust_statistics(
+    instance.async_adjust_statistics(
         "sensor.test4", sum_adjustement_start, sum_adjustment
     )
     wait_recording_done(hass)

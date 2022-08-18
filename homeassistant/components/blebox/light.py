@@ -159,15 +159,20 @@ class BleBoxLightEntity(BleBoxEntity, LightEntity):
             else:
                 value = feature.apply_brightness(value, brightness)
 
+        try:
+            await self._feature.async_on(value)
+        except ValueError as exc:
+            raise ValueError(
+                f"Turning on '{self.name}' failed: Bad value {value}"
+            ) from exc
+
         if effect is not None:
-            effect_value = self.effect_list.index(effect)
-            await self._feature.async_api_command("effect", effect_value)
-        else:
             try:
-                await self._feature.async_on(value)
+                effect_value = self.effect_list.index(effect)
+                await self._feature.async_api_command("effect", effect_value)
             except ValueError as exc:
                 raise ValueError(
-                    f"Turning on '{self.name}' failed: Bad value {value}"
+                    f"Turning on with effect '{self.name}' failed: {effect} not in effect list."
                 ) from exc
 
     async def async_turn_off(self, **kwargs):

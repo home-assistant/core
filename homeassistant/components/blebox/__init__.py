@@ -17,12 +17,13 @@ from .const import DEFAULT_SETUP_TIMEOUT, DOMAIN, PRODUCT
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
+    Platform.AIR_QUALITY,
+    Platform.BUTTON,
+    Platform.CLIMATE,
     Platform.COVER,
+    Platform.LIGHT,
     Platform.SENSOR,
     Platform.SWITCH,
-    Platform.AIR_QUALITY,
-    Platform.LIGHT,
-    Platform.CLIMATE,
 ]
 
 PARALLEL_UPDATES = 0
@@ -48,7 +49,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     domain_entry = domain.setdefault(entry.entry_id, {})
     product = domain_entry.setdefault(PRODUCT, product)
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
     return True
 
 

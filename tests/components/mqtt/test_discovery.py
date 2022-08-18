@@ -46,7 +46,7 @@ def entity_reg(hass):
 
 
 @pytest.mark.parametrize(
-    "mqtt_config",
+    "mqtt_config_entry_data",
     [{mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_DISCOVERY: False}],
 )
 async def test_subscribing_config_topic(hass, mqtt_mock_entry_no_yaml_config):
@@ -1238,19 +1238,27 @@ async def test_no_implicit_state_topic_switch(
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR])
 @pytest.mark.parametrize(
-    "mqtt_config",
+    "mqtt_config_entry_data",
     [
         {
             mqtt.CONF_BROKER: "mock-broker",
-            mqtt.CONF_DISCOVERY_PREFIX: "my_home/homeassistant/register",
         }
     ],
 )
 async def test_complex_discovery_topic_prefix(
-    hass, mqtt_mock_entry_no_yaml_config, caplog
+    hass, mqtt_mock_entry_with_yaml_config, caplog
 ):
     """Tests handling of discovery topic prefix with multiple slashes."""
-    await mqtt_mock_entry_no_yaml_config()
+    assert await async_setup_component(
+        hass,
+        mqtt.DOMAIN,
+        {
+            mqtt.DOMAIN: {
+                mqtt.CONF_DISCOVERY_PREFIX: "my_home/homeassistant/register",
+            }
+        },
+    )
+
     async_fire_mqtt_message(
         hass,
         ("my_home/homeassistant/register/binary_sensor/node1/object1/config"),

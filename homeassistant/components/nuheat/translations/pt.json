@@ -12,6 +12,7 @@
             "user": {
                 "data": {
                     "password": "Palavra-passe",
+                    "serial_number": "N\u00famero de s\u00e9rie do termostato.",
                     "username": "Nome de Utilizador"
                 }
             }

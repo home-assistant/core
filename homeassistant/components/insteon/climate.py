@@ -86,7 +86,7 @@ class InsteonClimateEntity(InsteonEntity, ClimateEntity):
     @property
     def temperature_unit(self) -> str:
         """Return the unit of measurement."""
-        if self._insteon_device.properties[CELSIUS].value:
+        if self._insteon_device.configuration[CELSIUS].value:
             return TEMP_CELSIUS
         return TEMP_FAHRENHEIT
 

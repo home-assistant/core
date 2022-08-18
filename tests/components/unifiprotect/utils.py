@@ -2,9 +2,10 @@
 # pylint: disable=protected-access
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any, Callable, Sequence
+from typing import Any, Callable
 from unittest.mock import Mock
 
 from pyunifiprotect import ProtectApiClient

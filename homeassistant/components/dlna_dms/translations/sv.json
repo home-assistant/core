@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad",
+            "already_in_progress": "Konfigurationsfl\u00f6det p\u00e5g\u00e5r redan",
+            "bad_ssdp": "SSDP-data saknar ett obligatoriskt v\u00e4rde",
+            "no_devices_found": "Inga enheter hittades i n\u00e4tverket",
+            "not_dms": "Enheten \u00e4r inte en mediaserver som st\u00f6ds"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm": {
+                "description": "Vill du starta konfigurationen?"
+            },
+            "user": {
+                "data": {
+                    "host": "V\u00e4rd"
+                },
+                "description": "V\u00e4lj en enhet att konfigurera",
+                "title": "Uppt\u00e4ckta DLNA DMA-enheter"
+            }
+        }
+    }
+}

@@ -1,0 +1,13 @@
+{
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "timestep": "Min. Mellan NowCast-prognoser"
+                },
+                "description": "Om du v\u00e4ljer att aktivera \"nowcast\"-prognosentiteten kan du konfigurera antalet minuter mellan varje prognos. Antalet prognoser som tillhandah\u00e5lls beror p\u00e5 antalet minuter som v\u00e4ljs mellan prognoserna.",
+                "title": "Uppdatera ClimaCell-alternativ"
+            }
+        }
+    }
+}

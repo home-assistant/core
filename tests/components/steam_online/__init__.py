@@ -30,15 +30,6 @@ CONF_OPTIONS_2 = {
     }
 }
 
-CONF_IMPORT_OPTIONS = {
-    CONF_ACCOUNTS: {
-        ACCOUNT_1: ACCOUNT_NAME_1,
-        ACCOUNT_2: ACCOUNT_NAME_2,
-    }
-}
-
-CONF_IMPORT_DATA = {CONF_API_KEY: API_KEY, CONF_ACCOUNTS: [ACCOUNT_1, ACCOUNT_2]}
-
 
 def create_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Add config entry in Home Assistant."""

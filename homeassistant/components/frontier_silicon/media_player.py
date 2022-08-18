@@ -179,11 +179,14 @@ class AFSAPIDevice(MediaPlayerEntity):
             self._attr_media_artist = await afsapi.get_play_artist()
             self._attr_media_album_name = await afsapi.get_play_album()
 
-            self._attr_source = (await afsapi.get_mode()).label
+            radio_mode = await afsapi.get_mode()
+            self._attr_source = radio_mode.label if radio_mode is not None else None
 
             self._attr_is_volume_muted = await afsapi.get_mute()
             self._attr_media_image_url = await afsapi.get_play_graphic()
-            self._attr_sound_mode = (await afsapi.get_eq_preset()).label
+
+            eq_preset = await afsapi.get_eq_preset()
+            self._attr_sound_mode = eq_preset.label if eq_preset is not None else None
 
             volume = await self.fs_device.get_volume()
 

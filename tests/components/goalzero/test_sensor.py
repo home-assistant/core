@@ -85,7 +85,7 @@ async def test_sensors(
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TEMPERATURE
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
     assert state.attributes.get(ATTR_STATE_CLASS) is None
-    state = hass.states.get(f"sensor.{DEFAULT_NAME}_wifi_strength")
+    state = hass.states.get(f"sensor.{DEFAULT_NAME}_wi_fi_strength")
     assert state.state == "-62"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.SIGNAL_STRENGTH
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == SIGNAL_STRENGTH_DECIBELS

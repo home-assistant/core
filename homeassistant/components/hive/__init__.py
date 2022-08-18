@@ -93,12 +93,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except HiveReauthRequired as err:
         raise ConfigEntryAuthFailed from err
 
-    for ha_type, hive_type in PLATFORM_LOOKUP.items():
-        device_list = devices.get(hive_type)
-        if device_list:
-            hass.async_create_task(
-                hass.config_entries.async_forward_entry_setup(entry, ha_type)
-            )
+    await hass.config_entries.async_forward_entry_setups(
+        entry,
+        [
+            ha_type
+            for ha_type, hive_type in PLATFORM_LOOKUP.items()
+            if devices.get(hive_type)
+        ],
+    )
 
     return True
 
@@ -137,7 +139,7 @@ def refresh_system(
 class HiveEntity(Entity):
     """Initiate Hive Base Class."""
 
-    def __init__(self, hive, hive_device):
+    def __init__(self, hive: Hive, hive_device: dict[str, Any]) -> None:
         """Initialize the instance."""
         self.hive = hive
         self.device = hive_device
@@ -151,9 +153,9 @@ class HiveEntity(Entity):
             sw_version=self.device["deviceData"]["version"],
             via_device=(DOMAIN, self.device["parentDevice"]),
         )
-        self.attributes = {}
+        self.attributes: dict[str, Any] = {}
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """When entity is added to Home Assistant."""
         self.async_on_remove(
             async_dispatcher_connect(self.hass, DOMAIN, self.async_write_ha_state)

@@ -61,6 +61,34 @@ TEST_DISCOVERY2 = ZeroconfServiceInfo(
     type="mock_type",
 )
 
+TEST_DISCOVERY_ANNA = ZeroconfServiceInfo(
+    host=TEST_HOST,
+    addresses=[TEST_HOST],
+    hostname=f"{TEST_HOSTNAME}.local.",
+    name="mock_name",
+    port=DEFAULT_PORT,
+    properties={
+        "product": "smile_thermo",
+        "version": "1.2.3",
+        "hostname": f"{TEST_HOSTNAME}.local.",
+    },
+    type="mock_type",
+)
+
+TEST_DISCOVERY_ADAM = ZeroconfServiceInfo(
+    host=TEST_HOST,
+    addresses=[TEST_HOST],
+    hostname=f"{TEST_HOSTNAME2}.local.",
+    name="mock_name",
+    port=DEFAULT_PORT,
+    properties={
+        "product": "smile_open_therm",
+        "version": "1.2.3",
+        "hostname": f"{TEST_HOSTNAME2}.local.",
+    },
+    type="mock_type",
+)
+
 
 @pytest.fixture(name="mock_smile")
 def mock_smile():
@@ -294,3 +322,61 @@ async def test_flow_errors(
 
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(mock_smile_config_flow.connect.mock_calls) == 2
+
+
+async def test_zeroconf_abort_anna_with_existing_config_entries(
+    hass: HomeAssistant,
+    mock_smile_adam: MagicMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test we abort Anna discovery with existing config entries."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_ZEROCONF},
+        data=TEST_DISCOVERY_ANNA,
+    )
+    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("reason") == "anna_with_adam"
+
+
+async def test_zeroconf_abort_anna_with_adam(hass: HomeAssistant) -> None:
+    """Test we abort Anna discovery when an Adam is also discovered."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_ZEROCONF},
+        data=TEST_DISCOVERY_ANNA,
+    )
+    assert result.get("type") == FlowResultType.FORM
+    assert result.get("step_id") == "user"
+
+    flows_in_progress = hass.config_entries.flow.async_progress()
+    assert len(flows_in_progress) == 1
+    assert flows_in_progress[0]["context"]["product"] == "smile_thermo"
+
+    # Discover Adam, Anna should be aborted and no longer present
+    result2 = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_ZEROCONF},
+        data=TEST_DISCOVERY_ADAM,
+    )
+
+    assert result2.get("type") == FlowResultType.FORM
+    assert result2.get("step_id") == "user"
+
+    flows_in_progress = hass.config_entries.flow.async_progress()
+    assert len(flows_in_progress) == 1
+    assert flows_in_progress[0]["context"]["product"] == "smile_open_therm"
+
+    # Discover Anna again, Anna should be aborted directly
+    result3 = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_ZEROCONF},
+        data=TEST_DISCOVERY_ANNA,
+    )
+    assert result3.get("type") == FlowResultType.ABORT
+    assert result3.get("reason") == "anna_with_adam"
+
+    # Adam should still be there
+    flows_in_progress = hass.config_entries.flow.async_progress()
+    assert len(flows_in_progress) == 1
+    assert flows_in_progress[0]["context"]["product"] == "smile_open_therm"

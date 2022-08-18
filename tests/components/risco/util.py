@@ -23,18 +23,18 @@ async def setup_risco(hass, events=[], options={}):
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.risco.RiscoAPI.login",
+        "homeassistant.components.risco.RiscoCloud.login",
         return_value=True,
     ), patch(
-        "homeassistant.components.risco.RiscoAPI.site_uuid",
+        "homeassistant.components.risco.RiscoCloud.site_uuid",
         new_callable=PropertyMock(return_value=TEST_SITE_UUID),
     ), patch(
-        "homeassistant.components.risco.RiscoAPI.site_name",
+        "homeassistant.components.risco.RiscoCloud.site_name",
         new_callable=PropertyMock(return_value=TEST_SITE_NAME),
     ), patch(
-        "homeassistant.components.risco.RiscoAPI.close"
+        "homeassistant.components.risco.RiscoCloud.close"
     ), patch(
-        "homeassistant.components.risco.RiscoAPI.get_events",
+        "homeassistant.components.risco.RiscoCloud.get_events",
         return_value=events,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -68,7 +68,7 @@ def two_zone_alarm():
         "zones",
         new_callable=PropertyMock(return_value=zone_mocks),
     ), patch(
-        "homeassistant.components.risco.RiscoAPI.get_state",
+        "homeassistant.components.risco.RiscoCloud.get_state",
         return_value=alarm_mock,
     ):
         yield alarm_mock

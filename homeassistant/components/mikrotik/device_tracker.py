@@ -6,7 +6,7 @@ from typing import Any
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.components.device_tracker.const import (
     DOMAIN as DEVICE_TRACKER,
-    SOURCE_TYPE_ROUTER,
+    SourceType,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -17,10 +17,6 @@ import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
 from .hub import Device, MikrotikDataUpdateCoordinator
-
-# These are normalized to ATTR_IP and ATTR_MAC to conform
-# to device_tracker
-FILTER_ATTRS = ("ip_address", "mac_address")
 
 
 async def async_setup_entry(
@@ -90,6 +86,8 @@ class MikrotikDataUpdateCoordinatorTracker(
         """Initialize the tracked device."""
         super().__init__(coordinator)
         self.device = device
+        self._attr_name = str(device.name)
+        self._attr_unique_id = device.mac
 
     @property
     def is_connected(self) -> bool:
@@ -103,15 +101,9 @@ class MikrotikDataUpdateCoordinatorTracker(
         return False
 
     @property
-    def source_type(self) -> str:
+    def source_type(self) -> SourceType:
         """Return the source type of the client."""
-        return SOURCE_TYPE_ROUTER
-
-    @property
-    def name(self) -> str:
-        """Return the name of the client."""
-        # Stringify to ensure we return a string
-        return str(self.device.name)
+        return SourceType.ROUTER
 
     @property
     def hostname(self) -> str:
@@ -124,18 +116,11 @@ class MikrotikDataUpdateCoordinatorTracker(
         return self.device.mac
 
     @property
-    def ip_address(self) -> str:
+    def ip_address(self) -> str | None:
         """Return the mac address of the client."""
         return self.device.ip_address
 
     @property
-    def unique_id(self) -> str:
-        """Return a unique identifier for this device."""
-        return self.device.mac
-
-    @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the device state attributes."""
-        if self.is_connected:
-            return {k: v for k, v in self.device.attrs.items() if k not in FILTER_ATTRS}
-        return None
+        return self.device.attrs if self.is_connected else None

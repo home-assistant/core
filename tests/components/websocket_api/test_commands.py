@@ -22,7 +22,13 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import DATA_SETUP_TIME, async_setup_component
 
-from tests.common import MockEntity, MockEntityPlatform, async_mock_service
+from tests.common import (
+    MockEntity,
+    MockEntityPlatform,
+    MockModule,
+    async_mock_service,
+    mock_integration,
+)
 
 STATE_KEY_SHORT_NAMES = {
     "entity_id": "e",
@@ -1749,3 +1755,36 @@ async def test_validate_config_invalid(websocket_client, key, config, error):
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
     assert msg["result"] == {key: {"valid": False, "error": error}}
+
+
+async def test_supported_brands(hass, websocket_client):
+    """Test supported brands."""
+    mock_integration(
+        hass,
+        MockModule("test", partial_manifest={"supported_brands": {"hello": "World"}}),
+    )
+    mock_integration(
+        hass,
+        MockModule(
+            "abcd", partial_manifest={"supported_brands": {"something": "Something"}}
+        ),
+    )
+
+    with patch(
+        "homeassistant.generated.supported_brands.HAS_SUPPORTED_BRANDS",
+        ("abcd", "test"),
+    ):
+        await websocket_client.send_json({"id": 7, "type": "supported_brands"})
+        msg = await websocket_client.receive_json()
+
+    assert msg["id"] == 7
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"] == {
+        "abcd": {
+            "something": "Something",
+        },
+        "test": {
+            "hello": "World",
+        },
+    }

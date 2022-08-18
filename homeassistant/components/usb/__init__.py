@@ -1,12 +1,13 @@
 """The USB Discovery integration."""
 from __future__ import annotations
 
+from collections.abc import Coroutine
 import dataclasses
 import fnmatch
 import logging
 import os
 import sys
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from serial.tools.list_ports import comports
 from serial.tools.list_ports_common import ListPortInfo
@@ -109,7 +110,7 @@ class USBDiscovery:
         self.usb = usb
         self.seen: set[tuple[str, ...]] = set()
         self.observer_active = False
-        self._request_debouncer: Debouncer | None = None
+        self._request_debouncer: Debouncer[Coroutine[Any, Any, None]] | None = None
 
     async def async_setup(self) -> None:
         """Set up USB Discovery."""

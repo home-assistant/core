@@ -167,6 +167,11 @@ ZEROCONF = {
             "name": "*z.wave-me*"
         }
     ],
+    "_hap._udp.local.": [
+        {
+            "domain": "homekit_controller"
+        }
+    ],
     "_homekit._tcp.local.": [
         {
             "domain": "homekit"
@@ -178,6 +183,10 @@ ZEROCONF = {
         }
     ],
     "_http._tcp.local.": [
+        {
+            "domain": "awair",
+            "name": "awair*"
+        },
         {
             "domain": "bosch_shc",
             "name": "bosch shc*"
@@ -421,6 +430,7 @@ HOMEKIT = {
     "C105X": "roku",
     "C135X": "roku",
     "EB-*": "ecobee",
+    "Escea": "escea",
     "HHKBridge*": "hive",
     "Healty Home Coach": "netatmo",
     "Iota": "abode",

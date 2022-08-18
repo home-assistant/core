@@ -5,7 +5,7 @@ import asyncio
 from collections.abc import Callable
 import functools
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from homeassistant.const import ATTR_NAME
 from homeassistant.core import CALLBACK_TYPE, Event, callback
@@ -35,6 +35,9 @@ if TYPE_CHECKING:
     from .core.channels.base import ZigbeeChannel
     from .core.device import ZHADevice
 
+_ZhaEntitySelfT = TypeVar("_ZhaEntitySelfT", bound="ZhaEntity")
+_ZhaGroupEntitySelfT = TypeVar("_ZhaGroupEntitySelfT", bound="ZhaGroupEntity")
+
 _LOGGER = logging.getLogger(__name__)
 
 ENTITY_SUFFIX = "entity_suffix"
@@ -45,6 +48,7 @@ class BaseZhaEntity(LogMixin, entity.Entity):
     """A base class for ZHA entities."""
 
     unique_id_suffix: str | None = None
+    _attr_has_entity_name = True
 
     def __init__(self, unique_id: str, zha_device: ZHADevice, **kwargs: Any) -> None:
         """Init ZHA entity."""
@@ -154,7 +158,7 @@ class BaseZhaEntity(LogMixin, entity.Entity):
 class ZhaEntity(BaseZhaEntity, RestoreEntity):
     """A base class for non group ZHA entities."""
 
-    def __init_subclass__(cls, id_suffix: str | None = None, **kwargs) -> None:
+    def __init_subclass__(cls, id_suffix: str | None = None, **kwargs: Any) -> None:
         """Initialize subclass.
 
         :param id_suffix: suffix to add to the unique_id of the entity. Used for multi
@@ -173,23 +177,25 @@ class ZhaEntity(BaseZhaEntity, RestoreEntity):
     ) -> None:
         """Init ZHA entity."""
         super().__init__(unique_id, zha_device, **kwargs)
-        ieeetail = "".join([f"{o:02x}" for o in zha_device.ieee[:4]])
-        ch_names = ", ".join(sorted(ch.name for ch in channels))
-        self._name: str = f"{zha_device.name} {ieeetail} {ch_names}"
-        if self.unique_id_suffix:
-            self._name += f" {self.unique_id_suffix}"
+        self._name: str = (
+            self.__class__.__name__.lower()
+            .replace("zha", "")
+            .replace("entity", "")
+            .replace("sensor", "")
+            .capitalize()
+        )
         self.cluster_channels: dict[str, ZigbeeChannel] = {}
         for channel in channels:
             self.cluster_channels[channel.name] = channel
 
     @classmethod
     def create_entity(
-        cls,
+        cls: type[_ZhaEntitySelfT],
         unique_id: str,
         zha_device: ZHADevice,
         channels: list[ZigbeeChannel],
-        **kwargs,
-    ) -> ZhaEntity | None:
+        **kwargs: Any,
+    ) -> _ZhaEntitySelfT | None:
         """Entity Factory.
 
         Return entity if it is a supported configuration, otherwise return None
@@ -254,13 +260,20 @@ class ZhaGroupEntity(BaseZhaEntity):
     """A base class for ZHA group entities."""
 
     def __init__(
-        self, entity_ids: list[str], unique_id: str, group_id: int, zha_device, **kwargs
+        self,
+        entity_ids: list[str],
+        unique_id: str,
+        group_id: int,
+        zha_device: ZHADevice,
+        **kwargs: Any,
     ) -> None:
         """Initialize a light group."""
         super().__init__(unique_id, zha_device, **kwargs)
         self._available = False
         self._group = zha_device.gateway.groups.get(group_id)
-        self._name = f"{self._group.name}_zha_group_0x{group_id:04x}"
+        self._name = (
+            f"{self._group.name}_zha_group_0x{group_id:04x}".lower().capitalize()
+        )
         self._group_id: int = group_id
         self._entity_ids: list[str] = entity_ids
         self._async_unsub_state_changed: CALLBACK_TYPE | None = None
@@ -274,8 +287,13 @@ class ZhaGroupEntity(BaseZhaEntity):
 
     @classmethod
     def create_entity(
-        cls, entity_ids: list[str], unique_id: str, group_id: int, zha_device, **kwargs
-    ) -> ZhaGroupEntity | None:
+        cls: type[_ZhaGroupEntitySelfT],
+        entity_ids: list[str],
+        unique_id: str,
+        group_id: int,
+        zha_device: ZHADevice,
+        **kwargs: Any,
+    ) -> _ZhaGroupEntitySelfT | None:
         """Group Entity Factory.
 
         Return entity if it is a supported configuration, otherwise return None
