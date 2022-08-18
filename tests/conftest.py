@@ -886,6 +886,8 @@ async def mock_enable_bluetooth(
 def mock_bluetooth_adapters():
     """Fixture to mock bluetooth adapters."""
     with patch(
+        "homeassistant.components.bluetooth.util.platform.system", return_value="Linux"
+    ), patch(
         "bluetooth_adapters.get_bluetooth_adapter_details",
         return_value={
             "hci0": {
