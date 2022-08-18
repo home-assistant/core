@@ -11,16 +11,19 @@
       "bluetooth_confirm": {
         "description": "Do you want to setup {name}?"
       },
-      "default_adapter": {
-        "description": "Do you want to setup the Bluetooth adapter {name}?"
+      "multiple_adapters": {
+        "description": "Select a Bluetooth adapter to setup",
+        "data": {
+          "adapter": "Adapter"
+        }
       },
-      "discovered_adapter": {
-        "description": "[%key:component::bluetooth::config::step::default_adapter::description%]"
+      "select_adapter": {
+        "description": "Do you want to setup the Bluetooth adapter {name}?"
       }
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "no_adapters": "No Bluetooth adapters found"
+      "no_adapters": "No unconfigured Bluetooth adapters found"
     }
   }
 }

@@ -48,12 +48,12 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
         self._adapter = adapter
         self._details = details
         self.context["title_placeholders"] = {"name": f"{name} ({adapter})"}
-        return await self.async_step_discovered_adapter()
+        return await self.async_step_select_adapter()
 
-    async def async_step_discovered_adapter(
+    async def async_step_select_adapter(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Handle a flow for an discovered adapter."""
+        """Select an adapter."""
         adapter = self._adapter
         details = self._details
 
@@ -66,11 +66,11 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(title=name, data={})
 
         return self.async_show_form(
-            step_id="discovered_adapter",
+            step_id="select_adapter",
             description_placeholders={"name": f"{name} ({adapter})"},
         )
 
-    async def async_step_manual_adapter(
+    async def async_step_multiple_adapters(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initialized by the user."""
@@ -85,9 +85,13 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
         self._adapters = await async_get_bluetooth_adapters()
         if not self._adapters:
             return self.async_abort(reason="no_adapters")
+        if len(self._adapters) == 1:
+            self._adapter = list(self._adapters)[0]
+            self._details = self._adapters[self._adapter]
+            return await self.async_step_select_adapter()
 
         return self.async_show_form(
-            step_id="user",
+            step_id="multiple_adapters",
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_ADAPTER): vol.In(
@@ -104,4 +108,4 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initialized by the user."""
-        return await self.async_step_manual_adapter()
+        return await self.async_step_multiple_adapters()
