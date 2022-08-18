@@ -49,6 +49,7 @@ def async_info(hass: HomeAssistant) -> HardwareInfo:
             model=MODELS.get(board),
             revision=None,
         ),
+        dongles=None,
         name=BOARD_NAMES.get(board, f"Unknown Raspberry Pi model '{board}'"),
         url=None,
     )
