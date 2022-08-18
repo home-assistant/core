@@ -6,10 +6,17 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util import Throttle
 from homeassistant.util.dt import as_local, parse_datetime, utcnow
 
 from . import OpenUvEntity
-from .const import DATA_PROTECTION_WINDOW, DOMAIN, LOGGER, TYPE_PROTECTION_WINDOW
+from .const import (
+    DATA_PROTECTION_WINDOW,
+    DOMAIN,
+    ENTITY_THROTTLE_DURATION,
+    LOGGER,
+    TYPE_PROTECTION_WINDOW,
+)
 
 ATTR_PROTECTION_WINDOW_ENDING_TIME = "end_time"
 ATTR_PROTECTION_WINDOW_ENDING_UV = "end_uv"
@@ -36,6 +43,7 @@ async def async_setup_entry(
 class OpenUvBinarySensor(OpenUvEntity, BinarySensorEntity):
     """Define a binary sensor for OpenUV."""
 
+    @Throttle(ENTITY_THROTTLE_DURATION)
     async def async_update(self) -> None:
         """Update the entity.
 

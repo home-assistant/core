@@ -11,12 +11,14 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TIME_MINUTES, UV_INDEX
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util import Throttle
 from homeassistant.util.dt import as_local, parse_datetime
 
 from . import OpenUvEntity
 from .const import (
     DATA_UV,
     DOMAIN,
+    ENTITY_THROTTLE_DURATION,
     TYPE_CURRENT_OZONE_LEVEL,
     TYPE_CURRENT_UV_INDEX,
     TYPE_CURRENT_UV_LEVEL,
@@ -131,6 +133,7 @@ async def async_setup_entry(
 class OpenUvSensor(OpenUvEntity, SensorEntity):
     """Define a binary sensor for OpenUV."""
 
+    @Throttle(ENTITY_THROTTLE_DURATION)
     async def async_update(self) -> None:
         """Update the entity.
 
