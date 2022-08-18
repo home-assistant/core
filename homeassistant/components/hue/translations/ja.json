@@ -63,7 +63,8 @@
             "remote_double_button_long_press": "\u4e21\u65b9\u306e \"{subtype}\" \u306f\u9577\u62bc\u3057\u5f8c\u306b\u30ea\u30ea\u30fc\u30b9\u3055\u308c\u307e\u3057\u305f",
             "remote_double_button_short_press": "\u4e21\u65b9\u306e \"{subtype}\" \u3092\u96e2\u3059",
             "repeat": "\u30dc\u30bf\u30f3 \"{subtype}\" \u3092\u62bc\u3057\u305f\u307e\u307e",
-            "short_release": "\u30dc\u30bf\u30f3 \"{subtype}\" \u77ed\u62bc\u3057\u306e\u5f8c\u306b\u96e2\u3059"
+            "short_release": "\u30dc\u30bf\u30f3 \"{subtype}\" \u77ed\u62bc\u3057\u306e\u5f8c\u306b\u96e2\u3059",
+            "start": "\"{subtype}\" \u304c\u6700\u521d\u306b\u62bc\u3055\u308c\u307e\u3057\u305f"
         }
     },
     "options": {
