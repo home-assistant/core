@@ -78,10 +78,7 @@ async def test_setup_zha(hass: HomeAssistant) -> None:
         "radio_type": "znp",
     }
     assert config_entry.options == {}
-    assert (
-        config_entry.title
-        == "bla_description - bla_device, s/n: bla_serial_number - bla_manufacturer - bla_vid:bla_pid"
-    )
+    assert config_entry.title == "bla_description"
 
 
 async def test_setup_entry_wait_usb(hass: HomeAssistant) -> None:
