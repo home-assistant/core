@@ -30,7 +30,6 @@ from .const import (
     CHARACTERISTIC_PLATFORMS,
     CONTROLLER,
     DOMAIN,
-    ENTITY_MAP,
     HOMEKIT_ACCESSORY_DISPATCH,
     IDENTIFIER_ACCESSORY_ID,
     IDENTIFIER_LEGACY_ACCESSORY_ID,
@@ -38,7 +37,6 @@ from .const import (
     IDENTIFIER_SERIAL_NUMBER,
 )
 from .device_trigger import async_fire_triggers, async_setup_triggers_for_entry
-from .storage import EntityMapStorage
 
 RETRY_INTERVAL = 60  # seconds
 MAX_POLL_FAILURES_TO_DECLARE_UNAVAILABLE = 3
@@ -213,9 +211,6 @@ class HKDevice:
 
         await self.async_process_entity_map()
 
-        if not cache:
-            # If its missing from the cache, make sure we save it
-            self.async_save_entity_map()
         # If everything is up to date, we can create the entities
         # since we know the data is not stale.
         await self.async_add_new_entities()
@@ -440,20 +435,11 @@ class HKDevice:
 
     async def async_update_new_accessories_state(self) -> None:
         """Process a change in the pairings accessories state."""
-        self.async_save_entity_map()
         await self.async_process_entity_map()
         if self.watchable_characteristics:
             await self.pairing.subscribe(self.watchable_characteristics)
         await self.async_update()
         await self.async_add_new_entities()
-
-    @callback
-    def async_save_entity_map(self) -> None:
-        """Save the entity map."""
-        entity_storage: EntityMapStorage = self.hass.data[ENTITY_MAP]
-        entity_storage.async_create_or_update_map(
-            self.unique_id, self.config_num, self.entity_map.serialize()
-        )
 
     def add_accessory_factory(self, add_entities_cb) -> None:
         """Add a callback to run when discovering new entities for accessories."""
