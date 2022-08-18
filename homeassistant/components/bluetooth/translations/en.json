@@ -9,23 +9,17 @@
             "bluetooth_confirm": {
                 "description": "Do you want to setup {name}?"
             },
-            "enable_bluetooth": {
-                "description": "Do you want to setup Bluetooth?"
+            "default_adapter": {
+                "description": "Do you want to setup the Bluetooth adapter {name}?"
+            },
+            "discovered_adapter": {
+                "description": "Do you want to setup the Bluetooth adapter {name}?"
             },
             "user": {
                 "data": {
                     "address": "Device"
                 },
                 "description": "Choose a device to setup"
-            }
-        }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "adapter": "The Bluetooth Adapter to use for scanning"
-                }
             }
         }
     }

@@ -2,9 +2,6 @@
   "config": {
     "flow_title": "{name}",
     "step": {
-      "enable_bluetooth": {
-        "description": "Do you want to setup Bluetooth?"
-      },
       "user": {
         "description": "Choose a device to setup",
         "data": {
@@ -14,8 +11,11 @@
       "bluetooth_confirm": {
         "description": "Do you want to setup {name}?"
       },
+      "default_adapter": {
+        "description": "Do you want to setup the Bluetooth adapter {name}?"
+      },
       "discovered_adapter": {
-        "description": "Do you want to setup {name}?"
+        "description": "[%key:component::bluetooth::config::step::default_adapter::description%]"
       }
     },
     "abort": {

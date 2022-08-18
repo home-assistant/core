@@ -63,7 +63,9 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None or not onboarding.async_is_onboarded(self.hass):
             return self.async_create_entry(title=adapter, data={})
 
-        return self.async_show_form(step_id="enable_bluetooth")
+        return self.async_show_form(
+            step_id="default_adapter", description_placeholders={"name": adapter}
+        )
 
     async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
         """Handle import from configuration.yaml."""
