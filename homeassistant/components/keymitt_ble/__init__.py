@@ -53,6 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(
         entry, PLATFORMS
     )
+    entry.async_on_unload(coordinator.async_start())
 
     async def calibrate(call: ServiceCall) -> None:
         _LOGGER.debug("Calibrate service called")
@@ -96,19 +97,8 @@ class MicroBotDataUpdateCoordinator(PassiveBluetoothDataUpdateCoordinator):
             service_info.device, service_info.advertisement
         ):
             self.data = adv.data
-            if self.data:
-                self._ready_event.set()
             _LOGGER.debug("%s: MicroBot data: %s", self.ble_device.address, self.data)
             self.api.update_from_advertisement(adv)
-        self.async_update_listeners()
-
-    async def async_wait_ready(self) -> bool:
-        """Wait for the device to be ready."""
-        with contextlib.suppress(asyncio.TimeoutError):
-            async with async_timeout.timeout(55):
-                await self._ready_event.wait()
-                return True
-        return False
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
