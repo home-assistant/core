@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CURRENT_VERSION = AwesomeVersion(HA_VERSION)
 CURRENT_PLAIN_VERSION = AwesomeVersion(
-    CURRENT_VERSION.string.removesuffix(f".{CURRENT_VERSION.modifier}")
+    CURRENT_VERSION.string.removesuffix(f"{CURRENT_VERSION.modifier}")
 )
 
 
