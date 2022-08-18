@@ -51,6 +51,7 @@ NO_IOT_CLASS = [
     "discovery",
     "downloader",
     "ffmpeg",
+    "file_upload",
     "frontend",
     "hardkernel",
     "hardware",
