@@ -184,7 +184,11 @@ class SensorManager:
             return
 
         for device in self.manager.data["device_consumption"]:
-            if device["entity_parent_source"] == parent["stat_energy_from"]:
+            if (
+                "entity_parent_source" in device.keys()
+                and device["entity_parent_source"] is not None
+                and device["entity_parent_source"] == parent["stat_energy_from"]
+            ):
 
                 fake_adapter = SourceAdapter(
                     adapter.source_type,
