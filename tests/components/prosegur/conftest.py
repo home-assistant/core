@@ -51,10 +51,8 @@ async def init_integration(
 
     with patch(
         "pyprosegur.installation.Installation.retrieve", return_value=mock_install
-    ):
+    ), patch("pyprosegur.auth.Auth.login", return_value=AsyncMock()):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
-        with patch("pyprosegur.auth.Auth.login", return_value=AsyncMock()):
-            await hass.config_entries.async_setup(mock_config_entry.entry_id)
-            await hass.async_block_till_done()
-
-            return mock_config_entry
+        return mock_config_entry
