@@ -66,6 +66,13 @@ SWITCHES: tuple[FullySwitchEntityDescription, ...] = (
         off_action=lambda fully: fully.disableMotionDetection(),
         is_on_fn=lambda data: data["settings"].get("motionDetection"),
     ),
+    FullySwitchEntityDescription(
+        key="screenOn",
+        name="Screen",
+        on_action=lambda fully: fully.screenOn(),
+        off_action=lambda fully: fully.screenOff(),
+        is_on_fn=lambda data: data.get("screenOn"),
+    ),
 )
 
 
