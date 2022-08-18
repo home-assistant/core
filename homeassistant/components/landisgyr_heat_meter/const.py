@@ -28,6 +28,7 @@ HEAT_METER_SENSOR_TYPES = (
         native_unit_of_measurement=VOLUME_CUBIC_METERS,
         state_class=SensorStateClass.TOTAL,
     ),
+    # Diagnostic entity for debugging, this will match the value in GJ indicated on the meter's display
     SensorEntityDescription(
         key="heat_usage_gj",
         icon="mdi:fire",
