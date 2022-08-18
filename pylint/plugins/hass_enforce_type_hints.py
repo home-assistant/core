@@ -1500,6 +1500,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             ],
         ),
     ],
+    # "mailbox": [], # ignored as deprecated
     "media_player": [
         ClassTypeHintMatch(
             base_class="Entity",
@@ -2072,6 +2073,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             ],
         ),
     ],
+    # "stt": [],  # ignored as does not provide Entity classes
     "switch": [
         ClassTypeHintMatch(
             base_class="Entity",
@@ -2091,6 +2093,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             ],
         ),
     ],
+    # "tts": [],  # ignored as does not provide Entity classes
     "update": [
         ClassTypeHintMatch(
             base_class="Entity",
