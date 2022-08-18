@@ -1412,7 +1412,7 @@ pyws66i==1.1
 pyzerproc==0.4.8
 
 # homeassistant.components.qingping
-qingping-ble==0.2.3
+qingping-ble==0.2.4
 
 # homeassistant.components.rachio
 rachiopy==1.0.3
