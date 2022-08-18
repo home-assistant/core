@@ -36,17 +36,11 @@ SCANNER_WATCHDOG_INTERVAL: Final = timedelta(seconds=SCANNER_WATCHDOG_TIMEOUT)
 class AdapterDetails(TypedDict, total=False):
     """Adapter details."""
 
-    name: str
     address: str
     sw_version: str
     hw_version: str
-    powered: bool
-    discovering: bool
 
 
-ADAPTER_NAME: Final = "name"
 ADAPTER_ADDRESS: Final = "address"
 ADAPTER_SW_VERSION: Final = "sw_version"
 ADAPTER_HW_VERSION: Final = "hw_version"
-ADAPTER_POWERED: Final = "powered"
-ADAPTER_DISCOVERING: Final = "discovering"

@@ -19,6 +19,7 @@ from homeassistant.components.bluetooth import (
     scanner,
 )
 from homeassistant.components.bluetooth.const import (
+    DEFAULT_ADDRESS,
     SOURCE_LOCAL,
     UNAVAILABLE_TRACK_SECONDS,
 )
@@ -1339,7 +1340,7 @@ async def test_async_ble_device_from_address(hass, mock_bleak_scanner_start):
 
 async def test_can_unsetup_bluetooth(hass, mock_bleak_scanner_start, enable_bluetooth):
     """Test we can setup and unsetup bluetooth."""
-    entry = MockConfigEntry(domain=bluetooth.DOMAIN, data={})
+    entry = MockConfigEntry(domain=bluetooth.DOMAIN, data={}, unique_id=DEFAULT_ADDRESS)
     entry.add_to_hass(hass)
     for _ in range(2):
 
@@ -1353,7 +1354,16 @@ async def test_can_unsetup_bluetooth(hass, mock_bleak_scanner_start, enable_blue
 async def test_auto_detect_bluetooth_adapters_linux(hass):
     """Test we auto detect bluetooth adapters on linux."""
     with patch(
-        "bluetooth_adapters.get_bluetooth_adapters", return_value=["hci0"]
+        "bluetooth_adapters.get_bluetooth_adapter_details",
+        return_value={
+            "hci0": {
+                "org.bluez.Adapter1": {
+                    "Address": DEFAULT_ADDRESS,
+                    "Name": "BlueZ 4.63",
+                    "Modalias": "usbid:1234",
+                }
+            }
+        },
     ), patch(
         "homeassistant.components.bluetooth.util.platform.system", return_value="Linux"
     ):
@@ -1366,19 +1376,37 @@ async def test_auto_detect_bluetooth_adapters_linux(hass):
 async def test_auto_detect_bluetooth_adapters_linux_multiple(hass):
     """Test we auto detect bluetooth adapters on linux with multiple adapters."""
     with patch(
-        "bluetooth_adapters.get_bluetooth_adapters", return_value=["hci1", "hci0"]
+        "bluetooth_adapters.get_bluetooth_adapter_details",
+        return_value={
+            "hci0": {
+                "org.bluez.Adapter1": {
+                    "Address": DEFAULT_ADDRESS,
+                    "Name": "BlueZ 4.63",
+                    "Modalias": "usbid:1234",
+                }
+            },
+            "hci1": {
+                "org.bluez.Adapter1": {
+                    "Address": "00:11:11:11:11:11",
+                    "Name": "BlueZ 4.63",
+                    "Modalias": "usbid:1234",
+                }
+            },
+        },
     ), patch(
         "homeassistant.components.bluetooth.util.platform.system", return_value="Linux"
     ):
         assert await async_setup_component(hass, bluetooth.DOMAIN, {})
         await hass.async_block_till_done()
     assert not hass.config_entries.async_entries(bluetooth.DOMAIN)
-    assert len(hass.config_entries.flow.async_progress(bluetooth.DOMAIN)) == 1
+    assert len(hass.config_entries.flow.async_progress(bluetooth.DOMAIN)) == 2
 
 
 async def test_auto_detect_bluetooth_adapters_linux_none_found(hass):
     """Test we auto detect bluetooth adapters on linux with no adapters found."""
-    with patch("bluetooth_adapters.get_bluetooth_adapters", return_value=set()), patch(
+    with patch(
+        "bluetooth_adapters.get_bluetooth_adapter_details", return_value={}
+    ), patch(
         "homeassistant.components.bluetooth.util.platform.system", return_value="Linux"
     ):
         assert await async_setup_component(hass, bluetooth.DOMAIN, {})

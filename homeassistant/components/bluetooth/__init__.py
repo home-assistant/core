@@ -19,7 +19,6 @@ from . import models
 from .const import (
     ADAPTER_ADDRESS,
     ADAPTER_HW_VERSION,
-    ADAPTER_NAME,
     ADAPTER_SW_VERSION,
     CONF_ADAPTER,
     CONF_DETAILS,
@@ -41,7 +40,7 @@ from .models import (
     ProcessAdvertisementCallback,
 )
 from .scanner import HaScanner, create_bleak_scanner
-from .util import adapter_human_name, async_default_adapter
+from .util import adapter_human_name, adapter_unique_name, async_default_adapter
 
 if TYPE_CHECKING:
     from bleak.backends.device import BLEDevice
@@ -208,13 +207,12 @@ def async_migrate_entries(
             continue
 
         address = DEFAULT_ADDRESS
-        name = default_adapter
         adapter = entry.options.get(CONF_ADAPTER, default_adapter)
-        if details := adapters.get(adapter):
-            address = details[ADAPTER_ADDRESS]
-            name = details[ADAPTER_NAME]
-
-        hass.config_entries.async_update_entry(entry, title=name, unique_id=address)
+        if adapter in adapters:
+            address = adapters[adapter][ADAPTER_ADDRESS]
+        hass.config_entries.async_update_entry(
+            entry, title=adapter_unique_name(adapter, address), unique_id=address
+        )
 
 
 async def async_discover_adapters(
