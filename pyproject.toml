@@ -123,6 +123,7 @@ extension-pkg-allow-list = [
     "ciso8601",
     "orjson",
     "cv2",
+    "rrdtool",
 ]
 fail-on = [
     "I",
