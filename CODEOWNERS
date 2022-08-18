@@ -333,6 +333,8 @@ build.json @home-assistant/supervisor
 /tests/components/fibaro/ @rappenze
 /homeassistant/components/file/ @fabaff
 /tests/components/file/ @fabaff
+/homeassistant/components/file_upload/ @home-assistant/core
+/tests/components/file_upload/ @home-assistant/core
 /homeassistant/components/filesize/ @gjohansson-ST
 /tests/components/filesize/ @gjohansson-ST
 /homeassistant/components/filter/ @dgomes
@@ -469,6 +471,8 @@ build.json @home-assistant/supervisor
 /tests/components/homeassistant/ @home-assistant/core
 /homeassistant/components/homeassistant_alerts/ @home-assistant/core
 /tests/components/homeassistant_alerts/ @home-assistant/core
+/homeassistant/components/homeassistant_sky_connect/ @home-assistant/core
+/tests/components/homeassistant_sky_connect/ @home-assistant/core
 /homeassistant/components/homeassistant_yellow/ @home-assistant/core
 /tests/components/homeassistant_yellow/ @home-assistant/core
 /homeassistant/components/homekit/ @bdraco
@@ -591,6 +595,8 @@ build.json @home-assistant/supervisor
 /tests/components/lacrosse_view/ @IceBotYT
 /homeassistant/components/lametric/ @robbiet480 @frenck
 /tests/components/lametric/ @robbiet480 @frenck
+/homeassistant/components/landisgyr_heat_meter/ @vpathuis
+/tests/components/landisgyr_heat_meter/ @vpathuis
 /homeassistant/components/launch_library/ @ludeeus @DurgNomis-drol
 /tests/components/launch_library/ @ludeeus @DurgNomis-drol
 /homeassistant/components/laundrify/ @xLarry

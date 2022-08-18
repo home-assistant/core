@@ -228,7 +228,7 @@ async def test_discovery_via_usb(detect_mock, hass):
     )
     await hass.async_block_till_done()
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "confirm"
+    assert result["step_id"] == "confirm_usb"
 
     with patch("homeassistant.components.zha.async_setup_entry"):
         result2 = await hass.config_entries.flow.async_configure(
@@ -237,7 +237,7 @@ async def test_discovery_via_usb(detect_mock, hass):
         await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert "zigbee radio" in result2["title"]
+    assert result2["title"] == "zigbee radio"
     assert result2["data"] == {
         "device": {
             "baudrate": 115200,
@@ -264,7 +264,7 @@ async def test_zigate_discovery_via_usb(detect_mock, hass):
     )
     await hass.async_block_till_done()
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "confirm"
+    assert result["step_id"] == "confirm_usb"
 
     with patch("homeassistant.components.zha.async_setup_entry"):
         result2 = await hass.config_entries.flow.async_configure(
@@ -273,10 +273,7 @@ async def test_zigate_discovery_via_usb(detect_mock, hass):
         await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert (
-        "zigate radio - /dev/ttyZIGBEE, s/n: 1234 - test - 6015:0403"
-        in result2["title"]
-    )
+    assert result2["title"] == "zigate radio"
     assert result2["data"] == {
         "device": {
             "path": "/dev/ttyZIGBEE",
@@ -301,7 +298,7 @@ async def test_discovery_via_usb_no_radio(detect_mock, hass):
     )
     await hass.async_block_till_done()
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "confirm"
+    assert result["step_id"] == "confirm_usb"
 
     with patch("homeassistant.components.zha.async_setup_entry"):
         result2 = await hass.config_entries.flow.async_configure(
@@ -454,7 +451,7 @@ async def test_discovery_via_usb_deconz_ignored(detect_mock, hass):
     await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "confirm"
+    assert result["step_id"] == "confirm_usb"
 
 
 @patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=True)
@@ -775,6 +772,7 @@ async def test_migration_ti_cc_to_znp(old_type, new_type, hass, config_entry):
 async def test_hardware_not_onboarded(hass):
     """Test hardware flow."""
     data = {
+        "name": "Yellow",
         "radio_type": "efr32",
         "port": {
             "path": "/dev/ttyAMA1",
@@ -790,7 +788,7 @@ async def test_hardware_not_onboarded(hass):
         )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "/dev/ttyAMA1"
+    assert result["title"] == "Yellow"
     assert result["data"] == {
         CONF_DEVICE: {
             CONF_BAUDRATE: 115200,

@@ -646,3 +646,19 @@ def test_datetime_selector_schema(schema, valid_selections, invalid_selections):
 def test_template_selector_schema(schema, valid_selections, invalid_selections):
     """Test template selector."""
     _test_selector("template", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    "schema,valid_selections,invalid_selections",
+    (
+        (
+            {"accept": "image/*"},
+            ("0182a1b99dbc5ae24aecd90c346605fa",),
+            (None, "not-a-uuid", "abcd", 1),
+        ),
+    ),
+)
+def test_file_selector_schema(schema, valid_selections, invalid_selections):
+    """Test file selector."""
+
+    _test_selector("file", schema, valid_selections, invalid_selections)

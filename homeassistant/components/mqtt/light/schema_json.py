@@ -38,7 +38,6 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_OPTIMISTIC,
     CONF_RGB,
-    CONF_WHITE_VALUE,
     CONF_XY,
     STATE_ON,
 )
@@ -96,6 +95,8 @@ CONF_FLASH_TIME_SHORT = "flash_time_short"
 
 CONF_MAX_MIREDS = "max_mireds"
 CONF_MIN_MIREDS = "min_mireds"
+
+CONF_WHITE_VALUE = "white_value"
 
 
 def valid_color_configuration(config):

@@ -9,6 +9,7 @@
     "config",
     "device_automation",
     "diagnostics",
+    "file_upload",
     "http",
     "lovelace",
     "onboarding",

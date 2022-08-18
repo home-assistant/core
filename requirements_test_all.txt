@@ -845,7 +845,7 @@ openerz-api==0.1.0
 ovoenergy==1.2.0
 
 # homeassistant.components.p1_monitor
-p1monitor==1.0.1
+p1monitor==2.1.0
 
 # homeassistant.components.mqtt
 # homeassistant.components.shiftr
@@ -907,7 +907,7 @@ poolsense==0.0.8
 praw==7.5.0
 
 # homeassistant.components.islamic_prayer_times
-prayer_times_calculator==0.0.5
+prayer_times_calculator==0.0.6
 
 # homeassistant.components.progettihwsw
 progettihwsw==0.1.1
@@ -1079,7 +1079,7 @@ pyfttt==0.3
 pygti==0.9.3
 
 # homeassistant.components.version
-pyhaversion==22.4.1
+pyhaversion==22.8.0
 
 # homeassistant.components.heos
 pyheos==0.7.2
@@ -1616,6 +1616,9 @@ twitchAPI==2.5.2
 
 # homeassistant.components.ukraine_alarm
 uasiren==0.0.1
+
+# homeassistant.components.landisgyr_heat_meter
+ultraheat-api==0.4.1
 
 # homeassistant.components.unifiprotect
 unifi-discovery==1.1.5

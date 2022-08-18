@@ -128,7 +128,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="not_zha_device")
 
         self._device_path = dev_path
-        self._title = usb.human_readable_device_name(
+        self._title = description or usb.human_readable_device_name(
             dev_path,
             serial_number,
             manufacturer,
@@ -138,11 +138,11 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
         self._set_confirm_only()
         self.context["title_placeholders"] = {CONF_NAME: self._title}
-        return await self.async_step_confirm()
+        return await self.async_step_confirm_usb()
 
-    async def async_step_confirm(self, user_input=None):
-        """Confirm a discovery."""
-        if user_input is not None:
+    async def async_step_confirm_usb(self, user_input=None):
+        """Confirm a USB discovery."""
+        if user_input is not None or not onboarding.async_is_onboarded(self.hass):
             auto_detected_data = await detect_radios(self._device_path)
             if auto_detected_data is None:
                 # This path probably will not happen now that we have
@@ -155,7 +155,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         return self.async_show_form(
-            step_id="confirm",
+            step_id="confirm_usb",
             description_placeholders={CONF_NAME: self._title},
         )
 
