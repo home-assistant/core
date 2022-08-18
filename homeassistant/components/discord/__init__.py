@@ -15,7 +15,7 @@ PLATFORMS = [Platform.NOTIFY]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the NFAndroidTV component."""
+    """Set up the Discord component."""
 
     hass.data[DATA_HASS_CONFIG] = config
     return True
