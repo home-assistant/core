@@ -1,6 +1,8 @@
 """Fully Kiosk Browser number entity."""
 from __future__ import annotations
 
+from contextlib import suppress
+
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TIME_SECONDS
@@ -84,7 +86,11 @@ class FullyNumberEntity(FullyKioskEntity, NumberEntity):
             value := self.coordinator.data["settings"].get(self.entity_description.key)
         ) is None:
             return None
-        return int(value)
+
+        with suppress(ValueError):
+            return int(value)
+
+        return None
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the value of the entity."""
