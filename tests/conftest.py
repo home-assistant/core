@@ -885,7 +885,7 @@ async def mock_enable_bluetooth(
 @pytest.fixture(name="mock_bluetooth_adapters")
 def mock_bluetooth_adapters():
     """Fixture to mock bluetooth adapters."""
-    with patch("bluetooth_adapters.get_bluetooth_adapters", return_value=[]):
+    with patch("bluetooth_adapters.get_bluetooth_adapter_details", return_value={}):
         yield
 
 
