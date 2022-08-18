@@ -4,8 +4,10 @@ import asyncio
 from aiowebostv import WebOsTvCommandError
 from websockets.exceptions import ConnectionClosed, ConnectionClosedOK
 
+from homeassistant.const import Platform
+
 DOMAIN = "webostv"
-PLATFORMS = ["media_player"]
+PLATFORMS = [Platform.MEDIA_PLAYER]
 DATA_CONFIG_ENTRY = "config_entry"
 DATA_HASS_CONFIG = "hass_config"
 DEFAULT_NAME = "LG webOS Smart TV"
