@@ -104,7 +104,7 @@ def async_get_entry_id_for_service_call(hass: HomeAssistant, call: ServiceCall) 
     device_registry = dr.async_get(hass)
 
     if (device_entry := device_registry.async_get(device_id)) is None:
-        raise ValueError(f"Invalid RainMachine device ID: {device_id}")
+        raise ValueError(f"Invalid Guardian device ID: {device_id}")
 
     for entry_id in device_entry.config_entries:
         if (entry := hass.config_entries.async_get_entry(entry_id)) is None:
@@ -112,7 +112,7 @@ def async_get_entry_id_for_service_call(hass: HomeAssistant, call: ServiceCall) 
         if entry.domain == DOMAIN:
             return entry_id
 
-    raise ValueError(f"No client for device ID: {device_id}")
+    raise ValueError(f"No config entry for device ID: {device_id}")
 
 
 @callback
