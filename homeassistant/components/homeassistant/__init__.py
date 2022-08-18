@@ -234,6 +234,8 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
         # auth only processed during startup
         await conf_util.async_process_ha_core_config(hass, conf.get(ha.DOMAIN) or {})
 
+        conf_util.async_process_entity_registry_customization(hass)
+
     async_register_admin_service(
         hass, ha.DOMAIN, SERVICE_RELOAD_CORE_CONFIG, async_handle_reload_config
     )

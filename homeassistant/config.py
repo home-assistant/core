@@ -20,8 +20,10 @@ from . import auth
 from .auth import mfa_modules as auth_mfa_modules, providers as auth_providers
 from .const import (
     ATTR_ASSUMED_STATE,
+    ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
     ATTR_HIDDEN,
+    ATTR_ICON,
     CONF_ALLOWLIST_EXTERNAL_DIRS,
     CONF_ALLOWLIST_EXTERNAL_URLS,
     CONF_AUTH_MFA_MODULES,
@@ -54,10 +56,11 @@ from .exceptions import HomeAssistantError
 from .helpers import (
     config_per_platform,
     config_validation as cv,
+    entity_registry as er,
     extract_domain_configs,
 )
 from .helpers.entity_values import EntityValues
-from .helpers.typing import ConfigType
+from .helpers.typing import UNDEFINED, ConfigType
 from .loader import Integration, IntegrationNotFound
 from .requirements import RequirementsNotFound, async_get_integration_with_requirements
 from .util.package import is_docker_env
@@ -492,6 +495,34 @@ def _format_config_error(
         message += f"Please check the docs at {link}"
 
     return message, is_friendly
+
+
+def _pop_dict_keys(data: dict[Any, Any], keys: set[Any]) -> dict[Any, Any]:
+    """Pop provided keys from dict."""
+    result = {}
+    for key in keys:
+        try:
+            value = data.pop(key)
+            result[key] = value
+        except KeyError:
+            pass
+    return result
+
+
+def async_process_entity_registry_customization(hass: HomeAssistant) -> None:
+    """Apply entity customizations to entity registry."""
+
+    entity_values: EntityValues = hass.data[DATA_CUSTOMIZE]
+    entity_registry = er.async_get(hass)
+    for entry in entity_registry.entities.values():
+        customization = entity_values.get(entry.entity_id)
+        if customization:
+            entity_registry.async_update_entity(
+                entry.entity_id,
+                name=customization.pop(ATTR_FRIENDLY_NAME, UNDEFINED),
+                device_class=customization.pop(ATTR_DEVICE_CLASS, UNDEFINED),
+                icon=customization.pop(ATTR_ICON, UNDEFINED),
+            )
 
 
 async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> None:

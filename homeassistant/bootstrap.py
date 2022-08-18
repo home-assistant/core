@@ -527,6 +527,9 @@ async def _async_set_up_integrations(
         hass.async_add_executor_job(_cache_uname_processor),
     )
 
+    # Apply entity customizations
+    conf_util.async_process_entity_registry_customization(hass)
+
     # Initialize recorder
     if "recorder" in domains_to_setup:
         recorder.async_initialize_recorder(hass)
