@@ -42,9 +42,9 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.loader import async_get_integration
 
 
-def _convert_states(states: dict[str, Any]) -> dict[str, Any]:
+def _convert_states(states: dict[str, Any]) -> dict[str, State]:
     """Convert state definitions to State objects."""
-    result = {}
+    result: dict[str, State] = {}
 
     for entity_id, info in states.items():
         entity_id = cv.entity_id(entity_id)
