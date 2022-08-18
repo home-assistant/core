@@ -55,6 +55,11 @@ SOURCE_PLATFORM_CONFIG = "platform_config"
 FLOAT_PRECISION = abs(int(math.floor(math.log10(abs(sys.float_info.epsilon))))) - 1
 
 
+def _remove_dict_keys(data: dict[Any, Any], keys: set[Any]) -> dict[Any, Any]:
+    """Return a dict with given keys excluded."""
+    return {key: value for key, value in data.items() if key not in keys}
+
+
 @callback
 @bind_hass
 def entity_sources(hass: HomeAssistant) -> dict[str, dict[str, str]]:
@@ -635,6 +640,12 @@ class Entity(ABC):
 
         # Overwrite properties that have been set in the config file.
         if DATA_CUSTOMIZE in self.hass.data:
+            data = self.hass.data[DATA_CUSTOMIZE].get(self.entity_id)
+            if self.registry_entry:
+                data = _remove_dict_keys(
+                    data, {ATTR_FRIENDLY_NAME, ATTR_ICON, ATTR_DEVICE_CLASS}
+                )
+
             attr.update(self.hass.data[DATA_CUSTOMIZE].get(self.entity_id))
 
         if (
