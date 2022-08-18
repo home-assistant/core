@@ -1338,17 +1338,63 @@ async def test_async_ble_device_from_address(hass, mock_bleak_scanner_start):
         )
 
 
-async def test_can_unsetup_bluetooth(hass, mock_bleak_scanner_start, enable_bluetooth):
+async def test_can_unsetup_bluetooth_single_adapter(
+    hass, mock_bleak_scanner_start, enable_bluetooth
+):
     """Test we can setup and unsetup bluetooth."""
     entry = MockConfigEntry(domain=bluetooth.DOMAIN, data={}, unique_id=DEFAULT_ADDRESS)
     entry.add_to_hass(hass)
-    for _ in range(2):
 
+    for _ in range(2):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
         assert await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
+
+
+async def test_can_unsetup_bluetooth_multiple_adapters(
+    hass, mock_bleak_scanner_start, enable_bluetooth
+):
+    """Test we can setup and unsetup bluetooth with multiple adapters."""
+    entry1 = MockConfigEntry(
+        domain=bluetooth.DOMAIN, data={}, unique_id=DEFAULT_ADDRESS
+    )
+    entry1.add_to_hass(hass)
+
+    entry2 = MockConfigEntry(
+        domain=bluetooth.DOMAIN, data={}, unique_id="00:00:00:00:00:01"
+    )
+    entry2.add_to_hass(hass)
+
+    with patch(
+        "bluetooth_adapters.get_bluetooth_adapter_details",
+        return_value={
+            "hci0": {
+                "org.bluez.Adapter1": {
+                    "Address": DEFAULT_ADDRESS,
+                    "Name": "BlueZ 4.63",
+                    "Modalias": "usbid:1234",
+                }
+            },
+            "hci1": {
+                "org.bluez.Adapter1": {
+                    "Address": "00:00:00:00:00:01",
+                    "Name": "BlueZ 4.63",
+                    "Modalias": "usbid:1234",
+                }
+            },
+        },
+    ), patch(
+        "homeassistant.components.bluetooth.util.platform.system", return_value="Linux"
+    ):
+        for _ in range(2):
+            for entry in (entry1, entry2):
+                assert await hass.config_entries.async_setup(entry.entry_id)
+                await hass.async_block_till_done()
+
+                assert await hass.config_entries.async_unload(entry.entry_id)
+                await hass.async_block_till_done()
 
 
 async def test_auto_detect_bluetooth_adapters_linux(hass):
