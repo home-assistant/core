@@ -278,17 +278,9 @@ async def async_setup_entry(
     entry.async_on_unload(scanner.async_register_callback(manager.scanner_adv_received))
     await scanner.async_start()
     entry.async_on_unload(manager.async_register_scanner(scanner))
-    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     await async_update_device(entry, manager, adapter, address)
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = scanner
     return True
-
-
-async def _async_update_listener(
-    hass: HomeAssistant, entry: config_entries.ConfigEntry
-) -> None:
-    """Handle options update."""
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(
