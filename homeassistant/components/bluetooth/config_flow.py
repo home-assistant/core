@@ -90,10 +90,16 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
             return self.async_create_entry(title=adapter, data={})
 
+        configured_addresses = self._async_current_ids()
         self._adapters = await async_get_bluetooth_adapters()
-        if not self._adapters:
+        unconfigured_adapters = [
+            adapter
+            for adapter, details in self._adapters.items()
+            if details[ADAPTER_ADDRESS] not in configured_addresses
+        ]
+        if not unconfigured_adapters:
             return self.async_abort(reason="no_adapters")
-        if len(self._adapters) == 1:
+        if len(unconfigured_adapters) == 1:
             self._adapter = list(self._adapters)[0]
             self._details = self._adapters[self._adapter]
             return await self.async_step_select_adapter()
@@ -105,9 +111,9 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_ADAPTER): vol.In(
                         {
                             adapter: adapter_human_name(
-                                adapter, details[ADAPTER_ADDRESS]
+                                adapter, self._adapters[adapter][ADAPTER_ADDRESS]
                             )
-                            for adapter, details in self._adapters.items()
+                            for adapter in sorted(unconfigured_adapters)
                         }
                     ),
                 }
