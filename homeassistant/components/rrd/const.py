@@ -1,4 +1,4 @@
-"""Constants for InfluxDB integration."""
+"""Constants for RRD integration."""
 DEFAULT_DATABASE = "home_assistant.rrd"
 DOMAIN = "rrd"
 
