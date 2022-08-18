@@ -14,7 +14,7 @@ from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN as ZHA_DOMAIN
-from .core.const import DATA_ZHA, ZHA_DEVICES_LOADED_EVENT, ZHA_EVENT
+from .core.const import ZHA_EVENT
 from .core.helpers import async_get_zha_device
 
 CONF_SUBTYPE = "subtype"
@@ -32,8 +32,9 @@ async def async_validate_trigger_config(
     """Validate config."""
     config = TRIGGER_SCHEMA(config)
 
-    if ZHA_DOMAIN in hass.config.components:
-        await hass.data[DATA_ZHA][ZHA_DEVICES_LOADED_EVENT].wait()
+    entries = hass.config_entries.async_entries(ZHA_DOMAIN)
+
+    if entries and await hass.config_entries.async_wait_entry(entries[0]):
         trigger = (config[CONF_TYPE], config[CONF_SUBTYPE])
         try:
             zha_device = async_get_zha_device(hass, config[CONF_DEVICE_ID])

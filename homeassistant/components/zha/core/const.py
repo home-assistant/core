@@ -395,7 +395,6 @@ ZHA_GW_MSG_GROUP_REMOVED = "group_removed"
 ZHA_GW_MSG_LOG_ENTRY = "log_entry"
 ZHA_GW_MSG_LOG_OUTPUT = "log_output"
 ZHA_GW_MSG_RAW_INIT = "raw_device_initialized"
-ZHA_DEVICES_LOADED_EVENT = "zha_devices_loaded_event"
 
 
 class Strobe(t.enum8):
