@@ -17,18 +17,20 @@ from .const import (
 
 async def async_get_bluetooth_adapters() -> dict[str, AdapterDetails]:
     """Return a list of bluetooth adapters."""
-    if platform.system() == "Windows":  # We don't have a good way to detect on windows
+    if platform.system() == "Windows":
         return {
             WINDOWS_DEFAULT_BLUETOOTH_ADAPTER: AdapterDetails(
                 name=WINDOWS_DEFAULT_BLUETOOTH_ADAPTER,
                 address=DEFAULT_ADDRESS,
+                sw_version=platform.release(),
             )
         }
-    if platform.system() == "Darwin":  # CoreBluetooth is built in on MacOS hardware
+    if platform.system() == "Darwin":
         return {
             MACOS_DEFAULT_BLUETOOTH_ADAPTER: AdapterDetails(
                 name=MACOS_DEFAULT_BLUETOOTH_ADAPTER,
                 address=DEFAULT_ADDRESS,
+                sw_version=platform.release(),
             )
         }
     from bluetooth_adapters import (  # pylint: disable=import-outside-toplevel
