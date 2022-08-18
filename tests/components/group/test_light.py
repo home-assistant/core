@@ -25,7 +25,6 @@ from homeassistant.components.light import (
     ATTR_SUPPORTED_COLOR_MODES,
     ATTR_TRANSITION,
     ATTR_WHITE,
-    ATTR_WHITE_VALUE,
     ATTR_XY_COLOR,
     DOMAIN as LIGHT_DOMAIN,
     SERVICE_TOGGLE,
@@ -78,7 +77,6 @@ async def test_default_state(hass):
     assert state.attributes.get(ATTR_BRIGHTNESS) is None
     assert state.attributes.get(ATTR_HS_COLOR) is None
     assert state.attributes.get(ATTR_COLOR_TEMP) is None
-    assert state.attributes.get(ATTR_WHITE_VALUE) is None
     assert state.attributes.get(ATTR_EFFECT_LIST) is None
     assert state.attributes.get(ATTR_EFFECT) is None
 
