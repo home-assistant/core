@@ -222,7 +222,8 @@ async def async_discover_adapters(
     """Discover adapters and start flows."""
     if platform.system() == "Windows":
         # We currently do not have a good way to detect if a bluetooth device is
-        # available on Windows. We will just assume that it is not.
+        # available on Windows. We will just assume that it is not unless they
+        # actively add it.
         return
 
     for adapter, details in adapters.items():
