@@ -22,9 +22,8 @@ async def async_get_service(hass, config, discovery_info=None):
 
     if discovery_info is None:
         return
-    else:
-        number = discovery_info.get(CONF_RECIPIENT, None)
 
+    number = discovery_info.get(CONF_RECIPIENT, None)
     return SMSNotificationService(hass, number)
 
 

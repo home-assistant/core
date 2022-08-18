@@ -76,8 +76,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await signal_coordinator.async_config_entry_first_refresh()
     await network_coordinator.async_config_entry_first_refresh()
 
-    hass_config = hass.data[DOMAIN].get(HASS_CONFIG, {})
-
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][SMS_GATEWAY] = {
         SIGNAL_COORDINATOR: signal_coordinator,
@@ -95,7 +93,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             Platform.NOTIFY,
             DOMAIN,
             {CONF_NAME: DOMAIN},
-            hass_config,
+            hass.data[HASS_CONFIG],
         )
     )
     return True
