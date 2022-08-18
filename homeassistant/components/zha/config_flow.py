@@ -128,7 +128,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="not_zha_device")
 
         self._device_path = dev_path
-        self._title = usb.human_readable_device_name(
+        self._title = description or usb.human_readable_device_name(
             dev_path,
             serial_number,
             manufacturer,
