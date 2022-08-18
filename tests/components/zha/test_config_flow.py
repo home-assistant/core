@@ -775,6 +775,7 @@ async def test_migration_ti_cc_to_znp(old_type, new_type, hass, config_entry):
 async def test_hardware_not_onboarded(hass):
     """Test hardware flow."""
     data = {
+        "name": "Yellow",
         "radio_type": "efr32",
         "port": {
             "path": "/dev/ttyAMA1",
@@ -790,7 +791,7 @@ async def test_hardware_not_onboarded(hass):
         )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "/dev/ttyAMA1"
+    assert result["title"] == "Yellow"
     assert result["data"] == {
         CONF_DEVICE: {
             CONF_BAUDRATE: 115200,
