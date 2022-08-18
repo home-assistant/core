@@ -98,7 +98,7 @@ async def test_setup_and_stop_broken_bluetooth(hass, caplog, macos_adapter):
     assert len(bluetooth.async_discovered_service_info(hass)) == 0
 
 
-async def test_setup_and_stop_broken_bluetooth_hanging(hass, caplog):
+async def test_setup_and_stop_broken_bluetooth_hanging(hass, caplog, macos_adapter):
     """Test we fail gracefully when bluetooth/dbus is hanging."""
     mock_bt = []
 
@@ -153,7 +153,7 @@ async def test_setup_and_retry_adapter_not_yet_available(hass, caplog, macos_ada
         await hass.async_block_till_done()
 
 
-async def test_no_race_during_manual_reload_in_retry_state(hass, caplog):
+async def test_no_race_during_manual_reload_in_retry_state(hass, caplog, macos_adapter):
     """Test we can successfully reload when the entry is in a retry state."""
     mock_bt = []
     with patch(
@@ -187,7 +187,9 @@ async def test_no_race_during_manual_reload_in_retry_state(hass, caplog):
         await hass.async_block_till_done()
 
 
-async def test_calling_async_discovered_devices_no_bluetooth(hass, caplog):
+async def test_calling_async_discovered_devices_no_bluetooth(
+    hass, caplog, macos_adapter
+):
     """Test we fail gracefully when asking for discovered devices and there is no blueooth."""
     mock_bt = []
     with patch(
@@ -243,7 +245,9 @@ async def test_discovery_match_by_service_uuid(
         assert mock_config_flow.mock_calls[0][1][0] == "switchbot"
 
 
-async def test_discovery_match_by_local_name(hass, mock_bleak_scanner_start):
+async def test_discovery_match_by_local_name(
+    hass, mock_bleak_scanner_start, macos_adapter
+):
     """Test bluetooth discovery match by local_name."""
     mock_bt = [{"domain": "switchbot", "local_name": "wohand"}]
     with patch(
@@ -276,7 +280,7 @@ async def test_discovery_match_by_local_name(hass, mock_bleak_scanner_start):
 
 
 async def test_discovery_match_by_manufacturer_id_and_manufacturer_data_start(
-    hass, mock_bleak_scanner_start
+    hass, mock_bleak_scanner_start, macos_adapter
 ):
     """Test bluetooth discovery match by manufacturer_id and manufacturer_data_start."""
     mock_bt = [
@@ -352,7 +356,7 @@ async def test_discovery_match_by_manufacturer_id_and_manufacturer_data_start(
 
 
 async def test_discovery_match_by_service_data_uuid_then_others(
-    hass, mock_bleak_scanner_start
+    hass, mock_bleak_scanner_start, macos_adapter
 ):
     """Test bluetooth discovery match by service_data_uuid and then other fields."""
     mock_bt = [
@@ -504,7 +508,7 @@ async def test_discovery_match_by_service_data_uuid_then_others(
 
 
 async def test_discovery_match_first_by_service_uuid_and_then_manufacturer_id(
-    hass, mock_bleak_scanner_start
+    hass, mock_bleak_scanner_start, macos_adapter
 ):
     """Test bluetooth discovery matches twice for service_uuid and then manufacturer_id."""
     mock_bt = [
@@ -604,7 +608,9 @@ async def test_rediscovery(hass, mock_bleak_scanner_start, enable_bluetooth):
         assert mock_config_flow.mock_calls[1][1][0] == "switchbot"
 
 
-async def test_async_discovered_device_api(hass, mock_bleak_scanner_start):
+async def test_async_discovered_device_api(
+    hass, mock_bleak_scanner_start, macos_adapter
+):
     """Test the async_discovered_device API."""
     mock_bt = []
     with patch(
