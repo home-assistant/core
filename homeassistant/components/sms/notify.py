@@ -21,7 +21,7 @@ async def async_get_service(hass, config, discovery_info=None):
     """Get the SMS notification service."""
 
     if discovery_info is None:
-        number = config.get(CONF_RECIPIENT, None)
+        return
     else:
         number = discovery_info.get(CONF_RECIPIENT, None)
 
