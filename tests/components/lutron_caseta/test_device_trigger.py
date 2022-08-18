@@ -65,7 +65,7 @@ MOCK_BUTTON_DEVICES = [
         ],
         "leap_name": "Front Steps_Front Steps Sunnata Keypad",
         "type": "SunnataKeypad",
-        "model": "PJ2-3BRL-GXX-X01",
+        "model": "RRST-W4B-XX",
         "serial": 43845547,
     },
 ]
