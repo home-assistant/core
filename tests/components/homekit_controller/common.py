@@ -244,23 +244,6 @@ async def device_config_changed(hass, accessories):
             port=8080,
         )
     )
-    pairing._async_description_update(
-        HomeKitService(
-            name="TestDevice.local",
-            id="00:00:00:00:00:00",
-            model="",
-            config_num=3,
-            state_num=3,
-            feature_flags=0,
-            status_flags=0,
-            category=1,
-            protocol_version="1.0",
-            type="_hap._tcp.local.",
-            address="127.0.0.1",
-            addresses=["127.0.0.1"],
-            port=8080,
-        )
-    )
 
     # Wait for services to reconfigure
     await hass.async_block_till_done()
