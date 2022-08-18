@@ -11,6 +11,7 @@ from .entity import MicroBotEntity
 if TYPE_CHECKING:
     from .__init__ import MicroBotDataUpdateCoordinator
 
+
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up MicroBot based on a config entry."""
     coordinator: MicroBotDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
