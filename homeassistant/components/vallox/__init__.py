@@ -310,7 +310,7 @@ class ValloxServiceHandler:
             return
 
         _LOGGER.warning(
-            "The %s.%s service is deprecated and will be removed in future release. Please use the corresponding number entity",
+            "The %s.%s service is deprecated and will be removed in a future release. Please migrate to the corresponding number entity",
             DOMAIN,
             call.service,
         )
