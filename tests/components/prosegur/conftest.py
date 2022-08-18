@@ -10,6 +10,8 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
+CONTRACT = "1234abcd"
+
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
@@ -17,7 +19,7 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=PROSEGUR_DOMAIN,
         data={
-            "contract": "1234abcd",
+            "contract": CONTRACT,
             CONF_USERNAME: "user@email.com",
             CONF_PASSWORD: "password",
             "country": "PT",
@@ -29,13 +31,12 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_install() -> AsyncMock:
     """Return the mocked alarm install."""
     install = AsyncMock()
-    install.contract = "123"
-    install.installationId = "1234abcd"
+    install.contract = CONTRACT
     install.cameras = [Camera("1", "test_cam")]
     install.get_image = AsyncMock(return_value=b"ABC")
     install.request_image = AsyncMock()
 
-    install.data = {"contract": "123"}
+    install.data = {"contract": CONTRACT}
     install.activity = AsyncMock(return_value={"event": "armed"})
 
     return install

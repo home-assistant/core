@@ -20,8 +20,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_component, entity_registry as er
 
-INSTALL_ID = "1234abcd"
-PROSEGUR_ALARM_ENTITY = f"alarm_control_panel.contract_{INSTALL_ID}"
+from .conftest import CONTRACT
+
+PROSEGUR_ALARM_ENTITY = f"alarm_control_panel.contract_{CONTRACT}"
 
 
 @pytest.fixture
@@ -37,8 +38,7 @@ def mock_status(request):
     """Mock the status of the alarm."""
 
     install = AsyncMock()
-    install.contract = "123"
-    install.installationId = "1234abcd"
+    install.contract = CONTRACT
     install.status = request.param
 
     with patch("pyprosegur.installation.Installation.retrieve", return_value=install):
@@ -51,13 +51,13 @@ async def test_entity_registry(hass: HomeAssistant, mock_auth, mock_status) -> N
 
     entry = entity_registry.async_get(PROSEGUR_ALARM_ENTITY)
     # Prosegur alarm device unique_id is the contract id associated to the alarm account
-    assert entry.unique_id == INSTALL_ID
+    assert entry.unique_id == CONTRACT
 
     await hass.async_block_till_done()
 
     state = hass.states.get(PROSEGUR_ALARM_ENTITY)
 
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "contract 1234abcd"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == f"contract {CONTRACT}"
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 3
 
 

@@ -17,6 +17,6 @@ async def test_diagnostics(hass, hass_client, init_integration, mock_install):
         )
 
         assert diag == {
-            "installation": {"contract": "123"},
+            "installation": {"contract": "1234abcd"},
             "activity": {"event": "armed"},
         }
