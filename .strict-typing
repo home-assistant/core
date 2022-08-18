@@ -170,6 +170,8 @@ homeassistant.components.image_upload.*
 homeassistant.components.input_button.*
 homeassistant.components.input_select.*
 homeassistant.components.integration.*
+homeassistant.components.islamic_prayer_times.*
+homeassistant.components.isy994.*
 homeassistant.components.iqvia.*
 homeassistant.components.isy994.*
 homeassistant.components.jellyfin.*

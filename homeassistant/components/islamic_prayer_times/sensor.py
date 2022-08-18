@@ -1,4 +1,6 @@
 """Platform to retrieve Islamic prayer times information for Home Assistant."""
+from datetime import datetime
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -12,7 +14,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import IslamicPrayerDataUpdateCoordinator
-from .const import DOMAIN, NAME, PRAYER_TIMES_ICON
+from .const import DOMAIN, NAME
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -67,8 +69,6 @@ class IslamicPrayerTimeSensor(
     """Representation of an Islamic prayer time sensor."""
 
     _attr_device_class = SensorDeviceClass.TIMESTAMP
-    _attr_icon = PRAYER_TIMES_ICON
-    _attr_should_poll = False
     _attr_has_entity_name = True
 
     def __init__(
@@ -87,6 +87,6 @@ class IslamicPrayerTimeSensor(
         )
 
     @property
-    def native_value(self):
+    def native_value(self) -> datetime:
         """Return the state of the sensor."""
         return self.coordinator.data[self.entity_description.key]
