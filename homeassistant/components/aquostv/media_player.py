@@ -158,13 +158,19 @@ class SharpAquosTVDevice(MediaPlayerEntity):
         self._remote.power(0)
 
     @_retry
-    def volume_up(self):
+    def volume_up(self) -> None:
         """Volume up the media player."""
+        if self.volume_level is None:
+            _LOGGER.debug("Unknown volume in volume_up")
+            return
         self._remote.volume(int(self.volume_level * 60) + 2)
 
     @_retry
-    def volume_down(self):
+    def volume_down(self) -> None:
         """Volume down media player."""
+        if self.volume_level is None:
+            _LOGGER.debug("Unknown volume in volume_down")
+            return
         self._remote.volume(int(self.volume_level * 60) - 2)
 
     @_retry
