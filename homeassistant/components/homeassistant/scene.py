@@ -1,7 +1,7 @@
 """Allow users to set and activate scenes."""
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, ValuesView
 import logging
 from typing import Any, NamedTuple, cast
 
@@ -146,10 +146,11 @@ def scenes_with_entity(hass: HomeAssistant, entity_id: str) -> list[str]:
 
     platform: EntityPlatform = hass.data[DATA_PLATFORM]
 
+    scene_entities = cast(ValuesView[HomeAssistantScene], platform.entities.values())
     return [
         scene_entity.entity_id
-        for scene_entity in platform.entities.values()
-        if entity_id in cast(HomeAssistantScene, scene_entity).scene_config.states
+        for scene_entity in scene_entities
+        if entity_id in scene_entity.scene_config.states
     ]
 
 
