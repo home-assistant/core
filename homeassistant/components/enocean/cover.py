@@ -246,7 +246,10 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         self._watchdog_enabled = False
 
     async def watchdog(self):
-        """Watchdog to check if the cover movement stopped. After watchdog time expired, the watchdog queries the current status."""
+        """Watchdog to check if the cover movement stopped.
+
+        After watchdog time expired, the watchdog queries the current status.
+        """
 
         while 1:
             await asyncio.sleep(1)
