@@ -586,9 +586,9 @@ build.json @home-assistant/supervisor
 /homeassistant/components/lacrosse_view/ @IceBotYT
 /tests/components/lacrosse_view/ @IceBotYT
 /homeassistant/components/lametric/ @robbiet480 @frenck
+/tests/components/lametric/ @robbiet480 @frenck
 /homeassistant/components/landisgyr_heat_meter/ @vpathuis
 /tests/components/landisgyr_heat_meter/ @vpathuis
-/tests/components/lametric/ @robbiet480 @frenck
 /homeassistant/components/launch_library/ @ludeeus @DurgNomis-drol
 /tests/components/launch_library/ @ludeeus @DurgNomis-drol
 /homeassistant/components/laundrify/ @xLarry
