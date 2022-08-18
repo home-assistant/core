@@ -17,6 +17,7 @@ from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import raise_if_invalid_filename
 from homeassistant.util.ulid import ulid_hex
 
 DOMAIN = "file_upload"
@@ -73,10 +74,10 @@ class FileUploadData:
             if temp_dir.exists():
                 shutil.rmtree(temp_dir)
 
-            temp_dir.mkdir()
+            temp_dir.mkdir(0o700)
             return temp_dir
 
-        temp_dir = Path(await hass.async_add_executor_job(_create_temp_dir))
+        temp_dir = await hass.async_add_executor_job(_create_temp_dir)
 
         def cleanup_unused_files(ev: Event) -> None:
             """Clean up unused files."""
@@ -130,6 +131,11 @@ class FileUploadView(HomeAssistantView):
 
         if not isinstance(file_field, web.FileField):
             raise vol.Invalid("Expected a file")
+
+        try:
+            raise_if_invalid_filename(file_field.filename)
+        except ValueError as err:
+            raise web.HTTPBadRequest from err
 
         hass: HomeAssistant = request.app["hass"]
         file_id = ulid_hex()
