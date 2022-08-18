@@ -23,7 +23,6 @@ from .const import (
     HASS_CONFIG
     NETWORK_COORDINATOR,
     SIGNAL_COORDINATOR,
-    SMS_CONFIG,
     SMS_GATEWAY,
 )
 from .gateway import create_sms_gateway
