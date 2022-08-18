@@ -55,11 +55,12 @@ class ClassTypeHintMatch:
     matches: list[TypeHintMatch]
 
 
+_INNER_MATCH = r"((?:[\w\| ]+)|(?:\.{3})|(?:\w+\[.+\]))"
 _TYPE_HINT_MATCHERS: dict[str, re.Pattern[str]] = {
     # a_or_b matches items such as "DiscoveryInfoType | None"
-    "a_or_b": re.compile(r"^(\w+) \| (\w+)$"),
+    # or "dict | list | None"
+    "a_or_b": re.compile(rf"^(.+) \| {_INNER_MATCH}$"),
 }
-_INNER_MATCH = r"((?:[\w\| ]+)|(?:\.{3})|(?:\w+\[.+\]))"
 _INNER_MATCH_POSSIBILITIES = [i + 1 for i in range(5)]
 _TYPE_HINT_MATCHERS.update(
     {
@@ -2114,6 +2115,137 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     function_name="release_notes",
                     return_type=["str", None],
                     has_async_counterpart=True,
+                ),
+            ],
+        ),
+    ],
+    "vacuum": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="ToggleEntity",
+            matches=_TOGGLE_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="_BaseVacuum",
+            matches=[
+                TypeHintMatch(
+                    function_name="battery_level",
+                    return_type=["int", None],
+                ),
+                TypeHintMatch(
+                    function_name="battery_icon",
+                    return_type="str",
+                ),
+                TypeHintMatch(
+                    function_name="fan_speed",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="fan_speed_list",
+                    return_type="list[str]",
+                ),
+                TypeHintMatch(
+                    function_name="stop",
+                    kwargs_type="Any",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="return_to_base",
+                    kwargs_type="Any",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="clean_spot",
+                    kwargs_type="Any",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="locate",
+                    kwargs_type="Any",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="set_fan_speed",
+                    named_arg_types={
+                        "fan_speed": "str",
+                    },
+                    kwargs_type="Any",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="send_command",
+                    named_arg_types={
+                        "command": "str",
+                        "params": "dict[str, Any] | list[Any] | None",
+                    },
+                    kwargs_type="Any",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+            ],
+        ),
+        ClassTypeHintMatch(
+            base_class="VacuumEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="status",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="start_pause",
+                    kwargs_type="Any",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="async_pause",
+                    return_type=None,
+                ),
+                TypeHintMatch(
+                    function_name="async_start",
+                    return_type=None,
+                ),
+            ],
+        ),
+        ClassTypeHintMatch(
+            base_class="StateVacuumEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="state",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="start",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="pause",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="async_turn_on",
+                    kwargs_type="Any",
+                    return_type=None,
+                ),
+                TypeHintMatch(
+                    function_name="async_turn_off",
+                    kwargs_type="Any",
+                    return_type=None,
+                ),
+                TypeHintMatch(
+                    function_name="async_toggle",
+                    kwargs_type="Any",
+                    return_type=None,
                 ),
             ],
         ),
