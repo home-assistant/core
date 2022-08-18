@@ -10,9 +10,6 @@ from typing import TYPE_CHECKING, Final
 
 from bleak.backends.scanner import AdvertisementDataCallback
 
-from build.lib.homeassistant.components.bluetooth.util import (
-    async_get_bluetooth_adapters,
-)
 from homeassistant import config_entries
 from homeassistant.core import (
     CALLBACK_TYPE,
@@ -37,6 +34,7 @@ from .match import (
 )
 from .models import BluetoothCallback, BluetoothChange, BluetoothServiceInfoBleak
 from .usage import install_multiple_bleak_catcher, uninstall_multiple_bleak_catcher
+from .util import async_get_bluetooth_adapters
 
 if TYPE_CHECKING:
     from bleak.backends.device import BLEDevice
