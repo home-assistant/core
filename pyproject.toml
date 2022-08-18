@@ -123,8 +123,6 @@ extension-pkg-allow-list = [
     "ciso8601",
     "orjson",
     "cv2",
-]
-extension-pkg-whitelist = [
     "rrdtool",
 ]
 fail-on = [
