@@ -15,7 +15,7 @@
                 },
                 "description": "Select a Bluetooth adapter to setup"
             },
-            "select_adapter": {
+            "single_adapter": {
                 "description": "Do you want to setup the Bluetooth adapter {name}?"
             },
             "user": {
