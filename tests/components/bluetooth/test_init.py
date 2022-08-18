@@ -902,7 +902,7 @@ async def test_register_callback_survives_reload(
     switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
     switchbot_adv = AdvertisementData(
         local_name="wohand",
-        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+        service_uuids=["zba20d00-224d-11e6-9fb8-0002a5d5c51b"],
         manufacturer_data={89: b"\xd8.\xad\xcd\r\x85"},
         service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"H\x10c"},
     )
@@ -1470,3 +1470,23 @@ async def test_getting_the_scanner_returns_the_wrapped_instance(hass, enable_blu
     """Test getting the scanner returns the wrapped instance."""
     scanner = bluetooth.async_get_scanner(hass)
     assert isinstance(scanner, models.HaBleakScannerWrapper)
+
+
+async def test_migrate_single_entry_macos(
+    hass, mock_bleak_scanner_start, macos_adapter
+):
+    """Test we can migrate a single entry on MacOS."""
+    entry = MockConfigEntry(domain=bluetooth.DOMAIN, data={})
+    entry.add_to_hass(hass)
+    assert await async_setup_component(hass, bluetooth.DOMAIN, {})
+    await hass.async_block_till_done()
+    assert entry.unique_id == DEFAULT_ADDRESS
+
+
+async def test_migrate_single_entry_linux(hass, mock_bleak_scanner_start, one_adapter):
+    """Test we can migrate a single entry on Linux."""
+    entry = MockConfigEntry(domain=bluetooth.DOMAIN, data={})
+    entry.add_to_hass(hass)
+    assert await async_setup_component(hass, bluetooth.DOMAIN, {})
+    await hass.async_block_till_done()
+    assert entry.unique_id == "00:00:00:00:00:01"
