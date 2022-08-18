@@ -21,22 +21,22 @@ def rrd_scaled_duration(duration):
         number = int(duration[0:-1])
         if number <= 0:
             raise vol.Invalid("Duration must be positive")
-    except Exception:
-        raise vol.Invalid("Duration must be a number.")
+    except Exception as exc:
+        raise vol.Invalid("Duration must be a number.") from exc
 
     return duration
 
 
-def convert_to_seconds(s):
+def convert_to_seconds(time_str):
     """Convert time string expressed as <number>[m|h|d|s|w] to seconds."""
     # Source: https://stackoverflow.com/a/54331471
 
-    if isinstance(s, int):
+    if isinstance(time_str, int):
         # We are dealing with a raw number
-        return s
+        return time_str
 
     try:
-        seconds = int(s)
+        seconds = int(time_str)
         # We are dealing with an integer string
         return seconds
     except ValueError:
@@ -44,7 +44,7 @@ def convert_to_seconds(s):
         pass
 
     # Expecting a string ending in [m|h|d|s|w]
-    count = int(s[:-1])
-    unit = TIME_UNITS[s[-1]]
-    td = timedelta(**{unit: count})
-    return td.seconds + 60 * 60 * 24 * td.days
+    count = int(time_str[:-1])
+    unit = TIME_UNITS[time_str[-1]]
+    time_delta = timedelta(**{unit: count})
+    return time_delta.seconds + 60 * 60 * 24 * time_delta.days
