@@ -348,7 +348,19 @@ def gen_platform_strings_schema(config: Config, integration: Integration) -> vol
             vol.Optional("state"): cv.schema_with_slug_keys(
                 cv.schema_with_slug_keys(str, slug_validator=lowercase_validator),
                 slug_validator=device_class_validator,
-            )
+            ),
+            vol.Optional("state_attributes"): cv.schema_with_slug_keys(
+                cv.schema_with_slug_keys(
+                    {
+                        vol.Optional("name"): str,
+                        vol.Optional("values"): cv.schema_with_slug_keys(
+                            str, slug_validator=lowercase_validator
+                        ),
+                    },
+                    slug_validator=lowercase_validator,
+                ),
+                slug_validator=device_class_validator,
+            ),
         }
     )
 
