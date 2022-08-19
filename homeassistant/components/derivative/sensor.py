@@ -193,7 +193,7 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
             ):
                 return
 
-            if self._attr_native_unit_of_measurement is None:
+            if self.native_unit_of_measurement is None:
                 unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
                 self._attr_native_unit_of_measurement = self._unit_template.format(
                     "" if unit is None else unit
