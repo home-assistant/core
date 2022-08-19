@@ -1,8 +1,6 @@
 """Utilities for Risco tests."""
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
-from pytest import fixture
-
 from homeassistant.components.risco.const import DOMAIN, TYPE_LOCAL
 from homeassistant.const import (
     CONF_HOST,
@@ -80,53 +78,8 @@ async def setup_risco_local(hass, options={}):
     return config_entry
 
 
-def _zone_mock():
+def zone_mock():
+    """Return a mocked zone."""
     return MagicMock(
         triggered=False, bypassed=False, bypass=AsyncMock(return_value=True)
     )
-
-
-@fixture
-def two_zone_cloud():
-    """Fixture to mock alarm with two zones."""
-    zone_mocks = {0: _zone_mock(), 1: _zone_mock()}
-    alarm_mock = MagicMock()
-    with patch.object(
-        zone_mocks[0], "id", new_callable=PropertyMock(return_value=0)
-    ), patch.object(
-        zone_mocks[0], "name", new_callable=PropertyMock(return_value="Zone 0")
-    ), patch.object(
-        zone_mocks[1], "id", new_callable=PropertyMock(return_value=1)
-    ), patch.object(
-        zone_mocks[1], "name", new_callable=PropertyMock(return_value="Zone 1")
-    ), patch.object(
-        alarm_mock,
-        "zones",
-        new_callable=PropertyMock(return_value=zone_mocks),
-    ), patch(
-        "homeassistant.components.risco.RiscoCloud.get_state",
-        return_value=alarm_mock,
-    ):
-        yield zone_mocks
-
-
-@fixture
-def two_zone_local():
-    """Fixture to mock alarm with two zones."""
-    zone_mocks = {0: _zone_mock(), 1: _zone_mock()}
-    with patch.object(
-        zone_mocks[0], "id", new_callable=PropertyMock(return_value=0)
-    ), patch.object(
-        zone_mocks[0], "name", new_callable=PropertyMock(return_value="Zone 0")
-    ), patch.object(
-        zone_mocks[1], "id", new_callable=PropertyMock(return_value=1)
-    ), patch.object(
-        zone_mocks[1], "name", new_callable=PropertyMock(return_value="Zone 1")
-    ), patch(
-        "homeassistant.components.risco.RiscoLocal.partitions",
-        new_callable=PropertyMock(return_value={}),
-    ), patch(
-        "homeassistant.components.risco.RiscoLocal.zones",
-        new_callable=PropertyMock(return_value=zone_mocks),
-    ):
-        yield zone_mocks

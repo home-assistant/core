@@ -12,7 +12,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt
 
 from .util import TEST_CLOUD_CONFIG, setup_risco_cloud, setup_risco_local
-from .util import two_zone_cloud  # noqa: F401
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -166,7 +165,7 @@ def _check_state(hass, category, entity_id):
         assert "zone_entity_id" not in state.attributes
 
 
-async def test_cloud_setup(hass, two_zone_cloud):  # noqa: F811
+async def test_cloud_setup(hass, two_zone_cloud):
     """Test entity setup."""
     hass.config.set_time_zone("UTC")
     registry = er.async_get(hass)

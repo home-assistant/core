@@ -1,26 +1,49 @@
 """Tests for the Risco binary sensors."""
 from unittest.mock import PropertyMock, patch
 
+from pytest import fixture
+
 from homeassistant.components.risco import CannotConnectError, UnauthorizedError
 from homeassistant.components.risco.const import DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 
-from .util import (  # noqa: F401
+from .util import (
     TEST_CLOUD_CONFIG,
     TEST_LOCAL_CONFIG,
     TEST_SITE_UUID,
     setup_risco_cloud,
     setup_risco_local,
-    two_zone_cloud,
-    two_zone_local,
+    zone_mock,
 )
 
 from tests.common import MockConfigEntry
 
 FIRST_ENTITY_ID = "binary_sensor.zone_0"
 SECOND_ENTITY_ID = "binary_sensor.zone_1"
+
+
+@fixture
+def two_zone_local():
+    """Fixture to mock alarm with two zones."""
+    zone_mocks = {0: zone_mock(), 1: zone_mock()}
+    with patch.object(
+        zone_mocks[0], "id", new_callable=PropertyMock(return_value=0)
+    ), patch.object(
+        zone_mocks[0], "name", new_callable=PropertyMock(return_value="Zone 0")
+    ), patch.object(
+        zone_mocks[1], "id", new_callable=PropertyMock(return_value=1)
+    ), patch.object(
+        zone_mocks[1], "name", new_callable=PropertyMock(return_value="Zone 1")
+    ), patch(
+        "homeassistant.components.risco.RiscoLocal.partitions",
+        new_callable=PropertyMock(return_value={}),
+    ), patch(
+        "homeassistant.components.risco.RiscoLocal.zones",
+        new_callable=PropertyMock(return_value=zone_mocks),
+    ):
+        yield zone_mocks
 
 
 async def test_cloud_cannot_connect(hass):
@@ -55,7 +78,7 @@ async def test_cloud_unauthorized(hass):
         assert not registry.async_is_registered(SECOND_ENTITY_ID)
 
 
-async def test_cloud_setup(hass, two_zone_cloud):  # noqa: F811
+async def test_cloud_setup(hass, two_zone_cloud):
     """Test entity setup."""
     registry = er.async_get(hass)
 
@@ -96,7 +119,7 @@ async def _check_state(hass, zones, triggered, bypassed, entity_id, zone_id):
         assert hass.states.get(entity_id).attributes["zone_id"] == zone_id
 
 
-async def test_cloud_states(hass, two_zone_cloud):  # noqa: F811
+async def test_cloud_states(hass, two_zone_cloud):
     """Test the various alarm states."""
     await setup_risco_cloud(hass)
 
@@ -110,7 +133,7 @@ async def test_cloud_states(hass, two_zone_cloud):  # noqa: F811
     await _check_state(hass, two_zone_cloud, False, False, SECOND_ENTITY_ID, 1)
 
 
-async def test_cloud_bypass(hass, two_zone_cloud):  # noqa: F811
+async def test_cloud_bypass(hass, two_zone_cloud):
     """Test bypassing a zone."""
     await setup_risco_cloud(hass)
     with patch("homeassistant.components.risco.RiscoCloud.bypass_zone") as mock:
@@ -123,7 +146,7 @@ async def test_cloud_bypass(hass, two_zone_cloud):  # noqa: F811
         mock.assert_awaited_once_with(0, True)
 
 
-async def test_cloud_unbypass(hass, two_zone_cloud):  # noqa: F811
+async def test_cloud_unbypass(hass, two_zone_cloud):
     """Test unbypassing a zone."""
     await setup_risco_cloud(hass)
     with patch("homeassistant.components.risco.RiscoCloud.bypass_zone") as mock:
@@ -168,7 +191,7 @@ async def test_local_unauthorized(hass):
         assert not registry.async_is_registered(SECOND_ENTITY_ID)
 
 
-async def test_local_setup(hass, two_zone_local):  # noqa: F811
+async def test_local_setup(hass, two_zone_local):
     """Test entity setup."""
     registry = er.async_get(hass)
 
@@ -190,7 +213,7 @@ async def test_local_setup(hass, two_zone_local):  # noqa: F811
     assert device.manufacturer == "Risco"
 
 
-async def test_local_states(hass, two_zone_local):  # noqa: F811
+async def test_local_states(hass, two_zone_local):
     """Test the various alarm states."""
     await setup_risco_local(hass)
 
@@ -204,7 +227,7 @@ async def test_local_states(hass, two_zone_local):  # noqa: F811
     await _check_state(hass, two_zone_local, False, False, SECOND_ENTITY_ID, 1)
 
 
-async def test_local_bypass(hass, two_zone_local):  # noqa: F811
+async def test_local_bypass(hass, two_zone_local):
     """Test bypassing a zone."""
     await setup_risco_local(hass)
     with patch.object(two_zone_local[0], "bypass") as mock:
@@ -217,7 +240,7 @@ async def test_local_bypass(hass, two_zone_local):  # noqa: F811
         mock.assert_awaited_once_with(True)
 
 
-async def test_local_unbypass(hass, two_zone_local):  # noqa: F811
+async def test_local_unbypass(hass, two_zone_local):
     """Test unbypassing a zone."""
     await setup_risco_local(hass)
     with patch.object(two_zone_local[0], "bypass") as mock:
