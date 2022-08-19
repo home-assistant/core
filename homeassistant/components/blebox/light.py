@@ -56,11 +56,14 @@ COLOR_MODE_MAP = {
 class BleBoxLightEntity(BleBoxEntity, LightEntity):
     """Representation of BleBox lights."""
 
-    def __init__(self, feature):
+    _feature: blebox_uniapi.light.Light
+
+    def __init__(self, feature: blebox_uniapi.light.Light) -> None:
         """Initialize a BleBox light."""
         super().__init__(feature)
         self._attr_supported_color_modes = {self.color_mode}
-        self._attr_supported_features = LightEntityFeature.EFFECT
+        if feature.effect_list:
+            self._attr_supported_features = LightEntityFeature.EFFECT
 
     @property
     def is_on(self) -> bool:
