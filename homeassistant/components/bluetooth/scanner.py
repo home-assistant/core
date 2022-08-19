@@ -260,9 +260,9 @@ class HaScanner:
         if time_since_last_detection < SCANNER_WATCHDOG_TIMEOUT:
             return
         _LOGGER.info(
-            "%s: Bluetooth scanner has gone quiet for %s, restarting",
+            "%s: Bluetooth scanner has gone quiet for %ss, restarting",
             self.name,
-            SCANNER_WATCHDOG_INTERVAL,
+            SCANNER_WATCHDOG_TIMEOUT,
         )
         async with self._start_stop_lock:
             # Stop the scanner but not the watchdog
