@@ -57,7 +57,7 @@ def setup_platform(
     device_class = config.get(CONF_DEVICE_CLASS)
     if device_class is None:
         device_class = CoverDeviceClass.BLIND
-    watchdog_timeout = config.get(WATCHDOG_TIMEOUT)
+    watchdog_timeout = config[WATCHDOG_TIMEOUT]
     add_entities(
         [EnOceanCover(sender_id, dev_id, dev_name, device_class, watchdog_timeout)]
     )
