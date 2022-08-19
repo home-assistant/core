@@ -171,7 +171,6 @@ class Life360DeviceTracker(
                 # Overwrite new location related data with previous values.
                 for attr in _LOC_ATTRS:
                     setattr(self._data, attr, getattr(self._prev_data, attr))
-                self._addresses = []
 
             else:
                 # Process address field.
