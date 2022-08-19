@@ -154,7 +154,7 @@ class HaScanner:
 
         for attempt in range(start_attempts):
             _LOGGER.debug(
-                "%s: Starting bluetooth discovery attempts: (%s/%s)",
+                "%s: Starting bluetooth discovery attempt: (%s/%s)",
                 self.name,
                 attempt + 1,
                 start_attempts,
