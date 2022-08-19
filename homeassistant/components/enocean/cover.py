@@ -10,9 +10,9 @@ import voluptuous as vol  # pylint: disable=import-error
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    DEVICE_CLASS_BLIND,
     DEVICE_CLASSES_SCHEMA,
     PLATFORM_SCHEMA,
+    CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
 )
@@ -57,7 +57,7 @@ def setup_platform(
     dev_name = config.get(CONF_NAME)
     device_class = config.get(CONF_DEVICE_CLASS)
     if device_class is None:
-        device_class = DEVICE_CLASS_BLIND
+        device_class = CoverDeviceClass.BLIND
     watchdog_timeout = config.get(WATCHDOG_TIMEOUT)
     add_entities(
         [
