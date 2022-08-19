@@ -74,7 +74,7 @@ class MicroBotDataUpdateCoordinator(PassiveBluetoothDataUpdateCoordinator):
         ble_device: BLEDevice,
     ) -> None:
         """Initialize."""
-        self.api = client
+        self.api: MicroBotApiClient = client
         self._ready_event = asyncio.Event()
         self.data: dict[str, Any] = {}
         self.ble_device = ble_device
