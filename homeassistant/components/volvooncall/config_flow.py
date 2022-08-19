@@ -20,7 +20,9 @@ USER_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_REGION): vol.In({"na": "North America", "cn": "China"}),
+        vol.Optional(CONF_REGION): vol.In(
+            {"na": "North America", "cn": "China", None: "Rest of world"}
+        ),
         vol.Optional(CONF_MUTABLE, default=True): cv.boolean,
         vol.Optional(CONF_SCANDINAVIAN_MILES, default=False): cv.boolean,
     },
