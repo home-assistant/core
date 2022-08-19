@@ -29,7 +29,6 @@ from .device import EnOceanEntity
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "EnOcean roller shutter"
-DEPENDENCIES = ["enocean"]
 
 CONF_SENDER_ID = "sender_id"
 WATCHDOG_TIMEOUT = "watchdog_timeout"
