@@ -189,7 +189,11 @@ class RiscoCloudAlarm(RiscoAlarm, RiscoEntity):
     """Representation of a Risco partition."""
 
     def __init__(
-        self, coordinator, partition_id, code: str, options: dict[str, Any]
+        self,
+        coordinator: RiscoDataUpdateCoordinator,
+        partition_id: int,
+        code: str,
+        options: dict[str, Any],
     ) -> None:
         """Init the partition."""
         super().__init__(
