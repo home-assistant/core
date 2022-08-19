@@ -58,7 +58,7 @@ FLUME_BINARY_SENSORS: tuple[FlumeBinarySensorEntityDescription, ...] = (
     ),
     FlumeBinarySensorEntityDescription(
         key="bridge",
-        name="Bridge disconnected",
+        name="Bridge",
         event_rule=NOTIFICATION_BRIDGE_DISCONNECT,
         icon="mdi:bridge",
         reverse_output=True,
