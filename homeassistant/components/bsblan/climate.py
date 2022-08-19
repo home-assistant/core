@@ -106,14 +106,14 @@ class BSBLanClimate(ClimateEntity):
             self._store_hvac_mode = self._attr_hvac_mode
             await self.async_set_data(preset_mode=preset_mode)
 
-    async def async_set_hvac_mode(self, hvac_mode):
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVAC mode."""
         _LOGGER.debug("Setting HVAC mode to: %s", hvac_mode)
         # preset should be none when hvac mode is set
         self._attr_preset_mode = PRESET_NONE
         await self.async_set_data(hvac_mode=hvac_mode)
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
         await self.async_set_data(**kwargs)
 
