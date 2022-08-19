@@ -103,8 +103,8 @@ class BrottsplatskartanSensor(SensorEntity):
             return
 
         for incident in incidents:
-            incident_type = incident.get("title_type", "")
-            incident_counts[incident_type] += 1
+            if (incident_type := incident.get("title_type")) is not None:
+                incident_counts[incident_type] += 1
 
         self._attr_extra_state_attributes = incident_counts
         self._attr_native_value = len(incidents)
