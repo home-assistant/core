@@ -169,8 +169,6 @@ class BMWSensor(BMWBaseEntity, SensorEntity):
         """Initialize BMW vehicle sensor."""
         super().__init__(coordinator, vehicle)
         self.entity_description = description
-
-        self._attr_name = description.name
         self._attr_unique_id = f"{vehicle.vin}-{description.key}"
 
         # Set the correct unit of measurement based on the unit_type

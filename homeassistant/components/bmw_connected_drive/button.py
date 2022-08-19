@@ -112,8 +112,6 @@ class BMWButton(BMWBaseEntity, ButtonEntity):
         """Initialize BMW vehicle sensor."""
         super().__init__(coordinator, vehicle)
         self.entity_description = description
-
-        self._attr_name = description.name
         self._attr_unique_id = f"{vehicle.vin}-{description.key}"
 
     async def async_press(self) -> None:

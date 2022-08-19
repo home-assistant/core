@@ -224,8 +224,6 @@ class BMWBinarySensor(BMWBaseEntity, BinarySensorEntity):
         super().__init__(coordinator, vehicle)
         self.entity_description = description
         self._unit_system = unit_system
-
-        self._attr_name = description.name
         self._attr_unique_id = f"{vehicle.vin}-{description.key}"
 
     @callback
