@@ -663,7 +663,7 @@ class DarkSkySensor(SensorEntity):
         self.forecast_data = forecast_data
         self.forecast_day = forecast_day
         self.forecast_hour = forecast_hour
-        self._icon = None
+        self._icon: str | None = None
         self._unit_of_measurement = None
 
         if forecast_day is not None:
@@ -710,7 +710,7 @@ class DarkSkySensor(SensorEntity):
 
         return self.entity_description.icon
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from Dark Sky and updates the states."""
         # Call the API for new forecast data. Each sensor will re-trigger this
         # same exact call, but that's fine. We cache results for a short period
