@@ -163,6 +163,7 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
             final_unit_prefix = "" if unit_prefix is None else unit_prefix
             self._unit_template = f"{final_unit_prefix}{{}}/{unit_time}"
             # we postpone the definition of unit_of_measurement to later
+            self._attr_native_unit_of_measurement = None
         else:
             self._attr_native_unit_of_measurement = unit_of_measurement
 
