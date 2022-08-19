@@ -49,7 +49,7 @@ __all__ = [
 
 
 class USBCallbackMatcher(USBMatcher):
-    """Callback matcher for the usb integration."""
+    """Callback matcher for the USB integration."""
 
 
 @hass_callback
@@ -58,7 +58,7 @@ def async_register_callback(
     callback: Callable[[UsbServiceInfo], None],
     matcher: USBCallbackMatcher | None = None,
 ) -> CALLBACK_TYPE:
-    """Register to receive a callback when a new usb device is discovered."""
+    """Register to receive a callback when a new USB device is discovered."""
     discovery: USBDiscovery = hass.data[DOMAIN]
     return discovery.async_register_callback(callback, matcher)
 
@@ -67,11 +67,10 @@ def async_register_callback(
 def async_is_plugged_in(hass: HomeAssistant, matcher: USBCallbackMatcher) -> bool:
     """Return True is a USB device is present."""
     usb_discovery: USBDiscovery = hass.data[DOMAIN]
-    for device_tuple in usb_discovery.seen:
-        device = USBDevice(*device_tuple)
-        if _is_matching(device, matcher):
-            return True
-    return False
+    return any(
+        _is_matching(USBDevice(*device_tuple), matcher)
+        for device_tuple in usb_discovery.seen
+    )
 
 
 @dataclasses.dataclass
