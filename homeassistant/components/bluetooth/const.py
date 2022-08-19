@@ -29,8 +29,10 @@ DATA_MANAGER: Final = "bluetooth_manager"
 
 UNAVAILABLE_TRACK_SECONDS: Final = 60 * 5
 START_TIMEOUT = 12
-SCANNER_WATCHDOG_TIMEOUT: Final = 60 * 5
-SCANNER_WATCHDOG_INTERVAL: Final = timedelta(seconds=SCANNER_WATCHDOG_TIMEOUT)
+SCANNER_WATCHDOG_TIMEOUT: Final = (
+    180  # How many seconds before a device is considered lost
+)
+SCANNER_WATCHDOG_INTERVAL: Final = timedelta(seconds=SCANNER_WATCHDOG_TIMEOUT / 2)
 
 
 class AdapterDetails(TypedDict, total=False):

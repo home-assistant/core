@@ -207,6 +207,11 @@ class HaScanner:
     async def _async_scanner_watchdog(self, now: datetime) -> None:
         """Check if the scanner is running."""
         time_since_last_detection = MONOTONIC_TIME() - self._last_detection
+        _LOGGER.debug(
+            "%s: Scanner watchdog time_since_last_detection: %s",
+            self.name,
+            time_since_last_detection,
+        )
         if time_since_last_detection < SCANNER_WATCHDOG_TIMEOUT:
             return
         _LOGGER.info(
