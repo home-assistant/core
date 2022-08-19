@@ -90,7 +90,7 @@ class CompensationSensor(SensorEntity):
         self._unique_id = unique_id
         self._name = name
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Handle added to Hass."""
         self.async_on_remove(
             async_track_state_change_event(
