@@ -91,7 +91,6 @@ async def async_setup_entry(
 
     avr: Connection = hass.data[DOMAIN][config_entry.entry_id]
 
-    _LOGGER.debug("Initializing Zones %s", avr.protocol.zones)
     _LOGGER.debug("Connection data dump: %s", avr.dump_conndata)
 
     async_add_entities(
