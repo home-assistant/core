@@ -32,7 +32,7 @@ async def async_setup_entry(
 
     for vehicle in coordinator.account.vehicles:
         if not coordinator.read_only:
-            entities.append(BMWLock(coordinator, vehicle, "lock", "BMW lock"))
+            entities.append(BMWLock(coordinator, vehicle, "lock", "Lock"))
     async_add_entities(entities)
 
 
@@ -50,9 +50,8 @@ class BMWLock(BMWBaseEntity, LockEntity):
         super().__init__(coordinator, vehicle)
 
         self._attribute = attribute
-        self._attr_name = f"{vehicle.name} {attribute}"
+        self._attr_name = sensor_name
         self._attr_unique_id = f"{vehicle.vin}-{attribute}"
-        self._sensor_name = sensor_name
         self.door_lock_state_available = DOOR_LOCK_STATE in vehicle.available_attributes
 
     async def async_lock(self, **kwargs: Any) -> None:
