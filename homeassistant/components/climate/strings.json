@@ -25,5 +25,21 @@
       "dry": "Dry",
       "fan_only": "Fan only"
     }
+  },
+  "state_attributes": {
+    "_": {
+      "preset_mode": {
+        "values": {
+          "none": "None",
+          "eco": "Eco",
+          "away": "Away",
+          "boost": "Boost",
+          "comfort": "Comfort",
+          "home": "Home",
+          "sleep": "Sleep",
+          "activity": "Activity"
+        }
+      }
+    }
   }
 }
