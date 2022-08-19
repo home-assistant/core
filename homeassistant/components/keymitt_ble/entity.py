@@ -14,6 +14,7 @@ from .const import MANUFACTURER
 
 class MicroBotEntity(PassiveBluetoothCoordinatorEntity):
     """Generic entity for all MicroBots."""
+
     coordinator: MicroBotDataUpdateCoordinator
     def __init__(self, coordinator, config_entry):
         """Initialise the entity."""
