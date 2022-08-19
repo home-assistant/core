@@ -86,6 +86,7 @@ class HaScanner:
         self._cancel_stop: CALLBACK_TYPE | None = None
         self._cancel_watchdog: CALLBACK_TYPE | None = None
         self._last_detection = 0.0
+        self._start_time = 0.0
         self._callbacks: list[
             Callable[[BLEDevice, AdvertisementData, float, str], None]
         ] = []
@@ -194,7 +195,7 @@ class HaScanner:
     @hass_callback
     def _async_setup_scanner_watchdog(self) -> None:
         """If Dbus gets restarted or updated, we need to restart the scanner."""
-        self._last_detection = MONOTONIC_TIME()
+        self._start_time = self._last_detection = MONOTONIC_TIME()
         self._cancel_watchdog = async_track_time_interval(
             self.hass, self._async_scanner_watchdog, SCANNER_WATCHDOG_INTERVAL
         )
@@ -216,12 +217,19 @@ class HaScanner:
         )
         async with self._start_stop_lock:
             await self._async_stop()
+            if self._start_time == self._last_detection:
+                await self._async_reset_adapter()
             await self._async_start()
 
     async def _async_hass_stopping(self, event: Event) -> None:
         """Stop the Bluetooth integration at shutdown."""
         self._cancel_stop = None
         await self.async_stop()
+
+    async def _async_reset_adapter(self) -> None:
+        """Reset the adapter."""
+        _LOGGER.debug("%s: Resetting adapter", self.name)
+        # TODO: implement in bluetooth-adapters library
 
     async def async_stop(self) -> None:
         """Stop bluetooth scanner."""

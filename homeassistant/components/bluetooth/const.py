@@ -29,10 +29,20 @@ DATA_MANAGER: Final = "bluetooth_manager"
 
 UNAVAILABLE_TRACK_SECONDS: Final = 60 * 5
 START_TIMEOUT = 12
-SCANNER_WATCHDOG_TIMEOUT: Final = (
-    180  # How many seconds before a device is considered lost
-)
-SCANNER_WATCHDOG_INTERVAL: Final = timedelta(seconds=SCANNER_WATCHDOG_TIMEOUT / 2)
+
+# We must recover before we hit the 180s mark
+# where the device is removed from the stack
+# or the devices will go unavailable. Since
+# we only check every 30s, we need this number
+# to be
+# 180s Time when device is removed from stack
+# - 30s check interval
+# - 20s scanner restart time
+#
+SCANNER_WATCHDOG_TIMEOUT: Final = 130
+# How often to check if the scanner has reached
+# the SCANNER_WATCHDOG_TIMEOUT without seeing anything
+SCANNER_WATCHDOG_INTERVAL: Final = timedelta(seconds=30)
 
 
 class AdapterDetails(TypedDict, total=False):
