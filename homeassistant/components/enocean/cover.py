@@ -2,9 +2,11 @@
 from __future__ import annotations
 
 import asyncio
+from enum import Enum
 import logging
 
-from enocean.protocol.packet import Packet
+from enocean.protocol.constants import RORG
+from enocean.protocol.packet import RadioPacket
 from enocean.utils import combine_hex
 import voluptuous as vol
 
@@ -63,6 +65,14 @@ def setup_platform(
     )
 
 
+class EnOceanCoverCommand(Enum):
+    """The possible commands to be sent to an EnOcean cover."""
+
+    SET_POSITION = 1
+    STOP = 2
+    QUERY_POSITION = 3
+
+
 class EnOceanCover(EnOceanEntity, CoverEntity):
     """Representation of an EnOcean Cover (EEP D2-05-00)."""
 
@@ -115,11 +125,7 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         self._is_opening = True
         self._is_closing = False
         self.start_or_feed_watchdog()
-
-        telegram = [0xD2, 0, 0, 0, 1]
-        telegram.extend(self._sender_id)
-        telegram.extend([0x00])
-        self.send_telegram(telegram)
+        self.send_telegram(EnOceanCoverCommand.SET_POSITION, 0)
 
     def close_cover(self, **kwargs) -> None:
         """Close the cover."""
@@ -127,11 +133,7 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         self._is_opening = False
         self._is_closing = True
         self.start_or_feed_watchdog()
-
-        telegram = [0xD2, 100, 0, 0, 1]
-        telegram.extend(self._sender_id)
-        telegram.extend([0x00])
-        self.send_telegram(telegram)
+        self.send_telegram(EnOceanCoverCommand.SET_POSITION, 100)
 
     def set_cover_position(self, **kwargs) -> None:
         """Set the cover position."""
@@ -148,11 +150,9 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
             self._is_closing = True
 
         self.start_or_feed_watchdog()
-
-        telegram = [0xD2, 100 - kwargs[ATTR_POSITION], 0, 0, 1]
-        telegram.extend(self._sender_id)
-        telegram.extend([0x00])
-        self.send_telegram(telegram)
+        self.send_telegram(
+            EnOceanCoverCommand.SET_POSITION, 100 - kwargs[ATTR_POSITION]
+        )
 
     def stop_cover(self, **kwargs) -> None:
         """Stop any cover movement."""
@@ -160,11 +160,7 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         self._state_changed_by_command = True
         self._is_opening = False
         self._is_closing = False
-
-        telegram = [0xD2, 2]
-        telegram.extend(self._sender_id)
-        telegram.extend([0x00])
-        self.send_telegram(telegram)
+        self.send_telegram(EnOceanCoverCommand.STOP)
 
     def value_changed(self, packet):
         """Fire an event with the data that have changed.
@@ -202,11 +198,17 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
 
         self.schedule_update_ha_state()
 
-    def send_telegram(self, data):
-        """Send a telegram via the EnOcean dongle to only this device."""
-        # optional data contains: number of subtelegrams (fixed to 3 for sending),
-        # destination id, max dBm (0xFF) for sending and security level 0
-        packet = Packet(0x01, data=data, optional=[3] + self.dev_id + [0xFF, 0])
+    def send_telegram(self, command: EnOceanCoverCommand, position: int = 0):
+        """Send an EnOcean telegram with the respective command."""
+        packet = RadioPacket.create(
+            rorg=RORG.VLD,
+            rorg_func=0x05,
+            rorg_type=0x00,
+            destination=self.dev_id,
+            sender=self._sender_id,
+            command=command.value,
+            POS=position,
+        )
         dispatcher_send(self.hass, SIGNAL_SEND_MESSAGE, packet)
 
     def start_or_feed_watchdog(self):
@@ -236,10 +238,7 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
                 return
 
             if self._watchdog_seconds_remaining == 0:
-                telegram = [0xD2, 3]
-                telegram.extend(self._sender_id)
-                telegram.extend([0x00])
-                self.send_telegram(telegram)
+                self.send_telegram(EnOceanCoverCommand.QUERY_POSITION)
                 await asyncio.sleep(2)
 
                 self._watchdog_seconds_remaining = self._watchdog_timeout
