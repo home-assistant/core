@@ -488,9 +488,9 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
         self._set_confirm_only()
         self.context["title_placeholders"] = {CONF_NAME: self._title}
-        return await self.async_step_confirm_usb()
+        return await self.async_step_confirm()
 
-    async def async_step_confirm_usb(self, user_input=None):
+    async def async_step_confirm(self, user_input=None):
         """Confirm a discovery."""
         if user_input is not None or not onboarding.async_is_onboarded(self.hass):
             if not await self._detect_radio_type():
@@ -502,7 +502,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_choose_formation_strategy()
 
         return self.async_show_form(
-            step_id="confirm_usb",
+            step_id="confirm",
             description_placeholders={CONF_NAME: self._title},
         )
 
