@@ -20,7 +20,7 @@ from homeassistant.const import (
     TIME_MINUTES,
     TIME_SECONDS,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
@@ -149,7 +149,7 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
         self._attr_unique_id = unique_id
         self._sensor_source_id = source_entity
         self._round_digits = round_digits
-        self._state = 0
+        self._state = Decimal(0)
         self._state_list = (
             []
         )  # List of tuples with (timestamp_start, timestamp_end, derivative)
@@ -178,13 +178,12 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
                 _LOGGER.warning("Could not restore last state: %s", err)
 
         @callback
-        def calc_derivative(event):
+        def calc_derivative(event: Event) -> None:
             """Handle the sensor state changes."""
-            old_state = event.data.get("old_state")
-            new_state = event.data.get("new_state")
             if (
-                old_state is None
+                (old_state := event.data.get("old_state")) is None
                 or old_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+                or (new_state := event.data.get("new_state")) is None
                 or new_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
             ):
                 return
@@ -242,7 +241,7 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
             if elapsed_time > self._time_window:
                 derivative = new_derivative
             else:
-                derivative = 0
+                derivative = Decimal(0)
                 for (start, end, value) in self._state_list:
                     weight = calculate_weight(start, end, new_state.last_updated)
                     derivative = derivative + (value * Decimal(weight))
