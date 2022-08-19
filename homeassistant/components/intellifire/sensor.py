@@ -59,14 +59,12 @@ INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
         key="flame_height",
         icon="mdi:fire-circle",
         name="Flame height",
-        has_entity_name=True,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.flameheight,
     ),
     IntellifireSensorEntityDescription(
         key="temperature",
         name="Temperature",
-        has_entity_name=True,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
@@ -75,7 +73,6 @@ INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
     IntellifireSensorEntityDescription(
         key="target_temp",
         name="Target temperature",
-        has_entity_name=True,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
@@ -85,7 +82,6 @@ INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
         key="fan_speed",
         icon="mdi:fan",
         name="Fan speed",
-        has_entity_name=True,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.fanspeed,
     ),
@@ -93,7 +89,6 @@ INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
         key="timer_end_timestamp",
         icon="mdi:timer-sand",
         name="Timer end",
-        has_entity_name=True,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=_time_remaining_to_timestamp,
@@ -101,7 +96,6 @@ INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
     IntellifireSensorEntityDescription(
         key="downtime",
         name="Downtime",
-        has_entity_name=True,
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=_downtime_to_timestamp,
@@ -109,7 +103,6 @@ INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
     IntellifireSensorEntityDescription(
         key="uptime",
         name="Uptime",
-        has_entity_name=True,
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda data: utcnow() - timedelta(seconds=data.uptime),
@@ -117,7 +110,6 @@ INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
     IntellifireSensorEntityDescription(
         key="connection_quality",
         name="Connection quality",
-        has_entity_name=True,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.connection_quality,
         entity_registry_enabled_default=False,
@@ -125,7 +117,6 @@ INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
     IntellifireSensorEntityDescription(
         key="ecm_latency",
         name="ECM latency",
-        has_entity_name=True,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.ecm_latency,
         entity_registry_enabled_default=False,
@@ -133,7 +124,6 @@ INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
     IntellifireSensorEntityDescription(
         key="ipv4_address",
         name="IP",
-        has_entity_name=True,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.ipv4_address,
     ),

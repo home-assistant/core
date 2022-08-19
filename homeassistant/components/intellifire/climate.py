@@ -17,7 +17,7 @@ from .const import DEFAULT_THERMOSTAT_TEMP, DOMAIN, LOGGER
 from .entity import IntellifireEntity
 
 INTELLIFIRE_CLIMATES: tuple[ClimateEntityDescription, ...] = (
-    ClimateEntityDescription(key="climate", name="Thermostat", has_entity_name=True),
+    ClimateEntityDescription(key="climate", name="Thermostat"),
 )
 
 

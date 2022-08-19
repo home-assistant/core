@@ -39,35 +39,30 @@ INTELLIFIRE_BINARY_SENSORS: tuple[IntellifireBinarySensorEntityDescription, ...]
     IntellifireBinarySensorEntityDescription(
         key="on_off",  # This is the sensor name
         name="Flame",  # This is the human readable name
-        has_entity_name=True,
         icon="mdi:fire",
         value_fn=lambda data: data.is_on,
     ),
     IntellifireBinarySensorEntityDescription(
         key="timer_on",
         name="Timer on",
-        has_entity_name=True,
         icon="mdi:camera-timer",
         value_fn=lambda data: data.timer_on,
     ),
     IntellifireBinarySensorEntityDescription(
         key="pilot_light_on",
         name="Pilot light on",
-        has_entity_name=True,
         icon="mdi:fire-alert",
         value_fn=lambda data: data.pilot_on,
     ),
     IntellifireBinarySensorEntityDescription(
         key="thermostat_on",
         name="Thermostat on",
-        has_entity_name=True,
         icon="mdi:home-thermometer-outline",
         value_fn=lambda data: data.thermostat_on,
     ),
     IntellifireBinarySensorEntityDescription(
         key="error_pilot_flame",
         name="Pilot flame error",
-        has_entity_name=True,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.error_pilot_flame,
         device_class=BinarySensorDeviceClass.PROBLEM,
@@ -75,7 +70,6 @@ INTELLIFIRE_BINARY_SENSORS: tuple[IntellifireBinarySensorEntityDescription, ...]
     IntellifireBinarySensorEntityDescription(
         key="error_flame",
         name="Flame error",
-        has_entity_name=True,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.error_flame,
         device_class=BinarySensorDeviceClass.PROBLEM,
@@ -83,7 +77,6 @@ INTELLIFIRE_BINARY_SENSORS: tuple[IntellifireBinarySensorEntityDescription, ...]
     IntellifireBinarySensorEntityDescription(
         key="error_fan_delay",
         name="Fan delay error",
-        has_entity_name=True,
         icon="mdi:fan-alert",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.error_fan_delay,
@@ -92,7 +85,6 @@ INTELLIFIRE_BINARY_SENSORS: tuple[IntellifireBinarySensorEntityDescription, ...]
     IntellifireBinarySensorEntityDescription(
         key="error_maintenance",
         name="Maintenance error",
-        has_entity_name=True,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.error_maintenance,
         device_class=BinarySensorDeviceClass.PROBLEM,
@@ -100,7 +92,6 @@ INTELLIFIRE_BINARY_SENSORS: tuple[IntellifireBinarySensorEntityDescription, ...]
     IntellifireBinarySensorEntityDescription(
         key="error_disabled",
         name="Disabled error",
-        has_entity_name=True,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.error_disabled,
         device_class=BinarySensorDeviceClass.PROBLEM,
@@ -108,7 +99,6 @@ INTELLIFIRE_BINARY_SENSORS: tuple[IntellifireBinarySensorEntityDescription, ...]
     IntellifireBinarySensorEntityDescription(
         key="error_fan",
         name="Fan error",
-        has_entity_name=True,
         icon="mdi:fan-alert",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.error_fan,
@@ -117,7 +107,6 @@ INTELLIFIRE_BINARY_SENSORS: tuple[IntellifireBinarySensorEntityDescription, ...]
     IntellifireBinarySensorEntityDescription(
         key="error_lights",
         name="Lights error",
-        has_entity_name=True,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.error_lights,
         device_class=BinarySensorDeviceClass.PROBLEM,
@@ -125,7 +114,6 @@ INTELLIFIRE_BINARY_SENSORS: tuple[IntellifireBinarySensorEntityDescription, ...]
     IntellifireBinarySensorEntityDescription(
         key="error_accessory",
         name="Accessory error",
-        has_entity_name=True,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.error_accessory,
         device_class=BinarySensorDeviceClass.PROBLEM,
@@ -133,7 +121,6 @@ INTELLIFIRE_BINARY_SENSORS: tuple[IntellifireBinarySensorEntityDescription, ...]
     IntellifireBinarySensorEntityDescription(
         key="error_soft_lock_out",
         name="Soft lock out error",
-        has_entity_name=True,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.error_soft_lock_out,
         device_class=BinarySensorDeviceClass.PROBLEM,
@@ -141,7 +128,6 @@ INTELLIFIRE_BINARY_SENSORS: tuple[IntellifireBinarySensorEntityDescription, ...]
     IntellifireBinarySensorEntityDescription(
         key="error_ecm_offline",
         name="Ecm offline error",
-        has_entity_name=True,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.error_ecm_offline,
         device_class=BinarySensorDeviceClass.PROBLEM,
@@ -149,7 +135,6 @@ INTELLIFIRE_BINARY_SENSORS: tuple[IntellifireBinarySensorEntityDescription, ...]
     IntellifireBinarySensorEntityDescription(
         key="error_offline",
         name="Offline error",
-        has_entity_name=True,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.error_offline,
         device_class=BinarySensorDeviceClass.PROBLEM,

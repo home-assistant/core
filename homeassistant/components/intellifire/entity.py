@@ -11,6 +11,7 @@ class IntellifireEntity(CoordinatorEntity[IntellifireDataUpdateCoordinator]):
     """Define a generic class for Intellifire entities."""
 
     _attr_attribution = "Data provided by unpublished Intellifire API"
+    _attr_has_entity_name = True
 
     def __init__(
         self,
