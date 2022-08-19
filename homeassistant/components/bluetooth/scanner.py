@@ -153,6 +153,12 @@ class HaScanner:
         start_attempts = START_ATTEMPTS if allow_reset else 1
 
         for attempt in range(start_attempts):
+            _LOGGER.debug(
+                "%s: Starting bluetooth discovery attempts: (%s/%s)",
+                self.name,
+                attempt + 1,
+                start_attempts,
+            )
             try:
                 async with async_timeout.timeout(START_TIMEOUT):
                     await self.scanner.start()  # type: ignore[no-untyped-call]
@@ -274,7 +280,7 @@ class HaScanner:
 
     async def _async_reset_adapter(self) -> None:
         """Reset the adapter."""
-        _LOGGER.warning("%s: adapter stopped responding, executing reset", self.name)
+        _LOGGER.warning("%s: adapter stopped responding; executing reset", self.name)
         result = await async_reset_adapter(self.adapter)
         _LOGGER.info("%s: adapter reset result: %s", self.name, result)
 
@@ -285,7 +291,7 @@ class HaScanner:
 
     async def _async_stop(self) -> None:
         """Stop bluetooth discovery under the lock."""
-        _LOGGER.debug("Stopping bluetooth discovery")
+        _LOGGER.debug("%s: Stopping bluetooth discovery", self.name)
         if self._cancel_watchdog:
             self._cancel_watchdog()
             self._cancel_watchdog = None
@@ -298,4 +304,4 @@ class HaScanner:
             # This is not fatal, and they may want to reload
             # the config entry to restart the scanner if they
             # change the bluetooth dongle.
-            _LOGGER.error("Error stopping scanner: %s", ex)
+            _LOGGER.error("%s: Error stopping scanner: %s", self.name, ex)
