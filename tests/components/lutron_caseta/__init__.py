@@ -54,13 +54,7 @@ class MockBridge:
             self.is_currently_connected = True
 
     def add_subscriber(self, device_id: str, callback_):
-        """
-        Add a listener to be notified of state changes.
-
-        :param device_id: device id, e.g. 5
-        :param callback_: callback to invoke
-        """
-        # self._subscribers[device_id] = callback_
+        """Mock a listener to be notified of state changes."""
 
     def is_connected(self):
         """Return whether the mock bridge is connected."""
