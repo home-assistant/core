@@ -69,12 +69,17 @@ class VolvoOnCallConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         session = async_get_clientsession(self.hass)
 
+        region: str | None = None
+
+        if CONF_REGION in user_input.keys():
+            region = user_input[CONF_REGION]
+
         connection = Connection(
             session=session,
             username=user_input[CONF_USERNAME],
             password=user_input[CONF_PASSWORD],
             service_url=None,
-            region=user_input[CONF_REGION],
+            region=region,
         )
 
         test_volvo_data = VolvoData(self.hass, connection, user_input)

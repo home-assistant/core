@@ -2,6 +2,7 @@
 
 import logging
 
+from aiohttp.client_exceptions import ClientResponseError
 import async_timeout
 import voluptuous as vol
 from volvooncall import Connection
@@ -217,7 +218,7 @@ class VolvoData:
         """Check if provided username/password/region authenticate."""
         try:
             await self.connection.get("customeraccounts")
-        except Exception as exc:
+        except ClientResponseError as exc:
             raise InvalidAuth from exc
 
 
