@@ -299,10 +299,6 @@ class SystemBridgeEntity(CoordinatorEntity[SystemBridgeDataUpdateCoordinator]):
         """Return the name of the entity."""
         return self._name
 
-
-class SystemBridgeDeviceEntity(SystemBridgeEntity):
-    """Defines a System Bridge device entity."""
-
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information about this System Bridge instance."""
