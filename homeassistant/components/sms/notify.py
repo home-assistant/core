@@ -44,7 +44,7 @@ class SMSNotificationService(BaseNotificationService):
 
         gateway = self.hass.data[DOMAIN][SMS_GATEWAY][GATEWAY]
 
-        targets = kwargs.get(CONF_TARGET, [self.number])
+        targets = kwargs.get(CONF_TARGET)
         if targets is None:
             _LOGGER.error("No target number specified, cannot send message")
             return
