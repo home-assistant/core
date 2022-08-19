@@ -3,14 +3,25 @@
 import logging
 
 import async_timeout
+import voluptuous as vol
 from volvooncall import Connection
 from volvooncall.dashboard import Instrument
 
-from homeassistant import config_entries
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
+from homeassistant.components.repairs import IssueSeverity, async_create_issue
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_REGION,
+    CONF_RESOURCES,
+    CONF_SCAN_INTERVAL,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -21,13 +32,44 @@ from homeassistant.helpers.update_coordinator import (
 from .const import (
     CONF_MUTABLE,
     CONF_SCANDINAVIAN_MILES,
+    CONF_SERVICE_URL,
     DEFAULT_UPDATE_INTERVAL,
     DOMAIN,
     PLATFORMS,
+    RESOURCES,
+    VOLVO_DISCOVERY_NEW,
 )
-from .errors import AuthenticationError
+from .errors import InvalidAuth
 
 _LOGGER = logging.getLogger(__name__)
+
+CONFIG_SCHEMA = vol.Schema(
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                {
+                    vol.Required(CONF_USERNAME): cv.string,
+                    vol.Required(CONF_PASSWORD): cv.string,
+                    vol.Optional(
+                        CONF_SCAN_INTERVAL, default=DEFAULT_UPDATE_INTERVAL
+                    ): vol.All(cv.time_period, vol.Clamp(min=DEFAULT_UPDATE_INTERVAL)),
+                    vol.Optional(CONF_NAME, default={}): cv.schema_with_slug_keys(
+                        cv.string
+                    ),
+                    vol.Optional(CONF_RESOURCES): vol.All(
+                        cv.ensure_list, [vol.In(RESOURCES)]
+                    ),
+                    vol.Optional(CONF_REGION): cv.string,
+                    vol.Optional(CONF_SERVICE_URL): cv.string,
+                    vol.Optional(CONF_MUTABLE, default=True): cv.boolean,
+                    vol.Optional(CONF_SCANDINAVIAN_MILES, default=False): cv.boolean,
+                }
+            )
+        },
+    ),
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -39,13 +81,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     if not hass.config_entries.async_entries(DOMAIN):
         new_conf = {}
-        new_conf[CONF_USERNAME] = config[DOMAIN].get(CONF_USERNAME)
-        new_conf[CONF_PASSWORD] = config[DOMAIN].get(CONF_PASSWORD)
+        new_conf[CONF_USERNAME] = config[DOMAIN][CONF_USERNAME]
+        new_conf[CONF_PASSWORD] = config[DOMAIN][CONF_PASSWORD]
         new_conf[CONF_REGION] = config[DOMAIN].get(CONF_REGION)
-        new_conf[CONF_SCANDINAVIAN_MILES] = config[DOMAIN].get(CONF_SCANDINAVIAN_MILES)
-        new_conf[CONF_MUTABLE] = config[DOMAIN].get(CONF_MUTABLE)
-        if new_conf[CONF_MUTABLE] is None:
-            new_conf[CONF_MUTABLE] = True
+        new_conf[CONF_SCANDINAVIAN_MILES] = config[DOMAIN][CONF_SCANDINAVIAN_MILES]
+        new_conf[CONF_MUTABLE] = config[DOMAIN][CONF_MUTABLE]
 
         hass.async_create_task(
             hass.config_entries.flow.async_init(
@@ -53,12 +93,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
         )
 
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_yaml",
+            breaks_in_ha_version=None,
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+        )
+
     return True
 
 
-async def async_setup_entry(
-    hass: HomeAssistant, entry: config_entries.ConfigEntry
-) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Volvo On Call component from a ConfigEntry."""
     session = async_get_clientsession(hass)
 
@@ -74,9 +122,26 @@ async def async_setup_entry(
 
     volvo_data = VolvoData(hass, connection, entry)
 
-    hass.data[DOMAIN][entry.entry_id] = VolvoUpdateCoordinator(hass, volvo_data)
+    coordinator = hass.data[DOMAIN][entry.entry_id] = VolvoUpdateCoordinator(
+        hass, volvo_data
+    )
 
-    return await volvo_data.update()
+    try:
+        await coordinator.async_config_entry_first_refresh()
+    except ConfigEntryAuthFailed:
+        return False
+    except UpdateFailed:
+        return False
+
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        hass.data[DOMAIN].pop(entry.entry_id)
+
+    return unload_ok
 
 
 class VolvoData:
@@ -86,7 +151,7 @@ class VolvoData:
         self,
         hass: HomeAssistant,
         connection: Connection,
-        entry: config_entries.ConfigEntry,
+        entry: ConfigEntry,
     ) -> None:
         """Initialize the component state."""
         self.hass = hass
@@ -129,13 +194,13 @@ class VolvoData:
             if instrument.component in PLATFORMS
         ):
             self.instruments.add(instrument)
+            dispatcher_send(self.hass, VOLVO_DISCOVERY_NEW, [instrument])
 
-        for platform in PLATFORMS:
-            self.hass.async_create_task(
-                self.hass.config_entries.async_forward_entry_setup(
-                    self.config_entry, platform
-                )
+        self.hass.async_create_task(
+            self.hass.config_entries.async_forward_entry_setups(
+                self.config_entry, PLATFORMS
             )
+        )
 
     async def update(self):
         """Update status from the online service."""
@@ -153,9 +218,7 @@ class VolvoData:
         try:
             await self.connection.get("customeraccounts")
         except Exception as exc:
-            raise AuthenticationError from exc
-
-        return True
+            raise InvalidAuth from exc
 
 
 class VolvoUpdateCoordinator(DataUpdateCoordinator):

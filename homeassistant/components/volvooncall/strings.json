@@ -2,10 +2,9 @@
   "config": {
     "step": {
       "user": {
-        "title": "Login to Volvo On Call",
         "data": {
-          "username": "Username",
-          "password": "Password",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
           "region": "Region",
           "mutable": "Allow Remote Start / Lock / etc.",
           "scandinavian_miles": "Use Scandinavian Miles"
@@ -13,8 +12,8 @@
       }
     },
     "error": {
-      "invalid_auth": "Authentication failed. Please check your username, password, and region.",
-      "unknown": "Unknown error."
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
       "already_configured": "Account is already configured"

@@ -4,35 +4,50 @@ from __future__ import annotations
 
 from typing import Any
 
-from volvooncall.dashboard import Lock
+from volvooncall.dashboard import Instrument, Lock
 
-from homeassistant import config_entries
 from homeassistant.components.lock import LockEntity
-from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DOMAIN, VolvoEntity, VolvoUpdateCoordinator
+from . import VolvoData, VolvoEntity, VolvoUpdateCoordinator
+from .const import DOMAIN, VOLVO_DISCOVERY_NEW
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: config_entries.ConfigEntry,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Configure locks from a config entry created in the integrations UI."""
-    volvo_data = hass.data[DOMAIN][config_entry.entry_id].volvo_data
-    for instrument in volvo_data.instruments:
-        if instrument.component == "lock":
-            discovery_info = (
-                instrument.vehicle.vin,
-                instrument.component,
-                instrument.attr,
-                instrument.slug_attr,
-            )
+    volvo_data: VolvoData = hass.data[DOMAIN][config_entry.entry_id].volvo_data
 
-            async_add_entities(
-                [VolvoLock(hass.data[DOMAIN][config_entry.entry_id], *discovery_info)]
-            )
+    @callback
+    def async_discover_device(instruments: list[Instrument]) -> None:
+        """Discover and add a discovered Volvo On Call lock."""
+        entities: list[VolvoLock] = []
+
+        for instrument in instruments:
+            if instrument.component == "lock":
+                entities.append(
+                    VolvoLock(
+                        hass.data[DOMAIN][config_entry.entry_id],
+                        instrument.vehicle.vin,
+                        instrument.component,
+                        instrument.attr,
+                        instrument.slug_attr,
+                    )
+                )
+
+        async_add_entities(entities)
+
+    async_discover_device([*volvo_data.instruments])
+
+    config_entry.async_on_unload(
+        async_dispatcher_connect(hass, VOLVO_DISCOVERY_NEW, async_discover_device)
+    )
 
 
 class VolvoLock(VolvoEntity, LockEntity):

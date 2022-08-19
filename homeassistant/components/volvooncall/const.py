@@ -58,3 +58,5 @@ RESOURCES = [
     "any_door_open",
     "any_window_open",
 ]
+
+VOLVO_DISCOVERY_NEW = "volvo_discovery_new"

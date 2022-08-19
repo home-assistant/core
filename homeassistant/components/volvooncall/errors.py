@@ -1,9 +1,6 @@
 """Exceptions specific to volvooncall."""
+from homeassistant.exceptions import HomeAssistantError
 
 
-class InvalidRegionError(Exception):
-    """Raised when the input region is unexpected."""
-
-
-class AuthenticationError(Exception):
-    """Raised when the input credentials are invalid."""
+class InvalidAuth(HomeAssistantError):
+    """Error to indicate there is invalid auth."""

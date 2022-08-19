@@ -1,4 +1,8 @@
-"""Config Flow Handler for volvooncall."""
+"""Config flow for Volvo On Call integration."""
+from __future__ import annotations
+
+from typing import Any
+
 import voluptuous as vol
 from volvooncall import Connection
 
@@ -10,13 +14,13 @@ import homeassistant.helpers.config_validation as cv
 
 from . import VolvoData
 from .const import CONF_MUTABLE, CONF_SCANDINAVIAN_MILES, DOMAIN
-from .errors import AuthenticationError, InvalidRegionError
+from .errors import InvalidAuth
 
-CONFIG_SCHEMA = vol.Schema(
+USER_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_REGION): cv.string,
+        vol.Optional(CONF_REGION): vol.In({"na": "North America", "cn": "China"}),
         vol.Optional(CONF_MUTABLE, default=True): cv.boolean,
         vol.Optional(CONF_SCANDINAVIAN_MILES, default=False): cv.boolean,
     },
@@ -27,53 +31,39 @@ class VolvoOnCallConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """VolvoOnCall config flow."""
 
     VERSION = 1
-    data = None
 
-    async def async_step_user(self, user_input=None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle user step."""
-        errors = {}
+        errors = None
         if user_input is not None:
+            await self.async_set_unique_id(user_input[CONF_USERNAME])
+            self._abort_if_unique_id_configured()
+
             try:
                 await self.is_valid(user_input)
-            except InvalidRegionError:
-                errors[CONF_REGION] = "invalid_region"
-            except AuthenticationError:
-                errors["base"] = "auth"
+            except InvalidAuth:
+                errors = {}
+                errors["base"] = "invalid_auth"
+            except Exception:  # pylint: disable=broad-except
+                errors = {}
+                errors["base"] = "unknown"
             if not errors:
-                self.data = user_input
-                return self.async_create_entry(title="Volvo On Call", data=self.data)
+                return self.async_create_entry(
+                    title=user_input[CONF_USERNAME], data=user_input
+                )
 
         return self.async_show_form(
-            step_id="user", data_schema=CONFIG_SCHEMA, errors=errors
+            step_id="user", data_schema=USER_SCHEMA, errors=errors
         )
 
     async def async_step_import(self, import_data) -> FlowResult:
         """Import volvooncall config from configuration.yaml."""
-        import_result = await self.async_step_user(import_data)
-
-        if import_result.get("errors") is None:
-            notification_data = {}
-            notification_data["title"] = "Volvo On Call Migration Complete"
-            notification_data[
-                "message"
-            ] = "Your Volvo On Call configuration has been migrated to the Settings UI. Please remove your volvooncall YAML configuration."
-            await self.hass.services.async_call(
-                "persistent_notification", "create", notification_data
-            )
-
-        return import_result
+        return await self.async_step_user(import_data)
 
     async def is_valid(self, user_input):
         """Check for user input errors."""
-        if CONF_REGION not in user_input.keys():
-            user_input[CONF_REGION] = None
-
-        if (
-            user_input[CONF_REGION] is not None
-            and user_input[CONF_REGION] != "na"
-            and user_input[CONF_REGION] != "cn"
-        ):
-            raise InvalidRegionError
 
         session = async_get_clientsession(self.hass)
 
@@ -87,4 +77,4 @@ class VolvoOnCallConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         test_volvo_data = VolvoData(self.hass, connection, user_input)
 
-        return await test_volvo_data.auth_is_valid()
+        await test_volvo_data.auth_is_valid()

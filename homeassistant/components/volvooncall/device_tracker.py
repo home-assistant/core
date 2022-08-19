@@ -1,65 +1,68 @@
 """Support for tracking a Volvo."""
 from __future__ import annotations
 
-from homeassistant import config_entries
+from volvooncall.dashboard import Instrument
+
 from homeassistant.components.device_tracker import SourceType
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
-from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DOMAIN, VolvoEntity, VolvoUpdateCoordinator
+from . import VolvoData, VolvoEntity, VolvoUpdateCoordinator
+from .const import DOMAIN, VOLVO_DISCOVERY_NEW
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: config_entries.ConfigEntry,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Configure device_trackers from a config entry created in the integrations UI."""
-    volvo_data = hass.data[DOMAIN][config_entry.entry_id].volvo_data
-    for instrument in volvo_data.instruments:
-        if instrument.component == "device_tracker":
-            discovery_info = (
-                instrument.vehicle.vin,
-                instrument.component,
-                instrument.attr,
-                instrument.slug_attr,
-            )
+    coordinator: VolvoUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    volvo_data: VolvoData = coordinator.volvo_data
 
-            async_add_entities(
-                [
+    @callback
+    def async_discover_device(instruments: list[Instrument]) -> None:
+        """Discover and add a discovered Volvo On Call device tracker."""
+        entities: list[VolvoTrackerEntity] = []
+
+        for instrument in instruments:
+            if instrument.component == "device_tracker":
+                entities.append(
                     VolvoTrackerEntity(
-                        hass.data[DOMAIN][config_entry.entry_id], *discovery_info
+                        instrument.vehicle.vin,
+                        instrument.component,
+                        instrument.attr,
+                        instrument.slug_attr,
+                        coordinator,
                     )
-                ]
-            )
+                )
+
+        async_add_entities(entities)
+
+    async_discover_device([*volvo_data.instruments])
+
+    config_entry.async_on_unload(
+        async_dispatcher_connect(hass, VOLVO_DISCOVERY_NEW, async_discover_device)
+    )
 
 
 class VolvoTrackerEntity(VolvoEntity, TrackerEntity):
     """A tracked Volvo vehicle."""
 
-    def __init__(
-        self,
-        coordinator: VolvoUpdateCoordinator,
-        vin: str,
-        component: str,
-        attribute: str,
-        slug_attr: str,
-    ) -> None:
-        """Initialize the lock."""
-        super().__init__(vin, component, attribute, slug_attr, coordinator)
-
     @property
     def latitude(self) -> float | None:
         """Return latitude value of the device."""
         latitude, _ = self._get_pos()
-        return float(latitude)
+        return latitude
 
     @property
     def longitude(self) -> float | None:
         """Return longitude value of the device."""
         _, longitude = self._get_pos()
-        return float(longitude)
+        return longitude
 
     @property
     def source_type(self) -> SourceType | str:
