@@ -198,7 +198,7 @@ class InverterSensor(CoordinatorEntity, SensorEntity):
             self
         )
 
-    async def async_reset(self):
+    async def async_reset(self, now):
         """Reset the value back to 0 at midnight."""
         self._previous_value = 0
         self.coordinator.data[self._sensor.id_] = 0
