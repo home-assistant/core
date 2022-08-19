@@ -157,7 +157,7 @@ class CupsSensor(SensorEntity):
             ATTR_PRINTER_URI_SUPPORTED: self._printer["printer-uri-supported"],
         }
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data and updates the states."""
         self.data.update()
         self._printer = self.data.printers.get(self._name)
@@ -234,7 +234,7 @@ class IPPSensor(SensorEntity):
 
         return state_attributes
 
-    def update(self):
+    def update(self) -> None:
         """Fetch new state data for the sensor."""
         self.data.update()
         self._attributes = self.data.attributes.get(self._name)
@@ -309,7 +309,7 @@ class MarkerSensor(SensorEntity):
             ATTR_PRINTER_NAME: printer_name,
         }
 
-    def update(self):
+    def update(self) -> None:
         """Update the state of the sensor."""
         # Data fetching is done by CupsSensor/IPPSensor
         self._attributes = self.data.attributes

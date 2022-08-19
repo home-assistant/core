@@ -90,19 +90,6 @@ OPTIMISTIC_HS_COLOR_LIGHT_CONFIG = {
 }
 
 
-OPTIMISTIC_WHITE_VALUE_LIGHT_CONFIG = {
-    **OPTIMISTIC_ON_OFF_LIGHT_CONFIG,
-    "set_white_value": {
-        "service": "test.automation",
-        "data_template": {
-            "action": "set_white_value",
-            "caller": "{{ this.entity_id }}",
-            "white_value": "{{white_value}}",
-        },
-    },
-}
-
-
 async def async_setup_light(hass, count, light_config):
     """Do setup of light integration."""
     config = {"light": {"platform": "template", "lights": light_config}}

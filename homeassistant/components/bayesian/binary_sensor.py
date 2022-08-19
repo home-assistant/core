@@ -162,7 +162,7 @@ class BayesianBinarySensor(BinarySensorEntity):
             "state": self._process_state,
         }
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """
         Call when entity about to be added.
 
@@ -397,7 +397,7 @@ class BayesianBinarySensor(BinarySensorEntity):
             ATTR_PROBABILITY_THRESHOLD: self._probability_threshold,
         }
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest data and update the states."""
         if not self._callbacks:
             self._recalculate_and_write_state()

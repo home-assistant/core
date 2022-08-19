@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -177,7 +178,7 @@ class DaikinClimate(ClimateEntity):
         return self._api.device.mac
 
     @property
-    def temperature_unit(self):
+    def temperature_unit(self) -> str:
         """Return the unit of measurement which this thermostat uses."""
         return TEMP_CELSIUS
 
@@ -196,7 +197,7 @@ class DaikinClimate(ClimateEntity):
         """Return the supported step of target temperature."""
         return 1
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         await self._set(kwargs)
 
@@ -232,7 +233,7 @@ class DaikinClimate(ClimateEntity):
         """Return the fan setting."""
         return self._api.device.represent(HA_ATTR_TO_DAIKIN[ATTR_FAN_MODE])[1].title()
 
-    async def async_set_fan_mode(self, fan_mode):
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode."""
         await self._set({ATTR_FAN_MODE: fan_mode})
 
@@ -246,7 +247,7 @@ class DaikinClimate(ClimateEntity):
         """Return the fan setting."""
         return self._api.device.represent(HA_ATTR_TO_DAIKIN[ATTR_SWING_MODE])[1].title()
 
-    async def async_set_swing_mode(self, swing_mode):
+    async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new target temperature."""
         await self._set({ATTR_SWING_MODE: swing_mode})
 
@@ -275,7 +276,7 @@ class DaikinClimate(ClimateEntity):
             return PRESET_ECO
         return PRESET_NONE
 
-    async def async_set_preset_mode(self, preset_mode):
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode."""
         if preset_mode == PRESET_AWAY:
             await self._api.device.set_holiday(ATTR_STATE_ON)
@@ -309,15 +310,15 @@ class DaikinClimate(ClimateEntity):
             ret += [PRESET_ECO, PRESET_BOOST]
         return ret
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Retrieve latest state."""
         await self._api.async_update()
 
-    async def async_turn_on(self):
+    async def async_turn_on(self) -> None:
         """Turn device on."""
         await self._api.device.set({})
 
-    async def async_turn_off(self):
+    async def async_turn_off(self) -> None:
         """Turn device off."""
         await self._api.device.set(
             {HA_ATTR_TO_DAIKIN[ATTR_HVAC_MODE]: HA_STATE_TO_DAIKIN[HVACMode.OFF]}

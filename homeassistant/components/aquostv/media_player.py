@@ -131,7 +131,7 @@ class SharpAquosTVDevice(MediaPlayerEntity):
         self._attr_state = state
 
     @_retry
-    def update(self):
+    def update(self) -> None:
         """Retrieve the latest data."""
         if self._remote.power() == 1:
             self._attr_state = STATE_ON
@@ -153,61 +153,67 @@ class SharpAquosTVDevice(MediaPlayerEntity):
         self._attr_volume_level = self._remote.volume() / 60
 
     @_retry
-    def turn_off(self):
+    def turn_off(self) -> None:
         """Turn off tvplayer."""
         self._remote.power(0)
 
     @_retry
-    def volume_up(self):
+    def volume_up(self) -> None:
         """Volume up the media player."""
+        if self.volume_level is None:
+            _LOGGER.debug("Unknown volume in volume_up")
+            return
         self._remote.volume(int(self.volume_level * 60) + 2)
 
     @_retry
-    def volume_down(self):
+    def volume_down(self) -> None:
         """Volume down media player."""
+        if self.volume_level is None:
+            _LOGGER.debug("Unknown volume in volume_down")
+            return
         self._remote.volume(int(self.volume_level * 60) - 2)
 
     @_retry
-    def set_volume_level(self, volume):
+    def set_volume_level(self, volume: float) -> None:
         """Set Volume media player."""
         self._remote.volume(int(volume * 60))
 
     @_retry
-    def mute_volume(self, mute):
+    def mute_volume(self, mute: bool) -> None:
         """Send mute command."""
         self._remote.mute(0)
 
     @_retry
-    def turn_on(self):
+    def turn_on(self) -> None:
         """Turn the media player on."""
         self._remote.power(1)
 
     @_retry
-    def media_play_pause(self):
+    def media_play_pause(self) -> None:
         """Simulate play pause media player."""
         self._remote.remote_button(40)
 
     @_retry
-    def media_play(self):
+    def media_play(self) -> None:
         """Send play command."""
         self._remote.remote_button(16)
 
     @_retry
-    def media_pause(self):
+    def media_pause(self) -> None:
         """Send pause command."""
         self._remote.remote_button(16)
 
     @_retry
-    def media_next_track(self):
+    def media_next_track(self) -> None:
         """Send next track command."""
         self._remote.remote_button(21)
 
     @_retry
-    def media_previous_track(self):
+    def media_previous_track(self) -> None:
         """Send the previous track command."""
         self._remote.remote_button(19)
 
-    def select_source(self, source):
+    def select_source(self, source: str) -> None:
         """Set the input source."""
         for key, value in SOURCES.items():
             if source == value:

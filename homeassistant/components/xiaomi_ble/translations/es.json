@@ -20,7 +20,7 @@
                 "description": "\u00bfQuieres configurar {name}?"
             },
             "confirm_slow": {
-                "description": "No ha habido una transmisi\u00f3n desde este dispositivo en el \u00faltimo minuto, por lo que no estamos seguros de si este dispositivo usa cifrado o no. Esto puede deberse a que el dispositivo utiliza un intervalo de transmisi\u00f3n lento. Confirma para agregar este dispositivo de todos modos, luego, la pr\u00f3xima vez que se reciba una transmisi\u00f3n, se te pedir\u00e1 que ingreses su clave de enlace si es necesario."
+                "description": "No ha habido una transmisi\u00f3n desde este dispositivo en el \u00faltimo minuto, por lo que no estamos seguros de si este dispositivo usa cifrado o no. Esto puede deberse a que el dispositivo utiliza un intervalo de transmisi\u00f3n lento. Confirma para a\u00f1adir este dispositivo de todos modos, luego, la pr\u00f3xima vez que se reciba una transmisi\u00f3n, se te pedir\u00e1 que ingreses su clave de enlace si es necesario."
             },
             "get_encryption_key_4_5": {
                 "data": {

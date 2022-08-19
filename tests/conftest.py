@@ -876,7 +876,7 @@ async def mock_enable_bluetooth(
     hass, mock_bleak_scanner_start, mock_bluetooth_adapters
 ):
     """Fixture to mock starting the bleak scanner."""
-    entry = MockConfigEntry(domain="bluetooth")
+    entry = MockConfigEntry(domain="bluetooth", unique_id="00:00:00:00:00:01")
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -885,7 +885,20 @@ async def mock_enable_bluetooth(
 @pytest.fixture(name="mock_bluetooth_adapters")
 def mock_bluetooth_adapters():
     """Fixture to mock bluetooth adapters."""
-    with patch("bluetooth_adapters.get_bluetooth_adapters", return_value=[]):
+    with patch(
+        "homeassistant.components.bluetooth.util.platform.system", return_value="Linux"
+    ), patch(
+        "bluetooth_adapters.get_bluetooth_adapter_details",
+        return_value={
+            "hci0": {
+                "org.bluez.Adapter1": {
+                    "Address": "00:00:00:00:00:01",
+                    "Name": "BlueZ 4.63",
+                    "Modalias": "usbid:1234",
+                }
+            },
+        },
+    ):
         yield
 
 

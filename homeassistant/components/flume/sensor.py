@@ -50,15 +50,6 @@ async def async_setup_entry(
         device_timezone = device[KEY_DEVICE_LOCATION][KEY_DEVICE_LOCATION_TIMEZONE]
         device_friendly_name = f"{name} {device_name}"
 
-        # flume_device = FlumeData(
-        #     flume_auth,
-        #     device_id,
-        #     device_timezone,
-        #     SCAN_INTERVAL,
-        #     update_on_init=False,
-        #     http_session=http_session,
-        # )
-
         coordinator = FlumeDeviceDataUpdateCoordinator(
             hass=hass,
             flume_auth=flume_auth,
@@ -73,11 +64,7 @@ async def async_setup_entry(
                     coordinator=coordinator,
                     description=description,
                     name=device_friendly_name,
-                    device_id=device_id
-                    # flume_device,
-                    # device_friendly_name,
-                    # device_id,
-                    # description,
+                    device_id=device_id,
                 )
                 for description in FLUME_QUERIES_SENSOR
             ]
@@ -92,33 +79,6 @@ class FlumeSensor(FlumeEntity, SensorEntity):
 
     entity_description: SensorEntityDescription  # FlumeBinarySensorEntityDescription
     coordinator: FlumeDeviceDataUpdateCoordinator
-    # def __init__(
-    #     self,
-    #     name: str,
-    #     device_id: str,
-    # ) -> None:
-    #     super().__init__(coordinator, description, name, device_id)
-
-    # def __init__(
-    #     self,
-    #     coordinator,
-    #     flume_device,
-    #     name,
-    #     device_id,
-    #     description: SensorEntityDescription,
-    # ):
-    #     """Initialize the Flume sensor."""
-    #     super().__init__(coordinator)
-    #     self.entity_description = description
-    #     self._flume_device = flume_device
-    #     self._attr_name = f"{name} {description.name}"
-    #     self._attr_unique_id = f"{description.key}_{device_id}"
-    #     self._attr_device_info = DeviceInfo(
-    #         identifiers={(DOMAIN, device_id)},
-    #         manufacturer="Flume, Inc.",
-    #         model="Flume Smart Water Monitor",
-    #         name=self.name,
-    #     )
 
     @property
     def native_value(self):
