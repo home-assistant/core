@@ -273,7 +273,7 @@ class CastDevice:
         await self._async_disconnect()
 
     def _get_chromecast(self) -> pychromecast.Chromecast:
-        """Ensure chromecast is available."""
+        """Ensure chromecast is available, to facilitate type checking."""
         if self._chromecast is None:
             raise HomeAssistantError("Chromecast is not available.")
         return self._chromecast
