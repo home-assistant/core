@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
@@ -294,9 +295,11 @@ class AirtouchGroup(CoordinatorEntity, ClimateEntity):
         )
         return [AT_TO_HA_FAN_SPEED[speed] for speed in airtouch_fan_speeds]
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
-        temp = kwargs.get(ATTR_TEMPERATURE)
+        if (temp := kwargs.get(ATTR_TEMPERATURE)) is None:
+            _LOGGER.debug("Argument `temperature` is missing in set_temperature")
+            return
 
         _LOGGER.debug("Setting temp of %s to %s", self._group_number, str(temp))
         self._unit = await self._airtouch.SetGroupToTemperature(

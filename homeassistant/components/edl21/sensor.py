@@ -22,6 +22,7 @@ from homeassistant.const import (
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     ENERGY_WATT_HOUR,
+    FREQUENCY_HERTZ,
     POWER_WATT,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -252,6 +253,7 @@ SENSOR_UNIT_MAPPING = {
     "A": ELECTRIC_CURRENT_AMPERE,
     "V": ELECTRIC_POTENTIAL_VOLT,
     "°": DEGREE,
+    "Hz": FREQUENCY_HERTZ,
 }
 
 

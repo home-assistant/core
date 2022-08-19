@@ -292,6 +292,7 @@ FLOWS = {
         "prosegur",
         "ps4",
         "pure_energie",
+        "pushover",
         "pvoutput",
         "pvpc_hourly_pricing",
         "qingping",

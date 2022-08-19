@@ -1,14 +1,17 @@
 """The Mikrotik component."""
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
-from .const import ATTR_MANUFACTURER, DOMAIN, PLATFORMS
+from .const import ATTR_MANUFACTURER, DOMAIN
 from .errors import CannotConnect, LoginError
 from .hub import MikrotikDataUpdateCoordinator, get_api
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
+
+PLATFORMS = [Platform.DEVICE_TRACKER]
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
@@ -26,7 +29,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = coordinator
 
-    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
