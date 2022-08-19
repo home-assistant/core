@@ -64,7 +64,6 @@ class HiveAlarmControlPanelEntity(HiveEntity, AlarmControlPanelEntity):
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         await self.hive.alarm.setMode(self.device, "away")
-    
     async def async_alarm_trigger(self, code=None) -> None:
         """Send alarm trigger command."""
         await self.hive.alarm.setMode(self.device, "sos")
