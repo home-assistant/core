@@ -239,7 +239,7 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
             return
 
         self._watchdog_enabled = True
-        self._hass.async_create_task(self.watchdog())
+        self.hass.create_task(self.watchdog())
 
     def stop_watchdog(self):
         """Stop the 'movement stop' watchdog."""
