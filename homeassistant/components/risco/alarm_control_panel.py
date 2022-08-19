@@ -108,17 +108,10 @@ class RiscoAlarm(AlarmControlPanelEntity):
         self._risco_to_ha = options[CONF_RISCO_STATES_TO_HA]
         self._ha_to_risco = options[CONF_HA_STATES_TO_RISCO]
         self._attr_supported_features = 0
+        self._attr_has_entity_name = True
+        self._attr_name = None
         for state in self._ha_to_risco:
             self._attr_supported_features |= STATES_TO_SUPPORTED_FEATURES[state]
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info for this device."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.unique_id or "")},
-            name=self.name,
-            manufacturer="Risco",
-        )
 
     @property
     def state(self) -> str | None:
@@ -204,7 +197,11 @@ class RiscoCloudAlarm(RiscoAlarm, RiscoEntity):
             options=options,
         )
         self._attr_unique_id = f"{self._risco.site_uuid}_{partition_id}"
-        self._attr_name = f"Risco {self._risco.site_name} Partition {partition_id}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._attr_unique_id)},
+            name=f"Risco {self._risco.site_name} Partition {partition_id}",
+            manufacturer="Risco",
+        )
 
     def _get_data_from_coordinator(self):
         self._partition = self.coordinator.data.partitions[self._partition_id]
@@ -236,7 +233,11 @@ class RiscoLocalAlarm(RiscoAlarm):
         self._system_id = system_id
         self._partition_updates = partition_updates
         self._attr_unique_id = f"{system_id}_{partition_id}_local"
-        self._attr_name = f"Risco {system_id} Partition {partition_id}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._attr_unique_id)},
+            name=f"Risco {system_id} Partition {partition_id}",
+            manufacturer="Risco",
+        )
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to updates."""

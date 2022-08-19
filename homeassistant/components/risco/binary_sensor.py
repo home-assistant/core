@@ -66,20 +66,8 @@ class RiscoBinarySensor(BinarySensorEntity):
         super().__init__(**kwargs)
         self._zone_id = zone_id
         self._zone = zone
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info for this device."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.unique_id or "")},
-            manufacturer="Risco",
-            name=self.name,
-        )
-
-    @property
-    def name(self) -> str | None:
-        """Return the name of the zone."""
-        return self._zone.name
+        self._attr_has_entity_name = True
+        self._attr_name = None
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
@@ -112,6 +100,11 @@ class RiscoCloudBinarySensor(RiscoBinarySensor, RiscoEntity):
         """Init the zone."""
         super().__init__(zone_id=zone_id, zone=zone, coordinator=coordinator)
         self._attr_unique_id = binary_sensor_unique_id(self._risco, zone_id)
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._attr_unique_id)},
+            manufacturer="Risco",
+            name=self._zone.name,
+        )
 
     def _get_data_from_coordinator(self):
         self._zone = self.coordinator.data.zones[self._zone_id]
@@ -139,6 +132,11 @@ class RiscoLocalBinarySensor(RiscoBinarySensor):
         self._system_id = system_id
         self._zone_updates = zone_updates
         self._attr_unique_id = f"{system_id}_zone_{zone_id}_local"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._attr_unique_id)},
+            manufacturer="Risco",
+            name=self._zone.name,
+        )
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to updates."""
