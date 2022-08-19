@@ -69,7 +69,6 @@ class HiveAlarmControlPanelEntity(HiveEntity, AlarmControlPanelEntity):
         """Send alarm trigger command."""
         await self.hive.alarm.setMode(self.device, "sos")
 
-
     async def async_update(self) -> None:
         """Update all Node data from Hive."""
         await self.hive.session.updateData(self.device)
