@@ -17,11 +17,12 @@ from systembridgeconnector.models.open_url import OpenUrl
 from systembridgeconnector.version import SUPPORTED_VERSION, Version
 import voluptuous as vol
 
-from homeassistant.components import notify as hass_notify
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
+    CONF_ENTITY_ID,
     CONF_HOST,
+    CONF_NAME,
     CONF_PATH,
     CONF_PORT,
     CONF_URL,
@@ -36,7 +37,6 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MODULES
@@ -58,26 +58,6 @@ SERVICE_OPEN_PATH = "open_path"
 SERVICE_OPEN_URL = "open_url"
 SERVICE_SEND_KEYPRESS = "send_keypress"
 SERVICE_SEND_TEXT = "send_text"
-
-
-async def async_setup(
-    hass: HomeAssistant,
-    config: ConfigType,
-) -> bool:
-    """Set up the System Bridge integration."""
-    hass.data.setdefault(DOMAIN, {})
-
-    hass.async_create_task(
-        discovery.async_load_platform(
-            hass,
-            Platform.NOTIFY,
-            DOMAIN,
-            {},
-            config,
-        )
-    )
-
-    return True
 
 
 async def async_setup_entry(
@@ -154,6 +134,7 @@ async def async_setup_entry(
         coordinator.data.json(),
     )
 
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
     # Set up all platforms except notify
@@ -161,7 +142,19 @@ async def async_setup_entry(
         entry, [platform for platform in PLATFORMS if platform != Platform.NOTIFY]
     )
 
-    await hass_notify.async_reload(hass, DOMAIN)
+    # Set up notify platform
+    hass.async_create_task(
+        discovery.async_load_platform(
+            hass,
+            Platform.NOTIFY,
+            DOMAIN,
+            {
+                CONF_NAME: f"{DOMAIN}_{coordinator.data.system.hostname}",
+                CONF_ENTITY_ID: entry.entry_id,
+            },
+            hass.data[DOMAIN][entry.entry_id],
+        )
+    )
 
     if hass.services.has_service(DOMAIN, SERVICE_OPEN_URL):
         return True
@@ -293,8 +286,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.services.async_remove(DOMAIN, SERVICE_OPEN_URL)
         hass.services.async_remove(DOMAIN, SERVICE_SEND_KEYPRESS)
         hass.services.async_remove(DOMAIN, SERVICE_SEND_TEXT)
-
-    await hass_notify.async_reload(hass, DOMAIN)
 
     return unload_ok
 
