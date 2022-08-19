@@ -30,7 +30,7 @@ async def async_get_service(hass, config, discovery_info=None):
 class SMSNotificationService(BaseNotificationService):
     """Implement the notification service for SMS."""
 
-    def __init__(self, hass, number=None):
+    def __init__(self, hass):
         """Initialize the service."""
 
         self.hass = hass
