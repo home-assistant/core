@@ -21,8 +21,6 @@ USB_DATA = usb.UsbServiceInfo(
 
 async def test_config_flow(hass: HomeAssistant) -> None:
     """Test the config flow."""
-    # mock_integration(hass, MockModule("hassio"))
-
     with patch(
         "homeassistant.components.homeassistant_sky_connect.async_setup_entry",
         return_value=True,
