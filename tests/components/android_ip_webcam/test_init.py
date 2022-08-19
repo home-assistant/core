@@ -53,10 +53,10 @@ async def test_successful_config_entry(
     assert entry.state == ConfigEntryState.LOADED
 
 
-async def test_setup_failed_conn_error(
+async def test_setup_failed_connection_error(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Test integration failed due to conn error."""
+    """Test integration failed due to connection error."""
 
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG_DATA)
     entry.add_to_hass(hass)
@@ -70,7 +70,7 @@ async def test_setup_failed_conn_error(
     assert entry.state == ConfigEntryState.SETUP_RETRY
 
 
-async def test_setup_failed_invlid_auth(
+async def test_setup_failed_invalid_auth(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test integration failed due to invalid auth."""
