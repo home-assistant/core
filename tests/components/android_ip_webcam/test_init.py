@@ -84,7 +84,7 @@ async def test_setup_failed_invlid_auth(
 
     await hass.config_entries.async_setup(entry.entry_id)
 
-    assert entry.state == ConfigEntryState.SETUP_ERROR
+    assert entry.state == ConfigEntryState.SETUP_RETRY
 
 
 async def test_unload_entry(hass: HomeAssistant, aioclient_mock_fixture) -> None:
