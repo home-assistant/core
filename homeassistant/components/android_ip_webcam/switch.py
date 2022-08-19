@@ -55,8 +55,8 @@ SWITCH_TYPES: tuple[AndroidIPWebcamSwitchEntityDescription, ...] = (
         name="Focus",
         icon="mdi:image-filter-center-focus",
         entity_category=EntityCategory.CONFIG,
-        on_func=lambda ipcam: ipcam.torch(activate=True),
-        off_func=lambda ipcam: ipcam.torch(activate=False),
+        on_func=lambda ipcam: ipcam.focus(activate=True),
+        off_func=lambda ipcam: ipcam.focus(activate=False),
     ),
     AndroidIPWebcamSwitchEntityDescription(
         key="gps_active",
@@ -111,8 +111,8 @@ SWITCH_TYPES: tuple[AndroidIPWebcamSwitchEntityDescription, ...] = (
         name="Video recording",
         icon="mdi:record-rec",
         entity_category=EntityCategory.CONFIG,
-        on_func=lambda ipcam: ipcam.record(activate=True),
-        off_func=lambda ipcam: ipcam.record(activate=False),
+        on_func=lambda ipcam: ipcam.record(record=True),
+        off_func=lambda ipcam: ipcam.record(record=False),
     ),
 )
 
