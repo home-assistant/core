@@ -60,20 +60,14 @@ def setup_platform(
         device_class = CoverDeviceClass.BLIND
     watchdog_timeout = config.get(WATCHDOG_TIMEOUT)
     add_entities(
-        [
-            EnOceanCover(
-                sender_id, dev_id, dev_name, device_class, hass, watchdog_timeout
-            )
-        ]
+        [EnOceanCover(sender_id, dev_id, dev_name, device_class, watchdog_timeout)]
     )
 
 
 class EnOceanCover(EnOceanEntity, CoverEntity):
     """Representation of an EnOcean Cover (EEP D2-05-00)."""
 
-    def __init__(
-        self, sender_id, dev_id, dev_name, device_class, hass, watchdog_timeout
-    ):
+    def __init__(self, sender_id, dev_id, dev_name, device_class, watchdog_timeout):
         """Initialize the EnOcean Cover."""
         super().__init__(dev_id, dev_name)
         self._device_class = device_class
@@ -88,7 +82,6 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         self._watchdog_enabled = False
         self._watchdog_seconds_remaining = 0
         self._watchdog_timeout = watchdog_timeout
-        self._hass = hass
 
     @property
     def name(self):
