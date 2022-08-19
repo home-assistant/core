@@ -9,8 +9,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_ADDRESS,
-    CONF_NAME,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     TEMP_CELSIUS,
@@ -73,20 +71,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up Switchbot sensor based on a config entry."""
     coordinator: SwitchbotDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    unique_id = entry.unique_id
-    assert unique_id is not None
     async_add_entities(
-        [
-            SwitchBotSensor(
-                coordinator,
-                unique_id,
-                sensor,
-                entry.data[CONF_ADDRESS],
-                entry.data[CONF_NAME],
-            )
-            for sensor in coordinator.data["data"]
-            if sensor in SENSOR_TYPES
-        ]
+        SwitchBotSensor(
+            coordinator,
+            sensor,
+        )
+        for sensor in coordinator.data["data"]
+        if sensor in SENSOR_TYPES
     )
 
 
@@ -96,16 +87,14 @@ class SwitchBotSensor(SwitchbotEntity, SensorEntity):
     def __init__(
         self,
         coordinator: SwitchbotDataUpdateCoordinator,
-        unique_id: str,
         sensor: str,
-        address: str,
-        switchbot_name: str,
     ) -> None:
         """Initialize the Switchbot sensor."""
-        super().__init__(coordinator, unique_id, address, name=switchbot_name)
+        super().__init__(coordinator)
         self._sensor = sensor
-        self._attr_unique_id = f"{unique_id}-{sensor}"
-        self._attr_name = f"{switchbot_name} {sensor.replace('_', ' ').title()}"
+        self._attr_unique_id = f"{coordinator.base_unique_id}-{sensor}"
+        name = coordinator.device_name
+        self._attr_name = f"{name} {sensor.replace('_', ' ').title()}"
         self.entity_description = SENSOR_TYPES[sensor]
 
     @property

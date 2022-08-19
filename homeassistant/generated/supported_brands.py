@@ -12,5 +12,6 @@ HAS_SUPPORTED_BRANDS = (
     "overkiz",
     "renault",
     "wemo",
+    "yalexs_ble",
     "zwave_js"
 )

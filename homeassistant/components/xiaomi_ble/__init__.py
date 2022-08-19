@@ -11,8 +11,8 @@ from homeassistant.components.bluetooth import (
     BluetoothScanningMode,
     BluetoothServiceInfoBleak,
 )
-from homeassistant.components.bluetooth.passive_update_processor import (
-    PassiveBluetoothProcessorCoordinator,
+from homeassistant.components.bluetooth.active_update_coordinator import (
+    ActiveBluetoothProcessorCoordinator,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,9 +56,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         kwargs["bindkey"] = bytes.fromhex(bindkey)
     data = XiaomiBluetoothDeviceData(**kwargs)
 
+    def _needs_poll(
+        service_info: BluetoothServiceInfoBleak, last_poll: float | None
+    ) -> bool:
+        return data.poll_needed(service_info, last_poll)
+
+    async def _async_poll(service_info: BluetoothServiceInfoBleak):
+        # BluetoothServiceInfoBleak is defined in HA, otherwise would just pass it
+        # directly to the Xiaomi code
+        return await data.async_poll(service_info.device)
+
     coordinator = hass.data.setdefault(DOMAIN, {})[
         entry.entry_id
-    ] = PassiveBluetoothProcessorCoordinator(
+    ] = ActiveBluetoothProcessorCoordinator(
         hass,
         _LOGGER,
         address=address,
@@ -66,6 +76,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_method=lambda service_info: process_service_info(
             hass, entry, data, service_info
         ),
+        needs_poll_method=_needs_poll,
+        poll_method=_async_poll,
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(

@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Integraci\u00f3n mELCloud ya configurada para este correo electr\u00f3nico. Se ha actualizado el token de acceso."
+            "already_configured": "Integraci\u00f3n MELCloud ya configurada para este correo electr\u00f3nico. El token de acceso se ha actualizado."
         },
         "error": {
-            "cannot_connect": "Fall\u00f3 la conexi\u00f3n",
-            "invalid_auth": "Autentificaci\u00f3n inv\u00e1lida",
+            "cannot_connect": "No se pudo conectar",
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
             "unknown": "Error inesperado"
         },
         "step": {
@@ -14,8 +14,8 @@
                     "password": "Contrase\u00f1a",
                     "username": "Correo electr\u00f3nico"
                 },
-                "description": "Con\u00e9ctate usando tu cuenta de MELCloud.",
-                "title": "Con\u00e9ctese a MELCloud"
+                "description": "Con\u00e9ctate usando tu cuenta MELCloud.",
+                "title": "Conectar a MELCloud"
             }
         }
     }

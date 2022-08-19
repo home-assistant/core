@@ -297,6 +297,21 @@ def test_time_selector_schema(schema, valid_selections, invalid_selections):
 @pytest.mark.parametrize(
     "schema,valid_selections,invalid_selections",
     (
+        (
+            {"entity_id": "sensor.abc"},
+            ("on", "armed"),
+            (None, True, 1),
+        ),
+    ),
+)
+def test_state_selector_schema(schema, valid_selections, invalid_selections):
+    """Test state selector."""
+    _test_selector("state", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    "schema,valid_selections,invalid_selections",
+    (
         ({}, ({"entity_id": ["sensor.abc123"]},), ("abc123", None)),
         ({"entity": {}}, (), ()),
         ({"entity": {"domain": "light"}}, (), ()),
@@ -646,3 +661,19 @@ def test_datetime_selector_schema(schema, valid_selections, invalid_selections):
 def test_template_selector_schema(schema, valid_selections, invalid_selections):
     """Test template selector."""
     _test_selector("template", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    "schema,valid_selections,invalid_selections",
+    (
+        (
+            {"accept": "image/*"},
+            ("0182a1b99dbc5ae24aecd90c346605fa",),
+            (None, "not-a-uuid", "abcd", 1),
+        ),
+    ),
+)
+def test_file_selector_schema(schema, valid_selections, invalid_selections):
+    """Test file selector."""
+
+    _test_selector("file", schema, valid_selections, invalid_selections)

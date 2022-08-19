@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured_account": "La cuenta ya est\u00e1 configurada",
-            "ezviz_cloud_account_missing": "Falta la cuenta de Ezviz Cloud. Por favor, reconfigura la cuenta de Ezviz Cloud",
+            "ezviz_cloud_account_missing": "Falta la cuenta de Ezviz Cloud. Por favor, vuelve a configurar la cuenta de Ezviz Cloud",
             "unknown": "Error inesperado"
         },
         "error": {
@@ -15,7 +15,7 @@
             "confirm": {
                 "data": {
                     "password": "Contrase\u00f1a",
-                    "username": "Usuario"
+                    "username": "Nombre de usuario"
                 },
                 "description": "Introduce las credenciales RTSP para la c\u00e1mara Ezviz {serial} con IP {ip_address}",
                 "title": "Descubierta c\u00e1mara Ezviz"
@@ -24,7 +24,7 @@
                 "data": {
                     "password": "Contrase\u00f1a",
                     "url": "URL",
-                    "username": "Usuario"
+                    "username": "Nombre de usuario"
                 },
                 "title": "Conectar con Ezviz Cloud"
             },
@@ -32,10 +32,10 @@
                 "data": {
                     "password": "Contrase\u00f1a",
                     "url": "URL",
-                    "username": "Usuario"
+                    "username": "Nombre de usuario"
                 },
                 "description": "Especificar manualmente la URL de tu regi\u00f3n",
-                "title": "Conectar con la URL personalizada de Ezviz"
+                "title": "Conectar a la URL personalizada de Ezviz"
             }
         }
     },
@@ -43,8 +43,8 @@
         "step": {
             "init": {
                 "data": {
-                    "ffmpeg_arguments": "Par\u00e1metros pasados a ffmpeg para c\u00e1maras",
-                    "timeout": "Tiempo de espera de la solicitud (segundos)"
+                    "ffmpeg_arguments": "Argumentos pasados a ffmpeg para las c\u00e1maras",
+                    "timeout": "Tiempo de espera de solicitud (segundos)"
                 }
             }
         }

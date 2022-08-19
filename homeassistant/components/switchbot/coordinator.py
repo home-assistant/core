@@ -2,9 +2,11 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 from typing import TYPE_CHECKING, Any
 
+import async_timeout
 import switchbot
 
 from homeassistant.components import bluetooth
@@ -37,6 +39,8 @@ class SwitchbotDataUpdateCoordinator(PassiveBluetoothDataUpdateCoordinator):
         logger: logging.Logger,
         ble_device: BLEDevice,
         device: switchbot.SwitchbotDevice,
+        base_unique_id: str,
+        device_name: str,
     ) -> None:
         """Initialize global switchbot data updater."""
         super().__init__(
@@ -45,6 +49,8 @@ class SwitchbotDataUpdateCoordinator(PassiveBluetoothDataUpdateCoordinator):
         self.ble_device = ble_device
         self.device = device
         self.data: dict[str, Any] = {}
+        self.device_name = device_name
+        self.base_unique_id = base_unique_id
         self._ready_event = asyncio.Event()
 
     @callback
@@ -67,8 +73,8 @@ class SwitchbotDataUpdateCoordinator(PassiveBluetoothDataUpdateCoordinator):
 
     async def async_wait_ready(self) -> bool:
         """Wait for the device to be ready."""
-        try:
-            await asyncio.wait_for(self._ready_event.wait(), timeout=55)
-        except asyncio.TimeoutError:
-            return False
-        return True
+        with contextlib.suppress(asyncio.TimeoutError):
+            async with async_timeout.timeout(55):
+                await self._ready_event.wait()
+                return True
+        return False
