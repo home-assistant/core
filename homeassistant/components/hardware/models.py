@@ -17,12 +17,24 @@ class BoardInfo:
     revision: str | None
 
 
-@dataclass
+@dataclass(frozen=True)
+class USBInfo:
+    """USB info type."""
+
+    vid: str
+    pid: str
+    serial_number: str | None
+    manufacturer: str | None
+    description: str | None
+
+
+@dataclass(frozen=True)
 class HardwareInfo:
     """Hardware info type."""
 
     name: str | None
     board: BoardInfo | None
+    dongles: list[USBInfo] | None
     url: str | None
 
 

@@ -1,6 +1,8 @@
 {
     "config": {
         "abort": {
+            "cloud_not_connected": "Ej ansluten till Home Assistant Cloud.",
+            "single_instance_allowed": "Redan konfigurerad. Endast en konfiguration m\u00f6jlig.",
             "webhook_not_internet_accessible": "Din Home Assistant instans m\u00e5ste kunna n\u00e5s fr\u00e5n Internet f\u00f6r att ta emot webhook meddelanden"
         },
         "create_entry": {

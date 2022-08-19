@@ -12,6 +12,7 @@ from aiolyric.objects.device import LyricDevice
 from aiolyric.objects.location import LyricLocation
 import async_timeout
 
+from homeassistant.components.repairs import IssueSeverity, async_create_issue
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -23,6 +24,7 @@ from homeassistant.helpers import (
     device_registry as dr,
 )
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -41,6 +43,22 @@ CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.CLIMATE, Platform.SENSOR]
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Honeywell Lyric integration."""
+    if DOMAIN in config:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "removed_yaml",
+            breaks_in_ha_version="2022.8.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="removed_yaml",
+        )
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

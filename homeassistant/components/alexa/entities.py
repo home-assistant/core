@@ -460,7 +460,7 @@ class ClimateCapabilities(AlexaEntity):
     def interfaces(self):
         """Yield the supported interfaces."""
         # If we support two modes, one being off, we allow turning on too.
-        if climate.HVAC_MODE_OFF in self.entity.attributes.get(
+        if climate.HVACMode.OFF in self.entity.attributes.get(
             climate.ATTR_HVAC_MODES, []
         ):
             yield AlexaPowerController(self.entity)

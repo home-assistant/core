@@ -3,21 +3,14 @@ from __future__ import annotations
 
 from typing import Optional, Union
 
-from inkbird_ble import (
-    DeviceClass,
-    DeviceKey,
-    INKBIRDBluetoothDeviceData,
-    SensorDeviceInfo,
-    SensorUpdate,
-    Units,
-)
+from inkbird_ble import DeviceClass, DeviceKey, SensorDeviceInfo, SensorUpdate, Units
 
 from homeassistant import config_entries
-from homeassistant.components.bluetooth.passive_update_coordinator import (
+from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothDataProcessor,
     PassiveBluetoothDataUpdate,
-    PassiveBluetoothDataUpdateCoordinator,
     PassiveBluetoothEntityKey,
+    PassiveBluetoothProcessorCoordinator,
     PassiveBluetoothProcessorEntity,
 )
 from homeassistant.components.sensor import (
@@ -126,21 +119,16 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the INKBIRD BLE sensors."""
-    coordinator: PassiveBluetoothDataUpdateCoordinator = hass.data[DOMAIN][
+    coordinator: PassiveBluetoothProcessorCoordinator = hass.data[DOMAIN][
         entry.entry_id
     ]
-    data = INKBIRDBluetoothDeviceData()
-    processor = PassiveBluetoothDataProcessor(
-        lambda service_info: sensor_update_to_bluetooth_data_update(
-            data.update(service_info)
-        )
-    )
-    entry.async_on_unload(coordinator.async_register_processor(processor))
+    processor = PassiveBluetoothDataProcessor(sensor_update_to_bluetooth_data_update)
     entry.async_on_unload(
         processor.async_add_entities_listener(
             INKBIRDBluetoothSensorEntity, async_add_entities
         )
     )
+    entry.async_on_unload(coordinator.async_register_processor(processor))
 
 
 class INKBIRDBluetoothSensorEntity(

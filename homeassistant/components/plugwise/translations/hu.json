@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "A szolg\u00e1ltat\u00e1s m\u00e1r konfigur\u00e1lva van"
+            "already_configured": "A szolg\u00e1ltat\u00e1s m\u00e1r konfigur\u00e1lva van",
+            "anna_with_adam": "Anna \u00e9s \u00c1d\u00e1m is \u00e9szlelve lett. Adja hozz\u00e1 az \u00c1d\u00e1mot az Anna helyett"
         },
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",

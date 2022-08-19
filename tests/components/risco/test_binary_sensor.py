@@ -20,7 +20,7 @@ async def test_cannot_connect(hass):
     """Test connection error."""
 
     with patch(
-        "homeassistant.components.risco.RiscoAPI.login",
+        "homeassistant.components.risco.RiscoCloud.login",
         side_effect=CannotConnectError,
     ):
         config_entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONFIG)
@@ -36,7 +36,7 @@ async def test_unauthorized(hass):
     """Test unauthorized error."""
 
     with patch(
-        "homeassistant.components.risco.RiscoAPI.login",
+        "homeassistant.components.risco.RiscoCloud.login",
         side_effect=UnauthorizedError,
     ):
         config_entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONFIG)
@@ -106,7 +106,7 @@ async def test_states(hass, two_zone_alarm):  # noqa: F811
 async def test_bypass(hass, two_zone_alarm):  # noqa: F811
     """Test bypassing a zone."""
     await setup_risco(hass)
-    with patch("homeassistant.components.risco.RiscoAPI.bypass_zone") as mock:
+    with patch("homeassistant.components.risco.RiscoCloud.bypass_zone") as mock:
         data = {"entity_id": FIRST_ENTITY_ID}
 
         await hass.services.async_call(
@@ -119,7 +119,7 @@ async def test_bypass(hass, two_zone_alarm):  # noqa: F811
 async def test_unbypass(hass, two_zone_alarm):  # noqa: F811
     """Test unbypassing a zone."""
     await setup_risco(hass)
-    with patch("homeassistant.components.risco.RiscoAPI.bypass_zone") as mock:
+    with patch("homeassistant.components.risco.RiscoCloud.bypass_zone") as mock:
         data = {"entity_id": FIRST_ENTITY_ID}
 
         await hass.services.async_call(

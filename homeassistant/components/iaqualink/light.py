@@ -1,6 +1,8 @@
 """Support for Aqualink pool lights."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_EFFECT,
@@ -46,7 +48,7 @@ class HassAqualinkLight(AqualinkEntity, LightEntity):
         return self.dev.is_on
 
     @refresh_system
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light.
 
         This handles brightness and light effects for lights that do support
@@ -63,7 +65,7 @@ class HassAqualinkLight(AqualinkEntity, LightEntity):
             await await_or_reraise(self.dev.turn_on())
 
     @refresh_system
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         await await_or_reraise(self.dev.turn_off())
 
@@ -93,7 +95,7 @@ class HassAqualinkLight(AqualinkEntity, LightEntity):
         return ColorMode.ONOFF
 
     @property
-    def supported_color_modes(self) -> set[str] | None:
+    def supported_color_modes(self) -> set[ColorMode]:
         """Flag supported color modes."""
         return {self.color_mode}
 

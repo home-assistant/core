@@ -38,7 +38,21 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
             constant=re.compile(r"^FORMAT_(\w*)$"),
         ),
     ],
-    "homeassistant.components.binarysensor": [
+    "homeassistant.components.automation": [
+        ObsoleteImportMatch(
+            reason="replaced by TriggerActionType from helpers.trigger",
+            constant=re.compile(r"^AutomationActionType$")
+        ),
+        ObsoleteImportMatch(
+            reason="replaced by TriggerData from helpers.trigger",
+            constant=re.compile(r"^AutomationTriggerData$")
+        ),
+        ObsoleteImportMatch(
+            reason="replaced by TriggerInfo from helpers.trigger",
+            constant=re.compile(r"^AutomationTriggerInfo$")
+        ),
+    ],
+    "homeassistant.components.binary_sensor": [
         ObsoleteImportMatch(
             reason="replaced by BinarySensorDeviceClass enum",
             constant=re.compile(r"^DEVICE_CLASS_(\w*)$"),
@@ -92,6 +106,18 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
         ObsoleteImportMatch(
             reason="replaced by CoverEntityFeature enum",
             constant=re.compile(r"^SUPPORT_(\w*)$"),
+        ),
+    ],
+    "homeassistant.components.device_tracker": [
+        ObsoleteImportMatch(
+            reason="replaced by SourceType enum",
+            constant=re.compile(r"^SOURCE_TYPE_\w+$")
+        ),
+    ],
+    "homeassistant.components.device_tracker.const": [
+        ObsoleteImportMatch(
+            reason="replaced by SourceType enum",
+            constant=re.compile(r"^SOURCE_TYPE_\w+$")
         ),
     ],
     "homeassistant.components.fan": [

@@ -55,19 +55,23 @@ class KNXTestKit:
     async def setup_integration(self, config):
         """Create the KNX integration."""
 
+        def disable_rate_limiter():
+            """Disable rate limiter for tests."""
+            # after XKNX.__init__() to not overwrite it by the config entry again
+            # before StateUpdater starts to avoid slow down of tests
+            self.xknx.rate_limit = 0
+
         def knx_ip_interface_mock():
             """Create a xknx knx ip interface mock."""
             mock = Mock()
-            mock.start = AsyncMock()
+            mock.start = AsyncMock(side_effect=disable_rate_limiter)
             mock.stop = AsyncMock()
             mock.send_telegram = AsyncMock(side_effect=self._outgoing_telegrams.put)
             return mock
 
         def fish_xknx(*args, **kwargs):
             """Get the XKNX object from the constructor call."""
-            self.xknx = kwargs["xknx"]
-            # disable rate limiter for tests (before StateUpdater starts)
-            self.xknx.rate_limit = 0
+            self.xknx = args[0]
             return DEFAULT
 
         with patch(

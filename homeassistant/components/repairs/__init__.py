@@ -7,6 +7,7 @@ from homeassistant.helpers.typing import ConfigType
 from . import issue_handler, websocket_api
 from .const import DOMAIN
 from .issue_handler import (
+    ConfirmRepairFlow,
     async_create_issue,
     async_delete_issue,
     create_issue,
@@ -21,6 +22,7 @@ __all__ = [
     "create_issue",
     "delete_issue",
     "DOMAIN",
+    "ConfirmRepairFlow",
     "IssueSeverity",
     "RepairsFlow",
 ]

@@ -22,13 +22,13 @@ async def test_sensors(hass):
 
     saved_callback = None
 
-    def _async_register_callback(_hass, _callback, _matcher):
+    def _async_register_callback(_hass, _callback, _matcher, _mode):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None
 
     with patch(
-        "homeassistant.components.bluetooth.passive_update_coordinator.async_register_callback",
+        "homeassistant.components.bluetooth.update_coordinator.async_register_callback",
         _async_register_callback,
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -39,10 +39,10 @@ async def test_sensors(hass):
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 3
 
-    temp_sensor = hass.states.get("sensor.ibs_th_75bbe1738105_battery")
+    temp_sensor = hass.states.get("sensor.ibs_th_8105_battery")
     temp_sensor_attribtes = temp_sensor.attributes
     assert temp_sensor.state == "87"
-    assert temp_sensor_attribtes[ATTR_FRIENDLY_NAME] == "IBS-TH 75BBE1738105 Battery"
+    assert temp_sensor_attribtes[ATTR_FRIENDLY_NAME] == "IBS-TH 8105 Battery"
     assert temp_sensor_attribtes[ATTR_UNIT_OF_MEASUREMENT] == "%"
     assert temp_sensor_attribtes[ATTR_STATE_CLASS] == "measurement"
 

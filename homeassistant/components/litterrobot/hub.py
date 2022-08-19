@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import timedelta
 import logging
+from typing import Any
 
 from pylitterbot import Account
 from pylitterbot.exceptions import LitterRobotException, LitterRobotLoginException
@@ -24,7 +25,7 @@ class LitterRobotHub:
 
     account: Account
 
-    def __init__(self, hass: HomeAssistant, data: Mapping) -> None:
+    def __init__(self, hass: HomeAssistant, data: Mapping[str, Any]) -> None:
         """Initialize the Litter-Robot hub."""
         self._data = data
 

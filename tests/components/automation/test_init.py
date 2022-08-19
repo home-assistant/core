@@ -1103,6 +1103,24 @@ async def test_extraction_functions(hass):
                             "event_type": "state_changed",
                             "event_data": {"entity_id": "sensor.trigger_event"},
                         },
+                        # entity_id is a list of strings (not supported)
+                        {
+                            "platform": "event",
+                            "event_type": "state_changed",
+                            "event_data": {"entity_id": ["sensor.trigger_event2"]},
+                        },
+                        # entity_id is not a valid entity ID
+                        {
+                            "platform": "event",
+                            "event_type": "state_changed",
+                            "event_data": {"entity_id": "abc"},
+                        },
+                        # entity_id is not a string
+                        {
+                            "platform": "event",
+                            "event_type": "state_changed",
+                            "event_data": {"entity_id": 123},
+                        },
                     ],
                     "condition": {
                         "condition": "state",
@@ -1150,6 +1168,18 @@ async def test_extraction_functions(hass):
                             "platform": "event",
                             "event_type": "esphome.button_pressed",
                             "event_data": {"device_id": "device-trigger-event"},
+                        },
+                        # device_id is a list of strings (not supported)
+                        {
+                            "platform": "event",
+                            "event_type": "esphome.button_pressed",
+                            "event_data": {"device_id": ["device-trigger-event"]},
+                        },
+                        # device_id is not a string
+                        {
+                            "platform": "event",
+                            "event_type": "esphome.button_pressed",
+                            "event_data": {"device_id": 123},
                         },
                     ],
                     "condition": {

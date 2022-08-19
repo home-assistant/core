@@ -3,8 +3,11 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.bluetooth.passive_update_coordinator import (
-    PassiveBluetoothDataUpdateCoordinator,
+from inkbird_ble import INKBIRDBluetoothDeviceData
+
+from homeassistant.components.bluetooth import BluetoothScanningMode
+from homeassistant.components.bluetooth.passive_update_processor import (
+    PassiveBluetoothProcessorCoordinator,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -21,14 +24,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up INKBIRD BLE device from a config entry."""
     address = entry.unique_id
     assert address is not None
-    hass.data.setdefault(DOMAIN, {})[
+    data = INKBIRDBluetoothDeviceData()
+    coordinator = hass.data.setdefault(DOMAIN, {})[
         entry.entry_id
-    ] = PassiveBluetoothDataUpdateCoordinator(
+    ] = PassiveBluetoothProcessorCoordinator(
         hass,
         _LOGGER,
         address=address,
+        mode=BluetoothScanningMode.ACTIVE,
+        update_method=data.update,
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    entry.async_on_unload(
+        coordinator.async_start()
+    )  # only start after all platforms have had a chance to subscribe
     return True
 
 

@@ -5,6 +5,7 @@
         },
         "error": {
             "cannot_connect": "Anslutningen misslyckades",
+            "invalid_auth": "Ogiltig autentisering",
             "name_exists": "Namnet finns"
         },
         "step": {

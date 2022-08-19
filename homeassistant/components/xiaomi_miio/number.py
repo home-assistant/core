@@ -4,6 +4,8 @@ from __future__ import annotations
 import dataclasses
 from dataclasses import dataclass
 
+from miio import Device
+
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.components.number.const import DOMAIN as PLATFORM_DOMAIN
 from homeassistant.config_entries import ConfigEntry
@@ -12,6 +14,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     CONF_DEVICE,
@@ -24,6 +27,7 @@ from .const import (
     FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB,
     FEATURE_FLAGS_AIRPURIFIER_2S,
     FEATURE_FLAGS_AIRPURIFIER_3C,
+    FEATURE_FLAGS_AIRPURIFIER_4,
     FEATURE_FLAGS_AIRPURIFIER_MIIO,
     FEATURE_FLAGS_AIRPURIFIER_MIOT,
     FEATURE_FLAGS_AIRPURIFIER_PRO,
@@ -55,6 +59,8 @@ from .const import (
     MODEL_AIRHUMIDIFIER_CB1,
     MODEL_AIRPURIFIER_2S,
     MODEL_AIRPURIFIER_3C,
+    MODEL_AIRPURIFIER_4,
+    MODEL_AIRPURIFIER_4_PRO,
     MODEL_AIRPURIFIER_PRO,
     MODEL_AIRPURIFIER_PRO_V7,
     MODEL_AIRPURIFIER_V1,
@@ -88,16 +94,31 @@ ATTR_VOLUME = "volume"
 
 
 @dataclass
-class XiaomiMiioNumberDescription(NumberEntityDescription):
+class XiaomiMiioNumberMixin:
+    """A class that describes number entities."""
+
+    method: str
+
+
+@dataclass
+class XiaomiMiioNumberDescription(NumberEntityDescription, XiaomiMiioNumberMixin):
     """A class that describes number entities."""
 
     available_with_device_off: bool = True
-    method: str | None = None
 
 
 @dataclass
 class OscillationAngleValues:
     """A class that describes oscillation angle values."""
+
+    max_value: float | None = None
+    min_value: float | None = None
+    step: float | None = None
+
+
+@dataclass
+class FavoriteLevelValues:
+    """A class that describes favorite level values."""
 
     max_value: float | None = None
     min_value: float | None = None
@@ -215,6 +236,8 @@ MODEL_TO_FEATURES_MAP = {
     MODEL_AIRPURIFIER_PRO_V7: FEATURE_FLAGS_AIRPURIFIER_PRO_V7,
     MODEL_AIRPURIFIER_V1: FEATURE_FLAGS_AIRPURIFIER_V1,
     MODEL_AIRPURIFIER_V3: FEATURE_FLAGS_AIRPURIFIER_V3,
+    MODEL_AIRPURIFIER_4: FEATURE_FLAGS_AIRPURIFIER_4,
+    MODEL_AIRPURIFIER_4_PRO: FEATURE_FLAGS_AIRPURIFIER_4,
     MODEL_FAN_1C: FEATURE_FLAGS_FAN_1C,
     MODEL_FAN_P10: FEATURE_FLAGS_FAN_P10_P11,
     MODEL_FAN_P11: FEATURE_FLAGS_FAN_P10_P11,
@@ -235,6 +258,11 @@ OSCILLATION_ANGLE_VALUES = {
     MODEL_FAN_P9: OscillationAngleValues(max_value=150, min_value=30, step=30),
     MODEL_FAN_P10: OscillationAngleValues(max_value=140, min_value=30, step=30),
     MODEL_FAN_P11: OscillationAngleValues(max_value=140, min_value=30, step=30),
+}
+
+FAVORITE_LEVEL_VALUES = {
+    tuple(MODELS_PURIFIER_MIIO): FavoriteLevelValues(max_value=17, min_value=0, step=1),
+    tuple(MODELS_PURIFIER_MIOT): FavoriteLevelValues(max_value=14, min_value=0, step=1),
 }
 
 
@@ -280,6 +308,15 @@ async def async_setup_entry(
                     native_min_value=OSCILLATION_ANGLE_VALUES[model].min_value,
                     native_step=OSCILLATION_ANGLE_VALUES[model].step,
                 )
+            elif description.key == ATTR_FAVORITE_LEVEL:
+                for list_models, favorite_level_value in FAVORITE_LEVEL_VALUES.items():
+                    if model in list_models:
+                        description = dataclasses.replace(
+                            description,
+                            native_max_value=favorite_level_value.max_value,
+                            native_min_value=favorite_level_value.min_value,
+                            native_step=favorite_level_value.step,
+                        )
 
             entities.append(
                 XiaomiNumberEntity(
@@ -297,7 +334,16 @@ async def async_setup_entry(
 class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
     """Representation of a generic Xiaomi attribute selector."""
 
-    def __init__(self, device, entry, unique_id, coordinator, description):
+    entity_description: XiaomiMiioNumberDescription
+
+    def __init__(
+        self,
+        device: Device,
+        entry: ConfigEntry,
+        unique_id: str,
+        coordinator: DataUpdateCoordinator,
+        description: XiaomiMiioNumberDescription,
+    ) -> None:
         """Initialize the generic Xiaomi attribute selector."""
         super().__init__(device, entry, unique_id, coordinator)
 
@@ -307,7 +353,7 @@ class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
         self.entity_description = description
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return the number controller availability."""
         if (
             super().available
@@ -317,7 +363,7 @@ class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
             return False
         return super().available
 
-    async def async_set_native_value(self, value):
+    async def async_set_native_value(self, value: float) -> None:
         """Set an option of the miio device."""
         method = getattr(self, self.entity_description.method)
         if await method(int(value)):
@@ -325,7 +371,7 @@ class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
             self.async_write_ha_state()
 
     @callback
-    def _handle_coordinator_update(self):
+    def _handle_coordinator_update(self) -> None:
         """Fetch state from the device."""
         # On state change the device doesn't provide the new state immediately.
         self._attr_native_value = self._extract_value_from_attribute(
@@ -379,7 +425,7 @@ class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
             delay_off_countdown * 60,
         )
 
-    async def async_set_led_brightness_level(self, level: int):
+    async def async_set_led_brightness_level(self, level: int) -> bool:
         """Set the led brightness level."""
         return await self._try_command(
             "Setting the led brightness level of the miio device failed.",
@@ -387,7 +433,7 @@ class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
             level,
         )
 
-    async def async_set_led_brightness(self, level: int):
+    async def async_set_led_brightness(self, level: int) -> bool:
         """Set the led brightness level."""
         return await self._try_command(
             "Setting the led brightness level of the miio device failed.",
@@ -395,7 +441,7 @@ class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
             level,
         )
 
-    async def async_set_favorite_rpm(self, rpm: int):
+    async def async_set_favorite_rpm(self, rpm: int) -> bool:
         """Set the target motor speed."""
         return await self._try_command(
             "Setting the favorite rpm of the miio device failed.",

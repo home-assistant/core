@@ -1,0 +1,27 @@
+[
+  {
+    "title": "Dark Sky API closed for new users",
+    "created": "2020-03-31T14:40:00.000Z",
+    "integrations": [
+      {
+        "package": "darksky"
+      }
+    ],
+    "github_issue": "https://github.com/home-assistant/home-assistant.io/pull/12591",
+    "homeassistant": {
+      "package": "homeassistant",
+      "affected_from_version": "0.30"
+    },
+    "filename": "dark_sky.markdown",
+    "alert_url": "https://alerts.home-assistant.io/#dark_sky.markdown"
+  },
+  {
+    "title": "Hikvision Security Vulnerability",
+    "created": "2021-09-20T22:08:00.000Z",
+    "filename": "hikvision.markdown",
+    "alert_url": "https://alerts.home-assistant.io/#hikvision.markdown",
+    "homeassistant": {
+      "package": "homeassistant"
+    }
+  }
+]

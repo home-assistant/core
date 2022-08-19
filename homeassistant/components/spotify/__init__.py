@@ -9,6 +9,7 @@ import aiohttp
 import requests
 from spotipy import Spotify, SpotifyException
 
+from homeassistant.components.repairs import IssueSeverity, async_create_issue
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -18,6 +19,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
     async_get_config_entry_implementation,
 )
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .browse_media import async_browse_media
@@ -49,6 +51,22 @@ class HomeAssistantSpotifyData:
     current_user: dict[str, Any]
     devices: DataUpdateCoordinator
     session: OAuth2Session
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Spotify integration."""
+    if DOMAIN in config:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "removed_yaml",
+            breaks_in_ha_version="2022.8.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="removed_yaml",
+        )
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

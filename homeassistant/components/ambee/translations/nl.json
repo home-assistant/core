@@ -24,5 +24,10 @@
                 "description": "Stel Ambee in om te integreren met Home Assistant."
             }
         }
+    },
+    "issues": {
+        "pending_removal": {
+            "title": "De Ambee-integratie wordt verwijderd"
+        }
     }
 }
