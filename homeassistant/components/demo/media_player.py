@@ -1,6 +1,8 @@
 """Demo implementation of the media player."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
@@ -164,57 +166,57 @@ class AbstractDemoPlayer(MediaPlayerEntity):
         """Return the device class of the media player."""
         return self._device_class
 
-    def turn_on(self):
+    def turn_on(self) -> None:
         """Turn the media player on."""
         self._player_state = STATE_PLAYING
         self.schedule_update_ha_state()
 
-    def turn_off(self):
+    def turn_off(self) -> None:
         """Turn the media player off."""
         self._player_state = STATE_OFF
         self.schedule_update_ha_state()
 
-    def mute_volume(self, mute):
+    def mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
         self._volume_muted = mute
         self.schedule_update_ha_state()
 
-    def volume_up(self):
+    def volume_up(self) -> None:
         """Increase volume."""
         self._volume_level = min(1.0, self._volume_level + 0.1)
         self.schedule_update_ha_state()
 
-    def volume_down(self):
+    def volume_down(self) -> None:
         """Decrease volume."""
         self._volume_level = max(0.0, self._volume_level - 0.1)
         self.schedule_update_ha_state()
 
-    def set_volume_level(self, volume):
+    def set_volume_level(self, volume: float) -> None:
         """Set the volume level, range 0..1."""
         self._volume_level = volume
         self.schedule_update_ha_state()
 
-    def media_play(self):
+    def media_play(self) -> None:
         """Send play command."""
         self._player_state = STATE_PLAYING
         self.schedule_update_ha_state()
 
-    def media_pause(self):
+    def media_pause(self) -> None:
         """Send pause command."""
         self._player_state = STATE_PAUSED
         self.schedule_update_ha_state()
 
-    def media_stop(self):
+    def media_stop(self) -> None:
         """Send stop command."""
         self._player_state = STATE_OFF
         self.schedule_update_ha_state()
 
-    def set_shuffle(self, shuffle):
+    def set_shuffle(self, shuffle: bool) -> None:
         """Enable/disable shuffle mode."""
         self._shuffle = shuffle
         self.schedule_update_ha_state()
 
-    def select_sound_mode(self, sound_mode):
+    def select_sound_mode(self, sound_mode: str) -> None:
         """Select sound mode."""
         self._sound_mode = sound_mode
         self.schedule_update_ha_state()
@@ -291,12 +293,12 @@ class DemoYoutubePlayer(AbstractDemoPlayer):
         if self._player_state == STATE_PLAYING:
             return self._progress_updated_at
 
-    def play_media(self, media_type, media_id, **kwargs):
+    def play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
         """Play a piece of media."""
         self.youtube_id = media_id
         self.schedule_update_ha_state()
 
-    def media_pause(self):
+    def media_pause(self) -> None:
         """Send pause command."""
         self._progress = self.media_position
         self._progress_updated_at = dt_util.utcnow()
@@ -393,38 +395,38 @@ class DemoMusicPlayer(AbstractDemoPlayer):
         """Flag media player features that are supported."""
         return MUSIC_PLAYER_SUPPORT
 
-    def media_previous_track(self):
+    def media_previous_track(self) -> None:
         """Send previous track command."""
         if self._cur_track > 0:
             self._cur_track -= 1
             self.schedule_update_ha_state()
 
-    def media_next_track(self):
+    def media_next_track(self) -> None:
         """Send next track command."""
         if self._cur_track < len(self.tracks) - 1:
             self._cur_track += 1
             self.schedule_update_ha_state()
 
-    def clear_playlist(self):
+    def clear_playlist(self) -> None:
         """Clear players playlist."""
         self.tracks = []
         self._cur_track = 0
         self._player_state = STATE_OFF
         self.schedule_update_ha_state()
 
-    def set_repeat(self, repeat):
+    def set_repeat(self, repeat: str) -> None:
         """Enable/disable repeat mode."""
         self._repeat = repeat
         self.schedule_update_ha_state()
 
-    def join_players(self, group_members):
+    def join_players(self, group_members: list[str]) -> None:
         """Join `group_members` as a player group with the current player."""
         self._group_members = [
             self.entity_id,
         ] + group_members
         self.schedule_update_ha_state()
 
-    def unjoin_player(self):
+    def unjoin_player(self) -> None:
         """Remove this player from any group."""
         self._group_members = []
         self.schedule_update_ha_state()
@@ -505,19 +507,19 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
         """Flag media player features that are supported."""
         return NETFLIX_PLAYER_SUPPORT
 
-    def media_previous_track(self):
+    def media_previous_track(self) -> None:
         """Send previous track command."""
         if self._cur_episode > 1:
             self._cur_episode -= 1
             self.schedule_update_ha_state()
 
-    def media_next_track(self):
+    def media_next_track(self) -> None:
         """Send next track command."""
         if self._cur_episode < self._episode_count:
             self._cur_episode += 1
             self.schedule_update_ha_state()
 
-    def select_source(self, source):
+    def select_source(self, source: str) -> None:
         """Set the input source."""
         self._source = source
         self.schedule_update_ha_state()
