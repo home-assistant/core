@@ -5,6 +5,7 @@ import asyncio
 from collections.abc import Callable
 from datetime import datetime
 import logging
+import platform
 import time
 
 import async_timeout
@@ -26,7 +27,6 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util.package import is_docker_env
 
 from .const import (
-    MACOS_DEFAULT_BLUETOOTH_ADAPTER,
     SCANNER_WATCHDOG_INTERVAL,
     SCANNER_WATCHDOG_TIMEOUT,
     SOURCE_LOCAL,
@@ -66,7 +66,8 @@ def create_bleak_scanner(
 ) -> bleak.BleakScanner:
     """Create a Bleak scanner."""
     scanner_kwargs = {"scanning_mode": SCANNING_MODE_TO_BLEAK[scanning_mode]}
-    if adapter and adapter != MACOS_DEFAULT_BLUETOOTH_ADAPTER:
+    # Only Linux support multiple adapters
+    if adapter and platform.system() == "Linux":
         scanner_kwargs["adapter"] = adapter
     _LOGGER.debug("Initializing bluetooth scanner with %s", scanner_kwargs)
     try:
