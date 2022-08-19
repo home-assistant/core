@@ -125,7 +125,7 @@ class BleBoxLightEntity(BleBoxEntity, LightEntity):
             return None
         return tuple(blebox_uniapi.light.Light.rgb_hex_to_rgb_list(rgbww_hex))
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
 
         rgbw = kwargs.get(ATTR_RGBW_COLOR)
@@ -167,7 +167,7 @@ class BleBoxLightEntity(BleBoxEntity, LightEntity):
                 f"Turning on '{self.name}' failed: Bad value {value}"
             ) from exc
 
-        if effect is not None:
+        if effect is not None and self.effect_list is not None:
             try:
                 effect_value = self.effect_list.index(effect)
                 await self._feature.async_api_command("effect", effect_value)
