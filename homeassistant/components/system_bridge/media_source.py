@@ -126,7 +126,7 @@ def _build_base_url(
     """Build base url for System Bridge media."""
     return (
         f"http://{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
-        + f"/api/media/file/data?apiKey={entry.data[CONF_API_KEY]}"
+        f"/api/media/file/data?apiKey={entry.data[CONF_API_KEY]}"
     )
 
 
@@ -194,10 +194,9 @@ def _build_media_item(
     media_file: MediaFile,
 ) -> BrowseMediaSource:
     """Build individual media item."""
+    ext = ""
     if media_file.is_file and media_file.mime_type is not None:
         ext = f"~~{media_file.mime_type}"
-    else:
-        ext = ""
 
     if media_file.is_directory or media_file.mime_type is None:
         media_class = MEDIA_CLASS_DIRECTORY
