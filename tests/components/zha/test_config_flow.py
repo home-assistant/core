@@ -90,7 +90,7 @@ async def test_discovery(hass):
         type="mock_type",
     )
     flow = await hass.config_entries.flow.async_init(
-        "zha", context={"source": SOURCE_ZEROCONF}, data=service_info
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=service_info
     )
     result = await hass.config_entries.flow.async_configure(
         flow["flow_id"], user_input={}
@@ -122,7 +122,7 @@ async def test_zigate_via_zeroconf(setup_entry_mock, hass):
         type="mock_type",
     )
     flow = await hass.config_entries.flow.async_init(
-        "zha", context={"source": SOURCE_ZEROCONF}, data=service_info
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=service_info
     )
     result = await hass.config_entries.flow.async_configure(
         flow["flow_id"], user_input={}
@@ -152,7 +152,7 @@ async def test_efr32_via_zeroconf(hass):
         type="mock_type",
     )
     flow = await hass.config_entries.flow.async_init(
-        "zha", context={"source": SOURCE_ZEROCONF}, data=service_info
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=service_info
     )
     result = await hass.config_entries.flow.async_configure(
         flow["flow_id"], user_input={"baudrate": 115200}
@@ -197,7 +197,7 @@ async def test_discovery_via_zeroconf_ip_change(hass):
         type="mock_type",
     )
     result = await hass.config_entries.flow.async_init(
-        "zha", context={"source": SOURCE_ZEROCONF}, data=service_info
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=service_info
     )
 
     assert result["type"] == FlowResultType.ABORT
@@ -230,7 +230,7 @@ async def test_discovery_via_zeroconf_ip_change_ignored(hass):
         type="mock_type",
     )
     result = await hass.config_entries.flow.async_init(
-        "zha", context={"source": SOURCE_ZEROCONF}, data=service_info
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=service_info
     )
 
     assert result["type"] == FlowResultType.ABORT
@@ -252,7 +252,7 @@ async def test_discovery_via_usb(hass):
         manufacturer="test",
     )
     result = await hass.config_entries.flow.async_init(
-        "zha", context={"source": SOURCE_USB}, data=discovery_info
+        DOMAIN, context={"source": SOURCE_USB}, data=discovery_info
     )
     await hass.async_block_till_done()
     assert result["type"] == FlowResultType.FORM
@@ -299,7 +299,7 @@ async def test_zigate_discovery_via_usb(probe_mock, hass):
         manufacturer="test",
     )
     result = await hass.config_entries.flow.async_init(
-        "zha", context={"source": SOURCE_USB}, data=discovery_info
+        DOMAIN, context={"source": SOURCE_USB}, data=discovery_info
     )
     await hass.async_block_till_done()
     assert result["type"] == FlowResultType.FORM
@@ -344,7 +344,7 @@ async def test_discovery_via_usb_no_radio(probe_mock, hass):
         manufacturer="test",
     )
     result = await hass.config_entries.flow.async_init(
-        "zha", context={"source": SOURCE_USB}, data=discovery_info
+        DOMAIN, context={"source": SOURCE_USB}, data=discovery_info
     )
     await hass.async_block_till_done()
     assert result["type"] == FlowResultType.FORM
@@ -377,7 +377,7 @@ async def test_discovery_via_usb_already_setup(hass):
         manufacturer="test",
     )
     result = await hass.config_entries.flow.async_init(
-        "zha", context={"source": SOURCE_USB}, data=discovery_info
+        DOMAIN, context={"source": SOURCE_USB}, data=discovery_info
     )
     await hass.async_block_till_done()
 
@@ -411,7 +411,7 @@ async def test_discovery_via_usb_path_changes(hass):
         manufacturer="test",
     )
     result = await hass.config_entries.flow.async_init(
-        "zha", context={"source": SOURCE_USB}, data=discovery_info
+        DOMAIN, context={"source": SOURCE_USB}, data=discovery_info
     )
     await hass.async_block_till_done()
 
@@ -450,7 +450,7 @@ async def test_discovery_via_usb_deconz_already_discovered(hass):
         manufacturer="test",
     )
     result = await hass.config_entries.flow.async_init(
-        "zha", context={"source": SOURCE_USB}, data=discovery_info
+        DOMAIN, context={"source": SOURCE_USB}, data=discovery_info
     )
     await hass.async_block_till_done()
 
@@ -472,7 +472,7 @@ async def test_discovery_via_usb_deconz_already_setup(hass):
         manufacturer="test",
     )
     result = await hass.config_entries.flow.async_init(
-        "zha", context={"source": SOURCE_USB}, data=discovery_info
+        DOMAIN, context={"source": SOURCE_USB}, data=discovery_info
     )
     await hass.async_block_till_done()
 
@@ -496,7 +496,7 @@ async def test_discovery_via_usb_deconz_ignored(hass):
         manufacturer="test",
     )
     result = await hass.config_entries.flow.async_init(
-        "zha", context={"source": SOURCE_USB}, data=discovery_info
+        DOMAIN, context={"source": SOURCE_USB}, data=discovery_info
     )
     await hass.async_block_till_done()
 
@@ -524,7 +524,7 @@ async def test_discovery_via_usb_zha_ignored_updates(hass):
         manufacturer="test",
     )
     result = await hass.config_entries.flow.async_init(
-        "zha", context={"source": SOURCE_USB}, data=discovery_info
+        DOMAIN, context={"source": SOURCE_USB}, data=discovery_info
     )
     await hass.async_block_till_done()
 
@@ -554,7 +554,7 @@ async def test_discovery_already_setup(hass):
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        "zha", context={"source": SOURCE_ZEROCONF}, data=service_info
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=service_info
     )
     await hass.async_block_till_done()
 
@@ -831,7 +831,7 @@ async def test_hardware_not_onboarded(hass):
         "homeassistant.components.onboarding.async_is_onboarded", return_value=False
     ):
         result = await hass.config_entries.flow.async_init(
-            "zha", context={"source": "hardware"}, data=data
+            DOMAIN, context={"source": "hardware"}, data=data
         )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
@@ -861,7 +861,7 @@ async def test_hardware_onboarded(hass):
         "homeassistant.components.onboarding.async_is_onboarded", return_value=True
     ):
         result = await hass.config_entries.flow.async_init(
-            "zha", context={"source": "hardware"}, data=data
+            DOMAIN, context={"source": "hardware"}, data=data
         )
 
     assert result["type"] == FlowResultType.FORM
@@ -899,7 +899,7 @@ async def test_hardware_already_setup(hass):
         },
     }
     result = await hass.config_entries.flow.async_init(
-        "zha", context={"source": "hardware"}, data=data
+        DOMAIN, context={"source": "hardware"}, data=data
     )
 
     assert result["type"] == FlowResultType.ABORT
@@ -913,7 +913,7 @@ async def test_hardware_invalid_data(hass, data):
     """Test onboarding flow -- invalid data."""
 
     result = await hass.config_entries.flow.async_init(
-        "zha", context={"source": "hardware"}, data=data
+        DOMAIN, context={"source": "hardware"}, data=data
     )
 
     assert result["type"] == FlowResultType.ABORT
