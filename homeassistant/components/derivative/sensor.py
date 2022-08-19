@@ -149,7 +149,7 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
         self._attr_unique_id = unique_id
         self._sensor_source_id = source_entity
         self._round_digits = round_digits
-        self._state = Decimal(0)
+        self._state = 0
         self._state_list = (
             []
         )  # List of tuples with (timestamp_start, timestamp_end, derivative)
