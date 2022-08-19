@@ -300,7 +300,7 @@ def test_time_selector_schema(schema, valid_selections, invalid_selections):
         (
             {"entity_id": "sensor.abc"},
             ("friendly_name", "device_class"),
-            (None,),
+            (None, True, 1),
         ),
     ),
 )
