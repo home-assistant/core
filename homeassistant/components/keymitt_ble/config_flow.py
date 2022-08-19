@@ -151,4 +151,4 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
         user_input[CONF_ADDRESS] = self._bdaddr
         user_input[CONF_ACCESS_TOKEN] = token
 
-        return self.async_create_entry(title=self._name, data=user_input)  # type: ignore
+        return self.async_create_entry(title=self._name, data=user_input)  # type: ignore[arg-type]
