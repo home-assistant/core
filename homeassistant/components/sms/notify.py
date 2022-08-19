@@ -23,7 +23,7 @@ async def async_get_service(hass, config, discovery_info=None):
     if discovery_info is None:
         return
 
-    return SMSNotificationService(hass, number)
+    return SMSNotificationService(hass)
 
 
 class SMSNotificationService(BaseNotificationService):
