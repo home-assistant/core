@@ -69,8 +69,9 @@ def adapter_unique_name(adapter: str, address: str) -> str:
     return adapter if address == DEFAULT_ADDRESS else address
 
 
-async def async_reset_adapter(adapter: str | None) -> None:
+async def async_reset_adapter(adapter: str | None) -> bool | None:
     """Reset the adapter."""
     if adapter and adapter.startswith("hci"):
         adapter_id = int(adapter[3:])
-        await recover_adapter(adapter_id)
+        return await recover_adapter(adapter_id)
+    return False
