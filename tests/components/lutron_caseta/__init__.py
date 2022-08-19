@@ -53,6 +53,15 @@ class MockBridge:
         if self.can_connect:
             self.is_currently_connected = True
 
+    def add_subscriber(self, device_id: str, callback_):
+        """
+        Add a listener to be notified of state changes.
+
+        :param device_id: device id, e.g. 5
+        :param callback_: callback to invoke
+        """
+        # self._subscribers[device_id] = callback_
+
     def is_connected(self):
         """Return whether the mock bridge is connected."""
         return self.is_currently_connected
@@ -60,11 +69,62 @@ class MockBridge:
     def get_devices(self):
         """Return devices on the bridge."""
         return {
-            "1": {"serial": 1234, "name": "bridge", "model": "model", "type": "type"}
+            "1": {"serial": 1234, "name": "bridge", "model": "model", "type": "type"},
+            "801": {
+                "device_id": "801",
+                "current_state": 100,
+                "fan_speed": None,
+                "zone": "801",
+                "name": "Basement Bedroom_Main Lights",
+                "button_groups": None,
+                "type": "Dimmed",
+                "model": None,
+                "serial": None,
+                "tilt": None,
+            },
+            "901": {
+                "device_id": "901",
+                "current_state": 100,
+                "fan_speed": None,
+                "zone": "901",
+                "name": "Kitchen_Main Lights",
+                "button_groups": None,
+                "type": "WallDimmer",
+                "model": None,
+                "serial": 5442321,
+                "tilt": None,
+            },
         }
 
     def get_devices_by_domain(self, domain):
         """Return devices on the bridge."""
+        if domain == "light":
+            return [
+                {
+                    "device_id": "801",
+                    "current_state": 100,
+                    "fan_speed": None,
+                    "zone": "801",
+                    "name": "Basement Bedroom_Main Lights",
+                    "button_groups": None,
+                    "type": "Dimmed",
+                    "model": None,
+                    "serial": None,
+                    "tilt": None,
+                },
+                {
+                    "device_id": "901",
+                    "current_state": 100,
+                    "fan_speed": None,
+                    "zone": "901",
+                    "name": "Kitchen_Main Lights",
+                    "button_groups": None,
+                    "type": "WallDimmer",
+                    "model": None,
+                    "serial": 5442321,
+                    "tilt": None,
+                },
+            ]
         return {}
 
     def get_scenes(self):
