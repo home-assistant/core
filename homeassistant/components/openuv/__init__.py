@@ -24,6 +24,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers.debounce import Debouncer
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 from homeassistant.helpers.service import verify_domain_control
@@ -39,7 +40,7 @@ from .const import (
     LOGGER,
 )
 
-DEFAULT_ATTRIBUTION = "Data provided by OpenUV"
+DEFAULT_DEBOUNCER_COOLDOWN_SECONDS = 15 * 60
 
 NOTIFICATION_ID = "openuv_notification"
 NOTIFICATION_TITLE = "OpenUV Component Setup"
@@ -124,6 +125,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     websession = aiohttp_client.async_get_clientsession(hass)
     openuv = OpenUV(
+        hass,
         entry,
         Client(
             entry.data[CONF_API_KEY],
@@ -261,13 +263,29 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class OpenUV:
     """Define a generic OpenUV object."""
 
-    def __init__(self, entry: ConfigEntry, client: Client) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, client: Client) -> None:
         """Initialize."""
+        self._update_protection_data_debouncer = Debouncer(
+            hass,
+            LOGGER,
+            cooldown=DEFAULT_DEBOUNCER_COOLDOWN_SECONDS,
+            immediate=True,
+            function=self._async_update_protection_data,
+        )
+
+        self._update_uv_index_data_debouncer = Debouncer(
+            hass,
+            LOGGER,
+            cooldown=DEFAULT_DEBOUNCER_COOLDOWN_SECONDS,
+            immediate=True,
+            function=self._async_update_uv_index_data,
+        )
+
         self._entry = entry
         self.client = client
         self.data: dict[str, Any] = {DATA_PROTECTION_WINDOW: {}, DATA_UV: {}}
 
-    async def async_update_protection_data(self) -> None:
+    async def _async_update_protection_data(self) -> None:
         """Update binary sensor (protection window) data."""
         low = self._entry.options.get(CONF_FROM_WINDOW, DEFAULT_FROM_WINDOW)
         high = self._entry.options.get(CONF_TO_WINDOW, DEFAULT_TO_WINDOW)
@@ -281,7 +299,7 @@ class OpenUV:
 
         self.data[DATA_PROTECTION_WINDOW] = data.get("result")
 
-    async def async_update_uv_index_data(self) -> None:
+    async def _async_update_uv_index_data(self) -> None:
         """Update sensor (uv index, etc) data."""
         try:
             data = await self.client.uv_index()
@@ -291,6 +309,14 @@ class OpenUV:
             ) from err
 
         self.data[DATA_UV] = data.get("result")
+
+    async def async_update_protection_data(self) -> None:
+        """Update binary sensor (protection window) data with a debouncer."""
+        await self._update_protection_data_debouncer.async_call()
+
+    async def async_update_uv_index_data(self) -> None:
+        """Update sensor (uv index, etc) data with a debouncer."""
+        await self._update_uv_index_data_debouncer.async_call()
 
     async def async_update(self) -> None:
         """Update sensor/binary sensor data."""

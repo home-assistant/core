@@ -1,5 +1,4 @@
 """Define constants for the OpenUV component."""
-from datetime import timedelta
 import logging
 
 DOMAIN = "openuv"
@@ -13,8 +12,6 @@ DATA_UV = "uv"
 
 DEFAULT_FROM_WINDOW = 3.5
 DEFAULT_TO_WINDOW = 3.5
-
-ENTITY_THROTTLE_DURATION = timedelta(minutes=15)
 
 TYPE_CURRENT_OZONE_LEVEL = "current_ozone_level"
 TYPE_CURRENT_UV_INDEX = "current_uv_index"
