@@ -28,7 +28,7 @@ SOURCE_LOCAL: Final = "local"
 DATA_MANAGER: Final = "bluetooth_manager"
 
 UNAVAILABLE_TRACK_SECONDS: Final = 60 * 5
-START_TIMEOUT = 20
+START_TIMEOUT = 15
 
 # We must recover before we hit the 180s mark
 # where the device is removed from the stack
