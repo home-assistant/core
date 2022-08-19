@@ -69,39 +69,25 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
     def __init__(self, sender_id, dev_id, dev_name, device_class, watchdog_timeout):
         """Initialize the EnOcean Cover."""
         super().__init__(dev_id, dev_name)
-        self._device_class = device_class
+        self._attr_device_class = device_class
         self._position = None
         self._is_closed = None
         self._is_opening = False
         self._is_closing = False
         self._sender_id = sender_id
         self._dev_name = dev_name
+        self._attr_name = dev_name
         self._attr_unique_id = f"{combine_hex(dev_id)}-{device_class}"
         self._state_changed_by_command = False
         self._watchdog_enabled = False
         self._watchdog_seconds_remaining = 0
         self._watchdog_timeout = watchdog_timeout
-
-    @property
-    def name(self):
-        """Return the default name for the cover."""
-        return self._dev_name
-
-    @property
-    def device_class(self):
-        """Return the class of this cover."""
-        return self._device_class
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        flags = (
+        self._attr_supported_features = (
             CoverEntityFeature.OPEN
             | CoverEntityFeature.CLOSE
             | CoverEntityFeature.STOP
             | CoverEntityFeature.SET_POSITION
         )
-        return flags
 
     @property
     def current_cover_position(self) -> int | None:
