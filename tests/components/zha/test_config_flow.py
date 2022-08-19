@@ -228,7 +228,7 @@ async def test_discovery_via_usb(detect_mock, hass):
     )
     await hass.async_block_till_done()
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "confirm_usb"
+    assert result["step_id"] == "confirm"
 
     with patch("homeassistant.components.zha.async_setup_entry"):
         result2 = await hass.config_entries.flow.async_configure(
@@ -264,7 +264,7 @@ async def test_zigate_discovery_via_usb(detect_mock, hass):
     )
     await hass.async_block_till_done()
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "confirm_usb"
+    assert result["step_id"] == "confirm"
 
     with patch("homeassistant.components.zha.async_setup_entry"):
         result2 = await hass.config_entries.flow.async_configure(
@@ -298,7 +298,7 @@ async def test_discovery_via_usb_no_radio(detect_mock, hass):
     )
     await hass.async_block_till_done()
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "confirm_usb"
+    assert result["step_id"] == "confirm"
 
     with patch("homeassistant.components.zha.async_setup_entry"):
         result2 = await hass.config_entries.flow.async_configure(
@@ -451,7 +451,7 @@ async def test_discovery_via_usb_deconz_ignored(detect_mock, hass):
     await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "confirm_usb"
+    assert result["step_id"] == "confirm"
 
 
 @patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=True)
