@@ -274,8 +274,9 @@ class HaScanner:
 
     async def _async_reset_adapter(self) -> None:
         """Reset the adapter."""
-        _LOGGER.debug("%s: Resetting adapter", self.name)
-        await async_reset_adapter(self.adapter)
+        _LOGGER.warning("%s: adapter stopped responding, executing reset", self.name)
+        result = await async_reset_adapter(self.adapter)
+        _LOGGER.info("%s: adapter reset result: %s", self.name, result)
 
     async def async_stop(self) -> None:
         """Stop bluetooth scanner."""
