@@ -85,7 +85,7 @@ class BSBLanClimate(ClimateEntity):
     ) -> None:
         """Initialize BSBLan climate device."""
         self._attr_available = True
-        self._store_hvac_mode = None
+        self._store_hvac_mode: HVACMode | str | None = None
         self.bsblan = bsblan
         self._attr_name = self._attr_unique_id = info.device_identification
         self._attr_device_info = DeviceInfo(
@@ -95,7 +95,7 @@ class BSBLanClimate(ClimateEntity):
             name="BSBLan Device",
         )
 
-    async def async_set_preset_mode(self, preset_mode):
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode."""
         _LOGGER.debug("Setting preset mode to: %s", preset_mode)
         if preset_mode == PRESET_NONE:
