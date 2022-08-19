@@ -4,9 +4,9 @@ from __future__ import annotations
 import asyncio
 import logging
 
-from enocean.protocol.packet import Packet  # pylint: disable=import-error
-from enocean.utils import combine_hex  # pylint: disable=import-error
-import voluptuous as vol  # pylint: disable=import-error
+from enocean.protocol.packet import Packet
+from enocean.utils import combine_hex
+import voluptuous as vol
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
