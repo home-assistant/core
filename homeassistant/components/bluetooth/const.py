@@ -18,6 +18,7 @@ DEFAULT_ADAPTER_BY_PLATFORM = {
     "Darwin": MACOS_DEFAULT_BLUETOOTH_ADAPTER,
 }
 
+
 # Some operating systems hide the adapter address for privacy reasons (ex MacOS)
 DEFAULT_ADDRESS: Final = "00:00:00:00:00:00"
 
@@ -28,6 +29,9 @@ DATA_MANAGER: Final = "bluetooth_manager"
 UNAVAILABLE_TRACK_SECONDS: Final = 60 * 5
 START_TIMEOUT = 15
 
+STALE_ADVERTISEMENT_SECONDS: Final = 130
+
+
 # We must recover before we hit the 180s mark
 # where the device is removed from the stack
 # or the devices will go unavailable. Since
@@ -37,7 +41,7 @@ START_TIMEOUT = 15
 # - 30s check interval
 # - 20s scanner restart time
 #
-SCANNER_WATCHDOG_TIMEOUT: Final = 130
+SCANNER_WATCHDOG_TIMEOUT: Final = STALE_ADVERTISEMENT_SECONDS
 # How often to check if the scanner has reached
 # the SCANNER_WATCHDOG_TIMEOUT without seeing anything
 SCANNER_WATCHDOG_INTERVAL: Final = timedelta(seconds=30)
