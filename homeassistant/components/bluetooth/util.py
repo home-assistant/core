@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import platform
 
+from bluetooth_auto_recovery import recover_adapter
+
 from homeassistant.core import callback
 
 from .const import (
@@ -65,3 +67,10 @@ def adapter_human_name(adapter: str, address: str) -> str:
 def adapter_unique_name(adapter: str, address: str) -> str:
     """Return a unique name for the adapter."""
     return adapter if address == DEFAULT_ADDRESS else address
+
+
+async def async_reset_adapter(adapter: str | None) -> None:
+    """Reset the adapter."""
+    if adapter and adapter.startswith("hci"):
+        adapter_id = int(adapter[3:])
+        await recover_adapter(adapter_id)
