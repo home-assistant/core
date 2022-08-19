@@ -77,7 +77,7 @@ def create_bleak_scanner(
 
 
 class HaScanner:
-    """Operate a BleakScanner.
+    """Operate and automatically recover a BleakScanner.
 
     Multiple BleakScanner can be used at the same time
     if there are multiple adapters. This is only useful
