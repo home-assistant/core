@@ -1,4 +1,5 @@
 """The Whirlpool Sixth Sense integration."""
+from dataclasses import dataclass
 import logging
 
 import aiohttp
@@ -11,12 +12,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import (
-    APPLIANCES_MANAGER_INSTANCE_KEY,
-    AUTH_INSTANCE_KEY,
-    BACKEND_SELECTOR_INSTANCE_KEY,
-    DOMAIN,
-)
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,11 +39,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("Cannot fetch appliances")
         return False
 
-    hass.data[DOMAIN][entry.entry_id] = {
-        APPLIANCES_MANAGER_INSTANCE_KEY: appliances_manager,
-        AUTH_INSTANCE_KEY: auth,
-        BACKEND_SELECTOR_INSTANCE_KEY: backend_selector,
-    }
+    hass.data[DOMAIN][entry.entry_id] = WhirlpoolData(
+        appliances_manager,
+        auth,
+        backend_selector,
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -61,3 +57,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+@dataclass
+class WhirlpoolData:
+    """Whirlpool integaration shared data."""
+
+    appliances_manager: AppliancesManager
+    auth: Auth
+    backend_selector: BackendSelector

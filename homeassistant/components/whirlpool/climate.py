@@ -5,7 +5,6 @@ import logging
 from typing import Any
 
 from whirlpool.aircon import Aircon, FanSpeed as AirconFanSpeed, Mode as AirconMode
-from whirlpool.appliancesmanager import AppliancesManager
 from whirlpool.auth import Auth
 from whirlpool.backendselector import BackendSelector
 
@@ -27,12 +26,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    APPLIANCES_MANAGER_INSTANCE_KEY,
-    AUTH_INSTANCE_KEY,
-    BACKEND_SELECTOR_INSTANCE_KEY,
-    DOMAIN,
-)
+from . import WhirlpoolData
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -74,19 +69,19 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up entry."""
-    appliances_manager: AppliancesManager = hass.data[DOMAIN][config_entry.entry_id][
-        APPLIANCES_MANAGER_INSTANCE_KEY
-    ]
-    auth: Auth = hass.data[DOMAIN][config_entry.entry_id][AUTH_INSTANCE_KEY]
-    backend_selector: BackendSelector = hass.data[DOMAIN][config_entry.entry_id][
-        BACKEND_SELECTOR_INSTANCE_KEY
-    ]
-    if not (aircons := appliances_manager.aircons):
+    whirlpool_data: WhirlpoolData = hass.data[DOMAIN][config_entry.entry_id]
+    if not (aircons := whirlpool_data.appliances_manager.aircons):
         _LOGGER.debug("No aircons found")
         return
 
     aircons = [
-        AirConEntity(hass, ac_data["SAID"], ac_data["NAME"], backend_selector, auth)
+        AirConEntity(
+            hass,
+            ac_data["SAID"],
+            ac_data["NAME"],
+            whirlpool_data.backend_selector,
+            whirlpool_data.auth,
+        )
         for ac_data in aircons
     ]
     async_add_entities(aircons, True)
