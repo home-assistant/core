@@ -1,7 +1,7 @@
 """Numeric derivative of data coming from a source sensor over time."""
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 from decimal import Decimal, DecimalException
 import logging
 
@@ -20,7 +20,7 @@ from homeassistant.const import (
     TIME_MINUTES,
     TIME_SECONDS,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
@@ -150,9 +150,8 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
         self._sensor_source_id = source_entity
         self._round_digits = round_digits
         self._state = 0
-        self._state_list = (
-            []
-        )  # List of tuples with (timestamp_start, timestamp_end, derivative)
+        # List of tuples with (timestamp_start, timestamp_end, derivative)
+        self._state_list: list[tuple[datetime, datetime, Decimal]] = []
 
         self._name = name if name is not None else f"{source_entity} derivative"
 
@@ -180,6 +179,8 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
         @callback
         def calc_derivative(event: Event) -> None:
             """Handle the sensor state changes."""
+            old_state: State | None
+            new_state: State | None
             if (
                 (old_state := event.data.get("old_state")) is None
                 or old_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
