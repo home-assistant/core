@@ -296,6 +296,7 @@ class TodoistProjectEntity(CalendarEntity):
         )
         self._cal_data = {}
         self._name = data[CONF_NAME]
+        self._attr_unique_id = data.get(CONF_ID)
 
     @property
     def event(self) -> CalendarEvent:

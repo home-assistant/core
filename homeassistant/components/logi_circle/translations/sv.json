@@ -1,11 +1,15 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Konto har redan konfigurerats",
             "external_error": "Undantag intr\u00e4ffade fr\u00e5n ett annat fl\u00f6de.",
-            "external_setup": "Logi Circle har konfigurerats fr\u00e5n ett annat fl\u00f6de."
+            "external_setup": "Logi Circle har konfigurerats fr\u00e5n ett annat fl\u00f6de.",
+            "missing_configuration": "Komponenten har inte konfigurerats. F\u00f6lj dokumentationen."
         },
         "error": {
-            "follow_link": "V\u00e4nligen f\u00f6lj l\u00e4nken och autentisera innan du trycker p\u00e5 Skicka."
+            "authorize_url_timeout": "Timeout vid generering av en auktoriserings-URL.",
+            "follow_link": "V\u00e4nligen f\u00f6lj l\u00e4nken och autentisera innan du trycker p\u00e5 Skicka.",
+            "invalid_auth": "Ogiltig autentisering"
         },
         "step": {
             "auth": {

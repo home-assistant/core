@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
-from pydeconz.models.group import Group as DeconzGroup
-from pydeconz.models.light import LightBase as DeconzLight
+from typing import Generic, TypeVar, Union
+
+from pydeconz.models.deconz_device import DeconzDevice as PydeconzDevice
+from pydeconz.models.group import Group as PydeconzGroup
+from pydeconz.models.light import LightBase as PydeconzLightBase
 from pydeconz.models.scene import Scene as PydeconzScene
-from pydeconz.models.sensor import SensorBase as DeconzSensor
+from pydeconz.models.sensor import SensorBase as PydeconzSensorBase
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
@@ -15,29 +18,39 @@ from homeassistant.helpers.entity import DeviceInfo, Entity
 from .const import DOMAIN as DECONZ_DOMAIN
 from .gateway import DeconzGateway
 
+_DeviceT = TypeVar(
+    "_DeviceT",
+    bound=Union[
+        PydeconzGroup,
+        PydeconzLightBase,
+        PydeconzSensorBase,
+        PydeconzScene,
+    ],
+)
 
-class DeconzBase:
+
+class DeconzBase(Generic[_DeviceT]):
     """Common base for deconz entities and events."""
 
     def __init__(
         self,
-        device: DeconzGroup | DeconzLight | DeconzSensor | PydeconzScene,
+        device: _DeviceT,
         gateway: DeconzGateway,
     ) -> None:
         """Set up device and add update callback to get data from websocket."""
-        self._device = device
+        self._device: _DeviceT = device
         self.gateway = gateway
 
     @property
     def unique_id(self) -> str:
         """Return a unique identifier for this device."""
-        assert not isinstance(self._device, PydeconzScene)
+        assert isinstance(self._device, PydeconzDevice)
         return self._device.unique_id
 
     @property
     def serial(self) -> str | None:
         """Return a serial number for this device."""
-        assert not isinstance(self._device, PydeconzScene)
+        assert isinstance(self._device, PydeconzDevice)
         if not self._device.unique_id or self._device.unique_id.count(":") != 7:
             return None
         return self._device.unique_id.split("-", 1)[0]
@@ -45,7 +58,7 @@ class DeconzBase:
     @property
     def device_info(self) -> DeviceInfo | None:
         """Return a device description for device registry."""
-        assert not isinstance(self._device, PydeconzScene)
+        assert isinstance(self._device, PydeconzDevice)
         if self.serial is None:
             return None
 
@@ -60,7 +73,7 @@ class DeconzBase:
         )
 
 
-class DeconzDevice(DeconzBase, Entity):
+class DeconzDevice(DeconzBase[_DeviceT], Entity):
     """Representation of a deCONZ device."""
 
     _attr_should_poll = False
@@ -69,7 +82,7 @@ class DeconzDevice(DeconzBase, Entity):
 
     def __init__(
         self,
-        device: DeconzGroup | DeconzLight | DeconzSensor | PydeconzScene,
+        device: _DeviceT,
         gateway: DeconzGateway,
     ) -> None:
         """Set up device and add update callback to get data from websocket."""
@@ -114,15 +127,13 @@ class DeconzDevice(DeconzBase, Entity):
         """Return True if device is available."""
         if isinstance(self._device, PydeconzScene):
             return self.gateway.available
-        return self.gateway.available and self._device.reachable
+        return self.gateway.available and self._device.reachable  # type: ignore[union-attr]
 
 
-class DeconzSceneMixin(DeconzDevice):
+class DeconzSceneMixin(DeconzDevice[PydeconzScene]):
     """Representation of a deCONZ scene."""
 
     _attr_has_entity_name = True
-
-    _device: PydeconzScene
 
     def __init__(
         self,

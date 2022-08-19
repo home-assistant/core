@@ -715,7 +715,7 @@ async def test_warn_slow_write_state_custom_component(hass, caplog):
     assert (
         "Updating state for comp_test.test_entity "
         "(<class 'custom_components.bla.sensor.test_warn_slow_write_state_custom_component.<locals>.CustomComponentEntity'>) "
-        "took 10.000 seconds. Please report it to the custom component author."
+        "took 10.000 seconds. Please report it to the custom integration author."
     ) in caplog.text
 
 

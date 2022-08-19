@@ -42,6 +42,7 @@ SENSORS: tuple[AccSensorEntityDescription, ...] = (
         key="battery_level",
         name="Battery level",
         device_class=SensorDeviceClass.BATTERY,
+        entity_registry_enabled_default=False,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=AladdinConnectClient.get_battery_status,
@@ -54,6 +55,15 @@ SENSORS: tuple[AccSensorEntityDescription, ...] = (
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=AladdinConnectClient.get_rssi_status,
+    ),
+    AccSensorEntityDescription(
+        key="ble_strength",
+        name="BLE Strength",
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        entity_registry_enabled_default=False,
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=AladdinConnectClient.get_ble_strength,
     ),
 )
 
@@ -88,14 +98,17 @@ class AladdinConnectSensor(SensorEntity):
         device: DoorDevice,
         description: AccSensorEntityDescription,
     ) -> None:
-        """Initialize a sensor for an Abode device."""
+        """Initialize a sensor for an Aladdin Connect device."""
         self._device_id = device["device_id"]
         self._number = device["door_number"]
         self._name = device["name"]
+        self._model = device["model"]
         self._acc = acc
         self.entity_description = description
         self._attr_unique_id = f"{self._device_id}-{self._number}-{description.key}"
         self._attr_has_entity_name = True
+        if self._model == "01" and description.key in ("battery_level", "ble_strength"):
+            self._attr_entity_registry_enabled_default = True
 
     @property
     def device_info(self) -> DeviceInfo | None:
@@ -104,6 +117,7 @@ class AladdinConnectSensor(SensorEntity):
             identifiers={(DOMAIN, self._device_id)},
             name=self._name,
             manufacturer="Overhead Door",
+            model=self._model,
         )
 
     @property

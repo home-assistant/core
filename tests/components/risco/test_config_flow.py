@@ -51,13 +51,13 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.risco.config_flow.RiscoAPI.login",
+        "homeassistant.components.risco.config_flow.RiscoCloud.login",
         return_value=True,
     ), patch(
-        "homeassistant.components.risco.config_flow.RiscoAPI.site_name",
+        "homeassistant.components.risco.config_flow.RiscoCloud.site_name",
         new_callable=PropertyMock(return_value=TEST_SITE_NAME),
     ), patch(
-        "homeassistant.components.risco.config_flow.RiscoAPI.close"
+        "homeassistant.components.risco.config_flow.RiscoCloud.close"
     ) as mock_close, patch(
         "homeassistant.components.risco.async_setup_entry",
         return_value=True,
@@ -74,61 +74,33 @@ async def test_form(hass):
     mock_close.assert_awaited_once()
 
 
-async def test_form_invalid_auth(hass):
-    """Test we handle invalid auth."""
+@pytest.mark.parametrize(
+    "exception, error",
+    [
+        (UnauthorizedError, "invalid_auth"),
+        (CannotConnectError, "cannot_connect"),
+        (Exception, "unknown"),
+    ],
+)
+async def test_error(hass, exception, error):
+    """Test we handle config flow errors."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with patch(
-        "homeassistant.components.risco.config_flow.RiscoAPI.login",
-        side_effect=UnauthorizedError,
-    ), patch("homeassistant.components.risco.config_flow.RiscoAPI.close") as mock_close:
+        "homeassistant.components.risco.config_flow.RiscoCloud.login",
+        side_effect=exception,
+    ), patch(
+        "homeassistant.components.risco.config_flow.RiscoCloud.close"
+    ) as mock_close:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], TEST_DATA
         )
 
-    assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "invalid_auth"}
     mock_close.assert_awaited_once()
-
-
-async def test_form_cannot_connect(hass):
-    """Test we handle cannot connect error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.risco.config_flow.RiscoAPI.login",
-        side_effect=CannotConnectError,
-    ), patch("homeassistant.components.risco.config_flow.RiscoAPI.close") as mock_close:
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], TEST_DATA
-        )
-
     assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "cannot_connect"}
-    mock_close.assert_awaited_once()
-
-
-async def test_form_exception(hass):
-    """Test we handle unknown exception."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.risco.config_flow.RiscoAPI.login",
-        side_effect=Exception,
-    ), patch("homeassistant.components.risco.config_flow.RiscoAPI.close") as mock_close:
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], TEST_DATA
-        )
-
-    assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "unknown"}
-    mock_close.assert_awaited_once()
+    assert result2["errors"] == {"base": error}
 
 
 async def test_form_already_exists(hass):

@@ -154,7 +154,7 @@ class AirtouchAC(CoordinatorEntity, ClimateEntity):
         modes.append(HVACMode.OFF)
         return modes
 
-    async def async_set_hvac_mode(self, hvac_mode):
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new operation mode."""
         if hvac_mode not in HA_STATE_TO_AT:
             raise ValueError(f"Unsupported HVAC mode: {hvac_mode}")
@@ -170,7 +170,7 @@ class AirtouchAC(CoordinatorEntity, ClimateEntity):
         _LOGGER.debug("Setting operation mode of %s to %s", self._ac_number, hvac_mode)
         self.async_write_ha_state()
 
-    async def async_set_fan_mode(self, fan_mode):
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new fan mode."""
         if fan_mode not in self.fan_modes:
             raise ValueError(f"Unsupported fan mode: {fan_mode}")
@@ -182,14 +182,14 @@ class AirtouchAC(CoordinatorEntity, ClimateEntity):
         self._unit = self._airtouch.GetAcs()[self._ac_number]
         self.async_write_ha_state()
 
-    async def async_turn_on(self):
+    async def async_turn_on(self) -> None:
         """Turn on."""
         _LOGGER.debug("Turning %s on", self.unique_id)
         # in case ac is not on. Airtouch turns itself off if no groups are turned on
         # (even if groups turned back on)
         await self._airtouch.TurnAcOn(self._ac_number)
 
-    async def async_turn_off(self):
+    async def async_turn_off(self) -> None:
         """Turn off."""
         _LOGGER.debug("Turning %s off", self.unique_id)
         await self._airtouch.TurnAcOff(self._ac_number)
@@ -266,7 +266,7 @@ class AirtouchGroup(CoordinatorEntity, ClimateEntity):
 
         return HVACMode.FAN_ONLY
 
-    async def async_set_hvac_mode(self, hvac_mode):
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new operation mode."""
         if hvac_mode not in HA_STATE_TO_AT:
             raise ValueError(f"Unsupported HVAC mode: {hvac_mode}")
@@ -304,7 +304,7 @@ class AirtouchGroup(CoordinatorEntity, ClimateEntity):
         )
         self.async_write_ha_state()
 
-    async def async_set_fan_mode(self, fan_mode):
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new fan mode."""
         if fan_mode not in self.fan_modes:
             raise ValueError(f"Unsupported fan mode: {fan_mode}")
@@ -315,7 +315,7 @@ class AirtouchGroup(CoordinatorEntity, ClimateEntity):
         )
         self.async_write_ha_state()
 
-    async def async_turn_on(self):
+    async def async_turn_on(self) -> None:
         """Turn on."""
         _LOGGER.debug("Turning %s on", self.unique_id)
         await self._airtouch.TurnGroupOn(self._group_number)
@@ -330,7 +330,7 @@ class AirtouchGroup(CoordinatorEntity, ClimateEntity):
         await self.coordinator.async_request_refresh()
         self.async_write_ha_state()
 
-    async def async_turn_off(self):
+    async def async_turn_off(self) -> None:
         """Turn off."""
         _LOGGER.debug("Turning %s off", self.unique_id)
         await self._airtouch.TurnGroupOff(self._group_number)

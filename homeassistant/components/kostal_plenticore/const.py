@@ -1,8 +1,6 @@
 """Constants for the Kostal Plenticore Solar Inverter integration."""
-from dataclasses import dataclass
 from typing import NamedTuple
 
-from homeassistant.components.number import NumberEntityDescription
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     SensorDeviceClass,
@@ -18,7 +16,6 @@ from homeassistant.const import (
     PERCENTAGE,
     POWER_WATT,
 )
-from homeassistant.helpers.entity import EntityCategory
 
 DOMAIN = "kostal_plenticore"
 
@@ -790,57 +787,6 @@ SENSOR_PROCESS_DATA = [
             ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
         },
         "format_energy",
-    ),
-]
-
-
-@dataclass
-class PlenticoreNumberEntityDescriptionMixin:
-    """Define an entity description mixin for number entities."""
-
-    module_id: str
-    data_id: str
-    fmt_from: str
-    fmt_to: str
-
-
-@dataclass
-class PlenticoreNumberEntityDescription(
-    NumberEntityDescription, PlenticoreNumberEntityDescriptionMixin
-):
-    """Describes a Plenticore number entity."""
-
-
-NUMBER_SETTINGS_DATA = [
-    PlenticoreNumberEntityDescription(
-        key="battery_min_soc",
-        entity_category=EntityCategory.CONFIG,
-        entity_registry_enabled_default=False,
-        icon="mdi:battery-negative",
-        name="Battery min SoC",
-        native_unit_of_measurement=PERCENTAGE,
-        native_max_value=100,
-        native_min_value=5,
-        native_step=5,
-        module_id="devices:local",
-        data_id="Battery:MinSoc",
-        fmt_from="format_round",
-        fmt_to="format_round_back",
-    ),
-    PlenticoreNumberEntityDescription(
-        key="battery_min_home_consumption",
-        device_class=SensorDeviceClass.POWER,
-        entity_category=EntityCategory.CONFIG,
-        entity_registry_enabled_default=False,
-        name="Battery min Home Consumption",
-        native_unit_of_measurement=POWER_WATT,
-        native_max_value=38000,
-        native_min_value=50,
-        native_step=1,
-        module_id="devices:local",
-        data_id="Battery:MinHomeComsumption",
-        fmt_from="format_round",
-        fmt_to="format_round_back",
     ),
 ]
 

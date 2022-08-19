@@ -6,7 +6,9 @@ from http import HTTPStatus
 from ipaddress import ip_address
 import logging
 import secrets
+from typing import TYPE_CHECKING, Any
 
+from aiohttp import StreamReader
 from aiohttp.web import Request, Response
 import voluptuous as vol
 
@@ -17,7 +19,7 @@ from homeassistant.helpers.network import get_url
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util import network
-from homeassistant.util.aiohttp import MockRequest, serialize_response
+from homeassistant.util.aiohttp import MockRequest, MockStreamReader, serialize_response
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -83,17 +85,20 @@ def async_generate_path(webhook_id: str) -> str:
 
 @bind_hass
 async def async_handle_webhook(
-    hass: HomeAssistant, webhook_id: str, request: Request
+    hass: HomeAssistant, webhook_id: str, request: Request | MockRequest
 ) -> Response:
     """Handle a webhook."""
-    handlers = hass.data.setdefault(DOMAIN, {})
+    handlers: dict[str, dict[str, Any]] = hass.data.setdefault(DOMAIN, {})
 
     # Always respond successfully to not give away if a hook exists or not.
     if (webhook := handlers.get(webhook_id)) is None:
+        content_stream: StreamReader | MockStreamReader
         if isinstance(request, MockRequest):
             received_from = request.mock_source
+            content_stream = request.content
         else:
             received_from = request.remote
+            content_stream = request.content
 
         _LOGGER.info(
             "Received message for unregistered webhook %s from %s",
@@ -102,13 +107,16 @@ async def async_handle_webhook(
         )
         # Look at content to provide some context for received webhook
         # Limit to 64 chars to avoid flooding the log
-        content = await request.content.read(64)
+        content = await content_stream.read(64)
         _LOGGER.debug("%s", content)
         return Response(status=HTTPStatus.OK)
 
     if webhook["local_only"]:
+        if TYPE_CHECKING:
+            assert isinstance(request, Request)
+            assert request.remote is not None
         try:
-            remote = ip_address(request.remote)  # type: ignore[arg-type]
+            remote = ip_address(request.remote)
         except ValueError:
             _LOGGER.debug("Unable to parse remote ip %s", request.remote)
             return Response(status=HTTPStatus.OK)

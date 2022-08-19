@@ -5,7 +5,6 @@ import asyncio
 from collections import ChainMap
 from collections.abc import Callable, Coroutine, Iterable, Mapping
 from contextvars import ContextVar
-import dataclasses
 from enum import Enum
 import functools
 import logging
@@ -28,12 +27,12 @@ from .util import uuid as uuid_util
 from .util.decorator import Registry
 
 if TYPE_CHECKING:
+    from .components.bluetooth import BluetoothServiceInfoBleak
     from .components.dhcp import DhcpServiceInfo
     from .components.hassio import HassioServiceInfo
     from .components.ssdp import SsdpServiceInfo
     from .components.usb import UsbServiceInfo
     from .components.zeroconf import ZeroconfServiceInfo
-    from .helpers.service_info.bluetooth import BluetoothServiceInfo
     from .helpers.service_info.mqtt import MqttServiceInfo
 
 _LOGGER = logging.getLogger(__name__)
@@ -74,7 +73,7 @@ PATH_CONFIG = ".config_entries.json"
 
 SAVE_DELAY = 1
 
-_T = TypeVar("_T", bound="ConfigEntryState")
+_ConfigEntryStateSelfT = TypeVar("_ConfigEntryStateSelfT", bound="ConfigEntryState")
 _R = TypeVar("_R")
 
 
@@ -98,7 +97,9 @@ class ConfigEntryState(Enum):
 
     _recoverable: bool
 
-    def __new__(cls: type[_T], value: str, recoverable: bool) -> _T:
+    def __new__(
+        cls: type[_ConfigEntryStateSelfT], value: str, recoverable: bool
+    ) -> _ConfigEntryStateSelfT:
         """Create new ConfigEntryState."""
         obj = object.__new__(cls)
         obj._value_ = value
@@ -639,7 +640,12 @@ class ConfigEntry:
                 await asyncio.gather(*pending)
 
     @callback
-    def async_start_reauth(self, hass: HomeAssistant) -> None:
+    def async_start_reauth(
+        self,
+        hass: HomeAssistant,
+        context: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+    ) -> None:
         """Start a reauth flow."""
         flow_context = {
             "source": SOURCE_REAUTH,
@@ -647,6 +653,9 @@ class ConfigEntry:
             "title_placeholders": {"name": self.title},
             "unique_id": self.unique_id,
         }
+
+        if context:
+            flow_context.update(context)
 
         for flow in hass.config_entries.flow.async_progress_by_handler(self.domain):
             if flow["context"] == flow_context:
@@ -656,7 +665,7 @@ class ConfigEntry:
             hass.config_entries.flow.async_init(
                 self.domain,
                 context=flow_context,
-                data=self.data,
+                data=self.data | (data or {}),
             )
         )
 
@@ -1288,6 +1297,8 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         self,
         updates: dict[str, Any] | None = None,
         reload_on_update: bool = True,
+        *,
+        error: str = "already_configured",
     ) -> None:
         """Abort if the unique ID is already configured."""
         if self.unique_id is None:
@@ -1323,7 +1334,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
                 self.hass.async_create_task(
                     self.hass.config_entries.async_reload(entry.entry_id)
                 )
-            raise data_entry_flow.AbortFlow("already_configured")
+            raise data_entry_flow.AbortFlow(error)
 
     async def async_set_unique_id(
         self, unique_id: str | None = None, *, raise_on_progress: bool = True
@@ -1446,12 +1457,18 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         if self._async_in_progress(include_uninitialized=True):
             raise data_entry_flow.AbortFlow("already_in_progress")
 
-    async def async_step_discovery(
-        self, discovery_info: DiscoveryInfoType
+    async def _async_step_discovery_without_unique_id(
+        self,
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by discovery."""
         await self._async_handle_discovery_without_unique_id()
         return await self.async_step_user()
+
+    async def async_step_discovery(
+        self, discovery_info: DiscoveryInfoType
+    ) -> data_entry_flow.FlowResult:
+        """Handle a flow initialized by discovery."""
+        return await self._async_step_discovery_without_unique_id()
 
     @callback
     def async_abort(
@@ -1478,58 +1495,58 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         )
 
     async def async_step_bluetooth(
-        self, discovery_info: BluetoothServiceInfo
+        self, discovery_info: BluetoothServiceInfoBleak
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by Bluetooth discovery."""
-        return await self.async_step_discovery(dataclasses.asdict(discovery_info))
+        return await self._async_step_discovery_without_unique_id()
 
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by DHCP discovery."""
-        return await self.async_step_discovery(dataclasses.asdict(discovery_info))
+        return await self._async_step_discovery_without_unique_id()
 
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by HASS IO discovery."""
-        return await self.async_step_discovery(discovery_info.config)
+        return await self._async_step_discovery_without_unique_id()
 
     async def async_step_integration_discovery(
         self, discovery_info: DiscoveryInfoType
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by integration specific discovery."""
-        return await self.async_step_discovery(discovery_info)
+        return await self._async_step_discovery_without_unique_id()
 
     async def async_step_homekit(
         self, discovery_info: ZeroconfServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by Homekit discovery."""
-        return await self.async_step_discovery(dataclasses.asdict(discovery_info))
+        return await self._async_step_discovery_without_unique_id()
 
     async def async_step_mqtt(
         self, discovery_info: MqttServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by MQTT discovery."""
-        return await self.async_step_discovery(dataclasses.asdict(discovery_info))
+        return await self._async_step_discovery_without_unique_id()
 
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by SSDP discovery."""
-        return await self.async_step_discovery(dataclasses.asdict(discovery_info))
+        return await self._async_step_discovery_without_unique_id()
 
     async def async_step_usb(
         self, discovery_info: UsbServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by USB discovery."""
-        return await self.async_step_discovery(dataclasses.asdict(discovery_info))
+        return await self._async_step_discovery_without_unique_id()
 
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by Zeroconf discovery."""
-        return await self.async_step_discovery(dataclasses.asdict(discovery_info))
+        return await self._async_step_discovery_without_unique_id()
 
     @callback
     def async_create_entry(
