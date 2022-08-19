@@ -94,7 +94,7 @@ class BleBoxLightEntity(BleBoxEntity, LightEntity):
         return color_mode_tmp
 
     @property
-    def effect_list(self) -> list[str] | None:
+    def effect_list(self) -> list[str]:
         """Return the list of supported effects."""
         return self._feature.effect_list
 
@@ -171,12 +171,8 @@ class BleBoxLightEntity(BleBoxEntity, LightEntity):
             ) from exc
 
         if effect is not None:
-            if not self.effect_list or effect not in self.effect_list:
-                raise ValueError(
-                    f"Turning on with effect '{self.name}' failed: {effect} not in effect list."
-                )
-            effect_value = self.effect_list.index(effect)
             try:
+                effect_value = self.effect_list.index(effect)
                 await self._feature.async_api_command("effect", effect_value)
             except ValueError as exc:
                 raise ValueError(
