@@ -1,6 +1,40 @@
 """Tests for the Lutron Caseta integration."""
 
 
+from unittest.mock import patch
+
+from homeassistant.components.lutron_caseta import DOMAIN
+from homeassistant.components.lutron_caseta.const import (
+    CONF_CA_CERTS,
+    CONF_CERTFILE,
+    CONF_KEYFILE,
+)
+from homeassistant.const import CONF_HOST
+
+from tests.common import MockConfigEntry
+
+ENTRY_MOCK_DATA = {
+    CONF_HOST: "1.1.1.1",
+    CONF_KEYFILE: "",
+    CONF_CERTFILE: "",
+    CONF_CA_CERTS: "",
+}
+
+
+async def async_setup_integration(hass, mock_bridge) -> MockConfigEntry:
+    """Set up a mock bridge."""
+    mock_entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_MOCK_DATA)
+    mock_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.lutron_caseta.Smartbridge.create_tls"
+    ) as create_tls:
+        create_tls.return_value = mock_bridge(can_connect=True)
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+    return mock_entry
+
+
 class MockBridge:
     """Mock Lutron bridge that emulates configured connected status."""
 
