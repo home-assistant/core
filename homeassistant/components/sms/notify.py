@@ -1,7 +1,7 @@
 """Support for SMS notification services."""
 import logging
 
-import gammu
+import gammu  # pylint: disable=import-error
 import voluptuous as vol
 
 from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
