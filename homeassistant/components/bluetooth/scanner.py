@@ -66,7 +66,7 @@ def create_bleak_scanner(
 ) -> bleak.BleakScanner:
     """Create a Bleak scanner."""
     scanner_kwargs = {"scanning_mode": SCANNING_MODE_TO_BLEAK[scanning_mode]}
-    # Only Linux support multiple adapters
+    # Only Linux supports multiple adapters
     if adapter and platform.system() == "Linux":
         scanner_kwargs["adapter"] = adapter
     _LOGGER.debug("Initializing bluetooth scanner with %s", scanner_kwargs)
