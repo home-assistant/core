@@ -27,9 +27,14 @@ SOURCE_LOCAL: Final = "local"
 DATA_MANAGER: Final = "bluetooth_manager"
 
 UNAVAILABLE_TRACK_SECONDS: Final = 60 * 5
+
 START_TIMEOUT = 15
 
-STALE_ADVERTISEMENT_SECONDS: Final = 130
+MAX_DBUS_SETUP_SECONDS = 5
+
+# Anything after 30s is considered stale, we have buffer
+# for start timeouts and execution time
+STALE_ADVERTISEMENT_SECONDS: Final = 30 + START_TIMEOUT + MAX_DBUS_SETUP_SECONDS
 
 
 # We must recover before we hit the 180s mark
@@ -41,7 +46,7 @@ STALE_ADVERTISEMENT_SECONDS: Final = 130
 # - 30s check interval
 # - 20s scanner restart time
 #
-SCANNER_WATCHDOG_TIMEOUT: Final = STALE_ADVERTISEMENT_SECONDS
+SCANNER_WATCHDOG_TIMEOUT: Final = 130
 # How often to check if the scanner has reached
 # the SCANNER_WATCHDOG_TIMEOUT without seeing anything
 SCANNER_WATCHDOG_INTERVAL: Final = timedelta(seconds=30)
