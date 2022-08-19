@@ -1,6 +1,5 @@
 """Config flow for flume integration."""
 from collections.abc import Mapping
-import logging
 import os
 from typing import Any
 
@@ -17,9 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import BASE_TOKEN_FILENAME, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .const import _LOGGER, BASE_TOKEN_FILENAME, DOMAIN
 
 # If flume ever implements a login page for oauth
 # we can use the oauth2 support built into Home Assistant.

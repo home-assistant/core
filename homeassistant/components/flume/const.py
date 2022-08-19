@@ -1,14 +1,17 @@
 """The Flume component."""
 from __future__ import annotations
 
+import logging
+
 from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.const import Platform
 
 DOMAIN = "flume"
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
-DEFAULT_NAME = "Flume Sensor"
+DEFAULT_NAME = "Flume"
 
 FLUME_TYPE_SENSOR = 2
 FLUME_QUERIES_SENSOR: tuple[SensorEntityDescription, ...] = (
@@ -19,32 +22,32 @@ FLUME_QUERIES_SENSOR: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="month_to_date",
-        name="Current Month",
+        name="Current month",
         native_unit_of_measurement="gal",
     ),
     SensorEntityDescription(
         key="week_to_date",
-        name="Current Week",
+        name="Current week",
         native_unit_of_measurement="gal",
     ),
     SensorEntityDescription(
         key="today",
-        name="Current Day",
+        name="Current day",
         native_unit_of_measurement="gal",
     ),
     SensorEntityDescription(
         key="last_60_min",
-        name="60 Minutes",
+        name="60 minutes",
         native_unit_of_measurement="gal/h",
     ),
     SensorEntityDescription(
         key="last_24_hrs",
-        name="24 Hours",
+        name="24 hours",
         native_unit_of_measurement="gal/d",
     ),
     SensorEntityDescription(
         key="last_30_days",
-        name="30 Days",
+        name="30 days",
         native_unit_of_measurement="gal/mo",
     ),
 )
