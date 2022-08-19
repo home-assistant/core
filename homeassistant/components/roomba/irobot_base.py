@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import json
 
 from homeassistant.components.vacuum import (
     ATTR_STATUS,
@@ -181,6 +182,10 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
 
         # Set legacy status to avoid break changes
         state_attrs[ATTR_STATUS] = self.vacuum.current_state
+
+        lastCommand = state.get("lastCommand")
+        if lastCommand is not None:
+          state_attrs['lastCommand'] = json.dumps(lastCommand)
 
         # Only add cleaning time and cleaned area attrs when the vacuum is
         # currently on
