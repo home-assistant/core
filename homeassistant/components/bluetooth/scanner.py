@@ -77,7 +77,7 @@ def create_bleak_scanner(
 
 
 class HaScanner:
-    """Operate a BleakScanner.
+    """Operate and automatically recover a BleakScanner.
 
     Multiple BleakScanner can be used at the same time
     if there are multiple adapters. This is only useful
@@ -244,9 +244,10 @@ class HaScanner:
     def _async_setup_scanner_watchdog(self) -> None:
         """If Dbus gets restarted or updated, we need to restart the scanner."""
         self._start_time = self._last_detection = MONOTONIC_TIME()
-        self._cancel_watchdog = async_track_time_interval(
-            self.hass, self._async_scanner_watchdog, SCANNER_WATCHDOG_INTERVAL
-        )
+        if not self._cancel_watchdog:
+            self._cancel_watchdog = async_track_time_interval(
+                self.hass, self._async_scanner_watchdog, SCANNER_WATCHDOG_INTERVAL
+            )
 
     async def _async_scanner_watchdog(self, now: datetime) -> None:
         """Check if the scanner is running."""
@@ -264,7 +265,9 @@ class HaScanner:
             SCANNER_WATCHDOG_INTERVAL,
         )
         async with self._start_stop_lock:
-            await self._async_stop()
+            # Stop the scanner but not the watchdog
+            # since we want to try again later if it's still quiet
+            await self._async_stop_scanner()
             if self._start_time == self._last_detection:
                 await self._async_reset_adapter()
             try:
@@ -294,14 +297,18 @@ class HaScanner:
             await self._async_stop()
 
     async def _async_stop(self) -> None:
-        """Stop bluetooth discovery under the lock."""
-        _LOGGER.debug("%s: Stopping bluetooth discovery", self.name)
+        """Cancel watchdog and bluetooth discovery under the lock."""
         if self._cancel_watchdog:
             self._cancel_watchdog()
             self._cancel_watchdog = None
+        await self._async_stop_scanner()
+
+    async def _async_stop_scanner(self) -> None:
+        """Stop bluetooth discovery under the lock."""
         if self._cancel_stop:
             self._cancel_stop()
             self._cancel_stop = None
+        _LOGGER.debug("%s: Stopping bluetooth discovery", self.name)
         try:
             await self.scanner.stop()  # type: ignore[no-untyped-call]
         except BleakError as ex:
