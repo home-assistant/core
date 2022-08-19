@@ -53,7 +53,7 @@ def setup_platform(
     """Set up the Cover platform for EnOcean."""
     dev_id = config.get(CONF_ID)
     sender_id = config.get(CONF_SENDER_ID)
-    dev_name = config.get(CONF_NAME)
+    dev_name = config[CONF_NAME]
     device_class = config.get(CONF_DEVICE_CLASS)
     if device_class is None:
         device_class = CoverDeviceClass.BLIND
