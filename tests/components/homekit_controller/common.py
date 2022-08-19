@@ -21,6 +21,7 @@ from homeassistant.components.homekit_controller.const import (
     IDENTIFIER_ACCESSORY_ID,
     IDENTIFIER_SERIAL_NUMBER,
 )
+from homeassistant.components.homekit_controller.utils import async_get_controller
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -174,12 +175,11 @@ async def setup_platform(hass):
     config = {"discovery": {}}
 
     with mock.patch(
-        "homeassistant.components.homekit_controller.utils.Controller"
-    ) as controller:
-        fake_controller = controller.return_value = FakeController()
+        "homeassistant.components.homekit_controller.utils.Controller", FakeController
+    ):
         await async_setup_component(hass, DOMAIN, config)
 
-    return fake_controller
+    return await async_get_controller(hass)
 
 
 async def setup_test_accessories(hass, accessories):
