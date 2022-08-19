@@ -100,7 +100,7 @@ async def test_cloud_setup(hass, two_zone_cloud):
     assert device.manufacturer == "Risco"
 
 
-async def _check_state(hass, zones, triggered, bypassed, entity_id, zone_id):
+async def _check_cloud_state(hass, zones, triggered, bypassed, entity_id, zone_id):
     with patch.object(
         zones[zone_id],
         "triggered",
@@ -123,14 +123,14 @@ async def test_cloud_states(hass, two_zone_cloud):
     """Test the various alarm states."""
     await setup_risco_cloud(hass)
 
-    await _check_state(hass, two_zone_cloud, True, True, FIRST_ENTITY_ID, 0)
-    await _check_state(hass, two_zone_cloud, True, False, FIRST_ENTITY_ID, 0)
-    await _check_state(hass, two_zone_cloud, False, True, FIRST_ENTITY_ID, 0)
-    await _check_state(hass, two_zone_cloud, False, False, FIRST_ENTITY_ID, 0)
-    await _check_state(hass, two_zone_cloud, True, True, SECOND_ENTITY_ID, 1)
-    await _check_state(hass, two_zone_cloud, True, False, SECOND_ENTITY_ID, 1)
-    await _check_state(hass, two_zone_cloud, False, True, SECOND_ENTITY_ID, 1)
-    await _check_state(hass, two_zone_cloud, False, False, SECOND_ENTITY_ID, 1)
+    await _check_cloud_state(hass, two_zone_cloud, True, True, FIRST_ENTITY_ID, 0)
+    await _check_cloud_state(hass, two_zone_cloud, True, False, FIRST_ENTITY_ID, 0)
+    await _check_cloud_state(hass, two_zone_cloud, False, True, FIRST_ENTITY_ID, 0)
+    await _check_cloud_state(hass, two_zone_cloud, False, False, FIRST_ENTITY_ID, 0)
+    await _check_cloud_state(hass, two_zone_cloud, True, True, SECOND_ENTITY_ID, 1)
+    await _check_cloud_state(hass, two_zone_cloud, True, False, SECOND_ENTITY_ID, 1)
+    await _check_cloud_state(hass, two_zone_cloud, False, True, SECOND_ENTITY_ID, 1)
+    await _check_cloud_state(hass, two_zone_cloud, False, False, SECOND_ENTITY_ID, 1)
 
 
 async def test_cloud_bypass(hass, two_zone_cloud):
@@ -213,18 +213,58 @@ async def test_local_setup(hass, two_zone_local):
     assert device.manufacturer == "Risco"
 
 
+async def _check_local_state(
+    hass, zones, triggered, bypassed, entity_id, zone_id, callback
+):
+    with patch.object(
+        zones[zone_id],
+        "triggered",
+        new_callable=PropertyMock(return_value=triggered),
+    ), patch.object(
+        zones[zone_id],
+        "bypassed",
+        new_callable=PropertyMock(return_value=bypassed),
+    ):
+        await callback(zone_id, zones[zone_id])
+
+        expected_triggered = STATE_ON if triggered else STATE_OFF
+        assert hass.states.get(entity_id).state == expected_triggered
+        assert hass.states.get(entity_id).attributes["bypassed"] == bypassed
+        assert hass.states.get(entity_id).attributes["zone_id"] == zone_id
+
+
 async def test_local_states(hass, two_zone_local):
     """Test the various alarm states."""
-    await setup_risco_local(hass)
+    with patch("homeassistant.components.risco.RiscoLocal.add_zone_handler") as mock:
+        await setup_risco_local(hass)
+        callback = mock.call_args.args[0]
 
-    await _check_state(hass, two_zone_local, True, True, FIRST_ENTITY_ID, 0)
-    await _check_state(hass, two_zone_local, True, False, FIRST_ENTITY_ID, 0)
-    await _check_state(hass, two_zone_local, False, True, FIRST_ENTITY_ID, 0)
-    await _check_state(hass, two_zone_local, False, False, FIRST_ENTITY_ID, 0)
-    await _check_state(hass, two_zone_local, True, True, SECOND_ENTITY_ID, 1)
-    await _check_state(hass, two_zone_local, True, False, SECOND_ENTITY_ID, 1)
-    await _check_state(hass, two_zone_local, False, True, SECOND_ENTITY_ID, 1)
-    await _check_state(hass, two_zone_local, False, False, SECOND_ENTITY_ID, 1)
+    assert callback is not None
+
+    await _check_local_state(
+        hass, two_zone_local, True, True, FIRST_ENTITY_ID, 0, callback
+    )
+    await _check_local_state(
+        hass, two_zone_local, True, False, FIRST_ENTITY_ID, 0, callback
+    )
+    await _check_local_state(
+        hass, two_zone_local, False, True, FIRST_ENTITY_ID, 0, callback
+    )
+    await _check_local_state(
+        hass, two_zone_local, False, False, FIRST_ENTITY_ID, 0, callback
+    )
+    await _check_local_state(
+        hass, two_zone_local, True, True, SECOND_ENTITY_ID, 1, callback
+    )
+    await _check_local_state(
+        hass, two_zone_local, True, False, SECOND_ENTITY_ID, 1, callback
+    )
+    await _check_local_state(
+        hass, two_zone_local, False, True, SECOND_ENTITY_ID, 1, callback
+    )
+    await _check_local_state(
+        hass, two_zone_local, False, False, SECOND_ENTITY_ID, 1, callback
+    )
 
 
 async def test_local_bypass(hass, two_zone_local):

@@ -186,7 +186,9 @@ async def test_cloud_setup(hass, two_part_cloud_alarm):
     assert device.manufacturer == "Risco"
 
 
-async def _check_state(hass, partitions, property, state, entity_id, partition_id):
+async def _check_cloud_state(
+    hass, partitions, property, state, entity_id, partition_id
+):
     with patch.object(partitions[partition_id], property, return_value=True):
         await async_update_entity(hass, entity_id)
         await hass.async_block_till_done()
@@ -203,7 +205,7 @@ async def test_cloud_states(hass, two_part_cloud_alarm):
         0: FIRST_CLOUD_ENTITY_ID,
         1: SECOND_CLOUD_ENTITY_ID,
     }.items():
-        await _check_state(
+        await _check_cloud_state(
             hass,
             two_part_cloud_alarm,
             "triggered",
@@ -211,7 +213,7 @@ async def test_cloud_states(hass, two_part_cloud_alarm):
             entity_id,
             partition_id,
         )
-        await _check_state(
+        await _check_cloud_state(
             hass,
             two_part_cloud_alarm,
             "arming",
@@ -219,7 +221,7 @@ async def test_cloud_states(hass, two_part_cloud_alarm):
             entity_id,
             partition_id,
         )
-        await _check_state(
+        await _check_cloud_state(
             hass,
             two_part_cloud_alarm,
             "armed",
@@ -227,7 +229,7 @@ async def test_cloud_states(hass, two_part_cloud_alarm):
             entity_id,
             partition_id,
         )
-        await _check_state(
+        await _check_cloud_state(
             hass,
             two_part_cloud_alarm,
             "partially_armed",
@@ -235,7 +237,7 @@ async def test_cloud_states(hass, two_part_cloud_alarm):
             entity_id,
             partition_id,
         )
-        await _check_state(
+        await _check_cloud_state(
             hass,
             two_part_cloud_alarm,
             "disarmed",
@@ -250,7 +252,7 @@ async def test_cloud_states(hass, two_part_cloud_alarm):
             "groups",
             new_callable=PropertyMock(return_value=groups),
         ):
-            await _check_state(
+            await _check_cloud_state(
                 hass,
                 two_part_cloud_alarm,
                 "partially_armed",
@@ -538,54 +540,74 @@ async def test_local_setup(hass, two_part_local_alarm):
     assert device.manufacturer == "Risco"
 
 
+async def _check_local_state(
+    hass, partitions, property, state, entity_id, partition_id, callback
+):
+    with patch.object(partitions[partition_id], property, return_value=True):
+        await callback(partition_id, partitions[partition_id])
+
+    assert hass.states.get(entity_id).state == state
+
+
 async def test_local_states(hass, two_part_local_alarm):
     """Test the various alarm states."""
-    await setup_risco_local(hass, CUSTOM_MAPPING_OPTIONS)
+    with patch(
+        "homeassistant.components.risco.RiscoLocal.add_partition_handler"
+    ) as mock:
+        await setup_risco_local(hass, CUSTOM_MAPPING_OPTIONS)
+        callback = mock.call_args.args[0]
+
+    assert callback is not None
 
     assert hass.states.get(FIRST_LOCAL_ENTITY_ID).state == STATE_UNKNOWN
     for partition_id, entity_id in {
         0: FIRST_LOCAL_ENTITY_ID,
         1: SECOND_LOCAL_ENTITY_ID,
     }.items():
-        await _check_state(
+        await _check_local_state(
             hass,
             two_part_local_alarm,
             "triggered",
             STATE_ALARM_TRIGGERED,
             entity_id,
             partition_id,
+            callback,
         )
-        await _check_state(
+        await _check_local_state(
             hass,
             two_part_local_alarm,
             "arming",
             STATE_ALARM_ARMING,
             entity_id,
             partition_id,
+            callback,
         )
-        await _check_state(
+        await _check_local_state(
             hass,
             two_part_local_alarm,
             "armed",
             STATE_ALARM_ARMED_AWAY,
             entity_id,
             partition_id,
+            callback,
         )
-        await _check_state(
+        await _check_local_state(
             hass,
             two_part_local_alarm,
             "partially_armed",
             STATE_ALARM_ARMED_HOME,
             entity_id,
             partition_id,
+            callback,
         )
-        await _check_state(
+        await _check_local_state(
             hass,
             two_part_local_alarm,
             "disarmed",
             STATE_ALARM_DISARMED,
             entity_id,
             partition_id,
+            callback,
         )
 
         groups = {"A": False, "B": False, "C": True, "D": False}
@@ -594,13 +616,14 @@ async def test_local_states(hass, two_part_local_alarm):
             "groups",
             new_callable=PropertyMock(return_value=groups),
         ):
-            await _check_state(
+            await _check_local_state(
                 hass,
                 two_part_local_alarm,
                 "partially_armed",
                 STATE_ALARM_ARMED_NIGHT,
                 entity_id,
                 partition_id,
+                callback,
             )
 
 
