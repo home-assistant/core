@@ -51,6 +51,6 @@ class AcmedaBattery(AcmedaBase, SensorEntity):
         return f"{super().name} Battery"
 
     @property
-    def native_value(self) -> float | None:
+    def native_value(self) -> float | int | None:
         """Return the state of the device."""
         return self.roller.battery
