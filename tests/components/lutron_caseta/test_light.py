@@ -14,6 +14,7 @@ async def test_light_unique_id(hass: HomeAssistant) -> None:
 
     ra3_entity_id = "light.basement_bedroom_main_lights"
     caseta_entity_id = "light.kitchen_main_lights"
+
     entity_registry = er.async_get(hass)
 
     """Assert that RA3 lights will have the bridge serial hash and the zone id as the uniqueID"""
