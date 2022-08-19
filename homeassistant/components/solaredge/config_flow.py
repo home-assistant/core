@@ -23,7 +23,7 @@ class SolarEdgeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self._errors = {}
+        self._errors: dict[str, str] = {}
 
     @callback
     def _async_current_site_ids(self) -> set[str]:

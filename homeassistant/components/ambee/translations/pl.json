@@ -24,5 +24,11 @@
                 "description": "Skonfiguruj Ambee, aby zintegrowa\u0107 go z Home Assistantem."
             }
         }
+    },
+    "issues": {
+        "pending_removal": {
+            "description": "Integracja Ambee oczekuje na usuni\u0119cie z Home Assistanta i nie b\u0119dzie ju\u017c dost\u0119pna od Home Assistant 2022.10. \n\nIntegracja jest usuwana, poniewa\u017c Ambee usun\u0105\u0142 ich bezp\u0142atne (ograniczone) konta i nie zapewnia ju\u017c zwyk\u0142ym u\u017cytkownikom mo\u017cliwo\u015bci zarejestrowania si\u0119 w p\u0142atnym planie. \n\nUsu\u0144 integracj\u0119 Ambee z Home Assistanta, aby rozwi\u0105za\u0107 ten problem.",
+            "title": "Integracja Ambee zostanie usuni\u0119ta"
+        }
     }
 }

@@ -10,6 +10,7 @@ from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
     get_last_statistics,
 )
+from homeassistant.components.repairs import IssueSeverity, async_create_issue
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -177,6 +178,49 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.bus.async_listen(EVENT_HOMEASSISTANT_START, demo_start_listener)
 
+    # Create issues
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "transmogrifier_deprecated",
+        breaks_in_ha_version="2023.1.1",
+        is_fixable=False,
+        learn_more_url="https://en.wiktionary.org/wiki/transmogrifier",
+        severity=IssueSeverity.WARNING,
+        translation_key="transmogrifier_deprecated",
+    )
+
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "out_of_blinker_fluid",
+        breaks_in_ha_version="2023.1.1",
+        is_fixable=True,
+        learn_more_url="https://www.youtube.com/watch?v=b9rntRxLlbU",
+        severity=IssueSeverity.CRITICAL,
+        translation_key="out_of_blinker_fluid",
+    )
+
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "unfixable_problem",
+        is_fixable=False,
+        learn_more_url="https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        severity=IssueSeverity.WARNING,
+        translation_key="unfixable_problem",
+    )
+
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "bad_psu",
+        is_fixable=True,
+        learn_more_url="https://www.youtube.com/watch?v=b9rntRxLlbU",
+        severity=IssueSeverity.CRITICAL,
+        translation_key="bad_psu",
+    )
+
     return True
 
 
@@ -259,10 +303,9 @@ async def _insert_statistics(hass):
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set the config entry up."""
     # Set up demo platforms with config entry
-    for platform in COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, platform)
-        )
+    await hass.config_entries.async_forward_entry_setups(
+        config_entry, COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM
+    )
     if "recorder" in hass.config.components:
         await _insert_statistics(hass)
     return True

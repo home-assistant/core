@@ -34,6 +34,8 @@ async def async_setup_entry(
 class PeriodicVentingTime(CoordinatorEntity[Coordinator], NumberEntity):
     """Periodic Venting."""
 
+    _attr_has_entity_name = True
+
     _attr_native_max_value: float = 59
     _attr_native_min_value: float = 0
     _attr_native_step: float = 1
@@ -51,7 +53,7 @@ class PeriodicVentingTime(CoordinatorEntity[Coordinator], NumberEntity):
         self._device = device
         self._attr_unique_id = f"{device.address}-periodic-venting"
         self._attr_device_info = device_info
-        self._attr_name = f"{device_info['name']} Periodic Venting"
+        self._attr_name = "Periodic venting"
 
     @property
     def native_value(self) -> float | None:

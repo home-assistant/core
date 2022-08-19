@@ -273,15 +273,16 @@ async def async_setup_entry(
 class RfxtrxSensor(RfxtrxEntity, SensorEntity):
     """Representation of a RFXtrx sensor."""
 
+    _attr_force_update = True
+    """We should force updates. Repeated states have meaning."""
+
     entity_description: RfxtrxSensorEntityDescription
 
     def __init__(self, device, device_id, entity_description, event=None):
         """Initialize the sensor."""
         super().__init__(device, device_id, event=event)
         self.entity_description = entity_description
-        self._unique_id = "_".join(
-            x for x in (*self._device_id, entity_description.key)
-        )
+        self._attr_unique_id = "_".join(x for x in (*device_id, entity_description.key))
 
     async def async_added_to_hass(self):
         """Restore device state."""
@@ -301,16 +302,6 @@ class RfxtrxSensor(RfxtrxEntity, SensorEntity):
             return None
         value = self._event.values.get(self.entity_description.key)
         return self.entity_description.convert(value)
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def force_update(self) -> bool:
-        """We should force updates. Repeated states have meaning."""
-        return True
 
     @callback
     def _handle_event(self, event, device_id):

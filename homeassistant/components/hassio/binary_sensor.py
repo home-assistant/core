@@ -36,7 +36,7 @@ COMMON_ENTITY_DESCRIPTIONS = (
         device_class=BinarySensorDeviceClass.UPDATE,
         entity_registry_enabled_default=False,
         key=ATTR_UPDATE_AVAILABLE,
-        name="Update Available",
+        name="Update available",
     ),
 )
 

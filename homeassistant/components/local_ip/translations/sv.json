@@ -5,6 +5,7 @@
         },
         "step": {
             "user": {
+                "description": "Vill du starta konfigurationen?",
                 "title": "Lokal IP-adress"
             }
         }

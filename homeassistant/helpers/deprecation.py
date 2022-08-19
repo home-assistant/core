@@ -5,12 +5,20 @@ from collections.abc import Callable
 import functools
 import inspect
 import logging
-from typing import Any
+from typing import Any, TypeVar
+
+from typing_extensions import ParamSpec
 
 from ..helpers.frame import MissingIntegrationFrame, get_integration_frame
 
+_ObjectT = TypeVar("_ObjectT", bound=object)
+_R = TypeVar("_R")
+_P = ParamSpec("_P")
 
-def deprecated_substitute(substitute_name: str) -> Callable[..., Callable]:
+
+def deprecated_substitute(
+    substitute_name: str,
+) -> Callable[[Callable[[_ObjectT], Any]], Callable[[_ObjectT], Any]]:
     """Help migrate properties to new names.
 
     When a property is added to replace an older property, this decorator can
@@ -19,10 +27,10 @@ def deprecated_substitute(substitute_name: str) -> Callable[..., Callable]:
     warning will be issued alerting the user of the impending change.
     """
 
-    def decorator(func: Callable) -> Callable:
+    def decorator(func: Callable[[_ObjectT], Any]) -> Callable[[_ObjectT], Any]:
         """Decorate function as deprecated."""
 
-        def func_wrapper(self: Callable) -> Any:
+        def func_wrapper(self: _ObjectT) -> Any:
             """Wrap for the original function."""
             if hasattr(self, substitute_name):
                 # If this platform is still using the old property, issue
@@ -81,14 +89,16 @@ def get_deprecated(
     return config.get(new_name, default)
 
 
-def deprecated_class(replacement: str) -> Any:
+def deprecated_class(
+    replacement: str,
+) -> Callable[[Callable[_P, _R]], Callable[_P, _R]]:
     """Mark class as deprecated and provide a replacement class to be used instead."""
 
-    def deprecated_decorator(cls: Any) -> Any:
+    def deprecated_decorator(cls: Callable[_P, _R]) -> Callable[_P, _R]:
         """Decorate class as deprecated."""
 
         @functools.wraps(cls)
-        def deprecated_cls(*args: Any, **kwargs: Any) -> Any:
+        def deprecated_cls(*args: _P.args, **kwargs: _P.kwargs) -> _R:
             """Wrap for the original class."""
             _print_deprecation_warning(cls, replacement, "class")
             return cls(*args, **kwargs)
@@ -98,14 +108,16 @@ def deprecated_class(replacement: str) -> Any:
     return deprecated_decorator
 
 
-def deprecated_function(replacement: str) -> Callable[..., Callable]:
+def deprecated_function(
+    replacement: str,
+) -> Callable[[Callable[_P, _R]], Callable[_P, _R]]:
     """Mark function as deprecated and provide a replacement function to be used instead."""
 
-    def deprecated_decorator(func: Callable) -> Callable:
+    def deprecated_decorator(func: Callable[_P, _R]) -> Callable[_P, _R]:
         """Decorate function as deprecated."""
 
         @functools.wraps(func)
-        def deprecated_func(*args: Any, **kwargs: Any) -> Any:
+        def deprecated_func(*args: _P.args, **kwargs: _P.kwargs) -> _R:
             """Wrap for the original function."""
             _print_deprecation_warning(func, replacement, "function")
             return func(*args, **kwargs)

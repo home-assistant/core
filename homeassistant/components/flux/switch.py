@@ -15,7 +15,6 @@ from homeassistant.components.light import (
     ATTR_COLOR_TEMP,
     ATTR_RGB_COLOR,
     ATTR_TRANSITION,
-    ATTR_WHITE_VALUE,
     ATTR_XY_COLOR,
     DOMAIN as LIGHT_DOMAIN,
     VALID_TRANSITION,
@@ -101,7 +100,6 @@ async def async_set_lights_xy(hass, lights, x_val, y_val, brightness, transition
                 service_data[ATTR_XY_COLOR] = [x_val, y_val]
             if brightness is not None:
                 service_data[ATTR_BRIGHTNESS] = brightness
-                service_data[ATTR_WHITE_VALUE] = brightness
             if transition is not None:
                 service_data[ATTR_TRANSITION] = transition
             await hass.services.async_call(LIGHT_DOMAIN, SERVICE_TURN_ON, service_data)

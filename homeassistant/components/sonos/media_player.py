@@ -216,7 +216,6 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         """Initialize the media player entity."""
         super().__init__(speaker)
         self._attr_unique_id = self.soco.uid
-        self._attr_name = self.speaker.zone_name
 
     async def async_added_to_hass(self) -> None:
         """Handle common setup when added to hass."""

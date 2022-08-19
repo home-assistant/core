@@ -23,13 +23,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Skybell switch."""
     async_add_entities(
-        SkybellLight(
-            coordinator,
-            LightEntityDescription(
-                key=coordinator.device.name,
-                name=coordinator.device.name,
-            ),
-        )
+        SkybellLight(coordinator, LightEntityDescription(key="light"))
         for coordinator in hass.data[DOMAIN][entry.entry_id]
     )
 
