@@ -1,4 +1,4 @@
-"""Support for EnOcean roller shutters (EEP D2-05-00)."""
+"""Support for EnOcean roller shutters."""
 from __future__ import annotations
 
 import asyncio
