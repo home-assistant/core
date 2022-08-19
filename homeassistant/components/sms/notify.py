@@ -2,13 +2,20 @@
 import logging
 
 import gammu
+import voluptuous as vol
 
-from homeassistant.components.notify import BaseNotificationService
-from homeassistant.const import CONF_TARGET
+from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
+from homeassistant.const import CONF_NAME, CONF_RECIPIENT, CONF_TARGET
+import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN, GATEWAY, SMS_GATEWAY
 
 _LOGGER = logging.getLogger(__name__)
+
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Optional(CONF_RECIPIENT): cv.string, vol.Optional(CONF_NAME): cv.string}
+)
 
 
 async def async_get_service(hass, config, discovery_info=None):
