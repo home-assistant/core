@@ -198,6 +198,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def _async_rediscover_adapters() -> None:
         """Rediscover adapters when a new one may be available."""
         discovered_adapters = await manager.async_get_bluetooth_adapters(cached=False)
+        _LOGGER.debug("Rediscovered adapters: %s", discovered_adapters)
         await async_discover_adapters(hass, discovered_adapters)
 
     discovery_debouncer = Debouncer(
@@ -211,6 +212,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         # tell if the device is a bluetooth adapter or if its
         # actually supported unless we ask DBus if its now
         # present.
+        _LOGGER.debug("Triggering bluetooth discovery for %s", service_info)
         hass.async_create_task(discovery_debouncer.async_call())
 
     cancel = usb.async_register_callback(hass, _async_trigger_discovery, None)
