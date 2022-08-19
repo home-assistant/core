@@ -84,7 +84,7 @@ async def _async_setup_local_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
 
     entry.async_on_unload(risco.add_error_handler(_error))
 
-    async def _default(command: str, result: str, *params: list[str]):
+    async def _default(command: str, result: str, *params: list[str]) -> None:
         _LOGGER.debug(
             "Unhandled update from Risco library: %s, %s, %s", command, result, params
         )
@@ -101,7 +101,7 @@ async def _async_setup_local_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
 
     entry.async_on_unload(risco.add_zone_handler(_zone))
 
-    async def _partition(partition_id: int, partition: Partition):
+    async def _partition(partition_id: int, partition: Partition) -> None:
         _LOGGER.debug("Risco partition update for %d", partition_id)
         callback = local_data.partition_updates.get(partition_id)
         if callback:

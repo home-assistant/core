@@ -73,9 +73,9 @@ async def async_setup_entry(
             for partition_id, partition in local_data.system.partitions.items()
         )
     else:
-        coordinator: RiscoDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id][
-            DATA_COORDINATOR
-        ]
+        coordinator: RiscoDataUpdateCoordinator = hass.data[DOMAIN][
+            config_entry.entry_id
+        ][DATA_COORDINATOR]
         async_add_entities(
             RiscoCloudAlarm(
                 coordinator, partition_id, config_entry.data[CONF_PIN], options
@@ -234,7 +234,7 @@ class RiscoLocalAlarm(RiscoAlarm):
         self._attr_unique_id = f"{system_id}_{partition_id}_local"
         self._attr_name = f"Risco {system_id} Partition {partition_id}"
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Subscribe to updates."""
         self._partition_updates[self._partition_id] = self.async_write_ha_state
 
