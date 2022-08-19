@@ -825,7 +825,7 @@ class DarkSkyAlertSensor(SensorEntity):
         """Return the state attributes."""
         return self._alerts
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from Dark Sky and updates the states."""
         # Call the API for new forecast data. Each sensor will re-trigger this
         # same exact call, but that's fine. We cache results for a short period

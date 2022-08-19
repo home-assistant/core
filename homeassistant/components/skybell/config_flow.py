@@ -10,19 +10,12 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 
 
 class SkybellFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Skybell."""
-
-    async def async_step_import(self, user_input: ConfigType) -> FlowResult:
-        """Import a config entry from configuration.yaml."""
-        if self._async_current_entries():
-            return self.async_abort(reason="already_configured")
-        return await self.async_step_user(user_input)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
