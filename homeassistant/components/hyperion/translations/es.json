@@ -27,7 +27,7 @@
                 "title": "Confirmar para a\u00f1adir el servicio Hyperion Ambilight"
             },
             "create_token": {
-                "description": "Elige **Enviar** a continuaci\u00f3n para solicitar un nuevo token de autenticaci\u00f3n. Ser\u00e1s redirigido a la IU de Hyperion para aprobar la solicitud. Verifica que la identificaci\u00f3n que se muestra sea \"{auth_id}\"",
+                "description": "Elige **Enviar** a continuaci\u00f3n para solicitar un nuevo token de autenticaci\u00f3n. Ser\u00e1s redirigido a la IU de Hyperion para aprobar la solicitud. Por favor, verifica que la identificaci\u00f3n que se muestra sea \"{auth_id}\"",
                 "title": "Crear autom\u00e1ticamente un nuevo token de autenticaci\u00f3n"
             },
             "create_token_external": {

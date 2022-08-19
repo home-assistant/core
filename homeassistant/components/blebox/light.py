@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Any
 
 import blebox_uniapi.light
 from blebox_uniapi.light import BleboxColorMode
@@ -175,6 +176,6 @@ class BleBoxLightEntity(BleBoxEntity, LightEntity):
                     f"Turning on with effect '{self.name}' failed: {effect} not in effect list."
                 ) from exc
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self._feature.async_off()

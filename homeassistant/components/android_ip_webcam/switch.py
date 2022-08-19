@@ -1,8 +1,9 @@
 """Support for Android IP Webcam settings."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
+from typing import Any
 
 from pydroid_ipcam import PyDroidIPCam
 
@@ -21,8 +22,8 @@ from .entity import AndroidIPCamBaseEntity
 class AndroidIPWebcamSwitchEntityDescriptionMixin:
     """Mixin for required keys."""
 
-    on_func: Callable[[PyDroidIPCam], None]
-    off_func: Callable[[PyDroidIPCam], None]
+    on_func: Callable[[PyDroidIPCam], Coroutine[Any, Any, bool]]
+    off_func: Callable[[PyDroidIPCam], Coroutine[Any, Any, bool]]
 
 
 @dataclass
@@ -159,12 +160,12 @@ class IPWebcamSettingSwitch(AndroidIPCamBaseEntity, SwitchEntity):
         """Return if settings is on or off."""
         return bool(self.cam.current_settings.get(self.entity_description.key))
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
         await self.entity_description.on_func(self.cam)
         await self.coordinator.async_request_refresh()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
         await self.entity_description.off_func(self.cam)
         await self.coordinator.async_request_refresh()

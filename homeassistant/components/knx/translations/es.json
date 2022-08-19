@@ -21,7 +21,7 @@
                 },
                 "data_description": {
                     "host": "Direcci\u00f3n IP del dispositivo de tunelizaci\u00f3n KNX/IP.",
-                    "local_ip": "D\u00e9jalo en blanco para utilizar el descubrimiento autom\u00e1tico.",
+                    "local_ip": "D\u00e9jalo en blanco para usar el descubrimiento autom\u00e1tico.",
                     "port": "Puerto del dispositivo de tunelizaci\u00f3n KNX/IP."
                 },
                 "description": "Por favor, introduce la informaci\u00f3n de conexi\u00f3n de tu dispositivo de t\u00fanel."
@@ -61,7 +61,7 @@
                     "user_id": "Este suele ser el n\u00famero de t\u00fanel +1. Por tanto, 'T\u00fanel 2' tendr\u00eda ID de usuario '3'.",
                     "user_password": "Contrase\u00f1a para la conexi\u00f3n de t\u00fanel espec\u00edfica establecida en el panel 'Propiedades' del t\u00fanel en ETS."
                 },
-                "description": "Introduce tu informaci\u00f3n de IP segura."
+                "description": "Por favor, introduce tu informaci\u00f3n de IP segura."
             },
             "secure_tunneling": {
                 "description": "Selecciona c\u00f3mo quieres configurar KNX/IP Secure.",
@@ -74,7 +74,7 @@
                 "data": {
                     "gateway": "Conexi\u00f3n de t\u00fanel KNX"
                 },
-                "description": "Selecciona una puerta de enlace de la lista."
+                "description": "Por favor, selecciona una puerta de enlace de la lista."
             },
             "type": {
                 "data": {
@@ -98,7 +98,7 @@
                 },
                 "data_description": {
                     "individual_address": "Direcci\u00f3n KNX que usar\u00e1 Home Assistant, por ejemplo, `0.0.4`",
-                    "local_ip": "Usa `0.0.0.0` para el descubrimiento autom\u00e1tico.",
+                    "local_ip": "Usar `0.0.0.0` para el descubrimiento autom\u00e1tico.",
                     "multicast_group": "Se utiliza para el enrutamiento y el descubrimiento. Predeterminado: `224.0.23.12`",
                     "multicast_port": "Se utiliza para el enrutamiento y el descubrimiento. Predeterminado: `3671`",
                     "rate_limit": "N\u00famero m\u00e1ximo de telegramas salientes por segundo.\nRecomendado: 20 a 40",

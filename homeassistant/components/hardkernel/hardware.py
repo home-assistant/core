@@ -34,6 +34,7 @@ def async_info(hass: HomeAssistant) -> HardwareInfo:
             model=board,
             revision=None,
         ),
+        dongles=None,
         name=BOARD_NAMES.get(board, f"Unknown hardkernel Odroid model '{board}'"),
         url=None,
     )
