@@ -664,7 +664,6 @@ class DarkSkySensor(SensorEntity):
         self.forecast_day = forecast_day
         self.forecast_hour = forecast_hour
         self._icon: str | None = None
-        self._unit_of_measurement = None
 
         if forecast_day is not None:
             self._attr_name = f"{name} {description.name} {forecast_day}d"
@@ -672,11 +671,6 @@ class DarkSkySensor(SensorEntity):
             self._attr_name = f"{name} {description.name} {forecast_hour}h"
         else:
             self._attr_name = f"{name} {description.name}"
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
 
     @property
     def unit_system(self):
@@ -697,7 +691,9 @@ class DarkSkySensor(SensorEntity):
     def update_unit_of_measurement(self):
         """Update units based on unit system."""
         unit_key = MAP_UNIT_SYSTEM.get(self.unit_system, "si_unit")
-        self._unit_of_measurement = getattr(self.entity_description, unit_key)
+        self._attr_native_unit_of_measurement = getattr(
+            self.entity_description, unit_key
+        )
 
     @property
     def icon(self):
