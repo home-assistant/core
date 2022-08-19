@@ -97,6 +97,13 @@ async def test_options(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
+    with patch(
+        "homeassistant.components.transmission.async_setup_entry",
+        return_value=True,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
     assert result["type"] == FlowResultType.FORM
@@ -218,7 +225,7 @@ async def test_reauth_failed(hass: HomeAssistant, mock_api: MagicMock) -> None:
     assert result2["errors"] == {"password": "invalid_auth"}
 
 
-async def test_reauth_failed_conn_error(
+async def test_reauth_failed_connection_error(
     hass: HomeAssistant, mock_api: MagicMock
 ) -> None:
     """Test we can't reauth due to connection error."""

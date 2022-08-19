@@ -32,7 +32,7 @@ async def test_successful_config_entry(hass: HomeAssistant) -> None:
     assert entry.state == ConfigEntryState.LOADED
 
 
-async def test_setup_failed_conn_error(
+async def test_setup_failed_connection_error(
     hass: HomeAssistant, mock_api: MagicMock
 ) -> None:
     """Test integration failed due to connection error."""
@@ -72,4 +72,4 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.NOT_LOADED
-    assert entry.entry_id not in hass.data[DOMAIN]
+    assert not hass.data[DOMAIN]
