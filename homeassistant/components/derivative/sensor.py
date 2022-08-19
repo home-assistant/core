@@ -168,7 +168,7 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
         self._unit_time = UNIT_TIME[unit_time]
         self._time_window = time_window.total_seconds()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
         if (state := await self.async_get_last_state()) is not None:
