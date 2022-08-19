@@ -48,7 +48,7 @@ def mock_app():
     with patch(
         "zigpy.application.ControllerApplication.new", AsyncMock(return_value=mock_app)
     ):
-        yield
+        yield mock_app
 
 
 def mock_detect_radio_type(radio_type=RadioType.ezsp, ret=True):
@@ -918,3 +918,129 @@ async def test_hardware_invalid_data(hass, data):
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "invalid_hardware_data"
+
+
+def test_allow_overwrite_ezsp_ieee():
+    """Test modifying the backup to allow bellows to override the IEEE address."""
+    handler = config_flow.ZhaFlowHandler()
+
+    backup = zigpy.backups.NetworkBackup()
+    new_backup = handler._allow_overwrite_ezsp_ieee(backup)
+
+    assert backup != new_backup
+    assert (
+        new_backup.network_info.stack_specific["ezsp"][
+            "i_understand_i_can_update_eui64_only_once_and_i_still_want_to_do_it"
+        ]
+        is True
+    )
+
+
+@pytest.fixture
+def pick_radio(hass):
+    """Fixture for the first step of the config flow (where a radio is picked)."""
+
+    async def wrapper(radio_type):
+        port = com_port()
+        port_select = f"{port}, s/n: {port.serial_number} - {port.manufacturer}"
+
+        with patch(
+            "homeassistant.components.zha.config_flow.ZhaFlowHandler._detect_radio_type",
+            mock_detect_radio_type(radio_type=radio_type),
+        ):
+            result = await hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={CONF_SOURCE: SOURCE_USER},
+                data={
+                    zigpy.config.CONF_DEVICE_PATH: port_select,
+                },
+            )
+
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "choose_formation_strategy"
+
+        return result, port
+
+    p1 = patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
+    p2 = patch("homeassistant.components.zha.async_setup_entry")
+
+    with p1, p2:
+        yield wrapper
+
+
+async def test_formation_strategy_form_new_network(pick_radio, mock_app, hass):
+    """Test forming a new network."""
+    result, port = await pick_radio(RadioType.ezsp)
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            config_flow.FORMATION_STRATEGY: config_flow.FORMATION_FORM_NEW_NETWORK
+        },
+    )
+    await hass.async_block_till_done()
+
+    # A new network will be formed
+    mock_app.form_network.assert_called_once()
+
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+
+
+async def test_formation_strategy_reuse_settings(pick_radio, mock_app, hass):
+    """Test reusing existing network settings."""
+    result, port = await pick_radio(RadioType.ezsp)
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            config_flow.FORMATION_STRATEGY: config_flow.FORMATION_REUSE_SETTINGS
+        },
+    )
+    await hass.async_block_till_done()
+
+    # Nothing will be written when settings are reused
+    mock_app.write_network_info.assert_not_called()
+
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+
+
+async def test_formation_strategy_restore_manual_backup_non_ezsp(
+    pick_radio, mock_app, hass
+):
+    """Test restoring a manual backup on non-EZSP coordinators."""
+    result, port = await pick_radio(RadioType.znp)
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            config_flow.FORMATION_STRATEGY: config_flow.FORMATION_RESTORE_MANUAL_BACKUP
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["step_id"] == "upload_manual_backup"
+
+    # There is no need for the checkbox, writes are not permanent for non-EZSP sticks
+    assert config_flow.OVERWRITE_COORDINATOR_IEEE not in result2["data_schema"].schema
+
+
+async def test_formation_strategy_restore_manual_backup_ezsp(
+    pick_radio, mock_app, hass
+):
+    """Test restoring a manual backup on EZSP coordinators."""
+    result, port = await pick_radio(RadioType.ezsp)
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            config_flow.FORMATION_STRATEGY: config_flow.FORMATION_RESTORE_MANUAL_BACKUP
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["step_id"] == "upload_manual_backup"
+
+    # We must prompt for overwriting the IEEE address
+    assert config_flow.OVERWRITE_COORDINATOR_IEEE in result2["data_schema"].schema
