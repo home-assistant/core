@@ -678,7 +678,7 @@ class DarkSkySensor(SensorEntity):
         return self.forecast_data.unit_system
 
     @property
-    def entity_picture(self):
+    def entity_picture(self) -> str | None:
         """Return the entity picture to use in the frontend, if any."""
         if self._icon is None or "summary" not in self.entity_description.key:
             return None
@@ -688,7 +688,7 @@ class DarkSkySensor(SensorEntity):
 
         return None
 
-    def update_unit_of_measurement(self):
+    def update_unit_of_measurement(self) -> None:
         """Update units based on unit system."""
         unit_key = MAP_UNIT_SYSTEM.get(self.unit_system, "si_unit")
         self._attr_native_unit_of_measurement = getattr(
@@ -696,7 +696,7 @@ class DarkSkySensor(SensorEntity):
         )
 
     @property
-    def icon(self):
+    def icon(self) -> str | None:
         """Icon to use in the frontend, if any."""
         if (
             "summary" in self.entity_description.key
