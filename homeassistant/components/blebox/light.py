@@ -167,9 +167,13 @@ class BleBoxLightEntity(BleBoxEntity, LightEntity):
                 f"Turning on '{self.name}' failed: Bad value {value}"
             ) from exc
 
-        if effect is not None and self.effect_list is not None:
+        if effect is not None:
+            if not self.effect_list or effect not in self.effect_list:
+                raise ValueError(
+                    f"Turning on with effect '{self.name}' failed: {effect} not in effect list."
+                )
+            effect_value = self.effect_list.index(effect)
             try:
-                effect_value = self.effect_list.index(effect)
                 await self._feature.async_api_command("effect", effect_value)
             except ValueError as exc:
                 raise ValueError(
