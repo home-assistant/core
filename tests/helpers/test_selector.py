@@ -305,7 +305,7 @@ def test_time_selector_schema(schema, valid_selections, invalid_selections):
     ),
 )
 def test_state_selector_schema(schema, valid_selections, invalid_selections):
-    """Test attribute selector."""
+    """Test state selector."""
     _test_selector("state", schema, valid_selections, invalid_selections)
 
 
