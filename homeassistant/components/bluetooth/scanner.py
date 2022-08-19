@@ -222,6 +222,9 @@ class HaScanner:
                     f"{self.name}: Failed to start Bluetooth: {ex}"
                 ) from ex
 
+            # Everything is fine, break out of the loop
+            break
+
         self._async_setup_scanner_watchdog()
         self._cancel_stop = self.hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STOP, self._async_hass_stopping
