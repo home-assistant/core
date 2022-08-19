@@ -297,6 +297,21 @@ def test_time_selector_schema(schema, valid_selections, invalid_selections):
 @pytest.mark.parametrize(
     "schema,valid_selections,invalid_selections",
     (
+        (
+            {"entity_id": "sensor.abc"},
+            ("friendly_name", "device_class"),
+            (None,),
+        ),
+    ),
+)
+def test_state_selector_schema(schema, valid_selections, invalid_selections):
+    """Test attribute selector."""
+    _test_selector("state", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    "schema,valid_selections,invalid_selections",
+    (
         ({}, ({"entity_id": ["sensor.abc123"]},), ("abc123", None)),
         ({"entity": {}}, (), ()),
         ({"entity": {"domain": "light"}}, (), ()),
