@@ -19,7 +19,7 @@
                     "stations": "Estaciones"
                 },
                 "description": "se encontraron {stations_count} estaciones en el radio",
-                "title": "Selecciona las estaciones a a\u00f1adir"
+                "title": "Selecciona las estaciones para a\u00f1adir"
             },
             "user": {
                 "data": {

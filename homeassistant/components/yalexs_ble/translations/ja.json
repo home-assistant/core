@@ -15,6 +15,9 @@
         },
         "flow_title": "{name}",
         "step": {
+            "integration_discovery_confirm": {
+                "description": "\u30a2\u30c9\u30ec\u30b9 {address} \u3092\u3001Bluetooth\u7d4c\u7531\u3067 {name} \u3092\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7\u3057\u307e\u3059\u304b\uff1f"
+            },
             "user": {
                 "data": {
                     "address": "Bluetooth\u30a2\u30c9\u30ec\u30b9",
