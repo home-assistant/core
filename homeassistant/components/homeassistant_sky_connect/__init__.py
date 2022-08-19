@@ -1,6 +1,8 @@
 """The Home Assistant Sky Connect integration."""
 from __future__ import annotations
 
+from typing import cast
+
 from homeassistant.components import usb
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -17,7 +19,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         manufacturer=entry.data["manufacturer"],
         description=entry.data["description"],
     )
-    if not usb.async_is_plugged_in(hass, entry.data):
+    if not usb.async_is_plugged_in(hass, cast(usb.USBCallbackMatcher, entry.data)):
         # The USB dongle is not plugged in
         raise ConfigEntryNotReady
 

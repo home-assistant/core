@@ -146,9 +146,11 @@ class BluetoothManager:
                 return adapter
         return None
 
-    async def async_get_bluetooth_adapters(self) -> dict[str, AdapterDetails]:
+    async def async_get_bluetooth_adapters(
+        self, cached: bool = True
+    ) -> dict[str, AdapterDetails]:
         """Get bluetooth adapters."""
-        if not self._adapters:
+        if not cached or not self._adapters:
             self._adapters = await async_get_bluetooth_adapters()
         return self._adapters
 
