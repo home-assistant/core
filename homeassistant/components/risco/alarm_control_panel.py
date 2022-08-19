@@ -27,7 +27,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import is_local
+from . import LocalData, RiscoDataUpdateCoordinator, is_local
 from .const import (
     CONF_CODE_ARM_REQUIRED,
     CONF_CODE_DISARM_REQUIRED,
@@ -60,7 +60,7 @@ async def async_setup_entry(
     """Set up the Risco alarm control panel."""
     options = {**DEFAULT_OPTIONS, **config_entry.options}
     if is_local(config_entry):
-        local_data = hass.data[DOMAIN][config_entry.entry_id]
+        local_data: LocalData = hass.data[DOMAIN][config_entry.entry_id]
         async_add_entities(
             RiscoLocalAlarm(
                 local_data.system.id,
@@ -73,7 +73,9 @@ async def async_setup_entry(
             for partition_id, partition in local_data.system.partitions.items()
         )
     else:
-        coordinator = hass.data[DOMAIN][config_entry.entry_id][DATA_COORDINATOR]
+        coordinator: RiscoDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id][
+            DATA_COORDINATOR
+        ]
         async_add_entities(
             RiscoCloudAlarm(
                 coordinator, partition_id, config_entry.data[CONF_PIN], options

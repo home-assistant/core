@@ -93,7 +93,7 @@ async def _async_setup_local_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
 
     local_data = LocalData(risco)
 
-    async def _zone(zone_id: int, zone: Zone):
+    async def _zone(zone_id: int, zone: Zone) -> None:
         _LOGGER.debug("Risco zone update for %d", zone_id)
         callback = local_data.zone_updates.get(zone_id)
         if callback:
