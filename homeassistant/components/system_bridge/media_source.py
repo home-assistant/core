@@ -124,7 +124,10 @@ def _build_base_url(
     entry: ConfigEntry,
 ) -> str:
     """Build base url for System Bridge media."""
-    return f"http://{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}/api/media/file/data?apiKey={entry.data[CONF_API_KEY]}"
+    return (
+        f"http://{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
+        f"/api/media/file/data?apiKey={entry.data[CONF_API_KEY]}"
+    )
 
 
 def _build_root_paths(
@@ -191,17 +194,19 @@ def _build_media_item(
     media_file: MediaFile,
 ) -> BrowseMediaSource:
     """Build individual media item."""
-    ext = (
-        f"~~{media_file.mime_type}"
-        if media_file.is_file and media_file.mime_type is not None
-        else ""
-    )
+    ext = ""
+    if media_file.is_file and media_file.mime_type is not None:
+        ext = f"~~{media_file.mime_type}"
+
+    if media_file.is_directory or media_file.mime_type is None:
+        media_class = MEDIA_CLASS_DIRECTORY
+    else:
+        media_class = MEDIA_CLASS_MAP[media_file.mime_type.split("/", 1)[0]]
+
     return BrowseMediaSource(
         domain=DOMAIN,
         identifier=f"{path}/{media_file.name}{ext}",
-        media_class=MEDIA_CLASS_DIRECTORY
-        if media_file.is_directory or media_file.mime_type is None
-        else MEDIA_CLASS_MAP[media_file.mime_type.split("/", 1)[0]],
+        media_class=media_class,
         media_content_type=media_file.mime_type,
         title=media_file.name,
         can_play=media_file.is_file,
