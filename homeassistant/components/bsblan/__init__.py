@@ -1,5 +1,5 @@
 """The BSB-Lan integration."""
-from typing import NamedTuple
+import dataclasses
 
 from bsblan import BSBLAN, Device, Info, State
 
@@ -20,7 +20,8 @@ from .const import CONF_PASSKEY, DOMAIN, LOGGER, SCAN_INTERVAL
 PLATFORMS = [Platform.CLIMATE]
 
 
-class HomeAssistantBSBLANData(NamedTuple):
+@dataclasses.dataclass
+class HomeAssistantBSBLANData:
     """BSBLan data stored in the Home Assistant data object."""
 
     coordinator: DataUpdateCoordinator[State]
