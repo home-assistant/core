@@ -49,6 +49,7 @@ from .const import (
     FEATURE_FLAGS_AIRPURIFIER_2S,
     FEATURE_FLAGS_AIRPURIFIER_3C,
     FEATURE_FLAGS_AIRPURIFIER_4,
+    FEATURE_FLAGS_AIRPURIFIER_4_LITE,
     FEATURE_FLAGS_AIRPURIFIER_MIIO,
     FEATURE_FLAGS_AIRPURIFIER_MIOT,
     FEATURE_FLAGS_AIRPURIFIER_PRO,
@@ -70,6 +71,7 @@ from .const import (
     MODEL_AIRPURIFIER_2S,
     MODEL_AIRPURIFIER_3C,
     MODEL_AIRPURIFIER_4,
+    MODEL_AIRPURIFIER_4_LITE,
     MODEL_AIRPURIFIER_4_PRO,
     MODEL_AIRPURIFIER_PRO,
     MODEL_AIRPURIFIER_PRO_V7,
@@ -416,6 +418,14 @@ class XiaomiAirPurifier(XiaomiGenericAirPurifier):
             self._speed_count = 1
         elif self._model in [MODEL_AIRPURIFIER_4, MODEL_AIRPURIFIER_4_PRO]:
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_4
+            self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_MIOT
+            self._preset_modes = PRESET_MODES_AIRPURIFIER_MIOT
+            self._attr_supported_features = (
+                FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
+            )
+            self._speed_count = 3
+        elif self._model == MODEL_AIRPURIFIER_4_LITE:
+            self._device_features = FEATURE_FLAGS_AIRPURIFIER_4_LITE
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_MIOT
             self._preset_modes = PRESET_MODES_AIRPURIFIER_MIOT
             self._attr_supported_features = (
