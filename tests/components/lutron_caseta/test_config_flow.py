@@ -20,7 +20,7 @@ from homeassistant.components.lutron_caseta.const import (
 )
 from homeassistant.const import CONF_HOST
 
-from . import MockBridge
+from . import ENTRY_MOCK_DATA, MockBridge
 
 from tests.common import MockConfigEntry
 
@@ -151,13 +151,7 @@ async def test_bridge_invalid_ssl_error(hass):
 async def test_duplicate_bridge_import(hass):
     """Test that creating a bridge entry with a duplicate host errors."""
 
-    entry_mock_data = {
-        CONF_HOST: "1.1.1.1",
-        CONF_KEYFILE: "",
-        CONF_CERTFILE: "",
-        CONF_CA_CERTS: "",
-    }
-    mock_entry = MockConfigEntry(domain=DOMAIN, data=entry_mock_data)
+    mock_entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_MOCK_DATA)
     mock_entry.add_to_hass(hass)
 
     with patch(
@@ -168,7 +162,7 @@ async def test_duplicate_bridge_import(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
-            data=entry_mock_data,
+            data=ENTRY_MOCK_DATA,
         )
 
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
