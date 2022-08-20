@@ -5,12 +5,6 @@
   "documentation": "https://www.home-assistant.io/integrations/airq",
   "requirements": ["aioairq==0.1.1"],
   "ssdp": [],
-  "zeroconf": [
-    {
-      "type": "_http._tcp.local.",
-      "name": "*_air-q.local"
-    }
-  ],
   "homekit": {},
   "dependencies": [],
   "codeowners": ["@Sibgatulin", "@dl2080"],

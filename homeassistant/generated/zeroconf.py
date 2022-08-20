@@ -184,10 +184,6 @@ ZEROCONF = {
     ],
     "_http._tcp.local.": [
         {
-            "domain": "airq",
-            "name": "*_air-q.local"
-        },
-        {
             "domain": "awair",
             "name": "awair*"
         },
