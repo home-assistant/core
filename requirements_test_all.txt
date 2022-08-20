@@ -341,7 +341,7 @@ blinkpy==0.19.0
 bluetooth-adapters==0.2.0
 
 # homeassistant.components.bluetooth
-bluetooth-auto-recovery==0.1.0
+bluetooth-auto-recovery==0.2.0
 
 # homeassistant.components.bond
 bond-async==0.1.22
@@ -1217,7 +1217,7 @@ pyopenuv==2022.04.0
 pyopnsense==0.2.0
 
 # homeassistant.components.opentherm_gw
-pyotgw==2.0.2
+pyotgw==2.0.3
 
 # homeassistant.auth.mfa_modules.notify
 # homeassistant.auth.mfa_modules.totp

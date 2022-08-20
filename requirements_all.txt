@@ -430,7 +430,7 @@ blockchain==1.4.4
 bluetooth-adapters==0.2.0
 
 # homeassistant.components.bluetooth
-bluetooth-auto-recovery==0.1.0
+bluetooth-auto-recovery==0.2.0
 
 # homeassistant.components.bond
 bond-async==0.1.22
@@ -1740,7 +1740,7 @@ pyopnsense==0.2.0
 pyoppleio==1.0.5
 
 # homeassistant.components.opentherm_gw
-pyotgw==2.0.2
+pyotgw==2.0.3
 
 # homeassistant.auth.mfa_modules.notify
 # homeassistant.auth.mfa_modules.totp
