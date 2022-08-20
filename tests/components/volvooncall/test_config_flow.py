@@ -1,8 +1,9 @@
 """Test the Volvo On Call config flow."""
 from unittest.mock import patch
 
+from aiohttp.client_exceptions import ClientResponseError
+
 from homeassistant import config_entries
-from homeassistant.components.volvooncall.config_flow import InvalidAuth
 from homeassistant.components.volvooncall.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -51,8 +52,10 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.volvooncall.config_flow.VolvoOnCallConfigFlow.is_valid",
-        side_effect=InvalidAuth,
+        "aiohttp.client_exceptions.ClientResponseError.__init__", return_value=None
+    ), patch(
+        "volvooncall.Connection.get",
+        side_effect=ClientResponseError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -67,3 +70,28 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
+
+
+async def test_form_other_exception(hass: HomeAssistant) -> None:
+    """Test we handle other exceptions."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "volvooncall.Connection.get",
+        side_effect=Exception,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": "test-username",
+                "password": "test-password",
+                "region": "na",
+                "mutable": True,
+                "scandinavian_miles": False,
+            },
+        )
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": "unknown"}
