@@ -11,11 +11,15 @@ from homeassistant.helpers.entity import DeviceInfo
 
 from .const import MANUFACTURER
 
+if TYPE_CHECKING:
+    from .__init__ import MicroBotDataUpdateCoordinator
+
 
 class MicroBotEntity(PassiveBluetoothCoordinatorEntity):
     """Generic entity for all MicroBots."""
 
     coordinator: MicroBotDataUpdateCoordinator
+
     def __init__(self, coordinator, config_entry):
         """Initialise the entity."""
         super().__init__(coordinator)
