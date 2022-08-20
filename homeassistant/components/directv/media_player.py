@@ -99,14 +99,13 @@ class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerEntity):
         self._last_update = None
         self._paused = None
         self._program = None
-        self._state = None
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Retrieve latest state."""
-        self._state = await self.dtv.state(self._address)
-        self._attr_available = self._state.available
-        self._is_standby = self._state.standby
-        self._program = self._state.program
+        state = await self.dtv.state(self._address)
+        self._attr_available = state.available
+        self._is_standby = state.standby
+        self._program = state.program
 
         if self._is_standby:
             self._attr_assumed_state = False
@@ -118,7 +117,7 @@ class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerEntity):
             self._paused = self._last_position == self._program.position
             self._is_recorded = self._program.recorded
             self._last_position = self._program.position
-            self._last_update = self._state.at
+            self._last_update = state.at
             self._attr_assumed_state = self._is_recorded
 
     @property
