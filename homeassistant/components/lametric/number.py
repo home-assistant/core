@@ -74,17 +74,17 @@ class LaMetricNumberEntity(LaMetricEntity, NumberEntity):
         coordinator: LaMetricDataUpdateCoordinator,
         description: LaMetricNumberEntityDescription,
     ) -> None:
-        """Initiate Plugwise Number."""
+        """Initiate LaMetric Number."""
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.data.serial_number}-{description.key}"
 
     @property
     def native_value(self) -> int | None:
-        """Return the present setpoint value."""
+        """Return the number value."""
         return self.entity_description.value_fn(self.coordinator.data)
 
     async def async_set_native_value(self, value: float) -> None:
-        """Change to the new setpoint value."""
+        """Change to new number value."""
         await self.entity_description.set_value_fn(self.coordinator.lametric, value)
         await self.coordinator.async_request_refresh()
