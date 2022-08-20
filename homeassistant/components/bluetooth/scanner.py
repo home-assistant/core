@@ -33,7 +33,7 @@ from .const import (
     START_TIMEOUT,
 )
 from .models import BluetoothScanningMode
-from .util import async_reset_adapter. adapter_human_name
+from .util import adapter_human_name, async_reset_adapter
 
 OriginalBleakScanner = bleak.BleakScanner
 MONOTONIC_TIME = time.monotonic
