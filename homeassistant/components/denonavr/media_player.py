@@ -390,32 +390,32 @@ class DenonDevice(MediaPlayerEntity):
         return self._receiver.dynamic_eq
 
     @async_log_errors
-    async def async_media_play_pause(self):
+    async def async_media_play_pause(self) -> None:
         """Play or pause the media player."""
         await self._receiver.async_toggle_play_pause()
 
     @async_log_errors
-    async def async_media_play(self):
+    async def async_media_play(self) -> None:
         """Send play command."""
         await self._receiver.async_play()
 
     @async_log_errors
-    async def async_media_pause(self):
+    async def async_media_pause(self) -> None:
         """Send pause command."""
         await self._receiver.async_pause()
 
     @async_log_errors
-    async def async_media_previous_track(self):
+    async def async_media_previous_track(self) -> None:
         """Send previous track command."""
         await self._receiver.async_previous_track()
 
     @async_log_errors
-    async def async_media_next_track(self):
+    async def async_media_next_track(self) -> None:
         """Send next track command."""
         await self._receiver.async_next_track()
 
     @async_log_errors
-    async def async_select_source(self, source: str):
+    async def async_select_source(self, source: str) -> None:
         """Select input source."""
         # Ensure that the AVR is turned on, which is necessary for input
         # switch to work.
@@ -423,32 +423,32 @@ class DenonDevice(MediaPlayerEntity):
         await self._receiver.async_set_input_func(source)
 
     @async_log_errors
-    async def async_select_sound_mode(self, sound_mode: str):
+    async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select sound mode."""
         await self._receiver.async_set_sound_mode(sound_mode)
 
     @async_log_errors
-    async def async_turn_on(self):
+    async def async_turn_on(self) -> None:
         """Turn on media player."""
         await self._receiver.async_power_on()
 
     @async_log_errors
-    async def async_turn_off(self):
+    async def async_turn_off(self) -> None:
         """Turn off media player."""
         await self._receiver.async_power_off()
 
     @async_log_errors
-    async def async_volume_up(self):
+    async def async_volume_up(self) -> None:
         """Volume up the media player."""
         await self._receiver.async_volume_up()
 
     @async_log_errors
-    async def async_volume_down(self):
+    async def async_volume_down(self) -> None:
         """Volume down media player."""
         await self._receiver.async_volume_down()
 
     @async_log_errors
-    async def async_set_volume_level(self, volume: int):
+    async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         # Volume has to be sent in a format like -50.0. Minimum is -80.0,
         # maximum is 18.0
@@ -458,7 +458,7 @@ class DenonDevice(MediaPlayerEntity):
         await self._receiver.async_set_volume(volume_denon)
 
     @async_log_errors
-    async def async_mute_volume(self, mute: bool):
+    async def async_mute_volume(self, mute: bool) -> None:
         """Send mute command."""
         await self._receiver.async_mute(mute)
 

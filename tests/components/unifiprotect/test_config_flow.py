@@ -238,6 +238,7 @@ async def test_form_options(hass: HomeAssistant, ufp_client: ProtectApiClient) -
             "id": "UnifiProtect",
             "port": 443,
             "verify_ssl": False,
+            "max_media": 1000,
         },
         version=2,
         unique_id=dr.format_mac(MAC_ADDR),
@@ -268,6 +269,7 @@ async def test_form_options(hass: HomeAssistant, ufp_client: ProtectApiClient) -
         "all_updates": True,
         "disable_rtsp": True,
         "override_connection_host": True,
+        "max_media": 1000,
     }
 
 

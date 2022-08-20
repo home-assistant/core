@@ -9,5 +9,10 @@
             }
         }
     },
+    "device_automation": {
+        "action_type": {
+            "notify": "Skicka ett meddelande"
+        }
+    },
     "title": "Mobilapp"
 }

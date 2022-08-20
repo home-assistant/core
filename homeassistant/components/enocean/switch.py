@@ -1,6 +1,8 @@
 """Support for EnOcean switches."""
 from __future__ import annotations
 
+from typing import Any
+
 from enocean.protocol.constants import RORG
 from enocean.utils import combine_hex
 import voluptuous as vol
@@ -76,7 +78,6 @@ async def async_setup_platform(
 
     _migrate_to_new_unique_id(hass, dev_id, channel)
     async_add_entities([EnOceanSwitch(dev_id, dev_name, channel, base_id)])
-    # add_entities([EnOceanSwitch(dev_id, dev_name, channel, base_id)])
 
 
 class EnOceanSwitch(EnOceanEntity, SwitchEntity):
@@ -102,7 +103,7 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
         """Return the device name."""
         return self.dev_name
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         # build the data and optional data for the serial packet
         optional = [0x03]  # number of subtelegram
@@ -118,16 +119,13 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
         data.extend([0x00])
 
         self.send_command(
-            # radio variant VLD (RORG: D2), payload: 0x01 -> Command 01, channel, ,
-            # channel == 0x1E??
-            # data=[0xD2, 0x01, self.channel & 0xFF, 0x64, 0xFF, 0xD9, 0x7F, 0x80, 0x00],
             data=data,
             optional=optional,
             packet_type=0x01,  # RADIO_ERP1 (radio telegram)
         )
         self._on_state = True
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         optional = [0x03]
         optional.extend(self.dev_id)
@@ -140,7 +138,6 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
         data.extend([0x00])
 
         self.send_command(
-            # data=[0xD2, 0x01, self.channel & 0xFF, 0x00, 0xFF, 0xD9, 0x7F, 0x80, 0x00],
             data=data,
             optional=optional,
             packet_type=0x01,

@@ -1,0 +1,8 @@
+{
+    "issues": {
+        "pending_removal": {
+            "description": "Deutsche Bahni integratsioon on Home Assistantist eemaldamisel ja see ei ole enam saadaval alates Home Assistant 2022.11.\n\nIntegratsioon eemaldatakse, sest see p\u00f5hineb veebiotsingul, mis on keelatud.\n\nProbleemi lahendamiseks eemaldage Deutsche Bahni YAML-konfiguratsioon oma configuration.yaml-failist ja k\u00e4ivitage Home Assistant uuesti.",
+            "title": "Deutsche Bahni integratsioon eemaldatakse"
+        }
+    }
+}

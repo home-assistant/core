@@ -1,6 +1,10 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Platsen \u00e4r redan konfigurerad"
+        },
         "error": {
+            "cannot_connect": "Det gick inte att ansluta.",
             "invalid_address": "Adress hittades inte i serviceomr\u00e5det Twente Milieu."
         },
         "step": {
