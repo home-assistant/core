@@ -1,6 +1,7 @@
 """Config flow for Volvo On Call integration."""
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 import voluptuous as vol
@@ -16,11 +17,13 @@ from . import VolvoData
 from .const import CONF_MUTABLE, CONF_SCANDINAVIAN_MILES, DOMAIN
 from .errors import InvalidAuth
 
+_LOGGER = logging.getLogger(__name__)
+
 USER_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_REGION): vol.In(
+        vol.Required(CONF_REGION, default=None): vol.In(
             {"na": "North America", "cn": "China", None: "Rest of world"}
         ),
         vol.Optional(CONF_MUTABLE, default=True): cv.boolean,
@@ -38,7 +41,7 @@ class VolvoOnCallConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle user step."""
-        errors = None
+        errors = {}
         if user_input is not None:
             await self.async_set_unique_id(user_input[CONF_USERNAME])
             self._abort_if_unique_id_configured()
@@ -46,10 +49,9 @@ class VolvoOnCallConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 await self.is_valid(user_input)
             except InvalidAuth:
-                errors = {}
                 errors["base"] = "invalid_auth"
             except Exception:  # pylint: disable=broad-except
-                errors = {}
+                _LOGGER.exception("Unhandled exception in user step")
                 errors["base"] = "unknown"
             if not errors:
                 return self.async_create_entry(
@@ -69,10 +71,7 @@ class VolvoOnCallConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         session = async_get_clientsession(self.hass)
 
-        region: str | None = None
-
-        if CONF_REGION in user_input.keys():
-            region = user_input[CONF_REGION]
+        region: str | None = user_input.get(CONF_REGION)
 
         connection = Connection(
             session=session,

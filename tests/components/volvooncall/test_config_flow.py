@@ -14,11 +14,9 @@ async def test_form(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == FlowResultType.FORM
-    assert result["errors"] is None
+    assert len(result["errors"]) == 0
 
-    with patch(
-        "homeassistant.components.volvooncall.config_flow.VolvoOnCallConfigFlow.is_valid"
-    ), patch(
+    with patch("volvooncall.Connection.get", return_value="",), patch(
         "homeassistant.components.volvooncall.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:

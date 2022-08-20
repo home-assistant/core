@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import VolvoData, VolvoEntity, VolvoUpdateCoordinator
+from . import VolvoEntity, VolvoUpdateCoordinator
 from .const import DOMAIN, VOLVO_DISCOVERY_NEW
 
 
@@ -25,7 +25,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Configure binary_sensors from a config entry created in the integrations UI."""
-    volvo_data: VolvoData = hass.data[DOMAIN][config_entry.entry_id].volvo_data
+    coordinator: VolvoUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    volvo_data = coordinator.volvo_data
 
     @callback
     def async_discover_device(instruments: list[Instrument]) -> None:
@@ -36,7 +37,7 @@ async def async_setup_entry(
             if instrument.component == "binary_sensor":
                 entities.append(
                     VolvoSensor(
-                        hass.data[DOMAIN][config_entry.entry_id],
+                        coordinator,
                         instrument.vehicle.vin,
                         instrument.component,
                         instrument.attr,
