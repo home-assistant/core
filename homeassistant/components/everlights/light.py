@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Any
 
 import pyeverlights
 import voluptuous as vol
@@ -155,11 +156,11 @@ class EverLightsLight(LightEntity):
         self._brightness = brightness
         self._effect = effect
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self._api.clear_pattern(self._channel)
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Synchronize state with control box."""
         try:
             self._status = await self._api.get_status()
