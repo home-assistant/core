@@ -40,9 +40,6 @@ class AirQCoordinator(DataUpdateCoordinator):
         self.airq = AirQ(address, passw)
         self._target_route = target_route
 
-    # Consider adding a more specific type alias, e.g.
-    # Data = int | float | list[float] | str | dict[str, str]
-    # or filtering the dictionary in a dedicated method e.g. aioairq.AirQ.get_lean_data
     async def _async_update_data(self) -> dict:
         """Fetch the data from the device.
 
@@ -56,8 +53,6 @@ class AirQCoordinator(DataUpdateCoordinator):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up air-Q from a config entry."""
-    # entry.data is a dict with the data from STEP_USER_SCHEMA:
-    # entry.data.keys: [CONF_IP_ADDRESS, CONF_PASSWORD]
 
     # Set up the "access point"
     coordinator = AirQCoordinator(

@@ -82,11 +82,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             await validate_input(user_input)
         except CannotConnect:
-            # Is it ok to print the IP? Looks so, judging by this
-            # https://developers.home-assistant.io/docs/development_guidelines?_highlight=print&_highlight=out#log-messages
-            # Also, I am opting for .error over .exception since the latter includes
-            # a humongous traceback, which looks far too scary for such a minor thing
-            _LOGGER.error(
+            _LOGGER.debug(
                 "Failed to connect to device %s. Check the specified IP address / mDNS, "
                 "as well as whether the device is connected to power and the WiFi",
                 user_input[CONF_IP_ADDRESS],
