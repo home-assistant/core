@@ -154,6 +154,17 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
             on_value="feeding",
         ),
     ),
+    # Motion Sensor Light
+    # https://developer.tuya.com/en/docs/iot/gyd?id=Kaof8a8hycfmy
+    "gyd": (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.PIR_STATE,
+            name="Motion",
+            device_class=BinarySensorDeviceClass.MOTION,
+            on_value="pir",
+        ),
+        TAMPER_BINARY_SENSOR,
+    ),
     # Human Presence Sensor
     # https://developer.tuya.com/en/docs/iot/categoryhps?id=Kaiuz42yhn1hs
     "hps": (

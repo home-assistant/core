@@ -140,6 +140,8 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
     "gyd": (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED,
+            name="floodlight",
+            icon="mdi:light-flood-down",
             color_mode=DPCode.WORK_MODE,
             brightness=DPCode.BRIGHT_VALUE,
             color_temp=DPCode.TEMP_VALUE,

@@ -27,6 +27,28 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Motion Sensor Light
+    # https://developer.tuya.com/en/docs/iot/gyd?id=Kaof8a8hycfmy
+    "gyd": (
+        SelectEntityDescription(
+            key=DPCode.DEVICE_MODE,
+            name="PIR mode",
+            icon="mdi:arrow-decision-auto",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SelectEntityDescription(
+            key=DPCode.CDS,
+            name="Light Level",
+            icon="mdi:theme-light-dark",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SelectEntityDescription(
+            key=DPCode.PIR_SENSITIVITY,
+            name="PIR Sensitivity",
+            icon="mdi:format-line-weight",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     # Coffee maker
     # https://developer.tuya.com/en/docs/iot/categorykfj?id=Kaiuz2p12pc7f
     "kfj": (
