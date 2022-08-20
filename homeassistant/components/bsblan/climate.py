@@ -67,6 +67,15 @@ class BSBLANClimate(BSBLANEntity, CoordinatorEntity, ClimateEntity):
     """Defines a BSBLAN climate device."""
 
     coordinator: DataUpdateCoordinator[State]
+    _attr_has_entity_name = True
+    # Determine preset modes
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+    )
+    _attr_preset_modes = PRESET_MODES
+
+    # Determine hvac modes
+    _attr_hvac_modes = HVAC_MODES
 
     def __init__(
         self,
@@ -80,13 +89,7 @@ class BSBLANClimate(BSBLANEntity, CoordinatorEntity, ClimateEntity):
         super().__init__(client, device, info, entry)
         CoordinatorEntity.__init__(self, coordinator)
         self._attr_unique_id = f"{format_mac(device.MAC)}-climate"
-        self._attr_name = device.name
 
-        self._attr_supported_features = (
-            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
-        )
-        self._attr_hvac_modes = HVAC_MODES
-        self._attr_preset_modes = PRESET_MODES
         self._attr_min_temp = float(self.coordinator.data.min_temp.value)
         self._attr_max_temp = float(self.coordinator.data.max_temp.value)
         self._attr_temperature_unit = (
