@@ -13,6 +13,9 @@
             "confirm": {
                 "description": "Do you want to setup {name}?"
             },
+            "confirm_hardware": {
+                "description": "Do you want to setup {name}?"
+            },
             "pick_radio": {
                 "data": {
                     "radio_type": "Radio Type"
