@@ -10,7 +10,6 @@ from . import (
     NOT_MICROBOT_INFO,
     USER_INPUT,
     SERVICE_INFO,
-    init_integration,
     patch_async_setup_entry,
 )
 
