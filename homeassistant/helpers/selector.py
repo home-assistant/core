@@ -206,10 +206,11 @@ class AreaSelector(Selector):
         return [vol.Schema(str)(val) for val in data]
 
 
-class AttributeSelectorConfig(TypedDict):
+class AttributeSelectorConfig(TypedDict, total=False):
     """Class to represent an attribute selector config."""
 
     entity_id: str
+    exclude_attributes: list[str]
 
 
 @SELECTORS.register("attribute")
@@ -218,7 +219,12 @@ class AttributeSelector(Selector):
 
     selector_type = "attribute"
 
-    CONFIG_SCHEMA = vol.Schema({vol.Required("entity_id"): cv.entity_id})
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Required("entity_id"): cv.entity_id,
+            vol.Optional("exclude_attributes"): [str],
+        }
+    )
 
     def __init__(self, config: AttributeSelectorConfig) -> None:
         """Instantiate a selector."""
