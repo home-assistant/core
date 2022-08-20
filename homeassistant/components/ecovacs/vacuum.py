@@ -94,17 +94,17 @@ class EcovacsVacuum(VacuumEntity):
         return self.device.vacuum.get("did")
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if vacuum is currently cleaning."""
         return self.device.is_cleaning
 
     @property
-    def is_charging(self):
+    def is_charging(self) -> bool:
         """Return true if vacuum is currently charging."""
         return self.device.is_charging
 
     @property
-    def status(self):
+    def status(self) -> str | None:
         """Return the status of the vacuum cleaner."""
         return self.device.vacuum_status
 
@@ -173,9 +173,9 @@ class EcovacsVacuum(VacuumEntity):
         self.device.run(sucks.VacBotCommand(command, params))
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device-specific state attributes of this vacuum."""
-        data = {}
+        data: dict[str, Any] = {}
         data[ATTR_ERROR] = self._error
 
         for key, val in self.device.components.items():
