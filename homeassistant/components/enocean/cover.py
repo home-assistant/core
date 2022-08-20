@@ -33,7 +33,10 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = "EnOcean roller shutter"
 
 CONF_SENDER_ID = "sender_id"
-WATCHDOG_TIMEOUT = "watchdog_timeout"
+
+WATCHDOG_TIMEOUT = 1
+WATCHDOG_INTERVAL = 0.2
+WATCHDOG_MAX_QUERIES = 10
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -41,7 +44,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_SENDER_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Optional(WATCHDOG_TIMEOUT, default=5): int,
     }
 )
 
@@ -59,10 +61,7 @@ def setup_platform(
     device_class = config.get(CONF_DEVICE_CLASS)
     if device_class is None:
         device_class = CoverDeviceClass.BLIND
-    watchdog_timeout = config[WATCHDOG_TIMEOUT]
-    add_entities(
-        [EnOceanCover(sender_id, dev_id, dev_name, device_class, watchdog_timeout)]
-    )
+    add_entities([EnOceanCover(sender_id, dev_id, dev_name, device_class)])
 
 
 class EnOceanCoverCommand(Enum):
@@ -76,7 +75,7 @@ class EnOceanCoverCommand(Enum):
 class EnOceanCover(EnOceanEntity, CoverEntity):
     """Representation of an EnOcean Cover (EEP D2-05-00)."""
 
-    def __init__(self, sender_id, dev_id, dev_name, device_class, watchdog_timeout):
+    def __init__(self, sender_id, dev_id, dev_name, device_class):
         """Initialize the EnOcean Cover."""
         super().__init__(dev_id, dev_name)
         self._attr_device_class = device_class
@@ -89,9 +88,10 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         self._attr_name = dev_name
         self._attr_unique_id = f"{combine_hex(dev_id)}-{device_class}"
         self._state_changed_by_command = False
+        self._stop_suspected = False
         self._watchdog_enabled = False
         self._watchdog_seconds_remaining = 0
-        self._watchdog_timeout = watchdog_timeout
+        self._watchdog_queries_remaining = 5
         self._attr_supported_features = (
             CoverEntityFeature.OPEN
             | CoverEntityFeature.CLOSE
@@ -177,14 +177,28 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         if self._position is not None:
             if self._state_changed_by_command:
                 self._state_changed_by_command = False
-            elif new_position in (0, 100, self._position):
+
+            elif new_position in (0, 100):
                 self._is_opening = False
                 self._is_closing = False
                 self.stop_watchdog()
+
+            elif new_position == self._position:
+                if self._stop_suspected:
+                    self._stop_suspected = False
+                    self._is_opening = False
+                    self._is_closing = False
+                    self.stop_watchdog()
+                else:
+                    self.start_or_feed_watchdog()
+                    self._stop_suspected = True
+                    return
+
             elif new_position > self._position:
                 self._is_opening = True
                 self._is_closing = False
                 self.start_or_feed_watchdog()
+
             elif new_position < self._position:
                 self._is_opening = False
                 self._is_closing = True
@@ -213,7 +227,8 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
 
     def start_or_feed_watchdog(self):
         """Start or feed the 'movement stop' watchdog."""
-        self._watchdog_seconds_remaining = self._watchdog_timeout
+        self._watchdog_seconds_remaining = WATCHDOG_TIMEOUT
+        self._watchdog_queries_remaining = WATCHDOG_MAX_QUERIES
 
         if self._watchdog_enabled:
             return
@@ -232,16 +247,25 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         """
 
         while 1:
-            await asyncio.sleep(1)
+            await asyncio.sleep(WATCHDOG_INTERVAL)
 
             if not self._watchdog_enabled:
                 return
 
-            if self._watchdog_seconds_remaining == 0:
+            if self._watchdog_seconds_remaining <= 0:
                 self.send_telegram(EnOceanCoverCommand.QUERY_POSITION)
-                await asyncio.sleep(2)
+                self._watchdog_seconds_remaining = WATCHDOG_TIMEOUT
+                self._watchdog_queries_remaining -= 1
 
-                self._watchdog_seconds_remaining = self._watchdog_timeout
+                if self._watchdog_queries_remaining == 0:
+                    _LOGGER.debug(
+                        "'Movement stop' watchdog max query limit reached. Disabling watchdog and setting state to 'unknown'"
+                    )
+                    self._position = None
+                    self._is_closed = None
+                    self._is_opening = False
+                    self._is_closing = False
+                    return
                 continue
 
-            self._watchdog_seconds_remaining -= 1
+            self._watchdog_seconds_remaining -= WATCHDOG_INTERVAL
