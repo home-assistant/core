@@ -44,11 +44,11 @@ _LOGGER = logging.getLogger(__name__)
 
 MONOTONIC_TIME = time.monotonic
 
-NEED_RESET_ERRORS = {
+NEED_RESET_ERRORS = [
     "org.bluez.Error.Failed",
     "org.bluez.Error.InProgress",
     "org.bluez.Error.NotReady",
-}
+]
 START_ATTEMPTS = 2
 
 SCANNING_MODE_TO_BLEAK = {
