@@ -80,13 +80,9 @@ async def test_cloud_unauthorized(hass):
 
 async def test_cloud_setup(hass, two_zone_cloud):
     """Test entity setup."""
-    registry = er.async_get(hass)
-
-    assert not registry.async_is_registered(FIRST_ENTITY_ID)
-    assert not registry.async_is_registered(SECOND_ENTITY_ID)
-
     await setup_risco_cloud(hass)
 
+    registry = er.async_get(hass)
     assert registry.async_is_registered(FIRST_ENTITY_ID)
     assert registry.async_is_registered(SECOND_ENTITY_ID)
 
@@ -193,13 +189,9 @@ async def test_local_unauthorized(hass):
 
 async def test_local_setup(hass, two_zone_local):
     """Test entity setup."""
-    registry = er.async_get(hass)
-
-    assert not registry.async_is_registered(FIRST_ENTITY_ID)
-    assert not registry.async_is_registered(SECOND_ENTITY_ID)
-
     await setup_risco_local(hass)
 
+    registry = er.async_get(hass)
     assert registry.async_is_registered(FIRST_ENTITY_ID)
     assert registry.async_is_registered(SECOND_ENTITY_ID)
 

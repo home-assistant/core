@@ -168,15 +168,12 @@ def _check_state(hass, category, entity_id):
 async def test_cloud_setup(hass, two_zone_cloud):
     """Test entity setup."""
     hass.config.set_time_zone("UTC")
-    registry = er.async_get(hass)
-
-    for id in ENTITY_IDS.values():
-        assert not registry.async_is_registered(id)
 
     with patch(
         "homeassistant.components.risco.Store.async_save",
     ) as save_mock:
         await setup_risco_cloud(hass, *TEST_EVENTS)
+        registry = er.async_get(hass)
         for id in ENTITY_IDS.values():
             assert registry.async_is_registered(id)
 
@@ -202,11 +199,6 @@ async def test_cloud_setup(hass, two_zone_cloud):
 
 async def test_local_setup(hass):
     """Test entity setup."""
-    registry = er.async_get(hass)
-
-    for id in ENTITY_IDS.values():
-        assert not registry.async_is_registered(id)
-
     with patch(
         "homeassistant.components.risco.RiscoLocal.zones",
         new_callable=PropertyMock(return_value=[]),
@@ -215,5 +207,6 @@ async def test_local_setup(hass):
         new_callable=PropertyMock(return_value=[]),
     ):
         await setup_risco_local(hass)
+        registry = er.async_get(hass)
         for id in ENTITY_IDS.values():
             assert not registry.async_is_registered(id)
