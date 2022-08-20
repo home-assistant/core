@@ -15,5 +15,5 @@ async def test_cover_unique_id(hass: HomeAssistant) -> None:
 
     entity_registry = er.async_get(hass)
 
-    """Assert that Caseta covers will have the bridge serial hash and the zone id as the uniqueID"""
+    # Assert that Caseta covers will have the bridge serial hash and the zone id as the uniqueID
     assert entity_registry.async_get(cover_entity_id).unique_id == "000004d2_802"

@@ -17,10 +17,10 @@ async def test_light_unique_id(hass: HomeAssistant) -> None:
 
     entity_registry = er.async_get(hass)
 
-    """Assert that RA3 lights will have the bridge serial hash and the zone id as the uniqueID"""
+    # Assert that RA3 lights will have the bridge serial hash and the zone id as the uniqueID
     assert entity_registry.async_get(ra3_entity_id).unique_id == "000004d2_801"
 
-    """Assert that Caseta lights will have the serial number as the uniqueID"""
+    # Assert that Caseta lights will have the serial number as the uniqueID
     assert entity_registry.async_get(caseta_entity_id).unique_id == "5442321"
 
     state = hass.states.get(ra3_entity_id)
