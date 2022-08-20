@@ -158,7 +158,7 @@ class BlackbirdZone(MediaPlayerEntity):
         self._zone_id = zone_id
         self._attr_name = zone_name
 
-    def update(self):
+    def update(self) -> None:
         """Retrieve latest state."""
         state = self._blackbird.zone_status(self._zone_id)
         if not state:
@@ -183,7 +183,7 @@ class BlackbirdZone(MediaPlayerEntity):
         _LOGGER.debug("Setting all zones source to %s", idx)
         self._blackbird.set_all_zone_source(idx)
 
-    def select_source(self, source):
+    def select_source(self, source: str) -> None:
         """Set input source."""
         if source not in self._source_name_id:
             return
@@ -191,12 +191,12 @@ class BlackbirdZone(MediaPlayerEntity):
         _LOGGER.debug("Setting zone %d source to %s", self._zone_id, idx)
         self._blackbird.set_zone_source(self._zone_id, idx)
 
-    def turn_on(self):
+    def turn_on(self) -> None:
         """Turn the media player on."""
         _LOGGER.debug("Turning zone %d on", self._zone_id)
         self._blackbird.set_zone_power(self._zone_id, True)
 
-    def turn_off(self):
+    def turn_off(self) -> None:
         """Turn the media player off."""
         _LOGGER.debug("Turning zone %d off", self._zone_id)
         self._blackbird.set_zone_power(self._zone_id, False)

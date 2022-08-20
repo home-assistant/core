@@ -167,6 +167,8 @@ DISCOVERY_SCHEMA_JSON = vol.All(
 )
 
 PLATFORM_SCHEMA_MODERN_JSON = vol.All(
+    # CONF_WHITE_VALUE is no longer supported, support was removed in 2022.9
+    cv.removed(CONF_WHITE_VALUE),
     _PLATFORM_SCHEMA_BASE,
     valid_color_configuration,
 )

@@ -98,7 +98,7 @@ class DeutscheBahnSensor(SensorEntity):
             connections["next_on"] = self.data.connections[2]["departure"]
         return connections
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest delay from bahn.de and updates the state."""
         self.data.update()
         self._state = self.data.connections[0].get("departure", "Unknown")

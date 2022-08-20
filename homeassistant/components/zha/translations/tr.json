@@ -13,6 +13,9 @@
             "confirm": {
                 "description": "{name} kurulumunu yapmak istiyor musunuz?"
             },
+            "confirm_hardware": {
+                "description": "{name} kurulumunu yapmak istiyor musunuz?"
+            },
             "pick_radio": {
                 "data": {
                     "radio_type": "Radyo Tipi"

@@ -142,7 +142,7 @@ class NestCamera(Camera):
             url = self.device.snapshot_url
 
             try:
-                response = requests.get(url)
+                response = requests.get(url, timeout=10)
             except requests.exceptions.RequestException as error:
                 _LOGGER.error("Error getting camera image: %s", error)
                 return None
