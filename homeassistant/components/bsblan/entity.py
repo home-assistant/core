@@ -12,7 +12,7 @@ from .const import DOMAIN
 
 
 class BSBLANEntity(Entity):
-    """Defines an BSBLAN entity."""
+    """Defines a BSBLAN entity."""
 
     def __init__(
         self,
