@@ -158,16 +158,14 @@ class HaScanner:
         async with self._start_stop_lock:
             await self._async_start()
 
-    async def _async_start(self, allow_reset: bool = True) -> None:
+    async def _async_start(self) -> None:
         """Start bluetooth scanner under the lock."""
-        start_attempts = START_ATTEMPTS if allow_reset else 1
-
-        for attempt in range(start_attempts):
+        for attempt in range(START_ATTEMPTS):
             _LOGGER.debug(
                 "%s: Starting bluetooth discovery attempt: (%s/%s)",
                 self.name,
                 attempt + 1,
-                start_attempts,
+                START_ATTEMPTS,
             )
             try:
                 async with async_timeout.timeout(START_TIMEOUT):
@@ -213,14 +211,14 @@ class HaScanner:
                     f"is available to Home Assistant: {ex}"
                 ) from ex
             except asyncio.TimeoutError as ex:
-                if allow_reset and attempt == 0:
+                if attempt == 0:
                     await self._async_reset_adapter()
                     continue
                 raise ScannerStartError(
                     f"{self.name}: Timed out starting Bluetooth after {START_TIMEOUT} seconds"
                 ) from ex
             except BleakError as ex:
-                if allow_reset and attempt == 0:
+                if attempt == 0:
                     error_str = str(ex)
                     if any(
                         needs_reset_error in error_str
@@ -274,10 +272,12 @@ class HaScanner:
             # Stop the scanner but not the watchdog
             # since we want to try again later if it's still quiet
             await self._async_stop_scanner()
-            if self._start_time == self._last_detection:
+            if self._start_time == self._last_detection or (
+                time_since_last_detection
+            ) > (SCANNER_WATCHDOG_TIMEOUT + SCANNER_WATCHDOG_INTERVAL.total_seconds()):
                 await self._async_reset_adapter()
             try:
-                await self._async_start(allow_reset=False)
+                await self._async_start()
             except ScannerStartError as ex:
                 _LOGGER.error(
                     "%s: Failed to restart Bluetooth scanner: %s",
