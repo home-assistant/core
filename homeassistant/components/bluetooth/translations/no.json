@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Tjenesten er allerede konfigurert",
-            "no_adapters": "Finner ingen Bluetooth-adaptere"
+            "no_adapters": "Fant ingen ukonfigurerte Bluetooth-adaptere"
         },
         "flow_title": "{name}",
         "step": {
@@ -11,6 +11,15 @@
             },
             "enable_bluetooth": {
                 "description": "Vil du konfigurere Bluetooth?"
+            },
+            "multiple_adapters": {
+                "data": {
+                    "adapter": "Adapter"
+                },
+                "description": "Velg en Bluetooth-adapter for \u00e5 konfigurere"
+            },
+            "single_adapter": {
+                "description": "Vil du konfigurere Bluetooth-adapteren {name} ?"
             },
             "user": {
                 "data": {

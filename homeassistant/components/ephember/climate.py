@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Any
 
 from pyephember.pyephember import (
     EphEmber,
@@ -141,7 +142,7 @@ class EphEmberThermostat(ClimateEntity):
         """Return the supported operations."""
         return OPERATION_LIST
 
-    def set_hvac_mode(self, hvac_mode):
+    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the operation mode."""
         mode = self.map_mode_hass_eph(hvac_mode)
         if mode is not None:
@@ -155,17 +156,17 @@ class EphEmberThermostat(ClimateEntity):
 
         return zone_is_boost_active(self._zone)
 
-    def turn_aux_heat_on(self):
+    def turn_aux_heat_on(self) -> None:
         """Turn auxiliary heater on."""
         self._ember.activate_boost_by_name(
             self._zone_name, zone_target_temperature(self._zone)
         )
 
-    def turn_aux_heat_off(self):
+    def turn_aux_heat_off(self) -> None:
         """Turn auxiliary heater off."""
         self._ember.deactivate_boost_by_name(self._zone_name)
 
-    def set_temperature(self, **kwargs):
+    def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
@@ -198,7 +199,7 @@ class EphEmberThermostat(ClimateEntity):
 
         return 35.0
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data."""
         self._zone = self._ember.get_zone(self._zone_name)
 

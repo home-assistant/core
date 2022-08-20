@@ -37,7 +37,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.18.10
+PySwitchbot==0.18.12
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -1737,7 +1737,7 @@ pyopnsense==0.2.0
 pyoppleio==1.0.5
 
 # homeassistant.components.opentherm_gw
-pyotgw==2.0.2
+pyotgw==2.0.3
 
 # homeassistant.auth.mfa_modules.notify
 # homeassistant.auth.mfa_modules.totp
@@ -2512,7 +2512,7 @@ xs1-api-client==3.0.0
 yalesmartalarmclient==0.3.8
 
 # homeassistant.components.yalexs_ble
-yalexs-ble==1.4.0
+yalexs-ble==1.6.2
 
 # homeassistant.components.august
 yalexs==1.2.1
