@@ -36,4 +36,4 @@ class MicroBotEntity(PassiveBluetoothCoordinatorEntity):
     @property
     def data(self) -> dict[str, Any]:
         """Return coordinator data for this entity."""
-        return coordinator.data
+        return self.coordinator.data
