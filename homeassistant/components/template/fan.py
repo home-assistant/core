@@ -404,19 +404,17 @@ class TemplateFan(TemplateEntity, FanEntity):
         # Validate percentage
         try:
             percentage = int(float(percentage))
-        except ValueError:
+        except (ValueError, TypeError):
             _LOGGER.error(
                 "Received invalid percentage: %s for entity %s",
                 percentage,
                 self.entity_id,
             )
             self._percentage = 0
-            self._preset_mode = None
             return
 
         if 0 <= percentage <= 100:
             self._percentage = percentage
-            self._preset_mode = None
         else:
             _LOGGER.error(
                 "Received invalid percentage: %s for entity %s",
@@ -424,7 +422,6 @@ class TemplateFan(TemplateEntity, FanEntity):
                 self.entity_id,
             )
             self._percentage = 0
-            self._preset_mode = None
 
     @callback
     def _update_preset_mode(self, preset_mode):
@@ -432,10 +429,8 @@ class TemplateFan(TemplateEntity, FanEntity):
         preset_mode = str(preset_mode)
 
         if self.preset_modes and preset_mode in self.preset_modes:
-            self._percentage = None
             self._preset_mode = preset_mode
         elif preset_mode in (STATE_UNAVAILABLE, STATE_UNKNOWN):
-            self._percentage = None
             self._preset_mode = None
         else:
             _LOGGER.error(
@@ -444,7 +439,6 @@ class TemplateFan(TemplateEntity, FanEntity):
                 self.entity_id,
                 self.preset_mode,
             )
-            self._percentage = None
             self._preset_mode = None
 
     @callback
