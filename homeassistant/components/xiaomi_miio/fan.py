@@ -428,10 +428,8 @@ class XiaomiAirPurifier(XiaomiGenericAirPurifier):
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_4_LITE
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_MIOT
             self._preset_modes = PRESET_MODES_AIRPURIFIER_MIOT
-            self._attr_supported_features = (
-                FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
-            )
-            self._speed_count = 3
+            self._attr_supported_features = FanEntityFeature.PRESET_MODE
+            self._speed_count = 1
         elif self._model == MODEL_AIRPURIFIER_PRO_V7:
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_PRO_V7
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_PRO_V7
