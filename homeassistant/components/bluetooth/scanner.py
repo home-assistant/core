@@ -145,7 +145,7 @@ class HaScanner:
             or advertisement_data.service_uuids
         ):
             # Don't count empty advertisements
-            # as the adapter count be in a failure
+            # as the adapter is in a failure
             # state if all the data is empty.
             self._last_detection = callback_time
         for callback in self._callbacks:
