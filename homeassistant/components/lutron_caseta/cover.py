@@ -80,3 +80,10 @@ class LutronCasetaCover(LutronCasetaDeviceUpdatableEntity, CoverEntity):
         if ATTR_POSITION in kwargs:
             position = kwargs[ATTR_POSITION]
             await self._smartbridge.set_value(self.device_id, position)
+
+    @property
+    def unique_id(self):
+        """Return a unique identifier if serial number is None."""
+        if self.serial is None:
+            return f"{self._bridge_unique_id}_{self.device_id}"
+        return super().unique_id
