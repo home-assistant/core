@@ -132,6 +132,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except ConfigEntryAuthFailed:
         return False
 
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
     return True
 
 
@@ -194,12 +196,6 @@ class VolvoData:
         ):
             self.instruments.add(instrument)
             dispatcher_send(self.hass, VOLVO_DISCOVERY_NEW, [instrument])
-
-        self.hass.async_create_task(
-            self.hass.config_entries.async_forward_entry_setups(
-                self.config_entry, PLATFORMS
-            )
-        )
 
     async def update(self):
         """Update status from the online service."""
