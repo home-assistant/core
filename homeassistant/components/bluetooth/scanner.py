@@ -44,17 +44,26 @@ _LOGGER = logging.getLogger(__name__)
 
 MONOTONIC_TIME = time.monotonic
 
-NEED_RESET_ERRORS = {
+NEED_RESET_ERRORS = [
     "org.bluez.Error.Failed",
     "org.bluez.Error.InProgress",
     "org.bluez.Error.NotReady",
-}
+]
 START_ATTEMPTS = 2
 
 SCANNING_MODE_TO_BLEAK = {
     BluetoothScanningMode.ACTIVE: "active",
     BluetoothScanningMode.PASSIVE: "passive",
 }
+
+# The minimum number of seconds to know
+# the adapter has not had advertisements
+# and we already tried to restart the scanner
+# without success when the first time the watch
+# dog hit the failure path.
+SCANNER_WATCHDOG_MULTIPLE = (
+    SCANNER_WATCHDOG_TIMEOUT + SCANNER_WATCHDOG_INTERVAL.total_seconds()
+)
 
 
 class ScannerStartError(HomeAssistantError):
@@ -276,9 +285,13 @@ class HaScanner:
             # Stop the scanner but not the watchdog
             # since we want to try again later if it's still quiet
             await self._async_stop_scanner()
-            if self._start_time == self._last_detection or (
-                time_since_last_detection
-            ) > (SCANNER_WATCHDOG_TIMEOUT + SCANNER_WATCHDOG_INTERVAL.total_seconds()):
+            # If there have not been any valid advertisements,
+            # or the watchdog has hit the failure path multiple times,
+            # do the reset.
+            if (
+                self._start_time == self._last_detection
+                or time_since_last_detection > SCANNER_WATCHDOG_MULTIPLE
+            ):
                 await self._async_reset_adapter()
             try:
                 await self._async_start()
