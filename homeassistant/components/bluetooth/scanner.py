@@ -33,6 +33,7 @@ from .const import (
     START_TIMEOUT,
 )
 from .models import BluetoothScanningMode
+from .util import adapter_human_name
 
 OriginalBleakScanner = bleak.BleakScanner
 MONOTONIC_TIME = time.monotonic
@@ -76,7 +77,11 @@ class HaScanner:
     """
 
     def __init__(
-        self, hass: HomeAssistant, scanner: bleak.BleakScanner, adapter: str | None
+        self,
+        hass: HomeAssistant,
+        scanner: bleak.BleakScanner,
+        adapter: str,
+        address: str,
     ) -> None:
         """Init bluetooth discovery."""
         self.hass = hass
@@ -89,7 +94,7 @@ class HaScanner:
         self._callbacks: list[
             Callable[[BLEDevice, AdvertisementData, float, str], None]
         ] = []
-        self.name = self.adapter or "default"
+        self.name = adapter_human_name(adapter, address)
         self.source = self.adapter or SOURCE_LOCAL
 
     @property
