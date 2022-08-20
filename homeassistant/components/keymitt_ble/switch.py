@@ -9,7 +9,7 @@ from .const import DOMAIN
 from .entity import MicroBotEntity
 
 if TYPE_CHECKING:
-    from .__init__ import MicroBotDataUpdateCoordinator
+    from . import MicroBotDataUpdateCoordinator
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
