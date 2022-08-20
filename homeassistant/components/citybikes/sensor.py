@@ -15,7 +15,6 @@ from homeassistant.components.sensor import (
     SensorEntity,
 )
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     ATTR_ID,
     ATTR_LATITUDE,
     ATTR_LOCATION,
@@ -275,6 +274,7 @@ class CityBikesNetwork:
 class CityBikesStation(SensorEntity):
     """CityBikes API Sensor."""
 
+    _attr_attribution = CITYBIKES_ATTRIBUTION
     _attr_native_unit_of_measurement = "bikes"
     _attr_icon = "mdi:bike"
 
@@ -284,7 +284,7 @@ class CityBikesStation(SensorEntity):
         self._station_id = station_id
         self.entity_id = entity_id
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update station state."""
         for station in self._network.stations:
             if station[ATTR_ID] == self._station_id:
@@ -292,15 +292,10 @@ class CityBikesStation(SensorEntity):
                 break
         self._attr_name = station_data.get(ATTR_NAME)
         self._attr_native_value = station_data.get(ATTR_FREE_BIKES)
-        self._attr_extra_state_attributes = (
-            {
-                ATTR_ATTRIBUTION: CITYBIKES_ATTRIBUTION,
-                ATTR_UID: station_data.get(ATTR_EXTRA, {}).get(ATTR_UID),
-                ATTR_LATITUDE: station_data[ATTR_LATITUDE],
-                ATTR_LONGITUDE: station_data[ATTR_LONGITUDE],
-                ATTR_EMPTY_SLOTS: station_data[ATTR_EMPTY_SLOTS],
-                ATTR_TIMESTAMP: station_data[ATTR_TIMESTAMP],
-            }
-            if station_data
-            else {ATTR_ATTRIBUTION: CITYBIKES_ATTRIBUTION}
-        )
+        self._attr_extra_state_attributes = {
+            ATTR_UID: station_data.get(ATTR_EXTRA, {}).get(ATTR_UID),
+            ATTR_LATITUDE: station_data.get(ATTR_LATITUDE),
+            ATTR_LONGITUDE: station_data.get(ATTR_LONGITUDE),
+            ATTR_EMPTY_SLOTS: station_data.get(ATTR_EMPTY_SLOTS),
+            ATTR_TIMESTAMP: station_data.get(ATTR_TIMESTAMP),
+        }

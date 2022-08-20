@@ -44,6 +44,8 @@
             "button_2": "Teine nupp",
             "button_3": "Kolmas nupp",
             "button_4": "Neljas nupp",
+            "clock_wise": "P\u00f6\u00f6rlemine p\u00e4rip\u00e4eva",
+            "counter_clock_wise": "P\u00f6\u00f6ramine vastup\u00e4eva",
             "dim_down": "H\u00e4marda",
             "dim_up": "Tee heledamaks",
             "double_buttons_1_3": "Esimene ja kolmas nupp",
@@ -53,15 +55,16 @@
         },
         "trigger_type": {
             "double_short_release": "\"{subtype}\" nupp vabastatati",
-            "initial_press": "Nuppu \"{subtype}\" on vajutatud",
-            "long_release": "Nupp \"{subtype}\" vabastati p\u00e4rast pikka vajutust",
-            "remote_button_long_release": "\"{subtype}\" nupp vabastatati p\u00e4rast pikka vajutust",
-            "remote_button_short_press": "\"{subtype}\" nupp  on vajutatud",
-            "remote_button_short_release": "\"{subtype}\" nupp  vabastati",
+            "initial_press": "\"{subtype}\" on vajutatud",
+            "long_release": "\"{subtype}\" vabastati p\u00e4rast pikka vajutust",
+            "remote_button_long_release": "\"{subtype}\" vabastatati p\u00e4rast pikka vajutust",
+            "remote_button_short_press": "\"{subtype}\" vajutati",
+            "remote_button_short_release": "\"{subtype}\" vabastati",
             "remote_double_button_long_press": "M\u00f5lemad \"{subtype}\" nupud vabastatati p\u00e4rast pikka vajutust",
             "remote_double_button_short_press": "M\u00f5lemad \"{subtype}\" nupud vabastatati",
-            "repeat": "Nuppu \" {subtype} \" hoitakse all",
-            "short_release": "Nupp \" {subtype} \" vabastati p\u00e4rast l\u00fchikest vajutust"
+            "repeat": "\" {subtype} \" hoitakse all",
+            "short_release": "\" {subtype} \" vabastati p\u00e4rast l\u00fchikest vajutust",
+            "start": "vajutati \"{subtype}\""
         }
     },
     "options": {

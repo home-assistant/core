@@ -10,7 +10,7 @@ from lru import LRU  # pylint: disable=no-name-in-module
 from homeassistant.loader import BluetoothMatcher, BluetoothMatcherOptional
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
+    from collections.abc import MutableMapping
 
     from bleak.backends.device import BLEDevice
     from bleak.backends.scanner import AdvertisementData
@@ -70,13 +70,13 @@ class IntegrationMatcher:
         self._integration_matchers = integration_matchers
         # Some devices use a random address so we need to use
         # an LRU to avoid memory issues.
-        self._matched: Mapping[str, IntegrationMatchHistory] = LRU(
+        self._matched: MutableMapping[str, IntegrationMatchHistory] = LRU(
             MAX_REMEMBER_ADDRESSES
         )
 
-    def async_clear_history(self) -> None:
-        """Clear the history."""
-        self._matched = {}
+    def async_clear_address(self, address: str) -> None:
+        """Clear the history matches for a set of domains."""
+        self._matched.pop(address, None)
 
     def match_domains(self, device: BLEDevice, adv_data: AdvertisementData) -> set[str]:
         """Return the domains that are matched."""
@@ -98,7 +98,7 @@ class IntegrationMatcher:
             previous_match.service_data |= bool(adv_data.service_data)
             previous_match.service_uuids |= bool(adv_data.service_uuids)
         else:
-            self._matched[device.address] = IntegrationMatchHistory(  # type: ignore[index]
+            self._matched[device.address] = IntegrationMatchHistory(
                 manufacturer_data=bool(adv_data.manufacturer_data),
                 service_data=bool(adv_data.service_data),
                 service_uuids=bool(adv_data.service_uuids),

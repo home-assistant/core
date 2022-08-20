@@ -4,7 +4,8 @@
             "already_configured": "OpenWeatherMap-integrationen f\u00f6r dessa koordinater \u00e4r redan konfigurerad."
         },
         "error": {
-            "cannot_connect": "Det gick inte att ansluta."
+            "cannot_connect": "Det gick inte att ansluta.",
+            "invalid_api_key": "Ogiltig API-nyckel"
         },
         "step": {
             "user": {

@@ -10,6 +10,9 @@
         },
         "flow_title": "Roku: {name}",
         "step": {
+            "discovery_confirm": {
+                "description": "Vill du konfigurera {name}?"
+            },
             "user": {
                 "data": {
                     "host": "V\u00e4rd"
