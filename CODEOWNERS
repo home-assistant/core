@@ -566,6 +566,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/kef/ @basnijholt
 /homeassistant/components/keyboard_remote/ @bendavid @lanrat
 /homeassistant/components/keymitt_ble/ @spycle
+/tests/components/keymitt_ble/ @spycle
 /homeassistant/components/kmtronic/ @dgomes
 /tests/components/kmtronic/ @dgomes
 /homeassistant/components/knx/ @Julius2342 @farmio @marvin-w
