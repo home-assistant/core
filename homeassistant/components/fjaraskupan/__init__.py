@@ -14,11 +14,13 @@ from homeassistant.components.bluetooth import (
     BluetoothScanningMode,
     BluetoothServiceInfoBleak,
     async_address_present,
+    async_rediscover_address,
     async_register_callback,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -113,6 +115,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
             device = Device(service_info.device)
             device_info = DeviceInfo(
+                connections={(dr.CONNECTION_BLUETOOTH, service_info.address)},
                 identifiers={(DOMAIN, service_info.address)},
                 manufacturer="Fjäråskupan",
                 name="Fjäråskupan",
@@ -174,5 +177,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
+
+        for device_entry in dr.async_entries_for_config_entry(
+            dr.async_get(hass), entry.entry_id
+        ):
+            for conn in device_entry.connections:
+                if conn[0] == dr.CONNECTION_BLUETOOTH:
+                    async_rediscover_address(hass, conn[1])
 
     return unload_ok

@@ -3,6 +3,10 @@
         "abort": {
             "reauth_successful": "\u00c5terautentisering lyckades"
         },
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta.",
+            "invalid_api_key": "Ogiltig API-nyckel"
+        },
         "step": {
             "reauth_confirm": {
                 "data": {
@@ -12,8 +16,12 @@
             },
             "user": {
                 "data": {
-                    "api_key": "API-nyckel"
-                }
+                    "api_key": "API-nyckel",
+                    "latitude": "Latitud",
+                    "longitude": "Longitud",
+                    "name": "Namn"
+                },
+                "description": "Konfigurera Ambee f\u00f6r att integrera med Home Assistant."
             }
         }
     },

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from enocean.protocol.constants import RORG
+from typing import Any
 from enocean.utils import combine_hex
 import voluptuous as vol
 
@@ -102,7 +103,7 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
         """Return the device name."""
         return self.dev_name
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         # build the data and optional data for the serial packet
         optional = [0x03]  # number of subtelegram
@@ -127,7 +128,7 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
         )
         self._on_state = True
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         optional = [0x03]
         optional.extend(self.dev_id)

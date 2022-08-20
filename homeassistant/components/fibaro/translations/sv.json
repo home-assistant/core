@@ -11,7 +11,9 @@
         "step": {
             "user": {
                 "data": {
+                    "import_plugins": "Importera enheter fr\u00e5n fibaro plugin?",
                     "password": "L\u00f6senord",
+                    "url": "URL i formatet http://HOST/api/",
                     "username": "Anv\u00e4ndarnamn"
                 }
             }

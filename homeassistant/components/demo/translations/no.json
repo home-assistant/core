@@ -1,10 +1,21 @@
 {
     "issues": {
+        "bad_psu": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Trykk SUBMIT for \u00e5 bekrefte at str\u00f8mforsyningen er byttet ut",
+                        "title": "Str\u00f8mforsyningen m\u00e5 skiftes"
+                    }
+                }
+            },
+            "title": "Str\u00f8mforsyningen er ikke stabil"
+        },
         "out_of_blinker_fluid": {
             "fix_flow": {
                 "step": {
                     "confirm": {
-                        "description": "Trykk OK n\u00e5r blinklysv\u00e6ske er fylt p\u00e5 igjen",
+                        "description": "Trykk SUBMIT n\u00e5r blinklysv\u00e6ske er fylt p\u00e5 igjen",
                         "title": "Blinkerv\u00e6ske m\u00e5 etterfylles"
                     }
                 }

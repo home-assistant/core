@@ -4,7 +4,7 @@
             "press": "Presiona el bot\u00f3n {entity_name}"
         },
         "trigger_type": {
-            "pressed": "{entity_name} se ha presionado"
+            "pressed": "{entity_name} se ha pulsado"
         }
     },
     "title": "Bot\u00f3n"

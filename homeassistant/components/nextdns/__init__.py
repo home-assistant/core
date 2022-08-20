@@ -15,6 +15,7 @@ from nextdns import (
     AnalyticsProtocols,
     AnalyticsStatus,
     ApiError,
+    ConnectionStatus,
     InvalidApiKeyError,
     NextDns,
     Settings,
@@ -31,6 +32,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
+    ATTR_CONNECTION,
     ATTR_DNSSEC,
     ATTR_ENCRYPTION,
     ATTR_IP_VERSIONS,
@@ -40,6 +42,7 @@ from .const import (
     CONF_PROFILE_ID,
     DOMAIN,
     UPDATE_INTERVAL_ANALYTICS,
+    UPDATE_INTERVAL_CONNECTION,
     UPDATE_INTERVAL_SETTINGS,
 )
 
@@ -131,10 +134,19 @@ class NextDnsSettingsUpdateCoordinator(NextDnsUpdateCoordinator[Settings]):
         return await self.nextdns.get_settings(self.profile_id)
 
 
+class NextDnsConnectionUpdateCoordinator(NextDnsUpdateCoordinator[ConnectionStatus]):
+    """Class to manage fetching NextDNS connection data from API."""
+
+    async def _async_update_data_internal(self) -> ConnectionStatus:
+        """Update data via library."""
+        return await self.nextdns.connection_status(self.profile_id)
+
+
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.BUTTON, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR, Platform.SWITCH]
 COORDINATORS = [
+    (ATTR_CONNECTION, NextDnsConnectionUpdateCoordinator, UPDATE_INTERVAL_CONNECTION),
     (ATTR_DNSSEC, NextDnsDnssecUpdateCoordinator, UPDATE_INTERVAL_ANALYTICS),
     (ATTR_ENCRYPTION, NextDnsEncryptionUpdateCoordinator, UPDATE_INTERVAL_ANALYTICS),
     (ATTR_IP_VERSIONS, NextDnsIpVersionsUpdateCoordinator, UPDATE_INTERVAL_ANALYTICS),

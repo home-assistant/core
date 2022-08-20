@@ -28,7 +28,8 @@
                 "data": {
                     "access_token": "\u00c5tkomstnyckel",
                     "email": "E-post"
-                }
+                },
+                "description": "Du m\u00e5ste registrera dig f\u00f6r en Awair-utvecklar\u00e5tkomsttoken p\u00e5: https://developer.getawair.com/onboard/login"
             }
         }
     }

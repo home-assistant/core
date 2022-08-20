@@ -4,11 +4,9 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from switchbot import Switchbot
-
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ADDRESS, CONF_NAME, STATE_ON
+from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -29,19 +27,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Switchbot based on a config entry."""
     coordinator: SwitchbotDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    unique_id = entry.unique_id
-    assert unique_id is not None
-    async_add_entities(
-        [
-            SwitchBotSwitch(
-                coordinator,
-                unique_id,
-                entry.data[CONF_ADDRESS],
-                entry.data[CONF_NAME],
-                coordinator.device,
-            )
-        ]
-    )
+    async_add_entities([SwitchBotSwitch(coordinator)])
 
 
 class SwitchBotSwitch(SwitchbotEntity, SwitchEntity, RestoreEntity):
@@ -49,18 +35,9 @@ class SwitchBotSwitch(SwitchbotEntity, SwitchEntity, RestoreEntity):
 
     _attr_device_class = SwitchDeviceClass.SWITCH
 
-    def __init__(
-        self,
-        coordinator: SwitchbotDataUpdateCoordinator,
-        unique_id: str,
-        address: str,
-        name: str,
-        device: Switchbot,
-    ) -> None:
+    def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
         """Initialize the Switchbot."""
-        super().__init__(coordinator, unique_id, address, name)
-        self._attr_unique_id = unique_id
-        self._device = device
+        super().__init__(coordinator)
         self._attr_is_on = False
 
     async def async_added_to_hass(self) -> None:
