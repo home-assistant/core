@@ -120,7 +120,7 @@ async def test_user_setup_already_configured(hass):
     entry.add_to_hass(hass)
     with patch(
         "homeassistant.components.keymitt_ble.config_flow.async_discovered_service_info",
-        return_value=[WOHAND_SERVICE_INFO],
+        return_value=[SERVICE_INFO],
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
