@@ -176,7 +176,7 @@ async def test_cloud_setup(hass, two_zone_cloud):
     with patch(
         "homeassistant.components.risco.Store.async_save",
     ) as save_mock:
-        await setup_risco_cloud(hass, TEST_EVENTS)
+        await setup_risco_cloud(hass, *TEST_EVENTS)
         for id in ENTITY_IDS.values():
             assert registry.async_is_registered(id)
 

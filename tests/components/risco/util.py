@@ -28,7 +28,7 @@ TEST_SITE_UUID = "test-site-uuid"
 TEST_SITE_NAME = "test-site-name"
 
 
-async def setup_risco_cloud(hass, events=[], options={}):
+async def setup_risco_cloud(hass, *events, **options):
     """Set up a Risco integration for testing."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data=TEST_CLOUD_CONFIG, options=options
@@ -56,7 +56,7 @@ async def setup_risco_cloud(hass, events=[], options={}):
     return config_entry
 
 
-async def setup_risco_local(hass, options={}):
+async def setup_risco_local(hass, **options):
     """Set up a Risco integration for testing."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data=TEST_LOCAL_CONFIG, options=options

@@ -198,7 +198,7 @@ async def _check_cloud_state(
 
 async def test_cloud_states(hass, two_part_cloud_alarm):
     """Test the various alarm states."""
-    await setup_risco_cloud(hass, [], CUSTOM_MAPPING_OPTIONS)
+    await setup_risco_cloud(hass, [], **CUSTOM_MAPPING_OPTIONS)
 
     assert hass.states.get(FIRST_CLOUD_ENTITY_ID).state == STATE_UNKNOWN
     for partition_id, entity_id in {
@@ -288,7 +288,7 @@ async def _test_cloud_no_service_call(
 
 async def test_cloud_sets_custom_mapping(hass, two_part_cloud_alarm):
     """Test settings the various modes when mapping some states."""
-    await setup_risco_cloud(hass, [], CUSTOM_MAPPING_OPTIONS)
+    await setup_risco_cloud(hass, [], **CUSTOM_MAPPING_OPTIONS)
 
     registry = er.async_get(hass)
     entity = registry.async_get(FIRST_CLOUD_ENTITY_ID)
@@ -322,7 +322,7 @@ async def test_cloud_sets_custom_mapping(hass, two_part_cloud_alarm):
 
 async def test_cloud_sets_full_custom_mapping(hass, two_part_cloud_alarm):
     """Test settings the various modes when mapping all states."""
-    await setup_risco_cloud(hass, [], FULL_CUSTOM_MAPPING)
+    await setup_risco_cloud(hass, [], **FULL_CUSTOM_MAPPING)
 
     registry = er.async_get(hass)
     entity = registry.async_get(FIRST_CLOUD_ENTITY_ID)
@@ -375,7 +375,7 @@ async def test_cloud_sets_full_custom_mapping(hass, two_part_cloud_alarm):
 async def test_cloud_sets_with_correct_code(hass, two_part_cloud_alarm):
     """Test settings the various modes when code is required."""
     await setup_risco_cloud(
-        hass, [], {**CUSTOM_MAPPING_OPTIONS, **CODES_REQUIRED_OPTIONS}
+        hass, [], **{**CUSTOM_MAPPING_OPTIONS, **CODES_REQUIRED_OPTIONS}
     )
 
     code = {"code": 1234}
@@ -438,7 +438,7 @@ async def test_cloud_sets_with_correct_code(hass, two_part_cloud_alarm):
 async def test_cloud_sets_with_incorrect_code(hass, two_part_cloud_alarm):
     """Test settings the various modes when code is required and incorrect."""
     await setup_risco_cloud(
-        hass, [], {**CUSTOM_MAPPING_OPTIONS, **CODES_REQUIRED_OPTIONS}
+        hass, [], **{**CUSTOM_MAPPING_OPTIONS, **CODES_REQUIRED_OPTIONS}
     )
 
     code = {"code": 4321}
@@ -554,7 +554,7 @@ async def test_local_states(hass, two_part_local_alarm):
     with patch(
         "homeassistant.components.risco.RiscoLocal.add_partition_handler"
     ) as mock:
-        await setup_risco_local(hass, CUSTOM_MAPPING_OPTIONS)
+        await setup_risco_local(hass, **CUSTOM_MAPPING_OPTIONS)
         callback = mock.call_args.args[0]
 
     assert callback is not None
@@ -645,7 +645,7 @@ async def _test_local_no_service_call(
 
 async def test_local_sets_custom_mapping(hass, two_part_local_alarm):
     """Test settings the various modes when mapping some states."""
-    await setup_risco_local(hass, CUSTOM_MAPPING_OPTIONS)
+    await setup_risco_local(hass, **CUSTOM_MAPPING_OPTIONS)
 
     registry = er.async_get(hass)
     entity = registry.async_get(FIRST_LOCAL_ENTITY_ID)
@@ -713,7 +713,7 @@ async def test_local_sets_custom_mapping(hass, two_part_local_alarm):
 
 async def test_local_sets_full_custom_mapping(hass, two_part_local_alarm):
     """Test settings the various modes when mapping all states."""
-    await setup_risco_local(hass, FULL_CUSTOM_MAPPING)
+    await setup_risco_local(hass, **FULL_CUSTOM_MAPPING)
 
     registry = er.async_get(hass)
     entity = registry.async_get(FIRST_LOCAL_ENTITY_ID)
@@ -799,7 +799,9 @@ async def test_local_sets_full_custom_mapping(hass, two_part_local_alarm):
 
 async def test_local_sets_with_correct_code(hass, two_part_local_alarm):
     """Test settings the various modes when code is required."""
-    await setup_risco_local(hass, {**CUSTOM_MAPPING_OPTIONS, **CODES_REQUIRED_OPTIONS})
+    await setup_risco_local(
+        hass, **{**CUSTOM_MAPPING_OPTIONS, **CODES_REQUIRED_OPTIONS}
+    )
 
     code = {"code": 1234}
     await _test_local_service_call(
@@ -890,7 +892,9 @@ async def test_local_sets_with_correct_code(hass, two_part_local_alarm):
 
 async def test_local_sets_with_incorrect_code(hass, two_part_local_alarm):
     """Test settings the various modes when code is required and incorrect."""
-    await setup_risco_local(hass, {**CUSTOM_MAPPING_OPTIONS, **CODES_REQUIRED_OPTIONS})
+    await setup_risco_local(
+        hass, **{**CUSTOM_MAPPING_OPTIONS, **CODES_REQUIRED_OPTIONS}
+    )
 
     code = {"code": 4321}
     await _test_local_no_service_call(
