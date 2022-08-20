@@ -137,9 +137,17 @@ class HaScanner:
         Currently this is used to feed the callbacks into the
         central manager.
         """
-        self._last_detection = MONOTONIC_TIME()
+        callback_time = MONOTONIC_TIME()
+        if (
+            advertisement_data.local_name
+            or advertisement_data.manufacturer_data
+            or advertisement_data.service_data
+            or advertisement_data.service_uuids
+        ):
+            # Don't count empty advertisements
+            self._last_detection = callback_time
         for callback in self._callbacks:
-            callback(ble_device, advertisement_data, self._last_detection, self.source)
+            callback(ble_device, advertisement_data, callback_time, self.source)
 
     async def async_start(self) -> None:
         """Start bluetooth scanner."""
