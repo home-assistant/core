@@ -1,25 +1,17 @@
 """Support for LaMetric time."""
-from demetriek import LaMetricConnectionError, LaMetricDevice
 import voluptuous as vol
 
+from homeassistant.components import notify as hass_notify
 from homeassistant.components.repairs import IssueSeverity, async_create_issue
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
-    CONF_HOST,
-    CONF_NAME,
-    Platform,
-)
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import discovery
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import DOMAIN, PLATFORMS
+from .coordinator import LaMetricDataUpdateCoordinator
 
 CONFIG_SCHEMA = vol.Schema(
     vol.All(
@@ -56,18 +48,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up LaMetric from a config entry."""
-    lametric = LaMetricDevice(
-        host=entry.data[CONF_HOST],
-        api_key=entry.data[CONF_API_KEY],
-        session=async_get_clientsession(hass),
-    )
+    coordinator = LaMetricDataUpdateCoordinator(hass, entry)
+    await coordinator.async_config_entry_first_refresh()
 
-    try:
-        device = await lametric.device()
-    except LaMetricConnectionError as ex:
-        raise ConfigEntryNotReady("Cannot connect to LaMetric device") from ex
-
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = lametric
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # Set up notify platform, no entry support for notify component yet,
     # have to use discovery to load platform.
@@ -76,8 +61,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass,
             Platform.NOTIFY,
             DOMAIN,
-            {CONF_NAME: device.name, "entry_id": entry.entry_id},
+            {CONF_NAME: coordinator.data.name, "entry_id": entry.entry_id},
             hass.data[DOMAIN]["hass_config"],
         )
     )
     return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload LaMetric config entry."""
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        del hass.data[DOMAIN][entry.entry_id]
+        await hass_notify.async_reload(hass, DOMAIN)
+    return unload_ok
