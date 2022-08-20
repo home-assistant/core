@@ -4,7 +4,7 @@
   "documentation": "https://www.home-assistant.io/integrations/lametric",
   "requirements": ["demetriek==0.2.2"],
   "codeowners": ["@robbiet480", "@frenck"],
-  "iot_class": "local_push",
+  "iot_class": "local_polling",
   "dependencies": ["application_credentials", "repairs"],
   "loggers": ["demetriek"],
   "config_flow": true,
