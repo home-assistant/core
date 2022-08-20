@@ -91,7 +91,7 @@ class EcobeeBinarySensor(BinarySensorEntity):
         return None
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return true if device is available."""
         thermostat = self.data.ecobee.get_thermostat(self.index)
         return thermostat["runtime"]["connected"]
@@ -106,7 +106,7 @@ class EcobeeBinarySensor(BinarySensorEntity):
         """Return the class of this sensor, from DEVICE_CLASSES."""
         return BinarySensorDeviceClass.OCCUPANCY
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest state of the sensor."""
         await self.data.update()
         for sensor in self.data.ecobee.get_remote_sensors(self.index):
