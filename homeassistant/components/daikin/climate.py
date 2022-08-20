@@ -27,7 +27,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN as DAIKIN_DOMAIN
+from . import DOMAIN as DAIKIN_DOMAIN, DaikinApi
 from .const import (
     ATTR_INSIDE_TEMPERATURE,
     ATTR_OUTSIDE_TEMPERATURE,
@@ -115,14 +115,17 @@ def format_target_temperature(target_temperature):
 class DaikinClimate(ClimateEntity):
     """Representation of a Daikin HVAC."""
 
-    def __init__(self, api):
+    def __init__(self, api: DaikinApi) -> None:
         """Initialize the climate device."""
 
         self._api = api
+        self._attr_hvac_modes = list(HA_STATE_TO_DAIKIN)
+        self._attr_fan_modes = self._api.device.fan_rate
+        self._attr_swing_modes = self._api.device.swing_modes
         self._list = {
-            ATTR_HVAC_MODE: list(HA_STATE_TO_DAIKIN),
-            ATTR_FAN_MODE: self._api.device.fan_rate,
-            ATTR_SWING_MODE: self._api.device.swing_modes,
+            ATTR_HVAC_MODE: self._attr_hvac_modes,
+            ATTR_FAN_MODE: self._attr_fan_modes,
+            ATTR_SWING_MODE: self._attr_swing_modes,
         }
 
         self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
@@ -219,11 +222,6 @@ class DaikinClimate(ClimateEntity):
         daikin_mode = self._api.device.represent(HA_ATTR_TO_DAIKIN[ATTR_HVAC_MODE])[1]
         return DAIKIN_TO_HA_STATE.get(daikin_mode, HVACMode.HEAT_COOL)
 
-    @property
-    def hvac_modes(self) -> list[HVACMode]:
-        """Return the list of available operation modes."""
-        return self._list.get(ATTR_HVAC_MODE)
-
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVAC mode."""
         await self._set({ATTR_HVAC_MODE: hvac_mode})
@@ -238,11 +236,6 @@ class DaikinClimate(ClimateEntity):
         await self._set({ATTR_FAN_MODE: fan_mode})
 
     @property
-    def fan_modes(self):
-        """List of available fan modes."""
-        return self._list.get(ATTR_FAN_MODE)
-
-    @property
     def swing_mode(self):
         """Return the fan setting."""
         return self._api.device.represent(HA_ATTR_TO_DAIKIN[ATTR_SWING_MODE])[1].title()
@@ -250,11 +243,6 @@ class DaikinClimate(ClimateEntity):
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new target temperature."""
         await self._set({ATTR_SWING_MODE: swing_mode})
-
-    @property
-    def swing_modes(self):
-        """List of available swing modes."""
-        return self._list.get(ATTR_SWING_MODE)
 
     @property
     def preset_mode(self):
