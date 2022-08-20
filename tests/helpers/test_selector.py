@@ -302,6 +302,11 @@ def test_time_selector_schema(schema, valid_selections, invalid_selections):
             ("on", "armed"),
             (None, True, 1),
         ),
+        (
+            {"entity_id": "sensor.abc", "attribute": "device_class"},
+            ("temperature", "humidity"),
+            (None,),
+        ),
     ),
 )
 def test_state_selector_schema(schema, valid_selections, invalid_selections):
