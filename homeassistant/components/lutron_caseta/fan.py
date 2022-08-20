@@ -89,10 +89,3 @@ class LutronCasetaFan(LutronCasetaDeviceUpdatableEntity, FanEntity):
     def is_on(self) -> bool:
         """Return true if device is on."""
         return bool(self.percentage)
-
-    @property
-    def unique_id(self):
-        """Return a unique identifier if serial number is None."""
-        if self.serial is None:
-            return f"{self._bridge_unique_id}_{self.device_id}"
-        return super().unique_id
