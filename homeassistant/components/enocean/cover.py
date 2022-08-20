@@ -119,6 +119,11 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         """Return if the cover is closed or not."""
         return self._is_closed
 
+    async def async_added_to_hass(self):
+        """Query status after Home Assistant (re)start."""
+        await super().async_added_to_hass()
+        self.start_or_feed_watchdog()
+
     def open_cover(self, **kwargs) -> None:
         """Open the cover."""
         self._state_changed_by_command = True
