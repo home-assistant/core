@@ -38,7 +38,6 @@ def patch_async_setup_entry(return_value=True):
 
 async def init_integration(
     hass: HomeAssistant,
-    *,
     data: dict = ENTRY_CONFIG,
     skip_entry_setup: bool = False,
 ) -> MockConfigEntry:
