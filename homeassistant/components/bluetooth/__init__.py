@@ -269,13 +269,17 @@ async def async_setup_entry(
     assert address is not None
     adapter = await manager.async_get_adapter_from_address(address)
     if adapter is None:
-        raise ConfigEntryNotReady(f"Bluetooth adapter with address {address} not found")
+        raise ConfigEntryNotReady(
+            f"Bluetooth adapter {adapter} with address {address} not found"
+        )
 
     try:
         bleak_scanner = create_bleak_scanner(BluetoothScanningMode.ACTIVE, adapter)
     except RuntimeError as err:
-        raise ConfigEntryNotReady from err
-    scanner = HaScanner(hass, bleak_scanner, adapter)
+        raise ConfigEntryNotReady(
+            f"{adapter_human_name(adapter, address)}: {err}"
+        ) from err
+    scanner = HaScanner(hass, bleak_scanner, adapter, address)
     entry.async_on_unload(scanner.async_register_callback(manager.scanner_adv_received))
     await scanner.async_start()
     entry.async_on_unload(manager.async_register_scanner(scanner))
