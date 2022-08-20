@@ -50,6 +50,18 @@ class AirQCoordinator(DataUpdateCoordinator):
         data = await self.airq.get(self._target_route)
         return self.airq.drop_errors_from_data(data)
 
+    async def async_fetch_config(self) -> None:
+        """Fetch static config information from the device."""
+        config = await self.airq.get("config")
+        self.config = {
+            "id": config["id"],
+            "name": config["devicename"],
+            "model": config["type"],
+            "room_type": config["RoomType"].replace("-", " ").title(),
+            "sw_version": config["air-Q-Software-Version"],
+            "hw_version": config["air-Q-Hardware-Version"],
+        }
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up air-Q from a config entry."""
@@ -62,17 +74,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         passw=entry.data[CONF_PASSWORD],
     )
 
-    # A workaround. Should be set in AirQCoordinator.__init__, I just failed
-    # to handle the async / await correctly
-    config = await coordinator.airq.get("config")
-    coordinator.config = {
-        "id": config["id"],
-        "name": config["devicename"],
-        "model": config["type"],
-        "room_type": config["RoomType"].replace("-", " ").title(),
-        "sw_version": config["air-Q-Software-Version"],
-        "hw_version": config["air-Q-Hardware-Version"],
-    }
+    await coordinator.async_fetch_config()
 
     # Query the device for the first time and initialise coordinator.data
     await coordinator.async_config_entry_first_refresh()
