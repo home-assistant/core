@@ -4,6 +4,9 @@ from __future__ import annotations
 from typing import Any, TYPE_CHECKING
 
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_platform
 
 from .const import DOMAIN
 from .entity import MicroBotEntity
@@ -12,7 +15,11 @@ if TYPE_CHECKING:
     from . import MicroBotDataUpdateCoordinator
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: entity_platform.AddEntitiesCallback,
+) -> None:
     """Set up MicroBot based on a config entry."""
     coordinator: MicroBotDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities([MicroBotBinarySwitch(coordinator, entry)])
