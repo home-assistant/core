@@ -12,7 +12,6 @@
         "step": {
             "option": {
                 "data": {
-                    "opt_type": "Gateway add method",
                     "light_device_type": "Smart Lighting Control Mode"
                 },
                 "description": "Please select the gateway addition method and the intelligent lighting control method."
@@ -20,16 +19,6 @@
             "scan": {
                 "data": {},
                 "description": "Please select the scanned gateway to connect."
-            },
-            "custom": {
-                "data": {
-                    "name": "Gateway ID",
-                    "broker": "Gateway IP",
-                    "password": "Password",
-                    "port": "Port",
-                    "username": "Username"
-                },
-                "description": "Please enter gateway connection information."
             }
         }
     }

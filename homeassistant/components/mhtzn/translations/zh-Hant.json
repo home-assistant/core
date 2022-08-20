@@ -12,7 +12,6 @@
         "step": {
             "option": {
                 "data": {
-                    "opt_type": "網關添加方式",
                     "light_device_type": "智能燈光控制方式"
                 },
                 "description": "請選擇網關添加方式以及智能燈光控制方式。"
@@ -20,16 +19,6 @@
             "scan": {
                 "data": {},
                 "description": "請選擇掃描到的網關進行連接。"
-            },
-            "custom": {
-                "data": {
-                    "name": "網關標識",
-                    "broker": "網關IP",
-                    "password": "密碼",
-                    "port": "端口",
-                    "username": "用戶名"
-                },
-                "description": "請輸入網關連接信息。"
             }
         }
     }
