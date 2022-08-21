@@ -30,12 +30,10 @@ ORDERED_NAMED_FAN_SPEEDS = ["1", "2", "3", "4", "5", "6", "7", "8"]
 PRESET_MODE_NORMAL = "normal"
 PRESET_MODE_AFTER_COOKING_MANUAL = "after_cooking_manual"
 PRESET_MODE_AFTER_COOKING_AUTO = "after_cooking_auto"
-PRESET_MODE_PERIODIC_VENTILATION = "periodic_ventilation"
 PRESET_MODES = [
     PRESET_MODE_NORMAL,
     PRESET_MODE_AFTER_COOKING_AUTO,
     PRESET_MODE_AFTER_COOKING_MANUAL,
-    PRESET_MODE_PERIODIC_VENTILATION,
 ]
 
 PRESET_TO_COMMAND = {
@@ -178,8 +176,6 @@ class Fan(CoordinatorEntity[Coordinator], FanEntity):
                 self._preset_mode = PRESET_MODE_AFTER_COOKING_MANUAL
             else:
                 self._preset_mode = PRESET_MODE_AFTER_COOKING_AUTO
-        elif data.periodic_venting_on:
-            self._preset_mode = PRESET_MODE_PERIODIC_VENTILATION
         else:
             self._preset_mode = PRESET_MODE_NORMAL
 
