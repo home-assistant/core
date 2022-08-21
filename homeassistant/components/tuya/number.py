@@ -107,12 +107,6 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             icon="mdi:brightness-6",
             entity_category=EntityCategory.CONFIG,
         ),
-        NumberEntityDescription(
-            key=DPCode.PIR_RESUME_COUNTDOWN,
-            name="Resume Countdown",
-            icon="mdi:av-timer",
-            entity_category=EntityCategory.CONFIG,
-        ),
     ),
     # Human Presence Sensor
     # https://developer.tuya.com/en/docs/iot/categoryhps?id=Kaiuz42yhn1hs
