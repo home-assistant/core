@@ -154,20 +154,26 @@ class FileUploadView(HomeAssistantView):
 
         await hass.async_add_executor_job(_sync_create_dir)
 
-        def _sync_write_file(file_name: str, _chunk: bytes, _size: int) -> None:
-            mode = "wb" if _size <= ONE_MEGABYTE else "ab"
-            with (file_dir / file_name).open(mode) as target_fileobj:
+        def _sync_write_file(
+            _file_name: str, _chunk: bytes, _append_to_file: bool
+        ) -> None:
+            mode = "ab" if _append_to_file else "wb"
+            with (file_dir / _file_name).open(mode) as target_fileobj:
                 target_fileobj.write(_chunk)
 
         # We cannot rely on Content-Length if transfer is chunked
         size = 0
-        while True:
-            chunk = await file_field_reader.read_chunk(ONE_MEGABYTE)
-            if not chunk:
-                break
+        # We cannot rely on the requested chunk size
+        initial_chunk_size = 0
+        while chunk := await file_field_reader.read_chunk(ONE_MEGABYTE):
+            if size == 0:
+                initial_chunk_size = len(chunk)
             size += len(chunk)
             await hass.async_add_executor_job(
-                _sync_write_file, file_field_reader.filename, chunk, size
+                _sync_write_file,
+                file_field_reader.filename,
+                chunk,
+                size > initial_chunk_size,
             )
 
         file_upload_data.files[file_id] = file_field_reader.filename
