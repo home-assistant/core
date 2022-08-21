@@ -103,7 +103,7 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
         ),
         NumberEntityDescription(
             key=DPCode.STANDBY_BRIGHT,
-            name="Standby Bright",
+            name="Standby bright",
             icon="mdi:brightness-6",
             entity_category=EntityCategory.CONFIG,
         ),
