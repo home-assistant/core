@@ -1,6 +1,8 @@
 """The Flume component."""
 from __future__ import annotations
 
+import logging
+
 from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.const import Platform
 
@@ -9,6 +11,9 @@ DOMAIN = "flume"
 PLATFORMS = [Platform.SENSOR]
 
 DEFAULT_NAME = "Flume Sensor"
+
+
+_LOGGER = logging.getLogger(__package__)
 
 FLUME_TYPE_SENSOR = 2
 FLUME_QUERIES_SENSOR: tuple[SensorEntityDescription, ...] = (
