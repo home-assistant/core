@@ -25,7 +25,6 @@ class FlumeEntity(CoordinatorEntity[FlumeDataUpdateCoordinator]):
 
         self.device_id = device_id  # This is wrong
         self.entity_description = description
-        self._attr_name = f"{name} {description.name}"
         self._attr_unique_id = f"{description.key}_{device_id}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device_id)},
