@@ -1,15 +1,19 @@
 """Support for the NextDNS service."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, Generic
 
-from nextdns import Settings
+from aiohttp import ClientError
+from aiohttp.client_exceptions import ClientConnectorError
+from nextdns import ApiError, Settings
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -564,9 +568,17 @@ class NextDnsSwitch(CoordinatorEntity[NextDnsSettingsUpdateCoordinator], SwitchE
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
-        result = await self.coordinator.nextdns.set_setting(
-            self.coordinator.profile_id, self.entity_description.key, True
-        )
+        try:
+            result = await self.coordinator.nextdns.set_setting(
+                self.coordinator.profile_id, self.entity_description.key, True
+            )
+        except (
+            ApiError,
+            ClientConnectorError,
+            asyncio.TimeoutError,
+            ClientError,
+        ) as err:
+            raise HomeAssistantError(err) from err
 
         if result:
             self._attr_is_on = True
@@ -574,9 +586,17 @@ class NextDnsSwitch(CoordinatorEntity[NextDnsSettingsUpdateCoordinator], SwitchE
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off switch."""
-        result = await self.coordinator.nextdns.set_setting(
-            self.coordinator.profile_id, self.entity_description.key, False
-        )
+        try:
+            result = await self.coordinator.nextdns.set_setting(
+                self.coordinator.profile_id, self.entity_description.key, False
+            )
+        except (
+            ApiError,
+            ClientConnectorError,
+            asyncio.TimeoutError,
+            ClientError,
+        ) as err:
+            raise HomeAssistantError(err) from err
 
         if result:
             self._attr_is_on = False
