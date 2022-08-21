@@ -64,7 +64,7 @@ async def test_create_entry(hass):
             flow["flow_id"], FAKE_CONFIG
         )
         await hass.async_block_till_done()
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["data"] == FAKE_CONFIG
         assert result["title"] == FAKE_TITLE
 
@@ -89,7 +89,7 @@ async def test_create_same_entry_twice(hass):
             flow["flow_id"], FAKE_CONFIG
         )
         await hass.async_block_till_done()
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
         assert result["reason"] == "already_configured"
 
 
@@ -135,6 +135,6 @@ async def test_lat_lon_not_specified(hass):
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=fake_config
         )
         await hass.async_block_till_done()
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["data"] == FAKE_CONFIG
         assert result["title"] == FAKE_TITLE

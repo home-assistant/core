@@ -1,0 +1,73 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto har redan konfigurerats"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "attribute": "Attribut",
+                    "authentication": "Autentisering",
+                    "device_class": "Enhetsklass",
+                    "headers": "Headers",
+                    "index": "Index",
+                    "name": "Namn",
+                    "password": "L\u00f6senord",
+                    "resource": "Resurs",
+                    "select": "V\u00e4lj",
+                    "state_class": "Tillst\u00e5ndsklass",
+                    "unit_of_measurement": "M\u00e5ttenhet",
+                    "username": "Anv\u00e4ndarnamn",
+                    "value_template": "V\u00e4rdemall",
+                    "verify_ssl": "Verifiera SSL-certifikat"
+                },
+                "data_description": {
+                    "attribute": "H\u00e4mta v\u00e4rdet av ett attribut p\u00e5 den valda taggen",
+                    "authentication": "Typ av HTTP-autentisering. Antingen basic eller digest",
+                    "device_class": "Typ/klass av sensorn f\u00f6r att st\u00e4lla in ikonen i frontend",
+                    "headers": "Rubriker att anv\u00e4nda f\u00f6r webbf\u00f6rfr\u00e5gan",
+                    "index": "Definierar vilka av elementen som returneras av CSS-v\u00e4ljaren som ska anv\u00e4ndas",
+                    "resource": "Webbadressen till webbplatsen som inneh\u00e5ller v\u00e4rdet",
+                    "select": "Definierar vilken tagg som ska s\u00f6kas efter. Se Beautifulsoup CSS-selektorer f\u00f6r mer information.",
+                    "state_class": "Tillst\u00e5ndsklassen f\u00f6r sensorn",
+                    "value_template": "Definierar en mall f\u00f6r att f\u00e5 sensorns tillst\u00e5nd",
+                    "verify_ssl": "Aktiverar/inaktiverar verifiering av SSL/TLS-certifikat, till exempel om det \u00e4r sj\u00e4lvsignerat"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "attribute": "Attribut",
+                    "authentication": "Autentisering",
+                    "device_class": "Enhetsklass",
+                    "headers": "Headers",
+                    "index": "Index",
+                    "name": "Namn",
+                    "password": "L\u00f6senord",
+                    "resource": "Resurs",
+                    "select": "V\u00e4lj",
+                    "state_class": "Tillst\u00e5ndsklass",
+                    "unit_of_measurement": "M\u00e5ttenhet",
+                    "username": "Anv\u00e4ndarnamn",
+                    "value_template": "V\u00e4rdemall",
+                    "verify_ssl": "Verifiera SSL-certifikat"
+                },
+                "data_description": {
+                    "attribute": "H\u00e4mta v\u00e4rdet av ett attribut p\u00e5 den valda taggen",
+                    "authentication": "Typ av HTTP-autentisering. Antingen basic eller digest",
+                    "device_class": "Typ/klass av sensorn f\u00f6r att st\u00e4lla in ikonen i frontend",
+                    "headers": "Rubriker att anv\u00e4nda f\u00f6r webbf\u00f6rfr\u00e5gan",
+                    "index": "Definierar vilka av elementen som returneras av CSS-v\u00e4ljaren som ska anv\u00e4ndas",
+                    "resource": "Webbadressen till webbplatsen som inneh\u00e5ller v\u00e4rdet",
+                    "select": "Definierar vilken tagg som ska s\u00f6kas efter. Se Beautifulsoup CSS-selektorer f\u00f6r mer information.",
+                    "state_class": "Tillst\u00e5ndsklassen f\u00f6r sensorn",
+                    "value_template": "Definierar en mall f\u00f6r att f\u00e5 sensorns tillst\u00e5nd",
+                    "verify_ssl": "Aktiverar/inaktiverar verifiering av SSL/TLS-certifikat, till exempel om det \u00e4r sj\u00e4lvsignerat"
+                }
+            }
+        }
+    }
+}

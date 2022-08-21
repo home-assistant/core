@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad",
+            "no_serial_ports": "Inga com portar funna. M\u00e5ste ha en RS485 enhet f\u00f6r att kommunicera"
+        },
+        "error": {
+            "cannot_connect": "Det g\u00e5r inte att ansluta, kontrollera seriell port, adress, elektrisk anslutning och att v\u00e4xelriktaren \u00e4r p\u00e5 (i dagsljus)",
+            "cannot_open_serial_port": "Kan inte \u00f6ppna serieporten, kontrollera och f\u00f6rs\u00f6k igen.",
+            "invalid_serial_port": "Serieporten \u00e4r inte en giltig enhet eller kunde inte \u00f6ppnas"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "address": "V\u00e4xelriktarens adress",
+                    "port": "RS485 eller USB-RS485 adapter port"
+                },
+                "description": "V\u00e4xelriktaren m\u00e5ste anslutas via en RS485-adapter, v\u00e4lj seriell port och v\u00e4xelriktarens adress som konfigurerats p\u00e5 LCD-panelen"
+            }
+        }
+    }
+}

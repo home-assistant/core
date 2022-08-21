@@ -3,6 +3,7 @@
         "abort": {
             "all_student_already_configured": "K\u00f5ik \u00f5pilased on juba lisatud.",
             "already_configured": "See \u00f5pilane on juba lisatud.",
+            "no_matching_entries": "Sobivaid kirjeid ei leitud, kasuta teist kontot v\u00f5i eemalda muudetud \u00f5pilasega sidumine...",
             "reauth_successful": "Taastuvastamine \u00f5nnestus"
         },
         "error": {
@@ -29,7 +30,7 @@
                 },
                 "description": "Logi Vulcani kontole sisse mobiilirakenduse registreerimislehe kaudu."
             },
-            "reauth": {
+            "reauth_confirm": {
                 "data": {
                     "pin": "PIN kood",
                     "region": "S\u00fcmbol",
@@ -48,21 +49,6 @@
                     "student_name": "Vali \u00f5pilane"
                 },
                 "description": "Vali \u00f5pilane, saad lisada rohkem \u00f5pilasi  lisades sidumise veelkord."
-            }
-        }
-    },
-    "options": {
-        "error": {
-            "error": "Ilmnes t\u00f5rge"
-        },
-        "step": {
-            "init": {
-                "data": {
-                    "attendance_notify": "Kuva m\u00e4rguanded viimaste osalemiskirjete kohta",
-                    "grade_notify": "Kuva m\u00e4rguanded viimaste hinnete kohta",
-                    "message_notify": "Kuva teated uue s\u00f5numi saabumisel",
-                    "scan_interval": "V\u00e4rskendamise intervall (minutites)"
-                }
             }
         }
     }

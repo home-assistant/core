@@ -15,10 +15,8 @@
             "manual_tunnel": {
                 "data": {
                     "host": "Nazwa hosta lub adres IP",
-                    "individual_address": "Indywidualny adres dla po\u0142\u0105czenia",
                     "local_ip": "Lokalny adres IP Home Assistanta",
                     "port": "Port",
-                    "route_back": "Tryb Route Back / NAT",
                     "tunneling_type": "Typ tunelowania KNX"
                 },
                 "data_description": {
@@ -104,15 +102,13 @@
                     "multicast_group": "U\u017cywany do routingu i wykrywania. Domy\u015blnie: `224.0.23.12`",
                     "multicast_port": "U\u017cywany do routingu i wykrywania. Domy\u015blnie: `3671`",
                     "rate_limit": "Maksymalna liczba wychodz\u0105cych wiadomo\u015bci na sekund\u0119.\nZalecane: od 20 do 40",
-                    "state_updater": "Globalnie w\u0142\u0105czaj lub wy\u0142\u0105czaj odczytywanie stan\u00f3w z magistrali KNX. Po wy\u0142\u0105czeniu, Home Assistant nie b\u0119dzie aktywnie pobiera\u0107 stan\u00f3w z magistrali KNX, opcje encji `sync_state` nie b\u0119d\u0105 mia\u0142y \u017cadnego efektu."
+                    "state_updater": "Ustaw domy\u015blne odczytywanie stan\u00f3w z magistrali KNX. Po wy\u0142\u0105czeniu, Home Assistant nie b\u0119dzie aktywnie pobiera\u0107 stan\u00f3w encji z magistrali KNX. Mo\u017cna to zast\u0105pi\u0107 przez opcj\u0119 encji `sync_state`."
                 }
             },
             "tunnel": {
                 "data": {
                     "host": "Nazwa hosta lub adres IP",
-                    "local_ip": "Lokalny adres IP (pozostaw pusty, je\u015bli nie masz pewno\u015bci)",
                     "port": "Port",
-                    "route_back": "Tryb Route Back / NAT",
                     "tunneling_type": "Typ tunelowania KNX"
                 },
                 "data_description": {

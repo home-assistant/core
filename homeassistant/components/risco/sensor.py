@@ -3,6 +3,7 @@ from homeassistant.components.binary_sensor import DOMAIN as BS_DOMAIN
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
@@ -75,9 +76,7 @@ class RiscoSensor(CoordinatorEntity, SensorEntity):
 
     async def async_added_to_hass(self):
         """When entity is added to hass."""
-        self._entity_registry = (
-            await self.hass.helpers.entity_registry.async_get_registry()
-        )
+        self._entity_registry = er.async_get(self.hass)
         self.async_on_remove(
             self.coordinator.async_add_listener(self._refresh_from_coordinator)
         )

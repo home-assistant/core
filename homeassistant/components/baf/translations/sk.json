@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Zariadenie je u\u017e nakonfigurovan\u00e9",
+            "ipv6_not_supported": "IPv6 nie je podporovan\u00e9"
+        },
+        "error": {
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "IP adresa"
+                }
+            }
+        }
+    }
+}

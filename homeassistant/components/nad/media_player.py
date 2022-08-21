@@ -45,7 +45,8 @@ CONF_MAX_VOLUME = "max_volume"
 CONF_VOLUME_STEP = "volume_step"  # for NADReceiverTCP
 CONF_SOURCE_DICT = "sources"  # for NADReceiver
 
-SOURCE_DICT_SCHEMA = vol.Schema({vol.Range(min=1, max=10): cv.string})
+# Max value based on a C658 with an MDC HDM-2 card installed
+SOURCE_DICT_SCHEMA = vol.Schema({vol.Range(min=1, max=12): cv.string})
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {

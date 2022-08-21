@@ -1,15 +1,8 @@
 """Provides device automations for deconz events."""
-
 from __future__ import annotations
-
-from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.automation import (
-    AutomationActionType,
-    AutomationTriggerInfo,
-)
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
@@ -25,6 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN
@@ -643,8 +637,8 @@ def _get_deconz_event_from_device(
 
 async def async_validate_trigger_config(
     hass: HomeAssistant,
-    config: dict[str, Any],
-) -> vol.Schema:
+    config: ConfigType,
+) -> ConfigType:
     """Validate config."""
     config = TRIGGER_SCHEMA(config)
 
@@ -671,8 +665,8 @@ async def async_validate_trigger_config(
 async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
-    action: AutomationActionType,
-    automation_info: AutomationTriggerInfo,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
     event_data: dict[str, int | str] = {}
@@ -696,14 +690,14 @@ async def async_attach_trigger(
 
     event_config = event_trigger.TRIGGER_SCHEMA(raw_event_config)
     return await event_trigger.async_attach_trigger(
-        hass, event_config, action, automation_info, platform_type="device"
+        hass, event_config, action, trigger_info, platform_type="device"
     )
 
 
 async def async_get_triggers(
     hass: HomeAssistant,
     device_id: str,
-) -> list | None:
+) -> list[dict[str, str]]:
     """List device triggers.
 
     Make sure device is a supported remote model.
@@ -714,7 +708,7 @@ async def async_get_triggers(
     device = device_registry.devices[device_id]
 
     if device.model not in REMOTES:
-        return None
+        return []
 
     triggers = []
     for trigger, subtype in REMOTES[device.model].keys():

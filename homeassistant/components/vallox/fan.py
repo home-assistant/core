@@ -17,9 +17,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import ValloxDataUpdateCoordinator
+from . import ValloxDataUpdateCoordinator, ValloxEntity
 from .const import (
     DOMAIN,
     METRIC_KEY_MODE,
@@ -80,10 +79,11 @@ async def async_setup_entry(
     async_add_entities([device])
 
 
-class ValloxFan(CoordinatorEntity[ValloxDataUpdateCoordinator], FanEntity):
+class ValloxFan(ValloxEntity, FanEntity):
     """Representation of the fan."""
 
     _attr_supported_features = FanEntityFeature.PRESET_MODE
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -92,13 +92,11 @@ class ValloxFan(CoordinatorEntity[ValloxDataUpdateCoordinator], FanEntity):
         coordinator: ValloxDataUpdateCoordinator,
     ) -> None:
         """Initialize the fan."""
-        super().__init__(coordinator)
+        super().__init__(name, coordinator)
 
         self._client = client
 
-        self._attr_name = name
-
-        self._attr_unique_id = str(self.coordinator.data.get_uuid())
+        self._attr_unique_id = str(self._device_uuid)
 
     @property
     def preset_modes(self) -> list[str]:
@@ -134,7 +132,7 @@ class ValloxFan(CoordinatorEntity[ValloxDataUpdateCoordinator], FanEntity):
         Returns true if the mode has been changed, false otherwise.
         """
         try:
-            self._valid_preset_mode_or_raise(preset_mode)  # type: ignore[no-untyped-call]
+            self._valid_preset_mode_or_raise(preset_mode)
 
         except NotValidPresetModeError as err:
             _LOGGER.error(err)

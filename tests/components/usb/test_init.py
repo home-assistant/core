@@ -835,22 +835,43 @@ def test_human_readable_device_name():
     assert "8A2A" in name
 
 
-@pytest.mark.usefixtures("mock_integration_frame")
-async def test_service_info_compatibility(hass, caplog):
-    """Test compatibility with old-style dict.
+async def test_async_is_plugged_in(hass, hass_ws_client):
+    """Test async_is_plugged_in."""
+    new_usb = [{"domain": "test1", "vid": "3039", "pid": "3039"}]
 
-    To be removed in 2022.6
-    """
-    discovery_info = usb.UsbServiceInfo(
-        device=slae_sh_device.device,
-        vid=12345,
-        pid=12345,
-        serial_number=slae_sh_device.serial_number,
-        manufacturer=slae_sh_device.manufacturer,
-        description=slae_sh_device.description,
-    )
+    mock_comports = [
+        MagicMock(
+            device=slae_sh_device.device,
+            vid=12345,
+            pid=12345,
+            serial_number=slae_sh_device.serial_number,
+            manufacturer=slae_sh_device.manufacturer,
+            description=slae_sh_device.description,
+        )
+    ]
 
-    # Ensure first call get logged
-    with patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set()):
-        assert discovery_info["vid"] == 12345
-    assert "Detected integration that accessed discovery_info['vid']" in caplog.text
+    matcher = {
+        "vid": "3039",
+        "pid": "3039",
+    }
+
+    with patch("pyudev.Context", side_effect=ImportError), patch(
+        "homeassistant.components.usb.async_get_usb", return_value=new_usb
+    ), patch("homeassistant.components.usb.comports", return_value=[]), patch.object(
+        hass.config_entries.flow, "async_init"
+    ):
+        assert await async_setup_component(hass, "usb", {"usb": {}})
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+        assert not usb.async_is_plugged_in(hass, matcher)
+
+    with patch(
+        "homeassistant.components.usb.comports", return_value=mock_comports
+    ), patch.object(hass.config_entries.flow, "async_init"):
+        ws_client = await hass_ws_client(hass)
+        await ws_client.send_json({"id": 1, "type": "usb/scan"})
+        response = await ws_client.receive_json()
+        assert response["success"]
+        await hass.async_block_till_done()
+        assert usb.async_is_plugged_in(hass, matcher)

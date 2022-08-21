@@ -9,9 +9,6 @@
         },
         "flow_title": "{name}",
         "step": {
-            "confirm": {
-                "description": "Vil du starte oppsettet?"
-            },
             "user": {
                 "data": {
                     "host": "Vert"
@@ -23,6 +20,5 @@
                 "title": "Oppdaget Modern Forms-vifteenhet"
             }
         }
-    },
-    "title": "Moderne former"
+    }
 }

@@ -50,10 +50,30 @@ def patch_profile_home():
 
 
 @pytest.fixture(autouse=True)
-def patch_uuid():
-    """Patch the Vallox entity UUID."""
+def patch_model():
+    """Patch the Vallox model response."""
     with patch(
-        "homeassistant.components.vallox.calculate_uuid",
+        "homeassistant.components.vallox._api_get_model",
+        return_value="Vallox Testmodel",
+    ):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def patch_sw_version():
+    """Patch the Vallox SW version response."""
+    with patch(
+        "homeassistant.components.vallox._api_get_sw_version",
+        return_value="0.1.2",
+    ):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def patch_uuid():
+    """Patch the Vallox UUID response."""
+    with patch(
+        "homeassistant.components.vallox._api_get_uuid",
         return_value=_random_uuid(),
     ):
         yield

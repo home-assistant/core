@@ -269,6 +269,16 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Sous Vide Cooker
+    # https://developer.tuya.com/en/docs/iot/categorymzj?id=Kaiuz2vy130ux
+    "mzj": (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH,
+            name="Switch",
+            icon="mdi:pot-steam",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     # Power Socket
     # https://developer.tuya.com/en/docs/iot/s?id=K9gf7o5prgf7s
     "pc": (

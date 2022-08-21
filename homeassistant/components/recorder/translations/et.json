@@ -1,0 +1,11 @@
+{
+    "system_health": {
+        "info": {
+            "current_recorder_run": "Praegune k\u00e4ivitamise algusaeg",
+            "database_engine": "Andmebaasi mootor",
+            "database_version": "Andmebaasi versioon",
+            "estimated_db_size": "Andmebaasi hinnanguline suurus (MB)",
+            "oldest_recorder_run": "Vanim k\u00e4ivitamise algusaeg"
+        }
+    }
+}

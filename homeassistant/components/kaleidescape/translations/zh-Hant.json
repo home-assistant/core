@@ -13,14 +13,12 @@
         "flow_title": "{model} ({name})",
         "step": {
             "discovery_confirm": {
-                "description": "\u662f\u5426\u8981\u8a2d\u5b9a\u540d\u70ba {name} \u7684 {model} \u64ad\u653e\u5668\uff1f",
-                "title": "Kaleidescape"
+                "description": "\u662f\u5426\u8981\u8a2d\u5b9a\u540d\u70ba {name} \u7684 {model} \u64ad\u653e\u5668\uff1f"
             },
             "user": {
                 "data": {
                     "host": "\u4e3b\u6a5f\u7aef"
-                },
-                "title": "Kaleidescape \u8a2d\u5b9a"
+                }
             }
         }
     }

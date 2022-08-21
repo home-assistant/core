@@ -43,7 +43,6 @@ class AsusWrtSensorEntityDescription(SensorEntityDescription):
     precision: int = 2
 
 
-DEFAULT_PREFIX = "Asuswrt"
 UNIT_DEVICES = "Devices"
 
 CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
@@ -190,8 +189,11 @@ class AsusWrtSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self.entity_description: AsusWrtSensorEntityDescription = description
 
-        self._attr_name = f"{DEFAULT_PREFIX} {description.name}"
-        self._attr_unique_id = f"{DOMAIN} {self.name}"
+        self._attr_name = f"{router.name} {description.name}"
+        if router.unique_id:
+            self._attr_unique_id = f"{DOMAIN} {router.unique_id} {description.name}"
+        else:
+            self._attr_unique_id = f"{DOMAIN} {self.name}"
         self._attr_device_info = router.device_info
         self._attr_extra_state_attributes = {"hostname": router.host}
 

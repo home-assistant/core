@@ -12,8 +12,8 @@
                 "data": {
                     "host": "Host",
                     "password": "Wachtwoord",
-                    "pin": "PIN-code",
-                    "ssl": "Gebruik een SSL-certificaat",
+                    "pin": "Pincode",
+                    "ssl": "Maakt gebruik van een SSL-certificaat",
                     "username": "Gebruikersnaam"
                 },
                 "title": "Maak verbinding met de Venstar-thermostaat"

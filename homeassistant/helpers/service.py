@@ -31,13 +31,7 @@ from homeassistant.exceptions import (
     Unauthorized,
     UnknownUser,
 )
-from homeassistant.loader import (
-    MAX_LOAD_CONCURRENTLY,
-    Integration,
-    async_get_integration,
-    bind_hass,
-)
-from homeassistant.util.async_ import gather_with_concurrency
+from homeassistant.loader import Integration, async_get_integrations, bind_hass
 from homeassistant.util.yaml import load_yaml
 from homeassistant.util.yaml.loader import JSON_TYPE
 
@@ -127,7 +121,10 @@ class SelectedEntities:
         if not parts:
             return
 
-        _LOGGER.warning("Unable to find referenced %s", ", ".join(parts))
+        _LOGGER.warning(
+            "Unable to find referenced %s or it is/they are currently not available",
+            ", ".join(parts),
+        )
 
 
 @bind_hass
@@ -464,10 +461,12 @@ async def async_get_all_descriptions(
     loaded = {}
 
     if missing:
-        integrations = await gather_with_concurrency(
-            MAX_LOAD_CONCURRENTLY,
-            *(async_get_integration(hass, domain) for domain in missing),
-        )
+        ints_or_excs = await async_get_integrations(hass, missing)
+        integrations = [
+            int_or_exc
+            for int_or_exc in ints_or_excs.values()
+            if isinstance(int_or_exc, Integration)
+        ]
 
         contents = await hass.async_add_executor_job(
             _load_services_files, hass, integrations
@@ -777,7 +776,7 @@ def verify_domain_control(
                     user_id=call.context.user_id,
                 )
 
-            reg = await hass.helpers.entity_registry.async_get_registry()
+            reg = entity_registry.async_get(hass)
 
             authorized = False
 

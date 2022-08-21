@@ -7,8 +7,7 @@
             "invalid_auth": "Ugyldig godkjenning"
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes",
-            "invalid_auth": "Ugyldig godkjenning"
+            "cannot_connect": "Tilkobling mislyktes"
         },
         "step": {
             "cloud": {
@@ -26,10 +25,7 @@
             },
             "user": {
                 "data": {
-                    "account_id": "Konto-ID",
-                    "connection_type": "Velg tilkoblingstype",
-                    "host": "Vert",
-                    "password": "Passord"
+                    "connection_type": "Velg tilkoblingstype"
                 },
                 "description": "Velg tilkoblingstype. Lokalt krever varmeovner med bluetooth"
             }

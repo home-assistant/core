@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto har redan konfigurerats",
+            "reauth_successful": "\u00c5terautentisering lyckades"
+        },
+        "create_entry": {
+            "default": "Autentiserats"
+        },
+        "error": {
+            "invalid_auth": "Ogiltig autentisering"
+        },
+        "step": {
+            "reauth": {
+                "data": {
+                    "password": "L\u00f6senord"
+                },
+                "description": "Autentiseringstokens blev ogiltiga, logga in f\u00f6r att \u00e5terskapa dem."
+            },
+            "user": {
+                "data": {
+                    "password": "L\u00f6senord",
+                    "url": "Webbplats",
+                    "username": "Anv\u00e4ndarnamn"
+                }
+            }
+        }
+    }
+}

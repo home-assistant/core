@@ -5,11 +5,21 @@
         },
         "error": {
             "invalid_auth": "Neplatn\u00e9 overenie"
+        },
+        "step": {
+            "service": {
+                "title": "Vyberte slu\u017eby"
+            }
         }
     },
     "options": {
         "abort": {
             "invalid_auth": "Neplatn\u00e9 overenie"
+        },
+        "step": {
+            "init": {
+                "title": "Vyberte slu\u017eby"
+            }
         }
     }
 }

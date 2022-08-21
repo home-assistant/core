@@ -424,7 +424,7 @@ async def test_get_translations(hass, ws_client):
     """Test get_translations command."""
     with patch(
         "homeassistant.components.frontend.async_get_translations",
-        side_effect=lambda hass, lang, category, integration, config_flow: {
+        side_effect=lambda hass, lang, category, integrations, config_flow: {
             "lang": lang
         },
     ):
@@ -442,6 +442,58 @@ async def test_get_translations(hass, ws_client):
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
     assert msg["result"] == {"resources": {"lang": "nl"}}
+
+
+async def test_get_translations_for_integrations(hass, ws_client):
+    """Test get_translations for integrations command."""
+    with patch(
+        "homeassistant.components.frontend.async_get_translations",
+        side_effect=lambda hass, lang, category, integration, config_flow: {
+            "lang": lang,
+            "integration": integration,
+        },
+    ):
+        await ws_client.send_json(
+            {
+                "id": 5,
+                "type": "frontend/get_translations",
+                "integration": ["frontend", "http"],
+                "language": "nl",
+                "category": "lang",
+            }
+        )
+        msg = await ws_client.receive_json()
+
+    assert msg["id"] == 5
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+    assert set(msg["result"]["resources"]["integration"]) == {"frontend", "http"}
+
+
+async def test_get_translations_for_single_integration(hass, ws_client):
+    """Test get_translations for integration command."""
+    with patch(
+        "homeassistant.components.frontend.async_get_translations",
+        side_effect=lambda hass, lang, category, integrations, config_flow: {
+            "lang": lang,
+            "integration": integrations,
+        },
+    ):
+        await ws_client.send_json(
+            {
+                "id": 5,
+                "type": "frontend/get_translations",
+                "integration": "http",
+                "language": "nl",
+                "category": "lang",
+            }
+        )
+        msg = await ws_client.receive_json()
+
+    assert msg["id"] == 5
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"] == {"resources": {"lang": "nl", "integration": ["http"]}}
 
 
 async def test_auth_load(hass):
@@ -526,3 +578,35 @@ async def test_manifest_json(hass, frontend_themes, mock_http_client):
 
     json = await resp.json()
     assert json["theme_color"] != DEFAULT_THEME_COLOR
+
+
+async def test_static_path_cache(hass, mock_http_client):
+    """Test static paths cache."""
+    resp = await mock_http_client.get("/lovelace/default_view", allow_redirects=False)
+    assert resp.status == 404
+
+    resp = await mock_http_client.get("/frontend_latest/", allow_redirects=False)
+    assert resp.status == 403
+
+    resp = await mock_http_client.get(
+        "/static/icons/favicon.ico", allow_redirects=False
+    )
+    assert resp.status == 200
+
+    # and again to make sure the cache works
+    resp = await mock_http_client.get(
+        "/static/icons/favicon.ico", allow_redirects=False
+    )
+    assert resp.status == 200
+
+    resp = await mock_http_client.get(
+        "/static/fonts/roboto/Roboto-Bold.woff2", allow_redirects=False
+    )
+    assert resp.status == 200
+
+    resp = await mock_http_client.get("/static/does-not-exist", allow_redirects=False)
+    assert resp.status == 404
+
+    # and again to make sure the cache works
+    resp = await mock_http_client.get("/static/does-not-exist", allow_redirects=False)
+    assert resp.status == 404

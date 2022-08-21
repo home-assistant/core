@@ -11,13 +11,6 @@
         },
         "flow_title": "{name} ( {host} )",
         "step": {
-            "init": {
-                "data": {
-                    "host": "Host"
-                },
-                "description": "Vali Roomba v\u00f5i Braava seade.",
-                "title": "\u00dchenda seadmega automaatselt"
-            },
             "link": {
                 "description": "Vajuta ja hoia all seadme {name} nuppu Home kuni seade teeb piiksu (umbes kaks sekundit), edasta 30 sekundi jooksul.",
                 "title": "Hangi salas\u00f5na"
@@ -31,7 +24,6 @@
             },
             "manual": {
                 "data": {
-                    "blid": "",
                     "host": "Host"
                 },
                 "description": "V\u00f5rgus ei tuvastatud \u00fchtegi Roomba ega Braava seadet.",
@@ -39,11 +31,7 @@
             },
             "user": {
                 "data": {
-                    "blid": "",
-                    "continuous": "Pidev",
-                    "delay": "Viivitus",
-                    "host": "",
-                    "password": "Salas\u00f5na"
+                    "host": ""
                 },
                 "description": "Vali Roomba v\u00f5i Braava seade",
                 "title": "\u00dchenda seadmega automaatselt"

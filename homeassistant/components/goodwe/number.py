@@ -40,24 +40,24 @@ NUMBERS = (
         name="Grid export limit",
         icon="mdi:transmission-tower",
         entity_category=EntityCategory.CONFIG,
-        unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=POWER_WATT,
         getter=lambda inv: inv.get_grid_export_limit(),
         setter=lambda inv, val: inv.set_grid_export_limit(val),
-        step=100,
-        min_value=0,
-        max_value=10000,
+        native_step=100,
+        native_min_value=0,
+        native_max_value=10000,
     ),
     GoodweNumberEntityDescription(
         key="battery_discharge_depth",
         name="Depth of discharge (on-grid)",
         icon="mdi:battery-arrow-down",
         entity_category=EntityCategory.CONFIG,
-        unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=PERCENTAGE,
         getter=lambda inv: inv.get_ongrid_battery_dod(),
         setter=lambda inv, val: inv.set_ongrid_battery_dod(val),
-        step=1,
-        min_value=0,
-        max_value=99,
+        native_step=1,
+        native_min_value=0,
+        native_max_value=99,
     ),
 )
 
@@ -105,12 +105,12 @@ class InverterNumberEntity(NumberEntity):
         self.entity_description = description
         self._attr_unique_id = f"{DOMAIN}-{description.key}-{inverter.serial_number}"
         self._attr_device_info = device_info
-        self._attr_value = float(current_value)
+        self._attr_native_value = float(current_value)
         self._inverter: Inverter = inverter
 
-    async def async_set_value(self, value: float) -> None:
+    async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         if self.entity_description.setter:
             await self.entity_description.setter(self._inverter, int(value))
-        self._attr_value = value
+        self._attr_native_value = value
         self.async_write_ha_state()

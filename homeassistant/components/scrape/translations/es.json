@@ -1,0 +1,73 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "La cuenta ya est\u00e1 configurada"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "attribute": "Atributo",
+                    "authentication": "Autenticaci\u00f3n",
+                    "device_class": "Clase de dispositivo",
+                    "headers": "Cabeceras",
+                    "index": "\u00cdndice",
+                    "name": "Nombre",
+                    "password": "Contrase\u00f1a",
+                    "resource": "Recurso",
+                    "select": "Seleccionar",
+                    "state_class": "Clase de estado",
+                    "unit_of_measurement": "Unidad de medida",
+                    "username": "Nombre de usuario",
+                    "value_template": "Plantilla de valor",
+                    "verify_ssl": "Verificar el certificado SSL"
+                },
+                "data_description": {
+                    "attribute": "Obtener el valor de un atributo en la etiqueta seleccionada",
+                    "authentication": "Tipo de autenticaci\u00f3n HTTP. Puede ser basic o digest",
+                    "device_class": "El tipo/clase del sensor para establecer el icono en el frontend",
+                    "headers": "Cabeceras a usar para la petici\u00f3n web",
+                    "index": "Define cu\u00e1l de los elementos devueltos por el selector CSS se va a usar",
+                    "resource": "La URL del sitio web que contiene el valor.",
+                    "select": "Define qu\u00e9 etiqueta buscar. Revisa los selectores CSS de Beautifulsoup para obtener m\u00e1s informaci\u00f3n.",
+                    "state_class": "El state_class del sensor",
+                    "value_template": "Define una plantilla para obtener el estado del sensor",
+                    "verify_ssl": "Habilita/deshabilita la verificaci\u00f3n del certificado SSL/TLS, por ejemplo, si est\u00e1 autofirmado"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "attribute": "Atributo",
+                    "authentication": "Autenticaci\u00f3n",
+                    "device_class": "Clase de dispositivo",
+                    "headers": "Cabeceras",
+                    "index": "\u00cdndice",
+                    "name": "Nombre",
+                    "password": "Contrase\u00f1a",
+                    "resource": "Recurso",
+                    "select": "Seleccionar",
+                    "state_class": "Clase de estado",
+                    "unit_of_measurement": "Unidad de medida",
+                    "username": "Nombre de usuario",
+                    "value_template": "Plantilla de valor",
+                    "verify_ssl": "Verificar el certificado SSL"
+                },
+                "data_description": {
+                    "attribute": "Obtener el valor de un atributo en la etiqueta seleccionada",
+                    "authentication": "Tipo de autenticaci\u00f3n HTTP. Puede ser basic o digest",
+                    "device_class": "El tipo/clase del sensor para establecer el icono en el frontend",
+                    "headers": "Cabeceras a usar para la petici\u00f3n web",
+                    "index": "Define cu\u00e1l de los elementos devueltos por el selector CSS se va a usar",
+                    "resource": "La URL del sitio web que contiene el valor.",
+                    "select": "Define qu\u00e9 etiqueta buscar. Revisa los selectores CSS de Beautifulsoup para obtener m\u00e1s informaci\u00f3n.",
+                    "state_class": "El state_class del sensor",
+                    "value_template": "Define una plantilla para obtener el estado del sensor",
+                    "verify_ssl": "Habilita/deshabilita la verificaci\u00f3n del certificado SSL/TLS, por ejemplo, si est\u00e1 autofirmado"
+                }
+            }
+        }
+    }
+}

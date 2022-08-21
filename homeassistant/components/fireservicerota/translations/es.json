@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "La cuenta ya ha sido configurada",
+            "already_configured": "La cuenta ya est\u00e1 configurada",
             "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente"
         },
         "create_entry": {
@@ -15,13 +15,13 @@
                 "data": {
                     "password": "Contrase\u00f1a"
                 },
-                "description": "Los tokens de autenticaci\u00f3n ya no son v\u00e1lidos, inicia sesi\u00f3n para recrearlos."
+                "description": "Los tokens de autenticaci\u00f3n dejaron de ser v\u00e1lidos, inicia sesi\u00f3n para volver a crearlos."
             },
             "user": {
                 "data": {
                     "password": "Contrase\u00f1a",
                     "url": "Sitio web",
-                    "username": "Usuario"
+                    "username": "Nombre de usuario"
                 }
             }
         }

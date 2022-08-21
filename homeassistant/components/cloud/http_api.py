@@ -419,6 +419,7 @@ async def websocket_hook_delete(hass, connection, msg):
 async def _account_data(hass: HomeAssistant, cloud: Cloud):
     """Generate the auth data JSON response."""
 
+    assert hass.config.api
     if not cloud.is_logged_in:
         return {
             "logged_in": False,

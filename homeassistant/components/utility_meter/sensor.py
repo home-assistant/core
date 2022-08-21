@@ -99,6 +99,13 @@ PAUSED = "paused"
 COLLECTING = "collecting"
 
 
+def validate_is_number(value):
+    """Validate value is a number."""
+    if is_number(value):
+        return value
+    raise vol.Invalid("Value is not a number")
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -167,7 +174,7 @@ async def async_setup_entry(
 
     platform.async_register_entity_service(
         SERVICE_CALIBRATE_METER,
-        {vol.Required(ATTR_VALUE): vol.Coerce(Decimal)},
+        {vol.Required(ATTR_VALUE): validate_is_number},
         "async_calibrate",
     )
 
@@ -244,7 +251,7 @@ async def async_setup_platform(
 
     platform.async_register_entity_service(
         SERVICE_CALIBRATE_METER,
-        {vol.Required(ATTR_VALUE): vol.Coerce(Decimal)},
+        {vol.Required(ATTR_VALUE): validate_is_number},
         "async_calibrate",
     )
 
@@ -446,8 +453,8 @@ class UtilityMeterSensor(RestoreSensor):
 
     async def async_calibrate(self, value):
         """Calibrate the Utility Meter with a given value."""
-        _LOGGER.debug("Calibrate %s = %s", self._name, value)
-        self._state = value
+        _LOGGER.debug("Calibrate %s = %s type(%s)", self._name, value, type(value))
+        self._state = Decimal(str(value))
         self.async_write_ha_state()
 
     async def async_added_to_hass(self):

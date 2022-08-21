@@ -1,0 +1,73 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "A fi\u00f3k m\u00e1r konfigur\u00e1lva van"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "attribute": "Attrib\u00fatum",
+                    "authentication": "Hiteles\u00edt\u00e9s",
+                    "device_class": "Eszk\u00f6zoszt\u00e1ly",
+                    "headers": "Fejl\u00e9cek",
+                    "index": "Index",
+                    "name": "Elnevez\u00e9s",
+                    "password": "Jelsz\u00f3",
+                    "resource": "Er\u0151forr\u00e1s",
+                    "select": "Kiv\u00e1laszt\u00e1s",
+                    "state_class": "\u00c1llapotoszt\u00e1ly",
+                    "unit_of_measurement": "M\u00e9rt\u00e9kegys\u00e9g",
+                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v",
+                    "value_template": "\u00c9rt\u00e9ksablon",
+                    "verify_ssl": "SSL-tan\u00fas\u00edtv\u00e1ny ellen\u0151rz\u00e9se"
+                },
+                "data_description": {
+                    "attribute": "Egy attrib\u00fatum \u00e9rt\u00e9k\u00e9nek lek\u00e9r\u00e9se a kiv\u00e1lasztott c\u00edmk\u00e9n",
+                    "authentication": "A HTTP-hiteles\u00edt\u00e9s t\u00edpusa. Basic vagy digest",
+                    "device_class": "Az \u00e9rz\u00e9kel\u0151 t\u00edpusa/oszt\u00e1lya az ikonnak a kezl\u0151fel\u00fcleten val\u00f3 be\u00e1ll\u00edt\u00e1s\u00e1hoz",
+                    "headers": "A webes k\u00e9r\u00e9shez haszn\u00e1land\u00f3 fejl\u00e9cek",
+                    "index": "Meghat\u00e1rozza, hogy a CSS-v\u00e1laszt\u00f3 \u00e1ltal visszaadott elemek k\u00f6z\u00fcl melyiket haszn\u00e1lja.",
+                    "resource": "Az \u00e9rt\u00e9ket tartalmaz\u00f3 weboldal URL c\u00edme",
+                    "select": "Meghat\u00e1rozza, hogy milyen c\u00edmk\u00e9t keressen. N\u00e9zze meg a Beautifulsoup CSS szelektorokat a r\u00e9szletek\u00e9rt",
+                    "state_class": "Az \u00e9rz\u00e9kel\u0151 \u00e1llapot oszt\u00e1lya",
+                    "value_template": "Meghat\u00e1roz egy sablont az \u00e9rz\u00e9kel\u0151 \u00e1llapot\u00e1nak lek\u00e9rdez\u00e9s\u00e9re.",
+                    "verify_ssl": "Az SSL/TLS tan\u00fas\u00edtv\u00e1ny ellen\u0151rz\u00e9s\u00e9nek enged\u00e9lyez\u00e9se/letilt\u00e1sa, p\u00e9ld\u00e1ul ha saj\u00e1t al\u00e1\u00edr\u00e1s\u00fa."
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "attribute": "Attrib\u00fatum",
+                    "authentication": "Hiteles\u00edt\u00e9s",
+                    "device_class": "Eszk\u00f6zoszt\u00e1ly",
+                    "headers": "Fejl\u00e9cek",
+                    "index": "Index",
+                    "name": "Elnevez\u00e9s",
+                    "password": "Jelsz\u00f3",
+                    "resource": "Er\u0151forr\u00e1s",
+                    "select": "Kiv\u00e1laszt\u00e1s",
+                    "state_class": "\u00c1llapotoszt\u00e1ly",
+                    "unit_of_measurement": "M\u00e9rt\u00e9kegys\u00e9g",
+                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v",
+                    "value_template": "\u00c9rt\u00e9ksablon",
+                    "verify_ssl": "SSL-tan\u00fas\u00edtv\u00e1ny ellen\u0151rz\u00e9se"
+                },
+                "data_description": {
+                    "attribute": "Egy attrib\u00fatum \u00e9rt\u00e9k\u00e9nek lek\u00e9r\u00e9se a kiv\u00e1lasztott c\u00edmk\u00e9n",
+                    "authentication": "A HTTP-hiteles\u00edt\u00e9s t\u00edpusa. Basic vagy digest",
+                    "device_class": "Az \u00e9rz\u00e9kel\u0151 t\u00edpusa/oszt\u00e1lya az ikonnak a kezl\u0151fel\u00fcleten val\u00f3 be\u00e1ll\u00edt\u00e1s\u00e1hoz",
+                    "headers": "A webes k\u00e9r\u00e9shez haszn\u00e1land\u00f3 fejl\u00e9cek",
+                    "index": "Meghat\u00e1rozza, hogy a CSS-v\u00e1laszt\u00f3 \u00e1ltal visszaadott elemek k\u00f6z\u00fcl melyiket haszn\u00e1lja.",
+                    "resource": "Az \u00e9rt\u00e9ket tartalmaz\u00f3 weboldal URL c\u00edme",
+                    "select": "Meghat\u00e1rozza, hogy milyen c\u00edmk\u00e9t keressen. N\u00e9zze meg a Beautifulsoup CSS szelektorokat a r\u00e9szletek\u00e9rt",
+                    "state_class": "Az \u00e9rz\u00e9kel\u0151 \u00e1llapot oszt\u00e1lya",
+                    "value_template": "Meghat\u00e1roz egy sablont az \u00e9rz\u00e9kel\u0151 \u00e1llapot\u00e1nak lek\u00e9rdez\u00e9s\u00e9re.",
+                    "verify_ssl": "Az SSL/TLS tan\u00fas\u00edtv\u00e1ny ellen\u0151rz\u00e9s\u00e9nek enged\u00e9lyez\u00e9se/letilt\u00e1sa, p\u00e9ld\u00e1ul ha saj\u00e1t al\u00e1\u00edr\u00e1s\u00fa."
+                }
+            }
+        }
+    }
+}

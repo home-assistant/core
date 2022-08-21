@@ -63,7 +63,7 @@
         "description": "{zone} options",
         "data": {
           "type": "Binary Sensor Type",
-          "name": "[%key:common::config_flow::data::name%] (optional)",
+          "name": "[%key:common::config_flow::data::name%]",
           "inverse": "Invert the open/close state"
         }
       },
@@ -72,19 +72,19 @@
         "description": "{zone} options",
         "data": {
           "type": "Sensor Type",
-          "name": "[%key:common::config_flow::data::name%] (optional)",
-          "poll_interval": "Poll Interval (minutes) (optional)"
+          "name": "[%key:common::config_flow::data::name%]",
+          "poll_interval": "Poll Interval (minutes)"
         }
       },
       "options_switch": {
         "title": "Configure Switchable Output",
         "description": "{zone} options: state {state}",
         "data": {
-          "name": "[%key:common::config_flow::data::name%] (optional)",
+          "name": "[%key:common::config_flow::data::name%]",
           "activation": "Output when on",
-          "momentary": "Pulse duration (ms) (optional)",
-          "pause": "Pause between pulses (ms) (optional)",
-          "repeat": "Times to repeat (-1=infinite) (optional)",
+          "momentary": "Pulse duration (ms)",
+          "pause": "Pause between pulses (ms)",
+          "repeat": "Times to repeat (-1=infinite)",
           "more_states": "Configure additional states for this zone"
         }
       },
@@ -95,7 +95,7 @@
           "discovery": "Respond to discovery requests on your network",
           "blink": "Blink panel LED on when sending state change",
           "override_api_host": "Override default Home Assistant API host panel URL",
-          "api_host": "Override API host URL (optional)"
+          "api_host": "Override API host URL"
         }
       }
     },

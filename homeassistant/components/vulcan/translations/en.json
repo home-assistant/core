@@ -3,6 +3,7 @@
         "abort": {
             "all_student_already_configured": "All students have already been added.",
             "already_configured": "That student has already been added.",
+            "no_matching_entries": "No matching entries found, please use different account or remove integration with outdated student..",
             "reauth_successful": "Reauth successful"
         },
         "error": {
@@ -29,7 +30,7 @@
                 },
                 "description": "Login to your Vulcan Account using mobile app registration page."
             },
-            "reauth": {
+            "reauth_confirm": {
                 "data": {
                     "pin": "Pin",
                     "region": "Symbol",
@@ -48,21 +49,6 @@
                     "student_name": "Select student"
                 },
                 "description": "Select student, you can add more students by adding integration again."
-            }
-        }
-    },
-    "options": {
-        "error": {
-            "error": "Error occurred"
-        },
-        "step": {
-            "init": {
-                "data": {
-                    "attendance_notify": "Show notifications about the latest attendance entries",
-                    "grade_notify": "Show notifications about the latest grades",
-                    "message_notify": "Show notifications when new message received",
-                    "scan_interval": "Update interval (in minutes)"
-                }
             }
         }
     }

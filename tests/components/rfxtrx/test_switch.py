@@ -11,8 +11,8 @@ from homeassistant.core import State
 from tests.common import MockConfigEntry, mock_restore_cache
 from tests.components.rfxtrx.conftest import create_rfx_test_cfg
 
-EVENT_RFY_ENABLE_SUN_AUTO = "081a00000301010113"
-EVENT_RFY_DISABLE_SUN_AUTO = "081a00000301010114"
+EVENT_RFY_ENABLE_SUN_AUTO = "0C1a0000030101011300000003"
+EVENT_RFY_DISABLE_SUN_AUTO = "0C1a0000030101011400000003"
 
 
 async def test_one_switch(hass, rfxtrx):

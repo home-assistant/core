@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/aemet",
   "requirements": ["AEMET-OpenData==0.2.1"],
-  "codeowners": [],
+  "codeowners": ["@Noltari"],
   "iot_class": "cloud_polling",
   "loggers": ["aemet_opendata"]
 }

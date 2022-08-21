@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
-from bluepy.btle import BTLEException  # pylint: disable=import-error
 import eq3bt as eq3  # pylint: disable=import-error
 import voluptuous as vol
 
@@ -141,7 +141,7 @@ class EQ3BTSmartThermostat(ClimateEntity):
         """Return the temperature we try to reach."""
         return self._thermostat.target_temperature
 
-    def set_temperature(self, **kwargs):
+    def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
@@ -159,7 +159,7 @@ class EQ3BTSmartThermostat(ClimateEntity):
         """Return the list of available operation modes."""
         return list(HA_TO_EQ_HVAC)
 
-    def set_hvac_mode(self, hvac_mode):
+    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set operation mode."""
         self._thermostat.mode = HA_TO_EQ_HVAC[hvac_mode]
 
@@ -207,16 +207,16 @@ class EQ3BTSmartThermostat(ClimateEntity):
         """Return the MAC address of the thermostat."""
         return format_mac(self._mac)
 
-    def set_preset_mode(self, preset_mode):
+    def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         if preset_mode == PRESET_NONE:
             self.set_hvac_mode(HVACMode.HEAT)
         self._thermostat.mode = HA_TO_EQ_PRESET[preset_mode]
 
-    def update(self):
+    def update(self) -> None:
         """Update the data from the thermostat."""
 
         try:
             self._thermostat.update()
-        except BTLEException as ex:
+        except eq3.BackendException as ex:
             _LOGGER.warning("Updating the state failed: %s", ex)

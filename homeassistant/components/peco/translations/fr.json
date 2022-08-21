@@ -7,9 +7,7 @@
             "user": {
                 "data": {
                     "county": "Comt\u00e9"
-                },
-                "description": "Veuillez choisir votre comt\u00e9 ci-dessous.",
-                "title": "Compteur de pannes PECO"
+                }
             }
         }
     }

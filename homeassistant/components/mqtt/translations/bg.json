@@ -27,6 +27,13 @@
             }
         }
     },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_3": "\u0422\u0440\u0435\u0442\u0438 \u0431\u0443\u0442\u043e\u043d",
+            "button_4": "\u0427\u0435\u0442\u0432\u044a\u0440\u0442\u0438 \u0431\u0443\u0442\u043e\u043d",
+            "button_6": "\u0428\u0435\u0441\u0442\u0438 \u0431\u0443\u0442\u043e\u043d"
+        }
+    },
     "options": {
         "error": {
             "cannot_connect": "\u041d\u0435\u0443\u0441\u043f\u0435\u0448\u043d\u043e \u0441\u0432\u044a\u0440\u0437\u0432\u0430\u043d\u0435"

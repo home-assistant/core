@@ -18,8 +18,7 @@
                 "data": {
                     "select_ip": "Adresse IP"
                 },
-                "description": "S\u00e9lectionnez la passerelle Xiaomi Aqara que vous souhaitez connecter",
-                "title": "S\u00e9lectionnez la passerelle Xiaomi Aqara que vous souhaitez connecter"
+                "description": "S\u00e9lectionnez la passerelle Xiaomi Aqara que vous souhaitez connecter"
             },
             "settings": {
                 "data": {
@@ -35,8 +34,7 @@
                     "interface": "Interface r\u00e9seau \u00e0 utiliser",
                     "mac": "Adresse MAC (facultatif)"
                 },
-                "description": "Si les adresses IP et MAC sont laiss\u00e9es vides, la d\u00e9couverte automatique sera utilis\u00e9e",
-                "title": "Passerelle Xiaomi Aqara"
+                "description": "Si les adresses IP et MAC sont laiss\u00e9es vides, la d\u00e9couverte automatique sera utilis\u00e9e"
             }
         }
     }

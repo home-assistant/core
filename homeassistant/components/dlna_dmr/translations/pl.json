@@ -4,7 +4,6 @@
             "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
             "alternative_integration": "Urz\u0105dzenie jest lepiej obs\u0142ugiwane przez inn\u0105 integracj\u0119",
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
-            "could_not_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia z urz\u0105dzeniem DLNA",
             "discovery_error": "Nie uda\u0142o si\u0119 wykry\u0107 pasuj\u0105cego urz\u0105dzenia DLNA",
             "incomplete_config": "W konfiguracji brakuje wymaganej zmiennej",
             "non_unique_id": "Znaleziono wiele urz\u0105dze\u0144 z tym samym unikalnym identyfikatorem",
@@ -12,7 +11,6 @@
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
-            "could_not_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia z urz\u0105dzeniem DLNA",
             "not_dmr": "Urz\u0105dzenie nie jest obs\u0142ugiwanym rendererem multimedi\u00f3w cyfrowych (DMR)"
         },
         "flow_title": "{name}",
@@ -32,8 +30,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Nazwa hosta lub adres IP",
-                    "url": "URL"
+                    "host": "Nazwa hosta lub adres IP"
                 },
                 "description": "Wybierz urz\u0105dzenie do skonfigurowania lub pozostaw puste, aby wprowadzi\u0107 adres URL",
                 "title": "Wykryto urz\u0105dzenia DLNA DMR"
@@ -47,6 +44,7 @@
         "step": {
             "init": {
                 "data": {
+                    "browse_unfiltered": "Poka\u017c niezgodne multimedia podczas przegl\u0105dania",
                     "callback_url_override": "Adres Callback URL dla detektora zdarze\u0144",
                     "listen_port": "Port detektora zdarze\u0144 (losowy, je\u015bli nie jest ustawiony)",
                     "poll_availability": "Sondowanie na dost\u0119pno\u015b\u0107 urz\u0105dze\u0144"

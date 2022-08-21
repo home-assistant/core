@@ -15,8 +15,7 @@
         },
         "step": {
             "creds": {
-                "description": "Credentials needed. Press 'Submit' and then in the PS4 2nd Screen App, refresh devices and select the 'Home-Assistant' device to continue.",
-                "title": "PlayStation 4"
+                "description": "Credentials needed. Press 'Submit' and then in the PS4 2nd Screen App, refresh devices and select the 'Home-Assistant' device to continue."
             },
             "link": {
                 "data": {
@@ -27,9 +26,7 @@
                 },
                 "data_description": {
                     "code": "Navigate to 'Settings' on your PlayStation 4 console. Then navigate to 'Mobile App Connection Settings' and select 'Add Device' to get the pin."
-                },
-                "description": "Enter your PlayStation 4 information. For PIN Code, navigate to 'Settings' on your PlayStation 4 console. Then navigate to 'Mobile App Connection Settings' and select 'Add Device'. Enter the PIN Code that is displayed. Refer to the [documentation](https://www.home-assistant.io/components/ps4/) for additional info.",
-                "title": "PlayStation 4"
+                }
             },
             "mode": {
                 "data": {
@@ -38,9 +35,7 @@
                 },
                 "data_description": {
                     "ip_address": "Leave blank if selecting auto-discovery."
-                },
-                "description": "Select mode for configuration. The IP Address field can be left blank if selecting Auto Discovery, as devices will be automatically discovered.",
-                "title": "PlayStation 4"
+                }
             }
         }
     }

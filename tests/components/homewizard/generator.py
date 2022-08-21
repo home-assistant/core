@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock
 
+from homewizard_energy.models import Device
+
 
 def get_mock_device(
     serial="aabbccddeeff",
@@ -13,15 +15,18 @@ def get_mock_device(
     mock_device = AsyncMock()
     mock_device.host = host
 
-    mock_device.device.product_name = product_name
-    mock_device.device.product_type = product_type
-    mock_device.device.serial = serial
-    mock_device.device.api_version = "v1"
-    mock_device.device.firmware_version = "1.00"
+    mock_device.device = AsyncMock(
+        return_value=Device(
+            product_name=product_name,
+            product_type=product_type,
+            serial=serial,
+            api_version="V1",
+            firmware_version="1.00",
+        )
+    )
+    mock_device.data = AsyncMock(return_value=None)
+    mock_device.state = AsyncMock(return_value=None)
 
-    mock_device.state = None
-
-    mock_device.initialize = AsyncMock()
     mock_device.close = AsyncMock()
 
     return mock_device

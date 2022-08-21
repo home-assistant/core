@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "Account is al geconfigureerd",
             "no_device": "Op geen van uw apparaten is \"Find my iPhone\" geactiveerd",
-            "reauth_successful": "Herauthenticatie was succesvol"
+            "reauth_successful": "Herauthenticatie geslaagd"
         },
         "error": {
             "invalid_auth": "Ongeldige authenticatie",
@@ -16,7 +16,7 @@
                     "password": "Wachtwoord"
                 },
                 "description": "Uw eerder ingevoerde wachtwoord voor {username} werkt niet meer. Update uw wachtwoord om deze integratie te blijven gebruiken.",
-                "title": "Verifieer de integratie opnieuw"
+                "title": "Integratie herauthenticeren"
             },
             "trusted_device": {
                 "data": {

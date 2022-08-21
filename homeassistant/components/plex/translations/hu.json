@@ -35,14 +35,12 @@
                 "title": "Plex-kiszolg\u00e1l\u00f3 kiv\u00e1laszt\u00e1sa"
             },
             "user": {
-                "description": "Folytassa a [plex.tv] (https://plex.tv) oldalt a Plex szerver \u00f6sszekapcsol\u00e1s\u00e1hoz.",
-                "title": "Plex Media Server"
+                "description": "Folytassa a [plex.tv] (https://plex.tv) oldalt a Plex szerver \u00f6sszekapcsol\u00e1s\u00e1hoz."
             },
             "user_advanced": {
                 "data": {
                     "setup_method": "Be\u00e1ll\u00edt\u00e1si m\u00f3dszer"
-                },
-                "title": "Plex Media Server"
+                }
             }
         }
     },

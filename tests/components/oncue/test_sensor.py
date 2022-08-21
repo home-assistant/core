@@ -1,19 +1,29 @@
 """Tests for the oncue sensor."""
 from __future__ import annotations
 
+import pytest
+
 from homeassistant.components import oncue
 from homeassistant.components.oncue.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from . import _patch_login_and_data
+from . import _patch_login_and_data, _patch_login_and_data_offline_device
 
 from tests.common import MockConfigEntry
 
 
-async def test_sensors(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "patcher, connections",
+    [
+        [_patch_login_and_data, {("mac", "c9:24:22:6f:14:00")}],
+        [_patch_login_and_data_offline_device, set()],
+    ],
+)
+async def test_sensors(hass: HomeAssistant, patcher, connections) -> None:
     """Test that the sensors are setup with the expected values."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -21,10 +31,16 @@ async def test_sensors(hass: HomeAssistant) -> None:
         unique_id="any",
     )
     config_entry.add_to_hass(hass)
-    with _patch_login_and_data():
+    with patcher():
         await async_setup_component(hass, oncue.DOMAIN, {oncue.DOMAIN: {}})
         await hass.async_block_till_done()
     assert config_entry.state == ConfigEntryState.LOADED
+
+    entity_registry = er.async_get(hass)
+    ent = entity_registry.async_get("sensor.my_generator_latest_firmware")
+    device_registry = dr.async_get(hass)
+    dev = device_registry.async_get(ent.device_id)
+    assert dev.connections == connections
 
     assert len(hass.states.async_all("sensor")) == 25
     assert hass.states.get("sensor.my_generator_latest_firmware").state == "2.0.6"

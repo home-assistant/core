@@ -20,9 +20,7 @@
                     "device_class": "Az eszk\u00f6z t\u00edpusa",
                     "host": "C\u00edm",
                     "port": "Port"
-                },
-                "description": "Az Android TV k\u00e9sz\u00fcl\u00e9khez val\u00f3 csatlakoz\u00e1shoz sz\u00fcks\u00e9ges param\u00e9terek be\u00e1ll\u00edt\u00e1sa",
-                "title": "Android TV"
+                }
             }
         }
     },
@@ -49,8 +47,7 @@
                     "state_detection_rules": "\u00c1llapotfelismer\u00e9si szab\u00e1lyok konfigur\u00e1l\u00e1sa",
                     "turn_off_command": "ADB shell kikapcsol\u00e1si parancs (alap\u00e9rtelmez\u00e9s szerint hagyja \u00fcresen)",
                     "turn_on_command": "ADB shell bekapcsol\u00e1si parancs (alap\u00e9rtelmez\u00e9s szerint hagyja \u00fcresen)"
-                },
-                "title": "Android TV be\u00e1ll\u00edt\u00e1sok"
+                }
             },
             "rules": {
                 "data": {

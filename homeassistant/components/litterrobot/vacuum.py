@@ -1,7 +1,6 @@
 """Support for Litter-Robot "Vacuum"."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
 import logging
 from typing import Any
 
@@ -46,7 +45,6 @@ LITTER_BOX_STATUS_STATE_MAP = {
     LitterBoxStatus.CAT_SENSOR_INTERRUPTED: STATE_PAUSED,
     LitterBoxStatus.OFF: STATE_OFF,
 }
-UNAVAILABLE_AFTER = timedelta(minutes=30)
 
 
 async def async_setup_entry(
@@ -95,11 +93,6 @@ class LitterRobotCleaner(LitterRobotControlEntity, StateVacuumEntity):
         | VacuumEntityFeature.TURN_OFF
         | VacuumEntityFeature.TURN_ON
     )
-
-    @property
-    def available(self) -> bool:
-        """Return True if the cleaner has been seen recently."""
-        return self.robot.last_seen > datetime.now(timezone.utc) - UNAVAILABLE_AFTER
 
     @property
     def state(self) -> str:
@@ -162,11 +155,8 @@ class LitterRobotCleaner(LitterRobotControlEntity, StateVacuumEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return device specific state attributes."""
         return {
-            "clean_cycle_wait_time_minutes": self.robot.clean_cycle_wait_time_minutes,
             "is_sleeping": self.robot.is_sleeping,
             "sleep_mode_enabled": self.robot.sleep_mode_enabled,
             "power_status": self.robot.power_status,
-            "status_code": self.robot.status_code,
-            "last_seen": self.robot.last_seen,
             "status": self.status,
         }

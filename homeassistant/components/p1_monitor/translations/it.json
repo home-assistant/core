@@ -1,8 +1,7 @@
 {
     "config": {
         "error": {
-            "cannot_connect": "Impossibile connettersi",
-            "unknown": "Errore imprevisto"
+            "cannot_connect": "Impossibile connettersi"
         },
         "step": {
             "user": {

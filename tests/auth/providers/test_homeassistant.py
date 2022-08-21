@@ -115,24 +115,24 @@ async def test_login_flow_validates(data, hass):
     )
     flow = await provider.async_login_flow({})
     result = await flow.async_step_init()
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
 
     result = await flow.async_step_init(
         {"username": "incorrect-user", "password": "test-pass"}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"]["base"] == "invalid_auth"
 
     result = await flow.async_step_init(
         {"username": "TEST-user ", "password": "incorrect-pass"}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"]["base"] == "invalid_auth"
 
     result = await flow.async_step_init(
         {"username": "test-USER", "password": "test-pass"}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"]["username"] == "test-USER"
 
 
@@ -216,24 +216,24 @@ async def test_legacy_login_flow_validates(legacy_data, hass):
     )
     flow = await provider.async_login_flow({})
     result = await flow.async_step_init()
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
 
     result = await flow.async_step_init(
         {"username": "incorrect-user", "password": "test-pass"}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"]["base"] == "invalid_auth"
 
     result = await flow.async_step_init(
         {"username": "test-user", "password": "incorrect-pass"}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"]["base"] == "invalid_auth"
 
     result = await flow.async_step_init(
         {"username": "test-user", "password": "test-pass"}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"]["username"] == "test-user"
 
 

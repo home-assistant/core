@@ -73,6 +73,18 @@ async def test_process_play_media_url(hass, mock_sign_path):
         == "http://192.168.123.123:8123/path?hello=world"
     )
 
+    # Test skip signing URLs if they are known to require no auth
+    assert (
+        async_process_play_media_url(hass, "/api/tts_proxy/bla")
+        == "http://example.local:8123/api/tts_proxy/bla"
+    )
+    assert (
+        async_process_play_media_url(
+            hass, "http://example.local:8123/api/tts_proxy/bla"
+        )
+        == "http://example.local:8123/api/tts_proxy/bla"
+    )
+
     with pytest.raises(ValueError):
         async_process_play_media_url(hass, "hello")
 

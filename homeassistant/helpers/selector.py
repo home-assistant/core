@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Sequence
 from typing import Any, TypedDict, cast
+from uuid import UUID
 
 import voluptuous as vol
 
@@ -10,6 +11,7 @@ from homeassistant.backports.enum import StrEnum
 from homeassistant.const import CONF_MODE, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.core import split_entity_id, valid_entity_id
 from homeassistant.util import decorator
+from homeassistant.util.yaml import dumper
 
 from . import config_validation as cv
 
@@ -611,8 +613,8 @@ class NumberSelector(Selector):
                     vol.Coerce(float), vol.Range(min=1e-3)
                 ),
                 vol.Optional(CONF_UNIT_OF_MEASUREMENT): str,
-                vol.Optional(CONF_MODE, default=NumberSelectorMode.SLIDER): vol.Coerce(
-                    NumberSelectorMode
+                vol.Optional(CONF_MODE, default=NumberSelectorMode.SLIDER): vol.All(
+                    vol.Coerce(NumberSelectorMode), lambda val: val.value
                 ),
             }
         ),
@@ -702,7 +704,9 @@ class SelectSelector(Selector):
             vol.Required("options"): vol.All(vol.Any([str], [select_option])),
             vol.Optional("multiple", default=False): cv.boolean,
             vol.Optional("custom_value", default=False): cv.boolean,
-            vol.Optional("mode"): vol.Coerce(SelectSelectorMode),
+            vol.Optional("mode"): vol.All(
+                vol.Coerce(SelectSelectorMode), lambda val: val.value
+            ),
         }
     )
 
@@ -735,6 +739,36 @@ class TargetSelectorConfig(TypedDict, total=False):
 
     entity: SingleEntitySelectorConfig
     device: SingleDeviceSelectorConfig
+
+
+class StateSelectorConfig(TypedDict, total=False):
+    """Class to represent an state selector config."""
+
+    entity_id: str
+    attribute: str
+
+
+@SELECTORS.register("state")
+class StateSelector(Selector):
+    """Selector for an entity state."""
+
+    selector_type = "state"
+
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Required("entity_id"): cv.entity_id,
+            vol.Optional("attribute"): str,
+        }
+    )
+
+    def __init__(self, config: StateSelectorConfig) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> str:
+        """Validate the passed selection."""
+        state: str = vol.Schema(str)(data)
+        return state
 
 
 @SELECTORS.register("target")
@@ -825,7 +859,9 @@ class TextSelector(Selector):
             vol.Optional("suffix"): str,
             # The "type" controls the input field in the browser, the resulting
             # data can be any string so we don't validate it.
-            vol.Optional("type"): vol.Coerce(TextSelectorType),
+            vol.Optional("type"): vol.All(
+                vol.Coerce(TextSelectorType), lambda val: val.value
+            ),
         }
     )
 
@@ -881,3 +917,44 @@ class TimeSelector(Selector):
         """Validate the passed selection."""
         cv.time(data)
         return cast(str, data)
+
+
+class FileSelectorConfig(TypedDict):
+    """Class to represent a file selector config."""
+
+    accept: str  # required
+
+
+@SELECTORS.register("file")
+class FileSelector(Selector):
+    """Selector of a file."""
+
+    selector_type = "file"
+
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            # https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/file#accept
+            vol.Required("accept"): str,
+        }
+    )
+
+    def __init__(self, config: FileSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> str:
+        """Validate the passed selection."""
+        if not isinstance(data, str):
+            raise vol.Invalid("Value should be a string")
+
+        UUID(data)
+
+        return data
+
+
+dumper.add_representer(
+    Selector,
+    lambda dumper, value: dumper.represent_odict(
+        dumper, "tag:yaml.org,2002:map", value.serialize()
+    ),
+)

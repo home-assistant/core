@@ -73,7 +73,7 @@ class DemoBinarySensor(BinarySensorEntity):
         )
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return the unique id."""
         return self._unique_id
 
@@ -83,16 +83,16 @@ class DemoBinarySensor(BinarySensorEntity):
         return self._sensor_type
 
     @property
-    def should_poll(self):
+    def should_poll(self) -> bool:
         """No polling needed for a demo binary sensor."""
         return False
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the binary sensor."""
         return self._name
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return self._state

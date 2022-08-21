@@ -1,11 +1,14 @@
 """Config flow for Glances."""
+from __future__ import annotations
+
+from typing import Any
+
 import glances_api
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import (
     CONF_HOST,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SCAN_INTERVAL,
@@ -14,12 +17,12 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 
 from . import get_api
 from .const import (
     CONF_VERSION,
     DEFAULT_HOST,
-    DEFAULT_NAME,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_VERSION,
@@ -29,7 +32,6 @@ from .const import (
 
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
         vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
         vol.Optional(CONF_USERNAME): str,
         vol.Optional(CONF_PASSWORD): str,
@@ -59,11 +61,15 @@ class GlancesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> GlancesOptionsFlowHandler:
         """Get the options flow for this handler."""
         return GlancesOptionsFlowHandler(config_entry)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
@@ -71,7 +77,7 @@ class GlancesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 await validate_input(self.hass, user_input)
                 return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=user_input
+                    title=user_input[CONF_HOST], data=user_input
                 )
             except CannotConnect:
                 errors["base"] = "cannot_connect"
@@ -82,20 +88,17 @@ class GlancesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_import(self, import_config):
-        """Import from Glances sensor config."""
-
-        return await self.async_step_user(user_input=import_config)
-
 
 class GlancesOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle Glances client options."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize Glances options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Manage the Glances options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)

@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El servicio ya est\u00e1 configurado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "type": "Definici\u00f3n del tipo de estaci\u00f3n"
+                }
+            }
+        }
+    }
+}

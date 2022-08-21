@@ -11,6 +11,7 @@ from pyhomematic.devicetypes.generic import HMGeneric
 from homeassistant.const import ATTR_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity, EntityDescription
+from homeassistant.helpers.event import track_time_interval
 
 from .const import (
     ATTR_ADDRESS,
@@ -222,12 +223,10 @@ class HMHub(Entity):
         self._state = None
 
         # Load data
-        self.hass.helpers.event.track_time_interval(self._update_hub, SCAN_INTERVAL_HUB)
+        track_time_interval(self.hass, self._update_hub, SCAN_INTERVAL_HUB)
         self.hass.add_job(self._update_hub, None)
 
-        self.hass.helpers.event.track_time_interval(
-            self._update_variables, SCAN_INTERVAL_VARIABLES
-        )
+        track_time_interval(self.hass, self._update_variables, SCAN_INTERVAL_VARIABLES)
         self.hass.add_job(self._update_variables, None)
 
     @property

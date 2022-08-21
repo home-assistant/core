@@ -3,7 +3,6 @@ from http import HTTPStatus
 import json
 import logging
 
-from aiohttp.hdrs import CONTENT_TYPE
 import requests
 import voluptuous as vol
 
@@ -74,7 +73,7 @@ class FacebookNotificationService(BaseNotificationService):
                 BASE_URL,
                 data=json.dumps(body),
                 params=payload,
-                headers={CONTENT_TYPE: CONTENT_TYPE_JSON},
+                headers={"Content-Type": CONTENT_TYPE_JSON},
                 timeout=10,
             )
             if resp.status_code != HTTPStatus.OK:

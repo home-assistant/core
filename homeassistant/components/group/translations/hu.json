@@ -15,56 +15,25 @@
                 "data": {
                     "entities": "A csoport tagjai",
                     "hide_members": "Tagok elrejt\u00e9se",
-                    "name": "Elnevez\u00e9s",
-                    "title": "Csoport hozz\u00e1ad\u00e1sa"
+                    "name": "Elnevez\u00e9s"
                 },
-                "description": "Csoport be\u00e1ll\u00edt\u00e1sai",
                 "title": "Csoport hozz\u00e1ad\u00e1sa"
-            },
-            "cover_options": {
-                "data": {
-                    "entities": "A csoport tagjai"
-                },
-                "description": "Csoport be\u00e1ll\u00edt\u00e1sai"
             },
             "fan": {
                 "data": {
                     "entities": "A csoport tagjai",
                     "hide_members": "Tagok elrejt\u00e9se",
-                    "name": "Elnevez\u00e9s",
-                    "title": "Csoport hozz\u00e1ad\u00e1sa"
+                    "name": "Elnevez\u00e9s"
                 },
-                "description": "Csoport be\u00e1ll\u00edt\u00e1sai",
                 "title": "Csoport hozz\u00e1ad\u00e1sa"
-            },
-            "fan_options": {
-                "data": {
-                    "entities": "A csoport tagjai"
-                },
-                "description": "Csoport be\u00e1ll\u00edt\u00e1sai"
-            },
-            "init": {
-                "data": {
-                    "group_type": "A csoport t\u00edpusa"
-                },
-                "description": "A csoport t\u00edpusa"
             },
             "light": {
                 "data": {
-                    "all": "Minden entit\u00e1s",
                     "entities": "A csoport tagjai",
                     "hide_members": "Tagok elrejt\u00e9se",
-                    "name": "Elnevez\u00e9s",
-                    "title": "Csoport hozz\u00e1ad\u00e1sa"
+                    "name": "Elnevez\u00e9s"
                 },
-                "description": "Ha \u201eMinden entit\u00e1s\u201d enged\u00e9lyezve van, a csoport \u00e1llapota csak akkor van bekapcsolva, ha minden tag \u00e1llapota bekapcsolt. Ha \u201eMinden entit\u00e1s\u201d le van tiltva, a csoport \u00e1llapota akkor van bekapcsolva, ha b\u00e1rmelyik tag bekapcsolt \u00e1llapotban van.",
                 "title": "Csoport hozz\u00e1ad\u00e1sa"
-            },
-            "light_options": {
-                "data": {
-                    "entities": "A csoport tagjai"
-                },
-                "description": "Csoport be\u00e1ll\u00edt\u00e1sai"
             },
             "lock": {
                 "data": {
@@ -78,17 +47,9 @@
                 "data": {
                     "entities": "A csoport tagjai",
                     "hide_members": "Tagok elrejt\u00e9se",
-                    "name": "Elnevez\u00e9s",
-                    "title": "Csoport hozz\u00e1ad\u00e1sa"
+                    "name": "Elnevez\u00e9s"
                 },
-                "description": "Csoport be\u00e1ll\u00edt\u00e1sai",
                 "title": "Csoport hozz\u00e1ad\u00e1sa"
-            },
-            "media_player_options": {
-                "data": {
-                    "entities": "A csoport tagjai"
-                },
-                "description": "Csoport be\u00e1ll\u00edt\u00e1sai"
             },
             "switch": {
                 "data": {
@@ -99,9 +60,6 @@
                 "title": "Csoport hozz\u00e1ad\u00e1sa"
             },
             "user": {
-                "data": {
-                    "group_type": "Csoport t\u00edpusa"
-                },
                 "description": "A csoportok lehet\u0151v\u00e9 teszik egy \u00faj entit\u00e1s l\u00e9trehoz\u00e1s\u00e1t, amely t\u00f6bb azonos t\u00edpus\u00fa entit\u00e1st k\u00e9pvisel.",
                 "menu_options": {
                     "binary_sensor": "Bin\u00e1ris \u00e9rz\u00e9kel\u0151 csoport",
@@ -126,32 +84,16 @@
                 },
                 "description": "Ha \u201eMinden entit\u00e1s\u201d enged\u00e9lyezve van, a csoport \u00e1llapota csak akkor van bekapcsolva, ha minden tag \u00e1llapota bekapcsolt. Ha \u201eMinden entit\u00e1s\u201d le van tiltva, a csoport \u00e1llapota akkor van bekapcsolva, ha b\u00e1rmelyik tag bekapcsolt \u00e1llapotban van."
             },
-            "binary_sensor_options": {
-                "data": {
-                    "all": "Minden entit\u00e1s",
-                    "entities": "A csoport tagjai"
-                }
-            },
             "cover": {
                 "data": {
                     "entities": "A csoport tagjai",
                     "hide_members": "Tagok elrejt\u00e9se"
                 }
             },
-            "cover_options": {
-                "data": {
-                    "entities": "A csoport tagjai"
-                }
-            },
             "fan": {
                 "data": {
                     "entities": "A csoport tagjai",
                     "hide_members": "Tagok elrejt\u00e9se"
-                }
-            },
-            "fan_options": {
-                "data": {
-                    "entities": "A csoport tagjai"
                 }
             },
             "light": {
@@ -161,12 +103,6 @@
                     "hide_members": "Tagok elrejt\u00e9se"
                 },
                 "description": "Ha \u201eMinden entit\u00e1s\u201d enged\u00e9lyezve van, a csoport \u00e1llapota csak akkor van bekapcsolva, ha minden tag \u00e1llapota bekapcsolt. Ha \u201eMinden entit\u00e1s\u201d le van tiltva, a csoport \u00e1llapota akkor van bekapcsolva, ha b\u00e1rmelyik tag bekapcsolt \u00e1llapotban van."
-            },
-            "light_options": {
-                "data": {
-                    "all": "Minden entit\u00e1s",
-                    "entities": "A csoport tagjai"
-                }
             },
             "lock": {
                 "data": {
@@ -178,11 +114,6 @@
                 "data": {
                     "entities": "A csoport tagjai",
                     "hide_members": "Tagok elrejt\u00e9se"
-                }
-            },
-            "media_player_options": {
-                "data": {
-                    "entities": "A csoport tagjai"
                 }
             },
             "switch": {

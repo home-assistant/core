@@ -12,16 +12,14 @@
         },
         "step": {
             "confirm_discovery": {
-                "description": "Y\u00f6nlendiricinizde DHCP rezervasyonu yap\u0131lmas\u0131 \u00f6nerilir. Kurulmazsa, Home Assistant yeni ip adresini alg\u0131layana kadar cihaz kullan\u0131lamayabilir. Y\u00f6nlendiricinizin kullan\u0131m k\u0131lavuzuna bak\u0131n.",
-                "title": "Goal Zero Yeti"
+                "description": "Y\u00f6nlendiricinizde DHCP rezervasyonu yap\u0131lmas\u0131 \u00f6nerilir. Kurulmazsa, Home Assistant yeni ip adresini alg\u0131layana kadar cihaz kullan\u0131lamayabilir. Y\u00f6nlendiricinizin kullan\u0131m k\u0131lavuzuna bak\u0131n."
             },
             "user": {
                 "data": {
                     "host": "Sunucu",
                     "name": "Ad"
                 },
-                "description": "T\u00fcm gereksinimlerin kar\u015f\u0131land\u0131\u011f\u0131ndan emin olmak i\u00e7in l\u00fctfen belgelere bak\u0131n.",
-                "title": "Goal Zero Yeti"
+                "description": "T\u00fcm gereksinimlerin kar\u015f\u0131land\u0131\u011f\u0131ndan emin olmak i\u00e7in l\u00fctfen belgelere bak\u0131n."
             }
         }
     }

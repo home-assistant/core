@@ -16,11 +16,7 @@ from homeassistant.components.devolo_home_network.const import (
 )
 from homeassistant.const import CONF_BASE, CONF_IP_ADDRESS, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 from .const import DISCOVERY_INFO, DISCOVERY_INFO_WRONG_DEVICE, IP
 
@@ -30,7 +26,7 @@ async def test_form(hass: HomeAssistant, info: dict[str, Any]):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -45,7 +41,7 @@ async def test_form(hass: HomeAssistant, info: dict[str, Any]):
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["result"].unique_id == info["serial_number"]
     assert result2["title"] == info["title"]
     assert result2["data"] == {
@@ -75,7 +71,7 @@ async def test_form_error(hass: HomeAssistant, exception_type, expected_error):
             },
         )
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {CONF_BASE: expected_error}
 
 
@@ -88,7 +84,7 @@ async def test_zeroconf(hass: HomeAssistant):
     )
 
     assert result["step_id"] == "zeroconf_confirm"
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["description_placeholders"] == {"host_name": "test"}
 
     context = next(
@@ -125,7 +121,7 @@ async def test_abort_zeroconf_wrong_device(hass: HomeAssistant):
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=DISCOVERY_INFO_WRONG_DEVICE,
     )
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "home_control"
 
 
@@ -158,7 +154,7 @@ async def test_abort_if_configued(hass: HomeAssistant):
         },
     )
     await hass.async_block_till_done()
-    assert result2["type"] == RESULT_TYPE_ABORT
+    assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
 
     # Abort on concurrent zeroconf discovery flow
@@ -167,7 +163,7 @@ async def test_abort_if_configued(hass: HomeAssistant):
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=DISCOVERY_INFO,
     )
-    assert result3["type"] == RESULT_TYPE_ABORT
+    assert result3["type"] == FlowResultType.ABORT
     assert result3["reason"] == "already_configured"
 
 

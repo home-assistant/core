@@ -8,8 +8,7 @@
         "error": {
             "api_error": "Logowanie nie powiod\u0142o si\u0119",
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
-            "iftapi_connect": "B\u0142\u0105d po\u0142\u0105czenia z iftapi.net",
-            "unknown": "Nieoczekiwany b\u0142\u0105d"
+            "iftapi_connect": "B\u0142\u0105d po\u0142\u0105czenia z iftapi.net"
         },
         "flow_title": "{serial} ({host})",
         "step": {
@@ -34,11 +33,6 @@
                 },
                 "description": "Wykryto nast\u0119puj\u0105ce urz\u0105dzenia IntelliFire. Wybierz, kt\u00f3re chcesz skonfigurowa\u0107.",
                 "title": "Wyb\u00f3r urz\u0105dzenia"
-            },
-            "user": {
-                "data": {
-                    "host": "Nazwa hosta lub adres IP"
-                }
             }
         }
     }

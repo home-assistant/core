@@ -1,6 +1,7 @@
 """Support for getting data from websites with scraping."""
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
 from typing import Any
 
@@ -38,6 +39,8 @@ from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
+
+SCAN_INTERVAL = timedelta(minutes=10)
 
 CONF_ATTR = "attribute"
 CONF_SELECT = "select"
@@ -154,7 +157,7 @@ class ScrapeSensor(SensorEntity):
 
     def _extract_value(self) -> Any:
         """Parse the html extraction in the executor."""
-        raw_data = BeautifulSoup(self.rest.data, "html.parser")
+        raw_data = BeautifulSoup(self.rest.data, "lxml")
         _LOGGER.debug(raw_data)
 
         try:

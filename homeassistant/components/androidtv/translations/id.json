@@ -20,9 +20,7 @@
                     "device_class": "Jenis perangkat",
                     "host": "Host",
                     "port": "Port"
-                },
-                "description": "Setel parameter yang diperlukan untuk terhubung ke perangkat Android TV Anda",
-                "title": "Android TV"
+                }
             }
         }
     },
@@ -49,8 +47,7 @@
                     "state_detection_rules": "Konfigurasikan aturan deteksi status",
                     "turn_off_command": "Perintah mematikan shell ADB (kosongkan untuk default)",
                     "turn_on_command": "Perintah nyalakan shell ADB (kosongkan untuk default)"
-                },
-                "title": "Opsi Android TV"
+                }
             },
             "rules": {
                 "data": {

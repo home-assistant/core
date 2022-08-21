@@ -11,7 +11,7 @@ from homeassistant.components.kraken.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_START
-from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 import homeassistant.util.dt as dt_util
 
 from .const import (
@@ -52,7 +52,7 @@ async def test_sensor(hass):
         )
         entry.add_to_hass(hass)
 
-        registry = await hass.helpers.entity_registry.async_get_registry()
+        registry = er.async_get(hass)
 
         # Pre-create registry entries for disabled by default sensors
         registry.async_get_or_create(
@@ -248,13 +248,13 @@ async def test_sensors_available_after_restart(hass):
             },
         )
 
-        device_registry = await hass.helpers.device_registry.async_get_registry()
+        device_registry = dr.async_get(hass)
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, "XBT_USD")},
             name="XBT USD",
             manufacturer="Kraken.com",
-            entry_type=DeviceEntryType.SERVICE,
+            entry_type=dr.DeviceEntryType.SERVICE,
         )
         entry.add_to_hass(hass)
 

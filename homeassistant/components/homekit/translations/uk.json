@@ -20,9 +20,6 @@
     "options": {
         "step": {
             "advanced": {
-                "data": {
-                    "auto_start": "[%key:component::homekit::config::step::user::data::auto_start%]"
-                },
                 "description": "\u0426\u0456 \u043f\u0430\u0440\u0430\u043c\u0435\u0442\u0440\u0438 \u043f\u043e\u0442\u0440\u0456\u0431\u043d\u0456, \u043b\u0438\u0448\u0435 \u044f\u043a\u0449\u043e HomeKit \u043d\u0435 \u043f\u0440\u0430\u0446\u044e\u0454.",
                 "title": "\u0420\u043e\u0437\u0448\u0438\u0440\u0435\u043d\u0456 \u043d\u0430\u043b\u0430\u0448\u0442\u0443\u0432\u0430\u043d\u043d\u044f"
             },

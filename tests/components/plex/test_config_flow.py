@@ -193,6 +193,8 @@ async def test_single_available_server(
         )
         assert result["data"][PLEX_SERVER_CONFIG][CONF_TOKEN] == MOCK_TOKEN
 
+    await hass.config_entries.async_unload(result["result"].entry_id)
+
 
 async def test_multiple_servers_with_selection(
     hass,
@@ -249,6 +251,8 @@ async def test_multiple_servers_with_selection(
         )
         assert result["data"][PLEX_SERVER_CONFIG][CONF_TOKEN] == MOCK_TOKEN
 
+    await hass.config_entries.async_unload(result["result"].entry_id)
+
 
 async def test_adding_last_unconfigured_server(
     hass,
@@ -304,6 +308,8 @@ async def test_adding_last_unconfigured_server(
             result["data"][PLEX_SERVER_CONFIG][CONF_URL] == mock_plex_server.url_in_use
         )
         assert result["data"][PLEX_SERVER_CONFIG][CONF_TOKEN] == MOCK_TOKEN
+
+    await hass.config_entries.async_unload(result["result"].entry_id)
 
 
 async def test_all_available_servers_configured(
@@ -697,6 +703,7 @@ async def test_integration_discovery(hass):
 
     with patch("homeassistant.components.plex.config_flow.GDM", return_value=mock_gdm):
         await config_flow.async_discover(hass)
+        await hass.async_block_till_done()
 
     flows = hass.config_entries.flow.async_progress()
 

@@ -11,13 +11,6 @@
             "cannot_connect": "Impossibile connettersi"
         },
         "step": {
-            "auth": {
-                "data": {
-                    "password": "Password",
-                    "username": "Nome utente"
-                },
-                "title": "Configura l'autenticazione"
-            },
             "configure": {
                 "data": {
                     "host": "Host",
@@ -40,14 +33,6 @@
                     "host": "Seleziona il dispositivo ONVIF rilevato"
                 },
                 "title": "Seleziona il dispositivo ONVIF"
-            },
-            "manual_input": {
-                "data": {
-                    "host": "Host",
-                    "name": "Nome",
-                    "port": "Porta"
-                },
-                "title": "Configura il dispositivo ONVIF"
             },
             "user": {
                 "data": {

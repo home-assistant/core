@@ -1,6 +1,4 @@
 """Test KNX number."""
-from unittest.mock import patch
-
 import pytest
 
 from homeassistant.components.knx.const import CONF_RESPOND_TO_READ, KNX_ADDRESS
@@ -9,6 +7,8 @@ from homeassistant.const import CONF_NAME, CONF_TYPE
 from homeassistant.core import HomeAssistant, State
 
 from .conftest import KNXTestKit
+
+from tests.common import mock_restore_cache_with_extra_data
 
 
 async def test_number_set_value(hass: HomeAssistant, knx: KNXTestKit):
@@ -64,22 +64,28 @@ async def test_number_restore_and_respond(hass: HomeAssistant, knx: KNXTestKit):
     """Test KNX number with passive_address and respond_to_read restoring state."""
     test_address = "1/1/1"
     test_passive_address = "3/3/3"
-    fake_state = State("number.test", "160")
 
-    with patch(
-        "homeassistant.helpers.restore_state.RestoreEntity.async_get_last_state",
-        return_value=fake_state,
-    ):
-        await knx.setup_integration(
-            {
-                NumberSchema.PLATFORM: {
-                    CONF_NAME: "test",
-                    KNX_ADDRESS: [test_address, test_passive_address],
-                    CONF_RESPOND_TO_READ: True,
-                    CONF_TYPE: "illuminance",
-                }
+    RESTORE_DATA = {
+        "native_max_value": None,  # Ignored by KNX number
+        "native_min_value": None,  # Ignored by KNX number
+        "native_step": None,  # Ignored by KNX number
+        "native_unit_of_measurement": None,  # Ignored by KNX number
+        "native_value": 160.0,
+    }
+
+    mock_restore_cache_with_extra_data(
+        hass, ((State("number.test", "abc"), RESTORE_DATA),)
+    )
+    await knx.setup_integration(
+        {
+            NumberSchema.PLATFORM: {
+                CONF_NAME: "test",
+                KNX_ADDRESS: [test_address, test_passive_address],
+                CONF_RESPOND_TO_READ: True,
+                CONF_TYPE: "illuminance",
             }
-        )
+        }
+    )
     # restored state - doesn't send telegram
     state = hass.states.get("number.test")
     assert state.state == "160.0"

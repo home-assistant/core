@@ -5,8 +5,7 @@
     },
     "error": {
       "db_url_invalid": "Database URL invalid",
-      "query_invalid": "SQL Query invalid",
-      "value_template_invalid": "Value Template invalid"
+      "query_invalid": "SQL Query invalid"
     },
     "step": {
       "user": {
@@ -52,8 +51,7 @@
     },
     "error": {
       "db_url_invalid": "[%key:component::sql::config::error::db_url_invalid%]",
-      "query_invalid": "[%key:component::sql::config::error::query_invalid%]",
-      "value_template_invalid": "[%key:component::sql::config::error::value_template_invalid%]"
+      "query_invalid": "[%key:component::sql::config::error::query_invalid%]"
     }
   }
 }

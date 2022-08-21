@@ -74,6 +74,7 @@ async def async_setup_entry(
 class SlimProtoPlayer(MediaPlayerEntity):
     """Representation of MediaPlayerEntity from SlimProto Player."""
 
+    _attr_has_entity_name = True
     _attr_should_poll = False
     _attr_supported_features = (
         MediaPlayerEntityFeature.PAUSE
@@ -100,8 +101,8 @@ class SlimProtoPlayer(MediaPlayerEntity):
             name=self.player.name,
             hw_version=self.player.firmware,
         )
-        # PiCore player has web interface
-        if "-pCP" in self.player.firmware:
+        # PiCore + SqueezeESP32 player has web interface
+        if "-pCP" in self.player.firmware or self.player.device_model == "SqueezeESP32":
             self._attr_device_info[
                 "configuration_url"
             ] = f"http://{self.player.device_address}"
@@ -118,7 +119,7 @@ class SlimProtoPlayer(MediaPlayerEntity):
                     EventType.PLAYER_CONNECTED,
                     EventType.PLAYER_DISCONNECTED,
                     EventType.PLAYER_NAME_RECEIVED,
-                    EventType.PLAYER_RPC_EVENT,
+                    EventType.PLAYER_CLI_EVENT,
                 ),
                 player_filter=self.player.player_id,
             )
@@ -139,7 +140,6 @@ class SlimProtoPlayer(MediaPlayerEntity):
     @callback
     def update_attributes(self) -> None:
         """Handle player updates."""
-        self._attr_name = self.player.name
         self._attr_volume_level = self.player.volume_level / 100
         self._attr_media_position = self.player.elapsed_seconds
         self._attr_media_position_updated_at = utcnow()
@@ -180,7 +180,9 @@ class SlimProtoPlayer(MediaPlayerEntity):
         to_send_media_type: str | None = media_type
         # Handle media_source
         if media_source.is_media_source_id(media_id):
-            sourced_media = await media_source.async_resolve_media(self.hass, media_id)
+            sourced_media = await media_source.async_resolve_media(
+                self.hass, media_id, self.entity_id
+            )
             media_id = sourced_media.url
             to_send_media_type = sourced_media.mime_type
 
@@ -205,7 +207,7 @@ class SlimProtoPlayer(MediaPlayerEntity):
         if event.type == EventType.PLAYER_CONNECTED:
             # player reconnected, update our player object
             self.player = self.slimserver.get_player(event.player_id)
-        if event.type == EventType.PLAYER_RPC_EVENT:
+        if event.type == EventType.PLAYER_CLI_EVENT:
             # rpc event from player such as a button press,
             # forward on the eventbus for others to handle
             dev_id = self.registry_entry.device_id if self.registry_entry else None

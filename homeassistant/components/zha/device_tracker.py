@@ -4,7 +4,7 @@ from __future__ import annotations
 import functools
 import time
 
-from homeassistant.components.device_tracker import SOURCE_TYPE_ROUTER
+from homeassistant.components.device_tracker import SourceType
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -85,9 +85,9 @@ class ZHADeviceScannerEntity(ScannerEntity, ZhaEntity):
         return self._connected
 
     @property
-    def source_type(self):
+    def source_type(self) -> SourceType:
         """Return the source type, eg gps or router, of the device."""
-        return SOURCE_TYPE_ROUTER
+        return SourceType.ROUTER
 
     @callback
     def async_battery_percentage_remaining_updated(self, attr_id, attr_name, value):
@@ -107,10 +107,10 @@ class ZHADeviceScannerEntity(ScannerEntity, ZhaEntity):
         """
         return self._battery_level
 
-    @property
+    @property  # type: ignore[misc]
     def device_info(  # pylint: disable=overridden-final-method
         self,
-    ) -> DeviceInfo | None:
+    ) -> DeviceInfo:
         """Return device info."""
         # We opt ZHA device tracker back into overriding this method because
         # it doesn't track IP-based devices.
@@ -118,7 +118,7 @@ class ZHADeviceScannerEntity(ScannerEntity, ZhaEntity):
         return super(ZhaEntity, self).device_info
 
     @property
-    def unique_id(self) -> str | None:
+    def unique_id(self) -> str:
         """Return unique ID."""
         # Call Super because ScannerEntity overrode it.
         return super(ZhaEntity, self).unique_id

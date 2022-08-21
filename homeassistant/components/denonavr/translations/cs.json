@@ -13,8 +13,7 @@
         "flow_title": "S\u00ed\u0165ov\u00fd p\u0159ij\u00edma\u010d Denon AVR: {name}",
         "step": {
             "confirm": {
-                "description": "Potvr\u010fte pros\u00edm p\u0159id\u00e1n\u00ed p\u0159ij\u00edma\u010de",
-                "title": "S\u00ed\u0165ov\u00e9 p\u0159ij\u00edma\u010de Denon AVR"
+                "description": "Potvr\u010fte pros\u00edm p\u0159id\u00e1n\u00ed p\u0159ij\u00edma\u010de"
             },
             "user": {
                 "data": {

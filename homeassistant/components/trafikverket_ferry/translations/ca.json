@@ -6,7 +6,9 @@
         },
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3",
-            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida"
+            "incorrect_api_key": "Clau API inv\u00e0lida per al compte seleccionat",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "invalid_route": "No s'ha pogut trobar la ruta amb la informaci\u00f3 proporcionada"
         },
         "step": {
             "reauth_confirm": {
@@ -18,6 +20,7 @@
                 "data": {
                     "api_key": "Clau API",
                     "from": "Des del port",
+                    "time": "Hora",
                     "to": "Al port",
                     "weekday": "Laborables"
                 }

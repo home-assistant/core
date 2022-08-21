@@ -1,6 +1,7 @@
 {
     "system_health": {
         "info": {
+            "agent_version": "Agendi versioon",
             "board": "Seade",
             "disk_total": "Kettaruum kokku",
             "disk_used": "Kasutatud kettaruum",

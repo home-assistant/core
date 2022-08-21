@@ -12,7 +12,7 @@
         },
         "step": {
             "reauth_confirm": {
-                "description": "Integrasi Steam perlu diautentikasi ulang secara manual \n\n Anda dapat menemukan kunci Anda di sini: https://steamcommunity.com/dev/apikey",
+                "description": "Integrasi Steam perlu diautentikasi ulang secara manual \n\nAnda dapat menemukan kunci Anda di sini: {api_key_url}",
                 "title": "Autentikasi Ulang Integrasi"
             },
             "user": {
@@ -20,11 +20,20 @@
                     "account": "ID akun Steam",
                     "api_key": "Kunci API"
                 },
-                "description": "Gunakan https://steamid.io untuk menemukan ID akun Steam Anda"
+                "description": "Gunakan {account_id_url} untuk menemukan ID akun Steam Anda"
             }
         }
     },
+    "issues": {
+        "removed_yaml": {
+            "description": "Proses konfigurasi Steam lewat YAML telah dihapus.\n\nKonfigurasi YAML yang ada tidak digunakan oleh Home Assistant.\n\nHapus konfigurasi YAML dari file configuration.yaml dan mulai ulang Home Assistant untuk memperbaiki masalah ini.",
+            "title": "Konfigurasi YAML Steam telah dihapus"
+        }
+    },
     "options": {
+        "error": {
+            "unauthorized": "Daftar teman dibatasi: Rujuk ke dokumentasi tentang cara melihat semua teman lain"
+        },
         "step": {
             "init": {
                 "data": {

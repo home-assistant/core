@@ -35,14 +35,12 @@
                 "title": "\u0412\u0438\u0431\u0435\u0440\u0456\u0442\u044c \u0441\u0435\u0440\u0432\u0435\u0440 Plex"
             },
             "user": {
-                "description": "\u041f\u0435\u0440\u0435\u0439\u0434\u0456\u0442\u044c \u043d\u0430 [plex.tv](https://plex.tv), \u0449\u043e\u0431 \u043f\u0440\u0438\u0432'\u044f\u0437\u0430\u0442\u0438 \u0441\u0435\u0440\u0432\u0435\u0440 Plex \u0434\u043e Home Assistant.",
-                "title": "Plex Media Server"
+                "description": "\u041f\u0435\u0440\u0435\u0439\u0434\u0456\u0442\u044c \u043d\u0430 [plex.tv](https://plex.tv), \u0449\u043e\u0431 \u043f\u0440\u0438\u0432'\u044f\u0437\u0430\u0442\u0438 \u0441\u0435\u0440\u0432\u0435\u0440 Plex \u0434\u043e Home Assistant."
             },
             "user_advanced": {
                 "data": {
                     "setup_method": "\u0421\u043f\u043e\u0441\u0456\u0431 \u043d\u0430\u043b\u0430\u0448\u0442\u0443\u0432\u0430\u043d\u043d\u044f"
-                },
-                "title": "Plex Media Server"
+                }
             }
         }
     },

@@ -39,9 +39,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AirzoneZoneEntity
 from .const import API_TEMPERATURE_STEP, DOMAIN, TEMP_UNIT_LIB_TO_HASS
 from .coordinator import AirzoneUpdateCoordinator
+from .entity import AirzoneZoneEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -123,7 +123,7 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
         }
         _LOGGER.debug("update_hvac_params=%s", _params)
         try:
-            await self.coordinator.airzone.put_hvac(_params)
+            await self.coordinator.airzone.set_hvac_parameters(_params)
         except AirzoneError as error:
             raise HomeAssistantError(
                 f"Failed to set zone {self.name}: {error}"
@@ -162,7 +162,7 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
             params[API_ON] = 1
         await self._async_update_hvac_params(params)
 
-    async def async_set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         params = {
             API_SET_POINT: kwargs.get(ATTR_TEMPERATURE),

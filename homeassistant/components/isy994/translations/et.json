@@ -7,10 +7,19 @@
             "cannot_connect": "\u00dchendamine nurjus",
             "invalid_auth": "Tuvastamine nurjus",
             "invalid_host": "Hostikirje ei olnud sobivas URL-vormingus, nt http://192.168.10.100:80",
+            "reauth_successful": "Taastuvastamine \u00f5nnestus",
             "unknown": "Tundmatu viga"
         },
         "flow_title": "{name} ({host})",
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
+                },
+                "description": "Kasutaja {host} mandaat ei kehti enam.",
+                "title": "Taastuvasta ISY"
+            },
             "user": {
                 "data": {
                     "host": "",
@@ -19,7 +28,7 @@
                     "username": "Kasutajanimi"
                 },
                 "description": "Hostikirje peab olema t\u00e4ielikus URL-vormingus, nt http://192.168.10.100:80",
-                "title": "\u00dchendu oma ISY994-ga"
+                "title": "\u00dchendu oma ISY-ga"
             }
         }
     },
@@ -33,7 +42,7 @@
                     "variable_sensor_string": "Muutuja sensori string"
                 },
                 "description": "Isy isidumisei suvandite m\u00e4\u00e4ramine: \n \u2022 S\u00f5lme sensor string: iga seade v\u00f5i kaust, mis sisaldab nimes \"Node Sensor String\" k\u00e4sitletakse sensorina v\u00f5i binaarandurina. \n \u2022 Ignoreeri stringi: iga seadet, mille nimes on \"Ignore String\", ignoreeritakse. \n \u2022 Muutuv sensorstring: andurina lisatakse k\u00f5ik muutujad, mis sisaldavad \"Variable Sensor String\". \n \u2022 Valguse heleduse taastamine: kui see on lubatud, taastatakse eelmine heledus, kui l\u00fclitate sisse seadme sisseehitatud taseme asemel valguse.",
-                "title": "ISY994 valikud"
+                "title": "ISY valikud"
             }
         }
     },

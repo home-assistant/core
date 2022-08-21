@@ -3,7 +3,7 @@
   "name": "Belkin WeMo",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/wemo",
-  "requirements": ["pywemo==0.7.0"],
+  "requirements": ["pywemo==0.9.1"],
   "ssdp": [
     {
       "manufacturer": "Belkin International Inc."
@@ -14,5 +14,8 @@
   },
   "codeowners": ["@esev"],
   "iot_class": "local_push",
-  "loggers": ["pywemo"]
+  "loggers": ["pywemo"],
+  "supported_brands": {
+    "digital_loggers": "Digital Loggers"
+  }
 }

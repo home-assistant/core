@@ -12,7 +12,7 @@
         },
         "step": {
             "reauth_confirm": {
-                "description": "Die Steam-Integration muss manuell erneut authentifiziert werden \n\nDeinen Schl\u00fcssel findest du hier: https://steamcommunity.com/dev/apikey",
+                "description": "Die Steam-Integration muss manuell erneut authentifiziert werden \nHier findest du deinen Schl\u00fcssel: {api_key_url}",
                 "title": "Integration erneut authentifizieren"
             },
             "user": {
@@ -20,11 +20,20 @@
                     "account": "Steam-Konto-ID",
                     "api_key": "API-Schl\u00fcssel"
                 },
-                "description": "Verwende https://steamid.io, um deine Steam-Konto-ID zu finden"
+                "description": "Verwende {account_id_url}, um deine Steam-Konto-ID zu finden"
             }
         }
     },
+    "issues": {
+        "removed_yaml": {
+            "description": "Die Konfiguration von Steam \u00fcber YAML wurde entfernt.\n\nDeine bestehende YAML-Konfiguration wird von Home Assistant nicht verwendet.\n\nEntferne die YAML-Konfiguration aus deiner configuration.yaml-Datei und starte den Home Assistant neu, um dieses Problem zu beheben.",
+            "title": "Die Steam-YAML-Konfiguration wurde entfernt"
+        }
+    },
     "options": {
+        "error": {
+            "unauthorized": "Freundesliste eingeschr\u00e4nkt: Bitte lies in der Dokumentation nach, wie du alle anderen Freunde sehen kannst"
+        },
         "step": {
             "init": {
                 "data": {

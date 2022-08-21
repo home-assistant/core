@@ -18,10 +18,6 @@
             "user": {
                 "data": {
                     "api_key": "Kunci API",
-                    "base_path": "Jalur ke API",
-                    "host": "Host",
-                    "port": "Port",
-                    "ssl": "Menggunakan sertifikat SSL",
                     "url": "URL",
                     "verify_ssl": "Verifikasi sertifikat SSL"
                 }

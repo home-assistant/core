@@ -2,6 +2,7 @@
 from unittest.mock import patch
 
 from glances_api import exceptions
+import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import glances
@@ -18,7 +19,6 @@ VERSION = 3
 SCAN_INTERVAL = 10
 
 DEMO_USER_INPUT = {
-    "name": NAME,
     "host": HOST,
     "username": USERNAME,
     "password": PASSWORD,
@@ -29,13 +29,20 @@ DEMO_USER_INPUT = {
 }
 
 
+@pytest.fixture(autouse=True)
+def glances_setup_fixture():
+    """Mock transmission entry setup."""
+    with patch("homeassistant.components.glances.async_setup_entry", return_value=True):
+        yield
+
+
 async def test_form(hass):
     """Test config entry configured successfully."""
 
     result = await hass.config_entries.flow.async_init(
         glances.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
     with patch("homeassistant.components.glances.Glances.get_data", autospec=True):
@@ -45,7 +52,7 @@ async def test_form(hass):
         )
 
     assert result["type"] == "create_entry"
-    assert result["title"] == NAME
+    assert result["title"] == HOST
     assert result["data"] == DEMO_USER_INPUT
 
 
@@ -109,14 +116,14 @@ async def test_options(hass):
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={glances.CONF_SCAN_INTERVAL: 10}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         glances.CONF_SCAN_INTERVAL: 10,
     }

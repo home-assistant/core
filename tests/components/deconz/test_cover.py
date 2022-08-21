@@ -42,68 +42,48 @@ async def test_cover(hass, aioclient_mock, mock_deconz_websocket):
     data = {
         "lights": {
             "1": {
-                "name": "Level controllable cover",
-                "type": "Level controllable output",
-                "state": {"bri": 254, "on": False, "reachable": True},
-                "modelid": "Not zigbee spec",
-                "uniqueid": "00:00:00:00:00:00:00:00-00",
-            },
-            "2": {
                 "name": "Window covering device",
                 "type": "Window covering device",
                 "state": {"lift": 100, "open": False, "reachable": True},
                 "modelid": "lumi.curtain",
                 "uniqueid": "00:00:00:00:00:00:00:01-00",
             },
-            "3": {
+            "2": {
                 "name": "Unsupported cover",
                 "type": "Not a cover",
                 "state": {"reachable": True},
                 "uniqueid": "00:00:00:00:00:00:00:02-00",
-            },
-            "4": {
-                "name": "deconz old brightness cover",
-                "type": "Level controllable output",
-                "state": {"bri": 255, "on": False, "reachable": True},
-                "modelid": "Not zigbee spec",
-                "uniqueid": "00:00:00:00:00:00:00:03-00",
-            },
-            "5": {
-                "name": "Window covering controller",
-                "type": "Window covering controller",
-                "state": {"bri": 253, "on": True, "reachable": True},
-                "modelid": "Motor controller",
-                "uniqueid": "00:00:00:00:00:00:00:04-00",
             },
         }
     }
     with patch.dict(DECONZ_WEB_REQUEST, data):
         config_entry = await setup_deconz_integration(hass, aioclient_mock)
 
-    assert len(hass.states.async_all()) == 5
-    assert hass.states.get("cover.level_controllable_cover").state == STATE_OPEN
-    assert hass.states.get("cover.window_covering_device").state == STATE_CLOSED
+    assert len(hass.states.async_all()) == 2
+    cover = hass.states.get("cover.window_covering_device")
+    assert cover.state == STATE_CLOSED
+    assert cover.attributes[ATTR_CURRENT_POSITION] == 0
     assert not hass.states.get("cover.unsupported_cover")
-    assert hass.states.get("cover.deconz_old_brightness_cover").state == STATE_OPEN
-    assert hass.states.get("cover.window_covering_controller").state == STATE_CLOSED
 
-    # Event signals cover is closed
+    # Event signals cover is open
 
     event_changed_light = {
         "t": "event",
         "e": "changed",
         "r": "lights",
         "id": "1",
-        "state": {"on": True},
+        "state": {"lift": 0, "open": True},
     }
     await mock_deconz_websocket(data=event_changed_light)
     await hass.async_block_till_done()
 
-    assert hass.states.get("cover.level_controllable_cover").state == STATE_CLOSED
+    cover = hass.states.get("cover.window_covering_device")
+    assert cover.state == STATE_OPEN
+    assert cover.attributes[ATTR_CURRENT_POSITION] == 100
 
     # Verify service calls for cover
 
-    mock_deconz_put_request(aioclient_mock, config_entry.data, "/lights/2/state")
+    mock_deconz_put_request(aioclient_mock, config_entry.data, "/lights/1/state")
 
     # Service open cover
 
@@ -145,71 +125,10 @@ async def test_cover(hass, aioclient_mock, mock_deconz_websocket):
     )
     assert aioclient_mock.mock_calls[4][2] == {"stop": True}
 
-    # Verify service calls for legacy cover
-
-    mock_deconz_put_request(aioclient_mock, config_entry.data, "/lights/1/state")
-
-    # Service open cover
-
-    await hass.services.async_call(
-        COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: "cover.level_controllable_cover"},
-        blocking=True,
-    )
-    assert aioclient_mock.mock_calls[5][2] == {"on": False}
-
-    # Service close cover
-
-    await hass.services.async_call(
-        COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: "cover.level_controllable_cover"},
-        blocking=True,
-    )
-    assert aioclient_mock.mock_calls[6][2] == {"on": True}
-
-    # Service set cover position
-
-    await hass.services.async_call(
-        COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: "cover.level_controllable_cover", ATTR_POSITION: 40},
-        blocking=True,
-    )
-    assert aioclient_mock.mock_calls[7][2] == {"bri": 152}
-
-    # Service stop cover movement
-
-    await hass.services.async_call(
-        COVER_DOMAIN,
-        SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: "cover.level_controllable_cover"},
-        blocking=True,
-    )
-    assert aioclient_mock.mock_calls[8][2] == {"bri_inc": 0}
-
-    # Test that a reported cover position of 255 (deconz-rest-api < 2.05.73) is interpreted correctly.
-    assert hass.states.get("cover.deconz_old_brightness_cover").state == STATE_OPEN
-
-    event_changed_light = {
-        "t": "event",
-        "e": "changed",
-        "r": "lights",
-        "id": "4",
-        "state": {"on": True},
-    }
-    await mock_deconz_websocket(data=event_changed_light)
-    await hass.async_block_till_done()
-
-    deconz_old_brightness_cover = hass.states.get("cover.deconz_old_brightness_cover")
-    assert deconz_old_brightness_cover.state == STATE_CLOSED
-    assert deconz_old_brightness_cover.attributes[ATTR_CURRENT_POSITION] == 0
-
     await hass.config_entries.async_unload(config_entry.entry_id)
 
     states = hass.states.async_all()
-    assert len(states) == 5
+    assert len(states) == 2
     for state in states:
         assert state.state == STATE_UNAVAILABLE
 

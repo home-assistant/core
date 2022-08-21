@@ -67,8 +67,11 @@ class EsphomeFan(EsphomeEntity[FanInfo, FanState], FanEntity):
         api_version = self._api_version
         return api_version.major == 1 and api_version.minor > 3
 
-    async def async_set_percentage(self, percentage: int | None) -> None:
+    async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
+        await self._async_set_percentage(percentage)
+
+    async def _async_set_percentage(self, percentage: int | None) -> None:
         if percentage == 0:
             await self.async_turn_off()
             return
@@ -95,7 +98,7 @@ class EsphomeFan(EsphomeEntity[FanInfo, FanState], FanEntity):
         **kwargs: Any,
     ) -> None:
         """Turn on the fan."""
-        await self.async_set_percentage(percentage)
+        await self._async_set_percentage(percentage)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""

@@ -32,14 +32,10 @@
                 "description": "\u6709\u591a\u4e2a\u53ef\u7528\u670d\u52a1\u5668\uff0c\u8bf7\u9009\u62e9\uff1a",
                 "title": "\u9009\u62e9 Plex \u670d\u52a1\u5668"
             },
-            "user": {
-                "title": "Plex \u5a92\u4f53\u670d\u52a1\u5668"
-            },
             "user_advanced": {
                 "data": {
                     "setup_method": "\u8bbe\u7f6e\u65b9\u6cd5"
-                },
-                "title": "Plex \u5a92\u4f53\u670d\u52a1\u5668"
+                }
             }
         }
     },

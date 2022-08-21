@@ -12,7 +12,6 @@
         "step": {
             "locations": {
                 "data": {
-                    "location": "Plassering",
                     "usercode": "Brukerkode"
                 },
                 "description": "Angi brukerkoden for denne brukeren p\u00e5 plasseringen {location_id}",
@@ -26,8 +25,18 @@
                 "data": {
                     "password": "Passord",
                     "username": "Brukernavn"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "auto_bypass_low_battery": "Auto bypass lavt batteri"
                 },
-                "title": ""
+                "description": "Omg\u00e5 automatisk soner i det \u00f8yeblikket de rapporterer lavt batteri.",
+                "title": "TotalConnect-alternativer"
             }
         }
     }

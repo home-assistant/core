@@ -12,21 +12,6 @@ def pywemo_model():
     return "Insight"
 
 
-@pytest.fixture(name="pywemo_device")
-def pywemo_device_fixture(pywemo_device):
-    """Fixture for WeMoDevice instances."""
-    pywemo_device.insight_params = {
-        "currentpower": 1.0,
-        "todaymw": 200000000.0,
-        "state": 0,
-        "onfor": 0,
-        "ontoday": 0,
-        "ontotal": 0,
-        "powerthreshold": 0,
-    }
-    yield pywemo_device
-
-
 class InsightTestTemplate(EntityTestHelpers):
     """Base class for testing WeMo Insight Sensors."""
 

@@ -6,7 +6,8 @@
         },
         "error": {
             "invalid_auth": "Autenticazione non valida",
-            "unknown": "Errore imprevisto"
+            "unknown": "Errore imprevisto",
+            "unknown_mfa": "Si \u00e8 verificato un errore sconosciuto durante la configurazione dell'autenticazione a pi\u00f9 fattori"
         },
         "step": {
             "installation": {
@@ -15,11 +16,23 @@
                 },
                 "description": "Home Assistant ha trovato pi\u00f9 installazioni Verisure nel tuo account My Pages. Per favore, seleziona l'installazione da aggiungere a Home Assistant."
             },
+            "mfa": {
+                "data": {
+                    "code": "Codice di verifica",
+                    "description": "Il tuo account ha la verifica in due passaggi abilitata. Inserisci il codice di verifica che ti viene inviato da Verisure."
+                }
+            },
             "reauth_confirm": {
                 "data": {
                     "description": "Autenticati nuovamente con il tuo account Verisure My Pages.",
                     "email": "Email",
                     "password": "Password"
+                }
+            },
+            "reauth_mfa": {
+                "data": {
+                    "code": "Codice di verifica",
+                    "description": "Il tuo account ha la verifica in due passaggi abilitata. Inserisci il codice di verifica che ti viene inviato da Verisure."
                 }
             },
             "user": {

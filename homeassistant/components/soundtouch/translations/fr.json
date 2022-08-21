@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9"
+        },
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "H\u00f4te"
+                }
+            },
+            "zeroconf_confirm": {
+                "description": "Vous \u00eates sur le point d'ajouter l'appareil SoundTouch nomm\u00e9 `{name}` \u00e0 Home Assistant.",
+                "title": "Confirmer l'ajout de l'appareil Bose SoundTouch"
+            }
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "title": "La configuration YAML pour Bose SoundTouch est en cours de suppression"
+        }
+    }
+}

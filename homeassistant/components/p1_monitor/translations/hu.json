@@ -1,8 +1,7 @@
 {
     "config": {
         "error": {
-            "cannot_connect": "Nem siker\u00fclt csatlakozni",
-            "unknown": "V\u00e1ratlan hiba"
+            "cannot_connect": "Nem siker\u00fclt csatlakozni"
         },
         "step": {
             "user": {

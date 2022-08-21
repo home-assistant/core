@@ -29,12 +29,6 @@
                 "data_description": {
                     "round": "Controla o n\u00famero de d\u00edgitos decimais na sa\u00edda."
                 }
-            },
-            "options": {
-                "data": {
-                    "round": "Precis\u00e3o"
-                },
-                "description": "A precis\u00e3o controla o n\u00famero de d\u00edgitos decimais na sa\u00edda."
             }
         }
     },

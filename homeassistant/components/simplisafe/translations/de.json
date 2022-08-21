@@ -7,19 +7,15 @@
             "wrong_account": "Die angegebenen Benutzeranmeldeinformationen stimmen nicht mit diesem SimpliSafe-Konto \u00fcberein."
         },
         "error": {
-            "2fa_timed_out": "Zeit\u00fcberschreitung beim Warten auf Zwei-Faktor-Authentifizierung",
             "identifier_exists": "Konto bereits registriert",
             "invalid_auth": "Ung\u00fcltige Authentifizierung",
-            "still_awaiting_mfa": "Immernoch warten auf MFA-E-Mail-Klick",
+            "invalid_auth_code_length": "SimpliSafe Autorisierungscodes sind 45 Zeichen lang",
             "unknown": "Unerwarteter Fehler"
         },
         "progress": {
-            "email_2fa": "Gib den Code f\u00fcr die Zwei-Faktor-Authentifizierung ein, den du per E-Mail erhalten hast."
+            "email_2fa": "\u00dcberpr\u00fcfe deine E-Mails auf einen Best\u00e4tigungslink von Simplisafe."
         },
         "step": {
-            "mfa": {
-                "title": "SimpliSafe Multi-Faktor-Authentifizierung"
-            },
             "reauth_confirm": {
                 "data": {
                     "password": "Passwort"
@@ -36,12 +32,10 @@
             "user": {
                 "data": {
                     "auth_code": "Autorisierungscode",
-                    "code": "Code (wird in der Benutzeroberfl\u00e4che von Home Assistant verwendet)",
                     "password": "Passwort",
                     "username": "Benutzername"
                 },
-                "description": "Gib deinen Benutzernamen und Passwort ein.",
-                "title": "Gib deine Informationen ein"
+                "description": "SimpliSafe authentifiziert die Benutzer \u00fcber seine Web-App. Aufgrund technischer Beschr\u00e4nkungen gibt es am Ende dieses Prozesses einen manuellen Schritt; bitte stelle sicher, dass du die [Dokumentation] (http://home-assistant.io/integrations/simplisafe#getting-an-authorization-code) liest, bevor du beginnst.\n\nWenn du bereit bist, klicke [hier]({url}), um die SimpliSafe-Webanwendung zu \u00f6ffnen und deine Anmeldedaten einzugeben. Wenn du dich bereits bei SimpliSafe in deinem Browser angemeldet hast, kannst du eine neue Registerkarte \u00f6ffnen und dann die oben genannte URL in diese Registerkarte kopieren/einf\u00fcgen.\n\nWenn der Vorgang abgeschlossen ist, kehre hierher zur\u00fcck und gib den Autorisierungscode von der URL \"com.simplisafe.mobile\" ein."
             }
         }
     },

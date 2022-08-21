@@ -13,6 +13,9 @@
             "confirm": {
                 "description": "Do you want to setup {name}?"
             },
+            "confirm_hardware": {
+                "description": "Do you want to setup {name}?"
+            },
             "pick_radio": {
                 "data": {
                     "radio_type": "Radio Type"
@@ -46,10 +49,13 @@
             "title": "Alarm Control Panel Options"
         },
         "zha_options": {
+            "always_prefer_xy_color_mode": "Always prefer XY color mode",
             "consider_unavailable_battery": "Consider battery powered devices unavailable after (seconds)",
             "consider_unavailable_mains": "Consider mains powered devices unavailable after (seconds)",
             "default_light_transition": "Default light transition time (seconds)",
             "enable_identify_on_join": "Enable identify effect when devices join the network",
+            "enhanced_light_transition": "Enable enhanced light color/temperature transition from an off-state",
+            "light_transitioning_flag": "Enable enhanced brightness slider during light transition",
             "title": "Global Options"
         }
     },

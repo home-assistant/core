@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Az UniFi Network webhely m\u00e1r konfigur\u00e1lva van",
-            "configuration_updated": "A konfigur\u00e1ci\u00f3 friss\u00edtve.",
+            "configuration_updated": "Konfigur\u00e1ci\u00f3 friss\u00edtve",
             "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt."
         },
         "error": {
@@ -26,6 +26,9 @@
         }
     },
     "options": {
+        "abort": {
+            "integration_not_setup": "Az UniFi integr\u00e1ci\u00f3 nincs be\u00e1ll\u00edtva"
+        },
         "step": {
             "client_control": {
                 "data": {

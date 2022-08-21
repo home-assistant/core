@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 
 from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.components.hassio.handler import HassioAPIError
-from homeassistant.const import EVENT_HOMEASSISTANT_START
+from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.setup import async_setup_component
 
 
@@ -45,7 +45,8 @@ async def test_hassio_discovery_startup(hass, aioclient_mock, hassio_client):
     ) as mock_mqtt:
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         await hass.async_block_till_done()
-
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
         assert aioclient_mock.call_count == 2
         assert mock_mqtt.called
         mock_mqtt.assert_called_with(
@@ -158,6 +159,8 @@ async def test_hassio_discovery_webhook(hass, aioclient_mock, hassio_client):
             "/api/hassio_push/discovery/testuuid",
             json={"addon": "mosquitto", "service": "mqtt", "uuid": "testuuid"},
         )
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
         assert resp.status == HTTPStatus.OK
