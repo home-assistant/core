@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable
-from dataclasses import dataclass
 from datetime import datetime, timedelta
 import itertools
 import logging
@@ -34,6 +33,7 @@ from .match import (
     ble_device_matches,
 )
 from .models import (
+    AdvertisementHistory,
     BaseHaScanner,
     BaseHaScannerT,
     BluetoothCallback,
@@ -55,16 +55,6 @@ FILTER_UUIDS: Final = "UUIDs"
 RSSI_SWITCH_THRESHOLD = 6
 
 _LOGGER = logging.getLogger(__name__)
-
-
-@dataclass
-class AdvertisementHistory:
-    """Bluetooth advertisement history."""
-
-    ble_device: BLEDevice
-    advertisement_data: AdvertisementData
-    time: float
-    source: str
 
 
 def _prefer_previous_adv(old: AdvertisementHistory, new: AdvertisementHistory) -> bool:
@@ -221,13 +211,7 @@ class BluetoothManager:
         )
 
     @hass_callback
-    def scanner_adv_received(
-        self,
-        device: BLEDevice,
-        advertisement_data: AdvertisementData,
-        monotonic_time: float,
-        source: str,
-    ) -> None:
+    def scanner_adv_received(self, new_history: AdvertisementHistory) -> None:
         """Handle a new advertisement from any scanner.
 
         Callbacks from all the scanners arrive here.
@@ -239,15 +223,15 @@ class BluetoothManager:
           than the source from the history or the timestamp
           in the history is older than 180s
         """
-        new_history = AdvertisementHistory(
-            device, advertisement_data, monotonic_time, source
-        )
+        device = new_history.ble_device
         if (old_history := self.history.get(device.address)) and _prefer_previous_adv(
             old_history, new_history
         ):
             return
 
         self.history[device.address] = new_history
+        advertisement_data = new_history.advertisement_data
+        source = new_history.source
 
         for callback_filters in self._bleak_callbacks:
             _dispatch_bleak_callback(*callback_filters, device, advertisement_data)

@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
 from datetime import datetime
 import logging
 import platform
@@ -32,7 +31,12 @@ from .const import (
     SOURCE_LOCAL,
     START_TIMEOUT,
 )
-from .models import BaseHaScanner, BluetoothManagerCallback, BluetoothScanningMode
+from .models import (
+    AdvertisementHistory,
+    BaseHaScanner,
+    BluetoothManagerCallback,
+    BluetoothScanningMode,
+)
 from .util import adapter_human_name, async_reset_adapter
 
 OriginalBleakScanner = bleak.BleakScanner
@@ -130,7 +134,7 @@ class HaScanner(BaseHaScanner):
 
     @hass_callback
     def async_register_callback(
-        self, callback: Callable[[BLEDevice, AdvertisementData, float, str], None]
+        self, callback: BluetoothManagerCallback
     ) -> CALLBACK_TYPE:
         """Register a callback.
 
@@ -167,7 +171,11 @@ class HaScanner(BaseHaScanner):
             # state if all the data is empty.
             self._last_detection = callback_time
         for callback in self._callbacks:
-            callback(ble_device, advertisement_data, callback_time, self.source)
+            callback(
+                AdvertisementHistory(
+                    ble_device, advertisement_data, callback_time, self.source
+                )
+            )
 
     async def async_start(self) -> None:
         """Start bluetooth scanner."""

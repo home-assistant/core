@@ -1,21 +1,23 @@
-"""Bluetooth scanner for esphome"""
+"""Bluetooth scanner for esphome."""
 
 from dataclasses import dataclass
+import datetime
 from datetime import timedelta
 import re
 import time
-import datetime
+
 from aioesphomeapi import APIClient, APIModelBase, converter_field
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
 
 from homeassistant.components.bluetooth import (
+    AdvertisementHistory,
+    BaseHaScanner,
     BluetoothManagerCallback,
     ScannerType,
     async_get_advertisement_callback,
     async_register_scanner,
 )
-from homeassistant.components.bluetooth.models import BaseHaScanner
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.event import async_track_time_interval
@@ -27,12 +29,16 @@ TWO = re.compile("..")
 
 @dataclass(frozen=True)
 class BluetoothServiceData(APIModelBase):
+    """Bluetooth service data."""
+
     uuid: str = ""
     data: list[int] = converter_field(default_factory=list, converter=list)
 
 
 @dataclass(frozen=True)
 class BluetoothLEAdvertisement(APIModelBase):
+    """Bluetooth LE advertisement."""
+
     address: int = 0
     name: str = ""
     rssi: int = 0
@@ -68,7 +74,7 @@ async def async_connect_scanner(
 
 
 class ESPHomeScannner(BaseHaScanner):
-    """Scanner for esphome"""
+    """Scanner for esphome."""
 
     def __init__(
         self,
@@ -90,7 +96,7 @@ class ESPHomeScannner(BaseHaScanner):
             self._hass, self._async_expire_devices, timedelta(seconds=30)
         )
 
-    def _async_expire_devices(self, dt: datetime.datetime) -> None:
+    def _async_expire_devices(self, _datetime: datetime.datetime) -> None:
         """Expire old devices."""
         now = time.monotonic()
         expired = [
@@ -125,4 +131,6 @@ class ESPHomeScannner(BaseHaScanner):
             service_data={long_uuid(k): v for k, v in adv.service_data},
             service_uuids=[long_uuid(hex) for hex in adv.service_uuids],
         )
-        self._manager_callback(device, adv_data, now, self._source)
+        self._manager_callback(
+            AdvertisementHistory(device, adv_data, now, self._source)
+        )

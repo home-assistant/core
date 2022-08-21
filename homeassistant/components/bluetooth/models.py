@@ -42,6 +42,16 @@ class ScannerType(Enum):
 
 
 @dataclass
+class AdvertisementHistory:
+    """Bluetooth advertisement history."""
+
+    ble_device: BLEDevice
+    advertisement_data: AdvertisementData
+    time: float
+    source: str
+
+
+@dataclass
 class BluetoothServiceInfoBleak(BluetoothServiceInfo):
     """BluetoothServiceInfo with bleak data.
 
@@ -82,7 +92,7 @@ class BluetoothScanningMode(Enum):
 BluetoothChange = Enum("BluetoothChange", "ADVERTISEMENT")
 BluetoothCallback = Callable[[BluetoothServiceInfoBleak, BluetoothChange], None]
 ProcessAdvertisementCallback = Callable[[BluetoothServiceInfoBleak], bool]
-BluetoothManagerCallback = Callable[[BLEDevice, AdvertisementData, float, str], None]
+BluetoothManagerCallback = Callable[[AdvertisementHistory], None]
 
 
 class BaseHaScanner:

@@ -31,7 +31,9 @@ from .const import (
 from .manager import BluetoothManager
 from .match import BluetoothCallbackMatcher, IntegrationMatcher
 from .models import (
+    AdvertisementHistory,
     BaseHaScanner,
+    BaseHaScannerT,
     BluetoothCallback,
     BluetoothChange,
     BluetoothManagerCallback,
@@ -52,6 +54,7 @@ if TYPE_CHECKING:
 
 
 __all__ = [
+    "AdvertisementHistory",
     "async_ble_device_from_address",
     "async_discovered_service_info",
     "async_get_scanner",
@@ -184,7 +187,7 @@ def async_rediscover_address(hass: HomeAssistant, address: str) -> None:
 
 @hass_callback
 def async_register_scanner(
-    hass: HomeAssistant, scanner: BaseHaScanner, scanner_type: ScannerType
+    hass: HomeAssistant, scanner: BaseHaScannerT, scanner_type: ScannerType
 ) -> CALLBACK_TYPE:
     """Register a BleakScanner."""
     manager: BluetoothManager = hass.data[DATA_MANAGER]
