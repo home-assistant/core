@@ -212,7 +212,7 @@ class DPCode(StrEnum):
     DECIBEL_SENSITIVITY = "decibel_sensitivity"
     DECIBEL_SWITCH = "decibel_switch"
     DEHUMIDITY_SET_VALUE = "dehumidify_set_value"
-    DEVICE_MODE = "device_mode"  # Motion sensor light (gyd)
+    DEVICE_MODE = "device_mode"
     DO_NOT_DISTURB = "do_not_disturb"
     DOORCONTACT_STATE = "doorcontact_state"  # Status of door window sensor
     DOORCONTACT_STATE_2 = "doorcontact_state_2"
