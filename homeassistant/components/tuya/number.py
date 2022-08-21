@@ -90,7 +90,7 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
         NumberEntityDescription(
             key=DPCode.PIR_DELAY,
             name="PIR delay",
-            native_unit_of_measurement="Secs",
+            native_unit_of_measurement="seconds",
             icon="mdi:timer-play",
             entity_category=EntityCategory.CONFIG,
         ),
