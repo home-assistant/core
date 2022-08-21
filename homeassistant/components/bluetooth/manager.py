@@ -33,7 +33,14 @@ from .match import (
     IntegrationMatcher,
     ble_device_matches,
 )
-from .models import BluetoothCallback, BluetoothChange, BluetoothServiceInfoBleak
+from .models import (
+    BaseHaScanner,
+    BaseHaScannerT,
+    BluetoothCallback,
+    BluetoothChange,
+    BluetoothServiceInfoBleak,
+    ScannerType,
+)
 from .usage import install_multiple_bleak_catcher, uninstall_multiple_bleak_catcher
 from .util import async_get_bluetooth_adapters
 
@@ -41,7 +48,6 @@ if TYPE_CHECKING:
     from bleak.backends.device import BLEDevice
     from bleak.backends.scanner import AdvertisementData
 
-    from .scanner import HaScanner
 
 FILTER_UUIDS: Final = "UUIDs"
 
@@ -137,7 +143,7 @@ class BluetoothManager:
             tuple[AdvertisementDataCallback, dict[str, set[str]]]
         ] = []
         self.history: dict[str, AdvertisementHistory] = {}
-        self._scanners: list[HaScanner] = []
+        self._scanners: list[BaseHaScanner] = []
         self._adapters: dict[str, AdapterDetails] = {}
 
     def _find_adapter_by_address(self, address: str) -> str | None:
@@ -364,8 +370,11 @@ class BluetoothManager:
         """Trigger discovery of devices which have already been seen."""
         self._integration_matcher.async_clear_address(address)
 
-    def async_register_scanner(self, scanner: HaScanner) -> CALLBACK_TYPE:
+    def async_register_scanner(
+        self, scanner: BaseHaScannerT, scanner_type: ScannerType
+    ) -> CALLBACK_TYPE:
         """Register a new scanner."""
+        # TODO: Handle passive only scanner type
 
         def _unregister_scanner() -> None:
             self._scanners.remove(scanner)

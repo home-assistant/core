@@ -32,7 +32,7 @@ from .const import (
     SOURCE_LOCAL,
     START_TIMEOUT,
 )
-from .models import BluetoothScanningMode
+from .models import BaseHaScanner, BluetoothManagerCallback, BluetoothScanningMode
 from .util import adapter_human_name, async_reset_adapter
 
 OriginalBleakScanner = bleak.BleakScanner
@@ -92,7 +92,7 @@ def create_bleak_scanner(
         raise RuntimeError(f"Failed to initialize Bluetooth: {ex}") from ex
 
 
-class HaScanner:
+class HaScanner(BaseHaScanner):
     """Operate and automatically recover a BleakScanner.
 
     Multiple BleakScanner can be used at the same time
@@ -119,9 +119,7 @@ class HaScanner:
         self._cancel_watchdog: CALLBACK_TYPE | None = None
         self._last_detection = 0.0
         self._start_time = 0.0
-        self._callbacks: list[
-            Callable[[BLEDevice, AdvertisementData, float, str], None]
-        ] = []
+        self._callbacks: list[BluetoothManagerCallback] = []
         self.name = adapter_human_name(adapter, address)
         self.source = self.adapter or SOURCE_LOCAL
 

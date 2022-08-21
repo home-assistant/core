@@ -1,13 +1,14 @@
 """Models for bluetooth."""
 from __future__ import annotations
 
+from abc import abstractmethod
 import asyncio
 from collections.abc import Callable
 import contextlib
 from dataclasses import dataclass
 from enum import Enum
 import logging
-from typing import TYPE_CHECKING, Any, Final
+from typing import TYPE_CHECKING, Any, Final, TypeVar
 
 from bleak import BleakClient, BleakError
 from bleak.backends.device import BLEDevice
@@ -31,6 +32,13 @@ _LOGGER = logging.getLogger(__name__)
 FILTER_UUIDS: Final = "UUIDs"
 
 MANAGER: BluetoothManager | None = None
+
+
+class ScannerType(Enum):
+    """Type of scanner."""
+
+    CONNECTABLE = "connectable"  # supports connecting to devices
+    NON_CONNECTABLE = "non_connectable"  # passive advertising only
 
 
 @dataclass
@@ -74,6 +82,19 @@ class BluetoothScanningMode(Enum):
 BluetoothChange = Enum("BluetoothChange", "ADVERTISEMENT")
 BluetoothCallback = Callable[[BluetoothServiceInfoBleak, BluetoothChange], None]
 ProcessAdvertisementCallback = Callable[[BluetoothServiceInfoBleak], bool]
+BluetoothManagerCallback = Callable[[BLEDevice, AdvertisementData, float, str], None]
+
+
+class BaseHaScanner:
+    """Base class for Ha Scanners."""
+
+    @abstractmethod
+    @property
+    def discovered_devices(self) -> list[BLEDevice]:
+        """Return a list of discovered devices."""
+
+
+BaseHaScannerT = TypeVar("BaseHaScannerT", bound=BaseHaScanner)
 
 
 class HaBleakScannerWrapper(BaseBleakScanner):

@@ -10,7 +10,7 @@ import async_timeout
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant, callback as hass_callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, discovery_flow
 from homeassistant.loader import async_get_bluetooth
@@ -31,13 +31,16 @@ from .const import (
 from .manager import BluetoothManager
 from .match import BluetoothCallbackMatcher, IntegrationMatcher
 from .models import (
+    BaseHaScanner,
     BluetoothCallback,
     BluetoothChange,
+    BluetoothManagerCallback,
     BluetoothScanningMode,
     BluetoothServiceInfo,
     BluetoothServiceInfoBleak,
     HaBleakScannerWrapper,
     ProcessAdvertisementCallback,
+    ScannerType,
 )
 from .scanner import HaScanner, ScannerStartError, create_bleak_scanner
 from .util import adapter_human_name, adapter_unique_name, async_default_adapter
@@ -56,11 +59,14 @@ __all__ = [
     "async_rediscover_address",
     "async_register_callback",
     "async_track_unavailable",
+    "BaseHaScanner",
+    "BluetoothManagerCallback",
     "BluetoothServiceInfo",
     "BluetoothServiceInfoBleak",
     "BluetoothScanningMode",
     "BluetoothCallback",
     "SOURCE_LOCAL",
+    "ScannerType",
 ]
 
 
@@ -176,6 +182,22 @@ def async_rediscover_address(hass: HomeAssistant, address: str) -> None:
     manager.async_rediscover_address(address)
 
 
+@hass_callback
+def async_register_scanner(
+    hass: HomeAssistant, scanner: BaseHaScanner, scanner_type: ScannerType
+) -> CALLBACK_TYPE:
+    """Register a BleakScanner."""
+    manager: BluetoothManager = hass.data[DATA_MANAGER]
+    return manager.async_register_scanner(scanner, scanner_type)
+
+
+@hass_callback
+def async_get_advertisement_callback(hass: HomeAssistant) -> BluetoothManagerCallback:
+    """Get the advertisement callback."""
+    manager: BluetoothManager = hass.data[DATA_MANAGER]
+    return manager.scanner_adv_received
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the bluetooth integration."""
     integration_matcher = IntegrationMatcher(await async_get_bluetooth(hass))
@@ -285,7 +307,9 @@ async def async_setup_entry(
         await scanner.async_start()
     except ScannerStartError as err:
         raise ConfigEntryNotReady from err
-    entry.async_on_unload(manager.async_register_scanner(scanner))
+    entry.async_on_unload(
+        manager.async_register_scanner(scanner, ScannerType.CONNECTABLE)
+    )
     await async_update_device(entry, manager, adapter, address)
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = scanner
     return True
