@@ -741,10 +741,11 @@ class TargetSelectorConfig(TypedDict, total=False):
     device: SingleDeviceSelectorConfig
 
 
-class StateSelectorConfig(TypedDict):
+class StateSelectorConfig(TypedDict, total=False):
     """Class to represent an state selector config."""
 
     entity_id: str
+    attribute: str
 
 
 @SELECTORS.register("state")
@@ -753,7 +754,12 @@ class StateSelector(Selector):
 
     selector_type = "state"
 
-    CONFIG_SCHEMA = vol.Schema({vol.Required("entity_id"): cv.entity_id})
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Required("entity_id"): cv.entity_id,
+            vol.Optional("attribute"): str,
+        }
+    )
 
     def __init__(self, config: StateSelectorConfig) -> None:
         """Instantiate a selector."""
