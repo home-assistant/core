@@ -1,7 +1,8 @@
 """The Fjäråskupan integration."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import AsyncIterator, Callable
+from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -14,6 +15,7 @@ from homeassistant.components.bluetooth import (
     BluetoothScanningMode,
     BluetoothServiceInfoBleak,
     async_address_present,
+    async_ble_device_from_address,
     async_rediscover_address,
     async_register_callback,
 )
@@ -84,7 +86,18 @@ class Coordinator(DataUpdateCoordinator[State]):
 
     def detection_callback(self, service_info: BluetoothServiceInfoBleak) -> None:
         """Handle a new announcement of data."""
+        self.device.device = service_info.device
         self.device.detection_callback(service_info.device, service_info.advertisement)
+        self.async_set_updated_data(self.device.state)
+
+    @asynccontextmanager
+    async def async_connect_and_update(self) -> AsyncIterator[Device]:
+        """Provide an up to date device for use during connections."""
+        if ble_device := async_ble_device_from_address(self.hass, self.device.address):
+            self.device.device = ble_device
+        async with self.device:
+            yield self.device
+
         self.async_set_updated_data(self.device.state)
 
 
