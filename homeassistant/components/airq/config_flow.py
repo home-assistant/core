@@ -68,9 +68,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         This prompts the user to enter the credentials to access the device.
         It then tries to connect to the device, and to assess the validity
         of the password.
-
-        If authentication is successful, next step handles minimal configuration
-        for the integration.
         """
         if user_input is None:
             return self.async_show_form(

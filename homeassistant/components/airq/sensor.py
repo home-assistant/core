@@ -1,8 +1,4 @@
-"""Definition of air-Q sensor platform.
-
-This platform initialisation follows immediately after (or as the last part of) the
-integration setup, defined in __init__.py.
-"""
+"""Definition of air-Q sensor platform."""
 from __future__ import annotations
 
 import logging
@@ -70,8 +66,6 @@ SENSOR_TYPES: list[SensorEntityDescription] = [
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    # The definition in SensorDeviceClass.PM1 says <= 0.1µm, not 1µm.
-    # Its documentation, however, says < 1µm
     SensorEntityDescription(
         key="pm1",
         name="PM1",
@@ -193,13 +187,6 @@ class AirQSensor(CoordinatorEntity, SensorEntity):
     @property
     def native_value(self) -> float | int | None:
         """Return the value reported by the sensor."""
-        # airthings has a neat way of doing it when the data returned by the API
-        # are a dictionary with keys for each device, and values being dictionaries
-        # of sensor values. Under this condition, the call should be:
-        # return self.coordinator.data[self._id].sensors[self.entity_description.key]
-        # In our case now, only one device is allowed and self.coordinator.data
-        # contains the regular dict retrieved from a single device
-
-        # .get(key, None) over [key] to guard against the keys of the warming up
-        # sensors not being present in the returned dictionary
-        return self.coordinator.data.get(self.entity_description.key, None)
+        # While a sensor is warming up its key isn't present in the returned dict
+        # => .get(key) returns None
+        return self.coordinator.data.get(self.entity_description.key)
