@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING, Any
 import async_timeout
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
+import msgpack
 
 from homeassistant import config_entries
 from homeassistant.components import usb
@@ -20,7 +21,6 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback as hass_call
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, discovery_flow
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.json import json_loads
 from homeassistant.loader import async_get_bluetooth
 
 from . import models
@@ -207,7 +207,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     @hass_callback
     def async_advertisement(service: ServiceCall) -> None:
         data = service.data
-        decoded: dict[str, Any] = json_loads(data["data"])
+        decoded: dict[str, Any] = msgpack.loads(data["data"])
         _LOGGER.warning("Advertisement: %s", decoded)
         manager.scanner_adv_received(
             BLEDevice(  # type: ignore[no-untyped-call]

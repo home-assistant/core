@@ -765,6 +765,9 @@ motionblinds==0.6.12
 # homeassistant.components.motioneye
 motioneye-client==0.3.12
 
+# homeassistant.components.bluetooth
+msgpack==1.0.4
+
 # homeassistant.components.mullvad
 mullvad-api==1.0.0
 
