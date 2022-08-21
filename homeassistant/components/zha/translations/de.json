@@ -13,6 +13,9 @@
             "confirm": {
                 "description": "M\u00f6chtest du {name} einrichten?"
             },
+            "confirm_hardware": {
+                "description": "M\u00f6chtest du {name} einrichten?"
+            },
             "pick_radio": {
                 "data": {
                     "radio_type": "Funktyp"
@@ -52,7 +55,7 @@
             "default_light_transition": "Standardlicht\u00fcbergangszeit (Sekunden)",
             "enable_identify_on_join": "Aktiviere den Identifikationseffekt, wenn Ger\u00e4te dem Netzwerk beitreten",
             "enhanced_light_transition": "Aktiviere einen verbesserten Lichtfarben-/Temperatur\u00fcbergang aus einem ausgeschalteten Zustand",
-            "light_transitioning_flag": "Erweiterten Helligkeitsregler w\u00e4hrend des Licht\u00fcbergangs aktivieren",
+            "light_transitioning_flag": "Verbesserten Helligkeitsregler w\u00e4hrend des Licht\u00fcbergangs aktivieren",
             "title": "Globale Optionen"
         }
     },

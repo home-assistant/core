@@ -29,7 +29,13 @@
                 "data": {
                     "host": "IP \u4f4d\u5740"
                 },
-                "description": "\u5fc5\u9808\u900f\u904e\u4ee5\u4e0b\u6b65\u9a5f\u4ee5\u555f\u7528 Awair \u672c\u5730\u7aef API\uff1a{url}"
+                "description": "\u8ddf\u96a8 [\u4ee5\u4e0b\u6b65\u9a5f]({url}) \u4ee5\u555f\u7528 Awair \u672c\u5730\u7aef API\u3002\n\n\u5b8c\u6210\u5f8c\u9ede\u9078\u50b3\u9001\u3002"
+            },
+            "local_pick": {
+                "data": {
+                    "device": "\u88dd\u7f6e",
+                    "host": "IP \u4f4d\u5740"
+                }
             },
             "reauth": {
                 "data": {

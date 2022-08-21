@@ -29,7 +29,13 @@
                 "data": {
                     "host": "Adre\u00e7a IP"
                 },
-                "description": "L'API local d'Awair s'ha d'activar seguint aquests passos: {url}"
+                "description": "Segueix [aquestes instruccions]({url}) per com activar l'API local d'Awair.\n\nPrem 'envia' quan hagis acabat."
+            },
+            "local_pick": {
+                "data": {
+                    "device": "Dispositiu",
+                    "host": "Adre\u00e7a IP"
+                }
             },
             "reauth": {
                 "data": {
