@@ -18,6 +18,9 @@ HAP-python==4.5.0
 # homeassistant.components.flick_electric
 PyFlick==0.0.2
 
+# homeassistant.components.keymitt_ble
+PyMicroBot==0.0.4
+
 # homeassistant.components.mobile_app
 # homeassistant.components.owntracks
 PyNaCl==1.5.0

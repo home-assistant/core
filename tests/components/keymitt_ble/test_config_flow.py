@@ -6,12 +6,7 @@ from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_USER
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_ADDRESS
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import (
-    NOT_MICROBOT_INFO,
-    USER_INPUT,
-    SERVICE_INFO,
-    patch_async_setup_entry,
-)
+from . import NOT_MICROBOT_INFO, SERVICE_INFO, USER_INPUT, patch_async_setup_entry
 
 from tests.common import MockConfigEntry
 
