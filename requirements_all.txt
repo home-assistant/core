@@ -427,7 +427,7 @@ blockchain==1.4.4
 bluetooth-adapters==0.2.0
 
 # homeassistant.components.bluetooth
-bluetooth-auto-recovery==0.2.1
+bluetooth-auto-recovery==0.2.2
 
 # homeassistant.components.bond
 bond-async==0.1.22
@@ -2512,7 +2512,7 @@ xs1-api-client==3.0.0
 yalesmartalarmclient==0.3.8
 
 # homeassistant.components.yalexs_ble
-yalexs-ble==1.6.2
+yalexs-ble==1.6.4
 
 # homeassistant.components.august
 yalexs==1.2.1
