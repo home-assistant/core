@@ -89,7 +89,7 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
     "gyd": (
         NumberEntityDescription(
             key=DPCode.PIR_DELAY,
-            name="PIR Delay",
+            name="PIR delay",
             native_unit_of_measurement="Secs",
             icon="mdi:timer-play",
             entity_category=EntityCategory.CONFIG,
