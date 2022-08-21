@@ -7,7 +7,7 @@ from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.const import Platform
 
 DOMAIN = "flume"
-_LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__package__)
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
