@@ -25,7 +25,6 @@ from homeassistant.const import (
     ATTR_NAME,
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
-    EVENT_HOMEASSISTANT_STOP,
     PRECISION_TENTHS,
     TEMP_CELSIUS,
 )
@@ -67,7 +66,7 @@ async def async_setup_entry(
     """Set up the Nobø Ecohub platform from UI configuration."""
 
     # Setup connection with hub
-    hub = hass.data[DOMAIN][config_entry.entry_id]
+    hub = hass.data[DOMAIN][config_entry.entry_id].hub
 
     override_type = (
         nobo.API.OVERRIDE_TYPE_NOW
@@ -113,12 +112,6 @@ async def async_setup_entry(
         )
         for zone_id in hub.zones
     )
-
-    async def _async_close(event):
-        """Close the Nobø Ecohub socket connection when HA stops."""
-        await hub.stop()
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_close)
 
 
 def _set_on_commands(command_on_by_id, command_on_dict, hub):
