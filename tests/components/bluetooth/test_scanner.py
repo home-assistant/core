@@ -482,9 +482,12 @@ async def test_adapter_fails_to_start_and_takes_a_bit_to_init(
     ), patch(
         "homeassistant.components.bluetooth.scanner.OriginalBleakScanner",
         return_value=scanner,
-    ):
+    ), patch(
+        "homeassistant.components.bluetooth.util.recover_adapter", return_value=True
+    ) as mock_recover_adapter:
         await async_setup_with_one_adapter(hass)
 
         assert called_start == 3
 
+    assert len(mock_recover_adapter.mock_calls) == 1
     assert "Waiting for adapter to initialize" in caplog.text
