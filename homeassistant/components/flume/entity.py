@@ -18,7 +18,6 @@ class FlumeEntity(CoordinatorEntity[FlumeDataUpdateCoordinator]):
         self,
         coordinator: FlumeDataUpdateCoordinator,
         description: EntityDescription,
-        name: str,
         device_id: str,
     ) -> None:
         """Class initializer."""
