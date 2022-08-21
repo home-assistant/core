@@ -568,27 +568,17 @@ class NextDnsSwitch(CoordinatorEntity[NextDnsSettingsUpdateCoordinator], SwitchE
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
-        try:
-            result = await self.coordinator.nextdns.set_setting(
-                self.coordinator.profile_id, self.entity_description.key, True
-            )
-        except (
-            ApiError,
-            ClientConnectorError,
-            asyncio.TimeoutError,
-            ClientError,
-        ) as err:
-            raise HomeAssistantError(err) from err
-
-        if result:
-            self._attr_is_on = True
-            self.async_write_ha_state()
+        await self.async_set_setting(True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off switch."""
+        await self.async_set_setting(False)
+
+    async def async_set_setting(self, new_state: bool) -> None:
+        """Set the new state."""
         try:
             result = await self.coordinator.nextdns.set_setting(
-                self.coordinator.profile_id, self.entity_description.key, False
+                self.coordinator.profile_id, self.entity_description.key, new_state
             )
         except (
             ApiError,
@@ -596,8 +586,10 @@ class NextDnsSwitch(CoordinatorEntity[NextDnsSettingsUpdateCoordinator], SwitchE
             asyncio.TimeoutError,
             ClientError,
         ) as err:
-            raise HomeAssistantError(err) from err
+            raise HomeAssistantError(
+                f"NextDNS API returned an error calling set_setting for {self.entity_id}: {err}"
+            ) from err
 
         if result:
-            self._attr_is_on = False
+            self._attr_is_on = new_state
             self.async_write_ha_state()
