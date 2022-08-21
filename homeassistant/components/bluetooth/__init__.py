@@ -3,16 +3,21 @@ from __future__ import annotations
 
 from asyncio import Future
 from collections.abc import Callable
+import logging
 import platform
-from typing import TYPE_CHECKING
+import re
+import time
+from typing import TYPE_CHECKING, Any
 
 import async_timeout
+from bleak.backends.scanner import AdvertisementData
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant, callback as hass_callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback as hass_callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, discovery_flow
+from homeassistant.helpers.json import json_loads
 from homeassistant.loader import async_get_bluetooth
 
 from . import models
@@ -41,6 +46,8 @@ from .models import (
 )
 from .scanner import HaScanner, ScannerStartError, create_bleak_scanner
 from .util import adapter_human_name, adapter_unique_name, async_default_adapter
+
+_LOGGER = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from bleak.backends.device import BLEDevice
@@ -184,6 +191,40 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     manager.async_setup()
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, manager.async_stop)
     hass.data[DATA_MANAGER] = models.MANAGER = manager
+
+    two = re.compile("..")
+
+    @hass_callback
+    def long_uuid(uuid: str) -> str:
+        """Convert a UUID to a long UUID."""
+        return (
+            f"0000{uuid[2:].lower()}-1000-8000-00805f9b34fb" if len(uuid) < 8 else uuid
+        )
+
+    @hass_callback
+    def async_advertisement(service: ServiceCall) -> None:
+        data = service.data
+        decoded: dict[str, Any] = json_loads(data["data"])
+        _LOGGER.warning("Advertisement: %s", decoded)
+        manager.scanner_adv_received(
+            BLEDevice(  # type: ignore[no-untyped-call]
+                address=":".join(two.findall("%012X" % data["a"])),
+                name=data.get("n", ""),
+                rssi=data.get("r", 0),
+            ),
+            AdvertisementData(  # type: ignore[no-untyped-call]
+                local_name=data.get("n", ""),
+                manufacturer_data={hex(k): v.encode() for k, v in decoded.get("m", {})},
+                service_data={
+                    long_uuid(k): v.encode() for k, v in decoded.get("s", {})
+                },
+                service_uuids=[long_uuid(hex) for hex in decoded.get("u", [])],
+            ),
+            time.monotonic(),
+            data.get("s", "unknown"),
+        )
+
+    hass.services.async_register(DOMAIN, "advertisement", async_advertisement)
 
     adapters = await manager.async_get_bluetooth_adapters()
 
