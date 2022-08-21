@@ -5,7 +5,7 @@ import logging
 from typing import Any
 
 from bleak.backends.device import BLEDevice
-from microbot import (  # pylint: disable=import-error
+from microbot import (
     MicroBotAdvertisement,
     MicroBotApiClient,
     parse_advertisement_data,
