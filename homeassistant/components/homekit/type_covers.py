@@ -303,11 +303,15 @@ class OpeningDevice(OpeningDeviceBase, HomeAccessory):
     @callback
     def async_update_state(self, new_state):
         """Update cover position and tilt after state changed."""
+        is_moving = new_state.state in [STATE_OPENING, STATE_CLOSING]
         current_position = new_state.attributes.get(ATTR_CURRENT_POSITION)
         if isinstance(current_position, (float, int)):
             current_position = int(current_position)
             self.char_current_position.set_value(current_position)
-            self.char_target_position.set_value(current_position)
+            # Writing target_position on moving cover
+            # will break moving state in HK.
+            if not is_moving:
+                self.char_target_position.set_value(current_position)
 
         position_state = _hass_state_to_position_start(new_state.state)
         self.char_position_state.set_value(position_state)
@@ -394,10 +398,11 @@ class WindowCoveringBasic(OpeningDeviceBase, HomeAccessory):
         """Update cover position after state changed."""
         position_mapping = {STATE_OPEN: 100, STATE_CLOSED: 0}
         hk_position = position_mapping.get(new_state.state)
+        is_moving = new_state.state in [STATE_OPENING, STATE_CLOSING]
         if hk_position is not None:
             if self.char_current_position.value != hk_position:
                 self.char_current_position.set_value(hk_position)
-            if self.char_target_position.value != hk_position:
+            if self.char_target_position.value != hk_position and not is_moving:
                 self.char_target_position.set_value(hk_position)
         position_state = _hass_state_to_position_start(new_state.state)
         if self.char_position_state.value != position_state:
