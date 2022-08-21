@@ -172,6 +172,7 @@ class DPCode(StrEnum):
     BRIGHTNESS_MIN_2 = "brightness_min_2"
     BRIGHTNESS_MIN_3 = "brightness_min_3"
     C_F = "c_f"  # Temperature unit switching
+    CDS = "cds"  # Motion sensor light (gyd) - Light sensor level
     CH2O_STATE = "ch2o_state"
     CH2O_VALUE = "ch2o_value"
     CH4_SENSOR_STATE = "ch4_sensor_state"
@@ -211,6 +212,7 @@ class DPCode(StrEnum):
     DECIBEL_SENSITIVITY = "decibel_sensitivity"
     DECIBEL_SWITCH = "decibel_switch"
     DEHUMIDITY_SET_VALUE = "dehumidify_set_value"
+    DEVICE_MODE = "device_mode"  # Motion sensor light (gyd)
     DO_NOT_DISTURB = "do_not_disturb"
     DOORCONTACT_STATE = "doorcontact_state"  # Status of door window sensor
     DOORCONTACT_STATE_2 = "doorcontact_state_2"
@@ -282,6 +284,10 @@ class DPCode(StrEnum):
     PHASE_B = "phase_b"
     PHASE_C = "phase_c"
     PIR = "pir"  # Motion sensor
+    PIR_DELAY = "pir_delay"  # Motion sensor light (gyd) - duration of floodlight
+    PIR_RESUME_COUNTDOWN = "pir_resume_countdown"  # Motion Sensor light (gyd)
+    PIR_SENSITIVITY = "pir_sensitivity"  # Motion Sensor light (gyd) - Sensitivity
+    PIR_STATE = "pir_state"  # Motion Sensor light (gyd)- motion detected
     PM1 = "pm1"
     PM10 = "pm10"
     PM25 = "pm25"
@@ -322,6 +328,8 @@ class DPCode(StrEnum):
     SOS_STATE = "sos_state"  # Emergency mode
     SPEED = "speed"  # Speed level
     SPRAY_MODE = "spray_mode"  # Spraying mode
+    STANDBY_TIME = "standby_time"  # Motion Sensor light (gyd) - Standby duration
+    STANDBY_BRIGHT = "standby_bright"  # Motion sensor light (gyd) - Brightness
     START = "start"  # Start
     STATUS = "status"
     STERILIZATION = "sterilization"  # Sterilization
@@ -347,6 +355,7 @@ class DPCode(StrEnum):
     SWITCH_LED_2 = "switch_led_2"
     SWITCH_LED_3 = "switch_led_3"
     SWITCH_NIGHT_LIGHT = "switch_night_light"
+    SWITCH_PIR = "switch_pir"  # PIR Floodlight (gyd) - control PIR sensor
     SWITCH_SAVE_ENERGY = "switch_save_energy"
     SWITCH_SOUND = "switch_sound"  # Voice switch
     SWITCH_SPRAY = "switch_spray"  # Spraying switch

@@ -98,6 +98,16 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             name="Switch",
         ),
     ),
+    # Motion Sensor Light
+    # https://developer.tuya.com/en/docs/iot/gyd?id=Kaof8a8hycfmy
+    "gyd": (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_PIR,
+            name="Pir",
+            icon="mdi:radar",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     # Wake Up Light II
     # Not documented
     "hxd": (

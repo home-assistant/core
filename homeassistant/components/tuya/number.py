@@ -84,6 +84,36 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             icon="mdi:microphone",
         ),
     ),
+    # Motion Sensor Light
+    # https://developer.tuya.com/en/docs/iot/gyd?id=Kaof8a8hycfmy
+    "gyd": (
+        NumberEntityDescription(
+            key=DPCode.PIR_DELAY,
+            name="PIR Delay",
+            native_unit_of_measurement="Secs",
+            icon="mdi:timer-play",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.STANDBY_TIME,
+            name="Standby Time",
+            native_unit_of_measurement="Mins",
+            icon="mdi:timer-plus",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.STANDBY_BRIGHT,
+            name="Standby Bright",
+            icon="mdi:brightness-6",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.PIR_RESUME_COUNTDOWN,
+            name="Resume Countdown",
+            icon="mdi:av-timer",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     # Human Presence Sensor
     # https://developer.tuya.com/en/docs/iot/categoryhps?id=Kaiuz42yhn1hs
     "hps": (
