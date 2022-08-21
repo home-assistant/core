@@ -22,8 +22,6 @@ from homeassistant.util.ulid import ulid_hex
 
 DOMAIN = "file_upload"
 
-# If increased, change upload view to streaming
-# https://docs.aiohttp.org/en/stable/web_quickstart.html#file-uploads
 ONE_MEGABYTE = 1024 * 1024
 MAX_SIZE = 100 * ONE_MEGABYTE
 TEMP_DIR_NAME = f"home-assistant-{DOMAIN}"
