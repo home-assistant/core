@@ -33,7 +33,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.18.12
+PySwitchbot==0.18.13
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -341,7 +341,7 @@ blinkpy==0.19.0
 bluetooth-adapters==0.2.0
 
 # homeassistant.components.bluetooth
-bluetooth-auto-recovery==0.2.1
+bluetooth-auto-recovery==0.2.2
 
 # homeassistant.components.bond
 bond-async==0.1.22
