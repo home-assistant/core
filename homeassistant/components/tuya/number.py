@@ -96,7 +96,7 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
         ),
         NumberEntityDescription(
             key=DPCode.STANDBY_TIME,
-            name="Standby Time",
+            name="Standby time",
             native_unit_of_measurement="minutes",
             icon="mdi:timer-plus",
             entity_category=EntityCategory.CONFIG,
