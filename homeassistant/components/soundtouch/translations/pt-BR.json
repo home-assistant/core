@@ -1,15 +1,15 @@
 {
     "config": {
         "abort": {
-            "already_configured": "O dispositivo j\u00e1 est\u00e1 configurado"
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado"
         },
         "error": {
-            "cannot_connect": "Falhou ao conectar"
+            "cannot_connect": "Falha ao conectar"
         },
         "step": {
             "user": {
                 "data": {
-                    "host": "Host"
+                    "host": "Nome do host"
                 }
             },
             "zeroconf_confirm": {

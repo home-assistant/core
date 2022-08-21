@@ -11,6 +11,12 @@
             "enable_bluetooth": {
                 "description": "Voulez-vous configurer le Bluetooth\u00a0?"
             },
+            "multiple_adapters": {
+                "data": {
+                    "adapter": "Adaptateur"
+                },
+                "description": "S\u00e9lectionner un adaptateur Bluetooth \u00e0 configurer"
+            },
             "user": {
                 "data": {
                     "address": "Appareil"
