@@ -1,6 +1,8 @@
 """Tests for ZHA config flow."""
 
+import json
 from unittest.mock import AsyncMock, MagicMock, patch
+import uuid
 
 import pytest
 import serial.tools.list_ports
@@ -1004,8 +1006,11 @@ async def test_formation_strategy_reuse_settings(pick_radio, mock_app, hass):
     assert result2["type"] == FlowResultType.CREATE_ENTRY
 
 
+@patch(
+    "homeassistant.components.zha.config_flow.ZhaFlowHandler._allow_overwrite_ezsp_ieee"
+)
 async def test_formation_strategy_restore_manual_backup_non_ezsp(
-    pick_radio, mock_app, hass
+    allow_overwrite_ieee_mock, pick_radio, mock_app, hass
 ):
     """Test restoring a manual backup on non-EZSP coordinators."""
     result, port = await pick_radio(RadioType.znp)
@@ -1024,9 +1029,29 @@ async def test_formation_strategy_restore_manual_backup_non_ezsp(
     # There is no need for the checkbox, writes are not permanent for non-EZSP sticks
     assert config_flow.OVERWRITE_COORDINATOR_IEEE not in result2["data_schema"].schema
 
+    with patch(
+        "homeassistant.components.zha.config_flow.process_uploaded_file"
+    ) as upload:
+        backup_json = json.dumps(zigpy.backups.NetworkBackup().as_dict())
+        upload.return_value.__enter__.return_value.read_text.return_value = backup_json
 
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            user_input={config_flow.UPLOADED_BACKUP_FILE: str(uuid.uuid4())},
+        )
+
+    mock_app.backups.restore_backup.assert_called_once()
+    allow_overwrite_ieee_mock.assert_not_called()
+
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["data"][CONF_RADIO_TYPE] == "znp"
+
+
+@patch(
+    "homeassistant.components.zha.config_flow.ZhaFlowHandler._allow_overwrite_ezsp_ieee"
+)
 async def test_formation_strategy_restore_manual_backup_ezsp(
-    pick_radio, mock_app, hass
+    allow_overwrite_ieee_mock, pick_radio, mock_app, hass
 ):
     """Test restoring a manual backup on EZSP coordinators."""
     result, port = await pick_radio(RadioType.ezsp)
@@ -1044,3 +1069,57 @@ async def test_formation_strategy_restore_manual_backup_ezsp(
 
     # We must prompt for overwriting the IEEE address
     assert config_flow.OVERWRITE_COORDINATOR_IEEE in result2["data_schema"].schema
+
+    with patch(
+        "homeassistant.components.zha.config_flow.process_uploaded_file"
+    ) as upload:
+        backup_json = json.dumps(zigpy.backups.NetworkBackup().as_dict())
+        upload.return_value.__enter__.return_value.read_text.return_value = backup_json
+
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            user_input={config_flow.UPLOADED_BACKUP_FILE: str(uuid.uuid4())},
+        )
+
+    mock_app.backups.restore_backup.assert_called_once()
+    allow_overwrite_ieee_mock.assert_called_once()
+
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["data"][CONF_RADIO_TYPE] == "ezsp"
+
+
+async def test_formation_strategy_restore_manual_backup_invalid_upload(
+    pick_radio, mock_app, hass
+):
+    """Test restoring a manual backup but an invalid file is uploaded."""
+    result, port = await pick_radio(RadioType.ezsp)
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            config_flow.FORMATION_STRATEGY: config_flow.FORMATION_RESTORE_MANUAL_BACKUP
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["step_id"] == "upload_manual_backup"
+
+    # We must prompt for overwriting the IEEE address
+    assert config_flow.OVERWRITE_COORDINATOR_IEEE in result2["data_schema"].schema
+
+    with patch(
+        "homeassistant.components.zha.config_flow.process_uploaded_file"
+    ) as upload:
+        upload.return_value.__enter__.return_value.read_text.return_value = "{}"
+
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            user_input={config_flow.UPLOADED_BACKUP_FILE: str(uuid.uuid4())},
+        )
+
+    mock_app.backups.restore_backup.assert_not_called()
+
+    assert result3["type"] == FlowResultType.FORM
+    assert result3["step_id"] == "upload_manual_backup"
+    assert result3["errors"]["base"] == "invalid_backup_json"
