@@ -17,7 +17,6 @@ class FlumeEntity(CoordinatorEntity[FlumeDataUpdateCoordinator]):
     def __init__(
         self,
         coordinator: FlumeDataUpdateCoordinator,
-        description: EntityDescription,
         device_id: str,
     ) -> None:
         """Class initializer."""
