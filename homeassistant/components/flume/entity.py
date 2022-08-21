@@ -12,6 +12,7 @@ class FlumeEntity(CoordinatorEntity[FlumeDataUpdateCoordinator]):
     """Base entity class."""
 
     _attr_attribution = "Data provided by Flume API"
+    _attr_has_entity_name = True
 
     def __init__(
         self,
