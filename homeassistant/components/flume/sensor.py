@@ -77,7 +77,7 @@ async def async_setup_entry(
 class FlumeSensor(FlumeEntity, SensorEntity):
     """Representation of the Flume sensor."""
 
-    entity_description: SensorEntityDescription  # FlumeBinarySensorEntityDescription
+    entity_description: SensorEntityDescription 
     coordinator: FlumeDeviceDataUpdateCoordinator
 
     @property

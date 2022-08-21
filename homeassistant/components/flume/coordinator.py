@@ -23,8 +23,8 @@ class FlumeDataUpdateCoordinator(DataUpdateCoordinator):
 
     pass  # pylint: disable=unnecessary-pass
 
-
-class FlumeDeviceDataUpdateCoordinator(FlumeDataUpdateCoordinator):
+class FlumeDeviceDataUpdateCoordinator(FlumeDataUpdateCoordinator[object]):
+# class FlumeDeviceDataUpdateCoordinator(FlumeDataUpdateCoordinator):
     """Data update coordinator for an individual flume device."""
 
     def __init__(
@@ -112,6 +112,4 @@ class FlumeNotificationDataUpdateCoordinator(FlumeDataUpdateCoordinator):
         try:
             await self.hass.async_add_executor_job(self._update_lists)
         except Exception as ex:
-            _LOGGER.error(ex)
-            _LOGGER.error("UPDATE ERROR")
             raise UpdateFailed(f"Error communicating with flume API: {ex}") from ex

@@ -28,11 +28,10 @@ from .const import (
     NOTIFICATION_BRIDGE_DISCONNECT,
     NOTIFICATION_HIGH_FLOW,
     NOTIFICATION_LEAK_DETECTED,
+    _LOGGER
 )
 from .coordinator import FlumeNotificationDataUpdateCoordinator
 from .entity import FlumeEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -104,7 +103,6 @@ async def async_setup_entry(
         device_name = device[KEY_DEVICE_LOCATION][KEY_DEVICE_LOCATION_NAME]
         device_friendly_name = f"{name} {device_name}"
 
-        _LOGGER.debug("Adding binary sensors for %s :: %s", device_id, device_name)
         flume_entity_list.extend(
             [
                 FlumeBinarySensor(
@@ -134,7 +132,7 @@ class FlumeBinarySensor(FlumeEntity, BinarySensorEntity):
         rule = self.entity_description.event_rule
 
         # Bridge notifications are reversed so set the default accordingly
-        default = self.device_class == BinarySensorDeviceClass.CONNECTIVITY
+        default = self.entity_description.device_class == BinarySensorDeviceClass.CONNECTIVITY
 
         value = self.coordinator.active_notifications_by_device.get(
             self.device_id, {}
