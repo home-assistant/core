@@ -1,4 +1,4 @@
-"""Support to interface with the Plex API."""
+"""Support to interface with the Jellyfin API."""
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -16,11 +16,6 @@ from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.browse_media import BrowseMedia
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_DIRECTORY,
-    MEDIA_CLASS_EPISODE,
-    MEDIA_CLASS_MOVIE,
-    MEDIA_CLASS_SEASON,
-    MEDIA_TYPE_MOVIE,
-    MEDIA_TYPE_TVSHOW,
     MediaPlayerEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -29,9 +24,21 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
-from ...helpers.update_coordinator import CoordinatorEntity, DataUpdateCoordinator
-from .const import DATA_CLIENT, DOMAIN, ITEM_KEY_IMAGE_TAGS, MEDIA_TYPE_NONE
+from .const import (
+    CONTENT_TYPE_MAP,
+    DATA_CLIENT,
+    DOMAIN,
+    EXPANDABLE_TYPES,
+    ITEM_KEY_IMAGE_TAGS,
+    MEDIA_CLASS_MAP,
+    MEDIA_TYPE_NONE,
+    SUPPORTED_LIBRARY_TYPES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -387,29 +394,13 @@ class JellyfinMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         """
 
         def browse_media_from_item(media: Any) -> BrowseMedia:
-            content_type_map = {
-                "Series": MEDIA_TYPE_TVSHOW,
-                "Movie": MEDIA_TYPE_MOVIE,
-                "CollectionFolder": "collection",
-                "Folder": "library",
-                "BoxSet": "boxset",
-            }
-            media_class_map = {
-                "Series": MEDIA_CLASS_DIRECTORY,
-                "Movie": MEDIA_CLASS_MOVIE,
-                "CollectionFolder": MEDIA_CLASS_DIRECTORY,
-                "Folder": MEDIA_CLASS_DIRECTORY,
-                "BoxSet": MEDIA_CLASS_DIRECTORY,
-                "Episode": MEDIA_CLASS_EPISODE,
-                "Seaoson": MEDIA_CLASS_SEASON,
-            }
             return BrowseMedia(
                 title=media["Name"],
                 media_content_id=media["Id"],
-                media_content_type=content_type_map.get(media["Type"], MEDIA_TYPE_NONE),
-                media_class=media_class_map.get(media["Type"], MEDIA_CLASS_DIRECTORY),
+                media_content_type=CONTENT_TYPE_MAP.get(media["Type"], MEDIA_TYPE_NONE),
+                media_class=MEDIA_CLASS_MAP.get(media["Type"], MEDIA_CLASS_DIRECTORY),
                 can_play=True,
-                can_expand=media["Type"] not in ["Movie", "Episode"],
+                can_expand=media["Type"] not in EXPANDABLE_TYPES,
                 children_media_class="",
                 thumbnail=str(
                     self._client.jellyfin.artwork(media["Id"], "Primary", 500)
@@ -452,6 +443,7 @@ class JellyfinMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
             children = [
                 await create_item_response(hass, client, user, folder["Id"])
                 for folder in folders["Items"]
+                if folder["CollectionType"] in SUPPORTED_LIBRARY_TYPES
             ]
 
             ret = BrowseMedia(
@@ -475,7 +467,14 @@ class JellyfinMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
 
             return item
 
-        if media_content_id is None or media_content_id == "root":
+        # media_content_id will be none, when HA asks for toplevel info
+        # we give our toplevel object which houses that info the id root.
+        # When HA browses via Media tab, the toplevel is called media-source://jellyfin
+        if (
+            media_content_id is None
+            or media_content_id == "root"
+            or media_content_id == "media-source://jellyfin"
+        ):
             _LOGGER.debug("Creating root instance in browse_media")
             return await create_root_response(
                 self.hass, self._client, self.coordinator.user["Id"]

@@ -2,7 +2,15 @@
 
 from typing import Final
 
-from ...const import Platform
+from homeassistant.components.media_player.const import (
+    MEDIA_CLASS_DIRECTORY,
+    MEDIA_CLASS_EPISODE,
+    MEDIA_CLASS_MOVIE,
+    MEDIA_CLASS_SEASON,
+    MEDIA_TYPE_MOVIE,
+    MEDIA_TYPE_TVSHOW,
+)
+from homeassistant.const import Platform
 
 DOMAIN: Final = "jellyfin"
 
@@ -43,3 +51,22 @@ USER_APP_NAME: Final = "Home Assistant"
 USER_AGENT: Final = f"Home-Assistant/{CLIENT_VERSION}"
 
 PLATFORMS = frozenset([Platform.MEDIA_PLAYER])
+
+CONTENT_TYPE_MAP = {
+    "Series": MEDIA_TYPE_TVSHOW,
+    "Movie": MEDIA_TYPE_MOVIE,
+    "CollectionFolder": "collection",
+    "Folder": "library",
+    "BoxSet": "boxset",
+}
+MEDIA_CLASS_MAP = {
+    "Series": MEDIA_CLASS_DIRECTORY,
+    "Movie": MEDIA_CLASS_MOVIE,
+    "CollectionFolder": MEDIA_CLASS_DIRECTORY,
+    "Folder": MEDIA_CLASS_DIRECTORY,
+    "BoxSet": MEDIA_CLASS_DIRECTORY,
+    "Episode": MEDIA_CLASS_EPISODE,
+    "Season": MEDIA_CLASS_SEASON,
+}
+EXPANDABLE_TYPES = ["Movie", "Episode"]
+SUPPORTED_LIBRARY_TYPES = ["movies", "tvshows"]
