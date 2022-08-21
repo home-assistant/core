@@ -9,7 +9,7 @@ from pathlib import Path
 import shutil
 import tempfile
 
-from aiohttp import web
+from aiohttp import BodyPartReader, web
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
@@ -24,7 +24,8 @@ DOMAIN = "file_upload"
 
 # If increased, change upload view to streaming
 # https://docs.aiohttp.org/en/stable/web_quickstart.html#file-uploads
-MAX_SIZE = 1024 * 1024 * 10
+ONE_MEGABYTE = 1024 * 1024
+MAX_SIZE = 100 * ONE_MEGABYTE
 TEMP_DIR_NAME = f"home-assistant-{DOMAIN}"
 
 
@@ -126,14 +127,18 @@ class FileUploadView(HomeAssistantView):
         # Increase max payload
         request._client_max_size = MAX_SIZE  # pylint: disable=protected-access
 
-        data = await request.post()
-        file_field = data.get("file")
+        reader = await request.multipart()
+        file_field_reader = await reader.next()
 
-        if not isinstance(file_field, web.FileField):
+        if (
+            not isinstance(file_field_reader, BodyPartReader)
+            or file_field_reader.name != "file"
+            or file_field_reader.filename is None
+        ):
             raise vol.Invalid("Expected a file")
 
         try:
-            raise_if_invalid_filename(file_field.filename)
+            raise_if_invalid_filename(file_field_reader.filename)
         except ValueError as err:
             raise web.HTTPBadRequest from err
 
@@ -146,18 +151,28 @@ class FileUploadView(HomeAssistantView):
         file_upload_data: FileUploadData = hass.data[DOMAIN]
         file_dir = file_upload_data.file_dir(file_id)
 
-        def _sync_work() -> None:
+        def _sync_create_dir() -> None:
             file_dir.mkdir()
 
-            # MyPy forgets about the isinstance check because we're in a function scope
-            assert isinstance(file_field, web.FileField)
+        await hass.async_add_executor_job(_sync_create_dir)
 
-            with (file_dir / file_field.filename).open("wb") as target_fileobj:
-                shutil.copyfileobj(file_field.file, target_fileobj)
+        def _sync_write_file(file_name: str, _chunk: bytes, _size: int) -> None:
+            mode = "wb" if _size <= ONE_MEGABYTE else "ab"
+            with (file_dir / file_name).open(mode) as target_fileobj:
+                target_fileobj.write(_chunk)
 
-        await hass.async_add_executor_job(_sync_work)
+        # We cannot rely on Content-Length if transfer is chunked
+        size = 0
+        while True:
+            chunk = await file_field_reader.read_chunk(ONE_MEGABYTE)
+            if not chunk:
+                break
+            size += len(chunk)
+            await hass.async_add_executor_job(
+                _sync_write_file, file_field_reader.filename, chunk, size
+            )
 
-        file_upload_data.files[file_id] = file_field.filename
+        file_upload_data.files[file_id] = file_field_reader.filename
 
         return self.json({"file_id": file_id})
 
