@@ -10,9 +10,21 @@
       "1": "[%key:common::state::off%]",
       "2": "[%key:common::state::on%]"
     },
+    "tuya__cds": {
+      "2000lux": "Daylight",
+      "300lux": "Dusk",
+      "50lux": "Evening",
+      "10lux": "Night",
+      "5lux": "Dark",
+      "now": "now"
+    },
     "tuya__decibel_sensitivity": {
       "0": "Low sensitivity",
       "1": "High sensitivity"
+    },
+    "tuya__device_mode": {
+      "auto": "Auto",
+      "manual": "Manual"
     },
     "tuya__ipc_work_mode": {
       "0": "Low power mode",
@@ -32,6 +44,11 @@
       "0": "Low sensitivity",
       "1": "Medium sensitivity",
       "2": "High sensitivity"
+    },
+    "tuya__pir_sensitivity": {
+      "low": "Near",
+      "middle": "Medium",
+      "high": "Far"
     },
     "tuya__record_mode": {
       "1": "Record events only",
