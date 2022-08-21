@@ -262,7 +262,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
     async def async_learn_command(self, entity_id: str) -> None:
         """Display a list of available commands in a persistent notification."""
         commands = await self.client.get_command_list()
-        codes = ", ".join(list(commands.keys()))
+        codes = ", ".join(commands.keys())
         title = "Bravia TV"
         message = f"**List of available commands for `{entity_id}`**:\n\n{codes}"
         persistent_notification.async_create(
