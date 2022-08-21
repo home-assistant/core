@@ -1,8 +1,10 @@
 """Test the air-Q config flow."""
 from unittest.mock import patch
 
+from aiohttp.client_exceptions import ClientConnectionError
+
 from homeassistant import config_entries
-from homeassistant.components.airq.config_flow import CannotConnect, InvalidAuth
+from homeassistant.components.airq.config_flow import InvalidAuth
 from homeassistant.components.airq.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
@@ -68,7 +70,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.airq.config_flow.validate_input",
-        side_effect=CannotConnect,
+        side_effect=ClientConnectionError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], TEST_DATA | {CONF_IP_ADDRESS: "wrong_ip"}
@@ -76,21 +78,3 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
-
-
-async def test_form_unknown_error(hass: HomeAssistant) -> None:
-    """Test we handle unknown error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.airq.config_flow.validate_input",
-        side_effect=Exception,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], TEST_DATA | {CONF_IP_ADDRESS: "wrong_ip"}
-        )
-
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "unknown"}

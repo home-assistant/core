@@ -35,12 +35,9 @@ async def validate_input(data: dict[str, Any]) -> None:
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
 
-    try:
-        auth_success = await AirQ(
-            data[CONF_IP_ADDRESS], data[CONF_PASSWORD]
-        ).test_authentication()
-    except ClientConnectionError as exc:
-        raise CannotConnect from exc
+    auth_success = await AirQ(
+        data[CONF_IP_ADDRESS], data[CONF_PASSWORD]
+    ).test_authentication()
 
     if not auth_success:
         raise InvalidAuth
@@ -78,7 +75,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             await validate_input(user_input)
-        except CannotConnect:
+        except ClientConnectionError:
             _LOGGER.debug(
                 "Failed to connect to device %s. Check the specified IP address / mDNS, "
                 "as well as whether the device is connected to power and the WiFi",
@@ -86,14 +83,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
             errors["base"] = "cannot_connect"
         except InvalidAuth:
-            _LOGGER.error(
+            _LOGGER.debug(
                 "Incorrect password for device %s", user_input[CONF_IP_ADDRESS]
             )
             errors["base"] = "invalid_auth"
-        except Exception:  # pylint: disable=broad-except
-            # This really shouldn't happen, so .exception is perhaps more appropriate
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
         else:
             _LOGGER.debug("Successfully connected to %s", user_input[CONF_IP_ADDRESS])
 
@@ -106,10 +99,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
 
 
 class InvalidAuth(HomeAssistantError):
