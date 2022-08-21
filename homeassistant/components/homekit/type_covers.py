@@ -308,8 +308,8 @@ class OpeningDevice(OpeningDeviceBase, HomeAccessory):
         if isinstance(current_position, (float, int)):
             current_position = int(current_position)
             self.char_current_position.set_value(current_position)
-            # Writing target_position on moving cover
-            # will break moving state in HK.
+            # Writing target_position on a moving cover
+            # will break the moving state in HK.
             if not is_moving:
                 self.char_target_position.set_value(current_position)
 
