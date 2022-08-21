@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
-from microbot import MicroBotApiClient  # pylint: disable=import-error
+from microbot import MicroBotApiClient
 
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
