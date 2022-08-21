@@ -77,6 +77,7 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             key=DPCode.UV,
             name="UV Sterilization",
             icon="mdi:lightbulb",
+            entity_category=EntityCategory.CONFIG,
         ),
     ),
     # Light
