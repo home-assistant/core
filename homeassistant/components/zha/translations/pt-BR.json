@@ -13,6 +13,9 @@
             "confirm": {
                 "description": "Voc\u00ea deseja configurar {name}?"
             },
+            "confirm_hardware": {
+                "description": "Deseja configurar {name}?"
+            },
             "pick_radio": {
                 "data": {
                     "radio_type": "Tipo de hub zigbee"

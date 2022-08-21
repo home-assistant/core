@@ -387,6 +387,13 @@ class LutronCasetaDeviceUpdatableEntity(LutronCasetaDevice):
         self._device = self._smartbridge.get_device_by_id(self.device_id)
         _LOGGER.debug(self._device)
 
+    @property
+    def unique_id(self):
+        """Return a unique identifier if serial number is None."""
+        if self.serial is None:
+            return f"{self._bridge_unique_id}_{self.device_id}"
+        return super().unique_id
+
 
 def _id_to_identifier(lutron_id: str) -> tuple[str, str]:
     """Convert a lutron caseta identifier to a device identifier."""

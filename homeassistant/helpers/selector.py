@@ -741,6 +741,36 @@ class TargetSelectorConfig(TypedDict, total=False):
     device: SingleDeviceSelectorConfig
 
 
+class StateSelectorConfig(TypedDict, total=False):
+    """Class to represent an state selector config."""
+
+    entity_id: str
+    attribute: str
+
+
+@SELECTORS.register("state")
+class StateSelector(Selector):
+    """Selector for an entity state."""
+
+    selector_type = "state"
+
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Required("entity_id"): cv.entity_id,
+            vol.Optional("attribute"): str,
+        }
+    )
+
+    def __init__(self, config: StateSelectorConfig) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> str:
+        """Validate the passed selection."""
+        state: str = vol.Schema(str)(data)
+        return state
+
+
 @SELECTORS.register("target")
 class TargetSelector(Selector):
     """Selector of a target value (area ID, device ID, entity ID etc).

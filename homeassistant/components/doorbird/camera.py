@@ -134,7 +134,7 @@ class DoorBirdCamera(DoorBirdEntity, Camera):
             )
             return self._last_image
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Add callback after being added to hass.
 
         Registers entity_id map for the logbook
