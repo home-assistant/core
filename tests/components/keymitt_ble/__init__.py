@@ -6,9 +6,6 @@ from bleak.backends.scanner import AdvertisementData
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_ADDRESS
-from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 DOMAIN = "keymitt_ble"
 
@@ -36,26 +33,12 @@ def patch_async_setup_entry(return_value=True):
     )
 
 
-async def init_integration(
-    hass: HomeAssistant,
-    data: dict = ENTRY_CONFIG,
-    skip_entry_setup: bool = False,
-) -> MockConfigEntry:
-    """Set up the MicroBot integration in Home Assistant."""
-    entry = MockConfigEntry(domain=DOMAIN, data=data)
-    entry.add_to_hass(hass)
-
-    if not skip_entry_setup:
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    return entry
-
-
 SERVICE_INFO = BluetoothServiceInfoBleak(
     name="mibp",
     service_uuids=["00001831-0000-1000-8000-00805f9b34fb"],
     address="aa:bb:cc:dd:ee:ff",
+    manufacturer_data="test",
+    service_data="test",
     rssi=-60,
     source="local",
     advertisement=AdvertisementData(

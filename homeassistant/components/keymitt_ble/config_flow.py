@@ -5,7 +5,7 @@ import logging
 from typing import Any
 
 from bleak.backends.device import BLEDevice
-from microbot import (
+from microbot import (  # pylint: disable=import-error
     MicroBotAdvertisement,
     MicroBotApiClient,
     parse_advertisement_data,
@@ -18,8 +18,8 @@ from homeassistant.components.bluetooth import (
     async_discovered_service_info,
 )
 from homeassistant.config_entries import ConfigFlow
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_ADDRESS
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
 
@@ -89,10 +89,7 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
             for discovery_info in async_discovered_service_info(self.hass):
                 self._ble_device = discovery_info.device
                 address = discovery_info.address
-                if (
-                    address in current_addresses
-                    or address in self._discovered_advs
-                ):
+                if address in current_addresses or address in self._discovered_advs:
                     continue
                 parsed = parse_advertisement_data(
                     discovery_info.device, discovery_info.advertisement
@@ -106,9 +103,7 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._name = name_from_discovery(self._discovered_adv)
             self._bdaddr = user_input[CONF_ADDRESS]
-            await self.async_set_unique_id(
-                self._bdaddr, raise_on_progress=False
-            )
+            await self.async_set_unique_id(self._bdaddr, raise_on_progress=False)
             self._abort_if_unique_id_configured()
             return await self.async_step_link()
 
