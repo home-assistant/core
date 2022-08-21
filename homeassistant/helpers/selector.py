@@ -310,6 +310,34 @@ class ColorTempSelector(Selector):
         return value
 
 
+class ConfigEntrySelectorConfig(TypedDict, total=False):
+    """Class to represent a config entry selector config."""
+
+    integration: str
+
+
+@SELECTORS.register("config_entry")
+class ConfigEntrySelector(Selector):
+    """Selector of a config entry."""
+
+    selector_type = "config_entry"
+
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Optional("integration"): str,
+        }
+    )
+
+    def __init__(self, config: ConfigEntrySelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> dict[str, str]:
+        """Validate the passed selection."""
+        config: dict[str, str] = vol.Schema(str)(data)
+        return config
+
+
 class DateSelectorConfig(TypedDict):
     """Class to represent a date selector config."""
 
