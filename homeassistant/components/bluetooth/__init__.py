@@ -211,7 +211,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _LOGGER.warning("Advertisement: %s", decoded)
         manager.scanner_adv_received(
             BLEDevice(  # type: ignore[no-untyped-call]
-                address=":".join(two.findall("%012X" % data["a"])),
+                address=":".join(two.findall("%012X" % decoded["a"])),
                 name=data.get("n", ""),
                 rssi=data.get("r", 0),
             ),
