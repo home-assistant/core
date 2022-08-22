@@ -196,6 +196,14 @@ def async_get_advertisement_callback(
     return manager.scanner_adv_received
 
 
+async def async_get_adapter_from_address(
+    hass: HomeAssistant, address: str
+) -> str | None:
+    """Get an adapter by the address."""
+    manager: BluetoothManager = hass.data[DATA_MANAGER]
+    return await manager.async_get_adapter_from_address(address)
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the bluetooth integration."""
     integration_matcher = IntegrationMatcher(await async_get_bluetooth(hass))
@@ -255,10 +263,9 @@ async def async_discover_adapters(
 
 
 async def async_update_device(
+    hass: HomeAssistant,
     entry: config_entries.ConfigEntry,
-    manager: BluetoothManager,
     adapter: str,
-    address: str,
 ) -> None:
     """Update device registry entry.
 
@@ -267,6 +274,7 @@ async def async_update_device(
     update the device with the new location so they can
     figure out where the adapter is.
     """
+    manager: BluetoothManager = hass.data[DATA_MANAGER]
     adapters = await manager.async_get_bluetooth_adapters()
     details = adapters[adapter]
     registry = dr.async_get(manager.hass)
@@ -283,10 +291,9 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: config_entries.ConfigEntry
 ) -> bool:
     """Set up a config entry for a bluetooth scanner."""
-    manager: BluetoothManager = hass.data[DATA_MANAGER]
     address = entry.unique_id
     assert address is not None
-    adapter = await manager.async_get_adapter_from_address(address)
+    adapter = await async_get_adapter_from_address(hass, address)
     if adapter is None:
         raise ConfigEntryNotReady(
             f"Bluetooth adapter {adapter} with address {address} not found"
@@ -299,13 +306,14 @@ async def async_setup_entry(
             f"{adapter_human_name(adapter, address)}: {err}"
         ) from err
     scanner = HaScanner(hass, bleak_scanner, adapter, address)
-    entry.async_on_unload(scanner.async_register_callback(manager.scanner_adv_received))
+    info_callback = async_get_advertisement_callback(hass)
+    entry.async_on_unload(scanner.async_register_callback(info_callback))
     try:
         await scanner.async_start()
     except ScannerStartError as err:
         raise ConfigEntryNotReady from err
-    entry.async_on_unload(manager.async_register_scanner(scanner, True))
-    await async_update_device(entry, manager, adapter, address)
+    entry.async_on_unload(async_register_scanner(hass, scanner, True))
+    await async_update_device(hass, entry, adapter)
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = scanner
     return True
 
