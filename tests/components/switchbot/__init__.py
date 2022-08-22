@@ -74,6 +74,26 @@ WOHAND_SERVICE_INFO = BluetoothServiceInfoBleak(
 )
 
 
+WOHAND_SERVICE_INFO_NOT_CONNECTABLE = BluetoothServiceInfoBleak(
+    name="WoHand",
+    manufacturer_data={89: b"\xfd`0U\x92W"},
+    service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"H\x90\xd9"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="aa:bb:cc:dd:ee:ff",
+    rssi=-60,
+    source="local",
+    advertisement=AdvertisementData(
+        local_name="WoHand",
+        manufacturer_data={89: b"\xfd`0U\x92W"},
+        service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"H\x90\xd9"},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=BLEDevice("aa:bb:cc:dd:ee:ff", "WoHand"),
+    time=0,
+    connectable=False,
+)
+
+
 WOHAND_ENCRYPTED_SERVICE_INFO = BluetoothServiceInfoBleak(
     name="WoHand",
     manufacturer_data={89: b"\xd8.\xad\xcd\r\x85"},

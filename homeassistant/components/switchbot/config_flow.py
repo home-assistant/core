@@ -72,11 +72,9 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         parsed = parse_advertisement_data(
             discovery_info.device, discovery_info.advertisement
         )
-        if not parsed:
+        if not parsed or parsed.data.get("modelName") not in SUPPORTED_MODEL_TYPES:
             return self.async_abort(reason="not_supported")
         model_name = parsed.data.get("modelName")
-        if model_name not in SUPPORTED_MODEL_TYPES:
-            return self.async_abort(reason="not_supported")
         if (
             not discovery_info.connectable
             and model_name in CONNECTABLE_SUPPORTED_MODEL_TYPES
