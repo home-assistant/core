@@ -22,7 +22,7 @@ async def test_sensors(hass):
 
     saved_callback = None
 
-    def _async_register_callback(_hass, _callback, _matcher, _mode):
+    def _async_register_callback(_hass, _callback, _matcher, _mode, _connectable):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None
@@ -63,7 +63,7 @@ async def test_xiaomi_formaldeyhde(hass):
 
     saved_callback = None
 
-    def _async_register_callback(_hass, _callback, _matcher, _mode):
+    def _async_register_callback(_hass, _callback, _matcher, _mode, _connectable):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None
@@ -110,7 +110,7 @@ async def test_xiaomi_consumable(hass):
 
     saved_callback = None
 
-    def _async_register_callback(_hass, _callback, _matcher, _mode):
+    def _async_register_callback(_hass, _callback, _matcher, _mode, _connectable):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None
@@ -157,7 +157,7 @@ async def test_xiaomi_battery_voltage(hass):
 
     saved_callback = None
 
-    def _async_register_callback(_hass, _callback, _matcher, _mode):
+    def _async_register_callback(_hass, _callback, _matcher, _mode, _connectable):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None
@@ -211,7 +211,7 @@ async def test_xiaomi_HHCCJCY01(hass):
 
     saved_callback = None
 
-    def _async_register_callback(_hass, _callback, _matcher, _mode):
+    def _async_register_callback(_hass, _callback, _matcher, _mode, _connectable):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None
@@ -305,7 +305,7 @@ async def test_xiaomi_CGDK2(hass):
 
     saved_callback = None
 
-    def _async_register_callback(_hass, _callback, _matcher, _mode):
+    def _async_register_callback(_hass, _callback, _matcher, _mode, _connectable):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None
