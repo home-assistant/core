@@ -254,7 +254,7 @@ def _domains_from_mock_config_flow(mock_config_flow: Mock) -> list[str]:
 
 
 async def test_discovery_match_by_service_uuid_connectable(
-    hass, mock_bleak_scanner_start
+    hass, mock_bleak_scanner_start, macos_adapter
 ):
     """Test bluetooth discovery match by service_uuid and the ble device is connectable."""
     mock_bt = [
@@ -299,7 +299,7 @@ async def test_discovery_match_by_service_uuid_connectable(
 
 
 async def test_discovery_match_by_service_uuid_not_connectable(
-    hass, mock_bleak_scanner_start
+    hass, mock_bleak_scanner_start, macos_adapter
 ):
     """Test bluetooth discovery match by service_uuid and the ble device is not connectable."""
     mock_bt = [
@@ -342,7 +342,7 @@ async def test_discovery_match_by_service_uuid_not_connectable(
 
 
 async def test_discovery_match_by_name_connectable_false(
-    hass, mock_bleak_scanner_start
+    hass, mock_bleak_scanner_start, macos_adapter
 ):
     """Test bluetooth discovery match by name and the integration will take non-connectable devices."""
     mock_bt = [
