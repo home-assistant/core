@@ -8,7 +8,7 @@ import contextlib
 from dataclasses import dataclass
 from enum import Enum
 import logging
-from typing import TYPE_CHECKING, Any, Final, TypeVar
+from typing import TYPE_CHECKING, Any, Final
 
 from bleak import BleakClient, BleakError
 from bleak.backends.device import BLEDevice
@@ -34,13 +34,6 @@ FILTER_UUIDS: Final = "UUIDs"
 MANAGER: BluetoothManager | None = None
 
 
-class ScannerType(Enum):
-    """Type of scanner."""
-
-    CONNECTABLE = "connectable"  # supports connecting to devices
-    NON_CONNECTABLE = "non_connectable"  # passive advertising only
-
-
 @dataclass
 class AdvertisementHistory:
     """Bluetooth advertisement history."""
@@ -49,6 +42,7 @@ class AdvertisementHistory:
     advertisement_data: AdvertisementData
     time: float
     source: str
+    connectable: bool  # If the device can be connected to via the BLEDevice
 
 
 @dataclass
@@ -102,9 +96,6 @@ class BaseHaScanner:
     @property
     def discovered_devices(self) -> list[BLEDevice]:
         """Return a list of discovered devices."""
-
-
-BaseHaScannerT = TypeVar("BaseHaScannerT", bound=BaseHaScanner)
 
 
 class HaBleakScannerWrapper(BaseBleakScanner):
@@ -167,7 +158,7 @@ class HaBleakScannerWrapper(BaseBleakScanner):
     def discovered_devices(self) -> list[BLEDevice]:
         """Return a list of discovered devices."""
         assert MANAGER is not None
-        return list(MANAGER.async_discovered_devices())
+        return list(MANAGER.async_discovered_devices(True))
 
     def register_detection_callback(
         self, callback: AdvertisementDataCallback | None
@@ -224,7 +215,7 @@ class HaBleakClientWrapper(BleakClient):
             error_if_core=False,
         )
         assert MANAGER is not None
-        ble_device = MANAGER.async_ble_device_from_address(address_or_ble_device)
+        ble_device = MANAGER.async_ble_device_from_address(address_or_ble_device, True)
         if ble_device is None:
             raise BleakError(f"No device found for address {address_or_ble_device}")
         super().__init__(ble_device, *args, **kwargs)

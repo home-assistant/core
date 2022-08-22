@@ -14,7 +14,6 @@ from homeassistant.components.bluetooth import (
     AdvertisementHistory,
     BaseHaScanner,
     BluetoothManagerCallback,
-    ScannerType,
     async_get_advertisement_callback,
     async_register_scanner,
 )
@@ -66,9 +65,7 @@ async def async_connect_scanner(
     scanner = ESPHomeScannner(
         hass, entry.unique_id, async_get_advertisement_callback(hass)
     )
-    entry.async_on_unload(
-        async_register_scanner(hass, scanner, ScannerType.NON_CONNECTABLE)
-    )
+    entry.async_on_unload(async_register_scanner(hass, scanner, False))
     entry.async_on_unload(scanner.async_setup())
     # await cli.subscribe_bluetooth_le_advertisements(scanner.async_on_advertisement)
 
@@ -132,5 +129,5 @@ class ESPHomeScannner(BaseHaScanner):
             service_uuids=[long_uuid(hex) for hex in adv.service_uuids],
         )
         self._manager_callback(
-            AdvertisementHistory(device, adv_data, now, self._source)
+            AdvertisementHistory(device, adv_data, now, self._source, False)
         )
