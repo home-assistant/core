@@ -1,6 +1,7 @@
 """Models for bluetooth."""
 from __future__ import annotations
 
+from abc import abstractmethod
 import asyncio
 from collections.abc import Callable
 import contextlib
@@ -45,23 +46,8 @@ class BluetoothServiceInfoBleak(BluetoothServiceInfo):
 
     device: BLEDevice
     advertisement: AdvertisementData
-
-    @classmethod
-    def from_advertisement(
-        cls, device: BLEDevice, advertisement_data: AdvertisementData, source: str
-    ) -> BluetoothServiceInfoBleak:
-        """Create a BluetoothServiceInfoBleak from an advertisement."""
-        return cls(
-            name=advertisement_data.local_name or device.name or device.address,
-            address=device.address,
-            rssi=device.rssi,
-            manufacturer_data=advertisement_data.manufacturer_data,
-            service_data=advertisement_data.service_data,
-            service_uuids=advertisement_data.service_uuids,
-            source=source,
-            device=device,
-            advertisement=advertisement_data,
-        )
+    connectable: bool
+    time: float
 
 
 class BluetoothScanningMode(Enum):
@@ -74,6 +60,15 @@ class BluetoothScanningMode(Enum):
 BluetoothChange = Enum("BluetoothChange", "ADVERTISEMENT")
 BluetoothCallback = Callable[[BluetoothServiceInfoBleak, BluetoothChange], None]
 ProcessAdvertisementCallback = Callable[[BluetoothServiceInfoBleak], bool]
+
+
+class BaseHaScanner:
+    """Base class for Ha Scanners."""
+
+    @property
+    @abstractmethod
+    def discovered_devices(self) -> list[BLEDevice]:
+        """Return a list of discovered devices."""
 
 
 class HaBleakScannerWrapper(BaseBleakScanner):
@@ -136,7 +131,7 @@ class HaBleakScannerWrapper(BaseBleakScanner):
     def discovered_devices(self) -> list[BLEDevice]:
         """Return a list of discovered devices."""
         assert MANAGER is not None
-        return list(MANAGER.async_discovered_devices())
+        return list(MANAGER.async_discovered_devices(True))
 
     def register_detection_callback(
         self, callback: AdvertisementDataCallback | None
@@ -193,7 +188,7 @@ class HaBleakClientWrapper(BleakClient):
             error_if_core=False,
         )
         assert MANAGER is not None
-        ble_device = MANAGER.async_ble_device_from_address(address_or_ble_device)
+        ble_device = MANAGER.async_ble_device_from_address(address_or_ble_device, True)
         if ble_device is None:
             raise BleakError(f"No device found for address {address_or_ble_device}")
         super().__init__(ble_device, *args, **kwargs)
