@@ -10,6 +10,7 @@ from typing import Any, Protocol, cast, final
 
 import voluptuous as vol
 
+from homeassistant.components.repairs import IssueSeverity, async_create_issue
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CONFIGURATION_URL,
@@ -28,7 +29,7 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, async_get_hass, callback
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -245,6 +246,20 @@ def warn_for_legacy_schema(domain: str) -> Callable:
             domain,
         )
         warned.add(domain)
+        # Register a repair
+        async_create_issue(
+            async_get_hass(),
+            DOMAIN,
+            f"deprecated_yaml_{domain}",
+            breaks_in_ha_version="2022.12.0",  # Warning first added in 2022.6.0
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "more_info_url": f"https://www.home-assistant.io/integrations/{domain}.mqtt/#new_format",
+                "platform": domain,
+            },
+        )
         return config
 
     return validator

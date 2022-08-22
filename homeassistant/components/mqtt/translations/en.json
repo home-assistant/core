@@ -1,5 +1,11 @@
 {
-    "config": {
+        "issues": {
+            "deprecated_yaml": {
+            "title": "Your manual set up MQTT {platform}(s) need attention",
+            "description": "Manually configured MQTT {platform}(s) found under platform key `{platform}`.\n\nPlease move the configuration to the mqtt integration key, see {more_info_url}."
+            }
+        },
+        "config": {
         "abort": {
             "already_configured": "Service is already configured",
             "single_instance_allowed": "Already configured. Only a single configuration possible."
