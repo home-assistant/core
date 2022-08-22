@@ -22,7 +22,7 @@ from homeassistant.helpers.event import async_track_time_interval
 
 ADV_STALE_TIME = 180  # seconds
 
-TWO = re.compile("..")
+TWO_CHAR = re.compile("..")
 
 
 async def async_connect_scanner(
@@ -81,7 +81,7 @@ class ESPHomeScannner(BaseHaScanner):
     def async_on_advertisement(self, adv: BluetoothLEAdvertisement) -> None:
         """Call the registered callback."""
         now = time.monotonic()
-        address = ":".join(TWO.findall("%012X" % adv.address))  # must be upper
+        address = ":".join(TWO_CHAR.findall("%012X" % adv.address))  # must be upper
         adv_data = AdvertisementData(  # type: ignore[no-untyped-call]
             local_name=None if adv.name == "" else adv.name,
             manufacturer_data=adv.manufacturer_data,
