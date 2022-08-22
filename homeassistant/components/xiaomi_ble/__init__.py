@@ -91,6 +91,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ),
         needs_poll_method=_needs_poll,
         poll_method=_async_poll,
+        # We will take advertisements from non-connectable devices
+        # since we will trade the BLEDevice for a connectable one
+        # if we need to poll it
+        connectable=False,
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(
