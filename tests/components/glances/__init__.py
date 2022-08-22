@@ -1,7 +1,6 @@
 """Tests for Glances."""
-"""Glances integration init."""
 
-MOCK_CONFIG_DATA = {
+MOCK_USER_INPUT = {
     "host": "0.0.0.0",
     "username": "username",
     "password": "password",

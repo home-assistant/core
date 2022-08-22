@@ -7,14 +7,15 @@ from homeassistant.components.glances.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
+from . import MOCK_USER_INPUT
+
 from tests.common import MockConfigEntry
-from tests.components.glances import MOCK_CONFIG_DATA
 
 
 async def test_successful_config_entry(hass: HomeAssistant) -> None:
     """Test that Glances is configured successfully."""
 
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG_DATA)
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT)
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
@@ -26,7 +27,7 @@ async def test_successful_config_entry(hass: HomeAssistant) -> None:
 async def test_conn_error(hass: HomeAssistant, mock_api: MagicMock) -> None:
     """Test Glances failed due to connection error."""
 
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG_DATA)
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT)
     entry.add_to_hass(hass)
 
     mock_api.return_value.get_data.side_effect = GlancesApiConnectionError
@@ -36,7 +37,7 @@ async def test_conn_error(hass: HomeAssistant, mock_api: MagicMock) -> None:
 
 async def test_unload_entry(hass: HomeAssistant) -> None:
     """Test removing Glances."""
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG_DATA)
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT)
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)

@@ -13,7 +13,7 @@ from homeassistant.data_entry_flow import (
     FlowResultType,
 )
 
-from . import MOCK_CONFIG_DATA
+from . import MOCK_USER_INPUT
 
 from tests.common import MockConfigEntry, patch
 
@@ -35,12 +35,12 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=MOCK_CONFIG_DATA
+        result["flow_id"], user_input=MOCK_USER_INPUT
     )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "0.0.0.0"
-    assert result["data"] == MOCK_CONFIG_DATA
+    assert result["data"] == MOCK_USER_INPUT
 
 
 async def test_form_cannot_connect(hass: HomeAssistant, mock_api: MagicMock) -> None:
@@ -51,7 +51,7 @@ async def test_form_cannot_connect(hass: HomeAssistant, mock_api: MagicMock) -> 
         glances.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=MOCK_CONFIG_DATA
+        result["flow_id"], user_input=MOCK_USER_INPUT
     )
 
     assert result["type"] == RESULT_TYPE_FORM
@@ -60,14 +60,14 @@ async def test_form_cannot_connect(hass: HomeAssistant, mock_api: MagicMock) -> 
 
 async def test_form_already_configured(hass: HomeAssistant) -> None:
     """Test host is already configured."""
-    entry = MockConfigEntry(domain=glances.DOMAIN, data=MOCK_CONFIG_DATA)
+    entry = MockConfigEntry(domain=glances.DOMAIN, data=MOCK_USER_INPUT)
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         glances.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=MOCK_CONFIG_DATA
+        result["flow_id"], user_input=MOCK_USER_INPUT
     )
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
