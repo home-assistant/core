@@ -1,7 +1,7 @@
 """Tests for ZHA config flow."""
 
 import json
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 import uuid
 
 import pytest
@@ -1208,8 +1208,9 @@ async def test_formation_strategy_restore_automatic_backup_ezsp(
     lambda self, s, **kwargs: "choice:" + repr(s),
 )
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+@pytest.mark.parametrize("is_advanced", [True, False])
 async def test_formation_strategy_restore_automatic_backup_non_ezsp(
-    pick_radio, mock_app, hass
+    is_advanced, pick_radio, mock_app, hass
 ):
     """Test restoring an automatic backup (non-EZSP radio)."""
     mock_app.backups.backups = [
@@ -1221,15 +1222,20 @@ async def test_formation_strategy_restore_automatic_backup_non_ezsp(
     backup.is_compatible_with = MagicMock(return_value=False)
 
     result, port = await pick_radio(RadioType.znp)
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={
-            config_flow.FORMATION_STRATEGY: (
-                config_flow.FORMATION_RESTORE_AUTOMATIC_BACKUP
-            )
-        },
-    )
-    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.config_entries.ConfigFlow.show_advanced_options",
+        new_callable=PropertyMock(return_value=is_advanced),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                config_flow.FORMATION_STRATEGY: (
+                    config_flow.FORMATION_RESTORE_AUTOMATIC_BACKUP
+                )
+            },
+        )
+        await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["step_id"] == "restore_automatic_backup"
