@@ -327,6 +327,20 @@ async def test_command_template_variables(hass, mqtt_mock_entry_with_yaml_config
     state = hass.states.get("select.test_select")
     assert state.state == "beer"
 
+    # Test that TemplateStateFromEntityId is not called again
+    with patch(
+        "homeassistant.helpers.template.TemplateStateFromEntityId", MagicMock()
+    ) as template_state_calls:
+        await hass.services.async_call(
+            "select",
+            "select_option",
+            {"entity_id": "select.test_select", "option": "milk"},
+            blocking=True,
+        )
+        assert template_state_calls.call_count == 0
+        state = hass.states.get("select.test_select")
+        assert state.state == "milk"
+
 
 async def test_value_template_value(hass):
     """Test the rendering of MQTT value template."""
@@ -368,6 +382,15 @@ async def test_value_template_value(hass):
     tpl2 = template.Template("{{ this.entity_id }}")
     val_tpl2 = mqtt.MqttValueTemplate(tpl2, entity=entity)
     assert val_tpl2.async_render_with_possible_json_value("bla") == "select.test"
+
+    with patch(
+        "homeassistant.helpers.template.TemplateStateFromEntityId", MagicMock()
+    ) as template_state_calls:
+        tpl3 = template.Template("{{ this.entity_id }}")
+        val_tpl3 = mqtt.MqttValueTemplate(tpl3, entity=entity)
+        val_tpl3.async_render_with_possible_json_value("call1")
+        val_tpl3.async_render_with_possible_json_value("call2")
+        assert template_state_calls.call_count == 1
 
 
 async def test_service_call_without_topic_does_not_publish(
