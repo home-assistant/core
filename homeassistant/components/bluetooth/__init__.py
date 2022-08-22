@@ -34,7 +34,6 @@ from .models import (
     BaseHaScanner,
     BluetoothCallback,
     BluetoothChange,
-    BluetoothManagerCallback,
     BluetoothScanningMode,
     BluetoothServiceInfo,
     BluetoothServiceInfoBleak,
@@ -59,7 +58,6 @@ __all__ = [
     "async_register_callback",
     "async_track_unavailable",
     "BaseHaScanner",
-    "BluetoothManagerCallback",
     "BluetoothServiceInfo",
     "BluetoothServiceInfoBleak",
     "BluetoothScanningMode",
@@ -190,7 +188,9 @@ def async_register_scanner(
 
 
 @hass_callback
-def async_get_advertisement_callback(hass: HomeAssistant) -> BluetoothManagerCallback:
+def async_get_advertisement_callback(
+    hass: HomeAssistant,
+) -> Callable[[BluetoothServiceInfoBleak], None]:
     """Get the advertisement callback."""
     manager: BluetoothManager = hass.data[DATA_MANAGER]
     return manager.scanner_adv_received

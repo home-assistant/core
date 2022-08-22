@@ -60,7 +60,6 @@ class BluetoothScanningMode(Enum):
 BluetoothChange = Enum("BluetoothChange", "ADVERTISEMENT")
 BluetoothCallback = Callable[[BluetoothServiceInfoBleak, BluetoothChange], None]
 ProcessAdvertisementCallback = Callable[[BluetoothServiceInfoBleak], bool]
-BluetoothManagerCallback = Callable[[BluetoothServiceInfoBleak], None]
 
 
 class BaseHaScanner:
