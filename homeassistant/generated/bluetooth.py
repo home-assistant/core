@@ -119,6 +119,7 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     },
     {
         "domain": "yalexs_ble",
-        "manufacturer_id": 465
+        "manufacturer_id": 465,
+        "connectable": True
     }
 ]
