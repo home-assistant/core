@@ -205,8 +205,8 @@ class BluetoothManager:
     @hass_callback
     def _async_setup_unavailable_tracking(self, connectable: bool) -> None:
         """Set up the unavailable tracking."""
-        history = self._get_history_by_type(connectable)
         unavailable_cbks = self._get_unavailable_cbks_by_type(connectable)
+        history = self._get_history_by_type(connectable)
 
         @hass_callback
         def _async_check_unavailable(now: datetime) -> None:
