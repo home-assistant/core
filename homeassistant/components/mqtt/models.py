@@ -100,10 +100,12 @@ class MqttCommandTemplate:
         if self._entity:
             values[ATTR_ENTITY_ID] = self._entity.entity_id
             values[ATTR_NAME] = self._entity.name
-            if self._command_template.hass:
-                values[ATTR_THIS] = template.TemplateStateFromEntityId(
+            values.setdefault(
+                ATTR_THIS,
+                template.TemplateStateFromEntityId(
                     self._command_template.hass, self._entity.entity_id
-                )
+                ),
+            )
         if variables is not None:
             values.update(variables)
         return _convert_outgoing_payload(
@@ -156,10 +158,12 @@ class MqttValueTemplate:
         if self._entity:
             values[ATTR_ENTITY_ID] = self._entity.entity_id
             values[ATTR_NAME] = self._entity.name
-            if self._value_template.hass:
-                values[ATTR_THIS] = template.TemplateStateFromEntityId(
+            values.setdefault(
+                ATTR_THIS,
+                template.TemplateStateFromEntityId(
                     self._value_template.hass, self._entity.entity_id
-                )
+                ),
+            )
 
         if default == _SENTINEL:
             return self._value_template.async_render_with_possible_json_value(
