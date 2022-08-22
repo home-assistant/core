@@ -130,7 +130,7 @@ def ble_device_matches(
     if (address := matcher.get(ADDRESS)) is not None and device.address != address:
         return False
 
-    if matcher.get(CONNECTABLE) and not service_info.connectable:
+    if matcher.get(CONNECTABLE, True) and not service_info.connectable:
         return False
 
     adv_data = service_info.advertisement
