@@ -100,7 +100,9 @@ MISSING_PAYLOAD_ENCRYPTED = BluetoothServiceInfoBleak(
 )
 
 
-def make_advertisement(address: str, payload: bytes) -> BluetoothServiceInfoBleak:
+def make_advertisement(
+    address: str, payload: bytes, connectable: bool = True
+) -> BluetoothServiceInfoBleak:
     """Make a dummy advertisement."""
     return BluetoothServiceInfoBleak(
         name="Test Device",
@@ -115,5 +117,5 @@ def make_advertisement(address: str, payload: bytes) -> BluetoothServiceInfoBlea
         source="local",
         advertisement=AdvertisementData(local_name="Test Device"),
         time=0,
-        connectable=True,
+        connectable=connectable,
     )
