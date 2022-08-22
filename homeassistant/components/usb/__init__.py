@@ -262,9 +262,6 @@ class USBDiscovery:
             description=device.description,
         )
 
-        if not matched:
-            return
-
         sorted_by_most_targeted = sorted(matched, key=lambda item: -len(item))
         most_matched_fields = len(sorted_by_most_targeted[0])
 
