@@ -1,4 +1,4 @@
-"""Support for govee ble sensors."""
+"""Support for airthings ble sensors."""
 from __future__ import annotations
 
 import logging
@@ -25,7 +25,10 @@ from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from ...helpers.typing import StateType
-from ...helpers.update_coordinator import CoordinatorEntity, DataUpdateCoordinator
+from ...helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 from .const import DOMAIN, VOLUME_BECQUEREL, VOLUME_PICOCURIE
 
 _LOGGER = logging.getLogger(__name__)
@@ -103,7 +106,7 @@ async def async_setup_entry(
     entry: config_entries.ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Govee BLE sensors."""
+    """Set up the Airthings BLE sensors."""
     is_metric = hass.config.units.is_metric
 
     coordinator: DataUpdateCoordinator[AirthingsDevice] = hass.data[DOMAIN][
@@ -131,7 +134,9 @@ async def async_setup_entry(
             )
             continue
         entities.append(
-            AirthingsSensor(coordinator, coordinator.data, SENSORS[sensor_type])
+            AirthingsSensor(
+                coordinator, coordinator.data, SENSORS[sensor_type]
+            )
         )
 
     async_add_entities(entities)
@@ -154,8 +159,9 @@ class AirthingsSensor(
         super().__init__(coordinator)
         self.entity_description = entity_description
 
-        self._attr_name = f"{airthings_device.name} {entity_description.name}"
-        self._attr_unique_id = f"{airthings_device.name}_{entity_description.key}"
+        self._attr_unique_id = (
+            f"{airthings_device.name}_{entity_description.key}"
+        )
         self._id = airthings_device.name
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, airthings_device.name)},
