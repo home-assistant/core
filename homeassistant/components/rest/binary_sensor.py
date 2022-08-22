@@ -145,10 +145,11 @@ class RestBinarySensor(RestEntity, TemplateEntity, BinarySensorEntity):
                     response = json_dumps(xmltodict.parse(response))
                     _LOGGER.debug("JSON converted from XML: %s", response)
                 except ExpatError:
-                    _LOGGER.warning(
-                        "REST xml result could not be parsed and converted to JSON"
+                    _LOGGER.debug(
+                        "REST xml result could not be parsed and converted to JSON."
+                        " Erroneous XML: %s",
+                        response,
                     )
-                    _LOGGER.debug("Erroneous XML: %s", response)
 
         if self._json_attrs:
             self._attributes = {}
@@ -163,21 +164,23 @@ class RestBinarySensor(RestEntity, TemplateEntity, BinarySensorEntity):
                     if isinstance(json_dict, list):
                         json_dict = json_dict[0]
                     if isinstance(json_dict, dict):
-                        attrs = {
+                        self._attributes = {
                             k: json_dict[k] for k in self._json_attrs if k in json_dict
                         }
-                        self._attributes = attrs
                     else:
                         _LOGGER.warning(
                             "JSON result was not a dictionary"
                             " or list with 0th element a dictionary"
                         )
                 except ValueError:
-                    _LOGGER.warning("REST result could not be parsed as JSON")
-                    _LOGGER.debug("Erroneous JSON: %s", response)
+                    _LOGGER.debug(
+                        "REST result could not be parsed as JSON."
+                        " Erroneous JSON: %s",
+                        response,
+                    )
 
             else:
-                _LOGGER.warning("Empty reply found when expecting JSON data")
+                _LOGGER.debug("Empty reply found when expecting JSON data")
 
         if self._value_template is not None:
             response = self._value_template.async_render_with_possible_json_value(
