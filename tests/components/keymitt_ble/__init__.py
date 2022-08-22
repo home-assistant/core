@@ -46,6 +46,8 @@ SERVICE_INFO = BluetoothServiceInfoBleak(
         service_uuids=["00001831-0000-1000-8000-00805f9b34fb"],
     ),
     device=BLEDevice("aa:bb:cc:dd:ee:ff", "mibp"),
+    time=0,
+    connectable=True,
 )
 
 NOT_MICROBOT_INFO = BluetoothServiceInfoBleak(
@@ -61,4 +63,6 @@ NOT_MICROBOT_INFO = BluetoothServiceInfoBleak(
         service_data={},
     ),
     device=BLEDevice("aa:bb:cc:dd:ee:ff", "unknown"),
+    time=0,
+    connectable=True,
 )
