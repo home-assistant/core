@@ -113,15 +113,9 @@ class RestBinarySensor(RestEntity, TemplateEntity, BinarySensorEntity):
         if (value_template := self._value_template) is not None:
             value_template.hass = hass
         self._json_attrs = config.get(CONF_JSON_ATTRS)
-        self._attributes = None
         self._json_attrs_path = config.get(CONF_JSON_ATTRS_PATH)
 
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return self._attributes
 
     def _update_from_rest_data(self):
         """Update state from the rest data."""
@@ -152,7 +146,6 @@ class RestBinarySensor(RestEntity, TemplateEntity, BinarySensorEntity):
                     )
 
         if self._json_attrs:
-            self._attributes = {}
             if response:
                 try:
                     json_dict = json_loads(response)
@@ -164,7 +157,7 @@ class RestBinarySensor(RestEntity, TemplateEntity, BinarySensorEntity):
                     if isinstance(json_dict, list):
                         json_dict = json_dict[0]
                     if isinstance(json_dict, dict):
-                        self._attributes = {
+                        self._attr_extra_state_attributes = {
                             k: json_dict[k] for k in self._json_attrs if k in json_dict
                         }
                     else:
