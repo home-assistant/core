@@ -10,6 +10,7 @@ from bleak import BleakClient, BleakError
 import voluptuous as vol
 
 from homeassistant.components import bluetooth
+from homeassistant.components.bluetooth.match import BluetoothCallbackMatcher
 from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
 )
@@ -207,7 +208,12 @@ async def async_setup_scanner(  # noqa: C901
 
     cancels = [
         bluetooth.async_register_callback(
-            hass, _async_update_ble, None, bluetooth.BluetoothScanningMode.ACTIVE
+            hass,
+            _async_update_ble,
+            BluetoothCallbackMatcher(
+                connectable=False
+            ),  # We will take data from any source
+            bluetooth.BluetoothScanningMode.ACTIVE,
         ),
         async_track_time_interval(hass, _async_refresh_ble, interval),
     ]
