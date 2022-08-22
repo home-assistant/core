@@ -295,7 +295,7 @@ async def test_discovery_match_by_service_uuid_connectable(
 
         called_domains = _domains_from_mock_config_flow(mock_config_flow)
         assert len(called_domains) == 1
-        assert called_domains == "switchbot"
+        assert called_domains == ["switchbot"]
 
 
 async def test_discovery_match_by_service_uuid_not_connectable(
