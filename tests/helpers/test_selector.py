@@ -454,7 +454,7 @@ def test_select_selector_schema_error(schema):
             (None,),
         ),
         (
-            {"entity_id": "sensor.abc", "exclude_attributes": ["friendly_name"]},
+            {"entity_id": "sensor.abc", "hide_attributes": ["friendly_name"]},
             ("device_class", "state_class"),
             (None,),
         ),
