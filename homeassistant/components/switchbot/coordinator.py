@@ -41,10 +41,15 @@ class SwitchbotDataUpdateCoordinator(PassiveBluetoothDataUpdateCoordinator):
         device: switchbot.SwitchbotDevice,
         base_unique_id: str,
         device_name: str,
+        connectable: bool,
     ) -> None:
         """Initialize global switchbot data updater."""
         super().__init__(
-            hass, logger, ble_device.address, bluetooth.BluetoothScanningMode.ACTIVE
+            hass,
+            logger,
+            ble_device.address,
+            bluetooth.BluetoothScanningMode.ACTIVE,
+            connectable,
         )
         self.ble_device = ble_device
         self.device = device
