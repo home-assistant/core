@@ -52,17 +52,17 @@ async def test_entry_diagnostics(
     }
     assert result["protocols_coordinator_data"] == {
         "doh_queries": 20,
-        "doh3_queries": 0,
+        "doh3_queries": 15,
         "doq_queries": 10,
         "dot_queries": 30,
         "tcp_queries": 0,
         "udp_queries": 40,
-        "doh_queries_ratio": 20.0,
-        "doh3_queries_ratio": 0.0,
-        "doq_queries_ratio": 10.0,
-        "dot_queries_ratio": 30.0,
+        "doh_queries_ratio": 17.4,
+        "doh3_queries_ratio": 13.0,
+        "doq_queries_ratio": 8.7,
+        "dot_queries_ratio": 26.1,
         "tcp_queries_ratio": 0.0,
-        "udp_queries_ratio": 40.0,
+        "udp_queries_ratio": 34.8,
     }
     assert result["settings_coordinator_data"] == settings
     assert result["status_coordinator_data"] == {

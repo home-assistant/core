@@ -207,59 +207,59 @@ class AFSAPIDevice(MediaPlayerEntity):
 
     # Management actions
     # power control
-    async def async_turn_on(self):
+    async def async_turn_on(self) -> None:
         """Turn on the device."""
         await self.fs_device.set_power(True)
 
-    async def async_turn_off(self):
+    async def async_turn_off(self) -> None:
         """Turn off the device."""
         await self.fs_device.set_power(False)
 
-    async def async_media_play(self):
+    async def async_media_play(self) -> None:
         """Send play command."""
         await self.fs_device.play()
 
-    async def async_media_pause(self):
+    async def async_media_pause(self) -> None:
         """Send pause command."""
         await self.fs_device.pause()
 
-    async def async_media_play_pause(self):
+    async def async_media_play_pause(self) -> None:
         """Send play/pause command."""
         if self._attr_state == STATE_PLAYING:
             await self.fs_device.pause()
         else:
             await self.fs_device.play()
 
-    async def async_media_stop(self):
+    async def async_media_stop(self) -> None:
         """Send play/pause command."""
         await self.fs_device.pause()
 
-    async def async_media_previous_track(self):
+    async def async_media_previous_track(self) -> None:
         """Send previous track command (results in rewind)."""
         await self.fs_device.rewind()
 
-    async def async_media_next_track(self):
+    async def async_media_next_track(self) -> None:
         """Send next track command (results in fast-forward)."""
         await self.fs_device.forward()
 
-    async def async_mute_volume(self, mute):
+    async def async_mute_volume(self, mute: bool) -> None:
         """Send mute command."""
         await self.fs_device.set_mute(mute)
 
     # volume
-    async def async_volume_up(self):
+    async def async_volume_up(self) -> None:
         """Send volume up command."""
         volume = await self.fs_device.get_volume()
         volume = int(volume or 0) + 1
         await self.fs_device.set_volume(min(volume, self._max_volume))
 
-    async def async_volume_down(self):
+    async def async_volume_down(self) -> None:
         """Send volume down command."""
         volume = await self.fs_device.get_volume()
         volume = int(volume or 0) - 1
         await self.fs_device.set_volume(max(volume, 0))
 
-    async def async_set_volume_level(self, volume):
+    async def async_set_volume_level(self, volume: float) -> None:
         """Set volume command."""
         if self._max_volume:  # Can't do anything sensible if not set
             volume = int(volume * self._max_volume)

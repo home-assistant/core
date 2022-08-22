@@ -24,7 +24,6 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_URL,
     CONF_USERNAME,
-    CONF_WHITE_VALUE,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -45,6 +44,7 @@ CONF_DIMMING = "dimming"
 CONF_GATEWAYS = "gateways"
 CONF_PLUGINS = "plugins"
 CONF_RESET_COLOR = "reset_color"
+CONF_WHITE_VALUE = "white_value"
 FIBARO_CONTROLLER = "fibaro_controller"
 FIBARO_DEVICES = "fibaro_devices"
 PLATFORMS = [

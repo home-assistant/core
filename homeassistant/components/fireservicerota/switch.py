@@ -69,7 +69,7 @@ class ResponseSwitch(SwitchEntity):
         return False
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return if switch is available."""
         return self._client.on_duty
 
@@ -99,11 +99,11 @@ class ResponseSwitch(SwitchEntity):
 
         return attr
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Send Acknowledge response status."""
         await self.async_set_response(True)
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Send Reject response status."""
         await self.async_set_response(False)
 
