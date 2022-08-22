@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 import logging
+from typing import Any
 
 import aiohttp
 from foobot_async import FoobotClient
@@ -31,7 +32,6 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
@@ -105,15 +105,15 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the devices associated with the account."""
-    token = config.get(CONF_TOKEN)
-    username = config.get(CONF_USERNAME)
+    token: str = config[CONF_TOKEN]
+    username: str = config[CONF_USERNAME]
 
     client = FoobotClient(
         token, username, async_get_clientsession(hass), timeout=TIMEOUT
     )
-    entities = []
+    entities: list[FoobotSensor] = []
     try:
-        devices = await client.get_devices()
+        devices: list[dict[str, Any]] = await client.get_devices()
         _LOGGER.debug("The following devices were found: %s", devices)
         for device in devices:
             foobot_data = FoobotData(client, device["uuid"])
@@ -141,7 +141,12 @@ async def async_setup_platform(
 class FoobotSensor(SensorEntity):
     """Implementation of a Foobot sensor."""
 
-    def __init__(self, data, device, description: SensorEntityDescription):
+    def __init__(
+        self,
+        data: FoobotData,
+        device: dict[str, Any],
+        description: SensorEntityDescription,
+    ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self.foobot_data = data
@@ -152,32 +157,28 @@ class FoobotSensor(SensorEntity):
     @property
     def native_value(self):
         """Return the state of the device."""
-        try:
-            data = self.foobot_data.data[self.entity_description.key]
-        except (KeyError, TypeError):
-            data = None
-        return data
+        return self.foobot_data.data.get(self.entity_description.key)
 
     async def async_update(self) -> None:
         """Get the latest data."""
         await self.foobot_data.async_update()
 
 
-class FoobotData(Entity):
+class FoobotData:
     """Get data from Foobot API."""
 
-    def __init__(self, client, uuid):
+    def __init__(self, client: FoobotClient, uuid: str) -> None:
         """Initialize the data object."""
         self._client = client
         self._uuid = uuid
-        self.data = {}
+        self.data: dict[str, float] = {}
 
     @Throttle(SCAN_INTERVAL)
-    async def async_update(self):
+    async def async_update(self) -> bool:
         """Get the data from Foobot API."""
         interval = SCAN_INTERVAL.total_seconds()
         try:
-            response = await self._client.get_last_data(
+            response: list[dict[str, Any]] = await self._client.get_last_data(
                 self._uuid, interval, interval + 1
             )
         except (
