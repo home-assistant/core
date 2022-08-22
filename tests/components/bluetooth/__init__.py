@@ -6,7 +6,12 @@ from unittest.mock import patch
 
 from bleak.backends.scanner import AdvertisementData, BLEDevice
 
-from homeassistant.components.bluetooth import DOMAIN, SOURCE_LOCAL, models
+from homeassistant.components.bluetooth import (
+    DOMAIN,
+    SOURCE_LOCAL,
+    async_get_advertisement_callback,
+    models,
+)
 from homeassistant.components.bluetooth.const import DEFAULT_ADDRESS
 from homeassistant.components.bluetooth.manager import BluetoothManager
 from homeassistant.core import HomeAssistant
@@ -20,28 +25,37 @@ def _get_manager() -> BluetoothManager:
     return models.MANAGER
 
 
-def inject_advertisement(device: BLEDevice, adv: AdvertisementData) -> None:
+def inject_advertisement(
+    hass: HomeAssistant, device: BLEDevice, adv: AdvertisementData
+) -> None:
     """Inject an advertisement into the manager."""
-    return inject_advertisement_with_source(device, adv, SOURCE_LOCAL)
+    return inject_advertisement_with_source(hass, device, adv, SOURCE_LOCAL)
 
 
 def inject_advertisement_with_source(
-    device: BLEDevice, adv: AdvertisementData, source: str
+    hass: HomeAssistant, device: BLEDevice, adv: AdvertisementData, source: str
 ) -> None:
     """Inject an advertisement into the manager from a specific source."""
-    inject_advertisement_with_time_and_source(device, adv, time.monotonic(), source)
+    inject_advertisement_with_time_and_source(
+        hass, device, adv, time.monotonic(), source
+    )
 
 
 def inject_advertisement_with_time_and_source(
-    device: BLEDevice, adv: AdvertisementData, time: float, source: str
+    hass: HomeAssistant,
+    device: BLEDevice,
+    adv: AdvertisementData,
+    time: float,
+    source: str,
 ) -> None:
     """Inject an advertisement into the manager from a specific source at a time."""
     inject_advertisement_with_time_and_source_connectable(
-        device, adv, time, source, True
+        hass, device, adv, time, source, True
     )
 
 
 def inject_advertisement_with_time_and_source_connectable(
+    hass: HomeAssistant,
     device: BLEDevice,
     adv: AdvertisementData,
     time: float,
@@ -49,7 +63,7 @@ def inject_advertisement_with_time_and_source_connectable(
     connectable: bool,
 ) -> None:
     """Inject an advertisement into the manager from a specific source at a time and connectable status."""
-    return _get_manager().scanner_adv_received(
+    async_get_advertisement_callback(hass)(
         models.BluetoothServiceInfoBleak(
             name=adv.local_name or device.name or device.address,
             address=device.address,
