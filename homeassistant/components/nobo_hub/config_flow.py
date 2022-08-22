@@ -1,7 +1,6 @@
 """Config flow for Nobø Ecohub integration."""
 from __future__ import annotations
 
-from collections import OrderedDict
 import socket
 from typing import Any
 
@@ -146,10 +145,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return name
 
     def _hubs(self):
-        def _hub(hub):
-            return hub[0], f"{hub[1]['serial_prefix']}XXX ({hub[1]['ip']})"
-
-        return OrderedDict(map(_hub, enumerate(self._discovered_hubs)))
+        return {
+            i: f"{hub['serial_prefix']}XXX ({hub['ip']})"
+            for (i, hub) in enumerate(self._discovered_hubs)
+        }
 
     @staticmethod
     @callback
@@ -179,7 +178,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None) -> FlowResult:
         """Manage the options."""
 
-        hub = self.hass.data[DOMAIN][self.config_entry.entry_id]
+        hub = self.hass.data[DOMAIN][self.config_entry.entry_id].hub
         profile_names = sorted(
             k["name"].replace("\xa0", " ") for k in hub.week_profiles.values()
         )
@@ -233,15 +232,14 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             on_commands = {}
         for zone in hub.zones:
             name = hub.zones[zone]["name"].replace("\xa0", " ")
-            on_command = (
-                on_commands[name]
-                if name in on_commands and on_commands[name] in profile_names
-                else CONF_WEEK_PROFILE_NONE
-            )
+            if name in on_commands and on_commands[name] in profile_names:
+                on_command = on_commands[name]
+            else:
+                on_command = CONF_WEEK_PROFILE_NONE
             schema = schema.extend(
                 {
                     vol.Required(
-                        CONF_COMMAND_ON + "_zone_" + zone, default=on_command
+                        f"{CONF_COMMAND_ON}_zone_{zone}", default=on_command
                     ): profiles
                 }
             )

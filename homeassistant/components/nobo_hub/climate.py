@@ -31,7 +31,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.util.dt as dt_util
 
 from .const import (
     ATTR_OVERRIDE_ALLOWED,
@@ -61,7 +60,7 @@ _ZONE_NORMAL_WEEK_LIST_SCHEMA = vol.Schema({cv.string: cv.string})
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_devices: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Nobø Ecohub platform from UI configuration."""
 
@@ -106,11 +105,18 @@ async def async_setup_entry(
                 _set_on_commands(command_on_by_id, command_on_dict, hub)
 
     # Add zones as entities
-    async_add_devices(
-        NoboZone(
-            zone_id, hub, command_off_id, command_on_by_id.get(zone_id), override_type
-        )
-        for zone_id in hub.zones
+    async_add_entities(
+        (
+            NoboZone(
+                zone_id,
+                hub,
+                command_off_id,
+                command_on_by_id.get(zone_id),
+                override_type,
+            )
+            for zone_id in hub.zones
+        ),
+        True,
     )
 
 
@@ -187,9 +193,13 @@ class NoboZone(ClimateEntity):
             self._attr_hvac_modes.append(HVACMode.OFF)
         self._override_type = override_type
 
-        # Register for callbacks before initial update to avoid race condition.
-        hub.register_callback(self._after_update)
-        self.update()
+    async def async_added_to_hass(self) -> None:
+        """Register callback from hub."""
+        self._nobo.register_callback(self._after_update)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Deregister callback from hub."""
+        self._nobo.deregister_callback(self._after_update)
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target HVAC mode, if it's supported."""
@@ -265,10 +275,14 @@ class NoboZone(ClimateEntity):
             self._id, temp_comfort_c=high, temp_eco_c=low
         )
 
-    @callback
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Fetch new state data for this zone."""
-        state = self._nobo.get_current_zone_mode(self._id, dt_util.now())
+        self._read_state()
+
+    @callback
+    def _read_state(self) -> None:
+        """Read the current state from the hub. These are only local calls."""
+        state = self._nobo.get_current_zone_mode(self._id)
         self._attr_hvac_mode = HVACMode.AUTO
         self._attr_preset_mode = PRESET_NONE
 
@@ -306,5 +320,5 @@ class NoboZone(ClimateEntity):
 
     @callback
     def _after_update(self, hub):
-        self.update()
+        self._read_state()
         self.async_schedule_update_ha_state()

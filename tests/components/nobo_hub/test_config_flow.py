@@ -4,6 +4,7 @@ from unittest.mock import Mock, PropertyMock, patch
 from pynobo import nobo
 
 from homeassistant import config_entries, setup
+from homeassistant.components.nobo_hub import NoboHubData
 from homeassistant.components.nobo_hub.const import (
     CONF_OVERRIDE_TYPE,
     CONF_WEEK_PROFILE_NONE,
@@ -307,7 +308,9 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         unique_id="123456789012",
         data={"serial": "123456789012"},
     )
-    hass.data[DOMAIN] = {entry.entry_id: hub}
+    hass.data[DOMAIN] = {
+        entry.entry_id: NoboHubData(hub, lambda remove_listener: remove_listener)
+    }
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
