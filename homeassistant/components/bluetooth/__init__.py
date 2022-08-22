@@ -31,8 +31,8 @@ from .const import (
 from .manager import BluetoothManager
 from .match import BluetoothCallbackMatcher, IntegrationMatcher
 from .models import (
-    AdvertisementHistory,
     BaseHaScanner,
+    BluetoothAdvertisement,
     BluetoothCallback,
     BluetoothChange,
     BluetoothManagerCallback,
@@ -52,7 +52,7 @@ if TYPE_CHECKING:
 
 
 __all__ = [
-    "AdvertisementHistory",
+    "BluetoothAdvertisement",
     "async_ble_device_from_address",
     "async_discovered_service_info",
     "async_get_scanner",
