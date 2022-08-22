@@ -28,7 +28,7 @@ calibrate:
           max: 999999
     mode:
       name: Mode
-      description: normal|invert|toggle
+      description: normal | invert | toggle
       required: true
       selector:
         select:

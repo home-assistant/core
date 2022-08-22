@@ -3,16 +3,20 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+import voluptuous as vol
+
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_platform
+from homeassistant.helpers import config_validation as cv, entity_platform
 
 from .const import DOMAIN
 from .entity import MicroBotEntity
 
 if TYPE_CHECKING:
     from . import MicroBotDataUpdateCoordinator
+
+CALIBRATE = "calibrate"
 
 
 async def async_setup_entry(
@@ -23,6 +27,16 @@ async def async_setup_entry(
     """Set up MicroBot based on a config entry."""
     coordinator: MicroBotDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities([MicroBotBinarySwitch(coordinator, entry)])
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(
+        CALIBRATE,
+        {
+            vol.Required("depth"): cv.positive_int,
+            vol.Required("duration"): cv.positive_int,
+            vol.Required("mode"): vol.In(["normal", "invert", "toggle"]),
+        },
+        "calibrate",
+    )
 
 
 class MicroBotBinarySwitch(MicroBotEntity, SwitchEntity):
@@ -44,3 +58,12 @@ class MicroBotBinarySwitch(MicroBotEntity, SwitchEntity):
     def is_on(self):
         """Return true if the switch is on."""
         return self.coordinator.api.is_on
+
+    async def calibrate(
+        self,
+        depth: int,
+        duration: int,
+        mode: str,
+    ) -> None:
+        """Send calibration commands to the switch."""
+        await self.coordinator.api.calibrate(depth, duration, mode)
