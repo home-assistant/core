@@ -81,7 +81,7 @@ class GeonetnzVolcanoSensor(SensorEntity):
         self._feed_last_update_successful = None
         self._remove_signal_update = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         self._remove_signal_update = async_dispatcher_connect(
             self.hass,
@@ -99,7 +99,7 @@ class GeonetnzVolcanoSensor(SensorEntity):
         """Call update method."""
         self.async_schedule_update_ha_state(True)
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update this entity from the data held in the feed manager."""
         _LOGGER.debug("Updating %s", self._external_id)
         feed_entry = self._feed_manager.get_entry(self._external_id)
