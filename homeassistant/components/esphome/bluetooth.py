@@ -1,5 +1,6 @@
 """Bluetooth scanner for esphome."""
 
+from collections.abc import Callable
 import datetime
 from datetime import timedelta
 import re
@@ -11,7 +12,6 @@ from bleak.backends.scanner import AdvertisementData
 
 from homeassistant.components.bluetooth import (
     BaseHaScanner,
-    BluetoothManagerCallback,
     async_get_advertisement_callback,
     async_register_scanner,
 )
@@ -22,7 +22,7 @@ from homeassistant.helpers.event import async_track_time_interval
 
 ADV_STALE_TIME = 180  # seconds
 
-TWO = re.compile("..")
+TWO_CHAR = re.compile("..")
 
 
 async def async_connect_scanner(
@@ -30,9 +30,8 @@ async def async_connect_scanner(
 ) -> None:
     """Connect scanner."""
     assert entry.unique_id is not None
-    scanner = ESPHomeScannner(
-        hass, entry.unique_id, async_get_advertisement_callback(hass)
-    )
+    new_info_callback = async_get_advertisement_callback(hass)
+    scanner = ESPHomeScannner(hass, entry.unique_id, new_info_callback)
     entry.async_on_unload(async_register_scanner(hass, scanner, False))
     entry.async_on_unload(scanner.async_setup())
     await cli.subscribe_bluetooth_le_advertisements(scanner.async_on_advertisement)
@@ -45,11 +44,11 @@ class ESPHomeScannner(BaseHaScanner):
         self,
         hass: HomeAssistant,
         scanner_id: str,
-        manager_callback: BluetoothManagerCallback,
+        new_info_callback: Callable[[BluetoothServiceInfoBleak], None],
     ) -> None:
         """Initialize the scanner."""
         self._hass = hass
-        self._manager_callback = manager_callback
+        self._new_info_callback = new_info_callback
         self._discovered_devices: dict[str, BLEDevice] = {}
         self._discovered_device_timestamps: dict[str, float] = {}
         self._source = scanner_id
@@ -82,7 +81,7 @@ class ESPHomeScannner(BaseHaScanner):
     def async_on_advertisement(self, adv: BluetoothLEAdvertisement) -> None:
         """Call the registered callback."""
         now = time.monotonic()
-        address = ":".join(TWO.findall("%012X" % adv.address))  # must be upper
+        address = ":".join(TWO_CHAR.findall("%012X" % adv.address))  # must be upper
         adv_data = AdvertisementData(  # type: ignore[no-untyped-call]
             local_name=None if adv.name == "" else adv.name,
             manufacturer_data=adv.manufacturer_data,
@@ -97,7 +96,7 @@ class ESPHomeScannner(BaseHaScanner):
         )
         self._discovered_devices[address] = device
         self._discovered_device_timestamps[address] = now
-        self._manager_callback(
+        self._new_info_callback(
             BluetoothServiceInfoBleak(
                 name=adv_data.local_name or device.name or device.address,
                 address=device.address,

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from datetime import datetime
 import logging
 import platform
@@ -31,12 +32,7 @@ from .const import (
     SOURCE_LOCAL,
     START_TIMEOUT,
 )
-from .models import (
-    BaseHaScanner,
-    BluetoothManagerCallback,
-    BluetoothScanningMode,
-    BluetoothServiceInfoBleak,
-)
+from .models import BaseHaScanner, BluetoothScanningMode, BluetoothServiceInfoBleak
 from .util import adapter_human_name, async_reset_adapter
 
 OriginalBleakScanner = bleak.BleakScanner
@@ -123,7 +119,7 @@ class HaScanner(BaseHaScanner):
         self._cancel_watchdog: CALLBACK_TYPE | None = None
         self._last_detection = 0.0
         self._start_time = 0.0
-        self._callbacks: list[BluetoothManagerCallback] = []
+        self._callbacks: list[Callable[[BluetoothServiceInfoBleak], None]] = []
         self.name = adapter_human_name(adapter, address)
         self.source = self.adapter or SOURCE_LOCAL
 
@@ -134,7 +130,7 @@ class HaScanner(BaseHaScanner):
 
     @hass_callback
     def async_register_callback(
-        self, callback: BluetoothManagerCallback
+        self, callback: Callable[[BluetoothServiceInfoBleak], None]
     ) -> CALLBACK_TYPE:
         """Register a callback.
 
