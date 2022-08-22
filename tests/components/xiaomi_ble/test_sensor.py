@@ -322,7 +322,7 @@ async def test_xiaomi_HHCCJCY01_not_connectable(hass):
     assert len(hass.states.async_all()) == 0
     saved_callback(
         make_advertisement(
-            "C4:7C:8D:6A:3E:7B",
+            "C4:7C:8D:6A:3E:7A",
             b"q \x98\x00fz>j\x8d|\xc4\r\x07\x10\x03\x00\x00\x00",
             connectable=False,
         ),
@@ -330,7 +330,7 @@ async def test_xiaomi_HHCCJCY01_not_connectable(hass):
     )
     saved_callback(
         make_advertisement(
-            "C4:7C:8D:6A:3E:7B",
+            "C4:7C:8D:6A:3E:7A",
             b"q \x98\x00hz>j\x8d|\xc4\r\t\x10\x02W\x02",
             connectable=False,
         ),
@@ -338,7 +338,7 @@ async def test_xiaomi_HHCCJCY01_not_connectable(hass):
     )
     saved_callback(
         make_advertisement(
-            "C4:7C:8D:6A:3E:7B",
+            "C4:7C:8D:6A:3E:7A",
             b"q \x98\x00Gz>j\x8d|\xc4\r\x08\x10\x01@",
             connectable=False,
         ),
@@ -346,7 +346,7 @@ async def test_xiaomi_HHCCJCY01_not_connectable(hass):
     )
     saved_callback(
         make_advertisement(
-            "C4:7C:8D:6A:3E:7B",
+            "C4:7C:8D:6A:3E:7A",
             b"q \x98\x00iz>j\x8d|\xc4\r\x04\x10\x02\xf4\x00",
             connectable=False,
         ),
@@ -355,34 +355,34 @@ async def test_xiaomi_HHCCJCY01_not_connectable(hass):
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 4
 
-    illum_sensor = hass.states.get("sensor.plant_sensor_6a3e7b_illuminance")
+    illum_sensor = hass.states.get("sensor.plant_sensor_6a3e7a_illuminance")
     illum_sensor_attr = illum_sensor.attributes
     assert illum_sensor.state == "0"
-    assert illum_sensor_attr[ATTR_FRIENDLY_NAME] == "Plant Sensor 6A3E7B Illuminance"
+    assert illum_sensor_attr[ATTR_FRIENDLY_NAME] == "Plant Sensor 6A3E7A Illuminance"
     assert illum_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "lx"
     assert illum_sensor_attr[ATTR_STATE_CLASS] == "measurement"
 
-    cond_sensor = hass.states.get("sensor.plant_sensor_6a3e7b_conductivity")
+    cond_sensor = hass.states.get("sensor.plant_sensor_6a3e7a_conductivity")
     cond_sensor_attribtes = cond_sensor.attributes
     assert cond_sensor.state == "599"
     assert (
-        cond_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Plant Sensor 6A3E7B Conductivity"
+        cond_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Plant Sensor 6A3E7A Conductivity"
     )
     assert cond_sensor_attribtes[ATTR_UNIT_OF_MEASUREMENT] == "µS/cm"
     assert cond_sensor_attribtes[ATTR_STATE_CLASS] == "measurement"
 
-    moist_sensor = hass.states.get("sensor.plant_sensor_6a3e7b_moisture")
+    moist_sensor = hass.states.get("sensor.plant_sensor_6a3e7a_moisture")
     moist_sensor_attribtes = moist_sensor.attributes
     assert moist_sensor.state == "64"
-    assert moist_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Plant Sensor 6A3E7B Moisture"
+    assert moist_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Plant Sensor 6A3E7A Moisture"
     assert moist_sensor_attribtes[ATTR_UNIT_OF_MEASUREMENT] == "%"
     assert moist_sensor_attribtes[ATTR_STATE_CLASS] == "measurement"
 
-    temp_sensor = hass.states.get("sensor.plant_sensor_6a3e7b_temperature")
+    temp_sensor = hass.states.get("sensor.plant_sensor_6a3e7a_temperature")
     temp_sensor_attribtes = temp_sensor.attributes
     assert temp_sensor.state == "24.4"
     assert (
-        temp_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Plant Sensor 6A3E7B Temperature"
+        temp_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Plant Sensor 6A3E7A Temperature"
     )
     assert temp_sensor_attribtes[ATTR_UNIT_OF_MEASUREMENT] == "°C"
     assert temp_sensor_attribtes[ATTR_STATE_CLASS] == "measurement"
@@ -397,7 +397,7 @@ async def test_xiaomi_HHCCJCY01_only_some_sources_connectable(hass):
     """This device has multiple advertisements before all sensors are visible and some sources are connectable."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="C4:7C:8D:6A:3E:7C",
+        unique_id="C4:7C:8D:6A:3E:7A",
     )
     entry.add_to_hass(hass)
 
@@ -409,28 +409,28 @@ async def test_xiaomi_HHCCJCY01_only_some_sources_connectable(hass):
     assert len(hass.states.async_all()) == 0
     saved_callback(
         make_advertisement(
-            "C4:7C:8D:6A:3E:7C",
+            "C4:7C:8D:6A:3E:7A",
             b"q \x98\x00fz>j\x8d|\xc4\r\x07\x10\x03\x00\x00\x00",
             connectable=True,
         ),
     )
     saved_callback(
         make_advertisement(
-            "C4:7C:8D:6A:3E:7C",
+            "C4:7C:8D:6A:3E:7A",
             b"q \x98\x00hz>j\x8d|\xc4\r\t\x10\x02W\x02",
             connectable=False,
         ),
     )
     saved_callback(
         make_advertisement(
-            "C4:7C:8D:6A:3E:7C",
+            "C4:7C:8D:6A:3E:7A",
             b"q \x98\x00Gz>j\x8d|\xc4\r\x08\x10\x01@",
             connectable=False,
         ),
     )
     saved_callback(
         make_advertisement(
-            "C4:7C:8D:6A:3E:7C",
+            "C4:7C:8D:6A:3E:7A",
             b"q \x98\x00iz>j\x8d|\xc4\r\x04\x10\x02\xf4\x00",
             connectable=False,
         ),
@@ -438,42 +438,42 @@ async def test_xiaomi_HHCCJCY01_only_some_sources_connectable(hass):
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 5
 
-    illum_sensor = hass.states.get("sensor.plant_sensor_6a3e7c_illuminance")
+    illum_sensor = hass.states.get("sensor.plant_sensor_6a3e7a_illuminance")
     illum_sensor_attr = illum_sensor.attributes
     assert illum_sensor.state == "0"
-    assert illum_sensor_attr[ATTR_FRIENDLY_NAME] == "Plant Sensor 6A3E7C Illuminance"
+    assert illum_sensor_attr[ATTR_FRIENDLY_NAME] == "Plant Sensor 6A3E7A Illuminance"
     assert illum_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "lx"
     assert illum_sensor_attr[ATTR_STATE_CLASS] == "measurement"
 
-    cond_sensor = hass.states.get("sensor.plant_sensor_6a3e7c_conductivity")
+    cond_sensor = hass.states.get("sensor.plant_sensor_6a3e7a_conductivity")
     cond_sensor_attribtes = cond_sensor.attributes
     assert cond_sensor.state == "599"
     assert (
-        cond_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Plant Sensor 6A3E7C Conductivity"
+        cond_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Plant Sensor 6A3E7A Conductivity"
     )
     assert cond_sensor_attribtes[ATTR_UNIT_OF_MEASUREMENT] == "µS/cm"
     assert cond_sensor_attribtes[ATTR_STATE_CLASS] == "measurement"
 
-    moist_sensor = hass.states.get("sensor.plant_sensor_6a3e7c_moisture")
+    moist_sensor = hass.states.get("sensor.plant_sensor_6a3e7a_moisture")
     moist_sensor_attribtes = moist_sensor.attributes
     assert moist_sensor.state == "64"
-    assert moist_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Plant Sensor 6A3E7C Moisture"
+    assert moist_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Plant Sensor 6A3E7A Moisture"
     assert moist_sensor_attribtes[ATTR_UNIT_OF_MEASUREMENT] == "%"
     assert moist_sensor_attribtes[ATTR_STATE_CLASS] == "measurement"
 
-    temp_sensor = hass.states.get("sensor.plant_sensor_6a3e7c_temperature")
+    temp_sensor = hass.states.get("sensor.plant_sensor_6a3e7a_temperature")
     temp_sensor_attribtes = temp_sensor.attributes
     assert temp_sensor.state == "24.4"
     assert (
-        temp_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Plant Sensor 6A3E7C Temperature"
+        temp_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Plant Sensor 6A3E7A Temperature"
     )
     assert temp_sensor_attribtes[ATTR_UNIT_OF_MEASUREMENT] == "°C"
     assert temp_sensor_attribtes[ATTR_STATE_CLASS] == "measurement"
 
-    batt_sensor = hass.states.get("sensor.plant_sensor_6a3e7c_battery")
+    batt_sensor = hass.states.get("sensor.plant_sensor_6a3e7a_battery")
     batt_sensor_attribtes = batt_sensor.attributes
     assert batt_sensor.state == "5"
-    assert batt_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Plant Sensor 6A3E7C Battery"
+    assert batt_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Plant Sensor 6A3E7A Battery"
     assert batt_sensor_attribtes[ATTR_UNIT_OF_MEASUREMENT] == "%"
     assert batt_sensor_attribtes[ATTR_STATE_CLASS] == "measurement"
 
