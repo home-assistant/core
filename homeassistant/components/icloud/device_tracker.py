@@ -34,7 +34,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up device tracker for iCloud component."""
-    account = hass.data[DOMAIN][entry.unique_id]
+    account: IcloudAccount = hass.data[DOMAIN][entry.unique_id]
     tracked = set[str]()
 
     @callback

@@ -11,7 +11,7 @@
             "reauth_confirm": {
                 "data": {
                     "api_key": "Clave API",
-                    "description": "Vuelva a autenticarse con su cuenta de Ambee."
+                    "description": "Vuelve a autenticarse con tu cuenta de Ambee."
                 }
             },
             "user": {
@@ -21,8 +21,14 @@
                     "longitude": "Longitud",
                     "name": "Nombre"
                 },
-                "description": "Configure Ambee para que se integre con Home Assistant."
+                "description": "Configura Ambee para que se integre con Home Assistant."
             }
+        }
+    },
+    "issues": {
+        "pending_removal": {
+            "description": "La integraci\u00f3n Ambee est\u00e1 pendiente de eliminaci\u00f3n de Home Assistant y ya no estar\u00e1 disponible a partir de Home Assistant 2022.10. \n\nSe va a eliminar la integraci\u00f3n porque Ambee elimin\u00f3 sus cuentas gratuitas (limitadas) y ya no proporciona una forma para que los usuarios regulares se registren en un plan pago. \n\nElimina la entrada de la integraci\u00f3n Ambee de tu instancia para solucionar este problema.",
+            "title": "Se va a eliminar la integraci\u00f3n Ambee"
         }
     }
 }

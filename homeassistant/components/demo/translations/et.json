@@ -1,10 +1,21 @@
 {
     "issues": {
+        "bad_psu": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Vajuta nuppu ESITA, et kinnitada toiteallika v\u00e4ljavahetamist",
+                        "title": "Toiteallikas tuleb v\u00e4lja vahetada"
+                    }
+                }
+            },
+            "title": "Toiteallikas ei ole stabiilne"
+        },
         "out_of_blinker_fluid": {
             "fix_flow": {
                 "step": {
                     "confirm": {
-                        "description": "Vajuta OK kui Blinkeri vedelik on uuesti t\u00e4idetud",
+                        "description": "Vajuta ESITA kui Blinkeri vedelik on uuesti t\u00e4idetud",
                         "title": "Blinkeri vedelikku on vaja uuesti t\u00e4ita"
                     }
                 }

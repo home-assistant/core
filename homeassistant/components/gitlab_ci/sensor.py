@@ -8,13 +8,7 @@ from gitlab import Gitlab, GitlabAuthenticationError, GitlabGetError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    CONF_NAME,
-    CONF_SCAN_INTERVAL,
-    CONF_TOKEN,
-    CONF_URL,
-)
+from homeassistant.const import CONF_NAME, CONF_SCAN_INTERVAL, CONF_TOKEN, CONF_URL
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -78,6 +72,8 @@ def setup_platform(
 class GitLabSensor(SensorEntity):
     """Representation of a GitLab sensor."""
 
+    _attr_attribution = ATTRIBUTION
+
     def __init__(self, gitlab_data, name):
         """Initialize the GitLab sensor."""
         self._available = False
@@ -111,7 +107,6 @@ class GitLabSensor(SensorEntity):
     def extra_state_attributes(self):
         """Return the state attributes."""
         return {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_BUILD_STATUS: self._state,
             ATTR_BUILD_STARTED: self._started_at,
             ATTR_BUILD_FINISHED: self._finished_at,
