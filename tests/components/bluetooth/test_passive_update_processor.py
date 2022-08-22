@@ -32,7 +32,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from . import patch_all_discovered_devices, patch_history
+from . import patch_all_discovered_devices, patch_connectable_history
 
 from tests.common import MockEntityPlatform, async_fire_time_changed
 
@@ -248,7 +248,7 @@ async def test_unavailable_after_no_data(hass, mock_bleak_scanner_start):
     assert processor.available is True
     with patch_all_discovered_devices(
         [MagicMock(address="44:44:33:11:23:45")]
-    ), patch_history(
+    ), patch_connectable_history(
         {"aa:bb:cc:dd:ee:ff": MagicMock()},
     ):
         async_fire_time_changed(
@@ -265,7 +265,7 @@ async def test_unavailable_after_no_data(hass, mock_bleak_scanner_start):
 
     with patch_all_discovered_devices(
         [MagicMock(address="44:44:33:11:23:45")]
-    ), patch_history(
+    ), patch_connectable_history(
         {"aa:bb:cc:dd:ee:ff": MagicMock()},
     ):
         async_fire_time_changed(
