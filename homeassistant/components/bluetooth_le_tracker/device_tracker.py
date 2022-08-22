@@ -202,7 +202,7 @@ async def async_setup_scanner(  # noqa: C901
         # interval so they do not get set to not_home when
         # there have been no callbacks because the RSSI or
         # other properties have not changed.
-        for service_info in bluetooth.async_discovered_service_info(hass):
+        for service_info in bluetooth.async_discovered_service_info(hass, False):
             _async_update_ble(service_info, bluetooth.BluetoothChange.ADVERTISEMENT)
 
     cancels = [

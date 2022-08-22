@@ -119,7 +119,6 @@ def async_register_callback(
     callback: BluetoothCallback,
     match_dict: BluetoothCallbackMatcher | None,
     mode: BluetoothScanningMode,
-    connectable: bool = True,
 ) -> Callable[[], None]:
     """Register to receive a callback on bluetooth change.
 
@@ -131,7 +130,7 @@ def async_register_callback(
     Returns a callback that can be used to cancel the registration.
     """
     manager: BluetoothManager = hass.data[DATA_MANAGER]
-    return manager.async_register_callback(callback, connectable, match_dict)
+    return manager.async_register_callback(callback, match_dict)
 
 
 async def async_process_advertisements(
@@ -140,7 +139,6 @@ async def async_process_advertisements(
     match_dict: BluetoothCallbackMatcher,
     mode: BluetoothScanningMode,
     timeout: int,
-    connectable: bool = True,
 ) -> BluetoothServiceInfoBleak:
     """Process advertisements until callback returns true or timeout expires."""
     done: Future[BluetoothServiceInfoBleak] = Future()
@@ -153,9 +151,7 @@ async def async_process_advertisements(
         if not done.done() and callback(service_info):
             done.set_result(service_info)
 
-    unload = manager.async_register_callback(
-        _async_discovered_device, connectable, match_dict
-    )
+    unload = manager.async_register_callback(_async_discovered_device, match_dict)
 
     try:
         async with async_timeout.timeout(timeout):
