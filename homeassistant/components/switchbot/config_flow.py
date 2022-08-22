@@ -74,7 +74,10 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         model_name = parsed.data.get("modelName")
         if not parsed or model_name not in SUPPORTED_MODEL_TYPES:
             return self.async_abort(reason="not_supported")
-        if discovery_info.connectable and CONNECTABLE_SUPPORTED_MODEL_TYPES[model_name]:
+        if (
+            not discovery_info.connectable
+            and model_name in CONNECTABLE_SUPPORTED_MODEL_TYPES
+        ):
             # Source is not connectable but the model is connectable
             return self.async_abort(reason="not_supported")
         self._discovered_adv = parsed
@@ -143,18 +146,25 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def _async_discover_devices(self) -> None:
         current_addresses = self._async_current_ids()
-        for discovery_info in async_discovered_service_info(self.hass):
-            address = discovery_info.address
-            if (
-                format_unique_id(address) in current_addresses
-                or address in self._discovered_advs
-            ):
-                continue
-            parsed = parse_advertisement_data(
-                discovery_info.device, discovery_info.advertisement
-            )
-            if parsed and parsed.data.get("modelName") in SUPPORTED_MODEL_TYPES:
-                self._discovered_advs[address] = parsed
+        for connectable in (True, False):
+            for discovery_info in async_discovered_service_info(self.hass, connectable):
+                address = discovery_info.address
+                if (
+                    format_unique_id(address) in current_addresses
+                    or address in self._discovered_advs
+                ):
+                    continue
+                parsed = parse_advertisement_data(
+                    discovery_info.device, discovery_info.advertisement
+                )
+                if not parsed:
+                    continue
+                model_name = parsed.data.get("modelName")
+                if (
+                    not discovery_info.connectable
+                    and model_name in CONNECTABLE_SUPPORTED_MODEL_TYPES
+                ):
+                    self._discovered_advs[address] = parsed
 
         if not self._discovered_advs:
             raise AbortFlow("no_unconfigured_devices")

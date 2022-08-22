@@ -107,7 +107,7 @@ async def test_basic_usage(hass, mock_bleak_scanner_start):
     assert coordinator.available is False  # no data yet
     saved_callback = None
 
-    def _async_register_callback(_hass, _callback, _matcher, _mode, _connectable):
+    def _async_register_callback(_hass, _callback, _matcher, _mode):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None
@@ -219,7 +219,7 @@ async def test_unavailable_after_no_data(hass, mock_bleak_scanner_start):
     assert coordinator.available is False  # no data yet
     saved_callback = None
 
-    def _async_register_callback(_hass, _callback, _matcher, _mode, _connectable):
+    def _async_register_callback(_hass, _callback, _matcher, _mode):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None
@@ -306,7 +306,7 @@ async def test_no_updates_once_stopping(hass, mock_bleak_scanner_start):
     assert coordinator.available is False  # no data yet
     saved_callback = None
 
-    def _async_register_callback(_hass, _callback, _matcher, _mode, _connectable):
+    def _async_register_callback(_hass, _callback, _matcher, _mode):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None
@@ -375,7 +375,7 @@ async def test_exception_from_update_method(hass, caplog, mock_bleak_scanner_sta
     assert coordinator.available is False  # no data yet
     saved_callback = None
 
-    def _async_register_callback(_hass, _callback, _matcher, _mode, _connectable):
+    def _async_register_callback(_hass, _callback, _matcher, _mode):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None
@@ -438,7 +438,7 @@ async def test_bad_data_from_update_method(hass, mock_bleak_scanner_start):
     assert coordinator.available is False  # no data yet
     saved_callback = None
 
-    def _async_register_callback(_hass, _callback, _matcher, _mode, _connectable):
+    def _async_register_callback(_hass, _callback, _matcher, _mode):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None
@@ -790,7 +790,7 @@ async def test_integration_with_entity(hass, mock_bleak_scanner_start):
     assert coordinator.available is False  # no data yet
     saved_callback = None
 
-    def _async_register_callback(_hass, _callback, _matcher, _mode, _connectable):
+    def _async_register_callback(_hass, _callback, _matcher, _mode):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None
@@ -910,7 +910,7 @@ async def test_integration_with_entity_without_a_device(hass, mock_bleak_scanner
     assert coordinator.available is False  # no data yet
     saved_callback = None
 
-    def _async_register_callback(_hass, _callback, _matcher, _mode, _connectable):
+    def _async_register_callback(_hass, _callback, _matcher, _mode):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None
@@ -984,7 +984,7 @@ async def test_passive_bluetooth_entity_with_entity_platform(
     assert coordinator.available is False  # no data yet
     saved_callback = None
 
-    def _async_register_callback(_hass, _callback, _matcher, _mode, _connectable):
+    def _async_register_callback(_hass, _callback, _matcher, _mode):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None
@@ -1081,7 +1081,7 @@ async def test_integration_multiple_entity_platforms(hass, mock_bleak_scanner_st
     assert coordinator.available is False  # no data yet
     saved_callback = None
 
-    def _async_register_callback(_hass, _callback, _matcher, _mode, _connectable):
+    def _async_register_callback(_hass, _callback, _matcher, _mode):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None
@@ -1195,7 +1195,7 @@ async def test_exception_from_coordinator_update_method(
     assert coordinator.available is False  # no data yet
     saved_callback = None
 
-    def _async_register_callback(_hass, _callback, _matcher, _mode, _connectable):
+    def _async_register_callback(_hass, _callback, _matcher, _mode):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None

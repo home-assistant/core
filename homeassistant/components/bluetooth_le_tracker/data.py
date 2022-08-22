@@ -11,6 +11,7 @@ from uuid import UUID
 from bleak import BleakClient, BleakError
 
 from homeassistant.components import bluetooth
+from homeassistant.components.bluetooth.match import BluetoothCallbackMatcher
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -145,6 +146,8 @@ class BLEScanner:
         self._update_cancel = bluetooth.async_register_callback(
             self.hass,
             self._async_update_ble,
-            None,
+            BluetoothCallbackMatcher(
+                connectable=False
+            ),  # We will take data from any source
             bluetooth.BluetoothScanningMode.ACTIVE,
         )

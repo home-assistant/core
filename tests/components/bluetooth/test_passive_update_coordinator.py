@@ -67,7 +67,7 @@ async def test_basic_usage(hass, mock_bleak_scanner_start):
     assert coordinator.available is False  # no data yet
     saved_callback = None
 
-    def _async_register_callback(_hass, _callback, _matcher, _mode, _connectable):
+    def _async_register_callback(_hass, _callback, _matcher, _mode):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None
@@ -109,7 +109,7 @@ async def test_context_compatiblity_with_data_update_coordinator(
     assert coordinator.available is False  # no data yet
     saved_callback = None
 
-    def _async_register_callback(_hass, _callback, _matcher, _mode, _connectable):
+    def _async_register_callback(_hass, _callback, _matcher, _mode):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None
@@ -160,7 +160,7 @@ async def test_unavailable_callbacks_mark_the_coordinator_unavailable(
     assert coordinator.available is False  # no data yet
     saved_callback = None
 
-    def _async_register_callback(_hass, _callback, _matcher, _mode, _connectable):
+    def _async_register_callback(_hass, _callback, _matcher, _mode):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None
@@ -215,7 +215,7 @@ async def test_passive_bluetooth_coordinator_entity(hass, mock_bleak_scanner_sta
 
     saved_callback = None
 
-    def _async_register_callback(_hass, _callback, _matcher, _mode, _connectable):
+    def _async_register_callback(_hass, _callback, _matcher, _mode):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None

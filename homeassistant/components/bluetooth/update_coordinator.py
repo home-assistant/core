@@ -64,9 +64,10 @@ class BasePassiveBluetoothCoordinator:
         self._cancel_bluetooth_advertisements = async_register_callback(
             self.hass,
             self._async_handle_bluetooth_event,
-            BluetoothCallbackMatcher(address=self.address),
+            BluetoothCallbackMatcher(
+                address=self.address, connectable=self.connectable
+            ),
             self.mode,
-            self.connectable,
         )
         self._cancel_track_unavailable = async_track_unavailable(
             self.hass, self._async_handle_unavailable, self.address, self.connectable

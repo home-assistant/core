@@ -22,7 +22,7 @@ async def test_smoke_sensor(hass):
 
     saved_callback = None
 
-    def _async_register_callback(_hass, _callback, _matcher, _mode, _connectable):
+    def _async_register_callback(_hass, _callback, _matcher, _mode):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None
