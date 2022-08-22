@@ -64,7 +64,7 @@ async def test_basic_usage(hass: HomeAssistant, mock_bleak_scanner_start):
     coordinator.async_register_processor(processor)
     async_handle_update = processor.async_handle_update
 
-    def _async_register_callback(_hass, _callback, _matcher, _mode, _connectable):
+    def _async_register_callback(_hass, _callback, _matcher, _mode):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None
@@ -130,7 +130,7 @@ async def test_poll_can_be_skipped(hass: HomeAssistant, mock_bleak_scanner_start
     coordinator.async_register_processor(processor)
     async_handle_update = processor.async_handle_update
 
-    def _async_register_callback(_hass, _callback, _matcher, _mode, _connectable):
+    def _async_register_callback(_hass, _callback, _matcher, _mode):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None
@@ -202,7 +202,7 @@ async def test_poll_failure_and_recover(hass: HomeAssistant, mock_bleak_scanner_
     coordinator.async_register_processor(processor)
     async_handle_update = processor.async_handle_update
 
-    def _async_register_callback(_hass, _callback, _matcher, _mode, _connectable):
+    def _async_register_callback(_hass, _callback, _matcher, _mode):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None
@@ -264,7 +264,7 @@ async def test_second_poll_needed(hass: HomeAssistant, mock_bleak_scanner_start)
     coordinator.async_register_processor(processor)
     async_handle_update = processor.async_handle_update
 
-    def _async_register_callback(_hass, _callback, _matcher, _mode, _connectable):
+    def _async_register_callback(_hass, _callback, _matcher, _mode):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None
@@ -322,7 +322,7 @@ async def test_rate_limit(hass: HomeAssistant, mock_bleak_scanner_start):
     coordinator.async_register_processor(processor)
     async_handle_update = processor.async_handle_update
 
-    def _async_register_callback(_hass, _callback, _matcher, _mode, _connectable):
+    def _async_register_callback(_hass, _callback, _matcher, _mode):
         nonlocal saved_callback
         saved_callback = _callback
         return lambda: None
