@@ -7,7 +7,7 @@ import logging
 from lektricowifi import lektricowifi
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_FRIENDLY_NAME, CONF_HOST
+from homeassistant.const import CONF_FRIENDLY_NAME, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -17,7 +17,13 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import DOMAIN
 
 # List the platforms that you want to support.
-PLATFORMS = ["sensor", "binary_sensor"]
+PLATFORMS = [
+    Platform.SENSOR,
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.NUMBER,
+    Platform.SWITCH,
+]
 
 _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 1
@@ -75,7 +81,7 @@ class LektricoDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         settings: lektricowifi.Settings,
     ) -> None:
         """Initialize a Lektrico Device."""
-        self._device = device
+        self.device = device
         self._hass = hass
         self.friendly_name = friendly_name.replace(" ", "_")
         self.serial_number = settings.serial_number
@@ -89,7 +95,7 @@ class LektricoDeviceDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> lektricowifi.Info:
         """Async Update device state."""
-        a_data = self._device.charger_info()
+        a_data = self.device.charger_info()
         data = await a_data
         entity_reg = er.async_get(self._hass)
         my_entry = entity_reg.async_get(f"sensor.{self.friendly_name}_charger_state")

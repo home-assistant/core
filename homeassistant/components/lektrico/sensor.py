@@ -21,7 +21,6 @@ from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
-    PERCENTAGE,
     POWER_KILO_WATT,
     TEMP_CELSIUS,
     TIME_SECONDS,
@@ -211,19 +210,6 @@ SENSORS: tuple[LektricoSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.CURRENT,
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
     ),
-    DynamicCurrentSensorEntityDescription(
-        key="dynamic_current",
-        name="Dynamic Current",
-        device_class=SensorDeviceClass.CURRENT,
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
-    ),
-    LedMaxBrightnessSensorEntityDescription(
-        key="led_max_brightness",
-        name="Led Brightness",
-        state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.ILLUMINANCE,
-        native_unit_of_measurement=PERCENTAGE,
-    ),
 )
 
 
@@ -276,7 +262,6 @@ class LektricoSensor(CoordinatorEntity, SensorEntity):
     @property
     def native_value(self) -> float | str | int | bool | None:
         """Return the state of the sensor."""
-
         return self.entity_description.get_native_value(self._lektrico_device.data)
 
     @property
