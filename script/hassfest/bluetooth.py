@@ -36,7 +36,7 @@ def generate_and_validate(integrations: list[dict[str, str]]):
         for entry in match_types:
             match_list.append({"domain": domain, **entry})
 
-    return BASE.format(json.dumps(match_list, indent=4).replace(": true", ": True"))
+    return BASE.format(json.dumps(match_list, indent=4).replace('": true', '": True'))
 
 
 def validate(integrations: dict[str, Integration], config: Config):
