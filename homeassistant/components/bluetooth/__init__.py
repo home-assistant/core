@@ -77,11 +77,6 @@ def _get_manager(hass: HomeAssistant) -> BluetoothManager:
     return cast(BluetoothManager, hass.data[DATA_MANAGER])
 
 
-def _get_manager(hass: HomeAssistant) -> BluetoothManager:
-    """Get the bluetooth manager."""
-    return cast(BluetoothManager, hass.data[DATA_MANAGER])
-
-
 @hass_callback
 def async_get_scanner(hass: HomeAssistant) -> HaBleakScannerWrapper:
     """Return a HaBleakScannerWrapper.
