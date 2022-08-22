@@ -224,7 +224,7 @@ class AttributeSelector(Selector):
             vol.Required("entity_id"): cv.entity_id,
             # hide_attributes is used to hide attributes in the frontend.
             # A hidden attribute can still be provided manually.
-            vol.Optional("exclude_attributes"): [str],
+            vol.Optional("hide_attributes"): [str],
         }
     )
 
