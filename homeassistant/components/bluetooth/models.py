@@ -84,7 +84,7 @@ class HaBleakScannerWrapper(BaseBleakScanner):
         """Initialize the BleakScanner."""
         self._detection_cancel: CALLBACK_TYPE | None = None
         self._mapped_filters: dict[str, set[str]] = {}
-        self._adv_data_callback: AdvertisementDataCallback | None = None
+        self._advertisement_data_callback: AdvertisementDataCallback | None = None
         remapped_kwargs = {
             "detection_callback": detection_callback,
             "service_uuids": service_uuids or [],
@@ -141,15 +141,15 @@ class HaBleakScannerWrapper(BaseBleakScanner):
         This method takes the callback and registers it with the long running
         scanner.
         """
-        self._adv_data_callback = callback
+        self._advertisement_data_callback = callback
         self._setup_detection_callback()
 
     def _setup_detection_callback(self) -> None:
         """Set up the detection callback."""
-        if self._adv_data_callback is None:
+        if self._advertisement_data_callback is None:
             return
         self._cancel_callback()
-        super().register_detection_callback(self._adv_data_callback)
+        super().register_detection_callback(self._advertisement_data_callback)
         assert MANAGER is not None
         assert self._callback is not None
         self._detection_cancel = MANAGER.async_register_bleak_callback(
