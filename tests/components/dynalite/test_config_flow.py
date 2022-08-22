@@ -15,7 +15,7 @@ from tests.common import MockConfigEntry
     ("first_con", "second_con", "exp_type", "exp_result", "exp_reason"),
     [
         (True, True, "create_entry", config_entries.ConfigEntryState.LOADED, ""),
-        (False, False, "abort", None, "no_connection"),
+        (False, False, "abort", None, "cannot_connect"),
         (True, False, "create_entry", config_entries.ConfigEntryState.SETUP_RETRY, ""),
     ],
 )

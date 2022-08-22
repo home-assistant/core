@@ -12,10 +12,10 @@ from .const import (
     CONF_ACTIVE,
     CONF_AREA,
     CONF_AUTO_DISCOVER,
-    CONF_DEV_PATH,
     CONF_PRESET,
     CONF_TEMPLATE,
     DEFAULT_NAME,
+    DEFAULT_PORT,
     DOMAIN,
     LOGGER,
 )
@@ -53,7 +53,11 @@ def get_dynalite_config(
         }
         for entry in entries
     }
-    dynalite_defaults = {"DEFAULT_NAME": DEFAULT_NAME, "DEVICE_CLASSES": DEVICE_CLASSES}
+    dynalite_defaults = {
+        "DEFAULT_NAME": DEFAULT_NAME,
+        "DEVICE_CLASSES": DEVICE_CLASSES,
+        "DEFAULT_PORT": DEFAULT_PORT,
+    }
     connection.send_result(
         msg["id"], {"config": relevant_config, "default": dynalite_defaults}
     )
@@ -82,20 +86,17 @@ def save_dynalite_config(
     message_data = {
         conf: message_conf[conf] for conf in RELEVANT_CONFS if conf in message_conf
     }
-    LOGGER.info("Updating Dynalite config entry=%s, data=%s", entry_id, message_data)
+    LOGGER.info("Updating Dynalite config entry")
     hass.config_entries.async_update_entry(entry, data=message_data)
     connection.send_result(msg["id"], {})
 
 
 async def async_register_dynalite_frontend(hass: HomeAssistant):
     """Register the Dynalite frontend configuration panel."""
-    # Add to sidepanel if needed
     websocket_api.async_register_command(hass, get_dynalite_config)
     websocket_api.async_register_command(hass, save_dynalite_config)
     if DOMAIN not in hass.data.get("frontend_panels", {}):
-        dev_path = hass.data.get(DOMAIN, {}).get(CONF_DEV_PATH)
-        # is_dev = dev_path is not None XXX TODO
-        path = dev_path if dev_path else locate_dir()
+        path = locate_dir()
         build_id = get_build_id()
         hass.http.register_static_path(
             URL_BASE, path, cache_headers=(build_id == "dev")
