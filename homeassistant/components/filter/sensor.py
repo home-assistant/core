@@ -277,7 +277,7 @@ class SensorFilter(SensorEntity):
         if update_ha:
             self.async_write_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
 
         if "recorder" in self.hass.config.components:

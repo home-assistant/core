@@ -432,3 +432,62 @@ async def test_adapter_scanner_fails_to_start_first_time(hass, one_adapter):
 
     assert len(mock_recover_adapter.mock_calls) == 1
     assert called_start == 4
+
+
+async def test_adapter_fails_to_start_and_takes_a_bit_to_init(
+    hass, one_adapter, caplog
+):
+    """Test we can recover the adapter at startup and we wait for Dbus to init."""
+
+    called_start = 0
+    called_stop = 0
+    _callback = None
+    mock_discovered = []
+
+    class MockBleakScanner:
+        async def start(self, *args, **kwargs):
+            """Mock Start."""
+            nonlocal called_start
+            called_start += 1
+            if called_start == 1:
+                raise BleakError("org.bluez.Error.InProgress")
+            if called_start == 2:
+                raise BleakError("org.freedesktop.DBus.Error.UnknownObject")
+
+        async def stop(self, *args, **kwargs):
+            """Mock Start."""
+            nonlocal called_stop
+            called_stop += 1
+
+        @property
+        def discovered_devices(self):
+            """Mock discovered_devices."""
+            nonlocal mock_discovered
+            return mock_discovered
+
+        def register_detection_callback(self, callback: AdvertisementDataCallback):
+            """Mock Register Detection Callback."""
+            nonlocal _callback
+            _callback = callback
+
+    scanner = MockBleakScanner()
+    start_time_monotonic = 1000
+
+    with patch(
+        "homeassistant.components.bluetooth.scanner.ADAPTER_INIT_TIME",
+        0,
+    ), patch(
+        "homeassistant.components.bluetooth.scanner.MONOTONIC_TIME",
+        return_value=start_time_monotonic,
+    ), patch(
+        "homeassistant.components.bluetooth.scanner.OriginalBleakScanner",
+        return_value=scanner,
+    ), patch(
+        "homeassistant.components.bluetooth.util.recover_adapter", return_value=True
+    ) as mock_recover_adapter:
+        await async_setup_with_one_adapter(hass)
+
+        assert called_start == 3
+
+    assert len(mock_recover_adapter.mock_calls) == 1
+    assert "Waiting for adapter to initialize" in caplog.text
