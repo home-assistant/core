@@ -688,10 +688,11 @@ async def test_async_discovered_device_api(
 
             assert len(service_infos) == 1
             # wrong_name should not appear because bleak no longer sees it
-            assert service_infos[0].name == "wohand"
-            assert service_infos[0].source == SOURCE_LOCAL
-            assert isinstance(service_infos[0].device, BLEDevice)
-            assert isinstance(service_infos[0].advertisement, AdvertisementData)
+            infos = list(service_infos)
+            assert infos[0].name == "wohand"
+            assert infos[0].source == SOURCE_LOCAL
+            assert isinstance(infos[0].device, BLEDevice)
+            assert isinstance(infos[0].advertisement, AdvertisementData)
 
             assert bluetooth.async_address_present(hass, "44:44:33:11:23:42") is False
             assert bluetooth.async_address_present(hass, "44:44:33:11:23:45") is True

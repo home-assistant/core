@@ -48,6 +48,7 @@ def inject_advertisement_with_time_and_source(
             device=device,
             advertisement=adv,
             connectable=True,
+            time=time,
         )
     )
 
