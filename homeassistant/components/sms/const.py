@@ -7,6 +7,7 @@ from homeassistant.helpers.entity import EntityCategory
 
 DOMAIN = "sms"
 SMS_GATEWAY = "SMS_GATEWAY"
+HASS_CONFIG = "sms_hass_config"
 SMS_STATE_UNREAD = "UnRead"
 SIGNAL_COORDINATOR = "signal_coordinator"
 NETWORK_COORDINATOR = "network_coordinator"

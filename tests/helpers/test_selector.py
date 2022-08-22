@@ -458,6 +458,11 @@ def test_select_selector_schema_error(schema):
             ("friendly_name", "device_class"),
             (None,),
         ),
+        (
+            {"entity_id": "sensor.abc", "hide_attributes": ["friendly_name"]},
+            ("device_class", "state_class"),
+            (None,),
+        ),
     ),
 )
 def test_attribute_selector_schema(schema, valid_selections, invalid_selections):
