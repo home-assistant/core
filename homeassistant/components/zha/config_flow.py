@@ -333,31 +333,34 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(schema),
         )
 
+    def _parse_uploaded_backup(
+        self, uploaded_file_id: str
+    ) -> zigpy.backups.NetworkBackup:
+        """Read and parse an uploaded backup JSON file."""
+        with process_uploaded_file(self.hass, uploaded_file_id) as file_path:
+            contents = file_path.read_text()
+
+        return zigpy.backups.NetworkBackup.from_dict(json.loads(contents))
+
     async def async_step_upload_manual_backup(self, user_input=None):
         """Upload and restore a coordinator backup JSON file."""
         errors = {}
 
         if user_input is not None:
-            uploaded_file_id = user_input[UPLOADED_BACKUP_FILE]
-
-            with process_uploaded_file(self.hass, uploaded_file_id) as file_path:
-                backup_json = await self.hass.async_add_executor_job(
-                    file_path.read_text
+            try:
+                backup = await self.hass.async_add_executor_job(
+                    self._parse_uploaded_backup, user_input[UPLOADED_BACKUP_FILE]
                 )
+            except ValueError:
+                errors["base"] = "invalid_backup_json"
+            else:
+                if user_input.get(OVERWRITE_COORDINATOR_IEEE):
+                    backup = self._allow_overwrite_ezsp_ieee(backup)
 
-                try:
-                    backup_obj = json.loads(backup_json)
-                    backup = zigpy.backups.NetworkBackup.from_dict(backup_obj)
-                except ValueError:
-                    errors["base"] = "invalid_backup_json"
-                else:
-                    if user_input.get(OVERWRITE_COORDINATOR_IEEE):
-                        backup = self._allow_overwrite_ezsp_ieee(backup)
+                async with self._connect_zigpy_app() as app:
+                    await app.backups.restore_backup(backup)
 
-                    async with self._connect_zigpy_app() as app:
-                        await app.backups.restore_backup(backup)
-
-                    return await self._async_create_radio_entity()
+                return await self._async_create_radio_entity()
 
         data_schema = {
             vol.Required(UPLOADED_BACKUP_FILE): FileSelector(

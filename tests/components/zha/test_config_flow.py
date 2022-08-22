@@ -1019,6 +1019,20 @@ async def test_formation_strategy_reuse_settings(pick_radio, mock_app, hass):
     assert result2["type"] == FlowResultType.CREATE_ENTRY
 
 
+@patch("homeassistant.components.zha.config_flow.process_uploaded_file")
+def test_parse_uploaded_backup(process_mock):
+    """Test parsing uploaded backup files."""
+    backup = zigpy.backups.NetworkBackup()
+
+    text = json.dumps(backup.as_dict())
+    process_mock.return_value.__enter__.return_value.read_text.return_value = text
+
+    handler = config_flow.ZhaFlowHandler()
+    parsed_backup = handler._parse_uploaded_backup(str(uuid.uuid4()))
+
+    assert backup == parsed_backup
+
+
 @patch(
     "homeassistant.components.zha.config_flow.ZhaFlowHandler._allow_overwrite_ezsp_ieee"
 )
@@ -1043,11 +1057,9 @@ async def test_formation_strategy_restore_manual_backup_non_ezsp(
     assert config_flow.OVERWRITE_COORDINATOR_IEEE not in result2["data_schema"].schema
 
     with patch(
-        "homeassistant.components.zha.config_flow.process_uploaded_file"
-    ) as upload:
-        backup_json = json.dumps(zigpy.backups.NetworkBackup().as_dict())
-        upload.return_value.__enter__.return_value.read_text.return_value = backup_json
-
+        "homeassistant.components.zha.config_flow.ZhaFlowHandler._parse_uploaded_backup",
+        return_value=zigpy.backups.NetworkBackup(),
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             user_input={config_flow.UPLOADED_BACKUP_FILE: str(uuid.uuid4())},
@@ -1084,11 +1096,9 @@ async def test_formation_strategy_restore_manual_backup_ezsp(
     assert config_flow.OVERWRITE_COORDINATOR_IEEE in result2["data_schema"].schema
 
     with patch(
-        "homeassistant.components.zha.config_flow.process_uploaded_file"
-    ) as upload:
-        backup_json = json.dumps(zigpy.backups.NetworkBackup().as_dict())
-        upload.return_value.__enter__.return_value.read_text.return_value = backup_json
-
+        "homeassistant.components.zha.config_flow.ZhaFlowHandler._parse_uploaded_backup",
+        return_value=zigpy.backups.NetworkBackup(),
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             user_input={config_flow.UPLOADED_BACKUP_FILE: str(uuid.uuid4())},
@@ -1122,10 +1132,9 @@ async def test_formation_strategy_restore_manual_backup_invalid_upload(
     assert config_flow.OVERWRITE_COORDINATOR_IEEE in result2["data_schema"].schema
 
     with patch(
-        "homeassistant.components.zha.config_flow.process_uploaded_file"
-    ) as upload:
-        upload.return_value.__enter__.return_value.read_text.return_value = "{}"
-
+        "homeassistant.components.zha.config_flow.ZhaFlowHandler._parse_uploaded_backup",
+        side_effect=ValueError("Invalid backup JSON"),
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             user_input={config_flow.UPLOADED_BACKUP_FILE: str(uuid.uuid4())},
