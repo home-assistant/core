@@ -20,7 +20,7 @@ from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from . import patch_all_discovered_devices, patch_connectable_history
+from . import patch_all_discovered_devices, patch_history
 
 from tests.common import async_fire_time_changed
 
@@ -180,7 +180,7 @@ async def test_unavailable_callbacks_mark_the_coordinator_unavailable(
 
     with patch_all_discovered_devices(
         [MagicMock(address="44:44:33:11:23:45")]
-    ), patch_connectable_history(
+    ), patch_history(
         {"aa:bb:cc:dd:ee:ff": MagicMock()},
     ):
         async_fire_time_changed(
@@ -194,7 +194,7 @@ async def test_unavailable_callbacks_mark_the_coordinator_unavailable(
 
     with patch_all_discovered_devices(
         [MagicMock(address="44:44:33:11:23:45")]
-    ), patch_connectable_history(
+    ), patch_history(
         {"aa:bb:cc:dd:ee:ff": MagicMock()},
     ):
         async_fire_time_changed(

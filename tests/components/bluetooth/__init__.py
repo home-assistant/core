@@ -54,6 +54,12 @@ def patch_all_discovered_devices(mock_discovered: list[BLEDevice]) -> None:
     )
 
 
+def patch_history(mock_history: dict[str, BluetoothAdvertisement]) -> None:
+    """Patch the history."""
+    manager = _get_manager()
+    return patch.object(manager, "_history", return_value=mock_history)
+
+
 def patch_connectable_history(mock_history: dict[str, BluetoothAdvertisement]) -> None:
     """Patch the connectable history."""
     manager = _get_manager()
