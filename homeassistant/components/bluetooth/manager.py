@@ -264,7 +264,7 @@ class BluetoothManager:
                 _dispatch_bleak_callback(*callback_filters, device, advertisement_data)
 
         matched_domains = self._integration_matcher.match_domains(
-            device, advertisement_data
+            device, advertisement_data, connectable
         )
         _LOGGER.debug(
             "%s: %s %s match: %s",
@@ -282,10 +282,11 @@ class BluetoothManager:
             return
 
         service_info: BluetoothServiceInfoBleak | None = None
-        for callback_type in (self._callbacks, self._connectable_callbacks):
+        for connectable_callback in (True, False):
+            callback_type = self._get_callbacks_by_type(connectable_callback)
             for callback, matcher in callback_type:
                 if matcher is None or ble_device_matches(
-                    matcher, device, advertisement_data
+                    matcher, device, advertisement_data, connectable_callback
                 ):
                     if service_info is None:
                         service_info = BluetoothServiceInfoBleak.from_advertisement(
@@ -296,10 +297,7 @@ class BluetoothManager:
                     except Exception:  # pylint: disable=broad-except
                         _LOGGER.exception("Error in bluetooth callback")
 
-        # Currently we do not create discovery flows for non-connectable devices
-        # because we have no way to tell know if integration can work with
-        # devices that are not connectable (ie passive only).
-        if not connectable or not matched_domains:
+        if not matched_domains:
             return
         if service_info is None:
             service_info = BluetoothServiceInfoBleak.from_advertisement(
