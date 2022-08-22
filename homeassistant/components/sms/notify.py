@@ -37,13 +37,12 @@ class SMSNotificationService(BaseNotificationService):
 
         gateway = self.hass.data[DOMAIN][SMS_GATEWAY][GATEWAY]
 
-        is_unicode = kwargs.get(CONF_UNICODE, True)
-
         targets = kwargs.get(CONF_TARGET)
         if targets is None:
             _LOGGER.error("No target number specified, cannot send message")
             return
 
+        is_unicode = kwargs.get(CONF_UNICODE, True)
         smsinfo = {
             "Class": -1,
             "Unicode": is_unicode,
