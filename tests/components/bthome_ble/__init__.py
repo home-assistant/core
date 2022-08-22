@@ -17,6 +17,8 @@ TEMP_HUMI_SERVICE_INFO = BluetoothServiceInfoBleak(
     service_uuids=["0000181c-0000-1000-8000-00805f9b34fb"],
     source="local",
     advertisement=AdvertisementData(local_name="Not it"),
+    time=0,
+    connectable=False,
 )
 
 TEMP_HUMI_ENCRYPTED_SERVICE_INFO = BluetoothServiceInfoBleak(
@@ -31,6 +33,8 @@ TEMP_HUMI_ENCRYPTED_SERVICE_INFO = BluetoothServiceInfoBleak(
     service_uuids=["0000181e-0000-1000-8000-00805f9b34fb"],
     source="local",
     advertisement=AdvertisementData(local_name="Not it"),
+    time=0,
+    connectable=False,
 )
 
 PM_SERVICE_INFO = BluetoothServiceInfoBleak(
@@ -45,6 +49,8 @@ PM_SERVICE_INFO = BluetoothServiceInfoBleak(
     service_uuids=["0000181c-0000-1000-8000-00805f9b34fb"],
     source="local",
     advertisement=AdvertisementData(local_name="Not it"),
+    time=0,
+    connectable=False,
 )
 
 INVALID_PAYLOAD = BluetoothServiceInfoBleak(
@@ -59,6 +65,8 @@ INVALID_PAYLOAD = BluetoothServiceInfoBleak(
     service_uuids=["0000181c-0000-1000-8000-00805f9b34fb"],
     source="local",
     advertisement=AdvertisementData(local_name="Not it"),
+    time=0,
+    connectable=False,
 )
 
 NOT_BTHOME_SERVICE_INFO = BluetoothServiceInfoBleak(
@@ -71,6 +79,8 @@ NOT_BTHOME_SERVICE_INFO = BluetoothServiceInfoBleak(
     service_uuids=[],
     source="local",
     advertisement=AdvertisementData(local_name="Not it"),
+    time=0,
+    connectable=False,
 )
 
 
@@ -88,6 +98,8 @@ def make_advertisement(address: str, payload: bytes) -> BluetoothServiceInfoBlea
         service_uuids=["0000181c-0000-1000-8000-00805f9b34fb"],
         source="local",
         advertisement=AdvertisementData(local_name="Test Device"),
+        time=0,
+        connectable=False,
     )
 
 
@@ -107,4 +119,6 @@ def make_encrypted_advertisement(
         service_uuids=["0000181e-0000-1000-8000-00805f9b34fb"],
         source="local",
         advertisement=AdvertisementData(local_name="Test Device"),
+        time=0,
+        connectable=False,
     )
