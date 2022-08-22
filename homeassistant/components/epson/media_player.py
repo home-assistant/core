@@ -53,13 +53,11 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Epson projector from a config entry."""
-    entry_id: str | None = config_entry.entry_id
-    unique_id: str | None = config_entry.unique_id
-    projector: Projector = hass.data[DOMAIN][entry_id]
+    projector: Projector = hass.data[DOMAIN][config_entry.entry_id]
     projector_entity = EpsonProjectorMediaPlayer(
         projector=projector,
         name=config_entry.title,
-        unique_id=unique_id,
+        unique_id=config_entry.unique_id,
         entry=config_entry,
     )
     async_add_entities([projector_entity], True)
