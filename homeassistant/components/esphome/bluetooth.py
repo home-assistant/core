@@ -1,12 +1,11 @@
 """Bluetooth scanner for esphome."""
 
-from dataclasses import dataclass
 import datetime
 from datetime import timedelta
 import re
 import time
 
-from aioesphomeapi import APIClient, APIModelBase, converter_field
+from aioesphomeapi import APIClient, BluetoothLEAdvertisement
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
 
@@ -24,37 +23,6 @@ from homeassistant.helpers.event import async_track_time_interval
 ADV_STALE_TIME = 180  # seconds
 
 TWO = re.compile("..")
-
-
-@dataclass(frozen=True)
-class BluetoothServiceData(APIModelBase):
-    """Bluetooth service data."""
-
-    uuid: str = ""
-    data: list[int] = converter_field(default_factory=list, converter=list)
-
-
-@dataclass(frozen=True)
-class BluetoothLEAdvertisement(APIModelBase):
-    """Bluetooth LE advertisement."""
-
-    address: int = 0
-    name: str = ""
-    rssi: int = 0
-
-    service_uuids: list[str] = converter_field(default_factory=list, converter=list)
-    service_data: list[BluetoothServiceData] = converter_field(
-        default_factory=list, converter=list
-    )
-    manufacturer_data: list[BluetoothServiceData] = converter_field(
-        default_factory=list, converter=list
-    )
-
-
-@callback
-def long_uuid(uuid: str) -> str:
-    """Convert a UUID to a long UUID."""
-    return f"0000{uuid[2:].lower()}-1000-8000-00805f9b34fb" if len(uuid) < 8 else uuid
 
 
 async def async_connect_scanner(
@@ -124,9 +92,9 @@ class ESPHomeScannner(BaseHaScanner):
         self._discovered_device_timestamps[address] = now
         adv_data = AdvertisementData(  # type: ignore[no-untyped-call]
             local_name=adv.name,
-            manufacturer_data={hex(k): v for k, v in adv.manufacturer_data},
-            service_data={long_uuid(k): v for k, v in adv.service_data},
-            service_uuids=[long_uuid(hex) for hex in adv.service_uuids],
+            manufacturer_data=adv.manufacturer_data,
+            service_data=adv.service_data,
+            service_uuids=adv.service_uuids,
         )
         self._manager_callback(
             AdvertisementHistory(device, adv_data, now, self._source, False)
