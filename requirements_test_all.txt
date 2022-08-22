@@ -33,7 +33,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.18.12
+PySwitchbot==0.18.14
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -793,7 +793,7 @@ nexia==2.0.2
 nextcord==2.0.0a8
 
 # homeassistant.components.nextdns
-nextdns==1.1.0
+nextdns==1.1.1
 
 # homeassistant.components.nfandroidtv
 notifications-android-tv==0.1.5
@@ -1418,7 +1418,7 @@ pyws66i==1.1
 pyzerproc==0.4.8
 
 # homeassistant.components.qingping
-qingping-ble==0.2.4
+qingping-ble==0.3.0
 
 # homeassistant.components.rachio
 rachiopy==1.0.3

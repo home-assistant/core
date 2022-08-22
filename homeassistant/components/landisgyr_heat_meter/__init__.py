@@ -1,6 +1,7 @@
 """The Landis+Gyr Heat Meter integration."""
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
 
 from ultraheat_api import HeatMeterService, UltraheatReader
@@ -38,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER,
         name="ultraheat_gateway",
         update_method=async_update_data,
-        update_interval=None,
+        update_interval=timedelta(days=1),
     )
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
