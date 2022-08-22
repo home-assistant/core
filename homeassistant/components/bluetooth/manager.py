@@ -295,9 +295,7 @@ class BluetoothManager:
                     continue
                 if service_info is None:
                     service_info = (
-                        BluetoothServiceInfoBleak.from_advertisement_with_source(
-                            device, advertisement_data, source, connectable
-                        )
+                        BluetoothServiceInfoBleak.from_bluetooth_advertisement(new_adv)
                     )
                 try:
                     callback(service_info, BluetoothChange.ADVERTISEMENT)
@@ -307,8 +305,8 @@ class BluetoothManager:
         if not matched_domains:
             return
         if service_info is None:
-            service_info = BluetoothServiceInfoBleak.from_advertisement_with_source(
-                device, advertisement_data, source, connectable
+            service_info = BluetoothServiceInfoBleak.from_bluetooth_advertisement(
+                new_adv
             )
         for domain in matched_domains:
             discovery_flow.async_create_flow(
@@ -369,12 +367,7 @@ class BluetoothManager:
         ):
             try:
                 callback(
-                    BluetoothServiceInfoBleak.from_advertisement_with_source(
-                        history.ble_device,
-                        history.advertisement_data,
-                        history.source,
-                        connectable,
-                    ),
+                    BluetoothServiceInfoBleak.from_bluetooth_advertisement(history),
                     BluetoothChange.ADVERTISEMENT,
                 )
             except Exception:  # pylint: disable=broad-except
@@ -404,12 +397,7 @@ class BluetoothManager:
         """Return if the address is present."""
         all_history = self._get_history_by_type(connectable)
         return [
-            BluetoothServiceInfoBleak.from_advertisement_with_source(
-                history.ble_device,
-                history.advertisement_data,
-                history.source,
-                connectable,
-            )
+            BluetoothServiceInfoBleak.from_bluetooth_advertisement(history)
             for history in all_history.values()
         ]
 
