@@ -326,15 +326,12 @@ class BluetoothManager:
     def async_register_callback(
         self,
         callback: BluetoothCallback,
-        matcher: BluetoothCallbackMatcher | None = None,
+        matcher: BluetoothCallbackMatcher | None,
     ) -> Callable[[], None]:
         """Register a callback."""
-        # If the matcher doesn't specify if they only
-        # want connectable or not, then we assume they
-        # they only want connectable devices.
         if not matcher:
             matcher = BluetoothCallbackMatcher(connectable=True)
-        elif CONNECTABLE not in matcher:
+        if CONNECTABLE not in matcher:
             matcher[CONNECTABLE] = True
         connectable = matcher[CONNECTABLE]
         callbacks = self._get_callbacks_by_type(connectable)
