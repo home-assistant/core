@@ -206,10 +206,11 @@ class AreaSelector(Selector):
         return [vol.Schema(str)(val) for val in data]
 
 
-class AttributeSelectorConfig(TypedDict):
+class AttributeSelectorConfig(TypedDict, total=False):
     """Class to represent an attribute selector config."""
 
     entity_id: str
+    hide_attributes: list[str]
 
 
 @SELECTORS.register("attribute")
@@ -218,7 +219,14 @@ class AttributeSelector(Selector):
 
     selector_type = "attribute"
 
-    CONFIG_SCHEMA = vol.Schema({vol.Required("entity_id"): cv.entity_id})
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Required("entity_id"): cv.entity_id,
+            # hide_attributes is used to hide attributes in the frontend.
+            # A hidden attribute can still be provided manually.
+            vol.Optional("hide_attributes"): [str],
+        }
+    )
 
     def __init__(self, config: AttributeSelectorConfig) -> None:
         """Instantiate a selector."""
@@ -741,10 +749,11 @@ class TargetSelectorConfig(TypedDict, total=False):
     device: SingleDeviceSelectorConfig
 
 
-class StateSelectorConfig(TypedDict):
+class StateSelectorConfig(TypedDict, total=False):
     """Class to represent an state selector config."""
 
     entity_id: str
+    attribute: str
 
 
 @SELECTORS.register("state")
@@ -753,7 +762,12 @@ class StateSelector(Selector):
 
     selector_type = "state"
 
-    CONFIG_SCHEMA = vol.Schema({vol.Required("entity_id"): cv.entity_id})
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Required("entity_id"): cv.entity_id,
+            vol.Optional("attribute"): str,
+        }
+    )
 
     def __init__(self, config: StateSelectorConfig) -> None:
         """Instantiate a selector."""

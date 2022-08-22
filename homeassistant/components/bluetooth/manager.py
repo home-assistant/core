@@ -23,6 +23,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from .const import (
     ADAPTER_ADDRESS,
     SOURCE_LOCAL,
+    STALE_ADVERTISEMENT_SECONDS,
     UNAVAILABLE_TRACK_SECONDS,
     AdapterDetails,
 )
@@ -46,7 +47,6 @@ FILTER_UUIDS: Final = "UUIDs"
 
 
 RSSI_SWITCH_THRESHOLD = 6
-STALE_ADVERTISEMENT_SECONDS = 180
 
 _LOGGER = logging.getLogger(__name__)
 

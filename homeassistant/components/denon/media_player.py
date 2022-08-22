@@ -84,7 +84,7 @@ def setup_platform(
     """Set up the Denon platform."""
     denon = DenonDevice(config[CONF_NAME], config[CONF_HOST])
 
-    if denon.update():
+    if denon.do_update():
         add_entities([denon])
 
 
@@ -161,8 +161,12 @@ class DenonDevice(MediaPlayerEntity):
         telnet.read_very_eager()  # skip response
         telnet.close()
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest details from the device."""
+        self.do_update()
+
+    def do_update(self) -> bool:
+        """Get the latest details from the device, as boolean."""
         try:
             telnet = telnetlib.Telnet(self._host)
         except OSError:

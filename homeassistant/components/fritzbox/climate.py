@@ -122,7 +122,7 @@ class FritzboxThermostat(FritzBoxEntity, ClimateEntity):
         """Return the list of available operation modes."""
         return OPERATION_LIST
 
-    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new operation mode."""
         if hvac_mode == HVACMode.OFF:
             await self.async_set_temperature(temperature=OFF_REPORT_SET_TEMPERATURE)
