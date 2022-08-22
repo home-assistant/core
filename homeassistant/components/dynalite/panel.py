@@ -41,6 +41,7 @@ RELEVANT_CONFS = [
         vol.Required("type"): "dynalite/get-config",
     }
 )
+@websocket_api.require_admin
 @callback
 def get_dynalite_config(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
@@ -70,6 +71,7 @@ def get_dynalite_config(
         vol.Required("config"): BRIDGE_SCHEMA,
     }
 )
+@websocket_api.require_admin
 @callback
 def save_dynalite_config(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
@@ -81,6 +83,7 @@ def save_dynalite_config(
         LOGGER.error(
             "Dynalite - received updated config for invalid entry - %s", entry_id
         )
+        connection.send_result(msg["id"], {"error": True})
         return
     message_conf = msg["config"]
     message_data = {

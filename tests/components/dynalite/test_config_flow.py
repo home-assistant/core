@@ -108,3 +108,55 @@ async def test_two_entries(hass: HomeAssistant) -> None:
         )
     assert result["type"] == "create_entry"
     assert result["result"].state == config_entries.ConfigEntryState.LOADED
+
+
+async def test_setup_user(hass):
+    """Test configuration via the user flow."""
+    host = "3.4.5.6"
+    port = 1234
+    result = await hass.config_entries.flow.async_init(
+        dynalite.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] is None
+
+    with patch(
+        "homeassistant.components.dynalite.bridge.DynaliteDevices.async_setup",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"host": host, "port": port},
+        )
+
+    assert result["type"] == "create_entry"
+    assert result["result"].state == config_entries.ConfigEntryState.LOADED
+    assert result["title"] == host
+    assert result["data"] == {
+        "host": host,
+        "port": port,
+    }
+
+
+async def test_setup_user_existing_host(hass):
+    """Test that when we setup a host that is defined, we get an error."""
+    host = "3.4.5.6"
+    MockConfigEntry(
+        domain=dynalite.DOMAIN, data={dynalite.CONF_HOST: host}
+    ).add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        dynalite.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    with patch(
+        "homeassistant.components.dynalite.bridge.DynaliteDevices.async_setup",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"host": host, "port": 1234},
+        )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
