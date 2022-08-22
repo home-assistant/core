@@ -210,7 +210,7 @@ class AttributeSelectorConfig(TypedDict, total=False):
     """Class to represent an attribute selector config."""
 
     entity_id: str
-    exclude_attributes: list[str]
+    hide_attributes: list[str]
 
 
 @SELECTORS.register("attribute")
@@ -222,7 +222,7 @@ class AttributeSelector(Selector):
     CONFIG_SCHEMA = vol.Schema(
         {
             vol.Required("entity_id"): cv.entity_id,
-            vol.Optional("exclude_attributes"): [str],
+            vol.Optional("hide_attributes"): [str],
         }
     )
 
