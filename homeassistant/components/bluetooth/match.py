@@ -9,10 +9,11 @@ from lru import LRU  # pylint: disable=no-name-in-module
 
 from homeassistant.loader import BluetoothMatcher, BluetoothMatcherOptional
 
+from .models import BluetoothAdvertisement
+
 if TYPE_CHECKING:
     from collections.abc import MutableMapping
 
-    from bleak.backends.device import BLEDevice
     from bleak.backends.scanner import AdvertisementData
 
 
@@ -89,11 +90,11 @@ class IntegrationMatcher:
         """Return the matches by type."""
         return self._matched_connectable if connectable else self._matched
 
-    def match_domains(
-        self, device: BLEDevice, adv_data: AdvertisementData, connectable: bool
-    ) -> set[str]:
+    def match_domains(self, adv: BluetoothAdvertisement) -> set[str]:
         """Return the domains that are matched."""
-        matched = self._get_matched_by_type(connectable)
+        device = adv.ble_device
+        adv_data = adv.advertisement_data
+        matched = self._get_matched_by_type(adv.connectable)
         matched_domains: set[str] = set()
         if (previous_match := matched.get(device.address)) and seen_all_fields(
             previous_match, adv_data
@@ -103,7 +104,7 @@ class IntegrationMatcher:
         matched_domains = {
             matcher["domain"]
             for matcher in self._integration_matchers
-            if ble_device_matches(matcher, device, adv_data, connectable)
+            if ble_device_matches(matcher, adv)
         }
         if not matched_domains:
             return matched_domains
@@ -122,17 +123,17 @@ class IntegrationMatcher:
 
 def ble_device_matches(
     matcher: BluetoothCallbackMatcher | BluetoothMatcher,
-    device: BLEDevice,
-    adv_data: AdvertisementData,
-    connectable: bool,
+    adv: BluetoothAdvertisement,
 ) -> bool:
     """Check if a ble device and advertisement_data matches the matcher."""
+    device = adv.ble_device
     if (address := matcher.get(ADDRESS)) is not None and device.address != address:
         return False
 
-    if matcher.get(CONNECTABLE) and not connectable:
+    if matcher.get(CONNECTABLE) and not adv.connectable:
         return False
 
+    adv_data = adv.advertisement_data
     if (local_name := matcher.get(LOCAL_NAME)) is not None and not fnmatch.fnmatch(
         adv_data.local_name or device.name or device.address,
         local_name,

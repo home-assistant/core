@@ -32,8 +32,8 @@ from .const import (
     START_TIMEOUT,
 )
 from .models import (
-    AdvertisementHistory,
     BaseHaScanner,
+    BluetoothAdvertisement,
     BluetoothManagerCallback,
     BluetoothScanningMode,
 )
@@ -172,7 +172,7 @@ class HaScanner(BaseHaScanner):
             self._last_detection = callback_time
         for callback in self._callbacks:
             callback(
-                AdvertisementHistory(
+                BluetoothAdvertisement(
                     ble_device, advertisement_data, callback_time, self.source, True
                 )
             )

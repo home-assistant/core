@@ -10,8 +10,8 @@ from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
 
 from homeassistant.components.bluetooth import (
-    AdvertisementHistory,
     BaseHaScanner,
+    BluetoothAdvertisement,
     BluetoothManagerCallback,
     async_get_advertisement_callback,
     async_register_scanner,
@@ -98,5 +98,5 @@ class ESPHomeScannner(BaseHaScanner):
             service_uuids=adv.service_uuids,
         )
         self._manager_callback(
-            AdvertisementHistory(device, adv_data, now, self._source, False)
+            BluetoothAdvertisement(device, adv_data, now, self._source, False)
         )

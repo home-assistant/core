@@ -9,7 +9,7 @@ from bleak.backends.scanner import AdvertisementData, BLEDevice
 from homeassistant.components.bluetooth import (
     DOMAIN,
     SOURCE_LOCAL,
-    AdvertisementHistory,
+    BluetoothAdvertisement,
     models,
 )
 from homeassistant.components.bluetooth.const import DEFAULT_ADDRESS
@@ -42,7 +42,7 @@ def inject_advertisement_with_time_and_source(
 ) -> None:
     """Inject an advertisement into the manager from a specific source at a time."""
     return _get_manager().scanner_adv_received(
-        AdvertisementHistory(device, adv, time, source, True)
+        BluetoothAdvertisement(device, adv, time, source, True)
     )
 
 
@@ -54,7 +54,7 @@ def patch_all_discovered_devices(mock_discovered: list[BLEDevice]) -> None:
     )
 
 
-def patch_connectable_history(mock_history: dict[str, AdvertisementHistory]) -> None:
+def patch_connectable_history(mock_history: dict[str, BluetoothAdvertisement]) -> None:
     """Patch the connectable history."""
     manager = _get_manager()
     return patch.object(manager, "_connectable_history", return_value=mock_history)
