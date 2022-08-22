@@ -32,3 +32,12 @@ geopy
 pandas
 xlrd
 pocketsphinx
+websocket
+websocket-client
+sentence-transformers
+fuzzywuzzy[speedup]
+spacy
+simpleaudio
+jira
+pytz
+twilio
