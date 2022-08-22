@@ -375,24 +375,13 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             # PAN ID
             f"{str(backup.network_info.pan_id)[2:]}"
             # EPID
-            f":{backup.network_info.extended_pan_id.serialize().hex()}"
+            f":{str(backup.network_info.extended_pan_id).replace(':', '')}"
         ).lower()
 
         return f"{backup.backup_time.strftime('%c')} ({identifier})"
 
     async def async_step_restore_automatic_backup(self, user_input=None):
         """Select and restore an automatic backup."""
-
-        if self._backups is None or self._current_settings is None:
-            async with self._connect_zigpy_app() as app:
-                try:
-                    self._current_settings = app.backups.create_backup(
-                        load_devices=True
-                    )
-                except NetworkNotFormed:
-                    self._current_settings = None
-
-                self._backups = app.backups.backups
 
         if self.show_advanced_options:
             # Always show the PAN IDs when in advanced mode
@@ -419,7 +408,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 backup = self._allow_overwrite_ezsp_ieee(backup)
 
             async with self._connect_zigpy_app() as app:
-                app.backups.restore_backup(backup)
+                await app.backups.restore_backup(backup)
 
             return await self._async_create_radio_entity()
 

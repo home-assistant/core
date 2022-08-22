@@ -8,6 +8,8 @@ import pytest
 import serial.tools.list_ports
 import zigpy.config
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
+from zigpy.exceptions import NetworkNotFormed
+import zigpy.types
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp, usb, zeroconf
@@ -970,6 +972,17 @@ def pick_radio(hass):
         yield wrapper
 
 
+async def test_strategy_no_network_settings(pick_radio, mock_app, hass):
+    """Test formation strategy when no network settings are present."""
+    mock_app.load_network_info = MagicMock(side_effect=NetworkNotFormed())
+
+    result, port = await pick_radio(RadioType.ezsp)
+    assert (
+        config_flow.FORMATION_REUSE_SETTINGS
+        not in result["data_schema"].schema[config_flow.FORMATION_STRATEGY].container
+    )
+
+
 async def test_formation_strategy_form_new_network(pick_radio, mock_app, hass):
     """Test forming a new network."""
     result, port = await pick_radio(RadioType.ezsp)
@@ -1123,3 +1136,115 @@ async def test_formation_strategy_restore_manual_backup_invalid_upload(
     assert result3["type"] == FlowResultType.FORM
     assert result3["step_id"] == "upload_manual_backup"
     assert result3["errors"]["base"] == "invalid_backup_json"
+
+
+def test_format_backup_choice():
+    """Test formatting zigpy NetworkBackup objects."""
+    backup = zigpy.backups.NetworkBackup()
+    backup.network_info.pan_id = zigpy.types.PanId(0x1234)
+    backup.network_info.extended_pan_id = zigpy.types.EUI64.convert(
+        "aa:bb:cc:dd:ee:ff:00:11"
+    )
+
+    handler = config_flow.ZhaFlowHandler()
+    with_ids = handler._format_backup_choice(backup, pan_ids=True)
+    without_ids = handler._format_backup_choice(backup, pan_ids=False)
+
+    assert with_ids.startswith(without_ids)
+    assert "1234:aabbccddeeff0011" in with_ids
+    assert "1234:aabbccddeeff0011" not in without_ids
+
+
+@patch(
+    "homeassistant.components.zha.config_flow.ZhaFlowHandler._format_backup_choice",
+    lambda self, s, **kwargs: "choice:" + repr(s),
+)
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+async def test_formation_strategy_restore_automatic_backup_ezsp(
+    pick_radio, mock_app, hass
+):
+    """Test restoring an automatic backup (EZSP radio)."""
+    mock_app.backups.backups = [
+        MagicMock(),
+        MagicMock(),
+        MagicMock(),
+    ]
+    backup = mock_app.backups.backups[1]  # pick the second one
+    backup.is_compatible_with = MagicMock(return_value=False)
+
+    result, port = await pick_radio(RadioType.ezsp)
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            config_flow.FORMATION_STRATEGY: (
+                config_flow.FORMATION_RESTORE_AUTOMATIC_BACKUP
+            )
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["step_id"] == "restore_automatic_backup"
+
+    # We must prompt for overwriting the IEEE address
+    assert config_flow.OVERWRITE_COORDINATOR_IEEE in result2["data_schema"].schema
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        user_input={
+            config_flow.CHOOSE_AUTOMATIC_BACKUP: "choice:" + repr(backup),
+            config_flow.OVERWRITE_COORDINATOR_IEEE: True,
+        },
+    )
+
+    mock_app.backups.restore_backup.assert_called_once()
+
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["data"][CONF_RADIO_TYPE] == "ezsp"
+
+
+@patch(
+    "homeassistant.components.zha.config_flow.ZhaFlowHandler._format_backup_choice",
+    lambda self, s, **kwargs: "choice:" + repr(s),
+)
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+async def test_formation_strategy_restore_automatic_backup_non_ezsp(
+    pick_radio, mock_app, hass
+):
+    """Test restoring an automatic backup (non-EZSP radio)."""
+    mock_app.backups.backups = [
+        MagicMock(),
+        MagicMock(),
+        MagicMock(),
+    ]
+    backup = mock_app.backups.backups[1]  # pick the second one
+    backup.is_compatible_with = MagicMock(return_value=False)
+
+    result, port = await pick_radio(RadioType.znp)
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            config_flow.FORMATION_STRATEGY: (
+                config_flow.FORMATION_RESTORE_AUTOMATIC_BACKUP
+            )
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["step_id"] == "restore_automatic_backup"
+
+    # We must prompt for overwriting the IEEE address
+    assert config_flow.OVERWRITE_COORDINATOR_IEEE not in result2["data_schema"].schema
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        user_input={
+            config_flow.CHOOSE_AUTOMATIC_BACKUP: "choice:" + repr(backup),
+        },
+    )
+
+    mock_app.backups.restore_backup.assert_called_once_with(backup)
+
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["data"][CONF_RADIO_TYPE] == "znp"
