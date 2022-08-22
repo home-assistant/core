@@ -199,7 +199,6 @@ def async_get_advertisement_callback(hass: HomeAssistant) -> BluetoothManagerCal
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the bluetooth integration."""
     integration_matcher = IntegrationMatcher(await async_get_bluetooth(hass))
-
     manager = BluetoothManager(hass, integration_matcher)
     manager.async_setup()
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, manager.async_stop)

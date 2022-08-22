@@ -36,6 +36,19 @@ def inject_advertisement_with_time_and_source(
     device: BLEDevice, adv: AdvertisementData, time: float, source: str
 ) -> None:
     """Inject an advertisement into the manager from a specific source at a time."""
+    inject_advertisement_with_time_and_source_connectable(
+        device, adv, time, source, True
+    )
+
+
+def inject_advertisement_with_time_and_source_connectable(
+    device: BLEDevice,
+    adv: AdvertisementData,
+    time: float,
+    source: str,
+    connectable: bool,
+) -> None:
+    """Inject an advertisement into the manager from a specific source at a time and connectable status."""
     return _get_manager().scanner_adv_received(
         models.BluetoothServiceInfoBleak(
             name=adv.local_name or device.name or device.address,
@@ -47,7 +60,7 @@ def inject_advertisement_with_time_and_source(
             source=source,
             device=device,
             advertisement=adv,
-            connectable=True,
+            connectable=connectable,
             time=time,
         )
     )

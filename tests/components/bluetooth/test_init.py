@@ -1,7 +1,8 @@
 """Tests for the Bluetooth integration."""
 import asyncio
 from datetime import timedelta
-from unittest.mock import MagicMock, patch
+import time
+from unittest.mock import MagicMock, Mock, patch
 
 from bleak import BleakError
 from bleak.backends.scanner import AdvertisementData, BLEDevice
@@ -20,6 +21,7 @@ from homeassistant.components.bluetooth import (
 )
 from homeassistant.components.bluetooth.const import (
     DEFAULT_ADDRESS,
+    DOMAIN,
     SOURCE_LOCAL,
     UNAVAILABLE_TRACK_SECONDS,
 )
@@ -33,6 +35,7 @@ from . import (
     _get_manager,
     async_setup_with_default_adapter,
     inject_advertisement,
+    inject_advertisement_with_time_and_source_connectable,
     patch_discovered_devices,
 )
 
@@ -243,6 +246,99 @@ async def test_discovery_match_by_service_uuid(
 
         assert len(mock_config_flow.mock_calls) == 1
         assert mock_config_flow.mock_calls[0][1][0] == "switchbot"
+
+
+def _domains_from_mock_config_flow(mock_config_flow: Mock) -> list[str]:
+    """Get all the domains that were passed to async_init except bluetooth."""
+    return [call[1][0] for call in mock_config_flow.mock_calls if call[1][0] != DOMAIN]
+
+
+async def test_discovery_match_by_service_uuid_connectable(
+    hass, mock_bleak_scanner_start
+):
+    """Test bluetooth discovery match by service_uuid and the ble device is connectable."""
+    mock_bt = [
+        {
+            "domain": "switchbot",
+            "connectable": True,
+            "service_uuid": "cba20d00-224d-11e6-9fb8-0002a5d5c51b",
+        }
+    ]
+    with patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
+    ), patch.object(hass.config_entries.flow, "async_init") as mock_config_flow:
+        await async_setup_with_default_adapter(hass)
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        assert len(mock_bleak_scanner_start.mock_calls) == 1
+
+        wrong_device = BLEDevice("44:44:33:11:23:45", "wrong_name")
+        wrong_adv = AdvertisementData(local_name="wrong_name", service_uuids=[])
+
+        inject_advertisement_with_time_and_source_connectable(
+            wrong_device, wrong_adv, time.monotonic(), "any", True
+        )
+        await hass.async_block_till_done()
+
+        assert len(_domains_from_mock_config_flow(mock_config_flow)) == 0
+
+        switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
+        switchbot_adv = AdvertisementData(
+            local_name="wohand", service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]
+        )
+
+        inject_advertisement_with_time_and_source_connectable(
+            switchbot_device, switchbot_adv, time.monotonic(), "any", True
+        )
+        await hass.async_block_till_done()
+
+        called_domains = _domains_from_mock_config_flow(mock_config_flow)
+        assert len(called_domains) == 1
+        assert called_domains == "switchbot"
+
+
+async def test_discovery_match_by_service_uuid_not_connectable(
+    hass, mock_bleak_scanner_start
+):
+    """Test bluetooth discovery match by service_uuid and the ble device is not connectable."""
+    mock_bt = [
+        {
+            "domain": "switchbot",
+            "connectable": True,
+            "service_uuid": "cba20d00-224d-11e6-9fb8-0002a5d5c51b",
+        }
+    ]
+    with patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
+    ), patch.object(hass.config_entries.flow, "async_init") as mock_config_flow:
+        await async_setup_with_default_adapter(hass)
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        assert len(mock_bleak_scanner_start.mock_calls) == 1
+
+        wrong_device = BLEDevice("44:44:33:11:23:45", "wrong_name")
+        wrong_adv = AdvertisementData(local_name="wrong_name", service_uuids=[])
+
+        inject_advertisement_with_time_and_source_connectable(
+            wrong_device, wrong_adv, time.monotonic(), "any", False
+        )
+        await hass.async_block_till_done()
+
+        assert len(_domains_from_mock_config_flow(mock_config_flow)) == 0
+
+        switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
+        switchbot_adv = AdvertisementData(
+            local_name="wohand", service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]
+        )
+
+        inject_advertisement_with_time_and_source_connectable(
+            switchbot_device, switchbot_adv, time.monotonic(), "any", False
+        )
+        await hass.async_block_till_done()
+
+        assert len(_domains_from_mock_config_flow(mock_config_flow)) == 0
 
 
 async def test_discovery_match_by_local_name(
