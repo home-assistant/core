@@ -1,4 +1,4 @@
-"""Gateway related business logic"""
+"""Define a gateway class for managing MQTT connections within the gateway"""
 
 import asyncio
 import json
@@ -16,6 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class Gateway:
+    """Class for gateway and managing MQTT connections within the gateway"""
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Init dummy hub."""
@@ -147,15 +148,15 @@ class Gateway:
         """Initialize the gateway business logic, including subscribing to device data, scene data, and basic data,
         and sending data reporting instructions to the gateway"""
         discovery_topics = [
-            # 获取设备
+            # Subscribe to device list
             f"{MQTT_TOPIC_PREFIX}/center/p5",
-            # 获取场景
+            # Subscribe to scene list
             f"{MQTT_TOPIC_PREFIX}/center/p28",
-            # 查询所有基础数据 房间、灯组、窗帘组
+            # Subscribe to all basic data Room list, light group list, curtain group list
             f"{MQTT_TOPIC_PREFIX}/center/p33",
-            # 获取房间和灯组关系
+            # Subscribe to room and light group relationship
             f"{MQTT_TOPIC_PREFIX}/center/p31",
-            # 订阅时间上报
+            # Subscribe to device property change events
             "p/+/event/3",
         ]
         await asyncio.gather(
@@ -175,14 +176,14 @@ class Gateway:
         _LOGGER.warning(mqtt_connected)
 
         if mqtt_connected:
-            # 获取设备列表
+            # publish payload to get device list
             await self._async_mqtt_publish("P/0/center/q5")
-            # 获取场景列表
+            # publish payload to get scene list
             await self._async_mqtt_publish("P/0/center/q28")
             if self.light_device_type == "group":
-                # 获取基础数据
+                # publish payload to get all basic data Room list, light group list, curtain group list
                 await self._async_mqtt_publish("P/0/center/q33")
-                # 获取关联数据
+                # publish payload to get room and light group relationship
                 await asyncio.sleep(5)
                 await self._async_mqtt_publish("P/0/center/q31")
 
