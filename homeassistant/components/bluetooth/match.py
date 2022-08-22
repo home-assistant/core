@@ -20,6 +20,7 @@ MAX_REMEMBER_ADDRESSES: Final = 2048
 
 
 ADDRESS: Final = "address"
+CONNECTABLE: Final = "connectable"
 LOCAL_NAME: Final = "local_name"
 SERVICE_UUID: Final = "service_uuid"
 SERVICE_DATA_UUID: Final = "service_data_uuid"
@@ -73,15 +74,28 @@ class IntegrationMatcher:
         self._matched: MutableMapping[str, IntegrationMatchHistory] = LRU(
             MAX_REMEMBER_ADDRESSES
         )
+        self._matched_connectable: MutableMapping[str, IntegrationMatchHistory] = LRU(
+            MAX_REMEMBER_ADDRESSES
+        )
 
     def async_clear_address(self, address: str) -> None:
         """Clear the history matches for a set of domains."""
         self._matched.pop(address, None)
+        self._matched_connectable.pop(address, None)
 
-    def match_domains(self, device: BLEDevice, adv_data: AdvertisementData) -> set[str]:
+    def _get_matched_by_type(
+        self, connectable: bool
+    ) -> MutableMapping[str, IntegrationMatchHistory]:
+        """Return the matches by type."""
+        return self._matched_connectable if connectable else self._matched
+
+    def match_domains(
+        self, device: BLEDevice, adv_data: AdvertisementData, connectable: bool
+    ) -> set[str]:
         """Return the domains that are matched."""
+        matched = self._get_matched_by_type(connectable)
         matched_domains: set[str] = set()
-        if (previous_match := self._matched.get(device.address)) and seen_all_fields(
+        if (previous_match := matched.get(device.address)) and seen_all_fields(
             previous_match, adv_data
         ):
             # We have seen all fields so we can skip the rest of the matchers
@@ -89,7 +103,7 @@ class IntegrationMatcher:
         matched_domains = {
             matcher["domain"]
             for matcher in self._integration_matchers
-            if ble_device_matches(matcher, device, adv_data)
+            if ble_device_matches(matcher, device, adv_data, connectable)
         }
         if not matched_domains:
             return matched_domains
@@ -98,7 +112,7 @@ class IntegrationMatcher:
             previous_match.service_data |= bool(adv_data.service_data)
             previous_match.service_uuids |= bool(adv_data.service_uuids)
         else:
-            self._matched[device.address] = IntegrationMatchHistory(
+            matched[device.address] = IntegrationMatchHistory(
                 manufacturer_data=bool(adv_data.manufacturer_data),
                 service_data=bool(adv_data.service_data),
                 service_uuids=bool(adv_data.service_uuids),
@@ -110,9 +124,13 @@ def ble_device_matches(
     matcher: BluetoothCallbackMatcher | BluetoothMatcher,
     device: BLEDevice,
     adv_data: AdvertisementData,
+    connectable: bool,
 ) -> bool:
     """Check if a ble device and advertisement_data matches the matcher."""
     if (address := matcher.get(ADDRESS)) is not None and device.address != address:
+        return False
+
+    if matcher.get(CONNECTABLE) and not connectable:
         return False
 
     if (local_name := matcher.get(LOCAL_NAME)) is not None and not fnmatch.fnmatch(

@@ -16,7 +16,13 @@ from homeassistant.const import CONF_ADDRESS, CONF_PASSWORD, CONF_SENSOR_TYPE
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 
-from .const import CONF_RETRY_COUNT, DEFAULT_RETRY_COUNT, DOMAIN, SUPPORTED_MODEL_TYPES
+from .const import (
+    CONF_RETRY_COUNT,
+    CONNECTABLE_SUPPORTED_MODEL_TYPES,
+    DEFAULT_RETRY_COUNT,
+    DOMAIN,
+    SUPPORTED_MODEL_TYPES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,7 +71,11 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         parsed = parse_advertisement_data(
             discovery_info.device, discovery_info.advertisement
         )
-        if not parsed or parsed.data.get("modelName") not in SUPPORTED_MODEL_TYPES:
+        model_name = parsed.data.get("modelName")
+        if not parsed or model_name not in SUPPORTED_MODEL_TYPES:
+            return self.async_abort(reason="not_supported")
+        if discovery_info.connectable and CONNECTABLE_SUPPORTED_MODEL_TYPES[model_name]:
+            # Source is not connectable but the model is connectable
             return self.async_abort(reason="not_supported")
         self._discovered_adv = parsed
         data = parsed.data

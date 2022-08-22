@@ -65,8 +65,17 @@ class BLEScanner:
         battery = None
         address = service_info.address
         self.last_battery_update[address] = monotonic_now
+        if not (
+            connectable_device := bluetooth.async_ble_device_from_address(
+                self.hass, service_info.device.address, True
+            )
+        ):
+            # The device can be seen by a passive tracker but we
+            # don't have a route to make a connection
+            return
+
         try:
-            async with BleakClient(service_info.device) as client:
+            async with BleakClient(connectable_device) as client:
                 bat_char = await client.read_gatt_char(BATTERY_CHARACTERISTIC_UUID)
                 battery = ord(bat_char)
         except asyncio.TimeoutError:

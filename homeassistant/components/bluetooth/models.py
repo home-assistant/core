@@ -1,6 +1,7 @@
 """Models for bluetooth."""
 from __future__ import annotations
 
+from abc import abstractmethod
 import asyncio
 from collections.abc import Callable
 import contextlib
@@ -34,6 +35,17 @@ MANAGER: BluetoothManager | None = None
 
 
 @dataclass
+class AdvertisementHistory:
+    """Bluetooth advertisement history."""
+
+    ble_device: BLEDevice
+    advertisement_data: AdvertisementData
+    time: float
+    source: str
+    connectable: bool  # If the device can be connected to via the BLEDevice
+
+
+@dataclass
 class BluetoothServiceInfoBleak(BluetoothServiceInfo):
     """BluetoothServiceInfo with bleak data.
 
@@ -45,10 +57,15 @@ class BluetoothServiceInfoBleak(BluetoothServiceInfo):
 
     device: BLEDevice
     advertisement: AdvertisementData
+    connectable: bool
 
     @classmethod
-    def from_advertisement(
-        cls, device: BLEDevice, advertisement_data: AdvertisementData, source: str
+    def from_advertisement_with_source(
+        cls,
+        device: BLEDevice,
+        advertisement_data: AdvertisementData,
+        source: str,
+        connectable: bool,
     ) -> BluetoothServiceInfoBleak:
         """Create a BluetoothServiceInfoBleak from an advertisement."""
         return cls(
@@ -61,6 +78,7 @@ class BluetoothServiceInfoBleak(BluetoothServiceInfo):
             source=source,
             device=device,
             advertisement=advertisement_data,
+            connectable=connectable,
         )
 
 
@@ -74,6 +92,16 @@ class BluetoothScanningMode(Enum):
 BluetoothChange = Enum("BluetoothChange", "ADVERTISEMENT")
 BluetoothCallback = Callable[[BluetoothServiceInfoBleak, BluetoothChange], None]
 ProcessAdvertisementCallback = Callable[[BluetoothServiceInfoBleak], bool]
+BluetoothManagerCallback = Callable[[AdvertisementHistory], None]
+
+
+class BaseHaScanner:
+    """Base class for Ha Scanners."""
+
+    @property
+    @abstractmethod
+    def discovered_devices(self) -> list[BLEDevice]:
+        """Return a list of discovered devices."""
 
 
 class HaBleakScannerWrapper(BaseBleakScanner):
@@ -136,7 +164,7 @@ class HaBleakScannerWrapper(BaseBleakScanner):
     def discovered_devices(self) -> list[BLEDevice]:
         """Return a list of discovered devices."""
         assert MANAGER is not None
-        return list(MANAGER.async_discovered_devices())
+        return list(MANAGER.async_discovered_devices(True))
 
     def register_detection_callback(
         self, callback: AdvertisementDataCallback | None
@@ -193,7 +221,7 @@ class HaBleakClientWrapper(BleakClient):
             error_if_core=False,
         )
         assert MANAGER is not None
-        ble_device = MANAGER.async_ble_device_from_address(address_or_ble_device)
+        ble_device = MANAGER.async_ble_device_from_address(address_or_ble_device, True)
         if ble_device is None:
             raise BleakError(f"No device found for address {address_or_ble_device}")
         super().__init__(ble_device, *args, **kwargs)

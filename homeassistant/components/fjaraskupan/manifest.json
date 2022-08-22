@@ -10,6 +10,7 @@
   "dependencies": ["bluetooth"],
   "bluetooth": [
     {
+      "connectable": true,
       "manufacturer_id": 20296,
       "manufacturer_data_start": [79, 68, 70, 74, 65, 82]
     }

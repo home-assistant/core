@@ -6,9 +6,10 @@ from __future__ import annotations
 
 # fmt: off
 
-BLUETOOTH: list[dict[str, str | int | list[int]]] = [
+BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     {
         "domain": "fjaraskupan",
+        "connectable": True,
         "manufacturer_id": 20296,
         "manufacturer_data_start": [
             79,
@@ -71,7 +72,8 @@ BLUETOOTH: list[dict[str, str | int | list[int]]] = [
         "manufacturer_id": 76,
         "manufacturer_data_start": [
             6
-        ]
+        ],
+        "connectable": True
     },
     {
         "domain": "inkbird",
@@ -119,6 +121,7 @@ BLUETOOTH: list[dict[str, str | int | list[int]]] = [
     },
     {
         "domain": "yalexs_ble",
-        "manufacturer_id": 465
+        "manufacturer_id": 465,
+        "connectable": True
     }
 ]
