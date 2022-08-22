@@ -35,6 +35,10 @@ class MockMessage:
 class MockFailingLifxCommand:
     """Mock a lifx command that fails."""
 
+    def __name__(self):
+        """Return name."""
+        return "mock_failing_lifx_command"
+
     def __init__(self, bulb, **kwargs):
         """Init command."""
         self.bulb = bulb
@@ -53,6 +57,10 @@ class MockFailingLifxCommand:
 
 class MockLifxCommand:
     """Mock a lifx command."""
+
+    def __name__(self):
+        """Return name."""
+        return "mock_lifx_command"
 
     def __init__(self, bulb, **kwargs):
         """Init command."""

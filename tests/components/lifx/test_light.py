@@ -612,6 +612,10 @@ async def test_config_zoned_light_strip_fails(hass):
     class MockFailingLifxCommand:
         """Mock a lifx command that fails on the 3rd try."""
 
+        def __name__(self):
+            """Return name."""
+            return "mock_failing_lifx_command"
+
         def __init__(self, bulb, **kwargs):
             """Init command."""
             self.bulb = bulb
@@ -964,6 +968,10 @@ async def test_color_bulb_is_actually_off(hass: HomeAssistant) -> None:
 
     class MockLifxCommandActuallyOff:
         """Mock a lifx command that will update our power level state."""
+
+        def __name__(self):
+            """Return name."""
+            return "mock_failing_lifx_command"
 
         def __init__(self, bulb, **kwargs):
             """Init command."""
