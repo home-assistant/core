@@ -501,7 +501,7 @@ async def test_setup_hass(
     assert len(mock_ensure_config_exists.mock_calls) == 1
     assert len(mock_process_ha_config_upgrade.mock_calls) == 1
 
-    assert hass == core.HomeAssistant()
+    assert hass == core.async_get_hass()
 
 
 async def test_setup_hass_takes_longer_than_log_slow_startup(

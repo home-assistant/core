@@ -15,7 +15,7 @@ from collections.abc import (
     Iterable,
     Mapping,
 )
-from contextvars import ContextVar, Token
+from contextvars import ContextVar
 import datetime
 import enum
 import functools
@@ -178,6 +178,12 @@ def is_callback(func: Callable[..., Any]) -> bool:
     return getattr(func, "_hass_callback", False) is True
 
 
+@callback
+def async_get_hass() -> HomeAssistant:
+    """Return the HomeAssistant instance."""
+    return _cv_hass.get()
+
+
 @enum.unique
 class HassJobType(enum.Enum):
     """Represent a job type."""
@@ -244,23 +250,9 @@ class HomeAssistant:
     auth: AuthManager
     http: HomeAssistantHTTP = None  # type: ignore[assignment]
     config_entries: ConfigEntries = None  # type: ignore[assignment]
-    _initialized: bool = False
-    _context_token: Token[HomeAssistant]
-
-    def __new__(cls) -> HomeAssistant:
-        """Return the existing HA instance if it exists, otherwise create one."""
-        try:
-            return _cv_hass.get()
-        except LookupError:
-            hass = super().__new__(cls)
-            hass._context_token = _cv_hass.set(hass)
-            return hass
 
     def __init__(self) -> None:
         """Initialize new Home Assistant object."""
-        if self._initialized:
-            return
-        self._initialized = True
         self.loop = asyncio.get_running_loop()
         self._pending_tasks: list[asyncio.Future[Any]] = []
         self._track_task = True

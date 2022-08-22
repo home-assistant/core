@@ -100,6 +100,7 @@ async def async_setup_hass(
 ) -> core.HomeAssistant | None:
     """Set up Home Assistant."""
     hass = core.HomeAssistant()
+    core._cv_hass.set(hass)  # pylint: disable=protected-access
     hass.config.config_dir = runtime_config.config_dir
 
     async_enable_logging(
@@ -165,7 +166,6 @@ async def async_setup_hass(
         old_config = hass.config
         old_logging = hass.data.get(DATA_LOGGING)
 
-        core._cv_hass.reset(hass._context_token)  # pylint: disable=protected-access
         hass = core.HomeAssistant()
         if old_logging:
             hass.data[DATA_LOGGING] = old_logging
