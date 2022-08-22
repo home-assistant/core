@@ -1921,7 +1921,7 @@ python-forecastio==1.4.0
 python-fullykiosk==0.0.11
 
 # homeassistant.components.sms
-# python-gammu==3.2.4
+python-gammu==3.2.4
 
 # homeassistant.components.gc100
 python-gc100==1.0.3a0
