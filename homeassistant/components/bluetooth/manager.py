@@ -204,6 +204,7 @@ class BluetoothManager:
     def _async_setup_unavailable_tracking(self, connectable: bool) -> None:
         """Set up the unavailable tracking."""
         history = self._get_history_by_type(connectable)
+        unavailable_cbks = self._get_unavailable_cbks_by_type(connectable)
 
         @hass_callback
         def _async_check_unavailable(now: datetime) -> None:
@@ -214,7 +215,6 @@ class BluetoothManager:
                 for device in self.async_all_discovered_devices(connectable)
             }
             disappeared = history_set.difference(active_addresses)
-            unavailable_cbks = self._get_unavailable_cbks_by_type(connectable)
             for address in disappeared:
                 del history[address]
                 if not (callbacks := unavailable_cbks.get(address)):
