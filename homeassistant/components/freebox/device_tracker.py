@@ -93,7 +93,7 @@ class FreeboxDevice(ScannerEntity):
         return self._name
 
     @property
-    def is_connected(self):
+    def is_connected(self) -> bool:
         """Return true if the device is connected to the network."""
         return self._active
 
@@ -123,7 +123,7 @@ class FreeboxDevice(ScannerEntity):
         self.async_update_state()
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register state update callback."""
         self.async_update_state()
         self.async_on_remove(
