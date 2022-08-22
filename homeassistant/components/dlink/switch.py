@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Any
 import urllib
 
 from pyW215.pyW215 import SmartPlug
@@ -106,15 +107,15 @@ class SmartPlugSwitch(SwitchEntity):
         """Return true if switch is on."""
         return self.data.state == "ON"
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         self.data.smartplug.state = "ON"
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         self.data.smartplug.state = "OFF"
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from the smart plug and updates the states."""
         self.data.update()
 

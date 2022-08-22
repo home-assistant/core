@@ -109,7 +109,7 @@ class HassFoscamCamera(Camera):
         if self._rtsp_port:
             self._attr_supported_features = CameraEntityFeature.STREAM
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Handle entity addition to hass."""
         # Get motion detection status
         ret, response = await self.hass.async_add_executor_job(
@@ -159,7 +159,7 @@ class HassFoscamCamera(Camera):
         """Camera Motion Detection Status."""
         return self._motion_status
 
-    def enable_motion_detection(self):
+    def enable_motion_detection(self) -> None:
         """Enable motion detection in camera."""
         try:
             ret = self._foscam_session.enable_motion_detection()
@@ -179,7 +179,7 @@ class HassFoscamCamera(Camera):
                 self._name,
             )
 
-    def disable_motion_detection(self):
+    def disable_motion_detection(self) -> None:
         """Disable motion detection."""
         try:
             ret = self._foscam_session.disable_motion_detection()

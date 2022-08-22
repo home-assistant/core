@@ -8,7 +8,8 @@
             "user": {
                 "data": {
                     "host": "Servidor"
-                }
+                },
+                "description": "Se voc\u00ea deixar o host vazio, a descoberta ser\u00e1 usada para localizar dispositivos."
             }
         }
     }

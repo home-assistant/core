@@ -14,6 +14,7 @@ NETWORK_COORDINATOR = "network_coordinator"
 GATEWAY = "gateway"
 DEFAULT_SCAN_INTERVAL = 30
 CONF_BAUD_SPEED = "baud_speed"
+CONF_UNICODE = "unicode"
 DEFAULT_BAUD_SPEED = "0"
 DEFAULT_BAUD_SPEEDS = [
     {"value": DEFAULT_BAUD_SPEED, "label": "Auto"},

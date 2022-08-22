@@ -20,7 +20,13 @@ from homeassistant.core import (
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import SOURCE_LOCAL, UNAVAILABLE_TRACK_SECONDS
+from .const import (
+    ADAPTER_ADDRESS,
+    SOURCE_LOCAL,
+    STALE_ADVERTISEMENT_SECONDS,
+    UNAVAILABLE_TRACK_SECONDS,
+    AdapterDetails,
+)
 from .match import (
     ADDRESS,
     BluetoothCallbackMatcher,
@@ -29,6 +35,7 @@ from .match import (
 )
 from .models import BluetoothCallback, BluetoothChange, BluetoothServiceInfoBleak
 from .usage import install_multiple_bleak_catcher, uninstall_multiple_bleak_catcher
+from .util import async_get_bluetooth_adapters
 
 if TYPE_CHECKING:
     from bleak.backends.device import BLEDevice
@@ -39,8 +46,7 @@ if TYPE_CHECKING:
 FILTER_UUIDS: Final = "UUIDs"
 
 
-RSSI_SWITCH_THRESHOLD = 10
-STALE_ADVERTISEMENT_SECONDS = 180
+RSSI_SWITCH_THRESHOLD = 6
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -132,6 +138,26 @@ class BluetoothManager:
         ] = []
         self.history: dict[str, AdvertisementHistory] = {}
         self._scanners: list[HaScanner] = []
+        self._adapters: dict[str, AdapterDetails] = {}
+
+    def _find_adapter_by_address(self, address: str) -> str | None:
+        for adapter, details in self._adapters.items():
+            if details[ADAPTER_ADDRESS] == address:
+                return adapter
+        return None
+
+    async def async_get_bluetooth_adapters(self) -> dict[str, AdapterDetails]:
+        """Get bluetooth adapters."""
+        if not self._adapters:
+            self._adapters = await async_get_bluetooth_adapters()
+        return self._adapters
+
+    async def async_get_adapter_from_address(self, address: str) -> str | None:
+        """Get adapter from address."""
+        if adapter := self._find_adapter_by_address(address):
+            return adapter
+        self._adapters = await async_get_bluetooth_adapters()
+        return self._find_adapter_by_address(address)
 
     @hass_callback
     def async_setup(self) -> None:
