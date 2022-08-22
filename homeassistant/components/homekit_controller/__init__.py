@@ -21,7 +21,7 @@ from homeassistant.helpers.typing import ConfigType
 from .config_flow import normalize_hkid
 from .connection import HKDevice
 from .const import ENTITY_MAP, KNOWN_DEVICES, TRIGGERS
-from .storage import EntityMapStorage, async_get_entity_storage
+from .storage import EntityMapStorage
 from .utils import async_get_controller
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,8 +50,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up for Homekit devices."""
-    await async_get_entity_storage(hass)
-
     await async_get_controller(hass)
 
     hass.data[KNOWN_DEVICES] = {}

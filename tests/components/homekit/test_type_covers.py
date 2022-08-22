@@ -166,7 +166,7 @@ async def test_windowcovering_set_cover_position(hass, hk_driver, events):
     )
     await hass.async_block_till_done()
     assert acc.char_current_position.value == 60
-    assert acc.char_target_position.value == 60
+    assert acc.char_target_position.value == 0
     assert acc.char_position_state.value == 1
 
     hass.states.async_set(
@@ -176,7 +176,7 @@ async def test_windowcovering_set_cover_position(hass, hk_driver, events):
     )
     await hass.async_block_till_done()
     assert acc.char_current_position.value == 70
-    assert acc.char_target_position.value == 70
+    assert acc.char_target_position.value == 0
     assert acc.char_position_state.value == 1
 
     hass.states.async_set(
@@ -186,7 +186,7 @@ async def test_windowcovering_set_cover_position(hass, hk_driver, events):
     )
     await hass.async_block_till_done()
     assert acc.char_current_position.value == 50
-    assert acc.char_target_position.value == 50
+    assert acc.char_target_position.value == 0
     assert acc.char_position_state.value == 0
 
     hass.states.async_set(

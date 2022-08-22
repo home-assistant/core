@@ -190,6 +190,11 @@ SSDP = {
             "manufacturer": "konnected.io"
         }
     ],
+    "lametric": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:LaMetric:1"
+        }
+    ],
     "nanoleaf": [
         {
             "st": "Nanoleaf_aurora:light"

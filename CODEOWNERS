@@ -329,6 +329,8 @@ build.json @home-assistant/supervisor
 /tests/components/fibaro/ @rappenze
 /homeassistant/components/file/ @fabaff
 /tests/components/file/ @fabaff
+/homeassistant/components/file_upload/ @home-assistant/core
+/tests/components/file_upload/ @home-assistant/core
 /homeassistant/components/filesize/ @gjohansson-ST
 /tests/components/filesize/ @gjohansson-ST
 /homeassistant/components/filter/ @dgomes
@@ -465,6 +467,8 @@ build.json @home-assistant/supervisor
 /tests/components/homeassistant/ @home-assistant/core
 /homeassistant/components/homeassistant_alerts/ @home-assistant/core
 /tests/components/homeassistant_alerts/ @home-assistant/core
+/homeassistant/components/homeassistant_sky_connect/ @home-assistant/core
+/tests/components/homeassistant_sky_connect/ @home-assistant/core
 /homeassistant/components/homeassistant_yellow/ @home-assistant/core
 /tests/components/homeassistant_yellow/ @home-assistant/core
 /homeassistant/components/homekit/ @bdraco
@@ -588,6 +592,9 @@ build.json @home-assistant/supervisor
 /homeassistant/components/lacrosse_view/ @IceBotYT
 /tests/components/lacrosse_view/ @IceBotYT
 /homeassistant/components/lametric/ @robbiet480 @frenck
+/tests/components/lametric/ @robbiet480 @frenck
+/homeassistant/components/landisgyr_heat_meter/ @vpathuis
+/tests/components/landisgyr_heat_meter/ @vpathuis
 /homeassistant/components/launch_library/ @ludeeus @DurgNomis-drol
 /tests/components/launch_library/ @ludeeus @DurgNomis-drol
 /homeassistant/components/laundrify/ @xLarry
@@ -625,8 +632,8 @@ build.json @home-assistant/supervisor
 /tests/components/luftdaten/ @fabaff @frenck
 /homeassistant/components/lupusec/ @majuss
 /homeassistant/components/lutron/ @JonGilmore
-/homeassistant/components/lutron_caseta/ @swails @bdraco
-/tests/components/lutron_caseta/ @swails @bdraco
+/homeassistant/components/lutron_caseta/ @swails @bdraco @danaues
+/tests/components/lutron_caseta/ @swails @bdraco @danaues
 /homeassistant/components/lyric/ @timmo001
 /tests/components/lyric/ @timmo001
 /homeassistant/components/mastodon/ @fabaff
@@ -843,6 +850,8 @@ build.json @home-assistant/supervisor
 /tests/components/pure_energie/ @klaasnicolaas
 /homeassistant/components/push/ @dgomes
 /tests/components/push/ @dgomes
+/homeassistant/components/pushover/ @engrbm87
+/tests/components/pushover/ @engrbm87
 /homeassistant/components/pvoutput/ @frenck
 /tests/components/pvoutput/ @frenck
 /homeassistant/components/pvpc_hourly_pricing/ @azogue
