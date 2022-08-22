@@ -82,7 +82,7 @@ class ESPHomeScannner(BaseHaScanner):
         """Call the registered callback."""
         now = time.monotonic()
         address = ":".join(TWO_CHAR.findall("%012X" % adv.address))  # must be upper
-        adv_data = AdvertisementData(  # type: ignore[no-untyped-call]
+        advertisement_data = AdvertisementData(  # type: ignore[no-untyped-call]
             local_name=None if adv.name == "" else adv.name,
             manufacturer_data=adv.manufacturer_data,
             service_data=adv.service_data,
@@ -98,15 +98,15 @@ class ESPHomeScannner(BaseHaScanner):
         self._discovered_device_timestamps[address] = now
         self._new_info_callback(
             BluetoothServiceInfoBleak(
-                name=adv_data.local_name or device.name or device.address,
+                name=advertisement_data.local_name or device.name or device.address,
                 address=device.address,
                 rssi=device.rssi,
-                manufacturer_data=adv_data.manufacturer_data,
-                service_data=adv_data.service_data,
-                service_uuids=adv_data.service_uuids,
+                manufacturer_data=advertisement_data.manufacturer_data,
+                service_data=advertisement_data.service_data,
+                service_uuids=advertisement_data.service_uuids,
                 source=self._source,
                 device=device,
-                advertisement=adv_data,
+                advertisement=advertisement_data,
                 connectable=False,
                 time=now,
             )
