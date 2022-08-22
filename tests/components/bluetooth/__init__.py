@@ -48,23 +48,27 @@ def inject_advertisement_with_time_and_source(
 
 def patch_all_discovered_devices(mock_discovered: list[BLEDevice]) -> None:
     """Mock all the discovered devices from all the scanners."""
-    manager = _get_manager()
     return patch.object(
-        manager, "async_all_discovered_devices", return_value=mock_discovered
+        _get_manager(), "async_all_discovered_devices", return_value=mock_discovered
     )
+
+
+def patch_history(mock_history: dict[str, BluetoothAdvertisement]) -> None:
+    """Patch the history."""
+    return patch.object(_get_manager(), "_history", return_value=mock_history)
 
 
 def patch_connectable_history(mock_history: dict[str, BluetoothAdvertisement]) -> None:
     """Patch the connectable history."""
-    manager = _get_manager()
-    return patch.object(manager, "_connectable_history", return_value=mock_history)
+    return patch.object(
+        _get_manager(), "_connectable_history", return_value=mock_history
+    )
 
 
 def patch_discovered_devices(mock_discovered: list[BLEDevice]) -> None:
     """Mock the combined best path to discovered devices from all the scanners."""
-    manager = _get_manager()
     return patch.object(
-        manager, "async_discovered_devices", return_value=mock_discovered
+        _get_manager(), "async_discovered_devices", return_value=mock_discovered
     )
 
 
