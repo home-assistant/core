@@ -1,10 +1,6 @@
 calibrate:
   name: Calibrate
   description: Calibration - Set mode, depth and press&hold duration. Warning - this will send a push command to the device
-  target:
-    entity:
-      integration: keymitt_ble
-      domain: switch
   fields:
     depth:
       name: Depth
