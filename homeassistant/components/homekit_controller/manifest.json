@@ -8,8 +8,7 @@
   "bluetooth": [
     {
       "manufacturer_id": 76,
-      "manufacturer_data_start": [6],
-      "connectable": true
+      "manufacturer_data_start": [6]
     }
   ],
   "dependencies": ["bluetooth", "zeroconf"],
