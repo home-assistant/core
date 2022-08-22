@@ -18,7 +18,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
-from .const import CONF_RETRY_COUNT, DEFAULT_RETRY_COUNT, DOMAIN, SupportedModels
+from .const import (
+    CONF_RETRY_COUNT,
+    CONNECTABLE_SUPPORTED_MODEL_TYPES,
+    DEFAULT_RETRY_COUNT,
+    DOMAIN,
+    SupportedModels,
+)
 from .coordinator import SwitchbotDataUpdateCoordinator
 
 PLATFORMS_BY_TYPE = {
@@ -39,6 +45,7 @@ CLASS_BY_DEVICE = {
     SupportedModels.BOT.value: switchbot.Switchbot,
     SupportedModels.PLUG.value: switchbot.SwitchbotPlugMini,
 }
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,6 +84,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         password=entry.data.get(CONF_PASSWORD),
         retry_count=entry.options[CONF_RETRY_COUNT],
     )
+
+    # connectable means we can make connections to the device
+    connectable = sensor_type in CONNECTABLE_SUPPORTED_MODEL_TYPES.values()
+
     coordinator = hass.data[DOMAIN][entry.entry_id] = SwitchbotDataUpdateCoordinator(
         hass,
         _LOGGER,
@@ -84,6 +95,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         device,
         entry.unique_id,
         entry.data.get(CONF_NAME, entry.title),
+        connectable,
     )
     entry.async_on_unload(coordinator.async_start())
     if not await coordinator.async_wait_ready():
