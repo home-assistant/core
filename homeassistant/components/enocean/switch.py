@@ -77,7 +77,6 @@ async def async_setup_platform(
 
     _migrate_to_new_unique_id(hass, dev_id, channel)
     async_add_entities([EnOceanSwitch(dev_id, dev_name, channel, base_id)])
-    # add_entities([EnOceanSwitch(dev_id, dev_name, channel, base_id)])
 
 
 class EnOceanSwitch(EnOceanEntity, SwitchEntity):
