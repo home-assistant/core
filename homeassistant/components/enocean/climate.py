@@ -4,8 +4,8 @@ from __future__ import annotations
 from abc import ABC
 import logging
 
-from components.climate import HVACAction
-from components.enocean.device import EnOceanEntity
+from homeassistant.components.climate import HVACAction
+from homeassistant.components.enocean.device import EnOceanEntity
 from enocean import utils
 from enocean.protocol.constants import PACKET, RORG
 from enocean.protocol.packet import Packet

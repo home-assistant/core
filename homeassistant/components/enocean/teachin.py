@@ -6,7 +6,7 @@ from enocean.communicators import Communicator
 from enocean.protocol.constants import PACKET
 from enocean.protocol.packet import Packet, RadioPacket
 
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 
 
 class TeachInHandler(ABC):
