@@ -1,7 +1,7 @@
 {
   "issues": {
     "deprecated_yaml": {
-      "title": "Your manual set up MQTT {platform}(s) need attention",
+      "title": "Your manually configured MQTT {platform}(s) needs attention",
       "description": "Manually configured MQTT {platform}(s) found under platform key `{platform}`.\n\nPlease move the configuration to the mqtt integration key, see {more_info_url}.."
     }
   },
