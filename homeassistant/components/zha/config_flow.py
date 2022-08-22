@@ -66,6 +66,24 @@ UPLOADED_BACKUP_FILE = "uploaded_backup_file"
 _LOGGER = logging.getLogger(__name__)
 
 
+def _format_backup_choice(
+    backup: zigpy.backups.NetworkBackup, *, pan_ids: bool = True
+) -> str:
+    """Format network backup info into a short piece of text."""
+
+    if not pan_ids:
+        return backup.backup_time.strftime("%c")
+
+    identifier = (
+        # PAN ID
+        f"{str(backup.network_info.pan_id)[2:]}"
+        # EPID
+        f":{str(backup.network_info.extended_pan_id).replace(':', '')}"
+    ).lower()
+
+    return f"{backup.backup_time.strftime('%c')} ({identifier})"
+
+
 class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
@@ -363,31 +381,13 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    def _format_backup_choice(
-        self, backup: zigpy.backups.NetworkBackup, *, pan_ids: bool = True
-    ) -> str:
-        """Format network backup info into a short piece of text."""
-
-        if not pan_ids:
-            return backup.backup_time.strftime("%c")
-
-        identifier = (
-            # PAN ID
-            f"{str(backup.network_info.pan_id)[2:]}"
-            # EPID
-            f":{str(backup.network_info.extended_pan_id).replace(':', '')}"
-        ).lower()
-
-        return f"{backup.backup_time.strftime('%c')} ({identifier})"
-
     async def async_step_restore_automatic_backup(self, user_input=None):
         """Select and restore an automatic backup."""
 
         if self.show_advanced_options:
             # Always show the PAN IDs when in advanced mode
             choices = [
-                self._format_backup_choice(backup, pan_ids=True)
-                for backup in self._backups
+                _format_backup_choice(backup, pan_ids=True) for backup in self._backups
             ]
         else:
             # Only show the PAN IDs for multiple backups taken on the same day
@@ -395,7 +395,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 backup.backup_time.date() for backup in self._backups
             )
             choices = [
-                self._format_backup_choice(
+                _format_backup_choice(
                     backup, pan_ids=(num_backups_on_date[backup.backup_time.date()] > 1)
                 )
                 for backup in self._backups

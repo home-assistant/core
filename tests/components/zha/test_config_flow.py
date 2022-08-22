@@ -1146,9 +1146,8 @@ def test_format_backup_choice():
         "aa:bb:cc:dd:ee:ff:00:11"
     )
 
-    handler = config_flow.ZhaFlowHandler()
-    with_ids = handler._format_backup_choice(backup, pan_ids=True)
-    without_ids = handler._format_backup_choice(backup, pan_ids=False)
+    with_ids = config_flow._format_backup_choice(backup, pan_ids=True)
+    without_ids = config_flow._format_backup_choice(backup, pan_ids=False)
 
     assert with_ids.startswith(without_ids)
     assert "1234:aabbccddeeff0011" in with_ids
@@ -1156,8 +1155,8 @@ def test_format_backup_choice():
 
 
 @patch(
-    "homeassistant.components.zha.config_flow.ZhaFlowHandler._format_backup_choice",
-    lambda self, s, **kwargs: "choice:" + repr(s),
+    "homeassistant.components.zha.config_flow._format_backup_choice",
+    lambda s, **kwargs: "choice:" + repr(s),
 )
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
 async def test_formation_strategy_restore_automatic_backup_ezsp(
@@ -1204,8 +1203,8 @@ async def test_formation_strategy_restore_automatic_backup_ezsp(
 
 
 @patch(
-    "homeassistant.components.zha.config_flow.ZhaFlowHandler._format_backup_choice",
-    lambda self, s, **kwargs: "choice:" + repr(s),
+    "homeassistant.components.zha.config_flow._format_backup_choice",
+    lambda s, **kwargs: "choice:" + repr(s),
 )
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
 @pytest.mark.parametrize("is_advanced", [True, False])
