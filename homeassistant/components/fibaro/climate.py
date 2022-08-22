@@ -124,7 +124,7 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
         self._temp_sensor_device: FibaroDevice | None = None
         self._target_temp_device: FibaroDevice | None = None
         self._op_mode_device: FibaroDevice | None = None
-        self._fan_mode_device = None
+        self._fan_mode_device: FibaroDevice | None = None
         self._attr_supported_features = 0
         self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
 
