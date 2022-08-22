@@ -72,8 +72,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     sensor_type: str = entry.data[CONF_SENSOR_TYPE]
+    # connectable means we can make connections to the device
+    connectable = sensor_type in CONNECTABLE_SUPPORTED_MODEL_TYPES.values()
     address: str = entry.data[CONF_ADDRESS]
-    ble_device = bluetooth.async_ble_device_from_address(hass, address.upper())
+    ble_device = bluetooth.async_ble_device_from_address(
+        hass, address.upper(), connectable
+    )
     if not ble_device:
         raise ConfigEntryNotReady(
             f"Could not find Switchbot {sensor_type} with address {address}"
@@ -84,9 +88,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         password=entry.data.get(CONF_PASSWORD),
         retry_count=entry.options[CONF_RETRY_COUNT],
     )
-
-    # connectable means we can make connections to the device
-    connectable = sensor_type in CONNECTABLE_SUPPORTED_MODEL_TYPES.values()
 
     coordinator = hass.data[DOMAIN][entry.entry_id] = SwitchbotDataUpdateCoordinator(
         hass,
