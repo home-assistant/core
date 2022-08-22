@@ -229,18 +229,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass, _LOGGER, cooldown=5, immediate=False, function=_async_rediscover_adapters
     )
 
-    def _async_trigger_discovery(service_info: usb.UsbServiceInfo) -> None:
+    def _async_trigger_discovery() -> None:
         # There are so many bluetooth adapter models that
         # we check the bus whenever a usb device is plugged in
         # to see if it is a bluetooth adapter since we can't
         # tell if the device is a bluetooth adapter or if its
         # actually supported unless we ask DBus if its now
         # present.
-        _LOGGER.debug("Triggering bluetooth discovery for %s", service_info)
+        _LOGGER.debug("Triggering bluetooth usb discovery")
         hass.async_create_task(discovery_debouncer.async_call())
 
-    cancel = usb.async_register_callback(hass, _async_trigger_discovery, None)
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, lambda event: cancel())
+    cancel = usb.async_register_scan_request_callback(hass, _async_trigger_discovery)
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, hass_callback(lambda event: cancel())
+    )
 
     return True
 

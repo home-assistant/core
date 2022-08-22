@@ -1,7 +1,7 @@
 """The USB Discovery integration."""
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
+from collections.abc import Coroutine
 import dataclasses
 import fnmatch
 import logging
@@ -42,7 +42,7 @@ REQUEST_SCAN_COOLDOWN = 60  # 1 minute cooldown
 
 __all__ = [
     "async_is_plugged_in",
-    "async_register_callback",
+    "async_register_scan_request_callback",
     "USBCallbackMatcher",
     "UsbServiceInfo",
 ]
@@ -53,14 +53,12 @@ class USBCallbackMatcher(USBMatcher):
 
 
 @hass_callback
-def async_register_callback(
-    hass: HomeAssistant,
-    callback: Callable[[UsbServiceInfo], None],
-    matcher: USBCallbackMatcher | None = None,
+def async_register_scan_request_callback(
+    hass: HomeAssistant, callback: CALLBACK_TYPE
 ) -> CALLBACK_TYPE:
-    """Register to receive a callback when a new USB device is discovered."""
+    """Register to receive a callback when a scan should be initiated."""
     discovery: USBDiscovery = hass.data[DOMAIN]
-    return discovery.async_register_callback(callback, matcher)
+    return discovery.async_register_scan_request_callback(callback)
 
 
 @hass_callback
@@ -169,9 +167,7 @@ class USBDiscovery:
         self.seen: set[tuple[str, ...]] = set()
         self.observer_active = False
         self._request_debouncer: Debouncer[Coroutine[Any, Any, None]] | None = None
-        self._callbacks: list[
-            tuple[Callable[[UsbServiceInfo], None], USBCallbackMatcher | None]
-        ] = []
+        self._request_callbacks: list[CALLBACK_TYPE] = []
 
     async def async_setup(self) -> None:
         """Set up USB Discovery."""
@@ -228,21 +224,19 @@ class USBDiscovery:
             "Discovered Device at path: %s, triggering scan serial",
             device.device_path,
         )
-        self.scan_serial()
+        self.hass.create_task(self._async_scan())
 
     @hass_callback
-    def async_register_callback(
+    def async_register_scan_request_callback(
         self,
-        _callback: Callable[[UsbServiceInfo], None],
-        matcher: USBCallbackMatcher | None = None,
+        _callback: CALLBACK_TYPE,
     ) -> CALLBACK_TYPE:
         """Register a callback."""
-        callback_entry = (_callback, matcher)
-        self._callbacks.append(callback_entry)
+        self._request_callbacks.append(_callback)
 
         @hass_callback
         def _async_remove_callback() -> None:
-            self._callbacks.remove(callback_entry)
+            self._request_callbacks.remove(_callback)
 
         return _async_remove_callback
 
@@ -256,7 +250,7 @@ class USBDiscovery:
         self.seen.add(device_tuple)
 
         matched = [matcher for matcher in self.usb if _is_matching(device, matcher)]
-        if not matched and not self._callbacks:
+        if not matched:
             return
 
         service_info = UsbServiceInfo(
@@ -267,16 +261,6 @@ class USBDiscovery:
             manufacturer=device.manufacturer,
             description=device.description,
         )
-
-        for _callback, matcher in self._callbacks:
-            if matcher is None or _is_matching(device, matcher):
-                try:
-                    _callback(service_info)
-                except Exception:  # pylint: disable=broad-except
-                    _LOGGER.exception("Error in usb callback")
-
-        if not matched:
-            return
 
         sorted_by_most_targeted = sorted(matched, key=lambda item: -len(item))
         most_matched_fields = len(sorted_by_most_targeted[0])
@@ -302,15 +286,17 @@ class USBDiscovery:
                 continue
             self._async_process_discovered_usb_device(usb_device_from_port(port))
 
-    def scan_serial(self) -> None:
-        """Scan serial ports."""
-        self.hass.add_job(self._async_process_ports, comports())
-
     async def _async_scan_serial(self) -> None:
         """Scan serial ports."""
         self._async_process_ports(await self.hass.async_add_executor_job(comports))
 
-    async def async_request_scan_serial(self) -> None:
+    async def _async_scan(self) -> None:
+        """Scan for USB devices and notify callbacks to scan as well."""
+        for callback in self._request_callbacks:
+            callback()
+        await self._async_scan_serial()
+
+    async def async_request_scan(self) -> None:
         """Request a serial scan."""
         if not self._request_debouncer:
             self._request_debouncer = Debouncer(
@@ -318,7 +304,7 @@ class USBDiscovery:
                 _LOGGER,
                 cooldown=REQUEST_SCAN_COOLDOWN,
                 immediate=True,
-                function=self._async_scan_serial,
+                function=self._async_scan,
             )
         await self._request_debouncer.async_call()
 
@@ -334,5 +320,5 @@ async def websocket_usb_scan(
     """Scan for new usb devices."""
     usb_discovery: USBDiscovery = hass.data[DOMAIN]
     if not usb_discovery.observer_active:
-        await usb_discovery.async_request_scan_serial()
+        await usb_discovery.async_request_scan()
     connection.send_result(msg["id"])
