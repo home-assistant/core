@@ -299,7 +299,7 @@ async def test_command_template_variables(hass, mqtt_mock_entry_with_yaml_config
                     "command_topic": topic,
                     "name": "Test Select",
                     "options": ["milk", "beer"],
-                    "command_template": '{"option": "{{ value }}", "entity_id": "{{ entity_id }}", "name": "{{ name }}"}',
+                    "command_template": '{"option": "{{ value }}", "entity_id": "{{ entity_id }}", "name": "{{ name }}", "this_object_state": "{{ this.state }}"}',
                 }
             },
         )
@@ -319,7 +319,7 @@ async def test_command_template_variables(hass, mqtt_mock_entry_with_yaml_config
 
     mqtt_mock.async_publish.assert_called_once_with(
         topic,
-        '{"option": "beer", "entity_id": "select.test_select", "name": "Test Select"}',
+        '{"option": "beer", "entity_id": "select.test_select", "name": "Test Select", "this_object_state": "milk"}',
         0,
         False,
     )
@@ -359,9 +359,15 @@ async def test_value_template_value(hass):
     # test value template with entity
     entity = Entity()
     entity.hass = hass
+    entity.entity_id = "select.test"
     tpl = template.Template("{{ value_json.id }}")
     val_tpl = mqtt.MqttValueTemplate(tpl, entity=entity)
     assert val_tpl.async_render_with_possible_json_value('{"id": 4321}') == "4321"
+
+    # test this object in a template
+    tpl2 = template.Template("{{ this.entity_id }}")
+    val_tpl2 = mqtt.MqttValueTemplate(tpl2, entity=entity)
+    assert val_tpl2.async_render_with_possible_json_value("bla") == "select.test"
 
 
 async def test_service_call_without_topic_does_not_publish(

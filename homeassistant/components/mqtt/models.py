@@ -17,6 +17,8 @@ from homeassistant.helpers.typing import TemplateVarsType
 
 _SENTINEL = object()
 
+ATTR_THIS = "this"
+
 PublishPayloadType = Union[str, bytes, int, float, None]
 
 
@@ -57,7 +59,7 @@ class MqttCommandTemplate:
         entity: Entity | None = None,
     ) -> None:
         """Instantiate a command template."""
-        self._attr_command_template = command_template
+        self._command_template = command_template
         if command_template is None:
             return
 
@@ -91,17 +93,21 @@ class MqttCommandTemplate:
 
             return payload
 
-        if self._attr_command_template is None:
+        if self._command_template is None:
             return value
 
-        values = {"value": value}
+        values: dict[str, Any] = {"value": value}
         if self._entity:
             values[ATTR_ENTITY_ID] = self._entity.entity_id
             values[ATTR_NAME] = self._entity.name
+            if self._command_template.hass:
+                values[ATTR_THIS] = template.TemplateStateFromEntityId(
+                    self._command_template.hass, self._entity.entity_id
+                )
         if variables is not None:
             values.update(variables)
         return _convert_outgoing_payload(
-            self._attr_command_template.async_render(values, parse_result=False)
+            self._command_template.async_render(values, parse_result=False)
         )
 
 
@@ -150,6 +156,10 @@ class MqttValueTemplate:
         if self._entity:
             values[ATTR_ENTITY_ID] = self._entity.entity_id
             values[ATTR_NAME] = self._entity.name
+            if self._value_template.hass:
+                values[ATTR_THIS] = template.TemplateStateFromEntityId(
+                    self._value_template.hass, self._entity.entity_id
+                )
 
         if default == _SENTINEL:
             return self._value_template.async_render_with_possible_json_value(
