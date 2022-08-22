@@ -158,7 +158,7 @@ class FoobotSensor(SensorEntity):
             data = None
         return data
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest data."""
         await self.foobot_data.async_update()
 
