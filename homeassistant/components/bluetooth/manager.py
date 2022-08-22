@@ -290,19 +290,19 @@ class BluetoothManager:
 
         service_info: BluetoothServiceInfoBleak | None = None
         for connectable_callback in (True, False):
-            callback_type = self._get_callbacks_by_type(connectable_callback)
-            for callback, matcher in callback_type:
-                if matcher is None or ble_device_matches(matcher, new_adv):
-                    if service_info is None:
-                        service_info = (
-                            BluetoothServiceInfoBleak.from_advertisement_with_source(
-                                device, advertisement_data, source, connectable
-                            )
+            for callback, matcher in self._get_callbacks_by_type(connectable_callback):
+                if matcher and not ble_device_matches(matcher, new_adv):
+                    continue
+                if service_info is None:
+                    service_info = (
+                        BluetoothServiceInfoBleak.from_advertisement_with_source(
+                            device, advertisement_data, source, connectable
                         )
-                    try:
-                        callback(service_info, BluetoothChange.ADVERTISEMENT)
-                    except Exception:  # pylint: disable=broad-except
-                        _LOGGER.exception("Error in bluetooth callback")
+                    )
+                try:
+                    callback(service_info, BluetoothChange.ADVERTISEMENT)
+                except Exception:  # pylint: disable=broad-except
+                    _LOGGER.exception("Error in bluetooth callback")
 
         if not matched_domains:
             return
