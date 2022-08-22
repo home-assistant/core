@@ -35,17 +35,6 @@ MANAGER: BluetoothManager | None = None
 
 
 @dataclass
-class BluetoothAdvertisement:
-    """Bluetooth advertisement history."""
-
-    ble_device: BLEDevice
-    advertisement_data: AdvertisementData
-    time: float
-    source: str
-    connectable: bool  # If the device can be connected to via the BLEDevice
-
-
-@dataclass
 class BluetoothServiceInfoBleak(BluetoothServiceInfo):
     """BluetoothServiceInfo with bleak data.
 
@@ -58,26 +47,7 @@ class BluetoothServiceInfoBleak(BluetoothServiceInfo):
     device: BLEDevice
     advertisement: AdvertisementData
     connectable: bool
-
-    @classmethod
-    def from_bluetooth_advertisement(
-        cls, adv: BluetoothAdvertisement
-    ) -> BluetoothServiceInfoBleak:
-        """Create a BluetoothServiceInfoBleak from an advertisement."""
-        adv_data = adv.advertisement_data
-        device = adv.ble_device
-        return cls(
-            name=adv_data.local_name or device.name or device.address,
-            address=device.address,
-            rssi=device.rssi,
-            manufacturer_data=adv_data.manufacturer_data,
-            service_data=adv_data.service_data,
-            service_uuids=adv_data.service_uuids,
-            source=adv.source,
-            device=device,
-            advertisement=adv_data,
-            connectable=adv.connectable,
-        )
+    time: float
 
 
 class BluetoothScanningMode(Enum):
@@ -90,7 +60,7 @@ class BluetoothScanningMode(Enum):
 BluetoothChange = Enum("BluetoothChange", "ADVERTISEMENT")
 BluetoothCallback = Callable[[BluetoothServiceInfoBleak, BluetoothChange], None]
 ProcessAdvertisementCallback = Callable[[BluetoothServiceInfoBleak], bool]
-BluetoothManagerCallback = Callable[[BluetoothAdvertisement], None]
+BluetoothManagerCallback = Callable[[BluetoothServiceInfoBleak], None]
 
 
 class BaseHaScanner:

@@ -9,7 +9,7 @@ from lru import LRU  # pylint: disable=no-name-in-module
 
 from homeassistant.loader import BluetoothMatcher, BluetoothMatcherOptional
 
-from .models import BluetoothAdvertisement
+from .models import BluetoothServiceInfoBleak
 
 if TYPE_CHECKING:
     from collections.abc import MutableMapping
@@ -90,11 +90,11 @@ class IntegrationMatcher:
         """Return the matches by type."""
         return self._matched_connectable if connectable else self._matched
 
-    def match_domains(self, adv: BluetoothAdvertisement) -> set[str]:
+    def match_domains(self, service_info: BluetoothServiceInfoBleak) -> set[str]:
         """Return the domains that are matched."""
-        device = adv.ble_device
-        adv_data = adv.advertisement_data
-        matched = self._get_matched_by_type(adv.connectable)
+        device = service_info.device
+        adv_data = service_info.advertisement
+        matched = self._get_matched_by_type(service_info.connectable)
         matched_domains: set[str] = set()
         if (previous_match := matched.get(device.address)) and seen_all_fields(
             previous_match, adv_data
@@ -104,7 +104,7 @@ class IntegrationMatcher:
         matched_domains = {
             matcher["domain"]
             for matcher in self._integration_matchers
-            if ble_device_matches(matcher, adv)
+            if ble_device_matches(matcher, service_info)
         }
         if not matched_domains:
             return matched_domains
@@ -123,17 +123,17 @@ class IntegrationMatcher:
 
 def ble_device_matches(
     matcher: BluetoothCallbackMatcher | BluetoothMatcher,
-    adv: BluetoothAdvertisement,
+    service_info: BluetoothServiceInfoBleak,
 ) -> bool:
     """Check if a ble device and advertisement_data matches the matcher."""
-    device = adv.ble_device
+    device = service_info.device
     if (address := matcher.get(ADDRESS)) is not None and device.address != address:
         return False
 
-    if matcher.get(CONNECTABLE) and not adv.connectable:
+    if matcher.get(CONNECTABLE) and not service_info.connectable:
         return False
 
-    adv_data = adv.advertisement_data
+    adv_data = service_info.advertisement
     if (local_name := matcher.get(LOCAL_NAME)) is not None and not fnmatch.fnmatch(
         adv_data.local_name or device.name or device.address,
         local_name,

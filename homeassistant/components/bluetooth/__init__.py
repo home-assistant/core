@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from asyncio import Future
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 import platform
 from typing import TYPE_CHECKING
 
@@ -32,7 +32,6 @@ from .manager import BluetoothManager
 from .match import BluetoothCallbackMatcher, IntegrationMatcher
 from .models import (
     BaseHaScanner,
-    BluetoothAdvertisement,
     BluetoothCallback,
     BluetoothChange,
     BluetoothManagerCallback,
@@ -52,7 +51,6 @@ if TYPE_CHECKING:
 
 
 __all__ = [
-    "BluetoothAdvertisement",
     "async_ble_device_from_address",
     "async_discovered_service_info",
     "async_get_scanner",
@@ -83,7 +81,7 @@ def async_get_scanner(hass: HomeAssistant) -> HaBleakScannerWrapper:
 @hass_callback
 def async_discovered_service_info(
     hass: HomeAssistant, connectable: bool = True
-) -> list[BluetoothServiceInfoBleak]:
+) -> Iterable[BluetoothServiceInfoBleak]:
     """Return the discovered devices list."""
     if DATA_MANAGER not in hass.data:
         return []
