@@ -92,7 +92,7 @@ class ESPHomeScannner(BaseHaScanner):
         self._discovered_devices[address] = device
         self._discovered_device_timestamps[address] = now
         adv_data = AdvertisementData(  # type: ignore[no-untyped-call]
-            local_name=adv.name,
+            local_name=None if adv.name == "" else adv.name,
             manufacturer_data=adv.manufacturer_data,
             service_data=adv.service_data,
             service_uuids=adv.service_uuids,
