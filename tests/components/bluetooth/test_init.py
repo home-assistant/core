@@ -341,6 +341,60 @@ async def test_discovery_match_by_service_uuid_not_connectable(
         assert len(_domains_from_mock_config_flow(mock_config_flow)) == 0
 
 
+async def test_discovery_match_by_name_connectable_false(
+    hass, mock_bleak_scanner_start
+):
+    """Test bluetooth discovery match by name and the integration will take non-connectable devices."""
+    mock_bt = [
+        {
+            "domain": "qingping",
+            "connectable": False,
+            "local_name": "Qingping*",
+        }
+    ]
+    with patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
+    ), patch.object(hass.config_entries.flow, "async_init") as mock_config_flow:
+        await async_setup_with_default_adapter(hass)
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        assert len(mock_bleak_scanner_start.mock_calls) == 1
+
+        wrong_device = BLEDevice("44:44:33:11:23:45", "wrong_name")
+        wrong_adv = AdvertisementData(local_name="wrong_name", service_uuids=[])
+
+        inject_advertisement_with_time_and_source_connectable(
+            hass, wrong_device, wrong_adv, time.monotonic(), "any", False
+        )
+        await hass.async_block_till_done()
+
+        assert len(_domains_from_mock_config_flow(mock_config_flow)) == 0
+
+        qingping_device = BLEDevice("44:44:33:11:23:45", "Qingping Motion & Light")
+        qingping_adv = AdvertisementData(
+            local_name="Qingping Motion & Light",
+            service_data={
+                "0000fdcd-0000-1000-8000-00805f9b34fb": b"H\x12\xcd\xd5`4-X\x08\x04\x01\xe8\x00\x00\x0f\x01{"
+            },
+        )
+
+        inject_advertisement_with_time_and_source_connectable(
+            hass, qingping_device, qingping_adv, time.monotonic(), "any", False
+        )
+        await hass.async_block_till_done()
+
+        assert _domains_from_mock_config_flow(mock_config_flow) == ["qingping"]
+
+        mock_config_flow.reset_mock()
+        # Make sure it will also take a connectable device
+        inject_advertisement_with_time_and_source_connectable(
+            hass, qingping_device, qingping_adv, time.monotonic(), "any", True
+        )
+        await hass.async_block_till_done()
+        assert _domains_from_mock_config_flow(mock_config_flow) == ["qingping"]
+
+
 async def test_discovery_match_by_local_name(
     hass, mock_bleak_scanner_start, macos_adapter
 ):
