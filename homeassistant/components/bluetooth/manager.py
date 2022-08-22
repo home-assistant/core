@@ -60,11 +60,13 @@ def _prefer_previous_adv(old: AdvertisementHistory, new: AdvertisementHistory) -
         # If the old advertisement is stale, any new advertisement is preferred
         if new.source != old.source:
             _LOGGER.debug(
-                "%s (%s): Switching from %s to %s (time_elapsed:%s > stale_seconds:%s)",
+                "%s (%s): Switching from %s[%s] to %s[%s] (time_elapsed:%s > stale_seconds:%s)",
                 new.advertisement_data.local_name,
                 new.ble_device.address,
                 old.source,
+                old.connectable,
                 new.source,
+                new.connectable,
                 new.time - old.time,
                 STALE_ADVERTISEMENT_SECONDS,
             )
@@ -73,11 +75,13 @@ def _prefer_previous_adv(old: AdvertisementHistory, new: AdvertisementHistory) -
         # If new advertisement is RSSI_SWITCH_THRESHOLD more, the new one is preferred
         if new.source != old.source:
             _LOGGER.debug(
-                "%s (%s): Switching from %s to %s (new_rssi:%s - threadshold:%s > old_rssi:%s)",
+                "%s (%s): Switching from %s[%s] to %s[%s] (new_rssi:%s - threadshold:%s > old_rssi:%s)",
                 new.advertisement_data.local_name,
                 new.ble_device.address,
                 old.source,
+                old.connectable,
                 new.source,
+                new.connectable,
                 new.ble_device.rssi,
                 RSSI_SWITCH_THRESHOLD,
                 old.ble_device.rssi,
