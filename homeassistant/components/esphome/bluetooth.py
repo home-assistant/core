@@ -35,7 +35,7 @@ async def async_connect_scanner(
     )
     entry.async_on_unload(async_register_scanner(hass, scanner, False))
     entry.async_on_unload(scanner.async_setup())
-    # await cli.subscribe_bluetooth_le_advertisements(scanner.async_on_advertisement)
+    await cli.subscribe_bluetooth_le_advertisements(scanner.async_on_advertisement)
 
 
 class ESPHomeScannner(BaseHaScanner):
