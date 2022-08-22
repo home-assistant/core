@@ -2,18 +2,17 @@
 from datetime import timedelta
 from unittest.mock import MagicMock, PropertyMock, patch
 
+import pytest
+
 from homeassistant.components.risco import (
     LAST_EVENT_TIMESTAMP_KEY,
     CannotConnectError,
     UnauthorizedError,
 )
-from homeassistant.components.risco.const import DOMAIN
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt
 
-from .util import TEST_CLOUD_CONFIG, setup_risco_cloud, setup_risco_local
-
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import async_fire_time_changed
 
 ENTITY_IDS = {
     "Alarm": "sensor.risco_test_site_name_alarm_events",
@@ -108,34 +107,23 @@ CATEGORIES_TO_EVENTS = {
 }
 
 
-async def test_cannot_connect(hass):
-    """Test connection error."""
-
+@pytest.fixture
+def _no_zones_and_partitions():
     with patch(
-        "homeassistant.components.risco.RiscoCloud.login",
-        side_effect=CannotConnectError,
+        "homeassistant.components.risco.RiscoLocal.zones",
+        new_callable=PropertyMock(return_value=[]),
+    ), patch(
+        "homeassistant.components.risco.RiscoLocal.partitions",
+        new_callable=PropertyMock(return_value=[]),
     ):
-        config_entry = MockConfigEntry(domain=DOMAIN, data=TEST_CLOUD_CONFIG)
-        config_entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    registry = er.async_get(hass)
-    for id in ENTITY_IDS.values():
-        assert not registry.async_is_registered(id)
+        yield
 
 
-async def test_unauthorized(hass):
-    """Test unauthorized error."""
-
-    with patch(
-        "homeassistant.components.risco.RiscoCloud.login",
-        side_effect=UnauthorizedError,
-    ):
-        config_entry = MockConfigEntry(domain=DOMAIN, data=TEST_CLOUD_CONFIG)
-        config_entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+@pytest.mark.parametrize("error", [CannotConnectError, UnauthorizedError])
+async def test_error_on_login(hass, login_with_error, cloud_config_entry):
+    """Test error on login."""
+    await hass.config_entries.async_setup(cloud_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     registry = er.async_get(hass)
     for id in ENTITY_IDS.values():
@@ -165,23 +153,31 @@ def _check_state(hass, category, entity_id):
         assert "zone_entity_id" not in state.attributes
 
 
-async def test_cloud_setup(hass, two_zone_cloud):
-    """Test entity setup."""
+@pytest.fixture
+def _set_utc_time_zone(hass):
     hass.config.set_time_zone("UTC")
 
+
+@pytest.fixture
+def _save_mock():
     with patch(
         "homeassistant.components.risco.Store.async_save",
     ) as save_mock:
-        await setup_risco_cloud(hass, *TEST_EVENTS)
-        registry = er.async_get(hass)
-        for id in ENTITY_IDS.values():
-            assert registry.async_is_registered(id)
+        yield save_mock
 
-        save_mock.assert_awaited_once_with(
-            {LAST_EVENT_TIMESTAMP_KEY: TEST_EVENTS[0].time}
-        )
-        for category, entity_id in ENTITY_IDS.items():
-            _check_state(hass, category, entity_id)
+
+@pytest.mark.parametrize("events", [TEST_EVENTS])
+async def test_cloud_setup(
+    hass, two_zone_cloud, _set_utc_time_zone, _save_mock, setup_risco_cloud
+):
+    """Test entity setup."""
+    registry = er.async_get(hass)
+    for id in ENTITY_IDS.values():
+        assert registry.async_is_registered(id)
+
+    _save_mock.assert_awaited_once_with({LAST_EVENT_TIMESTAMP_KEY: TEST_EVENTS[0].time})
+    for category, entity_id in ENTITY_IDS.items():
+        _check_state(hass, category, entity_id)
 
     with patch(
         "homeassistant.components.risco.RiscoCloud.get_events", return_value=[]
@@ -197,16 +193,8 @@ async def test_cloud_setup(hass, two_zone_cloud):
         _check_state(hass, category, entity_id)
 
 
-async def test_local_setup(hass):
+async def test_local_setup(hass, setup_risco_local, _no_zones_and_partitions):
     """Test entity setup."""
-    with patch(
-        "homeassistant.components.risco.RiscoLocal.zones",
-        new_callable=PropertyMock(return_value=[]),
-    ), patch(
-        "homeassistant.components.risco.RiscoLocal.partitions",
-        new_callable=PropertyMock(return_value=[]),
-    ):
-        await setup_risco_local(hass)
-        registry = er.async_get(hass)
-        for id in ENTITY_IDS.values():
-            assert not registry.async_is_registered(id)
+    registry = er.async_get(hass)
+    for id in ENTITY_IDS.values():
+        assert not registry.async_is_registered(id)
