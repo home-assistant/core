@@ -21,7 +21,6 @@ from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
     ADAPTER_ADDRESS,
-    SOURCE_LOCAL,
     STALE_ADVERTISEMENT_SECONDS,
     UNAVAILABLE_TRACK_SECONDS,
     AdapterDetails,
@@ -289,8 +288,10 @@ class BluetoothManager:
                     matcher, device, advertisement_data, connectable_callback
                 ):
                     if service_info is None:
-                        service_info = BluetoothServiceInfoBleak.from_advertisement(
-                            device, advertisement_data, source
+                        service_info = (
+                            BluetoothServiceInfoBleak.from_advertisement_with_source(
+                                device, advertisement_data, source, connectable
+                            )
                         )
                     try:
                         callback(service_info, BluetoothChange.ADVERTISEMENT)
@@ -300,8 +301,8 @@ class BluetoothManager:
         if not matched_domains:
             return
         if service_info is None:
-            service_info = BluetoothServiceInfoBleak.from_advertisement(
-                device, advertisement_data, source
+            service_info = BluetoothServiceInfoBleak.from_advertisement_with_source(
+                device, advertisement_data, source, connectable
             )
         for domain in matched_domains:
             discovery_flow.async_create_flow(
@@ -355,8 +356,11 @@ class BluetoothManager:
         ):
             try:
                 callback(
-                    BluetoothServiceInfoBleak.from_advertisement(
-                        history.ble_device, history.advertisement_data, history.source
+                    BluetoothServiceInfoBleak.from_advertisement_with_source(
+                        history.ble_device,
+                        history.advertisement_data,
+                        history.source,
+                        connectable,
                     ),
                     BluetoothChange.ADVERTISEMENT,
                 )
@@ -387,8 +391,11 @@ class BluetoothManager:
         """Return if the address is present."""
         all_history = self._get_history_by_type(connectable)
         return [
-            BluetoothServiceInfoBleak.from_advertisement(
-                history.ble_device, history.advertisement_data, SOURCE_LOCAL
+            BluetoothServiceInfoBleak.from_advertisement_with_source(
+                history.ble_device,
+                history.advertisement_data,
+                history.source,
+                connectable,
             )
             for history in all_history.values()
         ]

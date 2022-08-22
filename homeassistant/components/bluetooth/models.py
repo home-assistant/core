@@ -57,10 +57,15 @@ class BluetoothServiceInfoBleak(BluetoothServiceInfo):
 
     device: BLEDevice
     advertisement: AdvertisementData
+    connectable: bool
 
     @classmethod
-    def from_advertisement(
-        cls, device: BLEDevice, advertisement_data: AdvertisementData, source: str
+    def from_advertisement_with_source(
+        cls,
+        device: BLEDevice,
+        advertisement_data: AdvertisementData,
+        source: str,
+        connectable: bool,
     ) -> BluetoothServiceInfoBleak:
         """Create a BluetoothServiceInfoBleak from an advertisement."""
         return cls(
@@ -73,6 +78,7 @@ class BluetoothServiceInfoBleak(BluetoothServiceInfo):
             source=source,
             device=device,
             advertisement=advertisement_data,
+            connectable=connectable,
         )
 
 

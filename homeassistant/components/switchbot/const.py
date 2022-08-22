@@ -23,16 +23,22 @@ class SupportedModels(StrEnum):
     MOTION = "motion"
 
 
-SUPPORTED_MODEL_TYPES = {
+CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.BOT: SupportedModels.BOT,
     SwitchbotModel.CURTAIN: SupportedModels.CURTAIN,
-    SwitchbotModel.METER: SupportedModels.HYGROMETER,
-    SwitchbotModel.CONTACT_SENSOR: SupportedModels.CONTACT,
     SwitchbotModel.PLUG_MINI: SupportedModels.PLUG,
-    SwitchbotModel.MOTION_SENSOR: SupportedModels.MOTION,
     SwitchbotModel.COLOR_BULB: SupportedModels.BULB,
 }
 
+NON_CONNECTABLE_SUPPORTED_MODEL_TYPES = {
+    SwitchbotModel.CONTACT_SENSOR: SupportedModels.CONTACT,
+    SwitchbotModel.MOTION_SENSOR: SupportedModels.MOTION,
+}
+
+SUPPORTED_MODEL_TYPES = {
+    **CONNECTABLE_SUPPORTED_MODEL_TYPES,
+    **NON_CONNECTABLE_SUPPORTED_MODEL_TYPES,
+}
 
 # Config Defaults
 DEFAULT_RETRY_COUNT = 3
