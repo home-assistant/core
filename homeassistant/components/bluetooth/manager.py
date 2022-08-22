@@ -62,7 +62,7 @@ def _prefer_previous_adv(
         # If the old advertisement is stale, any new advertisement is preferred
         if new.source != old.source:
             _LOGGER.debug(
-                "%s (%s): Switching from %s[%s] to %s[%s] (time_elapsed:%s > stale_seconds:%s)",
+                "%s (%s): Switching from %s[%s] to %s[%s] (time elapsed:%s > stale seconds:%s)",
                 new.advertisement.local_name,
                 new.device.address,
                 old.source,
@@ -77,7 +77,7 @@ def _prefer_previous_adv(
         # If new advertisement is RSSI_SWITCH_THRESHOLD more, the new one is preferred
         if new.source != old.source:
             _LOGGER.debug(
-                "%s (%s): Switching from %s[%s] to %s[%s] (new_rssi:%s - threadshold:%s > old_rssi:%s)",
+                "%s (%s): Switching from %s[%s] to %s[%s] (new rssi:%s - threshold:%s > old rssi:%s)",
                 new.advertisement.local_name,
                 new.device.address,
                 old.source,
