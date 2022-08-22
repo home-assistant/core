@@ -1,26 +1,15 @@
-# Service ID
 teach_in_device:
-  # Service name as shown in UI
   name: Teach-In Device
-  # Description of the service
   description: Start the Teach-In-Process between the dongle and a device. During the teach-in normal packets are ignored
-  # Different fields that the service accepts
   fields:
-    # Key of the field
     teach_in_time:
-      # Field name as shown in UI
       name: Teach-In time
-      # Description of the field
       description:
         "How long shall the teach-in process be active (in seconds) (max: 600). During the process no
         other packets get processed!"
-      # Whether field is required (default = false)
       required: false
-      # Advanced fields are only shown when the advanced mode is enabled for the user (default = false)
       advanced: false
-      # Example value that can be passed for this field
       example: 60
-      # default value
       default: 60
 
     base_id:
@@ -33,4 +22,3 @@ teach_in_device:
       advanced: true
       example: 01BEEF23
       default: ""
-
