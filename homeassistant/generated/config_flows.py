@@ -57,6 +57,7 @@ FLOWS = {
         "brother",
         "brunt",
         "bsblan",
+        "bthome_ble",
         "buienradar",
         "canary",
         "cast",
