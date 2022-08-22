@@ -6,7 +6,7 @@ from __future__ import annotations
 
 # fmt: off
 
-BLUETOOTH: list[dict[str, str | int | list[int]]] = [
+BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     {
         "domain": "fjaraskupan",
         "manufacturer_id": 20296,
