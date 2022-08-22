@@ -182,6 +182,8 @@ def is_callback(func: Callable[..., Any]) -> bool:
 def async_get_hass() -> HomeAssistant:
     """Return the HomeAssistant instance.
 
+    Raises LookupError if no HomeAssistant instance is available.
+
     This should be used where it's very cumbersome or downright impossible to pass
     hass to the code which needs it.
     """
