@@ -92,8 +92,8 @@ BluetoothManagerCallback = Callable[[AdvertisementHistory], None]
 class BaseHaScanner:
     """Base class for Ha Scanners."""
 
-    @abstractmethod
     @property
+    @abstractmethod
     def discovered_devices(self) -> list[BLEDevice]:
         """Return a list of discovered devices."""
 

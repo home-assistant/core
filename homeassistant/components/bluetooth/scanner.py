@@ -173,7 +173,7 @@ class HaScanner(BaseHaScanner):
         for callback in self._callbacks:
             callback(
                 AdvertisementHistory(
-                    ble_device, advertisement_data, callback_time, self.source
+                    ble_device, advertisement_data, callback_time, self.source, True
                 )
             )
 

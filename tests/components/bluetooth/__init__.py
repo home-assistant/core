@@ -6,7 +6,12 @@ from unittest.mock import patch
 
 from bleak.backends.scanner import AdvertisementData, BLEDevice
 
-from homeassistant.components.bluetooth import DOMAIN, SOURCE_LOCAL, models
+from homeassistant.components.bluetooth import (
+    DOMAIN,
+    SOURCE_LOCAL,
+    AdvertisementHistory,
+    models,
+)
 from homeassistant.components.bluetooth.const import DEFAULT_ADDRESS
 from homeassistant.components.bluetooth.manager import BluetoothManager
 from homeassistant.core import HomeAssistant
@@ -36,7 +41,9 @@ def inject_advertisement_with_time_and_source(
     device: BLEDevice, adv: AdvertisementData, time: float, source: str
 ) -> None:
     """Inject an advertisement into the manager from a specific source at a time."""
-    return _get_manager().scanner_adv_received(device, adv, time, source)
+    return _get_manager().scanner_adv_received(
+        AdvertisementHistory(device, adv, time, source, True)
+    )
 
 
 def patch_all_discovered_devices(mock_discovered: list[BLEDevice]) -> None:
