@@ -183,16 +183,18 @@ class BluetoothManager:
     @hass_callback
     def async_all_discovered_devices(self, connectable: bool) -> Iterable[BLEDevice]:
         """Return all of discovered devices from all the scanners including duplicates."""
-        scanners = self._get_scanners_by_type(connectable)
         return itertools.chain.from_iterable(
-            scanner.discovered_devices for scanner in scanners
+            scanner.discovered_devices
+            for scanner in self._get_scanners_by_type(connectable)
         )
 
     @hass_callback
     def async_discovered_devices(self, connectable: bool) -> list[BLEDevice]:
         """Return all of combined best path to discovered from all the scanners."""
-        all_history = self._get_history_by_type(connectable)
-        return [history.device for history in all_history.values()]
+        return [
+            history.device
+            for history in self._get_history_by_type(connectable).values()
+        ]
 
     @hass_callback
     def async_setup_unavailable_tracking(self) -> None:
@@ -325,10 +327,9 @@ class BluetoothManager:
         if CONNECTABLE not in matcher:
             matcher[CONNECTABLE] = True
         connectable = matcher[CONNECTABLE]
-        callbacks = self._get_cbks_by_type(connectable)
-        all_history = self._get_history_by_type(connectable)
 
         callback_entry = (callback, matcher)
+        callbacks = self._get_cbks_by_type(connectable)
         callbacks.append(callback_entry)
 
         @hass_callback
@@ -338,6 +339,7 @@ class BluetoothManager:
         # If we have history for the subscriber, we can trigger the callback
         # immediately with the last packet so the subscriber can see the
         # device.
+        all_history = self._get_history_by_type(connectable)
         if (
             (address := matcher.get(ADDRESS))
             and (service_info := all_history.get(address))
