@@ -240,7 +240,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass.async_create_task(discovery_debouncer.async_call())
 
     cancel = usb.async_register_scan_request_callback(hass, _async_trigger_discovery)
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, lambda event: cancel())
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, hass_callback(lambda event: cancel())
+    )
 
     return True
 
