@@ -21,6 +21,7 @@ from .const import (
     CONNECTABLE_SUPPORTED_MODEL_TYPES,
     DEFAULT_RETRY_COUNT,
     DOMAIN,
+    NON_CONNECTABLE_SUPPORTED_MODEL_TYPES,
     SUPPORTED_MODEL_TYPES,
 )
 
@@ -71,9 +72,9 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         parsed = parse_advertisement_data(
             discovery_info.device, discovery_info.advertisement
         )
-        model_name = parsed.data.get("modelName")
-        if not parsed or model_name not in SUPPORTED_MODEL_TYPES:
+        if not parsed or parsed.data.get("modelName") not in SUPPORTED_MODEL_TYPES:
             return self.async_abort(reason="not_supported")
+        model_name = parsed.data.get("modelName")
         if (
             not discovery_info.connectable
             and model_name in CONNECTABLE_SUPPORTED_MODEL_TYPES
@@ -161,9 +162,9 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
                     continue
                 model_name = parsed.data.get("modelName")
                 if (
-                    not discovery_info.connectable
+                    discovery_info.connectable
                     and model_name in CONNECTABLE_SUPPORTED_MODEL_TYPES
-                ):
+                ) or model_name in NON_CONNECTABLE_SUPPORTED_MODEL_TYPES:
                     self._discovered_advs[address] = parsed
 
         if not self._discovered_advs:

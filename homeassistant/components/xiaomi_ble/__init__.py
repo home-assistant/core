@@ -67,11 +67,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # directly to the Xiaomi code
         # Make sure the device we have is one that we can connect with
         # in case its coming from a passive scanner
-        if not (
-            connectable_device := async_ble_device_from_address(
-                hass, service_info.device.address, True
-            )
+        if service_info.connectable:
+            connectable_device = service_info.device
+        elif device := async_ble_device_from_address(
+            hass, service_info.device.address, True
         ):
+            connectable_device = device
+        else:
             # We have no bluetooth controller that is in range of
             # the device to poll it
             raise RuntimeError(
