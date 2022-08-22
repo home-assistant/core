@@ -188,7 +188,10 @@ class BlockSleepingClimate(
     def hvac_mode(self) -> HVACMode:
         """HVAC current mode."""
         if self.device_block is None:
-            return HVACMode(self.last_state.state) if self.last_state else HVACMode.OFF
+            if self.last_state and self.last_state.state in list(HVACMode):
+                return HVACMode(self.last_state.state)
+            return HVACMode.OFF
+
         if self.device_block.mode is None or self._check_is_off():
             return HVACMode.OFF
 
