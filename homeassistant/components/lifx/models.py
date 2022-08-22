@@ -2,10 +2,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from aiolifx.connection import LIFXConnection
 
-from .coordinator import LIFXLightUpdateCoordinator, LIFXSensorUpdateCoordinator
+if TYPE_CHECKING:
+    from .coordinator import LIFXLightUpdateCoordinator, LIFXSensorUpdateCoordinator
 
 
 @dataclass

@@ -245,52 +245,48 @@ class LIFXSensorUpdateCoordinator(LIFXUpdateCoordinator):
             Debouncer(hass, _LOGGER, cooldown=0, immediate=True),
         )
 
-        self.update_rssi: bool = False
-        self.update_uptime: bool = False
-        self.update_hev_cycle_duration: bool = False
-        self.update_hev_cycle_remaining: bool = False
-        self.update_hev_cycle_last_power: bool = False
-        self.update_last_hev_cycle_result: bool = False
+        self.enabled_sensors: list[str] = []
 
         self.rssi: int = 0
         self.uptime: int = 0
+        self.hev_cycle_status: bool = False
         self.hev_cycle_duration: int = 7200
         self.hev_cycle_remaining: int = 0
         self.hev_cycle_last_power: bool = False
         self.last_hev_cycle_result: str = STATE_UNKNOWN
 
-    def async_enable_sensor(self, sensor_name: str) -> Callable[[], None]:
+    def async_enable_sensor(self, sensor: str) -> Callable[[], None]:
         """Enable updates for sensor."""
-        setattr(self, f"update_{sensor_name}", True)
-        _LOGGER.debug(
-            "Enabled %s updates for %s (%s)",
-            sensor_name,
-            self.device.label,
-            self.device.ip_addr,
-        )
+        if sensor not in self.enabled_sensors:
+            self.enabled_sensors.append(sensor)
 
         @callback
         def disable_sensor() -> None:
             """Disable updates for sensor."""
-            setattr(self, f"update_{sensor_name}", False)
-            _LOGGER.debug(
-                "Disabled %s updates for %s (%s)",
-                sensor_name,
-                self.device.label,
-                self.device.ip_addr,
-            )
+            if sensor in self.enabled_sensors:
+                self.enabled_sensors.remove(sensor)
 
         return disable_sensor
 
-    def async_get_native_value(self, sensor_name: str) -> StateType:
+    def async_get_native_value(self, sensor: str) -> StateType | bool:
         """Return the current native value for sensor."""
-        return getattr(self, sensor_name, None)
+        return getattr(self, sensor, None)
+
+    def async_get_extra_state_attribute(
+        self, attribute: str
+    ) -> str | int | bool | None:
+        """Return extra state attributes available for the sensor."""
+        return getattr(self, attribute, None)
 
     def get_rssi_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement for the RSSI sensor."""
         if AwesomeVersion(self.device.host_firmware_version) > RSSI_DBM_FW:
             return SIGNAL_STRENGTH_DECIBELS_MILLIWATT
         return SIGNAL_STRENGTH_DECIBELS
+
+    def get_hev_cycle_status(self) -> bool:
+        """Return True if a HEV cycle is currently active."""
+        return self.hev_cycle_status
 
     async def _async_update_data(self) -> None:
         """Update sensor data for enabled sensors."""
@@ -312,7 +308,7 @@ class LIFXSensorUpdateCoordinator(LIFXUpdateCoordinator):
                 self.rssi = rssi
 
         async def _async_update_hev_cycle_status() -> None:
-            """Fetch current HEV cycle status."""
+            """Fetch current HEV cycle status and previous HEV cycle result."""
             status = hev_cycle_status(
                 await async_execute_lifx(self.device.get_hev_cycle)
             )
@@ -323,8 +319,8 @@ class LIFXSensorUpdateCoordinator(LIFXUpdateCoordinator):
                     self.hev_cycle_last_power,
                 ) = status
 
-        async def _async_update_last_hev_cycle_result() -> None:
-            """Fetch the last HEV cycle result."""
+            self.hev_cycle_status = bool(self.hev_cycle_remaining > 0)
+
             last_result = last_hev_cycle_result_str(
                 await async_execute_lifx(self.device.get_last_hev_cycle_result)
             )
@@ -334,19 +330,5 @@ class LIFXSensorUpdateCoordinator(LIFXUpdateCoordinator):
         async with self.lock:
 
             # Only fetch data for enabled sensors
-            if self.update_rssi is True:
-                await _async_update_rssi()
-
-            if self.update_uptime is True:
-                await _async_update_uptime()
-
-            if lifx_features(self.device)["hev"]:
-                if (
-                    self.update_hev_cycle_duration is True
-                    or self.update_hev_cycle_remaining is True
-                    or self.update_hev_cycle_last_power is True
-                ):
-                    await _async_update_hev_cycle_status()
-
-                if self.update_last_hev_cycle_result is True:
-                    await _async_update_last_hev_cycle_result()
+            for sensor in self.enabled_sensors:
+                await locals()[f"_async_update_{sensor}"]()

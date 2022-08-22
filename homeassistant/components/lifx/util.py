@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 from datetime import timedelta
+from functools import partial
 import logging
 import math
 from typing import Any
@@ -185,7 +186,12 @@ async def async_execute_lifx(method: Callable) -> Message:
             # us by async_timeout when we hit the OVERALL_TIMEOUT
             future.set_result(message)
 
-    _LOGGER.debug("Sending LIFX command: %s", method)
+    method_name = (
+        f"partial({method.func.__name__})"
+        if isinstance(method, partial)
+        else f"{method.__name__}()"
+    )
+    _LOGGER.debug("Sending LIFX command: %s", method_name)
 
     method(callb=_callback)
     result = None
