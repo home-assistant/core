@@ -180,7 +180,11 @@ def is_callback(func: Callable[..., Any]) -> bool:
 
 @callback
 def async_get_hass() -> HomeAssistant:
-    """Return the HomeAssistant instance."""
+    """Return the HomeAssistant instance.
+
+    This should be used where it's very cumbersome or downright impossible to pass
+    hass to the code which needs it.
+    """
     return _cv_hass.get()
 
 
