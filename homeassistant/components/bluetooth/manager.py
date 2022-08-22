@@ -270,10 +270,11 @@ class BluetoothManager:
             device, advertisement_data, connectable
         )
         _LOGGER.debug(
-            "%s: %s %s match: %s",
+            "%s: %s %s connectable: %s match: %s",
             source,
             address,
             advertisement_data,
+            connectable,
             matched_domains,
         )
 
