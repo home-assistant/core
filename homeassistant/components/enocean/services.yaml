@@ -1,36 +1,19 @@
-# Service ID
 teach_in_device:
-  # Service name as shown in UI
   name: Teach-In Device
-  # Description of the service
   description: Start the Teach-In-Process between the dongle and a device. During the teach-in normal packets are ignored
-  # Different fields that the service accepts
   fields:
-    # Key of the field
     teach_in_time:
-      # Field name as shown in UI
       name: Teach-In time
-      # Description of the field
-      description:
-        "How long shall the teach-in process be active (in seconds) (max: 600). During the process no
-        other packets get processed!"
-      # Whether field is required (default = false)
+      description: "How long shall the teach-in process be active (in seconds) (max: 600). During the process no other packets get processed!"
       required: false
-      # Advanced fields are only shown when the advanced mode is enabled for the user (default = false)
       advanced: false
-      # Example value that can be passed for this field
       example: 60
-      # default value
       default: 60
 
     base_id:
       name: Used Base ID for this device for BS4-based teach-in
-      description:
-        "A communicator can use up to 128 different Base ID values within the allowed
-        range of the start Base ID. If nothing is specified, the default Base ID will
-        be used when communication over BS4. This ID has to be within the range of your transceiver."
+      description: "A communicator can use up to 128 different Base ID values within the allowed range of the start Base ID. If nothing is specified, the default Base ID will be used when communication over BS4. This ID has to be within the range of your transceiver."
       required: false
       advanced: true
       example: 01BEEF23
       default: ""
-
