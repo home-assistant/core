@@ -4,10 +4,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-from microbot import (
-    MicroBotApiClient,
-    parse_advertisement_data,
-)
+from microbot import MicroBotApiClient, parse_advertisement_data
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.passive_update_coordinator import (
