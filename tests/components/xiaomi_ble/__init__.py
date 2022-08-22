@@ -15,6 +15,8 @@ NOT_SENSOR_PUSH_SERVICE_INFO = BluetoothServiceInfoBleak(
     service_uuids=[],
     source="local",
     advertisement=AdvertisementData(local_name="Not it"),
+    time=0,
+    connectable=False,
 )
 
 LYWSDCGQ_SERVICE_INFO = BluetoothServiceInfoBleak(
@@ -29,6 +31,8 @@ LYWSDCGQ_SERVICE_INFO = BluetoothServiceInfoBleak(
     service_uuids=["0000fe95-0000-1000-8000-00805f9b34fb"],
     source="local",
     advertisement=AdvertisementData(local_name="Not it"),
+    time=0,
+    connectable=False,
 )
 
 MMC_T201_1_SERVICE_INFO = BluetoothServiceInfoBleak(
@@ -43,6 +47,8 @@ MMC_T201_1_SERVICE_INFO = BluetoothServiceInfoBleak(
     service_uuids=["0000fe95-0000-1000-8000-00805f9b34fb"],
     source="local",
     advertisement=AdvertisementData(local_name="Not it"),
+    time=0,
+    connectable=False,
 )
 
 JTYJGD03MI_SERVICE_INFO = BluetoothServiceInfoBleak(
@@ -57,6 +63,8 @@ JTYJGD03MI_SERVICE_INFO = BluetoothServiceInfoBleak(
     service_uuids=["0000fe95-0000-1000-8000-00805f9b34fb"],
     source="local",
     advertisement=AdvertisementData(local_name="Not it"),
+    time=0,
+    connectable=False,
 )
 
 YLKG07YL_SERVICE_INFO = BluetoothServiceInfoBleak(
@@ -71,6 +79,8 @@ YLKG07YL_SERVICE_INFO = BluetoothServiceInfoBleak(
     service_uuids=["0000fe95-0000-1000-8000-00805f9b34fb"],
     source="local",
     advertisement=AdvertisementData(local_name="Not it"),
+    time=0,
+    connectable=False,
 )
 
 MISSING_PAYLOAD_ENCRYPTED = BluetoothServiceInfoBleak(
@@ -85,6 +95,8 @@ MISSING_PAYLOAD_ENCRYPTED = BluetoothServiceInfoBleak(
     service_uuids=["0000fe95-0000-1000-8000-00805f9b34fb"],
     source="local",
     advertisement=AdvertisementData(local_name="Not it"),
+    time=0,
+    connectable=False,
 )
 
 
@@ -102,4 +114,6 @@ def make_advertisement(address: str, payload: bytes) -> BluetoothServiceInfoBlea
         service_uuids=["0000fe95-0000-1000-8000-00805f9b34fb"],
         source="local",
         advertisement=AdvertisementData(local_name="Test Device"),
+        time=0,
+        connectable=True,
     )
