@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from datetime import timedelta
 from functools import partial
 import logging
@@ -19,6 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -257,6 +259,33 @@ class LIFXSensorUpdateCoordinator(LIFXUpdateCoordinator):
         self.hev_cycle_last_power: bool = False
         self.last_hev_cycle_result: str = STATE_UNKNOWN
 
+    def async_enable_sensor(self, sensor_name: str) -> Callable[[], None]:
+        """Enable updates for sensor."""
+        setattr(self, f"update_{sensor_name}", True)
+        _LOGGER.debug(
+            "Enabled %s updates for %s (%s)",
+            sensor_name,
+            self.device.label,
+            self.device.ip_addr,
+        )
+
+        @callback
+        def disable_sensor() -> None:
+            """Disable updates for sensor."""
+            setattr(self, f"update_{sensor_name}", False)
+            _LOGGER.debug(
+                "Disabled %s updates for %s (%s)",
+                sensor_name,
+                self.device.label,
+                self.device.ip_addr,
+            )
+
+        return disable_sensor
+
+    def async_get_native_value(self, sensor_name: str) -> StateType:
+        """Return the current native value for sensor."""
+        return getattr(self, sensor_name, None)
+
     def get_rssi_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement for the RSSI sensor."""
         if AwesomeVersion(self.device.host_firmware_version) > RSSI_DBM_FW:
@@ -268,62 +297,39 @@ class LIFXSensorUpdateCoordinator(LIFXUpdateCoordinator):
 
         async def _async_update_uptime() -> None:
             """Fetch the current uptime value."""
-            try:
-                uptime = get_uptime_from_hostinfo(
-                    await async_execute_lifx(self.device.get_hostinfo)
-                )
-                if uptime is not None:
-                    self.uptime = uptime
-
-            except asyncio.TimeoutError as ex:
-                raise UpdateFailed(
-                    f"Failed to fetch uptime: {self.device.label} ({self.device.ip_addr})"
-                ) from ex
+            uptime = get_uptime_from_hostinfo(
+                await async_execute_lifx(self.device.get_hostinfo)
+            )
+            if uptime is not None:
+                self.uptime = uptime
 
         async def _async_update_rssi() -> None:
             """Fetch the current RSSI value."""
-            try:
-                rssi = get_rssi_from_wifiinfo(
-                    await async_execute_lifx(self.device.get_wifiinfo)
-                )
-                if rssi is not None:
-                    self.rssi = rssi
-            except asyncio.TimeoutError as ex:
-                raise UpdateFailed(
-                    f"Failed to fetch RSSI: {self.device.label} ({self.device.ip_addr})"
-                ) from ex
+            rssi = get_rssi_from_wifiinfo(
+                await async_execute_lifx(self.device.get_wifiinfo)
+            )
+            if rssi is not None:
+                self.rssi = rssi
 
         async def _async_update_hev_cycle_status() -> None:
             """Fetch current HEV cycle status."""
-            try:
-                status = hev_cycle_status(
-                    await async_execute_lifx(self.device.get_hev_cycle)
-                )
-                if status is not None:
-                    (
-                        self.hev_cycle_duration,
-                        self.hev_cycle_remaining,
-                        self.hev_cycle_last_power,
-                    ) = status
-
-            except asyncio.TimeoutError as ex:
-                raise UpdateFailed(
-                    f"Failed to fetch HEV cycle status from device: {self.device.label}() {self.device.ip_addr})"
-                ) from ex
+            status = hev_cycle_status(
+                await async_execute_lifx(self.device.get_hev_cycle)
+            )
+            if status is not None:
+                (
+                    self.hev_cycle_duration,
+                    self.hev_cycle_remaining,
+                    self.hev_cycle_last_power,
+                ) = status
 
         async def _async_update_last_hev_cycle_result() -> None:
             """Fetch the last HEV cycle result."""
-            try:
-                last_result = last_hev_cycle_result_str(
-                    await async_execute_lifx(self.device.get_last_hev_cycle_result)
-                )
-                if last_result is not None:
-                    self.last_hev_cycle_result = last_result
-
-            except asyncio.TimeoutError as ex:
-                raise UpdateFailed(
-                    f"Failed to fetch last HEV cycle result from device: {self.device.label}() {self.device.ip_addr})"
-                ) from ex
+            last_result = last_hev_cycle_result_str(
+                await async_execute_lifx(self.device.get_last_hev_cycle_result)
+            )
+            if last_result is not None:
+                self.last_hev_cycle_result = last_result
 
         async with self.lock:
 
