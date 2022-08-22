@@ -139,8 +139,18 @@ async def async_setup_scanner(  # noqa: C901
     ) -> None:
         """Lookup Bluetooth LE devices and update status."""
         battery = None
+        # We need one we can connect to since the tracker will
+        # accept devices from non-connectable sources
+        if not (
+            connectable_device := bluetooth.async_ble_device_from_address(
+                hass, service_info.device.address, True
+            )
+        ):
+            # The device can be seen by a passive tracker but we
+            # don't have a route to make a connection
+            return
         try:
-            async with BleakClient(service_info.device) as client:
+            async with BleakClient(connectable_device) as client:
                 bat_char = await client.read_gatt_char(BATTERY_CHARACTERISTIC_UUID)
                 battery = ord(bat_char)
         except asyncio.TimeoutError:
