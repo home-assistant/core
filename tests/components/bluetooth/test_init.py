@@ -386,6 +386,14 @@ async def test_discovery_match_by_name_connectable_false(
 
         assert _domains_from_mock_config_flow(mock_config_flow) == ["qingping"]
 
+        mock_config_flow.reset_mock()
+        # Make sure it will also take a connectable device
+        inject_advertisement_with_time_and_source_connectable(
+            hass, qingping_device, qingping_adv, time.monotonic(), "any", True
+        )
+        await hass.async_block_till_done()
+        assert _domains_from_mock_config_flow(mock_config_flow) == ["qingping"]
+
 
 async def test_discovery_match_by_local_name(
     hass, mock_bleak_scanner_start, macos_adapter
