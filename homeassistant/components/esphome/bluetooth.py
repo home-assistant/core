@@ -86,6 +86,7 @@ class ESPHomeScannner(BaseHaScanner):
         device = BLEDevice(  # type: ignore[no-untyped-call]
             address=address,
             name=adv.name,
+            details={},
             rssi=adv.rssi,
         )
         self._discovered_devices[address] = device
