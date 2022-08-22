@@ -251,6 +251,12 @@ class HomeAssistant:
     http: HomeAssistantHTTP = None  # type: ignore[assignment]
     config_entries: ConfigEntries = None  # type: ignore[assignment]
 
+    def __new__(cls) -> HomeAssistant:
+        """Set the _cv_hass context variable."""
+        hass = super().__new__(cls)
+        _cv_hass.set(hass)
+        return hass
+
     def __init__(self) -> None:
         """Initialize new Home Assistant object."""
         self.loop = asyncio.get_running_loop()
