@@ -37,7 +37,7 @@ class DemoImageProcessingAlpr(ImageProcessingAlprEntity):
 
     def __init__(self, camera_entity: str, name: str) -> None:
         """Initialize demo ALPR image processing entity."""
-        super().__init__()  # type:ignore[no-untyped-call]
+        super().__init__()
 
         self._attr_name = name
         self._camera = camera_entity
@@ -61,7 +61,7 @@ class DemoImageProcessingAlpr(ImageProcessingAlprEntity):
             "DF923043": 90.8,
         }
 
-        self.process_plates(demo_data, 1)  # type:ignore[no-untyped-call]
+        self.process_plates(demo_data, 1)
 
 
 class DemoImageProcessingFace(ImageProcessingFaceEntity):
@@ -69,7 +69,7 @@ class DemoImageProcessingFace(ImageProcessingFaceEntity):
 
     def __init__(self, camera_entity: str, name: str) -> None:
         """Initialize demo face image processing entity."""
-        super().__init__()  # type:ignore[no-untyped-call]
+        super().__init__()
 
         self._attr_name = name
         self._camera = camera_entity
@@ -97,4 +97,4 @@ class DemoImageProcessingFace(ImageProcessingFaceEntity):
             {ATTR_CONFIDENCE: 62.53, ATTR_NAME: "Luna"},
         ]
 
-        self.process_faces(demo_data, 4)  # type:ignore[no-untyped-call]
+        self.process_faces(demo_data, 4)
