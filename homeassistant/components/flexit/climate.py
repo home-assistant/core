@@ -59,6 +59,7 @@ async def async_setup_platform(
 class Flexit(ClimateEntity):
     """Representation of a Flexit AC unit."""
 
+    _attr_fan_modes = ["Off", "Low", "Medium", "High"]
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
     )
@@ -72,8 +73,7 @@ class Flexit(ClimateEntity):
         self._slave = modbus_slave
         self._target_temperature = None
         self._current_temperature = None
-        self._current_fan_mode = None
-        self._fan_modes = ["Off", "Low", "Medium", "High"]
+        self._attr_fan_mode = None
         self._filter_hours = None
         self._filter_alarm = None
         self._heat_recovery = None
@@ -92,8 +92,8 @@ class Flexit(ClimateEntity):
             CALL_TYPE_REGISTER_INPUT, 9
         )
         res = await self._async_read_int16_from_register(CALL_TYPE_REGISTER_HOLDING, 17)
-        if res < len(self._fan_modes):
-            self._current_fan_mode = res
+        if self.fan_modes and res < len(self.fan_modes):
+            self._attr_fan_mode = self.fan_modes[res]
         self._filter_hours = await self._async_read_int16_from_register(
             CALL_TYPE_REGISTER_INPUT, 8
         )
@@ -187,16 +187,6 @@ class Flexit(ClimateEntity):
         """
         return [HVACMode.COOL]
 
-    @property
-    def fan_mode(self):
-        """Return the fan setting."""
-        return self._current_fan_mode
-
-    @property
-    def fan_modes(self):
-        """Return the list of available fan modes."""
-        return self._fan_modes
-
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
         if kwargs.get(ATTR_TEMPERATURE) is not None:
@@ -212,10 +202,10 @@ class Flexit(ClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new fan mode."""
-        if await self._async_write_int16_to_register(
+        if self.fan_modes and await self._async_write_int16_to_register(
             17, self.fan_modes.index(fan_mode)
         ):
-            self._current_fan_mode = self.fan_modes.index(fan_mode)
+            self._attr_fan_mode = fan_mode
         else:
             _LOGGER.error("Modbus error setting fan mode to Flexit")
 
