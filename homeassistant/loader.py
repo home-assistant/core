@@ -91,6 +91,7 @@ class BluetoothMatcherOptional(TypedDict, total=False):
     service_data_uuid: str
     manufacturer_id: int
     manufacturer_data_start: list[int]
+    connectable: bool
 
 
 class BluetoothMatcher(BluetoothMatcherRequired, BluetoothMatcherOptional):
