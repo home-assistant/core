@@ -341,6 +341,9 @@ class BluetoothManager:
         matcher: BluetoothCallbackMatcher | None = None,
     ) -> Callable[[], None]:
         """Register a callback."""
+        # If the matcher doesn't specify if they only
+        # want connectable or not, then we assume they
+        # they only want connectable devices.
         connectable = not matcher or matcher.get(CONNECTABLE, True)
         callbacks = self._get_callbacks_by_type(connectable)
         all_history = self._get_history_by_type(connectable)
