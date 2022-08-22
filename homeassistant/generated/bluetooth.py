@@ -9,7 +9,6 @@ from __future__ import annotations
 BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     {
         "domain": "fjaraskupan",
-        "connectable": True,
         "manufacturer_id": 20296,
         "manufacturer_data_start": [
             79,
@@ -22,106 +21,125 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     },
     {
         "domain": "govee_ble",
-        "local_name": "Govee*"
+        "local_name": "Govee*",
+        "connectable": False
     },
     {
         "domain": "govee_ble",
-        "local_name": "GVH5*"
+        "local_name": "GVH5*",
+        "connectable": False
     },
     {
         "domain": "govee_ble",
-        "local_name": "B5178*"
+        "local_name": "B5178*",
+        "connectable": False
     },
     {
         "domain": "govee_ble",
         "manufacturer_id": 6966,
-        "service_uuid": "00008451-0000-1000-8000-00805f9b34fb"
+        "service_uuid": "00008451-0000-1000-8000-00805f9b34fb",
+        "connectable": False
     },
     {
         "domain": "govee_ble",
         "manufacturer_id": 26589,
-        "service_uuid": "00008351-0000-1000-8000-00805f9b34fb"
+        "service_uuid": "00008351-0000-1000-8000-00805f9b34fb",
+        "connectable": False
     },
     {
         "domain": "govee_ble",
         "manufacturer_id": 18994,
-        "service_uuid": "00008551-0000-1000-8000-00805f9b34fb"
+        "service_uuid": "00008551-0000-1000-8000-00805f9b34fb",
+        "connectable": False
     },
     {
         "domain": "govee_ble",
         "manufacturer_id": 818,
-        "service_uuid": "00008551-0000-1000-8000-00805f9b34fb"
+        "service_uuid": "00008551-0000-1000-8000-00805f9b34fb",
+        "connectable": False
     },
     {
         "domain": "govee_ble",
         "manufacturer_id": 59970,
-        "service_uuid": "00008151-0000-1000-8000-00805f9b34fb"
+        "service_uuid": "00008151-0000-1000-8000-00805f9b34fb",
+        "connectable": False
     },
     {
         "domain": "govee_ble",
         "manufacturer_id": 14474,
-        "service_uuid": "00008151-0000-1000-8000-00805f9b34fb"
+        "service_uuid": "00008151-0000-1000-8000-00805f9b34fb",
+        "connectable": False
     },
     {
         "domain": "govee_ble",
         "manufacturer_id": 10032,
-        "service_uuid": "00008251-0000-1000-8000-00805f9b34fb"
+        "service_uuid": "00008251-0000-1000-8000-00805f9b34fb",
+        "connectable": False
     },
     {
         "domain": "homekit_controller",
         "manufacturer_id": 76,
         "manufacturer_data_start": [
             6
-        ],
-        "connectable": True
+        ]
     },
     {
         "domain": "inkbird",
-        "local_name": "sps"
+        "local_name": "sps",
+        "connectable": False
     },
     {
         "domain": "inkbird",
-        "local_name": "Inkbird*"
+        "local_name": "Inkbird*",
+        "connectable": False
     },
     {
         "domain": "inkbird",
-        "local_name": "iBBQ*"
+        "local_name": "iBBQ*",
+        "connectable": False
     },
     {
         "domain": "inkbird",
-        "local_name": "xBBQ*"
+        "local_name": "xBBQ*",
+        "connectable": False
     },
     {
         "domain": "inkbird",
-        "local_name": "tps"
+        "local_name": "tps",
+        "connectable": False
     },
     {
         "domain": "moat",
-        "local_name": "Moat_S*"
+        "local_name": "Moat_S*",
+        "connectable": False
     },
     {
         "domain": "qingping",
-        "local_name": "Qingping*"
+        "local_name": "Qingping*",
+        "connectable": False
     },
     {
         "domain": "sensorpush",
-        "local_name": "SensorPush*"
+        "local_name": "SensorPush*",
+        "connectable": False
     },
     {
         "domain": "switchbot",
-        "service_data_uuid": "0000fd3d-0000-1000-8000-00805f9b34fb"
+        "service_data_uuid": "0000fd3d-0000-1000-8000-00805f9b34fb",
+        "connectable": False
     },
     {
         "domain": "switchbot",
-        "service_uuid": "cba20d00-224d-11e6-9fb8-0002a5d5c51b"
+        "service_uuid": "cba20d00-224d-11e6-9fb8-0002a5d5c51b",
+        "connectable": False
     },
     {
         "domain": "xiaomi_ble",
+        "connectable": False,
         "service_data_uuid": "0000fe95-0000-1000-8000-00805f9b34fb"
     },
     {
         "domain": "yalexs_ble",
-        "manufacturer_id": 465,
-        "connectable": True
+        "manufacturer_id": 465
     }
 ]
