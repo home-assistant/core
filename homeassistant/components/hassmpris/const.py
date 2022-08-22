@@ -11,3 +11,7 @@ ENTRY_PLAYERS = "players"
 CONF_CLIENT_CERT = "client_cert"
 CONF_CLIENT_KEY = "client_key"
 CONF_TRUST_CHAIN = "trust_chain"
+
+STEP_CONFIRM = "confirm"
+
+ATTR_PLAYBACK_RATE = "playback_rate"

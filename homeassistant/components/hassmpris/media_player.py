@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 import json
 import re
-from typing import Any, cast
+from typing import Any, cast, final
 
 from hassmpris.proto import mpris_pb2
 import hassmpris_client
@@ -30,7 +30,14 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN, ENTRY_CLIENT, ENTRY_MANAGER, ENTRY_PLAYERS, LOGGER as _LOGGER
+from .const import (
+    DOMAIN,
+    ENTRY_CLIENT,
+    ENTRY_MANAGER,
+    ENTRY_PLAYERS,
+    LOGGER as _LOGGER,
+    ATTR_PLAYBACK_RATE,
+)
 
 PLATFORM = "media_player"
 
@@ -65,6 +72,7 @@ class HASSMPRISEntity(MediaPlayerEntity):
 
     _attr_device_class = MediaPlayerDeviceClass.TV
     _attr_supported_features = SUPPORTED_MINIMAL
+    _attr_playback_rate: float = 1.0
 
     def __init__(
         self,
@@ -250,12 +258,16 @@ class HASSMPRISEntity(MediaPlayerEntity):
         p: mpris_pb2.MPRISPlayerProperties,
     ):
         """Update player properties based on incoming MPRISPlayerProperties."""
+        _LOGGER.debug("%s: new properties: %s", self.name, p)
+
         feats = self._attr_supported_features
         if p.HasField("CanControl"):
             if not p.CanControl:
                 feats = 0
             else:
                 feats = SUPPORTED_MINIMAL
+
+        update_state = False
 
         for name, bitwisefield in {
             "CanPlay": MediaPlayerEntityFeature.PLAY,
@@ -271,16 +283,35 @@ class HASSMPRISEntity(MediaPlayerEntity):
                 else:
                     feats = feats & ~bitwisefield
 
-        _LOGGER.debug(
-            "%s: current feature bitfield: (%s) %s",
-            self.name,
-            feats,
-            _feat2bitfield(feats, MediaPlayerEntityFeature),
-        )
         if feats != self._attr_supported_features:
+            _LOGGER.debug(
+                "%s: new feature bitfield: (%s) %s",
+                self.name,
+                feats,
+                _feat2bitfield(feats, MediaPlayerEntityFeature),
+            )
             self._attr_supported_features = feats
-            if self.hass:
-                await self.async_update_ha_state(True)
+            update_state = True
+
+        if p.HasField("Rate") and p.Rate != self._attr_playback_rate:
+            _LOGGER.debug("%s: new rate: %s", self.name, p.Rate)
+            self._attr_playback_rate = p.Rate
+            update_state = True
+
+        if update_state and self.hass:
+            await self.async_update_ha_state(True)
+
+    @final
+    @property
+    def state_attributes(self):
+        """
+        Return the state attributes.
+
+        We override the parent because we must add the playback rate.
+        """
+        attrs = super().state_attributes
+        attrs[ATTR_PLAYBACK_RATE] = self._attr_playback_rate
+        return attrs
 
 
 class EntityManager:
