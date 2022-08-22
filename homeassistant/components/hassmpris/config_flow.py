@@ -21,6 +21,7 @@ from .const import (
     CONF_TRUST_CHAIN,
     DOMAIN,
     LOGGER as _LOGGER,
+    STEP_CONFIRM,
 )
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
@@ -166,7 +167,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         emojis = emoji(ecdh.derived_key, 6)
 
         return self.async_show_form(
-            step_id="confirm",
+            step_id=STEP_CONFIRM,
             data_schema=vol.Schema(
                 {
                     vol.Required(
