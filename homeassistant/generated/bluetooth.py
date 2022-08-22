@@ -71,7 +71,8 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "manufacturer_id": 76,
         "manufacturer_data_start": [
             6
-        ]
+        ],
+        "connectable": True
     },
     {
         "domain": "inkbird",
