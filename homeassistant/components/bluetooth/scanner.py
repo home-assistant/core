@@ -32,7 +32,7 @@ from .const import (
     SOURCE_LOCAL,
     START_TIMEOUT,
 )
-from .models import BluetoothScanningMode
+from .models import BaseHaScanner, BluetoothScanningMode, BluetoothServiceInfoBleak
 from .util import adapter_human_name, async_reset_adapter
 
 OriginalBleakScanner = bleak.BleakScanner
@@ -44,12 +44,19 @@ _LOGGER = logging.getLogger(__name__)
 
 MONOTONIC_TIME = time.monotonic
 
+# If the adapter is in a stuck state the following errors are raised:
 NEED_RESET_ERRORS = [
     "org.bluez.Error.Failed",
     "org.bluez.Error.InProgress",
     "org.bluez.Error.NotReady",
 ]
-START_ATTEMPTS = 2
+
+# When the adapter is still initializing, the scanner will raise an exception
+# with org.freedesktop.DBus.Error.UnknownObject
+WAIT_FOR_ADAPTER_TO_INIT_ERRORS = ["org.freedesktop.DBus.Error.UnknownObject"]
+ADAPTER_INIT_TIME = 1.5
+
+START_ATTEMPTS = 3
 
 SCANNING_MODE_TO_BLEAK = {
     BluetoothScanningMode.ACTIVE: "active",
@@ -85,7 +92,7 @@ def create_bleak_scanner(
         raise RuntimeError(f"Failed to initialize Bluetooth: {ex}") from ex
 
 
-class HaScanner:
+class HaScanner(BaseHaScanner):
     """Operate and automatically recover a BleakScanner.
 
     Multiple BleakScanner can be used at the same time
@@ -112,9 +119,7 @@ class HaScanner:
         self._cancel_watchdog: CALLBACK_TYPE | None = None
         self._last_detection = 0.0
         self._start_time = 0.0
-        self._callbacks: list[
-            Callable[[BLEDevice, AdvertisementData, float, str], None]
-        ] = []
+        self._callbacks: list[Callable[[BluetoothServiceInfoBleak], None]] = []
         self.name = adapter_human_name(adapter, address)
         self.source = self.adapter or SOURCE_LOCAL
 
@@ -125,7 +130,7 @@ class HaScanner:
 
     @hass_callback
     def async_register_callback(
-        self, callback: Callable[[BLEDevice, AdvertisementData, float, str], None]
+        self, callback: Callable[[BluetoothServiceInfoBleak], None]
     ) -> CALLBACK_TYPE:
         """Register a callback.
 
@@ -142,7 +147,7 @@ class HaScanner:
     @hass_callback
     def _async_detection_callback(
         self,
-        ble_device: BLEDevice,
+        device: BLEDevice,
         advertisement_data: AdvertisementData,
     ) -> None:
         """Call the callback when an advertisement is received.
@@ -161,8 +166,21 @@ class HaScanner:
             # as the adapter is in a failure
             # state if all the data is empty.
             self._last_detection = callback_time
+        service_info = BluetoothServiceInfoBleak(
+            name=advertisement_data.local_name or device.name or device.address,
+            address=device.address,
+            rssi=device.rssi,
+            manufacturer_data=advertisement_data.manufacturer_data,
+            service_data=advertisement_data.service_data,
+            service_uuids=advertisement_data.service_uuids,
+            source=self.source,
+            device=device,
+            advertisement=advertisement_data,
+            connectable=True,
+            time=callback_time,
+        )
         for callback in self._callbacks:
-            callback(ble_device, advertisement_data, callback_time, self.source)
+            callback(service_info)
 
     async def async_start(self) -> None:
         """Start bluetooth scanner."""
@@ -231,17 +249,35 @@ class HaScanner:
                     f"{self.name}: Timed out starting Bluetooth after {START_TIMEOUT} seconds"
                 ) from ex
             except BleakError as ex:
+                error_str = str(ex)
                 if attempt == 0:
-                    error_str = str(ex)
                     if any(
                         needs_reset_error in error_str
                         for needs_reset_error in NEED_RESET_ERRORS
                     ):
                         await self._async_reset_adapter()
                     continue
+                if attempt != START_ATTEMPTS - 1:
+                    # If we are not out of retry attempts, and the
+                    # adapter is still initializing, wait a bit and try again.
+                    if any(
+                        wait_error in error_str
+                        for wait_error in WAIT_FOR_ADAPTER_TO_INIT_ERRORS
+                    ):
+                        _LOGGER.debug(
+                            "%s: Waiting for adapter to initialize; attempt (%s/%s)",
+                            self.name,
+                            attempt + 1,
+                            START_ATTEMPTS,
+                        )
+                        await asyncio.sleep(ADAPTER_INIT_TIME)
+                        continue
+
                 _LOGGER.debug(
-                    "%s: BleakError while starting bluetooth: %s",
+                    "%s: BleakError while starting bluetooth; attempt: (%s/%s): %s",
                     self.name,
+                    attempt + 1,
+                    START_ATTEMPTS,
                     ex,
                     exc_info=True,
                 )
@@ -310,9 +346,12 @@ class HaScanner:
 
     async def _async_reset_adapter(self) -> None:
         """Reset the adapter."""
-        _LOGGER.warning("%s: adapter stopped responding; executing reset", self.name)
+        # There is currently nothing the user can do to fix this
+        # so we log at debug level. If we later come up with a repair
+        # strategy, we will change this to raise a repair issue as well.
+        _LOGGER.debug("%s: adapter stopped responding; executing reset", self.name)
         result = await async_reset_adapter(self.adapter)
-        _LOGGER.info("%s: adapter reset result: %s", self.name, result)
+        _LOGGER.debug("%s: adapter reset result: %s", self.name, result)
 
     async def async_stop(self) -> None:
         """Stop bluetooth scanner."""

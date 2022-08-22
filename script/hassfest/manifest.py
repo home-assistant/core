@@ -197,6 +197,7 @@ MANIFEST_SCHEMA = vol.Schema(
         vol.Optional("bluetooth"): [
             vol.Schema(
                 {
+                    vol.Optional("connectable"): bool,
                     vol.Optional("service_uuid"): vol.All(str, verify_lowercase),
                     vol.Optional("service_data_uuid"): vol.All(str, verify_lowercase),
                     vol.Optional("local_name"): vol.All(str),

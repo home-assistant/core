@@ -6,6 +6,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -43,24 +44,28 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         name="Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SENSOR_TYPE_HUMIDITY: SensorEntityDescription(
         key=SENSOR_TYPE_HUMIDITY,
         name="Humidity",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SENSOR_TYPE_RAINRATE: SensorEntityDescription(
         key=SENSOR_TYPE_RAINRATE,
         name="Rain rate",
         native_unit_of_measurement=PRECIPITATION_MILLIMETERS_PER_HOUR,
         icon="mdi:water",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SENSOR_TYPE_RAINTOTAL: SensorEntityDescription(
         key=SENSOR_TYPE_RAINTOTAL,
         name="Rain total",
         native_unit_of_measurement=LENGTH_MILLIMETERS,
         icon="mdi:water",
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SENSOR_TYPE_WINDDIRECTION: SensorEntityDescription(
         key=SENSOR_TYPE_WINDDIRECTION,
@@ -70,38 +75,45 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         key=SENSOR_TYPE_WINDAVERAGE,
         name="Wind average",
         native_unit_of_measurement=SPEED_METERS_PER_SECOND,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SENSOR_TYPE_WINDGUST: SensorEntityDescription(
         key=SENSOR_TYPE_WINDGUST,
         name="Wind gust",
         native_unit_of_measurement=SPEED_METERS_PER_SECOND,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SENSOR_TYPE_UV: SensorEntityDescription(
         key=SENSOR_TYPE_UV,
         name="UV",
         native_unit_of_measurement=UV_INDEX,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SENSOR_TYPE_WATT: SensorEntityDescription(
         key=SENSOR_TYPE_WATT,
         name="Power",
         native_unit_of_measurement=POWER_WATT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SENSOR_TYPE_LUMINANCE: SensorEntityDescription(
         key=SENSOR_TYPE_LUMINANCE,
         name="Luminance",
         native_unit_of_measurement=LIGHT_LUX,
         device_class=SensorDeviceClass.ILLUMINANCE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SENSOR_TYPE_DEW_POINT: SensorEntityDescription(
         key=SENSOR_TYPE_DEW_POINT,
         name="Dew Point",
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SENSOR_TYPE_BAROMETRIC_PRESSURE: SensorEntityDescription(
         key=SENSOR_TYPE_BAROMETRIC_PRESSURE,
         name="Barometric Pressure",
         native_unit_of_measurement="kPa",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 }
 
