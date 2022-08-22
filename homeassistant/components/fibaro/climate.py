@@ -121,8 +121,8 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
     def __init__(self, fibaro_device):
         """Initialize the Fibaro device."""
         super().__init__(fibaro_device)
-        self._temp_sensor_device = None
-        self._target_temp_device = None
+        self._temp_sensor_device: FibaroDevice | None = None
+        self._target_temp_device: FibaroDevice | None = None
         self._op_mode_device: FibaroDevice | None = None
         self._fan_mode_device = None
         self._attr_supported_features = 0
@@ -318,7 +318,7 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
         """Set new target temperatures."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
         target = self._target_temp_device
-        if temperature is not None:
+        if target is not None and temperature is not None:
             if "setThermostatSetpoint" in target.fibaro_device.actions:
                 target.action("setThermostatSetpoint", self.fibaro_op_mode, temperature)
             elif "setHeatingThermostatSetpoint" in target.fibaro_device.actions:
