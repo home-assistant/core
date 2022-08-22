@@ -17,7 +17,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
-    ATTR_TIME,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
@@ -25,7 +24,6 @@ from homeassistant.const import (
     CONF_USERNAME,
     PERCENTAGE,
     TEMP_CELSIUS,
-    TIME_SECONDS,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
@@ -45,11 +43,6 @@ ATTR_VOLATILE_ORGANIC_COMPOUNDS = "VOC"
 ATTR_FOOBOT_INDEX = "index"
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
-        key="time",
-        name=ATTR_TIME,
-        native_unit_of_measurement=TIME_SECONDS,
-    ),
     SensorEntityDescription(
         key="pm",
         name=ATTR_PM2_5,
@@ -121,7 +114,6 @@ async def async_setup_platform(
                 [
                     FoobotSensor(foobot_data, device, description)
                     for description in SENSOR_TYPES
-                    if description.key != "time"
                 ]
             )
     except (
@@ -155,7 +147,7 @@ class FoobotSensor(SensorEntity):
         self._attr_unique_id = f"{device['uuid']}_{description.key}"
 
     @property
-    def native_value(self):
+    def native_value(self) -> float | None:
         """Return the state of the device."""
         return self.foobot_data.data.get(self.entity_description.key)
 
