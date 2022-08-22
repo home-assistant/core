@@ -34,7 +34,6 @@ from .match import (
 )
 from .models import (
     BaseHaScanner,
-    BluetoothAdvertisement,
     BluetoothCallback,
     BluetoothChange,
     BluetoothServiceInfoBleak,
@@ -56,7 +55,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def _prefer_previous_adv(
-    old: BluetoothAdvertisement, new: BluetoothAdvertisement
+    old: BluetoothServiceInfoBleak, new: BluetoothServiceInfoBleak
 ) -> bool:
     """Prefer previous advertisement if it is better."""
     if new.time - old.time > STALE_ADVERTISEMENT_SECONDS:
@@ -64,8 +63,8 @@ def _prefer_previous_adv(
         if new.source != old.source:
             _LOGGER.debug(
                 "%s (%s): Switching from %s[%s] to %s[%s] (time_elapsed:%s > stale_seconds:%s)",
-                new.advertisement_data.local_name,
-                new.ble_device.address,
+                new.advertisement.local_name,
+                new.device.address,
                 old.source,
                 old.connectable,
                 new.source,
@@ -74,20 +73,20 @@ def _prefer_previous_adv(
                 STALE_ADVERTISEMENT_SECONDS,
             )
         return False
-    if new.ble_device.rssi - RSSI_SWITCH_THRESHOLD > old.ble_device.rssi:
+    if new.device.rssi - RSSI_SWITCH_THRESHOLD > old.device.rssi:
         # If new advertisement is RSSI_SWITCH_THRESHOLD more, the new one is preferred
         if new.source != old.source:
             _LOGGER.debug(
                 "%s (%s): Switching from %s[%s] to %s[%s] (new_rssi:%s - threadshold:%s > old_rssi:%s)",
-                new.advertisement_data.local_name,
-                new.ble_device.address,
+                new.advertisement.local_name,
+                new.device.address,
                 old.source,
                 old.connectable,
                 new.source,
                 new.connectable,
-                new.ble_device.rssi,
+                new.device.rssi,
                 RSSI_SWITCH_THRESHOLD,
-                old.ble_device.rssi,
+                old.device.rssi,
             )
         return False
     # If the source is the different, the old one is preferred because its
@@ -143,8 +142,8 @@ class BluetoothManager:
         self._bleak_callbacks: list[
             tuple[AdvertisementDataCallback, dict[str, set[str]]]
         ] = []
-        self._history: dict[str, BluetoothAdvertisement] = {}
-        self._connectable_history: dict[str, BluetoothAdvertisement] = {}
+        self._history: dict[str, BluetoothServiceInfoBleak] = {}
+        self._connectable_history: dict[str, BluetoothServiceInfoBleak] = {}
         self._scanners: list[BaseHaScanner] = []
         self._connectable_scanners: list[BaseHaScanner] = []
         self._adapters: dict[str, AdapterDetails] = {}
@@ -198,7 +197,7 @@ class BluetoothManager:
     def async_discovered_devices(self, connectable: bool) -> list[BLEDevice]:
         """Return all of combined best path to discovered from all the scanners."""
         all_history = self._get_history_by_type(connectable)
-        return [history.ble_device for history in all_history.values()]
+        return [history.device for history in all_history.values()]
 
     @hass_callback
     def async_setup_unavailable_tracking(self) -> None:
@@ -240,7 +239,7 @@ class BluetoothManager:
         )
 
     @hass_callback
-    def scanner_adv_received(self, new_adv: BluetoothAdvertisement) -> None:
+    def scanner_adv_received(self, service_info: BluetoothServiceInfoBleak) -> None:
         """Handle a new advertisement from any scanner.
 
         Callbacks from all the scanners arrive here.
@@ -252,26 +251,26 @@ class BluetoothManager:
           than the source from the history or the timestamp
           in the history is older than 180s
         """
-        device = new_adv.ble_device
-        connectable = new_adv.connectable
+        device = service_info.device
+        connectable = service_info.connectable
         address = device.address
         all_history = self._get_history_by_type(connectable)
-        old_adv = all_history.get(address)
-        if old_adv and _prefer_previous_adv(old_adv, new_adv):
+        old_service_info = all_history.get(address)
+        if old_service_info and _prefer_previous_adv(old_service_info, service_info):
             return
 
-        self._history[address] = new_adv
-        advertisement_data = new_adv.advertisement_data
-        source = new_adv.source
+        self._history[address] = service_info
+        advertisement_data = service_info.advertisement
+        source = service_info.source
 
         if connectable:
-            self._connectable_history[address] = new_adv
+            self._connectable_history[address] = service_info
             # Bleak callbacks must get a connectable device
 
             for callback_filters in self._bleak_callbacks:
                 _dispatch_bleak_callback(*callback_filters, device, advertisement_data)
 
-        matched_domains = self._integration_matcher.match_domains(new_adv)
+        matched_domains = self._integration_matcher.match_domains(service_info)
         _LOGGER.debug(
             "%s: %s %s connectable: %s match: %s",
             source,
@@ -288,28 +287,17 @@ class BluetoothManager:
         ):
             return
 
-        service_info: BluetoothServiceInfoBleak | None = None
         for connectable_callback in (True, False):
-            callback_type = self._get_callbacks_by_type(connectable_callback)
-            for callback, matcher in callback_type:
-                if matcher is None or ble_device_matches(matcher, new_adv):
-                    if service_info is None:
-                        service_info = (
-                            BluetoothServiceInfoBleak.from_advertisement_with_source(
-                                device, advertisement_data, source, connectable
-                            )
-                        )
-                    try:
-                        callback(service_info, BluetoothChange.ADVERTISEMENT)
-                    except Exception:  # pylint: disable=broad-except
-                        _LOGGER.exception("Error in bluetooth callback")
+            for callback, matcher in self._get_callbacks_by_type(connectable_callback):
+                if matcher and not ble_device_matches(matcher, service_info):
+                    continue
+                try:
+                    callback(service_info, BluetoothChange.ADVERTISEMENT)
+                except Exception:  # pylint: disable=broad-except
+                    _LOGGER.exception("Error in bluetooth callback")
 
         if not matched_domains:
             return
-        if service_info is None:
-            service_info = BluetoothServiceInfoBleak.from_advertisement_with_source(
-                device, advertisement_data, source, connectable
-            )
         for domain in matched_domains:
             discovery_flow.async_create_flow(
                 self.hass,
@@ -364,19 +352,11 @@ class BluetoothManager:
         # device.
         if (
             (address := matcher.get(ADDRESS))
-            and (history := all_history.get(address))
-            and ble_device_matches(matcher, history)
+            and (service_info := all_history.get(address))
+            and ble_device_matches(matcher, service_info)
         ):
             try:
-                callback(
-                    BluetoothServiceInfoBleak.from_advertisement_with_source(
-                        history.ble_device,
-                        history.advertisement_data,
-                        history.source,
-                        connectable,
-                    ),
-                    BluetoothChange.ADVERTISEMENT,
-                )
+                callback(service_info, BluetoothChange.ADVERTISEMENT)
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Error in bluetooth callback")
 
@@ -389,7 +369,7 @@ class BluetoothManager:
         """Return the BLEDevice if present."""
         all_history = self._get_history_by_type(connectable)
         if history := all_history.get(address):
-            return history.ble_device
+            return history.device
         return None
 
     @hass_callback
@@ -400,18 +380,9 @@ class BluetoothManager:
     @hass_callback
     def async_discovered_service_info(
         self, connectable: bool
-    ) -> list[BluetoothServiceInfoBleak]:
+    ) -> Iterable[BluetoothServiceInfoBleak]:
         """Return if the address is present."""
-        all_history = self._get_history_by_type(connectable)
-        return [
-            BluetoothServiceInfoBleak.from_advertisement_with_source(
-                history.ble_device,
-                history.advertisement_data,
-                history.source,
-                connectable,
-            )
-            for history in all_history.values()
-        ]
+        return self._get_history_by_type(connectable).values()
 
     @hass_callback
     def async_rediscover_address(self, address: str) -> None:
@@ -434,7 +405,7 @@ class BluetoothManager:
 
     def _get_history_by_type(
         self, connectable: bool
-    ) -> dict[str, BluetoothAdvertisement]:
+    ) -> dict[str, BluetoothServiceInfoBleak]:
         """Return the history by type."""
         return self._connectable_history if connectable else self._history
 
@@ -473,7 +444,7 @@ class BluetoothManager:
         # or we are in passive mode
         for history in self._connectable_history.values():
             _dispatch_bleak_callback(
-                callback, filters, history.ble_device, history.advertisement_data
+                callback, filters, history.device, history.advertisement
             )
 
         return _remove_callback

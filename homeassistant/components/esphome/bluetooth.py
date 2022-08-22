@@ -11,11 +11,11 @@ from bleak.backends.scanner import AdvertisementData
 
 from homeassistant.components.bluetooth import (
     BaseHaScanner,
-    BluetoothAdvertisement,
     BluetoothManagerCallback,
     async_get_advertisement_callback,
     async_register_scanner,
 )
+from homeassistant.components.bluetooth.models import BluetoothServiceInfoBleak
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.event import async_track_time_interval
@@ -83,6 +83,12 @@ class ESPHomeScannner(BaseHaScanner):
         """Call the registered callback."""
         now = time.monotonic()
         address = ":".join(TWO.findall("%012X" % adv.address))  # must be upper
+        adv_data = AdvertisementData(  # type: ignore[no-untyped-call]
+            local_name=None if adv.name == "" else adv.name,
+            manufacturer_data=adv.manufacturer_data,
+            service_data=adv.service_data,
+            service_uuids=adv.service_uuids,
+        )
         device = BLEDevice(  # type: ignore[no-untyped-call]
             address=address,
             name=adv.name,
@@ -91,12 +97,18 @@ class ESPHomeScannner(BaseHaScanner):
         )
         self._discovered_devices[address] = device
         self._discovered_device_timestamps[address] = now
-        adv_data = AdvertisementData(  # type: ignore[no-untyped-call]
-            local_name=None if adv.name == "" else adv.name,
-            manufacturer_data=adv.manufacturer_data,
-            service_data=adv.service_data,
-            service_uuids=adv.service_uuids,
-        )
         self._manager_callback(
-            BluetoothAdvertisement(device, adv_data, now, self._source, False)
+            BluetoothServiceInfoBleak(
+                name=adv_data.local_name or device.name or device.address,
+                address=device.address,
+                rssi=device.rssi,
+                manufacturer_data=adv_data.manufacturer_data,
+                service_data=adv_data.service_data,
+                service_uuids=adv_data.service_uuids,
+                source=self._source,
+                device=device,
+                advertisement=adv_data,
+                connectable=False,
+                time=now,
+            )
         )

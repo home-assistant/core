@@ -33,9 +33,9 @@ from .const import (
 )
 from .models import (
     BaseHaScanner,
-    BluetoothAdvertisement,
     BluetoothManagerCallback,
     BluetoothScanningMode,
+    BluetoothServiceInfoBleak,
 )
 from .util import adapter_human_name, async_reset_adapter
 
@@ -151,8 +151,8 @@ class HaScanner(BaseHaScanner):
     @hass_callback
     def _async_detection_callback(
         self,
-        ble_device: BLEDevice,
-        advertisement_data: AdvertisementData,
+        device: BLEDevice,
+        adv_data: AdvertisementData,
     ) -> None:
         """Call the callback when an advertisement is received.
 
@@ -161,21 +161,30 @@ class HaScanner(BaseHaScanner):
         """
         callback_time = MONOTONIC_TIME()
         if (
-            advertisement_data.local_name
-            or advertisement_data.manufacturer_data
-            or advertisement_data.service_data
-            or advertisement_data.service_uuids
+            adv_data.local_name
+            or adv_data.manufacturer_data
+            or adv_data.service_data
+            or adv_data.service_uuids
         ):
             # Don't count empty advertisements
             # as the adapter is in a failure
             # state if all the data is empty.
             self._last_detection = callback_time
+        service_info = BluetoothServiceInfoBleak(
+            name=adv_data.local_name or device.name or device.address,
+            address=device.address,
+            rssi=device.rssi,
+            manufacturer_data=adv_data.manufacturer_data,
+            service_data=adv_data.service_data,
+            service_uuids=adv_data.service_uuids,
+            source=self.source,
+            device=device,
+            advertisement=adv_data,
+            connectable=True,
+            time=callback_time,
+        )
         for callback in self._callbacks:
-            callback(
-                BluetoothAdvertisement(
-                    ble_device, advertisement_data, callback_time, self.source, True
-                )
-            )
+            callback(service_info)
 
     async def async_start(self) -> None:
         """Start bluetooth scanner."""

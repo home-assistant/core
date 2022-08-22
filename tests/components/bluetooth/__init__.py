@@ -6,12 +6,7 @@ from unittest.mock import patch
 
 from bleak.backends.scanner import AdvertisementData, BLEDevice
 
-from homeassistant.components.bluetooth import (
-    DOMAIN,
-    SOURCE_LOCAL,
-    BluetoothAdvertisement,
-    models,
-)
+from homeassistant.components.bluetooth import DOMAIN, SOURCE_LOCAL, models
 from homeassistant.components.bluetooth.const import DEFAULT_ADDRESS
 from homeassistant.components.bluetooth.manager import BluetoothManager
 from homeassistant.core import HomeAssistant
@@ -42,29 +37,47 @@ def inject_advertisement_with_time_and_source(
 ) -> None:
     """Inject an advertisement into the manager from a specific source at a time."""
     return _get_manager().scanner_adv_received(
-        BluetoothAdvertisement(device, adv, time, source, True)
+        models.BluetoothServiceInfoBleak(
+            name=adv.local_name or device.name or device.address,
+            address=device.address,
+            rssi=device.rssi,
+            manufacturer_data=adv.manufacturer_data,
+            service_data=adv.service_data,
+            service_uuids=adv.service_uuids,
+            source=source,
+            device=device,
+            advertisement=adv,
+            connectable=True,
+            time=time,
+        )
     )
 
 
 def patch_all_discovered_devices(mock_discovered: list[BLEDevice]) -> None:
     """Mock all the discovered devices from all the scanners."""
-    manager = _get_manager()
     return patch.object(
-        manager, "async_all_discovered_devices", return_value=mock_discovered
+        _get_manager(), "async_all_discovered_devices", return_value=mock_discovered
     )
 
 
-def patch_connectable_history(mock_history: dict[str, BluetoothAdvertisement]) -> None:
+def patch_history(mock_history: dict[str, models.BluetoothServiceInfoBleak]) -> None:
+    """Patch the history."""
+    return patch.object(_get_manager(), "_history", return_value=mock_history)
+
+
+def patch_connectable_history(
+    mock_history: dict[str, models.BluetoothServiceInfoBleak]
+) -> None:
     """Patch the connectable history."""
-    manager = _get_manager()
-    return patch.object(manager, "_connectable_history", return_value=mock_history)
+    return patch.object(
+        _get_manager(), "_connectable_history", return_value=mock_history
+    )
 
 
 def patch_discovered_devices(mock_discovered: list[BLEDevice]) -> None:
     """Mock the combined best path to discovered devices from all the scanners."""
-    manager = _get_manager()
     return patch.object(
-        manager, "async_discovered_devices", return_value=mock_discovered
+        _get_manager(), "async_discovered_devices", return_value=mock_discovered
     )
 
 
