@@ -77,11 +77,11 @@ def cloud_config_entry(hass, options):
 
 
 @fixture
-def login_with_error(error):
+def login_with_error(exception):
     """Fixture to simulate error on login."""
     with patch(
         "homeassistant.components.risco.RiscoCloud.login",
-        side_effect=error,
+        side_effect=exception,
     ):
         yield
 
@@ -121,11 +121,11 @@ def local_config_entry(hass, options):
 
 
 @fixture
-def connect_with_error(error):
+def connect_with_error(exception):
     """Fixture to simulate error on connect."""
     with patch(
         "homeassistant.components.risco.RiscoLocal.connect",
-        side_effect=error,
+        side_effect=exception,
     ):
         yield
 

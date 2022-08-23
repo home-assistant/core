@@ -37,7 +37,7 @@ def two_zone_local():
         yield zone_mocks
 
 
-@pytest.mark.parametrize("error", [CannotConnectError, UnauthorizedError])
+@pytest.mark.parametrize("exception", [CannotConnectError, UnauthorizedError])
 async def test_error_on_login(hass, login_with_error, cloud_config_entry):
     """Test error on login."""
     await hass.config_entries.async_setup(cloud_config_entry.entry_id)
@@ -118,7 +118,7 @@ async def test_cloud_unbypass(hass, two_zone_cloud, setup_risco_cloud):
         mock.assert_awaited_once_with(0, False)
 
 
-@pytest.mark.parametrize("error", [CannotConnectError, UnauthorizedError])
+@pytest.mark.parametrize("exception", [CannotConnectError, UnauthorizedError])
 async def test_error_on_connect(hass, connect_with_error, local_config_entry):
     """Test error on connect."""
     await hass.config_entries.async_setup(local_config_entry.entry_id)

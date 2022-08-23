@@ -98,7 +98,7 @@ async def test_cloud_form(hass):
         (Exception, "unknown"),
     ],
 )
-async def test_cloud_error(hass, exception, error):
+async def test_cloud_error(hass, login_with_error, error):
     """Test we handle config flow errors."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -108,9 +108,6 @@ async def test_cloud_error(hass, exception, error):
     )
 
     with patch(
-        "homeassistant.components.risco.config_flow.RiscoCloud.login",
-        side_effect=exception,
-    ), patch(
         "homeassistant.components.risco.config_flow.RiscoCloud.close"
     ) as mock_close:
         result3 = await hass.config_entries.flow.async_configure(
@@ -198,7 +195,7 @@ async def test_local_form(hass):
         (Exception, "unknown"),
     ],
 )
-async def test_local_error(hass, exception, error):
+async def test_local_error(hass, connect_with_error, error):
     """Test we handle config flow errors."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -207,13 +204,9 @@ async def test_local_error(hass, exception, error):
         result["flow_id"], {"next_step_id": "local"}
     )
 
-    with patch(
-        "homeassistant.components.risco.config_flow.RiscoLocal.connect",
-        side_effect=exception,
-    ):
-        result3 = await hass.config_entries.flow.async_configure(
-            result2["flow_id"], TEST_LOCAL_DATA
-        )
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"], TEST_LOCAL_DATA
+    )
 
     assert result3["type"] == FlowResultType.FORM
     assert result3["errors"] == {"base": error}

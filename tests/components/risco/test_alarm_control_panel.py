@@ -124,7 +124,7 @@ def two_part_local_alarm():
         yield partition_mocks
 
 
-@pytest.mark.parametrize("error", [CannotConnectError, UnauthorizedError])
+@pytest.mark.parametrize("exception", [CannotConnectError, UnauthorizedError])
 async def test_error_on_login(hass, login_with_error, cloud_config_entry):
     """Test error on login."""
     await hass.config_entries.async_setup(cloud_config_entry.entry_id)
@@ -451,7 +451,7 @@ async def test_cloud_sets_with_incorrect_code(
         )
 
 
-@pytest.mark.parametrize("error", [CannotConnectError, UnauthorizedError])
+@pytest.mark.parametrize("exception", [CannotConnectError, UnauthorizedError])
 async def test_error_on_connect(hass, connect_with_error, local_config_entry):
     """Test error on connect."""
     await hass.config_entries.async_setup(local_config_entry.entry_id)
