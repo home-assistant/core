@@ -1,9 +1,5 @@
 """The rest component constants."""
 
-import mimetypes
-
-mimetypes.init()
-
 DOMAIN = "rest"
 
 DEFAULT_METHOD = "GET"
@@ -25,10 +21,12 @@ REST_DATA = "rest_data"
 
 METHODS = ["POST", "GET"]
 
-XML_CONTENT_EXTENSIONS = (
-    ".atom",
-    ".rss",
-    ".xml",
-    ".xhtml",
+XML_MIME_TYPES = (
+    "application/atom+xml",
+    "application/rdf+xml",
+    "application/rss+xml",
+    "application/x-rss+xml",
+    "application/xhtml+xml",
+    "application/xml",
+    "text/xml",
 )
-XML_MIME_TYPES = tuple(mimetypes.types_map[_type] for _type in XML_CONTENT_EXTENSIONS)
