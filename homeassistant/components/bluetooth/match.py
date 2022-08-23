@@ -174,7 +174,7 @@ def ble_device_matches(
     return True
 
 
-# The matcher has its own memorized fnmatch with its own lru_cache
+# Bluetooth has its own memorized fnmatch with its own lru_cache
 # since the data is going to be relatively the same
 # since the devices will not change frequently.
 

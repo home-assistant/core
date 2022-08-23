@@ -581,7 +581,7 @@ def _truncate_location_name_to_valid(location_name: str) -> str:
     return location_name.encode("utf-8")[:MAX_NAME_LEN].decode("utf-8", "ignore")
 
 
-# The integrations has its own memorized fnmatch with its own lru_cache
+# Zeroconf has its own memorized fnmatch with its own lru_cache
 # since the data is going to be relatively the same
 # since the devices will not change frequently
 

@@ -521,7 +521,7 @@ def _verify_working_pcap(cap_filter: str) -> None:
     compile_filter(cap_filter)
 
 
-# The integrations has its own memorized fnmatch with its own lru_cache
+# DHCP has its own memorized fnmatch with its own lru_cache
 # since the data is going to be relatively the same
 # since the devices will not change frequently
 
