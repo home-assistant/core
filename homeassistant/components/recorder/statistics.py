@@ -867,6 +867,7 @@ def list_statistic_ids(
             result[key] = {
                 "has_mean": meta["has_mean"],
                 "has_sum": meta["has_sum"],
+                "name": meta["name"],
                 "source": meta["source"],
                 "display_unit_of_measurement": _display_unit(
                     hass, meta["unit_of_measurement"]
