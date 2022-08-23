@@ -175,7 +175,7 @@ async def test_efr32_via_zeroconf(hass):
 
 
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
-@patch(f"bellows.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
+@patch(f"zigpy_znp.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
 async def test_discovery_via_zeroconf_ip_change(hass):
     """Test zeroconf flow -- radio detected."""
     entry = MockConfigEntry(
@@ -214,7 +214,7 @@ async def test_discovery_via_zeroconf_ip_change(hass):
 
 
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
-@patch(f"bellows.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
+@patch(f"zigpy_znp.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
 async def test_discovery_via_zeroconf_ip_change_ignored(hass):
     """Test zeroconf flow that was ignored gets updated."""
     entry = MockConfigEntry(
@@ -244,7 +244,7 @@ async def test_discovery_via_zeroconf_ip_change_ignored(hass):
     }
 
 
-@patch(f"bellows.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
+@patch(f"zigpy_znp.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
 async def test_discovery_via_usb(hass):
     """Test usb flow -- radio detected."""
     discovery_info = usb.UsbServiceInfo(
@@ -267,15 +267,13 @@ async def test_discovery_via_usb(hass):
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] == FlowResultType.MENU
     assert result2["step_id"] == "choose_formation_strategy"
 
-    with patch("homeassistant.components.zha.async_setup_entry"):
+    with patch("homeassistant.components.zha.async_setup_entry", return_value=True):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
-            user_input={
-                config_flow.FORMATION_STRATEGY: config_flow.FORMATION_REUSE_SETTINGS
-            },
+            user_input={"next_step_id": config_flow.FORMATION_REUSE_SETTINGS},
         )
         await hass.async_block_till_done()
 
@@ -283,11 +281,11 @@ async def test_discovery_via_usb(hass):
     assert result3["title"] == "zigbee radio"
     assert result3["data"] == {
         "device": {
-            "baudrate": 57600,
-            "flow_control": "software",
+            "baudrate": 115200,
+            "flow_control": None,
             "path": "/dev/ttyZIGBEE",
         },
-        CONF_RADIO_TYPE: "ezsp",
+        CONF_RADIO_TYPE: "znp",
     }
 
 
@@ -314,15 +312,13 @@ async def test_zigate_discovery_via_usb(probe_mock, hass):
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] == FlowResultType.MENU
     assert result2["step_id"] == "choose_formation_strategy"
 
-    with patch("homeassistant.components.zha.async_setup_entry"):
+    with patch("homeassistant.components.zha.async_setup_entry", return_value=True):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
-            user_input={
-                config_flow.FORMATION_STRATEGY: config_flow.FORMATION_REUSE_SETTINGS
-            },
+            user_input={"next_step_id": config_flow.FORMATION_REUSE_SETTINGS},
         )
         await hass.async_block_till_done()
 
@@ -354,7 +350,7 @@ async def test_discovery_via_usb_no_radio(probe_mock, hass):
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "confirm"
 
-    with patch("homeassistant.components.zha.async_setup_entry"):
+    with patch("homeassistant.components.zha.async_setup_entry", return_value=True):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
         )
@@ -364,7 +360,7 @@ async def test_discovery_via_usb_no_radio(probe_mock, hass):
     assert result2["reason"] == "usb_probe_failed"
 
 
-@patch(f"bellows.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
+@patch(f"zigpy_znp.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
 async def test_discovery_via_usb_already_setup(hass):
     """Test usb flow -- already setup."""
 
@@ -428,7 +424,7 @@ async def test_discovery_via_usb_path_changes(hass):
     }
 
 
-@patch(f"bellows.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
+@patch(f"zigpy_znp.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
 async def test_discovery_via_usb_deconz_already_discovered(hass):
     """Test usb flow -- deconz discovered."""
     result = await hass.config_entries.flow.async_init(
@@ -462,7 +458,7 @@ async def test_discovery_via_usb_deconz_already_discovered(hass):
     assert result["reason"] == "not_zha_device"
 
 
-@patch(f"bellows.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
+@patch(f"zigpy_znp.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
 async def test_discovery_via_usb_deconz_already_setup(hass):
     """Test usb flow -- deconz setup."""
     MockConfigEntry(domain="deconz", data={}).add_to_hass(hass)
@@ -484,7 +480,7 @@ async def test_discovery_via_usb_deconz_already_setup(hass):
     assert result["reason"] == "not_zha_device"
 
 
-@patch(f"bellows.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
+@patch(f"zigpy_znp.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
 async def test_discovery_via_usb_deconz_ignored(hass):
     """Test usb flow -- deconz ignored."""
     MockConfigEntry(
@@ -508,7 +504,7 @@ async def test_discovery_via_usb_deconz_ignored(hass):
     assert result["step_id"] == "confirm"
 
 
-@patch(f"bellows.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
+@patch(f"zigpy_znp.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
 async def test_discovery_via_usb_zha_ignored_updates(hass):
     """Test usb flow that was ignored gets updated."""
     entry = MockConfigEntry(
@@ -540,7 +536,7 @@ async def test_discovery_via_usb_zha_ignored_updates(hass):
 
 
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
-@patch(f"bellows.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
+@patch(f"zigpy_znp.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
 async def test_discovery_already_setup(hass):
     """Test zeroconf flow -- radio detected."""
     service_info = zeroconf.ZeroconfServiceInfo(
@@ -567,7 +563,7 @@ async def test_discovery_already_setup(hass):
 
 
 @patch(
-    "homeassistant.components.zha.config_flow.ZhaFlowHandler._detect_radio_type",
+    "homeassistant.components.zha.config_flow.ZhaConfigFlowHandler._detect_radio_type",
     mock_detect_radio_type(radio_type=RadioType.deconz),
 )
 @patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
@@ -584,15 +580,13 @@ async def test_user_flow(hass):
             zigpy.config.CONF_DEVICE_PATH: port_select,
         },
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] == FlowResultType.MENU
     assert result["step_id"] == "choose_formation_strategy"
 
-    with patch("homeassistant.components.zha.async_setup_entry"):
+    with patch("homeassistant.components.zha.async_setup_entry", return_value=True):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={
-                config_flow.FORMATION_STRATEGY: config_flow.FORMATION_REUSE_SETTINGS
-            },
+            user_input={"next_step_id": config_flow.FORMATION_REUSE_SETTINGS},
         )
         await hass.async_block_till_done()
 
@@ -607,7 +601,7 @@ async def test_user_flow(hass):
 
 
 @patch(
-    "homeassistant.components.zha.config_flow.ZhaFlowHandler._detect_radio_type",
+    "homeassistant.components.zha.config_flow.ZhaConfigFlowHandler._detect_radio_type",
     mock_detect_radio_type(ret=False),
 )
 @patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
@@ -636,7 +630,7 @@ async def test_user_flow_show_form(hass):
     )
 
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "choose_serial_port"
 
 
 @patch("serial.tools.list_ports.comports", MagicMock(return_value=[]))
@@ -698,7 +692,7 @@ async def test_detect_radio_type_success(
 ):
     """Test detect radios successfully."""
 
-    handler = config_flow.ZhaFlowHandler()
+    handler = config_flow.ZhaConfigFlowHandler()
     handler._device_path = "/dev/null"
 
     await handler._detect_radio_type()
@@ -724,7 +718,7 @@ async def test_detect_radio_type_success_with_settings(
 ):
     """Test detect radios successfully but probing returns new settings."""
 
-    handler = config_flow.ZhaFlowHandler()
+    handler = config_flow.ZhaConfigFlowHandler()
     handler._device_path = "/dev/null"
     await handler._detect_radio_type()
 
@@ -926,7 +920,7 @@ async def test_hardware_invalid_data(hass, data):
 
 def test_allow_overwrite_ezsp_ieee():
     """Test modifying the backup to allow bellows to override the IEEE address."""
-    handler = config_flow.ZhaFlowHandler()
+    handler = config_flow.ZhaConfigFlowHandler()
 
     backup = zigpy.backups.NetworkBackup()
     new_backup = handler._allow_overwrite_ezsp_ieee(backup)
@@ -949,7 +943,7 @@ def pick_radio(hass):
         port_select = f"{port}, s/n: {port.serial_number} - {port.manufacturer}"
 
         with patch(
-            "homeassistant.components.zha.config_flow.ZhaFlowHandler._detect_radio_type",
+            "homeassistant.components.zha.config_flow.ZhaConfigFlowHandler._detect_radio_type",
             mock_detect_radio_type(radio_type=radio_type),
         ):
             result = await hass.config_entries.flow.async_init(
@@ -960,7 +954,7 @@ def pick_radio(hass):
                 },
             )
 
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] == FlowResultType.MENU
         assert result["step_id"] == "choose_formation_strategy"
 
         return result, port
@@ -979,7 +973,7 @@ async def test_strategy_no_network_settings(pick_radio, mock_app, hass):
     result, port = await pick_radio(RadioType.ezsp)
     assert (
         config_flow.FORMATION_REUSE_SETTINGS
-        not in result["data_schema"].schema[config_flow.FORMATION_STRATEGY].container
+        not in result["data_schema"].schema["next_step_id"].container
     )
 
 
@@ -989,9 +983,7 @@ async def test_formation_strategy_form_new_network(pick_radio, mock_app, hass):
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={
-            config_flow.FORMATION_STRATEGY: config_flow.FORMATION_FORM_NEW_NETWORK
-        },
+        user_input={"next_step_id": config_flow.FORMATION_FORM_NEW_NETWORK},
     )
     await hass.async_block_till_done()
 
@@ -1007,9 +999,7 @@ async def test_formation_strategy_reuse_settings(pick_radio, mock_app, hass):
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={
-            config_flow.FORMATION_STRATEGY: config_flow.FORMATION_REUSE_SETTINGS
-        },
+        user_input={"next_step_id": config_flow.FORMATION_REUSE_SETTINGS},
     )
     await hass.async_block_till_done()
 
@@ -1027,14 +1017,14 @@ def test_parse_uploaded_backup(process_mock):
     text = json.dumps(backup.as_dict())
     process_mock.return_value.__enter__.return_value.read_text.return_value = text
 
-    handler = config_flow.ZhaFlowHandler()
+    handler = config_flow.ZhaConfigFlowHandler()
     parsed_backup = handler._parse_uploaded_backup(str(uuid.uuid4()))
 
     assert backup == parsed_backup
 
 
 @patch(
-    "homeassistant.components.zha.config_flow.ZhaFlowHandler._allow_overwrite_ezsp_ieee"
+    "homeassistant.components.zha.config_flow.ZhaConfigFlowHandler._allow_overwrite_ezsp_ieee"
 )
 async def test_formation_strategy_restore_manual_backup_non_ezsp(
     allow_overwrite_ieee_mock, pick_radio, mock_app, hass
@@ -1044,20 +1034,15 @@ async def test_formation_strategy_restore_manual_backup_non_ezsp(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={
-            config_flow.FORMATION_STRATEGY: config_flow.FORMATION_RESTORE_MANUAL_BACKUP
-        },
+        user_input={"next_step_id": config_flow.FORMATION_UPLOAD_MANUAL_BACKUP},
     )
     await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["step_id"] == "upload_manual_backup"
 
-    # There is no need for the checkbox, writes are not permanent for non-EZSP sticks
-    assert config_flow.OVERWRITE_COORDINATOR_IEEE not in result2["data_schema"].schema
-
     with patch(
-        "homeassistant.components.zha.config_flow.ZhaFlowHandler._parse_uploaded_backup",
+        "homeassistant.components.zha.config_flow.ZhaConfigFlowHandler._parse_uploaded_backup",
         return_value=zigpy.backups.NetworkBackup(),
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -1073,30 +1058,25 @@ async def test_formation_strategy_restore_manual_backup_non_ezsp(
 
 
 @patch(
-    "homeassistant.components.zha.config_flow.ZhaFlowHandler._allow_overwrite_ezsp_ieee"
+    "homeassistant.components.zha.config_flow.ZhaConfigFlowHandler._allow_overwrite_ezsp_ieee"
 )
-async def test_formation_strategy_restore_manual_backup_ezsp(
+async def test_formation_strategy_restore_manual_backup_overwrite_ieee_ezsp(
     allow_overwrite_ieee_mock, pick_radio, mock_app, hass
 ):
-    """Test restoring a manual backup on EZSP coordinators."""
+    """Test restoring a manual backup on EZSP coordinators (overwrite IEEE)."""
     result, port = await pick_radio(RadioType.ezsp)
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={
-            config_flow.FORMATION_STRATEGY: config_flow.FORMATION_RESTORE_MANUAL_BACKUP
-        },
+        user_input={"next_step_id": config_flow.FORMATION_UPLOAD_MANUAL_BACKUP},
     )
     await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["step_id"] == "upload_manual_backup"
 
-    # We must prompt for overwriting the IEEE address
-    assert config_flow.OVERWRITE_COORDINATOR_IEEE in result2["data_schema"].schema
-
     with patch(
-        "homeassistant.components.zha.config_flow.ZhaFlowHandler._parse_uploaded_backup",
+        "homeassistant.components.zha.config_flow.ZhaConfigFlowHandler._parse_uploaded_backup",
         return_value=zigpy.backups.NetworkBackup(),
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -1104,11 +1084,63 @@ async def test_formation_strategy_restore_manual_backup_ezsp(
             user_input={config_flow.UPLOADED_BACKUP_FILE: str(uuid.uuid4())},
         )
 
-    mock_app.backups.restore_backup.assert_called_once()
-    allow_overwrite_ieee_mock.assert_called_once()
+    assert result3["type"] == FlowResultType.FORM
+    assert result3["step_id"] == "maybe_confirm_ezsp_restore"
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
-    assert result3["data"][CONF_RADIO_TYPE] == "ezsp"
+    result4 = await hass.config_entries.flow.async_configure(
+        result3["flow_id"],
+        user_input={config_flow.OVERWRITE_COORDINATOR_IEEE: True},
+    )
+
+    allow_overwrite_ieee_mock.assert_called_once()
+    mock_app.backups.restore_backup.assert_called_once()
+
+    assert result4["type"] == FlowResultType.CREATE_ENTRY
+    assert result4["data"][CONF_RADIO_TYPE] == "ezsp"
+
+
+@patch(
+    "homeassistant.components.zha.config_flow.ZhaConfigFlowHandler._allow_overwrite_ezsp_ieee"
+)
+async def test_formation_strategy_restore_manual_backup_ezsp(
+    allow_overwrite_ieee_mock, pick_radio, mock_app, hass
+):
+    """Test restoring a manual backup on EZSP coordinators (don't overwrite IEEE)."""
+    result, port = await pick_radio(RadioType.ezsp)
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"next_step_id": config_flow.FORMATION_UPLOAD_MANUAL_BACKUP},
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["step_id"] == "upload_manual_backup"
+
+    backup = zigpy.backups.NetworkBackup()
+
+    with patch(
+        "homeassistant.components.zha.config_flow.ZhaConfigFlowHandler._parse_uploaded_backup",
+        return_value=backup,
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            user_input={config_flow.UPLOADED_BACKUP_FILE: str(uuid.uuid4())},
+        )
+
+    assert result3["type"] == FlowResultType.FORM
+    assert result3["step_id"] == "maybe_confirm_ezsp_restore"
+
+    result4 = await hass.config_entries.flow.async_configure(
+        result3["flow_id"],
+        user_input={config_flow.OVERWRITE_COORDINATOR_IEEE: False},
+    )
+
+    allow_overwrite_ieee_mock.assert_not_called()
+    mock_app.backups.restore_backup.assert_called_once_with(backup)
+
+    assert result4["type"] == FlowResultType.CREATE_ENTRY
+    assert result4["data"][CONF_RADIO_TYPE] == "ezsp"
 
 
 async def test_formation_strategy_restore_manual_backup_invalid_upload(
@@ -1119,20 +1151,15 @@ async def test_formation_strategy_restore_manual_backup_invalid_upload(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={
-            config_flow.FORMATION_STRATEGY: config_flow.FORMATION_RESTORE_MANUAL_BACKUP
-        },
+        user_input={"next_step_id": config_flow.FORMATION_UPLOAD_MANUAL_BACKUP},
     )
     await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["step_id"] == "upload_manual_backup"
 
-    # We must prompt for overwriting the IEEE address
-    assert config_flow.OVERWRITE_COORDINATOR_IEEE in result2["data_schema"].schema
-
     with patch(
-        "homeassistant.components.zha.config_flow.ZhaFlowHandler._parse_uploaded_backup",
+        "homeassistant.components.zha.config_flow.ZhaConfigFlowHandler._parse_uploaded_backup",
         side_effect=ValueError("Invalid backup JSON"),
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -1183,32 +1210,32 @@ async def test_formation_strategy_restore_automatic_backup_ezsp(
     result, port = await pick_radio(RadioType.ezsp)
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={
-            config_flow.FORMATION_STRATEGY: (
-                config_flow.FORMATION_RESTORE_AUTOMATIC_BACKUP
-            )
-        },
+        user_input={"next_step_id": (config_flow.FORMATION_CHOOSE_AUTOMATIC_BACKUP)},
     )
     await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.FORM
-    assert result2["step_id"] == "restore_automatic_backup"
-
-    # We must prompt for overwriting the IEEE address
-    assert config_flow.OVERWRITE_COORDINATOR_IEEE in result2["data_schema"].schema
+    assert result2["step_id"] == "choose_automatic_backup"
 
     result3 = await hass.config_entries.flow.async_configure(
         result2["flow_id"],
         user_input={
             config_flow.CHOOSE_AUTOMATIC_BACKUP: "choice:" + repr(backup),
-            config_flow.OVERWRITE_COORDINATOR_IEEE: True,
         },
+    )
+
+    assert result3["type"] == FlowResultType.FORM
+    assert result3["step_id"] == "maybe_confirm_ezsp_restore"
+
+    result4 = await hass.config_entries.flow.async_configure(
+        result3["flow_id"],
+        user_input={config_flow.OVERWRITE_COORDINATOR_IEEE: True},
     )
 
     mock_app.backups.restore_backup.assert_called_once()
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
-    assert result3["data"][CONF_RADIO_TYPE] == "ezsp"
+    assert result4["type"] == FlowResultType.CREATE_ENTRY
+    assert result4["data"][CONF_RADIO_TYPE] == "ezsp"
 
 
 @patch(
@@ -1238,15 +1265,13 @@ async def test_formation_strategy_restore_automatic_backup_non_ezsp(
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
-                config_flow.FORMATION_STRATEGY: (
-                    config_flow.FORMATION_RESTORE_AUTOMATIC_BACKUP
-                )
+                "next_step_id": (config_flow.FORMATION_CHOOSE_AUTOMATIC_BACKUP)
             },
         )
         await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.FORM
-    assert result2["step_id"] == "restore_automatic_backup"
+    assert result2["step_id"] == "choose_automatic_backup"
 
     # We must prompt for overwriting the IEEE address
     assert config_flow.OVERWRITE_COORDINATOR_IEEE not in result2["data_schema"].schema
@@ -1262,3 +1287,50 @@ async def test_formation_strategy_restore_automatic_backup_non_ezsp(
 
     assert result3["type"] == FlowResultType.CREATE_ENTRY
     assert result3["data"][CONF_RADIO_TYPE] == "znp"
+
+
+@patch(
+    "homeassistant.components.zha.config_flow.ZhaConfigFlowHandler._allow_overwrite_ezsp_ieee"
+)
+async def test_ezsp_restore_without_settings_change_ieee(
+    allow_overwrite_ieee_mock, pick_radio, mock_app, hass
+):
+    """Test a manual backup on EZSP coordinators without settings (no IEEE write)."""
+    # Fail to load settings
+    with patch.object(
+        mock_app, "load_network_info", MagicMock(side_effect=NetworkNotFormed())
+    ):
+        result, port = await pick_radio(RadioType.ezsp)
+
+    # Set the network state, it'll be picked up later after the load "succeeds"
+    backup = zigpy.backups.NetworkBackup()
+    mock_app.state.network_info = backup.network_info
+    mock_app.state.node_info = backup.node_info
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"next_step_id": config_flow.FORMATION_UPLOAD_MANUAL_BACKUP},
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["step_id"] == "upload_manual_backup"
+
+    with patch(
+        "homeassistant.components.zha.config_flow.ZhaConfigFlowHandler._parse_uploaded_backup",
+        return_value=backup,
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            user_input={config_flow.UPLOADED_BACKUP_FILE: str(uuid.uuid4())},
+        )
+
+    # We wrote settings when connecting
+    mock_app.write_network_info.assert_called_once()
+
+    # The backup was also immediately restored, since settings were compatible
+    allow_overwrite_ieee_mock.assert_not_called()
+    mock_app.backups.restore_backup.assert_called_once_with(backup)
+
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["data"][CONF_RADIO_TYPE] == "ezsp"

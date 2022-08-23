@@ -53,10 +53,10 @@ AUTOPROBE_RADIOS = (
 )
 
 FORMATION_STRATEGY = "formation_strategy"
-FORMATION_FORM_NEW_NETWORK = "Erase network settings and form a new network"
-FORMATION_REUSE_SETTINGS = "Keep radio network settings"
-FORMATION_RESTORE_AUTOMATIC_BACKUP = "Restore an automatic backup"
-FORMATION_RESTORE_MANUAL_BACKUP = "Upload a manual backup"
+FORMATION_FORM_NEW_NETWORK = "form_new_network"
+FORMATION_REUSE_SETTINGS = "reuse_settings"
+FORMATION_CHOOSE_AUTOMATIC_BACKUP = "choose_automatic_backup"
+FORMATION_UPLOAD_MANUAL_BACKUP = "upload_manual_backup"
 
 CHOOSE_AUTOMATIC_BACKUP = "choose_automatic_backup"
 OVERWRITE_COORDINATOR_IEEE = "overwrite_coordinator_ieee"
@@ -84,7 +84,7 @@ def _format_backup_choice(
     return f"{backup.backup_time.strftime('%c')} ({identifier})"
 
 
-class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class ZhaConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 3
@@ -97,6 +97,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._title: str | None = None
         self._current_settings: zigpy.backups.NetworkBackup | None = None
         self._backups: list[zigpy.backups.NetworkBackup] | None = None
+        self._chosen_backup: zigpy.backups.NetworkBackup | None = None
 
     @contextlib.asynccontextmanager
     async def _connect_zigpy_app(self) -> ControllerApplication:
@@ -167,13 +168,21 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(
             title=self._title,
-            data={CONF_DEVICE: device_settings, CONF_RADIO_TYPE: self._radio_type.name},
+            data={
+                CONF_DEVICE: device_settings,
+                CONF_RADIO_TYPE: self._radio_type.name,
+            },
         )
 
     async def async_step_user(self, user_input=None):
         """Handle a zha config flow start."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
+
+        return await self.async_step_choose_serial_port(user_input=user_input)
+
+    async def async_step_choose_serial_port(self, user_input=None):
+        """Choose a serial port."""
 
         ports = await self.hass.async_add_executor_job(serial.tools.list_ports.comports)
         list_of_ports = [
@@ -210,7 +219,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_choose_formation_strategy()
 
         schema = vol.Schema({vol.Required(CONF_DEVICE_PATH): vol.In(list_of_ports)})
-        return self.async_show_form(step_id="user", data_schema=schema)
+        return self.async_show_form(step_id="choose_serial_port", data_schema=schema)
 
     async def async_step_manual_pick_radio_type(self, user_input=None):
         """Manually select radio type."""
@@ -261,24 +270,8 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_choose_formation_strategy(self, user_input=None):
-        """Choose how to deal with the current radio's settings."""
-
-        if user_input is not None:
-            strategy = user_input[FORMATION_STRATEGY]
-
-            if strategy == FORMATION_FORM_NEW_NETWORK:
-                async with self._connect_zigpy_app() as app:
-                    await app.form_network()
-            elif strategy == FORMATION_REUSE_SETTINGS:
-                pass
-            elif strategy == FORMATION_RESTORE_MANUAL_BACKUP:
-                return await self.async_step_upload_manual_backup()
-            elif strategy == FORMATION_RESTORE_AUTOMATIC_BACKUP:
-                return await self.async_step_restore_automatic_backup()
-
-            return await self._async_create_radio_entity()
-
+    async def _async_load_network_settings(self):
+        """Connect to the radio and load its current network settings."""
         async with self._connect_zigpy_app() as app:
             # Check if the stick has any settings and load them
             try:
@@ -293,6 +286,10 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     node_info=app.state.node_info,
                 )
 
+    async def async_step_choose_formation_strategy(self, user_input=None):
+        """Choose how to deal with the current radio's settings."""
+        await self._async_load_network_settings()
+
         strategies = []
 
         # Check if we have any automatic backups *and* if the backups differ from
@@ -301,37 +298,29 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             not backup.is_compatible_with(self._current_settings)
             for backup in self._backups
         ):
-            strategies.append(FORMATION_RESTORE_AUTOMATIC_BACKUP)
+            strategies.append(CHOOSE_AUTOMATIC_BACKUP)
 
         if self._current_settings is not None:
             strategies.append(FORMATION_REUSE_SETTINGS)
 
-        strategies.append(FORMATION_RESTORE_MANUAL_BACKUP)
+        strategies.append(FORMATION_UPLOAD_MANUAL_BACKUP)
         strategies.append(FORMATION_FORM_NEW_NETWORK)
 
-        # Pick a default. Forming a new network will always be an option but we would
-        # prefer to suggest something non-destructive if it's available.
-        suggested_strategy = [
-            strategy
-            for strategy in strategies
-            if strategy
-            in (
-                FORMATION_RESTORE_AUTOMATIC_BACKUP,
-                FORMATION_REUSE_SETTINGS,
-                FORMATION_FORM_NEW_NETWORK,
-            )
-        ][0]
-
-        schema = {
-            vol.Required(FORMATION_STRATEGY, default=suggested_strategy): vol.In(
-                strategies
-            ),
-        }
-
-        return self.async_show_form(
+        return self.async_show_menu(
             step_id="choose_formation_strategy",
-            data_schema=vol.Schema(schema),
+            menu_options=strategies,
         )
+
+    async def async_step_reuse_settings(self, user_input=None):
+        """Reuse the existing network settings on the stick."""
+        return await self._async_create_radio_entity()
+
+    async def async_step_form_new_network(self, user_input=None):
+        """Form a brand new network."""
+        async with self._connect_zigpy_app() as app:
+            await app.form_network()
+
+        return await self._async_create_radio_entity()
 
     def _parse_uploaded_backup(
         self, uploaded_file_id: str
@@ -348,44 +337,28 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                backup = await self.hass.async_add_executor_job(
+                self._chosen_backup = await self.hass.async_add_executor_job(
                     self._parse_uploaded_backup, user_input[UPLOADED_BACKUP_FILE]
                 )
             except ValueError:
                 errors["base"] = "invalid_backup_json"
             else:
-                if user_input.get(OVERWRITE_COORDINATOR_IEEE):
-                    backup = self._allow_overwrite_ezsp_ieee(backup)
-
-                async with self._connect_zigpy_app() as app:
-                    await app.backups.restore_backup(backup)
-
-                return await self._async_create_radio_entity()
-
-        data_schema = {
-            vol.Required(UPLOADED_BACKUP_FILE): FileSelector(
-                FileSelectorConfig(accept=".json,application/json")
-            )
-        }
-
-        if self._radio_type == RadioType.ezsp and (
-            self._current_settings is None
-            or (
-                self._current_settings.network_info.metadata["ezsp"][
-                    "can_write_custom_eui64"
-                ]
-            )
-        ):
-            data_schema[vol.Required(OVERWRITE_COORDINATOR_IEEE, default=True)] = bool
+                return await self.async_step_maybe_confirm_ezsp_restore()
 
         return self.async_show_form(
             step_id="upload_manual_backup",
-            data_schema=vol.Schema(data_schema),
+            data_schema=vol.Schema(
+                {
+                    vol.Required(UPLOADED_BACKUP_FILE): FileSelector(
+                        FileSelectorConfig(accept=".json,application/json")
+                    )
+                }
+            ),
             errors=errors,
         )
 
-    async def async_step_restore_automatic_backup(self, user_input=None):
-        """Select and restore an automatic backup."""
+    async def async_step_choose_automatic_backup(self, user_input=None):
+        """Select an automatic backup."""
 
         if self.show_advanced_options:
             # Always show the PAN IDs when in advanced mode
@@ -405,9 +378,60 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             ]
 
         if user_input is not None:
-            backup = self._backups[choices.index(user_input[CHOOSE_AUTOMATIC_BACKUP])]
+            index = choices.index(user_input[CHOOSE_AUTOMATIC_BACKUP])
+            self._chosen_backup = self._backups[index]
 
-            if user_input.get(OVERWRITE_COORDINATOR_IEEE):
+            return await self.async_step_maybe_confirm_ezsp_restore()
+
+        return self.async_show_form(
+            step_id="choose_automatic_backup",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CHOOSE_AUTOMATIC_BACKUP, default=choices[0]): vol.In(
+                        choices
+                    ),
+                }
+            ),
+        )
+
+    async def async_step_maybe_confirm_ezsp_restore(self, user_input=None):
+        """Confirm restore for EZSP radios that require permanent IEEE writes."""
+        if self._radio_type != RadioType.ezsp:
+            async with self._connect_zigpy_app() as app:
+                await app.backups.restore_backup(self._chosen_backup)
+
+            return await self._async_create_radio_entity()
+
+        # We have no way to partially load network settings if no network is formed
+        if self._current_settings is None:
+            async with self._connect_zigpy_app() as app:
+                # Since we are going to be restoring the backup anyways, write it to the
+                # radio without overwriting the IEEE but don't take a backup with these
+                # temporary settings
+                await app.write_network_info(
+                    network_info=self._chosen_backup.network_info,
+                    node_info=self._chosen_backup.node_info,
+                )
+
+            await self._async_load_network_settings()
+
+        if (
+            self._current_settings.node_info.ieee == self._chosen_backup.node_info.ieee
+            or not self._current_settings.network_info.metadata["ezsp"][
+                "can_write_custom_eui64"
+            ]
+        ):
+            # No point in prompting the user if the backup doesn't have a new IEEE
+            # address or if there is no way to overwrite the IEEE address a second time
+            async with self._connect_zigpy_app() as app:
+                await app.backups.restore_backup(self._chosen_backup)
+
+            return await self._async_create_radio_entity()
+
+        if user_input is not None:
+            backup = self._chosen_backup
+
+            if user_input[OVERWRITE_COORDINATOR_IEEE]:
                 backup = self._allow_overwrite_ezsp_ieee(backup)
 
             async with self._connect_zigpy_app() as app:
@@ -415,27 +439,11 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             return await self._async_create_radio_entity()
 
-        data_schema = {
-            vol.Required(CHOOSE_AUTOMATIC_BACKUP, default=choices[0]): vol.In(choices),
-        }
-
-        if self._radio_type == RadioType.ezsp and (
-            self._current_settings is None
-            or (
-                self._current_settings.network_info.metadata["ezsp"][
-                    "can_write_custom_eui64"
-                ]
-                and any(
-                    backup.node_info.ieee != self._current_settings.node_info.ieee
-                    for backup in self._backups
-                )
-            )
-        ):
-            data_schema[vol.Required(OVERWRITE_COORDINATOR_IEEE, default=True)] = bool
-
         return self.async_show_form(
-            step_id="restore_automatic_backup",
-            data_schema=vol.Schema(data_schema),
+            step_id="maybe_confirm_ezsp_restore",
+            data_schema=vol.Schema(
+                {vol.Required(OVERWRITE_COORDINATOR_IEEE, default=True): bool}
+            ),
         )
 
     async def async_step_usb(self, discovery_info: usb.UsbServiceInfo) -> FlowResult:

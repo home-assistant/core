@@ -2,8 +2,8 @@
   "config": {
     "flow_title": "{name}",
     "step": {
-      "user": {
-        "title": "ZHA",
+      "choose_serial_port": {
+        "title": "Select a Serial Port",
         "data": { "path": "Serial Device Path" },
         "description": "Select the serial port for your Zigbee radio"
       },
@@ -13,7 +13,7 @@
       "confirm_hardware": {
         "description": "Do you want to setup {name}?"
       },
-      "manual_pick_radio": {
+      "manual_pick_radio_type": {
         "data": { "radio_type": "Radio Type" },
         "title": "Radio Type",
         "description": "Pick your Zigbee radio type"
@@ -29,21 +29,30 @@
       },
       "choose_formation_strategy": {
         "title": "Network Formation",
-        "description": "Choose the network settings for your radio"
+        "description": "Choose the network settings for your radio.",
+        "menu_options": {
+          "form_new_network": "Erase network settings and form a new network",
+          "reuse_settings": "Keep radio network settings",
+          "choose_automatic_backup": "Restore an automatic backup",
+          "upload_manual_backup": "Upload a manual backup"
+        }
       },
-      "restore_automatic_backup": {
+      "choose_automatic_backup": {
         "title": "Restore Automatic Backup",
         "description": "Restore your network settings from an automatic backup",
         "data": {
-          "choose_automatic_backup": "Choose an automatic backup",
-          "overwrite_coordinator_ieee": "Overwrite the radio IEEE address (permanent)"
+          "choose_automatic_backup": "Choose an automatic backup"
         }
       },
       "upload_manual_backup": {
         "title": "Upload a Manual Backup",
-        "description": "Restore your network settings from an uploaded backup JSON file. You can download one from a different ZHA installation from \"Diagnostics\".",
+        "description": "Restore your network settings from an uploaded backup JSON file. You can download one from a different ZHA installation from \"Diagnostics\"."
+      },
+      "maybe_confirm_ezsp_restore": {
+        "title": "Overwrite Radio IEEE Address",
+        "description": "Your chosen backup has a different IEEE address than your radio.  For your network to function properly, the IEEE address of your radio should also be changed.  This is a permanent operation.",
         "data": {
-          "overwrite_coordinator_ieee": "Overwrite the radio IEEE address (permanent)"
+          "overwrite_coordinator_ieee": "Overwrite the radio IEEE address"
         }
       }
     },
