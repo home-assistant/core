@@ -5,7 +5,6 @@ import asyncio
 import contextlib
 from contextlib import suppress
 from dataclasses import dataclass
-import fnmatch
 from ipaddress import IPv4Address, IPv6Address, ip_address
 import logging
 import socket
@@ -39,6 +38,7 @@ from homeassistant.loader import (
     async_get_zeroconf,
     bind_hass,
 )
+from homeassistant.util.fnmatch import memorized_fnmatch
 
 from .models import HaAsyncServiceBrowser, HaAsyncZeroconf, HaZeroconf
 from .usage import install_multiple_zeroconf_catcher
@@ -302,7 +302,8 @@ def _match_against_data(
             return False
         match_val = matcher[key]
         assert isinstance(match_val, str)
-        if not fnmatch.fnmatch(match_data[key], match_val):
+
+        if not memorized_fnmatch(match_data[key], match_val):
             return False
     return True
 
@@ -312,7 +313,7 @@ def _match_against_props(matcher: dict[str, str], props: dict[str, str]) -> bool
     return not any(
         key
         for key in matcher
-        if key not in props or not fnmatch.fnmatch(props[key].lower(), matcher[key])
+        if key not in props or not memorized_fnmatch(props[key].lower(), matcher[key])
     )
 
 
@@ -484,7 +485,7 @@ def async_get_homekit_discovery_domain(
         if (
             model != test_model
             and not model.startswith((f"{test_model} ", f"{test_model}-"))
-            and not fnmatch.fnmatch(model, test_model)
+            and not memorized_fnmatch(model, test_model)
         ):
             continue
 

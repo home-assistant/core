@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Coroutine, Mapping
 import dataclasses
-import fnmatch
 import logging
 import os
 import sys
@@ -23,6 +22,7 @@ from homeassistant.helpers import discovery_flow, system_info
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_usb
+from homeassistant.util.fnmatch import memorized_fnmatch
 
 from .const import DOMAIN
 from .models import USBDevice
@@ -94,7 +94,7 @@ def _fnmatch_lower(name: str | None, pattern: str) -> bool:
     """Match a lowercase version of the name."""
     if name is None:
         return False
-    return fnmatch.fnmatch(name.lower(), pattern)
+    return memorized_fnmatch(name.lower(), pattern)
 
 
 def _is_matching(device: USBDevice, matcher: Mapping[str, str]) -> bool:
