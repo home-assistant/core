@@ -1181,7 +1181,7 @@ pymonoprice==0.3
 pymyq==3.1.4
 
 # homeassistant.components.mysensors
-pymysensors==0.22.1
+pymysensors==0.24.0
 
 # homeassistant.components.netgear
 pynetgear==0.10.7
