@@ -20,7 +20,7 @@ from homeassistant.helpers.json import json_loads
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 from homeassistant.loader import async_get_mqtt
 
-from . import async_subscribe
+from .. import mqtt  # pylint:disable=[hass-absolute-import]
 from .abbreviations import ABBREVIATIONS, DEVICE_ABBREVIATIONS
 from .const import (
     ATTR_DISCOVERY_HASH,
@@ -248,7 +248,7 @@ async def async_start(  # noqa: C901
     ]
     hass.data[DISCOVERY_UNSUBSCRIBE] = await asyncio.gather(
         *(
-            async_subscribe(hass, topic, async_discovery_message_received, 0)
+            mqtt.async_subscribe(hass, topic, async_discovery_message_received, 0)
             for topic in discovery_topics
         )
     )
@@ -295,7 +295,7 @@ async def async_start(  # noqa: C901
 
         for topic in topics:
             key = f"{integration}_{topic}"
-            hass.data[INTEGRATION_UNSUBSCRIBE][key] = await async_subscribe(
+            hass.data[INTEGRATION_UNSUBSCRIBE][key] = await mqtt.async_subscribe(
                 hass,
                 topic,
                 functools.partial(async_integration_message_received, integration),
