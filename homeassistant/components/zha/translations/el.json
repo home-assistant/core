@@ -13,6 +13,9 @@
             "confirm": {
                 "description": "\u0398\u03ad\u03bb\u03b5\u03c4\u03b5 \u03bd\u03b1 \u03c1\u03c5\u03b8\u03bc\u03af\u03c3\u03b5\u03c4\u03b5 \u03c4\u03bf {name} ;"
             },
+            "confirm_hardware": {
+                "description": "\u0398\u03ad\u03bb\u03b5\u03c4\u03b5 \u03bd\u03b1 \u03c1\u03c5\u03b8\u03bc\u03af\u03c3\u03b5\u03c4\u03b5 \u03c4\u03bf {name};"
+            },
             "pick_radio": {
                 "data": {
                     "radio_type": "\u03a4\u03cd\u03c0\u03bf\u03c2 \u03ba\u03b5\u03c1\u03b1\u03af\u03b1\u03c2"

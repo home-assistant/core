@@ -1,7 +1,8 @@
 """Tests for the Bluetooth integration."""
 import asyncio
 from datetime import timedelta
-from unittest.mock import MagicMock, patch
+import time
+from unittest.mock import MagicMock, Mock, patch
 
 from bleak import BleakError
 from bleak.backends.scanner import AdvertisementData, BLEDevice
@@ -20,6 +21,7 @@ from homeassistant.components.bluetooth import (
 )
 from homeassistant.components.bluetooth.const import (
     DEFAULT_ADDRESS,
+    DOMAIN,
     SOURCE_LOCAL,
     UNAVAILABLE_TRACK_SECONDS,
 )
@@ -33,6 +35,7 @@ from . import (
     _get_manager,
     async_setup_with_default_adapter,
     inject_advertisement,
+    inject_advertisement_with_time_and_source_connectable,
     patch_discovered_devices,
 )
 
@@ -228,7 +231,7 @@ async def test_discovery_match_by_service_uuid(
         wrong_device = BLEDevice("44:44:33:11:23:45", "wrong_name")
         wrong_adv = AdvertisementData(local_name="wrong_name", service_uuids=[])
 
-        inject_advertisement(wrong_device, wrong_adv)
+        inject_advertisement(hass, wrong_device, wrong_adv)
         await hass.async_block_till_done()
 
         assert len(mock_config_flow.mock_calls) == 0
@@ -238,11 +241,158 @@ async def test_discovery_match_by_service_uuid(
             local_name="wohand", service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]
         )
 
-        inject_advertisement(switchbot_device, switchbot_adv)
+        inject_advertisement(hass, switchbot_device, switchbot_adv)
         await hass.async_block_till_done()
 
         assert len(mock_config_flow.mock_calls) == 1
         assert mock_config_flow.mock_calls[0][1][0] == "switchbot"
+
+
+def _domains_from_mock_config_flow(mock_config_flow: Mock) -> list[str]:
+    """Get all the domains that were passed to async_init except bluetooth."""
+    return [call[1][0] for call in mock_config_flow.mock_calls if call[1][0] != DOMAIN]
+
+
+async def test_discovery_match_by_service_uuid_connectable(
+    hass, mock_bleak_scanner_start, macos_adapter
+):
+    """Test bluetooth discovery match by service_uuid and the ble device is connectable."""
+    mock_bt = [
+        {
+            "domain": "switchbot",
+            "connectable": True,
+            "service_uuid": "cba20d00-224d-11e6-9fb8-0002a5d5c51b",
+        }
+    ]
+    with patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
+    ), patch.object(hass.config_entries.flow, "async_init") as mock_config_flow:
+        await async_setup_with_default_adapter(hass)
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        assert len(mock_bleak_scanner_start.mock_calls) == 1
+
+        wrong_device = BLEDevice("44:44:33:11:23:45", "wrong_name")
+        wrong_adv = AdvertisementData(local_name="wrong_name", service_uuids=[])
+
+        inject_advertisement_with_time_and_source_connectable(
+            hass, wrong_device, wrong_adv, time.monotonic(), "any", True
+        )
+        await hass.async_block_till_done()
+
+        assert len(_domains_from_mock_config_flow(mock_config_flow)) == 0
+
+        switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
+        switchbot_adv = AdvertisementData(
+            local_name="wohand", service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]
+        )
+
+        inject_advertisement_with_time_and_source_connectable(
+            hass, switchbot_device, switchbot_adv, time.monotonic(), "any", True
+        )
+        await hass.async_block_till_done()
+
+        called_domains = _domains_from_mock_config_flow(mock_config_flow)
+        assert len(called_domains) == 1
+        assert called_domains == ["switchbot"]
+
+
+async def test_discovery_match_by_service_uuid_not_connectable(
+    hass, mock_bleak_scanner_start, macos_adapter
+):
+    """Test bluetooth discovery match by service_uuid and the ble device is not connectable."""
+    mock_bt = [
+        {
+            "domain": "switchbot",
+            "connectable": True,
+            "service_uuid": "cba20d00-224d-11e6-9fb8-0002a5d5c51b",
+        }
+    ]
+    with patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
+    ), patch.object(hass.config_entries.flow, "async_init") as mock_config_flow:
+        await async_setup_with_default_adapter(hass)
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        assert len(mock_bleak_scanner_start.mock_calls) == 1
+
+        wrong_device = BLEDevice("44:44:33:11:23:45", "wrong_name")
+        wrong_adv = AdvertisementData(local_name="wrong_name", service_uuids=[])
+
+        inject_advertisement_with_time_and_source_connectable(
+            hass, wrong_device, wrong_adv, time.monotonic(), "any", False
+        )
+        await hass.async_block_till_done()
+
+        assert len(_domains_from_mock_config_flow(mock_config_flow)) == 0
+
+        switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
+        switchbot_adv = AdvertisementData(
+            local_name="wohand", service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]
+        )
+
+        inject_advertisement_with_time_and_source_connectable(
+            hass, switchbot_device, switchbot_adv, time.monotonic(), "any", False
+        )
+        await hass.async_block_till_done()
+
+        assert len(_domains_from_mock_config_flow(mock_config_flow)) == 0
+
+
+async def test_discovery_match_by_name_connectable_false(
+    hass, mock_bleak_scanner_start, macos_adapter
+):
+    """Test bluetooth discovery match by name and the integration will take non-connectable devices."""
+    mock_bt = [
+        {
+            "domain": "qingping",
+            "connectable": False,
+            "local_name": "Qingping*",
+        }
+    ]
+    with patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
+    ), patch.object(hass.config_entries.flow, "async_init") as mock_config_flow:
+        await async_setup_with_default_adapter(hass)
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        assert len(mock_bleak_scanner_start.mock_calls) == 1
+
+        wrong_device = BLEDevice("44:44:33:11:23:45", "wrong_name")
+        wrong_adv = AdvertisementData(local_name="wrong_name", service_uuids=[])
+
+        inject_advertisement_with_time_and_source_connectable(
+            hass, wrong_device, wrong_adv, time.monotonic(), "any", False
+        )
+        await hass.async_block_till_done()
+
+        assert len(_domains_from_mock_config_flow(mock_config_flow)) == 0
+
+        qingping_device = BLEDevice("44:44:33:11:23:45", "Qingping Motion & Light")
+        qingping_adv = AdvertisementData(
+            local_name="Qingping Motion & Light",
+            service_data={
+                "0000fdcd-0000-1000-8000-00805f9b34fb": b"H\x12\xcd\xd5`4-X\x08\x04\x01\xe8\x00\x00\x0f\x01{"
+            },
+        )
+
+        inject_advertisement_with_time_and_source_connectable(
+            hass, qingping_device, qingping_adv, time.monotonic(), "any", False
+        )
+        await hass.async_block_till_done()
+
+        assert _domains_from_mock_config_flow(mock_config_flow) == ["qingping"]
+
+        mock_config_flow.reset_mock()
+        # Make sure it will also take a connectable device
+        inject_advertisement_with_time_and_source_connectable(
+            hass, qingping_device, qingping_adv, time.monotonic(), "any", True
+        )
+        await hass.async_block_till_done()
+        assert _domains_from_mock_config_flow(mock_config_flow) == ["qingping"]
 
 
 async def test_discovery_match_by_local_name(
@@ -264,7 +414,7 @@ async def test_discovery_match_by_local_name(
         wrong_device = BLEDevice("44:44:33:11:23:45", "wrong_name")
         wrong_adv = AdvertisementData(local_name="wrong_name", service_uuids=[])
 
-        inject_advertisement(wrong_device, wrong_adv)
+        inject_advertisement(hass, wrong_device, wrong_adv)
         await hass.async_block_till_done()
 
         assert len(mock_config_flow.mock_calls) == 0
@@ -272,7 +422,7 @@ async def test_discovery_match_by_local_name(
         switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
         switchbot_adv = AdvertisementData(local_name="wohand", service_uuids=[])
 
-        inject_advertisement(switchbot_device, switchbot_adv)
+        inject_advertisement(hass, switchbot_device, switchbot_adv)
         await hass.async_block_till_done()
 
         assert len(mock_config_flow.mock_calls) == 1
@@ -315,21 +465,21 @@ async def test_discovery_match_by_manufacturer_id_and_manufacturer_data_start(
 
         # 1st discovery with no manufacturer data
         # should not trigger config flow
-        inject_advertisement(hkc_device, hkc_adv_no_mfr_data)
+        inject_advertisement(hass, hkc_device, hkc_adv_no_mfr_data)
         await hass.async_block_till_done()
         assert len(mock_config_flow.mock_calls) == 0
         mock_config_flow.reset_mock()
 
         # 2nd discovery with manufacturer data
         # should trigger a config flow
-        inject_advertisement(hkc_device, hkc_adv)
+        inject_advertisement(hass, hkc_device, hkc_adv)
         await hass.async_block_till_done()
         assert len(mock_config_flow.mock_calls) == 1
         assert mock_config_flow.mock_calls[0][1][0] == "homekit_controller"
         mock_config_flow.reset_mock()
 
         # 3rd discovery should not generate another flow
-        inject_advertisement(hkc_device, hkc_adv)
+        inject_advertisement(hass, hkc_device, hkc_adv)
         await hass.async_block_till_done()
 
         assert len(mock_config_flow.mock_calls) == 0
@@ -340,7 +490,7 @@ async def test_discovery_match_by_manufacturer_id_and_manufacturer_data_start(
             local_name="lock", service_uuids=[], manufacturer_data={76: b"\x02"}
         )
 
-        inject_advertisement(not_hkc_device, not_hkc_adv)
+        inject_advertisement(hass, not_hkc_device, not_hkc_adv)
         await hass.async_block_till_done()
 
         assert len(mock_config_flow.mock_calls) == 0
@@ -349,7 +499,7 @@ async def test_discovery_match_by_manufacturer_id_and_manufacturer_data_start(
             local_name="lock", service_uuids=[], manufacturer_data={21: b"\x02"}
         )
 
-        inject_advertisement(not_apple_device, not_apple_adv)
+        inject_advertisement(hass, not_apple_device, not_apple_adv)
         await hass.async_block_till_done()
 
         assert len(mock_config_flow.mock_calls) == 0
@@ -422,21 +572,21 @@ async def test_discovery_match_by_service_data_uuid_then_others(
         )
         # 1st discovery should not generate a flow because the
         # service_data_uuid is not in the advertisement
-        inject_advertisement(device, adv_without_service_data_uuid)
+        inject_advertisement(hass, device, adv_without_service_data_uuid)
         await hass.async_block_till_done()
         assert len(mock_config_flow.mock_calls) == 0
         mock_config_flow.reset_mock()
 
         # 2nd discovery should not generate a flow because the
         # service_data_uuid is not in the advertisement
-        inject_advertisement(device, adv_without_service_data_uuid)
+        inject_advertisement(hass, device, adv_without_service_data_uuid)
         await hass.async_block_till_done()
         assert len(mock_config_flow.mock_calls) == 0
         mock_config_flow.reset_mock()
 
         # 3rd discovery should generate a flow because the
         # manufacturer_data is in the advertisement
-        inject_advertisement(device, adv_with_mfr_data)
+        inject_advertisement(hass, device, adv_with_mfr_data)
         await hass.async_block_till_done()
         assert len(mock_config_flow.mock_calls) == 1
         assert mock_config_flow.mock_calls[0][1][0] == "other_domain"
@@ -445,7 +595,7 @@ async def test_discovery_match_by_service_data_uuid_then_others(
         # 4th discovery should generate a flow because the
         # service_data_uuid is in the advertisement and
         # we never saw a service_data_uuid before
-        inject_advertisement(device, adv_with_service_data_uuid)
+        inject_advertisement(hass, device, adv_with_service_data_uuid)
         await hass.async_block_till_done()
         assert len(mock_config_flow.mock_calls) == 1
         assert mock_config_flow.mock_calls[0][1][0] == "my_domain"
@@ -453,14 +603,14 @@ async def test_discovery_match_by_service_data_uuid_then_others(
 
         # 5th discovery should not generate a flow because the
         # we already saw an advertisement with the service_data_uuid
-        inject_advertisement(device, adv_with_service_data_uuid)
+        inject_advertisement(hass, device, adv_with_service_data_uuid)
         await hass.async_block_till_done()
         assert len(mock_config_flow.mock_calls) == 0
 
         # 6th discovery should not generate a flow because the
         # manufacturer_data is in the advertisement
         # and we saw manufacturer_data before
-        inject_advertisement(device, adv_with_service_data_uuid_and_mfr_data)
+        inject_advertisement(hass, device, adv_with_service_data_uuid_and_mfr_data)
         await hass.async_block_till_done()
         assert len(mock_config_flow.mock_calls) == 0
         mock_config_flow.reset_mock()
@@ -469,7 +619,7 @@ async def test_discovery_match_by_service_data_uuid_then_others(
         # service_uuids is in the advertisement
         # and we never saw service_uuids before
         inject_advertisement(
-            device, adv_with_service_data_uuid_and_mfr_data_and_service_uuid
+            hass, device, adv_with_service_data_uuid_and_mfr_data_and_service_uuid
         )
         await hass.async_block_till_done()
         assert len(mock_config_flow.mock_calls) == 2
@@ -482,7 +632,7 @@ async def test_discovery_match_by_service_data_uuid_then_others(
         # 8th discovery should not generate a flow
         # since all fields have been seen at this point
         inject_advertisement(
-            device, adv_with_service_data_uuid_and_mfr_data_and_service_uuid
+            hass, device, adv_with_service_data_uuid_and_mfr_data_and_service_uuid
         )
         await hass.async_block_till_done()
         assert len(mock_config_flow.mock_calls) == 0
@@ -490,19 +640,19 @@ async def test_discovery_match_by_service_data_uuid_then_others(
 
         # 9th discovery should not generate a flow
         # since all fields have been seen at this point
-        inject_advertisement(device, adv_with_service_uuid)
+        inject_advertisement(hass, device, adv_with_service_uuid)
         await hass.async_block_till_done()
         assert len(mock_config_flow.mock_calls) == 0
 
         # 10th discovery should not generate a flow
         # since all fields have been seen at this point
-        inject_advertisement(device, adv_with_service_data_uuid)
+        inject_advertisement(hass, device, adv_with_service_data_uuid)
         await hass.async_block_till_done()
         assert len(mock_config_flow.mock_calls) == 0
 
         # 11th discovery should not generate a flow
         # since all fields have been seen at this point
-        inject_advertisement(device, adv_without_service_data_uuid)
+        inject_advertisement(hass, device, adv_without_service_data_uuid)
         await hass.async_block_till_done()
         assert len(mock_config_flow.mock_calls) == 0
 
@@ -546,7 +696,7 @@ async def test_discovery_match_first_by_service_uuid_and_then_manufacturer_id(
 
         # 1st discovery with matches service_uuid
         # should trigger config flow
-        inject_advertisement(device, adv_service_uuids)
+        inject_advertisement(hass, device, adv_service_uuids)
         await hass.async_block_till_done()
         assert len(mock_config_flow.mock_calls) == 1
         assert mock_config_flow.mock_calls[0][1][0] == "my_domain"
@@ -554,19 +704,19 @@ async def test_discovery_match_first_by_service_uuid_and_then_manufacturer_id(
 
         # 2nd discovery with manufacturer data
         # should trigger a config flow
-        inject_advertisement(device, adv_manufacturer_data)
+        inject_advertisement(hass, device, adv_manufacturer_data)
         await hass.async_block_till_done()
         assert len(mock_config_flow.mock_calls) == 1
         assert mock_config_flow.mock_calls[0][1][0] == "my_domain"
         mock_config_flow.reset_mock()
 
         # 3rd discovery should not generate another flow
-        inject_advertisement(device, adv_service_uuids)
+        inject_advertisement(hass, device, adv_service_uuids)
         await hass.async_block_till_done()
         assert len(mock_config_flow.mock_calls) == 0
 
         # 4th discovery should not generate another flow
-        inject_advertisement(device, adv_manufacturer_data)
+        inject_advertisement(hass, device, adv_manufacturer_data)
         await hass.async_block_till_done()
         assert len(mock_config_flow.mock_calls) == 0
 
@@ -590,10 +740,10 @@ async def test_rediscovery(hass, mock_bleak_scanner_start, enable_bluetooth):
             local_name="wohand", service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]
         )
 
-        inject_advertisement(switchbot_device, switchbot_adv)
+        inject_advertisement(hass, switchbot_device, switchbot_adv)
         await hass.async_block_till_done()
 
-        inject_advertisement(switchbot_device, switchbot_adv)
+        inject_advertisement(hass, switchbot_device, switchbot_adv)
         await hass.async_block_till_done()
 
         assert len(mock_config_flow.mock_calls) == 1
@@ -601,7 +751,7 @@ async def test_rediscovery(hass, mock_bleak_scanner_start, enable_bluetooth):
 
         async_rediscover_address(hass, "44:44:33:11:23:45")
 
-        inject_advertisement(switchbot_device, switchbot_adv)
+        inject_advertisement(hass, switchbot_device, switchbot_adv)
         await hass.async_block_till_done()
 
         assert len(mock_config_flow.mock_calls) == 2
@@ -633,10 +783,10 @@ async def test_async_discovered_device_api(
 
             wrong_device = BLEDevice("44:44:33:11:23:42", "wrong_name")
             wrong_adv = AdvertisementData(local_name="wrong_name", service_uuids=[])
-            inject_advertisement(wrong_device, wrong_adv)
+            inject_advertisement(hass, wrong_device, wrong_adv)
             switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
             switchbot_adv = AdvertisementData(local_name="wohand", service_uuids=[])
-            inject_advertisement(switchbot_device, switchbot_adv)
+            inject_advertisement(hass, switchbot_device, switchbot_adv)
             wrong_device_went_unavailable = False
             switchbot_device_went_unavailable = False
 
@@ -670,8 +820,8 @@ async def test_async_discovered_device_api(
             assert wrong_device_went_unavailable is True
 
             # See the devices again
-            inject_advertisement(wrong_device, wrong_adv)
-            inject_advertisement(switchbot_device, switchbot_adv)
+            inject_advertisement(hass, wrong_device, wrong_adv)
+            inject_advertisement(hass, switchbot_device, switchbot_adv)
             # Cancel the callbacks
             wrong_device_unavailable_cancel()
             switchbot_device_unavailable_cancel()
@@ -688,10 +838,11 @@ async def test_async_discovered_device_api(
 
             assert len(service_infos) == 1
             # wrong_name should not appear because bleak no longer sees it
-            assert service_infos[0].name == "wohand"
-            assert service_infos[0].source == SOURCE_LOCAL
-            assert isinstance(service_infos[0].device, BLEDevice)
-            assert isinstance(service_infos[0].advertisement, AdvertisementData)
+            infos = list(service_infos)
+            assert infos[0].name == "wohand"
+            assert infos[0].source == SOURCE_LOCAL
+            assert isinstance(infos[0].device, BLEDevice)
+            assert isinstance(infos[0].advertisement, AdvertisementData)
 
             assert bluetooth.async_address_present(hass, "44:44:33:11:23:42") is False
             assert bluetooth.async_address_present(hass, "44:44:33:11:23:45") is True
@@ -736,25 +887,25 @@ async def test_register_callbacks(hass, mock_bleak_scanner_start, enable_bluetoo
             service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"H\x10c"},
         )
 
-        inject_advertisement(switchbot_device, switchbot_adv)
+        inject_advertisement(hass, switchbot_device, switchbot_adv)
 
         empty_device = BLEDevice("11:22:33:44:55:66", "empty")
         empty_adv = AdvertisementData(local_name="empty")
 
-        inject_advertisement(empty_device, empty_adv)
+        inject_advertisement(hass, empty_device, empty_adv)
         await hass.async_block_till_done()
 
         empty_device = BLEDevice("11:22:33:44:55:66", "empty")
         empty_adv = AdvertisementData(local_name="empty")
 
         # 3rd callback raises ValueError but is still tracked
-        inject_advertisement(empty_device, empty_adv)
+        inject_advertisement(hass, empty_device, empty_adv)
         await hass.async_block_till_done()
 
         cancel()
 
         # 4th callback should not be tracked since we canceled
-        inject_advertisement(empty_device, empty_adv)
+        inject_advertisement(hass, empty_device, empty_adv)
         await hass.async_block_till_done()
 
     assert len(callbacks) == 3
@@ -819,25 +970,25 @@ async def test_register_callback_by_address(
             service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"H\x10c"},
         )
 
-        inject_advertisement(switchbot_device, switchbot_adv)
+        inject_advertisement(hass, switchbot_device, switchbot_adv)
 
         empty_device = BLEDevice("11:22:33:44:55:66", "empty")
         empty_adv = AdvertisementData(local_name="empty")
 
-        inject_advertisement(empty_device, empty_adv)
+        inject_advertisement(hass, empty_device, empty_adv)
         await hass.async_block_till_done()
 
         empty_device = BLEDevice("11:22:33:44:55:66", "empty")
         empty_adv = AdvertisementData(local_name="empty")
 
         # 3rd callback raises ValueError but is still tracked
-        inject_advertisement(empty_device, empty_adv)
+        inject_advertisement(hass, empty_device, empty_adv)
         await hass.async_block_till_done()
 
         cancel()
 
         # 4th callback should not be tracked since we canceled
-        inject_advertisement(empty_device, empty_adv)
+        inject_advertisement(hass, empty_device, empty_adv)
         await hass.async_block_till_done()
 
         # Now register again with a callback that fails to
@@ -907,7 +1058,7 @@ async def test_register_callback_survives_reload(
         service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"H\x10c"},
     )
 
-    inject_advertisement(switchbot_device, switchbot_adv)
+    inject_advertisement(hass, switchbot_device, switchbot_adv)
     assert len(callbacks) == 1
     service_info: BluetoothServiceInfo = callbacks[0][0]
     assert service_info.name == "wohand"
@@ -918,7 +1069,7 @@ async def test_register_callback_survives_reload(
     await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
 
-    inject_advertisement(switchbot_device, switchbot_adv)
+    inject_advertisement(hass, switchbot_device, switchbot_adv)
     assert len(callbacks) == 2
     service_info: BluetoothServiceInfo = callbacks[1][0]
     assert service_info.name == "wohand"
@@ -955,9 +1106,9 @@ async def test_process_advertisements_bail_on_good_advertisement(
             service_data={"00000d00-0000-1000-8000-00805f9b34fa": b"H\x10c"},
         )
 
-        inject_advertisement(device, adv)
-        inject_advertisement(device, adv)
-        inject_advertisement(device, adv)
+        inject_advertisement(hass, device, adv)
+        inject_advertisement(hass, device, adv)
+        inject_advertisement(hass, device, adv)
 
         await asyncio.sleep(0)
 
@@ -997,14 +1148,14 @@ async def test_process_advertisements_ignore_bad_advertisement(
     # The goal of this loop is to make sure that async_process_advertisements sees at least one
     # callback that returns False
     while not done.is_set():
-        inject_advertisement(device, adv)
+        inject_advertisement(hass, device, adv)
         await asyncio.sleep(0)
 
     # Set the return value and mutate the advertisement
     # Check that scan ends and correct advertisement data is returned
     return_value.set()
     adv.service_data["00000d00-0000-1000-8000-00805f9b34fa"] = b"H\x10c"
-    inject_advertisement(device, adv)
+    inject_advertisement(hass, device, adv)
     await asyncio.sleep(0)
 
     result = await handle
@@ -1062,7 +1213,7 @@ async def test_wrapped_instance_with_filter(
         )
         scanner.register_detection_callback(_device_detected)
 
-        inject_advertisement(switchbot_device, switchbot_adv)
+        inject_advertisement(hass, switchbot_device, switchbot_adv)
         await hass.async_block_till_done()
 
         discovered = await scanner.discover(timeout=0)
@@ -1082,12 +1233,12 @@ async def test_wrapped_instance_with_filter(
             assert len(discovered) == 0
             assert discovered == []
 
-        inject_advertisement(switchbot_device, switchbot_adv)
+        inject_advertisement(hass, switchbot_device, switchbot_adv)
         assert len(detected) == 4
 
         # The filter we created in the wrapped scanner with should be respected
         # and we should not get another callback
-        inject_advertisement(empty_device, empty_adv)
+        inject_advertisement(hass, empty_device, empty_adv)
         assert len(detected) == 4
 
 
@@ -1129,14 +1280,14 @@ async def test_wrapped_instance_with_service_uuids(
         scanner.register_detection_callback(_device_detected)
 
         for _ in range(2):
-            inject_advertisement(switchbot_device, switchbot_adv)
+            inject_advertisement(hass, switchbot_device, switchbot_adv)
             await hass.async_block_till_done()
 
         assert len(detected) == 2
 
         # The UUIDs list we created in the wrapped scanner with should be respected
         # and we should not get another callback
-        inject_advertisement(empty_device, empty_adv)
+        inject_advertisement(hass, empty_device, empty_adv)
         assert len(detected) == 2
 
 
@@ -1177,9 +1328,9 @@ async def test_wrapped_instance_with_broken_callbacks(
         )
         scanner.register_detection_callback(_device_detected)
 
-        inject_advertisement(switchbot_device, switchbot_adv)
+        inject_advertisement(hass, switchbot_device, switchbot_adv)
         await hass.async_block_till_done()
-        inject_advertisement(switchbot_device, switchbot_adv)
+        inject_advertisement(hass, switchbot_device, switchbot_adv)
         await hass.async_block_till_done()
         assert len(detected) == 1
 
@@ -1222,14 +1373,14 @@ async def test_wrapped_instance_changes_uuids(
         scanner.register_detection_callback(_device_detected)
 
         for _ in range(2):
-            inject_advertisement(switchbot_device, switchbot_adv)
+            inject_advertisement(hass, switchbot_device, switchbot_adv)
             await hass.async_block_till_done()
 
         assert len(detected) == 2
 
         # The UUIDs list we created in the wrapped scanner with should be respected
         # and we should not get another callback
-        inject_advertisement(empty_device, empty_adv)
+        inject_advertisement(hass, empty_device, empty_adv)
         assert len(detected) == 2
 
 
@@ -1271,14 +1422,14 @@ async def test_wrapped_instance_changes_filters(
         scanner.register_detection_callback(_device_detected)
 
         for _ in range(2):
-            inject_advertisement(switchbot_device, switchbot_adv)
+            inject_advertisement(hass, switchbot_device, switchbot_adv)
             await hass.async_block_till_done()
 
         assert len(detected) == 2
 
         # The UUIDs list we created in the wrapped scanner with should be respected
         # and we should not get another callback
-        inject_advertisement(empty_device, empty_adv)
+        inject_advertisement(hass, empty_device, empty_adv)
         assert len(detected) == 2
 
 
@@ -1333,7 +1484,7 @@ async def test_async_ble_device_from_address(
 
         switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
         switchbot_adv = AdvertisementData(local_name="wohand", service_uuids=[])
-        inject_advertisement(switchbot_device, switchbot_adv)
+        inject_advertisement(hass, switchbot_device, switchbot_adv)
         await hass.async_block_till_done()
 
         assert (
@@ -1490,3 +1641,59 @@ async def test_migrate_single_entry_linux(hass, mock_bleak_scanner_start, one_ad
     assert await async_setup_component(hass, bluetooth.DOMAIN, {})
     await hass.async_block_till_done()
     assert entry.unique_id == "00:00:00:00:00:01"
+
+
+async def test_discover_new_usb_adapters(hass, mock_bleak_scanner_start, one_adapter):
+    """Test we can discover new usb adapters."""
+    entry = MockConfigEntry(
+        domain=bluetooth.DOMAIN, data={}, unique_id="00:00:00:00:00:01"
+    )
+    entry.add_to_hass(hass)
+
+    saved_callback = None
+
+    def _async_register_scan_request_callback(_hass, _callback):
+        nonlocal saved_callback
+        saved_callback = _callback
+        return lambda: None
+
+    with patch(
+        "homeassistant.components.bluetooth.usb.async_register_scan_request_callback",
+        _async_register_scan_request_callback,
+    ):
+        assert await async_setup_component(hass, bluetooth.DOMAIN, {})
+        await hass.async_block_till_done()
+
+    assert not hass.config_entries.flow.async_progress(DOMAIN)
+
+    saved_callback()
+    assert not hass.config_entries.flow.async_progress(DOMAIN)
+
+    with patch(
+        "homeassistant.components.bluetooth.util.platform.system", return_value="Linux"
+    ), patch(
+        "bluetooth_adapters.get_bluetooth_adapter_details",
+        return_value={
+            "hci0": {
+                "org.bluez.Adapter1": {
+                    "Address": "00:00:00:00:00:01",
+                    "Name": "BlueZ 4.63",
+                    "Modalias": "usbid:1234",
+                }
+            },
+            "hci1": {
+                "org.bluez.Adapter1": {
+                    "Address": "00:00:00:00:00:02",
+                    "Name": "BlueZ 4.63",
+                    "Modalias": "usbid:1234",
+                }
+            },
+        },
+    ):
+        for wait_sec in range(10, 20):
+            async_fire_time_changed(
+                hass, dt_util.utcnow() + timedelta(seconds=wait_sec)
+            )
+            await hass.async_block_till_done()
+
+    assert len(hass.config_entries.flow.async_progress(DOMAIN)) == 1
