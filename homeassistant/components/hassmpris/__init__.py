@@ -22,6 +22,7 @@ from .const import (
     DOMAIN,
     ENTRY_CLIENT,
     ENTRY_ENTITY_MANAGER,
+    ENTRY_UNLOADERS,
     LOGGER as _LOGGER,
 )
 
@@ -73,6 +74,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         ENTRY_CLIENT: clnt,
+        ENTRY_UNLOADERS: [],
     }
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
@@ -84,12 +86,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         data = hass.data[DOMAIN].pop(entry.entry_id)
-        if ENTRY_ENTITY_MANAGER in data:
-            _LOGGER.debug("Stopping entity manager")
-            waitable = data[ENTRY_ENTITY_MANAGER].stop()
+        _LOGGER.debug("Closing client connection")
         await data[ENTRY_CLIENT].close()
-        if ENTRY_ENTITY_MANAGER in data:
-            _LOGGER.debug("Waiting for entity manager to fully stop")
-            await waitable
+        _LOGGER.debug("Connection closed -- running unloaders")
+        unloaders = data[ENTRY_UNLOADERS]
+        for unloader in reversed(unloaders):
+            await unloader()
+        _LOGGER.debug("Unloaders complete")
 
     return unload_ok

@@ -35,6 +35,7 @@ from .const import (
     DOMAIN,
     ENTRY_CLIENT,
     ENTRY_ENTITY_MANAGER,
+    ENTRY_UNLOADERS,
     LOGGER as _LOGGER,
 )
 
@@ -353,17 +354,19 @@ class EntityManager:
     async def run(self):
         """Run the entity manager."""
         if self._started:
-            _LOGGER.debug("Thread already started")
+            _LOGGER.debug("%X: Thread already started", id(self))
             return
         self._started = True
-        _LOGGER.debug("Streaming updates started")
+        _LOGGER.debug("%X: Streaming updates started", id(self))
         while not self._shutdown.done():
             try:
                 try:
                     await self._monitor_updates()
                 except Exception as exc:
                     if self._shutdown.done():
-                        _LOGGER.debug("Ignoring %s since we are shut down", exc)
+                        _LOGGER.debug(
+                            "%X: Ignoring %s since we are shut down", id(self), exc
+                        )
                         await self._shutdown
                         continue
                     raise
@@ -376,14 +379,16 @@ class EntityManager:
                 self.config_entry.async_start_reauth(self.hass)
                 await self.stop()
             except hassmpris_client.ClientException as exc:
-                _LOGGER.error("We lost connectivity (%s) -- reconnecting", exc)
+                _LOGGER.error(
+                    "%X: We lost connectivity (%s) -- reconnecting", id(self), exc
+                )
                 await self._mark_all_entities_unavailable()
                 await asyncio.sleep(5)
             except Exception as exc:
                 await self.stop(exception=exc)
                 raise
         await self._shutdown
-        _LOGGER.debug("Streaming updates ended")
+        _LOGGER.debug("%X: Streaming updates ended", id(self))
 
     async def stop(
         self,
@@ -438,11 +443,13 @@ class EntityManager:
                         # Player is not off.  Not removing.
                         remove = False
                 if remove:
-                    _LOGGER.debug("Removing copy %s", player_id)
+                    _LOGGER.debug("%X: Removing copy %s", id(self), player_id)
                     reg.async_remove(entity.entity_id)
             else:
                 if not known(player_id):
-                    _LOGGER.debug("Resuscitating known player %s", player_id)
+                    _LOGGER.debug(
+                        "%X: Resuscitating known player %s", id(self), player_id
+                    )
                     entity = HASSMPRISEntity(
                         self.client,
                         self.config_entry.entry_id,
@@ -467,7 +474,7 @@ class EntityManager:
         self,
         discovery_data: mpris_pb2.MPRISUpdateReply,
     ):
-        _LOGGER.debug("Handling update: %s", discovery_data)
+        _LOGGER.debug("%X: Handling update: %s", id(self), discovery_data)
         state = STATE_IDLE
         fire_status_update_observed = False
         table = {
@@ -539,6 +546,21 @@ async def async_setup_entry(
     _LOGGER.debug("Registering entity manager in integration data")
     component_data[ENTRY_ENTITY_MANAGER] = manager
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, manager.stop)
+    async def async_unregister_manager():
+        _LOGGER.debug("Unregistering entity manager")
+        del component_data[ENTRY_ENTITY_MANAGER]
+        _LOGGER.debug("Entity manager unregistered")
+
+    component_data[ENTRY_UNLOADERS].append(async_unregister_manager)
+
     await manager.start()
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, manager.stop)
+
+    async def async_stop_manager():
+        _LOGGER.debug("Stopping entity manager")
+        await component_data[ENTRY_ENTITY_MANAGER].stop()
+        _LOGGER.debug("Entity manager stopped")
+
+    component_data[ENTRY_UNLOADERS].append(async_stop_manager)
+
     return True
