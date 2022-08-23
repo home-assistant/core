@@ -35,7 +35,7 @@ async def async_setup_entry(
             vol.Required("duration"): cv.positive_int,
             vol.Required("mode"): vol.In(["normal", "invert", "toggle"]),
         },
-        "calibrate",
+        "async_calibrate",
     )
 
 
