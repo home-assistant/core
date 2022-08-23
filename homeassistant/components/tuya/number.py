@@ -183,6 +183,18 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             icon="mdi:volume-high",
             entity_category=EntityCategory.CONFIG,
         ),
+        NumberEntityDescription(
+            key=DPCode.CHIME_RING_VOLUME,
+            name="Chime Volume",
+            icon="mdi:bell-ring",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.CHIME_TIME,
+            name="Chime Time",
+            icon="mdi:timer-play-outline",
+            entity_category=EntityCategory.CONFIG,
+        ),
     ),
     # Dimmer Switch
     # https://developer.tuya.com/en/docs/iot/categorytgkg?id=Kaiuz0ktx7m0o

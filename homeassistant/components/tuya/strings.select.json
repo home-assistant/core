@@ -10,6 +10,17 @@
       "1": "[%key:common::state::off%]",
       "2": "[%key:common::state::on%]"
     },
+    "tuya__basic_nightvision": {
+      "0": "Automatic",
+      "1": "[%key:common::state::off%]",
+      "2": "[%key:common::state::on%]"
+    },
+    "tuya__chime_ring_tune": {
+      "1": "Chime 1",
+      "2": "Chime 2",
+      "3": "Chime 3",
+      "4": "Chime 4"
+    },
     "tuya__decibel_sensitivity": {
       "0": "Low sensitivity",
       "1": "High sensitivity"

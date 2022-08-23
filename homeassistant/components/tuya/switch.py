@@ -473,6 +473,18 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             name="Motion Alarm",
             entity_category=EntityCategory.CONFIG,
         ),
+        SwitchEntityDescription(
+            key=DPCode.SD_FORMAT,
+            icon="mdi:sd",
+            name="Format SD Card",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.DEVICE_RESTART,
+            icon="mdi:restart",
+            name="Restart Device",
+            entity_category=EntityCategory.CONFIG,
+        ),
     ),
     # Fingerbot
     "szjqr": (

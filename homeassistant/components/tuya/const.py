@@ -92,6 +92,7 @@ class TuyaDeviceClass(StrEnum):
     CURTAIN_MOTOR_MODE = "tuya__curtain_motor_mode"
     BASIC_ANTI_FLICKR = "tuya__basic_anti_flickr"
     BASIC_NIGHTVISION = "tuya__basic_nightvision"
+    CHIME_RING_TUNE = "tuya__chime_ring_tune"
     COUNTDOWN = "tuya__countdown"
     DECIBEL_SENSITIVITY = "tuya__decibel_sensitivity"
     FAN_ANGLE = "tuya__fan_angle"
@@ -177,6 +178,9 @@ class DPCode(StrEnum):
     CH4_SENSOR_STATE = "ch4_sensor_state"
     CH4_SENSOR_VALUE = "ch4_sensor_value"
     CHILD_LOCK = "child_lock"  # Child lock
+    CHIME_RING_TUNE = "chime_ring_tune"
+    CHIME_RING_VOLUME = "chime_ring_volume"
+    CHIME_TIME = "chime_time"
     CISTERN = "cistern"
     CLEAN_AREA = "clean_area"
     CLEAN_TIME = "clean_time"
@@ -211,7 +215,10 @@ class DPCode(StrEnum):
     DECIBEL_SENSITIVITY = "decibel_sensitivity"
     DECIBEL_SWITCH = "decibel_switch"
     DEHUMIDITY_SET_VALUE = "dehumidify_set_value"
+    DEVICE_RESTART = "device_restart"
     DO_NOT_DISTURB = "do_not_disturb"
+    DOORBELL_ACTIVE = "doorbell_active"
+    DOORBELL_PICTURE = "doorbell_pic"
     DOORCONTACT_STATE = "doorcontact_state"  # Status of door window sensor
     DOORCONTACT_STATE_2 = "doorcontact_state_2"
     DOORCONTACT_STATE_3 = "doorcontact_state_3"
@@ -305,6 +312,9 @@ class DPCode(StrEnum):
     RESET_MAP = "reset_map"
     RESET_ROLL_BRUSH = "reset_roll_brush"
     ROLL_BRUSH = "roll_brush"
+    SD_FORMAT = "sd_format"
+    SD_FORMAT_STATE = "sd_format_state"
+    SD_STATUS = "sd_status"
     SEEK = "seek"
     SENSITIVITY = "sensitivity"  # Sensitivity
     SENSOR_HUMIDITY = "sensor_humidity"

@@ -485,6 +485,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
     # Smart Camera
     # https://developer.tuya.com/en/docs/iot/categorysp?id=Kaiuz35leyo12
     "sp": (
+        *BATTERY_SENSORS,
         TuyaSensorEntityDescription(
             key=DPCode.SENSOR_TEMPERATURE,
             name="Temperature",
@@ -503,6 +504,35 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.BATTERY,
             entity_category=EntityCategory.DIAGNOSTIC,
             state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.SD_STATUS,
+            name="SD Card Status",
+            state_class=SensorStateClass.MEASUREMENT,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            native_unit_of_measurement=PERCENTAGE
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.SD_FORMAT_STATE,
+            name="SD Card Format State",
+            state_class=SensorStateClass.MEASUREMENT,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.ALARM_MESSAGE,
+            name="Alarm Message",
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.DOORBELL_ACTIVE,
+            name="Doorbell Motion",
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.MOVEMENT_DETECT_PIC,
+            name="Motion Detection",
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.DOORBELL_PICTURE,
+            name="Motion DetectionMotion Detection",
         ),
     ),
     # Fingerbot

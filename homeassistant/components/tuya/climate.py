@@ -162,15 +162,15 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         celsius_type = self.find_dpcode(
             (DPCode.TEMP_CURRENT, DPCode.UPPER_TEMP), dptype=DPType.INTEGER
         )
-        farhenheit_type = self.find_dpcode(
+        fahrenheit_type = self.find_dpcode(
             (DPCode.TEMP_CURRENT_F, DPCode.UPPER_TEMP_F), dptype=DPType.INTEGER
         )
-        if farhenheit_type and (
+        if fahrenheit_type and (
             prefered_temperature_unit == TEMP_FAHRENHEIT
             or (prefered_temperature_unit == TEMP_CELSIUS and not celsius_type)
         ):
             self._attr_temperature_unit = TEMP_FAHRENHEIT
-            self._current_temperature = farhenheit_type
+            self._current_temperature = fahrenheit_type
         elif celsius_type:
             self._attr_temperature_unit = TEMP_CELSIUS
             self._current_temperature = celsius_type
@@ -179,14 +179,14 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         celsius_type = self.find_dpcode(
             DPCode.TEMP_SET, dptype=DPType.INTEGER, prefer_function=True
         )
-        farhenheit_type = self.find_dpcode(
+        fahrenheit_type = self.find_dpcode(
             DPCode.TEMP_SET_F, dptype=DPType.INTEGER, prefer_function=True
         )
-        if farhenheit_type and (
+        if fahrenheit_type and (
             prefered_temperature_unit == TEMP_FAHRENHEIT
             or (prefered_temperature_unit == TEMP_CELSIUS and not celsius_type)
         ):
-            self._set_temperature = farhenheit_type
+            self._set_temperature = fahrenheit_type
         elif celsius_type:
             self._set_temperature = celsius_type
 

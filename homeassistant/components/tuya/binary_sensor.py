@@ -40,7 +40,6 @@ TAMPER_BINARY_SENSOR = TuyaBinarySensorEntityDescription(
     entity_category=EntityCategory.DIAGNOSTIC,
 )
 
-
 # All descriptions can be found here. Mostly the Boolean data types in the
 # default status set of each category (that don't have a set instruction)
 # end up being a binary sensor.
@@ -260,10 +259,23 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
     # https://developer.tuya.com/en/docs/iot/categorysos?id=Kaiuz3oi6agjy
     "sos": (
         TuyaBinarySensorEntityDescription(
-            key=DPCode.SOS_STATE,
+            key=DPCode.BASIC_INDICATOR,
             device_class=BinarySensorDeviceClass.SAFETY,
         ),
         TAMPER_BINARY_SENSOR,
+    ),
+    # Smart Camera
+    # https://developer.tuya.com/en/docs/iot/s?id=K9gf48qapbl1n
+    "sp": (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.SOS_STATE,
+            device_class=BinarySensorDeviceClass.MOTION,
+        ),
+        TAMPER_BINARY_SENSOR,
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.BASIC_INDICATOR,
+            device_class=BinarySensorDeviceClass.MOTION,
+        ),
     ),
     # Volatile Organic Compound Sensor
     # Note: Undocumented in cloud API docs, based on test device
@@ -341,7 +353,7 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+        hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Tuya binary sensor dynamically through Tuya discovery."""
     hass_data: HomeAssistantTuyaData = hass.data[DOMAIN][entry.entry_id]
@@ -377,10 +389,10 @@ class TuyaBinarySensorEntity(TuyaEntity, BinarySensorEntity):
     entity_description: TuyaBinarySensorEntityDescription
 
     def __init__(
-        self,
-        device: TuyaDevice,
-        device_manager: TuyaDeviceManager,
-        description: TuyaBinarySensorEntityDescription,
+            self,
+            device: TuyaDevice,
+            device_manager: TuyaDeviceManager,
+            description: TuyaBinarySensorEntityDescription,
     ) -> None:
         """Init Tuya binary sensor."""
         super().__init__(device, device_manager)

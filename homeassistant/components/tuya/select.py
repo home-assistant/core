@@ -135,6 +135,13 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             device_class=TuyaDeviceClass.MOTION_SENSITIVITY,
             entity_category=EntityCategory.CONFIG,
         ),
+        SelectEntityDescription(
+            key=DPCode.CHIME_RING_TUNE,
+            name="Chime Ring Tune",
+            icon="mdi:music",
+            device_class=TuyaDeviceClass.CHIME_RING_TUNE,
+            entity_category=EntityCategory.CONFIG,
+        ),
     ),
     # IoT Switch?
     # Note: Undocumented
