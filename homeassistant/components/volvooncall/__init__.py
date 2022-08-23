@@ -22,7 +22,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -195,7 +195,7 @@ class VolvoData:
             if instrument.component in PLATFORMS
         ):
             self.instruments.add(instrument)
-            dispatcher_send(self.hass, VOLVO_DISCOVERY_NEW, [instrument])
+            async_dispatcher_send(self.hass, VOLVO_DISCOVERY_NEW, [instrument])
 
     async def update(self):
         """Update status from the online service."""
