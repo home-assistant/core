@@ -5,8 +5,12 @@ import asyncio
 import contextlib
 from contextlib import suppress
 from dataclasses import dataclass
+from fnmatch import translate
+from functools import lru_cache
 from ipaddress import IPv4Address, IPv6Address, ip_address
 import logging
+from os.path import normcase
+import re
 import socket
 import sys
 from typing import Any, Final, cast
@@ -38,7 +42,6 @@ from homeassistant.loader import (
     async_get_zeroconf,
     bind_hass,
 )
-from homeassistant.util.fnmatch import memorized_fnmatch
 
 from .models import HaAsyncServiceBrowser, HaAsyncZeroconf, HaZeroconf
 from .usage import install_multiple_zeroconf_catcher
@@ -303,7 +306,7 @@ def _match_against_data(
         match_val = matcher[key]
         assert isinstance(match_val, str)
 
-        if not memorized_fnmatch(match_data[key], match_val):
+        if not _memorized_fnmatch(match_data[key], match_val):
             return False
     return True
 
@@ -313,7 +316,7 @@ def _match_against_props(matcher: dict[str, str], props: dict[str, str]) -> bool
     return not any(
         key
         for key in matcher
-        if key not in props or not memorized_fnmatch(props[key].lower(), matcher[key])
+        if key not in props or not _memorized_fnmatch(props[key].lower(), matcher[key])
     )
 
 
@@ -485,7 +488,7 @@ def async_get_homekit_discovery_domain(
         if (
             model != test_model
             and not model.startswith((f"{test_model} ", f"{test_model}-"))
-            and not memorized_fnmatch(model, test_model)
+            and not _memorized_fnmatch(model, test_model)
         ):
             continue
 
@@ -576,3 +579,25 @@ def _truncate_location_name_to_valid(location_name: str) -> str:
         location_name,
     )
     return location_name.encode("utf-8")[:MAX_NAME_LEN].decode("utf-8", "ignore")
+
+
+# The integrations has its own memorized fnmatch with its own lru_cache
+# since the data is going to be relatively the same
+# since the devices will not changed
+
+
+@lru_cache(maxsize=4096, typed=True)
+def _compile_fnmatch(pattern: str) -> re.Pattern:
+    """Compile a fnmatch pattern."""
+    return re.compile(translate(normcase(pattern)))
+
+
+@lru_cache(maxsize=1024, typed=True)
+def _memorized_fnmatch(name: str, pattern: str) -> bool:
+    """Memorized version of fnmatch that has a larger lru_cache.
+
+    The default version of fnmatch only has a lru_cache of 256 entries.
+    With many devices we quickly reach that limit and end up compiling
+    the same pattern over and over again.
+    """
+    return bool(_compile_fnmatch(pattern).match(normcase(name)))

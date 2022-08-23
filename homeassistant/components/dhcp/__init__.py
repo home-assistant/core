@@ -7,9 +7,13 @@ from collections.abc import Callable, Iterable
 import contextlib
 from dataclasses import dataclass
 from datetime import timedelta
+from fnmatch import translate
+from functools import lru_cache
 from ipaddress import ip_address as make_ip_address
 import logging
 import os
+from os.path import normcase
+import re
 import threading
 from typing import TYPE_CHECKING, Any, Final, cast
 
@@ -54,7 +58,6 @@ from homeassistant.helpers.event import (
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import DHCPMatcher, async_get_dhcp
 from homeassistant.util.async_ import run_callback_threadsafe
-from homeassistant.util.fnmatch import memorized_fnmatch
 from homeassistant.util.network import is_invalid, is_link_local, is_loopback
 
 if TYPE_CHECKING:
@@ -204,12 +207,12 @@ class WatcherBase:
 
             if (
                 matcher_mac := matcher.get(MAC_ADDRESS)
-            ) is not None and not memorized_fnmatch(uppercase_mac, matcher_mac):
+            ) is not None and not _memorized_fnmatch(uppercase_mac, matcher_mac):
                 continue
 
             if (
                 matcher_hostname := matcher.get(HOSTNAME)
-            ) is not None and not memorized_fnmatch(
+            ) is not None and not _memorized_fnmatch(
                 lowercase_hostname, matcher_hostname
             ):
                 continue
@@ -516,3 +519,25 @@ def _verify_working_pcap(cap_filter: str) -> None:
     )
 
     compile_filter(cap_filter)
+
+
+# The integrations has its own memorized fnmatch with its own lru_cache
+# since the data is going to be relatively the same
+# since the devices will not changed
+
+
+@lru_cache(maxsize=4096, typed=True)
+def _compile_fnmatch(pattern: str) -> re.Pattern:
+    """Compile a fnmatch pattern."""
+    return re.compile(translate(normcase(pattern)))
+
+
+@lru_cache(maxsize=1024, typed=True)
+def _memorized_fnmatch(name: str, pattern: str) -> bool:
+    """Memorized version of fnmatch that has a larger lru_cache.
+
+    The default version of fnmatch only has a lru_cache of 256 entries.
+    With many devices we quickly reach that limit and end up compiling
+    the same pattern over and over again.
+    """
+    return bool(_compile_fnmatch(pattern).match(normcase(name)))

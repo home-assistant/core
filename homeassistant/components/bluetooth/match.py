@@ -2,12 +2,15 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from fnmatch import translate
+from functools import lru_cache
+from os.path import normcase
+import re
 from typing import TYPE_CHECKING, Final, TypedDict
 
 from lru import LRU  # pylint: disable=no-name-in-module
 
 from homeassistant.loader import BluetoothMatcher, BluetoothMatcherOptional
-from homeassistant.util.fnmatch import memorized_fnmatch
 
 from .models import BluetoothServiceInfoBleak
 
@@ -161,7 +164,7 @@ def ble_device_matches(
 
     if (local_name := matcher.get(LOCAL_NAME)) is not None and (
         (device_name := advertisement_data.local_name or device.name) is None
-        or not memorized_fnmatch(
+        or not _memorized_fnmatch(
             device_name,
             local_name,
         )
@@ -169,3 +172,25 @@ def ble_device_matches(
         return False
 
     return True
+
+
+# The matcher has its own memorized fnmatch with its own lru_cache
+# since the data is going to be relatively the same
+# since the devices will not changed
+
+
+@lru_cache(maxsize=4096, typed=True)
+def _compile_fnmatch(pattern: str) -> re.Pattern:
+    """Compile a fnmatch pattern."""
+    return re.compile(translate(normcase(pattern)))
+
+
+@lru_cache(maxsize=1024, typed=True)
+def _memorized_fnmatch(name: str, pattern: str) -> bool:
+    """Memorized version of fnmatch that has a larger lru_cache.
+
+    The default version of fnmatch only has a lru_cache of 256 entries.
+    With many devices we quickly reach that limit and end up compiling
+    the same pattern over and over again.
+    """
+    return bool(_compile_fnmatch(pattern).match(normcase(name)))
