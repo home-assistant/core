@@ -62,6 +62,7 @@ async def async_setup_entry(
 class LogiCam(Camera):
     """An implementation of a Logi Circle camera."""
 
+    _attr_should_poll = True  # Cameras default to False
     _attr_supported_features = CameraEntityFeature.ON_OFF
 
     def __init__(self, camera, device_info, ffmpeg):
@@ -167,11 +168,6 @@ class LogiCam(Camera):
     async def async_turn_on(self):
         """Enable streaming mode for this camera."""
         await self._camera.set_config("streaming", True)
-
-    @property
-    def should_poll(self):
-        """Update the image periodically."""
-        return True
 
     async def set_config(self, mode, value):
         """Set an configuration property for the target camera."""
