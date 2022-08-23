@@ -8,8 +8,7 @@ import attr
 
 from homeassistant.core import HomeAssistant
 
-from . import debug_info
-from .. import mqtt
+from . import async_subscribe, debug_info
 from .const import DEFAULT_QOS
 from .models import MessageCallbackType
 
@@ -46,7 +45,7 @@ class EntitySubscription:
         # Prepare debug data
         debug_info.add_subscription(self.hass, self.message_callback, self.topic)
 
-        self.subscribe_task = mqtt.async_subscribe(
+        self.subscribe_task = async_subscribe(
             hass, self.topic, self.message_callback, self.qos, self.encoding
         )
 
