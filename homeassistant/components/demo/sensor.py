@@ -25,10 +25,10 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
 from . import DOMAIN
-from ...helpers.event import async_track_time_interval
 
 
 async def async_setup_platform(
