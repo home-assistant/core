@@ -5,7 +5,7 @@
             "not_forked_daapd": "El dispositivo no es un servidor forked-daapd."
         },
         "error": {
-            "forbidden": "No se puede conectar. Comprueba los permisos de tu forked-daapd.",
+            "forbidden": "No se puede conectar. Por favor, comprueba los permisos de red de tu forked-daapd.",
             "unknown_error": "Error inesperado",
             "websocket_not_enabled": "Websocket del servidor forked-daapd no habilitado.",
             "wrong_host_or_port": "No se ha podido conectar. Por favor, comprueba host y puerto.",

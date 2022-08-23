@@ -240,6 +240,12 @@ async def test_create_local_entry(hass: HomeAssistant, local_devices):
             {"next_step_id": "local"},
         )
 
+        # We're being shown the local instructions
+        form_step = await hass.config_entries.flow.async_configure(
+            form_step["flow_id"],
+            {},
+        )
+
         result = await hass.config_entries.flow.async_configure(
             form_step["flow_id"],
             LOCAL_CONFIG,
@@ -249,6 +255,47 @@ async def test_create_local_entry(hass: HomeAssistant, local_devices):
         assert result["title"] == "Awair Element (24947)"
         assert result["data"][CONF_HOST] == LOCAL_CONFIG[CONF_HOST]
         assert result["result"].unique_id == LOCAL_UNIQUE_ID
+
+
+async def test_create_local_entry_from_discovery(hass: HomeAssistant, local_devices):
+    """Test local API when device discovered after instructions shown."""
+
+    menu_step = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=LOCAL_CONFIG
+    )
+
+    form_step = await hass.config_entries.flow.async_configure(
+        menu_step["flow_id"],
+        {"next_step_id": "local"},
+    )
+
+    # Create discovered entry in progress
+    with patch("python_awair.AwairClient.query", side_effect=[local_devices]):
+        await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data=Mock(host=LOCAL_CONFIG[CONF_HOST]),
+            context={"source": SOURCE_ZEROCONF},
+        )
+
+    # We're being shown the local instructions
+    form_step = await hass.config_entries.flow.async_configure(
+        form_step["flow_id"],
+        {},
+    )
+
+    with patch("python_awair.AwairClient.query", side_effect=[local_devices]), patch(
+        "homeassistant.components.awair.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            form_step["flow_id"],
+            {"device": LOCAL_CONFIG[CONF_HOST]},
+        )
+
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Awair Element (24947)"
+    assert result["data"][CONF_HOST] == LOCAL_CONFIG[CONF_HOST]
+    assert result["result"].unique_id == LOCAL_UNIQUE_ID
 
 
 async def test_create_local_entry_awair_error(hass: HomeAssistant):
@@ -267,6 +314,12 @@ async def test_create_local_entry_awair_error(hass: HomeAssistant):
             {"next_step_id": "local"},
         )
 
+        # We're being shown the local instructions
+        form_step = await hass.config_entries.flow.async_configure(
+            form_step["flow_id"],
+            {},
+        )
+
         result = await hass.config_entries.flow.async_configure(
             form_step["flow_id"],
             LOCAL_CONFIG,
@@ -274,7 +327,7 @@ async def test_create_local_entry_awair_error(hass: HomeAssistant):
 
         # User is returned to form to try again
         assert result["type"] == data_entry_flow.FlowResultType.FORM
-        assert result["step_id"] == "local"
+        assert result["step_id"] == "local_pick"
 
 
 async def test_create_zeroconf_entry(hass: HomeAssistant, local_devices):

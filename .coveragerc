@@ -639,7 +639,11 @@ omit =
     homeassistant/components/kostal_plenticore/switch.py
     homeassistant/components/kwb/sensor.py
     homeassistant/components/lacrosse/sensor.py
-    homeassistant/components/lametric/*
+    homeassistant/components/lametric/__init__.py
+    homeassistant/components/lametric/coordinator.py
+    homeassistant/components/lametric/entity.py
+    homeassistant/components/lametric/notify.py
+    homeassistant/components/lametric/number.py
     homeassistant/components/lannouncer/notify.py
     homeassistant/components/lastfm/sensor.py
     homeassistant/components/launch_library/__init__.py
@@ -1223,6 +1227,7 @@ omit =
     homeassistant/components/system_bridge/binary_sensor.py
     homeassistant/components/system_bridge/const.py
     homeassistant/components/system_bridge/coordinator.py
+    homeassistant/components/system_bridge/media_source.py
     homeassistant/components/system_bridge/sensor.py
     homeassistant/components/systemmonitor/sensor.py
     homeassistant/components/tado/__init__.py
@@ -1477,7 +1482,6 @@ omit =
     homeassistant/components/xiaomi_miio/light.py
     homeassistant/components/xiaomi_miio/number.py
     homeassistant/components/xiaomi_miio/remote.py
-    homeassistant/components/xiaomi_miio/select.py
     homeassistant/components/xiaomi_miio/sensor.py
     homeassistant/components/xiaomi_miio/switch.py
     homeassistant/components/xiaomi_tv/media_player.py

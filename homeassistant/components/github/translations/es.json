@@ -10,7 +10,7 @@
         "step": {
             "repositories": {
                 "data": {
-                    "repositories": "Selecciona los repositorios a seguir."
+                    "repositories": "Selecciona repositorios para rastrear."
                 },
                 "title": "Configura los repositorios"
             }

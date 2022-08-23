@@ -75,11 +75,6 @@ class NestCamera(Camera):
         self.stream_options[CONF_EXTRA_PART_WAIT_TIME] = 3
 
     @property
-    def should_poll(self) -> bool:
-        """Disable polling since entities have state pushed via pubsub."""
-        return False
-
-    @property
     def unique_id(self) -> str:
         """Return a unique ID."""
         # The API "name" field is a unique device identifier.

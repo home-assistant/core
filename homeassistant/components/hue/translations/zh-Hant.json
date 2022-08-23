@@ -44,6 +44,8 @@
             "button_2": "\u7b2c\u4e8c\u500b\u6309\u9215",
             "button_3": "\u7b2c\u4e09\u500b\u6309\u9215",
             "button_4": "\u7b2c\u56db\u500b\u6309\u9215",
+            "clock_wise": "\u9806\u6642\u91dd\u65cb\u8f49",
+            "counter_clock_wise": "\u9006\u6642\u91dd\u65cb\u8f49",
             "dim_down": "\u8abf\u6697",
             "dim_up": "\u8abf\u4eae",
             "double_buttons_1_3": "\u7b2c\u4e00\u8207\u7b2c\u4e09\u500b\u6309\u9215",
@@ -53,15 +55,16 @@
         },
         "trigger_type": {
             "double_short_release": "\"{subtype}\" \u4e00\u8d77\u91cb\u653e",
-            "initial_press": "\u6309\u9215 \"{subtype}\" \u6700\u521d\u6309\u4e0b",
-            "long_release": "\u6309\u9215 \"{subtype}\" \u9577\u6309\u5f8c\u91cb\u653e",
-            "remote_button_long_release": "\"{subtype}\" \u6309\u9215\u9577\u6309\u5f8c\u91cb\u653e",
-            "remote_button_short_press": "\"{subtype}\" \u6309\u9215\u5df2\u6309\u4e0b",
-            "remote_button_short_release": "\"{subtype}\" \u6309\u9215\u5df2\u91cb\u653e",
+            "initial_press": "\"{subtype}\" \u6700\u521d\u6309\u4e0b",
+            "long_release": "\"{subtype}\" \u9577\u6309\u5f8c\u91cb\u653e",
+            "remote_button_long_release": "\"{subtype}\" \u9577\u6309\u5f8c\u91cb\u653e",
+            "remote_button_short_press": "\"{subtype}\" \u5df2\u6309\u4e0b",
+            "remote_button_short_release": "\"{subtype}\" \u5df2\u91cb\u653e",
             "remote_double_button_long_press": "\"{subtype}\" \u4e00\u8d77\u9577\u6309\u5f8c\u91cb\u653e",
             "remote_double_button_short_press": "\"{subtype}\" \u4e00\u8d77\u91cb\u653e",
-            "repeat": "\u6309\u9215 \"{subtype}\" \u6309\u4e0b",
-            "short_release": "\u6309\u9215 \"{subtype}\" \u77ed\u6309\u5f8c\u91cb\u653e"
+            "repeat": "\"{subtype}\" \u6309\u4e0b",
+            "short_release": "\"{subtype}\" \u77ed\u6309\u5f8c\u91cb\u653e",
+            "start": "\"{subtype}\" \u6700\u521d\u6309\u4e0b"
         }
     },
     "options": {
