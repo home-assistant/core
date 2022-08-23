@@ -26,6 +26,10 @@ from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.debounce import Debouncer
 import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 from homeassistant.helpers.service import verify_domain_control
 
@@ -44,6 +48,8 @@ DEFAULT_DEBOUNCER_COOLDOWN_SECONDS = 15 * 60
 
 NOTIFICATION_ID = "openuv_notification"
 NOTIFICATION_TITLE = "OpenUV Component Setup"
+
+TOPIC_UPDATE = f"{DOMAIN}_data_update"
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
@@ -183,6 +189,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "2022.11.0",
         )
         await openuv.async_update()
+        async_dispatcher_send(hass, TOPIC_UPDATE)
 
     @_verify_domain_control
     @extract_openuv
@@ -196,6 +203,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "2022.11.0",
         )
         await openuv.async_update_uv_index_data()
+        async_dispatcher_send(hass, TOPIC_UPDATE)
 
     @_verify_domain_control
     @extract_openuv
@@ -209,6 +217,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "2022.11.0",
         )
         await openuv.async_update_protection_data()
+        async_dispatcher_send(hass, TOPIC_UPDATE)
 
     for service, method in (
         (SERVICE_NAME_UPDATE_DATA, update_data),
@@ -353,6 +362,14 @@ class OpenUvEntity(Entity):
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.update_from_latest_data()
+
+        @callback
+        def update() -> None:
+            """Update the state."""
+            self.update_from_latest_data()
+            self.async_write_ha_state()
+
+        self.async_on_remove(async_dispatcher_connect(self.hass, TOPIC_UPDATE, update))
 
     async def async_update(self) -> None:
         """Update the entity.
