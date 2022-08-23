@@ -108,7 +108,7 @@ async def async_setup_platform(
             ),
             DemoSumSensor(
                 "sensor_8",
-                "Total gas (metric)",
+                "Total gas 1",
                 0.025,  # 0.30 m³/h (10.6 ft³ / h)
                 SensorDeviceClass.GAS,
                 SensorStateClass.TOTAL,
@@ -118,7 +118,7 @@ async def async_setup_platform(
             ),
             DemoSumSensor(
                 "sensor_9",
-                "Total gas (imperial)",
+                "Total gas 2",
                 1.0,  # 12 ft³/h (0.34 m³ / h)
                 SensorDeviceClass.GAS,
                 SensorStateClass.TOTAL,

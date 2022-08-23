@@ -330,7 +330,7 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
     statistic_id = f"{DOMAIN}:gas_consumption_m3"
     metadata = {
         "source": DOMAIN,
-        "name": "Gas consumption (metric)",
+        "name": "Gas consumption 1",
         "statistic_id": statistic_id,
         "unit_of_measurement": "m³",
         "has_mean": False,
@@ -352,7 +352,7 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
     statistic_id = f"{DOMAIN}:gas_consumption_ft3"
     metadata = {
         "source": DOMAIN,
-        "name": "Gas consumption (imperial)",
+        "name": "Gas consumption 2",
         "statistic_id": statistic_id,
         "unit_of_measurement": "ft³",
         "has_mean": False,
