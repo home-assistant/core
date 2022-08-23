@@ -136,12 +136,6 @@ def ble_device_matches(
         return False
 
     advertisement_data = service_info.advertisement
-    if (local_name := matcher.get(LOCAL_NAME)) is not None and not memorized_fnmatch(
-        advertisement_data.local_name or device.name or device.address,
-        local_name,
-    ):
-        return False
-
     if (
         service_uuid := matcher.get(SERVICE_UUID)
     ) is not None and service_uuid not in advertisement_data.service_uuids:
@@ -164,5 +158,11 @@ def ble_device_matches(
             for manufacturer_data in advertisement_data.manufacturer_data.values()
         ):
             return False
+
+    if (local_name := matcher.get(LOCAL_NAME)) is not None and not memorized_fnmatch(
+        advertisement_data.local_name or device.name or device.address,
+        local_name,
+    ):
+        return False
 
     return True

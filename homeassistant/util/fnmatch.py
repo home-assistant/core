@@ -13,6 +13,7 @@ def compile_fnmatch(pattern: str) -> re.Pattern:
     return re.compile(translate(normcase(pattern)))
 
 
+@lru_cache(maxsize=1024, typed=True)
 def memorized_fnmatch(name: str, pattern: str) -> bool:
     """Memorized version of fnmatch that has a larger lru_cache.
 
