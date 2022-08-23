@@ -6,6 +6,7 @@ from random import random
 from homeassistant import config_entries, setup
 from homeassistant.components import persistent_notification
 from homeassistant.components.recorder import get_instance
+from homeassistant.components.recorder.models import StatisticMetaData
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
     get_last_statistics,
@@ -260,14 +261,14 @@ def _generate_sum_statistics(start, end, init_value, max_diff):
     return statistics
 
 
-async def _insert_statistics(hass):
+async def _insert_statistics(hass: HomeAssistant) -> None:
     """Insert some fake statistics."""
     now = dt_util.now()
     yesterday = now - datetime.timedelta(days=1)
     yesterday_midnight = yesterday.replace(hour=0, minute=0, second=0, microsecond=0)
 
     # Fake yesterday's temperatures
-    metadata = {
+    metadata: StatisticMetaData = {
         "source": DOMAIN,
         "name": "Outdoor temperature",
         "statistic_id": f"{DOMAIN}:temperature_outdoor",

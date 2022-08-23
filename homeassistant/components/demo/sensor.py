@@ -1,7 +1,8 @@
 """Demo platform that has a couple of fake sensors."""
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
+from typing import cast
 
 from homeassistant.components.sensor import (
     RestoreSensor,
@@ -21,7 +22,7 @@ from homeassistant.const import (
     VOLUME_CUBIC_FEET,
     VOLUME_CUBIC_METERS,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
@@ -199,17 +200,17 @@ class DemoSumSensor(RestoreSensor):
             self._attr_extra_state_attributes = {ATTR_BATTERY_LEVEL: battery}
 
     @callback
-    def _async_bump_sum(self, now: Event) -> None:
+    def _async_bump_sum(self, now: datetime) -> None:
         """Bump the sum."""
         self._attr_native_value += self._five_minute_increase
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
         await super().async_added_to_hass()
         state = await self.async_get_last_sensor_data()
         if state:
-            self._attr_native_value = state.native_value
+            self._attr_native_value = cast(float, state.native_value)
 
         self.async_on_remove(
             async_track_time_interval(
