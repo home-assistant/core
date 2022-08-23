@@ -9,6 +9,7 @@ from __future__ import annotations
 BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     {
         "domain": "fjaraskupan",
+        "connectable": False,
         "manufacturer_id": 20296,
         "manufacturer_data_start": [
             79,

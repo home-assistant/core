@@ -486,7 +486,7 @@ file-read-backwards==2.0.0
 fivem-api==0.1.2
 
 # homeassistant.components.fjaraskupan
-fjaraskupan==1.0.2
+fjaraskupan==2.0.0
 
 # homeassistant.components.flipr
 flipr-api==1.4.2
