@@ -365,14 +365,9 @@ class OpenUvEntity(Entity):
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.update_from_latest_data()
-
-        @callback
-        def update() -> None:
-            """Update the state."""
-            self.update_from_latest_data()
-            self.async_write_ha_state()
-
-        self.async_on_remove(async_dispatcher_connect(self.hass, TOPIC_UPDATE, update))
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, TOPIC_UPDATE, self.async_update_state)
+        )
 
     async def async_update(self) -> None:
         """Update the entity.
