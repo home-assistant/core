@@ -14,10 +14,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from ... import mqtt
 from ..client import async_subscribe
 from ..config import SCHEMA_BASE
-from ..const import CONF_QOS, MQTT_DATA_DEVICE_TRACKER_LEGACY
+from ..const import CONF_QOS, DOMAIN, MQTT_DATA_DEVICE_TRACKER_LEGACY
 from ..util import mqtt_config_entry_enabled, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
@@ -56,7 +55,7 @@ async def async_setup_scanner_from_yaml(
     payload_home = config[CONF_PAYLOAD_HOME]
     payload_not_home = config[CONF_PAYLOAD_NOT_HOME]
     source_type = config.get(CONF_SOURCE_TYPE)
-    config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     subscriptions: list[Callable] = []
 
     hass.data[MQTT_DATA_DEVICE_TRACKER_LEGACY] = MQTTLegacyDeviceTrackerData(
