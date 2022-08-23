@@ -99,7 +99,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize flow."""
         self._count = 0
         self._host: str = DEF_HOST
-        self._title: str = DEF_HOST
+        self._title: str | None = None
         self._unique_id: str | None = None
         self._cakes_port: int = DEF_CAKES_PORT
         self._mpris_port: int = DEF_MPRIS_PORT
@@ -122,6 +122,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         }
         return data
 
+    def _set_data(
+        self,
+        title: str | None,
+        host: str,
+        cakes_port: int,
+        mpris_port: int,
+        unique_id: str,
+    ):
+        self._title = title
+        self._host = host
+        self._cakes_port = cakes_port
+        self._mpris_port = mpris_port
+        self._unique_id = unique_id
+
     async def _create_entry(self):
         data = self._get_data()
 
@@ -129,6 +143,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self._unique_id:
             existing_entry = await self.async_set_unique_id(self._unique_id)
             if existing_entry:
+                _LOGGER.debug("Existing entry, unique ID")
                 self.hass.config_entries.async_update_entry(existing_entry, data=data)
                 await self.hass.config_entries.async_reload(existing_entry.entry_id)
                 return self.async_abort(reason="reauth_successful")
@@ -138,10 +153,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _genuid(self._host, self._cakes_port, self._mpris_port)
         )
         if existing_entry:
+            _LOGGER.debug("Existing entry, generated ID")
             self.hass.config_entries.async_update_entry(existing_entry, data=data)
             await self.hass.config_entries.async_reload(existing_entry.entry_id)
             return self.async_abort(reason="reauth_successful")
 
+        # OK, no entries found with those two identifiers.
+        # Let's set a unique ID if available
+        if self._unique_id:
+            await self.async_set_unique_id(self._unique_id)
+
+        _LOGGER.debug("New entry")
+        assert self._title, "Impossible: the title is %r" % self._title
         return self.async_create_entry(
             title=self._title,
             data=self._get_data(),
@@ -158,19 +181,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors={},
             )
 
-        self._host = user_input[CONF_HOST]
-        self._cakes_port = user_input[CONF_CAKES_PORT]
-        self._mpris_port = user_input[CONF_MPRIS_PORT]
-        self._title = f"MPRIS on {self._host}"
+        self._set_data(
+            f"MPRIS on {self._host}",
+            user_input[CONF_HOST],
+            user_input[CONF_CAKES_PORT],
+            user_input[CONF_MPRIS_PORT],
+            _genuid(self._host, self._cakes_port, self._mpris_port),
+        )
 
         # Do not proceed if the device is already configured by hand.
-        await self.async_set_unique_id(
-            _genuid(
-                self._host,
-                self._cakes_port,
-                self._mpris_port,
-            )
-        )
+        await self.async_set_unique_id(self._unique_id)
         self._abort_if_unique_id_configured()
 
         return await self.async_step_pairing()
@@ -200,13 +220,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except AssertionError:
             _LOGGER.debug("Ignoring invalid zeroconf announcement: %s", discovery_info)
 
-        self._unique_id = discovery_info.hostname
-        self._host = discovery_info.host
-        self._cakes_port = int(discovery_info.properties[CONF_CAKES_PORT])
-        self._mpris_port = int(discovery_info.port or DEF_MPRIS_PORT)
-        self._title = discovery_info.name.split(".")[0]
+        self._set_data(
+            discovery_info.name.split(".")[0],
+            discovery_info.host,
+            int(discovery_info.properties[CONF_CAKES_PORT]),
+            int(discovery_info.port or DEF_MPRIS_PORT),
+            discovery_info.hostname,
+        )
 
-        # Do not proceed if the device is already configured by hand.
+        # # Do not proceed if the device is already configured by hand.
         await self.async_set_unique_id(
             _genuid(self._host, self._cakes_port, self._mpris_port)
         )
@@ -237,16 +259,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._cakes_port = user_input[CONF_CAKES_PORT]
         self._mpris_port = user_input[CONF_MPRIS_PORT]
 
-        # Do not proceed if the device is already configured by hand.
-        await self.async_set_unique_id(
-            _genuid(self._host, self._cakes_port, self._mpris_port)
-        )
-        self._abort_if_unique_id_configured()
-
         return await self.async_step_pairing()
 
-    async def async_step_reauth(self, user_input: dict[str, Any] | None = None):
+    async def async_step_reauth(self, entry_data: dict[str, Any] | None = None):
         """Handle the reauth step."""
+        assert entry_data, "Impossible entry data empty"
+        self._set_data(
+            None,
+            entry_data[CONF_HOST],
+            entry_data[CONF_CAKES_PORT],
+            entry_data[CONF_MPRIS_PORT],
+            entry_data[CONF_UNIQUE_ID],
+        )
+
+        if self._unique_id:
+            await self.async_set_unique_id(self._unique_id)
+
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(self, user_input: dict[str, Any] | None = None):
@@ -261,25 +289,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ),
             )
 
-        if (
-            self._host != user_input[CONF_HOST]
-            or self._cakes_port != user_input[CONF_CAKES_PORT]
-            or self._mpris_port != user_input[CONF_MPRIS_PORT]
-        ):
-            # User has changed the information shown to him.
-            # This may be an altogether different server, so
-            # we must check if it has been set up.
-            self._host = user_input[CONF_HOST]
-            self._cakes_port = user_input[CONF_CAKES_PORT]
-            self._mpris_port = user_input[CONF_MPRIS_PORT]
+        self._host = user_input[CONF_HOST]
+        self._cakes_port = user_input[CONF_CAKES_PORT]
+        self._mpris_port = user_input[CONF_MPRIS_PORT]
 
-            # Do not proceed if the device is already configured by hand.
-            await self.async_set_unique_id(
-                _genuid(self._host, self._cakes_port, self._mpris_port)
-            )
-            self._abort_if_unique_id_configured()
-
-        self._client_cert = None
         return await self.async_step_pairing()
 
     async def async_step_pairing(

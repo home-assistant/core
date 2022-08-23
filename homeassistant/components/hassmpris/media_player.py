@@ -34,7 +34,6 @@ from .const import (
     ATTR_PLAYBACK_RATE,
     DOMAIN,
     ENTRY_CLIENT,
-    ENTRY_ENTITY_MANAGER,
     ENTRY_UNLOADERS,
     LOGGER as _LOGGER,
 )
@@ -532,7 +531,6 @@ async def async_setup_entry(
 ) -> bool:
     """Set up all the media players for the MPRIS integration."""
     component_data = hass.data[DOMAIN][config_entry.entry_id]
-    assert ENTRY_ENTITY_MANAGER not in component_data
     mpris_client = cast(
         hassmpris_client.AsyncMPRISClient,
         component_data[ENTRY_CLIENT],
@@ -543,22 +541,13 @@ async def async_setup_entry(
         mpris_client,
         async_add_entities,
     )
-    _LOGGER.debug("Registering entity manager in integration data")
-    component_data[ENTRY_ENTITY_MANAGER] = manager
-
-    async def async_unregister_manager():
-        _LOGGER.debug("Unregistering entity manager")
-        del component_data[ENTRY_ENTITY_MANAGER]
-        _LOGGER.debug("Entity manager unregistered")
-
-    component_data[ENTRY_UNLOADERS].append(async_unregister_manager)
 
     await manager.start()
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, manager.stop)
 
     async def async_stop_manager():
         _LOGGER.debug("Stopping entity manager")
-        await component_data[ENTRY_ENTITY_MANAGER].stop()
+        await manager.stop()
         _LOGGER.debug("Entity manager stopped")
 
     component_data[ENTRY_UNLOADERS].append(async_stop_manager)

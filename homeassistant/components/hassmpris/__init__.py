@@ -3,9 +3,9 @@ from __future__ import annotations
 
 import datetime
 
+from cryptography import x509
 from cryptography.hazmat.primitives import serialization
 from cryptography.x509 import Certificate
-from cryptography import x509
 import hassmpris_client
 
 from homeassistant.config_entries import ConfigEntry
@@ -21,7 +21,6 @@ from .const import (
     CONF_TRUST_CHAIN,
     DOMAIN,
     ENTRY_CLIENT,
-    ENTRY_ENTITY_MANAGER,
     ENTRY_UNLOADERS,
     LOGGER as _LOGGER,
 )
