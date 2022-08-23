@@ -61,6 +61,7 @@ class WebSocketHandler:
         """Initialize an active connection."""
         self.hass = hass
         self.request = request
+        self.command_phase = False
         self.wsock = web.WebSocketResponse(heartbeat=55)
         self._to_write: asyncio.Queue = asyncio.Queue(maxsize=MAX_PENDING_MSG)
         self._handle_task: asyncio.Task | None = None
@@ -80,7 +81,7 @@ class WebSocketHandler:
                     break
                 message = process if isinstance(process, str) else process()
 
-                if to_write.empty():
+                if not self.command_phase or to_write.empty():
                     logger.debug("Sending %s", message)
                     await wsock.send_str(message)
                     continue
@@ -223,6 +224,7 @@ class WebSocketHandler:
                 self.hass.data.get(DATA_CONNECTIONS, 0) + 1
             )
             async_dispatcher_send(self.hass, SIGNAL_WEBSOCKET_CONNECTED)
+            self.command_phase = True
 
             # Command phase
             while not wsock.closed:
