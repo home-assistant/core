@@ -35,7 +35,6 @@ from .const import (
     DOMAIN,
     ENTRY_CLIENT,
     ENTRY_ENTITY_MANAGER,
-    ENTRY_PLAYERS,
     LOGGER as _LOGGER,
 )
 
@@ -317,6 +316,7 @@ class EntityManager:
         self,
         hass: HomeAssistant,
         config_entry: ConfigEntry,
+        mpris_client: hassmpris_client.AsyncMPRISClient,
         async_add_entities: AddEntitiesCallback,
     ) -> None:
         """
@@ -331,19 +331,10 @@ class EntityManager:
         self.hass = hass
         self.config_entry = config_entry
         self.async_add_entities = async_add_entities
-        self.component_data = hass.data[DOMAIN][self.config_entry.entry_id]
-        self._client = cast(
-            hassmpris_client.AsyncMPRISClient, self.component_data[ENTRY_CLIENT]
-        )
-        if ENTRY_PLAYERS not in self.component_data:
-            self.component_data[ENTRY_PLAYERS] = {}
-        self._players = cast(
-            dict[str, HASSMPRISEntity], self.component_data[ENTRY_PLAYERS]
-        )
+        self._client = mpris_client
+        self._players: dict[str, HASSMPRISEntity] = {}
         self._shutdown: asyncio.Future[bool] = asyncio.Future()
         self._started = False
-        _LOGGER.debug("Registering entity manager in integration data")
-        self.component_data[ENTRY_ENTITY_MANAGER] = self
 
     @property
     def players(self) -> dict[str, HASSMPRISEntity]:
@@ -533,7 +524,21 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> bool:
     """Set up all the media players for the MPRIS integration."""
-    manager = EntityManager(hass, config_entry, async_add_entities)
+    component_data = hass.data[DOMAIN][config_entry.entry_id]
+    assert ENTRY_ENTITY_MANAGER not in component_data
+    mpris_client = cast(
+        hassmpris_client.AsyncMPRISClient,
+        component_data[ENTRY_CLIENT],
+    )
+    manager = EntityManager(
+        hass,
+        config_entry,
+        mpris_client,
+        async_add_entities,
+    )
+    _LOGGER.debug("Registering entity manager in integration data")
+    component_data[ENTRY_ENTITY_MANAGER] = manager
+
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, manager.stop)
     await manager.start()
     return True
