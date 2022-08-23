@@ -65,7 +65,10 @@
                 "title": "Overwrite Radio IEEE Address"
             },
             "upload_manual_backup": {
-                "description": "Restore your network settings from an uploaded backup JSON file. You can download one from a different ZHA installation from \"Diagnostics\".",
+                "data": {
+                    "uploaded_backup_file": "Upload a file"
+                },
+                "description": "Restore your network settings from an uploaded backup JSON file. You can download one from a different ZHA installation from \"Diagnostics\", or use a Zigbee2MQTT `coordinator_backup.json` file.",
                 "title": "Upload a Manual Backup"
             }
         }
