@@ -181,6 +181,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     @extract_openuv
     async def update_data(call: ServiceCall, openuv: OpenUV) -> None:
         """Refresh all OpenUV data."""
+        LOGGER.debug("Refreshing all OpenUV data")
         async_log_deprecated_service_call(
             hass,
             call,
@@ -195,6 +196,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     @extract_openuv
     async def update_uv_index_data(call: ServiceCall, openuv: OpenUV) -> None:
         """Refresh OpenUV UV index data."""
+        LOGGER.debug("Refreshing OpenUV UV index data")
         async_log_deprecated_service_call(
             hass,
             call,
@@ -209,6 +211,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     @extract_openuv
     async def update_protection_data(call: ServiceCall, openuv: OpenUV) -> None:
         """Refresh OpenUV protection window data."""
+        LOGGER.debug("Refreshing OpenUV protection window data")
         async_log_deprecated_service_call(
             hass,
             call,
