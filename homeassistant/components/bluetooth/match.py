@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import fnmatch
+from fnmatch import translate
+from functools import lru_cache
+import re
 from typing import TYPE_CHECKING, Final, TypedDict
 
 from lru import LRU  # pylint: disable=no-name-in-module
@@ -136,12 +138,6 @@ def ble_device_matches(
         return False
 
     advertisement_data = service_info.advertisement
-    if (local_name := matcher.get(LOCAL_NAME)) is not None and not fnmatch.fnmatch(
-        advertisement_data.local_name or device.name or device.address,
-        local_name,
-    ):
-        return False
-
     if (
         service_uuid := matcher.get(SERVICE_UUID)
     ) is not None and service_uuid not in advertisement_data.service_uuids:
@@ -165,4 +161,34 @@ def ble_device_matches(
         ):
             return False
 
+    if (local_name := matcher.get(LOCAL_NAME)) is not None and (
+        (device_name := advertisement_data.local_name or device.name) is None
+        or not _memorized_fnmatch(
+            device_name,
+            local_name,
+        )
+    ):
+        return False
+
     return True
+
+
+@lru_cache(maxsize=4096, typed=True)
+def _compile_fnmatch(pattern: str) -> re.Pattern:
+    """Compile a fnmatch pattern."""
+    return re.compile(translate(pattern))
+
+
+@lru_cache(maxsize=1024, typed=True)
+def _memorized_fnmatch(name: str, pattern: str) -> bool:
+    """Memorized version of fnmatch that has a larger lru_cache.
+
+    The default version of fnmatch only has a lru_cache of 256 entries.
+    With many devices we quickly reach that limit and end up compiling
+    the same pattern over and over again.
+
+    Bluetooth has its own memorized fnmatch with its own lru_cache
+    since the data is going to be relatively the same
+    since the devices will not change frequently.
+    """
+    return bool(_compile_fnmatch(pattern).match(name))
