@@ -159,9 +159,12 @@ def ble_device_matches(
         ):
             return False
 
-    if (local_name := matcher.get(LOCAL_NAME)) is not None and not memorized_fnmatch(
-        advertisement_data.local_name or device.name or device.address,
-        local_name,
+    if (local_name := matcher.get(LOCAL_NAME)) is not None and (
+        (device_name := advertisement_data.local_name or device.name) is None
+        or not memorized_fnmatch(
+            device_name,
+            local_name,
+        )
     ):
         return False
 
