@@ -201,6 +201,14 @@ CAMERA_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
     ),
     ProtectSensorEntityDescription(
+        key="lens_type",
+        name="Lens Type",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        icon="mdi:camera-iris",
+        ufp_required_field="has_removable_lens",
+        ufp_value="feature_flags.lens_type",
+    ),
+    ProtectSensorEntityDescription(
         key="mic_level",
         name="Microphone Level",
         icon="mdi:microphone",
