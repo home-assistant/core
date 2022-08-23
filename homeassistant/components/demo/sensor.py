@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from typing import cast
 
 from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
     RestoreSensor,
     SensorDeviceClass,
     SensorEntity,
@@ -87,39 +88,43 @@ async def async_setup_platform(
             ),
             DemoSumSensor(
                 "sensor_6",
-                "Total energy 1 (kWh)",
+                "Total energy 1",
                 0.5,  # 6kWh / h
                 SensorDeviceClass.ENERGY,
                 SensorStateClass.TOTAL,
                 ENERGY_KILO_WATT_HOUR,
                 None,
+                "total_energy_kwh",
             ),
             DemoSumSensor(
                 "sensor_7",
-                "Total energy 2 (MWh)",
+                "Total energy 2",
                 0.00025,  # 0.003 MWh/h (3 kWh / h)
                 SensorDeviceClass.ENERGY,
                 SensorStateClass.TOTAL,
                 ENERGY_MEGA_WATT_HOUR,
                 None,
+                "total_energy_mwh",
             ),
             DemoSumSensor(
                 "sensor_8",
-                "Total gas 1 (m³)",
+                "Total gas (metric)",
                 0.025,  # 0.30 m³/h (10.6 ft³ / h)
                 SensorDeviceClass.GAS,
                 SensorStateClass.TOTAL,
                 VOLUME_CUBIC_METERS,
                 None,
+                "total_gas_m3",
             ),
             DemoSumSensor(
                 "sensor_9",
-                "Total gas 2 (ft³)",
+                "Total gas (imperial)",
                 1.0,  # 12 ft³/h (0.34 m³ / h)
                 SensorDeviceClass.GAS,
                 SensorStateClass.TOTAL,
                 VOLUME_CUBIC_FEET,
                 None,
+                "total_gas_ft3",
             ),
         ]
     )
@@ -181,8 +186,10 @@ class DemoSumSensor(RestoreSensor):
         state_class: SensorStateClass | None,
         unit_of_measurement: str | None,
         battery: StateType,
+        suggested_entity_id: str,
     ) -> None:
         """Initialize the sensor."""
+        self.entity_id = f"{SENSOR_DOMAIN}.{suggested_entity_id}"
         self._attr_device_class = device_class
         self._attr_name = name
         self._attr_native_unit_of_measurement = unit_of_measurement

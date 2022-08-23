@@ -283,10 +283,10 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
 
     # Add external energy consumption in kWh, ~ 12 kWh / day
     # This should be possible to pick for the energy dashboard
-    statistic_id = f"{DOMAIN}:energy_consumption"
+    statistic_id = f"{DOMAIN}:energy_consumption_kwh"
     metadata = {
         "source": DOMAIN,
-        "name": "Energy consumption (kWh)",
+        "name": "Energy consumption 1",
         "statistic_id": statistic_id,
         "unit_of_measurement": "kWh",
         "has_mean": False,
@@ -305,10 +305,10 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
 
     # Add external energy consumption in MWh, ~ 12 kWh / day
     # This should not be possible to pick for the energy dashboard
-    statistic_id = f"{DOMAIN}:energy_consumption_2"
+    statistic_id = f"{DOMAIN}:energy_consumption_mwh"
     metadata = {
         "source": DOMAIN,
-        "name": "Energy consumption (MWh)",
+        "name": "Energy consumption 2",
         "statistic_id": statistic_id,
         "unit_of_measurement": "MWh",
         "has_mean": False,
@@ -327,7 +327,7 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
 
     # Add external gas consumption in m³, ~6 m3/day
     # This should be possible to pick for the energy dashboard
-    statistic_id = f"{DOMAIN}:gas_consumption"
+    statistic_id = f"{DOMAIN}:gas_consumption_m3"
     metadata = {
         "source": DOMAIN,
         "name": "Gas consumption (metric)",
@@ -349,7 +349,7 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
 
     # Add external gas consumption in ft³, ~180 ft3/day
     # This should not be possible to pick for the energy dashboard
-    statistic_id = f"{DOMAIN}:gas_consumption_2"
+    statistic_id = f"{DOMAIN}:gas_consumption_ft3"
     metadata = {
         "source": DOMAIN,
         "name": "Gas consumption (imperial)",

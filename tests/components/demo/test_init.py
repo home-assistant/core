@@ -65,9 +65,9 @@ async def test_demo_statistics(hass, recorder_mock):
     assert {
         "has_mean": False,
         "has_sum": True,
-        "name": "Energy consumption (kWh)",
+        "name": "Energy consumption 1",
         "source": "demo",
-        "statistic_id": "demo:energy_consumption",
+        "statistic_id": "demo:energy_consumption_kwh",
         "unit_of_measurement": "kWh",
     } in statistic_ids
 
