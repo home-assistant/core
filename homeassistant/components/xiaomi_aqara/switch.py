@@ -178,7 +178,7 @@ class XiaomiGenericSwitch(XiaomiDevice, SwitchEntity):
         return attrs
 
     @property
-    def should_poll(self):
+    def should_poll(self) -> bool:
         """Return the polling state. Polling needed for Zigbee plug only."""
         return self._supports_power_consumption
 
