@@ -242,7 +242,7 @@ class CoalescingResponse(client.ClientWebSocketResponse):
 class CoalescingClient(TestClient):
     """Client that mimics the websocket js code."""
 
-    def __init__(*args, **kwargs) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Init TestClient."""
         super().__init__(*args, ws_response_class=CoalescingResponse, **kwargs)
 
