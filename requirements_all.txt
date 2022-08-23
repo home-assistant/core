@@ -2471,7 +2471,7 @@ waterfurnace==1.1.0
 webexteamssdk==1.1.1
 
 # homeassistant.components.whirlpool
-whirlpool-sixth-sense==0.15.1
+whirlpool-sixth-sense==0.17.0
 
 # homeassistant.components.whois
 whois==0.9.16

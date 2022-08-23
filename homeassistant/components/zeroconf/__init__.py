@@ -580,11 +580,6 @@ def _truncate_location_name_to_valid(location_name: str) -> str:
     return location_name.encode("utf-8")[:MAX_NAME_LEN].decode("utf-8", "ignore")
 
 
-# Zeroconf has its own memorized fnmatch with its own lru_cache
-# since the data is going to be relatively the same
-# since the devices will not change frequently
-
-
 @lru_cache(maxsize=4096, typed=True)
 def _compile_fnmatch(pattern: str) -> re.Pattern:
     """Compile a fnmatch pattern."""
@@ -598,5 +593,9 @@ def _memorized_fnmatch(name: str, pattern: str) -> bool:
     The default version of fnmatch only has a lru_cache of 256 entries.
     With many devices we quickly reach that limit and end up compiling
     the same pattern over and over again.
+
+    Zeroconf has its own memorized fnmatch with its own lru_cache
+    since the data is going to be relatively the same
+    since the devices will not change frequently
     """
     return bool(_compile_fnmatch(pattern).match(name))
