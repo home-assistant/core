@@ -5,8 +5,7 @@
         },
         "error": {
             "cannot_connect": "Failed to connect, please check the IP or mDNS",
-            "invalid_auth": "Wrong password",
-            "unknown": "Unexpected error"
+            "invalid_auth": "Wrong password"
         },
         "step": {
             "user": {

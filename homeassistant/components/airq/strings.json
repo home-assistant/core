@@ -8,20 +8,11 @@
           "ip_address": "[%key:common::config_flow::data::ip%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
-      },
-      "configure": {
-        "title": "Configure the integration",
-        "description": "Select the desired scan interval (in seconds) and if the data should be smoothed",
-        "data": {
-          "scan_interval": "Scan interval in seconds",
-          "show_average": "Smooth the momentary values"
-        }
       }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
