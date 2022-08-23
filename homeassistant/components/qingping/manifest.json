@@ -3,7 +3,12 @@
   "name": "Qingping",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/qingping",
-  "bluetooth": [{ "local_name": "Qingping*", "connectable": false }],
+  "bluetooth": [
+    {
+      "service_data_uuid": "0000fdcd-0000-1000-8000-00805f9b34fb",
+      "connectable": false
+    }
+  ],
   "requirements": ["qingping-ble==0.3.0"],
   "dependencies": ["bluetooth"],
   "codeowners": ["@bdraco"],
