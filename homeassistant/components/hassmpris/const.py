@@ -8,7 +8,7 @@ LOGGER = logging.getLogger(__package__)
 
 DOMAIN = "hassmpris"
 ENTRY_CLIENT = "client"
-ENTITY_MANAGER = "entity_manager"
+ENTRY_ENTITY_MANAGER = "entity_manager"
 ENTRY_PLAYERS = "players"
 
 CONF_HOST = _CONF_HOST
