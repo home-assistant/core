@@ -32,8 +32,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Close the Nobø Ecohub socket connection when HA stops."""
         await hub.stop()
 
-    listener = hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_close)
-    hass.data[DOMAIN][entry.entry_id] = NoboHubData(hub, listener)
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_close)
+    )
+    hass.data[DOMAIN][entry.entry_id] = hub
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -45,10 +47,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
 
-    data: NoboHubData = hass.data[DOMAIN][entry.entry_id]
+    hub: nobo = hass.data[DOMAIN][entry.entry_id]
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        data.remove_listener()
-        await data.hub.stop()
+        await hub.stop()
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok

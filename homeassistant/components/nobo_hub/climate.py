@@ -65,7 +65,7 @@ async def async_setup_entry(
     """Set up the Nobø Ecohub platform from UI configuration."""
 
     # Setup connection with hub
-    hub = hass.data[DOMAIN][config_entry.entry_id].hub
+    hub: nobo = hass.data[DOMAIN][config_entry.entry_id]
 
     override_type = (
         nobo.API.OVERRIDE_TYPE_NOW
@@ -106,7 +106,7 @@ async def async_setup_entry(
 
     # Add zones as entities
     async_add_entities(
-        (
+        [
             NoboZone(
                 zone_id,
                 hub,
@@ -115,7 +115,7 @@ async def async_setup_entry(
                 override_type,
             )
             for zone_id in hub.zones
-        ),
+        ],
         True,
     )
 
@@ -321,4 +321,4 @@ class NoboZone(ClimateEntity):
     @callback
     def _after_update(self, hub):
         self._read_state()
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()

@@ -35,21 +35,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._discovered_hubs = None
 
-    @staticmethod
-    def _device(hub):
-        (ip, serial_prefix) = hub
-        return {"ip": ip, "serial_prefix": serial_prefix}
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
         if self._discovered_hubs is None:
-            self._discovered_hubs = list(
-                map(self._device, await nobo.async_discover_hubs(loop=self.hass.loop))
-            )
+            self._discovered_hubs = [
+                {"ip": ip, "serial_prefix": serial_prefix}
+                for ip, serial_prefix in await nobo.async_discover_hubs(
+                    loop=self.hass.loop
+                )
+            ]
 
-        if len(self._discovered_hubs) == 0:
+        if not self._discovered_hubs:
             # No hubs auto discovered
             return await self.async_step_manual()
 
@@ -94,21 +92,23 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle manual configuration. Triggered if no devices are discovered or by user."""
         errors = {}
-        serial, ip_address = None, None
         if user_input is not None:
-            serial = user_input.get(CONF_SERIAL)
-            ip_address = user_input.get(CONF_IP_ADDRESS)
+            serial = user_input[CONF_SERIAL]
+            ip_address = user_input[CONF_IP_ADDRESS]
             try:
                 return await self._create_configuration(serial, ip_address)
             except NoboHubConnectError as error:
                 errors["base"] = error.msg
 
+        user_input = user_input or {}
         return self.async_show_form(
             step_id="manual",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_SERIAL, default=serial): str,
-                    vol.Required(CONF_IP_ADDRESS, default=ip_address): str,
+                    vol.Required(CONF_SERIAL, default=user_input.get(CONF_SERIAL)): str,
+                    vol.Required(
+                        CONF_IP_ADDRESS, default=user_input.get(CONF_IP_ADDRESS)
+                    ): str,
                 }
             ),
             errors=errors,
@@ -178,7 +178,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None) -> FlowResult:
         """Manage the options."""
 
-        hub = self.hass.data[DOMAIN][self.config_entry.entry_id].hub
+        hub: nobo = self.hass.data[DOMAIN][self.config_entry.entry_id]
         profile_names = sorted(
             k["name"].replace("\xa0", " ") for k in hub.week_profiles.values()
         )
