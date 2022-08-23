@@ -15,7 +15,7 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN
+from .const import DOMAIN, TARGET_ROUTE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,21 +33,19 @@ class AirQCoordinator(DataUpdateCoordinator):
         update_interval: timedelta,
         address: str,
         passw: str,
-        target_route: str = "average",
     ) -> None:
         """Initialise a custom coordinator."""
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=update_interval)
         self.airq = AirQ(address, passw)
-        self._target_route = target_route
 
     async def _async_update_data(self) -> dict:
         """Fetch the data from the device.
 
-        Function is meant as an async closure, or partial(airq.get, target_route)
+        Function is meant as an async closure, or partial(airq.get, TARGET_ROUTE)
         Additionally, the result dictionary is stripped of the errors. Subject to
         a discussion
         """
-        data = await self.airq.get(self._target_route)
+        data = await self.airq.get(TARGET_ROUTE)
         return self.airq.drop_errors_from_data(data)
 
     async def async_fetch_config(self) -> None:
