@@ -2,12 +2,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import fnmatch
 from typing import TYPE_CHECKING, Final, TypedDict
 
 from lru import LRU  # pylint: disable=no-name-in-module
 
 from homeassistant.loader import BluetoothMatcher, BluetoothMatcherOptional
+from homeassistant.util.fnmatch import memorized_fnmatch
 
 from .models import BluetoothServiceInfoBleak
 
@@ -136,12 +136,6 @@ def ble_device_matches(
         return False
 
     advertisement_data = service_info.advertisement
-    if (local_name := matcher.get(LOCAL_NAME)) is not None and not fnmatch.fnmatch(
-        advertisement_data.local_name or device.name or device.address,
-        local_name,
-    ):
-        return False
-
     if (
         service_uuid := matcher.get(SERVICE_UUID)
     ) is not None and service_uuid not in advertisement_data.service_uuids:
@@ -164,5 +158,14 @@ def ble_device_matches(
             for manufacturer_data in advertisement_data.manufacturer_data.values()
         ):
             return False
+
+    if (local_name := matcher.get(LOCAL_NAME)) is not None and (
+        (device_name := advertisement_data.local_name or device.name) is None
+        or not memorized_fnmatch(
+            device_name,
+            local_name,
+        )
+    ):
+        return False
 
     return True
