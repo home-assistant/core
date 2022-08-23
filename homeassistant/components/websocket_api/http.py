@@ -94,8 +94,8 @@ class WebSocketHandler:
 
                 if len(messages) == 1:
                     # The next message was None so we are done
-                    logger.debug("Sending %s", message)
-                    await wsock.send_str(message)
+                    logger.debug("Sending %s", messages[0])
+                    await wsock.send_str(messages[0])
                     break
 
                 coalesced_messages = "[" + ",".join(messages) + "]"
