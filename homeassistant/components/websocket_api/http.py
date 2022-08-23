@@ -71,17 +71,29 @@ class WebSocketHandler:
     async def _writer(self) -> None:
         """Write outgoing messages."""
         # Exceptions if Socket disconnected or cancelled by connection handler
+        to_write = self._to_write
+        logger = self._logger
+        wsock = self.wsock
         with suppress(RuntimeError, ConnectionResetError, *CANCELLATION_ERRORS):
             while not self.wsock.closed:
-                if (process := await self._to_write.get()) is None:
+                if (process := await to_write.get()) is None:
                     break
+                message = process if isinstance(process, str) else process()
 
-                if not isinstance(process, str):
-                    message: str = process()
-                else:
-                    message = process
-                self._logger.debug("Sending %s", message)
-                await self.wsock.send_str(message)
+                if to_write.empty():
+                    logger.debug("Sending %s", message)
+                    await wsock.send_str(message)
+                    continue
+
+                messages: list[str] = [message]
+                while not to_write.empty():
+                    if (process := to_write.get_nowait()) is None:
+                        continue
+                    messages.append(process if isinstance(process, str) else process())
+
+                message_str = "[" + ",".join(messages) + "]"
+                self._logger.debug("Sending %s", message_str)
+                await self.wsock.send_str(message_str)
 
         # Clean up the peaker checker when we shut down the writer
         if self._peak_checker_unsub is not None:
