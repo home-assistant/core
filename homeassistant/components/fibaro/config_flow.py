@@ -124,4 +124,7 @@ class FibaroConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=vol.Schema({vol.Required(CONF_PASSWORD): str}),
             errors=errors,
+            description_placeholders={
+                CONF_USERNAME: self._reauth_entry.data[CONF_USERNAME]
+            },
         )

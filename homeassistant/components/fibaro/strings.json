@@ -14,7 +14,7 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "The fibaro integration needs to re-authenticate your account"
+        "description": "Please update your password for {username}"
       }
     },
     "error": {
