@@ -161,6 +161,7 @@ def mock_sensor_statistics():
                 "unit_of_measurement": "dogs",
                 "has_mean": True,
                 "has_sum": False,
+                "name": None,
             },
             "stat": {"start": start},
         }
