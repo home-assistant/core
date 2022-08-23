@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime, timedelta
 import logging
+import time
 from uuid import UUID
 
 from bleak import BleakClient, BleakError
@@ -15,6 +16,7 @@ from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
 )
 from homeassistant.components.device_tracker.const import (
+    CONF_CONSIDER_HOME,
     CONF_TRACK_NEW,
     SCAN_INTERVAL,
     SourceType,
@@ -74,6 +76,9 @@ async def async_setup_scanner(  # noqa: C901
     devs_no_track: set[str] = set()
     devs_track_battery = {}
     interval: timedelta = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
+    consider_home: float = config.get(
+        CONF_CONSIDER_HOME, timedelta(seconds=180)
+    ).total_seconds()
     # if track new devices is true discover new devices
     # on every scan.
     track_new = config.get(CONF_TRACK_NEW)
@@ -205,8 +210,11 @@ async def async_setup_scanner(  # noqa: C901
         # interval so they do not get set to not_home when
         # there have been no callbacks because the RSSI or
         # other properties have not changed.
+        monotonic_now = time.monotonic()
+        # Remove the time check when https://github.com/hbldh/bleak/issues/942 is fixed
         for service_info in bluetooth.async_discovered_service_info(hass, False):
-            _async_update_ble(service_info, bluetooth.BluetoothChange.ADVERTISEMENT)
+            if monotonic_now - service_info.time < consider_home:
+                _async_update_ble(service_info, bluetooth.BluetoothChange.ADVERTISEMENT)
 
     cancels = [
         bluetooth.async_register_callback(
