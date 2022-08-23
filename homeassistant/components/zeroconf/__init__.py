@@ -9,7 +9,6 @@ from fnmatch import translate
 from functools import lru_cache
 from ipaddress import IPv4Address, IPv6Address, ip_address
 import logging
-from os.path import normcase
 import re
 import socket
 import sys
@@ -581,7 +580,7 @@ def _truncate_location_name_to_valid(location_name: str) -> str:
     return location_name.encode("utf-8")[:MAX_NAME_LEN].decode("utf-8", "ignore")
 
 
-# The integrations has its own memorized fnmatch with its own lru_cache
+# Zeroconf has its own memorized fnmatch with its own lru_cache
 # since the data is going to be relatively the same
 # since the devices will not change frequently
 
@@ -589,7 +588,7 @@ def _truncate_location_name_to_valid(location_name: str) -> str:
 @lru_cache(maxsize=4096, typed=True)
 def _compile_fnmatch(pattern: str) -> re.Pattern:
     """Compile a fnmatch pattern."""
-    return re.compile(translate(normcase(pattern)))
+    return re.compile(translate(pattern))
 
 
 @lru_cache(maxsize=1024, typed=True)
@@ -600,4 +599,4 @@ def _memorized_fnmatch(name: str, pattern: str) -> bool:
     With many devices we quickly reach that limit and end up compiling
     the same pattern over and over again.
     """
-    return bool(_compile_fnmatch(pattern).match(normcase(name)))
+    return bool(_compile_fnmatch(pattern).match(name))
