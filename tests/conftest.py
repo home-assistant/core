@@ -259,6 +259,9 @@ def aiohttp_client(
 ) -> Generator[AiohttpClient, None, None]:
     """Override the default aiohttp_client since 3.x does not support aiohttp_client_cls.
 
+    Remove this when upgrading to 4.x as aiohttp_client_cls
+    will do the same thing
+
     aiohttp_client(app, **kwargs)
     aiohttp_client(server, **kwargs)
     aiohttp_client(raw_server, **kwargs)
