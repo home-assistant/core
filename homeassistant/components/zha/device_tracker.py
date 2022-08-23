@@ -49,13 +49,14 @@ async def async_setup_entry(
 class ZHADeviceScannerEntity(ScannerEntity, ZhaEntity):
     """Represent a tracked device."""
 
+    _attr_should_poll = True  # BaseZhaEntity defaults to False
+
     def __init__(self, unique_id, zha_device, channels, **kwargs):
         """Initialize the ZHA device tracker."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
         self._battery_channel = self.cluster_channels.get(CHANNEL_POWER_CONFIGURATION)
         self._connected = False
         self._keepalive_interval = 60
-        self._should_poll = True
         self._battery_level = None
 
     async def async_added_to_hass(self):
