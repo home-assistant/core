@@ -32,14 +32,18 @@
             },
             "user": {
                 "data": {
-                    "host": "Anfitrión"
+                    "host": "Anfitrión",
+                    "cakes_port": "Puerto de autenticación",
+                    "mpris_port": "Puerto de control de medios"
                 },
                 "description": "Escriba el nombre de dominio o la dirección IP de su computador que ejecuta el agente MPRIS.",
                 "title": "Configurar MPRIS multimedia remote control"
             },
             "zeroconf_confirm": {
                 "data": {
-                    "host": "Anfitrión"
+                    "host": "Anfitrión",
+                    "cakes_port": "Puerto de autenticación",
+                    "mpris_port": "Puerto de control de medios"
                 },
                 "description": "Confirme el nombre de dominion o la dirección IP de su computador que ejecuta el agente MPRIS.",
                 "title": "Configurar MPRIS multimedia remote control"

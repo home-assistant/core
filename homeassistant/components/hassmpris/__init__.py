@@ -3,22 +3,25 @@ from __future__ import annotations
 
 import datetime
 
-from cryptography.hazmat.primitives.serialization import load_pem_private_key
-from cryptography.x509 import Certificate, load_pem_x509_certificate
+from cryptography.hazmat.primitives import serialization
+from cryptography.x509 import Certificate
+from cryptography import x509
 import hassmpris_client
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import (
     CONF_CLIENT_CERT,
     CONF_CLIENT_KEY,
+    CONF_HOST,
+    CONF_MPRIS_PORT,
     CONF_TRUST_CHAIN,
     DOMAIN,
     ENTRY_CLIENT,
-    ENTRY_MANAGER,
+    ENTRY_ENTITY_MANAGER,
     LOGGER as _LOGGER,
 )
 
@@ -31,17 +34,17 @@ def _load_cert_chain(chain: bytes) -> list[Certificate]:
     cert_slots = chain.split(start_line)
     certificates: list[Certificate] = []
     for single_pem_cert in cert_slots[1:]:
-        loaded = load_pem_x509_certificate(start_line + single_pem_cert)
+        loaded = x509.load_pem_x509_certificate(start_line + single_pem_cert)
         certificates.append(loaded)
     return certificates
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up MPRIS media playback remote control from a config entry."""
-    client_cert = load_pem_x509_certificate(
+    client_cert = x509.load_pem_x509_certificate(
         entry.data[CONF_CLIENT_CERT].encode("ascii"),
     )
-    client_key = load_pem_private_key(
+    client_key = serialization.load_pem_private_key(
         entry.data[CONF_CLIENT_KEY].encode("ascii"),
         None,
     )
@@ -51,7 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     clnt = hassmpris_client.AsyncMPRISClient(
         entry.data[CONF_HOST],
-        40051,
+        entry.data[CONF_MPRIS_PORT],
         client_cert,
         client_key,
         trust_chain,
@@ -81,11 +84,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         data = hass.data[DOMAIN].pop(entry.entry_id)
-        if ENTRY_MANAGER in data:
+        if ENTRY_ENTITY_MANAGER in data:
             _LOGGER.debug("Stopping entity manager")
-            waitable = data[ENTRY_MANAGER].stop()
+            waitable = data[ENTRY_ENTITY_MANAGER].stop()
         await data[ENTRY_CLIENT].close()
-        if ENTRY_MANAGER in data:
+        if ENTRY_ENTITY_MANAGER in data:
             _LOGGER.debug("Waiting for entity manager to fully stop")
             await waitable
 

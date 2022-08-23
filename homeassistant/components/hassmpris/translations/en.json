@@ -32,14 +32,18 @@
             },
             "user": {
                 "data": {
-                    "host": "Host"
+                    "host": "Host",
+                    "cakes_port": "Authentication port",
+                    "mpris_port": "Media player control port"
                 },
                 "description": "Enter the name or address of your computer running the MPRIS agent.",
                 "title": "Set up MPRIS multimedia remote control"
             },
             "zeroconf_confirm": {
                 "data": {
-                    "host": "Host"
+                    "host": "Host",
+                    "cakes_port": "Authentication port",
+                    "mpris_port": "Media player control port"
                 },
                 "description": "Confirm the name or address of your computer running the MPRIS agent.",
                 "title": "Set up MPRIS multimedia remote control"

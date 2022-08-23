@@ -5,14 +5,18 @@
         "title": "Set up MPRIS multimedia remote control",
         "description": "Enter the name or address of your computer running the MPRIS agent.",
         "data": {
-          "host": "[%key:common::config_flow::data::host%]"
+          "host": "[%key:common::config_flow::data::host%]",
+          "cakes_port": "Authentication port",
+          "mpris_port": "Media player control port"
         }
       },
       "zeroconf_confirm": {
         "title": "Set up MPRIS multimedia remote control",
         "description": "Confirm the name or address of your computer running the MPRIS agent.",
         "data": {
-          "host": "[%key:common::config_flow::data::host%]"
+          "host": "[%key:common::config_flow::data::host%]",
+          "cakes_port": "Authentication port",
+          "mpris_port": "Media player control port"
         }
       },
       "reauth_confirm": {

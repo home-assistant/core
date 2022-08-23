@@ -34,7 +34,7 @@ from .const import (
     ATTR_PLAYBACK_RATE,
     DOMAIN,
     ENTRY_CLIENT,
-    ENTRY_MANAGER,
+    ENTRY_ENTITY_MANAGER,
     ENTRY_PLAYERS,
     LOGGER as _LOGGER,
 )
@@ -333,7 +333,7 @@ class EntityManager:
         self._shutdown: asyncio.Future[bool] = asyncio.Future()
         self._started = False
         _LOGGER.debug("Registering entity manager in integration data")
-        self.component_data[ENTRY_MANAGER] = self
+        self.component_data[ENTRY_ENTITY_MANAGER] = self
 
     @property
     def players(self) -> dict[str, HASSMPRISEntity]:
