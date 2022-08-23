@@ -59,7 +59,7 @@ class MicroBotBinarySwitch(MicroBotEntity, SwitchEntity):
         """Return true if the switch is on."""
         return self.coordinator.api.is_on
 
-    async def calibrate(
+    async def async_calibrate(
         self,
         depth: int,
         duration: int,
