@@ -91,9 +91,9 @@ class WebSocketHandler:
                         continue
                     messages.append(process if isinstance(process, str) else process())
 
-                message_str = "[" + ",".join(messages) + "]"
-                self._logger.debug("Sending %s", message_str)
-                await self.wsock.send_str(message_str)
+                coalesced_messages = "[" + ",".join(messages) + "]"
+                self._logger.debug("Sending %s", coalesced_messages)
+                await self.wsock.send_str(coalesced_messages)
 
         # Clean up the peaker checker when we shut down the writer
         if self._peak_checker_unsub is not None:
