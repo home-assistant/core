@@ -79,6 +79,7 @@ class HASSMPRISEntity(MediaPlayerEntity):
         client: hassmpris_client.AsyncMPRISClient,
         integration_id: str,
         player_id: str,
+        initial_state: str | None = None,
     ) -> None:
         """
         Initialize the entity.
@@ -97,6 +98,8 @@ class HASSMPRISEntity(MediaPlayerEntity):
         self._integration_id = integration_id
         self._attr_available = True
         self._metadata: dict[str, Any] = {}
+        if initial_state is not None:
+            self._attr_state = initial_state
 
     async def set_unavailable(self):
         """Mark player as unavailable."""
@@ -327,9 +330,16 @@ class EntityManager:
         """
         self.hass = hass
         self.config_entry = config_entry
-        self.config_entry_id = config_entry.entry_id
         self.async_add_entities = async_add_entities
-        self.component_data = hass.data[DOMAIN][self.config_entry_id]
+        self.component_data = hass.data[DOMAIN][self.config_entry.entry_id]
+        self._client = cast(
+            hassmpris_client.AsyncMPRISClient, self.component_data[ENTRY_CLIENT]
+        )
+        if ENTRY_PLAYERS not in self.component_data:
+            self.component_data[ENTRY_PLAYERS] = {}
+        self._players = cast(
+            dict[str, HASSMPRISEntity], self.component_data[ENTRY_PLAYERS]
+        )
         self._shutdown: asyncio.Future[bool] = asyncio.Future()
         self._started = False
         _LOGGER.debug("Registering entity manager in integration data")
@@ -338,14 +348,12 @@ class EntityManager:
     @property
     def players(self) -> dict[str, HASSMPRISEntity]:
         """Return the players known to this entity manager."""
-        if ENTRY_PLAYERS not in self.component_data:
-            self.component_data[ENTRY_PLAYERS] = {}
-        return cast(dict[str, HASSMPRISEntity], self.component_data[ENTRY_PLAYERS])
+        return self._players
 
     @property
     def client(self) -> hassmpris_client.AsyncMPRISClient:
         """Return the MPRIS client associated with this entity manager."""
-        return self.component_data[ENTRY_CLIENT]
+        return self._client
 
     async def start(self):
         """Start the entity manager as a separate task."""
@@ -427,7 +435,7 @@ class EntityManager:
         for entity in [
             e
             for e in reg.entities.values()
-            if e.config_entry_id == self.config_entry_id
+            if e.config_entry_id == self.config_entry.entry_id
         ]:
             player_id = player_id_from_entity(entity)
             if is_copy(player_id):
@@ -445,7 +453,10 @@ class EntityManager:
                 if not known(player_id):
                     _LOGGER.debug("Resuscitating known player %s", player_id)
                     entity = HASSMPRISEntity(
-                        self.client, self.config_entry_id, player_id
+                        self.client,
+                        self.config_entry.entry_id,
+                        player_id,
+                        initial_state=STATE_OFF,
                     )
                     self.players[player_id] = entity
                     self.async_add_entities([entity])
@@ -498,7 +509,11 @@ class EntityManager:
         if player_id in self.players:
             entity: HASSMPRISEntity = self.players[player_id]
         else:
-            entity = HASSMPRISEntity(self.client, self.config_entry_id, player_id)
+            entity = HASSMPRISEntity(
+                self.client,
+                self.config_entry.entry_id,
+                player_id,
+            )
             self.async_add_entities([entity])
             self.players[player_id] = entity
 
