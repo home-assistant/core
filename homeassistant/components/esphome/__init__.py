@@ -52,6 +52,8 @@ from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.template import Template
 
+from .bluetooth import async_connect_scanner
+
 # Import config flow so that it's added to the registry
 from .entry_data import RuntimeEntryData
 
@@ -286,6 +288,8 @@ async def async_setup_entry(  # noqa: C901
             await cli.subscribe_states(entry_data.async_update_state)
             await cli.subscribe_service_calls(async_on_service_call)
             await cli.subscribe_home_assistant_states(async_on_state_subscription)
+            if entry_data.device_info.has_bluetooth_proxy:
+                await async_connect_scanner(hass, entry, cli)
 
             hass.async_create_task(entry_data.async_save_to_store())
         except APIConnectionError as err:
