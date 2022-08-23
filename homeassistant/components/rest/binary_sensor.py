@@ -30,7 +30,12 @@ from homeassistant.helpers.template_entity import TemplateEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import async_get_config_and_coordinator, create_rest_data_from_config
-from .const import CONF_JSON_ATTRS, CONF_JSON_ATTRS_PATH, DEFAULT_BINARY_SENSOR_NAME
+from .const import (
+    CONF_JSON_ATTRS,
+    CONF_JSON_ATTRS_PATH,
+    DEFAULT_BINARY_SENSOR_NAME,
+    XML_MIME_TYPES,
+)
 from .entity import RestEntity
 from .schema import BINARY_SENSOR_SCHEMA, RESOURCE_SCHEMA
 
@@ -129,12 +134,7 @@ class RestBinarySensor(RestEntity, TemplateEntity, BinarySensorEntity):
             # If the http request failed, headers will be None
             content_type = self.rest.headers.get("content-type")
 
-            if content_type and (
-                content_type.startswith("text/xml")
-                or content_type.startswith("application/xml")
-                or content_type.startswith("application/xhtml+xml")
-                or content_type.startswith("application/rss+xml")
-            ):
+            if content_type and content_type.startswith(XML_MIME_TYPES):
                 try:
                     response = json_dumps(xmltodict.parse(response))
                     _LOGGER.debug("JSON converted from XML: %s", response)
