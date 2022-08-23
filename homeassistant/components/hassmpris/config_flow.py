@@ -136,6 +136,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._mpris_port = mpris_port
         self._unique_id = unique_id
 
+    def _update_server_data(self, host: str, cakes_port: int, mpris_port: int):
+        self._host = host
+        self._cakes_port = cakes_port
+        self._mpris_port = mpris_port
+
     async def _create_entry(self):
         data = self._get_data()
 
@@ -255,9 +260,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors={},
             )
 
-        self._host = user_input[CONF_HOST]
-        self._cakes_port = user_input[CONF_CAKES_PORT]
-        self._mpris_port = user_input[CONF_MPRIS_PORT]
+        self._update_server_data(
+            user_input[CONF_HOST],
+            user_input[CONF_CAKES_PORT],
+            user_input[CONF_MPRIS_PORT],
+        )
 
         return await self.async_step_pairing()
 
@@ -289,9 +296,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ),
             )
 
-        self._host = user_input[CONF_HOST]
-        self._cakes_port = user_input[CONF_CAKES_PORT]
-        self._mpris_port = user_input[CONF_MPRIS_PORT]
+        self._update_server_data(
+            user_input[CONF_HOST],
+            user_input[CONF_CAKES_PORT],
+            user_input[CONF_MPRIS_PORT],
+        )
 
         return await self.async_step_pairing()
 
