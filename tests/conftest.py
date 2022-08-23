@@ -225,10 +225,6 @@ class CoalescingResponse(client.ClientWebSocketResponse):
         if self._recv_buffer:
             return self._recv_buffer.pop(0)
         data = await self.receive_str(timeout=timeout)
-        import pprint
-
-        pprint.pprint(["got data", data])
-        assert 0
         decoded = loads(data)
         if isinstance(decoded, list):
             self._recv_buffer = decoded
@@ -511,10 +507,6 @@ def current_request_with_host(current_request):
 @pytest.fixture
 def hass_ws_client(aiohttp_client, hass_access_token, hass, socket_enabled):
     """Websocket client fixture connected to websocket server."""
-
-    import pprint
-
-    pprint.pprint(aiohttp_client)
 
     async def create_client(hass=hass, access_token=hass_access_token):
         """Create a websocket client."""
