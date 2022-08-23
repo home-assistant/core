@@ -16,6 +16,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.json import json_loads
 
 from .auth import AuthPhase, auth_required_message
 from .const import (
@@ -213,7 +214,7 @@ class WebSocketHandler:
                 raise Disconnect
 
             try:
-                msg_data = msg.json()
+                msg_data = msg.json(loads=json_loads)
             except ValueError as err:
                 disconnect_warn = "Received invalid JSON."
                 raise Disconnect from err
@@ -238,13 +239,18 @@ class WebSocketHandler:
                     break
 
                 try:
-                    msg_data = msg.json()
+                    msg_data = msg.json(loads=json_loads)
                 except ValueError:
                     disconnect_warn = "Received invalid JSON."
                     break
 
                 self._logger.debug("Received %s", msg_data)
-                connection.async_handle(msg_data)
+                if not isinstance(msg_data, list):
+                    connection.async_handle(msg_data)
+                    continue
+
+                for split_msg in msg_data:
+                    connection.async_handle(split_msg)
 
         except asyncio.CancelledError:
             self._logger.info("Connection closed by client")
