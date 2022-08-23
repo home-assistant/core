@@ -7,7 +7,6 @@ from collections.abc import Callable, Iterable
 import contextlib
 from dataclasses import dataclass
 from datetime import timedelta
-import fnmatch
 from ipaddress import ip_address as make_ip_address
 import logging
 import os
@@ -55,6 +54,7 @@ from homeassistant.helpers.event import (
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import DHCPMatcher, async_get_dhcp
 from homeassistant.util.async_ import run_callback_threadsafe
+from homeassistant.util.fnmatch import memorized_fnmatch
 from homeassistant.util.network import is_invalid, is_link_local, is_loopback
 
 if TYPE_CHECKING:
@@ -204,12 +204,14 @@ class WatcherBase:
 
             if (
                 matcher_mac := matcher.get(MAC_ADDRESS)
-            ) is not None and not fnmatch.fnmatch(uppercase_mac, matcher_mac):
+            ) is not None and not memorized_fnmatch(uppercase_mac, matcher_mac):
                 continue
 
             if (
                 matcher_hostname := matcher.get(HOSTNAME)
-            ) is not None and not fnmatch.fnmatch(lowercase_hostname, matcher_hostname):
+            ) is not None and not memorized_fnmatch(
+                lowercase_hostname, matcher_hostname
+            ):
                 continue
 
             _LOGGER.debug("Matched %s against %s", data, matcher)
