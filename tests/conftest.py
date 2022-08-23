@@ -5,12 +5,15 @@ import asyncio
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 import functools
+from json import JSONDecoder, loads
 import logging
 import ssl
 import threading
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
-from aiohttp.test_utils import make_mocked_request
+from aiohttp import client
+from aiohttp.test_utils import TestClient, make_mocked_request
 import freezegun
 import multidict
 import pytest
@@ -56,6 +59,7 @@ from tests.test_util.aiohttp import mock_aiohttp_client  # noqa: E402, isort:ski
 from tests.components.recorder.common import (  # noqa: E402, isort:skip
     async_recorder_block_till_done,
 )
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -201,6 +205,49 @@ def load_registries():
     @pytest.mark.parametrize("load_registries", [False])
     """
     return True
+
+
+class CoalescingResponse(client.ClientWebSocketResponse):
+    """ClientWebSocketResponse client that mimics the websocket js code."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Init the ClientWebSocketResponse."""
+        super().__init__(*args, **kwargs)
+        self._recv_buffer: list[Any] = []
+
+    async def receive_json(
+        self,
+        *,
+        loads: JSONDecoder = loads,
+        timeout: float | None = None,
+    ) -> Any:
+        """receive_json or from buffer."""
+        if self._recv_buffer:
+            return self._recv_buffer.pop(0)
+        data = await self.receive_str(timeout=timeout)
+        import pprint
+
+        pprint.pprint(["got data", data])
+        assert 0
+        decoded = loads(data)
+        if isinstance(decoded, list):
+            self._recv_buffer = decoded
+            return self._recv_buffer.pop(0)
+        return decoded
+
+
+class CoalescingClient(TestClient):
+    """Client that mimics the websocket js code."""
+
+    def __init__(*args, **kwargs) -> None:
+        """Init TestClient."""
+        super().__init__(*args, ws_response_class=CoalescingResponse, **kwargs)
+
+
+@pytest.fixture
+def aiohttp_client_cls():
+    """Override the test class for aiohttp."""
+    return CoalescingClient
 
 
 @pytest.fixture
@@ -464,6 +511,10 @@ def current_request_with_host(current_request):
 @pytest.fixture
 def hass_ws_client(aiohttp_client, hass_access_token, hass, socket_enabled):
     """Websocket client fixture connected to websocket server."""
+
+    import pprint
+
+    pprint.pprint(aiohttp_client)
 
     async def create_client(hass=hass, access_token=hass_access_token):
         """Create a websocket client."""
